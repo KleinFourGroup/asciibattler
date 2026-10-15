@@ -41,6 +41,7 @@ TODO items (list A's deletions, list B's trials) are in
 ### §122 sim
 
 - ✅ **Unify the duplicated `chebyshev` helpers.** The four private copies import `movement.ts`'s alias of `occupancy.ts`'s `distanceBetween` (census B-17; WORKLOG §122, 122j).
+- [ ] **A blinded ranged unit strikes past its acquisition range.** Under `atWill`, blind sets `targetId` null when nothing is within its `acquisitionRange` (1), and `Targeting.currentTarget` then falls back to `findTarget`, so the abilities still fire out to the attack range. A probe in a worktree: a blinded archer fired at an enemy 3 cells away (WORKLOG §122, 122o batch 6). The tests pin only a melee unit. A behaviour change, so it needs the user's call and a board re-run; the round's scope guards rule it out of Round 8.5.
 
 ### §123 run
 

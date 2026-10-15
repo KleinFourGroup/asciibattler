@@ -4,69 +4,58 @@ import { SIM } from '../config/sim';
 import { chebyshev } from './movement';
 
 /**
- * Per-archetype target-SELECTION policy. Each archetype declares a strategy
- * id in `config/units.json`, validated against this registry at load
- * (mirrors `AbilityIdSchema` in `src/config/units.ts`). The id is
- * resolved to a strategy at spawn and stashed on `Unit.targeting` — the same
- * resolve-at-spawn convention as `glyph` / `attackRange` / `abilities`, which
- * keeps the leaf `Targeting.ts` free of the archetype-config layer (no
- * config → registry → strikes → Targeting import cycle).
+ * The per-archetype target-selection policy. Each archetype names a strategy
+ * id in `config/units.json`, checked against this registry at load
+ * (`knownTargetingIds`, in `src/config/units.ts`). The id is set on
+ * `Unit.targeting` at spawn, and `Targeting.ts` looks its strategy up here
+ * at each pick.
  *
- * A strategy is two pure decisions over a unit's *enemy* candidates:
- *   - `compare` ranks two candidates → drives the per-tick pick (`findTarget`).
- *   - `shouldRetarget` is the E5 stickiness switch → drives whether a still-
- *     valid committed target is abandoned for a fresher pick (`updateTarget`).
+ * A strategy is two pure decisions over a unit's hostile candidates:
+ *   - `compare` ranks two candidates, for the pick (`findTarget`);
+ *   - `shouldRetarget` decides whether a still-valid committed target is
+ *     left for a fresh pick (`updateTarget`).
  *
- * Adding a strategy: implement the interface, add it to `STRATEGIES`. The
- * archetype-config schema picks the new id up automatically via
- * `knownTargetingIds()`.
+ * Adding a strategy: implement the interface and add it to `STRATEGIES`; the
+ * archetype schema takes the new id through `knownTargetingIds()`.
  */
 interface TargetingStrategy {
   readonly id: string;
   /**
-   * Comparator over two eligible enemy candidates of `unit`. Returns < 0 when
-   * `candidate` is a better target than `best`, > 0 when worse, 0 when
-   * indistinguishable. `findTarget` reduces the eligible-enemy set with this.
-   * `world` is passed for future world-aware strategies (threat, LOS, …);
-   * the current two ignore it.
+   * Compares two eligible candidates of `unit`: below 0 when `candidate` is
+   * the better target than `best`, above 0 when worse, 0 when neither is.
+   * `findTarget` reduces the eligible set with it. Neither strategy reads
+   * `world`.
    */
   compare(candidate: Unit, best: Unit, unit: Unit, world: World): number;
   /**
-   * E5 target stickiness. Given a still-valid committed `current` target and
-   * the strategy's freshly-picked `candidate` (already known to differ from
-   * `current`), is the candidate enough of an upgrade to switch to? `nearest`
-   * switches only when markedly closer; `weakest` never does (an assassin
-   * holds its mark until it dies — rule (a) handles the on-death re-pick).
+   * Stickiness: given a still-valid committed `current` and the strategy's
+   * fresh `candidate` (known to differ from it), is the candidate upgrade
+   * enough to switch to? `nearest` switches only when markedly closer;
+   * `weakest` never does, and holds its mark until it dies (when
+   * `updateTarget`'s rule (a) picks again).
    */
   shouldRetarget(unit: Unit, current: Unit, candidate: Unit, world: World): boolean;
 }
 
 /**
- * §43b2 — the ALIGNMENT tie layer: the displacement's minor-axis magnitude
- * `min(|dx|, |dy|)`. Among equal-Chebyshev candidates (whose distance IS the
- * major axis), the smaller minor offset is the enemy most directly ahead /
- * beside — nearest the unit's own row-or-column axis of advance, with no
- * forward vector needed. Symmetric under both axis mirrors, x/y swap, and
- * 180° rotation, so neither team nor board side is preferred (the whole
- * point — see `nearest`).
+ * The alignment tie: the displacement's minor axis, `min(|dx|, |dy|)`.
+ * Among candidates at equal Chebyshev distance (which is the major axis),
+ * the smaller minor offset is the enemy most directly ahead or beside,
+ * nearest the unit's own row or column, with no forward vector needed.
+ * Symmetric under both mirrors, the x/y swap and the 180° rotation, so
+ * neither team nor side of the board is preferred (see `nearest`).
  */
 function minorAxisOffset(a: { x: number; y: number }, b: { x: number; y: number }): number {
   return Math.min(Math.abs(a.x - b.x), Math.abs(a.y - b.y));
 }
 
 /**
- * The historical default: nearest living enemy, ties to lower `currentHp`,
- * then (§43b2) most ALIGNED (smallest minor-axis offset — the enemy nearest
- * the unit's own column/row of advance), then lower `id`. Extracted verbatim
- * from the pre-strategy `findTarget` + `updateTarget` rule (b); §43b2
- * inserted the alignment layer because resolving the distance+HP tie
- * straight to lowest id = SPAWN order = the leftmost opponent — the measured
- * openField funnel (all 8 units probed committing to the same flank, the
- * fixture's residual ±1 drift after 43a). The id layer stays as the
- * deterministic last resort, but now only decides true mirror pairs (equal
- * distance, equal HP, equal alignment). The E5 stickiness (`shouldRetarget`)
- * is deliberately untouched — only the tie among fresh equal-distance picks
- * moved.
+ * The default, and every shipped archetype's: the nearest hostile, ties to
+ * lower `currentHp`, then the most aligned (`minorAxisOffset`, the enemy
+ * nearest the unit's own row or column), then lower `id`. Without the
+ * alignment tie, a tie on distance and HP goes to the lowest id, which is
+ * spawn order, the leftmost opponent, and a whole team commits to one flank;
+ * the id now decides only true mirror pairs.
  */
 const nearest: TargetingStrategy = {
   id: 'nearest',
@@ -81,8 +70,8 @@ const nearest: TargetingStrategy = {
     return candidate.id - best.id;
   },
   shouldRetarget(unit, current, candidate) {
-    // Switch only when a rival is markedly closer than the commitment — the
-    // anti-thrash margin E5 introduced.
+    // Switch only when a rival is markedly closer than the commitment, so a
+    // unit doesn't thrash between two near targets.
     const curDist = chebyshev(unit.position, current.position);
     const nearDist = chebyshev(unit.position, candidate.position);
     return nearDist * SIM.retargetCloserRatio < curDist;
@@ -90,19 +79,13 @@ const nearest: TargetingStrategy = {
 };
 
 /**
- * The rogue's assassin policy: the squishiest enemy (lowest `derived.maxHp` —
- * structural max HP, which for the melee/ranged enemy pool means the ranged
- * backline), ties to nearer, then lower `id`. Stays committed to its mark
- * until it dies (never distance-thrashes), so the fast, fragile rogue can
- * actually reach + delete the backline instead of chasing the front tank.
- *
- * §43b2 note — this chain's own distance-tie still resolves to lowest id
- * (= leftmost spawn), the same residual `nearest` had. DELIBERATELY left:
- * the user-locked 43b2 slot covers the `nearest` strategy, and no §42
- * instrument can see `weakest` (no rogue in the harness rosters) — an
- * unmeasured change here would be doctrine, not data. If a rogue-flank bias
- * ever reads in a playtest, insert the same `minorAxisOffset` layer before
- * the id and measure it then.
+ * The assassin's policy: the squishiest hostile (lowest `derived.maxHp`,
+ * which in a mixed team is the ranged backline), ties to the nearer, then
+ * lower `id`. It holds its mark until the mark dies, so a fast, fragile unit
+ * reaches the backline instead of chasing the front. No shipped archetype
+ * takes it (the rogue's is `nearest`); only tests do. Its distance tie goes
+ * to the lowest id, the leftmost spawn, without the alignment tie `nearest`
+ * has.
  */
 const weakest: TargetingStrategy = {
   id: 'weakest',

@@ -20,53 +20,37 @@ import { SIM } from '../config/sim';
 import { emitMoveDecision } from './moveDecision';
 
 /**
- * J2 — the shared movement primitive + the movement-intent seam.
+ * The shared movement primitive, in three layers:
  *
- * Before J2 the "decide a goal → find the route → take a step" logic was
- * tangled inside `MovementBehavior.proposeAction` (and copy-pasted, leaf for
- * leaf, into `SupportMovementBehavior`). This module factors it into three
- * layers so the future gap-closer (Phase N's rogue dash — "move toward X now,
- * ignoring the normal goal-cell logic") can ride the SAME pathing without a
- * rewrite, and so caching can later attach behind a single pure boundary:
- *
- *   WANT  — a `MovementIntent` (preference-ordered goals + how far to commit).
- *           Each consumer builds its own: `MovementBehavior` (firing-cell →
- *           target-cell, or a rally tile), a dash (an adjacency cell, maxCells
- *           = dash range). This is the seam.
- *   ROUTE — `routeToward` = the pure `findPath` wrapper. **Caching, when it
- *           lands (deferred — pathing is measured-cheap), attaches HERE**, so
- *           it never touches a consumer.
- *   MOVE  — `advance` turns an intent into a one-tick `MoveAction`: a normal
- *           one-cell step (with the E5.B sidestep) at `maxCells: 1`, or a
- *           multi-cell leap at `maxCells: N`.
- *
- * Everything stays byte-identical to pre-J2 at `maxCells: 1` (same goal order,
- * same `findPath`, same sidestep), so no fuzz re-baseline. The `maxCells > 1`
- * branch is the dash hook; no shipped ability uses it yet (N1 adds the
- * `DashAbility`), but it is exercised by `movement.test.ts` so the seam is
- * proven to serve it, not merely notional.
+ * - want — a `MovementIntent`: goals in order of preference, and how far to
+ *   go. Each consumer builds its own (`positioning.ts`' firing cell then the
+ *   target's cell, a rally tile, the dash's target).
+ * - route — `routeToward`, one A* search over this tick's blockers and
+ *   costs, the same for every consumer.
+ * - move — `advance` turns an intent into this tick's proposal: a one-cell
+ *   step at `maxCells: 1`, a leap along the route above it. The dash lands
+ *   through `leapLanding`; only tests call `advance` with `maxCells > 1`.
  */
 
 /**
- * The soft-block graph a unit paths over this tick — built once and shared by
- * every goal attempt in an `advance` call.
+ * What a unit paths over this tick, built once and shared by every goal an
+ * `advance` call tries.
  *
- *   - `pathBlockers` — INERT neutral units (walls + half-cover + rubble): HARD
- *     blockers for `findPath`, exactly as terrain. §75d — an ACTIVE neutral (a
- *     camp member, `isActiveNeutral`) is a mobile body, NOT a wall: it goes to
- *     `otherUnitCells` like any combatant.
- *   - `otherUnitCells` — every OTHER mobile unit's cell (keyed; combatants +
- *     active neutrals), minus an
- *     optional `excludeUnitId`. These are SOFT cells (high cost via the
- *     CostFn) and also the step-collision set. The pursued target is excluded
- *     (so a path onto its cell always exists, and the in-range abstain stops
- *     the unit a cell short); a tile/dash goal excludes nothing.
- *   - `occupied` — EVERY other unit's cell (all teams, neutrals included): the
- *     sidestep occupancy set, so a sidestep never lands on a filled square.
- *   - `vacatingEta` / `claimed` / `stepTicks` — §45a: the vacancy-aware COST
- *     inputs (see `PathCostContext`). Route-selection only — the commit-time
- *     sets above stay strict, so softening a cost can never soften a collision
- *     check (gotcha #113's placement rule is untouched).
+ * - `pathBlockers` — inert neutrals (walls, half cover, rubble): hard
+ *   blockers for `findPath`, as terrain is. An active neutral, a camp
+ *   member, is a mobile body and goes in `otherUnitCells`.
+ * - `otherUnitCells` — every other mobile unit's cells and every other
+ *   unit's claimed destination, less `excludeUnitId`: the soft cells
+ *   `costAt` prices, and the set a step's collision check reads. The
+ *   pursued target is left out, so a path onto its cell exists and the
+ *   in-range abstain stops the unit a cell short; a tile goal and the dash
+ *   leave out nothing.
+ * - `occupied` — every other unit's cells, neutrals included, and the
+ *   claims: the cells a sidestep may not land on.
+ * - `vacatingEta`, `claimed`, `stepTicks` — the pricing inputs
+ *   (`PathCostContext`). They choose the route only; the sets above stay
+ *   strict, so a cheaper price never loosens a collision check (gotcha
+ *   #113).
  */
 interface MovementContext extends PathCostContext {
   readonly pathBlockers: GridCoord[];
@@ -75,28 +59,25 @@ interface MovementContext extends PathCostContext {
 }
 
 /**
- * §45a — what the vacancy-aware `costAt` needs to price a soft-blocked cell.
- * `buildMovementContext` embeds it in the combat `MovementContext`; the
- * healer's bespoke `stepToward` builds a lightweight literal. The route
- * ORIGIN (the arrival-window anchor) is passed per-call, not carried here —
- * it's `routeToward`'s `from`.
+ * What `costAt` needs to price a soft cell. `buildMovementContext` embeds it
+ * in a `MovementContext`; the healer's `stepToward` builds its own. The
+ * route's origin, which anchors the arrival estimate, is `costAt`'s `from`.
  */
 interface PathCostContext {
-  // 86c-L2 — every collection here is keyed by the PACKED cell index
-  // (`cellIndex(c, world.gridW)`), not the `"x,y"` string: these are the maps
-  // `costAt` probes once per A* expansion, the hottest reads in the balancer.
-  /** Soft-blocked cells (other units' bodies + in-flight claims). */
+  // Keyed by the packed cell index (`cellIndex`), not an "x,y" string:
+  // `costAt` reads these once per A* expansion, the hottest lookups a battle
+  // makes.
+  /** Soft cells: other units' bodies and claims. */
   readonly otherUnitCells: ReadonlySet<number>;
-  /** Packed cell index → ticks until the occupant's in-flight move vacates it
-   *  (`vacancyEtaOf`); absent = the occupant isn't going anywhere. */
+  /** Cell → ticks until its occupant's move vacates it (`vacancyEtaOf`);
+   *  absent when the occupant is not leaving. */
   readonly vacatingEta: ReadonlyMap<number, number>;
-  /** Cells CLAIMED as in-flight move destinations → the flip's ETA
-   *  (`claimEtas`). A body materialises there at the flip; WHEN that lands
-   *  relative to the pather's own arrival decides premium vs static. An
-   *  `undefined` ETA = timing unknown — priced at the premium (conservative). */
+  /** Claimed cell → ticks to the claimant's flip (`claimEtas`), when a body
+   *  appears there; whether that falls before the pather arrives sets the
+   *  price. `undefined`, the timing unknown, prices at the premium. */
   readonly claimed: ReadonlyMap<number, number | undefined>;
-  /** The pather's own base step duration in ticks — the unit of the §45a
-   *  vacancy window (`SIM.vacancyWindowOwnSteps` is expressed in these). */
+  /** The pather's base step in ticks, the unit `SIM.vacancyWindowOwnSteps`
+   *  counts in. */
   readonly stepTicks: number;
 }
 
@@ -114,17 +95,13 @@ export function buildMovementContext(
   const vacatingEta = new Map<number, number>();
   for (const u of world.units) {
     if (u.id === unit.id) continue;
-    // §45a — a soft-blocked body mid-move AWAY prices by its vacancy ETA
-    // (derived from its active action, never serialized). INERT neutrals never
-    // move (hard blockers) and the pursued target is priced free, so only the
-    // soft-cost branch consults it. §75d — an active neutral moves, so it gets
-    // a real ETA like any combatant.
+    // A body moving away is priced by its vacancy ETA, derived from its action
+    // and never serialized. An inert neutral never moves and the pursued
+    // target is free, so neither needs one; an active neutral moves, and gets
+    // one.
     const eta =
       isInertNeutral(u) || u.id === excludeUnitId ? undefined : vacancyEtaOf(u, world);
-    // §35 — route each unit's cell touch through the occupancy footprint seam
-    // (`cellsOccupiedBy`: one cell today, the N×N block once §39 fills it), so the
-    // sidestep occupancy set + neutral path-blockers cover a multi-tile body for
-    // free. Byte-identical at single-cell: each set gets exactly `u.position`.
+    // Every cell of the body (`cellsOccupiedBy`): rubble spans up to 3×3.
     for (const c of cellsOccupiedBy(u)) {
       const idx = cellIndex(c, world.gridW);
       occupied.add(idx);
@@ -136,13 +113,11 @@ export function buildMovementContext(
       }
     }
   }
-  // §36a — a cell CLAIMED by another in-flight mover is blocked-for-pathing just
-  // like an occupied cell (occupied OR claimed): fold it into BOTH the soft-cost
-  // set (so A* routes around it) and the sidestep occupancy set (so a sidestep
-  // never lands on it). Skip the building unit's own claims — it may step into
-  // what it reserved. §45a carries each claim's flip ETA alongside: `costAt`
-  // prices a convergence-window claim at the inbound premium and a long-done
-  // flip as a mere future body.
+  // A cell another mover has claimed blocks as a body does: it goes in the soft
+  // set, so A* prices it, and in `occupied`, so a sidestep never lands on it.
+  // The unit's own claims are skipped, since it may step into what it
+  // reserved. Each claim carries its flip's ETA, by which `costAt` prices it
+  // at the inbound premium or as a body standing there.
   const claimed = claimEtas(world, GROUND, { excludeId: unit.id });
   for (const key of claimed.keys()) {
     occupied.add(key);
@@ -159,27 +134,22 @@ export function buildMovementContext(
 }
 
 /**
- * The pure routing primitive: one A* search from `from` to `goal` over the
- * context's hard blockers + soft-cost graph. Returns `[from, …, goal]` or `[]`
- * when no route exists (the caller treats `[]` / a length-1 path as "no step").
- *
- * **This is the cache boundary.** A future per-unit memo or a shared-objective
- * flow-field substitutes for this call without any consumer change; today it
- * is a thin wrapper so the sim stays byte-identical and the recompute count
- * (`pathfindingStats`) measures the real A* load.
+ * The routing primitive: one A* search from `from` to `goal` over the
+ * context's hard blockers and soft costs. Returns `[from, …, goal]`, or `[]`
+ * when there is no route; a caller reads `[]` or a one-cell path as no step.
+ * There is no cache: every call is a search, and `pathfindingStats` counts
+ * them.
  */
 export function routeToward(
   from: GridCoord,
   goal: GridCoord,
   ctx: MovementContext,
   world: World,
-  // J3 — forwarded to `findPath`: an unreachable goal yields a path to the
-  // closest reachable cell instead of `[]` (the tile-objective "as close as you
-  // can" rally — keeps an unpathable rally cell from freezing the team).
+  // An unreachable goal yields a path to the closest reachable cell instead
+  // of `[]`, so a rally on a walled-off cell does not freeze the team.
   bestEffort = false,
-  // §39b — the mover's footprint edge (N of its N×N body). Default 1 keeps every
-  // single-cell mover byte-identical; a wider body needs the whole destination
-  // block passable, so it paths through wide corridors but not narrow ones.
+  // The mover's footprint edge (N of its N×N body): a wider body needs the
+  // whole block passable at each step, so it fits wide corridors only.
   footprint = 1,
 ): GridCoord[] {
   return findPath(
@@ -194,74 +164,64 @@ export function routeToward(
   );
 }
 
-/**
- * A unit's movement WANT for this tick — the seam every locomotion consumer
- * speaks.
- */
+/** A unit's movement for this tick, as every locomotion consumer states it. */
 export interface MovementIntent {
   /**
-   * Preference-ordered destinations; the first that yields a step wins. The
-   * fallback chain is the load-bearing anti-freeze guarantee — e.g. a ranged
-   * unit prefers its firing cell but FALLS BACK to charging the target's cell
-   * when the firing approach can't step, so a contested standoff cell never
-   * strands it. Do NOT collapse this to a single goal (that reintroduces the
-   * retired `pickGoalCellInRange` freeze — see GOTCHAS / MovementBehavior).
+   * Goals in order of preference; the first that yields a step wins. The
+   * fallback is what keeps a unit from freezing: a ranged unit prefers its
+   * firing cell and falls back to the target's cell when that approach
+   * cannot step, so a contested firing cell never strands it. Don't
+   * collapse this to one goal.
    */
   readonly goals: readonly GridCoord[];
   /**
-   * The cell a sidestep biases toward when the immediate forward step is
-   * occupied (the enemy / the rally cell) — usually the conceptual
-   * destination, NOT necessarily the current goal candidate.
+   * What a sidestep leans toward when the forward cell is occupied: the
+   * enemy or the rally cell, the place the unit is going rather than the
+   * goal being tried.
    */
   readonly approachToward: GridCoord;
   /**
-   * Mobile unit excluded from the soft-block set (the pursued target —
-   * §75d: an ACTIVE neutral camp target qualifies too; only inert scenery
-   * can't be excluded, it's a hard blocker).
-   * Undefined → exclude nothing (tile pursuit / a dash to an empty cell).
+   * The mobile unit left out of the soft cells: the pursued target, a camp
+   * member included. Inert scenery is a hard blocker and can't be left out.
+   * Undefined leaves out nothing.
    */
   readonly excludeUnitId?: number;
   /**
-   * Cells to advance along the route this action: `1` = a normal step (with
-   * the E5.B sidestep on an occupied forward cell); `> 1` = a dash/leap (walk
-   * up to N cells along the route, stopping before the first occupied cell, no
-   * sidestep). N1's gap-closer rides the `> 1` path.
+   * Cells to go along the route: `1` is a step, which may sidestep an
+   * occupied forward cell; above 1 is a leap of up to N cells, stopping
+   * before the first occupied one, with no sidestep.
    */
   readonly maxCells: number;
   /**
-   * J3 — route to the CLOSEST reachable cell when a goal is unreachable, rather
-   * than abstaining. The tile-objective rally sets this (a wall on the rally
-   * cell must not freeze the team); enemy-chasing leaves it off so a genuinely
-   * blocked target still abstains as before. Defaults to false.
+   * Route to the closest reachable cell when a goal is unreachable, instead
+   * of abstaining. A rally and a rubble approach set it, so a wall on the
+   * goal does not freeze the unit; a chase leaves it off, so a walled-off
+   * target is abstained on. Default false.
    */
   readonly bestEffort?: boolean;
   /**
-   * Whether a `maxCells: 1` step may sidestep when the forward cell is
-   * occupied. Defaults to `true` (MovementBehavior + tile pursuit). A future
-   * consumer that wants strict queueing can pass `false`.
+   * Whether a one-cell step may sidestep an occupied forward cell. Default
+   * true; no shipped consumer sets it.
    */
   readonly sidestepWhenBlocked?: boolean;
 }
 
 /**
- * Turn a `MovementIntent` into this tick's `MoveAction`, or null to abstain.
- * Iterates the goal preference list and returns the first goal that produces a
- * step; abstains only when none do. Score 1 (low) so `AbilityBehavior`
- * (score 10) always wins when an attack is also available.
+ * Turn a `MovementIntent` into this tick's proposal, or null to abstain: the
+ * first goal that yields a step wins. Its proposals score 1, below every
+ * ability that proposes.
  *
- * §42a — emits the poll's mechanical `unit:moveDecision`: `advance`/`sidestep`
- * on a step, `wait` on §45b's ETA-gated queue-in-lane proposal, and on a full
- * abstain `queue` when ANY goal attempt was blocked by a unit (a route
- * existed; a body was in the way — and its drain ETA, if any, missed the
- * §45b gate) vs `no_route` when none was. Emits nothing on an empty goal
- * list (the caller owns that decision — the Qb#3 `pinned` shape), so the
- * one-decision-per-poll invariant holds.
+ * Emits the poll's `unit:moveDecision`: the step's kind (`advance`,
+ * `sidestep`, `wait`, `swap_through`), or on an abstain `queue` when a body
+ * stood on any goal's route and `no_route` when none did. An empty goal list
+ * emits nothing, since its caller records that decision (the kiter's
+ * `pinned`), so a poll records one decision.
  */
 export function advance(unit: Unit, world: World, intent: MovementIntent): ActionProposal | null {
   const ctx = buildMovementContext(unit, world, { excludeUnitId: intent.excludeUnitId });
   const from = unit.position;
   const baseTicks = unit.derived.moveCooldownTicks;
-  const footprint = footprintOf(unit); // §39b — path a wider body through wider gaps.
+  const footprint = footprintOf(unit); // the route fits the body's width
   let sawBlocked = false;
   for (const goal of intent.goals) {
     const outcome = stepAlongRoute(unit, from, goal, ctx, world, intent, baseTicks, footprint);
@@ -280,21 +240,19 @@ export function advance(unit: Unit, world: World, intent: MovementIntent): Actio
 }
 
 /**
- * N1 — the landing cell for a multi-cell LEAP (the rogue dash), or null to
- * abstain. Mirrors `advance`'s goal-preference iteration but returns only the
- * destination cell, NOT a full proposal: a dash decouples its motion duration
- * from its (much longer) cooldown, so `DashAbility` builds the proposal itself
- * rather than routing through `moveProposal` (whose `cooldown == durationTicks`
- * invariant a dash breaks). Routes toward the first goal that yields a path,
- * then walks up to `intent.maxCells` cells along it, stopping before the first
- * cell occupied by another unit — the same conservative rule the `advance` leap
- * branch uses (the two share `walkAlongPath`). Leave the pursued enemy a
- * soft-blocker (no `excludeUnitId`) so a dash AT it lands the cell short.
+ * The landing cell of a leap (the dash), or null to abstain. It returns a
+ * cell, not a proposal, because a dash's cooldown is far longer than its
+ * motion, where `moveProposal`'s cooldown is the move's duration; the dash's
+ * proposal is built in `effects/propose.ts` (`proposeSelfMove`). Routes
+ * toward the first goal with a path and walks up to `intent.maxCells` cells
+ * along it, stopping before the first occupied cell (`walkAlongPath`, as
+ * `advance`'s leap does). Leave the pursued enemy soft (no `excludeUnitId`),
+ * so a dash at it lands a cell short.
  */
 export function leapLanding(unit: Unit, world: World, intent: MovementIntent): GridCoord | null {
   const ctx = buildMovementContext(unit, world, { excludeUnitId: intent.excludeUnitId });
   const from = unit.position;
-  const footprint = footprintOf(unit); // §39b — leap route respects the body's width.
+  const footprint = footprintOf(unit); // the route fits the body's width
   for (const goal of intent.goals) {
     const path = routeToward(from, goal, ctx, world, intent.bestEffort ?? false, footprint);
     if (path.length < 2) continue;
@@ -327,36 +285,29 @@ function walkAlongPath(
 }
 
 /**
- * §45c — the anti-flicker route choice: stable incumbent vs live challenger.
+ * The route choice that keeps a unit from flickering between lanes: a
+ * stable route against the live one.
  *
- * The flip-flop the §45c-pre trace attributed (25% of flips; 33–39% on
- * endlessCorridors) is TRANSIENT cost noise steering the router: a claim or a
- * soon-vacating body appears, the optimum flips to a parallel lane, the
- * transient resolves within a step or two, the optimum flips back — and the
- * unit has crabbed laterally for nothing. The cure the resolved §45c decision
- * allows (derive-don't-cache — nothing serialized, nothing to lose on a
- * snapshot resume):
+ * Short-lived costs steer the router: a claim or a body about to leave
+ * appears, the best route moves to a parallel lane, the cost clears a step or
+ * two later and the best route moves back, and the unit has stepped sideways
+ * for nothing. So:
  *
- *   - The **stable route** — the same A* with short-horizon transients
- *     STRIPPED (bodies/claims whose flip ETA is within
- *     `stableRouteHorizonOwnSteps` of the pather's own step; §45c-pre's
- *     counterfactual probe, promoted to the decision rule). Long-horizon
- *     traffic (a glacially-vacating blocker) stays priced — it's furniture.
- *     This is the derivable INCUMBENT: recomputable identically from
- *     serialized state on any resume.
- *   - The **live route** — today's full §45a pricing, the CHALLENGER.
- *   - When their FIRST STEPS agree (or no transient exists at all — the
- *     quiet-world fast path, one search, byte-identical to pre-§45c), the
- *     live route proceeds as before. When they diverge, the live detour is
- *     followed only if its advantage under live pricing exceeds
- *     `routeSwitchMargin`; otherwise the unit holds the stable lane and the
- *     §45b step machinery (wait / progress-guarded sidestep / queue) handles
- *     whatever is actually standing there.
+ * - The stable route is the same A* with the short-lived costs stripped:
+ *   bodies leaving and claims flipping within `stableRouteHorizonOwnSteps`
+ *   of the pather's own steps. Slower traffic stays priced, as furniture.
+ *   It is derived from the world's state alone, so nothing is serialized
+ *   and a restored world chooses the same.
+ * - The live route is `costAt`'s full pricing.
+ * - When their first steps agree, or nothing short-lived is in play (one
+ *   search), the live route is taken. When they differ, the live route is
+ *   taken only if it is cheaper under live pricing by more than
+ *   `routeSwitchMargin`; otherwise the unit keeps the stable lane, and the
+ *   step's wait, sidestep or queue deals with whatever stands in it.
  *
- * Only the first step is compared — the choice is re-derived every poll, so
- * later divergence is next poll's question. The dash/leap (`leapLanding`) and
- * the healer's `stepToward` stay live-only: no flip evidence was measured
- * there (§45c-pre traced combat comps), and scope stays tight.
+ * Only the first step is compared, since the choice is made again every
+ * poll. The leap (`leapLanding`) and the healer's `stepToward` take the live
+ * route alone.
  */
 function chooseRoute(
   from: GridCoord,
@@ -368,16 +319,10 @@ function chooseRoute(
 ): GridCoord[] {
   const live = routeToward(from, goal, ctx, world, bestEffort, footprint);
   if (live.length < 2) return live;
-  // (Two perf gates were tried here and REJECTED at the §45c keyboard, both
-  // measured to skip REAL suppressions: a straight-first-step fast path cost
-  // corridor(6)'s crab-to-lane-hold conversion + a chunk of endless osc, and
-  // a transient-distance gate pruned A* only on the cheap map whose flicker
-  // this phase exists to kill, while a maze's transients are always near so
-  // the expensive labyrinth searches ran anyway. The fuzz wall-time growth
-  // that motivated them was measured to be CONTENT — deeper greedy runs —
-  // not compute; the fuzz budgets carry it, per the 43a precedent.)
+  // A gate that skips the second search, on a straight first step or on the
+  // short-lived costs' distance, skips real suppressions too; don't add one.
   const stable = stableContext(ctx);
-  if (stable === null) return live; // no short-horizon transients — live IS stable.
+  if (stable === null) return live; // nothing short-lived: live is stable
   const stablePath = findPath(
     from,
     goal,
@@ -399,14 +344,12 @@ function chooseRoute(
 }
 
 /**
- * §45c — the stable-incumbent cost context: `ctx` with every short-horizon
- * transient stripped (cost 0 — the cell will clear around one own-step from
- * now, so for ROUTE choice it's noise). Long-horizon vacating bodies stay
- * soft-blocked (their `vacatingEta` entry is dropped, so they price at the
- * static tier); long-horizon / underivable claims keep their tier. Returns
- * null when nothing qualifies — the caller then skips the second search
- * entirely (the quiet-world fast path). COMMIT-time sets are untouched: this
- * context exists only inside the stable `costAt` closure.
+ * The stable route's costs: `ctx` with every short-lived cost stripped, a
+ * body leaving or a claim flipping within the horizon priced as an empty
+ * cell. A body leaving later stays soft, priced as one standing (its
+ * `vacatingEta` entry is dropped); a later or unknown claim keeps its tier.
+ * Null when nothing qualifies, and the caller skips the second search. The
+ * collision sets are untouched: only the stable route's `costAt` reads this.
  */
 const stableContextMemo = new WeakMap<MovementContext, PathCostContext | null>();
 
@@ -441,7 +384,7 @@ function buildStableContext(ctx: MovementContext): PathCostContext | null {
   return { otherUnitCells, vacatingEta: new Map(), claimed, stepTicks: ctx.stepTicks };
 }
 
-/** §45c — a path's total entry cost under the LIVE pricing (cells 1..end). */
+/** A path's entry cost under the live pricing, from cell 1 to the end. */
 function pathCost(
   path: readonly GridCoord[],
   ctx: MovementContext,
@@ -454,13 +397,11 @@ function pathCost(
 }
 
 /**
- * §42a — a goal attempt's outcome. `blocked` = a route existed but a unit
- * stood in the way and no sidestep committed (the aggregate `queue` signal);
- * `no_route` = A* found nothing (or the unit already sits on the goal). The
- * step kinds feed the `unit:moveDecision` record in `advance`. §45b adds
- * `wait` — a first-class queue-in-lane proposal, returned like a step (it
- * consumes the poll; the goal fallback chain finds a step, not a different
- * queue).
+ * One goal's outcome. `blocked`: a route existed but a body stood in the way
+ * and nothing committed (the abstain's `queue`); `no_route`: A* found none,
+ * or the unit stands on the goal. A step's kind feeds `advance`'s
+ * `unit:moveDecision`. A wait is returned as a step is: it takes the poll,
+ * and the goals after it are not tried.
  */
 type StepOutcome =
   | { proposal: ActionProposal; kind: 'advance' | 'sidestep' | 'wait' | 'swap_through' }
@@ -468,32 +409,25 @@ type StepOutcome =
   | 'no_route';
 
 /**
- * One A* route toward `goal`, then commit the step(s) per `intent.maxCells`:
+ * One route toward `goal`, then the step or steps by `intent.maxCells`:
  *
- *   - `maxCells <= 1` (the default step): take `path[1]`. If that cell is
- *     occupied by another unit: **§45b first asks whether the blocker is
- *     already leaving** — when its vacancy ETA is within
- *     `waitForVacancyOwnSteps` of the mover's own steps, propose a
- *     first-class WAIT (queue in lane; the crab-walk dies here). Only
- *     otherwise try the perpendicular E5.B sidestep toward `approachToward`
- *     before giving up (unless `sidestepWhenBlocked` is false — the wait
- *     gate fires for strict-queue consumers too; it IS queueing). A static
- *     body or a claim has no derivable drain ETA and behaves exactly
- *     pre-§45b.
- *   - `maxCells > 1` (a dash/leap): walk along the route from `path[1]`, taking
- *     cells until one is occupied or the cap/goal is reached; land on the
- *     furthest reachable cell. No sidestep — a leap doesn't crab sideways.
- *     (Exact leap-over-occupant semantics are N1's call; the conservative
- *     stop-before-occupied default keeps the seam safe meanwhile.)
+ * - 1, a step: take `path[1]`. When another unit holds it: if that body
+ *   leaves within `SIM.waitForVacancyOwnSteps` of the mover's own steps,
+ *   wait for it in lane; else if it is a friendly ranged unit to swap
+ *   through (`roleEligibleBlocker`), swap or queue; else sidestep toward
+ *   `approachToward`, unless `sidestepWhenBlocked` is false. The wait
+ *   applies either way, since it is queueing. A body not leaving, or a
+ *   claim, has no ETA to wait on.
+ * - Above 1, a leap: walk the route from `path[1]` until a cell is
+ *   occupied or the cap or the goal is reached, and land on the furthest
+ *   cell reached. No sidestep.
  *
- * Returns a failure kind (not a proposal) when no route exists or no cell can
- * be committed — the caller (`advance`) keeps trying later goals either way,
- * exactly as the pre-§42a `null` did.
+ * Returns a failure kind when there is no route or nothing can be
+ * committed; `advance` goes on to its next goal either way.
  */
 function stepAlongRoute(
-  // 56b — the acting unit, for the swap-through probe (team / role / id).
-  // Everything else still flows through the extracted params so the routing
-  // layers below stay unit-agnostic.
+  // The acting unit, for the swap-through check; the routing below reads
+  // only the other parameters.
   unit: Unit,
   from: GridCoord,
   goal: GridCoord,
@@ -501,42 +435,38 @@ function stepAlongRoute(
   world: World,
   intent: MovementIntent,
   baseTicks: number,
-  // §39b — the mover's footprint edge, forwarded to the A* passability check. The
-  // step-COMMIT collision + sidestep below stay single-cell (`to`/`side`): a
-  // multi-tile MOVER doesn't exist yet (§40's rubble is static), so widening the
-  // commit-time occupancy check rides the same seam whenever one ships.
+  // The mover's footprint edge, for A*'s passability. The collision check and
+  // the sidestep below test one cell (`to`, `side`): every mover is one cell,
+  // since only rubble is wider and it never moves. A wider mover would need
+  // both widened.
   footprint = 1,
 ): StepOutcome {
-  // §45c — the anti-flicker route choice (stable incumbent vs live challenger)
-  // replaces the bare live search; identical single-search behavior on any
-  // poll without short-horizon transients in play.
+  // The stable or the live route; one search when nothing short-lived is in
+  // play.
   const path = chooseRoute(from, goal, ctx, world, intent.bestEffort ?? false, footprint);
   if (path.length < 2) return 'no_route';
 
   if (intent.maxCells <= 1) {
     const to = path[1]!;
     if (ctx.otherUnitCells.has(cellIndex(to, world.gridW))) {
-      // §45b — the ETA-gated wait-vs-sidestep. The forward cell's occupant is
-      // mid-move away and will free it within the gate: queue for it (a
-      // deliberate, selector-visible hold — §44b's WaitAction) instead of
-      // crabbing perpendicular. Re-decided fresh every poll: if the blocker
-      // stalls (its move ends, ETA gone), the gate fails next tick and the
-      // pre-§45b sidestep/queue behavior resumes — no freeze. Claims never
-      // reach here (`vacatingEta` holds body cells only; waiting for an
-      // ARRIVING body means waiting for it to arrive AND leave — not
-      // derivable from one in-flight action).
+      // The occupant is moving away and frees the cell within the gate: wait
+      // for it in lane (a `WaitAction` the selector sees) rather than step
+      // sideways. Decided again every poll, so if the blocker stalls the gate
+      // fails next tick and the swap, sidestep or queue below applies; nothing
+      // freezes. A claim never reaches here: `vacatingEta` holds bodies only,
+      // and waiting on an arriving body means waiting for it to arrive and
+      // then leave, which one action does not tell.
       const eta = ctx.vacatingEta.get(cellIndex(to, world.gridW));
       if (eta !== undefined && eta <= SIM.waitForVacancyOwnSteps * ctx.stepTicks) {
         return { proposal: waitProposal(), kind: 'wait' };
       }
-      // 56c2 — a ROLE-ELIGIBLE blocker (friendly ranged that belongs behind
-      // this melee) is never sidestepped around: swap through it when it's
-      // between actions, else QUEUE — the abstain keeps the mover polling
-      // every tick, and the blocker's own yield (MovementBehavior's 56c2
-      // probe) covers its busy windows from the other side. The sidestep
-      // reordering is the scenario-2 fix (worklog §56c2): an equal-distance
-      // sidestep "succeeds" without progress, locks the mover for a full
-      // move window, and loops — while the swap it preempted was the answer.
+      // A friendly ranged unit that belongs behind this melee one is never
+      // sidestepped: swap through it when it is between actions, else queue.
+      // The abstain keeps the mover polling each tick, and the blocker's own
+      // yield (`MovementBehavior`) covers its busy windows from the other
+      // side. The swap comes before the sidestep because a sidestep at equal
+      // distance succeeds without progress, locks the mover for a whole move,
+      // and loops.
       const eligible = roleEligibleBlocker(unit, to, world);
       if (eligible !== null) {
         if (isSwappablePartner(eligible, world)) {
@@ -567,12 +497,9 @@ function stepAlongRoute(
     };
   }
 
-  // Dash/leap: furthest unoccupied cell within the step cap along the route.
-  // M6 — the leap keeps base cadence (no per-tile wade scaling): a dash's
-  // terrain interaction is N1's call and `stepDurationTicks` is a normal-step
-  // property. N1 — the walk is shared with `leapLanding` via `walkAlongPath`
-  // (DashAbility computes a landing without a full proposal, since a dash's
-  // cooldown is decoupled from its motion duration).
+  // A leap: the furthest unoccupied cell along the route, within the cap. It
+  // moves at the base cadence; a step's wading (`stepDurationTicks`) does not
+  // apply.
   const landing = walkAlongPath(path, intent.maxCells, ctx.otherUnitCells, world.gridW);
   return landing === null
     ? 'blocked'
@@ -580,44 +507,37 @@ function stepAlongRoute(
 }
 
 /**
- * 56b/56c2 — the STATIC half of the swap-through eligibility: the unit on the
- * mover's forward cell `to` when the pair's ROLES qualify, else null. The
- * rule set (shape-locked 2026-07-15, amended at the 56c2 design round —
- * worklog §56):
+ * The static half of the swap-through rule: the unit on the mover's forward
+ * cell `to` when the pair's roles qualify, else null.
  *
- *   - **Role order** — only a MELEE mover (attackRange 1) may initiate, and
- *     only a RANGED blocker (attackRange > 1) yields. Antisymmetry is the
- *     whole anti-oscillation story: swaps flow one direction in the role
- *     relation, so a pair can never swap twice — no hysteresis, no state.
- *     Backward displacement is neutral-to-good for every ranged archetype
- *     (a minRange kiter WANTS the extra cell), and a displaced-out-of-band
- *     archer re-enters as the passer marches on (the band loss is transient
- *     — the user's §56 design-round read; an in-band eligibility check was
- *     REJECTED for excluding the canonical max-range corridor jam).
- *   - **Friendly only** — enemies are fought, not passed. (Symmetric: enemy
- *     melee passes enemy ranged through this same probe.)
- *   - **No supports** — the healer reads as ranged (heal range IS its
- *     attackRange) but yields on its own terms via the GP5 `blockedAlly`
- *     machinery; kind literal because importing SupportMovementBehavior here
- *     is a module cycle (it imports this file).
- *   - **Single-cell bodies both sides** — SwapAction exchanges two positions;
- *     a multi-tile participant has no defined exchange yet (§39b).
+ * - Role order — only a melee mover (attack range 1) initiates, and only a
+ *   ranged blocker (range above 1) yields. Swaps flow one way in the role
+ *   order, so a pair can never swap back, with no state to keep. A cell
+ *   back is neutral or better for a ranged unit (a kiter wants the
+ *   distance), and one pushed out of its band comes back as the passer
+ *   moves on. Don't require the blocker to stay in band: that excludes the
+ *   jam this is for, an archer at full range in a corridor.
+ * - Friendly only — enemies are fought, not passed. The enemy's melee
+ *   passes the enemy's ranged by the same rule.
+ * - No supports — the healer counts as ranged (its heal's range is its
+ *   attack range) but yields by its own rule (`blockedAlly.ts`). Matched by
+ *   kind, since importing `SupportMovementBehavior`, which imports this
+ *   file, would be a cycle.
+ * - One-cell bodies on both sides — `SwapAction` exchanges two positions.
  *
- * The DYNAMIC half (`isSwappablePartner` — genuinely between actions, not
- * reserved by another in-flight swap) is checked at the call site: a
- * role-eligible-but-busy blocker means QUEUE, not sidestep — the blocker's
- * own 56c2 yield covers its busy windows at its next selection poll (the
- * two-sided protocol; see MovementBehavior's yield probe).
+ * The dynamic half, `isSwappablePartner` (between actions, not reserved by
+ * another swap), is the caller's: an eligible but busy blocker means queue,
+ * not sidestep, and the blocker's own yield covers its busy windows at its
+ * next poll (`MovementBehavior`).
  *
- * Speed-order (melee passing slower melee) was considered and DEFERRED to
- * playtest at the shape-lock — the solo-dart worry; don't add it here without
- * that evidence.
+ * Melee passing slower melee is not a rule, since it risks a lone unit
+ * darting ahead; don't add it without playtest evidence.
  */
 function roleEligibleBlocker(unit: Unit, to: GridCoord, world: World): Unit | null {
   if (unit.derived.attackRange > 1) return null; // role order: melee initiates
   if (footprintOf(unit) !== 1) return null;
-  // The forward cell can be soft-blocked by a CLAIM with no body on it —
-  // world.units position scan naturally yields no partner there.
+  // The forward cell may hold a claim and no body; the scan then finds no
+  // partner.
   const blocker = world.units.find(
     (u) => u.id !== unit.id && u.currentHp > 0 && u.position.x === to.x && u.position.y === to.y,
   );
@@ -625,34 +545,31 @@ function roleEligibleBlocker(unit: Unit, to: GridCoord, world: World): Unit | nu
   if (blocker.team !== unit.team) return null; // fought, not passed
   if (footprintOf(blocker) !== 1) return null;
   if (blocker.derived.attackRange <= 1) return null; // role order: ranged yields
-  if (blocker.behaviors.some((b) => b.kind === 'support_movement')) return null; // GP5 owns the healer
+  if (blocker.behaviors.some((b) => b.kind === 'support_movement')) return null; // the healer yields by its own rule
   return blocker;
 }
 
 /**
- * 56c2 — the yield's selector score. Ability proposals score `def.priority`
- * (10 across the shipped catalog, pinned by a balance-proof test against
- * this constant): a fill-phase attacker's next attack is already ready the
- * instant its action ends, so a yield at move-score 1 would starve at the
- * selector forever — the yield must OUTRANK the attack. Tactically: an
- * archer strictly blocking a boxed melee teammate skips ONE attack cycle to
- * let it through (the 56c2 design-round call, user-signed). Panic never
- * reaches the yield (the flee branch returns first), so nothing above
- * ability score competes.
+ * The ranged yield's selector score. An ability proposes at its
+ * `def.priority` (10 at most in the shipped catalog; `rangedYield.test.ts`
+ * holds every priority below this): an attacker whose recovery fills its
+ * cadence has its next attack ready the moment its action ends, so a yield
+ * at a move's score of 1 would never win the selector. An archer strictly
+ * blocking a boxed melee teammate skips one attack to let it through. A
+ * panicking unit never reaches the yield (the flee branch returns first),
+ * so nothing scoring above an ability competes.
  */
 export const YIELD_SWAP_SCORE = 12;
 
 /**
- * GP5 #5 / 56b / 56c2 — the shared swap proposal: the actor trades cells
- * with the unit at `to` (`otherId`). Move-shaped in BOTH senses since 56c2:
- * score (default 1; the blocker-initiated yield passes `YIELD_SWAP_SCORE`)
- * and the §36b deferred timeline — travel → the logical exchange at the
- * 50% `impact` boundary (`SwapAction.applyEffect`) → recovery, mirroring
- * `moveProposal` exactly (`floor` keeps a 1-tick swap instant). Only the
- * actor pays the cooldown; the partner is merely relocated — but stays
- * RESERVED until the flip (see SwapAction's class doc). One definition,
- * three proposers: the healer's GP5 yield, the 56b mover probe, and the
- * 56c2 ranged yield.
+ * The shared swap proposal: the actor trades cells with the unit at `to`
+ * (`otherId`). Shaped as a move: score 1 by default (the ranged yield passes
+ * `YIELD_SWAP_SCORE`), and `moveProposal`'s timeline, travel, the exchange
+ * at the flip (`SwapAction.applyEffect`), recovery. Only the actor pays the
+ * cooldown; the partner is moved, and stays reserved until the flip
+ * (`SwapAction`). Proposed by the mover's swap-through (`stepAlongRoute`),
+ * the ranged yield and the flee swap (`MovementBehavior`), and the healer's
+ * yield (`SupportMovementBehavior`).
  */
 export function swapProposal(
   from: GridCoord,
@@ -675,37 +592,31 @@ export function swapProposal(
 }
 
 /**
- * E5.B — one-cell perpendicular sidestep toward `target`, used when the
- * A*-chosen next step is occupied by another unit. Considers exactly the two
- * cells perpendicular to the unit→target direction (per the E5 decision point:
- * 2 candidates, not 3 — back-step-forward is what the cost gradient already
- * does). Keeps only in-bounds, finite-cost, unoccupied cells THAT DO NOT LOSE
- * GROUND (§45b — Chebyshev to `target` <= standing still; on a pure-diagonal
- * approach both rotations are backward, so the sidestep abstains entirely),
- * and returns the one closest to the target. Returns null when neither is
- * viable, so the caller abstains and corridor queueing still emerges.
+ * A one-cell step perpendicular to the way to `target`, taken when the
+ * route's next cell is occupied. Only the two perpendicular cells are
+ * candidates; a step back and then forward is what the cost gradient
+ * already does. A candidate must be in bounds, passable, unoccupied, and no
+ * farther from `target` (Chebyshev) than standing still, so on a diagonal
+ * approach, where both rotations step back, the sidestep abstains. The
+ * nearer wins; null when neither qualifies, and the caller abstains, from
+ * which corridor queueing emerges.
  *
- * §43b — the tie rule. When both rotations are viable AND equidistant (the
- * common case: any far-enough target ties), the winner is the rotation the
- * FROM cell's checkerboard parity prefers — NOT a fixed first-candidate
- * (which was body-framed: every unit always crabbed the same body side, the
- * shared-sign drift the §42c fixtures measured). Cell parity is stateless +
- * deterministic (no RNG — the standing movement ban), and self-decorrelates
- * on every axis that matters: adjacent cells in a column alternate sides, a
- * unit's own successive cardinal steps flip parity (so a crab-walk pair nets
- * zero instead of compounding), and the rule is invariant under the 180°
- * board rotation that relates the two teams on symmetric maps (W+H even), so
- * neither team gets a preferred side. Unit-id parity (the other candidate
- * rule) was measured and rejected: spawn-order ids hand a whole team one
- * parity whenever teams interleave (both §42b fixtures do exactly that), and
- * any odd roster keeps a residual bias. Non-ties are untouched — nearer
- * still wins.
+ * A tie (the usual case: any far target ties) goes to the rotation the
+ * from-cell's checkerboard parity picks, not a fixed side, which is
+ * body-framed: every unit would crab the same way and the drift would
+ * compound. Cell parity needs no state and draws no RNG, and it
+ * decorrelates where it matters: cells next to each other in a column
+ * alternate sides, a unit's own cardinal steps flip parity so two crab steps
+ * net zero, and it is invariant under the 180° rotation that relates the
+ * teams on a symmetric map (W + H even), so neither team has a favoured
+ * side. Don't use the unit id's parity: spawn order gives a whole team one
+ * parity when teams interleave, and an odd roster keeps a bias.
  */
 export function sidestep(
   from: GridCoord,
   target: GridCoord,
   world: World,
-  // 86c-L2 — packed cell indices (`cellIndex`), matching `MovementContext.occupied`.
+  // Packed cell indices (`cellIndex`), as `MovementContext.occupied` holds.
   occupied: ReadonlySet<number>,
 ): GridCoord | null {
   const sx = Math.sign(target.x - from.x);
@@ -722,15 +633,10 @@ export function sidestep(
     if (!isFinite(world.tileGrid.costAt(c))) continue;
     if (occupied.has(cellIndex(c, world.gridW))) continue;
     const dist = chebyshev(c, target);
-    // §45b — the PROGRESS guard: never sidestep to a cell strictly FARTHER
-    // from the approach anchor than standing still. A diagonal approach makes
-    // one rotation a backward step (dist+1); pre-§45b it was taken whenever
-    // the other rotation was blocked, and pairs of such steps are the
-    // shuttle that kept riverFork's standoff oscillation at 0.92 through
-    // every §43 tie fix (286 backtracks/300t, measured). Equal-distance
-    // laterals — the sidesteps that actually unlock corridor flow — remain.
-    // The honest alternative to a backward crab is the queue abstain (or
-    // §45b's wait when the blocker's drain is derivable).
+    // Never sidestep farther from the anchor than standing still: pairs of
+    // such backward steps shuttle a unit in place. Sidesteps at equal
+    // distance, the ones that free a corridor, stay; in place of a backward
+    // step the unit queues, or waits when the blocker is leaving.
     if (dist > chebyshev(from, target)) continue;
     if (dist < bestDist) {
       best = c;
@@ -741,18 +647,16 @@ export function sidestep(
 }
 
 /**
- * Build the standard single-step move proposal. §36b — the move is NON-INSTANT:
- * `MoveAction.start` (offset 0) claims the destination + emits `unit:moved`, but
- * the unit's LOGICAL position holds at `from` until the flip. The phase timeline
- * is `travel` (the in-transit window) → a 0-length `impact` boundary (where
- * `MoveAction.applyEffect` flips `position` to `to` and releases the claim) →
- * `recovery` (the post-flip lockout tail). The flip lands at offset `floor(
- * durationTicks * SIM.moveFlipFraction)` — 50%, so a slow unit reads as still
- * mostly on its prior tile for the first half. `floor` keeps a 1-tick move
- * instant (impact at offset 0) + byte-identical to the pre-§36b model. The unit
- * stays busy for the full `durationTicks` either way (Σ phase ticks). Score
- * defaults to 1 (movement is the lowest-priority proposal); callers that need a
- * higher movement priority (the healer's panic-retreat at 5) pass it.
+ * The standard one-cell move proposal. A move is not instant:
+ * `MoveAction.start` claims the destination and emits `unit:moved`, and the
+ * unit's position stays at `from` until the flip. The timeline is `travel`,
+ * a zero-length `impact` (where `MoveAction.applyEffect` sets the position to
+ * `to` and releases the claim), then `recovery`. The flip falls at
+ * `floor(durationTicks * SIM.moveFlipFraction)`, half the move as shipped,
+ * so a slow unit reads as on its old cell for the first half; `floor` makes
+ * a one-tick move instant. The unit is busy for the whole `durationTicks`.
+ * Score 1 by default, the lowest a proposal takes; the healer's panic step
+ * passes 5.
  */
 export function moveProposal(
   from: GridCoord,
@@ -774,61 +678,49 @@ export function moveProposal(
 }
 
 /**
- * M6 — water bog-down, the move-DURATION half. Scales a normal step's lockout +
- * render-lerp window by the TileGrid cost to ENTER `dest` (1 floor, 2 shallow
- * water), so a unit genuinely WADES at the cost-2 cadence. Until M6 the tile
- * cost only weighted A* route SELECTION (`costAt` → `findPath`), never how long
- * the step took — so a unit forced through water still crossed it at full
- * speed (the gap the playtest caught). Floor cost 1 → `base` unchanged
- * (byte-identical on water-free boards); water cost 2 → 2× the move cooldown. A
- * committed step destination is always passable, so the cost is finite. Rounded
- * to whole ticks. Pairs with the `World.applyDamage` precision penalty (the
- * "miss more" half) for the full "slow + miss more" water effect.
+ * A step's duration, its lockout and its render slide: the base scaled by
+ * the tile cost of entering `dest` (`TILE_DEFS`' `cost`, 1 on floor),
+ * rounded to whole ticks, so a unit wades as slowly as A* prices the tile.
+ * A committed destination is passable, so the cost is finite. A tile's
+ * to-hit modifiers are applied in `World.applyDamage`.
  */
 export function stepDurationTicks(world: World, dest: GridCoord, base: number): number {
   return Math.round(base * world.tileGrid.costAt(dest));
 }
 
 /**
- * Penalty added (on top of tile cost) for routing through a soft-blocked cell
- * — the soft-block knob, §45a split into tiers by WHEN the cell will actually
- * hold a body at the pather's arrival (estimate: Chebyshev distance from
- * `from` × the pather's own step ticks; the window slack is
- * `vacancyWindowOwnSteps` more of those steps):
+ * The cost of entering a cell: its tile cost, plus a penalty when the cell is
+ * soft. The penalty's tier is set by when the cell will hold a body as the
+ * pather arrives, estimated as the Chebyshev distance from `from` times the
+ * pather's step ticks, with `SIM.vacancyWindowOwnSteps` more steps of slack:
  *
- *   1. **Claimed, flip inside the window** (`inboundClaimPenalty`, > static) —
- *      an in-flight mover lands there right around when the pather would:
- *      the convergence-risk case, priced ABOVE a body (the §45 charter's
- *      "a claim into the unit's path"). Also the fallback when the flip ETA
- *      can't be derived (timing unknown = assume the worst).
- *   2. **Claimed, flip long done by arrival** (`occupiedCellPenalty`) — by
- *      then it's just a body standing there, today's flat +4. This is half of
- *      what lets a corridor column drain: the leader's NEXT cell no longer
- *      reads worse than the leader itself.
- *   3. **Vacating in time** (`vacatingCellPenalty`, near-zero) — the
- *      occupant's own in-flight move flips it vacant within the window. The
- *      other half of the corridor fix: the lane ahead is cheap because it's
- *      draining.
- *   4. **Static occupant** (`occupiedCellPenalty`) — a body with no in-flight
- *      move; the pre-§45a flat +4, unchanged.
+ * 1. Claimed, flipping inside the window (`inboundClaimPenalty`, above a
+ *    body's): a mover lands there about when the pather would. Also the
+ *    price when the flip's ETA is unknown.
+ * 2. Claimed, flipped well before the arrival (`occupiedCellPenalty`): by
+ *    then, a body standing there. This is half of what lets a corridor
+ *    column drain: the leader's next cell reads no worse than the leader.
+ * 3. Vacating in time (`vacatingCellPenalty`, near zero): the occupant's own
+ *    move leaves it within the window. The other half: the lane ahead is
+ *    cheap because it is draining.
+ * 4. A body not moving (`occupiedCellPenalty`).
  *
- * A* detours around a soft cell only when the detour costs less than its
- * penalty, and routes *through* it (→ step-collision abstain / E5.B sidestep /
- * §45b wait) otherwise. Route SELECTION only: the step-commit collision check
- * and the §35b execution gate stay strict whatever these dials say. Walls +
- * half-cover never reach here (hard `blockers` in `findPath`). Every tier
- * stays finite and >= 0 so total cost stays >= 1 and the Chebyshev heuristic
- * stays admissible (gotcha #34). All tiers + the window are tunable in
- * `config/sim.json`.
+ * A* goes around a soft cell only when the detour costs less than the
+ * penalty, and otherwise through it, to the step's abstain, sidestep or
+ * wait. The penalties choose routes only: the step's collision check and the
+ * selector's destination check (`World.destinationBlocked`) stay strict.
+ * Walls and half cover never reach here (`findPath`'s hard blockers). Every
+ * penalty stays finite and at least 0, so a cell costs at least 1 and the
+ * Chebyshev heuristic stays admissible (gotcha #34). The penalties and the
+ * window are in `config/sim.json`.
  *
- * The arrival estimate is a LOWER bound (real routes bend, terrain slows), so
- * it errs toward "I'll be there sooner than I will": the vacating discount
- * stays conservative near the pather, and the claim premium window stays wide.
+ * The arrival estimate is a lower bound (routes bend, terrain slows), so it
+ * errs toward arriving early: the vacating discount stays conservative near
+ * the pather, and the claim's premium window stays wide.
  */
 export function costAt(
-  // 86c-L2 — bare (x, y), matching the CostFn boundary: this runs once per
-  // footprint cell per neighbour candidate per A* expansion, so neither a
-  // coord object nor a key string is allocated on this path any more.
+  // Bare (x, y), as the `CostFn` takes them: this runs once per footprint
+  // cell per neighbour per A* expansion, so it allocates no coord or key.
   x: number,
   y: number,
   world: World,
@@ -858,9 +750,7 @@ export function costAt(
   return tileCost + SIM.occupiedCellPenalty;
 }
 
-// §35 — `key`/`chebyshev` now live in the occupancy core (`cellKey`/
-// `distanceBetween`); re-exported here so the movement consumers
-// (MovementBehavior, SupportMovementBehavior, the propose tests) keep their
-// existing imports while the single definition lives in one place.
+// `cellKey` and `distanceBetween` live in `occupancy.ts`; the movement and
+// targeting modules import them from here under these names.
 export const key = cellKey;
 export const chebyshev = distanceBetween;

@@ -12,17 +12,13 @@ import { collectLosBlockers } from './positioning';
 import { cellIndex, cellsOccupiedBy, footprintOf, unitDistance, cellUnitDistance } from './occupancy';
 
 /**
- * Pick the best living enemy of `unit` according to its targeting strategy
- * (`unit.targeting`, resolved at spawn from the archetype). The default
- * `nearest` strategy reproduces the historical pick exactly (nearest by
- * Chebyshev, ties to lower HP then lower id); the rogue's `weakest` strategy
- * targets the squishiest enemy. Returning null is a normal outcome — the
- * caller (Step 3.5 movement, Step 3.7 attacks) treats it as "no target, idle
- * this tick."
+ * The best hostile of `unit` (`hostileCandidate`) by its targeting strategy
+ * (`unit.targeting`, from the archetype; `targetingStrategies.ts`). Null is
+ * a normal outcome: no target, and the unit idles this tick.
  *
- * Pure function: same `(unit, world.units)` always yields the same answer.
- * This stays the raw pick; E5's target *stickiness* layers on top via
- * `updateTarget` / `currentTarget`.
+ * Pure: the same `(unit, world.units)` always yields the same answer. This
+ * is the raw pick; stickiness sits on top (`updateTarget`,
+ * `currentTarget`).
  */
 export function findTarget(unit: Unit, world: World): Unit | null {
   const strategy = getTargetingStrategy(unit.targeting);
@@ -39,20 +35,22 @@ export function findTarget(unit: Unit, world: World): Unit | null {
 }
 
 /**
- * §75e — THE shared admit rule every hostile scan runs (`findTarget`, the
- * sticky validity, the engage/in-range/reachable scans, the panic-flee anchor
- * in `MovementBehavior`): may `unit` treat `candidate` as a combat hostile?
+ * The one admit rule every hostile scan runs (`findTarget`, the sticky
+ * check, the engage, in-range and reachable scans, `MovementBehavior`'s
+ * flee anchor): may `unit` treat `candidate` as a combat hostile?
  *
- *   - combatant vs combatant: opposing team (the historical rule).
- *   - combatant vs ACTIVE neutral: only once the candidate's camp is hostile
- *     to the seeker's faction (the non-aggressive default — a passive camp is
- *     scenery to targeting; the aggro mark at the damage chokepoint and the
- *     75h click-to-engage order are what flip it).
- *   - ACTIVE neutral as seeker: only factions its camp is hostile to.
- *   - inert neutrals: never, in either direction.
+ * - A combatant and a combatant: on opposing teams.
+ * - A combatant and an active neutral: only once the candidate's camp is
+ *   hostile to the seeker's team. A passive camp is scenery to targeting;
+ *   a blow on a member (`World.dealDamage`) makes it hostile to the
+ *   striker's team. An ordered target on a passive camp is honoured by
+ *   `currentTarget`, not admitted here.
+ * - An active neutral as the seeker: only the teams its camp is hostile to.
+ * - Inert neutrals: never, either way.
  *
- * Camp-vs-camp is deliberately out (hostility is per-faction, and 'neutral'
- * never lands in a hostileTo set via the chokepoint guard).
+ * Camp against camp is out: hostility is per team, and a neutral's blow
+ * marks nothing (`dealDamage`), so `'neutral'` never enters a camp's
+ * `hostileTo`.
  */
 export function hostileCandidate(unit: Unit, candidate: Unit, world: World): boolean {
   if (candidate.id === unit.id || candidate.currentHp <= 0) return false;
@@ -73,39 +71,36 @@ export function hostileCandidate(unit: Unit, candidate: Unit, world: World): boo
 }
 
 /**
- * E5 — target stickiness. Called once per free unit by the selector
- * (`World.tick`, before behaviors poll) so the re-target decision and its
- * `outOfLosTicks` counter advance exactly once per tick — never twice from
- * MovementBehavior + AbilityBehavior both resolving a target.
+ * Target stickiness. Called once per free unit by `World.tick`, before the
+ * behaviours poll, so the re-target decision and `outOfLosTicks` move once a
+ * tick, never twice from two behaviours resolving a target.
  *
  * A committed unit keeps its target until one of:
- *   (a) the target died / vanished / is no longer a valid enemy → re-pick
- *       via the unit's strategy immediately;
- *   (b) the strategy's fresh pick is a markedly better target than the
- *       current one (`strategy.shouldRetarget`) — for `nearest`, "markedly
- *       closer" (`SIM.retargetCloserRatio`); `weakest` never switches off a
- *       live mark;
- *   (c) (ranged only) the target has been out of line-of-sight for
- *       `SIM.rangedRetargetLosTicks` — stop chasing a target hiding behind
- *       a wall and re-pick.
+ *   (a) the target is dead, gone or no longer a valid hostile: re-pick by
+ *       the unit's strategy at once;
+ *   (b) the strategy's fresh pick is markedly better
+ *       (`strategy.shouldRetarget`): for `nearest`, markedly closer
+ *       (`SIM.retargetCloserRatio`); `weakest` never switches off a live
+ *       mark;
+ *   (c) for an archetype with `retargetOnLosLoss`, the target has been out
+ *       of line of sight for `SIM.rangedRetargetLosTicks`: stop chasing a
+ *       target behind a wall and re-pick.
  *
- * Neutrals (walls/half-cover) never target, so they short-circuit.
+ * Inert neutrals and passive camp members never target and return at once.
  */
 export function updateTarget(unit: Unit, world: World): void {
   if (unit.team === 'neutral') {
-    // §75e — an ACTIVE neutral with a non-empty hostility set runs acquisition:
-    // `objectiveFor('neutral')` is always atWill, so it takes the default
-    // sticky path below, and `hostileCandidate` scopes its picks to the
-    // factions its camp is hostile to. A passive camp member and inert
-    // scenery never target.
+    // An active neutral whose camp is hostile to someone acquires targets:
+    // `objectiveFor('neutral')` is always `atWill`, so it takes the default
+    // sticky path below, and `hostileCandidate` keeps its picks to the teams
+    // its camp is hostile to.
     const camp = unit.campId !== null ? world.campById(unit.campId) : undefined;
     if (camp === undefined || camp.hostileTo.size === 0) return;
   }
 
-  // 28 — a BEHAVIOR status hijacks target acquisition, preempting the team
-  // objective entirely (a confused / blinded unit's AI is overridden — it no
-  // longer follows orders). Resolved off the unit's effects (def-resolve), so it
-  // adds no serialized state. Checked before the objective branches below.
+  // A behaviour status takes over acquisition ahead of the team's objective:
+  // a confused or blinded unit no longer follows orders. Read off the unit's
+  // effects, so it adds no serialized state.
   const behavior = behaviorFlags(unit.effects);
   if (behavior.targeting === 'random') {
     updateConfusedTarget(unit, world, behavior.acquisitionRange);
@@ -119,40 +114,34 @@ export function updateTarget(unit: Unit, world: World): void {
     return;
   }
 
-  // O1 — the acting team's steering objective drives its units' target choice.
-  // `atWill` (the default + J1's no-objective) falls through to the standard
-  // path below, byte-identical to pre-O1 (the fuzz baseline unmoved); `engage`
-  // routes to the Phase-J preemption logic. The enemy team is fixed at `atWill`,
-  // so enemy AI is unchanged. (O2/O3 add `hold`/`focus` branches here.)
+  // The acting team's objective drives its units' target choice (the modes:
+  // `objective.ts`). `atWill` takes the default path at the end.
   const objective = world.objectiveFor(unit.team);
   if (objective.mode === 'engage') {
     updateObjectiveTarget(unit, world, objective.target);
     return;
   }
   if (objective.mode === 'hold') {
-    // O2 — act in place: target the best enemy ALREADY within attack range. The
-    // unit never repositions to close (`MovementBehavior` abstains under hold),
-    // so an out-of-range enemy is simply ignored → null = idle. Re-picked each
-    // tick so an enemy entering range is engaged (the permitted in-place
-    // retaliation switch); the deterministic strategy pick handles tie-breaks.
+    // Act in place: the best hostile already within attack range. The unit
+    // never moves to close (`MovementBehavior` abstains under hold), so an
+    // enemy out of range is ignored, and null idles. Picked again each tick,
+    // so an enemy entering range is engaged.
     const inRange = findInRangeEnemy(unit, world);
     unit.targetId = inRange ? inRange.id : null;
     unit.outOfLosTicks = 0;
     return;
   }
   if (objective.mode === 'focus') {
-    // O3 — the full-preempt objective (see `updateFocusTarget`).
     updateFocusTarget(unit, world, objective.target);
     return;
   }
 
-  // `atWill` (the default + J1's no-objective): the standard sticky-target path.
   updateTargetDefault(unit, world);
 }
 
 /**
- * The default ("at-will") target update: the E5 STICKY hostile pick, then the
- * §40b rubble auto-target OVERLAY.
+ * The `atWill` target update: the sticky hostile pick, then the rubble
+ * overlay.
  */
 function updateTargetDefault(unit: Unit, world: World): void {
   updateStickyTarget(unit, world);
@@ -160,15 +149,14 @@ function updateTargetDefault(unit: Unit, world: World): void {
 }
 
 /**
- * E5's sticky hostile pick — byte-identical to the pre-§40b inline body (the O3
- * fallback used it directly). Sets `unit.targetId` to the strategy's committed
- * enemy (or null); the §40b overlay may then redirect a WALLED-OFF unit onto a
- * blocking rubble.
+ * The sticky hostile pick: sets `unit.targetId` to the strategy's committed
+ * hostile, or null. The rubble overlay may then redirect a walled-off unit
+ * onto a blocking rubble.
  */
 function updateStickyTarget(unit: Unit, world: World): void {
   const committed = unit.targetId !== null ? world.findUnit(unit.targetId) : undefined;
-  // §75e — the validity test IS the shared admit rule (a live hostile camp
-  // member is as sticky as a live enemy; hostility never un-marks mid-battle).
+  // The check is the admit rule: a living hostile camp member is as sticky as
+  // a living enemy, since a camp's hostility is never cleared in a battle.
   const valid = committed !== undefined && hostileCandidate(unit, committed, world);
 
   if (!valid) {
@@ -183,11 +171,9 @@ function updateStickyTarget(unit: Unit, world: World): void {
   const strategy = getTargetingStrategy(unit.targeting);
   const candidate = findTarget(unit, world);
 
-  // (c) drop a target we've been unable to see for too long — §38c: the ranged
-  // `=== 'ranged'` special-case became the `UnitDef.retargetOnLosLoss` capability
-  // flag (read at call time off the catalog). §38d — a NEUTRAL unit (wall /
-  // half-cover) never seeks a target and is absent from the COMBATANT catalog, so
-  // the optional chain short-circuits false (the removed sentinel guard's value).
+  // (c) drop a target unseen for too long. The flag is read off the catalog
+  // at call time; a camp member is a combatant archetype and reads it as any
+  // unit does, and scenery never gets here.
   if (UNIT_DEFS[unit.archetype]?.retargetOnLosLoss) {
     const visible = hasLineOfSight(unit.position, current.position, collectLosBlockers(world));
     if (visible) {
@@ -214,26 +200,24 @@ function updateStickyTarget(unit: Unit, world: World): void {
 }
 
 /**
- * §40b — the rubble AUTO-TARGET overlay, applied after the sticky hostile pick. A
- * unit whose committed hostile it CANNOT REACH (walled off by rubble) redirects:
- * first to any hostile it CAN reach (a reachable hostile always outranks rubble —
- * the locked priority), else to the nearest approachable auto-target rubble — the
- * "deny access until destroyed" loop. Leaves the sticky pick untouched when the
- * target is reachable (the common case) or nothing chippable is in reach.
+ * The rubble overlay, after the sticky hostile pick. A unit that cannot reach
+ * its committed hostile (walled off by rubble) redirects: to a hostile it can
+ * reach, since a reachable hostile always outranks rubble, else to the
+ * nearest approachable auto-target rubble, which it breaks to get through.
+ * The sticky pick stands when its target is reachable or nothing breakable
+ * is in reach.
  *
- * GATED on the board actually holding an auto-target rubble: absent (every shipped
- * map + all fuzz layouts), this is a no-op → byte-identical (the fuzz baseline
- * holds). The reachability probes (`findPath`) then run only for a unit that can't
- * reach its committed target AND has rubble on the board — a rare, bounded subset —
- * so a normal tick pays only the cheap presence scan. (A per-tick flood-fill would
- * amortize the probes if a heavy rubble map ever needs it — a §41 perf note.)
+ * Gated on the board holding a living auto-target rubble (shipped layouts
+ * place rubble); without one it does nothing. With one, the
+ * reachability probes (`findPath`) run only for a unit that cannot reach its
+ * committed target, so a normal tick pays only the presence scan.
  */
 function applyRubbleAutoTarget(unit: Unit, world: World): void {
   if (!worldHasAutoTargetRubble(world)) return;
   const committed = unit.targetId !== null ? world.findUnit(unit.targetId) : undefined;
-  // Committed to a hostile it can reach → keep the sticky pick (the common
-  // case). §75e — the admit rule: a hostile camp commitment holds like an
-  // enemy one; a committed RUBBLE fails it and falls through to the re-rank.
+  // Committed to a hostile it can reach: keep the sticky pick. The admit
+  // rule holds a hostile camp member as it does an enemy; a committed rubble
+  // fails it and falls through to the re-rank.
   if (committed !== undefined && hostileCandidate(unit, committed, world) && canReach(unit, world, committed)) {
     return;
   }
@@ -256,31 +240,27 @@ function applyRubbleAutoTarget(unit: Unit, world: World): void {
 }
 
 /**
- * §75k — the ordered-target AUTO-BREAK fallback: the §40b overlay's sibling for
- * the ORDERED pursue paths (engage step 3 + focus, both target kinds). Those
- * branches re-commit the ordered mark every tick and never reach the atWill-only
- * overlay — so an ordered mark walled off behind auto-target rubble froze the
- * unit (empty path → no proposal; caught live on rubbleQuarry's 75j enclosure,
- * worklog §75j-close — the §75j2 pull and the 75h click-to-engage share the
- * branch). When the committed mark is a MOBILE combat target (enemy or active
- * neutral) the unit cannot reach, redirect onto the ROUTE-GATING rubble
- * (§75k2 — `routeGateRubble`, not nearest-on-the-board: the labyrinth
- * two-camp catch, worklog §75k2) — chip the gate; the per-tick re-commit
- * resumes the order the moment the breach opens (a multi-gate corridor
- * resolves one gate at a time, nearest-first, exactly this way — and once the
- * last rubble dies the cheap gate makes this a no-op again). A null probe
- * (sealed by indestructible walls, or a route blocked by bodies rather than
- * rubble) HOLDS the ordered mark and idles — chipping off-route rubble helps
- * neither case. Two deliberate omissions vs the overlay:
- *   - NO reachable-hostile re-rank — engage's steps 1–2 already own preemption,
- *     and focus preempts nothing by design (an order is an order);
- *   - an INERT committed neutral (a focus on rubble / a destructible wall) is
- *     left alone — movement bestEffort-approaches those already, and a re-rank
- *     would yank a deliberate far-rubble focus onto a nearer one.
- * Cost shape: the cheap presence gate every tick; at most TWO A* runs
- * (`canReach` + the permeable probe) only for an ordered unit that's actually
- * walled off — cheaper than the per-candidate probes `nearestApproachableRubble`
- * pays on a multi-rubble board.
+ * The rubble overlay's counterpart for an ordered target (engage's pursuit,
+ * and focus, on a unit or a neutral). Those branches commit the ordered mark
+ * again every tick and never reach the `atWill` overlay, so a mark walled off
+ * behind rubble would freeze the unit (no path, no proposal). When the
+ * committed mark is a mobile target (an enemy or a camp member) the unit
+ * cannot reach, it redirects onto the rubble that gates its route
+ * (`routeGateRubble`) and breaks it; the next tick's commit resumes the order
+ * as soon as the way opens, so a corridor with several gates is broken one
+ * gate at a time, nearest first. A null gate (sealed by walls that don't
+ * break, or blocked by bodies rather than rubble) keeps the mark and idles,
+ * since breaking rubble off the route helps neither.
+ *
+ * Unlike the overlay:
+ * - no re-rank to a reachable hostile: engage's first two steps already
+ *   preempt, and focus preempts nothing, as an order is an order;
+ * - an inert committed neutral (a focus on rubble or a destructible wall)
+ *   is left alone: movement approaches it already, and a re-rank would pull
+ *   a deliberate focus on far rubble onto nearer rubble.
+ *
+ * Cost: the presence check every tick, and at most two A* searches
+ * (`canReach` and the gate's), only for an ordered unit walled off.
  */
 function applyOrderedRubbleFallback(unit: Unit, world: World): void {
   if (unit.targetId === null || !worldHasAutoTargetRubble(world)) return;
@@ -295,39 +275,35 @@ function applyOrderedRubbleFallback(unit: Unit, world: World): void {
 }
 
 /**
- * §75k2 — the chip premium the permeable probe pays per auto-target-rubble
- * BODY CELL. Any finite value keeps the probe correct (every candidate route
- * crosses ≥1 rubble here — a rubble-free route would have made `canReach`
- * true); the premium's job is the tiebreak BETWEEN gated routes: prefer one
- * far gate over several near ones, since each gate costs a whole chip fight.
- * Sized to dominate the soft-cell penalties (`SIM.occupiedCellPenalty` +4
- * class) so a queue of bodies never reads as pricier than breaking an extra
- * gate, while staying finite/≥0 (the gotcha-#34 admissibility rule). A code
- * constant, not a `sim.json` dial — it's a routing tiebreak, not balance;
- * promote it if a real map ever needs tuning.
+ * What the gate's search adds for each auto-target rubble body cell. Any
+ * finite value finds a gate, since every route there crosses rubble (one
+ * without would have made `canReach` true); the premium breaks ties between
+ * gated routes, preferring one far gate to several near ones, as each gate
+ * is a whole fight to break. It is above every soft-cell penalty
+ * (`config/sim.json`), so a queue of bodies never prices above an extra
+ * gate, and finite and at least 0 (gotcha #34). A code constant, not a
+ * dial: it breaks routing ties and moves no balance.
  */
 const RUBBLE_ROUTE_CHIP_COST = 25;
 
 /**
- * §75k2 — the ROUTE-AWARE gate pick: the auto-target rubble that actually
- * gates `unit`'s way to `target`, or null when no rubble does. One A* over the
- * PERMEABLE graph — the unit's real movement context (same soft costs, claims,
- * terrain; `target` soft-excluded exactly as `canReach` does) with auto-target
- * rubble lifted from the hard-blocker set and its body cells priced at the
- * chip premium — then the FIRST rubble body cell along the returned route
- * names the gate. First-on-route is what makes a sequentially-gated corridor
- * (the double-gate case) resolve correctly: the near gate is chipped, the
- * breach re-probes, the next gate becomes first.
+ * The auto-target rubble that gates `unit`'s way to `target`, or null when
+ * none does. One A* over the unit's movement context (the same soft costs,
+ * claims and terrain, `target` left out as `canReach` leaves it), with
+ * auto-target rubble lifted from the hard blockers and its body cells
+ * priced at the premium; the first rubble cell on the route names the gate.
+ * First on the route is what resolves a corridor with two gates: the near
+ * one is broken, the search runs again, and the next becomes first.
  *
- * Null in two honest cases the old nearest-pick got wrong (worklog §75k2):
- *   - no route even through rubble → the target is sealed by indestructible
- *     terrain/walls — genuinely unreachable, nothing to chip toward;
- *   - a route exists with NO rubble on it → the block is transient bodies,
- *     not rubble (the soft costs route through them; queueing resolves it).
- * Both hold the ordered mark instead of chipping an off-route rubble.
+ * Null in two cases, both keeping the ordered mark rather than breaking
+ * rubble off the route:
+ * - no route even through rubble: the target is sealed by walls or terrain
+ *   that don't break;
+ * - a route with no rubble on it: bodies are in the way, not rubble, and
+ *   queueing resolves it.
  */
 function routeGateRubble(unit: Unit, world: World, target: Unit): Unit | null {
-  // 86c-L2 — packed cell indices (`cellIndex`), matching the CostFn boundary.
+  // Packed cell indices (`cellIndex`), as the `CostFn` reads them.
   const rubbleByCell = new Map<number, Unit>();
   for (const r of world.units) {
     if (r.team !== 'neutral' || r.currentHp <= 0 || !isAutoTargetNeutral(r.archetype)) continue;
@@ -359,9 +335,8 @@ function routeGateRubble(unit: Unit, world: World, target: Unit): Unit | null {
   return null;
 }
 
-/** §40b — does the board hold a living auto-target rubble? The cheap gate every
- *  tick pays before any reachability probe; false on every shipped map + fuzz
- *  layout (→ the overlay is a no-op, byte-identical). */
+/** Does the board hold a living auto-target rubble? The cheap check every tick
+ *  pays before any reachability probe. */
 function worldHasAutoTargetRubble(world: World): boolean {
   for (const u of world.units) {
     if (u.team === 'neutral' && u.currentHp > 0 && isAutoTargetNeutral(u.archetype)) return true;
@@ -370,11 +345,11 @@ function worldHasAutoTargetRubble(world: World): boolean {
 }
 
 /**
- * §40b — can `unit` get within attack range of `target`? True when already in range,
- * else when `findPath` finds a route toward it (the target soft-excluded so the path
- * may end on its cell, exactly as the MovementBehavior approach does). Reuses the
- * real pathing (same blockers/costs) so "reachable" never diverges from how the unit
- * actually moves.
+ * Can `unit` get within attack range of `target`? True when already in range,
+ * else when there is a route to it (the target left out of the soft cells so
+ * the path may end on its cell, as the approach in `positioning.ts` leaves
+ * it). The real pathing, the same blockers and costs, so "reachable" never
+ * parts from how the unit moves.
  */
 function canReach(unit: Unit, world: World, target: Unit): boolean {
   if (unitDistance(unit, target) <= unit.derived.attackRange) return true;
@@ -383,9 +358,8 @@ function canReach(unit: Unit, world: World, target: Unit): boolean {
 }
 
 /**
- * §40b — the strategy-best hostile `unit` can actually REACH (path to within attack
- * range), or null when it's walled off from every hostile. Ranked by the unit's own
- * targeting strategy so `weakest` still prefers the squishiest among the reachable.
+ * The strategy's best hostile `unit` can reach (`canReach`), or null when it
+ * is walled off from every hostile. Ranked by the unit's own strategy.
  */
 function nearestReachableHostile(unit: Unit, world: World): Unit | null {
   const strategy = getTargetingStrategy(unit.targeting);
@@ -399,12 +373,11 @@ function nearestReachableHostile(unit: Unit, world: World): Unit | null {
 }
 
 /**
- * §40b — the nearest (body-to-body) auto-target rubble `unit` can APPROACH: reach a
- * cell within attack range of its footprint. Rubble is a HARD path-blocker, so
- * approachability is a bestEffort route toward its corner whose closest-reachable end
- * lands within strike range of the body (the J3 rally-approach shape). Nearest-first,
- * with a distance guard so the (expensive) approach probe runs only on improving
- * candidates.
+ * The nearest auto-target rubble (body to body) `unit` can approach: reach a
+ * cell within attack range of its footprint. Rubble is a hard blocker, so
+ * approachable means a best-effort route toward its corner whose closest
+ * reachable end is within strike range of the body. Nearest first, so the
+ * costly approach probe runs only on a candidate nearer than the best.
  */
 function nearestApproachableRubble(unit: Unit, world: World): Unit | null {
   let best: Unit | null = null;
@@ -420,29 +393,25 @@ function nearestApproachableRubble(unit: Unit, world: World): Unit | null {
   return best;
 }
 
-/** §40b — can `unit` reach a cell within attack range of the hard-blocker `rubble`'s
- *  body? Already-adjacent short-circuits; else a bestEffort route toward the corner
- *  whose reachable end is body-adjacent. */
+/** Can `unit` reach a cell within attack range of `rubble`'s body? True when
+ *  already in range; else a best-effort route toward the corner whose
+ *  reachable end is within range of the body. */
 function canApproach(unit: Unit, world: World, rubble: Unit): boolean {
   if (unitDistance(unit, rubble) <= unit.derived.attackRange) return true;
   const ctx = buildMovementContext(unit, world);
   const path = routeToward(unit.position, rubble.position, ctx, world, true, footprintOf(unit));
   if (path.length === 0) return false;
-  // 44-pre-b promoted this file's private `minCellToBody` into
-  // `occupancy.cellUnitDistance` (same math, shared home) — deduped here.
   return cellUnitDistance(path[path.length - 1]!, rubble) <= unit.derived.attackRange;
 }
 
 /**
- * §40e — resolve a `neutral`-kind objective target's unitId to a committable
- * `targetId`: the id when it's still a LIVING DESTRUCTIBLE neutral (rubble / a
- * destructible wall or cover) — or, §75e, a living ACTIVE neutral (a camp
- * member: the manual "attack this camp" order, hostile or not — the ordered
- * blow is what aggros it) — else null. The focus + engage pursue branches
- * admit an order by it, and `World.clearResolvedObjectives` keeps one by it. Mirrors the
- * `enemy`-target validity check, but for the neutral team + the §40b HP-presence
- * destructibility gate — an indestructible (hp-less) wall is never a valid
- * target, so a stray click on one reverts to atWill rather than pinning the team.
+ * A `neutral` objective target's unit id as a `targetId` to commit: the id
+ * while it is a living destructible neutral (rubble, a destructible wall or
+ * cover) or a living camp member (an order on a camp, hostile or not: the
+ * ordered blow is what makes it hostile), else null. The focus and engage
+ * pursuits admit an order by it, and `World.clearResolvedObjectives` keeps
+ * one by it. An indestructible wall, with no hp, is never valid, so a stray
+ * click on one reverts to `atWill` rather than pinning the team.
  */
 export function validNeutralObjectiveTarget(world: World, unitId: number): number | null {
   const t = world.findUnit(unitId);
@@ -455,23 +424,20 @@ export function validNeutralObjectiveTarget(world: World, unitId: number): numbe
 }
 
 /**
- * O3 — target selection under a `focus` objective. Focus COMPLETELY PREEMPTS:
- * the unit abandons any current fight and ignores every enemy except the focus
- * — it eats hits from non-focused attackers (no retaliation break-off, by
- * design; that's the point of a force-focus). The two preemption branches
- * `updateObjectiveTarget` has for `engage` are deliberately SKIPPED here.
+ * Target selection under a `focus` objective, which preempts whole: the unit
+ * leaves its fight and ignores every hostile but the focus, taking hits from
+ * the rest without breaking off, which is what a focus is for. The two
+ * preemption steps `updateObjectiveTarget` takes for `engage` are skipped.
  *
- *   - ENEMY focus → commit straight to that unit (a beeline; the path-to-target
- *     logic in MovementBehavior drives the approach, the strike abilities fire
- *     when in range). Reverted World-side to `atWill` on the target's death.
- *   - NEUTRAL focus (§40e) → commit straight to a DESTRUCTIBLE neutral (rubble /
- *     a destructible wall or cover) — the manual "demolish this obstacle" order,
- *     which by design OVERRIDES the reachable-hostile priority (that's what focus
- *     is for). Same beeline shape as an enemy focus; reverted World-side to
- *     `atWill` when the neutral is destroyed/reaped.
- *   - TILE focus → beyond `SIM.rangedLeashCells` of the tile, targetId null
- *     (MovementBehavior beelines to the rally cell); within it, act exactly
- *     like `engage{tile}`.
+ * - A unit focus commits straight to that unit; the movement drives the
+ *   approach and the abilities fire in range. The objective reverts to
+ *   `atWill` when the target dies (`World.clearResolvedObjectives`).
+ * - A neutral focus commits straight to a destructible neutral or a camp
+ *   member (`validNeutralObjectiveTarget`), over any reachable hostile.
+ *   Reverted to `atWill` when it is gone.
+ * - A tile focus: beyond `SIM.rangedLeashCells` of the tile, `targetId` is
+ *   null and the unit goes straight for the rally cell; within it, it acts
+ *   as `engage` on the tile.
  */
 function updateFocusTarget(unit: Unit, world: World, target: ObjectiveTarget): void {
   if (target.kind === 'enemy') {
@@ -483,21 +449,20 @@ function updateFocusTarget(unit: Unit, world: World, target: ObjectiveTarget): v
       objEnemy.currentHp > 0;
     unit.targetId = valid ? objEnemy.id : null;
     unit.outOfLosTicks = 0;
-    applyOrderedRubbleFallback(unit, world); // §75k — see the fallback's doc
+    applyOrderedRubbleFallback(unit, world);
     return;
   }
   if (target.kind === 'neutral') {
-    // §40e — a manual focus on a DESTRUCTIBLE neutral (rubble / a destructible
-    // wall or cover) commits straight to it, exactly like an enemy focus: the
-    // unit abandons its fight and beelines to demolish it. `currentTarget` honors
-    // the committed destructible neutral (§40b) so the strike fires, and
-    // MovementBehavior's neutral branch drives the bestEffort approach around the
-    // hard blocker. An indestructible or dead neutral → null (World reverts the
-    // objective to atWill the same tick).
+    // Committed straight to it, as a unit focus is. `currentTarget` honours a
+    // committed destructible or camp member, so the strike fires, and the
+    // movement approaches an inert one best-effort, around the hard blocker
+    // (`positioning.ts`). An invalid one gives null, and the objective
+    // reverts to `atWill` at the top of a tick, before the units step
+    // (`World.clearResolvedObjectives`).
     unit.targetId = validNeutralObjectiveTarget(world, target.unitId);
     unit.outOfLosTicks = 0;
-    // §75k — a focused CAMP member behind rubble gets the auto-break too (the
-    // inert guard inside keeps a deliberate rubble/wall focus un-re-ranked).
+    // A focused camp member behind rubble gets the break too; the fallback
+    // leaves a focus on rubble or a wall as it is.
     applyOrderedRubbleFallback(unit, world);
     return;
   }
@@ -513,24 +478,23 @@ function updateFocusTarget(unit: Unit, world: World, target: ObjectiveTarget): v
 }
 
 /**
- * J1 — target selection for a unit under an `engage` objective (the acting
- * team's `TeamObjective.target`; O1 generalized this off the player-only
- * gating). The Phase-J preemption rules, in priority order:
+ * Target selection under an `engage` objective (the acting team's, a
+ * player's order or the enemy's camp pull), in order:
  *
- *   1. ENGAGED → not preempted. A unit with a valid committed target inside its
- *      engage radius keeps fighting; the objective doesn't yank it off. (It may
- *      still switch to a markedly-better engageable enemy via the strategy's
- *      `shouldRetarget`, the same anti-thrash margin as the default path.)
- *   2. EN ROUTE → an engageable enemy preempts the objective. "Engageable" =
- *      within the leash-capped engage radius, OR retaliation (see
- *      `objectiveEngages`). Picked with the unit's own targeting strategy.
- *   3. PURSUE the objective. An `enemy` objective becomes the target (so the
- *      unit paths toward + attacks it; auto-cleared World-side on its death). A
- *      `tile` objective leaves `targetId` null → `MovementBehavior` walks toward
- *      the cell and the strike abilities abstain (`currentTarget` returns null).
+ *   1. Engaged: not preempted. A unit with a valid committed enemy inside
+ *      its engage radius keeps fighting; the objective doesn't pull it off.
+ *      It may still switch to a markedly better engageable hostile by its
+ *      strategy's `shouldRetarget`, as the default path does.
+ *   2. On the way: an engageable hostile preempts the objective (within the
+ *      leashed engage radius, or retaliating: `objectiveEngages`), picked by
+ *      the unit's strategy.
+ *   3. Pursue the objective. A unit or neutral target becomes the target,
+ *      so the unit paths to it and attacks; the objective reverts when it is
+ *      gone. A tile leaves `targetId` null: the movement walks to the cell
+ *      and the abilities abstain (`currentTarget` returns null).
  *
- * Mutates `unit.targetId` / `outOfLosTicks` exactly like the default
- * `updateTarget`, so it stays the once-per-tick authority on the sticky target.
+ * Sets `unit.targetId` and `outOfLosTicks` as the default path does, so
+ * `updateTarget` stays the once-a-tick authority on the target.
  */
 function updateObjectiveTarget(unit: Unit, world: World, target: ObjectiveTarget): void {
   const strategy = getTargetingStrategy(unit.targeting);
@@ -568,9 +532,7 @@ function updateObjectiveTarget(unit: Unit, world: World, target: ObjectiveTarget
   // 3. Pursue the objective itself.
   if (target.kind === 'enemy') {
     const objEnemy = world.findUnit(target.unitId);
-    // §75e — team-relative (was hard-coded `=== 'enemy'`, a latent player-only
-    // assumption): mirrors the focus arm exactly. Byte-identical for the
-    // player team (`!== 'player' && !== 'neutral'` ⇒ `=== 'enemy'`).
+    // Relative to the unit's team, as the focus branch's check is.
     const objValid =
       objEnemy !== undefined &&
       objEnemy.team !== unit.team &&
@@ -578,34 +540,31 @@ function updateObjectiveTarget(unit: Unit, world: World, target: ObjectiveTarget
       objEnemy.currentHp > 0;
     unit.targetId = objValid ? objEnemy.id : null;
   } else if (target.kind === 'neutral') {
-    // §40e — pursue a DESTRUCTIBLE neutral (rubble / a destructible wall). Unlike
-    // focus, engage still let an engageable hostile preempt above (steps 1–2);
-    // with none engageable, the unit commits to demolishing the obstacle.
+    // A destructible neutral or a camp member. Unlike focus, engage let an
+    // engageable hostile preempt above; with none, the unit commits to it.
     unit.targetId = validNeutralObjectiveTarget(world, target.unitId);
   } else {
-    // Tile objective: no enemy target; MovementBehavior paths toward the cell.
+    // A tile: no target; the movement paths toward the cell.
     unit.targetId = null;
   }
   unit.outOfLosTicks = 0;
-  // §75k — an unreachable ordered mark falls back to chipping the gate rubble
-  // (self-no-ops for the tile branch: targetId is null).
+  // An unreachable ordered mark falls back to breaking the gate rubble; a tile
+  // has no mark, and the fallback does nothing.
   applyOrderedRubbleFallback(unit, world);
 }
 
 /**
- * J1 — the best ENGAGEABLE enemy of a player `unit` under an objective, ranked
- * by the unit's targeting strategy (so `weakest` still prefers the squishiest
- * among the engageable set). The eligible set is `findTarget`'s, further
- * filtered by `objectiveEngages` — only enemies the unit may break off the
- * objective for. Returns null when nothing is engageable (→ pursue the
- * objective).
+ * The best engageable hostile of `unit` under an objective, ranked by its
+ * strategy: `findTarget`'s set, filtered by `objectiveEngages` to the
+ * hostiles the unit may leave its objective for. Null when none is (and the
+ * unit pursues the objective).
  */
 function findEngageableEnemy(unit: Unit, world: World): Unit | null {
   const strategy = getTargetingStrategy(unit.targeting);
   let best: Unit | null = null;
   for (const candidate of world.units) {
-    // §75e — the admit rule: a HOSTILE camp member inside the leash preempts
-    // the objective exactly as an enemy does (hostile camps are threats).
+    // The admit rule: a hostile camp member inside the leash preempts as an
+    // enemy does.
     if (!hostileCandidate(unit, candidate, world)) continue;
     if (!objectiveEngages(unit, candidate)) continue;
     if (best === null || strategy.compare(candidate, best, unit, world) < 0) {
@@ -616,15 +575,14 @@ function findEngageableEnemy(unit: Unit, world: World): Unit | null {
 }
 
 /**
- * O2 — the best enemy within a Chebyshev `range` of `unit`, ranked by the unit's
- * targeting strategy. `findTarget` with a hard range filter and no leash /
- * retaliation nuance — pure "in reach or not." Two callers:
- *   - O2 hold-mode (default `range = derived.attackRange`): a held unit acts on
- *     what's in strike reach and never moves to close.
- *   - 28 blind (`range = acquisitionRange`): a blinded unit only acquires a foe
- *     inside its crippled sight, else idles.
- * Returns null when nothing is in reach. Deterministic (the strategy tie-break;
- * no RNG).
+ * The best hostile within `range` of `unit`, by body distance, ranked by its
+ * strategy: `findTarget` with a hard range and no leash or retaliation. Two
+ * callers:
+ *   - hold (`range` defaults to `derived.attackRange`): a held unit acts on
+ *     what is in strike reach and never moves to close;
+ *   - blind (`range` is the status's `acquisitionRange`): a blinded unit
+ *     acquires only inside its shortened sight, else idles.
+ * Null when nothing is in reach. No RNG: the strategy breaks ties.
  */
 function findInRangeEnemy(
   unit: Unit,
@@ -634,11 +592,11 @@ function findInRangeEnemy(
   const strategy = getTargetingStrategy(unit.targeting);
   let best: Unit | null = null;
   for (const candidate of world.units) {
-    // §75e — the admit rule (a held/blinded unit acts on a hostile camp
-    // member in reach exactly as on an enemy).
+    // The admit rule: a held or blinded unit acts on a hostile camp member
+    // in reach as on an enemy.
     if (!hostileCandidate(unit, candidate, world)) continue;
-    // 44-pre-c — footprint distance (byte-identical today: every admissible
-    // candidate is 1×1; the honest measure the moment a multi-tile one ships).
+    // The body distance; every admitted candidate is one cell, so it is the
+    // cell distance.
     if (unitDistance(unit, candidate) > range) continue;
     if (best === null || strategy.compare(candidate, best, unit, world) < 0) {
       best = candidate;
@@ -648,26 +606,24 @@ function findInRangeEnemy(
 }
 
 /**
- * 28 — target selection under CONFUSION (`targeting:'random'`). Picks a uniformly
- * random LIVING, non-neutral unit — of ANY team, INCLUDING the unit's own — within
- * the confusion acquisition `radius` (Chebyshev; bounded so confusion isn't
- * omniscient), excluding the unit itself. The any-team pick is the friendly-fire:
- * `currentTarget` honors an ally mark under confusion, and single-target damage
- * has no team check, so the confused unit simply strikes whatever it rolled. A
- * confused AoE additionally forces `affects:'all'` at fire time (see the
- * interpreter). Rolls on `combatRng` (where targeting rolls live); null = no
- * candidate in radius → idle. Candidates iterate in `world.units` order, so the
- * roll is deterministic given the seed.
+ * Target selection under confusion (`targeting: 'random'`): a uniformly
+ * random living unit of any team, the unit's own included, or a camp member,
+ * within the status's `radius` (Chebyshev; bounded, so confusion isn't
+ * omniscient), the unit itself excluded. The any-team pick is the friendly
+ * fire: `currentTarget` honours an ally mark under confusion, and the unit
+ * strikes whatever it rolled. A confused caster's blast hits its own side
+ * too (the interpreter). Rolls on `combatRng`; null, with no candidate in
+ * the radius, idles. Candidates go in `world.units` order, so the roll is
+ * deterministic from the seed.
  */
 function updateConfusedTarget(unit: Unit, world: World, radius: number | null): void {
   const r = radius ?? Infinity;
   const candidates: Unit[] = [];
   for (const candidate of world.units) {
     if (candidate.id === unit.id) continue;
-    // §75e design call (chaos is chaos): ACTIVE neutrals join the confusion
-    // pool regardless of hostility — a confused unit may swing at a passive
-    // camp member (and the landed hit then aggros the camp via the damage
-    // chokepoint). Inert scenery stays out.
+    // A camp member is in the pool whatever its camp's hostility: a confused
+    // unit may strike a passive camp member, and the blow makes the camp
+    // hostile (`World.dealDamage`). Inert scenery stays out.
     if (candidate.team === 'neutral' && candidate.campId === null) continue;
     if (candidate.currentHp <= 0) continue;
     if (chebyshev(unit.position, candidate.position) > r) continue;
@@ -681,18 +637,18 @@ function updateConfusedTarget(unit: Unit, world: World, radius: number | null): 
 }
 
 /**
- * J1 — may `unit` break off its objective to engage `enemy`? Two gates:
+ * May `unit` break off its objective to engage `enemy`? Two gates:
  *
- *   - PROXIMITY: within the engage radius `min(attackRange, rangedLeashCells)`.
- *     The `min` is the leash: a long-range unit's engage radius is CAPPED at
- *     `rangedLeashCells` so an archer doesn't abandon the objective to plink
- *     every distant enemy in reach, while melee (range 1) is unaffected.
- *   - RETALIATION: the enemy is actively attacking this unit (committed to it
- *     AND within its own attack range) and the unit can shoot back (within its
- *     own attack range). This is what lets a leashed archer defend itself
- *     against an attacker beyond the leash — the only escape hatch past the cap.
+ *   - Proximity: within the engage radius `min(attackRange,
+ *     rangedLeashCells)`. The `min` is the leash: a long-range unit's radius
+ *     is capped, so an archer doesn't leave the objective to plink every
+ *     distant enemy in reach, and melee (range 1) is unaffected.
+ *   - Retaliation: the enemy is attacking this unit (committed to it and
+ *     within its own range) and the unit can shoot back (within its own
+ *     range). This lets a leashed archer defend itself against an attacker
+ *     beyond the leash, the only way past the cap.
  *
- * Pure; no RNG. Chebyshev throughout (the grid's 8-dir metric).
+ * Pure; no RNG. Chebyshev throughout, the grid's eight-way metric.
  */
 function objectiveEngages(unit: Unit, enemy: Unit): boolean {
   const d = chebyshev(unit.position, enemy.position);
@@ -707,31 +663,32 @@ function objectiveEngages(unit: Unit, enemy: Unit): boolean {
 }
 
 /**
- * E5 — the enemy a unit is acting against this tick: its sticky
- * `targetId` when that still resolves to a living enemy, else the nearest
- * enemy. Behaviors (MovementBehavior, the strike abilities) call this
- * instead of `findTarget` directly. The nearest-enemy fallback means a
- * behavior polled WITHOUT a prior `updateTarget` (e.g. a unit test calling
- * `proposeAction` straight) still gets a sensible target rather than
- * abstaining on a null commitment.
+ * The unit a unit acts against this tick: its committed `targetId` while
+ * that still resolves to a target it may act on, else `findTarget`'s pick
+ * (under `atWill`). Behaviours (`MovementBehavior`, the abilities) call this,
+ * not `findTarget`. The fallback means a behaviour polled with no
+ * `updateTarget` before it (a test calling `proposeAction` directly) still
+ * gets a target rather than abstaining. A blinded unit with nothing inside
+ * its acquisition range takes the fallback too, so a blinded ranged unit
+ * still strikes out to its attack range.
  */
 export function currentTarget(unit: Unit, world: World): Unit | null {
-  // 28 — a CONFUSED unit's mark may be an ALLY (`updateConfusedTarget` picks any
-  // team). Honor any living non-neutral commitment, and NEVER fall back to the
-  // normal enemy pick (that would silently "cure" the confusion); its mark is
-  // re-rolled each tick, so a null here is a deliberate "no candidate → idle."
+  // A confused unit's mark may be an ally (`updateConfusedTarget` picks any
+  // team). Honour a living commitment of any team, and never fall back to the
+  // normal pick, which would cure the confusion; its mark is rolled again each
+  // tick, so a null here means no candidate, and it idles.
   const confused = behaviorFlags(unit.effects).targeting === 'random';
   if (unit.targetId !== null) {
     const t = world.findUnit(unit.targetId);
     if (t !== undefined && t.currentHp > 0) {
-      // §40b — a committed DESTRUCTIBLE neutral (the rubble the auto-target hook
-      // chose to chip) is honored so the strike + movement act on it; an
-      // indestructible wall/half-cover never is. §75e — an ACTIVE-neutral
-      // commitment is honored regardless of hostility: commitments only arise
-      // from the hostility-gated acquisition paths, the confusion re-roll, or
-      // a manual engage/focus order on a passive camp — and that ordered first
-      // blow must land (it's what aggros the camp). A confused unit never
-      // chips rubble — its mark re-rolls among combatants + active neutrals.
+      // A committed destructible neutral (rubble the overlay chose, an
+      // ordered wall) is honoured, so the strike and the movement act on it;
+      // an indestructible wall or cover never is. A committed camp member is
+      // honoured whatever its camp's hostility: a commitment comes only from
+      // the hostility-gated acquisition, the confusion roll, or an order on a
+      // passive camp, and that ordered first blow must land, as it makes the
+      // camp hostile. A confused unit never breaks rubble: its mark is rolled
+      // among combatants and camp members.
       if (t.team === 'neutral') {
         if (t.campId !== null) return t;
         if (!confused && isDestructibleNeutral(t.archetype)) return t;
@@ -741,31 +698,25 @@ export function currentTarget(unit: Unit, world: World): Unit | null {
     }
   }
   if (confused) return null;
-  // O1 — under a non-`atWill` objective, a unit's null `targetId` is DELIBERATE
-  // (set by `updateObjectiveTarget`: no engageable enemy, so it's pursuing a
-  // tile objective). Suppress the nearest-enemy fallback here so it doesn't
-  // chase the whole map instead of honoring the objective. The fallback
-  // otherwise stays for `atWill` (the default + J1's no-objective case) and for
-  // unit tests that poll a behavior without a prior `updateTarget`.
+  // Under any objective but `atWill`, a null `targetId` is deliberate: a tile
+  // pursued, nothing in a held unit's range, an ordered target gone. No
+  // fallback, or the unit would chase the map instead of the objective.
   if (world.objectiveFor(unit.team).mode !== 'atWill') return null;
   return findTarget(unit, world);
 }
 
 /**
- * E7.B — the healer's target pick: the lowest-HP *wounded* ally within
- * `range` (Chebyshev), INCLUDING the healer itself (per the E7.B design
- * call — a fragile solo healer can self-heal, so it sits in its own
- * ally pool). "Wounded" = `currentHp < maxHp`, so a full-HP ally is never
- * targeted (a 0-delta heal is wasted). No line-of-sight requirement — heal
- * is a magic support buff, not a shot (E7.B call), so a wall between healer
- * and ally doesn't block it. Ties on `currentHp` go to the lower id for
- * determinism; returns null when nobody in range is hurt.
+ * A heal's target (the `lowestHpAlly` selector): the lowest-HP wounded ally
+ * within `range` (Chebyshev), the healer itself included, so a lone healer
+ * can heal itself. Wounded is `currentHp < maxHp`, so a full ally is never
+ * picked. No line of sight is needed: a heal is not a shot, and a wall
+ * between healer and ally doesn't block it. Ties on `currentHp` go to the
+ * lower id; null when nobody in range is hurt.
  */
 export function lowestWoundedAlly(unit: Unit, world: World, range: number): Unit | null {
   let best: Unit | null = null;
   for (const candidate of world.units) {
-    // Same team only — this naturally excludes enemies AND neutral walls
-    // (team 'neutral'), and naturally INCLUDES `unit` itself.
+    // Same team only: enemies and neutrals are out, and `unit` itself is in.
     if (candidate.team !== unit.team) continue;
     if (candidate.currentHp <= 0) continue;
     if (candidate.currentHp >= candidate.derived.maxHp) continue;
@@ -780,7 +731,3 @@ export function lowestWoundedAlly(unit: Unit, world: World, range: number): Unit
   }
   return best;
 }
-
-/* §44a — `collectLosBlockers` / `firingBandCell`
-   moved to [positioning.ts](positioning.ts), the WHERE-knowledge home (the
-   re-target LOS check above imports the pool back from there). */

@@ -6003,3 +6003,100 @@ signed for Round 9 with the ability-grant channel and a World bump. Batch
 searching TODO first; that line is removed. Its wording was wrong too: it
 named a resume as affected, and the game saves the run, not the battle,
 so only the bot's look-ahead copies a battle that way.
+
+### 122o, batch 6 — movement and targeting (2026-10-15, session 6ea507e4)
+
+`movement.ts`, `Targeting.ts`, `targetingStrategies.ts`, `moveDecision.ts`.
+Every step code is out (206), and the history with them: the layering's
+story, the measured flicker and crab-walk numbers, the perf gates tried
+and rejected, the tie rules' fixtures. A rejected alternative that a
+change must not bring back stays as a rule: no gate that skips the stable
+route's search, no in-band check on the swap-through, no unit-id parity
+for the sidestep, no speed order among melee.
+
+**Statements found false and corrected (rule 7)**, each checked against
+the code or the config:
+
+- *The leap.* The header said no shipped ability takes `advance`'s leap
+  and N1 would add `DashAbility`; the dash lands through `leapLanding`
+  (`proposeSelfMove` in `effects/propose.ts`), and only tests call
+  `advance` with `maxCells > 1`. `leapLanding` said `DashAbility` builds
+  the proposal; no such class exists.
+- *`movement.ts`, the rest.* The context named `isActiveNeutral` as the
+  active-neutral test (only its test calls it; the code reads
+  `isInertNeutral`), and `cellsOccupiedBy` as one cell "today" (rubble
+  spans 2×2 and 3×3). `MovementIntent.goals` sent the reader to GOTCHAS
+  for the freeze (no gotcha holds it); `bestEffort` named the rally alone
+  (the rubble approach sets it too); `sidestepWhenBlocked` named its
+  default's users and a future consumer (no consumer sets it). `advance`
+  said an ability scores 10 (the dash proposes at 5; a move is below every
+  ability that proposes). `YIELD_SWAP_SCORE` had every priority at 10 (the
+  dash 5, `inspire` 0; 10 is the most). `swapProposal` named three
+  proposers; the flee swap is a fourth. `stepDurationTicks` named water as
+  the tile that slows (sand 2, hills 3, mud 4 too). The sidestep's tie rule
+  said movement draws no RNG; a blinded unit's wander draws on
+  `combatRng`. The re-export named three importers; eight modules import
+  the two names.
+- *`Targeting.ts`.* `findTarget` called `weakest` the rogue's (the rogue
+  targets `nearest`, as every shipped archetype does). `updateTarget` said
+  the enemy team is fixed at `atWill` (the camp pull sets it) and that
+  neutrals never target (a hostile camp's members do).
+  `applyRubbleAutoTarget` and `worldHasAutoTargetRubble` called the overlay
+  a no-op on every shipped map (three layouts place rubble).
+  `findEngageableEnemy` served "a player unit" (the pull is an enemy
+  engage). The focus and engage branches named destructibles as the only
+  neutral targets (a camp member is one, `validNeutralObjectiveTarget`)
+  and `MovementBehavior`'s neutral branch as the approach
+  (`positioning.ts`). A neutral focus's revert came "the same tick"; it
+  comes at a tick's top, before the units step. `updateConfusedTarget`
+  drew from non-neutrals (camp members are in the pool). `currentTarget`
+  fell back to "the nearest enemy" (the strategy's pick) and named only a
+  tile objective for a deliberate null (a hold, a gone order too). The
+  re-target's line-of-sight note said a neutral is absent from the
+  combatant catalog; a camp member is a combatant archetype and reads the
+  flag.
+- *`targetingStrategies.ts`.* The header had the strategy resolved at
+  spawn and stashed, keeping `Targeting.ts` free of the config layer; the
+  id is stashed and the strategy looked up at each pick, and
+  `Targeting.ts` imports `config/units`. `weakest` was "the rogue's
+  assassin policy" (no shipped archetype takes it).
+
+**Lead, put in TODO "§122 sim":** a blinded ranged unit strikes past its
+acquisition range. Under `atWill`, blind leaves `targetId` null when
+nothing is within range 1, and `currentTarget`'s fallback hands the
+abilities `findTarget`'s pick. A probe in `output/wt-122o` (removed after):
+a blinded archer fired once at an enemy 3 cells away in 60 ticks, as the
+sighted control did; the tests pin only a melee unit. The comment now says
+so. A behaviour change, for the user to place.
+
+**Leads, not built (deletions for a census or a re-skim):** the
+`weakest` strategy, which only tests reach; `advance`'s leap branch and
+its tests, since the dash lands through `leapLanding`; the
+`sidestepWhenBlocked` option, which nothing sets.
+
+Measured (`comment-length` on copies at `4b106ed4` and after, under the
+ignored `output/122o-b6/` and `output/122o-b6-after/`): comment lines 986
+→ 782, words 8,406 → 6,668, code lines 836 unchanged. The step-code
+ceiling 4,645 → 4,439.
+
+Proof: `comment-strip HEAD src`, comments only, exit 0. The control in
+`output/wt-122o`, a worktree of `4b106ed4` with a `node_modules`
+junction, the four files copied in: unplanted exit 0; with
+`YIELD_SWAP_SCORE = 12` planted as `13`, exit 1 naming that line (643 →
+562); restored from a copy, byte-identical to the live file. After two
+later comment edits (`currentTarget`'s blind note, `moveDecision.ts`'s
+`boxed`), the final files copied in again: unplanted exit 0.
+
+Cost: 121,140 at 22:34 UTC by the tool's clock as the batch started (the
+session's first reading was 83,839, before the orientation), 308,189 at
+22:51 after the proof and the probe: 187k for 1,894 lines, 99 a line,
+the blindness probe and the facts behind `Targeting.ts`' objective
+branches taking much of it. The six batches: 835k for 11,638 lines, 72 a
+line.
+
+**Read** (`batch`): `git show <batch 6's commit> -- src/sim/movement.ts
+src/sim/Targeting.ts`. Wrong looks like a step code or history left, a
+claim the code contradicts (the dash's path, the objective branches'
+neutral targets, the strategies' users), or a rule cut that a change must
+respect: the goal fallback, the strict collision sets beside the soft
+prices, the swap's role order, the stable route's gate.

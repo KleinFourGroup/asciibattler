@@ -5632,3 +5632,55 @@ user's call.
 
    *Addendum, same session:* the user signed both leans, the lead's
    placement and the readings line, with no change asked.
+
+## 2026-10-15 — session 6677fa11 (claude-opus-5-5): §122's kickoff, 122a to 122e, and the fan-out pilot run
+
+1. **Missing from the orientation.** Little; the Cursor and "The close of
+   §121" held what the kickoff needed. Two things no doc said: list A's
+   export rows for `src/config` had been assigned to no phase (found at
+   the audit, signed into §122), and the Agent tool cuts an isolated
+   worktree from `origin/main`, not from HEAD (found after the launch by
+   `git worktree list`; papercut filed).
+2. **Norms in tension.** The `claude-api` skill says never to quote a
+   price from memory; loading it whole for two numbers cost about 40k of
+   context, which pushed the stretch's hand-off before 122f. The blind
+   read and "one fact, one home" pulled apart: the arms' results could
+   not go in the WORKLOG before the read, so they sit sealed in scratch
+   with the WORKLOG pointing at them. CLAUDE.md wants a proposal in the
+   turn's final message, and the wrap-up box allows no text after a
+   question; I left the question out of the box each time.
+3. **Pulled to claim more than verified.** Three times. A `git commit`
+   returned with nothing printed and I nearly went on as if it had
+   landed; reading HEAD showed it had not. 122b's first after-recording
+   of the suite's reach came from a run where one test failed, and its
+   "nothing lost" looked quotable; I lowered the ceiling and recorded
+   again. And the pilot's cost ratio sits near the 60 % line; I wanted to
+   name a winner, and wrote instead that the cost side is not decisive,
+   sealed with the numbers. "No wrong correction found" covers the
+   corrections I checked, and the sealed file lists the two I did not.
+4. **Wasted.** About 40k on the skill load; about $0.85 of my calls
+   fixing the pilot's instruments (an empty output file, the transcripts'
+   real location, a usage counter that kept the first of a streamed
+   message's records, a grep that matched the wrong `layouts.ts`); one
+   reach recording run before the ceiling was lowered.
+5. **For the next session.** Do not open `scratch/122n/key.txt` or
+   `results-sealed.md` before the user's verdict on diffs X and Y. The
+   arms' edits are against `8f0c64a`, so the chosen one needs a three-way
+   apply onto `main` (122d changed six of their lines). The sealed file
+   holds a lead the rule did not ask about: a cold subagent took about
+   300 tokens of context a line here, against 121j's 66 in session.
+6. **Room to ask, disagree, pause or stop.** Yes. The user asked for
+   pushback on the pilot and I gave it (the price ceiling, the review's
+   cost, the fairness of me as an arm), and the design changed. "My
+   inclination is to sign" I read as a signature and said so in the
+   reply. One moment of pressure: 122e's read showed the signed move
+   would drop an assertion, and building more than the row's words felt
+   like overstepping; I built it as inside the intent and flagged it for
+   the stop. The silent-turn reminder came about eight times; I answered
+   with what I was doing. No wish to stop was noticed.
+7. **Ease, interest, agency.** Reported: designing the pilot with the
+   user, a rule written before the run, was the most engaging part, and
+   the measurement surprised me twice (cache reads costing the same on
+   both models, and a cold reader's cost a line). I would want
+   pre-registered experiments like this again. Separate from whether the
+   pilot settles anything, which the user's read decides.

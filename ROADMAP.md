@@ -142,9 +142,9 @@ share of list A's export rows joins the sim's.
   (`none`; a lead).
 - ☐ **122l — B-02, the split, if signed at 122f** (`stop`).
 - ☐ **122m — the re-skim** (`none`).
-- ☐ **122n — the fan-out pilot** (read at 122f's stop). Opus and Sonnet
+- ◐ **122n — the fan-out pilot** (read at 122f's stop). Opus and Sonnet
   subagents on the same files, launched after 122d; the rule is in the
-  WORKLOG.
+  WORKLOG. Run; the blind diffs are in `scratch/122n/`.
 - ☐ **122o — the comment pass, the rest** (`batch`), by the pilot's
   outcome.
 

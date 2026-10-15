@@ -4896,3 +4896,53 @@ the impact at offset 5. The tick numbers are the old tests' own.
 Proof (test): typecheck clean; the two moved tests pass; `reach-diff` of
 the suite recorded at `20019a1` and after, through the 3 changed files:
 nothing lost. The step-code ceiling 5,765 → 5,761.
+
+Reading: 410,317 at 14:03 on the commit, `9ca9b6c`. Control, after the
+commit: `plant` bumped each moved test's cooldown by one in a worktree
+of `9ca9b6c` (10 → 11, 20 → 21), and the suite CAUGHT each, one file
+failing; unplanted, the worktree's suite fails `tests/licences.test.ts`
+alone, which the tool sets aside.
+
+### 122n — the fan-out pilot, run; its results sealed for the blind read (2026-10-15, session 6677fa11)
+
+**Correction to the pre-registration:** the Agent tool cut both
+worktrees from `origin/main`, `8f0c64a` (21 commits behind `20019a1`),
+not from HEAD. Both arms had the same base, so the comparison holds;
+the eight files differ from HEAD only by 122d's `export` word on six
+lines in five of them, and every check below ran against `8f0c64a`.
+
+What can be said before the read, of both arms alike: each edited the
+eight files and nothing else; each passes `comment-strip` against
+`8f0c64a` (exit 0, and exit 1 naming the line with one code token
+planted in `xp.ts`), run in a control worktree with each arm's files
+copied in; each left none of the eight files' 74 step codes and no `§`;
+each caught all of K1 to K8; each reported about twenty rule-7
+corrections, and every one the session checked against the code held,
+with no wrong correction found. Each cut about a fifth of the eight
+files' 465 comment lines. The two arms' tokens, times, prices and
+the session's review costs, and which arm is which, are in
+`scratch/122n/results-sealed.md` and `scratch/122n/key.txt`; the session
+that runs 122f's stop opens neither before the user's verdict.
+
+**The read**, at 122f's stop: `scratch/122n/diff-X.diff` and
+`diff-Y.diff` (936 and 948 lines of unified diff of the eight files
+against `8f0c64a`; the labels drawn by `crypto.randomInt`, the files'
+times set equal). What it asks: which diff is better, or equal, by the
+seven rules; and whether either arm's way of reading rule 1 on code is
+the one to sign for the rest of the pass. Wrong looks like a step code
+or history kept, a claim the code contradicts, a fact said twice, or a
+comment cut that a reader needs to change the code safely. Then the key
+and the costs are opened, and the rule above applies. The cost side
+reads close to its 60 % line and the sealed file says why; it also
+holds a lead the rule did not ask about, on what a cold subagent costs
+a line.
+
+The arms' worktrees stay at `.claude/worktrees/agent-*` until the read,
+so the chosen arm's edits can be brought onto `main` (a three-way
+apply, since `main` has 122d's six lines). The instruments are in the
+session's scratch and are not kept: the usage counter had a first-record
+bug, fixed and checked against the harness's own count (263,722 and
+282,718 against 268,775 and 286,198).
+
+Readings: 441,511 at 14:15 after the first arm's checks; 458,004 at
+14:22 after the second's and the draw.

@@ -143,8 +143,8 @@ share of list A's export rows joins the sim's.
   corpus 0 of 30, fuzz diff PASS, lines −2.
 - ☑ **122j — B-17, one `chebyshev`** (`none`). Kept; corpus 0 of 30,
   fuzz diff PASS, lines −14.
-- ☐ **122k — the focus-tile directive folded into `updateFocusTarget`**
-  (`none`; a lead).
+- ☑ **122k — the focus-tile directive folded into `updateFocusTarget`**
+  (`none`; a lead). Kept; a file and a type gone, lines −58.
 - ~~**122l — B-02, the split, if signed at 122f**~~ — a trial in Round 9,
   signed at 122f (META-ROADMAP §Round 9).
 - ☐ **122m — the re-skim** (`none`).

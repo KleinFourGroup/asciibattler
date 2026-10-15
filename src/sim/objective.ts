@@ -36,7 +36,7 @@ import type { GridCoord } from '../core/types';
  *    hits from non-focused enemies; no retaliation break-off) to converge on
  *    the focus. An ENEMY focus = beeline to that unit, ignore everything else
  *    (`Targeting.updateFocusTarget`). A TILE focus beelines to the tile and then
- *    engages around it (`src/sim/focusTile.ts`). A dead focus enemy reverts to
+ *    engages around it (`Targeting.updateFocusTarget`). A dead focus enemy reverts to
  *    `atWill` (mirrors engage); a tile focus persists.
  *
  * Stored per-team on `World` (`objectiveFor(team)`); the ENEMY team is fixed at

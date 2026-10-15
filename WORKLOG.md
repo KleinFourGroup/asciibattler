@@ -5401,3 +5401,29 @@ bar: about −56 across `src` and the tests.
 3. *No new parameter.*
 4. *Gone:* a file (`focusTile.ts`), a type (`FocusTileDirective`) and a
    test file.
+
+**Built.** `updateFocusTarget` asks the comparison itself: within
+`SIM.rangedLeashCells` of the tile it engages as `engage{tile}` does,
+beyond it the target is null. `focusTile.ts`, its type and
+`focusTile.test.ts` are deleted; the boundary is pinned by one new test in
+`Targeting.test.ts` (exactly the leash engages an adjacent enemy, one
+cell beyond pursues), through `updateTarget` like the file's other focus
+tests. The four comments and ARCHITECTURE's tree no longer name the file.
+
+Against the bar:
+
+1. *Behaviour: held.* Typecheck clean. The corpus, 0 of 30. The fuzz diff
+   against `3c2363df`: PASS, both shapes. `reach-diff --from=3c2363df`
+   of the suite, recorded before and after: nothing lost across 9 changed
+   files (the after run failed only the step-code ceiling's test, which
+   this commit lowers). The plants, in a worktree of an unreferenced
+   commit of the tree (`8e0097b`), at `Targeting.ts:507`: the boundary
+   (`<=` → `<`) CAUGHT by the suite, 3 files (`Targeting.test.ts`,
+   `chaos.test.ts`, `corpus-quick.test.ts`), and by the corpus, 12 of
+   30; the condition negated, CAUGHT by the corpus, 13 of 30, as at 121e.
+2. *Lines: held.* `src` and the tests −58 (+33 −91): `src` −30, the
+   tests −28; ARCHITECTURE −1.
+3. *No new parameter: held.*
+4. *Gone: held.* A file, a type and a test file.
+
+Kept. The step-code ceiling 5,680 → 5,675.

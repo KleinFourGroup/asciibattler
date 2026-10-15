@@ -114,7 +114,7 @@
  *   Beyond the leash only retaliation, an enemy attacking the unit within
  *   its own attack range, pulls it off the objective. Under a tile focus a
  *   unit stops heading for the tile and engages around it once within this
- *   radius (`src/sim/focusTile.ts`).
+ *   radius (`Targeting.updateFocusTarget`).
  */
 
 import { z } from 'zod';

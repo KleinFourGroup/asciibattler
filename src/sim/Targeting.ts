@@ -5,7 +5,6 @@ import { hasLineOfSight } from './LineOfSight';
 import { SIM } from '../config/sim';
 import { UNIT_DEFS, isDestructibleNeutral, isAutoTargetNeutral } from '../config/units';
 import { getTargetingStrategy } from './targetingStrategies';
-import { focusTileDirective } from './focusTile';
 import { behaviorFlags } from './statusBehavior';
 import { buildMovementContext, chebyshev, costAt, routeToward } from './movement';
 import { findPath } from './Pathfinding';
@@ -470,9 +469,9 @@ export function validNeutralObjectiveTarget(world: World, unitId: number): numbe
  *     which by design OVERRIDES the reachable-hostile priority (that's what focus
  *     is for). Same beeline shape as an enemy focus; reverted World-side to
  *     `atWill` when the neutral is destroyed/reaped.
- *   - TILE focus → `focusTile.ts`'s directive: `pursue` (targetId null →
- *     MovementBehavior beelines to the rally cell) or `engageLocal` (the unit
- *     has arrived near the tile → act exactly like `engage{tile}`).
+ *   - TILE focus → beyond `SIM.rangedLeashCells` of the tile, targetId null
+ *     (MovementBehavior beelines to the rally cell); within it, act exactly
+ *     like `engage{tile}`.
  */
 function updateFocusTarget(unit: Unit, world: World, target: ObjectiveTarget): void {
   if (target.kind === 'enemy') {
@@ -502,18 +501,15 @@ function updateFocusTarget(unit: Unit, world: World, target: ObjectiveTarget): v
     applyOrderedRubbleFallback(unit, world);
     return;
   }
-  switch (focusTileDirective(unit, target.cell)) {
-    case 'engageLocal':
-      // Arrived near the tile — engage locally, exactly like `engage{tile}`.
-      updateObjectiveTarget(unit, world, target);
-      return;
-    case 'pursue':
-    default:
-      // Beeline to the tile, ignore every enemy en route.
-      unit.targetId = null;
-      unit.outOfLosTicks = 0;
-      return;
+  // A tile focus persists (the team garrisons the area). The band, not the
+  // exact tile, switches a unit to engaging, so one that can't reach the tile
+  // (occupied or walled) still holds the nearest cell it can.
+  if (chebyshev(unit.position, target.cell) <= SIM.rangedLeashCells) {
+    updateObjectiveTarget(unit, world, target);
+    return;
   }
+  unit.targetId = null;
+  unit.outOfLosTicks = 0;
 }
 
 /**

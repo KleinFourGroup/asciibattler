@@ -70,8 +70,8 @@ export interface Stage {
 }
 
 // ---------------------------------------------------------------------------
-// Stage conditions — a keyed predicate vocabulary, extensible like focusTile.ts
-// (add a union variant + a registry entry; NOT a hard-coded `if`).
+// Stage conditions — a keyed predicate vocabulary: a new one is a union
+// variant + a registry entry, NOT a hard-coded `if`.
 // ---------------------------------------------------------------------------
 
 /** The live encounter state a stage condition reads, at the turn boundary. */

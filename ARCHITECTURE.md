@@ -170,7 +170,6 @@ src/
                              # + toData()/fromData for snapshot rehydration (A2); OrphanPolicy (F2)
     Command.ts               # WorldCommand union — drained at tick boundary (A2); J1: setObjective/clearObjective
     objective.ts             # O1/O2/O3: TeamObjective (atWill | engage{target} | hold | focus{target}) per team + ObjectiveTarget (tile | enemy); J3: objectiveAtCell (click cell → enemy/tile)
-    focusTile.ts             # O3: a unit's directive under a focus TILE (pursue beyond the leash, engageLocal within it)
     Pathfinding.ts           # A* king's-move, Chebyshev heuristic, optional CostFn (C1a); J2: pathfindingStats counter; J3: bestEffort (route to nearest reachable)
     movement.ts              # J2: shared movement seam — MovementIntent + advance (the dash hook) + routeToward (cache boundary); §42a: advance emits the mechanical unit:moveDecision
     moveDecision.ts          # §42a: the MoveDecisionKind taxonomy + emitMoveDecision — the per-poll movement decision record (observational only, never serialized)

@@ -523,6 +523,22 @@ describe('Targeting / focus (O3)', () => {
     applyFocusTile(world, { x: 5, y: 5 });
     expect(units[0]!.targetId).toBe(2);
   });
+
+  it('tile focus: engages from exactly the leash, and pursues one cell beyond it', () => {
+    const leash = SIM.rangedLeashCells;
+    const at = scene([
+      { id: 1, team: 'player', x: 5 + leash, y: 5 }, // chebyshev == leash from the tile
+      { id: 2, team: 'enemy', x: 4 + leash, y: 5 }, // adjacent, between it and the tile
+    ]);
+    applyFocusTile(at.world, { x: 5, y: 5 });
+    expect(at.units[0]!.targetId).toBe(2);
+    const beyond = scene([
+      { id: 1, team: 'player', x: 6 + leash, y: 5 }, // chebyshev leash + 1
+      { id: 2, team: 'enemy', x: 5 + leash, y: 5 },
+    ]);
+    applyFocusTile(beyond.world, { x: 5, y: 5 });
+    expect(beyond.units[0]!.targetId).toBeNull();
+  });
 });
 
 // §40e — a manual `focus`/`engage` objective can target a DESTRUCTIBLE neutral

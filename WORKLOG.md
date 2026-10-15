@@ -4834,3 +4834,41 @@ declaration before any file was written.
 Proof (export): typecheck clean, so no reader was missed and none of the
 68 is unread now; `build-hash HEAD`, the same bytes; the suite, the save
 pin among it, by the hook. No comment changed.
+
+Reading: 377,621 at 13:52 on the commit, `8a9190c`.
+
+### 122n — the fan-out pilot: files and answer key, before the run (2026-10-15, session 6677fa11)
+
+Eight files, 867 lines, none touched by a later step of the cut (B-01
+and B-02's sites, B-07's spawn bodies, B-08, B-09, B-17 and the focus
+fold were checked against them): `src/sim/layouts.ts` (44),
+`abilities/Ability.ts` (47), `behaviors/AbilityBehavior.ts` (61),
+`behaviors/registry.ts` (56), `actions/registry.ts` (43), `xp.ts` (128),
+`statusEffects.ts` (218), `TileGrid.ts` (270). The one `neutral` in
+`TileGrid.ts` is walls on the neutral team, which B-02 keeps.
+
+The answer key, each read at `8a9190c`:
+
+- K1, `layouts.ts`'s header: "`Run` rolls one RNG step at battle
+  setup. ~25% of battles get `layoutId = null` … the other ~75% pick
+  uniformly from `LAYOUT_IDS`." False: a battle's layout is the one
+  `selectEncounter` returns from the sector's pool (`Run.ts:2140-2155`),
+  and nothing draws a 25/75 split (121j found the same in the loader).
+- K2 to K8, a class that no longer exists named as if it did:
+  `Ability.ts:12` (`AttackBehavior`), `:20` (`AttackAction`);
+  `AbilityBehavior.ts:7` (`AttackBehavior`), `:24` (`AttackAction`),
+  `:49` (`AttackAction`); `behaviors/registry.ts:16` (`AttackBehavior`);
+  `actions/registry.ts:16` (`AttackAction` given as the example of an
+  action that resolves a `targetId`). Caught means the text no longer
+  presents the class as existing, whether the sentence went as history
+  or was corrected.
+
+Both arms get one brief, the same files, a worktree each from
+`8a9190c`, no effort setting, and run side by side; the session builds
+122e while they run. The brief gives the seven rules as signed at 121i,
+says rule 1 was written for config keys and asks for its intent on code
+(what a declaration does, what it guarantees, what a change must
+respect), forbids any code-token change, npm and commits, and asks for a
+report of each rule-7 correction with its evidence. The labels X and Y
+are drawn at random after both finish, and the key goes to
+`scratch/122n/key.txt`, which no session opens before the user's read.

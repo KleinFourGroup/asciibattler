@@ -1,44 +1,18 @@
 /**
- * Phase Y1 — the data-driven attack/effect vocabulary (the Cluster-1 keystone).
+ * The ability vocabulary: data and validation, no behaviour. Every ability
+ * decomposes into three axes:
  *
- * Every combat verb in the game — the six attack classes plus the rogue dash —
- * decomposes into three orthogonal axes (the design brief,
- * `archive/cluster-one-feedback.md`):
+ * 1. Targeting: the `TargetSelector`, who or what it resolves to.
+ * 2. Timeline: the phases (wind-up, release, travel, impact, recovery) and
+ *    the `OrphanPolicy`, authored in seconds and converted to ticks when it
+ *    resolves (`timeline.ts`).
+ * 3. Effect ops: the `EffectOp`s, an ordered list of small typed operations
+ *    placed on phases (`effects: [{ phase, op }]`).
  *
- *   1. Targeting   — `TargetSelector`: WHO/what the verb resolves to.
- *   2. Timeline    — the F2 phase schedule (windup→release→travel→impact→
- *                    recovery) + the per-verb `OrphanPolicy`. Authored in
- *                    SECONDS (canonical, TICK_RATE-independent) and converted to
- *                    ticks at resolve time (see `timeline.ts`).
- *   3. Effect-ops  — `EffectOp`: an ordered list of small typed operations
- *                    slotted onto phases (`effects:[{phase, op}]`).
- *
- * New mechanics are new OPS in the closed, zod-validated discriminated union —
- * never new `Action` classes, never a scripting language. The interpreter
- * (Phase Y2, `EffectAction`) is one `switch` over `op.kind`; this module is the
- * pure DATA + validation, no behavior.
- *
- * SCOPE (Y1): the `damage` / `heal` / `move` ops + the `self` / `enemyInRange` /
- * `aoe` / `lowestHpAlly` selectors are enough to express the existing verbs. The
- * union also DECLARES the reserved seams that later phases build:
- *   - the `applyStatus` op — status-on-hit, wired to the §27 status registry in
- *     §29 (its `statusId` is a plain string ref here, boot-validated then).
- * `summon` / `chain` are ADDITIVE variants the closed union grows into in §29 —
- * declared then, not now (they need `SummonSpec` / recursion).
- *
- * Reconciliation with the brief's type sketch (the brief is authoritative for
- * SHAPE; byte-identity dictates the fields it elided):
- *   - the `damage` op carries `accuracy` + `critBase` (every current attack
- *     does — they feed the to-hit / crit rolls); the brief dropped them.
- *   - the `aoe` selector carries `ringMultiplier` (the mage's 0.5 ring); the
- *     brief dropped it.
- *   - `scaling` lives on the op (each verb's id maps to exactly one
- *     `damageStatFor` stat, so op-authored scaling stays byte-identical) — and
- *     `damageStatFor` survives for the display surfaces (HUD/recruit "ATK").
- *
- * The config home is `config/abilities.json` (`src/config/abilities.ts`) — the
- * single ability catalog after Y5e retired the legacy hand-coded ability config.
- * See `src/config/abilities.ts`.
+ * A new mechanic is a new op in the closed, zod-validated union, never a new
+ * `Action` class or a scripting language; the interpreter (`interpreter.ts`) is
+ * one `switch` over `op.kind`. The catalog is `config/abilities.json`
+ * (`src/config/abilities.ts`).
  */
 
 import { z } from 'zod';
@@ -46,13 +20,12 @@ import { prose } from '../../i18n/prose';
 import type { ActionPhaseName, OrphanPolicy } from '../Action';
 
 /* -------------------------------------------------------------------------- */
-/* Phase + orphan enums — mirrored from Action.ts, drift-guarded.             */
+/* Phase and orphan enums, mirrored from Action.ts.                           */
 /* -------------------------------------------------------------------------- */
 
-// `satisfies` keeps the zod enums in lockstep with Action.ts's source unions: a
-// typo'd / stray literal here is a compile error. (Purely a type guard — no
-// runtime emission. The reverse direction — a NEW Action.ts phase without a
-// mirror — surfaces when a def references it and the enum rejects it.)
+// `satisfies` keeps these in step with Action.ts's unions: a stray literal here
+// does not compile. The other direction, a phase added to Action.ts and not
+// here, shows when a def names it and the enum refuses it.
 const PHASE_NAMES = [
   'windup',
   'release',
@@ -70,44 +43,39 @@ const PhaseSchema = z.enum(PHASE_NAMES);
 const OrphanPolicySchema = z.enum(ORPHAN_POLICIES);
 
 /* -------------------------------------------------------------------------- */
-/* Effect ops — the typed operations a verb performs on its resolved targets.  */
+/* Effect ops: what an ability does to the targets it resolved.               */
 /* -------------------------------------------------------------------------- */
 
 /**
- * Which caster stat is ADDED to an op's flat `might` to get its base output.
- * `none` = flat `might` only (a future environmental tick). Each existing verb
- * maps to exactly one stat (sword/club/katana/whip/gambit → strength, bow →
- * ranged, magic_bolt → magic, catapult_shot → ranged), so authoring `scaling`
- * on the op reproduces `damageStatFor` byte-for-byte.
+ * The caster stat added to an op's flat `might` for its base output; `none`
+ * adds nothing (the status DoTs and HoTs, and the abilities that deal flat
+ * damage). The op's `scaling` decides, not the archetype's `damageStat`
+ * (`config/units.json`), and the two can differ.
  */
 const DamageScalingSchema = z.enum(['strength', 'ranged', 'magic', 'none']);
 const HealScalingSchema = z.enum(['magic', 'none']);
 
 /* -------------------------------------------------------------------------- */
-/* Scaled values — §31 stat/level-driven magnitudes (the `damage`/`heal`       */
-/* `base + stat` generalized with a coefficient, for non-commensurate axes).   */
+/* Scaled values: magnitudes driven by a stat or the level, with a            */
+/* coefficient.                                                               */
 /* -------------------------------------------------------------------------- */
 
 /**
- * Which caster property a `ScaledValue` scales off. The combat stats are read
- * off `effectiveStats`; `level` is the unit's combatant level (the meta-property
- * a summon scales its minions by). `speed` is deliberately EXCLUDED — it already
- * drives the cadence/phase axis (a separate timeline concern, §Yb), so scaling a
- * magnitude off it would double-dip. No `none` sentinel: the absence of scaling
- * is expressed by authoring a bare number (the other arm of `ScalarOrScaled`).
+ * What a `ScaledValue` scales off. The combat stats are read off
+ * `effectiveStats`; `level` is the unit's combatant level, which a summon scales
+ * its minions by. `speed` is left out because it already drives the cadence
+ * and the phases, so a magnitude scaled off it would count speed twice. There
+ * is no `none`: a value that does not scale is a bare number.
  */
 export const ScalingStatSchema = z.enum(['strength', 'ranged', 'magic', 'luck', 'level']);
 
 /**
- * §31 — a cast-time-FROZEN scaling descriptor: `base + perPoint × stat(caster)`,
- * evaluated by `evalScaled` (`resolveScalars.ts`) at PROPOSE time and carried
- * inert to fire, exactly as `damage`/`heal` capture `might + scalingStat`. It is
- * the general form of which `might + stat` is the `perPoint = 1` special case;
- * the three non-commensurate axes (status magnitude ~1–3, status duration ~2–6 s,
- * summon level ~1–8) need the coefficient a bare stat-add can't express. `max`
- * caps the result (the stun-duration footgun guard); `base` is REQUIRED (the
- * scaled form is editor-generated in §31d — the def-base fallback belongs to the
- * bare-number arm, not here).
+ * A value that grows with a caster stat, `base + perPoint × stat`, evaluated by
+ * `evalScaled` (`resolveScalars.ts`) when the ability proposes and frozen to
+ * impact, as a damage op's `might + stat` is. A status's magnitude and
+ * duration and a summon's level sit on scales a stat does not match, which
+ * is why it carries a coefficient. `max` caps the result, so a long duration
+ * cannot grow without bound; `base` is required.
  */
 const ScaledValueSchema = z.object({
   base: z.number(),
@@ -117,20 +85,17 @@ const ScaledValueSchema = z.object({
 });
 
 /**
- * The opt-in, non-breaking union an authorable magnitude / duration / level uses:
- * a bare number (today's authoring, the def base read live) OR a `ScaledValue`
- * (the cast-time-captured scaled form). Every existing `magnitude: 2` / `level: 1`
- * still parses unchanged — the bare-number arm IS the pre-§31 behavior.
+ * A magnitude, duration or level: a bare number, read off the def as it is, or
+ * a `ScaledValue`, captured at cast.
  */
 export const ScalarOrScaledSchema = z.union([z.number(), ScaledValueSchema]);
 
 /**
- * `damage` — routes through `World.applyDamage` (the single chokepoint). The
- * interpreter computes `round(base × critFactor)` where
- * `base = might + scalingStat`, draws the crit off `combatRng`, then hands the
- * to-hit roll to `applyDamage` (when `evadable`). `accuracy` / `critBase` are
- * read only when `evadable` / `critable`. `bypassDefense` skips mitigation
- * (DoTs in §27; FALSE for every migrated strike — they keep defense).
+ * `damage`, through `World.applyDamage`. The interpreter applies the crit
+ * factor, rolling the crit on `combatRng`, and hands the to-hit roll to
+ * `applyDamage` when the op is `evadable`. `accuracy` is read only when
+ * `evadable`, `critBase` only when `critable`. `bypassDefense` skips the
+ * defense mitigation, as the status DoTs do; every ability's damage takes it.
  */
 const DamageOpSchema = z.object({
   kind: z.literal('damage'),
@@ -144,8 +109,8 @@ const DamageOpSchema = z.object({
 });
 
 /**
- * `heal` — adds HP to a resolved ally, clamped at maxHp. `might` flat + the
- * `scaling` stat (`magic` | `none`). Never rolls to-hit or crit.
+ * `heal` adds HP to the resolved ally, clamped at max HP: the flat `might` and
+ * the `scaling` stat (`magic` or `none`). It never rolls to hit or to crit.
  */
 const HealOpSchema = z.object({
   kind: z.literal('heal'),
@@ -154,10 +119,11 @@ const HealOpSchema = z.object({
 });
 
 /**
- * `move` — the caster repositions:
- *   - `advance` — leap to the landing captured at cast (the rogue dash, N1);
- *     how far is the ability's `rangeCells`.
- *   - `retreat` — one step away from the struck cell (the rogue gambit, F4).
+ * `move` repositions the caster:
+ *
+ * - `advance` — a leap to the landing captured at cast (the dash); how far is
+ *   the ability's `rangeCells`.
+ * - `retreat` — one step away from the struck cell (the gambit's dart-back).
  */
 const MoveOpSchema = z.object({
   kind: z.literal('move'),
@@ -165,54 +131,44 @@ const MoveOpSchema = z.object({
 });
 
 /**
- * `applyStatus` — RESERVED for §29 (status-on-hit). Declared here so the union
- * is closed and the editor (§30) sees the shape; `statusId` is a plain string
- * ref boot-validated once the §27 status registry exists, and the interpreter
- * rejects this op until §29 wires it.
+ * `applyStatus` puts a status from the catalog on the resolved targets.
+ * `statusId` is checked against the catalog at boot (`assertStatusRefsResolve`,
+ * run by the ability registry).
  */
 const ApplyStatusOpSchema = z.object({
   kind: z.literal('applyStatus'),
   statusId: z.string().min(1),
-  // §31 — opt-in stat/level scaling: a bare number (today's authoring) OR a
-  // `ScaledValue` captured at cast (`propose.ts` → `evalScaled`). `durationSeconds`
-  // sheds its old `.positive()` floor: the scaled arm can't be statically checked
-  // (it depends on the caster's live stats) and the editor (§31d) generates these,
-  // so a degenerate value is an authoring concern, not a parse-time one.
+  // Either may scale (`propose.ts` captures it). `durationSeconds` has no
+  // positive floor: a scaled value depends on the caster's stats and cannot be
+  // checked at parse, so a degenerate one is the author's to avoid.
   magnitude: ScalarOrScaledSchema.optional(),
   durationSeconds: ScalarOrScaledSchema.optional(),
 });
 
 /**
- * §29c — the ops valid as a `chain`'s per-jump payload. A chain arcs to N nearest
- * targets and applies these to each — so `damage` (the bolt) + `applyStatus` (a
- * rider, e.g. a stun-on-each-hop) are the meaningful ones. `move` / `heal` are
- * nonsensical fired at an enemy jump target, and a NESTED `chain` is excluded
- * deliberately: it would need `z.lazy` recursion + raise thorny falloff/geometry
- * semantics no consumer wants. So the inner payload is its own restricted union
- * (the same discipline `PeriodicOpSchema` holds for status ticks) — the chain op
- * stays in the closed `EffectOp` union without making that union self-referential.
+ * The ops a `chain` may apply at each hop: `damage`, and `applyStatus` as a
+ * rider. A `move` or a `heal` fired at an enemy hop means nothing, and a nested
+ * `chain` would need a recursive schema and a meaning for falloff and geometry
+ * that nothing wants. So the payload is its own narrow union, as
+ * `PeriodicOpSchema` is for status ticks, and `EffectOp` stays non-recursive.
  */
 const ChainInnerOpSchema = z.discriminatedUnion('kind', [DamageOpSchema, ApplyStatusOpSchema]);
 
 /**
- * `chain` — arc to up to `maxJumps` targets: start at the committed primary, then
- * hop to the nearest not-yet-hit enemy within `rangeCells` (Chebyshev) of the
- * previous victim, applying `ops` at each with a cumulative `falloff` on damage
- * (`baseDamage × falloff^jumpIndex`; the primary is `falloff^0` = full). The
- * geometry is deterministic (`world.units` order tie-breaks); only the `ops`'
- * own rolls draw RNG. The interpreter recurses over `ops` per jump (the closed
- * vocab's one op that contains other ops). Per-op cast-time scalars are captured
- * once at propose time into `OpResolution.chainOps` (aligned with `ops`) and
- * scaled by `falloff` live per jump — so a charged chain uses its CAST-time
- * stats, exactly like every other op.
+ * `chain` arcs to up to `maxJumps` targets: from the committed primary, each hop
+ * goes to the nearest enemy not yet hit within `rangeCells` (Chebyshev) of the
+ * last victim (`nearestChainTarget`), applying `ops` at each, with damage scaled
+ * by `falloff^jumpIndex` (the primary takes it whole). The geometry draws no
+ * RNG; only the ops' own rolls do. The ops' scalars are captured once at cast
+ * (`OpResolution.chainOps`) and scaled per hop, so a charged chain uses its
+ * cast-time stats as every other op does.
  *
- * `hopDelaySeconds` (§29c follow-up) staggers the arc over real sim ticks: each
- * jump lands `hopDelaySeconds` after the previous, so the bolt visibly TRAVELS
- * (the damage number, HP drop, and arc for each hop all coincide on that hop's
- * tick). `0` = the original all-at-once resolve (every hop on the impact tick).
- * Deferred hops ride `World.pendingChainHops` (serialized → WorldSnapshot v28),
- * re-resolving their next target live at fire time, so a target that moved or
- * died between hops is handled deterministically.
+ * `hopDelaySeconds` spaces the hops over sim ticks, each landing that long after
+ * the last, so the arc travels and each hop's number, HP drop and arc show on
+ * its own tick; 0 resolves every hop on the impact tick. A hop that waits sits
+ * in `World.pendingChainHops`, which is serialized, and finds its target when
+ * it fires, so a target that moved or died between hops is handled
+ * deterministically.
  */
 const ChainOpSchema = z.object({
   kind: z.literal('chain'),
@@ -223,46 +179,45 @@ const ChainOpSchema = z.object({
   ops: z.array(ChainInnerOpSchema).min(1),
 });
 
-// `EffectOpSchema` (the full op union, incl. §29d `summon`) is declared AFTER the
-// target selectors below — `summon`'s `at` anchor IS a `TargetSelector`, so the
-// union can't close until the selectors exist. `PeriodicOpSchema` (damage/heal
-// only) needs no selector, so it stays here.
+// `EffectOpSchema`, the whole op union, is declared after the target selectors,
+// since `summon`'s `at` anchor is a `TargetSelector`. `PeriodicOpSchema` needs
+// no selector, so it stays here.
 
 /**
- * Phase 27 — the subset of ops valid as a status's PERIODIC tick
- * (`StatusDef.periodic.op`, `statusSchema.ts`): a DoT (`damage`) or HoT
- * (`heal`). `move` / `applyStatus` are meaningless fired every interval, so the
- * periodic union excludes them — the full `EffectOp` union still carries them
- * for the attack timeline. A periodic DoT authors `scaling:'none'` flat `might`
- * with `bypassDefense:true` / `evadable:false` (the burn default); the
- * interpreter scales its output by the effect's magnitude (27b).
+ * The ops a status may fire as its periodic tick (`StatusDef.periodic.op`,
+ * `statusSchema.ts`): a DoT (`damage`) or a HoT (`heal`). A `move` or an
+ * `applyStatus` fired every interval means nothing, so they are left out. The
+ * shipped DoTs deal flat damage (`scaling: 'none'`) with `bypassDefense` and
+ * without `evadable`; the interpreter scales a tick's output by the effect's
+ * magnitude.
  */
 export const PeriodicOpSchema = z.discriminatedUnion('kind', [DamageOpSchema, HealOpSchema]);
 
 /* -------------------------------------------------------------------------- */
-/* Target selectors — WHO/what a verb resolves to.                            */
+/* Target selectors: who or what an ability resolves to.                      */
 /* -------------------------------------------------------------------------- */
 
 /**
- * Friendly-fire filter for an `aoe`, relative to the caster:
- *   - `enemies` — any unit NOT on the caster's team (enemy + neutral; so AoE
- *     chews destructible terrain for free once Cluster 2 gives neutrals HP).
- *   - `allies`  — the caster's team.
- *   - `all`     — both (also the forced filter for a §28 confused caster).
+ * Which teams an `aoe` or an aura touches, relative to the caster (as
+ * `affectsMatch` reads it):
+ *
+ * - `enemies` — every team but the caster's, neutrals included.
+ * - `allies` — the caster's team.
+ * - `all` — every team; a confused caster's blasts are forced to it.
  */
 const AffectsSchema = z.enum(['enemies', 'allies', 'all']);
 
 const SelfSelectorSchema = z.object({ kind: z.literal('self') });
 
-/** Single enemy target (the committed `currentTarget`). Affects enemies implicitly. */
+/** One enemy, the unit's committed `currentTarget`. */
 const EnemyInRangeSelectorSchema = z.object({ kind: z.literal('enemyInRange') });
 
 /**
- * Area over cells. Only `square` is exercised today (the mage bolt: square
- * radius 1, anchored on the target cell); `line` / `cross` are reserved shapes.
- * `ringMultiplier` is the damage factor on non-center cells (mage 0.5; 1 =
- * uniform). The interpreter resolves cells → units via the `unitsInCells`
- * helper (the Cluster-2 footprint seam, single-cell today).
+ * An area of cells around an anchor, the caster or the target's cell. Only
+ * `square` is built; `line` and `cross` parse and throw when an op fires one
+ * (`targeting.ts`). `ringMultiplier` is the damage factor off the centre cell
+ * (1, the default, is uniform). Cells become units through `unitsInCells`,
+ * which counts a unit's whole footprint.
  */
 const AoeSelectorSchema = z.object({
   kind: z.literal('aoe'),
@@ -273,7 +228,8 @@ const AoeSelectorSchema = z.object({
   ringMultiplier: z.number().min(0).max(1).default(1),
 });
 
-/** Lowest-HP ally within `rangeCells` (the healer). Affects allies implicitly. */
+/** The lowest-HP wounded ally within `rangeCells`, the caster included
+ *  (`lowestWoundedAlly`). */
 const LowestHpAllySelectorSchema = z.object({
   kind: z.literal('lowestHpAlly'),
   rangeCells: z.number().int().positive(),
@@ -287,29 +243,25 @@ export const TargetSelectorSchema = z.discriminatedUnion('kind', [
 ]);
 
 /* -------------------------------------------------------------------------- */
-/* §29d summon — spawn minions onto the caster's team, caster-anchored.         */
+/* Summon: minions placed on the caster's team, around an anchor.             */
 /* -------------------------------------------------------------------------- */
 
 /**
- * §29d — what a `summon` op spawns. The minion is its OWN archetype (a
- * data-driven stat block in `config/units.json` — the Ghoul ≈ half a bandit),
- * referenced by id (`archetype`); a typo'd id is boot-rejected by
- * `assertSummonRefsResolve` (`src/config/units.ts`), the `applyStatus`
- * `statusId` precedent. `level` is the minion level — a `ScalarOrScaled` (§31c): a
- * bare number (fixed) OR scaled off the summoner at cast (`evalScaled`, int-rounded
- * ≥1 at capture, since `scaledUnit` needs an int). Summoned via the deterministic
- * `scaledUnit` path, so the geometry AND the stats stay RNG-free. `count` minions land per
- * cast; `maxLive` caps how many of THIS caster's summons may be alive at once
- * (single digits — bounding the live unit count is what keeps object-pooling
- * parked). The cap is enforced at propose (the caster abstains at the ceiling,
- * re-summoning as minions die) AND defensively at fire. `radiusCells` bounds how
- * far from the `at` anchor a summon may land (the nearest-free-cell BFS); no free
- * cell in radius → the cast fizzles (cooldown spent, retry next opportunity).
+ * What a `summon` op places. The minion is its own archetype, a stat block in
+ * `config/units.json`, named by `archetype`; an unknown id is refused at boot
+ * (`assertSummonRefsResolve`, `src/config/units.ts`). `level` is the minions'
+ * level, a bare number or scaled off the summoner at cast and rounded to a
+ * whole level of at least 1, since `scaledUnit` needs one; that path draws no
+ * RNG for the stats. `count` minions land per cast. `maxLive` caps how many of
+ * this caster's summons may be alive at once, which bounds the live unit count;
+ * the cap is held at propose (the caster abstains at it and summons again as
+ * minions die) and again at fire. `radiusCells` bounds how far from the `at`
+ * anchor a minion may land (the search for the nearest free cell); with no free
+ * cell in range the cast fizzles, its cooldown spent.
  */
 const SummonSpecSchema = z.object({
   archetype: z.string().min(1),
-  // §31c — opt-in stat/level scaling (captured + int-rounded at cast in propose.ts).
-  // Default 1 keeps every existing summon (level absent / a bare int) byte-identical.
+  // Captured and rounded at cast (`propose.ts`).
   level: ScalarOrScaledSchema.default(1),
   count: z.number().int().positive().default(1),
   maxLive: z.number().int().positive(),
@@ -317,14 +269,13 @@ const SummonSpecSchema = z.object({
 });
 
 /**
- * `summon` — place `summon.count` minions onto the caster's team, into the nearest
- * free cells to the `at` anchor (the reused `actingPosition` BFS), bounded by
- * `summon.radiusCells`. Caster-ANCHORED, not the team spawn region: `at:self` (the
- * default) = adjacent to the caster, a target / aoe anchor = a flank / area summon
- * (ONE resolver — anchor → nearest free cells → take `count`). The geometry is
- * deterministic; only future RNG-rolled minion stats would draw (the Ghoul's are
- * deterministic). NOT a valid chain-inner / periodic op (a summon every tick / per
- * hop is nonsensical) — it lives only in the top-level `EffectOp` union.
+ * `summon` places `summon.count` minions on the caster's team in the free cells
+ * nearest the `at` anchor (the `actingPosition` search), within
+ * `summon.radiusCells`. It is anchored where the op says, not in the team's
+ * spawn region: `at: self` (the default) is beside the caster, and a target or
+ * an `aoe` anchor is a flank or an area summon, through one resolver (anchor,
+ * nearest free cells, take `count`). The geometry draws no RNG. It is not a
+ * chain or periodic op, since a summon per hop or per tick means nothing.
  */
 const SummonOpSchema = z.object({
   kind: z.literal('summon'),
@@ -333,9 +284,8 @@ const SummonOpSchema = z.object({
 });
 
 /**
- * The closed op union — every typed operation a verb performs on its resolved
- * targets. Declared HERE (after the selectors) because `summon`'s `at` anchor is a
- * `TargetSelector`. New mechanics are new VARIANTS here, never new action classes.
+ * The closed op union: every operation an ability performs on what it resolved.
+ * A new mechanic is a new variant here, never a new action class.
  */
 export const EffectOpSchema = z.discriminatedUnion('kind', [
   DamageOpSchema,
@@ -351,21 +301,17 @@ export const EffectOpSchema = z.discriminatedUnion('kind', [
 /* -------------------------------------------------------------------------- */
 
 /**
- * One phase of the busy-window timeline. `seconds` is the phase's authored
- * duration (converted via `secondsToTicks` at resolve), OR the sentinel `'fill'`
- * for the single ELASTIC phase that absorbs the remainder of the (speed-scaled)
- * cadence window — the strike's `recovery`, the charged spell's `windup`. At
- * most one `'fill'` per timeline (refined below). See `resolvePhases`.
+ * One phase of the busy window. `seconds` is the phase's duration, converted
+ * with `secondsToTicks` when it resolves, or `'fill'` for the one elastic phase
+ * that takes what the cadence leaves (every shipped def's `recovery`); a
+ * timeline has at most one (refined below). See `resolvePhases`.
  *
- * Phase Yb — `scalesWithSpeed` makes a FIXED (numeric) phase shrink with the
- * caster's `speed`, via the SAME curve the cadence uses (`speedScaledSeconds`):
- * a charged spell's windup then speeds up ALONGSIDE the cadence instead of
- * pinning a constant floor under it (which would waste most of the speed range —
- * e.g. a fixed 1.85 s of phases caps a 2.5 s→1.0 s cadence at 1.85 s, only 26% of
- * the 60% the curve allows). Default `false` = a flat conversion (a projectile's
- * physical travel, an impact boundary). Meaningless on a `'fill'` phase — that
- * already tracks the speed-scaled cadence — so the combo is rejected (refined
- * below) rather than silently ignored.
+ * `scalesWithSpeed` makes a fixed phase shrink with the caster's `speed` on the
+ * cadence's curve (`speedScaledSeconds`), so a charged spell's wind-up quickens
+ * with the cadence instead of putting a constant floor under it, which would
+ * waste most of the speed range. The default, false, is a flat conversion (a
+ * projectile's travel, an impact). On a `'fill'` phase, which already follows
+ * the cadence, it is refused rather than ignored.
  */
 const TimelinePhaseSchema = z
   .object({
@@ -384,7 +330,8 @@ const EffectEntrySchema = z.object({
   op: EffectOpSchema,
 });
 
-/** Opaque renderer keys per phase (§Z). Inert in Y — declared for the shape. */
+/** Renderer keys per phase, which the FX registry resolves on `action:phase`;
+ *  the sim never reads them. */
 const FxSchema = z
   .object({
     windup: z.string(),
@@ -396,22 +343,19 @@ const FxSchema = z
   .partial();
 
 /**
- * §76a — a passive AURA authored on the def, executed by `World.
- * applyAuraStatuses()` (a tick pass mirroring `applyTileStatuses`), NOT by the
- * ability pipeline: the carrier radiates every tick while it does whatever else
- * it does — inspire AND swing on the same tick. Each tick the pass SUSTAINS
- * `statusId` on every live unit within `radius` (footprint-aware Chebyshev,
- * caster included when `affects` admits its team), so "lingers after leaving" =
- * the status's own `durationSeconds`, and same-key non-stacking is the sustain
- * top-up (pinned in aura.test.ts — the top-up path is merge-policy-blind by
- * construction, don't rely on `merge: refresh` alone).
+ * A passive aura, run by `World.applyAuraStatuses` (a tick pass, as
+ * `applyTileStatuses` is), not by the ability pipeline, so the carrier radiates
+ * every tick while doing whatever else it does. Each tick the pass sustains
+ * `statusId` on every live unit within `radius` (Chebyshev to the footprint,
+ * the carrier included when `affects` admits its team), so the effect lingers
+ * after a unit leaves for the status's own `durationSeconds`, and the same
+ * status never stacks from the aura, whatever its `merge` (`aura.test.ts`).
  *
- * `radius` is the aura's OWN reach — deliberately not the def's `rangeCells`
- * (which is engagement reach; see the `rangeForArchetype` exclusion). A def may
- * carry ops AND an aura (a weapon that radiates); a PURE aura (no ops) must
- * target `self` (refined below) so `derived.attackRange` never inflates to the
- * aura radius (the N1 dash-range hazard), and the propose layer skips it
- * entirely (`proposeEffectAbility` — a pure aura never proposes an action).
+ * `radius` is the aura's own reach, not the def's `rangeCells`, which is the
+ * engagement reach (`rangeForArchetype` leaves the aura out). A def may carry
+ * ops and an aura. An aura with no ops must target `self` (refined below), so
+ * `derived.attackRange` never grows to the aura's radius, and it never proposes
+ * (`proposeEffectAbility`).
  */
 const AuraSchema = z.object({
   radius: z.number().int().positive(),
@@ -423,58 +367,43 @@ export const AbilityDefSchema = z
   .object({
     id: z.string().min(1),
     /**
-     * Player-facing display name (the UnitCard ability row, the archetype
-     * editor's ability list). Yb QoL: decoupled from `id` so the surfaces read
-     * one source of truth instead of hardcoding labels (the retired `ABILITY_UI`
-     * map) or humanizing the raw id. Required — every ability names itself.
+     * The player-facing name (the unit card's ability row, the archetype
+     * editor), a locale address (`abilities.<id>.name`).
      */
-    name: prose(), // §95b — a locale address (`abilities.<id>.name`)
-    /** Base re-proposal interval, in seconds. */
+    name: prose(),
+    /** The base interval before the ability proposes again, in seconds. */
     cooldownSeconds: z.number().positive(),
     /**
-     * Does the cadence (and the `'fill'` phase) scale with the caster's `speed`?
-     * `true` = attack cadence (`attackCooldownTicksFor`); `false` = a flat
-     * utility cooldown decoupled from the busy window (the dash: ~10 s cooldown,
-     * ~0.25 s motion).
+     * Whether the cadence, and so the `'fill'` phase, scales with the caster's
+     * `speed`: true is the attack cadence (`attackCooldownTicksFor`), false a
+     * flat cooldown apart from the busy window (the dash, whose cooldown is far
+     * longer than its motion).
      */
     speedScaled: z.boolean().default(true),
     rangeCells: z.number().int().nonnegative(),
-    /** Engagement floor (O4 kiting); 0 = no floor (the default). */
+    /** The nearest the unit engages from; a closer target makes it kite back to
+     *  the band (`positioning.ts`). 0, the default, is no floor. */
     minRangeCells: z.number().int().nonnegative().default(0),
-    /**
-     * E7.D — an arcing shot that lobs OVER walls (the catapult): the propose-time
-     * LOS gate is skipped, and `MovementBehavior`'s in-range abstain reads the
-     * same flag off the ability (via `EffectAbility.ignoresLineOfSight`) so it
-     * doesn't creep forward to clear a wall it doesn't need cleared. Absent/false
-     * on every LOS-gated verb (the strikes / bow / magic bolt).
-     */
+    /** An arcing shot that needs no line of sight; documented on `Ability`. */
     ignoresLineOfSight: z.boolean().optional(),
     target: TargetSelectorSchema,
     timeline: z.array(TimelinePhaseSchema).min(1),
     orphanPolicy: OrphanPolicySchema,
-    /**
-     * The proposal score the action selector ranks on (10 for the strikes /
-     * heal, 5 for the dash). Named `priority` per the brief; the §29 selector
-     * reads it, equal scores tie-broken by registration order as today.
-     */
+    /** The proposal's score, which `AbilityBehavior` ranks the abilities by. */
     priority: z.number(),
     effects: z.array(EffectEntrySchema),
     fx: FxSchema.optional(),
-    /** §76a — the optional passive aura (see `AuraSchema`). */
+    /** A passive aura (`AuraSchema`). */
     aura: AuraSchema.optional(),
     /**
-     * 82e — the release gate (the catapult's hold-fire). At the `release`
-     * phase boundary, the SAME `[minRangeCells, rangeCells]` band + LOS
-     * test the propose gate ran (`firingBandCell` — the one-predicate
-     * rule, positioning.ts) re-runs against the target's LIVE position:
-     * a dead or out-of-band target ABORTS the shot before the projectile
-     * exists (nothing fires, no RNG draw), and the ability's cooldown is
-     * set to `reaimSeconds` instead of the full cadence — the crew shifts
-     * its aim rather than re-cranking. `scalesWithSpeed` rides the cadence
-     * curve (`speedScaledSeconds`), matching the timeline-phase flag —
-     * authored `true` on the catapult so every one of its time costs
-     * shrinks together under haste. Requires a `release` timeline phase
-     * and a single-target selector (refined below).
+     * The release gate. At the `release` boundary, the band and line-of-sight
+     * test the propose step ran (`firingBandCell`, positioning.ts) runs again
+     * against the target's live position: a dead or out-of-band target stops
+     * the shot before the projectile exists (nothing fires, no RNG is drawn),
+     * and the cooldown is set to `reaimSeconds` instead of the full cadence, so
+     * the unit re-aims rather than winding up again. `scalesWithSpeed` puts the
+     * re-aim on the cadence's curve, as the phase flag does. Requires a
+     * `release` phase and the `enemyInRange` selector (refined below).
      */
     releaseGate: z
       .object({
@@ -515,7 +444,7 @@ export const AbilityDefSchema = z
   });
 
 /* -------------------------------------------------------------------------- */
-/* Inferred types.                                                             */
+/* Inferred types.                                                            */
 /* -------------------------------------------------------------------------- */
 
 export type DamageScaling = z.infer<typeof DamageScalingSchema>;
@@ -534,7 +463,7 @@ export type EffectEntry = z.infer<typeof EffectEntrySchema>;
 export type Aura = z.infer<typeof AuraSchema>;
 export type AbilityDef = z.infer<typeof AbilityDefSchema>;
 
-/** Parse one ability definition, throwing on a malformed shape (A4 style). */
+/** One ability definition, parsed; throws on a malformed shape. */
 export function parseAbilityDef(raw: unknown): AbilityDef {
   return AbilityDefSchema.parse(raw);
 }

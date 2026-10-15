@@ -1,14 +1,11 @@
 /**
- * Phase Y3 — the single generic `Ability` backing every migrated combat verb.
- * Where the legacy model had one class per verb (`MeleeStrike` / `RangedShot` /
- * `HealAlly` / `GambitStrike` / `DashAbility`), the data-driven model has ONE
- * ability class that wraps an `AbilityDef` and delegates to the propose bridge —
- * the verbs differ only in their DATA. The ability registry constructs one per
- * migrated id (`new EffectAbility(abilityDef(id))`).
+ * The `Ability` behind every ability def: it wraps one `AbilityDef` and hands
+ * proposing to `proposeEffectAbility` (`propose.ts`), so abilities differ only
+ * in their data. The ability registry builds one per def id.
  *
- * Stateless (the def is immutable, the per-tick proposal is derived live), so —
- * like the legacy abilities — a single instance per unit suffices and `World`
- * rehydrates it from the unit's ability-id list, not from serialized state.
+ * Stateless: the def is immutable and each proposal is derived live, so
+ * `World` rehydrates a unit's abilities from its list of ids, with no
+ * serialized state.
  */
 
 import type { Ability } from '../abilities/Ability';
@@ -20,20 +17,15 @@ import { proposeEffectAbility } from './propose';
 
 export class EffectAbility implements Ability {
   readonly id: string;
-  /**
-   * Surfaced from the def so `MovementBehavior`'s in-range abstain reads it off
-   * the migrated ability exactly as it did off the legacy `CatapultShot` (E7.D —
-   * lobs over walls). Absent on every LOS-gated verb.
-   */
+  /** Copied from the def; documented on `Ability`. */
   readonly ignoresLineOfSight?: boolean;
-  /** §76a — surfaced from the def for `World.applyAuraStatuses` (see Ability). */
+  /** Copied from the def; documented on `Ability`. */
   readonly aura?: Aura;
 
   constructor(private readonly def: AbilityDef) {
     this.id = def.id;
-    // Only set when the def opts in (the catapult); the legacy abilities simply
-    // omit the field, and `exactOptionalPropertyTypes` forbids assigning
-    // `undefined` to an optional boolean — so guard rather than assign through.
+    // Set only when the def has it: `exactOptionalPropertyTypes` forbids
+    // assigning `undefined` to an optional field.
     if (def.ignoresLineOfSight) this.ignoresLineOfSight = def.ignoresLineOfSight;
     if (def.aura) this.aura = def.aura;
   }

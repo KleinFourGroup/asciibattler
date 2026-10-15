@@ -1,11 +1,8 @@
 /**
- * Phase 27 — the bridge between a config `StatusDef` (the template) and a
- * runtime K1 `StatusEffect` (the live instance on `Unit.effects`).
- *
- * Kept separate from `statusSchema.ts` (pure schema) and `statusEffects.ts`
- * (pure K1 model) so neither has to import the other: this module depends on
- * both (+ the seconds→ticks conversion) and is the single place that knows how
- * to turn a def into an effect.
+ * Turns a config `StatusDef` (the template, `statusSchema.ts`) into a runtime
+ * `StatusEffect` (the live instance on `Unit.effects`, `statusEffects.ts`).
+ * It is its own module so that neither of those imports the other; this is the
+ * one place that knows how a def becomes an effect.
  */
 
 import { secondsToTicks } from '../../config';
@@ -13,11 +10,10 @@ import type { StatusEffect, MergePolicy, StatKey, StatMod } from '../statusEffec
 import type { StatusDef, StatusMerge } from './statusSchema';
 
 /**
- * Map the `StatusDef` merge vocabulary (the brief's names) onto K1's
- * `MergePolicy`. `refresh` → `replace` (reset duration, replace magnitude with
- * the base); `add` → `add` (stack); `instances` → `independent` (separate
- * copies); `ignore` → `ignore` (no-op if present). The reserved `instances` /
- * `ignore` have no §27 content consumer but map cleanly so the union is closed.
+ * A def's merge word as the effect's `MergePolicy` (whose doc says what each
+ * does): `refresh` → `replace`, `add` → `add`, `instances` → `independent`,
+ * `ignore` → `ignore`. No shipped status uses `instances` or `ignore`; they map
+ * so the union is closed.
  */
 function statusMergeToPolicy(merge: StatusMerge): MergePolicy {
   switch (merge) {
@@ -33,32 +29,31 @@ function statusMergeToPolicy(merge: StatusMerge): MergePolicy {
 }
 
 /**
- * Build a runtime `StatusEffect` from a `StatusDef` applied at `atTick`. The
- * periodic op / interval / duration are NOT stored on the effect — they're
- * def-resolved by `key` (= the def id) at tick time; the only periodic runtime
- * state is `nextTickAt` (the per-unit cursor, first tick one interval AFTER
- * apply, so the applying hit doesn't double-dip). `mods` copies the def's
- * `statMods` (the 47f authoring axis — per one unit of magnitude, the K1
- * contract; each instance gets its OWN copy since merging mutates mods in
- * place). Tick/duration conversions floor at 1 tick so a sub-tick interval
- * still advances.
+ * A runtime `StatusEffect` for `def` applied at `atTick`. The periodic op,
+ * its interval and the duration are not stored on the effect: they are read
+ * off the def by `key` (the def's id) when it ticks. The one periodic state is
+ * `nextTickAt`, first set one interval after the apply, so the hit that
+ * applied the status is not followed by a tick on the same tick. `mods` copies
+ * the def's `statMods` (per unit of magnitude), one copy per instance, since a
+ * merge mutates mods in place. The duration and the interval floor at 1 tick,
+ * so a sub-tick interval still advances.
  */
 export function buildStatusEffect(
   def: StatusDef,
   atTick: number,
   magnitude: number,
   sourceUnitId: number | null,
-  // 29 — the `applyStatus` op's optional per-application duration override (in
-  // seconds); falls back to the def's base duration when absent.
+  // The `applyStatus` op's duration for this application, in seconds; the
+  // def's own duration when absent.
   durationSecondsOverride?: number,
 ): StatusEffect {
   const durationTicks = Math.max(
     1,
     secondsToTicks(durationSecondsOverride ?? def.durationSeconds),
   );
-  // 47f — normalize zod's explicit-`undefined` optionals into exact `StatMod`
-  // objects (the `config/empower.ts` `normalizeMods` discipline), copying per
-  // instance.
+  // Zod gives an absent optional as an explicit `undefined`; copy only the
+  // fields that are set, so each `StatMod` is exact, as `normalizeMods` in
+  // `src/config/empower.ts` does.
   const mods: Partial<Record<StatKey, StatMod>> = {};
   if (def.statMods) {
     for (const [stat, mod] of Object.entries(def.statMods)) {

@@ -60,6 +60,14 @@ TODO items (list A's deletions, list B's trials) are in
   truth table (`scratch/122f/truth.ts` is one). Signed at 122m (WORKLOG
   §122, 122m).
 
+- [ ] **The ability line overstates three units' damage.**
+  `src/ui/abilityDetail.ts:51` and `:65` show a damage op as `might +
+  damageStatFor(archetype)`, but the sim adds the op's own `scaling` stat
+  (`resolveDamageScalars`). Corrupter, ice_mage and rioter carry ops scaled
+  `none` with a `damageStat` of magic or ranged, so their line adds a stat
+  the hit never gets. `scalingStatValue(op.scaling, stats)` is the sim's
+  number. Found at 122o's batch 2 (WORKLOG §122); not checked in the pane.
+
 - [ ] **The page drive does not notice a phase whose scene never mounts.**
   With `Game.dispatch`'s map swap after a rest removed, `npm run probe --
   shell/electron/probes/drive-run.js --seed=6 --dials=hops=2&firstNode=rest`

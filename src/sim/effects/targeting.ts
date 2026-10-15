@@ -1,17 +1,11 @@
 /**
- * Phase Y2 — target/area resolution for the effect interpreter.
+ * Who an op resolves to, for the effect interpreter. A single-target selector
+ * resolves to one unit when the ability proposes; an `aoe` selector resolves to
+ * the units in its cells when it fires, whoever is standing there then, and
+ * these helpers do that.
  *
- * The targeting axis (the brief's first axis): WHO an op resolves to. Single-
- * target selectors (`enemyInRange` / `lowestHpAlly` / `self`) resolve to one unit
- * at propose time (Y3); the `aoe` selector resolves to its occupants at FIRE time
- * (impact) — "hit whoever is standing in the cells now" — which is what these
- * helpers do.
- *
- * `unitsInCells` is the **Cluster-2 footprint seam** — FILLED (44-pre-b): an
- * area op is "units whose FOOTPRINT intersects the cell set" (`cellsOccupiedBy`),
- * so a 2×2/3×3 rubble is caught by a blast covering any of its body cells, not
- * just its §39 corner. Every 1×1 unit takes the same single-cell membership test
- * as before — byte-identical for the whole combatant roster.
+ * A unit is in an area when any cell of its footprint is (`cellsOccupiedBy`),
+ * so a blast over any body cell of a 2×2 or 3×3 rubble catches it.
  */
 
 import type { GridCoord } from '../../core/types';
@@ -22,10 +16,8 @@ import { cellKey, cellUnitDistance, cellsOccupiedBy } from '../occupancy';
 import type { Affects } from './schema';
 
 /**
- * The units whose footprint intersects the cell set, in `world.units` order (so
- * the downstream per-victim event/draw order is the same deterministic order
- * MagicBolt's `world.units.slice()` loop used). The Cluster-2 footprint seam,
- * filled 44-pre-b (see header).
+ * The units whose footprint meets the cell set, in `world.units` order, which
+ * fixes the order of each victim's events and draws downstream.
  */
 export function unitsInCells(world: World, cells: Iterable<GridCoord>): Unit[] {
   const keys = new Set<string>();
@@ -33,7 +25,7 @@ export function unitsInCells(world: World, cells: Iterable<GridCoord>): Unit[] {
   return world.units.filter((u) => cellsOccupiedBy(u).some((c) => keys.has(cellKey(c))));
 }
 
-/** The Chebyshev-radius square around a center — a (2·radius+1)² block. */
+/** The square of Chebyshev radius `radius` around `center`, (2·radius+1)² cells. */
 export function squareCells(center: GridCoord, radius: number): GridCoord[] {
   const cells: GridCoord[] = [];
   for (let dy = -radius; dy <= radius; dy++) {
@@ -44,8 +36,8 @@ export function squareCells(center: GridCoord, radius: number): GridCoord[] {
   return cells;
 }
 
-/** The cells an `aoe` shape covers around its center. Only `square` ships; the
- *  other shapes are reserved seams (declared in the schema, no consumer yet). */
+/** The cells an `aoe` shape covers around its centre. Only `square` is built;
+ *  `line` and `cross` pass the schema and throw here when an op fires one. */
 function cellsForAoeShape(
   shape: 'square' | 'line' | 'cross',
   center: GridCoord,
@@ -61,11 +53,9 @@ function cellsForAoeShape(
 }
 
 /**
- * The friendly-fire team filter relative to the caster. `'enemies'` is "not the
- * caster's team" (the brief's seam — so AoE chews destructible terrain for free
- * once Cluster 2 gives neutrals HP); the present-day neutral exclusion is the
- * SEPARATE `isCombatTargetable` guard, not this filter, so lifting it in Cluster
- * 2 is a one-line change here.
+ * The team filter, relative to the caster. `'enemies'` is every team but the
+ * caster's, neutrals included; which neutrals can be hit at all is
+ * `isCombatTargetable`'s call, not this filter's.
  */
 export function affectsMatch(affects: Affects, unitTeam: Team, casterTeam: Team): boolean {
   switch (affects) {
@@ -79,37 +69,31 @@ export function affectsMatch(affects: Affects, unitTeam: Team, casterTeam: Team)
 }
 
 /**
- * Is a unit a valid combat-damage target? Alive, AND either a combatant or a
- * DESTRUCTIBLE neutral. §40b lifted the blanket `team !== 'neutral'` exclusion →
- * destructibility = HP-PRESENCE: a neutral with an `hp` pool (rubble) is targetable;
- * an hp-less neutral (wall / half-cover) is not. This is what lets an
- * `affects:'enemies'` AoE chew rubble automatically — `resolveAreaVictims` filters
- * through here — while indestructible walls stay untouched. The `team === 'neutral'`
- * short-circuit keeps the combatant path (the overwhelming common case) a single
- * cheap check, consulting the catalog only for the rare neutral.
+ * Whether a unit can be hit: alive, and a combatant, a destructible neutral or
+ * a camp member. A neutral is destructible when its catalog entry has an `hp`
+ * pool (rubble); a neutral without one (a wall, half cover) is never hit. So an
+ * `affects: 'enemies'` blast breaks rubble and leaves walls whole. A combatant
+ * passes on the team check alone, without the catalog.
  */
 export function isCombatTargetable(u: Unit): boolean {
   if (u.currentHp <= 0) return false;
-  // §75e — an ACTIVE neutral (camp member) is a body in the blast: AoE splash
-  // and chain arcs hit it (`affectsMatch`'s 'enemies' already spans teams),
-  // and the landed splash aggros its camp at the damage chokepoint.
+  // A camp member is a body in the blast: splash and chain arcs hit it, and a
+  // landed hit turns its camp hostile (`World.dealDamage`).
   return u.team !== 'neutral' || isDestructibleNeutral(u.archetype) || u.campId !== null;
 }
 
 /**
- * §29c — the chain op's hop geometry: the nearest combat-targetable enemy (not on
- * `casterTeam`) within `rangeCells` (Chebyshev) of `from`, skipping any id in
- * `exclude` (the already-hit set, so the arc never repeats a target). Deterministic
- * — `world.units` order tie-breaks an equal-distance pick (strict `<`, so the first
- * occupant wins), the same order `unitsInCells` preserves for the blast. Returns
- * `undefined` when no fresh target remains in range → the chain ends early.
- * 44-pre-b — distance is to the nearest FOOTPRINT cell (`cellUnitDistance`), so a
- * big rubble whose body edges into hop range is a valid (and honestly-ranked)
- * hop even when its §39 corner sits outside; 1×1 units are byte-identical.
+ * The chain op's next hop: the nearest hittable unit not on `casterTeam` within
+ * `rangeCells` (Chebyshev) of `from`, skipping the ids in `exclude` (those
+ * already hit, so an arc never repeats a target). Distance is to the unit's
+ * nearest footprint cell (`cellUnitDistance`), so a large rubble whose body
+ * reaches into range is a hop even when its anchor cell is outside. An equal
+ * distance goes to the first in `world.units` order, as a blast's victims are
+ * ordered. `undefined` when no fresh target is in range, and the chain ends.
  *
- * Takes the caster's TEAM (not the caster unit) so a deferred hop — resolved a few
- * ticks after the cast — needn't deref a caster that may have died mid-chain (the
- * caller bails on a dead caster separately; this stays a pure geometry query).
+ * It takes the caster's team rather than the caster, so a hop resolved ticks
+ * after the cast never reads a caster that died mid-chain; the caller stops a
+ * dead caster's chain itself.
  */
 export function nearestChainTarget(
   world: World,
@@ -134,20 +118,17 @@ export function nearestChainTarget(
   return best;
 }
 
-/** A resolved area victim + its per-cell damage multiplier (center 1, ring `ringMultiplier`). */
+/** An area victim and its damage multiplier (1 at the centre, `ringMultiplier` on the ring). */
 interface AreaVictim {
   unit: Unit;
   mult: number;
 }
 
 /**
- * Resolve an `aoe` selector to its victims at fire time: the targetable units in
- * the shape, filtered by `affects` (relative to the caster), each tagged with its
- * center-vs-ring damage multiplier. Reproduces MagicBolt's blast set + order
- * (same-team / neutral / dead skipped, `world.units` order, center full / ring
- * scaled). 44-pre-b — the multiplier is the unit's BEST covered cell: any
- * footprint cell on the center takes 1, else ring (`cellUnitDistance === 0` ⇔
- * the body covers the center). Byte-identical for 1×1 units.
+ * An `aoe` selector's victims as it fires: the hittable units in the shape that
+ * `affects` admits, in `world.units` order, each with its multiplier. A unit
+ * takes the centre's 1 when any footprint cell is on the centre
+ * (`cellUnitDistance === 0`), and the ring's multiplier otherwise.
  */
 export function resolveAreaVictims(
   world: World,

@@ -5586,8 +5586,74 @@ Cost: 124,215 at 18:21 UTC by the tool's clock as the batch started,
 232,648 at 18:35 after its proof: 108k for 1,297 lines, 84 a line.
 `events.ts` took most of it: 36 events' emitters and consumers checked.
 
-**Read** (`batch`): `git show <hash> -- src/core/events.ts` against the
+**Read** (`batch`): `git show cdec80bf -- src/core/events.ts` against the
 seven rules. Wrong looks like a step code or history left, an event
 described with an emitter or consumer the code does not have, a field's
 fact said twice, or a cut that leaves a subscriber without what it must
 know (the optional fields' rule, `command:applied`'s tick stamp).
+
+Committed as `cdec80bf`; the suite 3,741 and the smoke 621, green, by the
+hook.
+
+### 122o, batch 2 — `src/sim/effects` (2026-10-15, session 4c3418de)
+
+All eleven: `schema.ts`, `interpreter.ts`, `propose.ts`, `EffectAction.ts`,
+`statusSchema.ts`, `targeting.ts`, `statusRuntime.ts`, `resolveScalars.ts`,
+`timeline.ts`, `EffectAbility.ts`, `reposition.ts`. The migration's story
+(the legacy classes each file replaced, "a line-for-line port of", the
+determinism oracle of the port, the editor and snapshot steps) is out;
+where a fact is owned elsewhere the comment names the owner
+(`MergePolicy`, `Ability`, `awayStep`, the kernels in
+`resolveScalars.ts`).
+
+**Statements found false and corrected (rule 7)**, each checked against
+the code or `config/abilities.json` and `config/statuses.json`:
+
+- `schema.ts`: its header called `applyStatus` reserved and rejected by
+  the interpreter, and `summon` and `chain` not yet declared; all three
+  are built. `FxSchema` was "inert"; the FX registry reads it.
+  `unitsInCells` was "single-cell today"; it counts the footprint. "Each
+  verb maps to exactly one `damageStatFor` stat": corrupter, ice_mage and
+  rioter scale their ops `none` against a `damageStat` of magic or ranged
+  (a lead below). The `'fill'` phase was "the charged spell's windup";
+  every shipped `'fill'` is a `recovery`.
+- `timeline.ts`: "only one non-zero fixed phase ever sits alongside a
+  `'fill'`"; magic_bolt, catapult_shot, hex and wail carry two, so the
+  clamp's order matters, and the comment now says which phase is cut.
+- `propose.ts`: its header said only the melee path was migrated and the
+  other selectors throw; every selector proposes. The strike's doc named
+  half cover's multiplier, which 121f removed, and a bow "joining in the
+  next commit".
+- `statusSchema.ts`: `preventsAttack` "skips attack proposals"; it stops
+  every ability, heals included (`AbilityBehavior`). The list of the four
+  statuses' flags left out confusion's `acquisitionRange`, which is also
+  a confused pick's radius; the list went (the JSON holds it).
+- `interpreter.ts`: "the attack editor enforces" an `applyStatus` coming
+  after its damage op; the editor checks no order.
+- `reposition.ts` named `GambitStrikeAction` as its other user; the users
+  are the interpreter's `retreat` and `MovementBehavior`'s flee.
+
+**Lead, put in TODO (§124):** `src/ui/abilityDetail.ts` shows a damage
+op as `might + damageStatFor(archetype)`, not the op's `scaling`, so the
+ability line of those three units adds a stat their hit never gets. Not
+checked in the pane.
+
+Measured (`comment-length` on copies of the eleven at `cdec80bf` and
+after): comment lines 1,061 → 826, words 8,711 → 6,747, code lines 1,154
+unchanged. The step-code ceiling 5,505 → 5,352, the eleven's 153.
+
+Proof: `comment-strip HEAD src`, comments only, exit 0. The control in
+`output/wt-122o`, the eleven copied in on top of batch 1's: unplanted
+exit 0; with `timeline.ts`'s flat-cooldown floor `Math.max(1, …)`
+planted as `Math.max(2, …)`, exit 1 naming that line; restored,
+byte-identical.
+
+Cost: 238,595 at 18:39 UTC after batch 1's commit, 364,885 at 18:52
+after the proof: 126k for 2,369 lines, 53 a line. Both batches so far:
+234k for 3,666 lines, 64 a line.
+
+**Read** (`batch`): `git show <hash> -- src/sim/effects/schema.ts
+src/sim/effects/timeline.ts` against the seven rules. Wrong looks like a
+step code or the migration's story left, a claim the config contradicts
+(a selector, a phase, a flag), or a rule a change must respect cut (the
+op order `applyStatus` needs, the shared firing-band predicate).

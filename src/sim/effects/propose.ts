@@ -1,22 +1,15 @@
 /**
- * Phase Y3 — the propose-time bridge: turn an `AbilityDef` + a casting unit into
- * an `EffectAction` + `ActionProposal`. This is the data-driven replacement for
- * each legacy ability's hand-coded `propose()` (`proposeBasicStrike`, the
- * healer's pick, the dash gate, …), reproducing the target resolution, the
- * range / LOS / minRange gates, and — critically — the CAST-TIME stat capture so
- * the Y3/Y4 determinism oracle reads byte-identical.
+ * The propose step: an `AbilityDef` and its caster become an `EffectAction` and
+ * its `ActionProposal`, or null when the ability abstains. It resolves the
+ * target, applies the range, line-of-sight and minimum-range gates, and captures
+ * the cast-time scalars.
  *
- * Why cast-time capture matters: the legacy actions resolve `baseDamage` /
- * `critChance` / the half-cover multiplier at PROPOSE time (off the caster's
- * current stats) and carry them inertly to impact. The interpreter consumes the
- * same scalars off the `OpResolution`, so a charged spell's damage uses its
- * cast-time stats, not its impact-time stats — exactly as before. The def
- * supplies the STRUCTURAL params (evadable, accuracy, the move mode), read live.
- *
- * SCOPE grows one verb per Y3/Y4 commit. Today: the `enemyInRange` + `damage`
- * path (the four melee weapons). The other selectors / ops throw a clear
- * not-yet-migrated error until their commit wires them — the strangler keeps the
- * legacy class authoritative for everything still un-migrated.
+ * The scalars (the base damage, the crit chance, a heal's amount, a status's
+ * magnitude and duration, a summon's level) are captured here off the caster's
+ * stats as they are now, and carried on the `OpResolution` to impact, so a
+ * charged spell lands with its cast-time stats, not its impact-time ones. The
+ * op's structural params (`evadable`, `accuracy`, the move mode) are read off
+ * the def when it fires.
  */
 
 import type { Unit } from '../Unit';
@@ -35,21 +28,19 @@ import { evalScaled, resolveDamageScalars, resolveHealAmount } from './resolveSc
 import { resolveCadenceTicks, resolvePhases } from './timeline';
 
 /**
- * Resolve an `AbilityDef` to a proposal for `unit` this tick, or null if it
- * abstains (no target, out of range, LOS broken). Dispatches on the target
- * selector — the propose-time shape that differs per verb family.
+ * `def`'s proposal for `unit` this tick, or null when it abstains (no target,
+ * out of range, no line of sight). Dispatches on the target selector.
  */
 export function proposeEffectAbility(
   def: AbilityDef,
   unit: Unit,
   world: World,
 ): ActionProposal | null {
-  // §76a — a PURE aura (no effect ops) never proposes an action: it is executed
-  // by `World.applyAuraStatuses`, not the ability pipeline, so the carrier stays
-  // free to move/strike on the same tick. Without this skip an op-less
-  // `self`-target def falls into `proposeSelfMove` and burns the action slot on
-  // a no-op leap. A def carrying ops AND an aura proposes normally (the ops are
-  // the action; the aura still radiates via the pass).
+  // An aura with no ops never proposes: `World.applyAuraStatuses` runs it
+  // outside the ability pipeline, so the carrier stays free to move or strike
+  // on the same tick. Without this, an op-less `self` def would fall into
+  // `proposeSelfMove` and spend the action on a leap that does nothing. A def
+  // with ops and an aura proposes normally; the aura still radiates.
   if (def.aura && def.effects.length === 0) return null;
   switch (def.target.kind) {
     case 'enemyInRange':
@@ -64,12 +55,9 @@ export function proposeEffectAbility(
 }
 
 /**
- * The single-target, LOS-gated strike (the four melee weapons; the bow joins in
- * the next commit). A line-for-line port of `proposeBasicStrike`'s melee path:
- * the same `currentTarget` pick, the same `[minRange, range]` band gate, the
- * same wall-abort + half-cover multiplier, and the cast-time damage/crit capture
- * — only now the scalars ride an `OpResolution` into the interpreter instead of
- * the per-class `AttackAction` fields.
+ * A single-target strike (the `enemyInRange` selector): the `currentTarget`
+ * pick, the `[minRange, range]` band and line-of-sight gate, and the cast-time
+ * capture.
  */
 function proposeSingleTargetAttack(
   def: AbilityDef,
@@ -79,13 +67,12 @@ function proposeSingleTargetAttack(
   const target = currentTarget(unit, world);
   if (target === null) return null;
 
-  // 44-pre-c — the band + LOS gate is the shared footprint-aware predicate
-  // (`firingBandCell`): in band of (and, for LOS-gated shots, with a clear line
-  // to) ANY of the target's body cells — 1×1 targets take the old corner test
-  // exactly. The LOS skip stays E7.D's (the catapult lobs OVER walls → null
-  // blockers, band-only). `MovementBehavior.inFiringBand` routes through the
-  // SAME predicate — moving one without the other re-creates the GP4/Qb#3
-  // freeze class (hold says in-band, strike says out-of-range → deadlock).
+  // The band and line-of-sight gate (`firingBandCell`): in band of, and with a
+  // clear line to, any of the target's body cells; an ability that
+  // `ignoresLineOfSight` passes no blockers and is gated on the band alone. The
+  // positioning protocol's hold (`positioning.ts`) runs the same predicate, and
+  // changing one without the other brings back a freeze: the hold says in band
+  // while the strike says out of range.
   const aim = firingBandCell(
     unit.position,
     target,
@@ -97,14 +84,13 @@ function proposeSingleTargetAttack(
   if (aim === undefined) return null;
 
   const speed = unit.effectiveStats.speed;
-  // `retreatAnchor` = the struck cell, for a gambit's `move`-retreat op (the
-  // strike effects ignore it). A copy is taken inside `resolveOp`.
+  // `retreatAnchor` is the struck cell, for a `move` op in `retreat` mode; the
+  // other ops ignore it. `resolveOp` copies it.
   const ops = def.effects.map((e) => resolveOp(e.op, { unit, retreatAnchor: target.position }));
 
-  // Fizzle (the catapult): capture the cast cell as the dud-VFX impact fallback
-  // (mirrors `CatapultShotAction.castPosition`) — the interpreter's fizzle branch
-  // + the homing `phaseTarget` read it when the locked target died mid-flight. The
-  // commit-at-cast strikes carry no cell.
+  // A shot that fizzles when its target is gone captures the cast cell: the
+  // interpreter's fizzle branch and `phaseTarget` draw the dud there if the
+  // locked target dies in flight. Other strikes carry no cell.
   const targetCell = def.orphanPolicy === 'fizzle' ? { ...target.position } : undefined;
 
   return {
@@ -117,10 +103,9 @@ function proposeSingleTargetAttack(
 }
 
 /**
- * The healer's pick (the `lowestHpAlly` selector). A line-for-line port of
- * `HealAlly.propose`: the lowest-HP wounded ally within `rangeCells` (self
- * included), the heal amount captured at cast, and the strike-shaped proposal
- * (score, speed-scaled cadence). No LOS / half-cover gate — a heal isn't a shot.
+ * A heal (the `lowestHpAlly` selector): `lowestWoundedAlly`'s pick within
+ * `rangeCells`, the caster included, with the heal amount captured at cast.
+ * There is no line-of-sight gate; a heal is not a shot.
  */
 function proposeHeal(
   def: AbilityDef,
@@ -144,19 +129,18 @@ function proposeHeal(
 }
 
 /**
- * A pure caster-reposition (the `self` selector — the rogue dash). A line-for-line
- * port of `DashAbility.propose`: resolve an enemy to leap at (only to compute the
- * landing — the EFFECT subjects the caster), abstain when already in strike reach,
- * and capture the `leapLanding` into the `advance` op. The leap distance is the
- * def's `rangeCells` (the movement-ability range); cadence is the FLAT cooldown
- * (`speedScaled:false`), decoupled from the short motion window.
+ * A leap (a `self` def whose op is a `move` in `advance` mode, the dash). An
+ * enemy is resolved only to compute the landing, since the effect moves the
+ * caster; the def abstains when the enemy is already within strike reach, and
+ * captures `leapLanding`'s cell for the op. The leap's reach is the def's
+ * `rangeCells`.
  */
 function proposeSelfMove(def: AbilityDef, unit: Unit, world: World): ActionProposal | null {
   const target = currentTarget(unit, world);
   if (target === null) return null;
-  // Already within strike reach → abstain so the strike (higher score) preempts.
-  // 44-pre-c — footprint distance: body-adjacent to a big rubble reads as "in
-  // reach" (corner-only, the rogue leapt around the body it could already hit).
+  // Within strike reach: abstain, so the strike proposes instead. The distance
+  // is to the target's body, so standing beside a large rubble counts as in
+  // reach.
   if (unitDistance(unit, target) <= unit.derived.attackRange) return null;
 
   const landing = leapLanding(unit, world, {
@@ -167,8 +151,8 @@ function proposeSelfMove(def: AbilityDef, unit: Unit, world: World): ActionPropo
   if (landing === null) return null;
 
   const speed = unit.effectiveStats.speed;
-  // No single-target unit (the leap subjects the caster); the enemy was only a
-  // landing reference, so targetId is -1 and phaseTarget surfaces nothing.
+  // No target unit: the enemy only placed the landing, so `targetId` is -1 and
+  // `phaseTarget` surfaces nothing.
   const ops = def.effects.map((e) =>
     resolveOp(e.op, { unit, advanceLanding: landing }),
   );
@@ -183,10 +167,9 @@ function proposeSelfMove(def: AbilityDef, unit: Unit, world: World): ActionPropo
 }
 
 /**
- * A `self`-target ability splits two ways by its op: a `summon` op (the Shaman —
- * caster-anchored minion placement) vs a caster-reposition `move` (the rogue dash).
- * Both target `self` (they subject the caster / its surroundings, not an enemy), so
- * they share the propose dispatch but diverge in their gate + capture.
+ * A `self` def proposes by its op: a `summon` op places minions around an
+ * anchor, and anything else is a leap. Both act on the caster or its
+ * surroundings rather than an enemy, which is why they share the selector.
  */
 function proposeSelfAbility(def: AbilityDef, unit: Unit, world: World): ActionProposal | null {
   const summon = def.effects.find((e) => e.op.kind === 'summon');
@@ -195,13 +178,12 @@ function proposeSelfAbility(def: AbilityDef, unit: Unit, world: World): ActionPr
 }
 
 /**
- * The summoner's cast (the Shaman — a `self`-target ability whose op is `summon`).
- * Gated ONLY on the per-caster `maxLive` cap: abstain at the ceiling so the unit
- * does something else (move) and re-proposes the instant a minion dies. No enemy /
- * range gate — a summoner raises its pack whenever it has room (the placement is
- * caster-anchored, so it needn't be near a foe). For a non-`self` `at` anchor (a
- * flank / area summon) the committed target's cell is captured so the interpreter
- * can resolve the anchor at fire; `at:self` needs no capture (`targetId -1`).
+ * A summon (a `self` def whose op is `summon`). Gated only on the caster's
+ * `maxLive` cap: at the cap it abstains, so the unit does something else, and it
+ * proposes again once a minion dies. No enemy or range gate. An anchor other
+ * than `self` captures the committed target's cell, so the interpreter can
+ * resolve the anchor when it fires; `at: self` captures nothing (`targetId`
+ * −1).
  */
 function proposeSummon(
   def: AbilityDef,
@@ -214,7 +196,7 @@ function proposeSummon(
   let targetId = -1;
   let targetCell: GridCoord | undefined;
   if (op.at.kind !== 'self') {
-    // A flank / area summon anchors on the committed target; abstain with none.
+    // The anchor is the committed target; abstain without one.
     const anchor = currentTarget(unit, world);
     if (anchor === null) return null;
     targetId = anchor.id;
@@ -233,19 +215,15 @@ function proposeSummon(
 }
 
 /**
- * The charged, ground-targeted area blast (the `aoe` selector — the mage bolt).
- * A line-for-line port of `MagicBolt.propose`: the same `currentTarget` pick, the
- * same `[minRange, range]` band gate, and the same LOS gate (a bolt can't be
- * lobbed through stone). It captures the target's CURRENT cell as the blast
- * CENTRE (`anchor:targetCell`) and carries it on the action; `targetId` is −1 —
- * the blast subjects whoever stands in the cells at impact, not a locked unit —
- * so `phaseTarget` surfaces only the cell. The interpreter's `executeDamage` aoe
- * branch (one crit roll, the ring multiplier) does the rest; the detonation FX
- * now rides the §Z registry off `action:phase{impact}`, not a sim event.
+ * An area blast aimed at a cell (an `aoe` selector anchored on the target):
+ * the `currentTarget` pick, the band gate and a line-of-sight gate, with the
+ * aimed cell captured as the blast's centre. `targetId` is −1, since the blast
+ * hits whoever stands in its cells at impact rather than a locked unit, so
+ * `phaseTarget` surfaces only the cell. The interpreter's area branch of
+ * `executeDamage` does the rest.
  */
 function proposeAreaBlast(def: AbilityDef, unit: Unit, world: World): ActionProposal | null {
-  // §76c — the caster-anchored arm (the second engine gap): no aim, no target,
-  // no LOS — the blast rides the caster.
+  // Anchored on the caster: no aim, no target, no line of sight.
   if (def.target.kind === 'aoe' && def.target.anchor === 'caster') {
     return proposeCasterAnchoredBlast(def, def.target, unit, world);
   }
@@ -253,13 +231,10 @@ function proposeAreaBlast(def: AbilityDef, unit: Unit, world: World): ActionProp
   const target = currentTarget(unit, world);
   if (target === null) return null;
 
-  // 44-pre-c — the same shared footprint band + LOS gate as the single-target
-  // strike (this gate was in the corner-only class too, though the audit's site
-  // list missed it — a hold/blast disagreement is the same freeze). The blast
-  // CENTRE becomes the aim cell: the in-range, visible body cell the gate
-  // passed on — for a 1×1 target that is exactly `target.position`, and against
-  // a multi-tile body the detonation lands where the caster can actually reach
-  // (44-pre-b's best-covered-cell mult reads it as a direct hit either way).
+  // The strike's band and line-of-sight gate, which the hold shares as well.
+  // The blast's centre is the cell the gate passed on: `target.position` for a
+  // 1×1 target, and against a larger body a cell the caster can reach, which
+  // the area's multiplier still reads as a direct hit.
   const aim = firingBandCell(
     unit.position,
     target,
@@ -271,8 +246,8 @@ function proposeAreaBlast(def: AbilityDef, unit: Unit, world: World): ActionProp
   if (aim === undefined) return null;
 
   const speed = unit.effectiveStats.speed;
-  // No single-target unit: an area detonation is dodged by leaving the blast,
-  // not by a per-cell roll. The blast centre is captured at cast time.
+  // No target unit: a blast is dodged by leaving its cells. The centre is
+  // captured at cast.
   const ops = def.effects.map((e) => resolveOp(e.op, { unit }));
 
   return {
@@ -285,20 +260,15 @@ function proposeAreaBlast(def: AbilityDef, unit: Unit, world: World): ActionProp
 }
 
 /**
- * §76c — the caster-anchored blast (the `aoe anchor:'caster'` selector, the
- * ally-targeting / nova propose arm the spec priced at ~40 lines). No
- * `currentTarget`, no band, no LOS — the blast rides the caster, so the only
- * gate is "would it MATTER now": at least one unit the blast affects stands in
- * the radius, judged by the SAME `resolveAreaVictims` the interpreter runs at
- * fire (propose and fire can't disagree by construction). Note an
- * `affects:'allies'`/`'all'` blast always finds at least the caster itself (its
- * own footprint covers the centre) — a self-including buff shout re-fires on
- * cooldown, which is the honest v1 semantics (an "only-when-others-nearby"
- * refinement is content policy, not engine). NOTHING is captured as the centre:
- * `targetCell` stays undefined and the interpreter's `aoeCenter` resolves the
- * caster's LIVE cell at fire, so a mid-windup shove moves the blast with the
- * body. `targetId` −1 (no locked unit; `phaseTarget` surfaces nothing —
- * commit-at-cast orphan semantics, like the dash).
+ * A blast anchored on the caster (an `aoe` selector with `anchor: 'caster'`).
+ * No target, no band and no line of sight; the one gate is whether the blast
+ * would touch anyone now, judged by the `resolveAreaVictims` the interpreter
+ * runs when it fires, so the two cannot disagree. An `affects: 'allies'` or
+ * `'all'` blast always finds the caster, whose footprint covers the centre, so
+ * it fires on every cooldown. Nothing is captured as the centre: the
+ * interpreter's `aoeCenter` reads the caster's live cell when it fires, so a
+ * shove during the wind-up moves the blast with the body. `targetId` −1, and
+ * `phaseTarget` surfaces nothing.
  */
 function proposeCasterAnchoredBlast(
   def: AbilityDef,
@@ -325,53 +295,43 @@ function proposeCasterAnchoredBlast(
   };
 }
 
-/** Per-op cast-time inputs an `EffectOp` may need, assembled by the caller. */
+/** The cast-time inputs an op may need, from the propose function. */
 interface OpResolveContext {
   unit: Unit;
-  /** `move` retreat (the gambit): the cell to dart AWAY from (the struck target's
-   *  position at cast — `struckFrom`). */
+  /** A `retreat` move's anchor: the struck target's cell at cast, which the
+   *  caster steps away from. */
   retreatAnchor?: GridCoord;
-  /** `move` advance (the dash): the captured leap landing. */
+  /** An `advance` move's landing cell. */
   advanceLanding?: GridCoord;
 }
 
-/**
- * Compute one op's cast-time scalars — the values the legacy actions resolved at
- * propose time and carried inertly to impact.
- */
+/** One op's cast-time scalars, carried unchanged to impact. */
 function resolveOp(op: EffectOp, c: OpResolveContext): OpResolution {
   switch (op.kind) {
     case 'damage': {
-      // §30c — the cast-time damage scalars (`might + scalingStat`, the crit
-      // probability) come from the shared `resolveScalars` kernel the attack
-      // editor's preview also consumes.
+      // The kernel the editors' previews share (`resolveScalars.ts`).
       const { baseDamage, critChance } = resolveDamageScalars(op, c.unit.effectiveStats);
       return { baseDamage, critChance };
     }
     case 'heal': {
-      // I6 — heal amount is `might + magic`, via the
-      // shared kernel. `none` scaling = flat `might`; never rolls to-hit or crit.
+      // The shared kernel too; a heal never rolls to hit or to crit.
       const healAmount = resolveHealAmount(op, c.unit.effectiveStats);
       return { healAmount };
     }
     case 'move': {
-      // retreat (the gambit dart-back): the anchor is the struck cell, captured
-      // at cast (`GambitStrikeAction.struckFrom`); the interpreter steps AWAY
-      // from it via `retreatCell`. advance (the dash): the captured leap landing,
-      // which the interpreter relocates the caster onto.
+      // `retreat`: the struck cell, which the interpreter steps away from
+      // (`retreatCell`). `advance`: the leap's landing, where it puts the caster.
       if (op.mode === 'retreat') {
         return c.retreatAnchor ? { moveDest: { ...c.retreatAnchor } } : {};
       }
       return c.advanceLanding ? { moveDest: { ...c.advanceLanding } } : {};
     }
     case 'applyStatus': {
-      // §31 — capture the (optionally scaled) magnitude + duration NOW, off the
-      // caster's stats (frozen), the same cast-time-capture contract `damage`
-      // holds. A bare number passes straight through `evalScaled`; an unauthored
-      // field stays undefined → the KEY is OMITTED (exactOptionalPropertyTypes),
-      // so the interpreter's `?? 1` / def-duration default governs. (The
-      // `statusId` is still read live at fire — the registry owns the op/behavior;
-      // only the SCALARS freeze here.)
+      // The magnitude and duration, scaled or not, frozen off the caster's stats
+      // now. A field the def leaves out is left off the resolution
+      // (`exactOptionalPropertyTypes`), so the interpreter's default (a
+      // magnitude of 1, the def's duration) governs. The `statusId` is read
+      // when it fires; only the scalars freeze here.
       const res: OpResolution = {};
       const magnitude = evalScaled(op.magnitude, c.unit);
       if (magnitude !== undefined) res.statusMagnitude = magnitude;
@@ -380,21 +340,16 @@ function resolveOp(op: EffectOp, c: OpResolveContext): OpResolution {
       return res;
     }
     case 'chain':
-      // 29c — capture each inner op's cast-time scalars NOW (off the caster's
-      // current stats), aligned with `op.ops`; the interpreter scales the damage
-      // by `falloff` per hop at fire time. Recurses through the same `resolveOp`,
-      // so a chained `damage` captures `baseDamage`/`critChance` exactly as a
-      // top-level one would (cast-time-stat capture, the charged-spell contract).
-      // The inner ops can't themselves be chains (ChainInnerOp = damage |
-      // applyStatus), so this recursion is one level deep.
+      // Each inner op's scalars, index for index with `op.ops`, through this same
+      // function, so a chained `damage` captures as a top-level one does; the
+      // interpreter applies `falloff` per hop when it fires. An inner op is a
+      // `damage` or an `applyStatus`, never a chain, so this recursion is one
+      // level deep.
       return { chainOps: op.ops.map((inner) => resolveOp(inner, c)) };
     case 'summon': {
-      // §31c — capture the minion level NOW (frozen), int-rounded ≥1 since
-      // `scaledUnit` needs an int. A bare number passes through `evalScaled`
-      // unchanged (byte-identical); a `ScaledValue` scales off the summoner at cast.
-      // ⚠️ §33 OP caveat: scaling off the caster's overall `level` can be strong — a
-      // one-line `perPoint`/`stat` dial-back. (count / cap / radius stay live on the
-      // op — registry-of-truth, like `applyStatus`'s `statusId`.)
+      // The minions' level, frozen now and rounded to a whole level of at least
+      // 1, since `scaledUnit` needs one. The count, the cap and the radius are
+      // read off the op when it fires, as `applyStatus`'s `statusId` is.
       const level = evalScaled(op.summon.level, c.unit) ?? 1;
       return { summonLevel: Math.max(1, Math.round(level)) };
     }

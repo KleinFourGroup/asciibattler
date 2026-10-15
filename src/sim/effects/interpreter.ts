@@ -1,17 +1,15 @@
 /**
- * Phase Y2 — the effect-op interpreter: one `switch` over `op.kind` that executes
- * a resolved op against the world. This is the data-driven replacement for the
- * per-class `start`/`applyEffect` bodies — `damage` → `world.applyDamage`,
- * `heal` → the heal path, `move` → the caster-reposition primitive — reproducing
- * each legacy action's mutations, `combatRng` draw order, and emitted events so
- * the Y3/Y4 determinism oracle reads byte-identical.
+ * The effect-op interpreter: one `switch` over `op.kind` that runs a resolved op
+ * against the world (`damage` through `world.applyDamage`, `heal`, `move`
+ * through the reposition step, `applyStatus`, `chain`, `summon`). Its RNG draws
+ * and its events are in an order the determinism tests pin.
  *
- * Cast-time-resolved scalars (baseDamage, critChance, the heal
- * amount, the move destination) ride in on the `OpResolution` — captured at
- * propose time (Y3's ability builder), exactly as the legacy actions captured
- * them, so a charged spell's damage uses the caster's CAST-time stats, not its
- * impact-time stats. The def supplies the structural params (evadable, accuracy,
- * the aoe shape/affects/ring, the move mode) — read live, the source of truth.
+ * The scalars captured at cast (the base damage, the crit chance, the heal
+ * amount, the move's cell, a status's magnitude and duration, a summon's level)
+ * arrive on the `OpResolution`, so a charged spell lands with the caster's
+ * cast-time stats. The structural params (`evadable`, `accuracy`, the area's
+ * shape, `affects` and ring, the move mode) are read off the def when the op
+ * fires.
  */
 
 import type { GridCoord } from '../../core/types';
@@ -28,81 +26,73 @@ import { retreatCell } from './reposition';
 import { behaviorFlags } from '../statusBehavior';
 
 /**
- * 29 — per-FIRE scratch, shared across every op that fires in one phase pass
- * (`EffectAction.fireOpsAt` builds one and threads it into each op's context).
- * It carries the status-on-hit gate: which single-target evade MISSES happened
- * this pass, so an `applyStatus` op slotted on the same phase as its paired
- * `damage` op skips the targets the strike whiffed on.
+ * A scratch shared by every op that fires on one phase boundary
+ * (`EffectAction.fireOpsAt` makes one and passes it to each op). It holds the
+ * misses: the targets a damage op on this boundary missed, so an `applyStatus`
+ * on the same phase skips them and a status lands only on a hit.
  *
- * Why track misses, not hits: non-evadable damage (every AoE) and a 0-damage
- * ring cell never call into the evade roll, so they're never "missed" — an area
- * status still lands on everyone the blast covered, while an evaded single-target
- * swing (the only thing that populates this set) drops its rider. A dead/fizzled
- * target is filtered separately by `applyStatus`'s own alive check.
+ * It records misses rather than hits because damage that cannot be evaded (no
+ * shipped area op is `evadable`) and a ring cell that rounds to 0 never roll to
+ * hit, so they are never missed: an area status lands on everyone the blast
+ * covered, and only an evaded strike drops its rider. A dead or fizzled target
+ * is left out by `applyStatus`'s own alive check.
  */
 interface FireScratch {
-  /** Unit ids a damage op this pass explicitly MISSED (evade). */
+  /** The unit ids a damage op on this boundary missed. */
   missed: Set<number>;
 }
 
-/** A fresh, empty per-fire scratch. */
+/** An empty scratch for one phase boundary. */
 export function newFireScratch(): FireScratch {
   return { missed: new Set<number>() };
 }
 
-/** Cast-time-resolved values for one op, captured at propose time. */
+/** One op's values captured at cast (`propose.ts`'s `resolveOp`). */
 export interface OpResolution {
-  /** damage: `might + scalingStat(caster)` at cast. */
+  /** damage: `might` and the `scaling` stat. */
   baseDamage?: number;
-  /** damage: `critable ? critChanceFor(critBase, luck) : 0` at cast. */
+  /** damage: the crit chance, 0 when the op is not `critable`. */
   critChance?: number;
-  /** heal: `might + magic` at cast. */
+  /** heal: the amount, `might` and the `scaling` stat. */
   healAmount?: number;
-  /** move: the `advance` landing cell, or the `retreat` anchor (struckFrom). */
+  /** move: the `advance` landing, or the `retreat` anchor (the struck cell). */
   moveDest?: GridCoord;
   /**
-   * 29c chain: the cast-time resolutions of the chain's inner `ops`, aligned by
-   * index with `op.ops`. Captured once at propose time (`resolveOp`) and scaled
-   * by `falloff^jump` live per hop, so a charged chain's damage uses its CAST-time
-   * stats — the same contract every other op holds. Round-trips via the recursive
-   * `cloneResolution` (EffectAction), so an in-flight chain carries no new
-   * serialized SHAPE beyond `OpResolution` gaining this optional nested array.
+   * chain: the inner ops' resolutions, index for index with `op.ops`, captured
+   * once at cast and scaled by `falloff^jump` per hop. `cloneResolution`
+   * (EffectAction) copies them in depth, so a chain under way round-trips.
    */
   chainOps?: OpResolution[];
   /**
-   * §31 applyStatus: the cast-time-captured (optionally scaled) status magnitude
-   * + duration override — `evalScaled(op.magnitude | op.durationSeconds, caster)`
-   * at propose, frozen. Both float; the `× magnitude` round + the `secondsToTicks`
-   * floor live downstream (World.applyStatusEffect / statusRuntime). Undefined when
-   * the op authored neither (the consumer's `?? 1` / def-duration default governs)
-   * or for a non-status op. Round-trips via cloneResolution's `{ ...r }` spread.
+   * applyStatus: the magnitude and the duration (in seconds), scaled or not,
+   * frozen at cast; both may be fractional. Rounding the magnitude and flooring
+   * the ticks happen downstream (`World.applyStatusEffect`, `statusRuntime.ts`).
+   * Undefined when the op authored neither, and the consumer's default (a
+   * magnitude of 1, the def's duration) governs.
    */
   statusMagnitude?: number;
   statusDurationSeconds?: number;
-  /**
-   * §31c summon: the cast-time-captured minion level (int-rounded ≥1 at capture —
-   * `scaledUnit` needs an int). Slot RESERVED here in 31b so 31c reuses the v30
-   * shape with no second bump (the "27 reserves 28" pattern).
-   */
+  /** summon: the minions' level, a whole level of at least 1, since
+   *  `scaledUnit` needs one. */
   summonLevel?: number;
 }
 
-/** Everything the interpreter needs to fire one op, assembled by `EffectAction`. */
+/** What the interpreter needs to fire one op, from `EffectAction`. */
 export interface OpFireContext {
   caster: Unit;
   world: World;
   orphanPolicy: OrphanPolicy;
   selector: TargetSelector;
-  /** The live single-target unit (re-resolved via `findUnit`), if any. */
+  /** The single target, looked up live (`findUnit`), if there is one. */
   target: Unit | undefined;
-  /** The captured cell: the aoe center, or the fizzle VFX fallback. */
+  /** The captured cell: an `aoe`'s centre, or where a fizzled shot is drawn. */
   targetCell: GridCoord | undefined;
   resolution: OpResolution;
-  /** Ticks of the phase this op fires on (the `advance` move's motion window). */
+  /** The ticks of the phase this op fires on: an `advance` move's slide. */
   phaseTicks: number;
-  /** finishTick − currentTick (the `retreat` move's lerp window). */
+  /** The action's busy ticks left: the most a `retreat` move's slide takes. */
   remainingTicks: number;
-  /** 29 — the per-fire scratch shared by every op on this phase (status-on-hit). */
+  /** The scratch every op on this boundary shares. */
   fireScratch: FireScratch;
 }
 
@@ -134,11 +124,9 @@ export function executeOp(op: EffectOp, ctx: OpFireContext): void {
 }
 
 /**
- * §76c — an aoe's blast centre: for `anchor:'caster'` it is the caster's LIVE
- * cell at fire (the declared-but-never-read anchor, finally honoured — a nova
- * detonates where the caster STANDS, so a mid-windup shove/reposition moves the
- * blast with it; nothing is captured at cast); for `anchor:'targetCell'` it is
- * the cast-time-captured cell, exactly as before.
+ * An `aoe`'s centre: for `anchor: 'caster'` the caster's live cell as the op
+ * fires, so a shove during the wind-up moves the blast with the body and nothing
+ * is captured at cast; for `anchor: 'targetCell'` the cell captured at cast.
  */
 function aoeCenter(
   sel: Extract<TargetSelector, { kind: 'aoe' }>,
@@ -155,18 +143,16 @@ function executeDamage(
   const baseDamage = ctx.resolution.baseDamage ?? 0;
   const critChance = ctx.resolution.critChance ?? 0;
 
-  // --- AoE (MagicBolt ground-target / §76c caster-anchored): victims at fire,
-  //     one crit roll. ---
+  // --- An area: the victims as it fires, one crit roll for all. ---
   if (ctx.selector.kind === 'aoe') {
     const center = aoeCenter(ctx.selector, ctx);
     if (center === undefined) return;
     const crit = world.combatRng.next() < critChance;
     const critFactor = crit ? STATS.critMult : 1;
-    // 28 — a CONFUSED caster's blast friendly-fires: its `affects:'all'` flag
-    // overrides the def's authored filter, hitting allies in the radius too. Read
-    // LIVE off the caster's effects at fire time (consistent with `affects` being
-    // a structural, source-of-truth param) → no captured/serialized state, no
-    // snapshot bump. The confused random target pick set the blast CENTRE.
+    // A confused caster's blast hits its own side too: the status's
+    // `affects: 'all'` overrides the def's filter. It is read off the caster's
+    // effects as the op fires, as `affects` itself is, so nothing is captured;
+    // the confused random target pick set the centre.
     const affects = behaviorFlags(caster.effects).affects ?? ctx.selector.affects;
     const victims = resolveAreaVictims(world, caster, center, {
       shape: ctx.selector.shape,
@@ -176,21 +162,21 @@ function executeDamage(
     });
     for (const { unit: victim, mult } of victims) {
       const damage = Math.round(baseDamage * critFactor * mult);
-      if (damage <= 0) continue; // a ring cell that rounds to nothing
+      if (damage <= 0) continue; // a ring cell that rounds to 0
       const landed = world.applyDamage(caster.id, victim, damage, {
         crit,
         evadable: op.evadable,
         accuracy: op.accuracy,
         bypassDefense: op.bypassDefense,
       });
-      if (!landed) ctx.fireScratch.missed.add(victim.id); // 29 — status-on-hit gate
+      if (!landed) ctx.fireScratch.missed.add(victim.id); // for applyStatus
     }
     return;
   }
 
   const target = ctx.target;
 
-  // --- Single-target, fizzle (CatapultShot): abort with no draw if dead. ---
+  // --- One target, `fizzle`: a dead target stops it with no draw. ---
   if (ctx.orphanPolicy === 'fizzle') {
     const hit = !!target && target.currentHp > 0;
     if (!hit) return; // no crit draw on the abort path
@@ -203,11 +189,11 @@ function executeDamage(
       accuracy: op.accuracy,
       bypassDefense: op.bypassDefense,
     });
-    if (!landed) ctx.fireScratch.missed.add(target!.id); // 29 — status-on-hit gate
+    if (!landed) ctx.fireScratch.missed.add(target!.id); // for applyStatus
     return;
   }
 
-  // --- Single-target, commit-at-cast (Attack/Gambit): skip if dead, no draw. ---
+  // --- One target, `commit-at-cast`: a dead target is skipped, no draw. ---
   if (!target || target.currentHp <= 0) return;
   const crit = world.combatRng.next() < critChance;
   const damage = Math.round(baseDamage * (crit ? STATS.critMult : 1));
@@ -217,12 +203,12 @@ function executeDamage(
     accuracy: op.accuracy,
     bypassDefense: op.bypassDefense,
   });
-  if (!landed) ctx.fireScratch.missed.add(target.id); // 29 — status-on-hit gate
+  if (!landed) ctx.fireScratch.missed.add(target.id); // for applyStatus
 }
 
 function executeHeal(_op: Extract<EffectOp, { kind: 'heal' }>, ctx: OpFireContext): void {
   const target = ctx.target;
-  if (!target || target.currentHp <= 0) return; // commit-at-cast guard
+  if (!target || target.currentHp <= 0) return; // a dead target is skipped
   const amount = ctx.resolution.healAmount ?? 0;
   const before = target.currentHp;
   target.currentHp = Math.min(target.derived.maxHp, before + amount);
@@ -237,7 +223,7 @@ function executeMove(op: Extract<EffectOp, { kind: 'move' }>, ctx: OpFireContext
   if (ref === undefined) return;
 
   if (op.mode === 'advance') {
-    // The leap toward the target (dash): relocate to the captured landing.
+    // The leap (the dash): onto the landing captured at cast.
     const from = { ...caster.position };
     caster.position = { ...ref };
     world.emit('unit:moved', { unitId: caster.id, from, to: { ...ref }, durationTicks: ctx.phaseTicks });
@@ -245,7 +231,7 @@ function executeMove(op: Extract<EffectOp, { kind: 'move' }>, ctx: OpFireContext
     return;
   }
 
-  // retreat — the gambit dart-back: a step AWAY from the anchor, or hold.
+  // `retreat`: a step away from the anchor, or none.
   const dest = retreatCell(caster, ref, world);
   if (dest === null) return;
   const from = { ...caster.position };
@@ -256,19 +242,17 @@ function executeMove(op: Extract<EffectOp, { kind: 'move' }>, ctx: OpFireContext
 }
 
 /**
- * 29 — status-on-hit: apply a configured status to the op's resolved targets.
- * Targets resolve off the def's SELECTOR (the same axis the paired damage op
- * uses); the status-on-hit gate then drops any the strike MISSED this pass and
- * any already dead (a corpse / fizzled shot). A PURE applier (no paired damage,
- * e.g. an AoE control cloud) leaves the miss set empty, so it lands on every
- * resolved target. `magnitude` (default 1) scales the status's periodic output
- * and stacks under the `add` merge; `durationSeconds`, when authored, overrides
- * the def's base duration.
+ * Puts the op's status on its resolved targets. The targets come from the def's
+ * selector, as the damage op's do; then the targets a damage op on this boundary
+ * missed, and the dead (a corpse, a fizzled shot's target), are skipped. An
+ * `applyStatus` with no damage op beside it (a cloud of control) finds no misses
+ * and lands on every target. `magnitude` (1 by default) scales the status's
+ * periodic output and stacks under an `add` merge; `durationSeconds`, when
+ * authored, replaces the def's duration.
  *
- * ORDER MATTERS: this must be authored AFTER its paired `damage` op on the same
- * phase so the miss is recorded before the gate reads it (`fireOpsAt` walks
- * `def.effects` in order). The §30 attack editor enforces it; the interpreter
- * relies on it.
+ * Order matters: the op must come after its damage op on the same phase, so the
+ * miss is recorded before it is read (`fireOpsAt` walks `def.effects` in
+ * order). Nothing checks the order; the author keeps it.
  */
 function executeApplyStatus(
   op: Extract<EffectOp, { kind: 'applyStatus' }>,
@@ -276,11 +260,9 @@ function executeApplyStatus(
 ): void {
   const def = statusDef(op.statusId);
   for (const t of resolveStatusTargets(ctx)) {
-    if (t.currentHp <= 0) continue; // never status a corpse / fizzled target
-    if (ctx.fireScratch.missed.has(t.id)) continue; // the missed-swing gate
-    // §31 — magnitude + duration are the CAST-TIME-captured (optionally scaled)
-    // scalars off the resolution, not the live op fields. A bare-number author
-    // is byte-identical (propose froze the same number); the scaled form rides in.
+    if (t.currentHp <= 0) continue; // never a corpse or a fizzled target
+    if (ctx.fireScratch.missed.has(t.id)) continue; // a missed strike
+    // The magnitude and duration captured at cast, not the op's fields.
     ctx.world.applyStatusEffect(
       t,
       def,
@@ -292,15 +274,15 @@ function executeApplyStatus(
 }
 
 /**
- * The units an op resolves to under the def's selector at fire time — the
- * targeting axis, shared with the damage path. `aoe` resolves its live occupants
- * (honouring a confused caster's forced `affects:'all'`, like `executeDamage`);
- * `self` is the caster; a single-target selector is the captured live target.
+ * The units a status op resolves to under the def's selector as it fires: an
+ * `aoe`'s occupants now (with a confused caster's `affects: 'all'`, as
+ * `executeDamage` reads it), the caster for `self`, and the live captured target
+ * for a single-target selector.
  */
 function resolveStatusTargets(ctx: OpFireContext): Unit[] {
   const sel = ctx.selector;
   if (sel.kind === 'aoe') {
-    const center = aoeCenter(sel, ctx); // §76c — caster-anchored resolves live
+    const center = aoeCenter(sel, ctx);
     if (center === undefined) return [];
     const affects = behaviorFlags(ctx.caster.effects).affects ?? sel.affects;
     return resolveAreaVictims(ctx.world, ctx.caster, center, {
@@ -311,35 +293,33 @@ function resolveStatusTargets(ctx: OpFireContext): Unit[] {
     }).map((v) => v.unit);
   }
   if (sel.kind === 'self') return [ctx.caster];
-  // enemyInRange / lowestHpAlly — the captured live single target.
+  // `enemyInRange` and `lowestHpAlly`: the captured target, if alive in the world.
   return ctx.target ? [ctx.target] : [];
 }
 
 /* -------------------------------------------------------------------------- */
-/* §29d summon — caster-anchored minion placement.                             */
+/* Summon: minions placed around an anchor.                                   */
 /* -------------------------------------------------------------------------- */
 
 /**
- * §29d — summon: place `op.summon.count` minions onto the caster's team, into the
- * nearest free cells to the resolved `at` anchor (bounded by `radiusCells`). The
- * per-caster `maxLive` cap is honoured LIVE — propose already abstains at the
- * ceiling, but it's clamped here too (defence against a stale propose), so the cap
- * is never exceeded. No free cell in range → the cast fizzles (nothing spawned).
- * Deterministic: the placement is the BFS, the minion stats the RNG-free
- * `scaledUnit` path (`World.spawnSummon`). Each minion fades in (`unit:spawned`
- * `instant:false`) under a `SpawnAction` lockout, joining next tick — the safe
- * mid-`tick` add (the per-unit loop iterates a `units.slice()`, so a unit pushed
- * at impact isn't part of this tick's pass), exactly like a D5.C overflow spawn.
+ * Places `op.summon.count` minions on the caster's team in the free cells
+ * nearest the resolved `at` anchor, within `radiusCells`. The caster's `maxLive`
+ * cap holds here as well as at propose, against a proposal made stale since,
+ * so the cap is never passed. No free cell in range: the cast fizzles and
+ * nothing is placed. The placement is a breadth-first search and the stats come
+ * from `scaledUnit` (`World.spawnSummon`), so nothing draws RNG. Each minion
+ * fades in (`unit:spawned` with `instant: false`) under a `SpawnAction` lockout
+ * and acts from the next tick: `World.tick` walks a copy of `units`, so a unit
+ * added at impact is not in this tick's pass.
  */
 function executeSummon(op: Extract<EffectOp, { kind: 'summon' }>, ctx: OpFireContext): void {
   const anchor = resolveSummonAnchor(op.at, ctx);
-  if (anchor === undefined) return; // no anchor (a dead/absent target) → fizzle
+  if (anchor === undefined) return; // no anchor (a dead or absent target): fizzle
   const room = op.summon.maxLive - ctx.world.liveSummonCount(ctx.caster.id);
-  if (room <= 0) return; // at the cap (defensive — propose already gated)
+  if (room <= 0) return; // at the cap
   const want = Math.min(op.summon.count, room);
   const cells = nearestFreeCells(anchor, want, op.summon.radiusCells, ctx.world);
-  // §31c — the minion level is the cast-time-captured (optionally scaled) value off
-  // the resolution, not the live op; `?? 1` is defensive (propose always captures).
+  // The level captured at cast, not the op's; propose always captures one.
   const level = ctx.resolution.summonLevel ?? 1;
   for (const cell of cells) {
     ctx.world.spawnSummon(op.summon.archetype as Archetype, level, ctx.caster.team, cell, ctx.caster.id);
@@ -347,18 +327,17 @@ function executeSummon(op: Extract<EffectOp, { kind: 'summon' }>, ctx: OpFireCon
 }
 
 /**
- * Resolve a summon's `at` anchor to a cell, mirroring `resolveStatusTargets`'s
- * selector axis: `self` → the caster's cell (the default — adjacent-to-me summon);
- * `aoe` → the captured blast cell; a single-target selector → the live target's
- * cell (a flank summon). `undefined` (a dead / never-captured target) fizzles the
- * cast.
+ * A summon's `at` anchor as a cell: the caster's cell for `self` (the default),
+ * the blast's centre for an `aoe`, the live target's cell for a single-target
+ * selector (a flank summon). `undefined`, for a dead or never-captured target,
+ * fizzles the cast.
  */
 function resolveSummonAnchor(at: TargetSelector, ctx: OpFireContext): GridCoord | undefined {
   switch (at.kind) {
     case 'self':
       return ctx.caster.position;
     case 'aoe':
-      return aoeCenter(at, ctx); // §76c — caster-anchored resolves live
+      return aoeCenter(at, ctx);
     case 'enemyInRange':
     case 'lowestHpAlly':
       return ctx.target?.position;
@@ -366,41 +345,39 @@ function resolveSummonAnchor(at: TargetSelector, ctx: OpFireContext): GridCoord 
 }
 
 /* -------------------------------------------------------------------------- */
-/* 29c chain — the per-hop arc, optionally staggered over real sim ticks.      */
+/* Chain: the arc from hop to hop, spaced over sim ticks if the op says so.   */
 /* -------------------------------------------------------------------------- */
 
 /**
- * 29c — chain: arc the op's `ops` across up to `maxJumps` targets. Jump 0 is the
- * committed primary (`ctx.target`); each later jump hops to the nearest fresh
- * enemy within `rangeCells` of the previous victim (`nearestChainTarget`), never
- * repeating a target, ending early if none remains. Each victim takes the inner
- * `ops` with `falloff^jump` applied to their captured damage (the primary full).
+ * A chain arcs its `ops` across up to `maxJumps` targets. Jump 0 is the committed
+ * primary (`ctx.target`); each later jump goes to the nearest fresh enemy within
+ * `rangeCells` of the last victim (`nearestChainTarget`), never repeating one,
+ * and the chain ends early when none is left. Each victim takes the inner ops
+ * with `falloff^jump` applied to their captured damage, the primary in full.
  *
- * Timing (the 29c follow-up): with `hopDelaySeconds > 0` only jump 0 lands NOW
- * (the impact tick); the remaining jumps ride `World.pendingChainHops`, firing one
- * every `hopDelaySeconds` so the bolt visibly travels (each hop's damage number /
- * HP drop / arc coincide on that hop's tick). `0` keeps the original synchronous
- * resolve (every hop on the impact tick). Either way the geometry is the same — a
- * deferred hop just re-resolves its next target LIVE at fire time, so a target that
- * moved or died between hops is handled deterministically (and the chain breaks if
- * the caster itself died mid-arc).
+ * With `hopDelaySeconds > 0` only jump 0 lands on the impact tick; the rest wait
+ * in `World.pendingChainHops` and land one every `hopDelaySeconds`, so the arc
+ * travels and each hop's number, HP drop and arc show on its own tick. With 0,
+ * every hop lands on the impact tick. The geometry is the same either way: a
+ * waiting hop finds its target when it fires, so a target that moved or died
+ * between hops is handled deterministically, and the chain stops if the caster
+ * died mid-arc.
  *
- * The inner ops fire through the SAME `executeOp` (the recursion), under a
- * synthesized single-target context: selector `enemyInRange`, `commit-at-cast`,
- * the jump victim as `target`, and a FRESH per-jump scratch — so an `applyStatus`
- * rider reads only its own hop's hit/miss, never a prior hop's. A dead primary
- * (it died during a charged windup) yields no jump-0 victim → the whole chain
- * fizzles, mirroring a `commit-at-cast` strike onto a corpse.
+ * The inner ops fire through `executeOp` itself, under a single-target context
+ * made for the hop (`enemyInRange`, `commit-at-cast`, the hop's victim as the
+ * target) with a fresh scratch, so an `applyStatus` rider reads only its own
+ * hop's miss. A primary that died (during a charged wind-up, say) leaves no
+ * victim for jump 0, and the whole chain fizzles, as a strike on a corpse does.
  */
 const CHAIN_INNER_SELECTOR: TargetSelector = { kind: 'enemyInRange' };
 
 /**
- * A chain jump waiting to fire on a future tick (`World.pendingChainHops`). Holds
- * the chain op + the cast-time `resolution` (so the inner scalars + falloff are
- * authoritative), the running `hitIds` (no repeats) and the arc origin `fromPos`
- * (the previous victim's cell), and which `jumpIndex` this is (its `falloff^jump`).
- * Plain data — round-trips in the WorldSnapshot (v28); `op`/`resolution` are
- * immutable by convention, the mutable per-hop bits (`fromPos`/`hitIds`) get copied.
+ * A chain hop waiting to fire on a later tick (`World.pendingChainHops`): the op
+ * and the cast-time `resolution` (whose inner scalars and falloff it fires
+ * with), the ids already hit (`hitIds`, so none repeats), the arc's origin
+ * `fromPos` (the last victim's cell), and its `jumpIndex` (the power of
+ * `falloff`). Plain data, serialized in the World snapshot. `op` and
+ * `resolution` are not mutated; `fromPos` and `hitIds` are copied per hop.
  */
 export interface PendingChainHop {
   fireAtTick: number;
@@ -414,7 +391,7 @@ export interface PendingChainHop {
 
 function executeChain(op: ChainOp, ctx: OpFireContext): void {
   const victim0 = ctx.target && ctx.target.currentHp > 0 ? ctx.target : undefined;
-  if (!victim0) return; // dead/committed primary → the whole chain fizzles
+  if (!victim0) return; // a dead primary: the whole chain fizzles
 
   const hit = new Set<number>();
   fireChainHopOps(ctx.world, ctx.caster, op, ctx.resolution, victim0, 0, ctx.caster.position);
@@ -425,8 +402,7 @@ function executeChain(op: ChainOp, ctx: OpFireContext): void {
   let from: GridCoord = { ...victim0.position };
 
   if (delayTicks <= 0) {
-    // Synchronous: every remaining hop lands on the impact tick (the original
-    // all-at-once resolve, kept for `hopDelaySeconds: 0`).
+    // `hopDelaySeconds: 0`: every remaining hop lands on the impact tick.
     for (let jump = 1; jump < op.maxJumps; jump++) {
       const victim = nearestChainTarget(ctx.world, ctx.caster.team, from, op.rangeCells, hit);
       if (!victim) break;
@@ -437,7 +413,7 @@ function executeChain(op: ChainOp, ctx: OpFireContext): void {
     return;
   }
 
-  // Staggered: queue jump 1, which cascades the rest one hop per `delayTicks`.
+  // Spaced: queue jump 1, which queues the next as it fires, one per `delayTicks`.
   ctx.world.scheduleChainHop({
     fireAtTick: ctx.world.currentTick + delayTicks,
     casterId: ctx.caster.id,
@@ -450,11 +426,10 @@ function executeChain(op: ChainOp, ctx: OpFireContext): void {
 }
 
 /**
- * Apply one hop's inner ops to `victim` (with the jump's cumulative `falloff`) and
- * emit the `unit:chained` arc event. Shared by the immediate jump 0, the
- * synchronous tail, and the deferred per-tick hops — so the firing is identical
- * however the hop is scheduled. `fromPos` is the arc's source cell (the caster for
- * jump 0, else the previous victim).
+ * Fires one hop's inner ops on `victim`, with the jump's `falloff`, and emits the
+ * `unit:chained` arc. Jump 0, the hops on the impact tick and the waiting hops
+ * all fire through here, so a hop fires the same however it was scheduled.
+ * `fromPos` is the arc's origin: the caster for jump 0, the last victim after.
  */
 function fireChainHopOps(
   world: World,
@@ -492,17 +467,17 @@ function fireChainHopOps(
 }
 
 /**
- * Fire one DEFERRED chain hop (called by `processChainHops` when it comes due):
- * re-resolve the next target LIVE off the stored origin, fire its ops, then queue
- * the following hop if any jumps remain. Breaks the chain (fires nothing further)
- * if the caster died mid-arc or no fresh target sits in range.
+ * Fires one waiting hop as it comes due (`processChainHops`): finds the next
+ * target from the stored origin as things stand, fires its ops, then queues the
+ * following hop if jumps remain. The chain stops, firing nothing more, if the
+ * caster died mid-arc or no fresh target is in range.
  */
 function advanceChainHop(world: World, hop: PendingChainHop): void {
   const caster = world.findUnit(hop.casterId);
-  if (!caster || caster.currentHp <= 0) return; // caster gone → the arc dies with it
+  if (!caster || caster.currentHp <= 0) return; // the caster is gone: the arc ends
   const hit = new Set<number>(hop.hitIds);
   const victim = nearestChainTarget(world, caster.team, hop.fromPos, hop.op.rangeCells, hit);
-  if (!victim) return; // no fresh target in range → chain ends
+  if (!victim) return; // no fresh target in range: the chain ends
 
   fireChainHopOps(world, caster, hop.op, hop.resolution, victim, hop.jumpIndex, hop.fromPos);
   hit.add(victim.id);
@@ -522,12 +497,12 @@ function advanceChainHop(world: World, hop: PendingChainHop): void {
 }
 
 /**
- * Process every pending chain hop that has come due this tick (`fireAtTick <=
- * currentTick`), in queue order, leaving the rest. Driven once per `World.tick`
- * alongside the periodic-status pass — the shared `reapDead` that follows reaps a
- * hop-kill on the same tick (combat-kill ordering). A hop that fires may enqueue
- * its successor (a strictly-later `fireAtTick`), so the not-yet-due remainder is
- * recomputed before firing to avoid re-running a freshly-scheduled hop this tick.
+ * Fires every waiting hop that is due (`fireAtTick <= currentTick`), in queue
+ * order, and keeps the rest. `World.tick` calls it once a tick beside the
+ * periodic-status pass, and the `reapDead` after both reaps a hop's kill on the
+ * same tick. A hop that fires may queue its successor at a later tick, so the
+ * queue is split before any hop fires, and a hop queued this tick does not run
+ * this tick.
  */
 export function processChainHops(world: World): void {
   const queue = world.pendingChainHops;
@@ -540,12 +515,10 @@ export function processChainHops(world: World): void {
 }
 
 /**
- * Apply a jump's cumulative `falloff` to one inner op's captured resolution.
- * Only `baseDamage` falls off (the per-hop magnitude reduction); a crit chance, or
- * an `applyStatus`'s captured status magnitude/duration (§31), pass through
- * untouched — the status rider is identical on every hop, only the bolt weakens.
- * Returns the input as-is when there's nothing to scale, so the no-damage ops
- * keep their identity.
+ * One inner op's resolution with the jump's `falloff` applied. Only `baseDamage`
+ * falls off: the crit chance and an `applyStatus`'s magnitude and duration pass
+ * through, so the rider is the same on every hop and only the bolt weakens. An op
+ * with nothing to scale gets its resolution back as it is.
  */
 function scaleChainResolution(r: OpResolution, factor: number): OpResolution {
   if (r.baseDamage === undefined) return r;

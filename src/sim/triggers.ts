@@ -1,48 +1,47 @@
 /**
- * K1 — the combat/lifecycle trigger vocabulary.
+ * The battle's triggers: fixed dispatch points in the sim where registered
+ * handlers may act, most often by applying a status. The handlers come from the
+ * battle's rules (`battleRules.ts`), which a daemon grants.
  *
- * A trigger is a deterministic dispatch point fired from the sim (or, in K1
- * commit 2, the run) where registered handlers may apply status effects. The
- * handlers are the seam the Phase-L daemon system plugs into; K1 ships the
- * dispatch surface + the fire points + tests (fixture handlers), with fatigue
- * as the one real consumer (via the effect-seed path, not a runtime handler).
+ * The combat triggers fire in `World.applyDamage` after the hit or the miss has
+ * resolved and HP has moved, so a handler's stat change lands on the next
+ * action, not the one under way. `kill` fires there too, while the attacker is
+ * still known; `death` fires in `World.reapUnit`; `spawn` when a unit is placed
+ * on the grid.
  *
- * The combat triggers all fire at the single `World.applyDamage` chokepoint,
- * **after** the hit/miss fully resolves (post-HP-mutation), so a handler's stat
- * changes land on the NEXT action, not the one in flight. `kill` fires there
- * too (clean attacker attribution); `death` fires at the death-removal sites;
- * `spawn` when a unit enters the grid.
+ * Each trigger is named from its subject's side: `dealHit` is the attacker
+ * landing a blow and `takeHit` the target taking it; `dealMiss` and `evade`
+ * are the two sides of an evaded strike.
  *
- * Each trigger names its subject from that unit's perspective — `dealHit` is
- * the attacker landing a blow, `takeHit` the target receiving it; `dealMiss` /
- * `evade` are the attacker- and target-side of an evaded strike. Handlers are
- * NOT snapshotted (they're behaviour, re-attached at construction like the
- * behaviour/ability registries); in K1 production no handler is registered for
- * the combat triggers, so a mid-battle resume has nothing to re-attach.
+ * The shipped rules handle `dealHit` and `kill`. No shipped code registers on
+ * `spawn`, `takeHit`, `dealMiss`, `evade` or `death`: they are fire points
+ * kept for the content that will handle them, not dead code to delete.
+ *
+ * Handlers are not snapshotted. A World's come from its battle rules, which
+ * the snapshot carries and `World.fromJSON` installs again.
  */
 
 import type { Unit, Team } from './Unit';
 import type { World } from './World';
 
 /**
- * The closed set of triggers and their context payloads. Adding a trigger is
- * one entry here; `World.fireTrigger` / `registerTrigger` stay type-safe off
- * the map.
+ * The closed set of triggers and their contexts. A new trigger is one entry
+ * here; `World.fireTrigger` and `registerTrigger` stay type-safe off the map.
  */
 export interface TriggerContextMap {
-  /** A unit entered the grid (initial layout or a D5.C overflow spawn). */
+  /** A unit was placed on the grid, by any path, walls included. */
   spawn: { unit: Unit };
-  /** The attacker landed a blow (melee / ranged / mage / catapult). */
+  /** The attacker landed a damage op's hit. */
   dealHit: { attacker: Unit; target: Unit; damage: number; crit: boolean };
-  /** The target received a landed blow. */
+  /** The target took a landed hit. */
   takeHit: { target: Unit; attacker: Unit; damage: number; crit: boolean };
-  /** The attacker's evadable strike was dodged (no HP touched). */
+  /** The attacker's evadable strike was dodged; no HP moved. */
   dealMiss: { attacker: Unit; target: Unit };
-  /** The target evaded an incoming evadable strike — the dodge-buff hook (L). */
+  /** The target evaded an evadable strike. */
   evade: { target: Unit; attacker: Unit };
-  /** The attacker's blow dropped the victim to ≤ 0 HP. */
+  /** The attacker's hit took the victim to 0 HP or below. */
   kill: { attacker: Unit; victim: Unit };
-  /** A unit is being removed from the grid for death (combat or fire kill). */
+  /** A dead unit is being reaped (`World.reapUnit`), whatever killed it. */
   death: { unit: Unit; team: Team };
 }
 
@@ -54,21 +53,19 @@ export type TriggerHandler<K extends TriggerName> = (
 ) => void;
 
 /**
- * K1 — a generic trigger dispatcher, parameterised by a context map `M` and an
- * owner `O`. Shared by `World` (combat triggers, owner = World) and `Run`
- * (lifecycle triggers, owner = Run). Handlers fire in registration order; an
- * empty trigger costs a single Map lookup, so the no-handler path is free.
- * Handlers are not snapshotted — the owner re-registers on a fresh/rehydrated
- * instance (like the behaviour/ability registries).
+ * A trigger dispatcher over a context map `M` and an owner `O`, shared by
+ * `World` (the combat triggers) and `Run` (its own lifecycle triggers).
+ * Handlers fire in the order they were registered; a trigger with none costs
+ * one Map lookup.
  */
 export class TriggerDispatcher<M, O> {
   private readonly handlers = new Map<keyof M, Array<(ctx: M[keyof M], owner: O) => void>>();
 
   register<K extends keyof M>(name: K, handler: (ctx: M[K], owner: O) => void): void {
     const list = this.handlers.get(name);
-    // Stored type-erased (the Map can't express the per-key handler type); the
-    // method signature keeps registration type-safe and `fire` only ever hands
-    // a handler its matching context.
+    // Stored with the type erased, since a Map cannot express the handler type
+    // per key; the signature keeps registration type-safe, and `fire` hands a
+    // handler only its own context.
     if (list) list.push(handler as (ctx: M[keyof M], owner: O) => void);
     else this.handlers.set(name, [handler as (ctx: M[keyof M], owner: O) => void]);
   }
@@ -79,10 +76,9 @@ export class TriggerDispatcher<M, O> {
     for (const handler of list) (handler as (ctx: M[K], owner: O) => void)(ctx, owner);
   }
 
-  /** 85-pre F4 — the registered-handler count. Run.toJSON's snapshot guard
-   *  reads it: handlers are NOT snapshotted and no re-registration hook
-   *  exists, so a serialized owner with live handlers would silently lose
-   *  them on every clone and save/load (WORKLOG §85-pre finding 7). */
+  /** The number of registered handlers. `Run.toJSON` refuses to serialize
+   *  while it is above 0: handlers are not snapshotted and nothing registers
+   *  them again, so a save or a bot's clone would lose them without a word. */
   get size(): number {
     let n = 0;
     for (const list of this.handlers.values()) n += list.length;

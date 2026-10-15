@@ -5652,8 +5652,96 @@ Cost: 238,595 at 18:39 UTC after batch 1's commit, 364,885 at 18:52
 after the proof: 126k for 2,369 lines, 53 a line. Both batches so far:
 234k for 3,666 lines, 64 a line.
 
-**Read** (`batch`): `git show <hash> -- src/sim/effects/schema.ts
+**Read** (`batch`): `git show 26bffce4 -- src/sim/effects/schema.ts
 src/sim/effects/timeline.ts` against the seven rules. Wrong looks like a
 step code or the migration's story left, a claim the config contradicts
 (a selector, a phase, a flag), or a rule a change must respect cut (the
 op order `applyStatus` needs, the shared firing-band predicate).
+
+Committed as `26bffce4`; the suite 3,741 and the smoke 621, green, by the
+hook.
+
+### 122o, batch 3 — the actions and the selector's vocabulary (2026-10-15, session 4c3418de)
+
+`Action.ts`, `Command.ts`, `triggers.ts`, `stats.ts`, `leveling.ts`,
+`statusBehavior.ts`, `statusReadout.ts`, `abilities/registry.ts`, and
+`actions/` (Spawn, Wait, Move, Swap). `triggers.ts` describes the five
+combat triggers no shipped code handles (`spawn`, `takeHit`, `dealMiss`,
+`evade`, `death`) as fire points kept for the content that will handle
+them, not dead code, as 122m's second call has it.
+
+**Statements found false and corrected (rule 7):**
+
+- `triggers.ts` said no handler is registered for the combat triggers in
+  production, so a resume has nothing to re-attach; the battle rules
+  register `dealHit` and `kill` (`battleRules.ts`), and `World.fromJSON`
+  installs the rules again. `death` fired "at the death-removal sites"
+  (one, `reapUnit`); `spawn` was "initial layout or an overflow spawn"
+  (every placement).
+- `SpawnAction.ts` was the lockout of "an overflow-queue unit", set by
+  `World.spawnFromQueue`; every unit joining a battle under way serves it
+  (a drip, a summon), seated in one place.
+- `Action.ts`: `destinationCell` was "inert on today's instant moves" and
+  load-bearing "once the flip is deferred"; moves defer their flip and
+  hold claims (`MoveAction`). `OrphanPolicy` was a contract a resolver
+  "will switch on"; the interpreter branches on `fizzle`.
+  `commit-at-cast` was single-tick with a window of zero; chain_lightning
+  and raise_dead wind up first.
+- `statusBehavior.ts` named the action selector (`World.tick`) as the
+  reader of `preventsAttack`; it is `AbilityBehavior`.
+- `statusReadout.ts`: `kind: 'behavior'` was "a control status"; a status
+  that only changes stats (emboldened, inspired) reads `behavior` too.
+  Its scope listed eight statuses and said daemon buffs are skipped;
+  Fortuna's emboldened has a def and shows.
+- `stats.ts`: `damageStatFor` was "the single source of truth" for a
+  unit's damage stat; a damage op adds its own `scaling` (batch 2's
+  lead). `hitChanceFor` named the units that never call it; it is the
+  op's `evadable` flag. `inertDerived` served "the future destructibility
+  plumbing"; rubble is destructible and goes through it.
+- `abilities/registry.ts` named "the four melee subclasses"; there are
+  none. `WaitAction.ts` gave "the panic-retreat at 5"; the 5 is the dash,
+  and the wait scores below every ability that proposes.
+
+**Leads, not built:**
+
+- `abilities/registry.ts` builds the same factory from three id lists
+  (`MELEE_WEAPON_IDS`, `MIGRATED_ABILITY_IDS`, `DEMO_ABILITY_IDS`, names
+  that keep the migration's history) and a coverage check holds them to
+  the catalog. Built from `ABILITY_DEFS`' keys, the lists and the check
+  could go: a deletion for a re-skim, not this pass.
+- `World.ts` speaks of "the instant move model" holding no claims in real
+  play (about seven comments, near lines 478, 482, 578, 1448, 1864, 1905
+  and 1938); a move holds its destination's claim until the flip at
+  `SIM.moveFlipFraction`. For batch 4, with batch 1's two leads.
+
+Measured (`comment-length` on copies of the twelve at `26bffce4` and
+after): comment lines 750 → 566, words 5,895 → 4,650, code lines 557
+unchanged. The step-code ceiling 5,352 → 5,220.
+
+Proof: `comment-strip HEAD src`, comments only, exit 0. The control in
+`output/wt-122o`, the twelve on top of batches 1 and 2: unplanted exit
+0; with `stats.ts`'s hit-chance clamp planted as `raw + 0`, exit 1
+naming that line; restored, byte-identical.
+
+Cost: 369,646 at 18:56 UTC after batch 2's commit, 441,451 at 19:04 after
+the proof: 72k for 1,392 lines, 52 a line. The three batches: 317k for
+5,058 lines, 63 a line (84, 53, 52), against 121j's 66. The first
+batch's 84 is `events.ts`, whose 36 events each needed their emitters
+and consumers found.
+
+**Read** (`batch`): `git show <hash> -- src/sim/triggers.ts
+src/sim/actions/SwapAction.ts` against the seven rules. Wrong looks like
+a step code or history left (the swap's incident tags), the five
+unhandled triggers called dead, or a rule cut that the swap's reserve
+or the move's claim depends on.
+
+### The hand-off after batch 3 (2026-10-15, session 4c3418de)
+
+Batches 1 to 3 are committed, unread; batch 4, `World.ts` alone (3,065
+lines, about 190k at 63 a line), does not fit under the hand-off line from
+441k, so it starts a fresh session. The plan for the rest, at 63 a line
+from a session that opens near 110k: batches 4 and 5 in one session
+(4,686 lines, about 295k), and batches 6 to 8 in the next (5,398 lines,
+about 340k). The control worktree `output/wt-122o` is removed, its
+junction first; the next session makes its own from its HEAD. No preview
+server was started, and `scratch/119f/hidden/` was not opened.

@@ -1,51 +1,47 @@
 /**
- * §28 — the BEHAVIOR-axis def-resolve.
+ * A unit's behaviour overrides, folded from its statuses. The status holds no
+ * AI logic: a status def authors a `behavior` block (`effects/statusSchema.ts`),
+ * and the decision points read the folded flags where they decide and change
+ * what they propose (`AbilityBehavior`, `MovementBehavior`,
+ * `CampWanderBehavior`, `Targeting`, the interpreter). This module is the pure
+ * fold of a unit's live `effects` into one `BehaviorFlags`.
  *
- * The status system holds NO AI logic (the brief's "decision-hooks, not
- * reach-in"). A behavior status (frozen/blind/panic/confusion) authors a
- * `StatusDef.behavior` block (`effects/statusSchema.ts`); the existing AI
- * consumers — the action-selector (`World.tick`), `MovementBehavior`,
- * `Targeting` — READ the resolved flags at their own decision points and change
- * what they propose. This module is the pure fold that turns a unit's live
- * `effects[]` into one merged `BehaviorFlags`.
+ * The block is read off `STATUS_DEFS[key]` here, never serialized: a
+ * `StatusEffect` carries only its `key`, so a behaviour status adds no state to
+ * a snapshot.
  *
- * Like the §27 periodic cursor, behavior is **def-resolved by `key`**: the
- * serialized `StatusEffect` carries only its `key`; the `behavior` block lives
- * on `STATUS_DEFS[key]` and is looked up here, NOT serialized. So §28 adds no
- * per-unit snapshot state — no `WorldSnapshot` bump (it stays v27).
- *
- * Plain K1 effects (fatigued/honed — no `STATUS_DEFS` entry) and periodic-
- * only statuses (burn — a def, but no `behavior`) contribute nothing; only the
- * four behavior statuses move the flags. The no-behavior common case returns the
- * shared `NEUTRAL` singleton (zero allocation, identity-stable).
+ * A plain stat effect (fatigued, honed; no catalog entry) and a status with no
+ * `behavior` block (burn) contribute nothing. When no effect has a block, the
+ * fold returns the shared `NEUTRAL`, so the common case allocates nothing.
  */
 
 import { STATUS_DEFS } from '../config/statuses';
 import type { StatusEffect } from './statusEffects';
 
 /**
- * The merged behavior overrides active on a unit this tick. A consumer reads the
- * one field it owns:
- *   - `preventsAttack` / `preventsMove` — the selector / `MovementBehavior` skip.
- *   - `movement` — the `MovementBehavior` goal override (`flee` / `wander`).
- *   - `targeting` — `Targeting` picks a random-team mark (confusion).
- *   - `acquisitionRange` — `Targeting` caps the acquisition reach (blind).
- *   - `affects` — the interpreter forces this unit's attacks to friendly-fire.
+ * The overrides on a unit this tick. Each consumer reads the field it owns:
+ *
+ * - `preventsAttack` — `AbilityBehavior` proposes no ability.
+ * - `preventsMove` — the movement behaviours propose no step.
+ * - `movement` — `MovementBehavior`'s goal (`flee` or `wander`).
+ * - `targeting` — `Targeting` picks a random unit of any team.
+ * - `acquisitionRange` — `Targeting`'s cap on acquisition reach.
+ * - `affects` — the interpreter's override of the unit's area attacks.
  */
 interface BehaviorFlags {
   preventsAttack: boolean;
   preventsMove: boolean;
-  /** The movement-goal override, or `null` for normal pursuit. */
+  /** The movement goal, or `null` for the normal pursuit. */
   movement: 'flee' | 'wander' | null;
-  /** `'random'` forces random-team target selection, or `null` for normal. */
+  /** `'random'` for a random target of any team, or `null`. */
   targeting: 'random' | null;
-  /** The acquisition-reach cap in cells, or `null` for the unit's normal reach. */
+  /** The cap on acquisition reach in cells, or `null` for the unit's own. */
   acquisitionRange: number | null;
-  /** A forced friendly-fire override for this unit's attacks, or `null`. */
+  /** `'all'` when the unit's area attacks hit every team, or `null`. */
   affects: 'all' | null;
 }
 
-/** The no-override flags — returned (shared, frozen) when nothing applies. */
+/** No overrides: the shared, frozen value returned when nothing applies. */
 const NEUTRAL: BehaviorFlags = Object.freeze({
   preventsAttack: false,
   preventsMove: false,
@@ -58,17 +54,17 @@ const NEUTRAL: BehaviorFlags = Object.freeze({
 export { NEUTRAL as NEUTRAL_BEHAVIOR };
 
 /**
- * Fold a unit's active effects into its merged `BehaviorFlags`. Resolves each
- * effect's `behavior` block from `STATUS_DEFS[key]` (def-resolve) and combines:
- *   - `preventsAttack` / `preventsMove` / `targeting` / `affects` — OR / set-once
- *     (any contributor wins; the values are single-valued).
- *   - `movement` — `flee` outranks `wander` (panic's flee is more urgent than
- *     blind's wander), so the merge is order-independent.
- *   - `acquisitionRange` — the MIN across contributors (the most restrictive cap
- *     wins; two blinding sources don't widen the reach).
+ * A unit's effects folded into one `BehaviorFlags`, each effect's block read off
+ * `STATUS_DEFS[key]`:
  *
- * Returns the shared `NEUTRAL` when no effect carries a behavior block (the
- * overwhelmingly common case) — callers must treat the result as read-only.
+ * - `preventsAttack`, `preventsMove`, `targeting`, `affects` — any contributor
+ *   sets them; each has one value.
+ * - `movement` — `flee` outranks `wander` (fleeing in panic is more urgent than
+ *   wandering blind), so the order of the effects does not matter.
+ * - `acquisitionRange` — the smallest cap wins; two sources never widen it.
+ *
+ * Returns the shared `NEUTRAL` when no effect has a block, so callers treat the
+ * result as read-only.
  */
 export function behaviorFlags(effects: readonly StatusEffect[]): BehaviorFlags {
   let out: BehaviorFlags | null = null;

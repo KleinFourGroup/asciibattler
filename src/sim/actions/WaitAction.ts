@@ -6,27 +6,23 @@ import type { World } from '../World';
 export const WAIT_ACTION_ID = 'wait';
 
 /**
- * §44b — the first-class WAIT: a unit's deliberate "I choose to hold this cell
- * this tick", offered to the selector instead of a bare `null` abstain. The
- * behaviors' deliberate-hold sites (the firing-band / heal-range holds — see
- * `moveDecision.ts`'s `wait` kind) propose it; helpless abstains (frozen /
- * boxed / no_goal) stay `null`, which now means only "nothing to propose".
+ * A deliberate wait: the unit chooses to hold its cell this tick, and offers
+ * the selector a wait instead of abstaining with `null`. The behaviours'
+ * deliberate holds (in the firing band, in heal range; `moveDecision.ts`'s
+ * `wait` kind) propose it; a unit that cannot act (frozen, boxed in, with no
+ * goal) still abstains with `null`, which means only "nothing to propose".
  *
- * INSTANTANEOUS BY CONSTRUCTION — the load-bearing §44b decision. A wait
- * carries an EMPTY phase timeline and no `applyEffect`, so `World`'s
- * instantaneous-action rule resolves it entirely within the tick it wins:
- * `start()` emits `unit:waited` and touches nothing; the unit never enters the
- * in-flight machinery (`activeAction`) and re-decides fresh next poll. That is
- * what keeps a waiting unit's world bytes IDENTICAL to the old abstaining
- * unit's — no WorldSnapshot bump, no serialized "did nothing" state. If a
- * future consumer wants a COMMITTED multi-tick wait, that's a deliberate
- * schema event: audit the WorldSnapshot surface first (an in-flight wait is a
- * bump), don't just hand this class a nonzero timeline.
+ * A wait is instantaneous, and must stay so. It has no phases and no
+ * `applyEffect`, so World resolves it within the tick it wins: `start()` emits
+ * `unit:waited` and touches nothing, the unit never takes an `activeAction`,
+ * and it decides afresh at its next poll. So a waiting unit leaves no state to
+ * serialize. A wait that lasts several ticks would be a snapshot change: an
+ * action under way is saved, so read the `WorldSnapshot` surface first rather
+ * than giving this class a timeline.
  *
- * Deliberately NOT in the action registry: a wait can never be mid-flight at
- * a snapshot, so `'wait'` reaching `createAction` means the invariant above
- * broke — the `abilityDef('wait')` fallback throws, and the corruption is loud
- * instead of silently decoded.
+ * It is left out of the action registry on purpose: a wait can never be under
+ * way at a snapshot, so `'wait'` reaching `createAction` means the rule above
+ * broke, and the `abilityDef('wait')` fallback throws instead of decoding it.
  */
 export class WaitAction implements Action {
   readonly id = WAIT_ACTION_ID;
@@ -35,20 +31,18 @@ export class WaitAction implements Action {
     world.emit('unit:waited', { unitId: unit.id });
   }
 
-  /** Present to satisfy `Action`; unreachable — a wait is never serialized. */
+  /** Required by `Action`; never called, since a wait is never serialized. */
   toData(): unknown {
     return {};
   }
 }
 
 /**
- * The shared wait proposal. Score 1 — the move tier — so any ready ability
- * (attacks / heals at 10, the panic-retreat at 5) still outranks holding by
- * construction; the wait only wins when holding genuinely is the best thing
- * on offer. Cooldown 0: a unit may wait indefinitely, one deliberate tick at
- * a time. A single frozen instance (not a per-call allocation) because a wait
- * captures no parameters — every field is readonly and the selector never
- * mutates proposals.
+ * The one wait proposal. It scores 1, as a move does, below every ability that
+ * proposes, so the wait wins only when holding is the best thing on offer.
+ * Cooldown 0: a unit may wait any number of ticks, one at a time. One frozen
+ * instance serves every call, since a wait captures nothing and the selector
+ * never mutates a proposal.
  */
 const WAIT_PROPOSAL: ActionProposal = Object.freeze({
   action: new WaitAction(),

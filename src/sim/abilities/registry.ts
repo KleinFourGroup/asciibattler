@@ -4,30 +4,22 @@ import { STATUS_DEFS, assertStatusRefsResolve } from '../../config/statuses';
 import { EffectAbility } from '../effects/EffectAbility';
 
 /**
- * Ability factories keyed by `Ability.id`. `World.fromJSON` uses these
- * to rehydrate each unit's `abilities` list from a snapshot; the
- * archetype-config schema (`src/config/units.ts`) validates that
- * every ability id declared on an archetype resolves here at boot.
+ * The ability factories, by `Ability.id`. `World.fromJSON` rebuilds each unit's
+ * `abilities` from a snapshot through them, and the unit catalog
+ * (`src/config/units.ts`) checks at boot that every ability id an archetype
+ * names is known here (`knownAbilityIds`).
  *
- * Pattern mirrors `behaviors/registry.ts` — abilities are stateless in
- * E2, so factories are zero-arg. If a future ability gains per-instance
- * state (charge-up progress, channelled-heal target lock), change its
- * factory signature to take a snapshot blob and add a `toData()` method
- * on the ability class (mirrors `actions/registry.ts`).
+ * Abilities are stateless, so a factory takes no arguments, as in
+ * `behaviors/registry.ts`. An ability that kept state per instance would need
+ * a factory that takes a snapshot blob and a `toData()`, as actions have
+ * (`actions/registry.ts`).
  */
 type AbilityFactory = () => Ability;
 
-// I6 — the four melee subclasses each carry a distinct weapon id (their
-// `config/abilities.json` profile differs).
+// Every id below is an `AbilityDef` in `config/abilities.json`, built as an
+// `EffectAbility`; the coverage check below holds the lists to the catalog.
 const MELEE_WEAPON_IDS = ['sword', 'club', 'katana', 'whip'] as const;
 
-// Every combat verb is a data-driven `EffectAbility` — its `AbilityDef` lives in
-// `config/abilities.json`. `createAbility(id)` routes each id to
-// `new EffectAbility(abilityDef(id))`; the hand-coded ability + action classes
-// were retired across Phase Y (the strangler migration), so this list is
-// exhaustive — there is no un-migrated verb. (Each def id equals the verb's id;
-// for magic_bolt/catapult_shot that also equals the old action id, which is why
-// those colliding action-factory entries were dropped — see actions/registry.ts.)
 const MIGRATED_ABILITY_IDS = [
   ...MELEE_WEAPON_IDS,
   'bow',
@@ -38,33 +30,20 @@ const MIGRATED_ABILITY_IDS = [
   'catapult_shot',
 ] as const;
 
-// §29 — the new demo-roster verbs (status-on-hit / chain / summon). NET-NEW
-// data-driven abilities (not Phase-Y migrations), but the SAME generic
-// `EffectAbility` factory — each is just an `AbilityDef` in config/abilities.json.
-// Append one per archetype commit as the roster lands.
 const DEMO_ABILITY_IDS = [
-  'cleaver', // 29a — bleed-on-hit melee
-  // 29b — the afflicter disruptors (status-on-hit AoE / ranged).
-  'vial', // poison
-  'ice_storm', // frozen
-  'hex', // confusion
-  'light_ray', // blind
-  'wail', // panic
-  'chain_lightning', // 29c — chain (arcs to N nearest, falloff per hop)
-  // 29d — the summon consumers.
-  'raise_dead', // the Shaman's caster-anchored summon
-  'ghoul_claw', // the summoned Ghoul's basic melee
-  // §76d — the stat-identity weapons (wielders land at the §76f design round;
-  // numbers are provisional until the 76h board signing). All four are pure
-  // config + fx reuse; molotov is the vial clone (burn, range 4) and authors
-  // critable:true / evadable:false directly — the 76e decoupled convention.
-  'molotov', // 3×3 burn lob — unmissable, luck-critable
-  'pistol', // the spray: very fast, very inaccurate, ranged
-  'halberd', // reach-2 melee: slow, heavy
-  'cane', // the melee spray (the pistol's twin — the Officer's swagger stick)
-  // §76f — the aura demo: the Officer's pure-aura def (+2 mobility, r4, 5s
-  // linger). Op-less by design — the propose layer skips it; the §76a World
-  // pass executes it.
+  'cleaver',
+  'vial',
+  'ice_storm',
+  'hex',
+  'light_ray',
+  'wail',
+  'chain_lightning',
+  'raise_dead',
+  'ghoul_claw',
+  'molotov',
+  'pistol',
+  'halberd',
+  'cane',
   'inspire',
 ] as const;
 
@@ -78,12 +57,11 @@ const FACTORIES: Record<string, AbilityFactory> = {
 };
 
 /**
- * A4 boot validation: the ability factories and the `config/abilities.json`
- * catalog (`ABILITY_DEFS`) must cover exactly the same id set. A registered
- * ability with no def (or a def for an ability that was never registered) is a
- * wiring mistake — fail loudly at module load rather than at the first propose
- * tick or, worse, with a silent default the user explicitly didn't want. Mirrors
- * the archetype-abilities check in `src/config/units.ts`.
+ * At module load: the factories and the catalog (`ABILITY_DEFS`) must hold
+ * exactly the same ids. A factory with no def, or a def with no factory, is a
+ * wiring mistake, so it fails at load rather than at the first propose or with
+ * a silent default. The unit catalog makes the matching check for the ability
+ * ids its archetypes name (`src/config/units.ts`).
  */
 (function assertAbilityDefCoverage(): void {
   const factoryIds = Object.keys(FACTORIES);
@@ -100,8 +78,8 @@ const FACTORIES: Record<string, AbilityFactory> = {
       `config/abilities.json: entry for unregistered ability id ${orphanConfig.join(', ')}`,
     );
   }
-  // Phase 27 — every `applyStatus` op (§29) must reference a real status id.
-  // Rides this guaranteed-at-boot IIFE so a typo fails at startup, not at cast.
+  // Every `applyStatus` op must name a status in the catalog. It runs here, at
+  // load, so a typo fails at startup rather than at cast.
   assertStatusRefsResolve(ABILITY_DEFS, STATUS_DEFS);
 })();
 

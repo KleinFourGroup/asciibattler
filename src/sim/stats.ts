@@ -1,47 +1,22 @@
 /**
- * E1 — derive per-unit computed values from base stats + archetype
- * context. Pure functions: same inputs → same outputs, no RNG.
+ * A unit's values computed from its stats, and the curves abilities share. Pure,
+ * no RNG; the knobs are in `config/stats.json`.
  *
- * I6 — crit left `deriveStats`: it is resolved PER-ABILITY at attack time via
- * `critChanceFor(ability.critBase, unit.stats.luck)` (gated on
- * `ability.critable`), so there is no per-unit `critChance` to derive. The
- * RNG crit roll still happens at action start/impact off `world.combatRng`;
- * only the probability's source moved (unit-derived → per-ability).
+ * The two cadence stats drive cooldowns through separate knobs so they can
+ * diverge: `mobility` sets the move cooldown (`mobilityCdPerStat`,
+ * `mobilityMinCdScale`) and `speed` an ability's cadence (`speedCdPerStat`,
+ * `speedMinCdScale`). Both are signed: a negative value makes a unit slower
+ * than the baseline, and the floor caps only the fast side. Every unit walks
+ * from the one `STATS.baseMoveCooldownSeconds`, so a slow walker is one with
+ * low or negative mobility.
  *
- * Formula sources (`config/stats.json`):
+ * Cadence is not derived per unit: a unit can carry several abilities with
+ * different timings, so `attackCooldownTicksFor` resolves an ability's
+ * `cooldownSeconds` against the unit's `speed` when it proposes. Nor is the
+ * crit chance: `critChanceFor` resolves it per damage op.
  *
- *   maxHp                   = max(1, round(hpPerConstitution * constitution))
- *   moveCooldown            = max(1, secondsToTicks(baseMoveCD * cooldownScale(mobility, mobilityCdPerStat, mobilityMinCdScale)))
- *   cooldownScale(s, p, m)  = max(m, 1 - s * p)
- *   attackRange             = effective engagement range (max over the unit's
- *                             abilities, via `rangeForArchetype`), passed through verbatim
- *
- * The 1-tick cooldown floor catches future tuning where the min scale
- * or base values drop low enough to round to 0; at default config it's
- * unreachable.
- *
- * GP1: the two cadence stats drive cooldowns through SEPARATE per-axis
- * knobs so they can diverge — `mobility` (move CD) reads
- * `mobilityCdPerStat`/`mobilityMinCdScale`; `speed` (attack cadence; I1
- * reverted the GP1 `agility` name) reads `speedCdPerStat`/`speedMinCdScale`.
- * `cooldownScale` is now
- * parameterized over (perStat, minScale) and each call site threads its
- * own pair. `mobility` is signed: negative → scale > 1 → slower than the
- * baseline (the min-scale floor caps only the fast side). GP1 also
- * dropped the per-archetype `baseMoveCooldownSeconds` override — there's
- * one universal `STATS.baseMoveCooldownSeconds`, and a slow walk now
- * comes from low/negative mobility.
- *
- * E5 pre-work: attack cadence is NO LONGER derived here. It moved to
- * the Ability layer — a unit can carry several abilities with different
- * timings, so a single per-unit `attackCooldownTicks` couldn't
- * represent them. `attackCooldownTicksFor` resolves an ability's
- * `cooldownSeconds` (from `config/abilities.json`) against the unit's
- * `speed` at propose time, reusing the same `cooldownScale` curve.
- *
- * `inertDerived` is the environment-entity path (walls / half-cover) —
- * non-combatants need a maxHp anchor for HP display and the future
- * destructibility plumbing, but no cooldowns / crit / range.
+ * The 1-tick floors keep a tuning that rounds to 0 from letting a unit act
+ * every tick; the shipped config never reaches them.
  */
 
 import { secondsToTicks } from '../config';
@@ -64,14 +39,10 @@ export function deriveStats(stats: UnitStats, attackRange: number): UnitDerived 
 }
 
 /**
- * E5 pre-work — resolve an ability's attack cadence to ticks for a
- * specific unit. `cooldownSeconds` is the ability's authored base
- * interval (`config/abilities.json`); the unit's `speed` shrinks it via
- * the same `cooldownScale` curve that governs movement (GP1: through the
- * speed-axis knobs, independent of the mobility ones), so nimbler units
- * still swing/shoot more often. Floored at 1 tick (mirrors the move-CD
- * floor) so an extreme base/scale combo can't round to a 0-tick — i.e.
- * fire-every-tick — cadence.
+ * An ability's cadence in ticks for a unit: its `cooldownSeconds`
+ * (`config/abilities.json`) shrunk by the unit's `speed` on the cooldown curve,
+ * with the speed knobs, so a quicker unit strikes more often. At least 1 tick,
+ * so no tuning gives a cadence of every tick.
  */
 export function attackCooldownTicksFor(cooldownSeconds: number, speed: number): number {
   return Math.max(
@@ -83,23 +54,20 @@ export function attackCooldownTicksFor(cooldownSeconds: number, speed: number): 
 }
 
 /**
- * Phase Yb — scale a timeline phase's authored duration (seconds) by the caster's
- * `speed`, through the SAME curve + knobs as the attack cadence
- * (`attackCooldownTicksFor`). Lets a FIXED phase — a charged spell's windup —
- * shrink with speed instead of staying constant, so speeding the cadence speeds
- * the whole cast (not just the elastic `recovery` tail) and the cast keeps the
- * full speed range rather than a fixed phase clamping a floor under it. Pure
- * seconds→seconds; the caller floors via `secondsToTicks`. Unscaled phases (a
- * projectile's physical travel) simply skip this. Unlike the cadence, NOT floored
- * at 1 tick — a phase may legitimately resolve to 0 (an instant boundary).
+ * A phase's seconds scaled by the caster's `speed` on the cadence's curve and
+ * knobs (`attackCooldownTicksFor`), for a fixed phase that `scalesWithSpeed`: a
+ * charged spell's wind-up then quickens with the cadence, so speed hastens the
+ * whole cast and not only the elastic `recovery`. Seconds in, seconds out; the
+ * caller converts with `secondsToTicks`. Not floored at 1 tick, since a phase
+ * may be 0 ticks, an instant boundary.
  */
 export function speedScaledSeconds(seconds: number, speed: number): number {
   return seconds * cooldownScale(speed, STATS.speedCdPerStat, STATS.speedMinCdScale);
 }
 
 /**
- * Environment entity derived values. Caller passes the desired maxHp;
- * the rest are zero/no-op. Walls + half-cover go through this path.
+ * The derived values of a neutral (a wall, half cover, rubble): the given max HP,
+ * and no movement or range.
  */
 export function inertDerived(maxHp: number): UnitDerived {
   return {
@@ -110,21 +78,13 @@ export function inertDerived(maxHp: number): UnitDerived {
 }
 
 /**
- * E1 — which base stat drives a unit's basic strike, given its archetype +
- * stat block. The SINGLE source of truth for the archetype→damage-stat
- * mapping, read by the ability detail line (`ui/abilityDetail.ts`).
+ * The value of the archetype's `damageStat` (`config/units.json`), or 0 when it
+ * has none (the healer, the shaman, every neutral). It is for display: a damage
+ * op adds its own `scaling` stat (`resolveScalars.ts`), which can differ.
  *
- * §38c — the archetype→stat mapping moved OUT of an 18-case `switch` into the
- * `UnitDef.damageStat` catalog field (`config/units.json`), read straight off
- * `UNIT_DEFS` here. A striker declares its scaling stat as pure data; an absent
- * field (non-strikers healer/shaman) resolves to 0 — the same value the switch's
- * explicit `return 0` cases produced, so this is byte-identical. §38d — a NEUTRAL
- * unit (wall / half-cover) never strikes and is absent from the COMBATANT catalog
- * (`UNIT_DEFS`), so the optional chain resolves to 0 — the same value the removed
- * `=== 'environment'` sentinel guard produced. Reads `UNIT_DEFS` at CALL time, not
- * module-eval — stats.ts sits inside the `config/units ⇄ sim` import cycle, so a
- * module-eval read of the not-yet-initialized catalog would throw (the pattern
- * every config-reading sim module follows).
+ * It reads `UNIT_DEFS` when called, not at module load, since stats.ts sits in
+ * the `config/units` and sim import cycle, where a read at load would find the
+ * catalog not yet built.
  */
 export function damageStatFor(archetype: UnitArchetype, stats: UnitStats): number {
   const key = UNIT_DEFS[archetype]?.damageStat;
@@ -132,21 +92,13 @@ export function damageStatFor(archetype: UnitArchetype, stats: UnitStats): numbe
 }
 
 /**
- * I2 — to-hit probability for a single-target strike (melee/ranged basic + the
- * rogue gambit). Fire-Emblem subtractive: the attacker's `precision` raises it,
- * the target's `evasion` lowers it, clamped to the configured floor/cap. Pure
- * (no RNG) — the World rolls `combatRng` against this once at the
- * `applyDamage` chokepoint when the caller opts in via `evadable`. The mage
- * blast, the catapult shot, and environmental fire/chasm damage never call it
- * (unmissable).
- *
- * I6 — `accuracy` (the firing ability's per-weapon base hit chance, from
- * `config/abilities.json`) REPLACES the old global `STATS.hitChanceBase`, so a
- * precise bow and a wild club start from different bases before the
- * precision/evasion spread. With uniform `precision == evasion` the prc/eva
- * terms cancel and the unit sits at the ability's `accuracy`. The floor keeps a
- * low-precision attacker from being fully shut out by a high-evasion target
- * (the chip-always-pokes-through analogue of `minDamage`).
+ * The chance a damage op authored `evadable` hits, rolled once on `combatRng` in
+ * `World.applyDamage`. The ability's `accuracy` is the base; the attacker's
+ * `precision` raises it and the target's `evasion` lowers it (subtractive, as in
+ * Fire Emblem), clamped to the configured floor and cap. With equal precision
+ * and evasion the two terms cancel and the hit sits at the ability's `accuracy`.
+ * The floor keeps a weak attacker from being shut out by an evasive target, as
+ * `minDamage` keeps a hit from doing nothing. Pure.
  */
 export function hitChanceFor(accuracy: number, precision: number, evasion: number): number {
   const raw =
@@ -157,13 +109,10 @@ export function hitChanceFor(accuracy: number, precision: number, evasion: numbe
 }
 
 /**
- * I6 — crit probability for an attack, resolved per-ability at attack time
- * (replaces the old per-unit `UnitDerived.critChance`). The firing ability's
- * `critBase` is the floor; the wielder's `luck` adds `luck·critPerLuck` on top,
- * capped at `critCap`: `clamp(critBase + luck·critPerLuck, 0, critCap)`. Pure
- * (no RNG) — the action rolls `combatRng` against this once. Callers pass 0
- * (skip the call) when the ability is NOT `critable`; with `critBase 0` this
- * reproduces the pre-I6 `min(critCap, luck·critPerLuck)` exactly.
+ * The crit chance of a `critable` damage op: its `critBase` plus the wielder's
+ * `luck × critPerLuck`, clamped to `[0, critCap]`. Pure; the damage op rolls
+ * `combatRng` against it once. A damage op that is not `critable` has a chance
+ * of 0 and does not call this.
  */
 export function critChanceFor(critBase: number, luck: number): number {
   const raw = critBase + luck * STATS.critPerLuck;
@@ -171,23 +120,18 @@ export function critChanceFor(critBase: number, luck: number): number {
 }
 
 /**
- * GP1 — the shared cooldown curve, now parameterized over its slope
- * (`perStat`) and fast-side floor (`minScale`) so the move axis (mobility)
- * and the attack axis (speed) can thread independent knobs. `max(minScale,
- * …)` caps only the FAST side: a negative `stat` makes `1 - stat*perStat`
- * exceed 1 (slower than baseline), and that larger value wins the `max`, so
- * the slow side is unbounded.
+ * The cooldown curve, over its slope (`perStat`) and fast-side floor
+ * (`minScale`), so the move axis and the cadence axis take their own knobs.
+ * `max(minScale, …)` caps only the fast side: a negative `stat` gives a scale
+ * above 1, slower than the baseline, which wins the `max`, so the slow side is
+ * unbounded.
  */
 function cooldownScale(stat: number, perStat: number, minScale: number): number {
   return Math.max(minScale, 1 - stat * perStat);
 }
 
-/**
- * All-zero stat block. Used for environment entities (walls,
- * half-cover) — they have no meaningful stats, but UnitStats is a
- * required init field. Kept as a single shared frozen literal so
- * spawn sites don't reconstruct it.
- */
+/** A stat block of zeros, for the neutrals, which have no stats; one frozen
+ *  instance shared by every spawn. */
 export const ZERO_STATS: UnitStats = Object.freeze({
   constitution: 0,
   strength: 0,

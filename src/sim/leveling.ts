@@ -1,40 +1,26 @@
 /**
- * E3 — level-up math. Two functions over the same `(baseStats,
- * growthRates, n)` shape, differing only in determinism:
+ * Level-up math: two functions over the same `(baseStats, growthRates, n)`,
+ * one rolled and one not.
  *
- *   simulateLevelUps — per-stat RNG roll vs growth rate, increment on
- *     success. Drives PLAYER recruits where dice rolls feel rewarding.
- *     Consumes 11 RNG draws per level (one per stat); byte-deterministic
- *     given the same RNG fork.
+ * - `simulateLevelUps` rolls each stat against its growth rate and adds 1 on
+ *   a success. The player's units level this way, where the dice feel
+ *   rewarding; it draws one RNG value per stat per level.
+ * - `scaleStats` adds `round(growth × n)` to each stat. Enemies and summons
+ *   level this way: no RNG state to carry per encounter, and a predictable
+ *   difficulty curve. It draws nothing.
  *
- *   scaleStats        — deterministic `stat += round(growth × n)` per
- *     stat. Drives ENEMIES (no per-encounter RNG state to plumb,
- *     predictable difficulty curve). No RNG draws.
- *
- * Both are pure functions of their inputs — same inputs → same outputs,
- * no shared module state, no I/O. Stat order matches `UnitStats` field
- * order; this is the canonical iteration order for the RNG draws so
- * existing seeds stay byte-stable across re-imports.
- *
- * `n` is the number of level-ups to apply. A unit at level L was
- * produced by applying `n = L - 1` level-ups on top of the archetype's
- * baseStats — level 1 is the baseline.
+ * Both are pure. `n` is the number of level-ups: a unit at level L is its
+ * archetype's base stats with `n = L − 1` applied, so level 1 is the base.
  */
 
 import type { RNG } from '../core/RNG';
 import type { UnitStats } from './Unit';
 import type { GrowthRates } from '../config/units';
 
-// I1: the canonical stat order — `CON · STR · RNG · MAG · LCK · DEF · PRC ·
-// EVA · SPD · MOB · POW` (combat → dodge → cadence → meta). This is BOTH the
-// level-up RNG draw order AND the card display order (`STAT_LABELS` mirrors
-// it), so "draw order == card order" stays legible. I1 deliberately broke the
-// GP1/GP2/H1 "append new stats last" discipline (which existed only to keep
-// the draw sequence byte-stable when bolting a stat onto a settled system):
-// the `agility → speed` revert + the two new dodge stats (`precision`,
-// `evasion`) + nudging `defense` up next to `luck` re-baseline the level-up
-// stream regardless, so the reorder rides that same regen at zero extra cost.
-// Snapshots are name-keyed (order-independent) and version-bumped anyway.
+// The canonical stat order (combat, then dodge, then cadence, then meta): the
+// order of the level-up draws and of the card's stat rows (`STAT_LABELS`), so
+// the two read alike. Reordering it moves every level-up roll; snapshots key
+// stats by name, so they are unaffected.
 const STAT_KEYS: readonly (keyof UnitStats & keyof GrowthRates)[] = [
   'constitution',
   'strength',
@@ -50,10 +36,9 @@ const STAT_KEYS: readonly (keyof UnitStats & keyof GrowthRates)[] = [
 ];
 
 /**
- * Apply `n` simulated level-ups on top of `base`. Each level-up rolls
- * every stat independently against its growth rate; on success the stat
- * increments by 1. Order of draws is fixed by `STAT_KEYS` so the same
- * RNG fork produces the same outcome across runs.
+ * `n` rolled level-ups on top of `base`. Each level-up rolls every stat on its
+ * own against its growth rate and adds 1 on a success, drawing in `STAT_KEYS`
+ * order, so the same stream gives the same result.
  */
 export function simulateLevelUps(
   base: UnitStats,
@@ -85,9 +70,8 @@ export function simulateLevelUps(
 }
 
 /**
- * Apply `n` deterministic level-ups on top of `base`. Each stat gains
- * `round(growth × n)` — the expected value of `simulateLevelUps` over
- * many trials, collapsed into a single closed-form scale. No RNG.
+ * `n` level-ups on top of `base` with no roll: each stat gains
+ * `round(growth × n)`, the expected value of `simulateLevelUps`.
  */
 export function scaleStats(base: UnitStats, growth: GrowthRates, n: number): UnitStats {
   return {

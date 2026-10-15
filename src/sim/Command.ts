@@ -1,19 +1,17 @@
 import type { ObjectiveTeam, TeamObjective } from './objective';
 
 /**
- * In-battle command channel. UI (and the headless harness in A3) enqueues
- * `WorldCommand`s on the active `World`; `World.tick()` drains the queue
- * at a deterministic point (top of tick, before per-unit step) and applies
- * each command. Pending commands are part of `WorldSnapshot` so a
- * mid-battle save/restore preserves intent that hasn't been processed yet.
+ * The in-battle command channel. The UI and the bot drivers enqueue
+ * `WorldCommand`s on the active `World`, and `World.tick()` drains the queue
+ * at a fixed point (the top of the tick, before the units step) and applies
+ * each. Pending commands are part of `WorldSnapshot`, so a save made mid-battle
+ * keeps an intent not yet applied.
  *
- * O1 (Phase O) — the objective commands carry the team they steer.
- * `setObjective(team, objective)` sets that team's always-present
- * `TeamObjective`; `clearObjective(team)` reverts it to `atWill` (a thin alias
- * for `setObjective(team, { mode: 'atWill' })`, kept because the J3 UI calls
- * it). `noop` stays so the channel can still be exercised by snapshot tests
- * without coupling to gameplay. The union stays open so later additions land
- * without touching the channel plumbing.
+ * The objective commands name the team they steer. `setObjective` sets that
+ * team's `TeamObjective`; `clearObjective` puts it back to `atWill`, the same
+ * as `setObjective` with `{ mode: 'atWill' }`, and the objective UI and the
+ * bot drivers send it. `noop` changes nothing, so a test can exercise the
+ * channel without touching play.
  */
 export type WorldCommand =
   | { readonly kind: 'noop' }

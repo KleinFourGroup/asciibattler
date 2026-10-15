@@ -3,33 +3,31 @@ import type { World } from './World';
 import type { GridCoord } from '../core/types';
 
 /**
- * F2 — the closed set of phase names an action's timeline can use. Fighting
- * games call these startup → active → recovery; MOBAs call it cast-point +
- * projectile travel. The effect lands on the `impact` phase, not frame 0.
- * Keep the set small + closed: adding a member is a deliberate schema event
- * (a union edit, plus a snapshot bump if the serialized shape changes), the
- * same discipline as the stat block.
+ * The closed set of phase names an action's timeline can use: what fighting
+ * games call startup, active and recovery, and MOBAs a cast point and a
+ * projectile's travel. The effect lands on `impact`, not on the first tick.
+ * Keep the set small and closed: a new member is a union edit, and a snapshot
+ * bump if the serialized shape changes, as with the stat block.
  *
- *  - windup   — charging / anticipation; no effect lands.
- *  - release  — the projectile / charge leaves the caster (F3 launch hook).
- *  - travel   — projectile in flight. A real, tick-counted SIM phase
- *               (deterministic arrival tick). F3 gave it real ticks on the
- *               mage/catapult (carved out of the wind-up, so the impact tick
- *               is unchanged); still 0-length where a projectile is cosmetic.
- *  - impact   — THE effect boundary. `Action.applyEffect` fires here.
- *  - recovery — follow-through / lockout tail; no effect.
+ * - `windup` — charging, the tell; no effect lands.
+ * - `release` — the projectile or the charge leaves the caster; the release
+ *   gate (`holdCheck`) is tested here.
+ * - `travel` — the projectile in flight, counted in sim ticks, so its arrival
+ *   tick is fixed; 0 ticks where a projectile is only drawn.
+ * - `impact` — the effect boundary, where `Action.applyEffect` fires.
+ * - `recovery` — the follow-through, the lockout's tail; no effect.
  *
- * Most actions use a subset: a basic strike is `impact` (offset 0) +
- * `recovery`; a charged projectile spell is
- * `windup` + `release` + `travel` + `impact`.
+ * Most actions use a subset: a basic strike is `impact` at offset 0 and
+ * `recovery`; a charged projectile adds `windup`, `release` and `travel` before
+ * its `impact`.
  */
 export type ActionPhaseName = 'windup' | 'release' | 'travel' | 'impact' | 'recovery';
 
 /**
- * One entry in an action's ordered phase timeline. `ticks` is the phase's
- * duration in sim ticks (>= 0); 0 is an instantaneous boundary that
- * fires-and-advances in the same tick as the next phase (e.g. a strike's
- * `impact`). An action's total busy window is the SUM of its phases' ticks.
+ * One entry in an action's ordered timeline. `ticks` is the phase's length in
+ * sim ticks, at least 0; a 0-tick phase is a boundary that fires on the same
+ * tick as the phase after it (a strike's `impact`). An action's busy window is
+ * the sum of its phases' ticks.
  */
 export interface ActionPhase {
   readonly phase: ActionPhaseName;
@@ -37,119 +35,102 @@ export interface ActionPhase {
 }
 
 /**
- * F2 — declared per-action handling for "the locked target died before the
- * effect lands" (during `windup` or `travel`). A closed menu:
+ * What an action does when its locked target died before the effect lands
+ * (during `windup` or `travel`):
  *
- *  - `commit-at-cast` — resolve against the ref captured at cast, with a
- *    dead-target guard (strikes, heal). Single-tick today, so the window is
- *    zero, but named for completeness.
- *  - `fizzle` — abort if the locked target died (catapult): no damage, no
- *    `combatRng` draw. The shot still announces itself (a dud), so it's not
- *    silent.
- *  - `ground-target` — hit the cell, whoever is standing there (mage AoE).
- *    The target ref is irrelevant at impact.
+ * - `commit-at-cast` — resolve against the target captured at cast, skipping
+ *   it if it is dead (the strikes, the heal, a chain's primary).
+ * - `fizzle` — stop if the locked target died: no damage, no `combatRng` draw.
+ *   The shot still shows as a dud, so it is not silent.
+ * - `ground-target` — hit the cell, whoever stands there; the target captured
+ *   at cast does not matter at impact.
  *
- * F2 is behavior-preserving: the death-guard still lives in each action's
- * effect site (`start` / `applyEffect`). This field is the *declared
- * contract* the F3 travel-orphan resolver will switch on.
+ * The interpreter branches on `fizzle`; an `aoe` selector resolves its cell
+ * whatever the policy, so `ground-target` names what the selector does.
  */
 export type OrphanPolicy = 'commit-at-cast' | 'fizzle' | 'ground-target';
 
 /**
- * An action is the "verb" a unit performs on a tick: move one cell, swing
- * the sword, channel a heal. Per-unit timing (cooldown, the phase timeline)
- * is carried by `ActionProposal`, not the Action itself, because per-unit
- * stat rolls vary those numbers. Move/Attack capture their other parameters
- * (target unit, dest cell, damage) on the instance at propose time, since
- * those vary per call.
+ * An action is what a unit does from a tick: move one cell, swing a sword,
+ * channel a heal. Its timing (the cooldown, the phase timeline) rides on the
+ * `ActionProposal`, not on the action, since it depends on the unit's stats;
+ * the action captures its other parameters (a target, a cell, the scalars) when
+ * it is proposed.
  *
- * For single-tick actions, `start` does all the work (position update,
- * damage, event emission) and `applyEffect` is absent. Multi-tick actions
- * (charged spells, lobbed shots) leave `start` a near-no-op and land their
- * effect in `applyEffect`, which `World.tick` fires at the `impact` phase
- * boundary — see `ActionProposal.phases`.
+ * `start` runs as the action is seated, and `applyEffect`, when present, at the
+ * `impact` boundary (`ActionProposal.phases`); an action does its work in one
+ * or both.
  *
- * `toData()` returns the plain-JSON payload sufficient to reconstruct this
- * Action via its registered factory (see `src/sim/actions/registry.ts`).
- * Needed for `World` snapshots — when a unit's `activeAction` is in flight
- * mid-tick, the snapshot has to carry enough state for future `applyEffect`
- * calls after rehydrate.
+ * `toData()` returns the plain JSON its registered factory rebuilds it from
+ * (`src/sim/actions/registry.ts`), so a `World` snapshot taken while an action
+ * is under way can carry it to the `applyEffect` still to come.
  */
 export interface Action {
   readonly id: string;
   start(unit: Unit, world: World): void;
   /**
-   * §35b — the cell this action relocates the unit ONTO, which must be free at
-   * execution; or undefined for actions that don't relocate onto an
-   * expected-empty cell (attacks, heals, and SwapAction — whose `to` is
-   * intentionally occupied by the swap partner). `World` re-validates this cell
-   * the instant before `start` runs: if it's occupied by another unit or
-   * untraversable, the action ABORTS (a clean no-op + `unit:moveAborted`,
-   * cooldown not consumed) instead of writing the unit onto a filled cell. The
-   * proactive-destination seam — inert on today's instant moves (a unit's
-   * propose and execute are atomic), load-bearing once §36 defers the flip and
-   * the claim system makes the collision window real.
+   * The cell this action moves the unit onto, which must be free as it starts;
+   * undefined for an action that does not move onto an empty cell (attacks,
+   * heals, and `SwapAction`, whose `to` holds the partner on purpose). World
+   * checks the cell just before `start`: if another unit stands on it or it is
+   * untraversable, the action aborts (nothing changes, `unit:moveAborted`
+   * fires, the cooldown is not spent) rather than writing the unit onto a
+   * filled cell. A move holds its destination by a claim until its flip
+   * (`MoveAction`), and this check is what stops two units landing together.
    */
   destinationCell?(): GridCoord | undefined;
   /**
-   * Fired at the `impact` phase boundary (the only phase carrying an effect
-   * in F2). `tickOffset` is ticks-from-start; `phase` is the boundary that
-   * fired it (always `'impact'` today — passed for forward-compat with
-   * future multi-effect timelines). Absent on actions whose work is all in
-   * `start`.
+   * Fired at the `impact` boundary, the one boundary World fires it at.
+   * `tickOffset` is the ticks since the start; `phase` is the boundary, always
+   * `'impact'`. Absent on an action whose work is all in `start`.
    */
   applyEffect?(unit: Unit, world: World, tickOffset: number, phase?: ActionPhaseName): void;
   /**
-   * F2 — optional target info for the `action:phase` event the renderer
-   * schedules against, surfaced without exposing the action's internals: a
-   * homing action returns `{ targetId }`, a ground-target returns
-   * `{ targetCell }`. Absent → `{}` (self / no-target actions like move).
+   * The target for the `action:phase` events the renderer schedules from,
+   * without exposing the action's insides: an action that tracks a unit returns
+   * `{ targetId }`, one aimed at a cell `{ targetCell }`. Absent, it is `{}` (a
+   * move, an action with no target).
    */
   phaseTarget?(): { targetId?: number | undefined; targetCell?: GridCoord | undefined };
   /**
-   * 82e — the release-gate probe (the §35b/§36c abort family, at a PHASE
-   * boundary). `World.tick` calls it for each phase of an in-flight action
-   * BEFORE that phase's event emits; a non-null return HOLDS FIRE: World
-   * clears `activeAction` (no phase event, no effect, no RNG draw) and sets
-   * the ability's cooldown to the returned ticks — the re-aim window — then
-   * emits `unit:actionHeld`. Null/absent = proceed. Implemented today only
-   * by `EffectAction` for defs authoring `releaseGate` (checked at their
-   * `release` boundary). The offset-0 START path deliberately skips the
-   * probe: propose validated the band on the same tick, nothing has moved.
+   * The release gate. `World.tick` calls it for each phase of an action under
+   * way, before that phase's event; a number holds fire: World clears
+   * `activeAction` (no phase event, no effect, no RNG draw), sets the ability's
+   * cooldown to the returned ticks, the re-aim window, and emits
+   * `unit:actionHeld`. Null or absent, the phase goes ahead. Only
+   * `EffectAction` implements it, for a def with a `releaseGate`, tested at its
+   * `release` boundary. A phase at offset 0 is never tested: the propose step
+   * checked the band on the same tick, and nothing has moved since.
    */
   holdCheck?(phase: ActionPhaseName, unit: Unit, world: World): number | null;
   /**
-   * 86c-L2b — the unit id this action RESERVES for its whole seated window
-   * (today: SwapAction's partner — skipped by the selector, refused by every
-   * swap proposer). World's seat/clear chokepoint reads it to maintain the
-   * derived reserved-partner index; absent = the action reserves nobody.
-   * Intrinsic to the action instance (rebuilt by `fromData`), never
-   * serialized separately.
+   * The unit this action reserves for its whole seated window: `SwapAction`'s
+   * partner, which the selector skips and every swap proposer refuses. World's
+   * seat and clear keep the reserved-partner index from it; absent, the action
+   * reserves nobody. It belongs to the action instance (rebuilt by
+   * `fromData`), so it is never serialized on its own.
    */
   reservedPartnerId?(): number;
   toData(): unknown;
 }
 
 /**
- * A behavior's offer to the action selector. Carries the per-unit timing
- * (cooldown + the phase timeline) so Action singletons stay stat-free.
+ * A behaviour's offer to the action selector. It carries the unit's timing (the
+ * cooldown and the phase timeline), so an action holds no stats.
  *
- * - `cooldown`: ticks before *this same* action (keyed by `cooldownKey`)
- *   can be proposed again. Decremented once per tick by World; the selector
- *   filters out proposals whose remaining cooldown is > 0. Independent of
- *   the phase timeline — a long-cooldown skill finishes its phases and still
- *   can't be re-proposed until the cooldown elapses.
- * - `phases` (F2): the action's ordered phase timeline. Replaces the pre-F2
- *   `duration` + `effectTicks` pair — the unit is busy for the SUM of every
- *   phase's `ticks` (the old `duration`), and `applyEffect` fires at the
- *   `impact` boundary (the old `effectTicks`). A basic strike is
- *   `[{impact,0},{recovery,D}]`; a charged spell is `[{windup,D},{impact,0}]`.
- *   For simple single-tick actions `cooldown` equals the total phase ticks;
- *   for charge-ups they may differ.
- * - `cooldownKey` (E2): selector key for `unit.actionCooldowns`. Defaults
- *   to `action.id` (the pre-E2 behavior); abilities override with their
- *   own id so a multi-ability unit gets independent cooldowns even when
- *   two abilities wrap the same Action class.
+ * - `cooldown` — the ticks before this action (by `cooldownKey`) may be
+ *   proposed again. World takes one off every entry each tick before the
+ *   selector runs, the selector drops a proposal whose cooldown is still above
+ *   0, and a seated action's cooldown is set to the full value (gotchas #7, #8).
+ *   It is apart from the timeline: a long-cooldown ability finishes its phases
+ *   and still waits out its cooldown.
+ * - `phases` — the ordered timeline. The unit is busy for the sum of the
+ *   phases' ticks, and `applyEffect` fires at the `impact` boundary. A basic
+ *   strike is `[{impact, 0}, {recovery, D}]`. For a simple strike `cooldown`
+ *   equals the total; for a charge-up the two may differ.
+ * - `cooldownKey` — the key in `unit.actionCooldowns`, `action.id` by default.
+ *   An ability passes its own id, so a unit's abilities keep separate
+ *   cooldowns though they share one action class.
  */
 export interface ActionProposal {
   readonly action: Action;
@@ -160,13 +141,12 @@ export interface ActionProposal {
 }
 
 /**
- * Set on a unit while an action is in flight. The action's busy window runs
- * from `startTick` to `finishTick` (exclusive of finish: `currentTick >=
- * finishTick` means the unit is free again). `World.tick()` emits an
- * `action:phase` event at each phase boundary (the offset where a phase
- * begins) and fires `applyEffect` at the `impact` boundary. The current
+ * Set on a unit while an action is under way. The busy window runs from
+ * `startTick` to `finishTick`, the unit free again once `currentTick >=
+ * finishTick`. `World.tick()` emits `action:phase` at each phase boundary (the
+ * offset where a phase begins) and fires `applyEffect` at `impact`. The current
  * phase is derived from `currentTick - startTick` against `phases`, so a
- * mid-flight snapshot resumes on the right phase automatically.
+ * snapshot taken mid-action resumes on the right phase.
  */
 export interface ActiveAction {
   readonly action: Action;
@@ -175,7 +155,7 @@ export interface ActiveAction {
   readonly phases: readonly ActionPhase[];
 }
 
-/** Total busy duration of a phase timeline = Σ phase ticks. */
+/** A timeline's whole busy window: the sum of its phases' ticks. */
 export function totalTicks(phases: readonly ActionPhase[]): number {
   let n = 0;
   for (const p of phases) n += p.ticks;
@@ -183,12 +163,10 @@ export function totalTicks(phases: readonly ActionPhase[]): number {
 }
 
 /**
- * The phase names whose cumulative start-offset equals `offset`, in declared
- * order. A phase "begins" at the running sum of all prior phases' ticks;
- * because zero-length phases share their boundary offset with the next
- * phase, several names can come back for one offset — they fire-and-advance
- * in the same tick (e.g. a lobbed shot's `release`/`travel`/`impact` at the
- * end of its wind-up).
+ * The phases that begin at `offset`, in order. A phase begins at the sum of the
+ * phases before it, and a 0-tick phase shares its offset with the next, so one
+ * offset can return several, which fire on the same tick (a shot's `release`
+ * and `travel` at the end of its wind-up).
  */
 export function phasesBeginningAt(
   phases: readonly ActionPhase[],

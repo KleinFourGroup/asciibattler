@@ -12,20 +12,16 @@ export interface MoveActionData {
 }
 
 /**
- * Single-step grid movement. §36b — NON-INSTANT: `start` CLAIMS the destination
- * (the §36 claim system) + emits `unit:moved`, but the unit's logical position
- * holds at `from`. The flip to `to` (and the claim release) lands in
- * `applyEffect`, which `World.tick` fires at the `impact` boundary — positioned
- * at the 50% mark by the proposal's phase timeline (see `moveProposal`). So for
- * the first half of the slide the unit logically occupies `from` and reserves
- * `to`; for the second it occupies `to` and the reservation is gone — `to` is
- * continuously blocked-for-pathing (claimed, then occupied) so no peer ever
- * converges on it. The renderer reads `durationTicks` from `unit:moved` and
- * lerps the sprite across the whole window independent of the logical flip.
+ * A one-cell move. `start` claims the destination and emits `unit:moved`, but
+ * the unit's position stays at `from`; the flip to `to`, and the claim's
+ * release, come in `applyEffect` at the `impact` boundary, which `moveProposal`
+ * places at `SIM.moveFlipFraction` of the move. Before the flip the unit stands
+ * on `from` and holds `to`; after it, it stands on `to`. So `to` is blocked to
+ * other units' pathing throughout, claimed and then occupied, and no two units
+ * converge on it. The renderer slides the glyph across the whole window from
+ * `unit:moved`'s `durationTicks`, apart from the flip.
  *
- * Per-proposal instance — MovementBehavior allocates one of these each
- * tick it wants to step. Trivial allocation overhead at expected unit
- * counts.
+ * A behaviour that steps builds one per proposal.
  */
 export class MoveAction implements Action {
   readonly id = MOVE_ACTION_ID;
@@ -37,11 +33,9 @@ export class MoveAction implements Action {
   ) {}
 
   start(unit: Unit, world: World): void {
-    // §36b — reserve the destination for the move's duration; the unit stays
-    // logically on `from` until `applyEffect` flips it at the 50% mark. A
-    // 1-tick move's `impact` sits at offset 0, so `start` + `applyEffect` run
-    // the same tick and the claim is atomically held-then-released (inert, as
-    // on the pre-§36b instant model).
+    // Hold the destination until the flip. A one-tick move's `impact` is at
+    // offset 0, so `start` and `applyEffect` run on the same tick and the claim
+    // is taken and released at once.
     world.claimCell(this.to, unit.id);
     world.emit('unit:moved', {
       unitId: unit.id,
@@ -52,16 +46,15 @@ export class MoveAction implements Action {
   }
 
   /**
-   * §36b — the deferred logical flip, fired at the `impact` phase boundary
-   * (the 50% mark, per `moveProposal`'s timeline). Move the unit onto `to` and
-   * release the destination claim: before this the unit reads as still on
-   * `from` (targeting / adjacency / pathing all read `unit.position`), after it
-   * reads as arrived. A move whose unit died before the flip never reaches here
-   * (the reap clears its claim via `releaseClaimsBy`).
+   * The flip, at the `impact` boundary: the unit moves onto `to` and the claim
+   * is released. Before it the unit reads as on `from` to targeting, adjacency
+   * and pathing, which all read `unit.position`; after it, as arrived. A unit
+   * that dies before the flip never gets here, and the reap releases its claim
+   * (`releaseClaimsBy`).
    *
-   * §37d — this flip IS the logical "enter" of `to`, so the tile→status ENTER
-   * hook fires here (after `position` is set, so it reads the destination def):
-   * mud → poison, water/deep_water → strip burn.
+   * The flip is when the unit enters `to`, so the tile's enter effects
+   * (`applyTileEnterEffects`) run here, after `position` is set, so they read
+   * the destination's tile.
    */
   applyEffect(unit: Unit, world: World, _tickOffset: number, _phase?: ActionPhaseName): void {
     unit.position = this.to;
@@ -70,9 +63,9 @@ export class MoveAction implements Action {
   }
 
   /**
-   * §35b — a move relocates onto `to`, which must be free. World re-validates it
-   * at execution and aborts the move (clean no-op + `unit:moveAborted`) if an
-   * earlier-processed unit took the cell this tick.
+   * The cell the move lands on, which must be free. World checks it again as
+   * the move starts and aborts it (nothing changes, and `unit:moveAborted`
+   * fires) if a unit that acted earlier this tick took the cell.
    */
   destinationCell(): GridCoord {
     return this.to;

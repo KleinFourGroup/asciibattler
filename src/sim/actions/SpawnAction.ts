@@ -5,23 +5,17 @@ import type { World } from '../World';
 export const SPAWN_ACTION_ID = 'spawn';
 
 /**
- * Multi-tick lockout an overflow-queue unit performs as its first
- * "action" after being placed on the grid. The selector's standard
- * `activeAction` short-circuit (see World.tick step 3) keeps the unit
- * from proposing during the lockout; no effect work happens here.
+ * The lockout a unit joining a battle under way serves as its first action (a
+ * unit from the spawn queue, a camp's drip, a summon). World seats it directly
+ * (`seatAction`) with one `impact` phase of `SIM.spawnDurationTicks`; no
+ * behaviour proposes it, and the unit's selector finds `activeAction` already
+ * set and proposes nothing until it ends. It does nothing itself.
  *
- * Set directly by `World.spawnFromQueue` rather than proposed by a
- * Behavior — the unit's selector never sees a SpawnAction, it just sees
- * activeAction already populated when it first appears in the per-unit
- * step.
+ * The renderer fades the glyph in over the same window off `unit:spawned`'s
+ * `instant: false`, not off this action.
  *
- * Renderer-side, BattleRenderer keys off the `instant: false` flag on
- * `unit:spawned` to lerp alpha 0 → 1 over the same duration; the fade
- * is purely wall-clock and is not driven by this action's effects.
- *
- * Pure-data action — no parameters to serialize. The registry factory
- * returns a fresh instance on rehydrate; `activeAction.startTick` /
- * `finishTick` carry the lockout window.
+ * It has no parameters to serialize: the registry builds a fresh one on
+ * rehydrate, and `activeAction.startTick` and `finishTick` carry the window.
  */
 export class SpawnAction implements Action {
   readonly id = SPAWN_ACTION_ID;

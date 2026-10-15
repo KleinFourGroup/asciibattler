@@ -14,49 +14,43 @@ export interface SwapActionData {
 }
 
 /**
- * GP5 #5 / 56c2 — an ATOMIC position swap between the acting unit and a
- * friendly `other`: the partner advances onto the actor's cell (`from`) and
- * the actor takes the partner's cell (`to`), exchanged in one write so the
- * grid never transiently double-occupies a cell. The healer's chokepoint
- * yield, the 56b swap-through, and the 56c flee-swap all ride this one verb.
+ * A position swap between the acting unit and a friendly `other`: the partner
+ * takes the actor's cell (`from`) and the actor takes the partner's (`to`), in
+ * one write, so no cell ever holds two units. The healer's yield at a
+ * chokepoint, the swap through a column, the flee swap and the ranged yield all
+ * use it.
  *
- * Why a dedicated action rather than two `MoveAction`s: `MoveAction`'s flip
- * just writes `position = to` with no occupancy check (it trusts behaviors
- * never to target an occupied cell). Two units exchanging via separate moves
- * would put both on one cell between the two flips. Exchanging both positions
- * in one call is the only race-free way to express a pass in a corridor with
- * no passing bay — the genuinely missing primitive behind the GP4-exposed
- * healer deadlock.
+ * Why not two `MoveAction`s: a move's flip writes `position = to` with no
+ * occupancy check, trusting the proposer, so two units exchanging by separate
+ * moves would share a cell between the flips. One write of both positions is
+ * the only race-free way to pass in a corridor with no passing bay, and without
+ * it two units deadlock there.
  *
- * 56c2 — DEFERRED, the §36b twin (GP5 shipped it instant, which let an
- * `aMM` column double-swap to `MMa` within one tick — the observed bug):
- * `start` only emits `unit:swapped` (the renderer begins its dual lerp);
- * the logical exchange lands in `applyEffect` at the `impact` boundary —
- * the 50% mark, exactly like a move (see `swapProposal`'s timeline). No
- * claims are needed: from the outside both cells are occupied for the whole
- * window (each by one of the pair, before and after the flip).
+ * The exchange is deferred, as a move's flip is: `start` only emits
+ * `unit:swapped`, and the renderer begins sliding both glyphs; the exchange
+ * lands in `applyEffect` at the `impact` boundary, which `swapProposal` places
+ * at `SIM.moveFlipFraction` of the swap. An instant swap let a column of three
+ * swap twice within one tick. No claims are needed: both cells are occupied
+ * throughout, by one of the pair before the exchange and the other after.
  *
- * The PARTNER is never seated with an action and pays no cooldown (it is
- * merely relocated, keeping its own cadence) — but for the WHOLE swap
- * window the partner is reserved: `World.tick` skips its selector and
- * every proposer's `isSwappablePartner` gate refuses it (both via the
- * derived `isReservedSwapPartner` scan — no serialized state). The swap is
- * fundamentally the partner's action too (56e-pre): pre-flip it must not
- * start anything the flip would invalidate, and post-flip it is still
- * mid-slide on the renderer's full-window dual lerp — releasing it at the
- * flip let a second swap grab a half-displaced unit (the 56e sighting).
- * That full-window reserve is what throttles a column re-sort to ONE hop
- * per swap window, now literally.
+ * The partner is never seated with an action and pays no cooldown; it is moved
+ * and keeps its own cadence. But it is reserved for the whole window: the
+ * selector skips it and every proposer's `isSwappablePartner` refuses it. The
+ * swap is the partner's action too. Before the exchange it must not start
+ * anything the exchange would undo, and after it, it is still mid-slide on the
+ * renderer's window; releasing it at the exchange let a second swap take a unit
+ * half moved. Reserving it for the whole window also limits a column's re-sort
+ * to one hop per window.
  *
- * Validation lives at the FLIP, not at `start`: within a live tick,
- * propose→start is synchronous right after the proposer's own gates, and
- * after a snapshot rehydrate `start` never re-runs — only future
- * `applyEffect` boundaries fire — so the flip is the one place stale state
- * can appear. Partner gone/dead/busy by then → degrade to a plain step when
- * `to` is actually free, else abort (`unit:swapAborted` — the TWO-body
- * settle, 56e-pre2; swap cooldown reset, lockout released — the §36c abort
- * shape). The sibling failure site is `World.removeUnit`: an actor removed
- * pre-flip (death mid-window) emits the same event there.
+ * The check is at the exchange, not at `start`: in a live tick the proposal
+ * and `start` run together just after the proposer's own checks, and after a
+ * snapshot is restored `start` never runs again, so the exchange is the one
+ * place stale state can show. If by then the partner is gone, dead or busy, the
+ * actor steps alone when `to` is free, and otherwise the swap aborts
+ * (`unit:swapAborted`, which settles both glyphs; the swap's cooldown reset and
+ * the lockout released). The other way a swap fails is `World.removeUnit`: an
+ * actor removed before the exchange (a death mid-window) emits the same event
+ * there.
  */
 export class SwapAction implements Action {
   readonly id = SWAP_ACTION_ID;
@@ -68,24 +62,23 @@ export class SwapAction implements Action {
     private readonly durationTicks: number,
   ) {}
 
-  /** The reserved partner's id — read by the reserved-partner verifier scan. */
+  /** The reserved partner's id, which `scanReservedSwapPartners` reads. */
   get partnerId(): number {
     return this.otherId;
   }
 
   /**
-   * 86c-L2b — the `Action.reservedPartnerId` seam: while this action is
-   * seated, `otherId` is reserved (selector skip + every proposer's
-   * `isSwappablePartner` refusal). World's seat/clear chokepoint reads this
-   * to maintain the O(1) reserved-partner index.
+   * `Action.reservedPartnerId`: while this action is seated, `otherId` is
+   * reserved (skipped by the selector, refused by `isSwappablePartner`).
+   * World's seat and clear keep the reserved-partner index from it.
    */
   reservedPartnerId(): number {
     return this.otherId;
   }
 
   start(unit: Unit, world: World): void {
-    // One swap event with shared timing — the renderer lerps both sprites
-    // over the full window; the logical exchange lands at the impact flip.
+    // One event with one timing: the renderer slides both glyphs over the
+    // whole window, and the exchange lands at `impact`.
     world.emit('unit:swapped', {
       unitA: unit.id,
       unitB: this.otherId,
@@ -96,26 +89,21 @@ export class SwapAction implements Action {
   }
 
   /**
-   * 56c2 — the deferred exchange, fired at the `impact` boundary. Three
-   * branches, validated against LIVE state (the partner reserve makes the
-   * happy path a guarantee in live play; the others cover a partner that
-   * died mid-window or post-rehydrate staleness):
+   * The exchange, at the `impact` boundary, checked against the world as it is
+   * now. The partner's reserve makes the first branch certain in live play; the
+   * others cover a partner that died mid-window and state gone stale across a
+   * restore.
    *
-   *   1. Partner alive, on `to`, idle → the atomic exchange. Both units
-   *      logically ENTER their new cells here, so both get the §37d
-   *      tile-enter hook (mud → poison…) — which the instant GP5 model
-   *      never fired for either party: a latent rules hole this rework
-   *      closes for free.
-   *   2. Partner gone and `to` genuinely free (no body, no foreign claim)
-   *      → degrade to a plain step (silent: the start event already showed
-   *      the actor sliding to `to`; a dead partner's sprite belongs to the
-   *      death anim).
-   *   3. `to` still occupied (a busy partner is its own occupant) or
-   *      claimed by a third → abort: stay on `from`, release the lockout,
-   *      reset the swap cooldown for an immediate retry, and emit
-   *      `unit:swapAborted` so the renderer settles BOTH sprites (§36c
-   *      shape, two-body since 56e-pre2 — the partner began the dual lerp
-   *      too, and settling only the actor left it desynced).
+   * 1. The partner is alive, on `to` and idle: the exchange. Both units enter
+   *    their new cells here, so both get the tile's enter effects.
+   * 2. The partner is gone and `to` is free (no body, no other unit's claim):
+   *    the actor steps alone, silently, since `start` already showed it sliding
+   *    to `to`, and a dead partner's glyph belongs to its death animation.
+   * 3. `to` is still taken (a busy partner stands on it) or another unit
+   *    claims it: abort. The actor stays on `from`, the lockout ends, the
+   *    swap's cooldown is reset so it may try again at once, and
+   *    `unit:swapAborted` lets the renderer settle both glyphs, since the
+   *    partner began sliding too.
    */
   applyEffect(unit: Unit, world: World, _tickOffset: number, _phase?: ActionPhaseName): void {
     const other = world.findUnit(this.otherId);
@@ -139,11 +127,10 @@ export class SwapAction implements Action {
       return;
     }
 
-    // Abort: the §36c shape — cooldown reset for the retry, lockout released.
-    // 56e-pre2: the failure is a TWO-body fact (both sprites began the dual
-    // lerp at `start`), so the dedicated event settles both — emitting the
-    // one-body `unit:moveAborted` here left the partner's sprite resting on
-    // a slide the sim never honored (the 56e labyrinth desync).
+    // Abort: the cooldown reset for a retry, the lockout released. Both glyphs
+    // began sliding at `start`, so the two-body event settles both; a
+    // `unit:moveAborted` would leave the partner's glyph where the sim never
+    // put it.
     unit.actionCooldowns.set(this.id, 0);
     world.clearActiveAction(unit);
     world.emit('unit:swapAborted', {
@@ -154,8 +141,8 @@ export class SwapAction implements Action {
     });
   }
 
-  /** No living body (other than `unit`) covers `cell` and no other unit
-   *  holds a claim on it. */
+  /** Whether no living body but `unit`'s covers `cell` and no other unit
+   *  claims it. */
   private cellFree(cell: GridCoord, unit: Unit, world: World): boolean {
     const claimant = claimantOf(world, cell);
     if (claimant !== undefined && claimant !== unit.id) return false;
@@ -183,41 +170,32 @@ export class SwapAction implements Action {
 }
 
 /**
- * 56c2/56e-pre — is `unitId` the reserved partner of someone's IN-FLIGHT
- * SwapAction? The reserve holds for the WHOLE window — seat through
- * finishTick — not just pre-flip: the swap is fundamentally the partner's
- * action too, so it neither starts anything the coming flip would
- * invalidate (pre-flip) nor acts or gets grabbed by a second swap while
- * the renderer's dual lerp is still sliding it (post-flip — the
- * flip-anchored release shipped at 56c2 allowed exactly that mid-window
- * re-grab, the 56e sighting; regression pins in movement.test.ts +
- * rangedYield.test.ts). The reserve clears when the actor's action does:
- * finishTick, or the abort branch clearing early.
+ * Whether `unitId` is the reserved partner of a swap under way. The reserve
+ * holds for the swap's whole window, from its seat to `finishTick`, not only
+ * until the exchange: the partner must neither start anything the exchange
+ * would undo nor act, or be taken by a second swap, while the renderer still
+ * slides it (pinned in `movement.test.ts` and
+ * `behaviors/rangedYield.test.ts`). It clears when the actor's action does, at
+ * `finishTick` or early on an abort.
  *
- * 86c-L2b — answered from World's incrementally-maintained index (O(1);
- * the per-call O(units) scan was 7.1% of a full-arm run post-L2).
- * Maintenance rides the activeAction seat/clear chokepoint, so mid-tick
- * mutation ordering is preserved by construction (a swap seated by an
- * earlier unit reserves its partner before the partner's own iteration
- * the same tick — the no-loop-start-hoist caveat). The old derived scan
- * survives as `scanReservedSwapPartners`, the test-side verifier.
+ * Answered from World's index in O(1); a scan of the units per call was a
+ * measurable share of a run. The index is kept at the seat and clear of
+ * `activeAction`, so the order of changes within a tick holds: a swap seated
+ * by an earlier unit reserves its partner before that partner's own turn the
+ * same tick. `scanReservedSwapPartners` is the scan, kept for the tests.
  *
- * Consumed by `World.tick`'s selector skip and by `isSwappablePartner`
- * (the one-hop-per-window chain throttle — window-true since 56e-pre).
+ * Read by the selector's skip in `World.tick` and by `isSwappablePartner`.
  */
 export function isReservedSwapPartner(unitId: number, world: World): boolean {
   return world.isSwapReservedPartner(unitId);
 }
 
 /**
- * 86c-L2b — the VERIFIER: the pre-index derived scan, kept as the
- * test-side recompute-and-compare invariant (the §79e principle applied to
- * a cache: the check re-derives from a surface production no longer
- * consults). Walks live `activeAction`s and rebuilds partnerId → actorId
- * from scratch; tests assert deep-equality against
- * `world.swapReservedPartnerIndex` after seats, flips, aborts, removals,
- * and snapshot round-trips. NEVER call this from production code — its
- * O(units) cost is exactly what the index retired.
+ * The tests' check on the index: it rebuilds partner id → actor id from the
+ * live `activeAction`s, a surface the index does not consult, and the tests
+ * compare it with `world.swapReservedPartnerIndex` after seats, exchanges,
+ * aborts, removals and snapshot round-trips. Never call it from game code: its
+ * cost per call is what the index removed.
  */
 export function scanReservedSwapPartners(world: World): Map<number, number> {
   const out = new Map<number, number>();
@@ -230,14 +208,12 @@ export function scanReservedSwapPartners(world: World): Map<number, number> {
 }
 
 /**
- * 56e-pre2 — the seated swap on `aa` whose flip has NOT yet fired, else null.
- * Pre-flip = offset < the tick-sum of the phases before `impact` (the check
- * the 56e-pre reserve dropped, resurrected for a narrower question).
- * Consumer: `World.removeUnit` — a participant removed pre-flip (death
- * mid-window) means the exchange will never land, and the dual lerp both
- * sprites started at `start` must be settled via `unit:swapAborted`.
- * Post-flip removal needs nothing: the exchange already landed and both
- * sprites are lerping toward their true cells.
+ * The swap seated on `aa` whose exchange has not yet happened, or null: one
+ * whose offset is still below the sum of the phases before `impact`. Read by
+ * `World.removeUnit`: a participant removed before the exchange (a death
+ * mid-window) means the exchange will never land, and both glyphs, sliding
+ * since `start`, are settled by `unit:swapAborted`. A removal after the
+ * exchange needs nothing, since both glyphs are sliding to their true cells.
  */
 export function preFlipSwap(
   aa: { action: Action; startTick: number; phases: readonly { phase: string; ticks: number }[] } | null,
@@ -253,12 +229,9 @@ export function preFlipSwap(
 }
 
 /**
- * 56c2 — the ONE partner-eligibility gate every swap proposer shares (the
- * mover-side probe, the ranged yield, the flee-swap, the healer's GP5
- * yield): the partner must be genuinely between actions (`activeAction`
- * null — never relocate anything in flight, whatever its phase shape; the
- * fill-windup lesson) and not already reserved by another in-flight swap
- * (for that swap's whole window, 56e-pre).
+ * The one check every swap proposer makes of a partner: it must be between
+ * actions (`activeAction` null, since nothing under way is ever moved, whatever
+ * its phases) and not reserved by another swap under way.
  */
 export function isSwappablePartner(u: Unit, world: World): boolean {
   return u.activeAction === null && !isReservedSwapPartner(u.id, world);

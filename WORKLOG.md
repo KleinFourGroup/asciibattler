@@ -4566,3 +4566,107 @@ much, Claude! 😁 Signing those two points!" So whether `mercenary` stays
 in `REQUIRED_UNIT_IDS` is a question for §122's kickoff, and the
 Cursor's readings line keeps the current phase's sessions, pointing to
 the WORKLOG and the Cursor at a hash for the phase before.
+
+## Phase 122 — sim
+
+### The kickoff: the audit, and the cut put to the user (2026-10-15, session 6677fa11)
+
+Pre-flight at `8522c69`, the tree clean. Nothing was built. Each finding
+below is from a search or a read of the named lines; no file was read
+whole.
+
+**The size.** `src/sim` and `src/core` hold 64 files of 16,206 lines
+besides 69 co-located tests. `comment-length` over the 64: 7,272 code
+lines, 8,099 comment lines, 66,424 comment words. `World.ts` is 3,081
+lines, 1,567 of them comment. `comment-codes`: 1,805 step codes in
+`src/sim` and 173 in `src/core`, 371 of them in tests.
+
+**The signed rows at HEAD.**
+
+- A-22, sim and core's share, twelve names: `healAmountFor`,
+  `magicBoltDamage`, `catapultShotDamage` (`stats.ts`),
+  `WORLD_COMMAND_KINDS` (`Command.ts`), `Vec2` (`core/types.ts`), and
+  `ScalingStat`, `ScalarOrScaled`, `PeriodicOp`, `MoveOp`,
+  `ApplyStatusOp` (`effects/schema.ts`), `StatusPeriodic`,
+  `StatusBehavior` (`effects/statusSchema.ts`). Comments name
+  `healAmountFor` in `propose.ts:352`, `resolveScalars.ts:54` and
+  `schema.ts:149`, and `ScalarOrScaled` in `resolveScalars.ts` and the
+  attack editor; no code reads either. `RedrawConfig` went at 121b.
+- A-25: `basicAttackDamage`, the three glyph constants and
+  `footprintFits`, each read by its own test alone.
+- A-26: 120d's walk (`scratch/120d/graph.json`) predates §121, so the
+  list is taken again at HEAD. At 120d it held 40 in `src/sim`, none in
+  `src/core`.
+- A-28: `EffectAction.orphanPolicy` (`EffectAction.ts:76`, set at :83).
+  The fire path reads `this.def.orphanPolicy` (:191), so no stored shape
+  changes with the field.
+- A-29, its sim half: `src/sim/effects/index.ts`, 18 lines.
+- A-34: `multiTick.test.ts` (three tests) and `phaseTimeline.test.ts`
+  (four), 204 and 210 lines.
+- A-38: `spawnEnvironment`'s `team?` (`World.ts:2676`), read once at
+  :2686.
+
+**Found: list A's rows for `src/config` are in no phase.** ROADMAP gives
+§122 the sim's share of A-22, A-25, A-26 and A-28, and §121 took section
+1's dials, not section 2's exports. Left over: A-22's `firstOpOf`
+(`abilities.ts`), `EFFECT_DURATIONS` and `EffectDuration`
+(`packets.ts`), `SectorMapNode`, `SectorEncounterPools`,
+`ProceduralCampsConfig`, `RangeSchema` and `Range`; A-29's other file,
+`src/config/schemas.ts`; and A-26's config share (30 at 120d, two of
+them in files deleted since).
+
+**List B at HEAD.**
+
+- B-01: `isInertNeutral` at 16 call sites in 11 files, as counted;
+  `isActiveNeutral` called nowhere. The hand-written pairs are where the
+  census put them, with lines moved (`World.ts:2174` is now :2168). One
+  more the census did not list: `audio/eventSounds.ts:54`,
+  `!(team === 'neutral' && campId === null)`, which takes the two fields
+  as arguments and not a unit.
+- B-07: the four bodies as the row has them (`spawnCampUnit` :2035,
+  `spawnFromQueue` :2068, `spawnSummon` :2605, `battleSetup.spawnTeam`
+  :94). The first deployment goes through `World.spawnUnit` and seats no
+  lockout; `spawnSummon` already chooses between the camp's movement and
+  the catalog's.
+- B-08: `World.clearResolvedObjectives` (:2143), its "must mirror"
+  comment at :2162; `validNeutralObjectiveTarget` (`Targeting.ts:449`),
+  private.
+- B-09: the tick's death check (:1307) and `reapDead` (:1835);
+  `reapUnit` (:2406) has those two callers and no other.
+- B-17: the four private copies (`Pathfinding.ts:217`,
+  `Targeting.ts:793`, `focusTile.ts:22`, `targetingStrategies.ts:43`)
+  and `movement.ts:866`'s alias `chebyshev = distanceBetween`. Both
+  names are in wide use: `distanceBetween` on 64 code lines in 15 files,
+  `chebyshev` on 50 in 19, tests included. The A* estimate's three
+  inline `Math.max` forms (`Pathfinding.ts:174`, :198, :277; gotcha #34)
+  are not calls of the function and stay.
+
+**The leads.**
+
+- `focusTile.ts`: 29 lines, one comparison and a two-value type,
+  imported by `Targeting.ts` (its switch at :506) and its own test.
+- `updateTargetDefault` (`Targeting.ts:159`): two calls, one caller
+  (:152). Inlined, a name and a two-line doc go, and the call site would
+  carry the doc's sentence.
+- The camp-anchor revert (`World.ts:2173-2189`): its one producer, the
+  enemy pull's tile order, was retired at §75j2, but a player's engage
+  order on an anchor cell still reaches it. Taking it out changes what
+  that order does once the camp is cleared, which is a change of
+  behaviour.
+- `src/sim/layouts.ts`'s stale header: the comment pass.
+- `mercenary` in `REQUIRED_UNIT_IDS`: the code that names it by literal
+  is the dev board's fixtures (five lines) and two editors
+  (`tools/character-editor/editor.ts:155`,
+  `tools/encounter-editor/editor.ts:662-663`); 108 test files name it.
+  The check's comment says only the dev board's fixtures name it, which
+  the editors contradict.
+
+**The comment pass's cost.** At 121j's 66 tokens a line the 16,206
+lines are about 1.07M tokens, at the pilot's 62 about 1.0M; `World.ts`
+alone is about 200k. 120h sized the phase at 16,389 lines.
+
+**The cut, as put.** In the session's final message of this turn, with
+its calls; the user's answer and the cut as signed follow here.
+
+Readings by the tool's clock (UTC): 99,774 at 12:26 after the
+orientation, 192,977 at 12:33 after the audit.

@@ -5327,3 +5327,30 @@ Kept.
 never handled in shipped code; `triggers.ts`'s header says K1 shipped the
 fire points for Phase L's daemons, and the daemons registered two. The
 census does not list them.
+
+### 122j — B-17, one `chebyshev` (2026-10-15, session 94dca491)
+
+Step zero at `6002c18`: the four private copies, each `Math.max` of the
+two axis differences (`focusTile.ts:22`, `Pathfinding.ts:217`,
+`Targeting.ts:793`, `targetingStrategies.ts:43`, the last typed by `x` and
+`y` alone, and every call passes a unit's `position`), beside
+`occupancy.ts:251`'s `distanceBetween` and `movement.ts:866`'s alias. The
+signed form (the kickoff's call 8) is for each file to import the alias.
+`Pathfinding.ts` imports nothing but a type today, and `movement.ts`
+imports its `findPath`, so the import makes a cycle; a walk of the value
+imports found that `occupancy.ts` already reaches `Pathfinding.ts` (through
+`config/units`, the ability registry, `effects/propose` and `movement`),
+so the sim's modules already share one cycle and this adds an edge to it,
+not a new kind of risk. Lines were estimated before this bar: about −13.
+
+**The bar** (D2), written before the code:
+
+1. *The same behaviour:* the corpus, 0 of 30, then the fuzz diff against
+   the commit before the code, PASS on both shapes; typecheck and the
+   suite. The function's body does not change, only where it is defined,
+   so a plant at the one definition is the control: an edit there is
+   caught by the corpus.
+2. *Source lines do not grow.*
+3. *No new parameter.*
+4. *The special case, counted:* five definitions of the distance → one,
+   under two names.

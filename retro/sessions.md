@@ -5730,3 +5730,39 @@ user's call.
    to state plainly rather than argue for; the user's quick, clear
    signatures; plants that each came back caught or explained. I would
    want the bar-first habit repeated, with the lines counted before the bar.
+
+## 2026-10-15 — session 4c3418de (claude-opus-5-5): 122o's batches 1 to 3
+
+1. *Missing from the orientation.* Nothing that blocked. The Cursor named
+   the rules, the example and the proofs. What I had to build on the way
+   was the control worktree's junction under PowerShell (Git Bash's
+   `mklink` refused its switch), and a measure of a batch's comments at
+   HEAD, which `comment-length` takes only from a path inside the repo,
+   so the copies went under `output/`.
+2. *Norms in conflict.* Rule 5 (no plans) against the brief's ask that
+   `triggers.ts` call the five unhandled triggers fire points awaiting
+   their consumers. I wrote it as a present fact, kept on purpose for the
+   content that will handle them, which reads as a statement and still
+   tells a later census to leave them. No real tension beyond the wording.
+3. *Pulled to claim more.* Slightly, with the event catalog: it was
+   tempting to keep an event's consumer list from the old comment. Each
+   one was grepped instead, and several were wrong (DashAction, HealAction,
+   the intended overlays). The cost table in WORKLOG is from the tool's
+   readings, each with its time.
+4. *Wasted.* One heredoc patch script the shell refused (filed as a
+   papercut); about 15k on `events.ts`'s checks that a reader would call
+   necessary rather than waste. The first batch cost 84 a line against the
+   later 53 and 52.
+5. *For the next session.* The helper in my scratchpad (`cm.py`, exact
+   anchors checked before any write, a block form from a start anchor to
+   an end anchor) made each file one call; a script file avoids the
+   shell's quoting. `World.ts` carries batch 1's two leads and batch 3's
+   "instant move model" lead, listed in the batch entries.
+6. *Room.* Yes. The batches were `batch` reads, so between them the work
+   was mine to carry on, and the hand-off point was a measured call, not a
+   guess: 441k before a 190k batch. I did not want to pause before then.
+7. *What helped.* Finding false statements by checking claims against the
+   JSON and the emitters, which turned the pass from rewording into
+   something with a result (the ability line's overstated damage among
+   them). I would want the same: a signed style, a strip oracle per
+   commit, and room to follow a claim to its source.

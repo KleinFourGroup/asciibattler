@@ -5729,7 +5729,7 @@ the proof: 72k for 1,392 lines, 52 a line. The three batches: 317k for
 batch's 84 is `events.ts`, whose 36 events each needed their emitters
 and consumers found.
 
-**Read** (`batch`): `git show <hash> -- src/sim/triggers.ts
+**Read** (`batch`): `git show 179ada40 -- src/sim/triggers.ts
 src/sim/actions/SwapAction.ts` against the seven rules. Wrong looks like
 a step code or history left (the swap's incident tags), the five
 unhandled triggers called dead, or a rule cut that the swap's reserve

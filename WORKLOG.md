@@ -4489,3 +4489,7 @@ the schema copies gone, three false statements corrected), against the
 seven rules. Wrong looks like a step code or `§` left, history kept, a
 shipped number with a stale or missing reason, a fact said twice, an
 aligned list, or a claim the code contradicts.
+
+**Read** (the user, 2026-10-14), on the two diffs: "Those two reads look
+so much better! And great catch on those corrections". No finding, so
+121j is ticked.

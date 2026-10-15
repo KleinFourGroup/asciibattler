@@ -126,15 +126,11 @@ kickoff):
 - ☑ **121i — the comment pass's pilot** (`stop`): `health.ts`,
   `daemons.ts`, `sim.ts`. Its seven rules signed as the round's style;
   121j in one fresh session, no fan-out (WORKLOG §121, 121i).
-- ◐ **121j — the comment pass, the rest of the loaders** (`batch`: two
+- ☑ **121j — the comment pass, the rest of the loaders** (`batch`: two
   loaders' diffs read against the pilot's style), with the cost a line.
   The co-located tests wait for §126. Built in five commits, `e457c93` to
-  `d91c2a6`, at about 66 tokens a line (WORKLOG §121, 121j). Read
-  `git show b8d8bba -- src/config/difficulty.ts` and
-  `git show c784720 -- src/config/sectors.ts` against the seven rules;
-  wrong looks like a step code left, history kept, a shipped number with a
-  stale or missing reason, a fact said twice, or a claim the code
-  contradicts.
+  `d91c2a6`, at about 66 tokens a line; `difficulty.ts` and `sectors.ts`
+  read by the user 2026-10-14, no finding (WORKLOG §121, 121j).
 
 ## Phase 122 — sim
 

@@ -5277,3 +5277,24 @@ Against the bar:
 
 Kept. The step-code ceiling lowered by `comment-codes --record` before the
 commit.
+
+### 122i — B-09, the death trigger in `reapUnit` (2026-10-15, session 94dca491)
+
+Step zero at `478bd4d`: the tick's death check (`World.ts:1307-1313`) and
+`reapDead` (:1836) each fire `death` and then call `reapUnit` (:2378),
+which has no other caller and whose doc calls it "the ONE death-event emit
+for both death sites"; `reapDead`'s line carries a note that it mirrors
+the tick's. Moved into `reapUnit`'s first line, the trigger keeps its
+place: before `recordFallen`, the splice and `unit:died`. Lines were
+estimated before this bar: about −3.
+
+**The bar** (D2), written before the code:
+
+1. *The same behaviour:* the corpus, 0 of 30, then the fuzz diff against
+   the commit before the code, PASS on both shapes; a plant at the moved
+   trigger, in a worktree, caught by the corpus or, if the corpus misses
+   it, by the suite; typecheck and the suite.
+2. *Source lines do not grow.*
+3. *No new parameter.*
+4. *The special case, counted:* the trigger fired at two sites → one, and
+   the note that one site mirrors the other → none.

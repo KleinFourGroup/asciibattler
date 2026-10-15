@@ -4791,3 +4791,23 @@ Proof (export): typecheck clean; `build-hash HEAD`, the same bytes;
 before the ceiling was lowered, so `comment-codes.test.ts` failed in it;
 the recording quoted is the second, green.) The step-code ceiling 5,773
 → 5,766.
+
+Reading: 346,696 at 13:41 on the commit, `8444bae`.
+
+### 122c — A-28's field and A-38's option (2026-10-15, session 6677fa11)
+
+`EffectAction.orphanPolicy` is gone, and with it the optional
+`orphanPolicy` member of the `Action` interface, which the field
+implemented and nothing reads (a search for `.orphanPolicy` outside an
+ability def and the interpreter's context found none); its doc said an
+absent policy "is treated as `commit-at-cast`", and nothing treats it so.
+The policy that runs is the def's (`EffectAction.ts:142`, :191) and the
+interpreter's context's. `World.spawnEnvironment` loses its `team`
+option, which no caller of the nine passes; the doc says the unit is on
+the neutral team rather than defaults to it.
+
+Proof (sim): typecheck clean (it named the `OrphanPolicy` import the
+field left unread); the corpus, 0 of 30 journals differ; the fuzz diff
+against `8444bae`, PASS on both shapes. `build-hash HEAD` differs in the
+two script bundles and `index.html`, as it must for shipped code. The
+step-code ceiling 5,766 → 5,765.

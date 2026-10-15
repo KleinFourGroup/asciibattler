@@ -2657,7 +2657,7 @@ export class World {
 
   /**
    * Spawn an environment entity — a wall, half-cover, future rubble: anything
-   * that lives on the grid as a unit but isn't a combatant. Defaults to the
+   * that lives on the grid as a unit but isn't a combatant. On the
    * `'neutral'` team (Targeting skips, HUD ignores, checkBattleEnd doesn't
    * count). Has no `behaviors`, so the selector never fires for it. Renderer-side
    * suppresses bloom + bars for the neutral team.
@@ -2673,7 +2673,6 @@ export class World {
     archetype: string;
     position: GridCoord;
     maxHp?: number;
-    team?: Team;
   }): Unit {
     const def = NEUTRAL_DEFS[opts.archetype];
     if (!def) {
@@ -2683,7 +2682,7 @@ export class World {
     }
     return this.addUnit(
       {
-        team: opts.team ?? 'neutral',
+        team: 'neutral',
         archetype: opts.archetype,
         glyph: def.glyph,
         stats: ZERO_STATS,

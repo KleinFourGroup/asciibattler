@@ -207,7 +207,7 @@
  "src/settings/boot.ts": 4,
  "src/settings/settings.test.ts": 1,
  "src/settings/settings.ts": 1,
- "src/sim/Action.ts": 19,
+ "src/sim/Action.ts": 18,
  "src/sim/Command.ts": 4,
  "src/sim/Pathfinding.test.ts": 4,
  "src/sim/Pathfinding.ts": 26,

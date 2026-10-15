@@ -32,7 +32,6 @@ import {
   type Action,
   type ActionPhase,
   type ActionPhaseName,
-  type OrphanPolicy,
 } from '../Action';
 import type { GridCoord } from '../../core/types';
 import { secondsToTicks } from '../../config';
@@ -73,14 +72,12 @@ function ticksOfPhase(phases: readonly ActionPhase[], phase: ActionPhaseName): n
 
 export class EffectAction implements Action {
   readonly id: string;
-  readonly orphanPolicy: OrphanPolicy;
 
   constructor(
     private readonly def: AbilityDef,
     private readonly ctx: EffectContext,
   ) {
     this.id = def.id;
-    this.orphanPolicy = def.orphanPolicy;
   }
 
   start(unit: Unit, world: World): void {

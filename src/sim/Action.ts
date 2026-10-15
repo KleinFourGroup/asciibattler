@@ -77,13 +77,6 @@ export type OrphanPolicy = 'commit-at-cast' | 'fizzle' | 'ground-target';
  */
 export interface Action {
   readonly id: string;
-  /**
-   * F2 — the action's orphan policy (see `OrphanPolicy`). Optional; absent
-   * is treated as `commit-at-cast` (the single-tick default). Intrinsic to
-   * the action class, so it's NOT serialized — `fromData` rebuilds the same
-   * class, which re-declares it.
-   */
-  readonly orphanPolicy?: OrphanPolicy;
   start(unit: Unit, world: World): void;
   /**
    * §35b — the cell this action relocates the unit ONTO, which must be free at

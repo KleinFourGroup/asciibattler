@@ -15,7 +15,8 @@ import type { GameEvents } from '../../core/events';
  * order, and fires `applyEffect` at the `impact` boundary. Zero-length
  * phases share a boundary tick (fire-and-advance). Per-action regression of
  * the damage/heal OUTCOMES lives in each action's own test + the byte-
- * identical fuzz baseline; this file pins the phase SCHEDULE + events.
+ * identical fuzz baseline; this file pins the phase SCHEDULE + events, and
+ * the busy window and the cooldown that gate the next proposal.
  */
 
 // A multi-tick action mirroring magic/catapult: no-op start, the effect
@@ -53,11 +54,10 @@ class PhasedBehavior implements Behavior {
   constructor(
     private readonly action: Action,
     private readonly phases: readonly ActionPhase[],
+    private readonly cooldown: number,
   ) {}
   proposeAction(): ActionProposal | null {
-    // cooldown far past the observation window → the action fires exactly
-    // once, so the assertions see a single clean lifecycle.
-    return { action: this.action, score: 100, cooldown: 9999, phases: this.phases };
+    return { action: this.action, score: 100, cooldown: this.cooldown, phases: this.phases };
   }
 }
 
@@ -67,7 +67,9 @@ interface LoggedPhase {
   actionId: string;
 }
 
-function scene(action: Action, phases: readonly ActionPhase[]): {
+// The default cooldown is far past the observation window, so the action
+// fires exactly once and the assertions see a single clean lifecycle.
+function scene(action: Action, phases: readonly ActionPhase[], cooldown = 9999): {
   world: World;
   phases: LoggedPhase[];
 } {
@@ -91,7 +93,7 @@ function scene(action: Action, phases: readonly ActionPhase[]): {
     derived,
     position: { x: 0, y: 0 },
   });
-  actor.behaviors.push(new PhasedBehavior(action, phases));
+  actor.behaviors.push(new PhasedBehavior(action, phases, cooldown));
   world.units.push(actor);
 
   // Inert enemy so neither team is wiped — keeps the battle (and ticks)
@@ -200,6 +202,46 @@ describe('F2 action phase timeline', () => {
     // impact at offset 5 (windup length), regardless of the trailing recovery.
     for (let i = 0; i < 5; i++) world.tick(); // ticks 2..6 (offset 5 = tick 6)
     expect(action.applyEffectOffsets).toEqual([5]);
+  });
+
+  // A 10-tick charge: windup 5, impact, recovery 5.
+  const CHARGE: readonly ActionPhase[] = [
+    { phase: 'windup', ticks: 5 },
+    { phase: 'impact', ticks: 0 },
+    { phase: 'recovery', ticks: 5 },
+  ];
+
+  it('takes no new action until the window ends, and the next one on that tick', () => {
+    const action = new ChargeProbe();
+    const { world } = scene(action, CHARGE, 10);
+
+    // Tick 1: starts. Tick 6: impact. Ticks 7..10: still busy.
+    for (let i = 1; i <= 10; i++) world.tick();
+    expect(action.applyEffectCalls).toBe(1);
+
+    // Tick 11: the window ends, the selector re-runs, a new charge starts.
+    world.tick();
+    expect(action.applyEffectCalls).toBe(1);
+    // Tick 16: the second impact.
+    for (let i = 12; i <= 16; i++) world.tick();
+    expect(action.applyEffectCalls).toBe(2);
+  });
+
+  it('keeps the action on cooldown for `cooldown` ticks from start, past the window', () => {
+    const action = new ChargeProbe();
+    const { world } = scene(action, CHARGE, 20);
+
+    // Tick 1: starts. Tick 6: impact. Tick 11: the window ends.
+    for (let i = 1; i <= 11; i++) world.tick();
+    expect(action.applyEffectCalls).toBe(1);
+
+    // Ticks 12..20: the unit is free, but the cooldown still holds.
+    for (let i = 12; i <= 20; i++) world.tick();
+    expect(action.applyEffectCalls).toBe(1);
+
+    // Tick 21: the cooldown clears and the charge starts again; impact at 26.
+    for (let i = 21; i <= 26; i++) world.tick();
+    expect(action.applyEffectCalls).toBe(2);
   });
 });
 

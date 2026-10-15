@@ -229,7 +229,6 @@
  "src/sim/actions/SwapAction.ts": 35,
  "src/sim/actions/WaitAction.test.ts": 4,
  "src/sim/actions/WaitAction.ts": 2,
- "src/sim/actions/multiTick.test.ts": 4,
  "src/sim/actions/phaseTimeline.test.ts": 2,
  "src/sim/actions/registry.ts": 4,
  "src/sim/archetypes.test.ts": 7,

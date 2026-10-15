@@ -130,7 +130,8 @@ share of list A's export rows joins the sim's.
   0 of 30 and PASS.
 - ☑ **122d — A-26, the word `export`** (`none`). 68 declarations in 40
   files; the build's bytes unchanged.
-- ☐ **122e — A-34, the test pair** (`none`).
+- ☑ **122e — A-34, the test pair** (`none`). The lockout test moved
+  with the cooldown test (flagged); `reach-diff`: nothing lost.
 - ☐ **122f — B-01, the two predicates by name** (`stop`: B-02's
   decision on B-01's list, with 122n's blind read).
 - ☐ **122g — B-07, a spawned unit's wiring once** (`none`).

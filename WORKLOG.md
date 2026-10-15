@@ -4872,3 +4872,27 @@ respect), forbids any code-token change, npm and commits, and asks for a
 report of each rule-7 correction with its evidence. The labels X and Y
 are drawn at random after both finish, and the key goes to
 `scratch/122n/key.txt`, which no session opens before the user's read.
+
+Committed as `20019a1`; both arms launched at about 13:56 UTC.
+
+### 122e — A-34, the test pair (2026-10-15, session 6677fa11)
+
+`phaseTimeline.test.ts`'s bodies were read first, as the row asked.
+They cover `multiTick`'s first test, the effect landing at its offset and
+once (their first and fourth tests). They do not cover its second: their
+behaviour proposes once, with a cooldown of 9999, so nothing showed that
+a busy unit takes no new action until the window ends and takes the next
+on that tick; the window's length is asserted only as `finishTick −
+startTick`. So the lockout test moved with the cooldown test, which is
+more than the row's words (the cooldown test alone) and inside its
+intent (one file, no assertion lost); flagged for 122f's stop.
+
+The two tests run `phaseTimeline`'s own probe: `PhasedBehavior` takes the
+cooldown as an argument (9999 by default through `scene`), and the
+charge is windup 5, impact, recovery 5, the old fixture's ten ticks with
+the impact at offset 5. The tick numbers are the old tests' own.
+`multiTick.test.ts` is deleted. The suite 3,743 → 3,742.
+
+Proof (test): typecheck clean; the two moved tests pass; `reach-diff` of
+the suite recorded at `20019a1` and after, through the 3 changed files:
+nothing lost. The step-code ceiling 5,765 → 5,761.

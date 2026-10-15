@@ -4984,3 +4984,28 @@ batch on `src/sim` will give (a)'s own cost a line on sim code.
 
 The decision goes to the user with the session's lean: (a). Not
 decided here.
+
+**Signed** (the user, 2026-10-15): "1. Signed! 2. Signed! 3. I'm good
+with that too! 😁 4. I agree entirely with your call! 5. Fresh session
+sounds good to me!" So:
+
+1. **The fan-out: (a).** The rest of the comment pass runs in fresh
+   sessions on this model, as 121j ran; no subagents. The rule's second
+   branch, Opus subagents, is set aside, its premise of an equal price
+   being false by the measurement above.
+2. **The Opus arm's edits are on `main`** for the eight files: a
+   three-way apply of `scratch/122n/diff-Y.diff`, clean. Proof:
+   `comment-strip HEAD src`, comments only, exit 0; against the arm's own
+   files, the six lines 122d took `export` off are the only difference;
+   typecheck clean. The step-code ceiling 5,761 → 5,687, the eight
+   files' 74. The two worktrees and their branches are removed after the
+   commit.
+3. **The Opus arm's eight files are the example of rule 1 on code:** a
+   declaration's comment says what it does and what it guarantees or
+   expects, and where a fact is owned elsewhere it says where, not the
+   fact again (`Ability.ts`: "how the proposals are ranked is documented
+   there"); it names the data a rule is about (`unit.actionCooldowns`)
+   rather than describing its consequence.
+4. **122e's flag:** the lockout test moving with the cooldown test is
+   signed.
+5. **122f runs in a fresh session.**

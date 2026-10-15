@@ -4,44 +4,34 @@ import type { World } from '../World';
 import type { Aura } from '../effects/schema';
 
 /**
- * E2 — per-unit ability primitive. Each tick `AbilityBehavior` walks
- * `unit.abilities` and asks every `Ability` for a proposal; the highest-
- * scoring proposal wins (ties resolved by config order — first proposer
- * in the array). Score is decided per-ability inside `propose`, not
- * uniformly: the basic-strike abilities all return 10 (mirrors the
- * pre-E2 `AttackBehavior` score), but future abilities can return
- * context-dependent values (e.g. a hypothetical mage AoE returning 15
- * when N enemies cluster). Movement stays at 1 in `MovementBehavior`,
- * unchanged.
+ * A unit's ability. Each tick `AbilityBehavior` asks every entry in
+ * `unit.abilities` to `propose`, and returns null to abstain; how the
+ * proposals are ranked is documented there. The one implementation,
+ * `EffectAbility`, scores a proposal with its def's `priority`
+ * (`config/abilities.json`).
  *
- * Cooldown isolation: the returned `ActionProposal` carries
- * `cooldownKey: this.id` so the selector keys per-ability cooldowns on
- * the ability id, not the underlying `Action.id`. Two abilities that
- * both wrap `AttackAction` (e.g. melee_strike + a future cleave_strike
- * on the same multi-ability unit) get independent cooldown counters.
+ * A proposal carries `cooldownKey: id`, so each ability on a unit has its own
+ * entry in `unit.actionCooldowns`.
  *
- * `id` is the registry key used by `World` snapshots to rehydrate a
- * unit's abilities after JSON round-trip. New implementations declare a
- * unique string `id` and register a factory in
- * `src/sim/abilities/registry.ts`.
+ * `id` is the `AbilityDef` id and the key `createAbility`
+ * (`src/sim/abilities/registry.ts`) rehydrates a snapshot's ability list by.
+ * The registry asserts at load that its ids and the config's match.
  */
 export interface Ability {
   readonly id: string;
   propose(unit: Unit, world: World): ActionProposal | null;
   /**
-   * E7.D — when `true`, this ability engages without needing line of sight
-   * (e.g. the catapult's arcing shot lobs over walls). `MovementBehavior`'s
-   * in-range abstain reads it: a unit carrying an LOS-ignoring ability holds
-   * + lets the ability fire the moment it's in range, instead of creeping
-   * forward to clear a wall it doesn't need cleared. Absent/false on every
-   * line-of-sight-gated ability (strikes, ranged, magic).
+   * True when the ability fires without line of sight (the catapult's lobbed
+   * shot). The positioning protocol reads it (`unitIgnoresLos` in
+   * `positioning.ts`): such a unit tests its firing band on range alone, so it
+   * holds and fires once in range instead of walking to clear a wall. Absent
+   * on every line-of-sight-gated ability.
    */
   readonly ignoresLineOfSight?: boolean;
   /**
-   * §76a — surfaced from the def (the `ignoresLineOfSight` pattern) so
-   * `World.applyAuraStatuses` can walk `unit.abilities` for aura carriers
-   * without reaching into `EffectAbility`'s private def. Absent on every
-   * non-aura ability.
+   * The def's aura, surfaced so `World.applyAuraStatuses` can find aura
+   * carriers through `unit.abilities` without reaching into `EffectAbility`'s
+   * private def. Absent on every non-aura ability.
    */
   readonly aura?: Aura;
 }

@@ -7,14 +7,10 @@ import { CampWanderBehavior } from './CampWanderBehavior';
 
 /**
  * Behavior factories keyed by `Behavior.kind`. `World.fromJSON` uses these
- * to rehydrate each unit's `behaviors` list from a snapshot. Behaviors are
- * stateless in MVP, so factories are zero-arg; if a future behavior gains
- * per-instance state, change its factory signature to take a snapshot blob
- * and add a `toData()` method on the behavior class (mirrors the Action
- * pattern in `actions/registry.ts`).
- *
- * E2 retired AttackBehavior in favor of AbilityBehavior — the per-ability
- * id list lives on `unit.abilities` (snapshotted as `string[]`).
+ * to rehydrate each unit's `behaviors` list from a snapshot, which stores
+ * only the kinds. Factories take no arguments because behaviors hold no
+ * state; a behavior given per-instance state would also need serializing,
+ * as actions are (`toData` / `fromData`, `actions/registry.ts`).
  */
 type BehaviorFactory = () => Behavior;
 
@@ -22,7 +18,7 @@ const FACTORIES: Record<string, BehaviorFactory> = {
   [MovementBehavior.kind]: () => new MovementBehavior(),
   [SupportMovementBehavior.kind]: () => new SupportMovementBehavior(),
   [AbilityBehavior.kind]: () => new AbilityBehavior(),
-  // §75f — the camp member's wander/engage locomotion (spawnCampUnit slot 0).
+  // A camp member's locomotion: wander inside the leash, engage when hostile.
   [CampWanderBehavior.kind]: () => new CampWanderBehavior(),
 };
 
@@ -35,19 +31,19 @@ export function createBehavior(kind: string): Behavior {
 }
 
 /**
- * E7.B — the movement behavior an archetype spawns with. A `support` unit
- * positions defensively (`SupportMovementBehavior` — keep allies in heal range,
- * flee when threatened); every other archetype charges the nearest enemy
- * (`MovementBehavior`). Shared by both spawn paths — `battleSetup`'s initial
- * team spawn and `World.spawnFromQueue`'s D5.C overflow spawn — so the two can't
- * drift. The chosen behavior's `kind` is snapshotted and rehydrated via
- * `createBehavior`, so this only runs at fresh spawn time.
+ * The movement behavior an archetype spawns with, chosen by its `UnitDef`
+ * `movementBehavior` (`config/units.json`): `support` positions defensively
+ * (`SupportMovementBehavior`: keep allies in heal range, retreat when
+ * threatened); absent or `standard` charges the nearest enemy
+ * (`MovementBehavior`). Shared by the spawn paths so they can't drift:
+ * `battleSetup`'s team spawn, `World.spawnFromQueue`'s overflow spawn and
+ * `World.spawnSummon` for a summon outside a camp. Camp members take
+ * `CampWanderBehavior` instead, since a camp unit shares its catalog def with
+ * the non-camp one.
  *
- * §38c — the healer's `=== 'healer'` special-case became the `UnitDef`
- * `movementBehavior` selector (`config/units.json`): `support` → the defensive
- * behavior, absent/`standard` → the charger. A future support unit declares it
- * as pure data. Read at CALL time (not module-eval) — spawn always post-dates
- * the config load, and the call-time read stays cycle-safe.
+ * Runs only at a fresh spawn; a snapshot rehydrates the chosen `kind` through
+ * `createBehavior`. `UNIT_DEFS` is read at call time, not module evaluation,
+ * which keeps the import cycle-safe.
  */
 export function createMovementBehavior(archetype: Archetype): Behavior {
   return UNIT_DEFS[archetype].movementBehavior === 'support'

@@ -1,37 +1,32 @@
 /**
- * K1 — the generic per-unit status-effect system.
+ * The per-unit status effect: a set of per-stat modifiers with a magnitude,
+ * a lifetime and a merge policy. This module is the pure data and math: the
+ * effect's shape, the fold from a base stat block and its effects to the
+ * effective block, and the merge arithmetic. The per-unit list (apply,
+ * expire, the `effectiveStats` cache) lives on `Unit`. Effects are applied
+ * by `World` (status ops, tiles, auras) and seeded at spawn by `Run`
+ * (fatigue, the encounter store).
  *
- * An effect is a per-stat modifier with a lifetime and a stacking/merge
- * policy. The four consumers that shaped it: empower (a flat buff till
- * encounter end, K4), daemon buffs (timed, L), the on-evade dodge buff (L),
- * and fatigue (the proof consumer — the H6c `fatigueFactor` migrates onto
- * this as a stackable "Fatigued" debuff in K1 commit 2).
+ * `buildStatusEffect` turns a status def (`config/statuses.json`) into one of
+ * these: its stat mods, plus the periodic cursor below for damage or healing
+ * over time. A def's behaviour flags (frozen, panic, blind) are read off the
+ * def by `key` (`statusBehavior.ts`), not stored here.
  *
- * This module is the pure data + math: the effect shape, the fold that turns
- * a base stat block + a list of effects into the effective block, and the
- * magnitude-merge arithmetic. The per-unit list management (apply / expire /
- * the `effectiveStats` cache) lives on `Unit`; the trigger dispatch that
- * APPLIES effects lives on `World` (see `triggers.ts`).
- *
- * Scope (K1, user-locked):
- * - **Stat modifiers only** — no DoT / stun / behaviour-disabling (no consumer
- *   asks for it yet).
- * - The fold covers **all 11 stats uniformly**, but K1 only ever *applies*
- *   effects touching the 9 live-read stats. The two cached-derived stats
- *   (`constitution → maxHp`, `mobility → moveCooldown`) are handled by
- *   `Unit.refreshDerived` so the wiring is live, but no K1 effect modifies
- *   them — the maxHp↔currentHp clamp policy is the one piece deliberately
- *   deferred until a real HP/move-speed consumer exists.
+ * The fold covers all 11 stats. Two feed the cached derived block
+ * (`constitution` → max HP, `mobility` → move cooldown), and
+ * `Unit.refreshDerived` recomputes it on every change to the list. Fatigue
+ * lowers constitution only at spawn, where the `Unit` constructor clamps
+ * current HP to the new max; a constitution effect added mid-battle gets no
+ * such clamp.
  */
 
 import type { UnitStats } from './Unit';
 
-/** Any key of the stat block — the fold is total over all 11. */
 export type StatKey = keyof UnitStats;
 
 /**
- * Per-stat modifier, expressed **per one unit of magnitude**. `add` shifts the
- * stat additively; `mul` is a multiplicative factor whose *delta* scales with
+ * Per-stat modifier, expressed per one unit of magnitude. `add` shifts the
+ * stat additively; `mul` is a multiplicative factor whose delta scales with
  * magnitude (see `foldEffects`). Either or both may be present.
  */
 export interface StatMod {
@@ -41,23 +36,23 @@ export interface StatMod {
 
 /**
  * Battle-side lifetime. `ticks` expires mid-battle at `expiresAtTick`;
- * `endOfTurn` lives for the whole tactical battle (it dies with the World — the
- * tick loop never removes it). The cross-turn `endOfEncounter` authoring
- * lifetime is implemented Run-side (a per-slot store re-seeded each turn as an
- * `endOfTurn` effect), so it never reaches the World as a distinct kind — see
- * K1 commit 2.
+ * `endOfTurn` lasts the whole battle (it dies with the World, and the tick
+ * loop never expires it). The cross-turn `endOfEncounter` authoring lifetime
+ * is kept by Run, a per-slot store re-seeded each turn as an `endOfTurn`
+ * effect, so it never reaches the World as a kind of its own.
  */
 type EffectLifetime =
   | { kind: 'ticks'; expiresAtTick: number }
   | { kind: 'endOfTurn' };
 
 /**
- * How a re-applied effect (same `key`) combines with the existing instance's
- * magnitude. `independent` skips the merge entirely (a separate instance is
- * kept). `ignore` (Phase 27) is a no-op if a same-`key` instance already exists
- * (don't refresh, don't stack) — RESERVED, no §27 consumer; ships so the
- * `StatusDef` merge vocabulary is closed. Every other policy refreshes the
- * lifetime to the incoming one on re-apply.
+ * How a re-applied effect (same `key`) combines with the existing instance
+ * (`mergeEffectInto`):
+ * - `replace`, `add`, `multiply` — combine magnitudes (`combineMagnitude`).
+ * - `independent` — no merge; the effect is kept as a separate instance.
+ * - `ignore` — the existing instance is left as it is (no refresh, no
+ *   stack). No shipped effect uses it; it is here because the status-def
+ *   merge vocabulary (`statusSchema.ts`) maps onto this type.
  */
 export type MergePolicy = 'replace' | 'add' | 'multiply' | 'independent' | 'ignore';
 
@@ -65,25 +60,25 @@ export interface StatusEffect {
   /** Identity for merging, e.g. `'fatigued'`, `'honed'`, `'burn'`. For a
    *  status-def effect this is the `StatusDef.id` (the def-resolve link). */
   key: string;
-  /** The "empower 3" scalar. Defaults to 1 at the apply sites. */
+  /** How many units of `mods` apply; an `add` merge stacks it. Defaults to 1
+   *  at the apply sites. */
   magnitude: number;
-  /** Per-stat modifiers, expressed per one unit of magnitude. */
   mods: Partial<Record<StatKey, StatMod>>;
   lifetime: EffectLifetime;
   merge: MergePolicy;
   /**
-   * Phase 27 — the per-unit PERIODIC tick cursor (the tick at which this
-   * effect's next DoT/HoT fires). Present only for status-def effects whose def
-   * carries a `periodic` block; absent for plain K1 stat effects. The op /
-   * interval / duration themselves are def-resolved by `key` (not serialized) —
-   * this cursor is the only periodic runtime state. Re-application preserves it
-   * (the cadence keeps running on its original anchor; see `mergeEffectInto`).
+   * The tick at which this effect's next periodic damage or heal fires.
+   * Present only on a status-def effect whose def has a `periodic` block. The
+   * op, interval and duration are resolved from the def by `key` and not
+   * serialized, so this cursor is the only periodic runtime state.
+   * Re-application keeps it (see `mergeEffectInto`).
    */
   nextTickAt?: number;
   /**
-   * Phase 27 — attribution for periodic damage/heal: the applying unit's id, or
-   * `null` for environmental (a fire-tile burn). Feeds the XP / kill ledger and
-   * the `status:*` events. Absent on plain K1 stat effects.
+   * Who applied the effect: a unit id, or `null` for an environmental source
+   * (a fire tile's burn). Credits periodic damage and healing to the XP and
+   * kill ledgers and rides the `status:*` events. Absent on plain stat
+   * effects.
    */
   sourceUnitId?: number | null;
 }
@@ -99,14 +94,15 @@ const SIGNED_STATS: ReadonlySet<StatKey> = new Set<StatKey>(['mobility']);
  *   effective = round( (base + Σ add·m) × Π (1 + (mul − 1)·m) )
  *
  * `add` scales linearly with magnitude; a `mul` contributes a magnitude-scaled
- * delta `(mul − 1)·m` *within* an instance, and instances multiply *across*
- * each other. This linear-in-magnitude convention recovers the exact fatigue
- * curve: a `{ power: { mul: 1−rate } }` effect at magnitude `stacks` yields
- * `power × (1 − rate·stacks)`.
+ * delta `(mul − 1)·m` within an instance, and instances multiply across each
+ * other. Linear-in-magnitude is what gives fatigue its curve: a
+ * `{ constitution: { mul: 1 − rate } }` effect at magnitude `stacks` yields
+ * `constitution × (1 − rate·stacks)`.
  *
- * **Identity guarantee:** with no effects this returns `base` itself (same
- * object), so the no-effect path is byte-identical and zero-cost. Only the
- * stats a modifier touches are recomputed; the rest keep their base value.
+ * With no effects this returns `base` itself, the same object, so the
+ * no-effect path costs nothing and changes nothing. Only the stats a
+ * modifier touches are recomputed, rounded and clamped; the rest keep their
+ * base value.
  */
 export function foldEffects(base: UnitStats, effects: readonly StatusEffect[]): UnitStats {
   if (effects.length === 0) return base;
@@ -142,8 +138,8 @@ export function foldEffects(base: UnitStats, effects: readonly StatusEffect[]): 
 
 /**
  * Combine an existing instance's magnitude with an incoming one per the merge
- * policy. `independent` returns the incoming magnitude unchanged (the caller
- * keeps the instances separate rather than calling this).
+ * policy. `mergeEffectInto` never calls it for `independent` or `ignore`;
+ * those cases return a value only so the switch is exhaustive.
  */
 export function combineMagnitude(policy: MergePolicy, existing: number, incoming: number): number {
   switch (policy) {
@@ -156,23 +152,19 @@ export function combineMagnitude(policy: MergePolicy, existing: number, incoming
     case 'independent':
       return incoming;
     case 'ignore':
-      // Unreachable: `mergeEffectInto` short-circuits `ignore` before combining.
-      // Present for switch exhaustiveness over the widened `MergePolicy`.
       return existing;
   }
 }
 
 /**
- * Apply `incoming` to an effect list per its merge policy (the shared merge
- * used by both `Unit.addEffect`, battle-side, and `Run.addEncounterEffect`,
- * the encounter store). A non-`independent` effect whose `key` already exists
- * combines magnitudes (`replace`/`add`/`multiply`), refreshes the lifetime,
- * and adopts the incoming mods/policy; otherwise a fresh (cloned) instance is
- * pushed. Mutates `list` in place.
+ * Apply `incoming` to an effect list per its merge policy, mutating `list` in
+ * place. The one merge for both `Unit.addEffect` (in battle) and
+ * `Run.addEncounterEffect` (the encounter store). When an instance with the
+ * same `key` exists, `ignore` leaves it, and `replace` / `add` / `multiply`
+ * combine magnitudes and take the incoming lifetime, mods and policy.
+ * Otherwise, and always for `independent`, a clone of `incoming` is pushed.
  */
 export function mergeEffectInto(list: StatusEffect[], incoming: StatusEffect): void {
-  // 27 — `ignore`: if a same-key instance is already present, do nothing (no
-  // refresh, no stack). Otherwise it falls through to a fresh push below.
   if (incoming.merge === 'ignore') {
     if (list.some((e) => e.key === incoming.key)) return;
     list.push(cloneEffect(incoming));
@@ -185,11 +177,11 @@ export function mergeEffectInto(list: StatusEffect[], incoming: StatusEffect): v
       existing.mods = cloneEffect(incoming).mods;
       existing.lifetime = { ...incoming.lifetime };
       existing.merge = incoming.merge;
-      // 27 — `nextTickAt` + `sourceUnitId` are deliberately NOT overwritten from
-      // `incoming`: a re-applied DoT/HoT (a `refresh` burn re-stamped each tick a
-      // unit stands in fire, an `add` bleed re-hit) keeps its periodic cadence
-      // running on the ORIGINAL anchor (so reapply tops up DURATION without ever
-      // pushing the next tick away) and the FIRST applier keeps kill/XP credit.
+      // `nextTickAt` and `sourceUnitId` are kept from the existing instance on
+      // purpose: a re-applied damage- or heal-over-time (a bleed hit again)
+      // keeps its cadence on the original anchor, so re-application renews
+      // the duration without pushing the next tick away, and the first
+      // applier keeps the kill and XP credit.
       return;
     }
   }
@@ -197,7 +189,7 @@ export function mergeEffectInto(list: StatusEffect[], incoming: StatusEffect): v
 }
 
 /** Deep copy an effect so a live unit's instance and a snapshot (or a seed
- *  template) never share a mutable `mods` / `lifetime` reference — merging
+ *  template) never share a mutable `mods` or `lifetime`, since merging
  *  mutates instances in place. */
 export function cloneEffect(effect: StatusEffect): StatusEffect {
   const mods: Partial<Record<StatKey, StatMod>> = {};
@@ -210,8 +202,8 @@ export function cloneEffect(effect: StatusEffect): StatusEffect {
     mods,
     lifetime: { ...effect.lifetime },
     merge: effect.merge,
-    // 27 — carry the periodic runtime state (omitted on plain stat effects, so
-    // the no-periodic common case stays a clean object without the keys).
+    // Copied only when present, so a plain stat effect's clone carries no
+    // `undefined` keys.
     ...(effect.nextTickAt !== undefined ? { nextTickAt: effect.nextTickAt } : {}),
     ...(effect.sourceUnitId !== undefined ? { sourceUnitId: effect.sourceUnitId } : {}),
   };

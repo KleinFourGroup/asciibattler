@@ -1,21 +1,17 @@
 /**
- * 2D tile grid that backs the battle arena. Owned by World; mutated during
- * encounter generation, queried by pathfinding and the renderer.
+ * The 2D tile grid under a battle. Owned by World; written during terrain
+ * generation and battle setup, then read by pathfinding, combat, the status
+ * hooks and the renderer.
  *
- * Coordinate system matches `GridCoord` everywhere else in sim: integer
- * cells with (0, 0) at the bottom-left. Row-major internal storage.
+ * Coordinates are `GridCoord`: integer cells with (0, 0) at the bottom-left.
+ * Storage is row-major.
  *
- * Tiles are surface properties (movement cost, eventually combat
- * modifiers / LOS). Solid obstacles like walls live as **neutral-team
- * units** sitting on a floor tile — see `wall` template — not as a tile
- * kind. That keeps destructibility, healing shrines, and any other
- * "static thing with optional behaviour" inside the existing Unit
- * pipeline.
+ * Tiles are surface properties (`TileDef`). Walls and other solid obstacles
+ * are neutral-team units (`src/sim/environment.ts`), not tile kinds, so
+ * destructibility and line-of-sight blocking go through the Unit pipeline.
  *
- * **D3:** width and height are independent. Constructors that take a
- * single dimension are gone; callers now pass `(width, height)`
- * explicitly so the rectangular case can't be silently squashed back to
- * square by an accidental single-arg call.
+ * Width and height are independent and both default to `GRID_SIZE`, so a
+ * one-argument constructor call gets a `GRID_SIZE` height; pass both.
  */
 
 import { GRID_SIZE } from '../config';
@@ -28,8 +24,6 @@ export type TileKind =
   | 'chasm'
   | 'fire'
   | 'healing'
-  // §37b — terrain-depth tiles. Cost + passability here; the combat to-hit
-  // mods land in 37c (`evasionMod`/`accuracyMod`), the status hooks in 37d.
   | 'deep_water'
   | 'hills'
   | 'ice'
@@ -37,105 +31,73 @@ export type TileKind =
   | 'mud';
 
 /**
- * §37a — the per-`TileKind` surface-property table, generalizing the old flat
- * `TILE_COSTS` map. ONE keyed table that every tile mechanic reads:
- *   - movement **cost** + **passability** (pathfinding) — today's behaviour;
- *   - combat to-hit **mods** (§37c folds `accuracyMod`/`evasionMod` into
- *     `applyDamage`'s precision-vs-evasion roll, generalizing M6's wading
- *     penalty);
- *   - tile→status **hooks on enter** (§37d — mud→poison / water→remove burn).
+ * A tile kind's surface properties: movement cost and passability
+ * (pathfinding), to-hit mods (`World.applyDamage`), and status hooks on
+ * entering (`World.applyTileEnterEffects`). The statuses sustained while
+ * standing on `fire` (burn) and `healing` (rejuvenate) are not here: they are
+ * keyed by kind in `World.applyTileStatuses`.
  *
- * Keyed by kind, **never serialized** (the grid serializes only the `TileKind`
- * string, see `TileGridSnapshot`), so adding a kind or tuning a mod never bumps
- * a snapshot.
+ * Never serialized (a snapshot holds only the `TileKind` string, see
+ * `TileGridSnapshot`), so adding a kind or tuning a mod never bumps a
+ * snapshot.
  */
 interface TileDef {
   /**
-   * Movement cost to ENTER. Pathfinding weights neighbour edges by the
-   * destination cell's cost; `Infinity` is the data-driven block (the
-   * `!isFinite(stepCost)` short-circuit in `Pathfinding.findPath`).
-   *
-   * Chebyshev (the A* heuristic) is a lower bound on min-cost path length only
-   * when every FINITE cost is >= 1 — keep it >= 1 (GOTCHAS #34: "faster" comes
-   * from cost 1, never < 1) or the heuristic stops being admissible.
+   * Movement cost to enter. Pathfinding weights a step by the destination
+   * cell's cost, and `Infinity` blocks it (the `isFinite` check in
+   * `Pathfinding.findPath`). Every finite cost must be >= 1, or the Chebyshev
+   * heuristic stops being admissible (gotcha #34); a fast tile gets the floor
+   * cost of 1.
    */
   cost: number;
   /**
-   * Whether a unit may occupy / path onto this tile. Today this is redundant
-   * with `isFinite(cost)` (the cost short-circuit is the live gate in
-   * pathfinding), but it's carried explicitly so an impassable-but-finite or
-   * passable-but-costly tile stays expressible, and so consumers can ask the
-   * intent directly rather than inferring it from a magic Infinity.
+   * Whether a unit may occupy or path onto this tile, for code that asks the
+   * intent directly (the bot's sensors and scripts). Pathfinding reads only
+   * `cost`, so a finite cost with `passable: false` would still be walked;
+   * every shipped entry keeps the two in agreement.
    */
   passable: boolean;
   /**
-   * §37c — added to the **defender's** evasion when it is struck while standing
-   * on this tile (positive = harder to hit; e.g. hills bonus, sand penalty).
-   * Absent = 0.
+   * Added to the defender's evasion when it is struck while standing on this
+   * tile; positive is harder to hit. Absent = 0.
    */
   evasionMod?: number;
   /**
-   * §37c — added to the **attacker's** precision when it attacks FROM this tile
-   * (negative = clumsier footing; generalizes M6's `shallow_water` wading
-   * penalty, and ice's severe accuracy hit). Absent = 0.
+   * Added to the attacker's precision when it attacks from this tile;
+   * negative is clumsier footing. Absent = 0.
    */
   accuracyMod?: number;
-  /**
-   * §37d — status id APPLIED to a unit on ENTER (e.g. `mud` → `poison`, behind
-   * a config flag). A plain status id resolved via `statusDef` at the use site;
-   * a boot-assert validates the reference (mirroring the ability `statusId`
-   * pattern). Absent = none.
-   */
+  /** Status id applied to a unit when it enters the tile. Absent = none. */
   statusOnEnter?: string;
-  /**
-   * §37d — status id REMOVED from a unit on ENTER (e.g. `shallow_water` /
-   * `deep_water` → remove `burn` — the inverse of the Cluster-1 fire→burn
-   * sustain). Absent = none.
-   */
+  /** Status id removed from a unit when it enters the tile. Absent = none. */
   statusRemovedOnEnter?: string;
 }
 
 /**
- * The shipped tile table. Existing kinds carry today's cost + no mods (§37a is
- * byte-identical); §37b–d fill in the new tiles and the mod/status fields.
+ * The shipped tile table. Of the costs only their order matters, above the
+ * floor of 1 (see `cost`). A mod point moves the to-hit chance by 0.02
+ * (`hitChancePerPrecision`, `dodgeChancePerEvasion` in `config/stats.json`),
+ * so -10 is -20% to hit.
  *
- * D7.A: `chasm` is `Infinity`/impassable — pathfinding short-circuits via the
- * `!isFinite(stepCost)` guard. LOS is a unit-blocker check (`LineOfSight.ts`),
- * so chasm is automatically LOS-transparent — tiles never enter the LOS
- * pipeline.
- *
- * D7.B: `fire` and `healing` are surface effects, not obstacles — normal floor
- * cost (1). Their per-tick chip is applied by `World.tick`'s tile-effect pass
- * (`applyTileStatuses`), not by pathfinding.
+ * - `shallow_water` — slow; wading costs accuracy, and entering douses burn.
+ * - `chasm` — impassable (gotcha #73). Line of sight checks units only
+ *   (`LineOfSight.ts`), so a chasm never blocks a shot.
+ * - `fire`, `healing` — floor cost; standing on one sustains a status (see
+ *   `TileDef`).
+ * - `deep_water` — impassable like chasm, and douses burn. No combat mod,
+ *   since nothing stands on it.
+ * - `hills` — slow, and high ground is harder to hit.
+ * - `ice` — floor cost, and slick footing costs accuracy.
+ * - `sand` — slow, and exposed footing is easier to hit.
+ * - `mud` — the slowest passable tile; it costs accuracy and poisons on
+ *   entering.
  */
 export const TILE_DEFS: Record<TileKind, TileDef> = {
   floor: { cost: 1, passable: true },
-  // §37c — `shallow_water`'s `accuracyMod: -10` is the M6 "bog-down" wading
-  // penalty, now OWNED by this table (the source for every tile combat mod) and
-  // read by `World.applyDamage`'s to-hit fold. -10 precision × 0.02 = -20% to
-  // hit while wading — byte-identical to the retired `STATS.waterPrecisionPenalty`.
-  // §37d — `statusRemovedOnEnter: 'burn'`: wading douses fire (the inverse of the
-  // fire→burn sustain).
   shallow_water: { cost: 2, passable: true, accuracyMod: -10, statusRemovedOnEnter: 'burn' },
   chasm: { cost: Infinity, passable: false },
   fire: { cost: 1, passable: true },
   healing: { cost: 1, passable: true },
-  // §37b cost/passability + §37c combat mods. All STARTING values (§41 tunes);
-  // for costs only the relative ordering + the ≥1 floor are load-bearing. Mods
-  // fold into the to-hit roll at 0.02/pt: `accuracyMod` docks the ATTACKER's
-  // precision (it's standing here), `evasionMod` shifts the DEFENDER's evasion.
-  //   - deep_water — impassable like chasm (cost ∞); the future marine/waterwalk
-  //     traversal that crosses it is a declared-inert seam (no field yet). No
-  //     combat mod — nothing stands on it.
-  //   - hills — slow (climb) + evasion BONUS (+8 → +16% harder to hit: high ground).
-  //   - ice — the cost-1 floor ("faster" = floor cost, never < 1, GOTCHAS #34 —
-  //     keeps the Chebyshev A* heuristic admissible) + a severe accuracy penalty
-  //     (-12 → -24% to hit: slick footing).
-  //   - sand — slow + evasion PENALTY (-6 → -12% easier to hit: exposed footing).
-  //   - mud — the worst passable mobility (deep_water on foot) + a severe accuracy
-  //     penalty (-12) + mud→poison on enter (37d).
-  // §37d status hooks: deep_water douses burn like shallow water (`statusRemovedOnEnter`,
-  // always on); mud applies poison on enter (`statusOnEnter`).
   deep_water: { cost: Infinity, passable: false, statusRemovedOnEnter: 'burn' },
   hills: { cost: 3, passable: true, evasionMod: 8 },
   ice: { cost: 1, passable: true, accuracyMod: -12 },
@@ -149,11 +111,11 @@ export function tileDef(kind: TileKind): TileDef {
 }
 
 /**
- * §37d boot check (the `assertStatusRefsResolve` / `assertSummonRefsResolve`
- * sibling): every `statusOnEnter` / `statusRemovedOnEnter` in the tile table must
- * reference a real status id, so a typo fails at module load rather than at the
- * moment a unit steps on the tile. `statusDef` throws loudly on a miss — calling
- * it here IS the assertion. Rides this guaranteed-at-import IIFE.
+ * Load-time check, like `assertStatusRefsResolve` and
+ * `assertSummonRefsResolve`: every status hook in the tile table must name a
+ * real status, so a typo fails at module load rather than when a unit steps
+ * on the tile. `statusDef` throws on an unknown id, so calling it is the
+ * assertion.
  */
 (function assertTileStatusRefsResolve(): void {
   for (const def of Object.values(TILE_DEFS)) {
@@ -197,29 +159,28 @@ export class TileGrid {
     return this.costAtXY(c.x, c.y);
   }
 
-  /** 86c-L2 — `costAt` without the coord object, for the per-expansion path
-   *  (the `CostFn` boundary passes bare `(x, y)`). Same semantics exactly. */
+  /** `costAt` without the coord object, for the A* expansion path, where the
+   *  `CostFn` boundary passes bare `(x, y)` and allocation per call matters. */
   costAtXY(x: number, y: number): number {
     if (x < 0 || y < 0 || x >= this.width || y >= this.height) return Infinity;
     return TILE_DEFS[this.kinds[this.index(x, y)]!].cost;
   }
 
   /**
-   * §37 — the full `TileDef` governing a cell (cost / passability / combat mods
-   * / status hooks). Throws out-of-bounds like `kindAt`: combat + status reads
-   * key off a live unit's in-bounds position, so an OOB read is a bug, not a
-   * "treat as impassable" case (that's `costAt`'s job for pathfinding).
+   * The `TileDef` governing a cell. Throws out of bounds like `kindAt`: its
+   * readers (combat, status hooks) key off a live unit's position, so an
+   * out-of-bounds read is a bug, unlike pathfinding's, which `costAt` answers
+   * with `Infinity`.
    */
   defAt(c: GridCoord): TileDef {
     return TILE_DEFS[this.kindAt(c)];
   }
 
   /**
-   * 86c-L3 — monotonic tile-mutation epoch: bumped on every `setKind`, never
-   * serialized (a rehydrated grid restarts at 0 — consumers key it per grid
-   * INSTANCE, so cross-instance comparison never happens). Lets an
-   * exact-input memo (the chokeHold sensor memo) detect "tiles unchanged"
-   * in O(1) instead of re-reading every cell. Not part of sim behavior.
+   * A count of `setKind` calls, so a memo can tell "tiles unchanged" in O(1)
+   * (the bot's chokeHold memo, `src/bot/scripts/chokeHold.ts`). Not
+   * serialized: a rehydrated grid restarts at 0, so compare it only within
+   * one grid instance (that memo keys per World). The sim never reads it.
    */
   private _mutations = 0;
   get mutations(): number {
@@ -238,7 +199,8 @@ export class TileGrid {
     return c.x >= 0 && c.y >= 0 && c.x < this.width && c.y < this.height;
   }
 
-  /** Iterate every cell in row-major order. Renderer + generator helper. */
+  /** Iterate every cell in row-major order; `battleSetup` copies generated
+   *  terrain onto the battle grid with it. */
   *cells(): IterableIterator<{ x: number; y: number; kind: TileKind }> {
     for (let y = 0; y < this.height; y++) {
       for (let x = 0; x < this.width; x++) {

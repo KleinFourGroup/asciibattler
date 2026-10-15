@@ -133,7 +133,7 @@ share of list A's export rows joins the sim's.
 - ☑ **122e — A-34, the test pair** (`none`). The lockout test moved
   with the cooldown test (flagged); `reach-diff`: nothing lost.
 - ☐ **122f — B-01, the two predicates by name** (`stop`: B-02's
-  decision on B-01's list, with 122n's blind read).
+  decision on B-01's list).
 - ☐ **122g — B-07, a spawned unit's wiring once** (`none`).
 - ☐ **122h — B-08, the objective rule called, not restated** (`none`).
 - ☐ **122i — B-09, the death trigger in `reapUnit`** (`none`).
@@ -142,11 +142,11 @@ share of list A's export rows joins the sim's.
   (`none`; a lead).
 - ☐ **122l — B-02, the split, if signed at 122f** (`stop`).
 - ☐ **122m — the re-skim** (`none`).
-- ◐ **122n — the fan-out pilot** (read at 122f's stop). Opus and Sonnet
-  subagents on the same files, launched after 122d; the rule is in the
-  WORKLOG. Run; the blind diffs are in `scratch/122n/`.
-- ☐ **122o — the comment pass, the rest** (`batch`), by the pilot's
-  outcome.
+- ☑ **122n — the fan-out pilot** (read by the user). Decided: (a), fresh
+  sessions on this model; the Opus arm's eight files landed as the
+  example of rule 1 on code.
+- ☐ **122o — the comment pass, the rest** (`batch`), in fresh sessions
+  on this model, as 121j ran.
 
 ## Phase 123 — run
 

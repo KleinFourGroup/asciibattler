@@ -7,19 +7,17 @@ import { EffectAction, type EffectActionData } from '../effects/EffectAction';
 import { abilityDef } from '../../config/abilities';
 
 /**
- * Action factories keyed by `Action.id`. `World.fromJSON` uses these to
- * rehydrate every unit's `activeAction` from a snapshot. New action kinds
- * register here; the registry stays a thin lookup table so the union of
- * supported actions is discoverable in one place.
+ * Action factories keyed by `Action.id`, which `World.fromJSON` uses to
+ * rehydrate a unit's in-flight `activeAction` from a snapshot. The table
+ * holds the non-combat actions; every other id is a combat verb, an
+ * `EffectAction` whose id is its `AbilityDef` id.
  *
- * Factories take `(data, world)` because some actions reference live world
- * state (e.g. `AttackAction` resolves a `targetId` via `world.findUnit`).
- * Pure-data actions like `MoveAction` ignore the world arg.
+ * No shipped factory reads `world`: an `EffectAction` keeps its target's id
+ * and resolves the unit when it fires.
  *
- * §44b — `WaitAction` ('wait') is DELIBERATELY absent: the instantaneous-
- * action rule resolves a wait within its tick, so it can never be mid-flight
- * at a snapshot. If 'wait' ever reaches `createAction`, that invariant broke
- * — the `abilityDef` fallback below throws, keeping the failure loud.
+ * `WaitAction` (`'wait'`) is absent on purpose: a wait resolves within its
+ * tick, so it is never in flight at a snapshot. If `'wait'` reaches
+ * `createAction`, that rule broke, and the `abilityDef` fallback throws.
  */
 type ActionFactory = (data: unknown, world: World) => Action;
 
@@ -32,12 +30,9 @@ const FACTORIES: Record<string, ActionFactory> = {
 export function createAction(id: string, data: unknown, world: World): Action {
   const factory = FACTORIES[id];
   if (factory) return factory(data, world);
-  // Y3–Y5 — every combat verb is now a data-driven `EffectAction`, whose
-  // `Action.id` is its `AbilityDef` id (e.g. 'sword', 'heal_ally', 'magic_bolt').
-  // None are registered above (Y5c deleted the last two non-colliding entries,
-  // `attack`/`heal`); the only registered factories are the non-verb actions
-  // (move/spawn/swap). Re-resolve the def and rehydrate the captured cast-time
-  // context. `abilityDef` throws on a genuinely unknown id, so a corrupt
-  // snapshot still fails loudly.
+  // A combat verb: re-resolve its def and rehydrate the context captured at
+  // cast time. The table above is checked first, so no ability may take the
+  // id `move`, `spawn` or `swap`. `abilityDef` throws on an unknown id, so a
+  // corrupt snapshot fails loudly.
   return EffectAction.fromData(data as EffectActionData, world, abilityDef(id));
 }

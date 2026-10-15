@@ -5684,3 +5684,12 @@ user's call.
    both models, and a cold reader's cost a line). I would want
    pre-registered experiments like this again. Separate from whether the
    pilot settles anything, which the user's read decides.
+
+   *Addendum, same session:* the user read the pilot's two diffs by spot
+   checks, since 940 lines each was more than a reader can hold, and
+   preferred Y by a little; the key gave Y as the Opus arm. Pricing 121j
+   from its own transcript put the in-session pass at $0.21 a hundred
+   lines against the arms' $0.46 and $0.80, and the user signed (a), the
+   Opus arm's files as the example on code, 122e's flag, and a fresh
+   session for 122f. The read being too large to hold was my design's
+   fault, sized for the instruments; noted in `retro/scratchpad.md`.

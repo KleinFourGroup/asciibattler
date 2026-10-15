@@ -1,16 +1,13 @@
 /**
- * E4 — XP curve. One module, one formula, easy to swap.
+ * The XP curve and the battle XP awards; the knobs are in
+ * `config/leveling.json`.
  *
- * `xpToNext(level)` returns the XP a unit at `level` must accumulate to
- * advance to `level + 1`. At the cap (level === LEVELING.levelCap) the
- * function returns `Infinity` — Run's level-up loop treats that as "no
- * further progression," so banked XP past the cap is silently dropped
- * (the cap is the asymptote enforcer per the ROADMAP E4 decision).
- *
- * Default shape is classic-quadratic-per-level (`baseXp * L^2`). Other
- * shapes (D&D linear-per-level, exponential 1.5, hand-authored table)
- * swap in here. The formula isolation is the contract — callers never
- * reach for `LEVELING.baseXp` directly outside this file.
+ * `xpToNext(level)` is the XP a unit at `level` must bank to reach
+ * `level + 1`: `round(baseXp × level^exponent)`. At or past
+ * `LEVELING.levelCap` it returns `Infinity`, and Run's level-up loop
+ * (`bankXpAwards`) drops any XP banked at the cap. The curve's knobs
+ * (`baseXp`, `exponent`) are read only here, so a new curve shape is a
+ * change to this file alone.
  */
 
 import { LEVELING } from '../config/leveling';
@@ -20,40 +17,32 @@ export function xpToNext(level: number): number {
   return Math.round(LEVELING.baseXp * Math.pow(level, LEVELING.exponent));
 }
 
-/**
- * Returns `true` if the unit is already at the level cap. Surfaced as a
- * helper so callers don't have to know the cap field name.
- */
+/** Whether `level` is at or past the level cap. */
 export function isAtLevelCap(level: number): boolean {
   return level >= LEVELING.levelCap;
 }
 
 /**
- * The integer level to *show* the player. A unit's `level` can be
- * fractional for enemies: a fractional `difficulty.enemyLevelPerFloor`
- * (e.g. 0.5 for "+1 level every 2 floors") feeds `scaleStats` a
- * fractional level so the stat ramp softens smoothly — but a "Lv 1.5"
- * badge reads as a bug. Player levels are always whole (per-level
- * increments), so this is a no-op for them. Rounding lives here, at the
- * display boundary, NOT at the source: the fractional value must reach
- * `scaleStats` intact for the gentle ramp to work.
+ * The integer level to show the player. Every shipped spawn path stamps a
+ * whole level, so this is a no-op on them; it rounds at the display
+ * boundary so that a fractional level, which `scaleStats` accepts, never
+ * shows as "Lv 1.5".
  */
 export function displayLevel(level: number): number {
   return Math.round(level);
 }
 
 /**
- * P2 — the XP-to-next-level bar's display model (pure, no DOM, so it's unit-
- * testable). The UnitCard `full` variant renders `fraction` as the fill width
- * and `need` in the label. At the cap the bar is full and reads MAX (`need`
- * 0); below it, `fraction` is `xp / xpToNext(level)` clamped to [0, 1] so
- * banked-past-the-threshold XP (a pending promotion) never overflows the bar.
+ * The XP bar's display model, kept free of the DOM so it is unit-testable.
+ * `UnitCard`'s `full` mode renders `fraction` as the fill width and `need` in
+ * the label, and reads MAX at the cap.
  */
 interface XpProgress {
   readonly atCap: boolean;
   /** XP required to reach the next level (the bar's denominator); 0 at the cap. */
   readonly need: number;
-  /** Filled fraction, clamped to [0, 1]; 1 at the cap. */
+  /** `xp / need` clamped to [0, 1], so XP banked past the threshold (a pending
+   *  promotion) never overflows the bar; 1 at the cap. */
   readonly fraction: number;
 }
 
@@ -67,12 +56,11 @@ export function xpProgress(xp: number, level: number): XpProgress {
 interface XpAward {
   unitId: number;
   /**
-   * Index into `Run.team` for the surviving player unit. Set by
-   * `spawnTeam` at battle setup; carried verbatim into the award so
-   * Run can bank XP into the right roster slot without keeping its
-   * own unitId-to-rosterIndex map. Will be `null` only for the
-   * pathological case of a player unit spawned without a rosterIndex
-   * (e.g. directly via `World.spawnUnit` in a test) — Run skips those.
+   * The unit's roster slot, an index into `Run.team`, stamped at spawn
+   * (`spawnTeam` passes the template's `rosterIndex`), so Run banks XP into
+   * the right slot without its own unitId map. Never null in
+   * `computeXpAwards`'s output: World records only player units that carry
+   * a slot, so a unit spawned without one earns no award.
    */
   rosterIndex: number | null;
   damageDealt: number;
@@ -80,28 +68,29 @@ interface XpAward {
 }
 
 /**
- * E4 — hybrid XP source. Each player unit's award (F6 adds the healing
- * term):
+ * Each player unit's XP for one battle:
  *
  *   xpGained = (alive ? xpFlatPerSurvivor : xpFlatPerFallen)
  *            + xpPerDamage  × damageDealt
  *            + xpPerHealing × utilityDone
  *
- * The survivor flat slice is the participation reward (tank / healer /
- * cover unit gets the same baseline as the carry); the per-damage
- * slice rewards damage carries proportionally; the F6 per-healing slice
- * rewards support contribution (effective HP healed) symmetrically, so a
- * heal-only healer that dealt 0 damage still levels; the fallen flat
- * slice (default 0) is a separate knob — the roster persists across
- * battles, so a fallen unit isn't really *gone*, just sidelined for the
- * next battle.
+ * The flat slice rewards taking part, so a tank or healer keeps the carry's
+ * baseline; the damage and healing slices reward contribution, so a healer
+ * that dealt no damage still levels. The fallen slice is its own knob
+ * because the roster persists across battles: a fallen unit isn't really
+ * gone, just sidelined for the next battle.
  *
- * Caller passes `playerRosterIds` (every player unit that ever spawned
- * this battle — even reaped ones) keyed by unitId; `livingUnitIds`
- * (subset still alive at battle end); the `damageDealt` ledger; and the
- * F6 `utilityDone` ledger (effective HP healed by ability casts).
- * Iteration order is insertion order on `playerRosterIds`, which is
- * spawn order — stable for snapshot determinism.
+ * Inputs:
+ * - `playerRosterIds` — unitId → roster slot for every player unit with a
+ *   slot that spawned this battle, reaped ones included.
+ * - `livingUnitIds` — the units still alive at battle end.
+ * - `damageDealt` — the damage ledger, summoners credited a share of their
+ *   summons' damage.
+ * - `utilityDone` — effective HP healed, overheal excluded
+ *   (`World.recordHealing`).
+ *
+ * Awards follow `playerRosterIds`' insertion order, which is spawn order, so
+ * the output is deterministic.
  */
 export function computeXpAwards(
   playerRosterIds: ReadonlyMap<number, number>,

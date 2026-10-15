@@ -1,26 +1,18 @@
 /**
- * Hand-authored encounter layouts (C1b + C1d.A).
+ * The hand-authored encounter layouts, re-exported from their config loader.
+ * The data is `config/layouts.json`; the schema and its rules are in
+ * `src/config/layouts.ts`.
  *
- * As of C1d.A, layouts are validated config — the source of truth lives
- * at `config/layouts.json` with the zod schema at `src/config/layouts.ts`.
- * This module is now a thin sim-side re-export so existing call sites
- * (Run, terrainGen, tests) keep working without churn.
+ * Which layout an encounter gets is rolled at encounter selection
+ * (`src/run/encounters/selection.ts`): a weighted pick from the sector's
+ * layout pool at the current hop, narrowed by the encounter's own layout
+ * list. The pool's `procedural` entry gives `layoutId = null`, a board from
+ * the generator in `terrainGen.ts`.
  *
- * Picking strategy: `Run` rolls one RNG step at battle setup. ~25% of
- * battles get `layoutId = null` (procedural via the density-driven
- * generator in `terrainGen.ts`); the other ~75% pick uniformly from
- * `LAYOUT_IDS`. The library deliberately starts small — a larger one
- * would dilute each pick and reduce repeated exposure to any given
- * tactical lesson before the player has internalized it.
+ * A layout fixes its own `gridW` × `gridH`; `generateTerrain` throws when a
+ * caller's dimensions differ rather than scaling the layout.
  *
- * Coordinate assumptions: each layout pins its own `gridW` × `gridH`
- * (8-32, set at authoring time). D5 retires `reservedSpawnRows` for
- * hand-authored layouts in favor of explicit `SpawnRegion`s on every
- * `LayoutDef`. `generateTerrain` throws on mismatched grid sizes rather
- * than silently scaling.
- *
- * Painting new layouts: use `tools/layout-editor/` (standalone Vite
- * page; see its README for launch instructions).
+ * New layouts are painted in `tools/layout-editor/` (see its README).
  */
 
 export {
@@ -37,8 +29,3 @@ export {
   type Theme,
   type CampRef,
 } from '../config/layouts';
-
-// R3's PROCEDURAL_MAP_NAME ("Uncharted Ground" — the one display label for a
-// procedural map) lived here until §95c: it was prose in sim code, consumed
-// only by view code. It is the UI string `map.uncharted` now (src/i18n/ui.ts);
-// the R3 guarantee (one string, no drift) holds through the one key.

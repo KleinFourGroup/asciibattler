@@ -11,8 +11,8 @@ plan: [archive/post-109-roadmap.md](archive/post-109-roadmap.md) (Round 8)
 with its worklog and spec beside it; before it
 [archive/post-104-roadmap.md](archive/post-104-roadmap.md) (Round 7.5).
 
-**Status: §120 ✅ CLOSED 2026-10-14, the census signed; §121, the dials,
-is next.** The spec holds the user's intent and four signed
+**Status: §121 ✅ CLOSED 2026-10-14, the dials; §122, sim, is next.**
+The spec holds the user's intent and four signed
 decisions ([round-8.5-spec.md](round-8.5-spec.md)). The round opened with
 the oracle map, ahead of the census, as the user signed at the Round 8
 close. The census sized the rest of the round as nine phases, written below
@@ -86,51 +86,29 @@ Every phase keeps the round's scope guards (META-ROADMAP §"Round 8.5 —
 Housekeeping"). The rows are in the census; the TODO items in TODO
 "Round 8.5".
 
-## Phase 121 — the dials
+## Phase 121 — the dials ✅ (closed 2026-10-14)
 
-Every signed config key and `RunConfig` item out with its readers
-(A-01 to A-05, A-07 to A-10, A-13, A-21's items), B-03's three one-key
-files folded, then `src/config`'s comment pass. Its first step is A-37's
-hook change, which takes the 81 s smoke test off every sim commit.
-First because a dial's readers sit in sim and run, so those phases read
-the code without them. Proof: config, and sim for a reader. Risk:
-low-medium. Decision point: the comment pass's cost a line, recorded
-here, decides at §122's kickoff whether the later passes fan out to
-smaller readers.
-
-The cut, signed 2026-10-14 with its six calls (WORKLOG §121, the
-kickoff):
+Every signed dial out with its readers, B-03's three one-key files
+folded into `sim` and `difficulty`, and `src/config`'s comment pass in
+seven rules signed as the round's style: config files 34 → 28, the
+step-code ceiling 6,376 → 5,783. Each step's record, the leads it hands
+to §122 and §123, and the cost a line for §122's fan-out call are in
+WORKLOG §121.
 
 - ☑ **121a — A-37: the `--jobs` parity test off the smoke** (`none`).
-  Its own script; run by the hook when `tests/fuzz/` is staged, by the
-  box launcher, and before a local `--jobs` batch.
-- ☑ **121b — the config keys nothing reads** (`none`). A-01, A-02 (the
-  JSON; the buff module stays), A-03, A-04's `ignoresTerrain`. Proof:
-  config.
-- ☑ **121c — the values never built** (`none`). A-05 with A-07, A-08;
-  the attack editor's Cells field goes. Proof: sim.
-- ☑ **121d — A-09, `layoutFirst`** (`none`), with its key, loader and
-  file. Proof: sim and config.
-- ☑ **121e — A-10 and A-21's two switches** (`none`); `tiles.json` and
-  its loader go. Proof: sim and config.
-- ☑ **121f — A-13, half cover's multiplier** (`none`), with the
-  `damageMultiplier` field and `collectHalfCoverPositions`; no World
-  bump. Proof: sim and config.
-- ☑ **121g — B-03's trial** (`none`): `sim.spawnDurationSeconds`,
-  `sim.rangedLeashCells`, `difficulty.startingBits`, under the bar
-  written at the kickoff. Kept; config files 31 → 28. The lockout kept in
-  ticks alone at the user's call (WORKLOG §121, 121g and 121g-post2).
-- ☑ **121h — the re-skim** of the phase's diff; a new deletion waits for
-  121i's stop. No trial reached the bar; two stale mentions fixed; leads
-  for §122 and §123 (WORKLOG §121, 121h).
-- ☑ **121i — the comment pass's pilot** (`stop`): `health.ts`,
-  `daemons.ts`, `sim.ts`. Its seven rules signed as the round's style;
-  121j in one fresh session, no fan-out (WORKLOG §121, 121i).
-- ☑ **121j — the comment pass, the rest of the loaders** (`batch`: two
-  loaders' diffs read against the pilot's style), with the cost a line.
-  The co-located tests wait for §126. Built in five commits, `e457c93` to
-  `d91c2a6`, at about 66 tokens a line; `difficulty.ts` and `sectors.ts`
-  read by the user 2026-10-14, no finding (WORKLOG §121, 121j).
+  Its own script, `npm run fuzz:jobs-parity`.
+- ☑ **121b — the config keys nothing reads** (`none`). A-01, A-02's
+  JSON, A-03, A-04's `ignoresTerrain`.
+- ☑ **121c — the values never built** (`none`). A-05, A-07, A-08.
+- ☑ **121d — A-09, `layoutFirst`** (`none`).
+- ☑ **121e — A-10 and A-21's two switches** (`none`).
+- ☑ **121f — A-13, half cover's multiplier** (`none`). No World bump.
+- ☑ **121g — B-03's trial** (`none`). Kept; the lockout in ticks alone.
+- ☑ **121h — the re-skim** (`none`). No trial reached the bar.
+- ☑ **121i — the comment pass's pilot** (`stop`). Seven rules signed.
+- ☑ **121j — the comment pass, the rest of the loaders** (`batch`).
+  About 66 tokens a line; read with no finding. The co-located tests,
+  with the 93 step codes left under `src/config`, wait for §126.
 
 ## Phase 122 — sim
 

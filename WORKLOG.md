@@ -4493,3 +4493,68 @@ aligned list, or a claim the code contradicts.
 **Read** (the user, 2026-10-14), on the two diffs: "Those two reads look
 so much better! And great catch on those corrections". No finding, so
 121j is ticked.
+
+### The close of §121 (2026-10-14, session ca8a3657)
+
+121a to 121j are ticked, each read as its step was cut (121i at its stop,
+121j's `batch` read with no finding, the rest `none`), and nothing is ◐.
+The section is demoted in ROADMAP. The phase ran from the kickoff's
+commit `972a866` to the read's `09c2b82`, 28 commits in three sessions
+(f8bbd64e, 07d94d5c, a474e209); the user asked for the close in a fresh
+session, at 460k in the last of them.
+
+What the phase changed, from `git diff 972a866 HEAD` and the
+instruments:
+
+- six config files deleted, 34 → 28: `economy`, `empower`, `objective`,
+  `selection`, `spawn`, `tiles`;
+- `src`: 2,996 lines out and 1,544 in over 73 files, comments included;
+  with `config`, `tests`, `tools` and `scripts`, 3,153 out and 1,770 in
+  over 98;
+- the suite 3,765 → 3,750 and the smoke 624 → 621, with the `--jobs`
+  parity test as its own script; test files 261 → 260;
+- the step-code ceiling 6,376 → 5,783. The loaders hold none; the 93
+  under `src/config` are in its 13 co-located tests, which wait for §126
+  (`comment-codes`, re-counted at this close).
+
+What it hands on:
+
+- **To every later comment pass:** the seven rules signed at 121i, and
+  the proof 121j ran per commit: `comment-strip HEAD src`, with a control
+  worktree of the pass's base that takes each batch's files and a
+  planted code token, and `comment-codes --record` for the ceiling.
+- **To §122's kickoff, the fan-out call:** 121j cost about 66 tokens a
+  line over 4,838 lines (about 321k), the pilot 62 over 703. Most of
+  rule 7's corrections came from greps against the JSON and the code
+  that reads a key, and those greps are in the figure; a smaller reader
+  would need them too (121j).
+- **To §122's kickoff, leads** within the trials' budget: `focusTile.ts`
+  folded into `Targeting.updateFocusTarget` (121h);
+  `updateTargetDefault`'s one caller (121e); World's camp-anchor revert,
+  whose one producer was retired at §75j2 (121e); and for the comment
+  pass, `src/sim/layouts.ts`'s header, which describes a layout pick
+  that no longer exists (121j).
+- **To §123's kickoff, leads:** `encounterFirst` inlined into its one
+  caller, `selectEncounter` (121h); and for the comment pass, `Run.ts`'s
+  hand-cap comment near `effectiveDrawAmount`, which says 8 where 10
+  ships (121j).
+- **Placed at this close:** `mercenary` in `REQUIRED_UNIT_IDS`
+  (`src/config/units.ts`), which 121j left "a call for a re-skim" after
+  §121's re-skim had run. `src/sim` and `src/run` name the id only in
+  comments; the dev board's fixtures name it by literal, which is what
+  the boot check guards, and `units.test.ts` mirrors the list. Whether
+  the entry stays goes to §122's kickoff, the next cut the user signs,
+  with its proof (config and the suite). The placement is this close's
+  lean, not a call the user has made.
+- **Tools, in the repo:** `npm run fuzz:jobs-parity` (121a);
+  `reach-diff --from=<ref>`, which maps a changed file's lines through
+  its diff and counts a file the diff deleted as deleted (121b-pre,
+  121d-post); `plant --list`, which reads the ref's line (121g-post). No
+  `scratch/121*` folder was kept, and no worktree is left.
+
+Readings by the tool's clock (UTC). The phase's three sessions: f8bbd64e
+134,404 → 530,791 (the kickoff and 121a to 121f), 07d94d5c 122,598 →
+388,468 (121g to 121i and 121g-post2), a474e209 85,387 → 444,138 (121j),
+about 1.02M in all. The close: 142,945 at 00:11 on 2026-10-15, after
+the orientation; **187,023** at 00:17, with everything above written
+and before the commit.

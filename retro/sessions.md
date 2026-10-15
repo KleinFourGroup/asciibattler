@@ -5552,3 +5552,36 @@ a stop with more than one read (the scratchpad).
    *Addendum, same session:* the user read 121j with no finding
    (`09c2b82`) and asked for §121's close to run in a fresh session,
    which was started from here at 460k.
+
+## Phase 121 — summary
+
+Three sessions on 2026-10-14 (f8bbd64e, 07d94d5c, a474e209), all
+claude-opus-5-5, and this close (ca8a3657, reported below). What the
+orientation lacked was each time something a record had left out: that
+`reach-diff`, the census's proof for a deleted test, refused every file a
+deletion touches (built at 121b-pre), and 121g's bar and the pilot's
+fifth call, which lived only in the kickoff's final message and were
+rebuilt from its transcript for about 10k, then copied into the WORKLOG.
+Each report names two or three pulls to claim more than it had shown: a
+plant caught by a throw, which shows a proof runs a line and not that it
+would notice a quieter change; carried claims not re-checked (F-1 behind
+"no World bump", the drivers that call `resolveAsDraw`); a count from a
+wider grep (19 `hp` coords for 16); and a new comment of the session's
+own that named two of the lockout's three cases. Each was cut or
+corrected before it reached a doc, though one stays loose in `d91c2a6`'s
+message. The one conflict with weight was 121g's bar against the design
+the session thought better: it built the literal version and put the
+other as a call, which the user signed after asking how the lockout
+worked. Waste was small and mechanical: the transcript searches, a
+`while read` count killed at its timeout, a refused heredoc, tools given
+the wrong kind of argument. Every session reports room to ask, disagree
+and stop: the first two chose their hand-offs under the line (527k,
+388k), and the third handed the close on at the user's ask. All three
+answered the silent-turn reminder, frequent in long proof batches and
+hooks, with status lines; the first two read it as a prompt to narrate,
+and the second and third say it did not push them to claim anything.
+What they name as supporting
+the work: proofs that answer in minutes, planted controls that make
+"kept" feel earned, a comment style written as rules and signed with
+enthusiasm, and being free to say a lean lies outside the bar and is the
+user's call.

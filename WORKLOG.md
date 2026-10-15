@@ -5373,3 +5373,31 @@ Against the bar:
 4. *The special case: held.* One definition, under two names.
 
 Kept.
+
+### 122k — the focus-tile directive folded into `updateFocusTarget` (2026-10-15, session 94dca491)
+
+Step zero at `b982138b`: `focusTile.ts` is 26 lines, a two-value type and
+one comparison (`chebyshev(position, tile) <= SIM.rangedLeashCells`), read
+by `Targeting.updateFocusTarget`'s switch (whose `default` arm shares
+`pursue`'s body) and by `focusTile.test.ts` (two tests, 43 lines).
+`Targeting.test.ts` already drives both directives through
+`updateTarget`, at a distance of 9 and of 0, so only `focusTile.test.ts`
+pins the boundary (exactly the leash, and one cell beyond); that pin moves
+into `Targeting.test.ts` as one test through the same path. Comments in
+`config/sim.ts`, `objective.ts`, `sequencer.ts` and `rosterOrder.ts` and
+ARCHITECTURE's tree name the file; the last two name it as a keyed
+pattern, which it stopped being at 121e. Lines were estimated before this
+bar: about −56 across `src` and the tests.
+
+**The bar** (D2), written before the code:
+
+1. *The same behaviour:* the corpus, 0 of 30, then the fuzz diff against
+   the commit before the code, PASS on both shapes; `reach-diff
+   --from=<that commit>` of the suite, nothing lost; plants at the inlined
+   comparison, in a worktree: its boundary moved, caught by the suite (the
+   ported test), and its condition negated, caught by the corpus (as at
+   121e); typecheck and the suite.
+2. *Source lines do not grow.*
+3. *No new parameter.*
+4. *Gone:* a file (`focusTile.ts`), a type (`FocusTileDirective`) and a
+   test file.

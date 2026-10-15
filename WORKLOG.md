@@ -5172,3 +5172,32 @@ session cleaning the code does not open the probe's hidden answers, so
 whether the deletion touches a probe question cannot be checked here;
 Round 9's B-02 decides the predicate's fate in any case. Put to the user
 at the next stop.
+
+### 122g — B-07, a spawned unit's wiring once (2026-10-15, session 94dca491)
+
+Step zero at `12993f0`: the four bodies where the kickoff had them
+(`spawnCampUnit` :2035, `spawnFromQueue` :2068, `spawnSummon` :2605,
+`battleSetup.spawnTeam` :111). After `addUnit`, which emits
+`unit:spawned` and fires the `spawn` trigger, each pushes a movement
+behaviour and `AbilityBehavior`, then the archetype's abilities, and
+seats the spawn lockout unless the spawn is instant; the first deployment
+never seats it. No other site in `src` or `tools` wires a unit so.
+
+The shape: one `World` method taking the unit, its movement behaviour and
+the spawn's `instant`, called by all four in the same order as now.
+`instant` is the flag `addUnit` and `spawnCampUnit` already take, set by
+the kind of spawn (a setup prime or the first deployment, against a drip,
+an overflow or a summon), so it is not added to tell the bodies apart;
+the movement behaviour is the real difference the census named. Lines
+were estimated before this bar: about −14.
+
+**The bar** (D2), written before the code:
+
+1. *The same behaviour:* the corpus, 0 of 30 journals differ, then the
+   fuzz diff against `12993f0`, PASS on both shapes; a plant in the new
+   method, in a worktree, caught by the corpus; typecheck and the suite.
+2. *Source lines do not grow.*
+3. *No new parameter* (above).
+4. *The special case, counted:* the wiring written out four times → once,
+   and the two "mirrors" notes (`spawnCampUnit`'s and `spawnSummon`'s
+   docs) → none.

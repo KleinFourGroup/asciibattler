@@ -4560,3 +4560,9 @@ the orientation; **187,023** at 00:17, with everything above written
 and before the commit.
 
 Reading: **192,222** at 00:19 on the close's commit, `357958c`.
+
+**Signed** (the user, 2026-10-14), the close's two leans: "Thank you so
+much, Claude! 😁 Signing those two points!" So whether `mercenary` stays
+in `REQUIRED_UNIT_IDS` is a question for §122's kickoff, and the
+Cursor's readings line keeps the current phase's sessions, pointing to
+the WORKLOG and the Cursor at a hash for the phase before.

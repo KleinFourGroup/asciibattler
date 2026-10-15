@@ -5629,3 +5629,6 @@ user's call.
    grep, where a carried sentence turned out narrower than it read. I
    would want a brief this complete again. That is separate from whether
    the close is right.
+
+   *Addendum, same session:* the user signed both leans, the lead's
+   placement and the readings line, with no change asked.

@@ -68,3 +68,10 @@ _(The post-§118 entries start here — Round 8.5, Housekeeping.)_
   had each gone in tranches too, after the fact. A stop with more than
   one section to sign could say what was built in a few lines, list the
   tranches, and put only the first.
+- **A blind read is sized for a reader, not for the measurement**
+  (2026-10-15, 122n, session 6677fa11). The fan-out pilot handed the user
+  two 940-line diffs of eight files to compare blind, sized so the arms'
+  costs and checks would mean something; the user could read them only
+  by spot checks. The comparison a person can hold is a handful of
+  paired excerpts, the same comment from each arm side by side, drawn
+  before the read; the whole diffs stay for the instruments.

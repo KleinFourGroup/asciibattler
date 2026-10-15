@@ -4946,3 +4946,41 @@ bug, fixed and checked against the harness's own count (263,722 and
 
 Readings: 441,511 at 14:15 after the first arm's checks; 458,004 at
 14:22 after the second's and the draw.
+
+### 122n — the read, the key, and the rule applied (2026-10-15, session 6677fa11)
+
+**Read** (the user, 2026-10-15), by spot checks, since two 940-line
+diffs are more than a reader can hold side by side: "Broadly, I'd say
+that I prefer Y stylistically, but I'm not quite sure if I can
+articulate why, and the difference is reasonably minor. I find the 300
+versus 60 comparison to be a much more compelling data point. Even if
+it's just a lead, that's a big difference, which strongly suggests that
+subagents aren't the way to go here." (The blind read's size:
+`retro/scratchpad.md`.)
+
+**The key, opened after the verdict:** X = Sonnet, Y = Opus. The session
+had drawn it without printing it.
+
+**The rule applied.** Sonnet's branch fails its first clause: the user's
+read rates the Opus arm above it, by a little. (Its cost clause was
+already undecided, 57.3 % alone and 59.9 to 63.8 % with the session's
+review.) The second branch, read literally, picks Opus subagents, since
+the Opus arm held its checks and the user preferred it. That branch was
+put on the premise "the same price as (a), with fewer sessions", and the
+measurement below shows the premise false.
+
+**(a) priced, from 121j's own transcript** (session a474e209, its calls
+from 23:14 to 23:46 UTC on 2026-10-14, the window 121j's entry gives the
+pass): 95 calls, cache reads 24,063,177, cache writes 334,620, output
+180,387; context 98,153 → 429,814; $10.094 at the list prices, about
+$0.21 for 100 lines over 4,838. The arms, the same way: the Opus arm
+$0.80 for 100 lines, the Sonnet arm $0.46, both before the session's
+review. What the two differ in besides the reader: the loaders held
+about 20 false statements in 4,838 lines and the pilot's eight files
+about 20 in 867, so a claim to check came five times as often; and a
+cold reader pays its orientation over 867 lines, a session over about
+5,000. Neither is separated from the other here. The first in-session
+batch on `src/sim` will give (a)'s own cost a line on sim code.
+
+The decision goes to the user with the session's lean: (a). Not
+decided here.

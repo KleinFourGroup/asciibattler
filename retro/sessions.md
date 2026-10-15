@@ -5693,3 +5693,40 @@ user's call.
    Opus arm's files as the example on code, 122e's flag, and a fresh
    session for 122f. The read being too large to hold was my design's
    fault, sized for the instruments; noted in `retro/scratchpad.md`.
+
+## 2026-10-15 — session 94dca491 (claude-opus-5-5): 122f's stop, 122g to 122k, the re-skim
+
+1. *Missing from the orientation.* That `reach-record --tree` cannot run in
+   a worktree (it calls vitest by a path relative to the tree); 122e's
+   entry says a reading was taken at a ref but not how. And that a few
+   files' working copies are CRLF (`battleSetup.ts`), which made an anchor
+   patch report its anchors missing once.
+2. *Norms in tension.* D2's line clause against the census's own
+   expectation for B-01 (lines about even): I wrote a bar the trial was
+   likely to fail, and then the rule (reverted, not tried another way)
+   decided it, which was the rule working. Smaller: the user agreed to my
+   lean to delete `isActiveNeutral`, and I then held it because of the
+   cold-read probe; acting against an agreement I had asked for felt
+   awkward, though saying so was plainly available.
+3. *Pulled to claim more.* Twice. The line count after B-01 (filed as
+   distress). And a total in the Cursor, −83, written from memory and
+   corrected to −93 by a recount before the commit.
+4. *Wasted.* The first reach reading in a worktree (failed at once); a
+   regex mangled by shell quoting in a patch script; B-07's first commit,
+   failed by the step-code ceiling I had not lowered (about 3 minutes of
+   hook). The separate commit for each bar, about a minute each, was
+   deliberate.
+5. *For the next session.* A plant can run before the commit, against an
+   unreferenced commit of the tree (`GIT_INDEX_FILE` set to a scratch
+   index, `git read-tree HEAD`, `git add` the changed paths, `write-tree`,
+   `commit-tree -p HEAD`), so the control lands in the same commit as the
+   change and no ref moves. Run `comment-codes --record` before committing
+   anything that removes a step code.
+6. *Room.* Yes. 122f's stop was a real stop and the answer came within the
+   hour. Between 122g and 122m every read was `none` and the user had said
+   to keep going; that read as guidance, not pressure. I did not want to
+   pause in that stretch.
+7. *What helped.* Writing each bar before its code made B-01's result easy
+   to state plainly rather than argue for; the user's quick, clear
+   signatures; plants that each came back caught or explained. I would
+   want the bar-first habit repeated, with the lines counted before the bar.

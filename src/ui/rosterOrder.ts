@@ -1,9 +1,10 @@
 /**
  * R1 — the roster-view ordering seam. A keyed resolver, so the roster view
- * can present its cards in different orders without a refactor: only `recruited` is wired to the UI today, but `archetype` /
- * `level` ship switchable so a future order-toggle control (or a difficulty /
- * preference flag) is a data change, not a rewrite — the user's call when R1's
- * order question was locked.
+ * can present its cards in different orders without a refactor: only
+ * `recruited` is wired to the UI today, but `archetype` / `level` ship
+ * switchable so a future order-toggle control (or a difficulty / preference
+ * flag) is a data change, not a rewrite — the user's call when R1's order
+ * question was locked.
  *
  * Pure (no DOM) so it's unit-testable under the project's node test env; the
  * DOM-side `CardListModal` consumes it.

@@ -5427,3 +5427,50 @@ Against the bar:
 4. *Gone: held.* A file, a type and a test file.
 
 Kept. The step-code ceiling 5,680 → 5,675.
+
+### 122m — the re-skim (2026-10-15, session 94dca491)
+
+Read: the phase's diff of `src` and `tools` without the tests,
+`8522c69..285389a3`, without the eight files 122n's comment pass changed
+(comments only, proven then) and without the hunks that only took
+`export` off a line (122d): 926 lines of `git diff -U3`. And a search of
+`src`, `tools`, `tests`, `scripts`, `shell`, `process/` and the live
+docs for every name the phase deleted.
+
+Fixed, as fix-ups of what the phase left: `rosterOrder.ts`'s doc, which
+122k's rewrap left as one line of 130 columns; `abilityDetail.ts:24`,
+which named `firstOpOf` (deleted at 122a); ARCHITECTURE's `occupancy.ts`
+line, which named `footprintFits` (122b); gotcha #97's list of the sites
+that emit `unit:attacked`, which named `AttackAction.start` (retired
+before this round) and the `multiTick` fixture (122e), and now names
+`World.applyDamage`, the one site in `src`. Proof: `comment-strip HEAD
+src`, comments only (exit 0). The `ScalarOrScaled` comments stay for the
+comment pass: the schema `ScalarOrScaledSchema` still exists, only its
+type alias went.
+
+Held against D2 (the budget allowed two more trials this phase; none run):
+
+- *`isActiveNeutral`,* read by its own test alone since B-01's no-op. A
+  deletion, not a trial; held for the user (122f), with Round 9's B-02
+  deciding the predicates' fate either way. The session's lean: leave it
+  for Round 9.
+- *The five combat triggers no shipped code handles* (`spawn`, `takeHit`,
+  `dealMiss`, `evade`, `death`; found at 122i). Their fire points and
+  context types, and the tests that register fixture handlers on them, are
+  what a deletion would take; a search shows the absence, so it is list A's
+  kind, which the user signs. They are K1's seam for Phase L's daemons, of
+  which the daemons use two. The session's lean: a line in TODO "Round 9"
+  for its kickoff, which designs the daemon and ability seams with their
+  consumers known, to keep or delete them there.
+- *A third copy of the neutral-target rule* in `ObjectiveController.ts:185-191`
+  (found at 122h): the click's candidate filter, which could call
+  `validNeutralObjectiveTarget` as `World` now does. B-08's shape in UI
+  code, so §124's (render and UI), whose proof for a reshaping is the eye
+  or a truth table. The session's lean: a lead for §124's kickoff.
+- *Seen and not over the bar:* `spawnUnit` is always followed by
+  `wireSpawned` in shipped code, but the tests spawn bare units through
+  it, so folding the wiring in would change every such test.
+
+No new deletion was found besides the two above.
+
+Reading: 411,060 at 17:55 before this entry.

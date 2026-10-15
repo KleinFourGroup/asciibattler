@@ -21,9 +21,9 @@ export function abilityDetailParts(id: string, archetype: Archetype, stats: Unit
   return abilityDetailPartsForDef(abilityDef(id), archetype, stats);
 }
 
-/** The op of `kind` from a def's effects, or undefined (the `firstOpOf` shape,
- *  but over a caller-supplied def — §76a split so a not-yet-shipped def, e.g. a
- *  test's synthetic aura, is coverable headless). */
+/** The op of `kind` from a def's effects, or undefined. It takes the def
+ *  rather than an id (§76a), so a not-yet-shipped def, e.g. a test's
+ *  synthetic aura, is coverable headless. */
 function opOf<K extends EffectOp['kind']>(
   def: AbilityDef,
   kind: K,

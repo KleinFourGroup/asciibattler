@@ -147,7 +147,8 @@ share of list A's export rows joins the sim's.
   (`none`; a lead). Kept; a file and a type gone, lines −58.
 - ~~**122l — B-02, the split, if signed at 122f**~~ — a trial in Round 9,
   signed at 122f (META-ROADMAP §Round 9).
-- ☐ **122m — the re-skim** (`none`).
+- ☑ **122m — the re-skim** (`none`). No trial over the bar; four
+  fix-ups; three calls for the user.
 - ☑ **122n — the fan-out pilot** (read by the user). Decided: (a), fresh
   sessions on this model; the Opus arm's eight files landed as the
   example of rule 1 on code.

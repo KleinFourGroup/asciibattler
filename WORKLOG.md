@@ -5201,3 +5201,29 @@ were estimated before this bar: about −14.
 4. *The special case, counted:* the wiring written out four times → once,
    and the two "mirrors" notes (`spawnCampUnit`'s and `spawnSummon`'s
    docs) → none.
+
+**Built.** `World.wireSpawned(unit, movement, instant)` pushes the movement
+behaviour and `AbilityBehavior`, then the archetype's abilities, and seats
+the lockout unless the spawn is instant. `spawnCampUnit`,
+`spawnFromQueue`, `spawnSummon` and `battleSetup.spawnTeam` call it after
+`addUnit` (the last after `spawnUnit`), each in the order it ran before.
+The two docs that said "mirrors" now say the unit is wired by
+`wireSpawned`; `spawnFromQueue`'s two step-history comments went into the
+method's doc as two facts (the behaviour's `kind` round-trips, the
+lockout's one phase only times the busy window). `battleSetup.ts` drops
+three imports.
+
+Against the bar:
+
+1. *Behaviour: held.* Typecheck clean. The corpus, 0 of 30. The fuzz
+   diff against `04145d4`: PASS, both shapes. The plant, in a worktree of
+   an unreferenced commit of the tree (`e8fe3aa`): `!instant` negated in
+   `wireSpawned` (`World.ts:2692`), the corpus CAUGHT, 30 of 30, against 0
+   of 30 unplanted. The suite and the smoke by the hook.
+2. *Lines: held.* `src` −10 (+35 −45): `World.ts` −4, `battleSetup.ts`
+   −6. The estimate was −14; the method's doc came out longer.
+3. *No new parameter: held.*
+4. *The special case: held.* The wiring is written once, not four times,
+   and no doc says a spawn path mirrors another.
+
+Kept.

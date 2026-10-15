@@ -26,10 +26,7 @@ import { RNG, deriveRng } from '../core/RNG';
 import type { GridCoord } from '../core/types';
 import type { World, CampInstance, CampPendingUnit } from './World';
 import { getCamp } from '../config/camps';
-import { AbilityBehavior } from './behaviors/AbilityBehavior';
 import { createMovementBehavior } from './behaviors/registry';
-import { createAbility } from './abilities/registry';
-import { abilityIdsForArchetype } from './archetypes';
 import type { Team, UnitTemplate } from './Unit';
 import type { BattleEncounter } from '../run/Run';
 import { TERRAIN } from '../config/terrain';
@@ -109,10 +106,7 @@ export function spawnTeam(
     // enemy templates). Plumbs into `xpAwards` so Run can bank XP
     // into the right roster slot without a separate id map.
     const u = world.spawnUnit(template, team, tiles[i]!, template.rosterIndex ?? null);
-    u.behaviors.push(createMovementBehavior(template.archetype), new AbilityBehavior());
-    for (const id of abilityIdsForArchetype(template.archetype)) {
-      u.abilities.push(createAbility(id));
-    }
+    world.wireSpawned(u, createMovementBehavior(template.archetype), true);
   }
   for (let i = n; i < templates.length; i++) {
     world.queueUnit(team, templates[i]!);

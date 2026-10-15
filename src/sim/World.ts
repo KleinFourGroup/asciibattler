@@ -7,6 +7,7 @@ import {
   Unit,
   isInertNeutral,
   type Archetype,
+  type Behavior,
   type Team,
   type UnitArchetype,
   type UnitDerived,
@@ -2019,9 +2020,9 @@ export class World {
   }
 
   /**
-   * §75c — spawn one camp member (mirrors `spawnFromQueue`: catalog-derived
-   * stats via the deterministic `scaledUnit` — no RNG draw — shared behavior
-   * wiring). Differences: `team: 'neutral'` + the `campId` stamp (the
+   * §75c — spawn one camp member: catalog-derived stats via the deterministic
+   * `scaledUnit` (no RNG draw), wired by `wireSpawned`. Unlike
+   * `spawnFromQueue`: `team: 'neutral'` + the `campId` stamp (the
    * active-neutral signal), and behavior slot 0 is `CampWanderBehavior`
    * (§75f — the 75c landing note landed): leash-filtered wander on `campRng`
    * while passive, the full `MovementBehavior` engagement delegate once the
@@ -2055,14 +2056,7 @@ export class World {
       },
       instant,
     );
-    unit.behaviors.push(new CampWanderBehavior(), new AbilityBehavior());
-    for (const id of abilityIdsForArchetype(spec.archetype)) {
-      unit.abilities.push(createAbility(id));
-    }
-    if (!instant) {
-      this.seatAction(unit, new SpawnAction(), [{ phase: 'impact', ticks: SIM.spawnDurationTicks }]);
-    }
-    return unit;
+    return this.wireSpawned(unit, new CampWanderBehavior(), instant);
   }
 
   private spawnFromQueue(template: UnitTemplate, team: Team, position: GridCoord): Unit {
@@ -2088,20 +2082,7 @@ export class World {
       },
       false,
     );
-    // E7.B — archetype-aware movement (healer → SupportMovementBehavior,
-    // else MovementBehavior), shared with battleSetup's initial-team spawn
-    // via `createMovementBehavior` so the two paths can't drift. The chosen
-    // behavior's `kind` is snapshotted per-unit and rehydrated via
-    // `createBehavior`, so the choice round-trips with no schema bump.
-    unit.behaviors.push(createMovementBehavior(template.archetype), new AbilityBehavior());
-    for (const id of abilityIdsForArchetype(template.archetype)) {
-      unit.abilities.push(createAbility(id));
-    }
-    // F2 — a single lockout phase spanning the spawn window; SpawnAction
-    // has no `applyEffect`, so `impact` here only times the busy window
-    // (matches the pre-F2 `effectTicks:[]` + `duration` lockout exactly).
-    this.seatAction(unit, new SpawnAction(), [{ phase: 'impact', ticks: SIM.spawnDurationTicks }]);
-    return unit;
+    return this.wireSpawned(unit, createMovementBehavior(template.archetype), false);
   }
 
   /**
@@ -2584,12 +2565,11 @@ export class World {
   /**
    * §29d — spawn a SUMMONED minion (the `summon` op): one `archetype` unit at
    * `level`, on `team`, at `position`, attributed to `summonerId` (so
-   * `liveSummonCount` can enforce the caster's `maxLive` cap). Mirrors
-   * `spawnFromQueue` — the deterministic `scaledUnit` stats (no RNG draw, so a
-   * summon never perturbs the combat / spawn streams), the shared
-   * `createMovementBehavior` + `AbilityBehavior` + archetype abilities, and the
-   * `SpawnAction` lockout + `unit:spawned{instant:false}` fade (the minion appears
-   * mid-battle and joins next tick, like a D5.C overflow spawn).
+   * `liveSummonCount` can enforce the caster's `maxLive` cap). Its stats are
+   * the deterministic `scaledUnit`'s (no RNG draw, so a summon never perturbs
+   * the combat / spawn streams), and `wireSpawned` gives it the lockout and the
+   * `unit:spawned{instant:false}` fade: the minion appears mid-battle and joins
+   * next tick, like an overflow spawn.
    *
    * §91-pre (the frost-coven ghoul bug, 2026-09-03 playtest): a CAMP member's
    * summon JOINS THE CAMP — it inherits the summoner's `campId` and takes the
@@ -2629,15 +2609,11 @@ export class World {
       },
       false,
     );
-    unit.behaviors.push(
+    return this.wireSpawned(
+      unit,
       campId !== null ? new CampWanderBehavior() : createMovementBehavior(archetype),
-      new AbilityBehavior(),
+      false,
     );
-    for (const id of abilityIdsForArchetype(archetype)) {
-      unit.abilities.push(createAbility(id));
-    }
-    this.seatAction(unit, new SpawnAction(), [{ phase: 'impact', ticks: SIM.spawnDurationTicks }]);
-    return unit;
   }
 
   /**
@@ -2697,6 +2673,26 @@ export class World {
       },
       true,
     );
+  }
+
+  /**
+   * Wires a unit that has just taken the field: its movement behaviour, then
+   * `AbilityBehavior`, then its archetype's abilities, and, unless the spawn
+   * is instant, the spawn lockout, a `SpawnAction` whose one `impact` phase
+   * only times the busy window. The first deployment, an overflow spawn, a
+   * camp member and a summon all come through here. The movement behaviour's
+   * `kind` is snapshotted and rehydrated by `createBehavior`, so it
+   * round-trips.
+   */
+  wireSpawned(unit: Unit, movement: Behavior, instant: boolean): Unit {
+    unit.behaviors.push(movement, new AbilityBehavior());
+    for (const id of abilityIdsForArchetype(unit.archetype)) {
+      unit.abilities.push(createAbility(id));
+    }
+    if (!instant) {
+      this.seatAction(unit, new SpawnAction(), [{ phase: 'impact', ticks: SIM.spawnDurationTicks }]);
+    }
+    return unit;
   }
 
   /**

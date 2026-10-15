@@ -5485,3 +5485,109 @@ Reading: 411,060 at 17:55 before this entry.
    finds them unhandled has this answer.
 3. `ObjectiveController.ts`'s copy of the neutral-target rule is a lead
    for §124's kickoff (TODO "§124 render and UI").
+
+### 122o — the comment pass: the batches, planned (2026-10-15, session 4c3418de)
+
+The pass takes every non-test `.ts` under `src/sim` and `src/core` but
+the eight 122n landed: 54 files, 15,142 lines (62 files, 15,911 lines,
+with the eight). Eight batches by file, grouped so the facts a batch
+must check sit together, in this order:
+
+1. `src/core`, 8 files, 1,297 lines.
+2. `src/sim/effects`, 11 files, 2,369 lines.
+3. The actions and the selector's vocabulary: `actions/` (Spawn, Wait,
+   Move, Swap), `abilities/registry.ts`, `Action.ts`, `Command.ts`,
+   `triggers.ts`, `statusBehavior.ts`, `statusReadout.ts`, `leveling.ts`,
+   `stats.ts`; 12 files, 1,392 lines.
+4. `World.ts` alone, 3,065 lines.
+5. The unit and the battle: `Unit.ts`, `battleSetup.ts`,
+   `battleRules.ts`, `objective.ts`, `environment.ts`, `archetypes.ts`;
+   1,621 lines.
+6. Movement and targeting: `movement.ts`, `Targeting.ts`,
+   `targetingStrategies.ts`, `moveDecision.ts`; 1,894 lines.
+7. Occupancy and the behaviours: `occupancy.ts`, `Pathfinding.ts`,
+   `positioning.ts`, `actingPosition.ts`, `blockedAlly.ts`,
+   `LineOfSight.ts`, `behaviors/` (CampWander, Movement,
+   SupportMovement); 2,353 lines.
+8. The map: `proceduralMap.ts`, `terrainGen.ts`, `layoutConnectivity.ts`;
+   1,151 lines.
+
+A session takes the next batch while its reading, plus the batch's lines
+at the rate measured so far, stays under the hand-off line, and hands off
+otherwise. At 121j's 66 tokens a line the pass is about 1.0M, three
+sessions; batch 1 measured 84 (below), which makes it four.
+
+Proof per batch, as 121j ran it: `comment-strip HEAD src` in the live
+tree, comments only, exit 0; the control in one worktree of `c17078e5`
+(`output/wt-122o`), each batch's files copied in on top of the last's,
+unplanted exit 0 and with one code token planted exit 1 naming that
+line, restored from a copy and compared byte for byte; then
+`comment-codes --record`. The suite and the smoke by the hook.
+
+### 122o, batch 1 — `src/core` (2026-10-15, session 4c3418de)
+
+`events.ts`, `RNG.ts`, `rngStreams.ts`, `sampling.ts`, `Clock.ts`,
+`EventBus.ts`, `fnv1a.ts`, `types.ts`. `events.ts` lost its history (the
+step that added each field, the retired FX events' note, the plans for
+consumers that now exist) and says each event's emitter and consumers as
+they are; a field documented in `xp.ts` is pointed at, not restated.
+
+**Statements found false and corrected (rule 7)**, each checked against
+the emitting or reading code:
+
+- `fnv1a.ts` named two stored uses of the hash; the journal's snapshot
+  hash, stamped at a segment's end, is a third.
+- `rngStreams.ts` called `combat` the World's combat stream. Only the
+  bot's battle clone derives it; a battle forks its combat stream off the
+  world seed (`World`'s constructor). The registry said keys might be
+  registered ahead of their wiring; every key is wired.
+- `events.ts`, `battle:ended`: its XP formula left out the healing slice
+  (now it points at `computeXpAwards`); "empty only when no roster unit
+  dealt damage" (every slotted player unit gets an entry, a flat slice at
+  least); `rosterIndex` "for the surviving player unit" (fallen ones too);
+  the payload "lets PromotionScene surface the damage dealt" (no UI reads
+  `damageDealt`); a draw "where both sides' survivors chip" (the chip
+  depends on `health.chipMode`, and casualties ships).
+- `unit:spawned` named only the queue's spawns as not instant; a camp's
+  drip and a summon are too. `unit:swapped` said a degraded swap falls
+  back to a `unit:moved`; `SwapAction` emits none. `unit:dashed` named
+  `DashAbility`, `DashAction` and BattleScene's audio; the emitter is the
+  effect `move` op in `advance` mode and the cue is in `eventSounds.ts`.
+- `unit:attacked` named AttackAction's start-time crit roll (the damage
+  op rolls it as it fires) and called `damage` the HP change (on a killing
+  blow it can exceed the HP left). `unit:missed` named the actions that
+  can miss by unit; it is the op's `evadable` flag. `unit:healed` named
+  `HealAction` (the interpreter's heal op). `unit:shoved` said the
+  renderer slides it once a source exists; only tests call `World.shove`,
+  which emits `unit:moved` for the slide.
+- `run:bitsChanged`, `run:cacheChanged`, `run:packetUsed` and
+  `port:entered` named their consumers as intended, or a stub that undocks
+  at once; all are wired (the overlays, PortScene, the event and port
+  screens). `turn:resolved`'s header called the chips the survivors'
+  Σ power; they are the applied loss, as its field said. `pools:chipped`
+  said survivors is the rule "today"; casualties ships.
+
+**Leads, not built:** `World.shove` and `unit:shoved` have no shipped
+caller (for batch 4 or a later census). `World`'s constructor comment
+says battleSetup passes an explicit combat stream anchored on the terrain
+seed; no shipped construction passes one (`BattleScene`,
+`replayJournal`, `replayTrace` take the default fork), for batch 4.
+
+Measured (`comment-length src/core`, at `c17078e5` and after): comment
+lines 784 → 642, words 6,530 → 5,379, code lines 450 unchanged. The
+step-code ceiling 5,675 → 5,505; the core's last code is in a test.
+
+Proof: `comment-strip HEAD src`, comments only, exit 0. The control in
+`output/wt-122o` with the 8 files copied in: unplanted exit 0; with
+`RNG.ts`'s step constant `0x6d2b79f5` planted as `…f6`, exit 1 naming
+that line; restored, byte-identical to the live file.
+
+Cost: 124,215 at 18:21 UTC by the tool's clock as the batch started,
+232,648 at 18:35 after its proof: 108k for 1,297 lines, 84 a line.
+`events.ts` took most of it: 36 events' emitters and consumers checked.
+
+**Read** (`batch`): `git show <hash> -- src/core/events.ts` against the
+seven rules. Wrong looks like a step code or history left, an event
+described with an emitter or consumer the code does not have, a field's
+fact said twice, or a cut that leaves a subscriber without what it must
+know (the optional fields' rule, `command:applied`'s tick stamp).

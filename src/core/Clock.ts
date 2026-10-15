@@ -1,18 +1,17 @@
 /**
- * Fixed-timestep accumulator. Decouples the simulation rate from the render
- * framerate: callers feed real `dt` from `requestAnimationFrame`, and Clock
- * fires `onTick` zero or more times to keep sim time aligned with real time.
- *
- * This is the canonical pattern from "Fix Your Timestep!" — render at whatever
- * the browser gives us, simulate at a fixed rate, never mix the two.
+ * A fixed-timestep accumulator, the pattern of "Fix Your Timestep!": the
+ * caller feeds the real frame time from `requestAnimationFrame`, and the
+ * clock fires `onTick` zero or more times so the sim keeps a fixed rate in
+ * step with real time while rendering runs at whatever rate the browser
+ * gives.
  */
 export class Clock {
   /**
-   * Cap on how much time the accumulator will retain after a stall. After a
-   * long pause (tab backgrounded, debugger break, GC hitch) the next frame's
-   * `dt` could otherwise demand hundreds of ticks at once, which would either
-   * freeze the page or spiral as each catchup takes longer than real time.
-   * We just drop the excess time.
+   * The most time the accumulator keeps after a stall, in ticks. After a
+   * long pause (a background tab, a debugger break, a GC hitch) the next
+   * frame's `dt` would otherwise ask for hundreds of ticks at once, freezing
+   * the page or spiralling as each catch-up takes longer than real time. The
+   * excess is dropped.
    */
   private static readonly MAX_CATCHUP_TICKS = 250;
 
@@ -26,9 +25,9 @@ export class Clock {
   }
 
   /**
-   * Advance the clock by `dtSeconds` of real time. Fires `onTick` exactly
-   * `floor((accumulator + dt) / tickSeconds)` times (subject to the catchup
-   * cap), in order, before returning.
+   * Advances the clock by `dtSeconds` of real time, firing `onTick`
+   * `floor((accumulator + dt) / tickSeconds)` times, after the catch-up cap,
+   * before it returns.
    */
   advance(dtSeconds: number): void {
     this.accumulator += dtSeconds;
@@ -36,9 +35,8 @@ export class Clock {
     const cap = Clock.MAX_CATCHUP_TICKS * this.tickSeconds;
     if (this.accumulator > cap) this.accumulator = cap;
 
-    // Compute the number of ticks in one division — iterative
-    // `accumulator -= tickSeconds` accumulates one rounding error per tick,
-    // which silently loses a tick on long catchups (e.g. 250 × 0.1 underflows).
+    // One division, not a loop of `accumulator -= tickSeconds`: the loop
+    // adds a rounding error per tick and loses a tick on a long catch-up.
     const ticks = Math.floor(this.accumulator / this.tickSeconds);
     if (ticks > 0) {
       this.accumulator -= ticks * this.tickSeconds;

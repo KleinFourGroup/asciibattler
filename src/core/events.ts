@@ -1,15 +1,18 @@
 /**
- * The canonical event catalog. Adding a new event? Add it here first so the
- * type system can guide every emitter and subscriber. Naming convention:
- * `subject:verbed` (past tense, lowercase, colon-separated).
+ * The event catalog: every event on the bus and its payload. A new event is
+ * added here first, so the type system guides every emitter and subscriber,
+ * then to ARCHITECTURE.md's "Event catalog (outputs)" and to
+ * `src/audio/eventSounds.ts`, as a cue or as silent with a reason. When this
+ * file and the doc disagree, this file is right and the doc is fixed in the
+ * same commit.
  *
- * Mirrors ARCHITECTURE.md "Event catalog". When the two drift, this file
- * wins — but please update the doc in the same commit.
+ * Names are `subject:verbed`, past tense and lower case, because the bus
+ * carries only what happened. Player intent goes through the command
+ * channels instead (`RunCommand` in `src/run/Command.ts`, `WorldCommand` in
+ * `src/sim/Command.ts`).
  *
- * A2: imperative inputs (player wants to enter a node, pick a recruit,
- * reset the run) moved off the bus and onto the `RunCommand` channel in
- * `src/run/Command.ts`. The bus carries only outputs ("X just happened")
- * — that's why every name here is past-tense.
+ * Several payload fields are optional only so a test's fake can drive Run
+ * without a real World; every real emit sets them.
  */
 
 import type { GridCoord } from './types';
@@ -27,115 +30,83 @@ import type { Theme } from '../sim/layouts';
 import type { EncounterKind } from '../config/encounters';
 import type { UseContext } from '../config/packets';
 
-/** 94e — what moved the run-wide player pool (`run:poolChanged.reason`). */
+/** What moved the run-wide player pool (`run:poolChanged.reason`). */
 export type PoolChangeReason = 'chip' | 'heal' | 'damage' | 'rest' | 'seam';
 
 export interface GameEvents extends Record<string, unknown> {
   tick: { tick: number };
 
   /**
-   * 53b — payload extended with the full `BattleEncounter` (the
-   * self-contained battle fixture `beginTurn` assembled: seeds, layout,
-   * grid, teams, battleRules). It is the trace recorder's begin-marker:
-   * encounter + the `command:applied` stream + the outcome IS a replayable
-   * trace. Only Run emits this event, and no sim/run subscriber reads
-   * `encounter`, so the payload growth cannot perturb the deterministic sim
-   * or the fuzz baseline.
+   * `encounter` is the whole battle fixture `beginTurn` assembled (seeds,
+   * layout, grid, teams, battle rules), so this event, the `command:applied`
+   * stream and the outcome make a replayable trace; the trace and journal
+   * recorders begin on it. Only Run emits it, and no sim or run code reads
+   * `encounter`.
    */
   'battle:started': { worldSeed: number; encounter: BattleEncounter };
   /**
-   * E4: payload extended with `xpAwards` — one entry per player roster unit
-   * (survivor OR fallen) that earned XP this battle. `damageDealt` is the raw
-   * HP-loss tally the World accumulated for that unit; `xpGained` is the
-   * `LEVELING`-resolved value (`xpFlatPerSurvivor`/`xpFlatPerFallen` +
-   * `xpPerDamage × damageDealt`). Run banks it into the persistent roster.
-   *
-   * H4: awards are computed on EVERY battle end regardless of `winner` (the
-   * old player-win-only gate is gone), because an encounter is now many turns
-   * and each turn's damage banks into the per-encounter XP total — a unit that
-   * dealt damage on a turn the player didn't win still earned it. (Empty only
-   * when no roster unit dealt damage or qualified for a flat slice.)
-   *
-   * Including damageDealt + xpGained lets PromotionScene surface
-   * "you dealt X damage, earned Y XP" without re-querying the World.
+   * Emitted once per battle by `World.emitBattleEnded`, whoever won.
+   * `xpAwards` holds one entry per player unit with a roster slot, survivor
+   * or fallen, as `computeXpAwards` (`src/sim/xp.ts`) computes them; Run
+   * banks them into the roster.
    */
   'battle:ended': {
-    /**
-     * E4: 'player' / 'enemy' on a decisive end (one team wiped). H4 adds
-     * 'draw' for a tick-capped (or mutual-wipe) turn — the driver's
-     * `World.resolveAsDraw` — where BOTH sides' survivors chip the opposing
-     * health pool.
-     */
+    /** 'draw' on a mutual wipe or a capped turn; `reason` says which. */
     winner: 'player' | 'enemy' | 'draw';
     /**
-     * §91a1: WHY the battle ended, beside who won. `'decisive'` = one team
-     * wiped (`checkBattleEnd`); `'mutualWipe'` = both teams' last units
-     * fell together (34a — also a `'draw'`); `'cap'` = the driver's per-turn
-     * tick budget force-resolved it (`World.resolveAsDraw`). The casualty
-     * chip rule's CAP PENALTY keys on `'cap'` only — a mutual wipe is the
-     * largest casualty turn there is, never a stall. Optional on the
-     * `survivorPower` rationale (test fakes omit it); every real emit sets it.
+     * Why the battle ended: `'decisive'`, one team wiped
+     * (`checkBattleEnd`); `'mutualWipe'`, both teams' last units fell
+     * together; `'cap'`, the driver's per-turn tick budget ran out
+     * (`World.resolveAsDraw`). The cap penalty (`health.capPenalty`) keys on
+     * `'cap'` alone: a mutual wipe is the largest casualty turn there is,
+     * never a stall.
      */
     reason?: 'decisive' | 'mutualWipe' | 'cap';
     xpAwards: readonly {
       unitId: number;
-      /**
-       * Index into `Run.team` for the surviving player unit. Null for
-       * the rare test fixture that spawned a player unit directly via
-       * `World.spawnUnit` without threading rosterIndex; Run skips
-       * those.
-       */
+      /** The unit's slot in `Run.team`, as `XpAward.rosterIndex` (`src/sim/xp.ts`). */
       rosterIndex: number | null;
       damageDealt: number;
       xpGained: number;
     }[];
     /**
-     * H4: Σ`power` over each team's living **on-grid** units at battle end —
-     * the amount each side chips the OPPOSING health pool by under the
-     * SURVIVORS rule (`health.chipMode`; §91a2 — the casualties rule reads
-     * `fallenPower` instead, and a cap turn may read both). Deliberately
-     * EXCLUDES the spawn queue (a queued/overflow unit never reached the grid
-     * and contributed no power, even though `checkBattleEnd` counts a
-     * non-empty queue as "alive"). Optional only so test fakes can drive
-     * Run's phase machine without a real World; every real emit
-     * (`World.emitBattleEnded`) sets it.
+     * Σ`power` over each team's living units on the grid at battle end: what
+     * each side chips the opposing pool by under the survivors rule
+     * (`health.chipMode`), and what a cap penalty charges. A unit still in
+     * the spawn queue is left out, since it never reached the grid, although
+     * `checkBattleEnd` counts a non-empty queue as alive.
      */
     survivorPower?: { player: number; enemy: number };
     /**
-     * §91a1: Σ`effectiveStats.power` over each team's combatants REAPED this
-     * battle (both death sites, booked before the splice) — the casualty
-     * chip rule's input: each side pays its OWN fallen
-     * (`health.chipMode: 'casualties'`). Neutrals charge nobody; a SUMMONED
-     * unit (the `summonedBy` stamp) books 0 whatever its archetype weighs
-     * (§91e2 — a conjured body is not a loss its side paid for; a FIELDED
-     * ghoul is). So fielded on-grid power = survivors + fallen, minus any
-     * summons that fell. Optional on the `survivorPower` rationale.
+     * Σ`effectiveStats.power` over each team's combatants reaped this battle,
+     * booked by `World.recordFallen`: the casualties rule's input, each side
+     * paying its own fallen. A neutral charges nobody, and a summoned unit
+     * (the `summonedBy` stamp) books 0 whatever its archetype weighs, since a
+     * conjured body is not a loss its side paid for; a fielded one is.
      */
     fallenPower?: { player: number; enemy: number };
     /**
-     * 47f: battle-earned run resources (the World's serialized tally —
-     * accumulated by battle-domain daemon rules, spec §"the seam
-     * crossings"). Run settles `bits` through `gainBits` (the `bitsGain`
-     * fold applies at the settle). Optional on the `survivorPower`
-     * rationale — test fakes omit it; every real emit sets it.
+     * The run resources earned in battle by battle-domain daemon rules (the
+     * World's serialized tally). Run settles `bits` through `gainBits`, where
+     * the `bitsGain` fold applies.
      */
     tallies?: { bits: number };
     /**
-     * §75g: the camps WIPED this battle, with the faction whose blow
-     * finished them (the drip-aware serialized `killedBy` stamp — §75e).
-     * Run rolls the PLAYER-killed camps' reward refs into the turn's
-     * offer win-or-lose; an enemy-killed camp yields nothing (credit
-     * denial IS the player's loss). OMITTED when no camp was wiped, so
-     * camp-free payloads are byte-identical to pre-75g.
+     * The camps wiped this battle, with the faction whose blow finished each
+     * (the serialized `killedBy` stamp, which counts a drip's units). Run
+     * adds a player-killed camp's reward refs to the turn's offer, won or
+     * lost; an enemy-killed camp yields nothing. Omitted when no camp was
+     * wiped.
      */
     campKills?: readonly { defId: string; killedBy: 'player' | 'enemy' }[];
   };
 
   /**
-   * Fires once per unit appearing on the grid. `instant: true` for
-   * setup-time spawns (battle start, initial team layout); `false` for
-   * D5.C overflow-queue spawns that come in mid-battle and visually
-   * lerp their alpha 0 → 1 over the SpawnAction lockout window.
+   * Fires once per unit placed on the grid, walls and other neutrals
+   * included. `instant` is true at battle setup, and false for a unit that
+   * joins a battle under way (from the spawn queue, a camp's drip, or a
+   * summon); the renderer fades that unit's glyph in over the spawn lockout
+   * (`SIM.spawnDurationTicks`).
    */
   'unit:spawned': { unitId: number; instant: boolean };
   'unit:moved': {
@@ -145,17 +116,12 @@ export interface GameEvents extends Record<string, unknown> {
     durationTicks: number;
   };
   /**
-   * GP5.1 — an atomic position SWAP (a `SwapAction`): `unitA` and `unitB`
-   * exchange cells over `durationTicks` (unitA moves `cellA → cellB`, unitB
-   * moves `cellB → cellA`). Distinct from two `unit:moved` events because a
-   * swap is one event with shared timing, and because the mechanic is
-   * non-obvious — keeping it first-class leaves a clean hook for a future
-   * swap-specific cue / VFX / telemetry without conflating it with a normal
-   * step. §56 generalized the emitters (the healer's yield, the 56b
-   * swap-through, the 56c flee-swap, the 56c2 ranged yield); consumers: the
-   * renderer (lerps both sprites from their live positions) + the pathing
-   * metrics collector (two committed steps). A degraded swap (partner gone
-   * after a snapshot) falls back to a plain `unit:moved`.
+   * A position swap (a `SwapAction`): `unitA` moves `cellA → cellB` and
+   * `unitB` moves `cellB → cellA` over `durationTicks`. One event rather than
+   * two `unit:moved`, since the two moves share their timing and are one
+   * mechanic. Consumers: the renderer, which slides both sprites from where
+   * they stand, and the pathing metrics (`tests/pathing/metrics.ts`), which
+   * count two committed steps.
    */
   'unit:swapped': {
     unitA: number;
@@ -165,19 +131,16 @@ export interface GameEvents extends Record<string, unknown> {
     durationTicks: number;
   };
   /**
-   * 56e-pre2 — an in-flight swap ended WITHOUT its flip: the `applyEffect`
-   * abort branch fired (`to` occupied/claimed at the impact boundary), or a
-   * participant was removed pre-flip (`World.removeUnit` — death mid-window).
-   * First-class (not two `unit:moveAborted`s) because the failure is a
-   * two-body fact: BOTH sprites began the 56c2 dual lerp at `start`, so both
-   * must settle back to their true cells — `unitA` to `cellA`, `unitB` to
-   * `cellB` (neither ever moved logically). Without this event the PARTNER's
-   * sprite finished a slide the sim never honored and rested on the wrong
-   * tile until its next move re-synced it (the 56e labyrinth desync
-   * sighting). Consumers: BattleRenderer (settles both, missing handles
-   * skipped — a dead participant's sprite is the death anim's) + the pathing
-   * metrics collector (reverts BOTH committed steps — it had the same
-   * one-sided hole). Payload mirrors `unit:swapped` minus the timing.
+   * A swap under way ended without its flip: the flip found `to` occupied
+   * or claimed (`SwapAction`), or a participant was removed before the flip
+   * (`World.removeUnit`, a death mid-window). One event rather than two
+   * `unit:moveAborted`, because both sprites began sliding at the start and
+   * both must settle back, `unitA` to `cellA` and `unitB` to `cellB`; neither
+   * moved in the sim. Without it the partner's sprite finished a slide the
+   * sim never made and stood on the wrong tile until its next move.
+   * Consumers: the renderer, which settles both and skips a missing sprite
+   * (a dead participant's belongs to its death animation), and the pathing
+   * metrics, which revert both committed steps.
    */
   'unit:swapAborted': {
     unitA: number;
@@ -186,17 +149,12 @@ export interface GameEvents extends Record<string, unknown> {
     cellB: GridCoord;
   };
   /**
-   * N1 — a `DashAbility` LEAP (a `DashAction`): the unit blinked from `from` to
-   * `to` over `durationTicks`. A first-class event, mirroring `unit:swapped`'s
-   * rationale — the dash is a movement VARIANT whose cue / VFX / telemetry must
-   * not be inferred from a plain `unit:moved`: a dash that lands adjacent to an
-   * enemy 2 cells away only moves ONE cell, indistinguishable from a normal step
-   * by distance. Unlike a swap (two units, so it CAN'T reuse `unit:moved`), a
-   * dash is one unit moving, so `DashAction` ALSO emits `unit:moved` and the
-   * renderer lerps the slide via its normal one-unit path; THIS event is the
-   * dash-specific signal layered on top. Today BattleScene's audio (the dash
-   * whoosh) is the only consumer; the deferred dash VFX (afterimage/trail) is
-   * the next.
+   * A dash: an effect's `move` op in `advance` mode carried the unit from
+   * `from` to `to` over `durationTicks`. The op also emits `unit:moved`, and
+   * the renderer slides the glyph on that; this event is the dash's own
+   * signal, which a `unit:moved` cannot give, since a dash that lands next to
+   * an enemy two cells away moves one cell, as a step does. The audio plays
+   * the dash cue off it.
    */
   'unit:dashed': {
     unitId: number;
@@ -205,17 +163,11 @@ export interface GameEvents extends Record<string, unknown> {
     durationTicks: number;
   };
   /**
-   * §35b — a relocation ABORTED at execution: the unit's selected move was a
-   * clean no-op because its destination (`to`) was occupied or untraversable by
-   * the time it ran (a stale proposal — an earlier-processed unit took the cell
-   * this tick). The cooldown is NOT consumed; the unit retries next tick, still
-   * at `from`. A first-class event (not a silent skip) so the renderer can react
-   * — inert on today's instant moves (propose == execute atomically), but
-   * load-bearing in §36: once the logical position flips partway through a move,
-   * a mid-flight abort animates as a settle-back, and the renderer must SEE the
-   * abort to reverse the lerp. §36c CONSUMER: BattleRenderer eases the sprite from
-   * its live mid-slide position back to `from` (the unit never left logically). A
-   * §35b selection-time abort (sprite still on `from`) settles in place — a no-op.
+   * A move aborted as it ran: its destination `to` was occupied or
+   * untraversable by then (an earlier unit took the cell this tick). The
+   * cooldown is not spent; the unit is still at `from` and tries again next
+   * tick. The renderer eases the sprite from wherever it stands back to
+   * `from`, which is no motion when the abort came before the slide began.
    */
   'unit:moveAborted': {
     unitId: number;
@@ -223,13 +175,12 @@ export interface GameEvents extends Record<string, unknown> {
     to: GridCoord;
   };
   /**
-   * 82e — an in-flight action HELD FIRE at a phase boundary (the release
-   * gate: a `releaseGate` def whose locked target left the firing band —
-   * or died — during the wind-up). The action cleared with nothing fired;
-   * the ability's cooldown was set to `reaimTicks` (the re-aim window,
-   * already speed-scaled). Consumer: BattleRenderer's amber DRAIN bar over
-   * the re-aim window — without it the held unit reads as idle (regular
-   * cooldowns are barless, so this bar is a unique "held fire" tell).
+   * An action held fire at a phase boundary: its def's `releaseGate` found
+   * the locked target out of the firing band, or dead, after the wind-up.
+   * Nothing fired, and the ability's cooldown was set to `reaimTicks`, the
+   * re-aim window, already scaled by speed. The renderer draws a draining
+   * amber bar over the window; without it the held unit reads as idle, since
+   * an ordinary cooldown has no bar.
    */
   'unit:actionHeld': {
     unitId: number;
@@ -237,14 +188,13 @@ export interface GameEvents extends Record<string, unknown> {
     reaimTicks: number;
   };
   /**
-   * §42a — the movement layer's per-poll DECISION record: why the unit moved,
-   * or why it deliberately (or helplessly) didn't. Exactly ONE per
-   * MovementBehavior / SupportMovementBehavior poll (a unit with an in-flight
-   * action isn't polled and emits nothing that tick). Purely observational —
-   * no world state, never serialized; the §42b metrics harness (decision-mix /
-   * oscillation / queue counts) is the consumer. Records movement INTENT: the
-   * proposal can still lose the selector to a higher-scoring ability —
-   * cross-check `unit:moved` for actual motion. Kinds + full taxonomy doc:
+   * The movement layer's decision for one poll: why the unit moved, or why
+   * it did not. Exactly one per `MovementBehavior` or
+   * `SupportMovementBehavior` poll; a unit with an action under way is not
+   * polled and emits nothing that tick. It records intent: the proposal can
+   * still lose the selector to a higher-scoring ability, so `unit:moved`
+   * says whether the unit moved. Observational only: no world state, never
+   * serialized. The pathing metrics consume it. The kinds are documented in
    * `src/sim/moveDecision.ts`.
    */
   'unit:moveDecision': {
@@ -252,28 +202,19 @@ export interface GameEvents extends Record<string, unknown> {
     kind: MoveDecisionKind;
   };
   /**
-   * §44b — a unit EXECUTED a first-class wait: its `WaitAction` won the
-   * selector (nothing better on offer this tick) and resolved within the tick
-   * — a deliberate hold of its cell. Distinct from
-   * `unit:moveDecision{kind:'wait'}`, which records the movement layer's
-   * INTENT at propose time (emitted even when a ready attack outranks the
-   * wait): THIS event fires only when the wait actually executes. Like the
-   * decision record it is purely observational — no world state, never
-   * serialized (the §44b instantaneous-action rule keeps waits out of
-   * `activeAction`). No consumer yet; the §45 renderer "queued" stance is the
-   * intended first.
+   * A unit's `WaitAction` won the selector and resolved within the tick: a
+   * deliberate hold of its cell. `unit:moveDecision` with kind `'wait'`
+   * records the intent at propose time, even when a ready attack outranks
+   * the wait; this fires only when the wait runs. Observational only, and
+   * never serialized, since a wait never becomes the `activeAction`. No game
+   * code subscribes; the tests do.
    */
   'unit:waited': { unitId: number };
   /**
-   * §35c — a unit was SHOVED off a cell it co-occupied: the occupancy backstop
-   * relocated it from `from` to the nearest free cell `to` (deterministically),
-   * lerped over `durationTicks`. Distinct from `unit:moved` because a shove is
-   * FORCED, not chosen — it's the de-overlap safety net for a knockback / summon
-   * / spawn landing on an occupied cell, and the primitive a future directional
-   * `knockback` op wraps. First-classed (like swap / dash / moveAborted) so that
-   * future cue / VFX / telemetry has a clean hook; no consumer yet (co-location
-   * doesn't arise on today's instant model — the renderer lerps the slide via
-   * its normal `to`/`durationTicks` path once a breach source exists).
+   * A unit sharing a cell was pushed off it: `World.shove` moved it from
+   * `from` to the nearest free cell `to` over `durationTicks`, and emitted
+   * `unit:moved` for the slide. A shove is forced, not chosen, which is why
+   * it has its own event. Only tests call `World.shove`.
    */
   'unit:shoved': {
     unitId: number;
@@ -282,11 +223,12 @@ export interface GameEvents extends Record<string, unknown> {
     durationTicks: number;
   };
   /**
-   * E1: `crit` flags whether AttackAction's start-time crit roll landed.
-   * `damage` is the resolved post-crit value (already multiplied by
-   * `STATS.critMult` when `crit === true`), so subscribers that only
-   * care about HP change don't need to re-multiply. The dedicated flag
-   * is what E6's hitsplats key off to render crits in red.
+   * A hit landed (`World.applyDamage`). `damage` is what was taken off the
+   * target's HP, after the crit factor (`STATS.critMult`, applied when `crit`
+   * is true), cover and defense, so a subscriber never multiplies again; on a
+   * killing blow it can exceed the HP the target had left. `crit` says
+   * whether the damage op's crit roll landed; the hitsplats draw crits in
+   * their own colour off it.
    */
   'unit:attacked': {
     attackerId: number;
@@ -295,37 +237,33 @@ export interface GameEvents extends Record<string, unknown> {
     crit: boolean;
   };
   /**
-   * I2: a single-target strike (melee/ranged basic or the rogue gambit) rolled
-   * to-hit at the `World.applyDamage` chokepoint and MISSED — the target's
-   * `evasion` beat the attacker's `precision`. Distinct from a 0-damage
-   * `unit:attacked` so consumers branch cleanly (no HP was touched, no
-   * `recordDamage` entry, no crit). The attacker still swung/shot — but as of
-   * Z3 that lunge/tracer + whoosh ride `action:phase` (which fires on hit AND
-   * miss), so the render layer keys ONLY the "Miss" hitsplat off this event.
-   * Only the evadable single-target actions emit it; the mage AoE, the catapult,
-   * and environmental fire/chasm damage are unmissable and never do. */
+   * A strike rolled to hit in `World.applyDamage` and missed: the target's
+   * `evasion` beat the attacker's `precision`. No HP moved, no damage was
+   * recorded and no crit applies, which is why it is not a `unit:attacked`
+   * for 0. Only a damage op authored `evadable` can miss; any other, and
+   * a tile's damage, never emits this. The swing and its sound ride
+   * `action:phase`, which fires on a hit and a miss alike, so the renderer
+   * keys only the "Miss" hitsplat off this event.
+   */
   'unit:missed': { attackerId: number; targetId: number };
-  /** Heal applied to a unit (an ability heal — `HealAction`). Emits AFTER
-   *  currentHp is updated; healing is clamped at maxHp, so the emitted `amount`
-   *  is the actual HP delta (0 when the unit is already full — we still emit so
-   *  subscribers can debounce / log).
-   *  F5: `healerId` tags the SOURCE — the casting unit's id for an ability heal,
-   *  or `null` for a (currently hypothetical) environmental heal. Render-only
-   *  metadata (not serialized): the F5 heal-sparkle fires only for ability heals.
-   *  27d — the per-tick HEALING-TILE chip-heal moved off this event: a healing
-   *  tile now sustains the `rejuvenate` HoT, which surfaces as `status:ticked`
-   *  (the regen number + cue resolve from the status's `fx`), so `unit:healed`
-   *  is the ability-heal cue only. */
+  /**
+   * A heal op restored HP (`interpreter.ts`), emitted after `currentHp`
+   * moved. Healing clamps at max HP, so `amount` is the HP gained, and 0
+   * when the unit was already full; it still fires. `healerId` is the
+   * caster, or null for a heal with no caster, which no shipped source
+   * emits; the heal sparkle plays only for a caster's heal. A healing tile
+   * does not emit this: it sustains the `rejuvenate` status, whose ticks
+   * surface as `status:ticked`.
+   */
   'unit:healed': { unitId: number; amount: number; healerId: number | null };
   /**
-   * §29c — one ARC of a chain attack reached a target. Fires per hop (the §29c
-   * chain op), on the tick that hop's damage lands — so with `hopDelaySeconds > 0`
-   * the events stagger and the renderer draws the lightning travelling jump by
-   * jump. `from`/`to` are the arc's grid endpoints (`from` = the caster for
-   * `jumpIndex 0`, else the previous victim's cell); `targetId` is the unit this
-   * hop struck (the live destination sprite). `casterId` tags the source (team
-   * colour). Render-only — the damage itself rides the normal `unit:attacked`
-   * each hop's inner damage op emits; this event carries only the arc geometry. */
+   * One arc of a chain attack reached a target, on the tick that hop's
+   * damage lands, so with `hopDelaySeconds > 0` the renderer draws the
+   * lightning jump by jump. `from` and `to` are the arc's cells (`from` is
+   * the caster's at `jumpIndex` 0, otherwise the previous victim's);
+   * `targetId` is the unit the hop struck, and `casterId` gives the team
+   * colour. Render-only: each hop's damage rides its own `unit:attacked`.
+   */
   'unit:chained': {
     casterId: number;
     targetId: number;
@@ -334,24 +272,20 @@ export interface GameEvents extends Record<string, unknown> {
     jumpIndex: number;
   };
   /**
-   * Fires once per unit removal from the world. `team` is included so
-   * subscribers can branch on combatant vs neutral (wall / environment)
-   * deaths without re-querying the world — by the time this event fires
-   * the unit has already been spliced out of `world.units` and is no
-   * longer findable. §75h adds `campId` on the same rationale: the death
-   * SFX plays for a camp member (an ACTIVE neutral) but not for crumbling
-   * scenery, and the dead unit can't be looked up to tell them apart.
+   * Fires once per unit removed from the world, after it has been spliced
+   * out of `world.units`. Nothing can look the dead unit up, so the payload
+   * carries what subscribers need: `team`, to tell a combatant from a wall
+   * or other scenery; `campId`, since the death sound plays for a camp
+   * member but not for crumbling scenery; and the fallen ledger's input.
    *
-   * 94d — the fallen LEDGER's input: the unit's IDENTITY rides the event on
-   * the same rationale (nothing can look the dead unit up). `archetype` /
-   * `level` are the unit's; `power` is the amount `World.recordFallen`
-   * BOOKED to its side's fallen total — the same number the casualty chip
-   * rule charges (0 for a neutral, which charges nobody, and 0 for a summon,
-   * §91e2) — so a per-death sum over a battle reproduces `battle:ended.
-   * fallenPower` exactly (the Run ledger's cross-check pin). `summoned` says
-   * WHY a power reads 0 (the `summonedBy` stamp) so a ledger can skip
-   * conjured bodies by kind, not by a zero it might one day author on
-   * purpose. `tick` = the World tick the death was reaped on.
+   * `archetype` and `level` are the unit's; `power` is what
+   * `World.recordFallen` booked to its side's fallen total, the number the
+   * casualties rule charges (0 for a neutral and for a summon), so the
+   * deaths of a battle sum to `battle:ended.fallenPower` exactly (the Run
+   * ledger's cross-check). `summoned` (the `summonedBy` stamp) says why a
+   * power reads 0, so a ledger skips conjured bodies by kind rather than by
+   * a zero that a def might one day author. `tick` is the tick the death
+   * was reaped on.
    */
   'unit:died': {
     unitId: number;
@@ -365,21 +299,17 @@ export interface GameEvents extends Record<string, unknown> {
   };
 
   /**
-   * Phase 27 — the status-effect lifecycle. A status (burn/bleed/poison/
-   * rejuvenate, …) was applied to / ticked on / expired off a unit. These are
-   * the in-battle status DISPLAY signal: the renderer (27e) resolves the status
-   * def's `fx` keys through the §Z registry to drive the apply flash / per-tick
-   * cue / expire fade / persistent overlay. `sourceUnitId` is the applier for
-   * attribution (`null` = environmental, e.g. a fire-tile burn — mirroring
-   * `unit:healed`'s `healerId: null`). Only status-DEF effects emit these; plain
-   * K1 stat effects (empower / fatigue / dodge-buff) do not.
+   * A status (burn, bleed, poison, rejuvenate…) was applied to, ticked on, or
+   * expired off a unit. They drive the status display: the renderer resolves
+   * the status def's `fx` keys through the FX registry for the apply flash,
+   * the tick cue, the expiry fade and the overlay. `sourceUnitId` is the
+   * applier, or null for a tile's status (a fire tile's burn). Only a status
+   * from the catalog (`config/statuses.json`) emits these; a plain stat
+   * effect (empower, fatigue, a dodge buff) does not.
    *
-   * `status:ticked` carries the per-tick `amount` (the DoT damage / HoT heal HP
-   * delta, post-mitigation) so the renderer floats the number + flavor off this
-   * ONE event — the periodic tick does NOT also emit `unit:attacked` /
-   * `unit:healed` (no double-cue, no null-attacker dance). A refinement over the
-   * roadmap's lean `{unitId, statusId, sourceUnitId}` sketch: the viz needs the
-   * number, and threading it here keeps `status:ticked` the single tick signal.
+   * `status:ticked` carries the tick's `amount`, the HP the DoT took or the
+   * HoT gave after mitigation, so the renderer floats the number off this
+   * one event; a status tick emits no `unit:attacked` or `unit:healed`.
    */
   'status:applied': { unitId: number; statusId: string; sourceUnitId: number | null };
   'status:ticked': {
@@ -391,29 +321,17 @@ export interface GameEvents extends Record<string, unknown> {
   'status:expired': { unitId: number; statusId: string; sourceUnitId: number | null };
 
   /**
-   * §Z — the ad-hoc `magic:detonated` / `catapult:fired` FX events (the Y4
-   * strangler artifacts) were RETIRED here. Their VFX + SFX now resolve through
-   * the renderer's FX registry (`src/render/fxRegistry.ts`), keyed off the
-   * ability def's `fx` and driven by `BattleRenderer` on the action's phase
-   * boundaries (the projectile on `release`, the burst + sound on `impact`).
-   * The damage still rides `unit:attacked` per hit, so hitsplats / HP bars /
-   * the XP ledger are unchanged.
-   */
-
-  /**
-   * F2 — transient phase-boundary signal. Fires once per phase that BEGINS
-   * on a tick, in declared order, for every in-flight action (zero-length
-   * phases included — they share a boundary tick). Renderer-only consumer:
-   * BattleRenderer's FX driver resolves the action's per-phase fx key through
-   * the registry (Z1 the mage/catapult projectile@`release` + burst@`impact`;
-   * Z2 the camera shake; Z3 the melee shove + bow tracer + their whoosh — on
-   * `impact`, or `windup` for the gambit). Driving the strike cue off THIS event
-   * is what plays it on a miss for free (the phase fires on hit AND miss).
-   * Carries NO damage — that still rides `unit:attacked` / `unit:healed`.
-   * `targetId` is set for homing actions (strikes, catapult), `targetCell` for
-   * ground-target / fixed-cell actions (mage); both omitted for self / no-target
-   * actions (dash, move, spawn). No sim/run subscriber exists, so emitting it
-   * cannot perturb the deterministic sim or the fuzz baseline.
+   * An action's phase began. Fires once per phase that begins on a tick, in
+   * the phases' order, for every action under way; a zero-length phase fires
+   * on the same tick as the next. The renderer's FX driver resolves the
+   * action's fx key for the phase through the registry
+   * (`src/render/fxRegistry.ts`): projectiles, bursts, camera shake, the
+   * melee lunge, the bow tracer and their sounds. Driving the strike cue off
+   * this event plays it on a miss too, since the phase fires on a hit and a
+   * miss alike. It carries no damage; that rides `unit:attacked` and
+   * `unit:healed`. `targetId` is set for an action that tracks a unit,
+   * `targetCell` for one aimed at a cell; both are omitted for an action
+   * with no target (a move, a spawn). No sim or run code subscribes.
    */
   'action:phase': {
     unitId: number;
@@ -424,38 +342,33 @@ export interface GameEvents extends Record<string, unknown> {
   };
 
   /**
-   * O1 — a team's steering objective was set (or replaced) on the battle, via
-   * the `setObjective` `WorldCommand`. Carries the team + the new
-   * `TeamObjective` (mode + optional target) so the J3 UI can render its marker
-   * (the marker tracks the PLAYER team's objective only). Sim-side an `engage`
-   * objective only steers a unit when it's not already engaged (see
-   * `Targeting.ts`).
+   * A team's objective was set or replaced through the `setObjective`
+   * `WorldCommand`. The renderer and the HUD draw the player team's
+   * objective marker off it.
    */
   'objective:set': { team: ObjectiveTeam; objective: TeamObjective };
   /**
-   * O1 — a team's objective reverted to `atWill`, either explicitly (the
-   * `clearObjective` command) or automatically when an `engage` enemy target
-   * died (`World.clearResolvedObjectives`). A `tile` target never auto-reverts
-   * (persist-until-cleared). The idempotent emit guard on the World side means
-   * this fires only on a real non-`atWill` → `atWill` transition.
+   * A team's objective went back to `atWill`: by the `clearObjective`
+   * command, or on its own when an `engage` target died
+   * (`World.clearResolvedObjectives`). A `tile` target never reverts on its
+   * own. The World emits it only on a real change from a non-`atWill`
+   * objective to `atWill`.
    */
   'objective:cleared': { team: ObjectiveTeam };
 
   /**
-   * 53a/53c — a drained `WorldCommand` took effect. Emitted once per command
-   * at the drain site, AFTER `applyCommand` ran, stamped with its EFFECTIVE
-   * tick — the first tick whose unit actions can observe it. The in-tick
-   * drain stamps the current tick (it runs before the per-unit step); a
-   * PARKED drain (countdown/pause, Q2) stamps the NEXT tick, because the
-   * frozen tick's units already acted. One uniform replay rule falls out:
-   * inject every command stamped E before tick E (replayTrace.ts). This is
-   * the trace recorder's substrate: unlike `objective:set`/
-   * `objective:cleared`, it fires ONLY for real drained commands (an
-   * auto-revert via `clearResolvedObjectives` emits `objective:cleared` but
-   * never this) and carries the whole command, so a replay re-enqueues it
-   * verbatim. Determinism already guarantees `worldSeed` + this stream → a
-   * byte-identical battle. No sim/run subscriber exists, so emitting it
-   * cannot perturb the deterministic sim or the fuzz baseline.
+   * A drained `WorldCommand` took effect: once per command at the drain,
+   * after `applyCommand` ran, stamped with its effective tick, the first
+   * tick whose unit actions can see it. The drain inside a tick stamps the
+   * current tick, since it runs before the units step; a drain while the
+   * battle is parked (the countdown, a pause) stamps the next tick, since
+   * the frozen tick's units already acted. So a replay injects every
+   * command stamped E before tick E (`src/dev/replayTrace.ts`). The trace
+   * and journal recorders read it: unlike `objective:set` and
+   * `objective:cleared`, it fires only for a real drained command (an
+   * objective's own revert emits `objective:cleared` and not this), and it
+   * carries the whole command, so a replay enqueues it again verbatim.
+   * No sim or run code subscribes.
    */
   'command:applied': { tick: number; command: WorldCommand };
 
@@ -463,19 +376,17 @@ export interface GameEvents extends Record<string, unknown> {
   'run:victory': Record<string, never>;
   'run:defeated': Record<string, never>;
   /**
-   * 67a — a (non-sink) sector terminal was cleared and the run advanced to
-   * the successor sector. Emitted from `advanceSector` AFTER the state swap
-   * (phase lands on `sectorCleared`), so the cleared sector's title rides
-   * the payload (the run only knows the successor by emit time) while
-   * `nextSectorTitle` mirrors the live `currentSectorTitle` getter. Game
-   * swaps to the sector-cleared screen (67b); the `dismissSectorCleared`
-   * command releases the gate back to 'map'.
+   * A sector's terminal (not the sink's) was cleared and the run moved to
+   * the next sector. Emitted by `advanceSector` after the state swap, with
+   * the phase at `sectorCleared`, so the cleared sector's title rides the
+   * payload and `nextSectorTitle` is the live `currentSectorTitle`. Game
+   * shows the sector-cleared screen; the `dismissSectorCleared` command
+   * returns to the map.
    *
-   * §90 — the seam floor: `poolBefore` is the run-wide pool the act ENDED on
-   * (pre-floor — the seam-hazard instrument's value; the fuzz harness records
-   * THIS as `poolAtSectorClears`, never the live pool at emit time) and
-   * `poolAfter` the pool after `health.seamHealFloor` lifted it (what the
-   * next act opens on). Equal when the floor didn't bite.
+   * `poolBefore` is the run-wide pool the sector ended on, before the seam
+   * floor; the fuzz harness records it as `poolAtSectorClears`. `poolAfter`
+   * is the pool after `health.seamHealFloor` lifted it, what the next sector
+   * opens on. They are equal when the floor did not bite.
    */
   'sector:cleared': {
     clearedSectorTitle: string;
@@ -485,49 +396,44 @@ export interface GameEvents extends Record<string, unknown> {
   };
 
   /**
-   * 47e — the run's bits balance changed. `bits` is the new balance
-   * (authoritative — a consumer never needs to accumulate deltas); `delta`
-   * is the applied signed change AFTER the floor-at-zero clamp. Emitted
-   * only on a real change, from the single `Run.addBits` chokepoint (earns
-   * via `Run.gainBits` today — daemon hooks + the coming §48 reward
-   * settles; spends arrive with §50 ports). The §48 persistent top-left
-   * overlay is the intended consumer; no sim/run subscriber exists.
+   * The run's bits balance changed. `bits` is the new balance, so a
+   * consumer never sums deltas; `delta` is the change after the clamp at 0.
+   * Emitted only on a real change, from `Run.addBits`, which every earn,
+   * spend and sale goes through. The bits overlay and the event and port
+   * screens read it; no sim or run code does.
    */
   'run:bitsChanged': { bits: number; delta: number };
 
   /**
-   * 94e — the run-wide player pool moved: `after` is authoritative, `reason`
-   * names the mover (the chip at a turn boundary · an event's heal / damage
-   * op · the rest heal · the sector-seam refill). Emitted only on a real
-   * change, from the single `Run.setPlayerHealth` chokepoint — the §94
-   * kickoff audit found four of the five pool writes emitting nothing,
-   * which is what would have left a persistent pool chip stale on a rest.
-   * The persistent `PoolOverlay` (the bits chip's sibling) is the intended
-   * consumer; `pools:chipped` (89a) stays the telemetry's turn-boundary
-   * source (it carries the encounter pool + the uncapped charges).
+   * The run-wide player pool moved. `after` is authoritative; `reason`
+   * names the mover (the chip at a turn boundary, an event's heal or damage
+   * op, the rest heal, the refill at a sector seam). Emitted only on a real
+   * change, from `Run.setPlayerHealth`, which every pool write goes through,
+   * so the pool overlay is never stale. The telemetry's turn-boundary
+   * source is `pools:chipped`, which carries the encounter pool and the
+   * uncapped charges.
    */
   'run:poolChanged': { before: number; after: number; max: number; reason: PoolChangeReason };
 
   /**
-   * 49b — the run's cache changed: a packet was added (`Run.addPacket` —
-   * reward accepts at 49c, port buys at §50) or discarded (the
-   * `discardPacket` command), or daemon ownership moved the DERIVED
-   * capacity (`Run.addDaemon` emits too — a size-modifier idol can shrink
-   * the cache into the forced-keep overflow without touching the list).
-   * `packetIds` is an authoritative copy (ids — defs resolve via
-   * `packetById`); `size` is the folded effective capacity. The 49f cache
-   * chip + modal are the intended consumers; no sim/run subscriber exists.
+   * The run's cache changed: a packet was added (`Run.addPacket`, from a
+   * reward or a port) or discarded (the `discardPacket` command), or a
+   * daemon changed the derived capacity (`Run.addDaemon`; a daemon that
+   * shrinks the cache can push it into the forced-keep overflow without
+   * touching the list). `packetIds` is a copy of the ids (`packetById`
+   * resolves a def); `size` is the folded capacity. The cache overlay, the
+   * pre-turn scene and the port screen read it; no sim or run code does.
    */
   'run:cacheChanged': { packetIds: string[]; size: number };
 
   /**
-   * 49e — a `usePacket` command fired a held packet (consume-on-fire; the
-   * paired `run:cacheChanged` already carried the shrunk cache). `context`
-   * is where it fired; `playerHealth` is post-effect (patch heals it);
-   * `grants` + `empowerStacks` are the re-derived pre-turn state (a
-   * reroute INSERTS a grant at the cursor, a hype re-badges the hand) —
-   * both derived-empty outside `turn-intro`. The 49f fire strip + cache
-   * modal are the intended consumers; no sim/run subscriber exists.
+   * A `usePacket` command fired a held packet, which is spent; the
+   * `run:cacheChanged` before it carried the smaller cache. `context` is
+   * where it fired; `playerHealth` is the pool after the effect (a patch
+   * heals it). `grants` and `empowerStacks` are the pre-turn state derived
+   * again, since a reroute inserts a grant at the cursor and a hype
+   * re-badges the hand; both are empty outside `turn-intro`. The pre-turn
+   * scene and the bot's evaluator read it; no sim or run code does.
    */
   'run:packetUsed': {
     packetId: string;
@@ -535,43 +441,40 @@ export interface GameEvents extends Record<string, unknown> {
     playerHealth: number;
     grants: TurnGrantView[];
     empowerStacks: EmpowerStackView[][];
-    /** 96.5c — the risk bound re-derived: a packet that moved the pool moves
-     *  its cap (`min(pool, exposure)`); a hand-changing packet's hand emit
-     *  follows with its own. Meaningful at the pre-turn gate only. */
+    /** The risk bound derived again: a packet that moved the pool moves its
+     *  cap (`min(pool, exposure)`), and a packet that changed the hand is
+     *  followed by that hand's own event. Meaningful at the pre-turn gate
+     *  only. */
     poolAtRisk: number;
   };
 
   /**
-   * 50c — the player docked at a port node (spec §Ports): `enterNode` on a
-   * `port`-kind node consumed the hop and the run entered the serialized
-   * `port` phase (it holds there until a `leavePort` command). `nodeId` is
-   * the docked node. §50e's PortScene swap is the intended consumer (the
-   * 50c interim Game stub undocks immediately instead); no sim/run
-   * subscriber exists. §50d rolls the stock at this same entry point.
+   * The player docked at a port: `enterNode` on a `port` node spent the hop,
+   * rolled the stock, and put the run in the serialized `port` phase, where
+   * it holds until a `leavePort` command. Game shows the port scene off it.
    */
   'port:entered': { nodeId: number };
 
   /**
-   * 74b — the player landed on an event node and it did NOT combat-resolve:
-   * the run entered the serialized `event` phase holding the
-   * `{eventId, pageId}` cursor. Game swaps the EventScene off this (74f);
-   * event nodes scatter naturally since 74e. `nodeId` is the entered node.
+   * The player landed on an event node that did not resolve into combat:
+   * the run is in the serialized `event` phase, holding the
+   * `{eventId, pageId}` cursor. Game shows the event scene off it.
    */
   'event:entered': { nodeId: number; eventId: string };
 
   /**
-   * 74b — the active event's cursor moved to another page (a resolved choice
-   * whose `next` was a page id). The EventScreen (74f) re-renders off this;
-   * terminals emit nothing here (return-to-map is the silent-transition
-   * pattern; start-encounter fires `battle:started`).
+   * The event's cursor moved to another page (a choice whose `next` is a
+   * page id). The event screen re-renders off it. A terminal choice emits
+   * nothing here: a return to the map is silent, and starting an encounter
+   * fires `battle:started`.
    */
   'event:pageChanged': { eventId: string; pageId: string };
 
   /**
-   * The player landed on a rest node: `enterNode` consumed the hop and the
-   * run entered the serialized `rest` phase, where it holds until a
+   * The player landed on a rest node: `enterNode` spent the hop and the run
+   * entered the serialized `rest` phase, where it holds until a
    * `chooseRestOption` command. Nothing has been healed or banked yet.
-   * Game swaps the RestScene off this, and `Run.resume()` emits it again for
+   * Game shows the rest scene off it, and `Run.resume()` emits it again for
    * a run loaded at the gate. `nodeId` is the rest node.
    */
   'rest:entered': { nodeId: number };
@@ -579,52 +482,40 @@ export interface GameEvents extends Record<string, unknown> {
   'recruit:offered': { units: UnitTemplate[] };
 
   /**
-   * 48b: a won encounter's reward offer is ready — the run just entered the
-   * `reward` phase (interposed BEFORE any promotion: battle → rewards →
-   * promotion → recruit, the shape-locked ordering). The payload is a copy
-   * of the rolled portions; the screen resolves them one at a time via the
-   * `acceptReward` / `declineReward` commands and should re-read
-   * `run.pendingRewards` (and derive bits displays via `run.effectiveBits`)
-   * after each — the live offer shrinks as portions resolve.
+   * A won encounter's reward offer is ready: the run entered the `reward`
+   * phase, which comes before any promotion (battle, rewards, promotion,
+   * recruit). The payload is a copy of the rolled portions. The screen
+   * resolves them one at a time with the `acceptReward` and `declineReward`
+   * commands and reads `run.pendingRewards` again after each (bits through
+   * `run.effectiveBits`), since the live offer shrinks as portions resolve.
    */
   'reward:offered': { rewards: readonly RewardPortion[] };
 
   /**
-   * E4: one or more player roster units crossed an XP threshold during
-   * battle-end banking. Game swaps to PromotionScene which renders the
-   * deltas; dismiss → recruit offer (existing flow) or run:victory at
-   * terminal. The payload is the closed set of "what changed" snapshots
-   * the scene needs — no follow-up world query required.
+   * One or more player units crossed an XP threshold as the battle's XP was
+   * banked. Game shows the promotion scene, and its dismissal leads to the
+   * recruit offer, or to `run:victory` at the run's end. The payload holds
+   * everything the scene shows.
    */
   'promotion:pending': { promotions: readonly PromotionInfo[] };
 
   /**
-   * H4b — a turn is about to begin (the pre-turn screen's cue). Fired only
-   * when `Run.pauseAtTurnGates` is on (the interactive/live path); the headless
-   * loop runs straight through and never emits it. Carries the turn number +
-   * the current health pools so the screen can show "Turn N" + both gauges
-   * before the tactical battle spins up. The screen dismisses with the
-   * `advanceTurn` command.
+   * A turn is about to begin: the pre-turn screen's cue. Fired only when
+   * `Run.pauseAtTurnGates` is on, the live path; the headless loop never
+   * emits it. The screen dismisses with the `advanceTurn` command.
    *
-   * H5b — also carries `hand`: this turn's drawn cards (the roster templates
-   * that will fight, in draw order), so the pre-turn screen shows WHO was
-   * drawn. The hand is drawn before this fires (Run.startNextTurn), so it's
-   * authoritative — the same templates `beginTurn` then sends to the World.
-   *
-   * K3.5 — also carries `map`: the ENCOUNTER's battlefield (one map per
-   * encounter as of K3.5, rolled at encounter start), so the redraw decision
-   * is made knowing the field. Inline structural shape rather than the Run
-   * `EncounterMap` type to keep core → run imports type-light (the terrain
-   * seed is deliberately omitted — presentation needs name/size/theme only).
-   *
-   * K3/K4→49d — also carries `grants`: this turn's GRANT QUEUE (one view
-   * per granted idol effect in acquisition order — the §49 per-source
-   * re-model; the old summed `redraw` + `empowers` list retired with it).
-   * `active` marks the derived cursor the strict finality mode enforces.
-   * Plus `empowerStacks` (parallel to `hand`: each card's badge-eligible
-   * buffs on its roster slot, one entry per KEY — 78c widened the K4 summed
-   * integer; empty = unbuffed), so the screen can badge a card that was
-   * empowered on an EARLIER turn and drawn back, per source.
+   * `hand` is this turn's drawn cards in draw order, drawn before this fires
+   * (`Run.startNextTurn`), so it is the same templates `beginTurn` sends to
+   * the World. `map` is the encounter's battlefield, one map per encounter
+   * rolled at its start, so a redraw is decided knowing the field; it is an
+   * inline shape rather than Run's `EncounterMap`, which keeps this file's
+   * imports from `src/run` few, and it leaves out the terrain seed, which
+   * the screen does not need. `grants` is this turn's grant queue, one view
+   * per granted daemon effect in the order the daemons were acquired; its
+   * `active` entry is the cursor the strict finality mode enforces.
+   * `empowerStacks` runs parallel to `hand`: each card's badge-eligible buffs
+   * on its roster slot, one entry per buff key (empty when unbuffed), so a
+   * card empowered on an earlier turn and drawn again keeps its badge.
    */
   'turn:starting': {
     turn: number; // 1-based, within the current encounter
@@ -634,25 +525,24 @@ export interface GameEvents extends Record<string, unknown> {
     enemyHealth: number;
     enemyHealthMax: number;
     hand: UnitTemplate[];
-    /** R2 — the encounter deck's other two piles, resolved to templates for the
-     *  pre-turn pile views. Carried in RECRUITMENT order (not draw order), so
-     *  the views show contents-only without revealing the next-draw sequence.
-     *  `hand` ∪ `drawPile` ∪ `discardPile` is the whole fielded roster. */
+    /** The encounter deck's other two piles, as templates, for the pre-turn
+     *  pile views. In recruitment order, not draw order, so the views show
+     *  what a pile holds without revealing the next draw. `hand`, `drawPile`
+     *  and `discardPile` together are the whole fielded roster. */
     drawPile: UnitTemplate[];
     discardPile: UnitTemplate[];
-    /** 49d — the grant queue views (`Run.grantViews()`): a command names its
-     *  grant by `grantIndex`; strict mode fires only the `active` one. */
+    /** The grant queue's views (`Run.grantViews()`): a command names its
+     *  grant by `grantIndex`, and strict mode fires only the `active` one. */
     grants: TurnGrantView[];
-    /** K4→78c — per-hand-position empower stacks (empty = none; one entry
-     *  per badge-eligible buff key), see the doc above. */
+    /** One stack per hand position (empty when none), one entry per
+     *  badge-eligible buff key; see the doc above. */
     empowerStacks: EmpowerStackView[][];
-    /** L1→47d — the run's OWNED daemons in acquisition order (empty =
-     *  daemon-less), for the stacked pre-turn banners. Inline structural
-     *  shape (the `map` convention). Per-turn grant state is NOT here — it's
-     *  what `grants` already says (a denied Mercury flip reads as a missing
-     *  queue entry); `redrawGate`/`empowerGate` say whether an idol HAS each
-     *  hook at all, so the screen can tell "denied this turn" from "this
-     *  idol never grants it". */
+    /** The run's daemons in the order they were acquired (empty when it has
+     *  none), for the pre-turn banners. An inline shape, as `map` is. A
+     *  turn's grant state is not here, since `grants` says it (a denied flip
+     *  is a missing queue entry); `redrawGate` and `empowerGate` say whether
+     *  a daemon has each hook at all, so the screen can tell "denied this
+     *  turn" from "never grants it". */
     daemons: Array<{
       id: string;
       name: string;
@@ -660,17 +550,17 @@ export interface GameEvents extends Record<string, unknown> {
       redrawGate: boolean;
       empowerGate: boolean;
     }>;
-    /** Wb1 — the active encounter's identity, so the pre-turn screen can NAME
-     *  the fight (otherwise the player guesses turn 1). `name` mirrors the HUD
-     *  enemy-pane title; `kind` lets the screen badge an elite/boss. */
+    /** The encounter, so the pre-turn screen can name the fight. `name` is the
+     *  HUD's enemy-pane title; `kind` lets the screen badge an elite or a
+     *  boss. */
     encounter: {
       name: string;
       kind: EncounterKind;
     };
-    /** 65e — the folded per-turn draw amount (`Run.effectiveDrawAmount`),
-     *  for the pre-turn "Draw: N" chip (the §65 shape-lock's transparency
-     *  surface). May differ from `hand.length` (a roster smaller than the
-     *  draw fields everyone; a packet draw grows the hand past it). */
+    /** The folded draw amount for the turn (`Run.effectiveDrawAmount`), for
+     *  the pre-turn "Draw: N" chip. It can differ from `hand.length`: a
+     *  roster smaller than the draw fields everyone, and a packet's draw
+     *  grows the hand past it. */
     drawAmount: number;
     map: {
       layoutId: string | null;
@@ -678,18 +568,18 @@ export interface GameEvents extends Record<string, unknown> {
       gridH: number;
       theme: Theme;
     };
-    /** 89e → §91d — the pre-turn RISK line: the most pool this turn can cost
-     *  the player under the shipped `health.chipMode`, capped at the pool
-     *  (`Run.previewPoolAtRisk`): under survivors the wave's Σ power (the
-     *  wave previewed off the keyed stream `beginTurn` will roll it from, so
-     *  it IS the fielded wave's bound); under casualties the HAND's Σ power
-     *  (the player's own fielded numbers). Display-only; never serialized. */
+    /** The pre-turn risk line: the most pool this turn can cost the player
+     *  under the shipped `health.chipMode`, capped at the pool
+     *  (`Run.previewPoolAtRisk`). Under survivors it is the wave's Σ power,
+     *  previewed off the keyed stream `beginTurn` rolls the wave from, so it
+     *  bounds the wave that is fielded; under casualties it is the hand's Σ
+     *  power. Display only; never serialized. */
     poolAtRisk: number;
-    /** 115a — the previous turn of this encounter, for the pre-turn
-     *  screen's "last turn" strip: its winner, why it ended, and who fell in
-     *  it (copies of the fallen ledger's rows, both sides, in death order).
-     *  Null on an encounter's first turn. The Run keeps it (saved since
-     *  Run v47), so a pre-turn screen resumed from a save has its strip. */
+    /** The encounter's previous turn, for the pre-turn screen's "last turn"
+     *  strip: its winner, why it ended, and who fell in it (copies of the
+     *  fallen ledger's rows, both sides, in death order). Null on an
+     *  encounter's first turn. The Run saves it, so a pre-turn screen resumed
+     *  from a save has its strip. */
     lastTurn: {
       winner: 'player' | 'enemy' | 'draw';
       reason: 'decisive' | 'mutualWipe' | 'cap';
@@ -698,14 +588,12 @@ export interface GameEvents extends Record<string, unknown> {
   };
 
   /**
-   * 65f — ONE card moved into the hand off the draw pile (the `drawCard()`
-   * chokepoint — the deal, a redraw refill, and a Surge all emit here).
-   * A presentation CUE, not authoritative state: the swap events
-   * (`turn:starting` / `turn:handRedrawn`) remain the truth the UI
-   * reconciles to; these cues exist so the pile chips can pulse SERIALLY,
-   * one per card (the §65f deck-transaction feel), and so audio can ride
-   * per-card later. Counts are the piles AFTER this card moved. Emits draw
-   * no RNG and serialize nothing.
+   * One card moved into the hand off the draw pile, in `drawCard()`: the
+   * deal, a redraw's refill and a Surge all emit here. A presentation cue,
+   * not state: the hand events (`turn:starting`, `turn:handRedrawn`) are
+   * what the UI reconciles to, and these let the pile chips pulse once per
+   * card. Counts are the piles after the card moved. The deck cues draw no
+   * RNG and serialize nothing.
    */
   'deck:cardDrawn': {
     drawPile: number;
@@ -713,9 +601,9 @@ export interface GameEvents extends Record<string, unknown> {
   };
 
   /**
-   * 65f — ONE card moved to the discard pile (the turn-start hand recycle,
-   * a redraw send-off, or a Cull). Same cue-not-truth contract as
-   * `deck:cardDrawn`. The recycle fires with no screen up — harmless.
+   * One card moved to the discard pile (the hand recycled at a turn's start,
+   * a redraw's send-off, or a Cull). A cue, as `deck:cardDrawn` is. The
+   * recycle fires with no screen up, which is harmless.
    */
   'deck:cardDiscarded': {
     drawPile: number;
@@ -723,11 +611,10 @@ export interface GameEvents extends Record<string, unknown> {
   };
 
   /**
-   * 65f — the discard pile was shuffled back into the draw pile (the H5
-   * cycle, inside `drawCard()` when the draw pile runs dry mid-draw). ONE
-   * event for the whole flip — the shuffle is one conceptual action (the
-   * §65f shape-lock: a single distinct pulse, not a serial tick-down).
-   * Counts are post-flip, pre-pop (`discardPile` is always 0).
+   * The discard pile was shuffled back into the draw pile, inside
+   * `drawCard()` when the draw pile runs dry mid-draw. One event for the
+   * whole flip, since the shuffle is one action and pulses once. Counts are
+   * after the flip and before the card is taken (`discardPile` is always 0).
    */
   'deck:reshuffled': {
     drawPile: number;
@@ -735,84 +622,76 @@ export interface GameEvents extends Record<string, unknown> {
   };
 
   /**
-   * K3 — a `redrawCards` command landed at the pre-turn gate: the selected
-   * cards went to the discard and fresh draws took their hand positions.
-   * Carries the FULL new hand (same draw-order contract as `turn:starting`)
-   * plus the decremented redraw availability, so the pre-turn screen swaps
-   * its card row + control state in place. Only ever fires during
-   * `turn-intro` (the command is phase-gated), i.e. only on the live path.
-   * 65c — also fired by the packet hand ops (`drawCards` grows the hand,
-   * `discardCards` shrinks it): the event is now "the pre-turn hand
-   * changed", whatever moved it (`Run.emitHandChanged` is the one emit
-   * site). The hand length may DIFFER from the drawn size.
-   *
-   * K4→78c — also carries `empowerStacks` (the badge column, parallel to
-   * the NEW hand): a refill can seat an already-empowered card, and the old
-   * positions no longer line up after a redraw.
+   * The pre-turn hand changed: a `redrawCards` command sent the selected
+   * cards to the discard and fresh draws took their places, or a packet's
+   * hand op grew it (`drawCards`) or shrank it (`discardCards`).
+   * `Run.emitHandChanged` is the one emit site. It carries the whole new
+   * hand, in the draw-order contract of `turn:starting`, so the pre-turn
+   * screen swaps its card row and controls in place; the hand's length may
+   * differ from the drawn size. It fires only in `turn-intro`, since the
+   * commands are gated to that phase, so only on the live path.
+   * `empowerStacks` runs parallel to the new hand, since a refill can seat an
+   * empowered card and the old positions no longer line up.
    */
   'turn:handRedrawn': {
     hand: UnitTemplate[];
-    /** R2 — the post-redraw draw/discard piles (recruitment order), so the
-     *  pre-turn pile views reflect the swap. Same contract as `turn:starting`. */
+    /** The draw and discard piles after the change, in recruitment order, as
+     *  `turn:starting` carries them. */
     drawPile: UnitTemplate[];
     discardPile: UnitTemplate[];
-    /** 49d — the full queue re-derived (the fired grant's budget moved,
-     *  possibly the cursor too). */
+    /** The whole queue derived again (the fired grant's budget moved, and
+     *  the cursor may have). */
     grants: TurnGrantView[];
     empowerStacks: EmpowerStackView[][];
-    /** 96.5c — the risk bound RE-DERIVED for the new hand (`Run.previewPoolAtRisk`,
-     *  the same number `turn:starting` carried): under casualties the hand's Σ
-     *  power IS the bound, so a redraw moves it — the pre-turn risk line was
-     *  painted once at turn start and went stale (the §96.5 kickoff audit). */
+    /** The risk bound derived again for the new hand (`Run.previewPoolAtRisk`,
+     *  as `turn:starting` carries it): under casualties the hand's Σ power is
+     *  the bound, so a redraw moves it. */
     poolAtRisk: number;
   };
 
   /**
-   * K4 — an `empowerUnit` command landed at the pre-turn gate: the selected
-   * card's roster slot gained the configured buff for the rest of the
-   * encounter. Carries the re-derived queue + the full per-hand stack column
-   * (`empowerStacks`, parallel to the unchanged hand) so the pre-turn
-   * screen updates its badge + control state in place. Only ever fires
-   * during `turn-intro` (the command is phase-gated).
+   * An `empowerUnit` command landed at the pre-turn gate: the selected card's
+   * roster slot gained the configured buff for the rest of the encounter.
+   * It carries the queue derived again and the whole stack column, parallel
+   * to the unchanged hand, so the pre-turn screen updates its badge and
+   * controls in place. It fires only in `turn-intro`, since the command is
+   * gated to that phase.
    */
   'turn:unitEmpowered': {
     handIndex: number;
-    /** 49d — the full queue re-derived (same shape as `turn:starting`). */
+    /** The whole queue derived again, as `turn:starting` carries it. */
     grants: TurnGrantView[];
     empowerStacks: EmpowerStackView[][];
   };
 
   /**
-   * 49d — a `passGrant` command finalized the active grant unspent (strict
-   * finality mode only — free mode never emits this). Carries the re-derived
-   * queue so the strip advances its auto-arm to the new cursor.
+   * A `passGrant` command closed the active grant unspent. Only strict
+   * finality mode emits it. It carries the queue derived again, so the strip
+   * arms the new cursor.
    */
   'turn:grantPassed': {
     grants: TurnGrantView[];
   };
 
   /**
-   * H4b — a turn just resolved into the pools (the post-turn outcome screen's
-   * cue). Fired only under `pauseAtTurnGates`. `winner` is the tactical winner
-   * of the turn; `enemyPoolChip`/`playerPoolChip` are the Σ`power` each side's
-   * survivors dealt the opposing pool; `result` is the encounter's status after
-   * this turn (`ongoing` → the next turn's `turn:starting` follows the
-   * `advanceTurn`; `won`/`lost` → the encounter ends instead). Pools are the
-   * post-chip values.
+   * A turn just resolved into the pools: the post-turn outcome screen's cue.
+   * Fired only under `pauseAtTurnGates`. `winner` is the turn's tactical
+   * winner; `result` is the encounter's state after the turn (`ongoing`:
+   * the next `turn:starting` follows the `advanceTurn`; `won` or `lost`: the
+   * encounter ends instead). The pools are the values after the chip.
    */
   'turn:resolved': {
     turn: number;
     winner: 'player' | 'enemy' | 'draw';
-    /** §91d — why the battle ended (`battle:ended.reason`, resolved by Run —
-     *  a fake without one maps 'draw' → 'cap', else 'decisive'). The outcome
-     *  screen labels its chip lines by the rule set this reason paid
-     *  (`rulesForTurn`): a tick-capped turn under a cap penalty pays TWO rules
-     *  and says so; a mutual wipe never does. */
+    /** Why the battle ended (`battle:ended.reason`, resolved by Run; a fake
+     *  without one maps 'draw' to 'cap', else 'decisive'). The outcome
+     *  screen labels its chip lines by the rules this reason paid
+     *  (`rulesForTurn`): a capped turn under a cap penalty pays two rules and
+     *  says so; a mutual wipe never does. */
     reason: 'decisive' | 'mutualWipe' | 'cap';
-    /** §91a2 — the APPLIED loss of each pool this turn (clamped at the pool:
-     *  "what you lost"), whatever the chip rule; pre-91a2 these re-derived
-     *  survivors × chipMultiplier (a second copy of the rule's arithmetic).
-     *  The uncapped charge rides `pools:chipped`. */
+    /** The loss each pool took this turn, clamped at the pool ("what you
+     *  lost"), whatever the chip rule. The uncapped charge rides
+     *  `pools:chipped`. */
     enemyPoolChip: number;
     playerPoolChip: number;
     result: 'won' | 'lost' | 'ongoing';
@@ -820,11 +699,11 @@ export interface GameEvents extends Record<string, unknown> {
     playerHealthMax: number;
     enemyHealth: number;
     enemyHealthMax: number;
-    /** 94d — the fallen ledger's narrative for the outcome screen: who fell
-     *  THIS turn (both sides, in death order) and the whole encounter's
-     *  record so far (this turn included). Copies of `Run.fallenLedger`
-     *  rows; the sum of `power` per side over `thisTurn` is the chip the
-     *  casualty rule charged (the screen can show the rows add up). */
+    /** The fallen ledger's story for the outcome screen: who fell this turn
+     *  (both sides, in death order) and the encounter's record so far, this
+     *  turn included. Copies of `Run.fallenLedger` rows; each side's `power`
+     *  over `thisTurn` sums to the chip the casualties rule charged, so the
+     *  screen can show the rows add up. */
     fallen: {
       thisTurn: readonly FallenRecord[];
       encounter: readonly FallenRecord[];
@@ -832,16 +711,14 @@ export interface GameEvents extends Record<string, unknown> {
   };
 
   /**
-   * 89a — the pools as `resolveTurn` actually moved them, fired on BOTH the
-   * gated and headless paths (unlike `turn:resolved`, a gated-only screen
-   * cue). The APPLIED deltas: `after − before` per side is what the chip
-   * rule charged, whatever the rule is (survivors today; the casualty rule
-   * of §91 reports through the same event untouched). The fuzz telemetry
-   * records these instead of re-deriving the chip from survivor power —
-   * a reader that multiplies survivors by `chipMultiplier` is re-doing the
-   * rule's arithmetic and goes wrong the moment the rule changes. Pools are
-   * pool-HP; `before` is the pool at the turn's battle start (no pool moves
-   * mid-battle), `after` the post-chip value (clamped at 0).
+   * The pools as `resolveTurn` moved them, fired on the gated and the
+   * headless paths alike (unlike `turn:resolved`). `before − after` per side
+   * is what the chip rule took, whatever the rule, so the fuzz telemetry
+   * records these rather than deriving the chip again: a reader that
+   * multiplies survivors by `chipMultiplier` repeats one rule's arithmetic
+   * and goes wrong under another. Values are pool HP; `before` is the pool
+   * at the turn's battle start (no pool moves mid-battle), `after` the pool
+   * after the chip, clamped at 0.
    */
   'pools:chipped': {
     turn: number;
@@ -849,21 +726,19 @@ export interface GameEvents extends Record<string, unknown> {
     playerAfter: number;
     enemyBefore: number;
     enemyAfter: number;
-    /** §91a2 — the rule's UNCAPPED charge to each side's pool this turn
-     *  (pool-HP, `turnCharges`): `before − after` is the APPLIED loss, this
-     *  is what the rule TRIED to take — the overkill read (89b2) needs the
-     *  pre-clamp number under any rule (the 89d rider). Under `survivors`
-     *  it equals the opposing survivors × chipMultiplier. */
+    /** The rule's uncapped charge to each side's pool this turn (pool HP,
+     *  `turnCharges`): `before − after` is the loss applied, and this is what
+     *  the rule tried to take, which the overkill read needs under any rule.
+     *  Under `survivors` it equals the opposing survivors × chipMultiplier. */
     playerCharge: number;
     enemyCharge: number;
   };
 }
 
 /**
- * E4 — one roster slot's level-up details. Mirrors what PromotionScene
- * renders: glyph + archetype + old→new level + per-stat deltas. Stats
- * before/after are kept whole (not just the deltas) so the scene can
- * show "STR 6 → 7" rather than just "+1 STR".
+ * One roster slot's promotion, as the promotion screen shows it: glyph,
+ * archetype, old and new level, and both stat blocks whole, so the screen can
+ * show a stat's old and new value and not only the change.
  */
 export interface PromotionInfo {
   rosterIndex: number;

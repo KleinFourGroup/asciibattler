@@ -1,9 +1,10 @@
-/**
- * Shared primitives. Kept narrow on purpose — anything that grows behavior
- * beyond a plain shape probably wants its own module.
- */
+/** Shared plain shapes. A type that grows behaviour belongs in its own module. */
 
-/** Integer cell index on the battle grid. (0, 0) is the bottom-left corner. */
+/**
+ * A cell on the battle grid, in whole cells. (0, 0) is the bottom-left
+ * corner: the near-left cell as the camera sees it (`gridToWorld` in
+ * `BattleRenderer.ts`).
+ */
 export interface GridCoord {
   readonly x: number;
   readonly y: number;

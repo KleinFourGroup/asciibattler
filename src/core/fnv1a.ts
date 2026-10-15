@@ -1,12 +1,14 @@
 /**
- * 32-bit FNV-1a over a string, as 8 lowercase hex chars. Not cryptographic —
- * a change-detector, not a security boundary. Two consumers with FORMAT
- * contracts on the output: the 53b config fingerprint (src/config/configHash.ts —
- * a trace refuses a mismatched replay) and the 95e i18n provenance `source`
- * hash (src/i18n/provenance.ts — a translation whose stored hash no longer
- * matches its English is FUZZY). Changing the function or its rendering
- * would fuzzy every entry of every shipped locale at once: PERMANENT, the
- * rngStreams discipline (gotcha #125). Test vectors: src/config/configHash.test.ts.
+ * 32-bit FNV-1a over a string, as 8 lowercase hex characters. A change
+ * detector, not a security boundary.
+ *
+ * Its output is stored, so the function and its rendering are permanent,
+ * as the RNG stream keys are (gotcha #125): the config fingerprint a trace
+ * is refused on (`src/config/configHash.ts`); the source hash on each
+ * translation (`src/i18n/provenance.ts`), where a changed hash would mark
+ * every entry of every shipped locale fuzzy; and the snapshot hash a
+ * journal stamps at a segment's end (`src/journal/journal.ts`). The test
+ * vectors are in `src/config/configHash.test.ts`.
  */
 export function fnv1a(input: string): string {
   let h = 0x811c9dc5;

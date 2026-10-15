@@ -1,24 +1,22 @@
 /**
- * Deterministic sampling helpers over a seeded `RNG`. Written for the M6
- * procedural map generator (turning config ranges/weights into concrete
- * values), but generic enough for any per-seed sampling.
+ * Sampling over a seeded `RNG`: a config's ranges and weights turned into
+ * values.
  *
- * **Fixed draw count.** Every function here consumes EXACTLY ONE `rng.next()`
- * draw, regardless of its arguments (degenerate ranges, zero intensity, etc.
- * still draw once). Callers rely on this: adding or removing a sampled knob
- * shifts the stream by a predictable single draw rather than an unknown amount,
- * which keeps the fuzz-replay re-baselining easy to reason about.
+ * Every function here takes exactly one `rng.next()`, whatever its
+ * arguments; a degenerate range or a zero intensity still draws once.
+ * Callers rely on it: adding or removing a sampled knob moves the stream by
+ * one draw, not by an amount that depends on the values.
  */
 import type { RNG } from './RNG';
 
 const clamp01 = (v: number): number => Math.min(1, Math.max(0, v));
 
 /**
- * Pick a key from a weight map, with probability proportional to its weight.
- * Assumes at least one positive weight (config-validated). Iteration order is
- * sorted by key — numerically when every key parses as a number, else
- * lexicographically — so the result depends only on the weights + seed, never
- * on the JSON's key order.
+ * A key from a weight map, with probability proportional to its weight.
+ * Expects at least one positive weight, which the config's schema ensures.
+ * The keys are walked in sorted order, numerically when both keys of a
+ * comparison parse as numbers and lexically otherwise, so the result depends
+ * on the weights and the seed, never on the JSON's key order.
  */
 export function weightedPick<K extends string>(rng: RNG, weights: Record<K, number>): K {
   const entries = orderedEntries(weights as Record<string, number>);
@@ -46,12 +44,11 @@ function orderedEntries(weights: Record<string, number>): Array<[string, number]
 }
 
 /**
- * Sample a value in `[min, max]` with one uniform draw. Bare → uniform. With
- * `center` + `intensity` (0..1), biases toward `center` by blending the uniform
- * sample with a triangular one peaked at `center`: intensity 0 = uniform, 1 =
- * full triangular peak. `center` is the MODE (the value it clusters around),
- * not the mean — skewing it leaves the mean drifting toward the midpoint. The
- * result is always within `[min, max]`.
+ * A value in `[min, max]` from one draw, uniform by default. With `center`
+ * and `intensity` (0 to 1) the uniform sample is blended toward a
+ * triangular one peaked at `center`: 0 is uniform, 1 the full triangle.
+ * `center` is the mode, the value samples cluster around, not the mean; an
+ * off-centre mode leaves the mean between it and the midpoint.
  */
 export function sampleRange(
   rng: RNG,

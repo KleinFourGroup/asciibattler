@@ -1,10 +1,11 @@
 /**
- * Tiny typed pub/sub. Combat, UI, FX, and the run state machine talk through
- * one of these so no module reaches into another's internals. See
- * ARCHITECTURE.md principle 5.
+ * A typed pub/sub. The sim, the run, the UI and the effects report what
+ * happened through one of these, so no module reaches into another's
+ * internals; player intent goes through the command channels instead
+ * (ARCHITECTURE.md, guiding principle 5).
  *
- * Generic over an `Events` record so callers get autocomplete on event names
- * and structural checking on payloads.
+ * `Events` maps each event name to its payload type, so a subscriber's
+ * event name and payload are type-checked.
  */
 
 type Handler<P> = (payload: P) => void;
@@ -12,10 +13,7 @@ type Handler<P> = (payload: P) => void;
 export class EventBus<Events extends Record<string, unknown>> {
   private readonly handlers: { [K in keyof Events]?: Set<Handler<Events[K]>> } = {};
 
-  /**
-   * Subscribe to `event`. Returns an unsubscribe function — call it to
-   * detach, no need to keep a reference to the handler itself.
-   */
+  /** Subscribes to `event` and returns the function that unsubscribes. */
   on<K extends keyof Events>(event: K, handler: Handler<Events[K]>): () => void {
     let set = this.handlers[event];
     if (!set) {
@@ -29,12 +27,12 @@ export class EventBus<Events extends Record<string, unknown>> {
   }
 
   /**
-   * Dispatch `payload` to every handler subscribed to `event` at the moment
-   * of the call. Handlers added or removed during dispatch take effect on
-   * the *next* emit — snapshot semantics keep iteration predictable.
+   * Calls every handler subscribed to `event` when the call starts; a
+   * handler added or removed during the dispatch takes effect at the next
+   * emit.
    *
-   * Exceptions from a handler propagate to the caller of `emit`; one bad
-   * handler will skip the rest. Treat that as a bug to fix, not to swallow.
+   * A handler's exception propagates to the caller of `emit` and skips the
+   * handlers after it. Treat it as a bug to fix, not to swallow.
    */
   emit<K extends keyof Events>(event: K, payload: Events[K]): void {
     const set = this.handlers[event];

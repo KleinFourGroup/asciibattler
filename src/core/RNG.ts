@@ -1,32 +1,30 @@
 /**
- * Seeded PRNG using mulberry32 — small, fast, plenty good enough for an
- * autobattler. The whole simulation's determinism rests on every consumer
- * taking one of these as an argument; never reach for `Math.random()` in
- * `src/sim` or `src/run` (ESLint enforces this).
+ * A seeded PRNG, mulberry32: small and fast, and good enough for an
+ * autobattler. The sim's determinism rests on every consumer taking one of
+ * these as an argument; `Math.random()` is banned in `src/sim` and
+ * `src/run` by ESLint.
  *
- * Two derivation mechanisms, with different contracts (77d1):
+ * A child stream comes from one of two derivations, with different
+ * contracts:
  *
- *  - **`deriveSeed`/`deriveRng` — the KEYED door.** Child seed =
- *    `hash(root, streamKey, ...indices)`, a pure function of stable
- *    identifiers. Order-free: no parent stream advances, so adding a new
- *    stream (or a new draw inside one occurrence) can never remap another.
- *    This is the sanctioned mechanism for every cross-seam stream (the Run
- *    ladder, battle setup, bot clones — the 77d2/77d3 conversions). Keys
- *    come from the closed registry in [rngStreams.ts](rngStreams.ts);
- *    ad-hoc `new RNG(someHash)` construction is a review offense.
+ *  - `deriveSeed` and `deriveRng`, keyed. The child's seed is
+ *    `hash(root, streamKey, ...ids)`, a pure function of stable ids, and no
+ *    parent stream advances, so adding a stream, or a draw inside one
+ *    occurrence, never moves another. Every stream that crosses a seam
+ *    takes this door (the run's streams, battle setup, the bot's clones).
+ *    The keys come from the closed registry in [rngStreams.ts](rngStreams.ts);
+ *    seeding `new RNG(someHash)` by hand instead is refused in review.
+ *  - `fork()`, positional. One draw off the parent seeds the child, so the
+ *    child depends on where the parent stands. It is legal only on a fresh
+ *    local parent that one scope owns, such as a tool or a test.
  *
- *  - **`fork()` — the POSITIONAL door.** One draw off the parent seeds the
- *    child, so the child depends on the parent's current position. Kept
- *    for LOCAL, self-contained uses (a tool or test forking off a fresh
- *    parent it owns end to end); retired from the cross-seam ladders.
+ * The hash is permanent, as the registry's key strings are (gotcha #125):
+ * changing `mix`, `fnv1a32` or `deriveSeed` moves every keyed stream and
+ * re-baselines the fuzz pins and the board. The vectors pinned in
+ * `rngStreams.test.ts` catch it.
  *
- * ⚠️ THE HASH IS FROZEN. `deriveSeed`'s mixing (below) and the registry's
- * key strings are both under the keys-are-permanent rule: changing either
- * is a global stream break (fuzz + board re-baseline). The pinned vectors
- * in rngStreams.test.ts enforce this.
- *
- * `toJSON()` / `fromJSON()` expose the single uint32 of internal state so
- * `World` and `Run` snapshots can resume the stream exactly mid-flight.
+ * `toJSON()` and `fromJSON()` expose the one uint32 of state, so a `World`
+ * or `Run` snapshot resumes a stream exactly where it stood.
  */
 
 import type { RngStreamKey } from './rngStreams';
@@ -38,17 +36,15 @@ export class RNG {
   private state: number;
 
   constructor(seed: number) {
-    // Normalize to uint32. Accepts negative or fractional seeds without
-    // surprising the caller.
+    // To uint32, so a negative or fractional seed is accepted.
     this.state = seed >>> 0;
   }
 
   toJSON(): RNGSnapshot {
-    // Normalize to uint32 — internal step uses `| 0` (signed cast), but the
-    // constructor and fromJSON both normalize with `>>> 0`. Without this,
-    // snapshotting a fresh RNG and a round-tripped RNG at the same logical
-    // step can return `state` values that differ by 2^32 (same bit pattern,
-    // different sign interpretation) and break strict equality in tests.
+    // To uint32: the step stores a signed `| 0`, while the constructor and
+    // `fromJSON` store `>>> 0`. Without this, a fresh RNG and a round-tripped
+    // one at the same step can report states 2^32 apart (the same bits read
+    // with a different sign) and fail a strict equality.
     return { state: this.state >>> 0 };
   }
 
@@ -77,18 +73,17 @@ export class RNG {
   }
 
   /**
-   * Returns a new RNG seeded deterministically from one uint32 drawn out of
-   * this stream. The parent's stream advances by exactly one step; the child
-   * is then completely independent.
+   * A new RNG seeded from one uint32 drawn off this stream: the parent
+   * advances exactly one step, and the child is independent after that. The
+   * header says where a fork is legal.
    */
   fork(): RNG {
     return new RNG(this.nextU32());
   }
 
   /**
-   * Mulberry32 step. Kept private so callers go through `next()` (for `[0,1)`)
-   * or `fork()` (for re-seeding) — the raw uint32 form is an implementation
-   * detail, not part of the contract.
+   * The mulberry32 step. Private, so callers draw through `next()` or
+   * `fork()` and the raw uint32 is not part of the contract.
    */
   private nextU32(): number {
     this.state = (this.state + 0x6d2b79f5) | 0;
@@ -99,15 +94,13 @@ export class RNG {
   }
 }
 
-/** One xor-multiply mixing round (the battleSetup `mixSeeds` shape,
- *  generalized here at 77d1 — that local one-off folds into this door at
- *  77d3). FROZEN: see the header. */
+/** One xor-multiply mixing round. Permanent: see the header. */
 function mix(a: number, b: number): number {
   return (Math.imul(a ^ 0x9e3779b9, 0x85ebca6b) ^ Math.imul(b, 0xc2b2ae35)) >>> 0;
 }
 
-/** FNV-1a over the key string, to a uint32 (the configHash shape, numeric
- *  variant). FROZEN: see the header. */
+/** FNV-1a over the key string, as a uint32 (`fnv1a.ts` renders the same
+ *  hash as hex). Permanent: see the header. */
 function fnv1a32(s: string): number {
   let h = 0x811c9dc5;
   for (let i = 0; i < s.length; i++) {
@@ -118,12 +111,10 @@ function fnv1a32(s: string): number {
 }
 
 /**
- * 77d1 — keyed child-seed derivation: `hash(root, stream, ...indices)`.
- * Pure and order-free (no stream position anywhere in the inputs). The
- * stream key is registry-typed so unregistered names fail to compile; the
- * trailing indices are the occurrence's STABLE ids (nodeId, sectorIndex,
- * turnIndex, unit level…) per the registry's per-key signature — never a
- * "how many times have we drawn" position.
+ * A keyed child seed, `hash(root, stream, ...indices)`: pure, with no
+ * stream position among its inputs. The indices are the occurrence's
+ * stable ids in the order the registry gives for the key (sectorIndex,
+ * nodeId, turnIndex…), never a count of draws.
  */
 export function deriveSeed(
   root: number,
@@ -135,7 +126,7 @@ export function deriveSeed(
   return h;
 }
 
-/** Convenience: a fresh RNG on the derived stream. */
+/** A fresh RNG on the keyed stream `deriveSeed` gives. */
 export function deriveRng(
   root: number,
   stream: RngStreamKey,

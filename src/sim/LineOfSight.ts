@@ -1,26 +1,19 @@
 import type { GridCoord } from '../core/types';
 
 /**
- * Integer-grid line-of-sight check. Walks the cells along the line from
- * `from` to `to` using Bresenham's algorithm; returns `true` iff no
- * intermediate cell appears in `blockers`. Endpoints are NOT checked — the
- * caller decides whether the source or destination cell counts as a
- * blocker (typically the attacker is at `from` and the target itself is at
- * `to`, so neither should be in the blocker set).
+ * Line of sight on the grid: walks the cells from `from` to `to` by
+ * Bresenham's algorithm, true when no cell between them is in `blockers`.
+ * The endpoints are not checked, since the attacker stands at `from` and
+ * the target at `to`, and neither should block.
  *
- * Bresenham was chosen over a supercover (every-cell-the-line-touches)
- * walk because it's the standard roguelike LOS shape and matches the
- * existing 8-directional Chebyshev movement: a unit that can reach a cell
- * in one orthogonal step covers the same trajectory the LOS check walks.
- * If a future feature needs strict "no diagonal squeeze through touching
- * walls," we can swap to a supercover variant — for now this is the
- * tactically simplest behaviour.
+ * Bresenham, not a supercover walk (every cell the line touches): it is the
+ * usual roguelike shape and matches eight-way movement. It lets a ray pass
+ * diagonally between two walls that touch at a corner; a supercover walk
+ * would not.
  *
- * Calling with `from === to` returns `true` (you can always see yourself /
- * an adjacent target — no intermediate cells to check). The caller is
- * expected to handle out-of-bounds inputs; the function doesn't validate
- * the grid extent because LOS doesn't need it (cells outside the grid are
- * never in the blocker list).
+ * `from === to`, or an adjacent target, is true: there is no cell between.
+ * The grid's extent isn't checked, as nothing off the grid is a blocker; the
+ * caller handles out-of-bounds input.
  */
 export function hasLineOfSight(
   from: GridCoord,
@@ -41,9 +34,8 @@ export function hasLineOfSight(
   const sy = y < to.y ? 1 : -1;
   let err = dx - dy;
 
-  // Step until we reach the destination. Each iteration advances one cell
-  // along the Bresenham line and checks the new cell against blockers
-  // (excluding the destination itself, which is the target's cell).
+  // Step to the destination, one cell along the line each pass, checking the
+  // new cell against the blockers; the destination itself is not checked.
   while (true) {
     const e2 = 2 * err;
     if (e2 > -dy) {

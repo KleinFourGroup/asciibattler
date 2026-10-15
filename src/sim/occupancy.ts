@@ -1,27 +1,14 @@
 /**
- * §35 — the occupancy core. The single abstraction every spatial query routes
- * through, so the same "what occupies a cell" question is answered in exactly one
- * place. Before this, the check was scattered — `World.isOccupied`'s overflow
- * scan, `buildMovementContext`'s sidestep set, the `nearestFreeCells` summon BFS,
- * the gambit `retreatCell` set — each re-deriving it inline. Centralizing now is
- * what makes the two Cluster-2 fills cheap LATER:
+ * The occupancy core: the one place that answers "what occupies a cell", for
+ * every spatial query.
  *
- *   - **The footprint seam (`cellsOccupiedBy`).** §39 FILLED — reads the §38
- *     `footprint` field off the unit's catalog def and returns the axis-aligned
- *     N×N block anchored at the canonical corner `unit.position` (single-cell
- *     units keep the exact `[unit.position]` fast path). Because every occupancy
- *     / pathing / targeting consumer touches a unit's cells THROUGH this, the
- *     multi-tile fill needed no scattered `key(position)` retrofit.
- *   - **The plane seam (`OccupancyPlane`).** `'ground'` today; `'air'` is the
- *     flight fill. One unit per cell PER PLANE. Every query takes a plane and
- *     filters by `planeOf`, so the costly part of adding flight (finding the
- *     single-layer assumptions) is already paid.
- *
- * Behavior stays byte-identical for the SHIPPED roster: there is exactly one
- * plane and every shipped def is `footprint: 1` (multi-tile stays inert until
- * §40's rubble), so `planeOf` never excludes and `cellsOccupiedBy` yields the one
- * anchor cell. The N×N geometry is exercised only by §39's tests until a
- * multi-tile entity ships.
+ * - The footprint (`cellsOccupiedBy`): a unit's body is the N×N block whose
+ *   minimum corner is `unit.position`, N from its catalog def's `footprint`.
+ *   Every occupancy, pathing and targeting consumer touches a unit's cells
+ *   through it. Combatants are one cell; rubble ships at 2×2 and 3×3.
+ * - The plane (`OccupancyPlane`): one unit per cell per plane. Every query
+ *   takes a plane and filters by `planeOf`; there is one plane, `'ground'`,
+ *   so the filter never excludes.
  */
 
 import type { GridCoord } from '../core/types';
@@ -32,31 +19,29 @@ import type { Unit } from './Unit';
 import type { World } from './World';
 
 /**
- * The occupancy planes. A closed union — `'ground'` is the only plane today; the
- * flight build adds `'air'` (its own design is locked, see ROADMAP "Deferred:
- * Flight"). One unit per cell per plane is the invariant §35 hardens.
+ * The occupancy planes, a closed union with one member. One unit per cell per
+ * plane is the invariant (`findOverlappingCells`).
  */
 export type OccupancyPlane = 'ground';
 
-/** The sole plane today; the default every query falls back to. */
+/** The one plane, and the default every query takes. */
 export const GROUND: OccupancyPlane = 'ground';
 
 /**
- * A unit's footprint edge length N (an axis-aligned N×N body; N ∈ 1..4). Reads
- * the §38 `footprint` field off the unit's catalog def at CALL time (gotcha #114
- * — never at module-eval, and imported straight from `config/units`), defaulting
- * to 1 for any id absent from the catalog. This is the single place the geometry
- * seams below learn how big a body is.
+ * A unit's footprint edge N (an N×N body; the schema allows 1 to 4), read off
+ * its catalog def at call time (gotcha #114: never at module evaluation, and
+ * imported from `config/units`), 1 for an id the catalog lacks. The one place
+ * the geometry below learns how big a body is.
  */
 export function footprintOf(unit: Unit): number {
   return ALL_UNIT_DEFS[unit.archetype]?.footprint ?? 1;
 }
 
 /**
- * The axis-aligned N×N block whose min corner is `corner`, cells extending toward
- * +x/+y. The pure geometry core of the footprint seam — `cellsOccupiedBy` maps a
- * unit onto it, and §39c's `anchorFootprint` reuses it to test whether a
- * candidate corner's block fits. `n === 1` yields a single-cell copy of `corner`.
+ * The N×N block whose minimum corner is `corner`, extending toward +x and +y.
+ * `cellsOccupiedBy` maps a unit onto it, and `anchorFootprint` tests a
+ * candidate corner's block with it. `n === 1` yields a one-cell copy of
+ * `corner`.
  */
 export function footprintCells(corner: GridCoord, n: number): GridCoord[] {
   const cells: GridCoord[] = [];
@@ -69,14 +54,11 @@ export function footprintCells(corner: GridCoord, n: number): GridCoord[] {
 }
 
 /**
- * The cells a unit's body occupies. **The footprint seam** (§39 FILLED) — the
- * axis-aligned N×N block whose min corner is the canonical `unit.position`, cells
- * extending toward +x/+y (the anchoring policy in §39c is what makes an edge-tile
- * spawn choose which corner `position` represents; the geometry here is always
- * corner..corner+N). Single-cell units take the `[unit.position]` fast path
- * (reference-identical to the pre-§39 return) so the shipped roster is byte-
- * identical. Every occupancy / pathing / targeting consumer routes its per-unit
- * cell touch through here, so the multi-tile fill needs no retrofit.
+ * The cells a unit's body occupies: the N×N block whose minimum corner is
+ * `unit.position`, extending toward +x and +y (`anchorFootprint` chooses which
+ * corner a spawn takes). A one-cell unit gets `[unit.position]`, its position
+ * object, not a copy. Every occupancy, pathing and targeting consumer reads a
+ * unit's cells here.
  */
 export function cellsOccupiedBy(unit: Unit): GridCoord[] {
   const n = footprintOf(unit);
@@ -85,40 +67,35 @@ export function cellsOccupiedBy(unit: Unit): GridCoord[] {
 }
 
 /**
- * The plane a unit lives on. **The plane seam** — always `'ground'` today; the
- * §38 `layer` field + the flight build select `'air'`. Centralized so every
- * occupancy query is plane-correct the moment a second plane exists.
+ * The plane a unit is on: always `'ground'`. Every occupancy query asks here,
+ * so a second plane would change this function and no query.
  */
 export function planeOf(_unit: Unit): OccupancyPlane {
   return GROUND;
 }
 
-/** The canonical cell key (`"x,y"`). One definition — the sim's many ad-hoc
- *  `` `${c.x},${c.y}` `` template strings collapse onto this. */
+/** The cell key, `"x,y"`, defined once. */
 export function cellKey(c: GridCoord): string {
   return `${c.x},${c.y}`;
 }
 
 /**
- * 86c-L2 — the PACKED cell key (`y*gridW + x`), `cellKey`'s numeric sibling for
- * the hot movement-context path (the §86a profile put the string-key layer at
- * ~a third of the whole balancer). Number-keyed Maps/Sets skip string
- * allocation + hashing entirely; grids cap at 32×32 (D3), so the index is a
- * small integer. ⚠ Only meaningful per-grid: an index from one grid width must
- * never probe a set built against another — take `gridW` explicitly rather
- * than defaulting it so call sites say whose grid they mean. Callers must pass
- * IN-BOUNDS coords (an off-grid coord would alias an on-grid index — the same
- * hazard findPath's blocker loop guards per-axis).
+ * The packed cell key, `y * gridW + x`: `cellKey`'s numeric form for the hot
+ * movement path, where number-keyed maps and sets skip a string's allocation
+ * and hashing. It means something only on one grid: an index from one width
+ * must never probe a set built for another, so `gridW` is passed, never
+ * defaulted, and a call site says whose grid it means. Pass in-bounds coords
+ * only: an off-grid coord aliases an on-grid index (the hazard `findPath`'s
+ * blocker loop guards axis by axis).
  */
 export function cellIndex(c: GridCoord, gridW: number): number {
   return c.y * gridW + c.x;
 }
 
 /**
- * The unit (if any) occupying `cell` on `plane` — the single occupancy POINT
- * query. `World.isOccupied`, summon placement, and proactive move checks (§35b)
- * all route here. Scans `world.units` (small N); a future index attaches behind
- * this signature without touching a caller.
+ * The unit, if any, occupying `cell` on `plane`: the occupancy point query.
+ * `World.isOccupied`, the move's destination check (`destinationBlocked`)
+ * and the bot's sensors ask here. A scan of `world.units`, which is small.
  */
 export function unitAt(
   world: World,
@@ -140,10 +117,10 @@ export function isFree(world: World, cell: GridCoord, plane: OccupancyPlane = GR
 }
 
 /**
- * Every occupied cell on `plane`, as a key set — the shared SET builder for the
- * movement sidestep set, the summon BFS, and the gambit retreat. `excludeId`
- * drops one unit (the mover itself), matching the "every OTHER unit" sets those
- * consumers built inline. Footprint-aware via `cellsOccupiedBy` (one cell today).
+ * Every occupied cell on `plane`, as a key set, every cell of a body
+ * included: the set the placement search (`nearestFreeCells`), the blind
+ * wander, the healer's retreat, the blocked-ally check and the effects'
+ * reposition build on. `excludeId` drops one unit, the mover itself.
  */
 export function occupiedCells(
   world: World,
@@ -161,30 +138,27 @@ export function occupiedCells(
 }
 
 /**
- * §39c — the spawn ANCHORING policy. `corner` is the deterministic default;
- * `random-intersect` (§75c — the camp drip's organic scatter) picks uniformly
- * among EVERY fitting placement whose footprint overlaps the spawn tile.
+ * How a body anchors on its spawn tile. `corner` is deterministic;
+ * `random-intersect` picks uniformly among every fitting placement whose
+ * block covers the spawn tile, for the camp drip's scatter.
  */
 type AnchorPolicy = 'corner' | 'random-intersect';
 
 /**
- * §39c — resolve where an N×N body ANCHORS when its spawn tile is `spawnTile`, or
- * `null` when it can't fit there. **The `corner` policy is in-bounds-biased:** the
- * spawn tile is *a* corner of the block, and we try the four diagonal orientations
- * (spawn tile as the block's top-left / top-right / bottom-left / bottom-right),
- * preferring the +x/+y extension, and return the first whose whole block is
- * on-grid AND passes `isFreeCell`. So an EDGE tile still fits — the block just
- * extends inward instead of off the grid. A `null` return is the caller's cue to
- * walk to the next candidate tile (the overflow scan's "skip if it doesn't fit"
- * loop generalized to N×N — NOT a new spawn class). `size === 1` collapses to "is
- * `spawnTile` free & on-grid" — the single-tile spawn check, reused verbatim.
+ * Where an N×N body anchors when its spawn tile is `spawnTile`, or null when
+ * it can't fit there. Under `corner` the spawn tile is a corner of the block:
+ * the four orientations are tried, the +x/+y extension first, and the first
+ * block wholly on the grid and passing `isFreeCell` wins, so an edge tile
+ * still fits, the block extending inward. Null tells the caller to try its
+ * next tile. At `size` 1, both policies ask whether `spawnTile` is free and
+ * on the grid.
  *
- * Pure + World-free (takes a grid-dims record + an `isFreeCell` predicate) so it's
- * unit-testable and the caller decides what "free" means (occupancy, passable
- * terrain, or both). §75c: `random-intersect` takes an optional `rng` — the ONLY
- * randomness this module ever consumes, drawn solely when >1 placement fits
- * (the camp drip passes `world.campRng`, so the draw never touches combat
- * streams). First production caller: the §75c camp drip.
+ * Pure and World-free (grid dimensions and an `isFreeCell` predicate), so
+ * the caller decides what free means (unoccupied, passable, unclaimed).
+ * `random-intersect` draws on `rng`, the only randomness this module takes,
+ * and only when more than one placement fits (gotcha #111): the camp drip
+ * passes `campRng`, so the draw never touches the combat stream. The drip is
+ * the shipped caller; `corner` serves the layout editor's deploy check.
  */
 export function anchorFootprint(
   spawnTile: GridCoord,
@@ -198,12 +172,10 @@ export function anchorFootprint(
   const d = size - 1;
 
   if (policy === 'random-intersect') {
-    // §75c — every min corner in [x-d..x] × [y-d..y] keeps the footprint
-    // overlapping the spawn tile; collect the FITTING ones in a fixed scan
-    // order (dy outer, dx inner — determinism), then pick uniformly. The
-    // singleton case draws NOTHING (#111 applied forward — and it makes the
-    // 1×1 drip zero-cost on the camp stream); `rng` is only required when a
-    // draw actually happens.
+    // Every minimum corner in [x-d..x] × [y-d..y] keeps the block over the
+    // spawn tile; collect the fitting ones in a fixed order (dy outer, dx
+    // inner), then pick uniformly. One fit draws nothing, so a 1×1 drip costs
+    // the camp stream nothing; `rng` is required only for a draw.
     const fitting: GridCoord[][] = [];
     for (let dy = 0; dy <= d; dy++) {
       for (let dx = 0; dx <= d; dx++) {
@@ -243,23 +215,22 @@ export function anchorFootprint(
 }
 
 /**
- * Grid distance between two cells — Chebyshev (8-connected movement, a diagonal
- * costs one step). The coord-to-coord PRIMITIVE; `unitDistance` (below) is the
- * footprint-aware body-to-body seam built on top of it. Untouched by §39 so every
- * existing coord caller (the A* heuristic, the leash checks) stays byte-identical.
+ * The grid distance between two cells: Chebyshev, since movement is
+ * eight-way and a diagonal costs one step. Cell to cell; `unitDistance`
+ * measures body to body on top of it.
  */
 export function distanceBetween(a: GridCoord, b: GridCoord): number {
   return Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y));
 }
 
 /**
- * Distance between two units' BODIES — the min cell-to-cell Chebyshev over the
- * two footprint blocks (§39). **The distance seam.** For two single-cell units
- * this is exactly `distanceBetween(a.position, b.position)` (the fast path), so
- * adjacency stays byte-identical for the shipped roster; a multi-tile body
- * measures from its nearest occupied cell, so a 2×2 and a unit hugging its edge
- * are at distance 1 (and two overlapping bodies at 0). Adjacency / acting-
- * position consult this once a multi-tile entity exists (§40).
+ * The distance between two units' bodies: the least cell-to-cell Chebyshev
+ * over the two blocks. For two one-cell units it is
+ * `distanceBetween(a.position, b.position)`; a larger body measures from its
+ * nearest cell, so a 2×2 and a unit against its edge are at 1, and two
+ * overlapping bodies at 0. The dash's abstain (`effects/propose.ts`), the
+ * kite (`positioning.ts`), the aura's radius (`World`) and the targeting's
+ * reach and range checks read it.
  */
 export function unitDistance(a: Unit, b: Unit): number {
   const aCells = cellsOccupiedBy(a);
@@ -278,13 +249,11 @@ export function unitDistance(a: Unit, b: Unit): number {
 }
 
 /**
- * Distance from a CELL to a unit's BODY — the min Chebyshev from `cell` over the
- * unit's footprint block (44-pre-b; the cell-to-body sibling of `unitDistance`).
- * For a single-cell unit this is exactly `distanceBetween(cell, unit.position)`
- * (the fast path), so every shipped-roster caller is byte-identical; against a
- * multi-tile body it measures to the NEAREST occupied cell — 0 means `cell` is
- * inside the body. The AoE center-cover test and the chain hop range consult
- * this; 44-pre-c's strike/hold gates are the next consumers.
+ * The distance from a cell to a unit's body: the least Chebyshev from `cell`
+ * over the unit's block, `unitDistance`'s cell-to-body form. For a one-cell
+ * unit it is `distanceBetween(cell, unit.position)`; 0 means `cell` is inside
+ * the body. The blast's centre test and the chain's hop range
+ * (`effects/targeting.ts`) and the rubble approach (`Targeting.ts`) read it.
  */
 export function cellUnitDistance(cell: GridCoord, unit: Unit): number {
   const cells = cellsOccupiedBy(unit);
@@ -298,14 +267,11 @@ export function cellUnitDistance(cell: GridCoord, unit: Unit): number {
 }
 
 /**
- * §35d — the occupancy INVARIANT detector: the cell keys held by MORE THAN ONE
- * unit on `plane` — a breach of the one-unit-per-cell-per-plane invariant §35
- * hardens. Empty ⇒ the invariant holds. Footprint- and plane-aware via
- * `cellsOccupiedBy`/`planeOf` (one cell / one plane today; the §39 N×N block for
- * free). The fuzz harness runs this every tick under an opt-in flag — the
- * corpus-wide generalization of the Qb#3 same-cell fixture. Counts ALL units
- * (combatants AND neutral walls): the invariant is "the grid never double-books
- * a cell," whoever the occupant.
+ * The invariant's detector: the cell keys more than one unit holds on
+ * `plane`, every cell of a body counted. Empty means one unit per cell per
+ * plane holds. The fuzz harness runs it after every tick under an opt-in
+ * flag, and the chaos census reads it. Counts every unit, scenery included:
+ * the grid never double-books a cell, whoever the occupant.
  */
 export function findOverlappingCells(world: World, plane: OccupancyPlane = GROUND): string[] {
   const counts = new Map<string, number>();
@@ -322,22 +288,16 @@ export function findOverlappingCells(world: World, plane: OccupancyPlane = GROUN
 }
 
 /**
- * §36a — an in-flight CELL CLAIM: a cell a moving unit has reserved as its move
- * destination. The claim system closes the same-tick collision window a
- * non-instant move opens (§36b): a unit claims `to` on move-start, the pathing
- * predicate treats a cell as blocked-for-pathing if **occupied OR claimed**, and
- * the claim releases on logical arrival — so two units never converge on one
- * vacant cell (the second sees the claim and re-routes).
+ * A cell claim: a cell a moving unit has reserved as its destination. A move
+ * is not instant, so two units could set out for one empty cell; a unit
+ * claims `to` as its move starts (`MoveAction`), pathing treats a cell
+ * occupied or claimed as blocked, and the claim is released at the flip, so
+ * the second mover sees the claim and goes another way. A placement must
+ * exclude claims too (gotcha #113). The registry is `World.claims`, and it is
+ * serialized.
  *
- * §36a ships the registry + these queries + serialization **inert**: nothing
- * creates a persistent claim on the instant move model (a move's claim+release
- * would be atomic), so the registry is empty in real play and behavior is
- * byte-identical. §36b wires the claim/release lifecycle onto the deferred
- * position flip, making it load-bearing.
- *
- * Plane-aware (the §35 seam): a claim carries the claiming unit's plane and the
- * queries filter by it. Ground-only today; the registry keys by cell, so a second
- * plane revisits the key the way `cellsOccupiedBy` revisits the footprint.
+ * A claim carries its unit's plane, and the queries filter by it. The
+ * registry is keyed by cell alone, which a second plane would have to change.
  */
 export interface Claim {
   /** The reserved cell (the mover's destination). */
@@ -349,9 +309,9 @@ export interface Claim {
 }
 
 /**
- * The unit id holding a claim on `cell` on `plane`, or undefined — the claim
- * POINT query. `destinationBlocked` (§35b) consults it so a stale move proposal
- * whose destination a peer just claimed aborts. Inert today (no persistent claims).
+ * The id of the unit holding a claim on `cell` on `plane`, or undefined: the
+ * claim point query. `World.destinationBlocked` asks it, so a stale move
+ * whose destination a peer has just claimed aborts.
  */
 export function claimantOf(
   world: World,
@@ -368,13 +328,12 @@ export function isClaimed(world: World, cell: GridCoord, plane: OccupancyPlane =
 }
 
 /**
- * The cell `unitId` has CLAIMED (its in-flight move destination), or undefined —
- * the INVERSE of `claimantOf` (unit→cell, not cell→unit). A mover holds at most
- * one claim, live only between move-start and the §36b flip, so this is the cell
- * the unit is ARRIVING at right now. §36b consumer: a melee/ranged pursuer reads
- * its TARGET's claim to recognise "my target is arriving into my firing band" and
- * hold for it, rather than sidestepping around the reservation (the locomotion
- * dual of the claim's pathing-block). O(claims) scan — claims are few.
+ * The cell `unitId` has claimed, its move's destination, or undefined:
+ * `claimantOf` the other way round. A mover holds at most one claim, live
+ * from the move's start to its flip, so this is the cell the unit is arriving
+ * at. A pursuer reads its target's claim to see the target arriving into its
+ * firing band and hold for it, rather than step around the reservation
+ * (`positioning.ts`). A scan of the claims, which are few.
  */
 export function claimedDestinationOf(
   world: World,
@@ -388,29 +347,20 @@ export function claimedDestinationOf(
 }
 
 /**
- * Every CLAIMED cell on `plane`, as a key set — the claim sibling of
- * `occupiedCells`. `buildMovementContext` merges it into the soft-block set so a
- * pather routes around (and never sidesteps onto) a peer's claimed destination.
- * `excludeId` drops the building unit's own claims (it may move into what it
- * reserved). Inert today (the set is empty with no persistent claims).
- */
-/**
- * §45a — the VACANCY ETA: ticks until `unit`'s in-flight move flips it OFF the
- * cells it currently occupies, or undefined when it isn't vacating them at all.
- * Defined only for a unit mid-move and still PRE-FLIP (its destination claim is
- * live): the flip lands at the `impact` phase boundary — `startTick` + the sum
- * of the phase ticks before `impact` (the §36b timeline `moveProposal` builds
- * from `moveFlipFraction`), so the ETA is that boundary minus `currentTick`,
- * clamped at 0 (a flip landing later this same tick = "vacates now"). POST-flip
- * the unit already stands on its destination (those cells are NOT vacating —
- * it lingers through recovery), and the claim is released, so the claim check
- * is what distinguishes the two halves without reading the action's privates.
+ * The vacancy ETA: ticks until `unit`'s move flips it off the cells it
+ * occupies, or undefined when it is not leaving them. Defined only for a unit
+ * mid-move and before the flip, while its destination claim is live: the
+ * flip falls at the `impact` boundary, `startTick` plus the ticks of the
+ * phases before it (`moveProposal`'s timeline), so the ETA is that minus
+ * `currentTick`, at least 0 (a flip later this tick vacates now). After the
+ * flip the unit stands on its destination through its recovery and the
+ * claim is released, so the claim check tells the halves apart without
+ * reading the action's internals.
  *
- * DERIVED, never serialized — recomputed from `activeAction` (which snapshots
- * carry) on every query, so a resumed run answers identically and no snapshot
- * shape changes (the §45 charter's no-bump rule). Consumers: the §45a
- * vacancy-aware path costs (`buildMovementContext` → `costAt`); §45b's
- * wait-vs-sidestep gate reads the same number for the forward cell.
+ * Derived, never serialized: computed from `activeAction`, which a snapshot
+ * carries, on every query, so a restored world answers the same. Read by the
+ * path costs (`buildMovementContext`, `costAt`) and by the step's wait gate,
+ * for the forward cell.
  */
 export function vacancyEtaOf(unit: Unit, world: World): number | undefined {
   const active = unit.activeAction;
@@ -424,6 +374,13 @@ export function vacancyEtaOf(unit: Unit, world: World): number | undefined {
   return Math.max(0, active.startTick + flipOffset - world.currentTick);
 }
 
+/**
+ * Every claimed cell on `plane`, as a key set: `occupiedCells`' claim
+ * counterpart, for the placements that must exclude claims (the placement
+ * search, `nearestFreeCells`, and the effects' reposition; gotcha #113).
+ * `excludeId` drops the building unit's own claim, since it may move into
+ * what it reserved.
+ */
 export function claimedCells(
   world: World,
   plane: OccupancyPlane = GROUND,
@@ -440,23 +397,22 @@ export function claimedCells(
 }
 
 /**
- * §45a — every claimed cell on `plane` with its OCCUPANCY ETA: ticks until the
- * claimant's move flips and the cell holds a real body. The temporal sibling of
- * `claimedCells` (same filtering, same key set) — a claim and its claimant's
- * vacancy share one flip, so the value IS `vacancyEtaOf(claimant)`. `undefined`
- * for a claim whose claimant can't be resolved to a live in-flight move (test
- * fixtures claiming by hand; a consumer should read that as "timing unknown —
- * price it like a wall", the conservative end). Feeds the §45a `costAt` claim
- * tier: a flip landing inside the pather's own arrival window is a convergence
- * risk (premium); a flip long done by then is merely a future body (static).
+ * Every claimed cell on `plane` with its occupancy ETA: ticks until the
+ * claimant's move flips and the cell holds a body. `claimedCells` with
+ * timing (the same filter): a claim and its claimant's vacancy share one
+ * flip, so the value is `vacancyEtaOf(claimant)`. Undefined for a claim whose
+ * claimant is not a live move (a test claiming by hand), which `costAt`
+ * prices at the premium, as timing unknown. Feeds `costAt`'s claim tiers: a
+ * flip inside the pather's arrival window is a convergence risk, the
+ * premium; a flip long done by then is a body standing there.
  */
 export function claimEtas(
   world: World,
   plane: OccupancyPlane = GROUND,
   opts?: { excludeId?: number },
 ): Map<number, number | undefined> {
-  // 86c-L2 — keyed by `cellIndex` (packed), not `cellKey`: this map is probed
-  // per A* expansion via `costAt`, the hottest read in the balancer.
+  // Keyed by the packed `cellIndex`, not `cellKey`: `costAt` reads this map
+  // once per A* expansion, the hottest lookup a battle makes.
   const excludeId = opts?.excludeId;
   const etas = new Map<number, number | undefined>();
   for (const claim of world.claims.values()) {

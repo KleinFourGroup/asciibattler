@@ -1,26 +1,20 @@
 import type { GridCoord } from '../core/types';
 import { chebyshev } from './movement';
 
-/** Cost to ENTER a cell. Returning Infinity treats the cell as impassable
- *  (same effect as a `blockers` entry, but data-driven). Callers MUST keep
- *  every returned cost >= 1, otherwise the Chebyshev heuristic stops being
- *  admissible and A* loses its optimality guarantee.
- *  86c-L2 — takes bare `(x, y)` (not a GridCoord): the callback runs per
- *  footprint cell per neighbour candidate per expansion, and the coord-object
- *  allocation was measurable at that frequency (the post-L1 profile's
- *  `fitCost` 12.8%). */
+/** The cost to enter a cell. Infinity makes it impassable, as a `blockers`
+ *  entry does, from data. Every cost must be at least 1, or the Chebyshev
+ *  heuristic is no longer admissible and A* loses its optimality (gotcha
+ *  #34). Takes bare `(x, y)`, not a coord: it runs once per footprint cell
+ *  per neighbour per expansion, where allocating a coord shows in a
+ *  profile. */
 export type CostFn = (x: number, y: number) => number;
 
 const UNIT_COST: CostFn = () => 1;
 
 /**
- * J2 — a dev/test instrument counting A* searches so the per-tick recompute
- * budget is assertable (the ROADMAP §J2 "bounded recompute count" guard;
- * see tests/integration/pathing-perf.test.ts). The counter influences no
- * path, no RNG, and no sim state — it is pure-output-neutral, so it can't
- * perturb determinism. The deferred path cache, when it lands, shows up as a
- * drop in this number against the same scenario, so the guard doubles as the
- * cache's effectiveness meter. Reset + read in tests.
+ * A count of A* searches, so a test can hold the per-tick search budget
+ * (`tests/integration/pathing-perf.test.ts`). It moves no path, no RNG and
+ * no sim state, so it cannot disturb determinism. Reset and read in tests.
  */
 let pathfindingCallCount = 0;
 export const pathfindingStats = {
@@ -35,45 +29,33 @@ export const pathfindingStats = {
 /**
  * A* on the battle grid. Pure function: same inputs, same path, every time.
  *
- * - 8-directional moves (king's moves; matches DESIGN.md "8-directional
- *   adjacency"). Step cost is the destination cell's cost, default 1; pass
- *   `costAt` to weight tiles (e.g. shallow_water costs 2 — see TileGrid).
- *   Diagonal cuts pay the destination cost just like orthogonal moves.
- * - Chebyshev distance is the heuristic — admissible and consistent when
- *   every cost is >= 1, so A* finds the optimal min-cost path.
- * - The start cell is always passable, even if it appears in `blockers`. This
- *   lets a moving unit pathfind from its own cell without the caller having
- *   to filter it out. The start cell's cost is NOT charged (you're already
- *   there); cost is paid only when entering a new cell.
- * - The goal cell must be unblocked. Callers that want "path to a cell next
- *   to a blocked target" should pick a valid neighbour cell as the goal — see
- *   the Step 3.5 movement behaviour notes in ROADMAP.md.
+ * - Eight-way moves (DESIGN.md's adjacency). A step costs the destination
+ *   cell's cost, 1 by default; `costAt` weights tiles (`TileGrid`). A
+ *   diagonal pays the destination's cost as an orthogonal step does.
+ * - The heuristic is Chebyshev distance, admissible and consistent while
+ *   every cost is at least 1, so the path found is a cheapest one.
+ * - The start cell is always passable, even if it is in `blockers`, so a
+ *   unit paths from its own cell without the caller filtering it out. Its
+ *   cost is not charged; a cost is paid on entering a cell.
+ * - The goal must be passable, unless `bestEffort`. A caller that wants a
+ *   cell beside a blocked target passes that cell as the goal.
  *
- * D3 takes `(gridW, gridH)` independently so rectangular arenas pathfind
- * correctly — passing a single value where two are wanted would
- * mis-clip one axis silently, which is exactly the bug the signature
- * change is meant to prevent.
+ * `gridW` and `gridH` are separate, so a rectangular arena paths right;
+ * one value passed for both would clip an axis without a sound.
  *
- * Returns the path as `[start, ..., goal]` (both ends inclusive), or `[]`
- * if no path exists or either endpoint is out of bounds / the goal is blocked.
+ * Returns `[start, ..., goal]`, both ends included, or `[]` when there is
+ * no path, an endpoint is off the grid, or the goal is blocked.
  *
- * **`bestEffort`** (default false): when the goal is unreachable (blocked, or
- * walled off), instead of returning `[]`, return the path to the CLOSEST
- * reachable cell to the goal (min Chebyshev-to-goal, then shortest route). This
- * is the J3 "path as close as you can" rally semantic — a tile objective on a
- * wall must NOT freeze the team (a single unreachable goal → `[]` → no step is
- * exactly the retired `pickGoalCellInRange` freeze). Off by default so every
- * other caller (enemy-chasing, firing cells) is byte-identical and the fuzz
- * baseline is untouched.
+ * `bestEffort` (default false): when the goal is unreachable (blocked or
+ * walled off), return the path to the reachable cell closest to it (least
+ * Chebyshev to the goal, then the shortest route) instead of `[]`, so a
+ * rally or a rubble approach toward a walled-off cell does not freeze the
+ * unit. A chase leaves it off.
  *
- * **`footprint`** (default 1): §39b — the mover's axis-aligned N×N body edge. A*
- * still moves the single canonical corner; a wider body just needs a wider
- * corridor, so PASSABILITY checks the whole N×N block (`corner..corner+N` toward
- * +x/+y) rather than the one corner cell. `footprint === 1` collapses to the
- * single-cell check — byte-identical to every pre-§39b caller, which is why this
- * is a trailing default rather than a required arg. Pathfinding stays a pure grid
- * algorithm: the footprint is a plain number, so this module needs no knowledge
- * of units or the catalog.
+ * `footprint` (default 1): the mover's N×N body edge. A* still moves the
+ * one corner; passability checks the whole block (`corner` to `corner + N`
+ * toward +x and +y), so a wider body needs a wider corridor. The footprint
+ * is a plain number, so this module knows nothing of units or the catalog.
  */
 export function findPath(
   start: GridCoord,
@@ -85,29 +67,24 @@ export function findPath(
   bestEffort = false,
   footprint = 1,
 ): GridCoord[] {
-  pathfindingCallCount++; // J2 — recompute-budget instrument (output-neutral).
+  pathfindingCallCount++; // the search count (`pathfindingStats`)
   if (!inBounds(start, gridW, gridH) || !inBounds(goal, gridW, gridH)) return [];
 
-  // 86c L1 — the numeric core. The search's interior state is packed-integer
-  // (`idx = y*gridW + x`) typed arrays ALLOCATED PER CALL — deliberately no
-  // shared/module scratch, so there is no reset discipline to get wrong (a
-  // pooled array reused with a stale field is the determinism bug class the
-  // pooling TODO warns about). Every behavioral contract is carried over
-  // verbatim from the string-keyed original: the 43a tie-break total order,
-  // gotcha #34 admissibility, §39b footprints, J3 best-effort. Byte-identity
-  // is structural: expansion order is decided by `popLowestFIdx`'s STRICT
-  // total order (the (y, x) tail is unique per cell), so the open list's
-  // container order can't change which node pops; no float summation is
-  // reordered. Gate: scripts/perf-oracle.sh + the pathing baseline pins.
+  // The search's state is typed arrays over the packed index
+  // (`y * gridW + x`), allocated per call. Don't share or pool them: a pooled
+  // array reused with a stale field is a determinism bug, and per-call arrays
+  // have no reset to get wrong. The expansion order is `popLowestFIdx`'s
+  // strict total order (its (y, x) tail is unique per cell), so the open
+  // list's order cannot change which node pops. `scripts/perf-oracle.sh` and
+  // the pathing pins hold the paths.
   const size = gridW * gridH;
   const startIdx = start.y * gridW + start.x;
   const goalIdx = goal.y * gridW + goal.x;
 
-  // The start cell is implicitly passable, even if it's in `blockers`. The
-  // per-AXIS bounds check matters: packing an off-grid coord (e.g. x = -1)
-  // would ALIAS a different on-grid cell (`y*W - 1` = the previous row's last
-  // cell) — the string keys of the pre-L1 core couldn't collide, so an
-  // off-grid blocker must stay a no-op here too.
+  // The start cell is passable even if it is in `blockers`. The bounds check
+  // is per axis because packing an off-grid coord (x = -1) would alias an
+  // on-grid cell (`y * W - 1`, the previous row's last): an off-grid blocker
+  // must stay a no-op.
   const blocked = new Uint8Array(size);
   for (const b of blockers) {
     if (b.x < 0 || b.y < 0 || b.x >= gridW || b.y >= gridH) continue;
@@ -115,15 +92,12 @@ export function findPath(
     if (bIdx !== startIdx) blocked[bIdx] = 1;
   }
 
-  // §39b — a candidate corner is a valid A* node iff its WHOLE footprint block
-  // is on-grid, unblocked, and finite-cost (a body stands on passable terrain
-  // across every cell it covers). `footprint === 1` iterates exactly the corner
-  // cell. The step COST charged (below) is still the corner's entry cost, so
-  // Chebyshev-on-corner stays admissible (gotcha #34) — only the passable/
-  // impassable decision widens, never the metric. Returns the corner's entry
-  // cost when the block fits, NaN when it doesn't — folding the old
-  // blockFits + second `costAt(corner)` pair into ONE call per candidate
-  // (CostFn is pure, so the dedup is unobservable).
+  // A candidate corner is a node when its whole block is on the grid,
+  // unblocked and of finite cost, since a body stands on every cell it
+  // covers. The step's cost is still the corner's, so the heuristic on the
+  // corner stays admissible (gotcha #34): only passability widens, never the
+  // metric. Returns the corner's cost when the block fits, NaN when not, one
+  // call per candidate.
   const fitCost = (cx: number, cy: number): number => {
     let cornerCost = NaN;
     for (let dy = 0; dy < footprint; dy++) {
@@ -185,8 +159,7 @@ export function findPath(
         if (dx === 0 && dy === 0) continue;
         const nx = cx + dx;
         const ny = cy + dy;
-        // §39b — the whole footprint block must fit (bounds + blockers + finite
-        // cost across the N×N cells; the single corner when footprint === 1).
+        // The whole block must fit: bounds, blockers and finite cost.
         const stepCost = fitCost(nx, ny);
         if (isNaN(stepCost)) continue;
         const nIdx = ny * gridW + nx;
@@ -216,37 +189,28 @@ function inBounds(c: GridCoord, gridW: number, gridH: number): boolean {
 }
 
 /**
- * Linear-scan pop over the packed-index open list. The largest D3-allowed
- * grid (32×32) caps the open set at ~1024 entries; post-L1 the scan is pure
- * numeric compares (no string parse, no allocation), so a binary heap stays
- * deferred (the 86c L1b decision — build it only if a profile still shows
- * pop dominance). The swap-remove and the list's insertion order CANNOT
- * change which node pops: the comparator below is a STRICT total order (the
- * (y, x) tail is unique per cell), so the argmin is container-order-
- * independent — the structural byte-identity argument, WORKLOG §86c-signing.
+ * A linear-scan pop over the open list of packed indices: plain numeric
+ * compares on a small grid's open set. A heap is worth building only if a
+ * profile shows the pop dominating. Neither the swap-remove nor the list's
+ * order can change which node pops: the comparator is a strict total order
+ * (the (y, x) tail is unique per cell), so the minimum does not depend on
+ * the container's order.
  *
- * E5.B + 43a — f-ties break toward the goal, then toward the straight line:
- * among equal-f nodes, expand the one with the lower Chebyshev distance to
- * goal (h), then (43a) the one nearer the start→goal LINE — the cross-track
- * tie-break that drains the Chebyshev cone's tie plateau into a straight
- * route — then numeric (y, x) as the final deterministic total order. All
- * of this is a pure ordering of equal-f nodes: f-values never change, the
- * Chebyshev heuristic stays admissible (gotcha #34), paths stay min-cost.
- * What changes is WHICH min-cost path is returned.
+ * An f tie goes toward the goal, then toward the straight line: among equal
+ * f, the lower Chebyshev distance to the goal (h), then the node nearer the
+ * start-to-goal line, which drains the Chebyshev cone's plateau of ties into
+ * a straight route, then the numeric (y, x). This only orders nodes of equal
+ * f: f never changes, the heuristic stays admissible (gotcha #34), and the
+ * path stays a cheapest one; it chooses which.
  *
- * 43a — the retired final fallback was a STRING compare of `"x,y"` keys
- * (`"10,3" < "2,3"`, `"5,1" < "6,1"`), which resolved EVERY open-ground tie
- * toward low-x: the world-frame leftward drift PATHING.md measured on every
- * shipped map (openField: literally every step, both teams — the River
- * "walks left" report). Cross-track distance is measured as the integer
- * cross-product magnitude |(n−start) × (goal−start)| — proportional to the
- * true point-to-line distance (the constant |goal−start| divisor can't
- * change comparisons within one search), symmetric under grid mirroring, so
- * mirrored worlds route mirrored paths. The (y, x) numeric fallback only
- * decides genuine double-ties (equal f, h, AND cross — symmetric pairs
- * about the line); some total order must, for determinism. RNG shuffling
- * stays rejected — it would perturb the deterministic byte stream on every
- * tie.
+ * The distance from the line is the integer cross product
+ * |(n − start) × (goal − start)|, proportional to the true distance (the
+ * constant divisor changes no comparison within a search) and symmetric
+ * under mirroring, so a mirrored world routes mirrored paths. Without it the
+ * last key would decide every open-ground tie and drift routes to one side;
+ * with it, (y, x) decides only true double ties, pairs mirrored about the
+ * line, and some total order must. Don't shuffle ties with the RNG: it would
+ * change the stream on every tie.
  */
 function popLowestFIdx(
   open: number[],

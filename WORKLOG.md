@@ -6100,3 +6100,110 @@ claim the code contradicts (the dash's path, the objective branches'
 neutral targets, the strategies' users), or a rule cut that a change must
 respect: the goal fallback, the strict collision sets beside the soft
 prices, the swap's role order, the stable route's gate.
+
+Batch 6 committed as `7556420f`, the hook green (the smoke 621; the
+suite's own count was not in the part of the hook's output read). Its read
+script's commit is `7556420f`.
+
+### 122o, batch 7 — occupancy and the behaviours (2026-10-15, session 6ea507e4)
+
+`occupancy.ts`, `Pathfinding.ts`, `positioning.ts`, `actingPosition.ts`,
+`blockedAlly.ts`, `LineOfSight.ts`, and `behaviors/` `CampWanderBehavior`,
+`MovementBehavior`, `SupportMovementBehavior`. Every step code is out
+(204), and the history with them: the seams "filled" and "inert until",
+the string-keyed A* and its retired tie, the profiles behind the packed
+keys, the moves between files (the block comments that only said where a
+function had gone are deleted). Kept as rules: per-call search arrays, no
+pooling; no RNG shuffle of ties; the hold and the strike through one band
+predicate; claims left out of a proposed move's set and folded into an
+instant reposition's; positioning.ts never importing archetypes.ts.
+`claimedCells`' doc sat above `vacancyEtaOf`, documenting neither; it is
+on its own function.
+
+**Statements found false and corrected (rule 7)**, each checked against
+the code or the config:
+
+- *The claims.* `occupancy.ts` called the claim registry inert, empty in
+  real play on the instant move model, in the `Claim` doc, `claimantOf`
+  and `claimedCells`; every move claims its destination (batch 3's and 4's
+  finding, in a third file). `claimedCells` was merged into the movement
+  context (that reads `claimEtas`; `claimedCells` serves the placement
+  search and the effects' reposition). `claimEtas` priced an unknown
+  timing "like a wall" (`costAt` gives it the inbound premium).
+- *The footprint.* The header had every shipped def at one cell and the
+  N×N geometry exercised only by tests; rubble ships at 2×2 and 3×3.
+  `occupiedCells`, `cellsOccupiedBy`, `nearestFreeCells` and others said
+  "one cell today". `unitDistance` and `cellUnitDistance` named consumers
+  "once a multi-tile entity exists" and the strike and hold gates as next
+  (those go through `firingBandCell`; the rubble approach reads
+  `cellUnitDistance`). `unitAt` named the summon placement as a caller
+  (it uses `occupiedCells`) and `occupiedCells` the movement context's
+  sidestep set (built there by hand).
+- *Grid size.* `cellIndex` and the A* pop gave a 32×32 cap; no schema or
+  loader sets one. Both lines went.
+- *`Pathfinding.ts`.* It pointed at "the Step 3.5 movement behaviour notes
+  in ROADMAP.md", which hold no such thing, and said the goal must be
+  unblocked (best effort searches toward a blocked goal).
+- *`positioning.ts`.* The strike gates were `effects/propose.ts` alone
+  (`EffectAction` tests the band again at the fire). Step 2 named rubble
+  (any inert target, a destructible wall or cover too) and said
+  `excludeUnitId` softens non-neutral cells (any mobile unit, a camp
+  member too). `collectLosBlockers` listed the hold as a reader (the hold
+  builds its own set, the same less the unit). The sight-ignoring ability
+  was the catapult's alone (`raise_dead` too). `awayStep` called
+  `retreatCell` the gambit's (the effect retreat and the flee).
+- *`actingPosition.ts`.* `nearestActingCell` named two callers by
+  archetype (one call site, the firing cell) and walls and half cover as
+  the blockers (rubble too). `nearestFreeCells` was the summon's query
+  alone (`World.shove` lands through it), shared `nearestActingCell`'s
+  blocker graph (it does not treat inert neutrals as walls), and had its
+  caller fizzle on fewer cells (the summon places as many as there are).
+- *`blockedAlly.ts`.* `neutralCells` and `isNavigable` named walls and
+  half cover (rubble too); a pointer to ROADMAP's GP5, gone.
+- *`CampWanderBehavior.ts`.* The walk back served a member "displaced by
+  shove or knockback" (only tests shove, nothing knocks back; a member that
+  pursued past the leash walks back). It cited a ban on RNG in movement;
+  the blind wander draws on `combatRng`, so the doc now says pathing draws
+  none and names the camp's stream as the signed exception.
+- *`MovementBehavior.ts`.* The header had a dash as "the same intent with
+  `maxCells > 1`" (it lands through `leapLanding`) and the abilities at
+  10. The tile rally said the enemy team stays at `atWill` (the camp pull
+  sets it) and named `pursue` and `engageLocal`, which don't exist. The
+  flee swap pointed at `swapThroughProposal`'s note, a function that no
+  longer exists, and cited the RNG ban beside the wander that draws.
+- *`SupportMovementBehavior.ts`.* The yield named `blocksAnyAlly` and
+  `vacateCell` (no such functions; it swaps, through `yieldSwap` and
+  `blockedAlly`) and covered two idle outcomes (every abstain: a boxed
+  retreat, a blocked or unroutable step, in formation). Pathing priced
+  other units at `SIM.occupiedCellPenalty` (`costAt`'s tiers, claims
+  among them). The behaviour was "assigned in `World.spawnUnit`" (by
+  `movementBehavior`, `behaviors/registry.ts`). `SwapAction`'s exchange was
+  "atomic" (deferred to the flip, one write). Two pointers to ROADMAP's
+  E7 values, gone.
+
+No new lead. `World.shove`, which only tests call (batch 4's lead), is
+named here as `nearestFreeCells`' second caller.
+
+Measured (`comment-length` on copies at `7556420f` and after, under the
+ignored `output/122o-b7/` and `output/122o-b7-after/`): comment lines
+1,072 → 869, words 9,576 → 7,777, code lines 1,165 unchanged. The
+step-code ceiling 4,439 → 4,235.
+
+Proof: `comment-strip HEAD src`, comments only, exit 0. The control in
+`output/wt-122o` (of `4b106ed4`), the nine files copied in on top of batch
+6's four: unplanted exit 0; with `Pathfinding.ts`' `UNIT_COST` planted as
+`() => 2`, exit 1 naming that line (14 → 12); restored from a copy,
+byte-identical to the live file. After a later comment fix in
+`occupancy.ts`, the final file copied in again: unplanted exit 0.
+
+Cost: 312,791 at 22:55 UTC as the batch started (batch 6's commit),
+466,569 at 23:09 after the proof: 154k for 2,353 lines, 65 a line. The
+seven batches: 989k for 13,991 lines, 71 a line.
+
+**Read** (`batch`): `git show <batch 7's commit> -- src/sim/occupancy.ts
+src/sim/behaviors/SupportMovementBehavior.ts`. Wrong looks like a step
+code or history left, a claim the code contradicts (the claims as inert,
+the footprint as one cell, a function named that doesn't exist), or a
+rule cut that a change must respect: claims excluded from every
+placement (gotcha #113), the packed index on one grid only, the yield
+only where the healer would abstain.

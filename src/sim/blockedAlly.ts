@@ -7,21 +7,18 @@ import { GROUND, cellsOccupiedBy, occupiedCells } from './occupancy';
 import { key, chebyshev } from './movement';
 
 /**
- * GP5 #5, extracted at 56c2 — the "strictly blocking a boxed ally" detector,
- * the blocker-initiated half of the swap protocol. Born as the healer's
- * chokepoint-yield trigger inside SupportMovementBehavior; 56c2 generalizes
- * the same question to ranged units ("is a melee teammate boxed behind me?"),
- * so the detector moves here and the ROLE half of the decision moves to an
- * `eligible` filter each caller supplies:
+ * The "strictly blocking a boxed ally" detector, the blocker's half of the
+ * swap: is a teammate boxed behind me? The role half of the decision is an
+ * `eligible` filter each caller passes:
  *
- *   - the healer's yield: any swappable ally (its GP5 semantics, unchanged);
- *   - the ranged yield (MovementBehavior): swappable MELEE allies only (the
- *     role order — ranged yields to melee, never the reverse).
+ *   - the healer's yield (`SupportMovementBehavior`): any swappable ally;
+ *   - the ranged yield (`MovementBehavior`): a swappable one-cell melee ally
+ *     only, by the role order (ranged yields to melee, never the reverse).
  *
- * This re-derivable world-state question is what makes the 56c2 "swap
- * request" design STATELESS: a busy blocker doesn't need a stored request
- * from the mover — at its next action-selection poll it re-asks this
- * detector and finds the same boxed teammate still there.
+ * The question is answered from the world as it stands, which is what keeps
+ * the swap stateless: a busy blocker needs no stored request from the
+ * mover, since at its next poll it asks again and finds the same boxed
+ * teammate.
  */
 
 /**
@@ -29,25 +26,23 @@ import { key, chebyshev } from './movement';
  * through — i.e. the ally to swap places with. An adjacent ally `a` qualifies
  * when the unit's cell `h` is `a`'s single forward step toward its target:
  * stepping onto `h` brings `a` closer (in real path distance) to its enemy,
- * and every *other* available neighbour of `a` does not. That's the
- * "strictly blocking a boxed ally" condition (ROADMAP GP5): it fires in a
- * genuine chokepoint, not in open field where `a` always has another forward
- * cell. Returns the first such ally in `world.units` order (deterministic),
- * or null when the unit isn't strictly blocking anyone `eligible`.
+ * and every other available neighbour of `a` does not. That is the strict
+ * block: it fires at a real choke, not in the open, where `a` always has
+ * another forward cell. Returns the first such ally in `world.units` order,
+ * or null when the unit strictly blocks no one `eligible`.
  *
- * "Forward" is measured by **grid path distance to the target**, NOT Chebyshev
- * — in a funnel layout the route to an enemy can run *away* from it in
- * straight-line terms (back through a gap, then around), so a Chebyshev test
- * mistakes the gap cell for a retreat and never fires. A BFS distance field
- * from the ally's target (over the static neutral-wall topology, computed once
- * per distinct target) gives the true "does stepping here get me closer"
- * answer for `h` and every neighbour in one sweep.
+ * Forward is measured by path distance on the grid to the target, not
+ * Chebyshev: in a funnel the route to an enemy can run away from it in a
+ * straight line (back through a gap, then round), and a Chebyshev test reads
+ * the gap cell as a retreat and never fires. A distance field from the
+ * ally's target, over the inert neutrals' topology and built once per
+ * target, answers "does stepping here bring me closer" for `h` and every
+ * neighbour in one sweep.
  *
- * Uses `currentTarget` (the ally's E5 sticky target) so the field is anchored
- * where `a` actually paths; a null target (no enemies) is skipped. The
- * "other forward cell" availability test runs against the NEUTRAL-INCLUSIVE
- * occupancy set — half-cover / walls are neutral *units*, not tiles, so
- * `passable` only rejects them when they're in `occupied`.
+ * The field is anchored on `currentTarget(a)`, where `a` paths; an ally with
+ * no target is skipped. The "other forward cell" test reads the occupancy
+ * set with neutrals in it: walls and half cover are units, not tiles, so
+ * `passable` rejects them only through `occupied`.
  */
 export function blockedAlly(
   unit: Unit,
@@ -56,10 +51,8 @@ export function blockedAlly(
 ): Unit | null {
   const h = unit.position;
   const hKey = key(h);
-  // 44-pre-a — footprint-aware (the §35 set builder); corner-only, a rubble's
-  // body cells read as open "other forward" cells. No behavior change expected:
-  // the BFS `distanceField` walls are already footprint-correct and gate the
-  // result.
+  // Every cell of a body, so a rubble's body never reads as an open forward
+  // cell.
   const occupied = occupiedCells(world, GROUND, { excludeId: unit.id });
   const walls = neutralCells(world);
   const fields = new Map<number, Map<string, number>>(); // target id → dist field
@@ -104,13 +97,13 @@ export function blockedAlly(
 }
 
 /**
- * BFS step-distance from `start` to every cell reachable over the static
- * navigable graph (in-bounds, finite tile cost, NOT a neutral/wall cell) —
- * 8-directional, uniform cost, fixed `NEIGHBORS` expansion order so the field
- * is deterministic. Units other than walls are treated as passable here: this
- * is the *topology* of the board (does a route exist through this cell), not a
- * live occupancy check — the caller layers the unoccupied test on top. Returns
- * a `key → distance` map; cells walled off from `start` are simply absent.
+ * The step distance from `start` to every cell reachable over the static
+ * graph (in bounds, of finite tile cost, not an inert neutral's cell):
+ * eight-way, uniform cost, in the fixed `NEIGHBORS` order, so the field is
+ * deterministic. Units other than scenery count as passable: this is the
+ * board's topology (does a route pass this cell), not live occupancy, which
+ * the caller tests on top. A `key → distance` map; a cell walled off from
+ * `start` is absent.
  */
 function distanceField(
   start: GridCoord,
@@ -137,11 +130,11 @@ function distanceField(
   return dist;
 }
 
-/** Set of INERT-neutral (wall + half-cover) cell keys — the static blockers.
- *  §75d — active neutrals (camp members) are mobile bodies, not topology:
- *  they stay OUT of this set, exactly as combatants do.
- *  43-pre — full footprints (`cellsOccupiedBy`): corner-only let the GP5.2
- *  navigable-snap accept a multi-tile rubble's body cell as a trail anchor. */
+/** The cell keys of every inert neutral (walls, half cover, rubble), whole
+ *  bodies: the static blockers. A camp member is a mobile body, not
+ *  topology, and stays out, as a combatant does. Whole bodies, so the
+ *  healer's snap to a navigable cell (`SupportMovementBehavior`) never takes
+ *  a rubble's body cell as its anchor. */
 export function neutralCells(world: World): Set<string> {
   const cells = new Set<string>();
   for (const u of world.units) {
@@ -150,7 +143,8 @@ export function neutralCells(world: World): Set<string> {
   return cells;
 }
 
-/** In-bounds, finite tile cost (excludes chasm), and not a neutral/wall cell. */
+/** In bounds, of finite tile cost (no chasm or deep water), and not an inert
+ *  neutral's cell. */
 export function isNavigable(c: GridCoord, world: World, walls: ReadonlySet<string>): boolean {
   if (c.x < 0 || c.y < 0 || c.x >= world.gridW || c.y >= world.gridH) return false;
   if (!isFinite(world.tileGrid.costAt(c))) return false;

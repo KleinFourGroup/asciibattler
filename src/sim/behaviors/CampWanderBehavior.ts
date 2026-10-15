@@ -12,54 +12,46 @@ import { getCamp } from '../../config/camps';
 import { SIM } from '../../config/sim';
 
 /**
- * §75f — the camp member's locomotion, behavior slot 0 from `spawnCampUnit`
- * (replacing the 75c placeholder `createMovementBehavior`; camp-ness can't
- * ride the catalog's `movementBehavior` value because a camp bandit shares
- * the enemy bandit's def — the 75c landing note). Two modes:
+ * A camp member's movement, the behaviour `World.spawnCampUnit` wires. Being
+ * a camp member can't ride the catalog's `movementBehavior`, since a camp
+ * bandit shares the enemy bandit's def. Two modes:
  *
- *   HOSTILE — `currentTarget` resolves an admissible mark (the §75e
- *     `hostileCandidate` gate scoped acquisition to the factions the camp is
- *     hostile to) → DELEGATE to the standard `MovementBehavior` engagement
- *     protocol wholesale: pursuit, firing cells, kiting, panic/frozen
- *     statuses, the §44 wait — camps fight exactly like combatants. A
- *     pursuing member may leave the leash (the leash bounds IDLING, not
- *     retaliation — the camps.ts doc). A support-archetype camp member
- *     deliberately gets the same charger delegate: the healer protocol
- *     trails a faction army's centroid and heals `team`-mates — which for
- *     'neutral' would include walls — so camp content ships charger-only.
+ *   Hostile — `currentTarget` resolves a mark (`hostileCandidate` keeps the
+ *     picks to the teams the camp is hostile to): hand the poll to
+ *     `MovementBehavior` whole, the pursuit, firing cells, kite, statuses
+ *     and waits, so a camp fights as combatants do. A pursuing member may
+ *     leave the leash, which bounds idling, not fighting. A support
+ *     archetype would get the same delegate, not the healer's protocol,
+ *     which follows its team's army and heals its team, the neutral
+ *     team's scenery included; no camp lists one.
  *
- *   PASSIVE — the leash-filtered wander. Per eligible poll (free, move off
- *     cooldown, not status-rooted) roll `SIM.campWanderChancePerTick` (the
- *     loader-derived per-tick threshold of the per-second author knob — a
- *     failed roll sets no cooldown, so eligible polls repeat every tick;
- *     the 75j verdicts caught the tick-rate coupling) on the presence-gated
- *     `campRng` and take one uniform step among the free in-leash neighbor
- *     cells. Standing ON the camp's anchor tile skips the
- *     chance gate entirely — vacating the drip portal ASAP is what keeps the
- *     pending queue flowing (the 75c "drip cadence IS the tile vacating"
- *     fact; the vacate-≤N-ticks exit invariant pins it). A member displaced
- *     BEYOND the leash (shove/knockback) self-heals: its candidate set
- *     becomes the neighbors that strictly reduce distance to the anchor.
+ *   Passive — the leashed wander. On each eligible poll (free, the move off
+ *     cooldown, not rooted by a status) roll `SIM.campWanderChancePerTick`
+ *     on `campRng` and take one uniform step among the free neighbours in
+ *     the leash. The chance is per tick, derived by the loader from the
+ *     per-second knob, since a failed roll sets no cooldown and the poll
+ *     comes again next tick. On the camp's anchor the roll is skipped: the
+ *     drip seats the next member there, so leaving it at once keeps the
+ *     queue moving (`CampWanderBehavior.test.ts` holds how soon). A member
+ *     outside the leash, after a pursuit, walks back: its candidates become
+ *     the neighbours strictly nearer the anchor.
  *
- * RNG discipline: every draw rides `world.campRng` (never `rng`/`combatRng`
- * — stream separation), and camp units only exist on camp-bearing worlds, so
- * fuzz byte-identity on camp-free layouts holds structurally. Draw shape per
- * eligible poll: 1 chance roll (skipped on the anchor) + 1 pick (skipped for
- * a singleton candidate set — the #111 zero-draw rule). The standing
- * NO-RNG-IN-MOVEMENT doctrine (§43–46) governs faction pathing symmetry;
- * camp idle wander on its own stream is the kickoff shape-lock's signed
- * exception (the cut line names `campRng`).
+ * Every draw is on `world.campRng`, never `rng` or `combatRng`, and a camp
+ * member exists only on a board with camps, so a board without one draws
+ * nothing here. Per eligible poll: one chance roll (none on the anchor) and
+ * one pick (none for a single candidate, gotcha #111). Pathing draws no RNG,
+ * which keeps the teams' movement symmetric; the camp's idle wander, on its
+ * own stream, is a signed exception.
  *
- * Wander steps are single-cell (`unit.position` neighbors): every shipped
- * camp archetype is a 1×1 combatant def; a multi-tile camp body would need a
- * footprint-aware candidate scan (the 75c N×N note — first real multi-tile
- * combatant pays it).
+ * A wander step is one cell from `unit.position`: every camp archetype is a
+ * one-cell combatant. A larger camp body would need a candidate scan over
+ * its whole block.
  */
 export class CampWanderBehavior implements Behavior {
   static readonly kind = 'camp';
   readonly kind = CampWanderBehavior.kind;
 
-  /** The hostile-mode delegate — stateless, so one shared instance. */
+  /** The hostile mode's delegate; it holds no state. */
   private readonly engage = new MovementBehavior();
 
   proposeAction(unit: Unit, world: World): ActionProposal | null {
@@ -67,14 +59,14 @@ export class CampWanderBehavior implements Behavior {
       return this.engage.proposeAction(unit, world);
     }
 
-    // Passive wander. Status roots (frozen) suppress it; the delegate above
-    // handles its own flags.
+    // The passive wander. A status that roots (frozen) stops it; the delegate
+    // above reads its own flags.
     if (behaviorFlags(unit.effects).preventsMove) return null;
     const camp = unit.campId !== null ? world.campById(unit.campId) : undefined;
     const rng = world.campRng;
     if (camp === undefined || rng === null) return null;
-    // Move on cooldown → no proposal AND no draw, so the chance reads as
-    // per-ELIGIBLE-poll and the stream isn't burned on locked-out ticks.
+    // The move on cooldown: no proposal and no draw, so the chance is per
+    // eligible poll and the stream is not spent on locked ticks.
     if ((unit.actionCooldowns.get('move') ?? 0) > 0) return null;
 
     const onAnchor = cellsOccupiedBy(unit).some(
@@ -98,13 +90,11 @@ export class CampWanderBehavior implements Behavior {
 }
 
 /**
- * The free neighbor cells a passive wander may step onto: in-bounds, finite
- * tile cost, unoccupied AND unclaimed (the same strict commit gate as the
- * drip's placement scan — gotcha #113's rule, softened for nobody), and
- * inside the leash — or, when the unit is already OUTSIDE the leash,
- * strictly closer to the anchor (the self-healing walk-back). Fixed
- * `NEIGHBORS` expansion order keeps the set (and thus the uniform pick)
- * deterministic.
+ * The free neighbours a passive wander may step onto: in bounds, of finite
+ * tile cost, unoccupied and unclaimed (the drip's placement test; gotcha
+ * #113), and inside the leash, or, for a unit already outside it, strictly
+ * nearer the anchor (the walk back). The fixed `NEIGHBORS` order keeps the
+ * set, and so the pick, deterministic.
  */
 function wanderCandidates(
   unit: Unit,

@@ -23,44 +23,39 @@ import { retreatCell } from '../effects/reposition';
 import { behaviorFlags } from '../statusBehavior';
 
 /**
- * Proposes a one-cell step toward the unit's current (E5-sticky) target when
- * out of attack range, or a first-class WAIT (§44b) when the unit is in the
- * firing band (with LOS where required) — the deliberate hold is a proposal
- * the selector weighs, no longer a silent abstain. Abstains (returns null)
- * only when there is genuinely nothing to propose: no enemy exists, no path
- * to target, the next step is blocked AND no sidestep is free, or a status /
- * objective forbids moving. Score 1 (low); AbilityBehavior scores 10 (via
- * each ability) so the selector prefers attacking over moving/waiting when
- * both fire.
+ * Proposes a one-cell step toward the unit's current target when it is out
+ * of reach, or a wait when it is in the firing band (with a line where one is
+ * needed): the hold is a proposal the selector weighs. Abstains only when
+ * there is nothing to propose: no target, no path, the next step blocked
+ * with no sidestep free, or a status or objective forbidding a move. Its
+ * proposals score 1, so an ability that proposes wins over a move or a wait.
  *
- * §44a — this behavior is a thin DECISION layer over two extracted seams:
- * [positioning.ts](../positioning.ts) owns the WHERE knowledge (the firing
- * band + LOS gate, the §40b rubble approach, the firing-cell/target goal list,
- * the minRange kite — the full engagement protocol is documented THERE), and
- * `advance` ([movement.ts](../movement.ts)) owns the route + step + E5.B
- * sidestep. What remains here is what to PROPOSE: mapping status flags
- * (frozen/flee/wander), objectives (hold/tile-rally), and the positioning
- * directive onto proposals + `MoveDecisionKind`s. The J2 seam is unchanged —
- * a dash is the same intent with `maxCells > 1`.
+ * A thin decision layer: `positioning.ts` holds where to be (the firing band
+ * and the line-of-sight gate, the approach to an inert target, the firing
+ * cell then the target's cell, the kite; the protocol is documented there),
+ * and `advance` (`movement.ts`) holds the route, the step and the sidestep.
+ * What is left here is what to propose: the status flags (frozen, flee,
+ * wander), the objectives (hold, a rally tile) and the positioning
+ * directive, each mapped onto a proposal and a `MoveDecisionKind`. The dash
+ * is an ability, and lands through `leapLanding`.
  */
 export class MovementBehavior implements Behavior {
   static readonly kind = 'movement';
   readonly kind = MovementBehavior.kind;
 
   proposeAction(unit: Unit, world: World): ActionProposal | null {
-    // 28 — a BEHAVIOR status overrides locomotion before any objective / pursuit
-    // logic (a frozen/panicking/blinded unit ignores orders). Resolved off the
-    // unit's effects (def-resolve), so no serialized state.
+    // A behaviour status overrides movement ahead of any objective or pursuit:
+    // a frozen, panicking or blinded unit ignores orders. Read off the unit's
+    // effects, so no serialized state.
     const behavior = behaviorFlags(unit.effects);
     if (behavior.preventsMove) {
       emitMoveDecision(world, unit, 'frozen'); // rooted.
       return null;
     }
     if (behavior.movement === 'flee') {
-      // Panic. §42a — `boxed` covers both no-retreat-cell and the degenerate
-      // no-threat case (see MoveDecisionKind docs). 56c — a boxed fleer first
-      // tries the bubble-back swap (proposeFlee's fallback); the decision
-      // record distinguishes it (`flee_swap`) so panic churn stays attributable.
+      // Panic. `boxed` covers no retreat cell and no threat at all. A boxed
+      // fleer first tries the swap back (`proposeFlee`), recorded as
+      // `flee_swap`, so panic churn can be told apart.
       const flee = proposeFlee(unit, world);
       if (flee === null) {
         emitMoveDecision(world, unit, 'boxed');
@@ -76,29 +71,26 @@ export class MovementBehavior implements Behavior {
       return wander;
     }
 
-    // O2 — under a `hold` objective the unit NEVER repositions: it acts in place
-    // (AbilityBehavior fires at whatever `updateTarget` left in range) but
-    // proposes no movement, even to close distance or clear LOS for a shot. The
-    // dash ability is independently gated off — `updateTarget`'s hold branch
-    // only ever commits an in-range target (or none), so the dash's
-    // "target beyond attackRange" trigger can't fire.
+    // Under a `hold` objective the unit never moves: it acts in place
+    // (`AbilityBehavior` fires at whatever `updateTarget` left in range) and
+    // proposes no move, not even to close or to clear a line for a shot. The
+    // dash is off too: the hold commits only a target in range, or none, and
+    // the dash abstains on a target within reach.
     if (world.objectiveFor(unit.team).mode === 'hold') {
       emitMoveDecision(world, unit, 'hold_objective');
       return null;
     }
 
-    // 56c2 — the blocker-initiated YIELD (the GP5 healer pattern generalized
-    // to ranged units — the "swap request" design, made stateless): before
-    // pursuing its own engagement, a ranged unit asks whether it is strictly
-    // blocking a boxed MELEE teammate, and if so proposes the yield-swap at
-    // YIELD_SWAP_SCORE — ABOVE its own attack, or a fill-phase attacker
-    // (busy for its entire cadence, by design) re-attacks every selection
-    // poll and the yield starves at the selector; the archer skips ONE
-    // attack cycle to let the swordsman through. This is the busy-window
-    // half of the two-sided protocol (the mover's probe handles idle
-    // blockers instantly); it sits AFTER the status branches (a panicking
-    // archer flees, it doesn't hold doors) and AFTER the O2 hold (which
-    // forbids all repositioning, yields included).
+    // The ranged yield, the blocker's half of the swap: before its own
+    // engagement, a ranged unit asks whether it strictly blocks a boxed melee
+    // teammate (`blockedAlly`) and, if so, proposes the swap at
+    // `YIELD_SWAP_SCORE`, above its own attack, since an attacker whose
+    // recovery fills its cadence attacks again at every poll and a lower
+    // yield would never win. The archer skips one attack to let the
+    // swordsman through. This covers the blocker's busy windows; the mover's
+    // swap-through (`movement.ts`) takes an idle blocker at once. It comes
+    // after the statuses (a panicking archer flees, it doesn't hold doors)
+    // and after the hold, which forbids every move, a yield included.
     if (unit.derived.attackRange > 1 && footprintOf(unit) === 1) {
       const yieldSwap = yieldToBlockedMelee(unit, world);
       if (yieldSwap !== null) {
@@ -109,30 +101,24 @@ export class MovementBehavior implements Behavior {
 
     const target = currentTarget(unit, world);
     if (target === null) {
-      // J1 — no enemy to engage. A unit under an `engage` TILE objective
-      // advances toward the rally cell (an attractor — "as close as it can",
-      // excluding nothing so it clusters near an occupied cell); otherwise idle.
-      // An `enemy` objective never reaches here: `updateTarget` commits the unit
-      // to the objective enemy, so `target` is non-null and the path-to-target
-      // logic below drives the approach. (O1 reads the acting unit's team
-      // objective; the enemy team is `atWill`, so this stays player-only today.)
-      //
-      // O3 — a `focus` TILE objective routes here identically when the unit has
-      // no committed target: `pursue` (beelining to the tile) leaves targetId
-      // null, and `engageLocal` with no enemy near the tile also leaves it null
-      // → both walk to the rally cell. The strategy choice lives entirely in
-      // `Targeting.updateFocusTarget` (it sets targetId); movement just reacts.
+      // No target. A unit under an `engage` or `focus` objective on a tile
+      // goes toward the rally cell, as close as it can, leaving nothing out
+      // of the soft cells, so it clusters near an occupied cell; otherwise it
+      // idles. A unit or neutral objective doesn't reach here while its
+      // target lives: `updateTarget` commits the unit to it. Only a player's
+      // order sets a tile. Whether a tile focus leaves the target null (far
+      // from the tile, or near it with no hostile in the engage radius) is
+      // `Targeting.updateFocusTarget`'s; movement only reacts.
       const objective = world.objectiveFor(unit.team);
       if (
         (objective.mode === 'engage' || objective.mode === 'focus') &&
         objective.target.kind === 'tile'
       ) {
-        // J3 — bestEffort so an UNREACHABLE rally cell (a wall, or a walled-off
-        // region) routes the unit AS CLOSE AS IT CAN rather than abstaining. A
-        // single unreachable goal → findPath [] → no step is exactly the
-        // pickGoalCellInRange freeze; here the whole team would idle (the
-        // objective also suppresses the nearest-enemy fallback). Right-clicking
-        // a wall is the reported trigger.
+        // Best effort, so a rally cell no route reaches (a wall, a walled-off
+        // region) brings the unit as close as it can rather than abstaining.
+        // Otherwise one unreachable goal gives no step, and the whole team
+        // would idle, since the objective also turns off the fallback to the
+        // nearest enemy. A rally on a wall is the case.
         return advance(unit, world, {
           goals: [objective.target.cell],
           approachToward: objective.target.cell,
@@ -144,25 +130,21 @@ export class MovementBehavior implements Behavior {
       return null;
     }
 
-    // §44a — the WHERE knowledge lives in positioning.ts (the engagement
-    // protocol: firing-band hold [incl. the §36b arriving-claim case], the
-    // §40b rubble bestEffort approach, the firing-cell/target goal list, the
-    // O4/Qb#3 minRange kite). This behavior just maps the directive onto a
-    // proposal + its `MoveDecisionKind`. The minRange is resolved HERE:
-    // positioning.ts must not import archetypes.ts (a module-eval cycle —
-    // see its import note).
+    // Where to be is `positioning.ts`'s (the band, the approach to an inert
+    // target, the goals, the kite); this maps its directive onto a proposal
+    // and a `MoveDecisionKind`. The minimum range is resolved here, since
+    // positioning.ts must not import archetypes.ts (its import note).
     const directive = engagementDirective(unit, world, target, minRangeForArchetype(unit.archetype));
     switch (directive.kind) {
       case 'hold':
-        // §44b — in position: a first-class WAIT proposal, not a bare null.
-        // A ready ability (score 10) still outranks it; on cooldown ticks the
-        // wait wins and resolves within the tick (no world-state trace).
+        // In position: a wait. A ready ability outranks it; on cooldown ticks
+        // the wait wins and resolves within the tick, leaving no state.
         emitMoveDecision(world, unit, 'wait');
         return waitProposal();
       case 'pinned':
-        // §42a — the Qb#3 pinned-kiter shape: too close (the charge fallback
-        // off) AND no reachable firing cell. `advance([])` would return null
-        // without emitting, so the decision is named here.
+        // The pinned kiter: too close, the charge left out, and no reachable
+        // firing cell. `advance` with no goals would return null and emit
+        // nothing, so the decision is named here.
         emitMoveDecision(world, unit, 'pinned');
         return null;
       case 'approach':
@@ -172,12 +154,12 @@ export class MovementBehavior implements Behavior {
 }
 
 /**
- * 56c2 — the ranged unit's yield probe: the swap proposal when this unit is
- * strictly blocking a boxed melee teammate, else null. The cheap pre-filter
- * (an adjacent friendly melee exists at all) runs before the detector's BFS
- * so the common case (nobody adjacent) costs one unit scan. Eligibility =
- * the role order (melee only — antisymmetry keeps the no-ping-pong
- * guarantee) + the shared swappable-partner gate + single-cell bodies.
+ * The ranged unit's yield: the swap proposal when it strictly blocks a boxed
+ * melee teammate, else null. A cheap check (is any friendly melee unit
+ * adjacent?) runs before the detector's search, so the usual case, no one
+ * adjacent, costs one scan of the units. Eligible: melee only, by the role
+ * order, which keeps a pair from swapping back; swappable
+ * (`isSwappablePartner`); and one cell.
  */
 function yieldToBlockedMelee(unit: Unit, world: World): ActionProposal | null {
   let adjacentMelee = false;
@@ -206,12 +188,11 @@ function yieldToBlockedMelee(unit: Unit, world: World): ActionProposal | null {
 }
 
 /**
- * 28 — panic FLEE: a one-cell step that STRICTLY increases distance from the
- * nearest enemy, reusing the gambit's `retreatCell` primitive (away-from-anchor,
- * tie-broken toward open space). 56c — when boxed (`retreatCell` null: no FREE
- * cell increases distance), fall through to the bubble-back swap before
- * cowering in place. Abstains when no enemy exists or nothing qualifies.
- * Score 1, like every move.
+ * The panic flee: a one-cell step that strictly increases the distance from
+ * the nearest hostile, by `retreatCell` (the effects' retreat; away from the
+ * anchor, ties toward open space). When boxed in (no free cell farther),
+ * the swap back is tried before cowering in place. Abstains when there is
+ * no hostile or nothing qualifies. Score 1, as every move.
  */
 function proposeFlee(unit: Unit, world: World): ActionProposal | null {
   const threat = nearestEnemy(unit, world);
@@ -226,24 +207,22 @@ function proposeFlee(unit: Unit, world: World): ActionProposal | null {
 }
 
 /**
- * 56c — the flee-swap (the shape-locked user heuristic, worklog §56): a BOXED
- * fleeing unit bubbles backward by swapping with an adjacent ally standing
- * STRICTLY farther from the threat. The exchange is mutually agreeable — the
- * fleer gains distance, the displaced FIGHTER is handed a step toward the
- * enemy it already wanted — which is exactly why the two eligibility gates
- * are load-bearing:
+ * The flee swap: a boxed-in fleeing unit moves back by swapping with an
+ * adjacent ally standing strictly farther from the threat. Both gain: the
+ * fleer gets distance, and the displaced fighter a step toward the enemy it
+ * wanted, which is why the two partner checks matter:
  *
- *   - **Partner not itself fleeing** — two panickers ping-pong (each swap
- *     hands the partner a step toward the threat it also fears).
- *   - **Partner not support** — a healer displaced into panic range
- *     immediately retreats back through the fleer (same churn), and the
- *     healer's yielding already lives in its GP5 `blockedAlly` machinery.
- *     Kind literal (module cycle — see `swapThroughProposal`'s twin note).
+ *   - Not fleeing itself: two panicking units ping-pong, each swap handing
+ *     the other a step toward the threat it also fears.
+ *   - Not a support: a healer pushed into panic range retreats straight back
+ *     through the fleer, the same churn, and it yields by its own rule
+ *     (`blockedAlly.ts`). Matched by kind, as `roleEligibleBlocker` matches
+ *     it.
  *
- * Plus the structural gates shared with 56b: idle partner only (the 56a
- * doctrine), friendly, footprint-1 both sides. Candidate choice is
- * deterministic: greatest distance-from-threat wins, ties to the fixed
- * `NEIGHBORS` scan order (no RNG in movement — the standing ban).
+ * And the swap's shared checks: the partner swappable (`isSwappablePartner`,
+ * between actions and not reserved), friendly, one cell on both sides. The
+ * pick is deterministic: the greatest distance from the threat, ties to the
+ * fixed `NEIGHBORS` order.
  */
 function fleeSwapProposal(
   unit: Unit,
@@ -262,10 +241,10 @@ function fleeSwapProposal(
     );
     if (partner === undefined) continue;
     if (partner.team !== unit.team) continue; // never swap with an enemy (or a wall)
-    if (!isSwappablePartner(partner, world)) continue; // 56a/56c2: idle + unreserved
+    if (!isSwappablePartner(partner, world)) continue; // between actions, unreserved
     if (footprintOf(partner) !== 1) continue;
     if (behaviorFlags(partner.effects).movement === 'flee') continue; // panicker pairs ping-pong
-    if (partner.behaviors.some((b) => b.kind === 'support_movement')) continue; // GP5 owns the healer
+    if (partner.behaviors.some((b) => b.kind === 'support_movement')) continue; // the healer yields by its own rule
     best = partner;
     bestDist = d;
   }
@@ -279,21 +258,20 @@ function fleeSwapProposal(
 }
 
 /**
- * 28 — blind WANDER: a one-cell step to a uniformly random passable, unoccupied
- * neighbor (rolled on `combatRng`, where movement / targeting rolls live).
- * Abstains when every neighbor is blocked. The selector still prefers an attack
- * (score 10) over this wander (score 1), so a blinded unit adjacent to a foe
- * strikes it and only wanders when it has nothing in reach.
+ * The blind wander: a one-cell step to a uniformly random passable,
+ * unoccupied neighbour, rolled on `combatRng`. Abstains when every
+ * neighbour is blocked. An ability that
+ * proposes outranks the wander (score 1), so a blinded unit strikes what is
+ * in reach and wanders only when nothing is (but see `currentTarget`'s
+ * fallback, which reaches past the blindness under `atWill`).
  */
 function proposeWander(unit: Unit, world: World): ActionProposal | null {
-  // 44-pre-a — the WHOLE footprint (the §35 set builder), not just the §39
-  // corner: corner-only, a multi-tile rubble's body cells read as free and the
-  // wander could roll a doomed step onto one — §35b's destination gate then
-  // aborts it (no overlap), but the unit wastes its tick on `unit:moveAborted`
-  // instead of wandering. Claims are deliberately NOT folded here: this ships
-  // as a MoveAction proposal, so `destinationBlocked` (occupied-OR-claimed)
-  // re-validates at execution — unlike `retreatCell`'s instant effect
-  // reposition, which bypasses the selector gate and must fold claims itself.
+  // Every cell of a body, so a rubble's body cells don't read as free; a
+  // step onto one would be aborted at execution and the tick spent on
+  // `unit:moveAborted`. Claims are left out: this is a move proposal, and
+  // `World.destinationBlocked` checks occupied or claimed as it runs, where
+  // `retreatCell`'s instant reposition skips that check and folds claims in
+  // itself.
   const occupied = occupiedCells(world, GROUND, { excludeId: unit.id });
   const free: GridCoord[] = [];
   for (const [dx, dy] of NEIGHBORS) {
@@ -313,13 +291,12 @@ function proposeWander(unit: Unit, world: World): ActionProposal | null {
 }
 
 /**
- * The nearest living hostile by Chebyshev — the panic-flee anchor. Ties resolve
- * to the first in `world.units` order (stable id order), so the pick is
- * deterministic. Distinct from `Targeting.findTarget` (which honors the unit's
- * strategy): a panicking unit flees the CLOSEST threat, not the one its
- * strategy would mark. §75e — the shared admit rule: a HOSTILE camp member is
- * a threat to flee from too (and a panicking camp member flees the factions
- * its camp is fighting).
+ * The nearest living hostile by Chebyshev, the flee's anchor. Ties go to the
+ * first in `world.units` order, so the pick is deterministic. Not
+ * `Targeting.findTarget`, which follows the unit's strategy: a panicking unit
+ * flees the closest threat, not its mark. The admit rule
+ * (`hostileCandidate`) makes a hostile camp member a threat too, and a
+ * panicking camp member flees the teams its camp fights.
  */
 function nearestEnemy(unit: Unit, world: World): Unit | null {
   let best: Unit | null = null;

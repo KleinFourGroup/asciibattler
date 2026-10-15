@@ -5,47 +5,39 @@ import { hasLineOfSight } from './LineOfSight';
 import { cellKey, cellsOccupiedBy, claimedCells, distanceBetween, occupiedCells } from './occupancy';
 
 /**
- * GP4 — find the nearest reachable cell from which `from` could ACT on a unit
- * at `target`: a cell `c` with `chebyshev(c, target)` in the band
- * `[minRange, range]` (O4 — `minRange` defaults 0, i.e. range-only, GP4's
- * original behavior) and (when `losBlockers` is non-null) line of sight to the
- * target. A non-zero `minRange` makes a too-close unit search for a cell FARTHER
- * out (the kiting standoff), since its own cell / near cells fail the lower
- * bound. The two callers:
+ * The nearest reachable cell from which `from` could act on a unit at
+ * `target`: a cell whose Chebyshev distance to `target` is within
+ * `[minRange, range]` and, when `losBlockers` is not null, with a line of
+ * sight to it. A minimum range above 0 makes a unit too close search for a
+ * cell farther out (the kite), since its own and the near cells fail the
+ * floor. Its one caller is `positioning.engagementDirective`'s firing cell:
+ * the occluders for a sight-gated ability, null for one that lobs over walls
+ * (the catapult).
  *
- *   - archers / mage  — `losBlockers` = the LOS occluders (the shot is gated);
- *   - the catapult    — `losBlockers` = null (it lobs over walls, range only).
+ * The caller paths to this cell rather than to the target's, so a ranged
+ * unit holds at standoff with a clear shot instead of charging in or
+ * creeping at a wall.
  *
- * The caller pathfinds to the returned cell instead of to the target's own
- * cell, so a ranged unit holds at standoff with a clear shot rather than
- * charging in / creeping at a wall. (The helper is `losBlockers`-agnostic so a
- * future range-only support caller could reuse it — the healer was considered
- * but its approach is already capped at heal range by its own in-range idle,
- * so its real fix is GP5, not here.)
+ * A bounded breadth-first search outward from `from`:
  *
- * Method — a bounded breadth-first search outward from `from`:
+ *   - It walks `findPath`'s hard-blocker graph: in bounds, of finite tile
+ *     cost, and not an inert neutral's cell. So any cell it returns can be
+ *     routed to, and `findPath(from, cell)` is never empty; a goal that is
+ *     itself a wall freezes the unit.
+ *   - It does not skip cells a unit stands on. A briefly occupied acting
+ *     cell is still a valid goal: the route goes toward it, and the caller's
+ *     in-range hold stops the unit a cell short, before any collision.
+ *     Skipping them would fall back to charging each time the best standoff
+ *     cell was briefly taken.
+ *   - It stops at depth `range + searchSlack` (`SIM.actingCellSearchSlack`).
+ *     A target beyond returns null, and the caller charges the target's cell;
+ *     the unit takes the acting cell once it is within the cap. This bounds
+ *     the work per unit per tick.
  *
- *   - **Traverses the same hard-blocker graph `findPath` uses**: in-bounds,
- *     finite `tileGrid.costAt`, and not a neutral/wall cell (built here from
- *     `world.units`). So any cell this returns is provably routable-to over
- *     that graph — `findPath(from, cell)` cannot come back empty, which is
- *     what keeps this from re-introducing the old `pickGoalCellInRange` freeze
- *     (a goal cell that was itself a wall/ally → `findPath` → `[]` → stall).
- *   - **Does NOT filter soft (unit-occupied) cells.** A transiently-occupied
- *     acting cell is still a valid *goal*: `findPath` routes toward it and the
- *     caller's in-range abstain stops the unit a cell short, before any
- *     collision. Filtering them would cause spurious fallbacks every time the
- *     ideal standoff cell is briefly occupied.
- *   - **Capped at `range + searchSlack` BFS depth.** A target beyond the cap
- *     returns null → the caller falls back to charging the target's cell (the
- *     anti-freeze guarantee); the unit snaps to the acting cell once it closes
- *     to within the cap. This bounds the per-unit-per-tick work.
+ * Deterministic: a fixed neighbour order (`dx, dy` from -1 to 1) and a FIFO
+ * queue, so the first qualifying cell is the same every run.
  *
- * Deterministic: fixed `dx,dy = -1..1` neighbour expansion order + FIFO queue
- * → "the first qualifying cell wins" is reproducible, so the sim stays
- * byte-stable per seed.
- *
- * Returns null when no qualifying cell is reachable within the cap.
+ * Null when no qualifying cell is reachable within the cap.
  */
 export function nearestActingCell(
   from: GridCoord,
@@ -54,20 +46,16 @@ export function nearestActingCell(
   searchSlack: number,
   world: World,
   losBlockers: readonly GridCoord[] | null,
-  // O4 — the engagement FLOOR; cells closer than this to the target are rejected
-  // (the unit kites out). Defaults 0 (range-only) so GP4's other callers and the
-  // pre-O4 firing-cell search stay byte-identical.
+  // The firing floor: a cell closer than this to the target is rejected, and
+  // the unit kites out. 0 tests range alone.
   minRange = 0,
 ): GridCoord | null {
-  // Hard blockers for BFS traversal: INERT neutral units (walls + half-cover),
-  // exactly what `findPath` treats as impassable, so reachability matches —
-  // §75d keeps this IN LOCKSTEP with `buildMovementContext`'s pathBlockers
-  // (the GP4/Qb#3 hold-vs-strike freeze class IS these two disagreeing): an
-  // active neutral (camp member) is soft there, so it must not wall the BFS
-  // here.
-  // 43-pre — the WHOLE footprint (`cellsOccupiedBy`), not just the §39 corner:
-  // a corner-only set let the BFS return a multi-tile rubble's body cell — an
-  // unroutable goal (the river `no_route` spam in PATHING.md).
+  // The search's hard blockers: every cell of an inert neutral (walls, half
+  // cover, rubble), as `buildMovementContext`'s `pathBlockers` has them, so
+  // reachability here matches the route's. A camp member is soft there and
+  // must not wall the search here. A rubble's whole body counts: with its
+  // corner alone the search could return a body cell, a goal no route
+  // reaches.
   const wallCells = new Set<string>();
   for (const u of world.units) {
     if (isInertNeutral(u)) for (const c of cellsOccupiedBy(u)) wallCells.add(cellKey(c));
@@ -108,23 +96,21 @@ export function nearestActingCell(
 }
 
 /**
- * §29d — the summon-placement query: up to `count` of the nearest UNOCCUPIED,
- * passable cells within `radiusCells` (BFS depth) of `anchor`. The sibling of
- * `nearestActingCell` — same bounded outward BFS over the same hard-blocker graph
- * (`findPath`'s: in-bounds + finite `tileGrid.costAt`) and the same deterministic
- * `dx,dy = -1..1` expansion + FIFO order, so the first free cells win
- * reproducibly. Two deliberate differences from the firing-cell search:
+ * The placement query: up to `count` of the nearest free, passable cells
+ * within `radiusCells` (search depth) of `anchor`, for a summon's minions
+ * (`interpreter.ts`) and `World.shove`'s landing. The same bounded search
+ * and fixed order as `nearestActingCell`, so the first free cells are the
+ * same every run, with two differences:
  *
- *   - it RETURNS cells (not a firing position), so a `summon` op drops a minion
- *     onto each — caster-anchored placement (`at:self` = adjacent to the caster).
- *   - a cell is a CANDIDATE only when UNOCCUPIED (no living unit stands on it) —
- *     a unit can't materialise onto an occupied cell — though the BFS still
- *     EXPANDS THROUGH an occupied (but passable) cell, so a summon can land on the
- *     far side of an ally. Walls / chasms (infinite cost) block both candidacy and
- *     traversal, exactly as for movement.
+ *   - it returns cells to place units on, not a position to act from;
+ *   - a cell is a candidate only when free (no unit on it, no claim), as a
+ *     unit cannot appear on a taken cell, though the search still passes
+ *     through a taken cell that is passable, so a summon can land beyond an
+ *     ally. Walls of terrain (an infinite cost) block both, as they do
+ *     movement; this search does not treat inert neutrals as walls.
  *
- * Returns fewer than `count` (or `[]`) when the radius can't yield enough free
- * cells — the caller fizzles the cast (no free cell → no summon).
+ * Fewer than `count`, or `[]`, when the radius holds too few free cells,
+ * and the summon places only as many.
  */
 export function nearestFreeCells(
   anchor: GridCoord,
@@ -132,17 +118,12 @@ export function nearestFreeCells(
   radiusCells: number,
   world: World,
 ): GridCoord[] {
-  // Every unit's cell (combatants + neutral walls/half-cover) is occupied —
-  // ineligible as a landing, but still traversable when passable (below). §35 —
-  // the occupancy chokepoint owns "what occupies a cell" (one cell per unit
-  // today; the §39 footprint block for free).
+  // Every cell of every unit, scenery included, is taken as a landing, and
+  // still passable for the search when its tile is.
   const occupied = occupiedCells(world);
-  // §36b — a CLAIMED cell is reserved by an in-flight mover whose deferred flip
-  // will land it there; materialising a unit on it (a summon drop, a shove
-  // relocation) would collide the instant the claimant arrives. Treat claimed
-  // cells as ineligible landings too — the placement-side of "occupied OR
-  // claimed" (the BFS still EXPANDS through them, like an occupied-but-passable
-  // cell, since the claimant isn't physically there yet).
+  // A claimed cell is taken too: a unit placed there would collide when the
+  // claimant's move lands (gotcha #113). The search still passes through it,
+  // since the claimant is not there yet.
   for (const k of claimedCells(world)) occupied.add(k);
 
   const found: GridCoord[] = [];

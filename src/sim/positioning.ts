@@ -1,76 +1,67 @@
 /**
- * §44a — positioning: the WHERE knowledge of the engagement protocol, extracted
- * from MovementBehavior + SupportMovementBehavior (a behavior-NEUTRAL
- * relocation; world bytes unchanged). The behaviors keep the DECISION plumbing
- * — what to propose, which `MoveDecisionKind` to emit — and consult this module
- * for everything spatial: the firing band, the LOS gate, the minRange kite, the
- * acting-cell goal list, and the shared leaf step primitives.
+ * Positioning: where a unit should be against its target. The behaviours keep
+ * the decision (what to propose, which `MoveDecisionKind` to emit) and ask
+ * this module everything spatial: the firing band, the line-of-sight gate,
+ * the minimum-range kite, the acting-cell goals, and the shared step
+ * primitives.
  *
- * ## The engagement-positioning protocol (carved from MovementBehavior's docs)
+ * ## The engagement protocol
  *
  * A unit engaging a committed target resolves its movement in this order
  * (`engagementDirective`):
  *
- * 1. **Hold when in the firing band.** The band test is the SHARED
- *    footprint-aware predicate (`firingBandCell`, 44-pre-c) — in
- *    `[minRange, attackRange]` of, and (for LOS-gated abilities) with a clear
- *    line to, ANY cell of the target's body. It is checked against the
- *    target's logical position AND its §36b claimed destination (the target is
- *    ARRIVING into the band — hold for it rather than sidestepping around its
- *    reservation, the corridor kite-pin the claim would otherwise trip). The
- *    strike gates (`effects/propose.ts`) fire through the SAME predicate:
- *    the hold and the strike must agree about "in range" or the GP4/Qb#3
- *    freeze class returns (hold says in-band, strike says out-of-range →
- *    deadlock). EXCEPTION (E7.D): a unit carrying an LOS-ignoring ability
- *    (the catapult) holds on range alone — it lobs over walls, nothing to
- *    path around; LOS-gated units keep pathing for a clear shot instead of
+ * 1. Hold in the firing band. The band test is the shared predicate
+ *    `firingBandCell`: in `[minRange, attackRange]` of, and for a
+ *    sight-gated ability with a clear line to, any cell of the target's
+ *    body. It is checked against the target's position and against its
+ *    claimed destination, so a target arriving into the band is waited for
+ *    rather than stepped around. The abilities' strike gates
+ *    (`effects/propose.ts`, `EffectAction`) test through the same predicate:
+ *    the hold and the strike must agree about "in range", or a unit holds
+ *    in band while its strike says out of range, and freezes. A unit with a
+ *    sight-ignoring ability (the catapult) holds on range alone, as it lobs
+ *    over walls; a sight-gated unit keeps moving for a clear shot instead of
  *    freezing behind a wall.
  *
- * 2. **A committed rubble (destructible neutral) is approached bestEffort.**
- *    §40b — rubble is a HARD path-blocker (`excludeUnitId` softens only
- *    non-neutral cells), so the unit routes AS CLOSE AS POSSIBLE toward its
- *    corner — the J3 tile-rally shape — and the in-band hold above fires the
- *    strike the moment the unit is body-adjacent (true since 44-pre-c).
+ * 2. Approach an inert target (rubble, a destructible wall or cover) best
+ *    effort. It is a hard blocker (`excludeUnitId` softens only a mobile
+ *    unit), so the unit routes as close as it can toward its corner, and the
+ *    hold above fires the strike once the unit is within reach of the body.
  *
- * 3. **Firing cell first, target cell as fallback.** A ranged unit
- *    (attackRange > 1) prefers the nearest cell it can actually shoot from —
- *    `nearestActingCell`: in the band AND (for LOS-gated abilities) with line
- *    of sight — so it holds at standoff with a clear shot rather than creeping
- *    into melee, or sidesteps a wall that breaks LOS. The goal list ALWAYS
- *    ends with the target's own cell, so when the firing-cell approach can't
- *    produce a move — no firing cell reachable within the cap, OR the step
- *    toward one is blocked (a contested cell in a chokepoint) — `advance`
- *    falls through to charging the target and drains the chokepoint. This is
- *    the load-bearing anti-freeze guarantee; the earlier `pickGoalCellInRange`
- *    heuristic froze when its single in-range goal was a wall/ally
- *    (→ findPath []). The target is excluded from the soft-block set
- *    (`excludeUnitId`) so findPath always has a reachable goal; the in-band
- *    hold stops the unit a cell short of actually stepping onto it.
+ * 3. The firing cell first, the target's cell as the fallback. A ranged
+ *    unit (attack range above 1) prefers the nearest cell it can shoot from
+ *    (`nearestActingCell`: in band and, if sight-gated, with a line), so it
+ *    holds at standoff with a clear shot rather than creeping into melee, or
+ *    steps round a wall that breaks the line. The goals always end with the
+ *    target's own cell, so when the firing cell yields no step (none
+ *    reachable within the search, or the step to it blocked at a choke)
+ *    `advance` falls through to charging, and the choke drains; a single
+ *    goal that is a wall or an ally freezes the unit. The target is left
+ *    out of the soft cells (`excludeUnitId`), so a path to its cell exists,
+ *    and the hold stops the unit a cell short of it.
  *
- * 4. **The minRange kite (O4/Qb#3).** Too CLOSE (body distance inside
- *    minRange) the target-cell fallback is OMITTED: it is the opposite of the
- *    kite's intent, and with the retreat blocked (a corridor pin: walls kill
- *    the sidestep, an ally fills the back-step) it would walk the kiter
- *    straight ONTO the soft-excluded target's cell — a same-cell overlap. A
- *    pinned kiter (no reachable firing cell either) yields an EMPTY goal list
- *    → the behavior abstains/queues rather than charging.
+ * 4. The minimum-range kite. Too close (body distance inside the minimum
+ *    range), the target's cell is left out of the goals: charging is the
+ *    opposite of a kite, and with the retreat blocked (walls stop the
+ *    sidestep, an ally fills the cell behind) it would walk the kiter onto
+ *    the excluded target's own cell. A pinned kiter, with no reachable
+ *    firing cell either, gets no goals, and the behaviour abstains.
  *
- * Distances are footprint-aware throughout (44-pre-c): `unitDistance`
- * body-to-body for the kite decision, `firingBandCell` per body cell for the
- * band. LOS occluders cover multi-tile bodies whole (43-pre-b).
+ * Distances are body to body throughout: `unitDistance` for the kite,
+ * `firingBandCell` per body cell for the band. Line-of-sight occluders cover
+ * a large body whole.
  */
 
 import type { GridCoord } from '../core/types';
 import { isInertNeutral, type Unit } from './Unit';
 import type { World } from './World';
 import type { MovementIntent } from './movement';
-// ⚠ NO import from './archetypes' here — this module is evaluated INSIDE the
-// `config/units` module-eval cycle (config/units → abilities/registry → the
-// effects layer → here), and archetypes.ts does EVAL-time catalog reads
-// (`CONFIGS = UNIT_DEFS`, `ALL_ARCHETYPES`) that explode mid-cycle (gotcha
-// #114's module-eval cousin). That is why `engagementDirective` takes
-// `minRange` as a PARAMETER instead of calling `minRangeForArchetype` itself —
-// the behaviors (outside the cycle) resolve it.
+// No import from './archetypes' here: this module is evaluated inside the
+// `config/units` cycle (config/units → abilities/registry → the effects layer
+// → here), and archetypes.ts reads the catalog at evaluation
+// (`CONFIGS = UNIT_DEFS`, `ALL_ARCHETYPES`), which fails mid-cycle (gotcha
+// #114). So `engagementDirective` takes `minRange` as a parameter, and the
+// behaviours, outside the cycle, resolve it.
 import { SIM } from '../config/sim';
 import { hasLineOfSight } from './LineOfSight';
 import { nearestActingCell } from './actingPosition';
@@ -84,9 +75,8 @@ import {
   unitDistance,
 } from './occupancy';
 
-/** The 8 grid neighbors, in a fixed order for deterministic candidate scans —
- *  THE shared copy (was triplicated across MovementBehavior /
- *  SupportMovementBehavior / effects/reposition). */
+/** The eight grid neighbours, in a fixed order, so a candidate scan is
+ *  deterministic. The one copy. */
 export const NEIGHBORS: ReadonlyArray<readonly [number, number]> = [
   [-1, -1], [0, -1], [1, -1],
   [-1, 0], [1, 0],
@@ -94,19 +84,16 @@ export const NEIGHBORS: ReadonlyArray<readonly [number, number]> = [
 ];
 
 /**
- * Neutral units (walls, rubble) whose `blocksLineOfSight` is true — the
- * LOS-occluder pool shared by the ranged re-target check (`Targeting`), the
- * strike abilities' shot gate (`effects/propose.ts`), and the movement hold.
- * Half-cover (`blocksLineOfSight: false`) is deliberately excluded: it blocks
- * movement but not sight (D6). 43-pre-b — the WHOLE footprint
- * (`cellsOccupiedBy`), not just the §39 corner: corner-only, shots passed
- * through a multi-tile rubble's body.
+ * Neutral units whose `blocksLineOfSight` is true (walls, rubble), every cell
+ * of a body: the occluders the re-target check (`Targeting`) and the
+ * abilities' shot gates (`effects/propose.ts`, `EffectAction`) read, and the
+ * set `engagementDirective` builds for the hold. Half cover
+ * (`blocksLineOfSight: false`) blocks movement and not sight.
  *
- * §75d — ACTIVE neutrals stay INCLUDED, deliberately (the kickoff census
- * call): a camp member spawns `blocksLineOfSight: true` like every combatant
- * def, so its body occludes shots exactly as rubble does. Endpoints are never
- * blockers (Bresenham excludes them), so a hostile camp member remains
- * shootable — its body only shadows cells BEHIND it.
+ * Camp members are included on purpose: a unit spawns with
+ * `blocksLineOfSight` true by default, so a camp member's body occludes a
+ * shot as rubble does. A ray's endpoints never block, so a hostile camp
+ * member can still be shot; its body shadows only the cells behind it.
  */
 export function collectLosBlockers(world: World): GridCoord[] {
   const blockers: GridCoord[] = [];
@@ -117,25 +104,22 @@ export function collectLosBlockers(world: World): GridCoord[] {
 }
 
 /**
- * 44-pre-c — THE shared firing-band + LOS gate, footprint-aware: the first cell
- * of `target`'s body (anchored at `anchor` — its logical position, or its §36b
- * claimed destination for the movement hold's arriving-target case) that sits in
- * `[minRange, maxRange]` of `from` AND — unless `losBlockers` is null (an
- * LOS-ignoring lob, E7.D) — has a clear Bresenham line from `from`. Returns
- * `undefined` when no body cell qualifies.
+ * The shared firing-band and line-of-sight gate: the first cell of `target`'s
+ * body (anchored at `anchor`, its position, or its claimed destination for
+ * the hold on an arriving target) within `[minRange, maxRange]` of `from`
+ * and, unless `losBlockers` is null (a sight-ignoring lob), with a clear
+ * Bresenham line from `from`. Undefined when no body cell qualifies.
  *
- * This ONE predicate is what keeps the strike gates (`effects/propose.ts`) and
- * the movement hold (`engagementDirective` above) in agreement — the GP4/Qb#3
- * freeze class IS the two layers disagreeing about "in range", so any future
- * range-gate must route through here rather than re-deriving the test. For a
- * 1×1 target this is exactly the old corner test (band first, then LOS),
- * byte-identical for the whole combatant roster. Against a multi-tile body the
- * ∃-cell shape matters: a melee unit flush against the FAR side of a 3×3 rubble
- * is in band via the near body cell (adjacent ray — endpoints are never
- * blockers), even though the ray to the §39 corner would thread the body.
- * `losBlockers` may include the target's own footprint (it does, for rubble —
- * `collectLosBlockers` collects all neutrals); self-occlusion of FAR body cells
- * is correct, the near visible cell carries the gate.
+ * This one predicate keeps the strike gates (`effects/propose.ts`,
+ * `EffectAction`) and the hold (`engagementDirective`) in agreement: a unit
+ * freezes when the two disagree about "in range", so a new range gate goes
+ * through here rather than testing again. Against a large body, any cell
+ * counts: a melee unit flush against the far side of a 3×3 rubble is in band
+ * through the cell beside it (an adjacent ray; endpoints never block), though
+ * the ray to the corner would cross the body. `losBlockers` may hold the
+ * target's own cells (it does for rubble, since `collectLosBlockers` takes
+ * every opaque neutral); its far cells are hidden behind its near ones,
+ * which is right, and the near visible cell passes the gate.
  */
 export function firingBandCell(
   from: GridCoord,
@@ -153,8 +137,8 @@ export function firingBandCell(
   return undefined;
 }
 
-/** E7.D — whether the unit carries an LOS-ignoring ability (the catapult's
- *  arcing shot): its band tests run on range alone. */
+/** Whether the unit carries a sight-ignoring ability (the catapult's arcing
+ *  shot, `raise_dead`): its band tests run on range alone. */
 function unitIgnoresLos(unit: Unit): boolean {
   return unit.abilities.some((a) => a.ignoresLineOfSight === true);
 }
@@ -164,14 +148,12 @@ function unitIgnoresLos(unit: Unit): boolean {
  * do about its committed target this poll (the WHERE half of the decision; the
  * behavior maps it onto proposals + `MoveDecisionKind`s):
  *
- *   - `hold`     — in the firing band (protocol step 1): stay put and let the
- *                  ability fire.
- *   - `approach` — path per the carried `MovementIntent` (steps 2–3): the
- *                  neutral bestEffort approach, or the firing-cell/target goal
- *                  list.
- *   - `pinned`   — the Qb#3 pinned-kiter shape (step 4): too close with no
- *                  reachable firing cell and the charge fallback off — nothing
- *                  sane to do but abstain/queue.
+ *   - `hold` — in the firing band (step 1): stay, and let the ability fire.
+ *   - `approach` — path by the carried `MovementIntent` (steps 2 and 3): the
+ *     best-effort approach to an inert target, or the firing cell then the
+ *     target's cell.
+ *   - `pinned` — the pinned kiter (step 4): too close, no reachable firing
+ *     cell, and no charge; nothing to do but abstain.
  */
 type EngagementDirective =
   | { kind: 'hold' }
@@ -179,12 +161,11 @@ type EngagementDirective =
   | { kind: 'pinned' };
 
 /**
- * Resolve the protocol (steps 1–4 in the module docs) for `unit` against its
- * committed `target`. Pure spatial knowledge — no events, no proposals, no
- * cooldowns; same inputs always yield the same directive. `minRange` is the
- * unit's O4 firing floor (`minRangeForArchetype(unit.archetype)`), passed by
- * the caller — see the import note at the top for why this module must not
- * resolve it itself.
+ * The protocol (steps 1 to 4 above) for `unit` against its committed
+ * `target`. Spatial only: no events, proposals or cooldowns, and the same
+ * inputs always give the same directive. `minRange` is the unit's firing
+ * floor (`minRangeForArchetype`), passed by the caller, since this module
+ * must not import it (the note at the imports).
  */
 export function engagementDirective(
   unit: Unit,
@@ -192,13 +173,10 @@ export function engagementDirective(
   target: Unit,
   minRange: number,
 ): EngagementDirective {
-  // LOS occluders for the in-band hold + the firing-cell search: neutral
-  // walls that block sight (half-cover is `blocksLineOfSight: false` — D6 —
-  // so it path-blocks but doesn't break LOS). Path-blocking is handled inside
-  // `advance` (all neutrals), so this set is LOS-only.
-  // 43-pre-b — the WHOLE footprint (`cellsOccupiedBy`), not just the §39
-  // corner. (Equivalent to `collectLosBlockers` — the self-exclusion below can
-  // never fire for a combatant — kept verbatim from the relocation.)
+  // The occluders for the hold and the firing-cell search, every cell of a
+  // body; blocking movement is `advance`'s, so this set is for sight only. It
+  // is `collectLosBlockers` less the unit itself, which only a camp member
+  // could be, and a ray's start never blocks anyway.
   const losBlockers: GridCoord[] = [];
   for (const u of world.units) {
     if (u.id === unit.id) continue;
@@ -206,12 +184,9 @@ export function engagementDirective(
   }
 
   const ignoresLos = unitIgnoresLos(unit);
-  // O4 — hold only when the target is in the firing BAND [minRange,
-  // attackRange]. Too FAR → close in. Too CLOSE (inside minRange) → DON'T
-  // hold, fall through and KITE out to the band.
-  // 44-pre-c — footprint distance (body-to-body), matching the strike gate's
-  // measure: too-close/too-far is judged against a multi-tile target's BODY,
-  // not its §39 corner. 1×1 targets byte-identical.
+  // Hold only in the band [minRange, attackRange]. Too far: close in. Too
+  // close: don't hold; fall through and kite out to the band. Body to body,
+  // the strike gate's measure.
   const dist = unitDistance(unit, target);
   // The band test against the target's body anchored at `at` (protocol step 1).
   const inFiringBand = (at: GridCoord): boolean =>
@@ -223,20 +198,18 @@ export function engagementDirective(
       unit.derived.attackRange,
       ignoresLos ? null : losBlockers,
     ) !== undefined;
-  // §36b — hold when in the band against the target's logical position (strike
-  // it NOW) OR its in-flight CLAIMED destination (it is ARRIVING into the
-  // band). The attack itself still lands only once the target's LOGICAL
-  // position is in range (the §36 lock); this is a locomotion-only "wait for
-  // the arrival" so the pursuer doesn't thrash a cell short.
+  // Hold in the band of the target's position (strike it now) or of its
+  // claimed destination (it is arriving). The strike still lands only once
+  // the target's position is in range; this hold only waits for the arrival,
+  // so the pursuer doesn't thrash a cell short.
   const targetClaim = claimedDestinationOf(world, target.id);
   if (inFiringBand(target.position) || (targetClaim !== undefined && inFiringBand(targetClaim))) {
     return { kind: 'hold' };
   }
 
-  // Protocol step 2 — the §40b bestEffort rubble approach. §75e — INERT only:
-  // an active neutral (camp member) is a mobile combat target, so it gets the
-  // REAL firing-cell/kite protocol below (a ranged unit kites a hostile camp
-  // bandit instead of charging its corner like rubble).
+  // Step 2, an inert target only: a camp member is a mobile target and gets
+  // the firing-cell and kite steps below, so a ranged unit kites a hostile
+  // bandit rather than charging its corner as it would rubble's.
   if (isInertNeutral(target)) {
     return {
       kind: 'approach',
@@ -249,8 +222,8 @@ export function engagementDirective(
     };
   }
 
-  // Protocol step 3 — firing cell (ranged only, when reachable) then the
-  // target's own cell; step 4 — the kite omits the charge fallback.
+  // Step 3: the firing cell (ranged only, when one is found), then the
+  // target's own cell; step 4: the kite leaves the charge out.
   const goals: GridCoord[] = [];
   if (unit.derived.attackRange > 1) {
     const firingCell = nearestActingCell(
@@ -264,8 +237,8 @@ export function engagementDirective(
     );
     if (firingCell !== null) goals.push(firingCell);
   }
-  // (`dist >= minRange` is always true for melee [minRange 0] and the too-far
-  // approach, so the omission bites only for the blocked kiter — Qb#3.)
+  // (`dist >= minRange` always holds for melee, at minimum range 0, and for a
+  // unit too far, so the charge is left out only for the kiter too close.)
   if (dist >= minRange) goals.push(target.position);
 
   if (goals.length === 0) return { kind: 'pinned' };
@@ -281,9 +254,9 @@ export function engagementDirective(
   };
 }
 
-/** In-bounds, finite tile cost, and not in `occupied` (the caller-built cell-key
- *  set — occupancy semantics, claims folded or not, are the CALLER's choice;
- *  see 44-pre-a). THE shared copy of the leaf passability test. */
+/** In bounds, of finite tile cost, and not in `occupied`, the caller's key
+ *  set: whether claims are in it is the caller's choice. The one copy of the
+ *  step's passability test. */
 export function passable(c: GridCoord, world: World, occupied: ReadonlySet<string>): boolean {
   if (c.x < 0 || c.y < 0 || c.x >= world.gridW || c.y >= world.gridH) return false;
   if (!isFinite(world.tileGrid.costAt(c))) return false;
@@ -306,18 +279,18 @@ function countOpenNeighbors(
 }
 
 /**
- * The conservative one-cell retreat: the neighbor of `from` that STRICTLY
- * increases Chebyshev distance from `anchor` (a sideways / closer step never
- * reads as a "retreat"), tie-broken toward open space (`countOpenNeighbors`),
- * then fixed `NEIGHBORS` order for determinism. Null when boxed in (corner /
- * 1-wide corridor) — the caller then holds. Pure given the occupied set.
+ * The one-cell retreat: the neighbour of `from` that strictly increases the
+ * Chebyshev distance from `anchor` (a step sideways or closer is no
+ * retreat), ties toward open space (`countOpenNeighbors`), then the fixed
+ * `NEIGHBORS` order. Null when boxed in (a corner, a one-wide corridor), and
+ * the caller holds. Pure, given the occupied set.
  *
- * THE shared core of the two retreat twins (was duplicated verbatim):
- * `effects/reposition.retreatCell` (the gambit dart-back — folds CLAIMS into
- * its set, its instant reposition bypasses the §35b selector gate) and
- * `SupportMovementBehavior.stepAwayFrom` (the healer panic step — plain
- * occupancy, its MoveAction proposal is §35b-guarded). The occupancy semantics
- * stay at the callers; only the geometry lives here.
+ * Shared by `effects/reposition.retreatCell` (the effect's retreat and the
+ * flee; it folds claims into its set, since an effect's reposition is
+ * instant and skips the selector's destination check) and the healer's
+ * `stepAwayFrom` in `SupportMovementBehavior` (occupancy only, since its
+ * move is checked as it runs). Each caller chooses its set; only the
+ * geometry is here.
  */
 export function awayStep(
   from: GridCoord,

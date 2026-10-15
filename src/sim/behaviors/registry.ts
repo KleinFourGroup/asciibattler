@@ -16,7 +16,7 @@ import { CampWanderBehavior } from './CampWanderBehavior';
  * E2 retired AttackBehavior in favor of AbilityBehavior — the per-ability
  * id list lives on `unit.abilities` (snapshotted as `string[]`).
  */
-export type BehaviorFactory = () => Behavior;
+type BehaviorFactory = () => Behavior;
 
 const FACTORIES: Record<string, BehaviorFactory> = {
   [MovementBehavior.kind]: () => new MovementBehavior(),

@@ -17,7 +17,7 @@ import { SIM } from '../config/sim';
  * position and the tile, so `focus` rides O1's snapshot with no field of its
  * own.
  */
-export type FocusTileDirective = 'pursue' | 'engageLocal';
+type FocusTileDirective = 'pursue' | 'engageLocal';
 
 function chebyshev(a: GridCoord, b: GridCoord): number {
   return Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y));

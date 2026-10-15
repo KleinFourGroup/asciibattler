@@ -46,7 +46,7 @@ export function squareCells(center: GridCoord, radius: number): GridCoord[] {
 
 /** The cells an `aoe` shape covers around its center. Only `square` ships; the
  *  other shapes are reserved seams (declared in the schema, no consumer yet). */
-export function cellsForAoeShape(
+function cellsForAoeShape(
   shape: 'square' | 'line' | 'cross',
   center: GridCoord,
   radius: number,
@@ -135,7 +135,7 @@ export function nearestChainTarget(
 }
 
 /** A resolved area victim + its per-cell damage multiplier (center 1, ring `ringMultiplier`). */
-export interface AreaVictim {
+interface AreaVictim {
   unit: Unit;
   mult: number;
 }

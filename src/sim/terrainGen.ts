@@ -54,7 +54,7 @@ import { sampleProceduralParams, generateProceduralMap } from './proceduralMap';
  * path emits only these) is assignable — `hp` is optional — so procedural obstacles stay
  * indestructible with no code change.
  */
-export type NeutralCoord = GridCoord & { readonly hp?: number | undefined };
+type NeutralCoord = GridCoord & { readonly hp?: number | undefined };
 
 /**
  * §40d — a rubble placement: a footprint CORNER plus an optional `size` (1..3,
@@ -63,7 +63,7 @@ export type NeutralCoord = GridCoord & { readonly hp?: number | undefined };
  * destructible; `hp` only tunes the pool. `battleSetup.applyTerrain` spawns each
  * via `spawnRubble`. Hand-authored-only (procedural emits none).
  */
-export type RubbleCoord = GridCoord & {
+type RubbleCoord = GridCoord & {
   readonly size?: number | undefined;
   readonly hp?: number | undefined;
 };

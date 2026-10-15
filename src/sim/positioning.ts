@@ -155,7 +155,7 @@ export function firingBandCell(
 
 /** E7.D — whether the unit carries an LOS-ignoring ability (the catapult's
  *  arcing shot): its band tests run on range alone. */
-export function unitIgnoresLos(unit: Unit): boolean {
+function unitIgnoresLos(unit: Unit): boolean {
   return unit.abilities.some((a) => a.ignoresLineOfSight === true);
 }
 
@@ -173,7 +173,7 @@ export function unitIgnoresLos(unit: Unit): boolean {
  *                  reachable firing cell and the charge fallback off — nothing
  *                  sane to do but abstain/queue.
  */
-export type EngagementDirective =
+type EngagementDirective =
   | { kind: 'hold' }
   | { kind: 'approach'; intent: MovementIntent }
   | { kind: 'pinned' };
@@ -293,7 +293,7 @@ export function passable(c: GridCoord, world: World, occupied: ReadonlySet<strin
 
 /** How many of `c`'s 8 neighbors are `passable` — the open-space tie-breaker
  *  the retreat step prefers (back away toward room, not into a pocket). */
-export function countOpenNeighbors(
+function countOpenNeighbors(
   c: GridCoord,
   world: World,
   occupied: ReadonlySet<string>,

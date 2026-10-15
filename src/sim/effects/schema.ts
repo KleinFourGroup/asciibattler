@@ -66,8 +66,8 @@ const ORPHAN_POLICIES = [
   'ground-target',
 ] as const satisfies readonly OrphanPolicy[];
 
-export const PhaseSchema = z.enum(PHASE_NAMES);
-export const OrphanPolicySchema = z.enum(ORPHAN_POLICIES);
+const PhaseSchema = z.enum(PHASE_NAMES);
+const OrphanPolicySchema = z.enum(ORPHAN_POLICIES);
 
 /* -------------------------------------------------------------------------- */
 /* Effect ops — the typed operations a verb performs on its resolved targets.  */
@@ -109,7 +109,7 @@ export const ScalingStatSchema = z.enum(['strength', 'ranged', 'magic', 'luck', 
  * scaled form is editor-generated in §31d — the def-base fallback belongs to the
  * bare-number arm, not here).
  */
-export const ScaledValueSchema = z.object({
+const ScaledValueSchema = z.object({
   base: z.number(),
   stat: ScalingStatSchema,
   perPoint: z.number(),
@@ -192,7 +192,7 @@ const ApplyStatusOpSchema = z.object({
  * (the same discipline `PeriodicOpSchema` holds for status ticks) — the chain op
  * stays in the closed `EffectOp` union without making that union self-referential.
  */
-export const ChainInnerOpSchema = z.discriminatedUnion('kind', [DamageOpSchema, ApplyStatusOpSchema]);
+const ChainInnerOpSchema = z.discriminatedUnion('kind', [DamageOpSchema, ApplyStatusOpSchema]);
 
 /**
  * `chain` — arc to up to `maxJumps` targets: start at the committed primary, then

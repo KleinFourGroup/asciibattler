@@ -44,7 +44,7 @@ const STAT_CAP = 99;
  * only the id.
  */
 export const RARITY_TIERS = ['common', 'uncommon', 'rare', 'legendary'] as const;
-export const RaritySchema = z.enum(RARITY_TIERS);
+const RaritySchema = z.enum(RARITY_TIERS);
 export type UnitRarity = z.infer<typeof RaritySchema>;
 
 const BaseStatsSchema = z.object({

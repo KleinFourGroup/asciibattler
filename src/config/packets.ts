@@ -60,7 +60,7 @@ export type UseContext = (typeof USE_CONTEXTS)[number];
 /** The target vocabulary. No op admits `tile`: neither context a packet
  *  fires in has a battlefield. */
 export const PACKET_TARGET_KINDS = ['none', 'unit', 'tile'] as const;
-export type PacketTargetKind = (typeof PACKET_TARGET_KINDS)[number];
+type PacketTargetKind = (typeof PACKET_TARGET_KINDS)[number];
 
 // ── the packet-only ops ─────────────────────────────────────────────────────
 

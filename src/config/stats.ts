@@ -63,6 +63,6 @@ const StatsSchema = z.object({
   speedMinCdScale: z.number().min(0).max(1),
 });
 
-export type StatsConfig = z.infer<typeof StatsSchema>;
+type StatsConfig = z.infer<typeof StatsSchema>;
 
 export const STATS: StatsConfig = StatsSchema.parse(statsJson);

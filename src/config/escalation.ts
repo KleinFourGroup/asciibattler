@@ -89,7 +89,7 @@ const LEVERS: readonly EscalationLever[] = ['levelBudget', 'wave', 'bits'];
 
 /** One lever a level moves, and how many levels under it moved the same
  *  lever before (0 the first time). */
-export interface LeverStep {
+interface LeverStep {
   readonly lever: EscalationLever;
   readonly earlier: number;
 }

@@ -49,7 +49,7 @@ export function displayLevel(level: number): number {
  * 0); below it, `fraction` is `xp / xpToNext(level)` clamped to [0, 1] so
  * banked-past-the-threshold XP (a pending promotion) never overflows the bar.
  */
-export interface XpProgress {
+interface XpProgress {
   readonly atCap: boolean;
   /** XP required to reach the next level (the bar's denominator); 0 at the cap. */
   readonly need: number;
@@ -64,7 +64,7 @@ export function xpProgress(xp: number, level: number): XpProgress {
   return { atCap: false, need, fraction };
 }
 
-export interface XpAward {
+interface XpAward {
   unitId: number;
   /**
    * Index into `Run.team` for the surviving player unit. Set by

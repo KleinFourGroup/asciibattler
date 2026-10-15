@@ -343,7 +343,7 @@ interface ActiveActionSnapshot {
   phases: readonly ActionPhase[];
 }
 
-export interface UnitSnapshot {
+interface UnitSnapshot {
   id: number;
   team: Team;
   archetype: UnitArchetype;
@@ -416,7 +416,7 @@ export interface CampInstance {
 
 /** §75b — the wire form of `CampInstance` (`hostileTo` flattens to a
  *  fixed-order array so serialization is deterministic). */
-export interface CampInstanceSnapshot {
+interface CampInstanceSnapshot {
   id: number;
   defId: string;
   anchor: GridCoord;
@@ -425,12 +425,12 @@ export interface CampInstanceSnapshot {
   killedBy: Team | null;
 }
 
-export interface SpawnQueueSnapshot {
+interface SpawnQueueSnapshot {
   team: Team;
   templates: UnitTemplate[];
 }
 
-export interface SpawnRegionAssignment {
+interface SpawnRegionAssignment {
   team: Team;
   region: SpawnRegion;
 }

@@ -15,7 +15,7 @@ import { EffectAbility } from '../effects/EffectAbility';
  * factory signature to take a snapshot blob and add a `toData()` method
  * on the ability class (mirrors `actions/registry.ts`).
  */
-export type AbilityFactory = () => Ability;
+type AbilityFactory = () => Ability;
 
 // I6 — the four melee subclasses each carry a distinct weapon id (their
 // `config/abilities.json` profile differs).

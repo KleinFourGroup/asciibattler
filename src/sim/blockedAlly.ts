@@ -112,7 +112,7 @@ export function blockedAlly(
  * live occupancy check — the caller layers the unoccupied test on top. Returns
  * a `key → distance` map; cells walled off from `start` are simply absent.
  */
-export function distanceField(
+function distanceField(
   start: GridCoord,
   world: World,
   walls: ReadonlySet<string>,

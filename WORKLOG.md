@@ -4811,3 +4811,26 @@ field left unread); the corpus, 0 of 30 journals differ; the fuzz diff
 against `8444bae`, PASS on both shapes. `build-hash HEAD` differs in the
 two script bundles and `index.html`, as it must for shipped code. The
 step-code ceiling 5,766 → 5,765.
+
+The first `git commit` left no commit and printed none of the hook's
+lines; the cause was not read. The second ran green.
+
+Reading: 357,566 at 13:47 on the commit, `698b578`.
+
+### 122d — A-26, the word `export` (2026-10-15, session 6677fa11)
+
+The list taken again at HEAD by `npm run oracle -- refs --all` over
+`src/sim`, `src/core` and `src/config`: 68 declarations, schema keys
+aside, that nothing outside their file reads, 39 in `src/sim`, 29 in
+`src/config`, none in `src/core` (120d had 40 and 30; `FocusTileResolution`
+went at 121e, and `EconomyConfig` and `SelectionConfig` with their files).
+A word search of the tracked files outside the type check found one, the
+save's shape pin (`tests/run-snapshot-shape.txt`), which names
+`BattleRuleEffect`, `BattleRuleFilter` and `EffectLifetime` as types and
+does not import them; no file in the three folders is imported as a
+namespace. Each line was checked to begin with `export` and name its
+declaration before any file was written.
+
+Proof (export): typecheck clean, so no reader was missed and none of the
+68 is unread now; `build-hash HEAD`, the same bytes; the suite, the save
+pin among it, by the hook. No comment changed.

@@ -128,8 +128,8 @@ share of list A's export rows joins the sim's.
   `reach-diff`: nothing lost.
 - ☑ **122c — A-28's field and A-38's option** (`none`). Proof: sim,
   0 of 30 and PASS.
-- ☐ **122d — A-26, the word `export`** (`none`). Sim, core and config,
-  the list taken again at HEAD.
+- ☑ **122d — A-26, the word `export`** (`none`). 68 declarations in 40
+  files; the build's bytes unchanged.
 - ☐ **122e — A-34, the test pair** (`none`).
 - ☐ **122f — B-01, the two predicates by name** (`stop`: B-02's
   decision on B-01's list, with 122n's blind read).

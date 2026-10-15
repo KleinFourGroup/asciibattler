@@ -19,7 +19,7 @@ import type { StatusDef, StatusMerge } from './statusSchema';
  * copies); `ignore` → `ignore` (no-op if present). The reserved `instances` /
  * `ignore` have no §27 content consumer but map cleanly so the union is closed.
  */
-export function statusMergeToPolicy(merge: StatusMerge): MergePolicy {
+function statusMergeToPolicy(merge: StatusMerge): MergePolicy {
   switch (merge) {
     case 'refresh':
       return 'replace';

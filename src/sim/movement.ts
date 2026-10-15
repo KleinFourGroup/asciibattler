@@ -68,7 +68,7 @@ import { emitMoveDecision } from './moveDecision';
  *     sets above stay strict, so softening a cost can never soften a collision
  *     check (gotcha #113's placement rule is untouched).
  */
-export interface MovementContext extends PathCostContext {
+interface MovementContext extends PathCostContext {
   readonly pathBlockers: GridCoord[];
   readonly otherUnitCells: Set<number>;
   readonly occupied: Set<number>;
@@ -81,7 +81,7 @@ export interface MovementContext extends PathCostContext {
  * ORIGIN (the arrival-window anchor) is passed per-call, not carried here —
  * it's `routeToward`'s `from`.
  */
-export interface PathCostContext {
+interface PathCostContext {
   // 86c-L2 — every collection here is keyed by the PACKED cell index
   // (`cellIndex(c, world.gridW)`), not the `"x,y"` string: these are the maps
   // `costAt` probes once per A* expansion, the hottest reads in the balancer.

@@ -161,7 +161,7 @@ assertLayoutCampRefs(LAYOUTS, CAMP_IDS);
  * `terrain.json#procedural.camps.pools` resolves in this catalog. camps.ts
  * imports terrain.ts, never the reverse.
  */
-export function assertProceduralCampRefs(
+function assertProceduralCampRefs(
   pools: Readonly<Record<string, readonly CampRef[]>>,
   campIds: readonly string[],
 ): void {

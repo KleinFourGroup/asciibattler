@@ -28,14 +28,14 @@ const ChanceSchema = z.number().min(0).max(1);
 // ── The rule vocabulary ─────────────────────────────────────────────────────
 
 /** Triggers resolved on the Run. */
-export const RUN_TRIGGER_KEYS = ['turnStart', 'encounterStart', 'encounterEnd'] as const;
+const RUN_TRIGGER_KEYS = ['turnStart', 'encounterStart', 'encounterEnd'] as const;
 /** Triggers compiled into the World as `battleRules`, on the payloads of the
  *  sim's `TriggerDispatcher`. */
 export const BATTLE_TRIGGER_KEYS = ['dealHit', 'kill'] as const;
 
-export type RunTriggerKey = (typeof RUN_TRIGGER_KEYS)[number];
-export type BattleTriggerKey = (typeof BATTLE_TRIGGER_KEYS)[number];
-export type TriggerKey = RunTriggerKey | BattleTriggerKey;
+type RunTriggerKey = (typeof RUN_TRIGGER_KEYS)[number];
+type BattleTriggerKey = (typeof BATTLE_TRIGGER_KEYS)[number];
+type TriggerKey = RunTriggerKey | BattleTriggerKey;
 
 /** Where a trigger fires. It decides which ops a hook on it may carry, and
  *  which hooks compile into the World. */
@@ -196,7 +196,7 @@ export const DaemonsSchema = z
 
 /** A hook's optional condition; each key is checked against the trigger at
  *  parse time (`RuleSchema`). */
-export interface RuleFilter {
+interface RuleFilter {
   archetype?: string;
   crit?: boolean;
   won?: boolean;
@@ -218,7 +218,7 @@ export type EffectOp =
     };
 
 /** A passive change to a run stat, folded by `foldRunStats`. */
-export interface ModifierRule {
+interface ModifierRule {
   kind: 'modifier';
   stat: RunStatKey;
   op: 'add' | 'mult';
@@ -235,7 +235,7 @@ export interface HookRule {
   effect: EffectOp;
 }
 
-export type Rule = ModifierRule | HookRule;
+type Rule = ModifierRule | HookRule;
 
 export interface DaemonConfig {
   id: string;

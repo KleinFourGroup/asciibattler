@@ -49,7 +49,7 @@ export type BattleRuleTrigger = 'dealHit' | 'kill';
 
 /** The battle-legal filter axes (parse-time matrix: `crit` only rides
  *  `dealHit`; `archetype` names the ACTING unit's archetype). */
-export interface BattleRuleFilter {
+interface BattleRuleFilter {
   archetype?: string;
   crit?: boolean;
 }
@@ -57,7 +57,7 @@ export interface BattleRuleFilter {
 /** The battle-legal effect ops: `gainBits` (→ the serialized tally) and
  *  `applyStatus` (def-resolved by id at fire time; `applyTo` absent =
  *  `'actor'`, the 47f default — `'target'` is the 49e axis, `dealHit`-only). */
-export type BattleRuleEffect =
+type BattleRuleEffect =
   | { op: 'gainBits'; amount: number }
   | {
       op: 'applyStatus';

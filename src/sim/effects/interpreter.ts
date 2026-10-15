@@ -40,7 +40,7 @@ import { behaviorFlags } from '../statusBehavior';
  * swing (the only thing that populates this set) drops its rider. A dead/fizzled
  * target is filtered separately by `applyStatus`'s own alive check.
  */
-export interface FireScratch {
+interface FireScratch {
   /** Unit ids a damage op this pass explicitly MISSED (evade). */
   missed: Set<number>;
 }

@@ -76,6 +76,6 @@ const NodeMapSchema = z
     message: 'middleWidthMin must be <= middleWidthMax',
   });
 
-export type NodeMapConfig = z.infer<typeof NodeMapSchema>;
+type NodeMapConfig = z.infer<typeof NodeMapSchema>;
 
 export const NODE_MAP: NodeMapConfig = NodeMapSchema.parse(nodeMapJson);

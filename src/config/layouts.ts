@@ -35,8 +35,8 @@ const NeutralCoordSchema = CoordSchema.extend({
 
 /** The rubble footprint's side range, matching the `rubble_1x1`, `2x2` and
  *  `3x3` defs. */
-export const RUBBLE_MIN_SIZE = 1;
-export const RUBBLE_MAX_SIZE = 3;
+const RUBBLE_MIN_SIZE = 1;
+const RUBBLE_MAX_SIZE = 3;
 
 /**
  * A rubble placement: its footprint's min corner `{x, y}`, the block extending

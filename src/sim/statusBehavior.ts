@@ -32,7 +32,7 @@ import type { StatusEffect } from './statusEffects';
  *   - `acquisitionRange` — `Targeting` caps the acquisition reach (blind).
  *   - `affects` — the interpreter forces this unit's attacks to friendly-fire.
  */
-export interface BehaviorFlags {
+interface BehaviorFlags {
   preventsAttack: boolean;
   preventsMove: boolean;
   /** The movement-goal override, or `null` for normal pursuit. */

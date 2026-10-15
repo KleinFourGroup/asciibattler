@@ -66,7 +66,7 @@ const DifficultySchema = z.object({
   startingBits: z.number().int().nonnegative(),
 });
 
-export type DifficultyConfig = z.infer<typeof DifficultySchema>;
+type DifficultyConfig = z.infer<typeof DifficultySchema>;
 
 export const DIFFICULTY: DifficultyConfig = DifficultySchema.parse(difficultyJson);
 

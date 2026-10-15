@@ -20,7 +20,7 @@ import { SIM } from '../config/sim';
  * archetype-config schema picks the new id up automatically via
  * `knownTargetingIds()`.
  */
-export interface TargetingStrategy {
+interface TargetingStrategy {
   readonly id: string;
   /**
    * Comparator over two eligible enemy candidates of `unit`. Returns < 0 when

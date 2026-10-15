@@ -38,7 +38,7 @@ import { spawnHalfCover, spawnRubble, spawnWall } from './environment';
 import type { SpawnRegion, CampRef } from './layouts';
 import { SIM } from '../config/sim';
 
-export interface PickedSpawnRegions {
+interface PickedSpawnRegions {
   readonly player: SpawnRegion;
   readonly enemy: SpawnRegion;
 }

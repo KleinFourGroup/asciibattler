@@ -21,7 +21,7 @@ import { abilityDef } from '../../config/abilities';
  * at a snapshot. If 'wait' ever reaches `createAction`, that invariant broke
  * — the `abilityDef` fallback below throws, keeping the failure loud.
  */
-export type ActionFactory = (data: unknown, world: World) => Action;
+type ActionFactory = (data: unknown, world: World) => Action;
 
 const FACTORIES: Record<string, ActionFactory> = {
   [MOVE_ACTION_ID]: (data) => MoveAction.fromData(data as MoveActionData),

@@ -49,6 +49,6 @@ const _rarityWeightsCoverTiers: Record<UnitRarity, number> = {} as z.infer<
 >;
 void _rarityWeightsCoverTiers;
 
-export type RecruitmentConfig = z.infer<typeof RecruitmentSchema>;
+type RecruitmentConfig = z.infer<typeof RecruitmentSchema>;
 
 export const RECRUITMENT: RecruitmentConfig = RecruitmentSchema.parse(recruitmentJson);

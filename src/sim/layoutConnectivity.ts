@@ -29,7 +29,7 @@
  * integration test remains the behavioral backstop for whatever ships.
  */
 
-export interface ConnectivityCoord {
+interface ConnectivityCoord {
   readonly x: number;
   readonly y: number;
 }
@@ -38,7 +38,7 @@ export interface ConnectivityRegion {
   readonly tiles: readonly ConnectivityCoord[];
 }
 
-export type ConnectivityTier =
+type ConnectivityTier =
   /** Connected over open ground (or through auto-targeted rubble) — no wall-break needed. */
   | 'connected'
   /** Reachable only if a DESTRUCTIBLE wall/half-cover is destroyed — the AI won't do
@@ -48,7 +48,7 @@ export type ConnectivityTier =
    *  (editor ERROR). */
   | 'severed';
 
-export interface ConnectivityQuery {
+interface ConnectivityQuery {
   readonly gridW: number;
   readonly gridH: number;
   /** Connectivity is probed between the first two regions' centroids (the same heuristic

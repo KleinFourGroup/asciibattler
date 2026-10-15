@@ -49,7 +49,7 @@ export type TileKind =
  * string, see `TileGridSnapshot`), so adding a kind or tuning a mod never bumps
  * a snapshot.
  */
-export interface TileDef {
+interface TileDef {
   /**
    * Movement cost to ENTER. Pathfinding weights neighbour edges by the
    * destination cell's cost; `Infinity` is the data-driven block (the

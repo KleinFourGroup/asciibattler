@@ -64,6 +64,6 @@ const KeybindingsSchema = z.object({
   showTooltip: z.string().min(1),
 });
 
-export type KeybindingsConfig = z.infer<typeof KeybindingsSchema>;
+type KeybindingsConfig = z.infer<typeof KeybindingsSchema>;
 
 export const KEYBINDING_DEFAULTS: KeybindingsConfig = KeybindingsSchema.parse(keybindingsJson);

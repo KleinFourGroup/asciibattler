@@ -233,7 +233,7 @@ export interface Behavior {
   proposeAction(unit: Unit, world: World): ActionProposal | null;
 }
 
-export interface UnitInit {
+interface UnitInit {
   readonly id: number;
   readonly team: Team;
   readonly archetype: UnitArchetype;

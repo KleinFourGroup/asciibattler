@@ -46,6 +46,6 @@ const PlaybackSchema = z
     path: ['speeds'],
   });
 
-export type PlaybackConfig = z.infer<typeof PlaybackSchema>;
+type PlaybackConfig = z.infer<typeof PlaybackSchema>;
 
 export const PLAYBACK: PlaybackConfig = PlaybackSchema.parse(playbackJson);

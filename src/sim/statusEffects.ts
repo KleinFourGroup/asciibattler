@@ -47,7 +47,7 @@ export interface StatMod {
  * `endOfTurn` effect), so it never reaches the World as a distinct kind — see
  * K1 commit 2.
  */
-export type EffectLifetime =
+type EffectLifetime =
   | { kind: 'ticks'; expiresAtTick: number }
   | { kind: 'endOfTurn' };
 

@@ -34,7 +34,7 @@ export const REWARD_ENTRY_KINDS = ['bits', 'packet', 'daemon', 'unit', 'poolHeal
 export type RewardEntryKind = (typeof REWARD_ENTRY_KINDS)[number];
 
 /** A `{min,max}` bits roll (uniform, integer, inclusive). */
-export interface BitsRewardEntry {
+interface BitsRewardEntry {
   readonly kind: 'bits';
   readonly weight: number;
   readonly min: number;
@@ -42,14 +42,14 @@ export interface BitsRewardEntry {
 }
 
 /** A packet grant. */
-export interface PacketRewardEntry {
+interface PacketRewardEntry {
   readonly kind: 'packet';
   readonly weight: number;
   readonly packet: string;
 }
 
 /** A daemon grant; owned ids are dropped before sampling. */
-export interface DaemonRewardEntry {
+interface DaemonRewardEntry {
   readonly kind: 'daemon';
   readonly weight: number;
   readonly daemon: string;
@@ -59,7 +59,7 @@ export interface DaemonRewardEntry {
  *  offered, on the reward-bits stream, as a port's stock does, and the
  *  portion carries the rolled `UnitTemplate`. `level` absent is 1.
  *  Duplicates are legal: nothing is excluded, as owned daemons are. */
-export interface UnitRewardEntry {
+interface UnitRewardEntry {
   readonly kind: 'unit';
   readonly weight: number;
   readonly archetype: string;
@@ -68,7 +68,7 @@ export interface UnitRewardEntry {
 
 /** A flat heal to the player's pool, capped at the maximum when the
  *  instant-op executor settles it, as a rest's heal is. It draws nothing. */
-export interface PoolHealthRewardEntry {
+interface PoolHealthRewardEntry {
   readonly kind: 'poolHealth';
   readonly weight: number;
   readonly amount: number;
@@ -87,7 +87,7 @@ export interface RewardTable {
 }
 
 /** The trigger (see the header). */
-export interface RewardTrigger {
+interface RewardTrigger {
   readonly chance: number;
 }
 

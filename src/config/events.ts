@@ -65,7 +65,7 @@ export type EventCondition =
 
 const FlagValueSchema = z.union([z.string(), z.number(), z.boolean()]);
 
-export const EventConditionSchema: z.ZodType<EventCondition> = z.discriminatedUnion('kind', [
+const EventConditionSchema: z.ZodType<EventCondition> = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('bitsAtLeast'), amount: z.number().int().nonnegative() }),
   z.object({ kind: z.literal('poolHealthAtLeast'), amount: z.number().int().nonnegative() }),
   z.object({ kind: z.literal('poolHealthAtMost'), amount: z.number().int().nonnegative() }),
@@ -97,7 +97,7 @@ export type EventEffectOp =
   | { op: 'removeUnit'; pick?: 'random' | 'weakest' | 'strongest' }
   | { op: 'setFlag'; flag: string; value?: EventFlagValue };
 
-export const EventEffectOpSchema = z.discriminatedUnion('op', [
+const EventEffectOpSchema = z.discriminatedUnion('op', [
   GainBitsOpSchema,
   z.object({ op: z.literal('spendBits'), amount: z.number().int().positive() }),
   HealPoolOpSchema,

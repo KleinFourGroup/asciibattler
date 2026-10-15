@@ -37,6 +37,6 @@ const DeckSchema = z.object({
   }),
 });
 
-export type DeckConfig = z.infer<typeof DeckSchema>;
+type DeckConfig = z.infer<typeof DeckSchema>;
 
 export const DECK: DeckConfig = DeckSchema.parse(deckJson);

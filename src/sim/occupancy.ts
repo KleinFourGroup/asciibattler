@@ -165,7 +165,7 @@ export function occupiedCells(
  * `random-intersect` (§75c — the camp drip's organic scatter) picks uniformly
  * among EVERY fitting placement whose footprint overlaps the spawn tile.
  */
-export type AnchorPolicy = 'corner' | 'random-intersect';
+type AnchorPolicy = 'corner' | 'random-intersect';
 
 /**
  * §39c — resolve where an N×N body ANCHORS when its spawn tile is `spawnTile`, or

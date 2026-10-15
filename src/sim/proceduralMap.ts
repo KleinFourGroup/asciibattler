@@ -115,7 +115,7 @@ export interface ResolvedMapParams {
   camps: { count: number; mode: CampPlacementMode; standoff: number };
 }
 
-export interface GenStats {
+interface GenStats {
   walls: number;
   halfCovers: number;
   /** Shallow-water cells (fords + pools + carves). */

@@ -47,6 +47,6 @@ const LevelingSchema = z.object({
   restXp: z.number().nonnegative(),
 });
 
-export type LevelingConfig = z.infer<typeof LevelingSchema>;
+type LevelingConfig = z.infer<typeof LevelingSchema>;
 
 export const LEVELING: LevelingConfig = LevelingSchema.parse(levelingJson);

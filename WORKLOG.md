@@ -5049,3 +5049,110 @@ The `campId` tests with no team test beside them (`World.ts:1124`,
 B-01's; they go on the list for B-02, which is taken after the
 conversion: every site in `src` that asks whether a unit is scenery, a
 camp member or any neutral, or compares one unit's team with another's.
+
+**What was built.** The 13 sites, each a call: `Targeting.ts:65`, :72,
+:103, :454 and :741, `World.ts:2170`, `spriteColor.ts:56` and
+`ObjectiveController.ts:190` to `isActiveNeutral`; `Targeting.ts:676`,
+`BattleRenderer.ts:743`, `devEntry.ts:114`, `eventSounds.ts:54` and
+`effects/targeting.ts:96` (`!isInertNeutral(u) || isDestructibleNeutral(…)`)
+to `isInertNeutral`; `isActiveNeutral` a type guard. The patch is
+`scratch/122f/b01.patch` (9 files, +27 −20), which `git apply --check`
+accepts at `ae59097`.
+
+Against the bar:
+
+1. *Behaviour: held.* Typecheck clean. The corpus, 0 of 30 journals
+   differ. The fuzz diff against `ae59097`: PASS, both shapes. The truth
+   table (`scratch/122f/truth.ts`): all 11 expressions the same on 34,992
+   cases (3 teams × `campId` null, 1 or 2 × six archetypes, among them
+   both values of each catalog flag × both hp signs, for a pair of units
+   and a team filter), the three exported functions called for real; its
+   three planted wrong rewrites caught (2,916, 3,888 and 972 cases).
+   `reach-diff` of the suite, recorded at `ae59097` and with the patch,
+   through the 9 changed files: nothing lost. The plant, in a worktree of
+   an unreferenced commit holding the patch (`d904bca`, made with a
+   scratch index; no ref moved): `Targeting.ts:741` negated, the only edit
+   the tool admits among the converted lines tried; the corpus CAUGHT, 12
+   of 30 journals, and the suite 6 files, against 0 of 30 and the
+   set-aside licences test unplanted.
+2. *Lines: failed.* `src` grows by 7: three import lines (`World.ts`'s
+   wrapped import, `ObjectiveController.ts`, `eventSounds.ts`) and four in
+   `Unit.ts` (the type guard's signature wraps past 100 columns, and one
+   line of doc). Without the guard it is +3, the imports alone. The bar
+   was written without counting the imports first; that was the session's
+   miss, and either form fails it.
+3. *No new parameter: held.*
+4. *The special case: held,* 13 hand-written sites → 0.
+
+**Under the bar, so reverted** (D2, and 120h's "not tried another way");
+the tree is at `ae59097` again. Whether clause 2 is set aside for B-01, as
+the user pre-registered for B-02, is the user's call at the stop. If not,
+`isActiveNeutral` is read by its own test alone (the shape of A-25's
+rows), since A-25 kept it for this trial.
+
+**B-01's list, for B-02.** Every code line in `src` outside tests that
+asks one of the four questions, taken at `ae59097` by a search for a team
+tested against `'neutral'`, a `campId` tested against null, the two
+predicates' calls, and one unit's team compared with another's, each line
+read.
+
+- *Scenery,* 26. The 15 `isInertNeutral` calls (11 files; a 16th is in
+  a test); the 5 B-01
+  sites shaped so (`Targeting.ts:676`, `BattleRenderer.ts:743`,
+  `devEntry.ts:114`, `eventSounds.ts:54`, `effects/targeting.ts:96`); and
+  6 that test `'neutral'` beside a catalog flag (`Targeting.ts:335`, :369,
+  :415 `isAutoTargetNeutral`, `spriteColor.ts:59` the destructible
+  obstacle, `positioning.ts:114` and :205 `blocksLineOfSight`). The first
+  four flags are keyed by `NEUTRAL_DEFS`, which no camp archetype is in
+  (`units.ts:255-266`, read), so a camp member never passes them; whether
+  a camp member's `blocksLineOfSight` is ever true was not read. Split,
+  all 26 become one team test.
+- *A camp member,* 10: the 8 B-01 sites shaped so, `World.ts:1124` (the
+  target's camp, for the aggro mark) and `groundMarks.ts:126` (`campId`
+  alone, the triangle mark). *Which camp,* 4 more: `World.ts:2615`/:2633
+  (a summon takes its summoner's camp), `World.ts:3035` (the snapshot
+  check), `CampWanderBehavior.ts:73`. Split, the 10 become one team test,
+  and `campId` keeps only the 4.
+- *Any neutral,* 18 lines that test `'neutral'` alone. 12 ask "not a
+  combatant" (`posed.ts:97`, `chipRule.ts:178`, `Targeting.ts:61`, :71,
+  :97, :452, :740, `World.ts:782`, :2168, `HUD.ts:821`,
+  `BattleRenderer.ts:742`, `ObjectiveController.ts:188`) and 6 "a
+  combatant" (`Targeting.ts:66`, :484, :546, :582, `World.ts:1124`'s
+  attacker, :2153). Split, each becomes two tests or a call.
+- *One unit's team against another's,* 17 lines and `affectsMatch`'s two
+  (`effects/targeting.ts:73`, :75). Where the unit can be a camp member
+  and the other a wall or rubble, so a split changes what the line
+  computes unless it grows a clause or the one helper: `MovementBehavior.ts:185`
+  (the yield probe's adjacent allies) and :264 (the panic-flee swap
+  partner), `blockedAlly.ts:68`, `movement.ts:625` (the role-order pass),
+  `effects/targeting.ts:125` (the nearest victim, skipping the caster's
+  team) and `affectsMatch`, `Targeting.ts:774` (`lowestWoundedAlly`). A
+  camp member reaches the first four through `CampWanderBehavior`'s
+  `MovementBehavior` delegate; whether a camp archetype casts an area,
+  chain, aura or heal that reaches the last three was not read. Where it
+  cannot, read so: `Targeting.ts:70`, :483, :545, :581 (the unit is a
+  combatant there), :743 (each pairing returns the same, the camp-on-camp
+  one only under confusion, which returns first), `World.ts:1026`
+  (scenery returned first; camp-on-camp is one team either way), :2152
+  (an objective team), `bot/sensors.ts:61`, :137 (the bot's side),
+  `SupportMovementBehavior.ts:256`, :281 (no camp member runs it).
+
+Read so, the exposed seven are where a camp member treats walls and
+rubble as its own side today: a wall as a swap partner or a blocked
+ally, rubble skipped by its area attacks and inside its `allies` auras
+and heals. B-02 under "the same behaviour" keeps each of those by its
+helper; a clean split changes them, which is Round 9's (beside "Camp-aware
+aura `affects`"). None of the seven was checked for whether a run reaches
+it.
+
+**Found.** `CampWanderBehavior.ts:29` says "camp content ships
+charger-only", and `config/camps.json` names `warlock`, `archer`,
+`ice_mage`, `shaman` and `banshee` beside `bandit` and `ghoul`; read as
+the locomotion delegate it holds, read as the archetypes it does not (the
+comment pass). `npm run oracle -- reach-record --tree=<worktree>` runs
+`node_modules/vitest/vitest.mjs` relative to the tree, which a worktree
+lacks, so the reading at the ref was taken on the live tree before the
+patch went back in (papercut filed).
+
+Readings: 94,666 at 16:00 after the orientation; 164,004 at 16:06 on the
+bar's commit, `ae59097`; 219,498 at 16:24 before this write-up.

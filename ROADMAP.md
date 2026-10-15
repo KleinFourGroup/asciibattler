@@ -132,8 +132,9 @@ share of list A's export rows joins the sim's.
   files; the build's bytes unchanged.
 - ☑ **122e — A-34, the test pair** (`none`). The lockout test moved
   with the cooldown test (flagged); `reach-diff`: nothing lost.
-- ☐ **122f — B-01, the two predicates by name** (`stop`: B-02's
-  decision on B-01's list).
+- ◐ **122f — B-01, the two predicates by name** (`stop`: B-02's
+  decision on B-01's list). Proven the same, under the bar on lines (+7),
+  so reverted and the patch kept; the user's call (WORKLOG §122, 122f).
 - ☐ **122g — B-07, a spawned unit's wiring once** (`none`).
 - ☐ **122h — B-08, the objective rule called, not restated** (`none`).
 - ☐ **122i — B-09, the death trigger in `reapUnit`** (`none`).

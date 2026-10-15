@@ -800,6 +800,8 @@ board at a chosen hop.
   camp-aware `affects`. Its bar is written before the trial; the user's
   pre-registration carries (lines may grow if it reads better; census
   B-02). `team` is in every unit of a World snapshot and on `unit:died`.
+  `isActiveNeutral`, read by its own test alone since 122f, is kept for
+  this trial to decide (signed at 122m).
 - **Cavalier** (blitz + hit on arrival): `proposeSelfMove` hardcodes
   `targetId:-1`, so a `damage` op after a move has no target — a post-move
   target re-resolve. Everything else is a dash clone + mobility.

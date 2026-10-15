@@ -52,6 +52,14 @@ TODO items (list A's deletions, list B's trials) are in
 
 ### §124 render and UI, its first steps
 
+- [ ] **A third copy of the neutral-target rule, a lead for the kickoff.**
+  `ObjectiveController.ts:185-191` filters the neutrals a click may order
+  an attack on by the rule `Targeting.validNeutralObjectiveTarget` holds;
+  `World` calls that function since 122h (B-08). Calling it here too is
+  B-08's shape in UI code, whose proof for a reshaping is the eye or a
+  truth table (`scratch/122f/truth.ts` is one). Signed at 122m (WORKLOG
+  §122, 122m).
+
 - [ ] **The page drive does not notice a phase whose scene never mounts.**
   With `Game.dispatch`'s map swap after a rest removed, `npm run probe --
   shell/electron/probes/drive-run.js --seed=6 --dials=hops=2&firstNode=rest`

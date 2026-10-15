@@ -5474,3 +5474,14 @@ Held against D2 (the budget allowed two more trials this phase; none run):
 No new deletion was found besides the two above.
 
 Reading: 411,060 at 17:55 before this entry.
+
+**Signed** (the user, 2026-10-15): "So for those small leans, signing
+1&3. For 2, I have content in mind for all of those, I think 😅" So:
+
+1. `isActiveNeutral` stays, for Round 9's B-02 to decide (written into
+   that bullet of META-ROADMAP §Round 9).
+2. The five combat triggers no shipped code handles stay: the user has
+   content in mind for them. Not a deletion candidate; a later census that
+   finds them unhandled has this answer.
+3. `ObjectiveController.ts`'s copy of the neutral-target rule is a lead
+   for §124's kickoff (TODO "§124 render and UI").

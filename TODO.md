@@ -204,6 +204,14 @@ META-ROADMAP §"Round 9 — Extensions" names each group.
 
 ### With a seam the round builds
 
+- [ ] **The camp-anchor revert, kept or cut.** `World.clearResolvedObjectives`
+  reverts an engage order on a tile that is a camp's anchor once the camp is
+  cleared. Its one producer, the enemy pull's tile order, was retired at
+  §75j2; a player's manual engage on an anchor cell still reaches it, so
+  cutting it changes what that order does, and Round 8.5 changes no
+  behaviour. Decide beside "Camp-aware aura `affects`", which reworks how
+  camps and teams meet. Pinned by `camps.economy.test.ts`, "a tile order
+  parked on a camp anchor". From §122's kickoff (WORKLOG §122).
 - [ ] **Renderer position-reconciliation sweep (self-heal + REPORT sprite/sim
   desyncs).** The 56e labyrinth desync (a sprite resting tiles from its
   logical cell, fixed at 56e-pre2 via `unit:swapAborted`) showed the failure

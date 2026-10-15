@@ -4670,3 +4670,69 @@ its calls; the user's answer and the cut as signed follow here.
 
 Readings by the tool's clock (UTC): 99,774 at 12:26 after the
 orientation, 192,977 at 12:33 after the audit.
+
+**Signed** (the user, 2026-10-15), first the leans: "my inclination is to
+sign all of your leans. The only one I'm not sure of is the fan out", and
+then the pilot as put: "That all sounds right to me, Claude! 😁 … Signed!"
+So:
+
+1. §122 takes `src/config`'s share of section 2 with the sim's: A-22's
+   seven config names and A-29's `schemas.ts` in 122a, A-26's config share
+   in 122d.
+2. `mercenary` stays in `REQUIRED_UNIT_IDS`; its comment is corrected to
+   name the two editors (122a).
+3. The focus-tile fold is the phase's first lead trial (122k).
+   `updateTargetDefault` is not tried: what goes is a name, and the call
+   site would keep its sentence. The camp-anchor revert is not this
+   round's, since taking it out changes what a player's engage order on
+   an anchor cell does; TODO "Round 9" holds it. Two of the budget's three
+   trials are left for the re-skim.
+4. B-02 is decided at 122f's stop on B-01's list; if run, it is the last
+   trial (122l), under the bar put at 120h: the same behaviour by the
+   corpus with the declared mapping, D2's third clause kept and its second
+   set aside, one small helper allowed, the 18 team-against-team sites
+   shown before and after for the user's read.
+5. The fan-out is decided by a pilot (122n), below.
+6. 122n's blind read is also the sign-off on how the seven rules read on
+   code, in place of a separate pilot stop.
+7. The co-located tests' comments wait for §126.
+8. B-17: the four private copies import `movement.ts`'s `chebyshev`
+   alias; one definition, two names.
+
+**The pilot's rule, written before it runs.** The user's ask: "We keep
+close track of tokens used and time spent. If Sonnet can decisively be
+cheaper while maintaining the same quality, we can choose it. Otherwise
+we stick with a." What the session added, and the user signed:
+
+- *Price.* By the API's list prices (the `claude-api` skill's table,
+  cached 2026-10-06), Sonnet 5.5 is $2 and $10 a million tokens of fresh
+  input and output against Opus 5.5's $4 and $20, and a cache read is
+  $0.20 on both. An agent's loop is mostly cache reads, so Sonnet's
+  saving is under half before the session's review of its work, which is
+  billed at Opus's price.
+- *Arms.* Two subagents, Opus 5.5 and Sonnet 5.5, with the same brief
+  (the seven rules, the proof) on the same files, each in its own
+  worktree, run side by side. The session is not an arm: it has read the
+  code, and its meter is not a subagent's measure.
+- *Files.* About 800 lines that no later step of the phase touches, chosen
+  after 122d. The false statements known in them are listed here before
+  the run, as the answer each arm is held to.
+- *Measured.* Each arm's tokens by kind and wall-clock time; priced at
+  the list prices; the session's cost to verify each arm by the meter.
+- *Quality.* `comment-strip` with a planted control; step codes, `§`
+  marks and history left; the known false statements caught; every
+  correction checked against the code, a wrong one counting heavily; and
+  the user's blind read of diffs X and Y, the labels drawn at random and
+  the key kept in scratch until the read.
+- *Decision.* Sonnet if the user's read rates it at least equal, it
+  catches every known false statement the Opus arm catches, makes no
+  wrong correction, and costs at most 60 % of the Opus arm with the
+  session's review included. Otherwise, if the Opus arm holds 121j's
+  quality, the pass fans out to Opus subagents. Otherwise (a): fresh
+  sessions on this model, as 121j ran.
+- *Place.* Launched after 122d, read at 122f's stop. The session hands
+  off before 122f, so the next session brings B-01's list and the
+  pilot's result to one stop.
+
+Reading: 271,913 at 13:06 after the price lookup, which loaded a whole
+skill (about 40k).

@@ -119,6 +119,32 @@ pre-registered in its row; one re-skim; the comment pass. Proof: sim.
 Risk: medium, the core. Decision points: B-02; the comment pass's
 fan-out.
 
+The cut, signed 2026-10-15 (WORKLOG §122, the kickoff). `src/config`'s
+share of list A's export rows joins the sim's.
+
+- ☐ **122a — list A's dead exports** (`none`). A-22's sim, core and
+  config names, A-29's two files; `build-hash` unchanged.
+- ☐ **122b — A-25's five, with their tests** (`none`).
+- ☐ **122c — A-28's field and A-38's option** (`none`). Proof: sim.
+- ☐ **122d — A-26, the word `export`** (`none`). Sim, core and config,
+  the list taken again at HEAD.
+- ☐ **122e — A-34, the test pair** (`none`).
+- ☐ **122f — B-01, the two predicates by name** (`stop`: B-02's
+  decision on B-01's list, with 122n's blind read).
+- ☐ **122g — B-07, a spawned unit's wiring once** (`none`).
+- ☐ **122h — B-08, the objective rule called, not restated** (`none`).
+- ☐ **122i — B-09, the death trigger in `reapUnit`** (`none`).
+- ☐ **122j — B-17, one `chebyshev`** (`none`).
+- ☐ **122k — the focus-tile directive folded into `updateFocusTarget`**
+  (`none`; a lead).
+- ☐ **122l — B-02, the split, if signed at 122f** (`stop`).
+- ☐ **122m — the re-skim** (`none`).
+- ☐ **122n — the fan-out pilot** (read at 122f's stop). Opus and Sonnet
+  subagents on the same files, launched after 122d; the rule is in the
+  WORKLOG.
+- ☐ **122o — the comment pass, the rest** (`batch`), by the pilot's
+  outcome.
+
 ## Phase 123 — run
 
 `src/run`, 19 files: the signed rows (A-36's trigger registry, A-39's

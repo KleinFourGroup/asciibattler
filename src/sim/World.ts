@@ -66,13 +66,11 @@ import { CampWanderBehavior } from './behaviors/CampWanderBehavior';
 import { SpawnAction } from './actions/SpawnAction';
 import { isReservedSwapPartner, preFlipSwap } from './actions/SwapAction';
 /**
- * 27d — the tile→status map. A unit standing on a `fire` tile sustains `burn`;
- * a `healing` tile sustains `rejuvenate`. Resolved ONCE at module load via
- * `statusDef` (which throws loudly if 27c's catalog ever loses one), so a missing
- * tile status fails at boot rather than at the first fire-tile step. The actual
- * HP change is the status's periodic tick (`applyPeriodicEffects`), so all damage
- * now flows through the single `dealDamage`/`applyDamage` chokepoint — the D7.B
- * per-tile chip pass (with its own `currentHp -=` + `unit:burned`) is retired.
+ * The statuses a tile sustains on the unit standing on it: `fire` sustains
+ * `burn`, `healing` sustains `rejuvenate`. Resolved at module load, so a
+ * catalog that lacks either fails at boot. The HP change is the status's
+ * periodic tick (`applyPeriodicEffects`), so a tile's damage goes through
+ * `dealDamage` like any other.
  */
 const FIRE_STATUS = statusDef('burn');
 const HEALING_STATUS = statusDef('rejuvenate');
@@ -85,248 +83,29 @@ import { NEUTRAL_DEFS, ALL_UNIT_DEFS } from '../config/units';
 import { getCamp } from '../config/camps';
 
 /**
- * Schema history:
- *   2 — C1a added tileGrid.
- *   3 — D3 replaced single `gridSize` with `gridW` + `gridH`.
- *   4 — D5.C added per-team `spawnQueue` (overflow UnitTemplate[]) +
- *       `spawnRegions` (each team's authoritative spawn region).
- *   5 — D6 added per-unit `blocksLineOfSight` (defaults `true` for
- *       combatants + walls; half-cover sets `false`).
- *   6 — E1 rewrote `UnitSnapshot.stats` to the new vocabulary
- *       (constitution / strength / ranged / magic / luck / speed /
- *       endurance), added `UnitSnapshot.archetype` + `.derived`, and
- *       added a top-level `combatRng` channel for AttackAction's
- *       start-time crit roll.
- *   7 — E2 added per-unit `abilities: string[]` (registry ids) so the
- *       new `AbilityBehavior` rehydrates the right concrete classes
- *       after round-trip. AttackBehavior retired; v6 `behaviors`
- *       arrays referencing `'attack'` would throw on rehydrate, but
- *       the version bump already rejects v6 wholesale.
- *   8 — E3 added per-unit `level: number` (combatant display metadata;
- *       defaults to 1 for environment entities). Spawn-queue templates
- *       gained a `level` field on the same bump (UnitTemplate is now
- *       `{archetype, level, stats}`). v7 throws on load.
- *   9 — E4 added the battle-scoped damage ledger
- *       (`damageDealt: [attackerId, total][]`) so a mid-battle snapshot
- *       round-trip preserves the XP awarded on battle:ended. Without
- *       round-trip, restoring a mid-battle world would start the
- *       ledger empty and a finished restored battle would award less
- *       XP than the un-roundtripped baseline — failing the
- *       snapshot-roundtrip determinism contract. v8 throws on load.
- *  10 — E4 added per-unit `xp: number` (display data; banked on the
- *       roster side post-battle) and `rosterIndex: number | null`
- *       (set for player units only; carried into `xpAwards` so Run
- *       can bank into the right slot). Spawn-queue templates also
- *       carry `xp` now. v9 throws on load.
- *  11 — E4 follow-up added `playerRosterIds: [unitId, rosterIndex][]`
- *       so a player unit that died during the battle still earns
- *       its damage-share XP plus the new `xpFlatPerFallen` slice.
- *       Without this, the dead unit's tally was orphaned at battle
- *       end because the unit was already spliced from `world.units`.
- *       v10 throws on load.
- *  12 — E5 pre-work removed `attackCooldownTicks` from
- *       `UnitSnapshot.derived` (the `UnitDerived` shape is stored
- *       verbatim). Attack cadence moved to the Ability layer, resolved
- *       from `config/abilities.json` at propose time, so the field no
- *       longer exists to serialize. v11 throws on load.
- *  14 — F2 replaced `ActiveActionSnapshot.effectTicks: number[]` with a
- *       declared `phases: {phase, ticks}[]` timeline (the action phase
- *       system). The impact tick is derived from the timeline rather than
- *       stored as a raw offset list. v13 (and earlier) throw on load. (v13
- *       was E5.A's `targetId`/`outOfLosTicks` add — see UnitSnapshot.)
- *  15 — F6 added the utility-contribution ledger
- *       (`utilityDone: [unitId, total][]`) — effective HP healed by
- *       ability casts — so a mid-battle round-trip preserves the heal-XP
- *       awarded on `battle:ended`. Without it a restored mid-battle world
- *       would start the ledger empty and under-award a healer's XP,
- *       failing the snapshot-roundtrip determinism contract (same reason
- *       v9 added `damageDealt`). v14 throws on load.
- *  16 — GP1 renamed two `UnitStats` keys (`speed → agility`, `endurance →
- *       mobility`). Stats round-trip as a whole object by key, so a v15
- *       snapshot carries the old key names and would deserialize into an
- *       `agility`/`mobility`-less stat block; the version check rejects it
- *       outright (no migration — the rename also re-tuned the move-CD curve,
- *       so old derived cadences wouldn't be reproduced anyway). v15 throws
- *       on load.
- *  17 — GP2 added the `defense` key to `UnitStats` (flat subtractive damage
- *       mitigation). Stats round-trip as a whole object by key, so a v16
- *       snapshot carries a `defense`-less stat block; the version check
- *       rejects it outright (no migration — defaulting the missing key would
- *       silently mis-derive nothing today, but the version bump keeps the
- *       stat-shape contract honest, same as GP1). v16 throws on load.
- *  18 — H1 added the `power` key to `UnitStats` (Phase-H pool-chip stat).
- *       Stats round-trip as a whole object by key, so a v17 snapshot carries a
- *       `power`-less stat block; the version check rejects it outright (no
- *       migration — same stat-shape-contract rationale as GP1/GP2). v17 throws
- *       on load.
- *  19 — I1 reverted the GP1 `agility → speed` rename and added two dodge keys
- *       (`precision`, `evasion`) to `UnitStats` (canonical order CON·STR·RNG·
- *       MAG·LCK·DEF·PRC·EVA·SPD·MOB·POW). Stats round-trip as a whole object by
- *       key, so a v18 snapshot carries an `agility`-keyed, dodge-less stat
- *       block; the version check rejects it outright (no migration — same
- *       stat-shape-contract rationale as GP1/GP2/H1). v18 throws on load.
- *  20 — I5 split the `melee` archetype into a family, RENAMING the key
- *       `melee → mercenary` (+ new `adventurer`/`ronin`/`bandit`). Unlike the
- *       prior bumps this is NOT a stat-shape change: a v19 snapshot carries
- *       units tagged `archetype: 'melee'`, which no longer resolves to a config
- *       — rehydrating one would crash deriving its abilities/glyph/stats. Reject
- *       outright (no migration; the renamed key has no automatic mapping). v19
- *       throws on load.
- *  21 — I6 removed `critChance` from `UnitSnapshot.derived` (the `UnitDerived`
- *       shape is stored verbatim). Crit is now resolved PER-ABILITY at attack
- *       time (`critChanceFor(ability.critBase, luck)`, gated on
- *       `ability.critable`), so the per-unit field no longer exists to
- *       serialize — the same kind of derived-field removal as E5's v12
- *       (`attackCooldownTicks`). The evadable strike actions also thread a new
- *       `accuracy` (+ `evadable`) into their serialized `actionData`; a v20
- *       mid-action snapshot would lack them. Reject v20 outright (no migration).
- *  22 — I6 commit 2 split the basic-strike ability ids: `melee_strike` → the
- *       per-subclass weapons `sword`/`club`/`katana`/`whip`, and `ranged_shot`
- *       → `bow`. `UnitSnapshot.abilities` stores the resolved id list, so a v21
- *       save carries `['melee_strike']`/`['ranged_shot']` that no longer resolve
- *       in the ability registry → `createAbility` would throw on rehydrate.
- *       Reject v21 outright (no migration; the renamed ids have no automatic
- *       mapping — same rationale as I5's archetype-key rename at v20). RunSnapshot
- *       is unaffected: roster templates carry only `archetype`, and abilities are
- *       re-resolved from the (updated) archetype config at spawn.
- *  23 — J1 added the player team's shared `objective` (a tile or an enemy unit;
- *       see `src/sim/objective.ts`) to WorldSnapshot — a mid-battle save must
- *       restore the active steering objective. A v22 save has no `objective`
- *       field; rather than default it (silently dropping a saved objective is a
- *       behavior change, not a missing-field nicety), reject v22 outright per
- *       the established no-migration contract. RunSnapshot is unaffected — the
- *       objective is World-side + transient per battle.
- *  24 — K1 added per-unit `effects` (the generic status-effect list) to
- *       `UnitSnapshot`. A v23 save has no `effects` field; defaulting it to
- *       `[]` would silently drop a saved buff/debuff (a behavior change), so
- *       reject v23 outright per the established no-migration contract. The
- *       fold is name-keyed and the base `stats` block is unchanged, so this is
- *       a purely additive per-unit field. RunSnapshot is NOT bumped by this
- *       commit — the World-side effect list is the only new state (the
- *       Run-side encounter store + fatigue migration land in K1 commit 2).
- *  25 — O1 (Phase O) replaced the single nullable player `objective`
- *       (v23's `objective: BattleObjective | null`) with a per-team,
- *       always-present typed objective (`objectives: { player, enemy }`, each a
- *       `TeamObjective` = mode + optional target; see `src/sim/objective.ts`). A
- *       v24 save carries the old `objective` field and lacks `objectives`;
- *       defaulting it would silently drop a saved steering objective (a behavior
- *       change), so reject v24 outright per the established no-migration
- *       contract. RunSnapshot is unaffected — the objective is World-side +
- *       transient per battle.
- *  26 — Y5 (the data-driven attack/effect migration) retired the per-verb action
- *       classes: a combat verb's in-flight `activeAction` now serializes as the
- *       generic `EffectActionData` (def id + cast-time ctx) instead of the legacy
- *       per-class payloads (`AttackActionData` / `MagicBoltActionData` / …), and
- *       the colliding `attack`/`heal` action-factory entries are gone. A v25 save
- *       with an in-flight melee/heal/magic/catapult/gambit/dash carries the OLD
- *       payload under the OLD action id; rehydrating it now would mis-decode (an
- *       `attack`/`heal` id throws in `abilityDef`, and gambit/dash/magic/catapult
- *       route to `EffectAction.fromData` expecting the new shape). Reject v25
- *       outright per the no-migration contract. RunSnapshot is unaffected —
- *       roster abilities are ids re-resolved at spawn, not serialized actions.
- *  27 — Phase 27 (statuses, periodic axis) added the per-unit periodic runtime
- *       state to `StatusEffect`: `nextTickAt` (the DoT/HoT tick cursor) +
- *       `sourceUnitId` (attribution). A v26 save's `effects[]` carry neither, so
- *       a mid-tick burn/bleed/poison/rejuvenate would resume with no cursor and
- *       silently stop ticking. Reject v26 outright per the no-migration contract
- *       (a pre-27 save has no periodic statuses anyway — the feature didn't
- *       exist). RunSnapshot is unaffected — statuses are World-side + transient.
- *  28 — §29c follow-up (the chain per-hop delay) added `pendingChainHops`: the
- *       queue of chain jumps waiting to fire on a future tick. A v27 save has no
- *       such field, so a mid-arc chain would resume with its remaining hops lost
- *       (the lightning stops halfway). Reject v27 outright per the no-migration
- *       contract — a pre-28 chain resolved all-at-once, so a v27 save never has a
- *       hop in flight. RunSnapshot is unaffected (the queue is World-side +
- *       transient).
- *  29 — §29d (summon) added `summonedBy` to every unit (the id of the caster whose
- *       `summon` op spawned it, or `null`). A v28 save's units carry no such field,
- *       so a restored summoned minion couldn't be attributed to its summoner and
- *       the per-caster `maxLive` cap would mis-count (re-summon past the ceiling).
- *       Reject v28 outright per the no-migration contract — a pre-29 save has no
- *       summons anyway (the op didn't exist). RunSnapshot is unaffected (summons
- *       are World-side combatants, never on the roster).
- *  30 — §31b (effect scaling) routes the `applyStatus` op's magnitude + duration
- *       through cast-time-captured `OpResolution` slots (`statusMagnitude` /
- *       `statusDurationSeconds`, + the reserved `summonLevel` 31c fills), instead
- *       of the interpreter reading the live op fields. A v29 save with an in-flight
- *       applyStatus (a mid-windup afflicter, or a queued chain hop carrying an
- *       applyStatus inner op) serialized its resolution as `{}` — so under v30 the
- *       status would resume at default magnitude 1 / def-duration, silently
- *       dropping even a bare-number-authored magnitude. Reject v29 outright per the
- *       no-migration contract. RunSnapshot is unaffected (the captured scalars are
- *       World-side + transient on the in-flight action).
- *  31 — §36a (the claim system, registry leg) added the in-flight cell-CLAIM
- *       registry (`claims: Claim[]`) — reservations a moving unit holds on its
- *       destination so a second pather routes around it (blocked-for-pathing =
- *       occupied OR claimed). A v30 save has no `claims` field; defaulting it to
- *       `[]` is harmless TODAY (the registry is empty on the instant move model —
- *       §36a is inert, nothing holds a claim across ticks), but reject v30 outright
- *       per the established no-migration contract so the shape change is honest and
- *       §36b's non-instant moves (which DO leave a claim mid-flight) can never load
- *       under a stale reader. RunSnapshot is unaffected (claims are World-side +
- *       transient per battle).
- *  35 — §75b (the camp registry) adds the neutral-camp battle state: a
- *       `camps: CampInstanceSnapshot[]` registry (per-instance def ref, spawn
- *       anchor, per-faction hostility, drip-pending templates, kill credit — the
- *       spawnQueues/spawnRegions shape), a nullable dedicated `campRng` stream
- *       (PRESENCE-GATED: `null` on every camp-free layout — it is never forked
- *       from `rng`, so existing worlds keep byte-identical streams), and a
- *       per-unit `campId` on `UnitSnapshot` (null = not a camp member; presence
- *       is the active-neutral signal, `isActiveNeutral`). A v34 reader would
- *       silently drop camp hostility + pending drips and rehydrate camp members
- *       as inert scenery — reject outright per the no-migration contract.
- *  34 — 49e (the packet fire engine) widens the serialized `battleRules`
- *       entries: `applyStatus` gains the optional `applyTo: 'actor'|'target'`
- *       axis (venom's "your hits apply poison" — the content 47f's actor-side
- *       lock was waiting for; absent = actor, byte-identical for every
- *       pre-49e rule). A v33 reader would silently land a target-side status
- *       on the ACTOR on a mid-battle resume — reject outright per the
- *       no-migration contract.
- *  33 — 47f (the battle-domain daemon seam) adds `battleRules` (compiled
- *       daemon battle-hooks, plain data — handlers re-register from it on load,
- *       the K1 behavior-registry pattern) and `tallies` (battle-earned run
- *       resources, today `{ bits }` — the XP-ledger pattern; settled by Run at
- *       `battle:ended`). A v32 save has neither field — a mid-battle resume
- *       would silently drop an in-flight tally and every installed rule —
- *       reject outright per the no-migration contract.
- *  32 — §40e (rubble clickable) added a `neutral` variant to `ObjectiveTarget`
- *       (`{kind:'neutral',unitId}`) so a player can manually `focus`/`engage` a
- *       DESTRUCTIBLE neutral (rubble / a destructible wall). A team objective is
- *       serialized (`objectives.{player,enemy}`), so a mid-battle save with an
- *       active rubble focus now carries the new kind. A v31 reader has no neutral
- *       branch in `updateFocusTarget` / `clearResolvedObjectives`, so it would
- *       mis-decode `target.cell` (undefined on a neutral) — reject v31 outright
- *       per the no-migration contract. A pre-§40e save can't hold a neutral
- *       objective (no way to set one), so nothing is lost. RunSnapshot is
- *       unaffected — the objective is World-side + transient per battle.
- *  36 — §91a1 (the casualty experiment) added `fallenPower: {player, enemy}`
- *       — the per-side Σ`effectiveStats.power` of every combatant REAPED
- *       this battle (the two death sites), the casualty chip rule's input
- *       (each side pays its OWN fallen). Dead units are spliced out of
- *       `units` at death, so the fallen are unrecoverable from the rest of
- *       the wire image: a v35 save restored mid-battle would under-charge
- *       the turn (0 fallen) — reject outright per the no-migration
- *       contract. Rides `battle:ended` beside `survivorPower`. RunSnapshot
- *       is unaffected (the chip MODE is config, not RunConfig).
+ * The wire format's version. `fromJSON` refuses a snapshot of any other
+ * version: there is no migration, because a missing field defaulted on load
+ * would change the restored battle silently (a status dropped, a claim lost,
+ * a side's fallen power under-charged). Bump it with any change to
+ * `WorldSnapshot`'s shape or to what one of its fields means.
  */
 const WORLD_SCHEMA_VERSION = 36;
 
-/** §40b — filler maxHp for an hp-less (indestructible) neutral so its Unit is
- *  "alive" enough to block pathing / LOS. Never a damage target — `isCombatTargetable`
- *  keys off the def's HP-PRESENCE, not this value. `1` matches the pre-§40b nominal
- *  `hp:1` walls exactly (byte-identical). */
+/** The maxHp of a neutral whose def has no `hp` (indestructible), so its unit
+ *  is alive and blocks pathing and line of sight. Never a damage target:
+ *  `isCombatTargetable` asks whether the def has `hp`, not this value. */
 const NOMINAL_NEUTRAL_MAXHP = 1;
 
 /**
- * Deterministic team iteration order for the post-death overflow scan.
- * Neutrals never appear in the queue (walls don't have templates), so
- * skipping them here is a deliberate scope.
+ * The two teams in a fixed order, for the queue scan and for `hostileTo` in
+ * the snapshot. Neutrals never queue (scenery has no template) and never
+ * enter a camp's `hostileTo`.
  */
 const QUEUE_TEAMS: readonly Team[] = ['player', 'enemy'];
 
-/** O1 — the teams that carry an objective (neutrals never do). Iterated by the
- *  per-team revert-on-death scan; narrower than `QUEUE_TEAMS` so it indexes the
- *  `objectives` record directly. */
+/** The teams that carry an objective (neutrals never do), for the per-team
+ *  scan that reverts an objective whose target died. Typed as a tuple so it
+ *  indexes the `objectives` record directly. */
 const OBJECTIVE_TEAMS = ['player', 'enemy'] as const;
 
 interface ActiveActionSnapshot {
@@ -335,76 +114,62 @@ interface ActiveActionSnapshot {
   startTick: number;
   finishTick: number;
   /**
-   * F2 — the in-flight action's declared phase timeline. Replaces the pre-F2
-   * `effectTicks` offset list: the impact tick (and every other boundary) is
-   * derived from this on resume, so a mid-`windup` snapshot picks up on the
-   * right phase. MUST be stored — the cadence-scaled tick counts aren't
-   * reconstructable from the action's `toData()`.
+   * The in-flight action's phase timeline. Every phase boundary, the impact
+   * tick among them, is derived from it on resume. Stored, because the
+   * cadence-scaled tick counts can't be rebuilt from the action's `toData()`.
    */
   phases: readonly ActionPhase[];
 }
 
+/** A unit's wire form. A field named as one of `Unit`'s is that field,
+ *  documented there. */
 interface UnitSnapshot {
   id: number;
   team: Team;
   archetype: UnitArchetype;
   glyph: string;
-  /** E3 — combatant level (1 for environment entities + level-1 units). */
   level: number;
-  /** E4 — display-only banked XP at spawn time. */
   xp: number;
-  /** E4 — index into Run.team for player units; null otherwise. */
   rosterIndex: number | null;
-  /** §29d — the summoning caster's id (null = not a summon). v29. */
   summonedBy: number | null;
-  /** §75b — the camp-registry instance id (null = not a camp member; presence
-   *  is the active-neutral signal). v35. */
   campId: number | null;
   stats: UnitStats;
   derived: UnitDerived;
   position: GridCoord;
   currentHp: number;
   blocksLineOfSight: boolean;
-  /** E5 — sticky target id (null = uncommitted). */
   targetId: number | null;
-  /** E5 — consecutive out-of-LOS ticks for the ranged re-target timeout. */
   outOfLosTicks: number;
   behaviors: string[];
-  /**
-   * E2 — registry ids for the unit's abilities (e.g. `['sword']`,
-   * `['bow']`; I6 renamed the basic-strike ids). Order is preserved across the round-trip since
-   * AbilityBehavior uses array order to break score ties. Environment
-   * units (walls, half-cover) have no behaviors and no abilities, so
-   * this serializes as an empty array.
-   */
+  /** The registry ids of `Unit.abilities`, in its order, since
+   *  `AbilityBehavior` breaks a score tie by it. Empty for walls and
+   *  half-cover. */
   abilities: string[];
   actionCooldowns: [string, number][];
   activeAction: ActiveActionSnapshot | null;
-  /**
-   * K1 — active status effects (stat modifiers + lifetime + merge policy). A
-   * mid-battle save must restore them so the effective stat block + the
-   * remaining lifetimes resume identically. Empty for the no-effect common
-   * case. `endOfTurn` effects round-trip too (they're cleared by World
-   * teardown, not the tick loop, so a resumed battle keeps them).
-   */
+  /** Every active status, `endOfTurn` ones included, so the effective stats
+   *  and the lifetimes left resume as they were. */
   effects: StatusEffect[];
 }
 
-/** §75b — one not-yet-dripped camp member (the count-expanded roster entry;
- *  stats re-derive from the catalog at spawn time, the #114 call-time rule). */
+/** One camp member not yet dripped in: one of its roster entry's `count`.
+ *  Its stats are derived from the catalog when it spawns (gotcha #114). */
 export interface CampPendingUnit {
   archetype: UnitArchetype;
   level: number;
 }
 
 /**
- * §75b — a rolled camp INSTANCE: one camp-spawn tile's resolved camp for this
- * battle. `id` is the per-battle instance key (`Unit.campId` points here);
- * `defId` references the `config/camps.json` catalog (leash radius, rewards —
- * derived at read time, never copied). `hostileTo` is the camp-wide per-faction
- * aggro set (75e writes it on first strike); `pending` is the drip queue the
- * per-tick drain feeds from (75c); `killedBy` is the kill-credit stamp (75e:
- * pending empty AND no living members — the drip-aware definition).
+ * One camp-spawn tile's camp for this battle.
+ *
+ * - `id` — the battle's key for the instance; `Unit.campId` points here.
+ * - `defId` — the `config/camps.json` entry; its leash and rewards are read
+ *   from the catalog when needed, never copied.
+ * - `hostileTo` — the teams the whole camp fights: a team joins when it
+ *   strikes a member (`markCampHostile`).
+ * - `pending` — the members not yet dripped in, drained a tick at a time.
+ * - `killedBy` — the team credited with clearing the camp, stamped when
+ *   nothing is pending and no member lives (`campCleared`).
  */
 export interface CampInstance {
   readonly id: number;
@@ -415,8 +180,8 @@ export interface CampInstance {
   killedBy: Team | null;
 }
 
-/** §75b — the wire form of `CampInstance` (`hostileTo` flattens to a
- *  fixed-order array so serialization is deterministic). */
+/** The wire form of `CampInstance`; `hostileTo` flattens to a fixed-order
+ *  array so the image is deterministic. */
 interface CampInstanceSnapshot {
   id: number;
   defId: string;
@@ -436,6 +201,9 @@ interface SpawnRegionAssignment {
   region: SpawnRegion;
 }
 
+/** The world's wire form. A field named as one of `World`'s is that field,
+ *  documented there; a map travels as `[key, value]` pairs and a set as an
+ *  array, so the image is plain JSON. */
 export interface WorldSnapshot {
   schemaVersion: typeof WORLD_SCHEMA_VERSION;
   gridW: number;
@@ -444,193 +212,122 @@ export interface WorldSnapshot {
   ended: boolean;
   nextUnitId: number;
   rng: RNGSnapshot;
-  /** E1: independent RNG for AttackAction's crit roll. Forked at battle
-   *  setup from a parent the spawn-setup stream also forks off, so
-   *  combat noise stays out of the spawn-pick + intra-region shuffle. */
   combatRng: RNGSnapshot;
   units: UnitSnapshot[];
   pendingCommands: WorldCommand[];
   tileGrid: TileGridSnapshot;
   spawnQueues: SpawnQueueSnapshot[];
   spawnRegions: SpawnRegionAssignment[];
-  /** E4: battle-scoped per-attacker damage tally (damage dealt to the
-   *  opposing team only; neutral hits ignored). Read once at
-   *  battle:ended to build `xpAwards`. Serialized as `[attackerId,
-   *  total]` pairs so the wire format stays plain JSON. */
   damageDealt: [number, number][];
-  /** E4 follow-up: every player unit ever spawned this battle, mapped
-   *  unitId → rosterIndex. Populated on spawn (initial + overflow) for
-   *  player team only; entries persist even after the unit dies so
-   *  fallen damage-dealers still earn their damage-share XP. */
   playerRosterIds: [number, number][];
-  /** F6: battle-scoped utility-contribution ledger (effective HP healed
-   *  by ability casts), mapped unitId → total. Serialized as `[unitId,
-   *  total]` pairs alongside `damageDealt` so a mid-battle round-trip
-   *  preserves the heal-XP awarded at battle:ended. */
   utilityDone: [number, number][];
-  /** O1: the per-team, always-present steering objective (replaces J1's single
-   *  nullable `objective`). The enemy team is fixed at `atWill` today; the
-   *  storage is structural for future enemy strategies. Restored so a
-   *  mid-battle save resumes both teams' objectives. */
   objectives: { player: TeamObjective; enemy: TeamObjective };
-  /** §29c: chain jumps waiting to fire on a future tick (the per-hop delay). A
-   *  chain caught mid-arc by a save resumes its remaining hops from here. Empty
-   *  for every non-chain battle and for an instant (`hopDelaySeconds: 0`) chain. */
   pendingChainHops: PendingChainHop[];
-  /** §36a: the in-flight cell-claim registry — reservations a moving unit holds on
-   *  its destination so a second pather routes around it (blocked-for-pathing =
-   *  occupied OR claimed). Empty on the instant move model (§36a is inert; §36b
-   *  wires the claim/release lifecycle), serialized so a save caught mid-move
-   *  (post-§36b) resumes the reservations. */
   claims: Claim[];
-  /** 47f: the installed battle-domain daemon rules (compiled data — see
-   *  src/sim/battleRules.ts). Serialized verbatim; `fromJSON` re-registers
-   *  the handlers from it (the K1 behavior-registry pattern). */
   battleRules: BattleRule[];
-  /** 47f: battle-earned run resources (the XP-ledger pattern, spec §"the
-   *  seam crossings"). Accumulated by rule execution mid-battle, serialized
-   *  so a mid-battle resume keeps the earnings, computed into the
-   *  `battle:ended` payload and settled by `Run.gainBits` (where the
-   *  `bitsGain` fold applies). Launch shape: bits only — grows when
-   *  content demands. */
   tallies: { bits: number };
-  /** §91a1: the per-side Σ`power` of the combatants reaped this battle —
-   *  the casualty chip rule's charge per side. Serialized so a mid-battle
-   *  resume keeps the turn's dead on the books (the `damageDealt` pattern:
-   *  the units themselves are gone from `units`). */
   fallenPower: { player: number; enemy: number };
-  /** §75b: the rolled camp instances (empty on every camp-free layout).
-   *  Serialized in ascending instance-id order so the wire image is
-   *  deterministic regardless of Map insertion history. */
+  /** In ascending instance id, so the image doesn't depend on the map's
+   *  insertion order. */
   camps: CampInstanceSnapshot[];
-  /** §75b: the dedicated camp RNG stream (wander rolls, drip placement).
-   *  `null` on every camp-free layout — PRESENCE-GATED by `installCamps`, and
-   *  never forked from `rng`, so camp-free worlds keep byte-identical streams
-   *  (the §75 exit gate). Re-seeded by `cloneForRollout` when present (the
-   *  clairvoyance guard — camp dice must be sampled, not foreseen). */
   campRng: RNGSnapshot | null;
 }
 
 /**
- * Battle state: grid, units, current tick. Owns the battle's RNG (forked from
- * the run RNG at Step 4.3) so combat rolls don't perturb the run stream.
+ * A battle: the grid, the units, the tick. Its RNG is the caller's, seeded
+ * from the encounter, so the battle's rolls don't move the run's stream.
  *
- * JSON-serializable end-to-end via `toJSON()` / `World.fromJSON()`. The bus
- * is intentionally NOT part of the snapshot — callers provide one at
- * rehydrate time, so a replay or a headless harness can attach its own
- * recorder.
+ * Serializable whole through `toJSON()` and `World.fromJSON()`. The bus is
+ * not in the snapshot: the caller passes one when it rehydrates, so a
+ * replay or a headless harness can attach its own recorder.
  *
- * D3: grid is rectangular. `gridW` and `gridH` are independent;
- * pre-D3 callers passed a single `gridSize` and got a square — those
- * call sites have been updated to pass both dimensions. Default
- * constructor still produces a square `GRID_SIZE × GRID_SIZE` for the
- * fuzz harness and the headful tests that don't care about the
- * dimensions.
+ * The grid is `gridW × gridH`; the constructor's default is a square of
+ * `GRID_SIZE` for the tests and harnesses that don't care about its size.
  */
 export class World {
   readonly gridW: number;
   readonly gridH: number;
   readonly rng: RNG;
   /**
-   * E1 — dedicated RNG for combat rolls (currently just AttackAction's
-   * crit decision; E2's Ability resolvers + E5's pathfinding nudges
-   * may join). Lives on its own stream so adding/removing combat
-   * sources doesn't perturb the spawn-setup stream that pathfinding /
-   * region-pick fuzz tests pin. Default forks from `rng` when the
-   * constructor caller doesn't provide one (preserves the behaviour
-   * tests that build a naked `new World(bus, rng)` rely on).
+   * The stream every roll in the battle but a camp's draws on: a damage
+   * op's hit and crit, a battle rule's chance, a confused unit's target and
+   * step. Forked from `rng` unless the constructor is given one, which no
+   * shipped construction does, so it is seeded by the encounter's world seed
+   * and stays apart from the spawn setup's stream (`setupRngFor`).
    */
   readonly combatRng: RNG;
   readonly units: Unit[] = [];
   /**
-   * O(1) id → unit index over `units`, maintained in `addUnit` /
-   * `removeUnit` / `fromJSON`. `findUnit` reads it (with a linear-scan
-   * fallback for fixtures that push directly to `units`). Read-only by id
-   * — never iterated — so its insertion order can't leak into the
-   * deterministic sim. Added in F2: the phase system + AoE targeting call
-   * `findUnit` far more often than the old O(n) scan could afford.
+   * The id → unit index over `units`, kept by `addUnit`, `removeUnit` and
+   * `fromJSON`, read by `findUnit`. Looked up by id and never iterated, so
+   * its insertion order can't reach the sim.
    */
   private readonly unitsById: Map<number, Unit> = new Map();
   /**
-   * Per-cell tile data (floor / shallow_water). Defaults to all-floor when
-   * the World is constructed without one — preserves the pre-C1a "open
-   * arena" behaviour for tests and the headless fuzz harness. Battle
-   * setup calls `applyTerrain` to populate it from the encounter seed.
+   * The per-cell tile kinds. All floor when the constructor is given none,
+   * the open arena tests use; battle setup fills it (`applyTerrain`).
    */
   readonly tileGrid: TileGrid;
 
   /**
-   * §29c — chain jumps waiting to fire on a future tick (the per-hop delay). A
-   * staggered chain enqueues its next hop here; `processChainHops` (driven once per
-   * `tick`, alongside the periodic-status pass) fires the due ones. Reassigned in
-   * place by the processor (drops the fired hops, keeps the not-yet-due tail), so
-   * it's mutable, not `readonly`. Serialized in the WorldSnapshot (v28) so a chain
-   * caught mid-arc by a save resumes its remaining hops.
+   * The chain jumps waiting to fire on a later tick, queued by a chain with a
+   * hop delay. `processChainHops`, run once a tick, fires the due ones and
+   * reassigns the array to the rest, so it is not `readonly`.
    */
   pendingChainHops: PendingChainHop[] = [];
 
   /**
-   * §36a — the in-flight cell-CLAIM registry, keyed by `cellKey(cell)`. A moving
-   * unit reserves its destination here (the claim system); the pathing predicate
-   * treats a cell as blocked if occupied OR claimed, so two units never converge
-   * on one vacant cell. Mutated only via `claimCell` / `releaseClaim` /
-   * `releaseClaimsBy`; read through the `occupancy.ts` claim queries. Empty in
-   * real play today — the instant move model holds no claim across ticks, so §36a
-   * is byte-identical; §36b's deferred position flip is the first caller.
-   * Serialized in the WorldSnapshot (v31).
+   * The cell claims, keyed by `cellKey(cell)`. A moving unit claims its
+   * destination from the move's start to its flip (`MoveAction`), and the
+   * pathing predicate treats a claimed cell as blocked, so two units never
+   * converge on one free cell. Changed only through `claimCell`,
+   * `releaseClaim` and `releaseClaimsBy`; read through `occupancy.ts`'s
+   * claim queries.
    */
   readonly claims: Map<string, Claim> = new Map();
 
   /**
-   * 86c-L2b — the derived reserved-swap-partner index: partnerId → actorId
-   * for every IN-FLIGHT action that names a reserved partner (today:
-   * SwapAction, via `Action.reservedPartnerId?.()`). The O(1) replacement
-   * for the per-call `isReservedSwapPartner` scan (7.1% self time post-L2,
-   * O(units²) per tick), same `unitsById`/`claims` robustness class:
-   * maintained ONLY by the seat/clear chokepoint (`seatActiveAction` /
-   * `clearActiveAction`) + `removeUnit` (an actor leaving `units` ends its
-   * reservation, exactly as the scan stopped seeing it); rebuilt naturally
-   * on `fromJSON` (Phase 2 seats through the chokepoint); NEVER serialized.
-   * A removed PARTNER's entry deliberately stays (the scan kept answering
-   * true for it while the actor's swap was in flight — the flip degrades or
-   * aborts on its own). The old scan survives as the test-side
-   * recompute-and-compare verifier (`scanReservedSwapPartners`, the §79e
-   * principle applied to a cache).
+   * partnerId → actorId for every action in flight that names a reserved
+   * partner (`Action.reservedPartnerId`, which `SwapAction` implements), so
+   * `isReservedSwapPartner` answers by lookup rather than by scanning every
+   * unit's action each call. Kept only by `seatActiveAction`,
+   * `clearActiveAction` and `removeUnit` (an actor leaving `units` ends its
+   * reservation); `fromJSON` rebuilds it by seating through the same calls,
+   * so it is not serialized. A removed partner's entry stays while the
+   * actor's swap is in flight, and the flip degrades or aborts on its own.
+   * A test recomputes it by scanning (`scanReservedSwapPartners`) and
+   * compares.
    */
   private readonly swapReservedPartners: Map<number, number> = new Map();
 
   /**
-   * 47f — the installed battle-domain daemon rules (plain compiled data; see
-   * src/sim/battleRules.ts for the evaluation semantics). Set once per battle
-   * via `installBattleRules` (both construction sites + `fromJSON`), which
-   * also registers the trigger handlers — the data is serialized (v33), the
-   * handlers never are (the K1 behavior-registry pattern).
+   * The daemons' battle rules, as plain data (`battleRules.ts` says how they
+   * fire). Set once a battle by `installBattleRules`, which also registers
+   * their trigger handlers: the data is serialized, and `fromJSON` registers
+   * the handlers again from it.
    */
   private battleRules: readonly BattleRule[] = [];
 
   /**
-   * 47f — battle-earned run resources (the XP-ledger pattern): rule
-   * execution accumulates here mid-battle; `emitBattleEnded` copies it into
-   * the `battle:ended` payload; Run settles it (`gainBits`, where the
-   * `bitsGain` fold applies). Serialized (v33) so a mid-battle resume keeps
-   * the earnings. Launch shape: bits only.
+   * The run resources the battle earns: the battle rules add to it,
+   * `battle:ended` carries it, and Run settles it through `gainBits`, where
+   * the `bitsGain` fold applies.
    */
   private readonly tallies = { bits: 0 };
 
   /**
-   * §75b — the camp registry: instance id → rolled camp (the
-   * spawnQueues/spawnRegions shape — battle-scoped state that survives member
-   * deaths and serializes). Camp-level facts live HERE, never on units: the
-   * zero-arg behavior-factory contract (registry.ts) forbids behavior state,
-   * and hostility must outlive the unit that was struck. Empty on every
-   * camp-free layout.
+   * The camps, instance id → camp. A camp's facts live here, not on its
+   * units: behaviours hold no state (`behaviors/registry.ts`), and a camp's
+   * hostility outlives the member that was struck. Empty on a camp-free
+   * layout.
    */
   private readonly camps: Map<number, CampInstance> = new Map();
   /**
-   * §75b — the dedicated camp stream (never `rng`/`combatRng` — the spec's
-   * dedicated-fork clause). `null` until `installCamps` stores one, which
-   * only happens when the layout actually rolled camps — the presence gate
-   * that keeps camp-free worlds byte-identical.
+   * The camps' own stream (a wander's rolls, a drip's placement), never
+   * `rng` or `combatRng`. Null until `installCamps` stores one, which it
+   * does only when the layout rolled camps, so a camp-free world draws what
+   * it would with no camp code at all. The bot's rollout clone re-seeds it
+   * (`cloneForRollout`), so a camp's dice are sampled, not foreseen.
    */
   private _campRng: RNG | null = null;
 
@@ -639,13 +336,12 @@ export class World {
   private nextUnitId = 1;
   private _ended = false;
   /**
-   * 34a — one-way latch, set the first tick BOTH teams field a living combatant
-   * (or a queued spawn). It tells a GENUINE mutual wipe (both teams had units
-   * and both are now gone → resolve as a draw immediately) apart from the
-   * pre-spawn / walls-only board (never had both teams → stay silent). NOT
-   * serialized: it re-latches on the first post-restore tick that sees both
-   * teams alive — which necessarily precedes any mutual wipe — so a snapshot
-   * round-trip is unaffected and no version bump is needed.
+   * A one-way latch, set on the first tick both teams field a living
+   * combatant or a queued spawn. It tells a mutual wipe (both teams fielded
+   * units and both are gone: a draw at once) from a board that never had
+   * both (no units yet, or walls only: no result). Not serialized: it sets
+   * again on the first tick after a restore that sees both teams, which must
+   * come before any mutual wipe.
    */
   private _combatBegan = false;
   /**
@@ -655,95 +351,68 @@ export class World {
    */
   private readonly commands: WorldCommand[] = [];
   /**
-   * D5.C overflow queue. Templates pushed here when battleSetup runs
-   * out of region tiles; drained at end-of-tick by `runOverflowScan`
-   * as tiles vacate (combatant deaths). Per-team FIFO so the layout
-   * author's roster order is preserved.
+   * Each team's units waiting for a spawn tile: battle setup queues the
+   * ones its region has no tile for, and `runOverflowScan` seats them at the
+   * tick's end as tiles empty. First in, first out, so the roster's order
+   * holds.
    */
   private readonly spawnQueues: Map<Team, UnitTemplate[]> = new Map();
   /**
-   * D5.C: each team's authoritative spawn region. `runOverflowScan`
-   * walks `region.tiles` in stored order to find the first free cell,
-   * so determinism is `queue FIFO × region tile order`.
+   * Each team's spawn region. `runOverflowScan` takes the first free cell
+   * in `region.tiles`' stored order, so where a queued unit lands is fixed
+   * by the queue's order and the tiles'.
    */
   private readonly spawnRegions: Map<Team, SpawnRegion> = new Map();
   /**
-   * E4: battle-scoped damage tally. Key = attacker unit id, value =
-   * total HP-of-damage dealt to opposing-team combatants over the
-   * battle's lifetime. Damage to walls, half-cover, or same-team
-   * (currently impossible) units is NOT counted — see
-   * `recordDamage`. Read once at `battle:ended` to compute
-   * `xpAwards`; the map is otherwise opaque to callers. Snapshotted
-   * so a mid-battle round-trip preserves XP outcomes.
+   * The damage dealt over the battle, attacker id → total, read once at
+   * `battle:ended` for `xpAwards`. What counts is `recordDamage`'s rule.
    */
   private readonly damageDealt: Map<number, number> = new Map();
   /**
-   * E4 follow-up: per-battle "every player unit that ever spawned"
-   * record. Key = unitId, value = rosterIndex. Populated in `addUnit`
-   * for player-team spawns whose rosterIndex is non-null; entries
-   * stick around even after the unit dies + is spliced from
-   * `world.units`, so `checkBattleEnd` can pay XP to the dead.
-   *
-   * Combined with `damageDealt` (also persistent through deaths) +
-   * `livingPlayerIds = units.filter(team === 'player' && hp > 0)`,
-   * the award generator can produce four cases cleanly:
-   *   survivor + dealt damage  → flatSurvivor + share
-   *   survivor + no damage     → flatSurvivor only
-   *   fallen + dealt damage    → flatFallen + share
-   *   fallen + no damage       → flatFallen only (0 at default knobs)
+   * Every player unit spawned this battle with a roster slot, unit id →
+   * `rosterIndex`, set in `addUnit`. An entry outlives its unit, so a
+   * fallen unit is still paid at `battle:ended` (`computeXpAwards` says
+   * how).
    */
   private readonly playerRosterIds: Map<number, number> = new Map();
   /**
-   * F6 — battle-scoped utility-contribution ledger. Key = the acting
-   * unit's id, value = total *effective* utility credited over the
-   * battle. Today the only contributor is HP healed by ability casts
-   * (`recordHealing`, fed from `HealAction`); a future buff/shield axis
-   * adds here so it rides the same `xpPerHealing` slice + snapshot field
-   * without another schema bump. Deliberately NOT fed by the per-tick
-   * regen-tile chip-heal (that's the tile's output, not a unit's
-   * contribution) — the 27d `rejuvenate` HoT a healing tile applies carries
-   * `sourceUnitId: null`, which `applyPeriodicEffects` skips for the ledger.
-   * Read once at `battle:ended`
-   * alongside `damageDealt`; snapshotted so a mid-battle round-trip
-   * preserves the heal-XP awarded on win.
+   * The effective HP healed over the battle, healer id → total, read once
+   * at `battle:ended` for the healing slice of `xpAwards`. Fed through
+   * `recordHealing` by the heal op and by a periodic heal that has a
+   * source; a healing tile's `rejuvenate` has none, so a tile earns nobody
+   * XP.
    */
   private readonly utilityDone: Map<number, number> = new Map();
   /**
-   * §91a1 — the per-side FALLEN power: Σ`effectiveStats.power` over every
-   * player / enemy combatant reaped this battle (`recordFallen`, called at
-   * both death sites BEFORE the splice — the same stat `survivorPower`
-   * reads, so the two are one bookkeeping: fielded = survivors + fallen for
-   * every on-grid unit). Neutrals (camp members, walls) are never charged
-   * to either side; a summon counts at its own power (0 by the §91b table).
-   * The casualty chip rule's input — each side pays its OWN fallen
-   * (`Run.resolveTurn`, `health.chipMode`). Snapshotted (v36): the dead
-   * are spliced out of `units`, so nothing else on the wire can rebuild it.
+   * Each side's fallen power: the sum of `effectiveStats.power` over its
+   * combatants reaped this battle, booked by `recordFallen` in `reapUnit`
+   * before the splice. It reads the stat `survivorPower` reads, so for
+   * every unit on the grid fielded = survivors + fallen. Neutrals, camp
+   * members among them, are charged to neither side, and a summon is booked
+   * at 0. The casualty chip rule's input, each side paying for its own dead
+   * (`run/chipRule.ts`). Serialized, because the dead are gone from `units`.
    */
   private readonly fallenPower = { player: 0, enemy: 0 };
   /**
-   * O1: the per-team, always-present steering objective (the Phase-O refactor of
-   * J1's single nullable player objective). Set/cleared only through the command
-   * channel (`applyCommand`) so the mutation point is the deterministic
-   * top-of-tick drain; read by `updateTarget` + `MovementBehavior` (tile
-   * pursuit) via `objectiveFor(team)` — behaviors steer off the ACTING unit's
-   * team objective. The ENEMY team is fixed at `atWill` today (nothing sets it),
-   * so enemy AI is unchanged; the storage is real so a future enemy strategy is
-   * a data change, not a refactor. An `engage` enemy target that dies reverts
-   * its team to `atWill` (`clearResolvedObjectives`); a `tile` target persists
-   * until replaced. Snapshotted (v25). The field reference is fixed; only the
-   * per-team slots are reassigned, so it's `readonly`.
+   * Each team's steering objective, always present. Changed mid-battle only
+   * through the command channel (`applyCommand`), so a change lands at the
+   * drain at the tick's top; read through `objectiveFor(team)` by
+   * `updateTarget` and `MovementBehavior`, each steering by the acting
+   * unit's team. Nothing in the game sets the enemy's, which stays
+   * `atWill`. An objective whose target unit dies reverts to `atWill`
+   * (`clearResolvedObjectives`); a `tile` holds until replaced. The record
+   * is fixed and only its slots are reassigned, so it is `readonly`.
    */
   private readonly objectives: { player: TeamObjective; enemy: TeamObjective } = {
     player: AT_WILL,
     enemy: AT_WILL,
   };
   /**
-   * K1 — combat/lifecycle trigger dispatch. Handlers apply status effects when
-   * the World fires a trigger; the Phase-L daemon system is the production
-   * consumer (K1 ships the dispatch + fire points + tests). NOT snapshotted —
-   * handlers are behaviour, re-attached at construction by their owner; in K1
-   * production nothing registers for the combat triggers, so a mid-battle
-   * resume has none to re-attach.
+   * The trigger dispatch: the World fires a trigger, and its handlers run in
+   * registration order. The battle rules register for `dealHit` and `kill`
+   * (`battleRules.ts`); the other combat triggers are fire points kept for
+   * the content that will handle them (`triggers.ts`). Not serialized: a
+   * handler is behaviour, and `fromJSON` installs the battle rules again.
    */
   private readonly triggers = new TriggerDispatcher<TriggerContextMap, World>();
 
@@ -760,9 +429,6 @@ export class World {
     this.gridW = gridW;
     this.gridH = gridH;
     this.tileGrid = tileGrid ?? new TileGrid(gridW, gridH);
-    // E1: default fork keeps unit tests that build a naked World working;
-    // battleSetup passes an explicit forked combatRng so its determinism
-    // is anchored on `encounter.terrainSeed`, not `rng`.
     this.combatRng = combatRng ?? rng.fork();
   }
 
@@ -774,25 +440,19 @@ export class World {
     return this._ended;
   }
 
-  /**
-   * O1 — the acting team's always-present objective. Neutrals (walls) never
-   * carry one → `atWill` (defensive; they never reach the objective-reading
-   * paths). Behaviors call this with the acting unit's team.
-   */
+  /** The team's objective. A neutral carries none and reads `atWill`. */
   objectiveFor(team: Team): TeamObjective {
     return team === 'neutral' ? AT_WILL : this.objectives[team];
   }
 
   /**
-   * 85d — a SETUP-PHASE standing order (the campRaid battle plan): a direct
-   * write, legal only before the first tick. Spawn-time setup mutates the
-   * world directly by design (spawnUnit / installCamps / primeCampSpawns);
-   * an order ENQUEUED at setup instead drains after tick 0's bot decides,
-   * so a driver that decided under the still-atWill objective clobbered the
-   * plan inside the very same drain (the 85d A/B probe's catch — the enemy
-   * pull never hits this only because the enemy team has no driver).
-   * Mid-battle mutation stays command-channel-only (the O1 invariant above
-   * is unchanged); the guard makes the boundary structural.
+   * Sets a team's objective before the first tick, as a harness's battle
+   * plan does (`tests/fuzz/campRaid.ts`). A direct write, as the rest of
+   * spawn-time setup is (`spawnUnit`, `installCamps`, `primeCampSpawns`): an
+   * order enqueued at setup drains after tick 0's driver has decided under
+   * `atWill`, and the driver's own command replaces the plan in that drain.
+   * Mid-battle, an objective changes only through the command channel, and
+   * the throw holds that boundary.
    */
   setInitialObjective(team: ObjectiveTeam, objective: TeamObjective): void {
     if (this.currentTick > 0) {
@@ -813,22 +473,20 @@ export class World {
   }
 
   /**
-   * K1 — register a handler for a trigger. Multiple handlers fire in
-   * registration order. The owner (a daemon layer in L; a test fixture in K1)
-   * is responsible for re-registering on a fresh/rehydrated World — handlers
-   * are not snapshotted.
+   * Registers a handler for a trigger; handlers fire in registration order.
+   * They are not serialized, so their owner registers them again on a
+   * rehydrated World, as `installBattleRules` does.
    */
   registerTrigger<K extends TriggerName>(name: K, handler: TriggerHandler<K>): void {
     this.triggers.register(name, handler);
   }
 
   /**
-   * 47f — install the battle's compiled daemon rules: store the data (for
-   * the snapshot) and register its trigger handlers. Called at most once per
-   * World (BattleScene / the fuzz harness / `fromJSON`); a second call
-   * throws — rules are per-battle constants, never appended mid-fight.
-   * Status refs are validated HERE so a bad id fails at battle setup, never
-   * mid-tick. An empty list is a free no-op (the daemon-less common case).
+   * Installs the battle's daemon rules: stores the data for the snapshot and
+   * registers their trigger handlers. The rules are fixed for the battle, so
+   * a call after rules are installed throws. Their status ids are checked
+   * here, so a bad one fails at setup, not mid-tick. An empty list stores
+   * nothing.
    */
   installBattleRules(rules: readonly BattleRule[]): void {
     if (this.battleRules.length > 0) {
@@ -841,12 +499,10 @@ export class World {
   }
 
   /**
-   * §75b — install the battle's rolled camps + the dedicated camp stream.
-   * Called at most once per World (battleSetup's 75c roll, or `fromJSON`);
-   * a second call throws — camps re-roll per battle, never append mid-fight
-   * (the installBattleRules posture). An empty list is a free no-op that
-   * stores NOTHING (the presence gate: camp-free worlds keep `campRng: null`
-   * and a byte-identical wire image).
+   * Installs the battle's camps and their stream (`battleSetup`, or
+   * `fromJSON`). Camps are rolled once a battle, so a call after camps are
+   * installed throws. An empty list stores nothing, the stream included, so
+   * a camp-free world keeps `campRng` null.
    */
   installCamps(camps: readonly CampInstance[], campRng: RNG): void {
     if (this.camps.size > 0 || this._campRng !== null) {
@@ -858,37 +514,34 @@ export class World {
         throw new Error(`World.installCamps: duplicate camp instance id ${camp.id}`);
       }
       this.camps.set(camp.id, camp);
-      // §83e — the forced-engagement probe dial: pre-mark every camp hostile
-      // to the player at the install chokepoint (both construction paths).
-      // Idempotent on the fromJSON/rollout-clone path (hostileTo is a
-      // serialized Set); shipped 0 = untaken branch, byte-identical.
+      // A probe's dial (`SIM.campsStartHostile`, shipped 0): every camp starts
+      // hostile to the player. Adding to a set is idempotent, so the
+      // `fromJSON` and rollout-clone installs leave a restored set as it was.
       if (SIM.campsStartHostile > 0) camp.hostileTo.add('player');
     }
     this._campRng = campRng;
   }
 
-  /** §75b — the dedicated camp stream (`null` on camp-free layouts). Behaviors
-   *  (75f wander) and the drip drain (75c) draw from it, never `combatRng`. */
+  /** The camps' stream, null on a camp-free layout: the camp wander and the
+   *  drip draw on it. */
   get campRng(): RNG | null {
     return this._campRng;
   }
 
-  /** §75b — resolve a camp instance by id (undefined = no such camp). */
+  /** The camp with this instance id, or undefined. */
   campById(id: number): CampInstance | undefined {
     return this.camps.get(id);
   }
 
-  /** §75b — every rolled camp instance in ascending id order (the stable
-   *  iteration the drip drain + serialization both walk). */
+  /** Every camp in ascending id, the order the drip and the snapshot walk. */
   campsList(): readonly CampInstance[] {
     return Array.from(this.camps.values()).sort((a, b) => a.id - b.id);
   }
 
   /**
-   * §75b — mark a camp hostile to a faction (camp-wide, one-way for the
-   * battle's lifetime; camps re-roll fresh next turn). 75e wires the strike
-   * sites; idempotent by Set semantics. Unknown ids throw — a hostility write
-   * without a registered camp is a wiring bug, not a degenerate case.
+   * Makes the whole camp hostile to `team` for the rest of the battle;
+   * `dealDamage` calls it when a team's unit damages a member. An unknown id
+   * throws, since a hostility write without its camp is a wiring bug.
    */
   markCampHostile(campId: number, team: Team): void {
     const camp = this.camps.get(campId);
@@ -898,28 +551,26 @@ export class World {
     camp.hostileTo.add(team);
   }
 
-  /** §75b — is this camp hostile to `team`? (False for unknown ids — read
-   *  sites degrade to the passive default rather than throwing mid-tick.) */
+  /** Whether the camp is hostile to `team`. False for an unknown id, so a
+   *  reader falls back to the passive default rather than throwing mid-tick. */
   campHostileTo(campId: number, team: Team): boolean {
     return this.camps.get(campId)?.hostileTo.has(team) ?? false;
   }
 
-  /** 47f — accumulate battle-earned bits into the serialized tally (rule
-   *  execution's write path; settled by Run at `battle:ended`). */
+  /** Adds bits to the battle's tally; a battle rule's `gainBits` calls it. */
   tallyBits(amount: number): void {
     this.tallies.bits += amount;
   }
 
-  /** Test-only read of the bits tally (the `damageDealtBy` precedent). */
+  /** Test-only read of the bits tally. */
   bitsTallied(): number {
     return this.tallies.bits;
   }
 
   /**
-   * K1 — fire a trigger to its registered handlers (deterministic, in
-   * registration order). Handlers run synchronously inside the sim step that
-   * fired them — they mutate unit effects directly, so the change is visible to
-   * subsequent ticks.
+   * Fires a trigger to its handlers, in registration order. They run inside
+   * the step that fired them and change state directly, so what they change
+   * is seen from that point on.
    */
   private fireTrigger<K extends TriggerName>(name: K, ctx: TriggerContextMap[K]): void {
     this.triggers.fire(name, ctx, this);
@@ -937,24 +588,19 @@ export class World {
   }
 
   /**
-   * Apply every queued command now, WITHOUT advancing the sim. `tick()` calls
-   * this at its top-of-tick drain; BattleScene also calls it while the sim is
-   * PARKED (Q2: the pre-battle countdown / a mid-battle pause) so a player order
-   * — and its `objective:set` marker — takes effect immediately instead of
-   * waiting for the first tick after resume. Determinism holds: no unit acts
-   * while parked, so applying an objective now vs. at the next tick is
-   * observably identical (the next tick's drain then finds the queue empty).
-   * No-op once ended or when the queue is empty.
+   * Applies every queued command now, without advancing the sim. BattleScene
+   * calls it while the sim is parked (the countdown before a battle, a pause),
+   * so a player's order and its `objective:set` marker take effect at once
+   * rather than after the resume. No unit acts while parked, so applying it
+   * now or at the next tick's drain is the same to the sim.
    *
-   * 53a/53c — every drained command emits `command:applied` stamped with its
-   * EFFECTIVE tick: the first tick whose unit actions can observe it. For the
-   * in-tick drain that's the current tick (the drain runs before the per-unit
-   * step). For THIS parked entry point, tick `tickCount` has already fully
-   * run — the command is first observable at the NEXT tick, so it stamps
-   * `tickCount + 1`. One uniform rule falls out for replay: inject every
-   * command stamped E before tick E runs (replayTrace.ts) — no parked/normal
-   * case split. The emit follows `applyCommand`, so subscribers see
-   * post-apply state (and any `objective:set` the apply produced lands first).
+   * Each drained command emits `command:applied` stamped with its effective
+   * tick, the first tick whose actions can see it: the current tick for the
+   * drain inside `tick()`, which runs before the units step, and
+   * `tickCount + 1` here, where tick `tickCount` has already run. So a replay
+   * injects every command stamped E before tick E runs, parked or not
+   * (`replayTrace.ts`). The emit follows `applyCommand`, so a subscriber sees
+   * the state after it, and any `objective:set` it produced comes first.
    */
   drainCommands(): void {
     this.drain(this.tickCount + 1);
@@ -972,9 +618,8 @@ export class World {
   /**
    * Register the authoritative spawn region for a team. Battle setup
    * calls this once per team after picking regions; the overflow scan
-   * uses the stored region to find free tiles. Calling a second time
-   * for the same team replaces the prior region (also serves rehydrate
-   * from snapshot).
+   * uses the stored region to find free tiles. A second call for the same
+   * team replaces its region.
    */
   setTeamSpawnRegion(team: Team, region: SpawnRegion): void {
     this.spawnRegions.set(team, region);
@@ -1000,24 +645,18 @@ export class World {
   }
 
   /**
-   * E4: tally a damage event for the XP ledger. Called from
-   * `AttackAction.start` after the HP deduction. Filters here (not at
-   * the consumer) so a single `damageDealt.get(id)` at battle end is
-   * already the "damage to enemies" number:
+   * Books damage to the XP ledger; `dealDamage` calls it after the HP
+   * change. It filters here, so `damageDealt.get(id)` at the battle's end is
+   * already the damage that earns XP:
    *
-   *   - Damage to the attacker's own team is ignored (currently
-   *     impossible; future friendly-fire abilities still won't earn
-   *     XP for it).
-   *   - Damage to INERT neutrals (walls, half-cover) is ignored —
-   *     half-cover destruction will surface its own progression later if
-   *     needed, but XP rides on opposed combat. §75e — an ACTIVE neutral
-   *     (camp member) DOES record: camp fights earn XP (the shape-lock's
-   *     signed XP-yes call).
+   * - damage to the attacker's own team is not booked (a confused unit's
+   *   blast can hit its side);
+   * - damage to an inert neutral (a wall, half-cover, rubble) is not booked,
+   *   since XP rides on opposed combat; a camp member's is, so camp fights
+   *   earn XP;
+   * - a summon's damage is booked to its summoner (below).
    *
-   * Overkill damage is recorded as-is (not clamped to the victim's
-   * pre-hit HP). Flat-XP dominates at the values we ship and a 1-tick
-   * AttackAction can't double-hit a corpse, so the simpler unclamped
-   * path stays.
+   * Overkill is booked as dealt, not clamped to the HP the target had.
    */
   recordDamage(attackerId: number, target: Unit, damage: number): void {
     if (damage <= 0) return;
@@ -1025,13 +664,11 @@ export class World {
     const attacker = this.findUnit(attackerId);
     if (!attacker) return;
     if (attacker.team === target.team) return;
-    // §33 — a SUMMONED unit has no roster slot, so its own ledger entry is never
-    // banked at battle end (only `playerRosterIds` get paid). Redirect its damage
-    // to the SUMMONER's tally, scaled by `summonDamageXpShare`, so a summon-only
-    // caster levels with its minions' performance. The summoner keeps the credit
-    // even after the minion (or the summoner itself) dies — `playerRosterIds`
-    // persists the dead. `share = 0` disables the credit (summon damage banks
-    // nowhere, the pre-§33 behaviour).
+    // A summon has no roster slot, so an entry of its own would never be paid.
+    // Its damage goes to the summoner's, scaled by `summonDamageXpShare`, so a
+    // caster that only summons still levels. The credit stands after the
+    // summon or the summoner dies (`playerRosterIds` keeps the dead); a share
+    // of 0 books summon damage nowhere.
     if (attacker.summonedBy != null) {
       const credited = Math.round(damage * LEVELING.summonDamageXpShare);
       if (credited > 0) {
@@ -1046,64 +683,19 @@ export class World {
   }
 
   /**
-   * GP2 — the single chokepoint for COMBAT damage: HP mutation + XP ledger +
-   * the `unit:attacked` emit, which the four combat actions
-   * (`AttackAction` / `GambitStrikeAction` / `MagicBoltAction` /
-   * `CatapultShotAction`) used to each do inline. Callers pre-compute
-   * `rawDamage` with the crit factor, half-cover multiplier, and AoE
-   * `cellMult` already baked in, and decide WHETHER a hit happens at all (the
-   * per-action `rawDamage <= 0` / team / radius skip guards stay caller-side —
-   * they decide if a cell is a victim; this method only applies a confirmed
-   * hit). `opts.crit` is the already-rolled flag, forwarded to the event for
-   * E6.C's red hitsplats.
+   * The one place HP falls: `defense` mitigation, the HP change, the XP
+   * ledger, and the camp's hostility and kill credit. Every source of damage
+   * comes here, a strike through `applyDamage` and a damage-over-time tick
+   * from `applyPeriodicEffects`. The to-hit roll, the events and the combat
+   * triggers stay with the callers, since each source has its own (a strike
+   * emits `unit:attacked` and fires `dealHit`, `takeHit` and `kill`; a tick
+   * emits `status:ticked`).
    *
-   * Environmental DoTs (the `burn` a fire tile applies, 27d) don't route through
-   * THIS to-hit wrapper — the periodic tick calls `dealDamage` directly with
-   * `bypassDefense: true`, so they stay unmissable and the GP2 `defense`
-   * mitigation never touches them, while still flowing through the one HP/ledger
-   * core (no bespoke `currentHp -=` anymore).
-   *
-   * GP2.2 — subtractive `defense` mitigation lands on the single `final` line:
-   * a confirmed hit deals `max(STATS.minDamage, rawDamage − target.defense)`,
-   * applied to the already crit/cover-resolved `rawDamage`. Both operands are
-   * integers, so `final` stays integral (no re-round). The `minDamage` floor
-   * keeps a high-defense target from fully negating chip/AoE.
-   *
-   * I2 — `opts.evadable` opts a call into the dodge to-hit roll. The caller
-   * has ALREADY drawn the crit roll (in its `start`/`applyEffect`), so the
-   * `combatRng` draw order is fixed at **crit → miss**: a missed strike simply
-   * discards the pre-rolled crit. Only single-target strikes (melee/ranged
-   * basic + the rogue gambit) pass `evadable: true`; the mage AoE, the
-   * catapult, the direct-`applyDamage` tests, and environmental fire/chasm
-   * damage (which bypasses this method entirely) are all unmissable — they omit
-   * it (default `false`) and draw nothing here. On a miss: deal 0, emit
-   * `unit:missed` (no HP mutation, no `recordDamage`, no `unit:attacked`), and
-   * return before mitigation.
-   *
-   * I6 — `opts.accuracy` is the firing ability's per-weapon base hit chance
-   * (from `config/abilities.json`), threaded by the evadable strike actions and
-   * fed to `hitChanceFor` in place of the retired global `hitChanceBase`. It is
-   * only consumed when `evadable` (and a live attacker exists); a missing
-   * accuracy on the evadable degraded path is treated as unmissable, the same
-   * as a missing attacker.
-   *
-   * 29 — RETURNS whether the blow LANDED: `true` on a confirmed hit (incl. the
-   * unmissable / degraded paths), `false` only on an evade miss. The status-on-hit
-   * `applyStatus` op reads this so a status rides a landed hit and skips a missed
-   * swing (the interpreter records the miss into the per-fire scratch). Callers
-   * that don't care (the legacy damage paths) ignore the value — byte-identical.
-   */
-  /**
-   * 27 — the shared damage CORE: subtractive `defense` mitigation (skipped when
-   * `bypassDefense`, the DoT path), the HP deduction, and the XP-ledger credit.
-   * Returns the final damage dealt. This is the single mitigation chokepoint —
-   * every HP-reducing source routes through it (the combat `applyDamage` wrapper
-   * below, and `applyPeriodicEffects`' DoT ticks), so future shields/resistances
-   * slot in ONE place. Event emission + the to-hit roll + the combat triggers
-   * stay with the callers (a strike emits `unit:attacked` + dealHit/takeHit/kill;
-   * a DoT tick emits `status:ticked`), so the per-source semantics don't leak in
-   * here. `attacker` is the resolved Unit (or undefined: a degraded combat hit or
-   * an environmental DoT) — no `recordDamage` credit without one.
+   * A hit deals `max(STATS.minDamage, rawDamage − defense)`, so a
+   * high-defense target can't cancel a hit outright; `bypassDefense` skips
+   * the mitigation. Both operands are integers, so the result is too.
+   * `attacker` is undefined for a hit whose attacker is gone or a tick with
+   * no source, and then nothing is booked. Returns the damage dealt.
    */
   private dealDamage(
     attacker: Unit | undefined,
@@ -1116,12 +708,10 @@ export class World {
       : Math.max(STATS.minDamage, rawDamage - target.effectiveStats.defense);
     target.currentHp -= final;
     if (attacker) this.recordDamage(attacker.id, target, final);
-    // §75e — camp AGGRO + KILL CREDIT ride this one damage chokepoint, so AoE
-    // splash and living-source DoT ticks are covered for free (the signed
-    // intent): a faction damaging a camp member marks the whole camp hostile
-    // to that faction; a lethal blow that wipes the camp stamps `killedBy`.
-    // The attacker-team guard keeps 'neutral' out of hostileTo (a confused
-    // camp-on-camp swing marks nothing).
+    // Here, so a blast's splash and a tick with a living source count too: a
+    // team that damages a camp member makes the whole camp hostile to it, and
+    // the blow that clears the camp stamps `killedBy`. A neutral attacker (a
+    // confused camp member) marks nothing.
     if (attacker && target.campId !== null && attacker.team !== 'neutral') {
       this.markCampHostile(target.campId, attacker.team);
       if (target.currentHp <= 0) this.recordCampKill(target.campId, attacker.team);
@@ -1130,12 +720,10 @@ export class World {
   }
 
   /**
-   * §75e — the drip-aware camp-kill stamp: when a lethal blow leaves the camp
-   * with NO living members and NOTHING pending, the killer's faction lands in
-   * the serialized `killedBy` (the campKills read 75g's win-or-lose reward
-   * portion consumes). Attribution is the chokepoint's resolved attacker, so
-   * combat kills and living-source DoT kills both stamp; a dead-source DoT
-   * wipe has no clean attribution and deliberately leaves `killedBy` null.
+   * Stamps `killedBy` when a lethal blow leaves the camp cleared
+   * (`campCleared`), for `battle:ended.campKills`. The team is `dealDamage`'s
+   * resolved attacker's, so a strike and a tick with a living source both
+   * stamp; a tick whose source is dead has no team, and the stamp stays null.
    */
   private recordCampKill(campId: number, team: Team): void {
     const camp = this.camps.get(campId);
@@ -1144,10 +732,10 @@ export class World {
   }
 
   /**
-   * §75e/§75g — a camp is CLEARED when nothing is pending AND no member is
-   * alive (the shape-lock's drip-aware definition — no early credit while
-   * the portal is still trickling). Shared by the kill stamp, the
-   * block-turn-end gate, and the enemy-pull objective revert.
+   * A camp is cleared when nothing is pending and no member lives, so there
+   * is no credit while members are still dripping in. Read by the kill stamp,
+   * the turn-end gate (`hasUnclearedHostileCamp`) and the camp-pull revert in
+   * `clearResolvedObjectives`.
    */
   private campCleared(camp: CampInstance): boolean {
     if (camp.pending.length > 0) return false;
@@ -1157,9 +745,9 @@ export class World {
     return true;
   }
 
-  /** §75g — does `team` still have an UNCLEARED camp hostile to it? The
-   *  block-turn-end gate's read; order-independent (a boolean OR over the
-   *  registry), and trivially false on every camp-free board. */
+  /** Whether a camp hostile to `team` is still uncleared, which holds back
+   *  `team`'s decisive win (`checkBattleEnd`). An OR over the camps, so their
+   *  order doesn't matter. */
   private hasUnclearedHostileCamp(team: Team): boolean {
     for (const camp of this.camps.values()) {
       if (camp.hostileTo.has(team) && !this.campCleared(camp)) return true;
@@ -1167,32 +755,43 @@ export class World {
     return false;
   }
 
+  /**
+   * Applies a strike: the to-hit roll, then `dealDamage`, the event and the
+   * combat triggers. The damage op calls it with `rawDamage` already scaled
+   * by the crit and a blast's ring, and decides whether a unit is hit at all;
+   * this only resolves the hit.
+   *
+   * - `crit` — the rolled flag, carried to `unit:attacked`. The op draws the
+   *   crit before calling, so the `combatRng` order is crit, then hit; a miss
+   *   discards the crit.
+   * - `evadable` — rolls to hit against the attacker's precision and the
+   *   target's evasion, each moved by the tile it stands on, from the op's
+   *   `accuracy` (`hitChanceFor`). Without `evadable` or `accuracy`, or with
+   *   the attacker gone, the hit lands and nothing is drawn. A miss emits
+   *   `unit:missed`, fires `dealMiss` and `evade`, and touches no HP.
+   * - `bypassDefense` — passed to `dealDamage`.
+   *
+   * Returns whether the hit landed: false only on a miss. The `applyStatus`
+   * op reads it, so a status rides a landed hit only.
+   */
   applyDamage(
     attackerId: number,
     target: Unit,
     rawDamage: number,
     opts: { crit: boolean; evadable?: boolean; accuracy?: number; bypassDefense?: boolean },
   ): boolean {
-    // K1 — looked up once: a live attacker is the runtime invariant (the strike
-    // is cast by it), and the combat triggers below need the Unit. `findUnit`
-    // is an O(1) `unitsById` hit and draws no RNG, so hoisting it off the
-    // evadable-only path is byte-identical.
+    // Looked up once, for the roll and the triggers; the lookup draws nothing.
     const attacker = this.findUnit(attackerId);
     if (opts.evadable && opts.accuracy !== undefined) {
-      // The guard only covers a degraded path (attacker gone) — treat it as an
-      // unmissable hit there rather than drawing combatRng against no precision.
+      // With the attacker gone the hit lands, rather than drawing against no
+      // precision.
       if (attacker) {
-        // §37c — the tile combat fold (generalizes M6's shallow-water bog-down).
-        // Two LIVE tile reads, like the fire/heal pass: the ATTACKER's tile
-        // `accuracyMod` docks its precision (clumsy footing on ice / mud / water
-        // → "miss more"), the DEFENDER's tile `evasionMod` shifts its evasion
-        // (hills high-ground harder to hit, sand exposed easier). Occupant-keyed:
-        // shooting INTO a tile from elsewhere is unaffected; only where each unit
-        // STANDS counts. Existing battles only ever place `shallow_water`, whose
-        // -10 accuracyMod reproduces the M6 penalty exactly — byte-identical.
-        // Only the to-hit THRESHOLD shifts (the combatRng draw below is
-        // unchanged), and the `hitChanceFloor`/cap clamp protects a now-negative
-        // effective precision or a stacked evasion bonus.
+        // The tiles each unit stands on, read live: the attacker's
+        // `accuracyMod` moves its precision (water, ice and mud lower it), the
+        // target's `evasionMod` its evasion (hills raise it, sand lowers it).
+        // Only where each stands counts, not the tiles a shot crosses. Only the
+        // threshold moves, never the draw, and `hitChanceFor`'s clamp covers a
+        // precision pushed below 0 or a stacked evasion.
         const precision =
           attacker.effectiveStats.precision +
           (this.tileGrid.defAt(attacker.position).accuracyMod ?? 0);
@@ -1202,12 +801,10 @@ export class World {
         const hitChance = hitChanceFor(opts.accuracy, precision, evasion);
         if (this.combatRng.next() >= hitChance) {
           this.emit('unit:missed', { attackerId, targetId: target.id });
-          // K1 — the evade pair fires post-resolution (no HP touched). The
-          // attacker side (`dealMiss`) and the target/dodger side (`evade`,
-          // the L dodge-buff hook). Skipped on the degraded no-attacker path.
+          // The attacker's side of a miss, then the dodger's.
           this.fireTrigger('dealMiss', { attacker, target });
           this.fireTrigger('evade', { target, attacker });
-          return false; // 29 — the miss the status-on-hit gate reads.
+          return false;
         }
       }
     }
@@ -1220,16 +817,15 @@ export class World {
       damage: final,
       crit: opts.crit,
     });
-    // K1 — combat triggers fire AFTER the hit resolves, so a handler's stat
-    // changes affect the next action, not this one. `kill` fires when the blow
-    // is lethal (clean attacker attribution here, before the death reap). All
-    // skipped on the degraded no-attacker path.
+    // After the hit resolves, so a handler's change affects the next action,
+    // not this one. `kill` fires on a lethal blow, here where the attacker is
+    // known, before the reap. None fire with the attacker gone.
     if (attacker) {
       this.fireTrigger('dealHit', { attacker, target, damage: final, crit: opts.crit });
       this.fireTrigger('takeHit', { target, attacker, damage: final, crit: opts.crit });
       if (target.currentHp <= 0) this.fireTrigger('kill', { attacker, victim: target });
     }
-    return true; // 29 — landed (incl. the unmissable / degraded paths).
+    return true;
   }
 
   /** Test-only read of the damage ledger. */
@@ -1238,89 +834,80 @@ export class World {
   }
 
   /**
-   * F6 — feed the utility-contribution ledger. `amount` is the *effective*
-   * (clamped, non-overheal) delta the action actually applied; a 0 (full-HP
-   * target, no-op) contributes nothing, which kills the heal-a-full-ally
-   * spam-XP case. Called from `HealAction` after it computes the delta —
-   * the analogue of `recordDamage`'s call from `AttackAction`.
+   * Books healing to the XP ledger. `amount` is the HP the heal restored,
+   * clamped at maxHp, so healing a full ally earns nothing. Called by the
+   * interpreter's heal op and by a periodic heal that has a source.
    *
-   * Deliberately leaner than `recordDamage` (no `target` / `findUnit` team
-   * guard): heals only ever target allies, and `computeXpAwards` reads this
-   * ledger only for ids in `playerRosterIds`, so an enemy-healer or
-   * self-heal entry is harmless and never paid out. Skipping the lookup
-   * also keeps this off the O(n) `findUnit` path.
+   * It has no team check, unlike `recordDamage`: heals target allies, and
+   * `computeXpAwards` pays only ids in `playerRosterIds`, so an enemy
+   * healer's entry is never paid.
    */
   recordHealing(healerId: number, amount: number): void {
     if (amount <= 0) return;
     this.utilityDone.set(healerId, (this.utilityDone.get(healerId) ?? 0) + amount);
   }
 
-  /** Test-only read of the utility-contribution ledger. */
+  /** Test-only read of the healing ledger. */
   utilityDoneBy(unitId: number): number {
     return this.utilityDone.get(unitId) ?? 0;
   }
 
   /**
-   * Advance the simulation by one tick. Per-unit step (in snapshot
-   * iteration order, so DeathBehavior-style splicing doesn't skip
-   * neighbours):
+   * Advances the battle one tick:
    *
-   *   0. Drain `commands` queue and apply each at a deterministic point
-   *      (before per-unit step) so command-affected state is visible to
-   *      every unit on the same tick.
-   *   1. Death short-circuit. `currentHp <= 0` → emit unit:died, remove
-   *      from world, continue. Used to live in DeathBehavior; folded in
-   *      here at A1 because a dead unit can't choose to do anything else.
-   *   2. Decrement per-action cooldown counters by 1 (capped at 0).
-   *   3. If an action is in flight (`activeAction != null`): fire any
-   *      `applyEffect` calls due at the current tick offset; if
-   *      `currentTick >= finishTick`, clear `activeAction`; otherwise
-   *      skip the selector (unit is busy).
-   *   4. Otherwise run the selector: poll every behavior, filter
-   *      proposals whose action is still on cooldown, pick the highest
-   *      score. Apply: set per-action cooldown to the proposal's value,
-   *      set activeAction with `startTick`/`finishTick`/`phases` (F2: the
-   *      declared phase timeline), call `action.start(unit, world)`, then
-   *      emit the offset-0 `action:phase` boundary(ies).
+   * 1. Drain the commands, so every unit sees them this tick, then revert
+   *    the objectives whose target is resolved (`clearResolvedObjectives`).
+   * 2. Step each unit, over a copy of `units` so a removal doesn't skip a
+   *    neighbour:
+   *    - reap it if it is dead;
+   *    - decrement each action cooldown by one, to a floor of 0;
+   *    - expire its timed statuses;
+   *    - with an action in flight: re-check a move's destination before
+   *      its flip, let the action hold fire, emit each phase that begins
+   *      at this offset with `applyEffect` at `impact`, and clear the
+   *      action at `finishTick`; a unit still busy stops here;
+   *    - skip a unit reserved as a swap's partner;
+   *    - refresh its target (`updateTarget`);
+   *    - run the selector: poll every behaviour, drop the proposals still
+   *      on cooldown, take the highest score, drop a move whose
+   *      destination is blocked, then set the cooldown, seat the action,
+   *      call `start` and emit its offset-0 phases.
+   * 3. Seat the queued units and the camps' drip, fire the chain hops due,
+   *    run the periodic statuses, the auras and the tiles, reap the dead,
+   *    and check for the battle's end.
    *
-   * Cooldown semantics are still decrement-then-check: behaviors set the
-   * proposal's cooldown to the *full* value (not N-1), and World
-   * decrements once per tick before the selector runs.
+   * Cooldowns decrement, then check: a proposal sets its cooldown to the
+   * full cadence, not N−1, and the decrement runs before the selector
+   * (gotchas #7, #8, #101).
    */
   tick(): void {
     if (this._ended) return;
     this.tickCount++;
     this.bus.emit('tick', { tick: this.tickCount });
 
-    // In-tick drain: this tick's per-unit step observes the commands, so the
-    // effective tick IS the current tick (53a/53c — see drainCommands).
+    // The units step after this drain, so its effective tick is this one
+    // (`drainCommands`).
     this.drain(this.tickCount);
 
-    // O1 — revert any team whose `engage` enemy target died (e.g. last tick) to
-    // `atWill`, so the per-unit `updateTarget` below sees the reverted objective
-    // and uses default targeting this same tick. Also catches a just-enqueued
-    // objective that points at an already-dead/invalid enemy. Runs after the
-    // command drain so a set-then-resolve in one tick is consistent.
+    // After the drain, so an objective set this tick at a target already gone
+    // reverts too, and before the units step, so `updateTarget` targets by
+    // default this same tick.
     this.clearResolvedObjectives();
 
     for (const unit of this.units.slice()) {
-      // 1. Death.
       if (unit.currentHp <= 0) {
         this.reapUnit(unit);
         continue;
       }
 
-      // 2. Decrement per-action cooldowns.
       for (const [actionId, cd] of unit.actionCooldowns) {
         if (cd > 0) unit.actionCooldowns.set(actionId, cd - 1);
       }
 
-      // 2.5. K1 — expire timed (`ticks`) status effects before the unit acts,
-      // so a just-expired buff can't influence this tick's proposal. A no-op
-      // (no array touch) for the no-effect common case. `endOfTurn` effects
-      // are never removed here — they live for the whole battle.
-      // 27 — fire `status:expired` for each removed status-DEF effect (the viz
-      // lifecycle); plain K1 stat effects (not in STATUS_DEFS) stay silent.
+      // Before the unit acts, so a status just run out can't shape this
+      // tick's proposal. An `endOfTurn` effect lasts the battle and is never
+      // expired here. A status with a def emits `status:expired`; a plain stat
+      // effect expires silently.
       for (const e of unit.expireEffects(this.tickCount)) {
         if (e.key in STATUS_DEFS) {
           this.bus.emit('status:expired', {
@@ -1331,32 +918,25 @@ export class World {
         }
       }
 
-      // 3. In-flight action. F2 — walk the declared phase timeline: emit an
-      // `action:phase` event for every phase that BEGINS at the current
-      // offset (zero-length phases share a boundary, so several can fire on
-      // one tick, in declared order), and fire `applyEffect` at `impact`.
-      // Behavior-preserving vs pre-F2: a multi-tick action's `impact` sits at
-      // offset == duration == finishTick (exactly where `effectTicks:[D]`
-      // fired before), then the finish check clears it on the same tick.
+      // An action in flight walks its phase timeline: each phase that begins
+      // at this offset emits `action:phase`, in declared order (zero-length
+      // phases share a boundary, so several can emit on one tick), and
+      // `applyEffect` fires at `impact`.
       if (unit.activeAction !== null) {
         const aa = unit.activeAction;
         const offset = this.tickCount - aa.startTick;
 
-        // §36c — in-flight re-validation of a deferred move. A move holds a claim
-        // on its destination until the logical flip (MoveAction.applyEffect, at
-        // the `impact` boundary); while the claim is still held the unit is
-        // PRE-FLIP (logically on `from`). Re-check the destination here, before
-        // walking the phase timeline: if it went occupied / untraversable since
-        // move-start — dynamic terrain or a non-pathed knockback onto `to`; a peer
-        // pather can NEVER cause it, the claim blocks convergence — abort via the
-        // §35b path instead of sliding (or flipping) onto a bad cell. The unit
-        // settles back to `from` (it never left), the claim releases, the move
-        // cooldown resets so it retries next tick, and `unit:moveAborted` drives
-        // the renderer's settle-back. The still-held claim is the exact pre-flip
-        // signal — `applyEffect` releases it at the flip, so an arrived unit is
-        // never re-validated; `destinationBlocked` already excludes the mover's
-        // own claim/occupancy. INERT today (no §37/§40 trigger exists yet), so no
-        // fuzz/play shift; exercised synthetically in moveAbortInflight.test.ts.
+        // A move holds its destination's claim until its flip
+        // (`MoveAction.applyEffect`, at `impact`), so a held claim marks a unit
+        // still on `from`. If the destination has become occupied or
+        // untraversable since the move began, the move aborts here, before the
+        // phase walk, rather than flip onto a bad cell: the unit stays on
+        // `from`, the claim is released, the move's cooldown resets so it
+        // retries next tick, and `unit:moveAborted` drives the renderer's
+        // settle-back. A peer's move can't cause it, since the claim blocks
+        // convergence; a knockback or a changed tile could.
+        // `destinationBlocked` ignores the mover's own claim and body.
+        // `moveAbortInflight.test.ts` exercises it.
         const dest = aa.action.destinationCell?.();
         if (dest !== undefined && claimantOf(this, dest) === unit.id && this.destinationBlocked(unit, dest)) {
           this.releaseClaim(dest);
@@ -1366,15 +946,12 @@ export class World {
           continue;
         }
 
-        // 82e — the release-gate probe (the §36c abort family, one step
-        // later in the lifecycle): before a phase boundary emits, the
-        // action may HOLD FIRE (`holdCheck` — today: a releaseGate def
-        // whose target left the firing band mid-windup). The abort mirrors
-        // §36c minus the claim (nothing was claimed): the action clears
-        // with nothing fired (no phase event, no effect, no RNG draw) and
-        // the cooldown is set to the returned RE-AIM ticks instead of
-        // resetting to 0 — the crew shifts its aim, it doesn't re-crank.
-        // `unit:actionHeld` drives the renderer's re-aim bar.
+        // Before a phase boundary emits, the action may hold fire
+        // (`holdCheck`: a def with a `releaseGate` whose target left the firing
+        // band during the windup). The action then clears with nothing fired
+        // (no phase event, no effect, no draw), and its cooldown is set to the
+        // re-aim ticks returned rather than to 0: the crew shifts its aim, it
+        // doesn't re-crank. `unit:actionHeld` drives the renderer's re-aim bar.
         let held = false;
         for (const phase of phasesBeginningAt(aa.phases, offset)) {
           const reaimTicks = aa.action.holdCheck?.(phase, unit, this) ?? null;
@@ -1402,38 +979,31 @@ export class World {
         }
       }
 
-      // 3.75 (sits between 3 and 3.5 conceptually) — 56c2/56e-pre: a unit
-      // named as the RESERVED PARTNER of someone's in-flight SwapAction is
-      // skipped for the swap's WHOLE window. Pre-flip it must not start an
-      // action the coming flip would invalidate (a move would corrupt the
-      // exchange; an attack would make it mid-action at relocation — the
-      // very thing the swap gates forbid); post-flip the swap is still ITS
-      // action too — the renderer's dual lerp is mid-slide, and the
-      // flip-anchored release let a half-displaced unit act or be grabbed
-      // by a second swap (the 56e sighting). Derived fresh per unit (never
-      // serialized; an earlier-order unit may have STARTED the swap this
-      // same tick), cheap at real unit counts. The partner still pays no
-      // cooldown — "merely relocated" survives; only the mid-window
-      // freedom is gone. The reserve clears with the actor's action
-      // (finishTick, or the flip's abort branch).
+      // A unit reserved as the partner of a swap in flight is skipped for the
+      // swap's whole window. Before the flip it must not start an action the
+      // flip would spoil (a move would break the exchange; an attack would
+      // leave it mid-action as it is moved, which the swap's gates forbid).
+      // After the flip the swap is still its action: the renderer is
+      // mid-slide, and releasing at the flip let a half-moved unit act or be
+      // taken by a second swap. Asked per unit, since a unit earlier in the
+      // order may have started the swap this tick. The partner pays no
+      // cooldown; the reserve ends with the actor's action (at `finishTick`,
+      // or the flip's abort).
       if (unit.activeAction === null && isReservedSwapPartner(unit.id, this)) continue;
 
-      // 3.5. E5 — refresh the sticky target ONCE per free unit, before
-      // behaviors poll. Both MovementBehavior and the strike abilities
-      // read `unit.targetId` via `currentTarget`; updating here (not
-      // inside each behavior) keeps the re-target decision + outOfLosTicks
-      // counter advancing exactly once per tick.
+      // Once per free unit, before the behaviours poll: `MovementBehavior`
+      // and the abilities read `unit.targetId` through `currentTarget`, and
+      // refreshing it here moves the re-target decision and `outOfLosTicks`
+      // on exactly once a tick.
       updateTarget(unit, this);
 
-      // 4. Selector.
       let best: ActionProposal | null = null;
       for (const behavior of unit.behaviors) {
         const proposal = behavior.proposeAction(unit, this);
         if (proposal === null) continue;
-        // E2: cooldownKey defaults to action.id (the pre-E2 behavior).
-        // Abilities override with their own id so a multi-ability unit
-        // gets independent cooldowns even when two abilities wrap the
-        // same Action class.
+        // An ability keys its cooldown by its own id, so two abilities that
+        // build the same action keep separate cooldowns; without a key it is
+        // the action's id.
         const cdKey = proposal.cooldownKey ?? proposal.action.id;
         const remainingCd = unit.actionCooldowns.get(cdKey) ?? 0;
         if (remainingCd > 0) continue;
@@ -1441,14 +1011,10 @@ export class World {
       }
       if (best === null) continue;
 
-      // §35b — proactive destination check + abort. A relocation whose
-      // destination is occupied (by another unit) or untraversable AT EXECUTION
-      // is aborted: a clean no-op that does NOT consume the cooldown (the unit
-      // retries next tick, still at `from`) and emits `unit:moveAborted` so the
-      // renderer can react. Inert on today's instant model — a unit's propose and
-      // execute are atomic, and behaviors already route around occupied cells —
-      // but built + event-seamed here so §36's deferred position flip (which opens
-      // a real same-tick collision window) inherits a tested abort path.
+      // A move whose destination is occupied, claimed by another unit or
+      // untraversable as it would start is dropped: it spends no cooldown, so
+      // the unit retries next tick from where it stands, and `unit:moveAborted`
+      // tells the renderer.
       const dest = best.action.destinationCell?.();
       if (dest !== undefined && this.destinationBlocked(unit, dest)) {
         this.bus.emit('unit:moveAborted', { unitId: unit.id, from: unit.position, to: dest });
@@ -1457,19 +1023,15 @@ export class World {
 
       const cdKey = best.cooldownKey ?? best.action.id;
 
-      // §44b — the INSTANTANEOUS-ACTION rule: a zero-length timeline with no
-      // deferred effect resolves entirely within this tick — `start()` runs
-      // and nothing enters the in-flight machinery. Deliberate, not an
-      // optimization: `activeAction` is SERIALIZED, and a zero-length action
-      // set here would linger on the unit until next tick's in-flight sweep —
-      // exactly across the boundary where snapshots are taken — so routing it
-      // through the normal path would put "I did nothing" state into
-      // WorldSnapshot (a bump for no behavior). The 0-cooldown skip is the
-      // same discipline: `actionCooldowns` serializes 0-valued entries, and a
-      // wait must leave world bytes identical to the abstain it replaced.
-      // Today only `WaitAction` matches — every combat `moveCooldownTicks`
-      // floors at 1 and Move/Effect actions carry `applyEffect` — and the
-      // WaitAction tests pin the no-lingering-state contract.
+      // An action with a zero-length timeline and no `applyEffect` resolves
+      // within this tick: `start()` runs and the action is never seated.
+      // `activeAction` is serialized, and a zero-length action seated here
+      // would sit on the unit until the next tick's sweep, across the boundary
+      // where snapshots are taken. A cooldown of 0 is not set either, since
+      // `actionCooldowns` serializes 0 entries: a wait leaves the world's bytes
+      // as an idle unit would. Only `WaitAction` matches (a move's cooldown is
+      // at least 1, and moves and effects have `applyEffect`); its tests pin
+      // that it leaves no state.
       if (totalTicks(best.phases) === 0 && !best.action.applyEffect) {
         if (best.cooldown > 0) unit.actionCooldowns.set(cdKey, best.cooldown);
         best.action.start(unit, this);
@@ -1482,15 +1044,11 @@ export class World {
       unit.actionCooldowns.set(cdKey, best.cooldown);
       const activeAction = this.seatAction(unit, best.action, best.phases);
       best.action.start(unit, this);
-      // F2 — emit the offset-0 phase boundary(ies) on the start tick, AFTER
-      // start(), so the renderer hears `windup` (or `impact` for a strike)
-      // the instant the action begins — mirroring step 3's per-tick handling
-      // for actions already in flight at tick top. No F2-migrated action has
-      // BOTH an offset-0 `impact` AND an `applyEffect` (a strike's effect is
-      // in `start()`, which already ran) — the one modern case is a 1-tick
-      // 56c2 SwapAction (flipOffset floors to 0), where firing the flip here
-      // on the start tick is exactly right (the same instant-at-1-tick rule
-      // a 1-tick move gets from its own offset-0 impact).
+      // The offset-0 phases emit on the start tick, after `start()`, so the
+      // renderer hears the first phase the tick the action begins, as an
+      // action already in flight is handled above. An offset-0 `impact` with
+      // an `applyEffect` fires it here: a one-tick move's or swap's flip lands
+      // on its start tick.
       for (const phase of phasesBeginningAt(activeAction.phases, 0)) {
         this.emitActionPhase(unit, activeAction.action, phase);
         if (phase === 'impact' && activeAction.action.applyEffect) {
@@ -1499,42 +1057,30 @@ export class World {
       }
     }
 
-    // D5.C — after deaths + movements settle for the tick, drain any
-    // overflow templates whose team's spawn region has free tiles.
-    // Runs before checkBattleEnd so a wiped team with units still in
-    // queue gets a chance to reinforce before victory triggers.
+    // After the tick's deaths and moves, seat the queued units whose region
+    // has a free tile; before `checkBattleEnd`, so a wiped team with units
+    // queued reinforces before the battle ends.
     this.runOverflowScan();
 
-    // §75c — the camp portal-drip sibling: each camp tries to materialize its
-    // next pending member overlapping its anchor tile. Free on camp-free
-    // worlds (the presence gate).
+    // Each camp tries to seat its next pending member on its anchor.
     this.runCampDripScan();
 
-    // 29c — fire any chain hops that came due this tick (the per-hop delay). Sits
-    // beside the periodic pass — both are scheduled over-time HP changes routed
-    // through `dealDamage`, and the shared `reapDead()` below reaps a hop-kill on
-    // the SAME tick (combat-kill ordering).
+    // The chain hops due this tick. A unit a hop kills is reaped by the
+    // `reapDead()` below, on this tick, as a strike's victim would be.
     processChainHops(this);
 
-    // 27 — per-unit periodic status ticks (DoT/HoT). The fire/healing tiles
-    // feed this via `applyTileStatuses` below (a unit standing on fire carries
-    // `burn`, on healing carries `rejuvenate`), so this is the single HP-over-
-    // time pass; the shared `reapDead()` reaps a DoT-kill on the SAME tick.
+    // The periodic statuses, the one pass for HP over time; the tiles feed it
+    // through the statuses they sustain (`applyTileStatuses`). A unit a tick
+    // kills is reaped below, on this tick.
     this.applyPeriodicEffects();
 
-    // §76a — the aura pass: every live aura carrier sustains its aura status on
-    // the units in radius. Sits with its sibling `applyTileStatuses` (both are
-    // sustain-source passes over the same `sustainStatus` chokepoint) and after
-    // the drip scan, so a just-dripped camp member standing in an aura is
-    // affected the same tick — mirroring 27d's freshly-spawned rule below.
+    // The auras, after the drip, so a member just dripped into an aura is
+    // affected this tick, as a unit spawned onto a tile is below.
     this.applyAuraStatuses();
 
-    // 27d — refresh the tile-sourced statuses AFTER the overflow scan so a
-    // freshly-spawned unit that lands on a fire/healing tile is afflicted the
-    // same tick. Replaces the D7.B per-tile chip pass: the HP change is now the
-    // status's periodic tick (above), routed through `dealDamage`/the HoT clamp,
-    // not an ad-hoc `currentHp -=` here. A `reapDead()` sweep follows so a unit
-    // killed by a burn tick dies on the SAME tick (combat-kill ordering).
+    // The tiles' statuses, after the queue is seated, so a unit spawned onto
+    // fire or a healing tile is affected this tick. Then the reap, so a unit
+    // killed this tick dies this tick.
     this.applyTileStatuses();
     this.reapDead();
 
@@ -1542,10 +1088,9 @@ export class World {
   }
 
   /**
-   * F2 — emit a single `action:phase` boundary event, pulling optional
-   * target info from the action's `phaseTarget()` (a homing action surfaces
-   * `targetId`, a ground-target surfaces `targetCell`) without exposing the
-   * action's internals. Transient + renderer-only; no sim state is touched.
+   * Emits one `action:phase`, with the target the action reports through
+   * `phaseTarget()` (a unit for a homing action, a cell for a ground target).
+   * For the renderer; it changes no sim state.
    */
   private emitActionPhase(unit: Unit, action: Action, phase: ActionPhaseName): void {
     const { targetId, targetCell } = action.phaseTarget?.() ?? {};
@@ -1559,36 +1104,29 @@ export class World {
   }
 
   /**
-   * 27 — apply a status to `target` from its `StatusDef` (the single apply
-   * chokepoint for status-DEF effects). Builds the runtime `StatusEffect`
-   * (merge-mapped, periodic cursor seeded), merges it onto the unit honouring
-   * the merge policy, and fires `status:applied`. `sourceUnitId` = the applier
-   * (the §29 caster) or `null` (environmental, the §27d fire tile). `magnitude`
-   * scales the periodic output + stacks under the `add` policy (default 1);
-   * `durationSecondsOverride` (29) lets an `applyStatus` op override the def's
-   * base duration. Callers: §27d (fire/healing tiles) and §29 (the `applyStatus`
-   * op — the status-on-hit production applier).
+   * Applies a status from its def, the one way a status with a def reaches a
+   * unit: builds the `StatusEffect` (`buildStatusEffect`), merges it onto the
+   * unit under the def's merge policy, and emits `status:applied`. Callers:
+   * the `applyStatus` op, a battle rule, the tiles and the auras (through
+   * `sustainStatus` and `applyTileEnterEffects`).
    *
-   * §38d-3 — the SUSCEPTIBILITY gate. A unit's `UnitDef.statusSusceptibility` may
-   * declare an allow-list of status ids it can receive (a wall opts into
-   * burn/frozen, out of poison/bleed — the burnable-not-poisonable wall). Gating
-   * HERE, at the single apply chokepoint, covers every source (the `applyStatus`
-   * op AND the tile enter/sustain hooks). Absent ⇒ susceptible to all, so every
-   * combatant today is unchanged (byte-identical); a filtered-out status is a
-   * silent no-op — nothing added, no `status:applied` emitted. Reads `ALL_UNIT_DEFS`
-   * at CALL time (the config/units ⇄ sim cycle — GOTCHAS #114).
+   * - `sourceUnitId` — the applier, or null for a tile.
+   * - `magnitude` — scales a periodic status's output, and stacks under the
+   *   `add` policy.
+   * - `durationSecondsOverride` — the op's own duration, in place of the def's.
    *
-   * §83b — the IMMUNITY gate, susceptibility's blocklist complement: ids the
-   * unit can NEVER receive (the healer's panic immunity — the wail-panic ×
-   * sustain-hand parity repair). Same chokepoint, same silent-no-op contract;
-   * symmetric across teams (an ENEMY healer is equally unpanickable).
+   * Two gates in the unit's def, read here so they hold for every source.
+   * `statusSusceptibility` lists the only statuses the unit can receive (a
+   * wall takes burn and frozen alone); absent, it takes all.
+   * `statusImmunities` lists those it never receives (the healer's panic), on
+   * either team. A gated status is dropped silently: nothing added, no event.
+   * The defs are read at call time (gotcha #114).
    */
   applyStatusEffect(
     target: Unit,
     def: StatusDef,
     sourceUnitId: number | null,
     magnitude = 1,
-    // 29 — the `applyStatus` op's optional per-application duration override.
     durationSecondsOverride?: number,
   ): void {
     const allow = ALL_UNIT_DEFS[target.archetype]?.statusSusceptibility;
@@ -1602,11 +1140,10 @@ export class World {
   }
 
   /**
-   * §37d — forcibly strip a status from a unit (the apply chokepoint's mirror).
-   * No-op if the unit doesn't carry it. Fires `status:expired` for a status-DEF
-   * effect (the same viz event the lifetime-expiry path emits, so the renderer
-   * restores the unit's team colour / clears the burn tint), staying silent for
-   * a plain K1 stat effect. Caller: the tile→status REMOVE hook (water → burn).
+   * Strips a status from a unit, if it carries it: water putting out a burn
+   * (`applyTileEnterEffects`). A status with a def emits `status:expired`, as
+   * one that runs out does, so the renderer clears its tint; a plain stat
+   * effect is stripped silently.
    */
   removeStatusEffect(target: Unit, statusId: string): void {
     const removed = target.removeEffect(statusId);
@@ -1620,17 +1157,15 @@ export class World {
   }
 
   /**
-   * §37d — the tile→status ENTER hook, fired by `MoveAction.applyEffect` at the
-   * §36b 50% logical flip (the moment the unit commits to `to`). Reads the
-   * destination tile's `TileDef` and, in one pass, REMOVES a status (water /
-   * deep_water → strip `burn`, the inverse of the fire→burn sustain — always on)
-   * and APPLIES one (mud → `poison`, environmental so `sourceUnitId` is `null`).
+   * A unit's entering a tile, called at a move's or a swap's flip, when the
+   * unit is on its new cell: strips the tile's `statusRemovedOnEnter` (water
+   * puts out a burn) and applies its `statusOnEnter` (mud poisons, with no
+   * source).
    *
-   * Distinct from the per-tick `applyTileStatuses` standing-on sustain: this
-   * fires ONCE per cell entry, so poison is a one-shot affliction per step onto
-   * mud (it isn't re-stamped while the unit stands there) and the cleanse only
-   * triggers on the move that lands in water. Scoped to a real `MoveAction`
-   * commit — spawn / shove / summon placement aren't tile "enters".
+   * Once per entry, unlike `applyTileStatuses`, which sustains a status every
+   * tick a unit stands on a tile: a step onto mud poisons once, and the
+   * cleanse comes only with the move that lands in water. A spawn, a shove or
+   * a summon's placement is not an entry.
    */
   applyTileEnterEffects(unit: Unit): void {
     const def = this.tileGrid.defAt(unit.position);
@@ -1643,10 +1178,9 @@ export class World {
   }
 
   /**
-   * 27 — the flat base of a periodic op: `might` + the scaling stat. §27 content
-   * is all `scaling:'none'` (flat `might`); the live-source scaling branch is a
-   * forward seam (a poison scaling off its applier's stat), contributing 0 when
-   * the op is flat or the source is gone/dead.
+   * A periodic op's base: `might`, plus the applier's scaling stat, read live,
+   * when the op scales and the applier is still in `units`. Every shipped
+   * periodic op is `scaling: 'none'`.
    */
   private periodicOpBase(
     op: { might: number; scaling: 'strength' | 'ranged' | 'magic' | 'none' },
@@ -1658,31 +1192,26 @@ export class World {
   }
 
   /**
-   * 27 — per-unit PERIODIC status pass (DoT/HoT). Each tick, for every live
-   * unit's effects whose def carries a `periodic` block, fire its op when the
-   * per-unit `nextTickAt` cursor comes due, then advance the cursor by one
-   * interval (a fixed cadence anchored at first apply — reapply tops up duration
-   * without shifting the tick phase). A DoT routes its damage through the shared
-   * `dealDamage` chokepoint (honouring `bypassDefense`); a HoT clamps at maxHp.
-   * Both emit `status:ticked` (the single viz event, carrying the HP delta) —
-   * NOT `unit:attacked` / `unit:healed`, so there's no double-cue. A unit killed
-   * by a DoT stops ticking its remaining effects (and is reaped by `reapDead`).
-   *
-   * Iteration order is `this.units` insertion order then effect-array order —
-   * deterministic, replay-stable for fuzz (mirrors `applyTileStatuses`). A unit
-   * with no periodic effect is a cheap per-effect no-op; the fire/healing tiles
-   * (27d) are the first in-battle source that seeds one.
-   */
-  /**
-   * §29c — enqueue a chain jump to fire on a future tick (the per-hop delay). The
-   * interpreter's `executeChain` / `advanceChainHop` push here; `processChainHops`
-   * (driven in `tick`) fires the due ones. Thin by design — the queue is plain data
-   * the snapshot round-trips, and all the firing logic stays in the interpreter.
+   * Queues a chain hop for a later tick; the interpreter's chain pushes here
+   * and `processChainHops` fires the due ones. The queue is plain data, and
+   * the firing stays in the interpreter.
    */
   scheduleChainHop(hop: PendingChainHop): void {
     this.pendingChainHops.push(hop);
   }
 
+  /**
+   * The periodic statuses. For each live unit's effect whose def has a
+   * `periodic` block, fire its op when the effect's `nextTickAt` comes due,
+   * then move the cursor on by one interval. The cadence is anchored at the
+   * first apply, so a top-up extends the duration without shifting the
+   * ticks. Damage goes through `dealDamage` under the op's `bypassDefense`;
+   * a heal clamps at maxHp. Both emit `status:ticked` with the HP change, not
+   * `unit:attacked` or `unit:healed`, so nothing is cued twice. A unit a tick
+   * kills ticks none of its other effects, and `reapDead` takes it.
+   *
+   * In `units` order, then each unit's effect order.
+   */
   private applyPeriodicEffects(): void {
     for (const unit of this.units) {
       if (unit.currentHp <= 0) continue;
@@ -1723,26 +1252,17 @@ export class World {
   }
 
   /**
-   * 27d — the tile-effect pass (replaces the D7.B per-tile chip). Each tick,
-   * every live combatant standing on a `fire` tile sustains `burn`, on a
-   * `healing` tile sustains `rejuvenate` — environmental, so `sourceUnitId` is
-   * `null` (the §27 default, mirroring the old chip's `healerId: null`). The
-   * actual HP change is the status's periodic tick (`applyPeriodicEffects`), so
-   * fire/healing now route through the same `dealDamage` / HoT-clamp path as
-   * every other source — no bespoke `currentHp -=` here.
+   * The tiles' statuses: every live unit on a `fire` tile sustains `burn`,
+   * on a `healing` tile `rejuvenate`, with no source. The HP change is the
+   * status's periodic tick (`applyPeriodicEffects`).
    *
-   * Runs every tick (not on a cadence) so a unit catches fire the instant it
-   * steps in; the burn DoT's own `everySeconds` paces the damage. Neutrals
-   * (walls, half-cover) are skipped per the D7 "combatants only" rule; dead
-   * units (awaiting reap) too. Iteration is `this.units` insertion order —
-   * deterministic, so the `status:applied` stream is replay-stable for fuzz.
+   * Every tick, so a unit catches fire the tick it steps in; the status's
+   * own `everySeconds` paces the damage. In `units` order.
    */
   private applyTileStatuses(): void {
     for (const unit of this.units) {
-      // §75d — inert scenery skips (a wall never "stands on" fire; its burn
-      // path is the §38d-3 susceptibility opt-in via applyStatus sources), but
-      // an ACTIVE neutral is a body on a tile: it catches fire / gets healed
-      // like any combatant.
+      // Scenery stands on no tile (a wall burns only from an `applyStatus`);
+      // a camp member is a body on a tile like any combatant.
       if (isInertNeutral(unit)) continue;
       if (unit.currentHp <= 0) continue;
       const kind = this.tileGrid.kindAt(unit.position);
@@ -1752,27 +1272,19 @@ export class World {
   }
 
   /**
-   * §76a — the aura pass (the second sustain source beside the 27d tiles).
-   * Every live aura carrier (`Ability.aura`, surfaced from the def) sustains its
-   * aura's status on every live unit within `aura.radius` — footprint-aware
-   * Chebyshev (`unitDistance`), `affects`-filtered relative to the carrier's
-   * team, inert scenery skipped (the 27d rule: a wall is not a body in an
-   * aura). The carrier itself is included whenever `affects` admits its own
-   * team (`unitDistance(u, u)` is 0). "Lingers after leaving" = the sustain
-   * stops and the status runs out its own `durationSeconds`; same-key
-   * non-stacking = the top-up path (policy-blind by construction — pinned in
-   * aura.test.ts).
+   * The auras: every live carrier (`Ability.aura`) sustains its aura's status
+   * on every live unit within `aura.radius` by `unitDistance`, filtered by
+   * `affects` relative to the carrier's team; scenery is skipped. The carrier
+   * itself is in range when `affects` admits its team. A unit that leaves
+   * keeps the status until its own `durationSeconds` runs out, and two auras
+   * of one status don't stack, since a sustain only tops up
+   * (`sustainStatus`; `aura.test.ts` pins it).
    *
-   * Iteration is `this.units` insertion order for both loops — deterministic,
-   * replay-stable; overlapping same-status auras top up to the same
-   * `expiresAtTick`, so carrier order can't change state. Aura-free worlds do
-   * no work (no shipped def carries `aura` until the §76 content lands) — the
-   * presence gate that keeps every existing run byte-identical.
+   * In `units` order for both loops. Overlapping auras of one status top up
+   * to the same `expiresAtTick`, so the carriers' order changes nothing.
    *
-   * NOTE deliberately unfiltered by camp: a camp-carried `allies` aura would
-   * reach EVERY neutral (affects is team-only — the audit's finding); no camp
-   * unit is authored with an aura in v1, and camp-aware `affects` is the
-   * documented widening if one ever is.
+   * Not filtered by camp: `affects` knows teams only, so a camp member's
+   * `allies` aura would reach every neutral. No camp unit carries an aura.
    */
   private applyAuraStatuses(): void {
     for (const carrier of this.units) {
@@ -1793,22 +1305,19 @@ export class World {
   }
 
   /**
-   * 27d — sustain a status on a unit from a standing source (a tile underfoot,
-   * a §76a aura in range). On ENTER (the status not yet present) it routes
-   * through `applyStatusEffect`, which fires `status:applied` once (→ the
-   * renderer's apply flash) and attributes `sourceUnitId` (an aura's carrier;
-   * `null` for the environmental tiles). On every subsequent tick it tops up
-   * the duration DIRECTLY (no event), so a sustained unit never re-flashes yet
-   * the `refresh` status never lapses — and, critically, the periodic
-   * `nextTickAt` cursor is left untouched, so a DoT cadence keeps running on
-   * its original anchor (a per-tick `applyStatusEffect` re-apply would also
-   * preserve the cursor, but would spam `status:applied`). Losing the source
-   * stops the top-up, so the status lingers its remaining `durationSeconds`
-   * then expires — the "lingers after stepping off / leaving the aura" feel.
-   * NOTE the top-up branch is merge-policy-BLIND and skips the §38d-3
-   * susceptibility gate (first-apply is gated; a gated-out unit never gets an
-   * `existing`, so it stays immune) — sustained statuses can never stack by
-   * construction, whatever their authored `merge`.
+   * Sustains a status from a standing source, a tile underfoot or an aura in
+   * range. While the unit lacks the status it is applied through
+   * `applyStatusEffect`, which emits `status:applied` once (the renderer's
+   * flash) and records the source (an aura's carrier, or null for a tile).
+   * After that each tick tops up the duration directly, with no event, so a
+   * sustained unit never flashes again and the status never lapses, and the
+   * periodic cursor `nextTickAt` is left as it was, so a damage tick keeps its
+   * cadence. When the source goes the top-up stops, and the status runs out
+   * its `durationSeconds`.
+   *
+   * The top-up ignores the merge policy and the def's gates: only the first
+   * apply is gated, and a unit gated out never carries the status to top up.
+   * So a sustained status never stacks, whatever its `merge`.
    */
   private sustainStatus(unit: Unit, def: StatusDef, sourceUnitId: number | null = null): void {
     const existing = unit.effects.find((e) => e.key === def.id);
@@ -1823,12 +1332,10 @@ export class World {
   }
 
   /**
-   * D7.B / 27 — reap any unit whose currentHp dropped to 0 (or below) during the
-   * end-of-tick passes. Combat kills are already reaped inside the per-unit
-   * loop's step-1 death check, so in practice this matches PERIODIC-status kills
-   * (a `burn`/`bleed`/`poison` DoT tick, including the fire-tile burn). Kept as
-   * an unconditional sweep because O(N) on a small N is cheaper than auditing
-   * every damage source for an inline reap.
+   * Reaps every unit at 0 HP or below at the tick's end: a periodic status's
+   * or a chain hop's kill, and a strike's victim that stepped before its
+   * killer in the order. A sweep over every unit, which is simpler than a
+   * reap at every source of damage.
    */
   private reapDead(): void {
     for (const unit of this.units.slice()) {
@@ -1839,16 +1346,12 @@ export class World {
   }
 
   /**
-   * D5.C overflow scan. For each team with a non-empty queue, walks
-   * its spawn region tiles in stored order and instantiates queued
-   * templates onto free cells (no living unit currently occupies the
-   * cell). Each spawn fires `unit:spawned` with `instant: false` so
-   * the renderer fades the sprite in, and seats the unit with a
-   * `SpawnAction` activeAction so the selector keeps it busy for
-   * `SIM.spawnDurationTicks` ticks.
-   *
-   * Determinism: team order is `QUEUE_TEAMS`, queue order is FIFO,
-   * tile order is the region's stored tile array.
+   * Seats queued units: for each team with a queue, walks its region's
+   * tiles in stored order and spawns the next template on each free,
+   * unclaimed one. A spawn emits `unit:spawned` with `instant: false`, so the
+   * renderer fades it in, and is seated with a `SpawnAction`, which keeps it
+   * busy for `SIM.spawnDurationTicks`. The order is `QUEUE_TEAMS`, then the
+   * queue's, then the tiles'.
    */
   private runOverflowScan(): void {
     for (const team of QUEUE_TEAMS) {
@@ -1859,10 +1362,8 @@ export class World {
 
       for (const tile of region.tiles) {
         if (queue.length === 0) break;
-        // §36b — skip a tile that's occupied OR claimed: a reinforcement that
-        // materialises on an in-flight mover's reserved destination would collide
-        // when that mover's deferred flip lands. (The instant model never held a
-        // claim across ticks, so this is inert pre-§36b.)
+        // A unit seated on a moving unit's claimed destination would collide
+        // with it at its flip.
         if (this.isOccupied(tile) || claimantOf(this, tile) !== undefined) continue;
         const template = queue.shift()!;
         this.spawnFromQueue(template, team, tile);
@@ -1871,52 +1372,43 @@ export class World {
   }
 
   private isOccupied(coord: GridCoord): boolean {
-    // §35 — the overflow scan routes through the occupancy chokepoint. Byte-
-    // identical to the old inline scan at one plane / single-cell footprints.
     return unitAt(this, coord) !== undefined;
   }
 
   /**
-   * §35b — whether a relocation's destination is invalid at execution: occupied
-   * by ANOTHER unit, or untraversable (an infinite-cost tile — dynamic terrain
-   * is a §37/§40 concern, so always traversable today). The mover itself is
-   * never on `dest` yet (it's still at `from`), but the id guard is defensive.
-   * Routes occupancy through the §35a chokepoint.
+   * Whether a move's destination is invalid as it runs: untraversable (an
+   * infinite-cost tile), occupied by another unit, or claimed by another
+   * unit. The mover is never on `dest` yet, since it is still on `from`; its
+   * id is excluded anyway.
    */
   private destinationBlocked(unit: Unit, dest: GridCoord): boolean {
     if (!isFinite(this.tileGrid.costAt(dest))) return true;
     const occupant = unitAt(this, dest);
     if (occupant !== undefined && occupant.id !== unit.id) return true;
-    // §36a — a destination CLAIMED by another in-flight mover is blocked too
-    // (blocked-for-pathing = occupied OR claimed): a stale proposal whose cell a
-    // peer just reserved aborts. Inert today (no persistent claims); load-bearing
-    // once §36b leaves a claim across the deferred-move window.
+    // A proposal made stale by a peer's claim on its cell aborts.
     const claimant = claimantOf(this, dest);
     return claimant !== undefined && claimant !== unit.id;
   }
 
   /**
-   * §36a — reserve `cell` as an in-flight move destination for `unitId` (the claim
-   * system). Until released (on logical arrival, or an abort), the pathing
-   * predicate treats `cell` as blocked-for-pathing for every OTHER unit, so two
-   * units never converge on one vacant cell — the second sees the claim and
-   * re-routes. Idempotent per cell (last writer wins). Inert today: §36b's deferred
-   * position flip is the only production caller; nothing holds a claim across ticks
-   * on the instant move model, so the registry stays empty in real play.
+   * Claims `cell` for `unitId` as a move's destination (`MoveAction.start`).
+   * Until it is released, at the flip or an abort, the pathing predicate
+   * treats the cell as blocked for every other unit, so a second unit
+   * routes around it rather than converging. One claim a cell: a second
+   * write replaces the first.
    */
   claimCell(cell: GridCoord, unitId: number, plane: OccupancyPlane = GROUND): void {
     this.claims.set(cellKey(cell), { cell: { x: cell.x, y: cell.y }, unitId, plane });
   }
 
-  /** §36a — release the claim on `cell` (logical arrival or abort). No-op if unclaimed. */
+  /** Releases the claim on `cell`, at the flip or an abort; nothing if unclaimed. */
   releaseClaim(cell: GridCoord): void {
     this.claims.delete(cellKey(cell));
   }
 
   /**
-   * §36a — release EVERY claim held by `unitId` (the mover died / was removed
-   * mid-move, or clears all its reservations). §36b calls this on reap so a dead
-   * mover never leaves a phantom block on its half-reached destination.
+   * Releases every claim `unitId` holds. The reap calls it, so a unit that
+   * dies mid-move leaves no block on the destination it never reached.
    */
   releaseClaimsBy(unitId: number): void {
     for (const [key, claim] of this.claims) {
@@ -1925,18 +1417,11 @@ export class World {
   }
 
   /**
-   * §35c — the occupancy backstop: relocate `unit` off its current cell to the
-   * nearest free cell (deterministic — the §29 `nearestFreeCells` BFS over the
-   * §35a occupancy chokepoint), reusing the `unit:moved` lerp for the visual
-   * slide (like a dash) plus a distinct `unit:shoved` signal. The de-overlap
-   * safety net for any path that lands a unit on an occupied cell (a future
-   * knockback / a summon or spawn breach / an invariant violation), and the
-   * primitive a directional `knockback` op wraps (a knockback = a directional
-   * shove). Returns false (a no-op) when no free cell is within
-   * `SIM.shoveSearchRadiusCells` — an absurdly packed board — rather than
-   * teleporting the unit across the map. Inert today (nothing co-locates on the
-   * instant model), built + tested so a breach source (or §40's knockback)
-   * inherits a proven primitive.
+   * Moves `unit` off its cell to the nearest free cell (`nearestFreeCells`),
+   * emitting `unit:moved` for the slide, as a dash does, and `unit:shoved`.
+   * Returns false, and moves nothing, when no free cell is within
+   * `SIM.shoveSearchRadiusCells`, rather than send the unit across the map.
+   * Only tests call it.
    */
   shove(unit: Unit): boolean {
     const [dest] = nearestFreeCells(unit.position, 1, SIM.shoveSearchRadiusCells, this);
@@ -1950,14 +1435,8 @@ export class World {
   }
 
   /**
-   * §75c — the camp PORTAL-DRIP drain, `runOverflowScan`'s sibling: each camp
-   * with pending members tries to materialize its head-of-queue unit
-   * OVERLAPPING its anchor tile this tick. Determinism = ascending instance-id
-   * order × per-camp FIFO × the fixed `random-intersect` candidate scan; the
-   * placement draw rides `campRng` exclusively (and only when >1 placement
-   * fits — #111). A blocked anchor just waits (the drip cadence IS the tile
-   * vacating — the 75f wander's vacate-≤N-ticks invariant is what keeps the
-   * queue flowing). Free on camp-free worlds (the presence gate).
+   * The camps' drip: each camp with members pending tries to seat the next
+   * one on its anchor this tick (`dripCampMember`), in ascending camp id.
    */
   private runCampDripScan(): void {
     if (this.camps.size === 0 || this._campRng === null) return;
@@ -1967,14 +1446,10 @@ export class World {
   }
 
   /**
-   * §75h2 — SETUP-TIME priming (user feedback at the 75h native eyeball):
-   * each camp's head-of-queue member materializes INSTANTLY at battle setup —
-   * present, faded-in, and targetable during the pre-battle countdown, just
-   * like the initial player/enemy teams (which spawn at setup, not tick 1).
-   * The rest of the queue keeps the signed PORTAL DRIP (they couldn't fit
-   * anyway — overlap is the whole reason the queue exists). Called by
-   * `spawnCamps` right after `installCamps`, so all four World construction
-   * sites get it free; a no-op on camp-free worlds (the presence gate).
+   * Seats each camp's first member at once, at battle setup, so it is
+   * present and targetable during the countdown as the two teams are; the
+   * rest drip in, since they share the anchor. `spawnCamps` calls it after
+   * `installCamps`.
    */
   primeCampSpawns(): void {
     if (this.camps.size === 0 || this._campRng === null) return;
@@ -1984,13 +1459,13 @@ export class World {
   }
 
   /**
-   * §75c/§75h2 — materialize one camp's head-of-queue member overlapping its
-   * anchor: the shared body of the per-tick drip drain and the setup-time
-   * prime. Placement determinism is unchanged (fixed `random-intersect` scan;
-   * the draw rides `campRng` only when >1 placement fits — #111). A blocked
-   * anchor just waits (the drip cadence IS the tile vacating). `instant`
-   * spawns skip the SpawnAction lockout + fade (the setup prime); drip
-   * spawns keep both (portal materialization).
+   * Seats one camp's next pending member on a footprint that covers its
+   * anchor, for the drip and the setup prime. The candidates are scanned in
+   * a fixed order (`random-intersect`), drawing on `campRng` only when more
+   * than one placement fits (gotcha #111). A blocked anchor waits: a member
+   * on the anchor always steps off (`CampWanderBehavior`), which is what
+   * keeps the queue moving. `instant` (the prime) skips the `SpawnAction`
+   * lockout and the fade; a drip keeps both.
    */
   private dripCampMember(camp: CampInstance, instant: boolean): void {
     const next = camp.pending[0];
@@ -2009,24 +1484,19 @@ export class World {
     );
     if (cells === null) return;
     camp.pending.shift();
-    // footprintCells pushes the min corner first — cells[0] is the
-    // canonical `position` per the §39 convention.
+    // The minimum corner comes first, and it is the unit's `position`.
     this.spawnCampUnit(camp, next, cells[0]!, instant);
   }
 
   /**
-   * §75c — spawn one camp member: catalog-derived stats via the deterministic
-   * `scaledUnit` (no RNG draw), wired by `wireSpawned`. Unlike
-   * `spawnFromQueue`: `team: 'neutral'` + the `campId` stamp (the
-   * active-neutral signal), and behavior slot 0 is `CampWanderBehavior`
-   * (§75f — the 75c landing note landed): leash-filtered wander on `campRng`
-   * while passive, the full `MovementBehavior` engagement delegate once the
-   * §75e hostility gate admits a target. Direct construction, not
-   * `createMovementBehavior` — a camp bandit shares the enemy bandit's
-   * catalog def, so camp-ness can't ride the catalog's `movementBehavior`
-   * value. §75h2 — `instant` (the setup prime) skips the SpawnAction lockout
-   * + fade; a drip spawn keeps both (`unit:spawned{instant:false}` — the
-   * portal materialization).
+   * Spawns one camp member, its stats from the catalog through `scaledUnit`
+   * (no draw), wired by `wireSpawned`. Unlike `spawnFromQueue`, it is
+   * `neutral` with a `campId`, and its movement is `CampWanderBehavior`: a
+   * wander inside the leash while the camp is passive, `MovementBehavior`'s
+   * engagement once the camp's hostility admits a target. It is built here,
+   * not by `createMovementBehavior`, because a camp bandit shares the enemy
+   * bandit's catalog def, so the catalog's `movementBehavior` can't say it is
+   * a camp's. `instant` as in `dripCampMember`.
    */
   private spawnCampUnit(
     camp: CampInstance,
@@ -2067,12 +1537,11 @@ export class World {
         position,
         level: template.level,
         xp: template.xp,
-        // E4: queue templates retain the same rosterIndex they were
-        // pushed onto the queue with (player overflow carries through
-        // from encounter.playerTeam; enemy queue templates carry null).
+        // A player's queued template keeps its roster slot; an enemy's is
+        // null.
         rosterIndex: template.rosterIndex ?? null,
-        // K1 — overflow spawns carry the same seed effects as their
-        // initial-spawn siblings (the stamped template round-trips them).
+        // The statuses the run stamps on the template (`Run.beginTurn`), as
+        // an initial spawn carries them.
         ...(template.effects ? { effects: template.effects } : {}),
       },
       false,
@@ -2081,13 +1550,11 @@ export class World {
   }
 
   /**
-   * O1 — apply a drained `WorldCommand`. One explicit case per kind (kept here
-   * rather than inlined in `tick` so a new kind is one branch, not a tick
-   * rewrite). The `setObjective` / `clearObjective` kinds drive a team's
-   * always-present steering objective; `noop` is the snapshot-test channel
-   * exerciser. `setObjective` does NOT validate the target here — an `engage`
-   * objective pointing at a dead/invalid unit is reverted on the next
-   * `clearResolvedObjectives` (called right after this drain).
+   * Applies a drained command, one case per kind. `setObjective` and
+   * `clearObjective` change a team's objective; `noop` exercises the channel
+   * in the snapshot tests. `setObjective` doesn't check its target: one
+   * already gone is reverted by `clearResolvedObjectives`, which runs right
+   * after the drain.
    */
   private applyCommand(command: WorldCommand): void {
     switch (command.kind) {
@@ -2104,17 +1571,19 @@ export class World {
   }
 
   /**
-   * O1 — revert any team whose `engage`/`focus` ENEMY target is no longer a
-   * living enemy (it died, was removed, or the objective was set on an invalid
-   * id) back to `atWill`. §40e — a `neutral` target (a manually-ordered rubble /
-   * destructible wall) reverts the same way once it's destroyed/reaped. An
-   * `engage` or `focus` `tile` target never auto-reverts
-   * (persist-until-cleared). Both teams are scanned (the enemy
-   * team is inert today but the storage is structural). Idempotent via
-   * `setObjectiveAtWill`'s guard. The "alive enemy" test is team-relative (the
-   * target must be an enemy OF the objective owner), so it generalizes to a
-   * future enemy-team objective; for the player team it's the J1
-   * `target.team === 'enemy'` check exactly.
+   * Reverts to `atWill` each team's `engage` or `focus` whose target is
+   * resolved:
+   *
+   * - an `enemy` target that is no longer a living enemy of the team (it
+   *   died, was removed, or the id was never valid);
+   * - a `neutral` target Targeting no longer admits
+   *   (`validNeutralObjectiveTarget`): destroyed, or no longer destructible
+   *   or a camp's;
+   * - an `engage` on a camp's anchor tile, once that camp is cleared.
+   *
+   * Any other tile target holds until replaced. Both teams are scanned, and
+   * the test is relative to the objective's team. `setObjectiveAtWill`
+   * keeps a second revert silent.
    */
   private clearResolvedObjectives(): void {
     for (const team of OBJECTIVE_TEAMS) {
@@ -2130,19 +1599,13 @@ export class World {
           target.currentHp > 0;
         if (!alive) this.setObjectiveAtWill(team);
       } else if (obj.target.kind === 'neutral') {
-        // §40e — a manual `focus`/`engage` on a neutral reverts to atWill once
-        // Targeting stops admitting its target: destroyed (0 HP, reaped), or no
-        // longer a destructible neutral or a camp member.
         if (validNeutralObjectiveTarget(this, obj.target.unitId) === null) {
           this.setObjectiveAtWill(team);
         }
       } else if (obj.mode === 'engage' && this.camps.size > 0) {
-        // §75g — the ONE exception to the J1 engage-tile persist rule: an
-        // engage TILE parked on a camp ANCHOR (the enemy-pull order) reverts
-        // once that camp is cleared, so the pulled team doesn't guard a
-        // corpse pile for the rest of the battle. Non-anchor tiles keep
-        // persisting, and the arm is unreachable on camp-free boards (the
-        // presence gate).
+        // An `engage` on a camp's anchor, the order that pulls a team into
+        // the camp, reverts once the camp is cleared, so the team doesn't
+        // guard the remains for the rest of the battle.
         for (const camp of this.camps.values()) {
           if (
             camp.anchor.x === obj.target.cell.x &&
@@ -2157,9 +1620,8 @@ export class World {
     }
   }
 
-  /** O1 — revert a team to `atWill` + emit `objective:cleared`, but only on a
-   *  real non-`atWill` → `atWill` transition (a redundant clear is silent — the
-   *  J1 guard, now per team). */
+  /** Reverts a team to `atWill` and emits `objective:cleared`, only when the
+   *  objective was something else; a redundant clear is silent. */
   private setObjectiveAtWill(team: ObjectiveTeam): void {
     if (this.objectives[team].mode === 'atWill') return;
     this.objectives[team] = AT_WILL;
@@ -2167,11 +1629,10 @@ export class World {
   }
 
   private checkBattleEnd(): void {
-    // Empty world isn't "battle over" — it's "no battle yet." Guards the
-    // pre-spawn ticks. 34a: once combat has BEGUN, an empty board IS a battle
-    // over — a genuine mutual wipe where both teams' last units died together
-    // with no walls left behind — so resolve it as a DRAW now rather than
-    // leaving it to the driver's tick cap (a minute+ static wait).
+    // An empty board before combat began is no battle yet (the ticks before
+    // the spawns). After it began, both teams' last units died together and
+    // nothing is left: a draw now, rather than a wait of a minute or more for
+    // the driver's tick cap.
     if (this.units.length === 0 && this.spawnQueues.size === 0) {
       if (this._combatBegan) this.emitBattleEnded('draw', 'mutualWipe');
       return;
@@ -2184,38 +1645,32 @@ export class World {
       // Neutrals (walls, environment entities) don't count toward either
       // side — a battlefield of just walls + corpses isn't a victory.
       if (playerAlive && enemyAlive) {
-        this._combatBegan = true; // 34a — both teams fielded a combatant.
+        this._combatBegan = true;
         return;
       }
     }
-    // D5.C — a team with units still in queue isn't wiped; the overflow
-    // scan will reinforce as tiles vacate. Treat them as alive so the
-    // battle doesn't end prematurely.
+    // A team with units queued isn't wiped: they are seated as tiles empty.
     if ((this.spawnQueues.get('player')?.length ?? 0) > 0) playerAlive = true;
     if ((this.spawnQueues.get('enemy')?.length ?? 0) > 0) enemyAlive = true;
     if (playerAlive && enemyAlive) {
-      this._combatBegan = true; // 34a — both teams present (queued spawns count).
+      this._combatBegan = true;
       return;
     }
-    // No combatants left = mutual annihilation OR walls-only / pre-spawn.
-    // 34a: a GENUINE mutual wipe (combat began, both teams now gone but walls
-    // remain so the board is non-empty) resolves as a DRAW immediately. A
-    // walls-only / pre-spawn board (combat never began) must NOT trip the
-    // condition — the `_combatBegan` latch tells them apart, replacing the old
-    // "leave it to the per-turn tick cap" silent return.
+    // Neither team has a combatant. After combat began it is a mutual wipe
+    // with scenery left on the board, a draw at once; a board that never had
+    // both teams (walls only, or before the spawns) has no result. The
+    // `_combatBegan` latch tells them apart.
     if (!playerAlive && !enemyAlive) {
       if (this._combatBegan) this.emitBattleEnded('draw', 'mutualWipe');
       return;
     }
-    // §75g — a decisive end does NOT land while the WINNER still has an
-    // uncleared camp fight open — the battle runs on until the camp is
-    // cleared (the 75j feel verdict, user-signed 2026-08-09: with no way to
-    // disengage a half-fought camp, the last enemy dying mid-camp-fight felt
-    // bad, not merciful). Checked here (not accumulated in the loop above — its
-    // early-return would truncate a mid-loop scan), and only on the
-    // decisive path: a mutual wipe has nobody left to fight the camp, and
-    // the driver's turn cap still resolves a stalemate as a draw, so
-    // battles stay bounded.
+    // A decisive end waits while the winner still has an uncleared camp
+    // fight open, and the battle runs on until the camp is cleared: with no
+    // way to disengage from a half-fought camp, a win landing mid-fight felt
+    // bad, not merciful. Checked here, not in the loop above, whose early
+    // return would cut the scan short, and only on the decisive path: after a
+    // mutual wipe nobody is left to fight the camp, and the driver's tick cap
+    // still ends a stalemate as a draw, so a battle stays bounded.
     if (this.hasUnclearedHostileCamp(playerAlive ? 'player' : 'enemy')) {
       return;
     }
@@ -2223,29 +1678,20 @@ export class World {
   }
 
   /**
-   * H4 — the DRIVER (Run's per-turn tick budget, via BattleScene or the
-   * headless test harness) force-resolves a battle that hasn't reached a
-   * decisive end as a DRAW: both sides' surviving units chip the opposing
-   * health pool by their Σ`power`. (34a moved the mutual-wipe draw INTO
-   * `checkBattleEnd` — a genuine double-KO now ends immediately, so this is
-   * the generic timeout terminator, no longer the only mutual-wipe path.)
-   * No-op once `_ended`.
+   * Ends a battle that reached no decisive end as a draw at the tick cap.
+   * The driver calls it (Run's per-turn tick budget, through BattleScene or a
+   * harness); a mutual wipe ends earlier, in `checkBattleEnd`. Nothing once
+   * ended.
    */
   resolveAsDraw(): void {
     this.emitBattleEnded('draw', 'cap');
   }
 
   /**
-   * H4 — single battle-end emit path shared by the natural decisive end
-   * (`checkBattleEnd`) and the forced draw (`resolveAsDraw`). Idempotent: a
-   * no-op once `_ended`, so a tick-cap that races a natural end can't
-   * double-emit.
-   *
-   * E4 follow-up: the roster persists across battles, so a "dead" player unit
-   * isn't really gone — `computeXpAwards` pays survivors AND fallen units
-   * (the latter their damage share + an `xpFlatPerFallen` slice). H4 drops the
-   * old `winner === 'player'` gate so every turn's damage banks into the
-   * encounter's XP total.
+   * The one emit of `battle:ended`, for `checkBattleEnd` and `resolveAsDraw`.
+   * Nothing once ended, so a tick cap racing a natural end can't emit twice.
+   * Every battle's awards are paid, win or lose, to survivors and fallen
+   * alike (`computeXpAwards`), since the roster outlives a battle.
    */
   private emitBattleEnded(
     winner: 'player' | 'enemy' | 'draw',
@@ -2263,9 +1709,7 @@ export class World {
       this.damageDealt,
       this.utilityDone,
     );
-    // §75g — the wiped camps ride the payload (the serialized killedBy
-    // stamps, collected in stable id order). Omitted when empty so a
-    // camp-free emit is byte-identical to pre-75g.
+    // The camps cleared, in id order; omitted when there are none.
     const campKills: { defId: string; killedBy: 'player' | 'enemy' }[] = [];
     for (const camp of this.campsList()) {
       if (camp.killedBy === 'player' || camp.killedBy === 'enemy') {
@@ -2274,36 +1718,31 @@ export class World {
     }
     this.bus.emit('battle:ended', {
       winner,
-      // §91a1 — WHY the battle ended, beside WHO won: a 'draw' is either a
-      // mutual wipe (checkBattleEnd, 34a) or the driver's tick cap
-      // (resolveAsDraw); the casualty rule's cap penalty keys on the CAP
-      // only (a mutual wipe is the largest casualty turn there is, never a
-      // stall).
+      // Why it ended, beside who won: a draw is a mutual wipe
+      // (`checkBattleEnd`) or the tick cap (`resolveAsDraw`), and the
+      // casualty rule's `capPenalty` keys on the cap alone (a mutual wipe is
+      // the heaviest casualty turn there is, never a stall).
       reason,
       xpAwards,
       survivorPower: this.survivorPower(),
-      // §91a1 — the per-side fallen power (copied; the accumulator is live
-      // until the World is discarded).
+      // Copies, so the payload shares nothing with the live accumulators.
       fallenPower: { ...this.fallenPower },
-      // 47f — the battle-earned run resources (copied: the payload must not
-      // share the live accumulator). Run settles bits via `gainBits`.
       tallies: { ...this.tallies },
       ...(campKills.length > 0 ? { campKills } : {}),
     });
   }
 
   /**
-   * H4 — Σ`power` over each team's living on-grid units (the chip each side
-   * deals the opposing pool). Excludes the spawn queue: a queued unit never
-   * reached the grid, so it contributed no power even though `checkBattleEnd`
-   * treats a non-empty queue as "alive" for end-detection.
+   * The sum of `power` over each team's living units on the grid. A queued
+   * unit never reached the grid and counts nothing, though `checkBattleEnd`
+   * counts a queue as alive.
    */
   private survivorPower(): { player: number; enemy: number } {
     let player = 0;
     let enemy = 0;
-    // 96.5b1 — summed off the per-unit read so the two cannot drift: the
-    // live bar's end-of-battle survivor events are one row each of exactly
-    // the units this sum counts.
+    // Summed off `survivorsByUnit`, so the two can't drift: the live bar's
+    // survivor events at the battle's end are one row each of the units this
+    // sum counts.
     for (const u of this.survivorsByUnit()) {
       if (u.team === 'player') player += u.power;
       else enemy += u.power;
@@ -2312,19 +1751,17 @@ export class World {
   }
 
   /**
-   * 96.5b1 — the living on-grid combatants, one row each (`survivorPower`'s
-   * per-unit form; the same filter — the spawn queue is not on the grid).
-   * The live bar's survivors-rule end sequence reads it at `battle:ended`
-   * (the loss-event model, src/run/chipRule.ts). Display-only: the sim
-   * never consults it.
+   * The living combatants on the grid, one row each: `survivorPower`'s
+   * per-unit form, under the same filter. The live bar reads it at
+   * `battle:ended` for its end sequence (`HUD`, through `run/chipRule.ts`'s
+   * loss events); the sim never does.
    */
   survivorsByUnit(): { unitId: number; team: 'player' | 'enemy'; power: number }[] {
     const out: { unitId: number; team: 'player' | 'enemy'; power: number }[] = [];
     for (const u of this.units) {
       if (u.currentHp <= 0) continue;
-      // K1 — pool chip reads `effectiveStats.power` so a power buff/debuff (the
-      // fatigue migration's target) shows up at the turn boundary. Identity-
-      // equal to `stats.power` when the unit has no effects.
+      // `effectiveStats.power`, so a status that moves power counts at the
+      // turn's end; it equals `stats.power` on a unit with no effects.
       if (u.team === 'player' || u.team === 'enemy') {
         out.push({ unitId: u.id, team: u.team, power: u.effectiveStats.power });
       }
@@ -2332,26 +1769,22 @@ export class World {
     return out;
   }
 
-  /** 96.5b1 — the fallen power booked SO FAR this battle (a copy of the
-   *  §91a1 accumulator, live until the World is discarded): a consumer that
-   *  attaches mid-battle (a restore) opens its ghost here. Display-only. */
+  /** A copy of the fallen power booked so far this battle: a reader that
+   *  attaches mid-battle (a restore) opens its ghost from it. For display. */
   fallenPowerSoFar(): { player: number; enemy: number } {
     return { ...this.fallenPower };
   }
 
   /**
-   * §91a1 — book a reaped combatant's power to its side's fallen total.
-   * Called at BOTH death sites (the step-1 death check and `reapDead`)
-   * before the splice, while the unit's effects are still folded — so the
-   * fallen read the same `effectiveStats.power` the survivors do. Neutrals
-   * charge nobody (a camp member's death is not a side's loss; a player
-   * unit killed BY a camp is still the player's fallen — team, not killer,
-   * is what's booked). §91e2 — a SUMMONED unit (the `summonedBy` stamp,
-   * `spawnSummon`) is booked at 0 whatever its archetype's power: a
-   * conjured body is not a loss its side paid for. The table used to carry
-   * this as the ghoul's power 0, but two encounters + two camps FIELD
-   * ghouls, and a fielded ghoul is a body like any other — the user's first
-   * casualties playtest found the pool not moving while the field emptied.
+   * Books a reaped combatant's power to its side's fallen total. `reapUnit`
+   * calls it before the splice, while the unit's effects still fold, so the
+   * fallen read the `effectiveStats.power` the survivors do. A neutral
+   * charges nobody: a camp member's death is no side's loss, while a player
+   * unit a camp kills is the player's (the team is booked, not the killer).
+   * A summon (`summonedBy`) is booked at 0 whatever its archetype's power:
+   * a conjured body is not a loss its side paid for. The catalog can't say
+   * it with a power of 0, since encounters and camps field ghouls, and a
+   * fielded ghoul is a body like any other.
    */
   private recordFallen(unit: Unit): number {
     if (unit.summonedBy != null) return 0;
@@ -2364,13 +1797,11 @@ export class World {
   }
 
   /**
-   * 94d — the ONE death path for both death sites: fires the `death` trigger
+   * The one death path, for the step's check and `reapDead`: fires `death`
    * while the unit is still on the grid, so a handler can read its position
-   * and team; books the fallen power (`recordFallen`); and puts the unit's
-   * identity + the BOOKED amount on `unit:died`, since the unit is spliced
-   * out before the event fires and nothing downstream can look it up. Call
-   * BEFORE `removeUnit` (the effects are still folded, so `power` reads what
-   * the survivors read).
+   * and team; books its fallen power (`recordFallen`); removes it; and puts
+   * its identity and the power booked on `unit:died`, since nothing
+   * downstream can look the unit up once it is spliced out.
    */
   private reapUnit(unit: Unit): void {
     this.fireTrigger('death', { unit, team: unit.team });
@@ -2389,12 +1820,10 @@ export class World {
   }
 
   /**
-   * 86c-L2b — the activeAction SEAT chokepoint (computed-ticks form): seats
-   * `action` starting NOW (`startTick = tickCount`, `finishTick = startTick
-   * + Σ phases`) — the shape every live seat site (selector, spawn lockouts)
-   * and most test fixtures share. Maintains the reserved-partner index in
-   * the same breath. Returns the seated ActiveAction (the tick loop fires
-   * its offset-0 phases off the return).
+   * Seats `action` starting now, its `finishTick` now plus its phases'
+   * ticks, as the selector, the spawn lockouts and most test fixtures do,
+   * and keeps the reserved-partner index. Returns the seated action, whose
+   * offset-0 phases the tick then fires.
    */
   seatAction(unit: Unit, action: Action, phases: readonly ActionPhase[]): ActiveAction {
     const aa: ActiveAction = {
@@ -2408,14 +1837,14 @@ export class World {
   }
 
   /**
-   * 86c-L2b — the RAW seat chokepoint: seats a fully-built ActiveAction
-   * (explicit start/finish ticks — the `fromJSON` rehydrate and the
-   * backdated test fixtures). Re-seating over an existing action is legal
-   * (a fixture adjusting `startTick` re-seats a spread copy): the old
-   * reservation unindexes first, so the invariant never double-counts.
-   * Throws if the incoming action reserves a partner already reserved by a
-   * DIFFERENT actor — every proposer's `isSwappablePartner` gate makes that
-   * unreachable in live play, so reaching it means a gate was bypassed.
+   * Seats a built `ActiveAction` with its own ticks (`fromJSON`'s rehydrate,
+   * a test's backdated action); every seat goes through here, which keeps
+   * `swapReservedPartners`. Seating over an action is legal (a fixture
+   * re-seats a copy with another `startTick`): the old reservation is
+   * unindexed first, so nothing counts twice. Throws if the action reserves
+   * a partner another actor has reserved: every proposer's
+   * `isSwappablePartner` gate rules that out, so reaching it means a gate
+   * was bypassed.
    */
   seatActiveAction(unit: Unit, aa: ActiveAction): void {
     this.unindexReservation(unit);
@@ -2434,17 +1863,16 @@ export class World {
   }
 
   /**
-   * 86c-L2b — the activeAction CLEAR chokepoint: releases the unit's
-   * in-flight action (finishTick, the abort branches, test fixtures
+   * Clears the unit's action in flight (at `finishTick`, an abort, a test
    * shedding a spawn lockout) and drops its partner reservation, if any.
-   * Safe no-op on an idle unit.
+   * Nothing on an idle unit.
    */
   clearActiveAction(unit: Unit): void {
     this.unindexReservation(unit);
     unit._setActiveAction(null);
   }
 
-  /** 86c-L2b — drop `unit`'s outgoing partner reservation, if it holds one. */
+  /** Drops the partner reservation `unit`'s action holds, if any. */
   private unindexReservation(unit: Unit): void {
     const pid = unit.activeAction?.action.reservedPartnerId?.();
     if (pid === undefined) return;
@@ -2458,35 +1886,28 @@ export class World {
     this.swapReservedPartners.delete(pid);
   }
 
-  /**
-   * 86c-L2b — O(1) read of the reserved-partner index. Production consumers
-   * go through `isReservedSwapPartner` (SwapAction.ts), which delegates here.
-   */
+  /** Whether `unitId` is a swap's reserved partner. The sim asks through
+   *  `isReservedSwapPartner` (`SwapAction.ts`), which reads this. */
   isSwapReservedPartner(unitId: number): boolean {
     return this.swapReservedPartners.has(unitId);
   }
 
-  /**
-   * 86c-L2b — test/verifier read of the whole index, for the
-   * recompute-and-compare invariant against `scanReservedSwapPartners`.
-   * Not for production reads (use `isSwapReservedPartner`).
-   */
+  /** The whole index, for the test that recomputes it by scanning
+   *  (`scanReservedSwapPartners`) and compares. */
   get swapReservedPartnerIndex(): ReadonlyMap<number, number> {
     return this.swapReservedPartners;
   }
 
   removeUnit(id: number): void {
     const i = this.units.findIndex((u) => u.id === id);
-    // 56e-pre2 — a removed unit can't carry an in-flight PRE-FLIP swap: the
-    // exchange will never land, but both sprites already began the 56c2 dual
-    // lerp at `start`, so the abort must be told to the renderer (and the
-    // pathing metrics) as the two-body fact it is. Without this, the
-    // PARTNER's sprite finished a slide the sim never honored and rested on
-    // the wrong tile until its next move (the 56e labyrinth desync). The
-    // sibling failure site is SwapAction.applyEffect's abort branch; a
-    // PARTNER removed pre-flip needs nothing here — the actor's own flip
-    // degrades or aborts when it fires. Post-flip removal also needs
-    // nothing: the exchange landed, both sprites head to their true cells.
+    // A removed actor's swap before its flip will never land, but both
+    // sprites began their slides at `start`, so the abort is told to the
+    // renderer and the pathing metrics as the two-body fact it is; otherwise
+    // the partner's sprite finishes a slide the sim never made and rests on
+    // the wrong tile until it next moves. `SwapAction.applyEffect`'s abort is
+    // the other site. A partner removed before the flip needs nothing here,
+    // since the actor's flip degrades or aborts when it fires; after the flip
+    // the exchange has landed.
     if (i >= 0) {
       const swap = preFlipSwap(this.units[i]!.activeAction, this.tickCount);
       if (swap !== null) {
@@ -2498,31 +1919,24 @@ export class World {
           cellB: d.to,
         });
       }
-      // 86c-L2b — an actor leaving `units` takes its in-flight reservation
-      // with it (the derived scan stopped seeing it the moment it left; the
-      // index must mirror that). A removed PARTNER's entry stays — the
-      // actor's swap is still seated and its flip degrades/aborts on its own.
+      // An actor leaving `units` takes its reservation with it. A removed
+      // partner's entry stays: the actor's swap is still seated, and its flip
+      // degrades or aborts on its own.
       this.unindexReservation(this.units[i]!);
       this.units.splice(i, 1);
     }
     this.unitsById.delete(id);
-    // §36b — a removed unit can't hold an in-flight destination reservation:
-    // drop every claim it owns (the "release on reap" half of the claim
-    // lifecycle) so a unit that died mid-move never leaves a phantom block on
-    // its half-reached `to`. No-op for the common case (most units hold none).
+    // A unit that dies mid-move leaves no block on the destination it never
+    // reached.
     this.releaseClaimsBy(id);
   }
 
   /**
-   * Instantiate a unit from a rolled template and place it on the grid.
-   * Glyph is derived from archetype; color is a renderer-side concern keyed
-   * off `team` (see render/BattleRenderer.ts).
-   *
-   * E1: derives the unit's `UnitDerived` snapshot from the template's
-   * stats + archetype attackRange. The template carries baseStats only;
-   * battle-time numbers (maxHp, cooldowns, crit chance) are computed
-   * here so the same template can be respawned with a different per-
-   * encounter modifier without a stale-template footgun.
+   * Places a unit from a template, instantly, as battle setup does. The
+   * glyph comes from the archetype, the colour from the team in the
+   * renderer. The template carries base stats only; the battle's derived
+   * numbers (maxHp, the move cooldown) are computed here (`deriveStats`), so
+   * no template carries a stale one. The caller wires it (`wireSpawned`).
    */
   spawnUnit(
     template: UnitTemplate,
@@ -2543,8 +1957,7 @@ export class World {
         level: template.level,
         xp: template.xp,
         rosterIndex,
-        // K1 — seed the template's transient effects (fatigue / encounter
-        // buffs from Run.beginTurn) onto the unit at spawn.
+        // The statuses the run stamps on the template (`Run.beginTurn`).
         ...(template.effects ? { effects: template.effects } : {}),
       },
       true,
@@ -2552,24 +1965,19 @@ export class World {
   }
 
   /**
-   * §29d — spawn a SUMMONED minion (the `summon` op): one `archetype` unit at
-   * `level`, on `team`, at `position`, attributed to `summonerId` (so
-   * `liveSummonCount` can enforce the caster's `maxLive` cap). Its stats are
-   * the deterministic `scaledUnit`'s (no RNG draw, so a summon never perturbs
-   * the combat / spawn streams), and `wireSpawned` gives it the lockout and the
-   * `unit:spawned{instant:false}` fade: the minion appears mid-battle and joins
-   * next tick, like an overflow spawn.
+   * Spawns a summon for the `summon` op: one `archetype` unit at `level`, on
+   * `team`, at `position`, stamped with `summonerId` so `liveSummonCount`
+   * holds the caster to its `maxLive`. Its stats are `scaledUnit`'s, which
+   * draw nothing, so a summon moves no stream; `wireSpawned` gives it the
+   * lockout and the fade, so it joins as a queued spawn does.
    *
-   * §91-pre (the frost-coven ghoul bug, 2026-09-03 playtest): a CAMP member's
-   * summon JOINS THE CAMP — it inherits the summoner's `campId` and takes the
-   * camp member's behavior wiring (`CampWanderBehavior`, §75f) instead of the
-   * catalog movement. Without the stamp the minion was a neutral with no camp:
-   * `isInertNeutral` → the renderer's wall path (passive tint, no bar, no
-   * fade-out of the materialize), no hostility to act on, and — since only
-   * destructibles and camp members are legal neutral targets — untouchable.
-   * As a member it counts toward the camp's wipe (`campCleared`) like any
-   * dripped unit (user-signed 2026-09-03). A faction summoner's minion is
-   * unchanged (campId null, catalog movement).
+   * A camp member's summon joins the camp: it takes the summoner's `campId`
+   * and the camp's movement (`CampWanderBehavior`) in place of the catalog's.
+   * A neutral without a camp is scenery (`isInertNeutral`): drawn as a wall,
+   * with no hostility to act on, and untargetable, since only destructibles
+   * and camp members are legal neutral targets. As a member it counts toward
+   * clearing the camp (`campCleared`). A team's summon has no `campId` and
+   * the catalog's movement.
    */
   spawnSummon(
     archetype: Archetype,
@@ -2606,11 +2014,10 @@ export class World {
   }
 
   /**
-   * §29d — how many of `summonerId`'s summoned minions are currently ALIVE. The
-   * `summon` op's `maxLive` gate reads this (at propose, to abstain at the ceiling;
-   * at fire, to clamp), so a summoner holds ≤ `maxLive` minions and re-summons only
-   * as they die. Dead minions leave `units` via `reapDead`, so the count drops
-   * automatically — no ledger to maintain.
+   * How many of `summonerId`'s summons are alive. The `summon` op's
+   * `maxLive` reads it, at propose to abstain at the ceiling and at fire to
+   * clamp, so a summoner holds at most `maxLive` and summons again only as
+   * they die. Counted from `units`, so there is no ledger to keep.
    */
   liveSummonCount(summonerId: number): number {
     let n = 0;
@@ -2621,18 +2028,13 @@ export class World {
   }
 
   /**
-   * Spawn an environment entity — a wall, half-cover, future rubble: anything
-   * that lives on the grid as a unit but isn't a combatant. On the
-   * `'neutral'` team (Targeting skips, HUD ignores, checkBattleEnd doesn't
-   * count). Has no `behaviors`, so the selector never fires for it. Renderer-side
-   * suppresses bloom + bars for the neutral team.
-   *
-   * §38d — the fold: `archetype` names a NEUTRAL `UnitDef` (`config/units.json`
-   * → `NEUTRAL_DEFS`), and the glyph / flat HP / LOS-blocking come from that def
-   * rather than being passed in. This is the old `ZERO_STATS` / `inertDerived`
-   * path made data-driven (the keystone). `maxHp` still overrides the def's flat
-   * HP for tests / future destructible variants; Targeting ignores neutrals by
-   * team, so destructibility stays a separate hook (§40).
+   * Spawns scenery: a wall, half-cover, rubble, anything on the grid as a
+   * unit that is not a combatant. It is `neutral`, which `checkBattleEnd`
+   * doesn't count, and has no behaviours, so the selector never runs for it.
+   * `archetype` names a neutral def (`NEUTRAL_DEFS`), which gives the glyph,
+   * the HP and whether it blocks line of sight; `maxHp` overrides the def's
+   * HP, as a layout coord's `hp` does (`environment.ts`). Whether it can be
+   * hit is the def's (`isCombatTargetable`).
    */
   spawnEnvironment(opts: {
     archetype: string;
@@ -2651,11 +2053,6 @@ export class World {
         archetype: opts.archetype,
         glyph: def.glyph,
         stats: ZERO_STATS,
-        // §40b — an hp-less neutral (indestructible wall / half-cover) has no `hp`
-        // on its def, so fall back to a nominal maxHp so the Unit is still "alive"
-        // (blocks pathing / LOS). Cosmetic — `isCombatTargetable` keys off the
-        // def's HP-PRESENCE, so this filler HP is never a damage target. Matches
-        // the pre-§40b `hp:1` walls exactly (byte-identical).
         derived: inertDerived(opts.maxHp ?? def.hp ?? NOMINAL_NEUTRAL_MAXHP),
         position: opts.position,
         blocksLineOfSight: def.blocksLineOfSight,
@@ -2685,12 +2082,12 @@ export class World {
   }
 
   /**
-   * `instant` distinguishes setup-time spawns (initial battle layout —
-   * renderer pops the sprite in at full alpha, matching the screen-fade
-   * lifecycle) from D5.C overflow-queue spawns (renderer lerps alpha
-   * 0 → 1 over the SpawnAction lockout window). Threaded into the
-   * `unit:spawned` payload so every subscriber can branch without
-   * re-querying world state.
+   * Adds a unit to `units` and the index, books a player unit's roster
+   * slot, emits `unit:spawned` and fires `spawn`. `instant` tells a setup
+   * spawn (the layout, a camp's first member), which the renderer shows at
+   * once, from a unit joining a battle under way (a queued spawn, a drip, a
+   * summon), which it fades in over the `SpawnAction` lockout. It rides
+   * `unit:spawned`, so a subscriber need not ask the world.
    */
   private addUnit(
     init: {
@@ -2705,7 +2102,6 @@ export class World {
       xp?: number;
       rosterIndex?: number | null;
       summonedBy?: number | null;
-      /** §75b — camp membership for the 75c drip-spawn path. */
       campId?: number | null;
       effects?: readonly StatusEffect[];
     },
@@ -2726,22 +2122,18 @@ export class World {
       rosterIndex: init.rosterIndex ?? null,
       summonedBy: init.summonedBy ?? null,
       campId: init.campId ?? null,
-      // K1 — seed transient spawn-time effects (fatigue / encounter buffs).
       ...(init.effects && init.effects.length > 0 ? { effects: init.effects } : {}),
     });
     this.units.push(unit);
     this.unitsById.set(unit.id, unit);
-    // E4 follow-up: stash the unit's roster slot before any death can
-    // reap it from `units`. Player units with a rosterIndex are the
-    // only ones that earn XP, so the filter is symmetric with the
-    // award-generation path in `checkBattleEnd`.
+    // Booked before any death can reap it. Only a player unit with a roster
+    // slot earns XP, the filter `computeXpAwards` pays by.
     if (unit.team === 'player' && unit.rosterIndex !== null) {
       this.playerRosterIds.set(unit.id, unit.rosterIndex);
     }
     this.bus.emit('unit:spawned', { unitId: unit.id, instant });
-    // K1 — `spawn` fires for every unit entering the grid (initial layout +
-    // D5.C overflow; walls included — handlers filter by team). The effect-seed
-    // path that applies fatigue at deploy lands in commit 2.
+    // For every unit entering the grid, scenery included; a handler filters
+    // by team.
     this.fireTrigger('spawn', { unit });
     return unit;
   }
@@ -2749,30 +2141,25 @@ export class World {
   findUnit(id: number): Unit | undefined {
     const hit = this.unitsById.get(id);
     if (hit !== undefined) return hit;
-    // Fallback for test fixtures that push directly onto `units` (bypassing
-    // `addUnit`, so they never populate the index). Production add paths
-    // (`addUnit` / `fromJSON`) always set the map, so this is a test-only
-    // safety net, not a hot path — and it keeps the map authoritative
-    // wherever it IS populated. A post-F2 chore can migrate fixtures to
-    // `addUnit` and drop this.
+    // A test fixture that pushes onto `units` directly skips the index, and
+    // the scan finds its units. `addUnit` and `fromJSON` always index, so the
+    // scan serves tests alone.
     return this.units.find((u) => u.id === id);
   }
 
   /**
-   * Capture the World's full state as plain JSON. Every field that
-   * affects determinism — RNG state, tick count, every unit's HP /
-   * cooldowns / activeAction, pending command queue — is included. The
-   * bus is excluded; rehydration takes a fresh bus.
+   * The whole state as plain JSON: everything that affects determinism, the
+   * streams, the tick, each unit's HP, cooldowns and action, the queued
+   * commands. The bus is left out; a rehydrate takes a fresh one.
    */
   toJSON(): WorldSnapshot {
     const spawnQueues: SpawnQueueSnapshot[] = [];
     for (const [team, templates] of this.spawnQueues) {
-      // Deep copy templates so a post-snapshot push doesn't mutate the wire image.
+      // Copies, so a push after the snapshot doesn't change it.
       spawnQueues.push({
         team,
         templates: templates.map((t) => {
-          // E4: include rosterIndex only when set, to keep
-          // exactOptionalPropertyTypes happy and the wire image clean.
+          // `rosterIndex` only when set, for `exactOptionalPropertyTypes`.
           const tpl: UnitTemplate = {
             archetype: t.archetype,
             level: t.level,
@@ -2812,38 +2199,31 @@ export class World {
       damageDealt: Array.from(this.damageDealt.entries()),
       playerRosterIds: Array.from(this.playerRosterIds.entries()),
       utilityDone: Array.from(this.utilityDone.entries()),
-      // O1 — copy the record (its slots are reassigned on set/revert); the
-      // per-team `TeamObjective` values are immutable, so referencing them is
-      // safe; callers JSON-serialize the snapshot anyway.
+      // A copy of the record, whose slots are reassigned; the objectives
+      // themselves are immutable, so they are shared.
       objectives: { player: this.objectives.player, enemy: this.objectives.enemy },
-      // 29c — copy each pending hop's MUTABLE per-hop state (`fromPos`/`hitIds`);
-      // `op`/`resolution` are immutable cast-time data, safe to reference (the
-      // caller JSON-serializes the snapshot anyway).
+      // Each hop's mutable parts (`fromPos`, `hitIds`) are copied; `op` and
+      // `resolution`, fixed at the cast, are shared.
       pendingChainHops: this.pendingChainHops.map((h) => ({
         ...h,
         fromPos: { ...h.fromPos },
         hitIds: h.hitIds.slice(),
       })),
-      // §36a — the in-flight claim registry as a flat list (the map key is
-      // derivable from `cell`). Deep-copy each cell so a post-snapshot mutation
-      // doesn't bleed into the wire image. Empty today (the instant move model
-      // holds no claim); non-empty once §36b defers the position flip.
+      // A flat list, since the key is derived from `cell`; each cell is
+      // copied.
       claims: Array.from(this.claims.values()).map((c) => ({
         cell: { x: c.cell.x, y: c.cell.y },
         unitId: c.unitId,
         plane: c.plane,
       })),
-      // 47f — the rules are immutable per battle (installed once), so a
-      // JSON-serialized wire image can reference them; the tally is live —
-      // copy it.
+      // The rules are fixed for the battle, so they are shared; the tally and
+      // the fallen power are live, so they are copied.
       battleRules: this.battleRules.slice(),
       tallies: { ...this.tallies },
-      // §91a1 — the fallen ledger (copied; live until the World is discarded).
       fallenPower: { ...this.fallenPower },
-      // §75b — the camp registry in ascending instance-id order; hostileTo
-      // flattens in fixed team order (the QUEUE_TEAMS convention) so the wire
-      // image is deterministic regardless of aggro order. Deep-copy the
-      // mutable bits (anchor, pending) so post-snapshot drips don't bleed in.
+      // `hostileTo` in `QUEUE_TEAMS`' order, so the image doesn't depend on
+      // the order the hostility came in. The mutable parts are copied, so a
+      // later drip doesn't reach the snapshot.
       camps: this.campsList().map((c) => ({
         id: c.id,
         defId: c.defId,
@@ -2857,10 +2237,9 @@ export class World {
   }
 
   /**
-   * Reconstruct a World from a snapshot. Two-phase: units are
-   * instantiated first (no `activeAction`), then `activeAction`s are
-   * resolved once all units exist (an in-flight `AttackAction` may
-   * reference another unit by id, which has to be present first).
+   * Rebuilds a World from a snapshot, in two phases: the units without their
+   * actions, then the actions in flight, once every unit exists, since an
+   * action may name another unit by id (a swap's partner, a strike's target).
    */
   static fromJSON(snap: WorldSnapshot, bus: EventBus<GameEvents>): World {
     if (snap.schemaVersion !== WORLD_SCHEMA_VERSION) {
@@ -2898,15 +2277,10 @@ export class World {
         level: us.level,
         xp: us.xp,
         rosterIndex: us.rosterIndex,
-        // §29d — restore the summon attribution so the `maxLive` cap re-counts
-        // a resumed summoner's live minions (v28 saves rejected above, so a v29
-        // unit always carries the field).
         summonedBy: us.summonedBy,
-        // §75b — restore camp membership (the active-neutral signal).
         campId: us.campId,
-        // K1 — restore status effects; the constructor re-folds `effectiveStats`
-        // + `refreshDerived` from them. `us.derived` (also restored) is
-        // idempotent under that recompute.
+        // The constructor folds `effectiveStats` and `refreshDerived` from
+        // them again, and the restored `derived` is the same under that.
         effects: us.effects,
       });
       unit.currentHp = us.currentHp;
@@ -2926,9 +2300,8 @@ export class World {
       const us = snap.units[i]!;
       const unit = world.units[i]!;
       if (us.activeAction) {
-        // 86c-L2b — seat through the chokepoint so the reserved-partner
-        // index rebuilds here for free (the rebuilt-on-fromJSON half of the
-        // `unitsById`/`claims` robustness class).
+        // Through `seatActiveAction`, which rebuilds the reserved-partner
+        // index.
         world.seatActiveAction(unit, {
           action: createAction(us.activeAction.actionId, us.activeAction.actionData, world),
           startTick: us.activeAction.startTick,
@@ -2940,8 +2313,6 @@ export class World {
 
     for (const cmd of snap.pendingCommands) world.commands.push(cmd);
 
-    // D5.C — restore overflow queues + regions BEFORE the next tick so
-    // the post-death scan and checkBattleEnd both see consistent state.
     for (const entry of snap.spawnQueues) {
       world.spawnQueues.set(entry.team, entry.templates.slice());
     }
@@ -2949,55 +2320,43 @@ export class World {
       world.spawnRegions.set(entry.team, entry.region);
     }
 
-    // E4 — restore damage ledger so battle:ended's xpAwards match the
-    // un-roundtripped baseline.
+    // The ledgers, so `battle:ended` pays what the battle unrestored would.
     for (const [attackerId, total] of snap.damageDealt) {
       world.damageDealt.set(attackerId, total);
     }
-    // E4 follow-up — restore player roster ids. addUnit's auto-populate
-    // doesn't fire on rehydrate (we push directly onto `world.units`
-    // in Phase 1 above), so the only path back is the snapshot copy.
+    // `addUnit` doesn't run on a rehydrate (phase 1 pushes onto `units`), so
+    // the roster ids come back from the snapshot alone.
     for (const [unitId, rosterIndex] of snap.playerRosterIds) {
       world.playerRosterIds.set(unitId, rosterIndex);
     }
-    // F6 — restore the utility-contribution ledger (mirror of damageDealt)
-    // so a mid-battle restore awards the same heal-XP at battle:ended.
     for (const [unitId, total] of snap.utilityDone) {
       world.utilityDone.set(unitId, total);
     }
 
-    // O1 — restore both teams' steering objectives (the version check above
-    // already rejected any v24 save that lacks the `objectives` field).
     world.objectives.player = snap.objectives.player;
     world.objectives.enemy = snap.objectives.enemy;
 
-    // 29c — restore the pending chain hops (copy the mutable per-hop bits; the
-    // version check above rejected any v27 save that lacks the field).
+    // Each hop's mutable parts are copied.
     for (const h of snap.pendingChainHops) {
       world.pendingChainHops.push({ ...h, fromPos: { ...h.fromPos }, hitIds: h.hitIds.slice() });
     }
 
-    // §36a — restore the in-flight claim registry, re-keying by cell (the version
-    // check above rejected any v30 save that lacks the field). Empty for any
-    // pre-§36b save — the instant move model never leaves a claim across ticks.
+    // Keyed again by cell.
     for (const c of snap.claims) {
       world.claims.set(cellKey(c.cell), { cell: { x: c.cell.x, y: c.cell.y }, unitId: c.unitId, plane: c.plane });
     }
 
-    // 47f — restore the battle rules AND re-register their handlers (the K1
-    // behavior-registry pattern: data snapshotted, handlers re-attached), then
-    // the in-flight tally — a mid-battle resume keeps its earnings.
+    // Installing the rules registers their handlers again.
     world.installBattleRules(snap.battleRules);
     world.tallies.bits = snap.tallies.bits;
-    // §91a1 — restore the fallen ledger (v35 saves rejected above — the dead
-    // are gone from `units`, so this copy is the only path back).
+    // The dead are gone from `units`, so their power comes back from the
+    // snapshot alone.
     world.fallenPower.player = snap.fallenPower.player;
     world.fallenPower.enemy = snap.fallenPower.enemy;
 
-    // §75b — restore the camp registry + the dedicated stream. Every defId
-    // must resolve in the live catalog (the 74b bespoke-rejection rule: leash
-    // radius + rewards derive from the def at read time, so an unresolvable
-    // ref would fail far from here, mid-tick). Deep-copy the mutable bits.
+    // Every `defId` must be in the catalog: the leash and the rewards are read
+    // from the def when needed, so a missing one would fail far from here,
+    // mid-tick. The mutable parts are copied.
     for (const c of snap.camps) {
       if (getCamp(c.defId) === undefined) {
         throw new Error(`World.fromJSON: unknown camp def "${c.defId}"`);
@@ -3013,9 +2372,9 @@ export class World {
     }
     world._campRng = snap.campRng === null ? null : RNG.fromJSON(snap.campRng);
     // A camp member whose instance isn't in the registry is a corrupt save —
-    // hostility reads would silently degrade to passive (campHostileTo's
-    // unknown-id false), which is exactly the quiet mis-decode the
-    // no-migration contract exists to prevent.
+    // hostility reads would fall back to passive (`campHostileTo` answers
+    // false for an unknown id), the quiet mis-decode the version check
+    // exists to prevent.
     for (const u of world.units) {
       if (u.campId !== null && !world.camps.has(u.campId)) {
         throw new Error(
@@ -3058,8 +2417,7 @@ function snapshotUnit(unit: Unit): UnitSnapshot {
           phases: unit.activeAction.phases.map((p) => ({ ...p })),
         }
       : null,
-    // K1 — deep-copy so the wire image never shares a mutable instance with the
-    // live unit (merge mutates effects in place).
+    // Copies, since a merge changes a live unit's effects in place.
     effects: unit.effects.map(cloneEffect),
   };
 }

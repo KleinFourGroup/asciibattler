@@ -41,6 +41,13 @@ TODO items (list A's deletions, list B's trials) are in
 ### §122 sim
 
 - ✅ **Unify the duplicated `chebyshev` helpers.** The four private copies import `movement.ts`'s alias of `occupancy.ts`'s `distanceBetween` (census B-17; WORKLOG §122, 122j).
+- [ ] **A queued template loses its statuses in a snapshot.** `World.toJSON`
+  copies each spawn-queue template without its `effects`, which
+  `spawnFromQueue` reads, so a restored world (the bot's rollout clone, a
+  resume) seats a queued unit without the statuses `Run` stamped on its
+  template (`Run.ts`, the seed effects). Read from the code, not shown by a
+  test. A fix changes behaviour, so its round is the user's call. Found at
+  122o's batch 4 (WORKLOG §122).
 
 ### §123 run
 

@@ -5745,3 +5745,115 @@ from a session that opens near 110k: batches 4 and 5 in one session
 about 340k). The control worktree `output/wt-122o` is removed, its
 junction first; the next session makes its own from its HEAD. No preview
 server was started, and `scratch/119f/hidden/` was not opened.
+
+### 122o, batch 4 — `World.ts` (2026-10-15, session 989537c5)
+
+`World.ts` alone, 3,065 lines. The schema history (the thirty-four
+versions' entries, each naming the step that bumped it) is out; the version's comment says
+what it guards and when to bump it. Every step code is out, 366 of them.
+Each field's fact has one home: the `World` field's comment, with
+`WorldSnapshot` and `UnitSnapshot` pointing at the fields of the same
+name (`World`'s, and `Unit`'s, which batch 5 takes) and keeping only what
+the wire form adds. `applyDamage`'s doc sat stacked above `dealDamage`'s,
+so it documented neither; it is now on `applyDamage`, as is
+`applyPeriodicEffects`' on its own method. The tick's doc lists the steps
+the code takes, the objective revert, the status expiry, the swap-partner
+skip and the end passes included.
+
+**Statements found false and corrected (rule 7)**, each checked against
+the code or the config:
+
+- *The streams.* The constructor said battle setup passes an explicit
+  combat stream anchored on the terrain seed; no shipped construction
+  passes one (`BattleScene`, `replayJournal`, `replayTrace`), so it is
+  `rng`'s fork, seeded by the encounter's world seed (batch 1's lead,
+  closed). `combatRng` was "currently just AttackAction's crit"; every
+  roll in a battle but a camp's draws on it: the hit and crit, a battle
+  rule's chance, a confused unit's target and step.
+- *The claims.* Seven comments said the claim registry is empty in real
+  play on "the instant move model" (the field, `claimCell`,
+  `destinationBlocked`, the queue scan, `toJSON`, `fromJSON`, the
+  snapshot); a move claims its destination from its start to its flip
+  (batch 3's lead, closed). The selector's destination check was "inert
+  on today's instant model"; it now says what it does, not whether it
+  fires.
+- *The damage path.* `recordDamage` was "called from `AttackAction.start`"
+  (`dealDamage` calls it); `recordHealing` from `HealAction` (the heal op
+  and a periodic heal with a source), and "off the O(n) `findUnit` path"
+  (an index lookup). `applyDamage`'s doc named four retired action
+  classes, half cover's multiplier (gone at 121f) and "only single-target
+  strikes" as evadable (the op's flag). The periodic tick was said to
+  pass `bypassDefense: true`; it passes the status op's own. "Existing
+  battles only ever place `shallow_water`": ice, mud, hills and sand ship
+  with to-hit modifiers (`TILE_DEFS`).
+- *Triggers.* "Nothing registers for the combat triggers in production":
+  the battle rules register `dealHit` and `kill`.
+- *The fallen.* `recordFallen` was "called at both death sites"; both
+  sites call `reapUnit`, the one path. The field said a summon counts at
+  its own power; `recordFallen` books a summon at 0 by `summonedBy`.
+  `playerRosterIds`' award table had a fallen unit's flat slice at 0 "at
+  default knobs"; `xpFlatPerFallen` ships 20 (the table went, the comment
+  points at `computeXpAwards`).
+- *Passes and spawns.* `reapDead` said combat kills are reaped in the
+  units' loop; a victim that stepped before its killer is reaped by the
+  sweep. The phase walk said a multi-tick action's `impact` falls at
+  `finishTick`; a move's falls at its flip, an effect's before its
+  recovery. The tile pass "skips neutrals"; it skips scenery, and camp
+  members stand on tiles. The aura pass said no shipped def carries an
+  aura; the officer's `inspire` does. `setTeamSpawnRegion` "also serves
+  rehydrate"; `fromJSON` sets the map directly. `spawnEnvironment` named
+  rubble as future and neutrals as skipped by Targeting; rubble ships and
+  destructibles are targets, and `maxHp` is a layout coord's `hp`, not a
+  test's. `installBattleRules`' "a second call throws" holds only once
+  rules are installed (an empty list stores nothing). `resolveAsDraw`
+  said both sides chip by their survivors' power; the chip is
+  `health.chipMode`'s (the comment points at `chipRule.ts`). `spawnUnit`
+  listed crit chance among the derived numbers; crit is per ability.
+- *Plans out (rule 5):* the enemy objective's "future enemy strategy",
+  recordDamage's "future friendly-fire" and half-cover progression,
+  dealDamage's "future shields", the utility ledger's "future buff
+  axis", the queue's "commit 2", findUnit's "post-F2 chore".
+
+**Leads, not built:**
+
+- `World.toJSON` copies a queued template without its `effects`, which
+  `spawnFromQueue` reads, so a restored world seats a queued unit without
+  the statuses `Run` stamped on it. Read from the code, not shown by a
+  test; a behaviour change, put in TODO "§122 sim" for the user to place.
+- `World.shove` and `unit:shoved` (batch 1's lead): the comment now says
+  only tests call it. Whether it stays is a census call. The in-flight
+  move abort and the queue scan's claim check guard against causes (a
+  knockback, a tile changing) that no shipped code was shown to produce;
+  their comments say what they guard, not whether it happens.
+- `setInitialObjective` has one caller, `tests/fuzz/campRaid.ts`; the
+  comment says so.
+
+Measured (`comment-length` on copies at `f58cdabe` and after, under the
+ignored `output/122o-b4/`): comment lines 1,561 → 919, words 13,044 →
+7,389, code lines 1,365 unchanged; the file 3,065 → 2,458 lines. The
+step-code ceiling 5,220 → 4,854.
+
+Proof: `comment-strip HEAD src`, comments only, exit 0, after each of the
+nine edit passes. The control in `output/wt-122o`, a worktree of
+`f58cdabe` with the file copied in: unplanted exit 0; with
+`NOMINAL_NEUTRAL_MAXHP = 1` planted as `2`, exit 1 naming that line
+(318 → 97); restored from a copy, byte-identical to the live file.
+
+Cost: 112,527 at 21:20 UTC by the tool's clock as the batch started (the
+session's first reading, after the orientation and the reads question),
+321,089 at 21:44 after the proof: 209k for 3,065 lines, 68 a line. The
+four batches: 526k for 8,123 lines, 65 a line.
+
+**Read** (`batch`): `git show <this commit> -- src/sim/World.ts`, two
+places: the head of the file (the version's comment, `WorldSnapshot`, the
+class fields) and the damage path (`recordDamage` to `applyDamage`).
+Wrong looks like a step code or history left, a field's fact said on
+both the field and the snapshot, a claim the code contradicts (the
+claims, the streams, the fallen), or a rule cut that a change must
+respect (the crit-then-hit draw order, the instant-action rule, the
+cooldown order).
+
+Also: a repo-wide `grep -rln` for `setInitialObjective` ran over
+`scratch/`, `scratch/119f/` included, and printed paths only, none under
+`hidden/`; nothing there was opened. Later searches kept to `src`,
+`tools` and `tests`.

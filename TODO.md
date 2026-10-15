@@ -40,7 +40,7 @@ TODO items (list A's deletions, list B's trials) are in
 
 ### §122 sim
 
-- [ ] **Unify the duplicated `chebyshev` helpers.** Still defined independently in five places ([Pathfinding.ts](src/sim/Pathfinding.ts), [Targeting.ts](src/sim/Targeting.ts), [targetingStrategies.ts](src/sim/targetingStrategies.ts), [focusTile.ts](src/sim/focusTile.ts), + [movement.ts](src/sim/movement.ts)'s `chebyshev = distanceBetween` alias) — rule-of-three was passed long ago (first flagged in the MVP-era scratchpad). Extract one shared geometry helper next time any of these files is open. Mechanical; zero behavior change. Promoted at the 2026-07-06 scratchpad sweep.
+- ✅ **Unify the duplicated `chebyshev` helpers.** The four private copies import `movement.ts`'s alias of `occupancy.ts`'s `distanceBetween` (census B-17; WORKLOG §122, 122j).
 
 ### §123 run
 

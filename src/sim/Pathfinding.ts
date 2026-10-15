@@ -1,4 +1,5 @@
 import type { GridCoord } from '../core/types';
+import { chebyshev } from './movement';
 
 /** Cost to ENTER a cell. Returning Infinity treats the cell as impassable
  *  (same effect as a `blockers` entry, but data-driven). Callers MUST keep
@@ -212,10 +213,6 @@ export function findPath(
 
 function inBounds(c: GridCoord, gridW: number, gridH: number): boolean {
   return c.x >= 0 && c.y >= 0 && c.x < gridW && c.y < gridH;
-}
-
-function chebyshev(a: GridCoord, b: GridCoord): number {
-  return Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y));
 }
 
 /**

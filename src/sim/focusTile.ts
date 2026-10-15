@@ -1,6 +1,7 @@
 import type { Unit } from './Unit';
 import type { GridCoord } from '../core/types';
 import { SIM } from '../config/sim';
+import { chebyshev } from './movement';
 
 /**
  * O3 — what a unit does under a `focus` objective whose target is a TILE (not
@@ -18,10 +19,6 @@ import { SIM } from '../config/sim';
  * own.
  */
 type FocusTileDirective = 'pursue' | 'engageLocal';
-
-function chebyshev(a: GridCoord, b: GridCoord): number {
-  return Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y));
-}
 
 /** O3 — this unit's per-tick behavior under a TILE focus. */
 export function focusTileDirective(unit: Unit, tile: GridCoord): FocusTileDirective {

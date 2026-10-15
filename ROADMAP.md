@@ -141,7 +141,8 @@ share of list A's export rows joins the sim's.
   Kept; corpus 0 of 30, fuzz diff PASS, lines −9.
 - ☑ **122i — B-09, the death trigger in `reapUnit`** (`none`). Kept;
   corpus 0 of 30, fuzz diff PASS, lines −2.
-- ☐ **122j — B-17, one `chebyshev`** (`none`).
+- ☑ **122j — B-17, one `chebyshev`** (`none`). Kept; corpus 0 of 30,
+  fuzz diff PASS, lines −14.
 - ☐ **122k — the focus-tile directive folded into `updateFocusTarget`**
   (`none`; a lead).
 - ~~**122l — B-02, the split, if signed at 122f**~~ — a trial in Round 9,

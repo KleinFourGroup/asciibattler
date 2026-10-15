@@ -5354,3 +5354,22 @@ not a new kind of risk. Lines were estimated before this bar: about −13.
 3. *No new parameter.*
 4. *The special case, counted:* five definitions of the distance → one,
    under two names.
+
+**Built.** The four copies are gone; `focusTile.ts`, `Pathfinding.ts` and
+`targetingStrategies.ts` import `chebyshev` from `movement.ts`, and
+`Targeting.ts` adds it to its existing import from there and drops its
+`GridCoord` import, which only the copy read. TODO's item is closed.
+
+Against the bar:
+
+1. *Behaviour: held.* Typecheck and lint clean. The corpus, 0 of 30. The
+   fuzz diff against `2cca5c9`: PASS, both shapes. The plant, in a
+   worktree of an unreferenced commit of the tree (`173cb39`): a sign
+   traded in `distanceBetween` (`occupancy.ts:252`), the corpus CAUGHT,
+   30 of 30, against 0 of 30 unplanted. The suite and the smoke by the
+   hook.
+2. *Lines: held.* `src` −14 (+4 −18).
+3. *No new parameter: held.*
+4. *The special case: held.* One definition, under two names.
+
+Kept.

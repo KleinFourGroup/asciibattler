@@ -1,6 +1,7 @@
 import type { Unit } from './Unit';
 import type { World } from './World';
 import { SIM } from '../config/sim';
+import { chebyshev } from './movement';
 
 /**
  * Per-archetype target-SELECTION policy. Each archetype declares a strategy
@@ -38,10 +39,6 @@ interface TargetingStrategy {
    * holds its mark until it dies — rule (a) handles the on-death re-pick).
    */
   shouldRetarget(unit: Unit, current: Unit, candidate: Unit, world: World): boolean;
-}
-
-function chebyshev(a: { x: number; y: number }, b: { x: number; y: number }): number {
-  return Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y));
 }
 
 /**

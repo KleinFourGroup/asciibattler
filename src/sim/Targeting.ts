@@ -1,6 +1,5 @@
 import { isInertNeutral, type Unit } from './Unit';
 import type { World } from './World';
-import type { GridCoord } from '../core/types';
 import type { ObjectiveTarget } from './objective';
 import { hasLineOfSight } from './LineOfSight';
 import { SIM } from '../config/sim';
@@ -8,7 +7,7 @@ import { UNIT_DEFS, isDestructibleNeutral, isAutoTargetNeutral } from '../config
 import { getTargetingStrategy } from './targetingStrategies';
 import { focusTileDirective } from './focusTile';
 import { behaviorFlags } from './statusBehavior';
-import { buildMovementContext, costAt, routeToward } from './movement';
+import { buildMovementContext, chebyshev, costAt, routeToward } from './movement';
 import { findPath } from './Pathfinding';
 import { collectLosBlockers } from './positioning';
 import { cellIndex, cellsOccupiedBy, footprintOf, unitDistance, cellUnitDistance } from './occupancy';
@@ -789,7 +788,3 @@ export function lowestWoundedAlly(unit: Unit, world: World, range: number): Unit
 /* §44a — `collectLosBlockers` / `firingBandCell`
    moved to [positioning.ts](positioning.ts), the WHERE-knowledge home (the
    re-target LOS check above imports the pool back from there). */
-
-function chebyshev(a: GridCoord, b: GridCoord): number {
-  return Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y));
-}

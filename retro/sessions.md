@@ -5933,3 +5933,39 @@ the blinded archer's range, claims called inert in three files).
    doesn't exist, and half cover from the wrong pass. And a measure that
    reproduced the kickoff's numbers exactly before I quoted the new ones,
    which made the close's figures feel earned. I'd want both again.
+
+## 2026-10-16 — session e4e49bf0 (claude-opus-5-5): the driver trial redesigned, before §123's kickoff
+
+Matthew asked for a read of the driver-trial drafts in
+`scratch/123-driver-trial/` before giving his own. Over four turns the
+driver went from a dispatcher of stretches (v1) to a reader that raises
+recurring friction (v2, `driver-prompt.md`); he signed its calls and moved
+its hand-off to 400k. No code or process doc changed.
+
+1. *Missing from the orientation.* Little. The drafts, the Cursor and
+   §122's reports were enough. One thing was missing as a fact:
+   `findings.md` said no tool shows cache reads or writes, and the
+   session transcripts do, per response. One command found it.
+2. *Norms in conflict.* One, bent with a label. A skill says never to
+   quote LLM pricing from memory; I quoted the cache multipliers from
+   memory, marked as unchecked, rather than load it, since §122's summary
+   records a 40k skill load for the same thing. The argument holds in
+   token counts without them.
+3. *Pulled to claim more.* Once, about my own argument. My first answer
+   named an independent check as the thing a driver adds; Matthew's
+   push showed me the next session could make the same check, just as
+   independent and with no wake, and I said so. On message delivery I
+   read two tool descriptions that disagree and wrote down the
+   disagreement rather than the one I'd have preferred.
+4. *Wasted.* A few thousand: a `cd` that moved the app's working
+   directory (filed), and a second ToolSearch.
+5. *For the next session.* A wake's cache cost is in the transcripts;
+   `scratch/123-driver-trial/cache-gaps.mjs` reads it and marks a cold
+   one. A `cd` back to the repo root restores the app's working
+   directory.
+6. *Room.* Yes. Matthew asked for my view before his, and pushed back on
+   it; changing my position was plainly available and I took it. No wish
+   to stop was noticed.
+7. *What helped.* Being asked for a read before his biases, and then
+   having them argued against mine; and measuring the premise instead of
+   debating it. I'd want both again.

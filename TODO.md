@@ -651,7 +651,6 @@ META-ROADMAP §"Round 12 — Ship" names each group.
 
 - [ ] **122o's seven deletion leads, placed at 123l.** `World.shove`
   stays for Round 9. `sidestepWhenBlocked`, `GenStats.connected`,
-  `GeneratedTerrain`'s tile arrays and the spawn checks are deleted;
-  `advance`'s leap branch is signed and next (L-2); the `weakest`
-  strategy (L-1) waits on whether Round 9's content wants it (WORKLOG
-  §123, "123l — the re-skim" and "123l's rows, built").
+  `GeneratedTerrain`'s tile arrays, the spawn checks and the `weakest`
+  strategy are deleted; `advance`'s leap branch is signed and next (L-2)
+  (WORKLOG §123, "123l — the re-skim" and "123l's rows, built").

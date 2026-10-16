@@ -193,9 +193,8 @@ The cut, signed 2026-10-16 with the kickoff's five calls (WORKLOG §123,
   `pauseAtTurnGates` alone; `fromJSON` sets it; corpus 0 of 30, fuzz
   diff PASS.
 - ☑ **123l — the re-skim** (read by the user). The one-condition
-  registry kept as a trial (−9 lines); two fix-ups; seven rows signed,
-  six as deletions below, L-1 waiting on its question (WORKLOG §123,
-  123l).
+  registry kept as a trial (−9 lines); two fix-ups; seven rows signed
+  as deletions below (WORKLOG §123, 123l).
   - ☑ **L-3 — `sidestepWhenBlocked`** (`none`). Corpus 0 of 30, fuzz
     diff PASS; `src` −7.
   - ☑ **L-6 — `GenStats.connected`**, with the mapgen tool's line
@@ -208,10 +207,10 @@ The cut, signed 2026-10-16 with the kickoff's five calls (WORKLOG §123,
   - ☑ **The load cycle, (b) and (c)** (`none`). `distanceBetween` to
     `src/core/grid.ts`; ability ids checked against `ABILITY_DEFS`;
     `config/units` in no import cycle (WORKLOG §123, "The load cycle").
-  - ☐ **L-1 — the `weakest` strategy** (`none`). Approved; a patch
-    waits on the load cycle's fix (WORKLOG §123).
+  - ☑ **L-1 — the `weakest` strategy** (`none`). Proof: sim; `src`
+    −29.
   - ☐ **L-2 — `advance`'s leap branch; `maxCells` to `leapLanding`**
-    (`none`). Proof: sim; `reach-diff` over the six.
+    (`none`). Proof: sim; `reach-diff` over the seven.
 - ☐ **123m — the comment pass** (`batch`, per batch). The 19 files as
   122o ran it; the tests wait for §126.
 - ☐ **123n — `Run.ts` read again for B-15** (`stop`). A split comes back

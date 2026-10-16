@@ -7356,3 +7356,16 @@ the three files that failed at HEAD (`targetingStrategies.test.ts`,
 `grid.test.ts`. The config dump against `34949419`'s, no difference; the
 corpus, 0 of 30; the fuzz diff against `34949419`, PASS on both shapes.
 `src` and `tools` without tests +58 −52, tests +22 −17.
+
+### L-1, landed (2026-10-16, session bfbf31de)
+
+The patch from "L-1, built and handed back" (`123l-L1-weakest.patch`),
+applied to `d7e3247d` with its two removed `chebyshev(` lines renamed to
+`distanceBetween(`, as the load cycle's fix left them; its stat is the
+patch's own, +6 −100. ARCHITECTURE's tree line for
+`targetingStrategies.ts` still named `weakest`, which the patch's records
+missed, and now names `nearest` alone. The patch's TODO entry for the
+cycle is superseded by the guard. Proof: typecheck clean; all 23
+archetypes in `config/units.json` take `nearest`; the corpus, 0 of 30;
+the fuzz diff against `d7e3247d`, PASS on both shapes. `src` −29
+without tests (+3 −32), tests −65 (+3 −68).

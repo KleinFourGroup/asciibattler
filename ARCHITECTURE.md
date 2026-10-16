@@ -181,7 +181,7 @@ src/
                              # dispatches the seeker's targeting strategy; ties by HP then id; skips neutrals
                              # §75e: hostileCandidate — THE shared admit rule every hostile scan runs (passive camps are scenery; hostility per-faction, both directions); currentTarget honors an ordered PASSIVE camp mark (the first-blow guarantee)
                              # §40b/§75k/k2: the rubble auto-break pair — applyRubbleAutoTarget (atWill overlay: reachable hostile > nearest approachable rubble) + applyOrderedRubbleFallback (the ordered pursue arms: routeGateRubble's permeable A* names the ROUTE-gating rubble, first-on-route; null probe HOLDS the mark)
-    targetingStrategies.ts   # per-archetype target-pick registry (nearest / weakest); Unit.targeting resolved at spawn
+    targetingStrategies.ts   # per-archetype target-pick registry (nearest); Unit.targeting resolved at spawn
     archetypes.ts            # ALL_ARCHETYPES (full catalog) + DRAFTABLE_ARCHETYPES (§29-close draft pool, draftable-flag filtered), rollUnit, glyphForArchetype, targetingForArchetype, range/minRangeForArchetype (O4)
                              # §76c: engagementReach (non-engaging verbs — self leaps, ally-buff blasts, pure auras — are EXCLUDED from derived.attackRange, the in-range-abstain threshold; falls back to max rangeCells for pure-support kits)
     environment.ts           # spawnWall + spawnHalfCover (D6) — neutral-team env factories

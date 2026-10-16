@@ -9,8 +9,8 @@ import { getTargetingStrategy, knownTargetingIds } from './targetingStrategies';
  * `Targeting.test.ts`.
  */
 describe('targetingStrategies registry', () => {
-  it('advertises nearest and weakest', () => {
-    expect(knownTargetingIds()).toEqual(expect.arrayContaining(['nearest', 'weakest']));
+  it('advertises nearest', () => {
+    expect(knownTargetingIds()).toEqual(['nearest']);
   });
 
   it('resolves a registered id to a strategy whose id matches the key', () => {

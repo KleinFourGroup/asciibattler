@@ -26,16 +26,14 @@ interface TargetingStrategy {
   /**
    * Compares two eligible candidates of `unit`: below 0 when `candidate` is
    * the better target than `best`, above 0 when worse, 0 when neither is.
-   * `findTarget` reduces the eligible set with it. Neither strategy reads
+   * `findTarget` reduces the eligible set with it. `nearest` does not read
    * `world`.
    */
   compare(candidate: Unit, best: Unit, unit: Unit, world: World): number;
   /**
    * Stickiness: given a still-valid committed `current` and the strategy's
    * fresh `candidate` (known to differ from it), is the candidate upgrade
-   * enough to switch to? `nearest` switches only when markedly closer;
-   * `weakest` never does, and holds its mark until it dies (when
-   * `updateTarget`'s rule (a) picks again).
+   * enough to switch to? `nearest` switches only when markedly closer.
    */
   shouldRetarget(unit: Unit, current: Unit, candidate: Unit, world: World): boolean;
 }
@@ -81,34 +79,8 @@ const nearest: TargetingStrategy = {
   },
 };
 
-/**
- * The assassin's policy: the squishiest hostile (lowest `derived.maxHp`,
- * which in a mixed team is the ranged backline), ties to the nearer, then
- * lower `id`. It holds its mark until the mark dies, so a fast, fragile unit
- * reaches the backline instead of chasing the front. No shipped archetype
- * takes it (the rogue's is `nearest`); only tests do. Its distance tie goes
- * to the lowest id, the leftmost spawn, without the alignment tie `nearest`
- * has.
- */
-const weakest: TargetingStrategy = {
-  id: 'weakest',
-  compare(candidate, best, unit) {
-    if (candidate.derived.maxHp !== best.derived.maxHp) {
-      return candidate.derived.maxHp - best.derived.maxHp;
-    }
-    const cd = distanceBetween(unit.position, candidate.position);
-    const bd = distanceBetween(unit.position, best.position);
-    if (cd !== bd) return cd - bd;
-    return candidate.id - best.id;
-  },
-  shouldRetarget() {
-    return false;
-  },
-};
-
 const STRATEGIES: Record<string, TargetingStrategy> = {
   [nearest.id]: nearest,
-  [weakest.id]: weakest,
 };
 
 export function getTargetingStrategy(id: string): TargetingStrategy {

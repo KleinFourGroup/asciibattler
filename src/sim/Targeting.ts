@@ -80,8 +80,7 @@ export function hostileCandidate(unit: Unit, candidate: Unit, world: World): boo
  *       the unit's strategy at once;
  *   (b) the strategy's fresh pick is markedly better
  *       (`strategy.shouldRetarget`): for `nearest`, markedly closer
- *       (`SIM.retargetCloserRatio`); `weakest` never switches off a live
- *       mark;
+ *       (`SIM.retargetCloserRatio`);
  *   (c) for an archetype with `retargetOnLosLoss`, the target has been out
  *       of line of sight for `SIM.rangedRetargetLosTicks`: stop chasing a
  *       target behind a wall and re-pick.

@@ -95,12 +95,7 @@ describe('archetypes / targeting config', () => {
     }
   });
 
-  // Every archetype currently targets `nearest`. `weakest` ships as
-  // dormant-but-tested infrastructure (the registry + the Targeting.test.ts
-  // weakest cases): a forced-roster eval showed it HALVES the range-1 rogue's
-  // damage — it chases an unreachable backline mark past adjacent enemies it
-  // can't strike — so it stays unassigned until a gap-closer/ranged assassin
-  // makes "dive the squishies" viable (see TODO.md "Targeting strategies").
+  // `nearest` is the one strategy registered.
   it('every archetype currently targets nearest', () => {
     for (const a of ALL_ARCHETYPES) {
       expect(targetingForArchetype(a)).toBe('nearest');

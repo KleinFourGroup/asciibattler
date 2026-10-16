@@ -544,12 +544,7 @@ function enforceObstacleCap(
   }
   let count = cells.length;
   if (count <= cap) return;
-  for (let i = cells.length - 1; i > 0; i--) {
-    const j = rng.int(0, i);
-    const tmp = cells[i]!;
-    cells[i] = cells[j]!;
-    cells[j] = tmp;
-  }
+  rng.shuffle(cells);
   const clear = (x: number, y: number): void => {
     grid[y]![x] = grid[y]![x] === 'deep' ? 'a' : 'f';
   };

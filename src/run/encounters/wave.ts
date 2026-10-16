@@ -338,7 +338,7 @@ export function distributeWeightedLevels(
     // Priority order: largest fractional share first, ties → RNG shuffle (so
     // uniform weights → a random subset, matching distributeBudget).
     const order = Array.from({ length: n }, (_, i) => i);
-    fisherYates(rng, order);
+    rng.shuffle(order);
     const frac = idealExtra.map((x) => x - Math.floor(x));
     order.sort((a, b) => frac[b]! - frac[a]!);
     let guard = total + n + 1; // termination backstop (total ≤ n·cap guarantees fit)
@@ -378,14 +378,4 @@ function apportion(total: number, weights: readonly number[]): number[] {
     .map((o) => o.i);
   for (let k = 0; k < leftover; k++) seats[order[k]!]! += 1;
   return seats;
-}
-
-/** In-place Fisher–Yates shuffle, drawing from `rng` (uint draws via `int`). */
-function fisherYates(rng: RNG, arr: number[]): void {
-  for (let i = arr.length - 1; i > 0; i--) {
-    const j = rng.int(0, i);
-    const tmp = arr[i]!;
-    arr[i] = arr[j]!;
-    arr[j] = tmp;
-  }
 }

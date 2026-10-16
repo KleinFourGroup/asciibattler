@@ -72,6 +72,15 @@ export class RNG {
     return arr[this.int(0, arr.length - 1)]!;
   }
 
+  /** Shuffles `arr` in place (Fisher–Yates, from the end down), drawing
+   *  `arr.length − 1` times. */
+  shuffle<T>(arr: T[]): void {
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = this.int(0, i);
+      [arr[i], arr[j]] = [arr[j]!, arr[i]!];
+    }
+  }
+
   /**
    * A new RNG seeded from one uint32 drawn off this stream: the parent
    * advances exactly one step, and the child is independent after that. The

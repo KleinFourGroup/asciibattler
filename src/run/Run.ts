@@ -2139,7 +2139,7 @@ export class Run {
     // freshly recruited card is in the deck); hand + discard start empty. The
     // deck is per-encounter — last encounter's pile state is discarded here.
     this.drawPile = this.team.map((_, i) => i);
-    shuffleInPlace(this.drawPile, this.streamRng('deck', this.deckShuffleIndex++));
+    this.streamRng('deck', this.deckShuffleIndex++).shuffle(this.drawPile);
     this.discardPile = [];
     this.hand = [];
     // H3 — counts reset per ENCOUNTER (was per-battle pre-H4); each turn's
@@ -4229,7 +4229,7 @@ export class Run {
       if (this.discardPile.length === 0) return undefined;
       this.drawPile = this.discardPile;
       this.discardPile = [];
-      shuffleInPlace(this.drawPile, this.streamRng('deck', this.deckShuffleIndex++));
+      this.streamRng('deck', this.deckShuffleIndex++).shuffle(this.drawPile);
       // 65f — the reshuffle cue (one event for the whole flip; post-flip,
       // pre-pop counts). Cue-not-truth: see the events.ts contract.
       this.bus.emit('deck:reshuffled', {
@@ -4656,18 +4656,6 @@ export class Run {
     m.lastTurn = snap.lastTurn === null ? null : { ...snap.lastTurn };
     run['subscribe']();
     return run;
-  }
-}
-
-/**
- * H5 — Fisher–Yates shuffle in place. Mirrors `battleSetup`'s tile shuffle;
- * kept local rather than shared for one tiny helper (rule-of-three not yet hit
- * — extract a `src/core` util if a third caller appears).
- */
-function shuffleInPlace<T>(arr: T[], rng: RNG): void {
-  for (let i = arr.length - 1; i > 0; i--) {
-    const j = rng.int(0, i);
-    [arr[i], arr[j]] = [arr[j]!, arr[i]!];
   }
 }
 

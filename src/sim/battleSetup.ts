@@ -82,7 +82,7 @@ export function spawnTeam(
 ): void {
   world.setTeamSpawnRegion(team, region);
   const tiles = region.tiles.slice();
-  shuffleTilesInPlace(tiles, rng);
+  rng.shuffle(tiles);
   const n = Math.min(templates.length, tiles.length);
   for (let i = 0; i < n; i++) {
     const template = templates[i]!;
@@ -93,13 +93,6 @@ export function spawnTeam(
   }
   for (let i = n; i < templates.length; i++) {
     world.queueUnit(team, templates[i]!);
-  }
-}
-
-function shuffleTilesInPlace<T>(arr: T[], rng: RNG): void {
-  for (let i = arr.length - 1; i > 0; i--) {
-    const j = rng.int(0, i);
-    [arr[i], arr[j]] = [arr[j]!, arr[i]!];
   }
 }
 

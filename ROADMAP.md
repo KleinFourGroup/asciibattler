@@ -183,7 +183,8 @@ The cut, signed 2026-10-16 with the kickoff's five calls (WORKLOG §123,
 - ☑ **123h — B-04, one chip rule** (`none`). Kept; corpus 0 of 30, fuzz
   diff PASS, the config dump's only differences the two keys; `src`
   lines −72.
-- ☐ **123i — B-06, one shuffle** (`none`). Proof: sim.
+- ☑ **123i — B-06, one shuffle** (`none`). Kept, as `RNG.shuffle`
+  beside `pick`; corpus 0 of 30, fuzz diff PASS; `src` lines −35.
 - ☐ **123j — B-10, `Run.ts`'s small repeats** (`none`). Four parts, each
   kept or reverted on its own.
 - ☐ **123k — F-2's test** (`none`). A loaded run has a constructed run's

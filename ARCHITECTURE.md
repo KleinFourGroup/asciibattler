@@ -49,7 +49,7 @@ src/
   core/
     EventBus.ts              # Tiny typed pub/sub; on() returns unsub
     fnv1a.ts                 # 95e: 32-bit FNV-1a → 8 hex chars, PERMANENT — the 53b config fingerprint (config/configHash.ts re-exports it), the journal's snapshot hash and the i18n provenance `source` hash share it; a change would fuzzy every shipped locale at once
-    RNG.ts                   # Mulberry32 PRNG; .next/.int/.pick/.fork
+    RNG.ts                   # Mulberry32 PRNG; .next/.int/.pick/.shuffle/.fork
     sampling.ts              # M6: deterministic RNG samplers — weightedPick + sampleRange (triangular bias)
     Clock.ts                 # Fixed-timestep tick loop separated from render loop
     events.ts                # GameEvents catalog (typed event payloads)

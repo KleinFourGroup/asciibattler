@@ -6851,3 +6851,63 @@ Against the bar:
 
 Kept. The step-code ceiling 4,151 → 4,145, recorded before any suite
 run. Reading: 285,907 at 16:01, before the commit.
+
+### 123i — B-06, one shuffle (2026-10-16, session b9cfc3b3)
+
+Step zero at `1c5fbfb9`. The five loops where the row put them, each
+walking `i` from the end down to 1, drawing `rng.int(0, i)` and swapping
+`arr[i]` with `arr[j]`: `shuffleInPlace` (`Run.ts:4667`, the deck's two
+shuffles at :2142 and :4232), `shuffleTilesInPlace` (`battleSetup.ts:99`,
+the spawn tiles at :85), `shuffle` on a copy (`NodeMap.ts:898`, the
+braid's arrangement attempts at :397), `fisherYates(rng, arr)`
+(`wave.ts:384`, the tie order at :341) and the one inline in
+`proceduralMap.ts` (:547-552). Two swap by destructuring and three
+through a temporary, which leave the same array. The two partial
+shuffles the census set apart (`Run.ts`'s `sampleDistinct`,
+`enemyBudget.ts`'s `distributeBudget`) walk forward and draw
+`rng.int(i, n − 1)`: a different loop, left alone.
+
+One thing differs from the row: it put the function in
+`src/core/sampling.ts`, whose header promises that every function there
+takes exactly one draw, so a sampled knob moves the stream by one; a
+shuffle takes `length − 1`. `RNG` already holds `pick`, a draw over a
+collection, so the shuffle goes beside it as `RNG.shuffle(arr)`, in
+place. The intent, one shuffle in `src/core`, is the row's.
+
+**The bar** (D2), written before the code:
+
+1. *The same behaviour:* typecheck clean; the corpus, 0 of 30; the fuzz
+   diff against `1c5fbfb9`, PASS on both shapes; a plant in
+   `RNG.shuffle`, in a worktree, caught by the corpus; a test that the
+   shuffle is a permutation and draws `length − 1` times; the suite and
+   the smoke by the hook.
+2. *Source lines do not grow* (`src` without tests).
+3. *No new parameter.*
+4. *What a reader had to know, counted:* the loop written five times →
+   once; four private helpers → none; the "kept local" note → none.
+
+**Built.** `RNG.shuffle(arr)` beside `pick`: the loop, its swap by
+destructuring, and a doc line that says how many times it draws. The
+five sites call it; the four helpers and the inline loop are gone, with
+the "kept local" note. `NodeMap`'s site copies the bag first, as its
+helper did, and says why. `RNG.test.ts` gains two tests: a shuffle is a
+permutation and leaves the stream where `length − 1` draws leave a fresh
+one, and an array of one or none draws nothing. ARCHITECTURE's `RNG.ts`
+line lists the method.
+
+Against the bar:
+
+1. *Behaviour: held.* Typecheck clean. The corpus, 0 of 30. The fuzz
+   diff against `1c5fbfb9`: PASS on both shapes. The plant, in a
+   worktree of an unreferenced commit of the tree (`5590e04c`):
+   `this.int(0, i)` bumped to `this.int(1, i)` in `RNG.shuffle`
+   (`RNG.ts:79`, the one edit the tool admits in the loop); unplanted 0
+   of 30, planted CAUGHT, 30 of 30. The new tests and the sites' own
+   test files, 161 tests, green before the hook.
+2. *Lines: held.* `src` without tests −35 (+17 −52); the tests +21.
+3. *No new parameter: held.*
+4. *What a reader had to know: held.* The loop written five times →
+   once; four private helpers → none; the "kept local" note → none.
+
+Kept. The step-code ceiling 4,145 → 4,144 (the deleted note's "H5").
+Reading: 332,595 at 16:12, before the commit.

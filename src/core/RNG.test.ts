@@ -76,6 +76,27 @@ describe('RNG', () => {
     });
   });
 
+  describe('shuffle', () => {
+    it('permutes in place, drawing length − 1 times', () => {
+      const r = new RNG(42);
+      const arr = [0, 1, 2, 3, 4, 5, 6, 7];
+      r.shuffle(arr);
+      expect([...arr].sort((a, b) => a - b)).toEqual([0, 1, 2, 3, 4, 5, 6, 7]);
+      expect(arr).not.toEqual([0, 1, 2, 3, 4, 5, 6, 7]);
+      // The stream stands where seven draws leave a fresh one.
+      const twin = new RNG(42);
+      for (let i = 0; i < 7; i++) twin.next();
+      expect(r.next()).toBe(twin.next());
+    });
+
+    it('draws nothing for an array of one or none', () => {
+      const r = new RNG(7);
+      r.shuffle([]);
+      r.shuffle(['only']);
+      expect(r.next()).toBe(new RNG(7).next());
+    });
+  });
+
   describe('fork', () => {
     it('two children forked from same-seed parents at the same point are identical', () => {
       const parentA = new RNG(42);

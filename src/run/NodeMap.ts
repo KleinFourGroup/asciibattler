@@ -394,7 +394,9 @@ function buildBraid(hopCount: number, widths: readonly number[], rng: RNG): Brai
     let best: OpToken[] | undefined;
     let bestClosures = Infinity;
     for (let attempt = 0; attempt < ARRANGEMENT_ATTEMPTS && chosen === undefined; attempt++) {
-      const cand = shuffle(tokens, rng);
+      // A copy: the bag is reused across attempts.
+      const cand = tokens.slice();
+      rng.shuffle(cand);
       const closures = closuresOf(cand);
       if (closures < bestClosures) {
         best = cand;
@@ -892,18 +894,6 @@ function weightedPick(weights: readonly number[], rng: RNG): number {
     if (r <= 0) return i;
   }
   return weights.length - 1;
-}
-
-/** Fisher–Yates on a copy (the input bag is reused across attempts). */
-function shuffle<T>(arr: readonly T[], rng: RNG): T[] {
-  const out = arr.slice();
-  for (let i = out.length - 1; i > 0; i--) {
-    const j = rng.int(0, i);
-    const tmp = out[i]!;
-    out[i] = out[j]!;
-    out[j] = tmp;
-  }
-  return out;
 }
 
 /**

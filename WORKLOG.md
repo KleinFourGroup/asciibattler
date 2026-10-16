@@ -7815,7 +7815,8 @@ lost their step and version tags.
 - `BattleEncounter`: `generateTerrain` is in `terrainGen.ts`, not
   `battleSetup.ts`; `layoutId` was "null-only, the library lands in C1b+";
   a procedural side was drawn "from `battleRng`", where it comes off the
-  encounter's map stream (a boss's, the sector-entry stream).
+  encounter's map stream (a boss's, the `'boss'` stream; this entry said
+  the sector-entry stream until 4b found otherwise).
   `battleRules` was the daemons' hooks, which the packets' injected rules
   follow, and reached "both construction sites"; the replays and the
   rollout walker build Worlds from it too.
@@ -7864,3 +7865,67 @@ to the class) against the seven rules. Wrong looks like a phase's entry
 or exit in `RunPhase` that its handler does not take, the version's doc
 without the rule for when to bump, a load check claimed for a snapshot
 field that `fromJSON` does not make, or history left.
+
+Committed as `333e41fc`; the suite 3,722 and the smoke 613, green, by the
+hook.
+
+### 123m, batch 4b — `Run.ts`'s fields and constructor (2026-10-16, session 41f464e5)
+
+The class's fields, the constructor, `streamRng`, the grant and draft
+helpers, the subscriptions, the ledger and `dispatch`. A field that the
+snapshot documents now points there for what is saved and says what the
+live run does with it. The dial fields share one statement, on
+`eventCatalog`: a load takes them from the config it is passed, and
+`RunConfig`'s header says which a save keeps.
+
+**Statements found false and corrected (rule 7):**
+
+- The dial fields (`eventCatalog`, `forcedLayoutId`, `forcedEncounterId`,
+  `passIsFinal`, `drawAmountAdd`, the shape dials) each said a rehydrated
+  run resets them, or reads the shipped default; `fromJSON` takes a config,
+  and the run slot passes the one it builds from the save's dials.
+- `sectorMap`: "the shipped DAG is a single sink"; it is two sectors.
+- `eventFlags` was "written only by the `setFlag` op"; a page opening
+  writes its visited flag.
+- `daemons`: index 0 was "the run-start seed"; with `daemon: null` it is
+  the first daemon gained. They were "the ONLY source of redraw/empower
+  availability"; a packet's `grantRedraws` grants a redraw.
+- `turnGrants` held "one entry per granted hook in walk order"; a packet's
+  grant goes in at the cursor.
+- `deploymentCounts` was "pure bookkeeping for now", for "a future fatigue
+  debuff"; `fatigueEffect` reads it at each deploy.
+- `cache` was changed "only by `addPacket` / `handleDiscardPacket`";
+  `handleUsePacket` consumes one, and a construction grant pushes one.
+- `playerHealth` and `enemyHealth` were each "chipped by the [other side's]
+  survivors' Σ`power`"; the chip rule charges each pool its own fallen
+  power, and the survivors' only on a capped turn. `enemyHealth` was
+  "reset to `HEALTH.enemyHealthMax`"; it is the encounter's `healthPool`
+  under the enemy-morale multiplier (`enemyPoolOf`).
+- The boss pair was rolled "on the sector-entry `sectorRng`, after the
+  node-map draws"; the constructor and `advanceSector` pass it its own
+  `'boss'` stream. Batch 4a wrote the same into `RunSnapshot.bossEncounterId`
+  and its WORKLOG entry; both are corrected here.
+- `pauseAtTurnGates` was off for "headless tests + the fuzz harness"; the
+  fuzz harness and the journal replay turn it on, as `Game` does.
+- `visitedNodes`: "Root is never added"; the root is added once left, and
+  only the pre-root start never is.
+
+**Leads, not built:** for 4c, `rollBossForSector`'s doc carries the same
+sector-entry stream, and `handleEnterNode`'s says "deterministic from a
+forked RNG".
+
+Measured (`comment-length` on copies under `output/cl-123m-b4b/`):
+`Run.ts` comment lines 2,066 → 1,976, words 17,312 → 16,510, code lines
+2,251 unchanged. `src/run` comment lines 3,639 → 3,549, words 30,627 →
+29,825. The step-code ceiling 3,672 → 3,548, `Run.ts` 537 → 413.
+
+Proof: `comment-strip HEAD src`, comments only, exit 0, its control named
+in `Run.ts`.
+
+Cost: 365,482 at 23:34 UTC by the tool's clock as the batch started,
+424,748 at 23:42 after its proof: 59k for 696 lines, 85 a line.
+
+**Read** (`batch`): `git show <this commit> -- src/run/Run.ts` (the class's
+fields to `dispatch`) against the seven rules. Wrong looks like a dial said
+to be lost on a load, a store said to change in fewer places than it does,
+a pool's charge told other than by the chip rule, or history left.

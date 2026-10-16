@@ -445,8 +445,8 @@ export interface RunSnapshot {
   nodeMap: NodeMap;
   /** The sector's boss, picked at the sector's entry so it can be shown
    *  ahead: the encounter by id, resolved on load (an unknown id rejects),
-   *  and its built battlefield. Drawn on the sector-entry stream after the
-   *  node map; never null, since every sector's terminal is a boss. */
+   *  and its built battlefield. Drawn on its own stream, keyed to the
+   *  sector (`'boss'`); never null, since every sector's terminal is a boss. */
   bossEncounterId: string;
   bossEncounterMap: EncounterMap;
   team: UnitTemplate[];
@@ -526,328 +526,273 @@ export interface RunSnapshot {
 const { startingLevel: STARTING_LEVEL } = RECRUITMENT;
 
 export class Run {
-  /** 77d2 (v42): the run randomness root — see RunSnapshot.streamRoot.
-   *  Every stream is a per-occurrence derivation off this root
-   *  (`this.streamRng(key, ...ids)`); the E4→74b positional fork ladder
-   *  and its nine long-lived stream fields are RETIRED. Stream isolation
-   *  (the old per-field rationale: filter-dependent draw counts must not
-   *  perturb siblings) is now structural — every occurrence has its own
-   *  derived stream, so nothing can perturb anything. */
+  /** The run's randomness root (`RunSnapshot.streamRoot`); every stream
+   *  derives from it per occurrence (`streamRng`), so one occurrence's draws
+   *  never move another's. */
   readonly streamRoot: number;
-  /** 77d2 (v42): sectors entered (0 = the start) — see RunSnapshot. */
+  /** Sectors entered, 0 for the start (`RunSnapshot.sectorIndex`). */
   private sectorIndex: number;
-  /** 77d2 (v42): shuffles performed — the 'deck' occurrence counter. */
+  /** The `'deck'` stream's occurrence counter (`RunSnapshot`). */
   private deckShuffleIndex: number;
-  /** 77d2 (v42): event occurrences resolved — the 'event' counter. */
+  /** The `'event'` stream's occurrence counter (`RunSnapshot`). */
   private eventStep: number;
-  /** 50d: the docked port's stock — see `PortStock`. Null undocked; rolled
-   *  at dock (`handleEnterNode`), cleared at `leavePort`, serialized while
-   *  docked (v35). */
+  /** The docked port's stock (`PortStock`), `null` when not docked: rolled
+   *  in `handleEnterNode`, dropped at `leavePort`. */
   portStock: PortStock | null = null;
-  /** 74b: the active event's {eventId,pageId} cursor (see RunSnapshot).
-   *  Null outside the `event` phase; set at `enterEventNode`, moved by
-   *  page-id `next` routing, cleared at every terminal. */
+  /** The open event and page, `null` outside the `event` phase: set in
+   *  `enterEventNode`, moved by an outcome's page `next`, cleared by every
+   *  outcome that leaves the event and by a defeat inside it. */
   activeEvent: { eventId: string; pageId: string } | null = null;
-  /** 74b: the run-lifetime chain-flag record (see RunSnapshot). Private —
-   *  read via `eventFlag()`; written only by the `setFlag` op. */
+  /** The event flags (`RunSnapshot.eventFlags`), read through `eventFlag()`;
+   *  written by the `setFlag` op and by a page opening (its visited flag). */
   private eventFlags: Record<string, EventFlagValue> = {};
-  /** 74b: a start-encounter terminal's pinned reward refs (see
-   *  RunSnapshot; 82c: a ref list). Consumed at the won turn boundary;
-   *  cleared at `finishEncounter`. */
+  /** A start-encounter outcome's reward refs (`RunSnapshot`): read at the
+   *  won turn's boundary, cleared in `finishEncounter`. */
   private pendingRewardOverride: readonly EncounterRewardRef[] | null = null;
-  /** 74b: the event catalog this run draws from — `RunConfig.eventCatalog`
-   *  override or the shipped EVENTS (the sectorMap discipline; a rehydrated
-   *  run always uses the shipped catalog). */
+  /** The event catalog this run draws from: `RunConfig.eventCatalog`, else
+   *  the shipped `EVENTS`. A load takes it from the config it is passed, as
+   *  it does every dial below that the snapshot does not hold (`RunConfig`'s
+   *  header says which a save keeps). */
   private readonly eventCatalog: readonly EventDef[];
-  /** 74b: the forced-event dev dial (`RunConfig.forcedEventId`, validated
-   *  loud at construction — the forcedEncounterId shape). */
+  /** The forced event (`RunConfig.forcedEventId`), checked at construction. */
   private readonly forcedEventId: string | null;
-  /** 74i-c: was the root's event kind DIAL-stamped (`firstNodeKind:
-   *  'event'`) rather than sector-stamped? A dial-stamped root draws from
-   *  the REGULAR pool — the dial's isolation power extends to the pool
-   *  choice (see enterEventNode). NOT persisted (dial discipline). */
+  /** Whether the root's `event` kind was stamped by the dial
+   *  (`firstNodeKind: 'event'`) rather than by the sector's starting events.
+   *  A dial-stamped root draws from the regular event pool, so the dial
+   *  still isolates the pool's draw when a sector authors starting events
+   *  (`enterEventNode`). */
   private readonly rootStampedByDial: boolean;
-  /** L1→47d: the run's owned daemons, in ACQUISITION order (index 0 = the
-   *  run-start seed; §48 rewards / §50 ports append via `addDaemon` —
-   *  uncapped, the locked design). 63c: seeded from the CHARACTER def (the
-   *  L1 run-start roll retired); an explicit `RunConfig.daemon` (a bespoke
-   *  config, or null = daemon-less, the fuzz control arm) still wins.
-   *  Daemon-only gates: these are the ONLY source of redraw/empower
-   *  availability. Serialized BY ID (v26). */
+  /** The owned daemons in the order gained: the starting one first (the
+   *  character's, or `RunConfig.daemon`'s, or none), then any a reward, a
+   *  port or an event adds (`addDaemon`), with no cap. The pre-turn grants
+   *  come from these and from a packet's `grantRedraws`. Saved by id. */
   readonly daemons: DaemonConfig[];
-  /** 63c: the run's starting character (resolved def; the id serializes at
-   *  v38, def-resolved on load — the daemonIds discipline). Fixed for the
-   *  run's whole life: drives the starting roster + daemon at construction
-   *  and the draft pools (blacklist additions + weight overrides) at every
-   *  offer/port-stock roll — both DERIVED from this def at call time, never
-   *  serialized themselves. */
+  /** The run's character, fixed for the run's life: it gives the starting
+   *  roster and daemon, and the draft pools (its blacklist and weights) at
+   *  every recruit offer and port stock, both read from the def as each is
+   *  rolled, never saved. Saved by id. */
   readonly character: CharacterConfig;
   /** The run's Escalation level, 0 (off) to `ESCALATION_MAX`
-   *  (config/escalation.ts). Fixed for the run's whole life and saved in
-   *  the snapshot (v48). `difficultyMultipliers` carries what it does. */
+   *  (`config/escalation.ts`), fixed for the run's life;
+   *  `difficultyMultipliers` carries what it does. */
   readonly escalation: number;
-  /** L1→49d: the current turn's grant QUEUE — re-resolved at every turn
-   *  start (`startNextTurn`, where a chance hook flips its coin): one entry
-   *  per granted hook in walk order, each carrying its own `used`/`passed`
-   *  engine state (the §49 fire-UX shape-lock). Entries MUTATE in place as
-   *  commands land, so serialization copies them (v32). The cursor (`active`
-   *  grant) is DERIVED — `activeGrantIndex`, never stored. */
+  /** The current turn's grant queue, resolved from the daemons' grant hooks
+   *  at each turn's start (`startNextTurn`, where a chance hook flips its
+   *  coin), in walk order; a packet's grant goes in at the cursor
+   *  (`handleUsePacket`). Each entry carries its own `used` and `passed` and
+   *  changes in place as commands land, so a save copies them. The cursor
+   *  (the active grant) is derived (`activeGrantIndex`), never stored. */
   private turnGrants: TurnGrants;
-  /** 49d — the finality toggle, resolved at construction:
-   *  `RunConfig.passIsFinal` override ?? `config/deck.json#grantQueue`. ON =
-   *  strict acquisition order (only the active grant fires; `passGrant`
-   *  finalizes); OFF = any pending grant, `passGrant` no-ops. NOT persisted
-   *  (the X1 RunConfig discipline — a rehydrate re-reads shipped config). */
+  /** The finality toggle: `RunConfig.passIsFinal`, else
+   *  `config/deck.json`'s `grantQueue`. On, grants fire strictly in order
+   *  (only the active one, and `passGrant` finalizes it); off, any pending
+   *  grant fires and `passGrant` does nothing. */
   private readonly passIsFinal: boolean;
-  /** 65d — the forced-draw A/B dial (`RunConfig.drawAmountAdd`), injected
-   *  into `effectiveRunStats` as one extra `drawAmount` add-modifier. 0 =
-   *  absent (no modifier → the fold identity fast path holds). NOT
-   *  persisted (the X1 RunConfig discipline — a rehydrate resets to 0). */
+  /** The forced-draw dial (`RunConfig.drawAmountAdd`), folded into
+   *  `effectiveRunStats` as one more `drawAmount` add; 0 adds no modifier,
+   *  so the fold's no-modifier path holds. */
   private readonly drawAmountAdd: number;
-  /** T2 — the sector-selection meta-DAG the run walks (default: the shipped
-   *  `SECTOR_MAP`; a `RunConfig.sectorMap` overrides it for tests). Not
-   *  persisted — a RunConfig input, reconstructable; a rehydrate resets it to
-   *  the shipped map (the shipped DAG is a single sink, never mid-walked). */
+  /** The sector map the run walks: `RunConfig.sectorMap`, for tests, else
+   *  the shipped `SECTOR_MAP`. */
   private sectorMap: SectorMap;
-  /** T2 — the active sector (drives the node-map length, theme, + layout pool)
-   *  and the DAG node it was chosen at (the walk cursor). Both persist; both
-   *  change only when a sector terminal is cleared (`advanceSector`). */
+  /** The active sector, and the sector-map node it was chosen at; both
+   *  change only when a sector's terminal is cleared (`advanceSector`). */
   currentSectorId: string;
   currentSectorNodeId: string;
-  /** T2 — regenerated per sector (was readonly + one-shot at construction). */
+  /** The active sector's node map, generated again at each sector. */
   nodeMap: NodeMap;
   team: UnitTemplate[];
   /**
-   * H3 — per-unit deployment counter (the fatigue hook). One slot per
-   * roster index, parallel to `team`; counts how many turns a unit has
-   * been deployed in the CURRENT encounter. **Pure bookkeeping for now**
-   * — a future fatigue debuff (deferred to H6 if needed) would read it at
-   * deploy time to scale the deployed unit's stats. Reset at encounter
-   * start via `resetDeploymentCounts`, bumped per deployment via
-   * `recordDeployment` — those two are the stable seam the H4 turn loop
-   * drives. Pre-H4 an encounter is a single battle and the whole roster
-   * is the "hand", so each battle resets-then-records-once → every count
-   * reads 1 mid-battle. Round-trips in the Run save (v7). Stays synced
-   * with `team`: a recruit appends a fresh `0`.
+   * Each roster slot's deployment count in the current encounter, parallel
+   * to `team`: cleared at an encounter's start (`resetDeploymentCounts`),
+   * raised for each turn a unit is dealt (`recordDeployment`). The fatigue
+   * debuff reads it at deploy (`fatigueEffect`). A recruit adds a `0`.
    */
   deploymentCounts: number[];
   /**
-   * K1 — per-roster-slot encounter-scoped status effects (the `endOfEncounter`
-   * store), parallel to `team`. Added via `addEncounterEffect` (the daemon /
-   * empower seam, L/K4), re-seeded onto the fielded unit each turn at deploy as
-   * `endOfTurn` effects, and reset at encounter start. Empty per slot by
-   * default. A recruit appends a fresh `[]` (stays synced with `team`, like
-   * `deploymentCounts`). Round-trips in the Run save (v12).
+   * Each roster slot's encounter-scoped status effects (`RunSnapshot`),
+   * parallel to `team`: added by `addEncounterEffect`, put on the fielded
+   * unit at each turn's deploy as `endOfTurn` effects, cleared at an
+   * encounter's start. A recruit adds an empty list.
    */
   encounterEffects: StatusEffect[][];
   /**
-   * H5 — the card deck (draw → hand → discard), holding `rosterIndex` values.
-   * Each turn draws up to `effectiveDrawAmount` cards into `hand` (65a — the
-   * fold over the H5 `DECK.handSize` base; only the hand
-   * fights), reshuffling `discardPile` back into `drawPile` when it empties; the
-   * fought hand recycles to `discardPile` at the next turn's start. Encounter-
-   * SCOPED: rebuilt + reshuffled from the current roster at every encounter
-   * start, so deck state never carries between encounters (the no-carry model).
-   * `drawPile` is drawn from the END (pop). Public so the turn loop + tests can
-   * inspect the piles; round-trips in the Run save (v9).
+   * The card deck, as roster indices (`RunSnapshot`). Each turn draws up to
+   * `effectiveDrawAmount` cards into `hand`, since only the hand fights,
+   * reshuffling `discardPile` into `drawPile` when the draw pile is empty;
+   * the fought hand goes to `discardPile` at the next turn's start. Rebuilt
+   * and shuffled from the roster at each encounter's start, so no deck state
+   * crosses encounters. Public so the turn loop and tests can read the piles.
    */
   drawPile: number[];
   discardPile: number[];
   hand: number[];
   /**
-   * 47e — the run's bits balance (the currency; spec §Bits). Integer,
-   * floored at ZERO, mutated only through the private `addBits` chokepoint
-   * (which clamps + emits `run:bitsChanged`). Earns go through `gainBits`,
-   * which applies the folded `bitsGain` run-stat multiplier at the grant
-   * site; spend surfaces arrive with §50 ports. Init: `RunConfig.startingBits`
-   * override ?? `config/difficulty.json`. Round-trips in the Run save (v27).
+   * The run's bits, an integer floored at 0, changed only through `addBits`,
+   * which clamps and emits `run:bitsChanged`. Earnings go through `gainBits`,
+   * which applies the folded `bitsGain` stat and the bits multiplier; spending
+   * through `spendBits`. Starts at `RunConfig.startingBits`, else
+   * `config/difficulty.json`'s.
    */
   bits: number;
   /**
-   * 49b — the cache: owned packet ids in acquisition order (defs resolve at
-   * read time — the daemons-by-id pattern). Capacity is NOT stored: it
-   * derives from the `cacheSize` run-stat fold at read time
-   * (`effectiveCacheSize`), so a size-modifier daemon joining is correct for
-   * free. The list MAY exceed the derived capacity transiently — a shrink
-   * daemon lands under current holdings and the overflow (`cacheOverflow`)
-   * stays pending until the forced-keep discards resolve it (49f renders
-   * that flow). Mutated only by `addPacket` / `handleDiscardPacket`, both of
-   * which emit `run:cacheChanged`. Round-trips in the Run save (v30).
+   * The cache: owned packet ids in the order gained, resolved from the
+   * catalog as read. Its capacity is not stored but folded from the
+   * `cacheSize` stat when read (`effectiveCacheSize`), so a daemon that
+   * changes it applies at once. The list may hold more than that capacity
+   * when a daemon shrinks it under what it holds; the overflow
+   * (`cacheOverflow`) stands until the forced discards resolve it. Changed by
+   * `addPacket`, `handleDiscardPacket` (a sale and an event's removal go
+   * through it) and `handleUsePacket`, each emitting `run:cacheChanged`, and
+   * at construction by a granted packet.
    */
   cache: string[];
   /**
-   * 49e — the pending-until-start store: an OUT-OF-BATTLE `applyBuff` fire
-   * (overclock, "empower for the next encounter") can't land in
-   * `encounterEffects` directly — `resetEncounterEffects` wipes that store
-   * at the next encounter's start (the K1 doctrine), so the buff pends HERE
-   * (per-roster-slot, parallel to `team`; a recruit appends a fresh `[]`)
-   * and `beginEncounter` drains it in right after the reset. A save between
-   * fire and next encounter round-trips it (v33). Pre-turn `applyBuff` fires
-   * skip this store — they land on the live encounter directly.
+   * Out-of-battle `applyBuff` fires (overclock), per roster slot like
+   * `encounterEffects`. Such a buff can't go into `encounterEffects`
+   * directly, since the next encounter's start clears that store, so it
+   * waits here and `beginEncounter` moves it in right after the clear. A
+   * pre-turn `applyBuff` goes straight onto the live encounter. A recruit
+   * adds an empty list.
    */
   pendingEncounterEffects: StatusEffect[][];
   /**
-   * 49e — packet-injected battle rules, in fire order. The `injectRule` op's
-   * landing stores: `encounter`-duration rules reset at the next encounter
-   * START (`beginEncounter`, the K1 reset-at-start doctrine — they persist
-   * through the post-encounter phases and die when a new encounter begins);
-   * `run`-duration rules persist for the whole run. Every turn's
-   * `battleRules` compile unions them AFTER the daemon rules (daemons →
-   * run-injected → encounter-injected, each in acquisition/fire order — the
-   * 47c fixed-evaluation-order discipline extended). Both round-trip (v33;
-   * 51f/v37 wraps each entry with its source packet id — see `InjectedRule`).
+   * Packet-injected battle rules, in fire order: where the `injectRule` op
+   * lands. `encounter`-duration rules last through the encounter's end and
+   * are dropped at the next encounter's start; `run`-duration rules last the
+   * run. Each turn's `battleRules` takes the daemons' rules, then the
+   * run-duration ones, then the encounter-duration ones, each in its own
+   * order, so the evaluation order is fixed.
    */
   injectedEncounterRules: InjectedRule[];
   injectedRunRules: InjectedRule[];
   /**
-   * H4 — the run-wide player health pool. Persists across the WHOLE run (every
-   * encounter chips it; it's never reset between encounters). At ≤ 0 the run is
-   * lost. Each turn it's chipped by the enemy survivors' Σ`power`. Init +
-   * cap from `HEALTH.playerHealthMax`. Round-trips in the Run save (v8).
+   * The player's pool, kept for the whole run and never refilled between
+   * encounters except by a heal (a rest, the sector seam's floor, a heal op).
+   * At 0 or below the run is lost. Starts at, and is capped by,
+   * `HEALTH.playerHealthMax`. Each turn charges it by the chip rule
+   * (`chipRule.ts`).
    */
   playerHealth: number;
   /**
-   * H4 — the ACTIVE encounter's enemy health pool. Reset to
-   * `HEALTH.enemyHealthMax` at every encounter start; at ≤ 0 the player wins
-   * the encounter. Each turn it's chipped by the player survivors' Σ`power`.
-   * Meaningful only while `phase === 'battle'`.
+   * The active encounter's enemy pool: filled at each encounter's start
+   * (`enemyPoolOf`, the encounter's `healthPool` under the enemy-morale
+   * multiplier) and charged each turn by the chip rule; at 0 or below the
+   * encounter is won.
    */
   enemyHealth: number;
-  /** H4 — turns elapsed in the active encounter. Incremented once per resolved
-   *  turn; drives the `HEALTH.maxTurns` safety cap. Reset at encounter start. */
+  /** Turns resolved in the active encounter: raised once a resolved turn,
+   *  read by the `HEALTH.maxTurns` cap, cleared at an encounter's start. */
   turnIndex: number;
   /**
-   * U3 — the active encounter (the authored fight selected onto this node).
-   * Held for the whole encounter: `beginTurn` resolves each turn's wave from its
-   * `waves` grammar, and the pool max comes from its `healthPool`
-   * (`enemyPoolOf`). Null outside
-   * an encounter (cleared in `finishEncounter`). NOT serialized directly — the
-   * snapshot persists `selectedEncounterId` and `fromJSON` re-resolves it from
-   * the authored catalog (`config/encounters.json`).
+   * The active encounter, held for the whole fight: `rollTurnWave` walks its
+   * `waves` each turn, and its pool comes from its `healthPool`
+   * (`enemyPoolOf`). `null` outside an encounter (cleared in
+   * `finishEncounter`). Saved as `selectedEncounterId`, which `fromJSON`
+   * resolves from the catalog.
    */
   selectedEncounter: Encounter | null = null;
-  /** U3 — the wave-list sequencer cursor (U2). Null before the first turn; the
-   *  sequencer returns a fresh cursor each turn. Persisted for mid-encounter
-   *  resume. */
+  /** The wave sequencer's cursor, `null` before the encounter's first wave;
+   *  each turn's walk returns the next. */
   waveCursor: WaveCursor | null = null;
   /**
-   * K3.5 — the active encounter's battlefield: layout/size/terrain/theme rolled
-   * ONCE in `beginEncounter` (the 'map' occurrence stream, 77d2); every turn's
-   * `beginTurn` fights on it. Null outside an encounter (cleared in
-   * `finishEncounter`; rest nodes never set it). Persisted (v14) — it is NOT
-   * re-derivable per turn, so a mid-encounter restore must carry it.
+   * The active encounter's battlefield, built once (`EncounterMap`); every
+   * turn fights on it. `null` outside an encounter: cleared in
+   * `finishEncounter`, and never set at a rest, so `handleDismissPromotion`
+   * reads it to tell a turn's promotion from a rest's.
    */
   encounterMap: EncounterMap | null;
   /**
-   * 66a — the sector's pre-rolled boss (the forewarning pair): the boss
-   * encounter BY ID + its fully-built battlefield, rolled once per sector
-   * entry (`rollBossForSector` on the sector-entry `sectorRng`, after the
-   * node-map draws) and consumed by the boss node's `beginEncounter`
-   * (which skips its own roll). Never null — every sector's terminal is a
-   * boss, and the selection coverage guard warrants a boss pool at every
-   * hop. Persisted (v39) so a mid-sector restore forewarns AND fights the
-   * exact same board.
+   * The sector's boss and its built battlefield (`RunSnapshot`), picked at
+   * the sector's entry (`rollBossForSector`) and taken by the boss node's
+   * `beginEncounter` in place of a draw, so the fight is the forewarned one.
+   * Never null: every sector's terminal is a boss, and the selection
+   * coverage guard holds a boss pool at every hop.
    */
   bossEncounterId: string;
   bossEncounterMap: EncounterMap;
   currentNodeId: number;
   phase: RunPhase = 'map';
   /**
-   * H4b — when true (Game sets it for the live game), the encounter loop PAUSES
-   * at turn boundaries: `turn-intro` before each turn (emits `turn:starting`)
-   * and `turn-outcome` after each turn resolves (emits `turn:resolved`), each
-   * resumed by an `advanceTurn` command from the pre/post-turn screen. When
-   * false (the default — headless tests + the fuzz harness), the loop runs
-   * straight through, byte-identical to H4a. Presentation-only and
-   * reconstructed by Game, so it is deliberately NOT snapshotted (a restore
-   * defaults it off).
+   * Whether the encounter loop pauses at the turn gates: `turn-intro` before
+   * each turn (emitting `turn:starting`) and `turn-outcome` after it
+   * (emitting `turn:resolved`), each left by an `advanceTurn` command. `Game`,
+   * the fuzz harness and the journal replay turn it on; off, the default,
+   * the loop runs straight through. Not saved: whoever loads a run sets it.
    */
   pauseAtTurnGates = false;
   currentEncounter: BattleEncounter | null = null;
-  /** 94d — the run-wide fallen ledger (see `FallenRecord`); append-only,
-   *  serialized (v45). Read it through `fallenForTurn` / the snapshot. */
+  /** The run's fallen ledger (`FallenRecord`), appended to and never cut;
+   *  read through `fallenForTurn` or the snapshot. */
   fallenLedger: FallenRecord[] = [];
-  /** Recruit offer presented after victory, cleared on choice. */
+  /** The recruit offer after a won encounter, cleared on a choice or a pass. */
   currentOffer: UnitTemplate[] | null = null;
   /**
-   * E4 — level-ups awaiting PromotionScene dismissal. M1: set at the TURN
-   * boundary in `handleTurnEnded` when `bankXpAwards` reports promotions
-   * (gated runs stash it across the `turn-outcome` screen — both fields are
-   * persisted, so a save there still pops the promotion on resume); cleared
-   * when `handleDismissPromotion` re-enters the encounter loop (next turn /
-   * finish) or, for a G3 rest, returns to the map.
+   * The promotions waiting to be shown (`RunSnapshot`): set in
+   * `handleTurnEnded` when `bankXpAwards` reports level-ups, or by a rest;
+   * cleared by `handleDismissPromotion`, which re-enters the encounter loop
+   * or, after a rest, returns to the map.
    */
   pendingPromotions: PromotionInfo[] | null = null;
   /**
-   * 48b — the rolled-but-unresolved reward portions (the pending offer, the
-   * `currentOffer` pattern). Built ONCE in `handleTurnEnded` at any non-lost
-   * turn boundary (51a: the battle tally leads the offer; the win roll
-   * appends on won); `continueFromTurnGate` interposes the reward phase
-   * while it's non-null; each accept/decline removes its portion, and
-   * resolving the last one re-enters the gate chain. Persisted (v29) so a
-   * mid-reward save reproduces the exact offer.
+   * The reward offer not yet resolved (`RunSnapshot`): built once in
+   * `handleTurnEnded` at a turn that did not lose the run.
+   * `continueFromTurnGate` holds the `reward` phase while it is set; each
+   * accept or decline removes its portion, and resolving the last re-enters
+   * the gate chain.
    */
   pendingRewards: RewardPortion[] | null = null;
-  /** 115a — set in `advanceSector`, cleared at `dismissSectorCleared`; the
-   *  `sector:cleared` payload is built from it (see `ClearedSector`). */
+  /** Set in `advanceSector`, cleared at `dismissSectorCleared`; the
+   *  `sector:cleared` payload is built from it (`ClearedSector`). */
   private clearedSector: ClearedSector | null = null;
-  /** 115a — set at every turn boundary, reset at encounter start and end;
-   *  `turn:starting` carries it with the turn's fallen rows (see `LastTurn`). */
+  /** Set at every turn boundary, cleared at an encounter's start and end;
+   *  `turn:starting` carries it with the turn's fallen rows (`LastTurn`). */
   private lastTurn: LastTurn | null = null;
   /**
-   * Nodes the player has cleared (entered + survived). Used by MapScreen to
-   * draw a visual trail of completed nodes. Root is never added — it's not
-   * "completed" in the battle sense, it's just the starting point.
+   * The nodes the player has left behind, which `MapScene` draws as the
+   * trail. A node is added when the next is entered, the root among them;
+   * the pre-root start never is.
    */
   readonly visitedNodes: Set<number>;
 
   /**
-   * G1 — when set (via `RunConfig.forcedLayoutId`), every battle uses this
-   * hand-authored layout instead of the sector-pool roll; the `FORCE_PROCEDURAL`
-   * sentinel forces a fresh procedural map every battle instead (M6). Null =
-   * normal sector-pool roll. Not persisted (RunConfig is a run input,
-   * reconstructable from seed); a rehydrated Run resets this to null.
+   * The forced layout (`RunConfig.forcedLayoutId`): every battle's board is
+   * this layout, or with `FORCE_PROCEDURAL` a fresh procedural board, in
+   * place of the sector pool's roll; `null` for the roll.
    */
   private readonly forcedLayoutId: string | null;
 
   /**
-   * X2 — when set (via `RunConfig.forcedEncounterId`), the authored encounter
-   * forced at every node whose kind matches it (`selectEncounter`'s force-select),
-   * for the `--encounter=<id>` balance-isolation sample. Null = normal sector-pool
-   * selection. Not persisted (RunConfig is a run input); a rehydrated Run resets
-   * this to null.
+   * The forced encounter (`RunConfig.forcedEncounterId`), taken at every
+   * node whose kind matches its own (`selectEncounter`); `null` for the
+   * sector pool's draw.
    */
   private readonly forcedEncounterId: string | null;
 
   /**
-   * X1 — the per-run difficulty multipliers, resolved ONCE, at construction
-   * and again on a load: the `RunConfig` overrides falling back to the global
-   * `difficulty.json` defaults (1.0 = no scaling), times the factors of the
-   * run's Escalation level (`withEscalation`; level 0 changes nothing). The
-   * wave pair is applied to every authored-encounter wave at resolve time via
-   * `WaveContext` (`beginTurn`), `bits` in `effectiveBits`, `enemyMorale` in
-   * `enemyPoolOf`. Not persisted: a load takes the overrides from the config
-   * it is given (none: the shipped defaults) and the level from the snapshot.
+   * The run's difficulty multipliers, resolved at construction and again on
+   * a load: `RunConfig`'s overrides, else `config/difficulty.json`'s
+   * defaults (1, no scaling), times the Escalation level's factors
+   * (`withEscalation`; level 0 changes nothing). The wave pair applies to
+   * every authored wave through `WaveContext` (`rollTurnWave`), `bits` in
+   * `effectiveBits`, `enemyMorale` in `enemyPoolOf`. Not saved: a load takes
+   * the overrides from the config it is passed and the level from the
+   * snapshot.
    */
   private readonly difficultyMultipliers: DifficultyMultipliers;
 
   /**
-   * 67c — the two dev run-SHAPE dials (mutually exclusive; construction
-   * throws on both). Neither is persisted (RunConfig discipline — a
-   * rehydrated run runs unbounded, the forcedLayoutId precedent):
-   * - `singleSectorRun` (set by `RunConfig.hopCount`): the bounded-probe
-   *   semantic — the current sector's terminal IS the run terminal; the
-   *   sector walk never advances. Every harness `SHORT` fixture, the
-   *   commit-hook smoke tier, and isolation probes mean THIS.
-   * - `sectorHopsOverride` (set by `RunConfig.sectorHops`): the cheap
-   *   full-walk semantic — every sector's node-map is exactly N hops
-   *   (an override, not a cap) while the DAG still walks to its real
-   *   sink. The quick multi-sector balance-read dial.
+   * The two run-shape dials; construction throws when both are set.
+   * - `singleSectorRun` (`RunConfig.hopCount`) — the first sector's terminal
+   *   is the run's, and the sector walk never advances: the bounded probe.
+   * - `sectorHopsOverride` (`RunConfig.sectorHops`) — every sector's node
+   *   map is exactly this many hops, while the sector walk still runs to a
+   *   sink: a short full run.
    */
   private readonly singleSectorRun: boolean;
   private readonly sectorHopsOverride: number | undefined;
-  /** 72e — the scatter-dial slice re-passed at every sector advance
-   *  (`undefined` absent the dials — the config-less path unchanged). */
+  /** The scatter dials, passed again at every sector advance
+   *  (`sectorAdvanceConfig`, gotcha #121); `undefined` when none is set. */
   private readonly sectorScatterConfig: RunConfig | undefined;
 
   private readonly bus: EventBus<GameEvents>;
@@ -855,28 +800,23 @@ export class Run {
 
   constructor(seed: number, bus: EventBus<GameEvents>, config?: RunConfig) {
     this.bus = bus;
-    // 77d2 — the keyed-derivation root replaces `this.rng` and the whole
-    // E4→74b positional fork ladder. There is no fork ORDER to keep
-    // aligned anymore: every stream derives per-occurrence off this root
-    // (`streamRng`), so overrides/appends can't shift siblings by
-    // construction. A DELIBERATE stream break vs v41 (every seed remaps —
-    // the §77-scheduled re-baseline; worklog §77d2).
+    // Every stream derives per occurrence off this root (`streamRng`), so
+    // there is no draw order across streams to keep.
     this.streamRoot = seed >>> 0;
     this.sectorIndex = 0;
     this.deckShuffleIndex = 0;
     this.eventStep = 0;
-    // 63c — resolve the starting character FIRST. Unset → The Soldier, so
-    // every bare headless constructor keeps working; the boot assert in
-    // characters.ts guarantees the default resolves, but stay loud anyway.
+    // The character first. Unset, the default (the Soldier), so a bare
+    // headless construction works; the catalog's boot check makes the
+    // default resolve, and a miss still throws.
     const character = config?.character ?? characterById(DEFAULT_CHARACTER_ID);
     if (character === undefined) {
       throw new Error(`Run: default character '${DEFAULT_CHARACTER_ID}' missing from the catalog`);
     }
     this.character = character;
-    // 115a — every config input the run reads after construction resolves
-    // in one place, which `fromJSON` shares (`resolveRunInputs`). All pure
-    // of RNG (no draw), so resolving them before the first stream keeps
-    // every stream as it was; the boss pre-roll below reads the force flags.
+    // Every config input the run reads after construction resolves in one
+    // place, which `fromJSON` shares (`resolveRunInputs`). None draws; the
+    // boss pick below reads the forced ids.
     const inputs = resolveRunInputs(config);
     this.sectorMap = inputs.sectorMap;
     this.forcedLayoutId = inputs.forcedLayoutId;
@@ -899,70 +839,50 @@ export class Run {
     }
     this.escalation = escalation;
     this.difficultyMultipliers = withEscalation(inputs.difficultyMultipliers, escalation);
-    // 77d2 — the three sector-scoped streams, one per consumer (the T2-era
-    // shared `sectorRng` retired): the DAG pick, the node-map generation,
-    // and the 66a boss pre-roll each own a derived stream, so a draw-count
-    // change in one (e.g. the 77e generator rework) can never move the
-    // others.
+    // The sector pick, the node map and the boss pick each draw on their
+    // own sector-keyed stream, so a change to one's draws moves no other.
     const start = pickStartSector(this.sectorMap, this.streamRng('sector', 0));
     this.currentSectorNodeId = start.sectorNodeId;
     this.currentSectorId = start.sectorId;
     this.nodeMap = generateNodeMap(this.streamRng('nodemap', 0), config, this.currentSectorLength());
-    // 74e — the startingEvents root stamp (zero-draw; the `firstNodeKind`
-    // dev dial WINS when set — isolation power, the 63c precedence rule).
-    // 74i-c — the dial beats the POOL choice too (see enterEventNode): a
-    // dial-stamped root draws from the REGULAR pool, or the dial would have
-    // lost its isolation power the day a shipped sector authored a starting
-    // event (`rootStampedByDial`, resolved above).
+    // The sector's starting events stamp the root `event`, with no draw;
+    // the `firstNodeKind` dial wins when set, and its root draws from the
+    // regular pool (`rootStampedByDial`).
     if (config?.firstNodeKind === undefined) this.stampStartingEventRoot();
-    // 66a — pre-roll the sector's boss (the forewarning pair).
+    // The sector's boss, picked now so it can be shown ahead.
     const bossRoll = this.rollBossForSector(this.streamRng('boss', 0));
     this.bossEncounterId = bossRoll.bossEncounterId;
     this.bossEncounterMap = bossRoll.bossEncounterMap;
     const teamRng = this.streamRng('team');
-    // 63c — the starting roster comes from the character def (an explicit
-    // `startingRoster` override still wins — the kickoff precedence fork).
-    // The Soldier's list reproduces the retired `rollTeam` sequence exactly
-    // (6 mercenary + 4 archer, same order, same STARTING_LEVEL), so the
-    // default team stream is byte-identical across the 63c landing.
+    // The starting roster is the character's list; `startingRoster` wins.
     this.team = config?.startingRoster
       ? config.startingRoster.map((e) => rollUnit(e.archetype, teamRng, e.level))
       : this.character.roster.map((a) => rollUnit(a, teamRng, STARTING_LEVEL));
-    // H3 — one deployment slot per roster unit, all zero at run start.
+    // One deployment count and one encounter-effect list per roster unit.
     this.deploymentCounts = new Array(this.team.length).fill(0);
-    // K1 — one (empty) encounter-effect list per roster unit.
     this.encounterEffects = this.team.map(() => []);
-    // H5 — the deck is empty until an encounter builds + shuffles it
-    // (`beginEncounter`); piles round-trip but mean nothing between encounters.
+    // The deck is empty until an encounter builds and shuffles it
+    // (`beginEncounter`); between encounters the piles mean nothing.
     this.drawPile = [];
     this.discardPile = [];
     this.hand = [];
-    // 47e — starting bits: override ?? config/difficulty.json. Pure of RNG
-    // (no draw), so it doesn't perturb the fork alignment; clamped so a
-    // programmatic override can't start a run below the zero floor.
+    // Clamped, so an override can't start a run below the floor of 0.
     this.bits = Math.max(0, config?.startingBits ?? DIFFICULTY.startingBits);
-    // 49b — the cache starts empty (packets arrive via rewards/ports only;
-    // no starting-packet config until content demands one).
+    // Packets arrive by rewards, ports, events and grants; the cache starts
+    // empty.
     this.cache = [];
-    // 49e — the fire engine's stores start empty (one pending-effect slot
-    // per roster unit, synced like `encounterEffects`; no injected rules).
     this.pendingEncounterEffects = this.team.map(() => []);
     this.injectedEncounterRules = [];
     this.injectedRunRules = [];
-    // H4 — the run-wide player pool starts full; the per-encounter state
-    // (enemyHealth/turnIndex/selectedEncounter) is set when an encounter
-    // actually begins (`beginEncounter`).
+    // The player's pool starts full; the encounter's state is set when one
+    // begins (`beginEncounter`).
     this.playerHealth = HEALTH.playerHealthMax;
     this.enemyHealth = 0;
     this.turnIndex = 0;
     this.encounterMap = null;
-    // 77d2 — the E4→74b construction-fork ladder used to live here (nine
-    // long-lived streams, each append a paid global re-baseline). All
-    // retired: streams derive per-occurrence at their consumer sites.
-    // 47d→63c — the ownership list seeds from the character def; an explicit
-    // `config.daemon` override (incl. null = daemon-less) still wins — the
-    // kickoff precedence fork, which keeps the fuzz control/fixed arms
-    // meaningful. Character daemon ids are parse-validated, but resolve loud.
+    // The character's daemon, unless `config.daemon` is set (`null` for
+    // none), which keeps the fuzz's control and fixed arms what they say.
+    // The character's daemon id was checked at parse; a miss still throws.
     this.daemons =
       config?.daemon !== undefined
         ? config.daemon === null
@@ -970,17 +890,12 @@ export class Run {
           : [config.daemon]
         : [this.resolveCharacterDaemon()];
     this.turnGrants = disabledTurnGrants();
-    // (49d's finality toggle, 65d's forced-draw dial and X1/48f's difficulty
-    // lever resolve with the other inputs at the constructor head.)
-    // 68b — the grant seam, applied LAST (every store it appends to
-    // exists). Daemon/packet grants draw nothing; a unit grant levels off
-    // the 'team' occurrence stream — construction-scoped, so an inert
-    // grant leaves the run byte-identical and no grant touches any other
-    // stream (structural under 77d2's keyed derivation).
+    // The grants go last, once every store they add to exists. A daemon or
+    // packet grant draws nothing; a unit grant draws its level off the
+    // `'team'` stream after the roster, so no grant moves another stream.
     for (const id of config?.grants ?? []) this.applyGrant(id, teamRng);
-    // S2 — the run begins at the virtual pre-root position (no node entered
-    // yet); the root is the sole frontier, so it's selected as the first
-    // encounter like any other node.
+    // The run begins at the pre-root position, with no node entered; the
+    // root is the only frontier node, chosen like any other.
     this.currentNodeId = PRE_ROOT_NODE_ID;
     this.visitedNodes = new Set<number>();
     this.subscribe();
@@ -988,26 +903,26 @@ export class Run {
   }
 
   /**
-   * 77d2 — one occurrence's stream: `deriveRng(streamRoot, key, ...ids)`.
-   * The ids are the occurrence's STABLE identifiers per the registry's
-   * per-key signature (src/core/rngStreams.ts) — never a draw position.
-   * Every call returns a FRESH stream at position 0; an occurrence is
-   * atomic (one synchronous resolution), so no stream state is ever
-   * serialized — resume re-derives from `streamRoot` + the ids.
+   * One occurrence's stream: `deriveRng(streamRoot, key, ...ids)`. The ids
+   * are the occurrence's stable identifiers, as the key's entry in
+   * `src/core/rngStreams.ts` gives them, never a draw position. Each call
+   * returns a fresh stream; an occurrence resolves in one synchronous step,
+   * so no stream state is saved, and a resumed run derives each stream
+   * again from the root and the ids.
    */
   private streamRng(key: RngStreamKey, ...ids: readonly number[]): RNG {
     return deriveRng(this.streamRoot, key, ...ids);
   }
 
   /**
-   * 68b — apply one construction grant (`RunConfig.grants`): resolve the id
-   * by catalog probe — daemon, then packet, then unit archetype — and add it
-   * through the same stores the real acquisition seams use. Direct pushes
-   * rather than `addDaemon`/`addPacket` (their `cache:changed` emits mean
-   * nothing pre-subscribe, and the constructor pattern is direct init);
-   * `appendRosterUnit` IS used — it's the parallel-structure chokepoint.
-   * A full cache and an unknown id both throw: loud beats a silently
-   * missing arm in a paired batch.
+   * Apply one construction grant (`RunConfig.grants`): find the id in the
+   * catalogs, daemon, then packet, then unit archetype, and add it to the
+   * store a real acquisition uses. Daemons and packets are pushed directly
+   * rather than through `addDaemon` and `addPacket`, whose events mean
+   * nothing while the run is being built; a unit goes through
+   * `appendRosterUnit`, which keeps the parallel lists in step. A full cache
+   * and an unknown id both throw, since a silently missing arm would spoil
+   * a paired batch.
    */
   private applyGrant(id: string, unitLevelRng: RNG): void {
     const daemon = daemonById(id);
@@ -1029,9 +944,8 @@ export class Run {
     throw new Error(`Run: grant id '${id}' is not a daemon, packet, or unit archetype`);
   }
 
-  /** 63c — resolve the character's starting daemon from the catalog. Parse
-   *  time already validated the id; a miss here means the catalogs drifted
-   *  after load, which deserves a loud throw (the daemonIds discipline). */
+  /** The character's starting daemon from the catalog. The parse checked
+   *  the id, so a miss means the catalogs changed after load, and throws. */
   private resolveCharacterDaemon(): DaemonConfig {
     const daemon = daemonById(this.character.daemon);
     if (daemon === undefined) {
@@ -1042,22 +956,19 @@ export class Run {
     return daemon;
   }
 
-  /** 63c — the character-governed draft pools, derived fresh per roll
-   *  (derive-don't-cache; the empty-blacklist fast path returns the shared
-   *  table). Both offer sites (recruit + port stock) draw through this, so
-   *  the port inherits the character's pools by construction (the spec's
-   *  ports-follow-the-same-mechanics lock). */
+  /** The character's draft pools, derived at each roll (an empty blacklist
+   *  returns the shared table). The recruit offer and the port stock both
+   *  draw through it, so a port follows the character's pools as a recruit
+   *  does. */
   private draftPools(): Readonly<Record<UnitRarity, readonly Archetype[]>> {
     return draftPoolsFor(this.character.blacklist);
   }
 
-  /** 64b — the tier weights as the run-stat fold sees them (Patrician's
-   *  Seal's mult-0 on common lands here). Derived per roll
-   *  (derive-don't-cache); the no-modifier fold returns the base block by
-   *  identity, so the unmodified path hands back the raw config record —
-   *  values AND allocation untouched. BOTH offer sites read this: the Seal
-   *  governs drafting everywhere (spec: ports follow the same mechanics),
-   *  unlike 64a's recruit-only offer size. */
+  /** The rarity weights as the run-stat fold gives them (Patrician's Seal's
+   *  ×0 on common lands here), derived at each roll. A fold with no
+   *  modifier returns its base block itself, so the path with none hands
+   *  back the config's own record. Both the recruit offer and the port stock
+   *  read it, where the offer's size is the recruit offer's alone. */
   private effectiveRarityWeights(): Readonly<Record<UnitRarity, number>> {
     const stats = this.effectiveRunStats();
     if (stats === RUN_STAT_BASES) return RECRUITMENT.rarityWeights;
@@ -1071,27 +982,26 @@ export class Run {
 
   private subscribe(): void {
     this.subscriptions.push(
-      // H4: a `battle:ended` ends a TURN, not the node. `winner` doesn't route
-      // the outcome — the pools do (charged by the chip rule off
-      // `survivorPower` / `fallenPower` + `reason`, §91a2) — but H4b surfaces
-      // it on the post-turn screen, so it's passed through.
+      // A `battle:ended` ends a turn, not the node. `winner` does not route
+      // the outcome, the pools do (charged by the chip rule off
+      // `survivorPower`, `fallenPower` and `reason`), but `turn:resolved`
+      // carries it, so it is passed through.
       this.bus.on(
         'battle:ended',
         ({ winner, reason, xpAwards, survivorPower, fallenPower, tallies, campKills }) =>
           this.handleTurnEnded(winner, xpAwards, survivorPower, tallies, campKills, reason, fallenPower),
       ),
-      // 94d — the fallen ledger appends off every combatant death during a
-      // battle (the identity rides the event; the unit is already gone).
+      // The fallen ledger takes every combatant's death in a battle; the
+      // event carries who it was, since the unit is already gone.
       this.bus.on('unit:died', (death) => this.recordFallen(death)),
     );
   }
 
   /**
-   * 94d — append one ledger row for a combatant that fell in the live
-   * battle. The exclusions mirror what the casualty rule books
-   * (`World.recordFallen`): neutrals charge nobody and are not "ours" or
-   * "theirs"; a summon is a free body (91e2). Outside a battle (a stray
-   * fake, a scenery reap on a non-battle bus) nothing is recorded.
+   * Append one ledger row for a combatant that fell in the live battle. The
+   * exclusions follow what the casualty rule books (`World.recordFallen`):
+   * a neutral charges nobody, and a summon is booked at 0, a body its side
+   * did not pay for. Outside a battle nothing is recorded.
    */
   private recordFallen(death: GameEvents['unit:died']): void {
     if (this.phase !== 'battle' || this.selectedEncounter === null) return;
@@ -1112,10 +1022,10 @@ export class Run {
   }
 
   /**
-   * 94d — the ledger rows for the encounter instance being fought (this
-   * sector + node), and the subset for `turn` (1-based). Copies, in death
-   * order. Called at the turn boundary AFTER `turnIndex` advanced, so the
-   * completed turn's number IS `turnIndex`.
+   * The ledger rows of the encounter being fought (this sector and node),
+   * and those of `turn` (1-based): copies, in death order. Called at the
+   * turn boundary after `turnIndex` has advanced, so the completed turn's
+   * number is `turnIndex`.
    */
   fallenForTurn(turn: number): GameEvents['turn:resolved']['fallen'] {
     const encounter = this.fallenLedger

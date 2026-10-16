@@ -192,9 +192,21 @@ The cut, signed 2026-10-16 with the kickoff's five calls (WORKLOG §123,
 - ☑ **123k — F-2's test** (`none`). It failed first on
   `pauseAtTurnGates` alone; `fromJSON` sets it; corpus 0 of 30, fuzz
   diff PASS.
-- ◐ **123l — the re-skim** (`stop`). The one-condition registry kept as
-  a trial (−9 lines); two fix-ups; seven rows (122o's six sim leads and
-  the `team` loss cause) put for the user's sign.
+- ☑ **123l — the re-skim** (read by the user). The one-condition
+  registry kept as a trial (−9 lines); two fix-ups; seven rows signed,
+  six as deletions below, L-1 waiting on its question (WORKLOG §123,
+  123l).
+  - ☑ **L-3 — `sidestepWhenBlocked`** (`none`). Corpus 0 of 30, fuzz
+    diff PASS; `src` −7.
+  - ☐ **L-6 — `GenStats.connected`**, with the mapgen tool's line
+    (`none`). Proof: sim.
+  - ☐ **L-7 — the `team` loss cause** (`none`). Proof: sim.
+  - ☐ **L-4 — `GeneratedTerrain`'s three tile arrays** (`none`). Proof:
+    sim.
+  - ☐ **L-5 — the generator's three spawn checks** (`none`). Proof:
+    sim.
+  - ☐ **L-2 — `advance`'s leap branch; `maxCells` to `leapLanding`**
+    (`none`). Proof: sim; `reach-diff` over the six.
 - ☐ **123m — the comment pass** (`batch`, per batch). The 19 files as
   122o ran it; the tests wait for §126.
 - ☐ **123n — `Run.ts` read again for B-15** (`stop`). A split comes back

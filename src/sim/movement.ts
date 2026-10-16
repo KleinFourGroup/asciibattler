@@ -199,11 +199,6 @@ export interface MovementIntent {
    * target is abstained on. Default false.
    */
   readonly bestEffort?: boolean;
-  /**
-   * Whether a one-cell step may sidestep an occupied forward cell. Default
-   * true; no shipped consumer sets it.
-   */
-  readonly sidestepWhenBlocked?: boolean;
 }
 
 /**
@@ -415,9 +410,8 @@ type StepOutcome =
  *   leaves within `SIM.waitForVacancyOwnSteps` of the mover's own steps,
  *   wait for it in lane; else if it is a friendly ranged unit to swap
  *   through (`roleEligibleBlocker`), swap or queue; else sidestep toward
- *   `approachToward`, unless `sidestepWhenBlocked` is false. The wait
- *   applies either way, since it is queueing. A body not leaving, or a
- *   claim, has no ETA to wait on.
+ *   `approachToward`. A body not leaving, or a claim, has no ETA to wait
+ *   on.
  * - Above 1, a leap: walk the route from `path[1]` until a cell is
  *   occupied or the cap or the goal is reached, and land on the furthest
  *   cell reached. No sidestep.
@@ -482,7 +476,6 @@ function stepAlongRoute(
         }
         return 'blocked';
       }
-      if (intent.sidestepWhenBlocked === false) return 'blocked';
       const side = sidestep(from, intent.approachToward, world, ctx.occupied);
       return side === null
         ? 'blocked'

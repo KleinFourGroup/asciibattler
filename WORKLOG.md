@@ -7174,3 +7174,22 @@ Signing the others, plus the calls you made!" So:
   `battleSetup`, which reads none of them, and are not saved; the two
   test lines that read `.fires` (`terrainGen.test.ts:215-216`) can count
   fire tiles on the grid. Their sign follows here.
+
+**Signed** (the user, 2026-10-16): "Signing all three, then, including
+your b lean for L-2!" So L-2 (with `maxCells` made `leapLanding`'s own
+argument and dropped from the intent), L-3 and L-4 are deletions beside
+L-5 to L-7. L-1 still waits on its question. The six land as steps
+before 123m, each read `none`, each its own commit, proven by the corpus,
+the fuzz diff and a plant at the site on the base; one `reach-diff` of
+the main suite, recorded at `a5cf0104` (`output/reach-123l/`), covers the
+batch. 123l is ☑.
+
+### 123l's rows, built (2026-10-16, session b9cfc3b3)
+
+- **L-3 — `sidestepWhenBlocked`.** The field and its doc, its one read
+  in `stepAlongRoute`, and the step doc's clause on it. Proof: typecheck
+  clean; the corpus, 0 of 30; the fuzz diff against `a5cf0104`, PASS on
+  both shapes; the plant at the site on `a5cf0104`, the check negated
+  (`movement.ts:485`), corpus CAUGHT 30 of 30, so the corpus runs the
+  sidestep's line. `src` −7. PATHING's mention is a dated record and
+  stays.

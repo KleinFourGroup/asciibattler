@@ -6421,3 +6421,109 @@ Readings by the tool's clock (UTC). The phase's six sessions: 6677fa11
 and this close), about 2.04M in all. The close: 266,081 at 01:07 on
 2026-10-16, on batch 8's commit; **345,515** at 01:47, with everything
 above written and before the commit.
+
+## Phase 123 — run
+
+### The kickoff: the audit, and the cut put to the user (2026-10-16, session 854d0fbd)
+
+Pre-flight at `7336e42`, the tree clean; the hook ran typecheck and the
+suite on that commit. Nothing was built. Each finding below is from a
+search or a read of the named lines; no file was read whole. The session
+was started by the phase's driver session (the trial in
+`scratch/123-driver-trial/`) and works with the user as usual.
+
+**The size.** `src/run` holds 19 files of 9,490 lines besides 22
+co-located tests. `comment-length src/run` over the 19: 4,742 code
+lines, 4,320 comment lines, 36,256 comment words. `Run.ts` is 4,888
+lines, 2,393 of them comment (20,301 words). `comment-codes`: 1,341 step
+codes in `src/run`, 316 of them in tests; the ceiling is 4,169.
+
+**The signed rows at HEAD.**
+
+- A-36, the run's trigger registry: `RunTriggerContextMap`
+  (`Run.ts:791`); the `runTriggers` field (:926), set in the constructor
+  (:1220) and in `fromJSON` (:4521, :4622); `registerTrigger` and
+  `fireTrigger` (:4251, :4258); the three fire sites (`encounterStart`
+  :2196, `turnStart` :2406, `deploy` :3063); the save's guard (:4392);
+  the two tests (`Run.test.ts:2558`, :2573). One more than the row
+  lists: `TriggerDispatcher.size` (`src/sim/triggers.ts:82`), whose only
+  reader is that guard. `TriggerDispatcher` stays, as `World`'s.
+- A-39, the board's line: `Run.ts:2177-2185`, gated on `typeof window`.
+- A-40: `handleDismissPromotion` (`Run.ts:3982`), the leg at :4000-4002.
+  Of the tests that dismiss a promotion, one builds by its look the state
+  that reaches the leg: `Run.test.ts:948` puts the run on the terminal
+  node with `phase = 'battle'` and never enters it, so `encounterMap` is
+  null and the node is not a rest. Its assertion is that the terminal win
+  exits to the sector gate. Not yet shown by a plant.
+- A-25, the run's share: `NodeMap.dump` (`NodeMap.ts:928`),
+  `empowerAvailability` (`empower.ts:48`) and `redrawAvailability`
+  (`redraw.ts:36`), each with its result type. Besides `dump`'s own test,
+  `NodeMap.test.ts:579` reads it to tell two maps apart.
+- A-26, the list taken again at HEAD by `refs --all src/run`: 29
+  declarations that only their own file reads (120d had 29),
+  `RunTriggerContextMap` among them; 19 more that only tests read, which
+  A-27 keeps.
+- A-22, A-28 and A-29 name nothing in `src/run`. A-33's
+  `levelCapMigration.test.ts` is in `src/run`, and ROADMAP gives it to
+  §126.
+
+**List B at HEAD.**
+
+- B-04: `chipRule.ts` builds the turn's rules from both switches (:54-55)
+  and compares `chipMode` at five places (:101, :113, :177, :216, :238).
+  Outside `src/run` the switches reach `config/health.json` and its
+  loader; three tooltips that take the mode as an argument
+  (`chipLabels.ts`, from `PreTurnScreen.ts:672` and `UnitCard.ts:287`,
+  :592); in `tests/fuzz` the harness, the sweep's registry
+  (`commands/run.ts`), `balanceSweep.ts`, `reporters.ts`, and three tests
+  with `harnessChipMode.test.ts` among them; the integration tests
+  `determinism` and `encounter-loop`; and DESIGN "The encounter loop".
+- B-06: the five loops where the row put them (`Run.ts:4761`,
+  `battleSetup.ts:99`, `NodeMap.ts:898`, `wave.ts:384`,
+  `proceduralMap.ts:548`); `Run.ts:4758` still says "kept local".
+- B-10: the event's draw and its outcome's draw (`Run.ts:1665`, :1707),
+  the heal to the cap (:1740, :2894), the swap slot's check (:2039,
+  :3681), and the command numbers checked by hand, `Number.isInteger` on
+  11 lines, as the row has it.
+- B-15: after the comment pass.
+
+**F-2 (TODO T-97).** `pauseAtTurnGates` (`Run.ts:1049`) is the property
+the census found missing on a loaded run (`scratch/120f/fromjson-keys.ts`,
+not run again here). Every reader tests it for truth, and the game, the
+journal's replay, the chaos driver and the fuzz walkers set it after a
+load where they need it on. A test that a loaded run has a constructed
+run's properties fails at HEAD, which is its known answer.
+
+**The leads.**
+
+- `encounterFirst` (`selection.ts:110`), from 121h: 12 lines with one
+  caller (`selectEncounter`, :170), named for a strategy whose
+  alternative went at 121d. Its error message names it (:115).
+- `EncounterState.turn` (`sequencer.ts:82`), new here, from 120d's member
+  walk (`scratch/120d/members.json`): "reserved for a future
+  `turnAtOrAbove` condition", written by the game once (`Run.ts:2949`
+  builds the state), by the encounter editor once, and by 16 test lines
+  (120d counted 18 writes), and read nowhere. The union and registry beside it (:84-95) hold one
+  condition and call themselves the seam for more.
+- The rest of 120d's write-only members in `src/run`:
+  `RunTriggerContextMap`'s three go with A-36; `FallenRecord.tick` and
+  `LastTurn`'s two fields are in the save, and `PoolLossEvent.phase` in a
+  bus event, so taking one out changes a stored or emitted shape;
+  `RejoinPair.branchHop` is in the map metrics' output. Not proposed.
+- `Run.ts`'s hand-cap comment near `effectiveDrawAmount` (:2643), from
+  121j: the comment pass.
+- 122o's seven deletion leads (TODO "Not yet placed"), all in sim.
+  `World.shove` with `unit:shoved` is signed **keep** for Round 9 (A-36),
+  so six are open.
+- The control built into `comment-strip`, proposed at §122's close
+  ("The close of §122").
+
+**The comment pass's cost.** At 122o's 74 tokens a line the 9,490 lines
+are about 700k tokens, `Run.ts` alone about 360k; at its dearest batch's
+120, about 1.14M.
+
+**The cut, as put.** In the session's final message of this turn, with
+its calls; the user's answer and the cut as signed follow here.
+
+Readings by the tool's clock (UTC): 97,392 at 13:50 after the
+orientation, 216,767 at 13:59 after the audit.

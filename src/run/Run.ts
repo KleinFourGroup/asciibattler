@@ -236,6 +236,12 @@ function pickWeighted<T>(items: readonly T[], weightOf: (item: T) => number, rng
   return items[items.length - 1]!;
 }
 
+/** Whether a command's number is an index into a list of `length`: given,
+ *  an integer, and in `[0, length)`. */
+function isIndex(i: number | undefined, length: number): i is number {
+  return i !== undefined && Number.isInteger(i) && i >= 0 && i < length;
+}
+
 export interface BattleEncounter {
   readonly worldSeed: number;
   /**
@@ -1664,9 +1670,7 @@ export class Run {
     if (this.phase !== 'event' || this.activeEvent === null) return;
     const page = this.currentEventPage();
     if (page === null) return;
-    if (!Number.isInteger(choiceIndex) || choiceIndex < 0 || choiceIndex >= page.choices.length) {
-      return;
-    }
+    if (!isIndex(choiceIndex, page.choices.length)) return;
     const choice = page.choices[choiceIndex]!;
     if (choice.condition !== undefined && !this.evaluateEventCondition(choice.condition)) return;
     // 77d2 — one choice resolution = one atomic occurrence: the outcome
@@ -2062,9 +2066,7 @@ export class Run {
    */
   private handlePayToRemoveUnit(rosterIndex: number): void {
     if (this.phase !== 'port') return;
-    if (!Number.isInteger(rosterIndex) || rosterIndex < 0 || rosterIndex >= this.team.length) {
-      return;
-    }
+    if (!isIndex(rosterIndex, this.team.length)) return;
     if (this.team.length <= 1) return;
     if (!this.spendBits(PRICES.unitRemovalPrice)) return;
     this.removeRosterUnit(rosterIndex);
@@ -2644,8 +2646,7 @@ export class Run {
    * wherever it landed (the reward phase today, ports at §50).
    */
   private handleDiscardPacket(cacheIndex: number): void {
-    if (!Number.isInteger(cacheIndex)) return;
-    if (cacheIndex < 0 || cacheIndex >= this.cache.length) return;
+    if (!isIndex(cacheIndex, this.cache.length)) return;
     this.cache.splice(cacheIndex, 1);
     this.emitCacheChanged();
   }
@@ -2676,7 +2677,7 @@ export class Run {
     const context: UseContext | null =
       this.phase === 'turn-intro' ? 'preTurn' : this.phase === 'map' ? 'outOfBattle' : null;
     if (context === null) return;
-    if (!Number.isInteger(cacheIndex) || cacheIndex < 0 || cacheIndex >= this.cache.length) return;
+    if (!isIndex(cacheIndex, this.cache.length)) return;
     // The cache holds catalog-validated ids (addPacket/fromJSON both hard-
     // reject unknowns), so a miss here is unreachable — guarded anyway.
     const packet = packetById(this.cache[cacheIndex]!);
@@ -2691,25 +2692,11 @@ export class Run {
     let targetHandIndex: number | null = null;
     if (packet.target === 'unit') {
       if (context === 'preTurn') {
-        if (
-          handIndex === undefined ||
-          !Number.isInteger(handIndex) ||
-          handIndex < 0 ||
-          handIndex >= this.hand.length
-        ) {
-          return;
-        }
+        if (!isIndex(handIndex, this.hand.length)) return;
         targetSlot = this.hand[handIndex]!;
         targetHandIndex = handIndex;
       } else {
-        if (
-          rosterIndex === undefined ||
-          !Number.isInteger(rosterIndex) ||
-          rosterIndex < 0 ||
-          rosterIndex >= this.team.length
-        ) {
-          return;
-        }
+        if (!isIndex(rosterIndex, this.team.length)) return;
         targetSlot = rosterIndex;
       }
     }
@@ -4085,7 +4072,7 @@ export class Run {
         `removeRosterUnit: only legal at the map, a port or an event (phase '${this.phase}')`,
       );
     }
-    if (!Number.isInteger(index) || index < 0 || index >= this.team.length) {
+    if (!isIndex(index, this.team.length)) {
       throw new Error(
         `removeRosterUnit: index ${index} out of range (roster size ${this.team.length})`,
       );

@@ -6983,3 +6983,26 @@ unreferenced commit of the tree (`9e448c35`), `draw < acc` negated in
 −5 (+18 −23). (3) No new parameter but `weightOf`, as the bar has it.
 (4) The draw written twice → once. **Kept.** The step-code ceiling
 4,144 → 4,143.
+
+**(b) Built and reverted.** `healedPool(amount)` with a one-line doc,
+read by both heal sites and by `restedPool`, whose body shrank to one
+call. Typecheck clean and the corpus 0 of 30, but `src` +2 (+10 −8): the
+two heal sites were already one line each, so the function only adds.
+Under the bar on lines; reverted. **A no-op.**
+
+**(d) Built.** `isIndex(i, length)` beside `pickWeighted`, a type guard:
+given, an integer, in `[0, length)`. Seven of the nine sites call it:
+the event choice, the removal's roster index, the discard (its two lines
+now one), the packet's cache index, its hand and roster targets (eight
+lines each → one) and `removeRosterUnit`'s throw. The two swap slots are
+part (c). The sell's integer test and `spendBits`' stay, as step zero
+found. Against the bar: (1) typecheck clean; the corpus, 0 of 30; the
+fuzz diff against `72b8a2e1`, PASS on both shapes; two plants in
+`isIndex`, each in a worktree of an unreferenced commit of the tree
+(`1ca82770`), where unplanted the corpus was 0 of 30 and the suite
+failed only `tests/licences.test.ts`, which the tool set aside:
+`i >= 0` → `i > 0`, corpus CAUGHT 28 of 30, the suite CAUGHT by not
+returning in 900 s (stopped); `i < length` → `i <= length`, the suite
+CAUGHT, 2 of 258 files failing. (2) `src` −13 (+13 −26). (3) No new
+parameter. (4) The index test written out at seven sites → one
+function. **Kept.**

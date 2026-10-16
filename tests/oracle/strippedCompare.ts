@@ -11,12 +11,17 @@
  * `npm run oracle -- comment-strip HEAD`. A file of a kind comments.ts does
  * not read (Markdown, JSON) is held byte for byte, and a file added or
  * removed is a difference.
+ *
+ * Every run carries its own failing control (`controlStripped`): each file
+ * that passed as a comment edit is compared again with one code edit made
+ * in its text in memory, and must be named.
  */
 
 import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { splitSource, type CodePiece } from './comments';
+import { applyEdit, describeEdit, edits } from './plant';
 import { REPO_ROOT } from './stepCodes';
 
 /** path (repo-relative, forward slashes) → the file's text. */
@@ -109,4 +114,41 @@ export function compareStripped(before: Tree, after: Tree): StrippedCompare {
     if (detail !== null) differences.push({ file, what: 'code', detail });
   }
   return { compared: files.length, changed, differences };
+}
+
+export interface StrippedControl {
+  readonly file: string;
+  /** The edit made, for the report. */
+  readonly planted: string;
+  /** Whether the compare named the file with the edit made. `false` is a
+   *  compare that cannot see the file's code where the edit went. */
+  readonly caught: boolean;
+}
+
+// A line every reader holds as code: a statement to TypeScript, and text
+// outside a comment to the GLSL and CSS reader.
+const APPENDED = '\n0;\n';
+
+/** `text` with one code edit made: the middle one of the edits plant.ts
+ *  finds through TypeScript's parser, or a line of code appended to a file
+ *  it finds none in (a file of types, a shader, a stylesheet). */
+export function plantedText(file: string, text: string): { readonly text: string; readonly planted: string } {
+  const found = /\.(?:ts|mts|cts)$/.test(file) ? edits(file, text) : [];
+  const edit = found[Math.floor(found.length / 2)];
+  if (edit === undefined) return { text: text + APPENDED, planted: 'a line of code appended' };
+  return { text: applyEdit(text, edit), planted: `line ${edit.line}, ${describeEdit(edit)}` };
+}
+
+/** Each file `result` passed as a comment edit, compared again with one code
+ *  edit made in its text. A file the compare does not name then is one whose
+ *  code it cannot see, so its pass there shows nothing. */
+export function controlStripped(before: Tree, after: Tree, result: StrippedCompare): StrippedControl[] {
+  const named = new Set(result.differences.map((d) => d.file));
+  return result.changed
+    .filter((file) => !named.has(file))
+    .map((file) => {
+      const planted = plantedText(file, after.get(file)!);
+      const again = compareStripped(new Map([[file, before.get(file)!]]), new Map([[file, planted.text]]));
+      return { file, planted: planted.planted, caught: again.differences.length > 0 };
+    });
 }

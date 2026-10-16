@@ -165,7 +165,7 @@ sim; the port trades by tests alone (the oracle map). Risk: medium.
 The cut, signed 2026-10-16 with the kickoff's five calls (WORKLOG §123,
 "The kickoff").
 
-- ☐ **123a — `comment-strip`'s control, built in** (`none`). A code edit
+- ☑ **123a — `comment-strip`'s control, built in** (`none`). A code edit
   planted in memory in each comment-only file; the run fails when the
   compare misses it.
 - ☐ **123b — A-36, the run's trigger registry** (`none`). With its two

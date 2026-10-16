@@ -23,8 +23,10 @@
  * the proof is that nothing else is in the list.
  *
  * `comment-strip` exits 1 when any file's code differs from the ref's, and 0
- * when the files that changed did so in their comments only. Roots default
- * to `src`.
+ * when the files that changed did so in their comments only. Each of those is
+ * compared again with one code edit made in memory, and the run exits 1 too
+ * when the compare misses one, so every run carries its failing control.
+ * Roots default to `src`.
  *
  * `comment-codes --record` writes the ceiling the count is held to
  * (tests/comment-codes-baseline.json). It refuses when the total would rise.
@@ -84,7 +86,7 @@ import {
 } from './stepCodes';
 import { PROOFS, READING_DIR, countAt, countBy, functionsAt, lineMap, loadReading, loadReadings, lost, parseAt, readingPath, record, union, type LineMap } from './reach';
 import { READER_KINDS, computedReads, count, exportsOf, membersOf, openProject, schemaKeys, standing, type Named } from './refs';
-import { compareStripped, readRef, readWorkingTree } from './strippedCompare';
+import { compareStripped, controlStripped, readRef, readWorkingTree } from './strippedCompare';
 
 const [command, ...rest] = process.argv.slice(2);
 const flags = new Set(rest.filter((arg) => arg.startsWith('--')));
@@ -103,11 +105,19 @@ function table(head: string[], rows: (string | number)[][]): void {
 }
 
 function commentStrip(ref: string, roots: string[]): number {
-  const result = compareStripped(readRef(ref, roots), readWorkingTree(roots));
+  const [before, after] = [readRef(ref, roots), readWorkingTree(roots)];
+  const result = compareStripped(before, after);
+  const controls = controlStripped(before, after, result);
+  const missed = controls.filter((c) => !c.caught);
   console.log(`oracle: ${result.compared} files under ${roots.join(', ')} held against ${ref}; ${result.changed.length} differ in their text`);
+  if (controls.length > 0) {
+    console.log(`oracle: the control, one code edit made in memory in each of the ${controls.length} that changed in comments only; the compare named ${controls.length - missed.length}:`);
+    for (const c of controls) console.log(`  ${c.caught ? 'named ' : 'MISSED'}  ${c.file}: ${c.planted}`);
+  }
+  if (missed.length > 0) console.log(`oracle: the compare cannot see the code of ${missed.length}, so its pass there shows nothing`);
   if (result.differences.length === 0) {
-    if (result.changed.length > 0) console.log('oracle: comments only. The code of every changed file is piece for piece what it was.');
-    return 0;
+    if (result.changed.length > 0 && missed.length === 0) console.log('oracle: comments only. The code of every changed file is piece for piece what it was.');
+    return missed.length === 0 ? 0 : 1;
   }
   console.log(`oracle: ${result.differences.length} of them differ in more than comments:`);
   for (const d of result.differences) console.log(`  ${d.file}: ${d.what === 'code' ? '' : `${d.what}, `}${d.detail}`);

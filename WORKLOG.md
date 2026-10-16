@@ -6549,3 +6549,33 @@ abandoned it. I think you're clear to remove that". So:
 
 The cut as signed is in ROADMAP §123. Reading: 254,365 at 14:29, before
 the commit.
+
+### 123a — `comment-strip`'s control, built in (2026-10-16, session 854d0fbd)
+
+`strippedCompare.ts` gains `controlStripped`: each file the compare
+passed as a comment edit is compared again with one code edit made in its
+text in memory, and `comment-strip` exits 1 when the compare does not
+name one. The edit is the middle one of those `plant.ts` finds through
+TypeScript's parser; a file it finds none in (a file of types, a shader,
+a stylesheet) takes a line of code appended (`0;`, code to both
+readers). The report lists each file with its edit and whether it was
+named. The CLI's header, TESTING.md "A comment-only change" and
+ARCHITECTURE's `oracle/` line say so. One edit a file: a compare blind
+in one part of a file and not another is caught only where the edit
+lands.
+
+Proof:
+
+- the test (`comments.test.ts`, "carries its own control"): four
+  comment-only files of four kinds named, a file with a code change given
+  no control, and the planted bad case missed, a stylesheet whose last
+  comment is left open, which swallows the appended line so that the
+  compare passes the file whatever follows. The expected lines were
+  written before the run and matched;
+- live, `comment-strip cdaf49bb~1 src`, over batch 8's four files: four
+  edits made, four named, exit 0;
+- not run live: the CLI's exit 1 on a missed file, which the test reaches
+  only through `controlStripped`.
+
+The smoke does not fire: `tests/oracle` is not on the hook's list.
+Reading: 297,177 at 14:35, before the commit.

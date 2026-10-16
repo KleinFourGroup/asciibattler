@@ -85,7 +85,11 @@ If the renderer ever grows pure-logic helpers (e.g. atlas UV computation), those
   tool reads (`i18n-ok`, `@ts-expect-error`, an `eslint-disable`, a
   coverage hint) counts as code. It proves the program's tokens are the
   same; it does not read the comments, so whether a rewritten comment is
-  still true is a reader's question.
+  still true is a reader's question. Every run carries its failing
+  control: each file that passed is compared again with one code edit
+  made in memory (`plant.ts`'s middle edit, or a line appended to a file
+  it finds none in), and a file the compare doesn't name then fails the
+  run, so a comment pass needs no worktree.
 - **The step-code ceiling:** `tests/comment-codes.test.ts` holds the count
   of step codes in the comments under `src` to
   `tests/comment-codes-baseline.json`, file by file, so it can only fall.

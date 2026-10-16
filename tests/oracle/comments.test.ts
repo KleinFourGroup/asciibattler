@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { measure, splitCStyle, splitSource, splitTypeScript } from './comments';
 import { ceilingDrift, ceilingOf, codesInSource, stepCodes } from './stepCodes';
-import { compareStripped, firstCodeDifference } from './strippedCompare';
+import { compareStripped, controlStripped, firstCodeDifference } from './strippedCompare';
 
 // The comment instruments. Each reader is held against an answer written out
 // by hand, and the compare against edits it must pass (comments only) and
@@ -139,6 +139,37 @@ describe('the compare with the comments out', () => {
     ]);
     // A checkout with CRLF is the same file.
     expect(compareStripped(before, new Map(before).set('src/a.ts', 'const a = 1; // one\r\n')).changed).toEqual([]);
+  });
+
+  it('carries its own control: each comment-only file is compared again with a code edit made, and one whose code it cannot see is missed', () => {
+    const before = new Map([
+      ['src/a.ts', 'const a = 1; // one\nif (a > 0) b();\n'],
+      ['src/b.ts', 'const b = 2;\n'],
+      ['src/f.glsl', 'void main() { } // one\n'],
+      ['src/open.css', '.a { color: red; }\n/* a comment left open'],
+      ['src/s.css', '.a { color: red; } /* one */\n'],
+      ['src/types.ts', '// the shape\nexport interface T { n: number }\n'],
+    ]);
+    const after = new Map(before)
+      .set('src/a.ts', 'const a = 1; // reworded\nif (a > 0) b();\n')
+      .set('src/b.ts', 'const b = 3;\n')
+      .set('src/f.glsl', 'void main() { } // reworded\n')
+      .set('src/open.css', '.a { color: red; }\n/* a comment left open, reworded')
+      .set('src/s.css', '.a { color: red; } /* reworded */\n')
+      .set('src/types.ts', '// the shape, reworded\nexport interface T { n: number }\n');
+    const result = compareStripped(before, after);
+    expect(result.differences.map((d) => d.file)).toEqual(['src/b.ts']);
+    // The code edit is the middle one of the five the parser finds in a.ts;
+    // a file with none takes a line appended. The planted bad case is the
+    // open comment, which swallows the appended line, so the compare passes
+    // the file whatever its code past the comment's start.
+    expect(controlStripped(before, after, result).map((c) => `${c.file}: ${c.caught ? 'named' : 'missed'}, ${c.planted}`)).toEqual([
+      'src/a.ts: named, line 2, boundary >  →  >=',
+      'src/f.glsl: named, a line of code appended',
+      'src/open.css: missed, a line of code appended',
+      'src/s.css: named, a line of code appended',
+      'src/types.ts: named, a line of code appended',
+    ]);
   });
 });
 

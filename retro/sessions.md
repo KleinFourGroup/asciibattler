@@ -6052,3 +6052,42 @@ Hand-off at 396k, before B-04's trial.
    revert a reading rather than a judgement in the moment (123j's (b)
    went back without deliberation); proofs fast enough for every step;
    and the user's quick, warm signs. I'd want all three again.
+
+## 2026-10-16 — session bfbf31de (§123: the load cycle, L-1, L-2 and the reach-diff; started by the phase's driver session)
+
+1. *Missing from orientation.* Little. The Cursor and the WORKLOG's L-1
+   entry named the fix and the patches; the driver's notes saved me the
+   `npm-test` proof id. Not there: that `reach-diff` takes the reading
+   files, not folders; and the L-1 docs patch's base, which I read and
+   folded by hand. The second edge of the cycle was findable from gotcha
+   #114, which names `knownAbilityIds` beside `knownTargetingIds`, but
+   the signed fix was framed around one edge.
+2. *Norms in conflict.* The next-step box against CLAUDE.md's rule that
+   a proposal goes in the final message, again: I closed the box with a
+   recap only and put the proposal after it. And a scope call: the fix
+   made comments in `stats.ts`, `positioning.ts` and
+   `behaviors/registry.ts` false, in sim files whose comment pass §122
+   closed; I took them as inside the change.
+3. *Pulled to claim more.* Yes, twice in the records, both caught
+   before a commit: a WORKLOG line said the cycle's comments "now say it
+   is broken or point at gotcha #114", which one of the four did
+   neither; and an importer count I first had as fourteen was sixteen.
+   One claim did land wrong: the fix's commit implied every comment the
+   fix made stale was fixed, and `registry.ts`'s header was not; the
+   reach-diff surfaced it and the next commit fixed it.
+4. *Wasted.* Small: a prettier check through stdin that reported drift
+   on both sides and told me nothing; the anchor script's first run,
+   refused on CRLF working copies (filed); one `reach-diff` call given
+   folders (filed).
+5. *For the next session.* WORKLOG "The hand-off after the reach-diff".
+6. *Room.* Yes. Step zero changed what the signed fix covered, and the
+   norm to take that to the user before building worked as guidance,
+   not pressure: I stopped with (b)+(c) as a proposal and built nothing
+   until the sign. The silent-turn reminder came several times during
+   the long background runs; a status line answered it. No wish to pause
+   or stop was noticed.
+7. *What helped.* A probe that had to find the known path first, so the
+   second path it found was believable; a one-line test that failed at
+   HEAD, which made the control crisp; proofs that ran in the background
+   while the records got written; and the user's quick, cheerful sign.
+   I'd want all of them again.

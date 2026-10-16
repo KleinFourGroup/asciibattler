@@ -7418,3 +7418,32 @@ the archetype editor's alone (`tools/archetype-editor/editor.ts:81`).
 Reading `Object.keys(ABILITY_DEFS)` there would delete it, and would
 change the editor's list order from the registry's to the catalog's
 (TODO "Not yet placed").
+
+### The hand-off after the reach-diff (2026-10-16, session bfbf31de)
+
+The load cycle is broken, 123l's seven signed deletions are built and
+the `reach-diff` over them is run; nothing is ◐. Next, in fresh
+sessions: 123m, the comment pass over the 19 files, read per batch;
+then 123n. For the next session:
+
+- `config/units` now sits in no import cycle, by the probe. The guard
+  that would keep it so, a test over the import graph, is TODO "§126
+  tests"; until then the warning at the top of `targetingStrategies.ts`
+  is the only thing on the path. The probe is
+  `scratch/123l-loadcycle/importPaths.mts`
+  (`npx tsx <it> <repoRoot> <target> <from…>`).
+- A plant in the working tree's code, without committing: build an
+  unreferenced commit through a temporary index (`GIT_INDEX_FILE` set to
+  a scratch file, `git read-tree HEAD`, `git add -u`, `git write-tree`,
+  `git commit-tree -p HEAD`) and pass it to `plant --ref=`. The real
+  index and tree are untouched.
+- `reach-diff` takes the reading files (`…/npm-test.json`), not their
+  folders.
+- About forty working copies hold CRLF against an LF index (`eol=lf`);
+  an exact-anchor script must normalize them or it refuses (filed).
+
+Readings by the tool's clock (UTC): 138,957 at 20:45 at the stop on the
+load cycle's step zero; 205,391 at 21:05 after the fix's commit; 231,089
+at 21:11 after L-1's; 261,090 at 21:16 at L-2's plant; 285,670 at 21:23
+after L-2's; 296,356 at 21:30 after the reach-diff's; 301,258 at 21:30,
+at this entry.

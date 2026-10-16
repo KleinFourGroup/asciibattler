@@ -219,6 +219,8 @@ The cut, signed 2026-10-16 with the kickoff's five calls (WORKLOG §123,
   "123m — the comment pass: the batches, planned".
   - ◐ **Batch 1 — the run's rules and records** (12 files). Built,
     unread.
+  - ◐ **Batch 2 — the map** (`NodeMap.ts`, `mapMetrics.ts`). Built,
+    unread.
 - ☐ **123n — `Run.ts` read again for B-15** (`stop`). A split comes back
   only with a measure that could pass it.
 

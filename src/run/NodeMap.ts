@@ -1,80 +1,65 @@
 /**
- * Run-level node map: a layered DAG the player traverses one hop at a time.
- * Node kinds: the terminal is a `boss` (G3); `rest` nodes scatter through the
- * middle hops (a non-combat XP grant — see `Run.resolveRest`, G3); `elite` nodes
- * also scatter the middle hops (W2 — an optional, harder fight, selected from
- * the sector's elite encounter pool); `port` nodes scatter there too (50c —
- * the shop dock, ≥1 guaranteed per map; see `Run.handleEnterNode`); `event`
- * nodes are the choose-your-own-adventure stops (74b/74e).
+ * The run's node map: a layered DAG the player crosses one hop at a time.
+ * The terminal is the `boss`. In the middle hops sit `rest` nodes (the pool
+ * heals and every unit banks XP, `Run.resolveRest`), `elite` nodes (an
+ * optional, harder fight from the sector's elite pool), `port` nodes (the
+ * shop, at least one a map unless a dial zeroes them; `Run.handleEnterNode`)
+ * and `event` nodes (the choose-your-own-adventure stops); every other node
+ * is a `battle`.
  *
- * 77e1 — THE BRAID (worklog §77e; replaces the G2 staircase-interval sweep).
- * Lanes (root→boss path objects) are the first-class primitive: hop width =
- * the number of active lanes, and each hop transition applies split/merge
- * ops between ADJACENT lanes. Planarity, full connectivity, and the degree
- * caps are free by construction — a split is out-degree ≤ 3, a merge is
- * in-degree ≤ 3 (`maxOutDegree` doubles as the op group cap), adjacent-only
- * ops cannot cross, and every node sits on a lane that runs root→boss. The
- * final transition is a merge-all into the boss (in-degree = the penultimate
- * width, matching the old generator's fan-in; group caps exempt).
+ * The map is a braid. Lanes, paths from the root to the boss, are the
+ * primitive: a hop's width is its number of lanes, and each transition
+ * applies split and merge ops between adjacent lanes. Planarity, full
+ * connectivity and the degree caps hold by construction: an op splits into
+ * or merges at most 3 lanes, ops between adjacent lanes cannot cross, and
+ * every node sits on a lane from the root to the boss. The widths pass bounds
+ * growth and shrink by `maxOutDegree` while the ops are 2 or 3 lanes wide, so
+ * the caps hold only at its shipped 3. The last transition merges every lane
+ * into the boss, whose in-degree is the width before it (no group cap there).
  *
- * Passes, each on its OWN keyed sub-stream (`nodemapWidths` / `nodemapOps` /
- * `nodemapKinds`, derived off one u32 drawn from the caller's 'nodemap'
- * stream at entry — the §77 keyed architecture; a draw-count change inside
- * one pass can never remap another, which retires the old tail-append
- * byte-discipline):
+ * Three passes, each on its own keyed stream (`nodemapWidths`, `nodemapOps`,
+ * `nodemapKinds`) derived from one u32 drawn from the caller's `nodemap`
+ * stream, so a change of draw count in one pass never remaps another:
  *
- *  1. **Widths** — per-hop lane counts, drawn exactly like the old width
- *     loop (budget + growth cap), plus the braid's shrink floor
- *     (`ceil(prev/3)`) and a no-growth clamp into the LAST middle hop (a
- *     pair born there is forced to rejoin at the boss = an automatic d2).
- *  2. **Ops** — per transition: the net width delta is realized as split2 /
- *     merge2 ops, fused into rare 3-ops (`split3Chance`/`merge3Chance`, plus
- *     forced fusing when lane capacity runs short); `churnChance` adds
- *     Δ-neutral split+merge pairs (the branch-texture source — without
- *     churn a width plateau is parallel non-interacting lanes). Op → lane
- *     assignment is a bounded shuffle search under the SEAM RULE: every
- *     split opens a seam between its child lanes; a merge closing an age-1
- *     seam is an instant-d2 diamond, allowed only via `d2RejoinChance` and
- *     a ≤25%-of-sibling-pairs map budget (the 77c signed cap, constructive).
- *  3. **Kinds** — the 77e2 quota layer (targets = the signed 77c sheet).
- *     Placement priority = signedness: (1) the port CONE pass (every hop-1
- *     first choice gets a port in its descendant cone by hop ≤5 — kills
- *     first-choice shop lockout + the by-h5 row at once; guarantee beats
- *     pacing), (2) presence floors (≥1 elite then ≥1 rest, early-biased),
- *     (3) EVENTS to the signed ≈3/route band (share×spread weighting),
- *     (4) the rest/elite/port feel-target top-ups with leftover slots —
- *     so narrow structures under-fill the feel quotas, never the signed
- *     rows. Everything sits under the BATTLE FLOOR (≥1 battle per middle
- *     hop, a hard C row) and PATH-WINDOW cooldowns (no same-kind node
- *     within `minSpacing` hops along any route — per-lane pacing that
- *     composed routes inherit exactly, because braid edges never cross
- *     lanes outside split/merge ops). Quotas are exact route-share sums
- *     against the `*RouteTarget` knobs. The rejection loop re-rolls ONLY
- *     this pass (attempt index on the kinds sub-stream, `kindMaxAttempts`
- *     hard-throw); the sole retryable failure is the cone pass finding no
- *     candidate — capacity shortfalls on tiny/narrow structures are
- *     accepted best-effort (dev shapes must never throw). NB the kinds
- *     share ONE slot pool by design: a probe dial that kills one kind
- *     frees slots the others may claim — the 74e "dial leaves other kinds
- *     byte-identical" contract narrowed to STRUCTURE at 77e2 (worklog).
+ * 1. Widths: each hop's lane count, within the node budget and the growth
+ *    cap, over the braid's shrink floor (`ceil(prev / 3)`), by steps of at
+ *    most 2, with no shrink right after growth and no growth into the last
+ *    middle hop, where a pair born would have only the boss merge ahead (an
+ *    automatic d2).
+ * 2. Ops: per transition, the net width change as split2 and merge2 ops,
+ *    fused into the rarer 3-ops (`split3Chance`, `merge3Chance`, and forced
+ *    when lanes run short); `churnChance` adds split and merge pairs that
+ *    keep the width, the source of branch texture, since without churn a
+ *    plateau is parallel lanes that never meet. Ops are assigned to lanes by
+ *    a bounded shuffle search under the seam rule: every split opens a seam
+ *    between its child lanes, and a merge that closes a seam one hop old is
+ *    an instant-d2 diamond, allowed only through `d2RejoinChance` and within
+ *    a map budget of 25% of the sibling pairs. A braid over the budget is
+ *    rolled again, a bounded number of times.
+ * 3. Kinds: quotas against the signed map sheet
+ *    (`tests/nodemap-metrics.test.ts`, whose C rows the generator enforces
+ *    and whose R rows the quotas push), placed in `placeKinds`'s order of
+ *    priority under the battle floor and the path-window spacing (no two
+ *    nodes of a kind closer than its `minSpacing` along any route, which
+ *    every route inherits from its lanes, since braid edges cross lanes only
+ *    at ops). A route target is a sum of route shares. A failed attempt
+ *    re-rolls this pass alone, throwing after `kindMaxAttempts`. The kinds
+ *    share one pool of slots, so a dial that kills one kind frees slots the
+ *    others may take: a dial holds the structure fixed, not the other kinds.
  *
- * Seed-stability: the seed→map mapping is `hash(root, subStreamKey)` per
- * pass — there is no cross-pass draw order to preserve. Changing a pass
- * remaps ONLY that pass's stream (structure holds under a kinds change;
- * see the eventChance-override contract test).
+ * A seed's map is `hash(root, pass key)` per pass, with no draw order across
+ * passes to keep, so a change to one pass remaps only that pass
+ * (`NodeMap.test.ts` holds the structure fixed under a scatter dial).
  */
 
 import { RNG, deriveRng } from '../core/RNG';
 import { NODE_MAP } from '../config/nodemap';
 import type { RunConfig } from './RunConfig';
 
-// 74b adds 'event' (the choose-your-own-adventure node, spec §Events);
-// 74e places them (74e scatter, now the e1 bridge pass); the sector
-// `startingEvents` root stamp is `stampRootKind`.
 export type NodeKind = 'battle' | 'rest' | 'boss' | 'elite' | 'port' | 'event';
 
 /**
- * S2 — the "pre-root" start position. A run begins here (no node entered yet),
+ * The pre-root start position. A run begins here (no node entered yet),
  * with the root as its only frontier, so the root is a *selectable* first
  * encounter rather than an inert starting cell. No real node ever carries this
  * id (ids start at 0), so it's an unambiguous sentinel for `Run.currentNodeId`.
@@ -101,8 +86,7 @@ export interface NodeMap {
   readonly hops: readonly (readonly number[])[];
 }
 
-// Shape parameters live in config/nodemap.json. Bound to locals here so
-// the existing call sites read the same way.
+// The shape's parameters, from config/nodemap.json.
 const {
   hopCount: HOP_COUNT,
   middleWidthMin: MIDDLE_WIDTH_MIN,
@@ -130,29 +114,30 @@ const {
   preBossRestWeight: PRE_BOSS_REST_WEIGHT,
 } = NODE_MAP;
 
-/** The port-cone guarantee window (the signed 77c rows "port by h5 = 100%"
- *  + "first-choice port lockout = 0%"): every hop-1 branch's cone gets a
- *  port no later than this hop (clamped to the eligible band on short
- *  maps). A design anchor from the signed sheet, not a tunable. */
+/** The port-cone window: every first choice's cone gets a port by this hop
+ *  (the sheet's rows for a port by hop 5 and for no first choice locked out
+ *  of ports), clamped to the band on short maps. Set by the signed sheet,
+ *  not a tunable. */
 const PORT_GUARANTEE_HOP = 5;
 
-/** The d2 budget: instant-rejoin closures may never exceed this fraction of
- *  the sibling pairs born so far (the 77c signed ≤25% cap, enforced online —
- *  conservative, since pairs born later only grow the denominator). */
+/** The d2 budget: instant-rejoin closures never exceed this share of the
+ *  sibling pairs born so far (the sheet's 25% cap), checked as the braid
+ *  grows, which is conservative since later pairs only add to the
+ *  denominator. */
 const D2_BUDGET_FRACTION = 0.25;
 
-/** Bounded arrangement search per transition (the scope-guard rule: bounded
- *  loops with a deterministic fallback, never an unbounded reroll). */
+/** The arrangement search per transition: bounded, with a deterministic
+ *  fallback, never an open re-roll. */
 const ARRANGEMENT_ATTEMPTS = 24;
 
-/** Bounded braid re-rolls against the per-map d2 cap (see generate pass 2). */
+/** The braid re-rolls against the per-map d2 cap (`generate`, pass 2). */
 const OPS_MAX_ATTEMPTS = 20;
 
-/** Width smoothing (77e2): per-transition width change is capped at ±2.
- *  A width sawtooth (2→6→2, seen live at seed 14) FORCES mass split3s
- *  immediately re-merged as merge3s — six d2 closures no ops re-roll can
- *  avoid, busting the signed ≤25% cap structurally. Gentle slopes keep
- *  forced merges rare enough for the seam rule to route around siblings. */
+/** Width smoothing: a transition changes the width by at most 2. A sawtooth
+ *  (2→6→2, seen at seed 14) forces mass split3s merged straight back as
+ *  merge3s, six d2 closures no re-roll of the ops can avoid, which breaks
+ *  the 25% cap by structure. Gentle slopes keep forced merges rare enough
+ *  for the seam rule to route around siblings. */
 const WIDTH_MAX_STEP = 2;
 
 /** A lane = one active root→boss path strand. `group`/`bornAt` implement the
@@ -168,13 +153,10 @@ interface Lane {
 type OpToken = 'c' | 's2' | 's3' | 'm2' | 'm3';
 
 export function generate(rng: RNG, config?: RunConfig, lengthOverride?: number): NodeMap {
-  // G1: RunConfig overrides the shape per-run; absent fields fall back to the
-  // config/nodemap.json defaults. `hopCount` + `mapMaxWidth` (G1) and
-  // `eliteChance` + `portChance` + `eventChance` (72e/74e probe dials) are
-  // tunable here; everything else stays on the JSON defaults.
-  // T2: `lengthOverride` is the current SECTOR's `length`; precedence
-  // `config.hopCount > sector.length > JSON default` keeps the dev `?hops=N`
-  // flag authoritative.
+  // A RunConfig's `hopCount`, `mapMaxWidth` and three scatter chances
+  // override config/nodemap.json; the rest of the shape is the JSON's.
+  // `lengthOverride` is the current sector's `length`, and the precedence is
+  // the config, then the sector, then the JSON, so `?hops=N` always wins.
   const hopCount = config?.hopCount ?? lengthOverride ?? HOP_COUNT;
   const maxWidth = config?.mapMaxWidth ?? MIDDLE_WIDTH_MAX;
   const eliteChance = config?.eliteChance ?? ELITE_CHANCE_ANCHOR;
@@ -217,9 +199,9 @@ export function generate(rng: RNG, config?: RunConfig, lengthOverride?: number):
         }
         const floorFeasible = Math.max(MIDDLE_WIDTH_MIN, Math.ceil(prevWidth / MAX_OUT_DEGREE));
         if (floorFeasible > cap) {
-          // Only reachable via extreme config overrides (e.g. a huge
-          // mapMaxWidth against a tiny budget) — fail loud, never quietly
-          // emit an infeasible width (the §77 scope guard).
+          // Reachable only through extreme overrides (a huge `mapMaxWidth`
+          // against a tiny budget): fail loudly rather than emit a width the
+          // braid cannot build.
           throw new Error(`NodeMap: hop ${f} width band empty (floor ${floorFeasible} > cap ${cap})`);
         }
         // No shrink RIGHT AFTER growth: pairs born on a growth transition
@@ -239,13 +221,12 @@ export function generate(rng: RNG, config?: RunConfig, lengthOverride?: number):
   }
 
   // ---- Pass 2: the braid (ops → nodes + edges) ---------------------------
-  // Bounded structure re-roll (the corpus gate's first red row forced it):
-  // the seam rule's online budget can be beaten by capacity-FORCED closures
-  // (transitions where no clean lane arrangement exists), so single rolls
-  // bust the signed ≤25% per-map d2 cap on ~26% of maps. Re-rolling the
-  // ops sub-stream (attempt-indexed) until the FINAL ratio honors the cap
-  // makes the C row hold for real (residual ≈ 0.26^20). Deterministic
-  // least-bad fallback — structure generation never throws.
+  // A bounded re-roll of the structure: closures forced by capacity (a
+  // transition with no clean arrangement) can beat the seam rule's running
+  // budget, and a single roll broke the sheet's 25% d2 cap on about 26% of
+  // maps when measured. Re-rolling the ops stream by attempt until the final
+  // ratio holds makes the C row hold, leaving about 0.26^20; the fallback is
+  // the least bad roll, so structure generation never throws.
   let braid: Braid | undefined;
   let leastBad: Braid | undefined;
   let leastBadRatio = Infinity;
@@ -302,9 +283,9 @@ function buildBraid(hopCount: number, widths: readonly number[], rng: RNG): Brai
     const childHop = f + 1;
 
     if (childHop === hopCount - 1) {
-      // The boss transition: merge-all (see header). Count any age-1 pairs
-      // honestly — the width clamp above makes them structurally impossible
-      // except at degenerate lengths (hopCount 3, where the root split has
+      // The boss transition merges every lane (the header). Pairs a hop old
+      // are counted all the same: the width clamp makes them impossible but
+      // at degenerate lengths (`hopCount` 3, where the root's split has
       // nowhere else to rejoin).
       for (let a = 0; a < lanes.length; a++) {
         for (let b = a + 1; b < lanes.length; b++) {
@@ -326,8 +307,8 @@ function buildBraid(hopCount: number, widths: readonly number[], rng: RNG): Brai
     let m2 = Math.max(m - n, 0);
     let m3 = 0;
     const laneNeed = () => s2 + s3 + 2 * m2 + 3 * m3;
-    // Forced 3-op fusing when lane capacity runs short (Δ-preserving:
-    // two 2-ops = one 3-op on both axes).
+    // Forced 3-op fusing when lanes run short; two 2-ops make one 3-op on
+    // either axis, so the width change is kept.
     while (laneNeed() > m && m2 >= 2) {
       m2 -= 2;
       m3 += 1;
@@ -339,16 +320,16 @@ function buildBraid(hopCount: number, widths: readonly number[], rng: RNG): Brai
     if (laneNeed() > m) {
       throw new Error(`NodeMap: transition ${f}→${childHop} infeasible (${m}→${n} lanes)`);
     }
-    // Churn: Δ-neutral split+merge pairs, geometric on churnChance, bounded
-    // by lane capacity. Suppressed into the last middle hop (see widths).
+    // Churn: split and merge pairs that keep the width, geometric on
+    // `churnChance` and bounded by the lanes. None into the last middle hop
+    // (the widths pass).
     if (childHop !== hopCount - 2) {
       while (laneNeed() + 3 <= m && rng.next() < CHURN_CHANCE) {
         s2 += 1;
         m2 += 1;
       }
     }
-    // Rare 3-op upgrades (one check per axis per transition — "rare but
-    // possible", the signed shape).
+    // 3-op upgrades, one check per axis per transition, so they stay rare.
     if (s2 >= 2 && rng.next() < SPLIT3_CHANCE) {
       s2 -= 2;
       s3 += 1;
@@ -413,8 +394,8 @@ function buildBraid(hopCount: number, widths: readonly number[], rng: RNG): Brai
       }
     }
     if (chosen === undefined) {
-      // No clean arrangement found (capacity-forced) — take the least-bad
-      // candidate and count it. Deterministic, bounded, honest.
+      // No clean arrangement (capacity forced it): take the least bad
+      // candidate and count its closures.
       chosen = best!;
       chosenClosures = bestClosures;
     }
@@ -462,15 +443,13 @@ function buildBraid(hopCount: number, widths: readonly number[], rng: RNG): Brai
   return { nodes, edges, hops, pairsBorn, d2Closed };
 }
 
-// ---- Pass 3: kinds — the quota layer (77e2; worklog §77e) -----------------
-// Quota-driven placement against the signed 77c sheet (priority order in
-// placeKinds — guarantees, then the signed band, then feel top-ups).
-// Dial scaling: an eliteChance/portChance/eventChance override `d` scales
-// the kind's route target by `d / anchor` (0 kills the kind INCLUDING its
-// guarantees — the probe-isolation arms; 1 floods). Rejection is a
-// bounded re-roll of this pass only (the attempt index on the kinds
-// sub-stream); the throw is the §77 scope guard and should be
-// unreachable on feasible configs.
+// ---- Pass 3: kinds, the quota layer --------------------------------------
+// Placement by quota against the signed sheet, in `placeKinds`'s order of
+// priority. A scatter dial `d` scales its kind's route target by
+// `d / anchor`, where the anchor is the JSON's chance: 0 kills the kind,
+// its guarantees included (the probe's isolation arms), and 1 floods it.
+// A failure re-rolls this pass alone, a bounded number of times; the throw
+// should be unreachable on a feasible config.
 function finishMap(
   hopCount: number,
   nodes: readonly MapNode[],
@@ -501,12 +480,10 @@ function finishMap(
   }
   const { restIds, eliteIds, portIds, eventIds } = placed;
 
-  // hopCount === 1 degenerates to root == terminal: `bossId` is the root, so
-  // the single node is tagged `boss` — the player's one fight IS the boss.
-  // 68e — the first-node stamp: a dev/isolation dial that marks the ROOT as
-  // the given kind AFTER every kind pass, with ZERO extra draws. Boss wins
-  // on the hopCount===1 degenerate (root == terminal). See
-  // RunConfig.firstNodeKind.
+  // At `hopCount` 1 the root is the terminal, so the one node is the `boss`
+  // and the player's one fight is the boss. The first-node stamp
+  // (`RunConfig.firstNodeKind`) marks the root after every kind pass and
+  // draws nothing; the boss wins where the root is the terminal.
   const rootId = hops[0]![0]!;
   const firstNodeStamp = config?.firstNodeKind;
   const kindedNodes: MapNode[] = nodes.map((n) =>
@@ -535,9 +512,8 @@ function finishMap(
 }
 
 // ---------------------------------------------------------------------------
-// 77e2 — the kind-placement engine (worklog §77e; targets = the signed 77c
-// sheet). Pure helpers over the finished braid structure; all randomness
-// comes from the per-attempt kinds sub-stream passed in.
+// The kind-placement engine: pure helpers over the finished braid, every
+// draw from the attempt's kinds stream passed in.
 
 interface MapStructure {
   readonly hopCount: number;
@@ -618,10 +594,10 @@ function analyzeStructure(
 }
 
 /**
- * One placement attempt. Returns null ONLY on a retryable failure (the
- * port-cone pass finding no candidate); quota shortfalls from genuine
- * capacity exhaustion (narrow/short structures) are accepted best-effort —
- * a re-roll cannot create slots, and dev shapes must never throw.
+ * One placement attempt. Returns null only on the retryable failure, the
+ * port-cone pass finding no candidate; a quota short for lack of slots (a
+ * narrow or short structure) is accepted, since a re-roll cannot make
+ * slots and a dev shape must never throw.
  */
 function placeKinds(
   s: MapStructure,
@@ -644,12 +620,13 @@ function placeKinds(
     const f = s.hopOf.get(id)!;
     if (f < s.bandStart || f > s.bandEnd) return false;
     if (kindAt.has(id)) return false;
-    // The battle floor (77c C row): >= 1 battle per middle hop, always.
+    // The battle floor, a C row: at least one battle on every middle hop.
     return (specialsAt.get(f) ?? 0) < widthOf(f) - 1;
   };
-  /** Path-window cooldown: no same-kind node within `spacing-1` hops along
-   *  any route (BFS both directions). The signed pacing rules: rest/elite
-   *  spacing 2 = never adjacent on a route; port 3; event 1 = no-op. */
+  /** The path-window spacing: no node of the kind within `spacing − 1` hops
+   *  along any route, searched both ways. At the shipped spacings a rest or
+   *  elite is never next to another on a route (2), a port has two hops
+   *  clear (3), and events may sit back to back (1). */
   const windowClear = (id: number, kind: NodeKind, spacing: number): boolean => {
     const depth = spacing - 1;
     if (depth <= 0) return true;
@@ -679,16 +656,14 @@ function placeKinds(
   const bandNodes: number[] = [];
   for (let f = s.bandStart; f <= s.bandEnd; f++) bandNodes.push(...s.hops[f]!);
 
-  // Placement priority (77e2, capacity-aware — worklog §77e2): HARD
-  // guarantees first (port cones, presence floors), then the SIGNED events
-  // band, then the feel-target top-ups with whatever slots remain. On
-  // narrow structures the feel quotas under-fill, never the signed rows —
-  // the probe that forced this ordering found 5% of maps below the events
-  // band when top-ups ran first.
+  // The order of placement: the hard guarantees first (port cones, presence
+  // floors), then the signed events band, the cone repair, and the route
+  // targets with whatever slots remain. On a narrow structure the targets
+  // under-fill, never the signed rows: with the top-ups first, 5% of maps
+  // fell below the events band.
 
-  // -- 1. PORT cone coverage (the two hard C rows). Guarantee applies to
-  //    real sector maps only (>= 3 band hops); degenerate dev shapes are
-  //    quota-only, like the old fallback's "sector-map contract" exemption.
+  // -- 1. Port cone coverage (two C rows), on a real sector map only (at
+  //    least 3 band hops); a degenerate dev shape takes quotas alone.
   if (scales.portScale > 0 && s.bandEnd - s.bandStart >= 2) {
     const windowMax = Math.min(PORT_GUARANTEE_HOP, s.bandEnd);
     const coveredBy = (id: number): number[] =>
@@ -717,18 +692,18 @@ function placeKinds(
     }
   }
 
-  /** The rest top-ups' pacing biases (the signed rules 3a/3b): before
-   *  placed elites, and harder before the boss. */
+  /** The rest top-ups' pacing biases, two of the signed pacing rules: toward
+   *  the hops before a placed elite, and more so before the boss. */
   const restBias = (id: number): number => {
     let w = 1;
     if (nearKind(s, kindAt, id, 'elite')) w *= PRE_ELITE_REST_WEIGHT;
     if (s.hopOf.get(id)! >= s.hopCount - 3) w *= PRE_BOSS_REST_WEIGHT;
     return w;
   };
-  /** The presence floor: ONE node of the kind, from a cascading candidate
-   *  pool — early+spaced, then spaced, then anything. The hard early
-   *  window (hops ≤ 5) is what holds the by-h5 R rows; the corpus gate
-   *  proved a soft early WEIGHT insufficient (87% vs the signed ≥90%). */
+  /** The presence floor: one node of the kind, from candidate pools tried
+   *  in turn, early and spaced, then spaced, then any. The hard early window
+   *  (hops up to 5) is what holds the by-hop-5 R rows; a soft early weight
+   *  reached 87% against the signed 90%. */
   const placeFloor = (kind: 'rest' | 'elite' | 'port', spacing: number): void => {
     if (out[`${kind}Ids`].size >= 1) return;
     const pools = [
@@ -745,9 +720,9 @@ function placeKinds(
         return;
       }
     }
-    // No slot at all — capacity-capped (tiny structures); accepted.
+    // No slot at all (a tiny structure): accepted.
   };
-  /** Top up toward the share target; spaced only, capacity caps best-effort. */
+  /** Top up toward the share target, spaced only, as far as the slots go. */
   const fillTarget = (
     kind: 'rest' | 'elite' | 'port',
     spacing: number,
@@ -756,25 +731,24 @@ function placeKinds(
   ): void => {
     while (shareSum[kind] < target) {
       const cands = bandNodes.filter((id) => slotFree(id) && windowClear(id, kind, spacing));
-      if (cands.length === 0) break; // capacity-capped (tiny/narrow structures)
+      if (cands.length === 0) break; // out of slots (a tiny or narrow structure)
       const weights = cands.map(weightOf);
       place(cands[weightedPick(weights, rng)]!, kind);
     }
   };
 
-  // -- 2. Presence floors. Port FIRST — the ≥1-port "sector-map contract"
-  //    predates every other guarantee (50c) and must survive short maps
-  //    where the cone pass is skipped (a portless 4-hop map vacuates the
-  //    fuzz economy arm — caught by the 50g canary). Then elite before
-  //    rest, so the rest top-ups can see placed elites (the signed
-  //    before-elite bias). Floors are hard early-window picks.
+  // -- 2. Presence floors. The port first: one port a map must hold on the
+  //    short maps where the cone pass is skipped, since a portless 4-hop
+  //    map empties the fuzz's economy arm. Then elite before rest, so the
+  //    rest top-ups can see the placed elites (the before-elite bias).
+  //    Floors are hard picks in the early window.
   if (scales.portScale > 0) placeFloor('port', PORT_MIN_SPACING);
   if (scales.eliteScale > 0) placeFloor('elite', ELITE_MIN_SPACING);
   placeFloor('rest', REST_MIN_SPACING);
 
-  // -- 3. EVENTS to the signed band (back-to-back LEGAL — spacing 1 is a
-  //    no-op window). Weight = share × spread: share makes each slot count
-  //    on tight maps, the spread term keeps events from clumping.
+  // -- 3. Events to the signed band, back to back allowed (spacing 1 is an
+  //    empty window). Weight is share × spread: the share makes each slot
+  //    count on a tight map, the spread keeps events from clumping.
   if (scales.eventScale > 0) {
     const target = EVENTS_PER_ROUTE * scales.eventScale;
     const ceiling = target + EVENTS_BAND_HALF_WIDTH;
@@ -782,7 +756,7 @@ function placeKinds(
       const cands = bandNodes.filter(
         (id) => slotFree(id) && windowClear(id, 'event', EVENT_MIN_SPACING),
       );
-      if (cands.length === 0) break; // band full — capacity is physics, not failure
+      if (cands.length === 0) break; // the band is full, which is not a failure
       const fitting = cands.filter((id) => shareSum.event + s.share.get(id)! <= ceiling);
       if (fitting.length > 0) {
         const weights = fitting.map(
@@ -790,7 +764,7 @@ function placeKinds(
         );
         place(fitting[weightedPick(weights, rng)]!, 'event');
       } else {
-        if (shareSum.event >= target - EVENTS_BAND_HALF_WIDTH) break; // in band — stop clean
+        if (shareSum.event >= target - EVENTS_BAND_HALF_WIDTH) break; // in the band: stop
         // Below the floor and everything overshoots: take the least overshoot.
         let pick = cands[0]!;
         for (const id of cands) if (s.share.get(id)! < s.share.get(pick)!) pick = id;
@@ -800,11 +774,11 @@ function placeKinds(
     }
   }
 
-  // -- 4. Cone-coverage repair (the ≤10% first-choice lockout R rows): any
-  //    first choice locked out of elites or rests gets one — BEFORE the
-  //    feel top-ups so the repairs aren't starved of in-cone slots (the
-  //    corpus gate measured elite lockout 23.4% with no repair, and rest
-  //    lockout 13.8% with the repair running last).
+  // -- 4. The cone repair (the R rows holding first-choice lockout to 10%):
+  //    a first choice locked out of elites or rests gets one, before the
+  //    top-ups so the repair is not starved of slots in the cone (with no
+  //    repair elite lockout measured 23.4%, and rest lockout 13.8% with the
+  //    repair last).
   const repairs: ReadonlyArray<readonly ['elite' | 'rest', number, boolean]> = [
     ['elite', ELITE_MIN_SPACING, scales.eliteScale > 0],
     ['rest', REST_MIN_SPACING, true],
@@ -819,12 +793,12 @@ function placeKinds(
       if (cands.length === 0) {
         cands = bandNodes.filter((id) => cone.has(id) && slotFree(id));
       }
-      if (cands.length === 0) continue; // no slot in the cone — residual lockout
+      if (cands.length === 0) continue; // no slot in the cone: a lockout left
       place(cands[rng.int(0, cands.length - 1)]!, kind);
     }
   }
 
-  // -- 5. Feel-target top-ups with the leftover slots (port → elite → rest).
+  // -- 5. The route-target top-ups with the slots left: port, elite, rest.
   const one = (): number => 1;
   if (scales.portScale > 0) {
     fillTarget('port', PORT_MIN_SPACING, PORT_ROUTE_TARGET * scales.portScale, one);
@@ -837,8 +811,8 @@ function placeKinds(
   return out;
 }
 
-/** Any `kind` node within 2 hops downstream of `id` (the rest pass's
- *  before-elite bias probe). */
+/** Whether a `kind` node sits within 2 hops downstream of `id` (the rest
+ *  pass's before-elite bias). */
 function nearKind(
   s: MapStructure,
   kindAt: ReadonlyMap<number, NodeKind>,
@@ -897,14 +871,13 @@ function weightedPick(weights: readonly number[], rng: RNG): number {
 }
 
 /**
- * 74e — re-kind a finished map's ROOT node (the sector `startingEvents`
- * stamp; the 68e `firstNodeKind` discipline as a post-generation transform).
- * ZERO extra RNG draws — structure, edges, and every scatter placement are
- * untouched, so a stamped map differs from its unstamped twin in exactly the
- * root's `kind`. Boss wins on the root === terminal degenerate (hopCount 1),
- * matching the in-generate stamp's precedence. Callers resolve WHICH kind
- * wins the root (the `firstNodeKind` dev dial beats the sector stamp —
- * isolation power, the 63c precedence precedent) before calling.
+ * Re-kind a finished map's root node, for a sector's `startingEvents`. It
+ * draws nothing and touches neither the structure nor any other node, so a
+ * stamped map differs from its unstamped twin in the root's `kind` alone.
+ * The boss wins where the root is the terminal (`hopCount` 1), as in
+ * `generate`'s own stamp. The caller settles which kind takes the root
+ * first: the `firstNodeKind` dial beats the sector's stamp, so a probe keeps
+ * its isolation.
  */
 export function stampRootKind(map: NodeMap, kind: NodeKind): NodeMap {
   if (map.rootId === map.terminalId) return map;

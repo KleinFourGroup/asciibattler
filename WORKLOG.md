@@ -7587,3 +7587,54 @@ said to be saved or not against what `runConfigToQueryString` writes, a
 command's doc naming a path its handler in `Run.ts` does not take, a step
 code or history left, or a rule a change must respect cut (the draw
 notes in `Recruitment.ts` and `daemon.ts`).
+
+Committed as `60aeb087`; the suite 3,722 and the smoke 613, green, by the
+hook.
+
+### 123m, batch 2 — the map (2026-10-16, session b975692d)
+
+`NodeMap.ts` and `mapMetrics.ts`. The generator's history (the staircase
+the braid replaced, the step that added each pass and dial, the commits
+behind each instrument) is out; the signed sheet is named by its gate,
+`tests/nodemap-metrics.test.ts`, where the comments said "77c". The
+header no longer lists the kinds pass's order, which `placeKinds` states
+where it runs.
+
+**Statements found false and corrected (rule 7):**
+
+- `NodeMap.ts`'s header listed four kind steps; `placeKinds` runs five,
+  with the cone repair (a first choice locked out of elites or rests gets
+  one) between the events and the top-ups, and a port presence floor
+  ahead of the elite and rest floors. The path-window spacing was "no
+  same-kind node within `minSpacing` hops"; `windowClear` searches
+  `spacing − 1` hops, so a node of the kind may sit exactly `minSpacing`
+  away. "`maxOutDegree` doubles as the op group cap": the ops are fixed at
+  2 and 3 lanes, and the widths pass reads `maxOutDegree` for its growth
+  cap and shrink floor, so the degree caps hold only at its shipped 3; the
+  header now says so, as a limit on a change. A rest node was "a
+  non-combat XP grant"; it heals the pool too (`Run.resolveRest`).
+- `mapMetrics.ts`: `battlelessMiddleHops` was "the known 74e width-2
+  stacking artifact"; the battle floor holds it at 0, and the sheet gates
+  that. The header's "two ratio reads the §77e passes will own" was a
+  plan, and the shear docs' "anti-drift dial question" one too.
+
+Measured (`comment-length` on copies under `output/cl-123m-b2/`):
+`NodeMap.ts` comment lines 235 → 208, words 2,231 → 2,142;
+`mapMetrics.ts` 79 → 77, 622 → 634, the shear's doc now giving the gate's
+bound where it gave the bug's history; code lines unchanged (629, 186).
+`src/run` comment lines 4,047 → 4,018, words 34,193 → 34,116. The
+step-code ceiling 3,932 → 3,875, the 57 the two files held.
+
+Proof: `comment-strip HEAD src`, comments only, exit 0, its control named
+in both files.
+
+Cost: 355,942 at 22:18 UTC by the tool's clock as the batch started,
+421,678 at 22:26 after its proof: 66k for 1,196 lines, 55 a line. Batch
+1's claims ran into other modules' callers, these into the file's own
+code and the sheet's gates.
+
+**Read** (`batch`): `git show <this commit> -- src/run/NodeMap.ts` against
+the seven rules. Wrong looks like the header's passes disagreeing with
+the code (the width rules, the seam rule, the spacing window), a sheet row
+named that `tests/nodemap-metrics.test.ts` does not gate, or a measured
+number left without what it measured.

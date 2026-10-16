@@ -1,38 +1,38 @@
 /**
- * 77b — the three sector-map metrics, as pure functions over a `NodeMap`.
- * Each operationalizes one sentence of the cluster-5 spec's map-gen
- * complaints (cluster-5-spec §Sector Map Generation Rework):
+ * The sector map's metrics, as pure functions over a `NodeMap`. Each
+ * measures one complaint the map's generator was rebuilt to answer:
  *
- *  1. EARLY AVAILABILITY — "fairly common for there to be no early elite,
- *     rest, or shop": `firstHopByKind` (the first hop hosting each kind).
- *  2. PATH-KIND COVERAGE — "these nodes all on the same path":
- *     `pathFractionByKind` (the fraction of root→terminal routes visiting
- *     ≥1 node of the kind, by avoid-DP) and `choiceCoverageByKind` (the
- *     fraction of first-choice branches that keep access to the kind).
- *  3. BRANCH DIVERGENCE — "paths play out identically, sometimes almost
- *     immediately rejoining": per branching child-pair, the rejoin
- *     distance (hops from the branch point to the first shared node) plus
- *     content differentiation (do the branch-exclusive nodes differ in
- *     kind composition).
+ * 1. Early availability (no early elite, rest or shop): `firstHopByKind`,
+ *    the first hop holding each kind.
+ * 2. Coverage (the special nodes all on one path): `pathFractionByKind`,
+ *    the share of routes from the root to the terminal that visit a node of
+ *    the kind (one minus the share avoiding it, by a DP), and
+ *    `choiceCoverageByKind`, the share of first choices that can still
+ *    reach the kind.
+ * 3. Branch divergence (paths that play the same, or rejoin at once): for
+ *    each pair of a branching node's children, the rejoin distance (hops
+ *    from the branch to the first shared node) and whether the nodes only
+ *    one side reaches differ in their kinds.
  *
- * Plus two ratio reads the §77e passes will own: `expectedRouteComposition`
- * (expected per-kind node counts on a uniformly-random route — the
- * events-to-combat ratio's numerator/denominator) and
- * `battlelessMiddleHops` (the known 74e width-2 stacking artifact, counted).
+ * Besides those: `expectedRouteComposition` (each kind's expected count on
+ * a uniformly random route, the terms of the events-to-combat ratio),
+ * `battlelessMiddleHops`, and the edge-shear pair (`meanEdgeShear`,
+ * `diagonalMajorityShare`).
  *
- * Route-uniformity caveat: "uniform over routes" is a corpus baseline, not
- * a player model — players steer. Good enough to sign thresholds against
- * (77c); the fuzz walker measures the steered reality.
+ * Uniform over routes is a corpus baseline, not a model of a player, who
+ * steers; the sheet's thresholds are signed against it, and the fuzz
+ * walker measures steered play.
  *
- * Everything here is deterministic and RNG-free; consumed by the
- * nodemap-viz overlay, the 77b baseline report, and (at 77e) the
- * `nodemap-metrics.test.ts` acceptance gates.
+ * Deterministic, drawing nothing. Read by the signed sheet's gates
+ * (`tests/nodemap-metrics.test.ts`) and by `tools/nodemap-viz`'s overlay
+ * and report.
  */
 
 import type { NodeMap, NodeKind } from './NodeMap';
 
-/** The scatterable kinds — the ones the availability/coverage complaints
- *  are about. Battle/boss are structural (everywhere / the terminal). */
+/** The kinds placed by quota, the ones the availability and coverage
+ *  complaints are about; battle and boss are structural (everywhere, and
+ *  the terminal). */
 export const SPECIAL_KINDS: readonly NodeKind[] = ['rest', 'elite', 'port', 'event'];
 
 interface RejoinPair {
@@ -46,8 +46,8 @@ interface RejoinPair {
    *  before the rejoin hop (the two sides are disjoint there by
    *  definition of the rejoin). */
   readonly exclusiveNodes: number;
-  /** True when the two exclusive sides differ as kind MULTISETS — the
-   *  branch offers different content, not just different node ids. */
+  /** True when the two exclusive sides differ as multisets of kinds: the
+   *  branch offers different content, not only different node ids. */
   readonly kindDivergent: boolean;
 }
 
@@ -68,23 +68,21 @@ export interface MapMetrics {
   readonly totalRoutes: number;
   /** One entry per unordered child-pair of every branching node. */
   readonly rejoinPairs: readonly RejoinPair[];
-  /** Middle hops (excluding hop 0, hop 1, and the boss hop — the scatter
-   *  band) with zero battle nodes: the 74e stacking artifact. */
+  /** Middle hops (the band: not hop 0, hop 1 or the boss's) with no battle
+   *  node. The generator's battle floor holds it at 0, a C row of the
+   *  sheet. */
   readonly battlelessMiddleHops: number;
-  /** 77e2b — the G2 edge-shear instrument (commit 41293a9), promoted from
-   *  its scratch-probe grave after the class was suspected a second time:
-   *  mean of (normalized child-x − parent-x) over all edges, where x =
-   *  index/(width−1) (width-1 hops read 0.5). 0 = no handedness; the
-   *  staircase's handed bug measured +0.146, the braid ≈ −0.002 pooled.
-   *  0 on edge-less maps. */
+  /** The edge shear: the mean over all edges of the child's x less the
+   *  parent's, with x normalized to `index / (width − 1)` and 0.5 on a hop
+   *  of width 1. 0 is no handedness; the sheet holds the corpus mean within
+   *  ±0.02. 0 on a map with no edges. */
   readonly meanEdgeShear: number;
-  /** 77e2b — per-map drift COHERENCE: the fraction of diagonal edges
-   *  (dx ≠ 0 in the centered fixed-pitch model) pointing the map's
-   *  majority direction. 0.5 = perfectly mixed, 1.0 = every diagonal one
-   *  way; 0.5 when the map has no diagonal edges. Ensemble handedness and
-   *  per-map drift are DIFFERENT facts: the braid is unbiased pooled, yet
-   *  the median map runs ~0.59 (random sign) — the e3 anti-drift dial
-   *  question (worklog §77e2b). */
+  /** The drift's coherence within one map: the share of diagonal edges (a
+   *  nonzero dx in the centred, fixed-pitch model) that point the map's
+   *  majority way. 0.5 is perfectly mixed, 1 every diagonal one way, and
+   *  0.5 on a map with none. Handedness over the corpus and drift within a
+   *  map are different facts: the braid is unbiased pooled, yet the median
+   *  map measured about 0.59, its sign at random. */
   readonly diagonalMajorityShare: number;
 }
 
@@ -193,13 +191,13 @@ export function computeMapMetrics(map: NodeMap): MapMetrics {
     }
   }
 
-  // --- the 74e stacking artifact ---
+  // --- middle hops with no battle ---
   let battlelessMiddleHops = 0;
   for (let f = 2; f <= hopCount - 2; f++) {
     if (map.hops[f]!.every((id) => kindOf.get(id) !== 'battle')) battlelessMiddleHops++;
   }
 
-  // --- 77e2b. edge shear + drift coherence (see the interface docs) ---
+  // --- edge shear and drift coherence (the interface's docs) ---
   const slot = new Map<number, { i: number; w: number }>();
   for (const ids of map.hops) {
     for (let i = 0; i < ids.length; i++) slot.set(ids[i]!, { i, w: ids.length });

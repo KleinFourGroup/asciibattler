@@ -6608,3 +6608,14 @@ Proof (sim):
 
 The census's evidence for the row, a break planted at a fire site that
 changes no run, was not run again.
+
+### 123c — A-39, the board's console line (2026-10-16, session 854d0fbd)
+
+`Run.beginEncounter`'s `console.log('[layout]', …)` and its comment are
+gone. Step zero: a search of the tracked files found no probe, script
+or doc that reads the line. The camera line is §124's.
+
+Proof: typecheck clean; the corpus, 0 of 30 (the line was gated on a
+window, so no headless run reached it); `build-hash HEAD`: 3 of 33 built
+files differ, the main bundle (named by its hash, so listed under both
+names) and `index.html`, which names it, as predicted.

@@ -2145,17 +2145,6 @@ export class Run {
     // H3 — counts reset per ENCOUNTER (was per-battle pre-H4); each turn's
     // `beginTurn` records the deployed hand.
     this.resetDeploymentCounts();
-    // Browser-only diagnostic (moved from `beginTurn`): confirm the layout
-    // picker hits the full library across a session. Gated on `typeof window`
-    // so the fuzz harness + vitest don't spam.
-    if (typeof window !== 'undefined') {
-      console.log(
-        '[layout]',
-        this.encounterMap!.layoutId ?? 'procedural',
-        `${this.encounterMap!.gridW}x${this.encounterMap!.gridH}`,
-        `hop ${this.currentHop}`,
-      );
-    }
     // K1 — clear the encounter-effect store.
     this.resetEncounterEffects();
     // 49e — the pending out-of-battle buffs (overclock) land NOW, right

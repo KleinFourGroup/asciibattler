@@ -170,7 +170,7 @@ The cut, signed 2026-10-16 with the kickoff's five calls (WORKLOG §123,
   compare misses it.
 - ☑ **123b — A-36, the run's trigger registry** (`none`). With its two
   tests and `TriggerDispatcher.size`. Proof: sim; `reach-diff`.
-- ☐ **123c — A-39, the board's console line** (`none`). Proof: the
+- ☑ **123c — A-39, the board's console line** (`none`). Proof: the
   corpus; `build-hash` moves at that file.
 - ☐ **123d — A-40, the leg nothing reaches** (`none`; a stop if the
   game can reach the test's state). The test found by a plant; the leg

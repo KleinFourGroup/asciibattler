@@ -7929,3 +7929,37 @@ Cost: 365,482 at 23:34 UTC by the tool's clock as the batch started,
 fields to `dispatch`) against the seven rules. Wrong looks like a dial said
 to be lost on a load, a store said to change in fewer places than it does,
 a pool's charge told other than by the chip rule, or history left.
+
+Committed as `017cda99`; the suite 3,722 and the smoke 613, green, by the
+hook.
+
+### The hand-off after batch 4b (2026-10-16, session 41f464e5)
+
+Batches 3, 4a and 4b of 123m are built and unread (◐ in ROADMAP), each
+with its read above; with batches 1 and 2, five batches wait to be read.
+Next, in fresh sessions: `Run.ts`'s 4c (`handleEnterNode` to
+`buildEncounterMap`, 830 lines at `56348dc1`), then 4d to 4f; then 123n.
+This session stopped before 4c since, at 4a's rate with the hand-off's
+records, it looked about the size of the room left under the line. For
+the next session:
+
+- Plan 4c from 4a's 115 a line, not 4b's 85: 4b's fields mostly pointed
+  at the snapshot's docs, while 4c's claims run into the event, port and
+  price configs.
+- Check a stream named in a doc against its `streamRng` call. Two docs
+  named the sector-entry stream for the boss pair, which draws on its own
+  `'boss'` stream; 4a copied one of them before 4b caught it. 4b's leads
+  name `rollBossForSector`'s and `handleEnterNode`'s docs for 4c.
+- A doc in `Run.ts` that says a dial is lost on a load is false:
+  `fromJSON` takes a config, and the run slot passes the save's dials.
+  The rule has its home in `RunConfig`'s header, and `Run`'s
+  `eventCatalog` field points there.
+- Tests often already pin what a comment misstates (`sequencer.test.ts`'s
+  nested loops, `wave.test.ts`'s capped multiplier); a correction can
+  cite the passing assertion instead of a probe.
+
+Readings by the tool's clock (UTC): 110,583 at 23:06 after the
+orientation, as batch 3 started; 247,887 at 23:19 after its proof;
+264,862 at 23:22 as 4a started; 357,368 at 23:32 after its proof; 365,482
+at 23:34 as 4b started; 424,748 at 23:42 after its proof; 444,642 at
+23:46 after its commit, before this entry.

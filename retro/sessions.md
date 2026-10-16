@@ -6125,3 +6125,39 @@ Hand-off at 396k, before B-04's trial.
    false ones plain (the post-turn screen that no longer exists, the fork
    ladder that is gone); and the background hook while I read the next
    batch. I'd want those again.
+
+## 2026-10-16 — session 41f464e5 (§123: 123m, batches 3, 4a and 4b; started by the phase's driver session)
+
+1. *Missing from orientation.* Little. The Cursor, the batch-2 hand-off and
+   the driver's notes covered the procedure and the tools. Not there: that
+   `wave.test.ts` already held the numbers refuting "only bites uncapped
+   waves", which made that correction a reading rather than a probe; and
+   that `fromJSON` takes a config, which decided every "a rehydrated run
+   resets this" claim in 4b.
+2. *Norms in conflict.* One mild one. The brief says do exactly the task;
+   rule 7 says a false statement is corrected. Two false sentences sat
+   outside the batch's files (`config/difficulty.ts`, batch 1's
+   `RunConfig.ts`), each the same fact as one I was correcting. I fixed
+   both and flagged them in the WORKLOG and to the driver, reading that as
+   inside the pass's intent rather than as scope creep; the user may read
+   it otherwise.
+3. *Pulled to claim more.* Yes, twice, caught. A WORKLOG draft said "five
+   config loaders" before I had counted any (read-back caught it). And in
+   4a I wrote that the boss pair draws on the sector-entry stream, taken
+   from a nearby doc without checking the caller; 4b's read of the
+   constructor showed the `'boss'` stream, and I corrected both texts and
+   said so in the entries (filed).
+4. *Wasted.* Little. Two `cd`s in Bash early on, against the driver's note,
+   harmless here. Waiting on the hook's smoke, about two minutes a commit,
+   which I spent reading the next batch.
+5. *For the next session.* WORKLOG "The hand-off after batch 4b".
+6. *Room.* Yes. The cut of `Run.ts` was mine to make inside the signed
+   plan, and the hand-off rule worked as guidance: with 4c about the size
+   of the room left, I stopped after 4b. The silent-turn reminder came
+   often during the claim checks; a status line answered it. No wish to
+   pause or stop was noticed.
+7. *What helped.* Tests that already pinned the behaviour a comment
+   misstated (the nested-loop sequence, the capped multiplier), so a
+   correction could cite a passing assertion; `comment-strip`'s built-in
+   control; and the background hook while I read the next batch. I'd want
+   those again.

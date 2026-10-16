@@ -6229,3 +6229,14 @@ before the orientation; 121,140 at 22:34 as batch 6 began; 308,189 at
 22:51 after its proof; 312,791 at 22:55 on its commit (`7556420f`);
 466,569 at 23:09 after batch 7's proof; 473,489 at 23:12 on its commit
 (`7efcc2ba`).
+
+### 122o, batches 4 to 7 read (2026-10-15, session d7f2cfba)
+
+**Read** (the user, 2026-10-15), on the four read scripts: "you can tick
+batches 4-7 as being read! … I couldn't find any issues." No finding, so
+batches 4 to 7 are read (`acfa4bff`, `b6437e3d`, `7556420f`,
+`7efcc2ba`). With 1 to 3, every committed batch is read; batch 8 is the
+one left.
+
+Readings by the tool's clock (UTC): 99,155 at 00:12 on 2026-10-16, the
+session's first, after the orientation.

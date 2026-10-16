@@ -102,13 +102,13 @@ export function conditionMet(cond: Condition, state: EncounterState): boolean {
 // ---------------------------------------------------------------------------
 
 /** Position within a `WaveList`: which entry, plus that entry's cursor. */
-export interface ListCursor {
+interface ListCursor {
   readonly index: number;
   readonly child: EntryCursor;
 }
 
 /** Position within a single entry (recurses into composite entries). */
-export type EntryCursor =
+type EntryCursor =
   | { readonly kind: 'wave' }
   | { readonly kind: 'pick'; readonly chosen: number; readonly child: EntryCursor }
   | { readonly kind: 'loop'; readonly iteration: number; readonly child: ListCursor }

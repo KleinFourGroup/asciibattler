@@ -6682,3 +6682,23 @@ script counted every anchor before it wrote a file.
 Proof (sim): typecheck clean, `tools` included, so an object literal
 still naming `turn` would have been refused; the corpus, 0 of 30; the
 fuzz diff against `09e4f771`, PASS on both shapes. No test was deleted.
+
+### 123g — A-26, the word `export` (2026-10-16, session 854d0fbd)
+
+The list taken again at HEAD by `refs --all src/run`: 28 declarations
+that nothing outside their file reads (the audit's 29 less
+`RunTriggerContextMap`, gone at 123b), in 12 files: 18 interfaces, 8
+types and 2 functions (`enemyBudgetFor`, `rollEnemyWave`, which
+`enemyBudget.ts` calls itself). A word search of the tracked files
+outside the type check found one reader, the save's shape pin
+(`tests/run-snapshot-shape.txt`), which names ten of them as types and
+imports none; no file under `src/run` is imported as a namespace. A
+script (`scratch/123g/unexport.mjs`) checked each line began with
+`export` and named its declaration before it wrote any file. A first
+version written through a shell heredoc lost a backslash, so its word
+boundary became a backspace and it refused the first line; it wrote
+nothing, and the kept version has no escape.
+
+Proof (export): typecheck clean, so no reader was missed; `build-hash
+HEAD`, the same bytes; the save's pin, `save-fingerprint.test.ts`, 8 of
+8. No comment changed.

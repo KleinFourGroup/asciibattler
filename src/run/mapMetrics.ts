@@ -35,7 +35,7 @@ import type { NodeMap, NodeKind } from './NodeMap';
  *  are about. Battle/boss are structural (everywhere / the terminal). */
 export const SPECIAL_KINDS: readonly NodeKind[] = ['rest', 'elite', 'port', 'event'];
 
-export interface RejoinPair {
+interface RejoinPair {
   /** The branching node's hop. */
   readonly branchHop: number;
   /** Hops from the branch node to the first hop where the two children's

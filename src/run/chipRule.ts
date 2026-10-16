@@ -40,7 +40,7 @@ export interface SidePower {
 }
 
 /** The uncapped pool-HP charge TO each side's pool this turn. */
-export interface TurnCharges {
+interface TurnCharges {
   readonly player: number;
   readonly enemy: number;
 }
@@ -136,9 +136,9 @@ export function enemyExposure(
  *
  * Everything here is pure; `health` is injectable like the rest of the file.
  */
-export type LossPhase = 'immediate' | 'end';
+type LossPhase = 'immediate' | 'end';
 
-export type LossCause =
+type LossCause =
   | { readonly kind: 'unit'; readonly unitId: number; readonly team: 'player' | 'enemy' }
   | { readonly kind: 'team'; readonly team: 'player' | 'enemy' };
 
@@ -153,14 +153,14 @@ export interface PoolLossEvent {
 
 /** The `unit:died` payload's slice the model reads. `power` is the amount
  *  the World BOOKED (a summon 0, a neutral excluded by team). */
-export interface FallenUnit {
+interface FallenUnit {
   readonly unitId: number;
   readonly team: 'player' | 'enemy' | 'neutral';
   readonly power: number;
 }
 
 /** A living on-grid combatant at battle end (`World.survivorsByUnit`). */
-export interface StandingUnit {
+interface StandingUnit {
   readonly unitId: number;
   readonly team: 'player' | 'enemy';
   readonly power: number;

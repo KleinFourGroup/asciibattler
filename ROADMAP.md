@@ -179,7 +179,7 @@ The cut, signed 2026-10-16 with the kickoff's five calls (WORKLOG §123,
   `empowerAvailability`, `redrawAvailability`, with their tests. Proof:
   export; `reach-diff`.
 - ☑ **123f — `EncounterState.turn`** (`none`). Proof: sim.
-- ☐ **123g — A-26, the word `export`** (`none`). Proof: export.
+- ☑ **123g — A-26, the word `export`** (`none`). Proof: export.
 - ☐ **123h — B-04, one chip rule** (`none`). Proof: sim and config; the
   shipped tooltip words by their test.
 - ☐ **123i — B-06, one shuffle** (`none`). Proof: sim.

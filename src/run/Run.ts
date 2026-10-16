@@ -182,17 +182,17 @@ export type RunPhase =
  * a `currentOffer` sibling) and a JITTERED price; packet/daemon slots carry
  * catalog ids (defs resolve at read time) and flat price-book prices.
  */
-export interface PortUnitSlot {
+interface PortUnitSlot {
   readonly template: UnitTemplate;
   readonly price: number;
   sold: boolean;
 }
-export interface PortPacketSlot {
+interface PortPacketSlot {
   readonly packetId: string;
   readonly price: number;
   sold: boolean;
 }
-export interface PortDaemonSlot {
+interface PortDaemonSlot {
   readonly daemonId: string;
   readonly price: number;
   sold: boolean;
@@ -546,14 +546,14 @@ export interface FallenRecord {
  *  once the next sector has replaced the cleared one: which sector was
  *  cleared (by id; its title resolves from the catalog) and the pool before
  *  the seam's heal. */
-export interface ClearedSector {
+interface ClearedSector {
   readonly sectorId: string;
   readonly poolBefore: number;
 }
 
 /** 115a — the active encounter's last resolved turn, as `turn:resolved`
  *  reported it. Who fell in it is already in the fallen ledger. */
-export interface LastTurn {
+interface LastTurn {
   readonly winner: 'player' | 'enemy' | 'draw';
   readonly reason: TurnEndReason;
 }
@@ -580,7 +580,7 @@ function cloneBattleRule(rule: BattleRule): BattleRule {
  *  (the reward tally's source label). No shipped packet injects a run-
  *  duration rule since 88c daemonized miner (packets.test.ts guards);
  *  encounter-duration injectors (venom) still ride this wrapper. */
-export interface InjectedRule {
+interface InjectedRule {
   rule: BattleRule;
   sourceId: string;
 }
@@ -610,7 +610,7 @@ function gateState<T>(value: T | null, phase: RunPhase, field: string): T {
  * `gridW`/`gridH` are stored (not re-derived) because a procedural roll's side
  * isn't recoverable from `layoutId: null`.
  */
-export interface EncounterMap {
+interface EncounterMap {
   readonly layoutId: string | null;
   readonly gridW: number;
   readonly gridH: number;

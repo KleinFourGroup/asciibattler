@@ -28,12 +28,12 @@ import {
 } from '../../config/sectors';
 import { pickWeighted } from '../sectorWalk';
 
-export interface SelectionContext {
+interface SelectionContext {
   readonly hop: number;
   readonly nodeKind: NodeKind;
 }
 
-export interface SelectedEncounter {
+interface SelectedEncounter {
   readonly encounter: Encounter;
   /** The rolled battlefield: a real layout id, or `null` for a procedural map
    *  (the `PROCEDURAL_LAYOUT_ID` sentinel resolved). */

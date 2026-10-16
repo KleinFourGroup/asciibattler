@@ -47,7 +47,7 @@ export type InstantOp = Extract<EffectOp, { op: 'gainBits' } | { op: 'healPool' 
 /** 49d — one grant's effect in the queue. Budgets unify onto `budget`
  *  (actions from this grant); redraw carries its per-action card cap,
  *  empower its buff. */
-export type GrantEffect =
+type GrantEffect =
   | { kind: 'redraw'; budget: number; maxCards: number }
   | { kind: 'empower'; budget: number; buff: EmpowerConfig['buff'] };
 
@@ -123,7 +123,7 @@ export function grantViews(
 /** 47e — one turn-start walk's full result: the serialized grants (round-trip
  *  in the Run save) plus this turn's granted instant ops (executed at the
  *  fire site, then discarded — see the module header). */
-export interface TurnStartResolution {
+interface TurnStartResolution {
   grants: TurnGrants;
   instants: InstantOp[];
 }
@@ -246,7 +246,7 @@ export function resolveTurnGrants(
 
 /** 47e — the filter context a run-lifecycle firing carries. `won` exists
  *  only at `encounterEnd` (the 47b matrix pins the `won` filter there). */
-export interface RunFireContext {
+interface RunFireContext {
   won?: boolean;
 }
 

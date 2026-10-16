@@ -46,7 +46,7 @@ import { LEVELING } from '../config/leveling';
  * — a zero is spelled "blacklist", which removes the archetype from `pools`
  * instead); the sampler still guards a zero-total pool loudly.
  */
-export type ArchetypeWeights = Readonly<Partial<Record<Archetype, number>>>;
+type ArchetypeWeights = Readonly<Partial<Record<Archetype, number>>>;
 
 export function rollOffer(
   rng: RNG,

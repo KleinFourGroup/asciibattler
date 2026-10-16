@@ -70,7 +70,7 @@ export function avgTeamLevel(team: readonly UnitTemplate[]): number {
  * the enemy total stays a fixed fraction of the roster at any depth (a flat
  * subtraction got swamped late). `round` keeps the budget an integer.
  */
-export function enemyBudgetFor(team: readonly UnitTemplate[]): number {
+function enemyBudgetFor(team: readonly UnitTemplate[]): number {
   const { budgetFactor, budgetOffset, minBudget } = DIFFICULTY;
   return Math.max(minBudget, Math.round(budgetOffset + budgetFactor * playerTeamLevel(team)));
 }
@@ -123,7 +123,7 @@ export function buildEnemyTeam(rng: RNG, playerTeam: readonly UnitTemplate[]): U
  * system." Count past the spawn region's tiles overflows onto the D5 spawn
  * queue (verified — `checkBattleEnd` treats a queued team as alive).
  */
-export function rollEnemyWave(
+function rollEnemyWave(
   rng: RNG,
   playerTeam: readonly UnitTemplate[],
   budget: number,

@@ -83,14 +83,14 @@ export type LevelCapSpec =
 
 /** How a unit type claims COUNT within the wave: a `fixed` headcount, or a
  *  `weight` share of the leftover count after the fixed units are placed. */
-export type UnitCountSpec =
+type UnitCountSpec =
   | { readonly kind: 'fixed'; readonly value: number }
   | { readonly kind: 'weight'; readonly weight: number };
 
 /** How a unit type's instances claim LEVEL within the wave: `fixed` pins every
  *  instance to an exact level; `weight` claims a per-instance share of the
  *  remaining level budget (higher weight → higher-level individuals). */
-export type UnitLevelSpec =
+type UnitLevelSpec =
   | { readonly kind: 'fixed'; readonly value: number }
   | { readonly kind: 'weight'; readonly weight: number };
 

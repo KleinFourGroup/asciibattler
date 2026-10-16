@@ -16,7 +16,7 @@ import type { StatKey, StatusEffect } from '../sim/statusEffects';
 
 /** 49d — one empower grant's live state, as the validator reads it (a
  *  `TurnGrant` with `effect.kind === 'empower'`, flattened). */
-export interface EmpowerGrantState {
+interface EmpowerGrantState {
   /** Actions consumed from this grant (`TurnGrant.used`). */
   used: number;
   /** Actions this grant carries (`effect.budget`). */

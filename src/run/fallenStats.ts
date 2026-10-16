@@ -46,7 +46,7 @@ export interface FallenBothSides {
 }
 
 /** One turn of an encounter in which somebody fell. */
-export interface TurnFallen extends FallenBothSides {
+interface TurnFallen extends FallenBothSides {
   /** 1-based, as the ledger records it. */
   readonly turn: number;
 }

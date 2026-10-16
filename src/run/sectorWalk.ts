@@ -12,7 +12,7 @@ import type { RNG } from '../core/RNG';
 import type { SectorMap } from '../config/sectorMap';
 
 /** A walk result: which DAG node the run is at + which sector it chose there. */
-export interface SectorPick {
+interface SectorPick {
   readonly sectorNodeId: string;
   readonly sectorId: string;
 }

@@ -54,8 +54,8 @@ export type TriggerHandler<K extends TriggerName> = (
 
 /**
  * A trigger dispatcher over a context map `M` and an owner `O`, which
- * `World` holds for the combat triggers. Handlers fire in the order they were registered; a trigger with none costs
- * one Map lookup.
+ * `World` holds for the combat triggers. Handlers fire in the order they
+ * were registered; a trigger with none costs one Map lookup.
  */
 export class TriggerDispatcher<M, O> {
   private readonly handlers = new Map<keyof M, Array<(ctx: M[keyof M], owner: O) => void>>();

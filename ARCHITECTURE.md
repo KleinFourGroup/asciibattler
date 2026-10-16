@@ -274,8 +274,8 @@ src/
                              # the K1 reset at encounter start; injectedEncounterRules/injectedRunRules
                              # unioned into every beginTurn compile after the daemon rules; packet
                              # redraw grants INSERT AT THE CURSOR). Live version: HANDOFF 🧭
-    redraw.ts                # K3→49d: pure redraw rules against ONE grant entry — redrawRejection / redrawAvailability (RedrawGrantState: used/budget/maxCards-per-ACTION)
-    empower.ts               # K4→49d: pure empower rules against ONE grant entry — empowerRejection / empowerAvailability / empowerEffect(buff)
+    redraw.ts                # K3→49d: pure redraw rules against ONE grant entry — redrawRejection (RedrawGrantState: used/budget/maxCards-per-ACTION)
+    empower.ts               # K4→49d: pure empower rules against ONE grant entry — empowerRejection / empowerEffect(buff)
     daemon.ts                # L1→49d: pure daemon rules — resolveTurnGrants + hooks (63c retired rollDaemon: characters seed the starting daemon)
                              # (owned daemons' turnStart grant hooks → THE GRANT QUEUE: TurnGrant[] per-source in
                              # walk order, each {daemonId; effect(kind/budget/maxCards|buff); used; passed} +

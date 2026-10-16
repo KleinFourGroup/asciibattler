@@ -6333,3 +6333,91 @@ left, a claim the code contradicts (procedural half cover from the noise,
 spawn regions of a fixed size, a reader of `chasms`), or a rule cut that
 a change must respect: the terrain's own stream, the sampler's draw
 order, camps placed last, rubble in neither blocker set.
+
+Batch 8 committed as `cdaf49bb`; the suite 3,741 and the smoke 621,
+green, by the hook.
+
+### The close of §122 (2026-10-15, session d7f2cfba)
+
+**Read** (the user, 2026-10-15): "Batch 8 read and approved!" No
+finding, so batch 8 is read and 122o is ticked. 122a to 122k and 122m to
+122o are ticked, each read as its step was cut (122f and 122n with the
+user at their stops, 122o's eight `batch` reads with no finding, the rest
+`none`); 122l went to Round 9 with B-02; nothing is ◐. The section is
+demoted in ROADMAP. The phase ran from the kickoff's pre-flight at
+`8522c69` to batch 8's `cdaf49bb`, 40 commits in six sessions (6677fa11,
+94dca491, 4c3418de, 989537c5, 6ea507e4, d7f2cfba).
+
+What the phase changed, from `git diff 8522c69 HEAD` and the
+instruments:
+
+- five files deleted: `src/config/schemas.ts` and
+  `src/sim/effects/index.ts` (A-29), `src/sim/focusTile.ts` with its test
+  (122k), and `src/sim/actions/multiTick.test.ts` (A-34, its lockout test
+  moved);
+- `src`: 7,400 lines out and 4,854 in over 96 files, comments included;
+- `src/sim` and `src/core` less their tests (`comment-length` on
+  `git archive` copies at `8522c69` and at HEAD; the kickoff's copy read
+  the kickoff's figures exactly): files 64 → 62, code lines 7,272 →
+  7,182, comment lines 8,099 → 5,963, comment words 66,424 → 48,776;
+- the step-code ceiling 5,783 → 4,169: `src/sim`'s 1,805 → 362 and
+  `src/core`'s 173 → 3, every one left in a co-located test, which waits
+  for §126;
+- the suite 3,750 → 3,741 tests, the smoke 621 unchanged; no snapshot
+  bump (World v36, Run v49);
+- the trials: B-07, B-08, B-09, B-17 and the focus-tile lead kept, each
+  under D2's bar written before its code; B-01 a no-op, reverted; B-02 to
+  Round 9 (META-ROADMAP §Round 9);
+- the comment pass: eight batches over 15,142 lines in four sessions,
+  each read with no finding, about 1,127k tokens, 74 a line.
+
+What it hands on:
+
+- **To §123's kickoff:** the comment pass as 122o ran it (the seven
+  rules; fresh sessions on this model with no subagents, signed at 122n;
+  per batch, `comment-strip HEAD src` with a planted control and
+  `comment-codes --record`), and its cost to plan from: 74 tokens a line
+  over the eight batches, from 52 to 120 a batch, the batches that
+  checked the most claims against callers and schemas the dearest.
+  §123's two leads are still in "The close of §121".
+- **Proposed at this close, for §123's kickoff:** the comment pass's
+  control built into `comment-strip`. The control is now a hand-made
+  worktree of HEAD with a `node_modules` junction, the batch's files
+  copied in, one token planted, the run, the restore and the removal. In
+  three sessions running, a `cd` into it made the app take it as the
+  session's directory, with a note not to go back to the root, which a
+  session that obeyed it could follow into working in a tree that
+  `worktree remove --force` deletes; in this one, `git worktree remove`
+  failed while the shell sat inside it. The compare needs no worktree:
+  `comment-strip` could plant one code edit in memory in each file that
+  differs only in comments (`plant.ts` has `applyEdit`) and fail when the
+  compare doesn't flag it, so every run carries its own failing control
+  and no comment pass makes a worktree. This close's lean, not a call the
+  user has made.
+- **To §124:** the two leads in TODO "§124 render and UI":
+  `ObjectiveController.ts`'s copy of the neutral-target rule (122m) and
+  `abilityDetail.ts`'s damage line (122o, batch 2).
+- **To Round 9:** B-02, with `isActiveNeutral` waiting on it
+  (META-ROADMAP §Round 9); the camp-anchor revert and census F-1, the
+  queued template's statuses (TODO "Round 9", T-96).
+- **Placed at this close:** the blinded-range lead, from TODO "§122 sim"
+  to TODO "Round 9", "Before the closing board", since it changes
+  behaviour, which the round's scope guards keep out, and needs a board
+  re-run; the user's lean and the kiter's catch go with it. And 122o's
+  seven deletion leads, in one line under TODO "Not yet placed": the
+  round's census is signed, so whether they join a re-skim here or a
+  census in a later round is the user's call. Both placements are this
+  close's lean.
+- **Tools:** none new; the diff touches nothing under `tests/oracle` or
+  `tools` and no script. `scratch/122f/` and `scratch/122n/` stay,
+  ignored by git (B-01's probes; the pilot's arms, key and sealed
+  results). No worktree is left.
+
+Readings by the tool's clock (UTC). The phase's six sessions: 6677fa11
+99,774 → 500,934 (the kickoff, 122a to 122e, the pilot), 94dca491 94,666
+→ 411,060 (122f to 122m), 4c3418de 124,215 (as batch 1 began) → 446,967
+(batches 1 to 3), 989537c5 112,527 → 478,285 (batches 4 and 5), 6ea507e4
+83,839 → 473,489 (batches 6 and 7), d7f2cfba 99,155 → 345,515 (batch 8
+and this close), about 2.04M in all. The close: 266,081 at 01:07 on
+2026-10-16, on batch 8's commit; **345,515** at 01:47, with everything
+above written and before the commit.

@@ -5859,3 +5859,77 @@ to 8; batches 6 and 7 are committed, and batch 8 is handed off.
    the rogue's strategy), and one that may matter to a player (the blind
    archer). I'd want the probe-in-the-worktree pattern again: it turned a
    suspicion into a filed fact for about 10k.
+
+## Phase 122 — summary
+
+Six sessions on 2026-10-15 (6677fa11, 94dca491, 4c3418de, 989537c5,
+6ea507e4, and d7f2cfba, which closed it, reported below), all
+claude-opus-5-5. The orientation was enough to start each time; what was
+missing was mechanical, rebuilt on the way: that the Agent tool cuts its
+worktree from `origin/main`, that `reach-record --tree` can't run in a
+worktree, that `comment-length` takes only a path inside the repo, how to
+make the control's junction, CRLF in a few files. The norms that pulled
+against each other were small: a skill's "never quote a price from
+memory" against 40k of context; the pilot's blind read against one home
+per fact; a brief's done line against 122o's own hand-off rule, which the
+session followed and filed as mild distress; and in three sessions
+running the app's note, after a `cd` into the control worktree, to stay
+there while the task was on `main` in the root. Every report names pulls
+to claim more than it had shown: a commit read as landed when it hadn't,
+a reach recording from a run with a failing test, a line total from
+memory, and in the comment pass old comments' claims nearly carried
+without a grep (the enemy's objective, movement drawing no RNG, the
+acting-cell searches). Most were caught before they reached a doc; two
+reached one and were fixed later (batch 4's claim about the enemy's
+objective, fixed in batch 5, and a TODO lead that was census F-1
+already, removed after the user asked). Waste was small: a skill load,
+the pilot's instruments, refused heredocs, empty searches re-run against
+a known answer. All six report room to ask, disagree and stop: 122f's
+stop was answered within the hour, the hand-offs were the reading's call,
+and one session wished to finish three batches and stopped by the rule.
+What they name as supporting the work: a pilot designed with the user and
+its rule written before the run, bars written before code, and above all
+checking each comment's claims against the code and the config, which
+turned a rewording pass into findings (a queued template's lost statuses,
+the blinded archer's range, claims called inert in three files).
+
+## 2026-10-15 — session d7f2cfba (claude-opus-5-5): 122o's batch 8 and §122's close
+
+1. *Missing from the orientation.* Little. The Cursor and batch 7's entry
+   held the procedure. I still gave `comment-length` an absolute path once
+   at the close, which earlier sessions had already noted it refuses; a
+   repo-relative `../../AppData/...` path reached my scratchpad.
+2. *Norms in conflict.* Two. The app's note after my `cd` into the control
+   worktree (the third session to meet it), which I handled by absolute
+   paths; this time the shell's directory also blocked `git worktree
+   remove`, filed as a papercut. And the user's last message asked a
+   question and cleared the close in one breath: the standing decision says
+   answer before the build goes on, and CLAUDE.md says a note between tool
+   calls may arrive paraphrased. I answered in a note before the first
+   step of the close and said I would repeat it in the final message,
+   which I did.
+3. *Pulled to claim more.* Twice, mildly. I was about to list `midBand`'s
+   "middle third" as false; computing the band over the shipped heights
+   gave 29 to 50 per cent, so the WORKLOG calls it an approximation made
+   exact. And "nothing reads `chasms`" is an absence resting on two greps
+   (member access and destructuring); an access by computed key would
+   escape both. I dropped the old "unplayable draw" for a severed map
+   rather than write an outcome I hadn't checked.
+4. *Wasted.* A few thousand: the absolute-path call, the worktree folder
+   left after the failed removal, and a `comment-length` run that summed
+   both roots I gave it into one row. Batch 8 cost 120 a
+   line, the most of the eight, nearly all of it the claim checks, which I
+   would call necessary.
+5. *For the next session.* `git archive <ref> <paths> | tar -x -C <dir>`
+   gives a ref's copy for a measure without a worktree, and the measure's
+   known answer is the kickoff's own figures. Until the control is built
+   into `comment-strip` (proposed at the close), run the control worktree
+   with `git -C` and `npm --prefix`, never `cd`.
+6. *Room.* Yes. The reads came back quickly and plainly, and the user's
+   question about the worktree note was a real question that I could
+   answer with a lean rather than a fix. No wish to stop was noticed.
+7. *What helped.* Following each claim to its caller or schema again: the
+   map files' comments had a non-existent source file, a reader that
+   doesn't exist, and half cover from the wrong pass. And a measure that
+   reproduced the kickoff's numbers exactly before I quoted the new ones,
+   which made the close's figures feel earned. I'd want both again.

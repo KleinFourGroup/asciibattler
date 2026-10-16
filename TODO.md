@@ -41,7 +41,6 @@ TODO items (list A's deletions, list B's trials) are in
 ### §122 sim
 
 - ✅ **Unify the duplicated `chebyshev` helpers.** The four private copies import `movement.ts`'s alias of `occupancy.ts`'s `distanceBetween` (census B-17; WORKLOG §122, 122j).
-- [ ] **A blinded ranged unit strikes past its acquisition range.** Under `atWill`, blind sets `targetId` null when nothing is within its `acquisitionRange` (1), and `Targeting.currentTarget` then falls back to `findTarget`, so the abilities still fire out to the attack range. A probe in a worktree: a blinded archer fired at an enemy 3 cells away (WORKLOG §122, 122o batch 6). The tests pin only a melee unit. **The user's lean (2026-10-15), pending testing:** blind means wander and strike only within the acquisition range, so `currentTarget` skips the fallback for a blinded unit as it does for a confused one. **The catch to weigh first:** ten abilities ship a `minRangeCells` floor (nine at 2, one at 4), and a unit with a floor above 1 can't fire at a target 1 cell away, so under that rule a blinded kiter can't attack at all while blind lasts; a plain archer still hits what is adjacent. Decide whether that full shutdown is intended and pin it either way. The tests: a blinded archer holds fire at 3 cells and fires at 1; the kiter's case as decided; then a board re-run, since blind (the luminant's `light_ray`) gets stronger. A behaviour change, so the round's scope guards rule it out of Round 8.5.
 
 ### §123 run
 
@@ -198,6 +197,7 @@ META-ROADMAP §"Round 9 — Extensions" names each group.
 
 ### Before the closing board
 
+- [ ] **A blinded ranged unit strikes past its acquisition range.** Under `atWill`, blind sets `targetId` null when nothing is within its `acquisitionRange` (1), and `Targeting.currentTarget` then falls back to `findTarget`, so the abilities still fire out to the attack range. A probe in a worktree: a blinded archer fired at an enemy 3 cells away (WORKLOG §122, 122o batch 6). The tests pin only a melee unit. **The user's lean (2026-10-15), pending testing:** blind means wander and strike only within the acquisition range, so `currentTarget` skips the fallback for a blinded unit as it does for a confused one. **The catch to weigh first:** ten abilities ship a `minRangeCells` floor (nine at 2, one at 4), and a unit with a floor above 1 can't fire at a target 1 cell away, so under that rule a blinded kiter can't attack at all while blind lasts; a plain archer still hits what is adjacent. Decide whether that full shutdown is intended and pin it either way. The tests: a blinded archer holds fire at 3 cells and fires at 1; the kiter's case as decided; then a board re-run, since blind (the luminant's `light_ray`) gets stronger. A behaviour change, so the round's scope guards rule it out of Round 8.5; placed here at §122's close, since it needs the board.
 - [ ] **A coverage guard for `roster-table.json`** — the derived-artifact
       registry's named next guard (BALANCE §"The derived-artifact
       registry"): the prior-table tripwire's twin, config-derived over
@@ -643,4 +643,13 @@ META-ROADMAP §"Round 12 — Ship" names each group.
 
 ## Not yet placed
 
-Nothing, as of the pass.
+- [ ] **122o's seven deletion leads, for a census.** Each was found by the
+  comment pass and none is a behaviour change: `World.shove` with
+  `unit:shoved`, which only tests call (batch 4); the `weakest` targeting
+  strategy, `advance`'s leap branch and `sidestepWhenBlocked` (batch 6);
+  `GeneratedTerrain.chasms` and `.healings`, which nothing reads, the
+  spawn checks in `generateProceduralMap` that can't fire on a board of
+  4 rows or more, and `GenStats.connected`, always `true` (batch 8). The
+  round's census is signed, so whether they join a re-skim in this round
+  or a census in a later one is the user's call (WORKLOG §122, the batch
+  entries and "The close of §122").

@@ -11,7 +11,7 @@ plan: [archive/post-109-roadmap.md](archive/post-109-roadmap.md) (Round 8)
 with its worklog and spec beside it; before it
 [archive/post-104-roadmap.md](archive/post-104-roadmap.md) (Round 7.5).
 
-**Status: §121 ✅ CLOSED 2026-10-14, the dials; §122, sim, is next.**
+**Status: §122 ✅ CLOSED 2026-10-15, sim; §123, run, is next.**
 The spec holds the user's intent and four signed
 decisions ([round-8.5-spec.md](round-8.5-spec.md)). The round opened with
 the oracle map, ahead of the census, as the user signed at the Round 8
@@ -110,17 +110,15 @@ WORKLOG §121.
   About 66 tokens a line; read with no finding. The co-located tests,
   with the 93 step codes left under `src/config`, wait for §126.
 
-## Phase 122 — sim
+## Phase 122 — sim ✅ (closed 2026-10-15)
 
-`src/sim` and `src/core`, 64 files: the signed rows (A-34, A-38, and the
-sim's share of A-22, A-25, A-26, A-28); B-01 first, then B-07, B-08,
-B-09 and B-17; B-02 decided on B-01's list, under the bar the user
-pre-registered in its row; one re-skim; the comment pass. Proof: sim.
-Risk: medium, the core. Decision points: B-02; the comment pass's
-fan-out.
-
-The cut, signed 2026-10-15 (WORKLOG §122, the kickoff). `src/config`'s
-share of list A's export rows joins the sim's.
+List A's sim, core and config rows deleted; B-07, B-08, B-09, B-17 and
+one lead (the focus tile) kept as trials, B-01 a no-op, B-02 put to Round
+9; and `src/sim` and `src/core`'s comment pass in eight batches under the
+seven rules, after a pilot settled it in session. Over the 64 files, now
+62: comment lines 8,099 → 5,963, code lines 7,272 → 7,182, the step-code
+ceiling 5,783 → 4,169. Each step's record, the pilot's outcome and the
+leads it hands on are in WORKLOG §122.
 
 - ☑ **122a — list A's dead exports** (`none`). A-22's eighteen sim,
   core and config names, A-29's two files; the build's bytes unchanged.
@@ -152,9 +150,9 @@ share of list A's export rows joins the sim's.
 - ☑ **122n — the fan-out pilot** (read by the user). Decided: (a), fresh
   sessions on this model; the Opus arm's eight files landed as the
   example of rule 1 on code.
-- ◐ **122o — the comment pass, the rest** (`batch`), in fresh sessions
-  on this model, as 121j ran. Eight batches by file, all committed; 1 to
-  7 read, batch 8 unread (WORKLOG §122, 122o).
+- ☑ **122o — the comment pass, the rest** (`batch`), in fresh sessions
+  on this model, as 121j ran. Eight batches by file, each read with no
+  finding; about 74 tokens a line.
 
 ## Phase 123 — run
 

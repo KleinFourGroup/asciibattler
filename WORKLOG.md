@@ -7393,3 +7393,28 @@ CAUGHT, 28 of 30, and the suite CAUGHT, 4 of 259 files, among them
 tests gone; unplanted, 0 of 30 and the set-aside `licences.test.ts`.
 `src` −34 without tests (+79 −113, most of it the step body's dedent),
 tests −80 (+2 −82).
+
+### The reach-diff over the seven (2026-10-16, session bfbf31de)
+
+`reach-record npm-test --dir=output/reach-123l/after` at `5e7774c2`,
+green, 97 s; then `reach-diff` of the two readings with
+`--from=a5cf0104`, which takes the `npm-test.json` files, not their
+folders (given the folders, it stopped on `EISDIR`). It compared 44
+files changed since `a5cf0104` through their diffs, and the suite no
+longer reaches one line and one function in one file:
+`knownAbilityIds` (`abilities/registry.ts:94-95`). That is the load
+cycle's fix (c), not a deletion: `units.ts` no longer calls it, and its
+one caller left is the archetype editor, which no test runs. Nothing
+else the seven deletions or the fix touched lost the suite.
+
+The same read found a doc the fix left stale: `registry.ts`'s header
+said the unit catalog checks ability ids here through
+`knownAbilityIds`. It now says the catalog checks against the ability
+catalog and never imports this module. Proof: `comment-strip HEAD src`,
+comments only, its control named (exit 0).
+
+A lead, not taken: with the unit catalog off it, `knownAbilityIds` is
+the archetype editor's alone (`tools/archetype-editor/editor.ts:81`).
+Reading `Object.keys(ABILITY_DEFS)` there would delete it, and would
+change the editor's list order from the registry's to the catalog's
+(TODO "Not yet placed").

@@ -211,7 +211,9 @@ The cut, signed 2026-10-16 with the kickoff's five calls (WORKLOG §123,
     −29.
   - ☑ **L-2 — `advance`'s leap branch; `maxCells` to `leapLanding`**
     (`none`). Proof: sim, a plant in `leapLanding` caught; `src` −34.
-    `reach-diff` over the seven next.
+  - ☑ **The `reach-diff` over the seven.** The suite lost only
+    `knownAbilityIds`, by the load cycle's fix (WORKLOG §123, "The
+    reach-diff over the seven").
 - ☐ **123m — the comment pass** (`batch`, per batch). The 19 files as
   122o ran it; the tests wait for §126.
 - ☐ **123n — `Run.ts` read again for B-15** (`stop`). A split comes back

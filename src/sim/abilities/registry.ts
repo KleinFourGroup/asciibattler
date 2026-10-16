@@ -5,9 +5,10 @@ import { EffectAbility } from '../effects/EffectAbility';
 
 /**
  * The ability factories, by `Ability.id`. `World.fromJSON` rebuilds each unit's
- * `abilities` from a snapshot through them, and the unit catalog
- * (`src/config/units.ts`) checks at boot that every ability id an archetype
- * names is known here (`knownAbilityIds`).
+ * `abilities` from a snapshot through them. Their ids are the ability
+ * catalog's (the check below), so the unit catalog (`src/config/units.ts`)
+ * checks the ability ids an archetype names against the catalog and never
+ * imports this module, which reaches it back (gotcha #114).
  *
  * Abilities are stateless, so a factory takes no arguments, as in
  * `behaviors/registry.ts`. An ability that kept state per instance would need

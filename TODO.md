@@ -654,3 +654,10 @@ META-ROADMAP §"Round 12 — Ship" names each group.
   `GeneratedTerrain`'s tile arrays, the spawn checks, the `weakest`
   strategy and `advance`'s leap branch are deleted (WORKLOG §123, "123l —
   the re-skim" and "123l's rows, built").
+
+- [ ] **`knownAbilityIds` has one reader left, the archetype editor.**
+  The unit catalog stopped calling it at the load cycle's fix, so no
+  test reaches it. The editor could read `Object.keys(ABILITY_DEFS)` and
+  the function go, which would order the editor's ability list by the
+  catalog instead of the registry (WORKLOG §123, "The reach-diff over
+  the seven").

@@ -115,7 +115,6 @@ import {
   type EventCondition,
   type EventEffectOp,
   type EventNext,
-  type EventOutcome,
   type EventFlagValue,
 } from '../config/events';
 import { rollRewards, type RewardPortion } from './rewards';
@@ -221,6 +220,20 @@ function sampleDistinct<T>(pool: readonly T[], count: number, rng: RNG): T[] {
     copy[j] = tmp;
   }
   return copy.slice(0, n);
+}
+
+/** One cumulative-weight draw over `items`: exactly one `next()`, a list
+ *  of one included (gotcha #111), and the last item if rounding runs past
+ *  the sum. The event's pick and a choice's outcome both use it. */
+function pickWeighted<T>(items: readonly T[], weightOf: (item: T) => number, rng: RNG): T {
+  const total = items.reduce((sum, item) => sum + weightOf(item), 0);
+  const draw = rng.next() * total;
+  let acc = 0;
+  for (const item of items) {
+    acc += weightOf(item);
+    if (draw < acc) return item;
+  }
+  return items[items.length - 1]!;
 }
 
 export interface BattleEncounter {
@@ -1636,14 +1649,7 @@ export class Run {
       eligible.push({ def, weight: entry.weight ?? 1 });
     }
     if (eligible.length === 0) return null;
-    const total = eligible.reduce((sum, e) => sum + e.weight, 0);
-    const draw = entryRng.next() * total;
-    let acc = 0;
-    for (const e of eligible) {
-      acc += e.weight;
-      if (draw < acc) return e.def;
-    }
-    return eligible[eligible.length - 1]!.def;
+    return pickWeighted(eligible, (e) => e.weight, entryRng).def;
   }
 
   /**
@@ -1667,25 +1673,14 @@ export class Run {
     // roll + every effect op ride one derived stream (a snapshot can land
     // between choices, never inside one — the counter is serialized).
     const choiceRng = this.streamRng('event', this.eventStep++);
-    const outcome = this.rollEventOutcome(choice.outcomes, choiceRng);
+    // Weight absent = 1, the sector-pool convention; schema-positive, so
+    // the sum is never 0.
+    const outcome = pickWeighted(choice.outcomes, (o) => o.weight ?? 1, choiceRng);
     for (const op of outcome.effects ?? []) {
       this.executeEventOp(op, choiceRng);
       if (this.phase !== 'event') return; // damagePool killed the run
     }
     this.resolveEventNext(outcome.next);
-  }
-
-  /** 74b — one cumulative-weight draw over the outcome list (weight absent
-   *  = 1, the sector-pool convention; schema-positive so no zero-divide). */
-  private rollEventOutcome(outcomes: readonly EventOutcome[], choiceRng: RNG): EventOutcome {
-    const total = outcomes.reduce((sum, o) => sum + (o.weight ?? 1), 0);
-    const roll = choiceRng.next() * total;
-    let acc = 0;
-    for (const outcome of outcomes) {
-      acc += outcome.weight ?? 1;
-      if (roll < acc) return outcome;
-    }
-    return outcomes[outcomes.length - 1]!;
   }
 
   /**

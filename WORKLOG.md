@@ -6911,3 +6911,75 @@ Against the bar:
 
 Kept. The step-code ceiling 4,145 → 4,144 (the deleted note's "H5").
 Reading: 332,595 at 16:12, before the commit.
+
+### 123j — B-10, `Run.ts`'s small repeats (2026-10-16, session b9cfc3b3)
+
+Step zero at `950814f1`, the four parts where the row put them:
+
+- (a) *The two weighted draws.* The event's (`Run.ts:1639-1646`, over
+  the eligible entries with `weight` resolved to 1 when absent) and the
+  outcome's (`rollEventOutcome`, :1680-1689, resolving it inline): the
+  same total, one `next()` times it, a running sum compared with `<`,
+  the last item as the float fallback. Both draw once for a list of one,
+  so gotcha #111's difference between the five picks the census set
+  apart does not arise between these two.
+- (b) *The heal to the cap.* `Math.min(HEALTH.playerHealthMax,
+  this.playerHealth + op.amount)` in the event executor (:1714) and the
+  instant-op executor (:2849), each one line; `restedPool` (:3880) is a
+  third copy of the clamp, over four lines.
+- (c) *The swap slot's check.* The port's packet buy (:2011-2018) and
+  the reward's accept (:3624-3631): eight lines each, `undefined`, not
+  an integer, below 0, past the cache.
+- (d) *The command numbers.* `Number.isInteger` is on 11 lines. Nine
+  test an index the same way, integer and inside `[0, length)`: the
+  event choice (:1661), the two swap slots of (c), the removal's roster
+  index (:2070), the discard (:2652-2653, over two lines), the packet's
+  cache index (:2684), its hand and roster targets (:2699-2706,
+  :2710-2717, each with `undefined` first) and `removeRosterUnit`
+  (:4093, which throws). The sell's (:2053) tests the integer alone and
+  leaves the range to the `undefined` lookup after it; `spendBits`
+  (:2506) tests an amount. Those two stay.
+
+**The shapes.** (a) one module function in `Run.ts`,
+`pickWeighted(items, weightOf, rng)`, with the sum, the compare and the
+fallback as both have them; `rollEventOutcome` goes. (b) a
+`healedPool(amount)` that both heal sites and `restedPool` read; counted
+before the code at +1 or +2 lines, so likely under the bar. (d) one
+module function `isIndex(i, length)`: not `undefined`, an integer, at
+least 0, below `length`; it is a type guard, so the sites that test
+`undefined` first lose that test. (c) is two more of (d)'s sites, built
+after it and judged on its own lines.
+
+**The bar** (D2), written before the code, for each part:
+
+1. *The same behaviour:* typecheck clean; for (a) the corpus, 0 of 30,
+   then the fuzz diff against the commit before it, PASS on both
+   shapes, and a plant in `pickWeighted` in a worktree caught by the
+   corpus; for (b), (c) and (d) the same corpus and fuzz diff, and, as
+   the port trades are reached by tests alone, a plant in the new
+   function caught by the suite; the suite and the smoke by the hook.
+2. *Source lines do not grow* (`src` without tests), by the part's own
+   diff.
+3. *No new parameter.* `weightOf` reads a weight, which one site has
+   resolved and the other has not; it does not tell the sites apart.
+4. *What a reader had to know, counted:* (a) the draw written twice →
+   once; (b) the clamp written three times → once; (c) the swap check
+   written twice → none; (d) the index test written out at nine sites →
+   one function.
+
+Each part kept is its own commit; a part under the bar is reverted and
+recorded here as a no-op.
+
+**(a) Built.** `pickWeighted(items, weightOf, rng)` beside
+`sampleDistinct`, its doc saying it draws once for a list of one; the
+event pick returns `pickWeighted(eligible, (e) => e.weight,
+entryRng).def`, and the choice's outcome is `pickWeighted(choice.outcomes,
+(o) => o.weight ?? 1, choiceRng)` with the deleted method's note on the
+default weight. `rollEventOutcome` and the `EventOutcome` import go.
+Against the bar: (1) typecheck clean; the corpus, 0 of 30; the fuzz diff
+against `950814f1`, PASS on both shapes; the plant, in a worktree of an
+unreferenced commit of the tree (`9e448c35`), `draw < acc` negated in
+`pickWeighted`: unplanted 0 of 30, planted CAUGHT, 10 of 30. (2) `src`
+−5 (+18 −23). (3) No new parameter but `weightOf`, as the bar has it.
+(4) The draw written twice → once. **Kept.** The step-code ceiling
+4,144 → 4,143.

@@ -6579,3 +6579,32 @@ Proof:
 
 The smoke does not fire: `tests/oracle` is not on the hook's list.
 Reading: 297,177 at 14:35, before the commit.
+
+### 123b — A-36, the run's trigger registry (2026-10-16, session 854d0fbd)
+
+Gone from `Run.ts`: `RunTriggerContextMap`, the `runTriggers` field with
+its construction and its rebuild in `fromJSON`, `registerTrigger` and
+`fireTrigger`, the three fire sites (`encounterStart`, `turnStart`,
+`deploy`) and `toJSON`'s guard; from `src/sim/triggers.ts`,
+`TriggerDispatcher.size`, which only that guard read, and the doc's
+mention of `Run`. The daemons' own hooks at the same places
+(`resolveInstantHooks`, `resolveTurnGrants`) are a separate path and
+stay, as do `addEncounterEffect` and the encounter-effect store. The two
+comments beside the fire sites now say what is left there. Tests:
+`Run.test.ts`'s two registry tests, 3,742 → 3,740. ARCHITECTURE's
+`Run.ts` line drops the run triggers.
+
+Proof (sim):
+
+- typecheck clean;
+- the corpus, 0 of 30;
+- the fuzz diff against `b6b6d57d`: PASS, both shapes;
+- `reach-diff --from=b6b6d57d` of the suite recorded at `b6b6d57d` and
+  after (`output/reach-123/`), through the five changed files' diffs:
+  nothing lost. The first after-recording failed on the step-code
+  ceiling, as 122b's first did; the one quoted is the second,
+  green, after `comment-codes --record` (4,169 → 4,154: `Run.ts` 700 →
+  686 and its test).
+
+The census's evidence for the row, a break planted at a fire site that
+changes no run, was not run again.

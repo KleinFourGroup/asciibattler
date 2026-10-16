@@ -53,9 +53,8 @@ export type TriggerHandler<K extends TriggerName> = (
 ) => void;
 
 /**
- * A trigger dispatcher over a context map `M` and an owner `O`, shared by
- * `World` (the combat triggers) and `Run` (its own lifecycle triggers).
- * Handlers fire in the order they were registered; a trigger with none costs
+ * A trigger dispatcher over a context map `M` and an owner `O`, which
+ * `World` holds for the combat triggers. Handlers fire in the order they were registered; a trigger with none costs
  * one Map lookup.
  */
 export class TriggerDispatcher<M, O> {
@@ -74,14 +73,5 @@ export class TriggerDispatcher<M, O> {
     const list = this.handlers.get(name);
     if (list === undefined || list.length === 0) return;
     for (const handler of list) (handler as (ctx: M[K], owner: O) => void)(ctx, owner);
-  }
-
-  /** The number of registered handlers. `Run.toJSON` refuses to serialize
-   *  while it is above 0: handlers are not snapshotted and nothing registers
-   *  them again, so a save or a bot's clone would lose them without a word. */
-  get size(): number {
-    let n = 0;
-    for (const list of this.handlers.values()) n += list.length;
-    return n;
   }
 }

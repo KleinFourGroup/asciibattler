@@ -2555,29 +2555,6 @@ describe('Run', () => {
       expect(run.encounterEffects[run.encounterEffects.length - 1]).toEqual([]);
     });
 
-    it('fires encounterStart / turnStart / deploy with the right context', () => {
-      const { run } = freshRunWithBus(1);
-      const encounterStarts: number[] = [];
-      const turnStarts: number[] = [];
-      const deploys: number[] = [];
-      run.registerTrigger('encounterStart', (ctx) => encounterStarts.push(ctx.nodeId));
-      run.registerTrigger('turnStart', (ctx) => turnStarts.push(ctx.turn));
-      run.registerTrigger('deploy', (ctx) => deploys.push(ctx.rosterIndex));
-      run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
-      expect(encounterStarts).toEqual([run.currentNodeId]);
-      expect(turnStarts).toEqual([1]); // turn 1
-      // deploy fires once per fielded slot (this turn's whole hand).
-      expect(deploys.slice().sort()).toEqual(run.hand.slice().sort());
-    });
-
-    it('a turnStart daemon adds an encounter effect that is seeded that same turn', () => {
-      const { run } = freshShortRosterRun(1); // slot 0 must field this turn (K2)
-      // The L daemon flow, in miniature: on turn start, grant slot 0 an empower.
-      run.registerTrigger('turnStart', (_ctx, r) => r.addEncounterEffect(0, empower()));
-      run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
-      expect(fieldedFor(run, 0)!.effects).toEqual([empower()]);
-    });
-
     it('round-trips the encounter-effect store; a pre-K1 version is rejected', () => {
       const { run } = freshRunWithBus(1);
       run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });

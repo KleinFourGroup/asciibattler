@@ -168,7 +168,7 @@ The cut, signed 2026-10-16 with the kickoff's five calls (WORKLOG §123,
 - ☑ **123a — `comment-strip`'s control, built in** (`none`). A code edit
   planted in memory in each comment-only file; the run fails when the
   compare misses it.
-- ☐ **123b — A-36, the run's trigger registry** (`none`). With its two
+- ☑ **123b — A-36, the run's trigger registry** (`none`). With its two
   tests and `TriggerDispatcher.size`. Proof: sim; `reach-diff`.
 - ☐ **123c — A-39, the board's console line** (`none`). Proof: the
   corpus; `build-hash` moves at that file.

@@ -242,8 +242,8 @@ src/
                              #      sector-pool roll; 74i: `visited:<id>` marked at page open, the
                              #      no-repeat pool filter (repeatable opt-out), the firstNodeKind
                              #      dial exemption (a dial-stamped root draws the REGULAR pool)
-                             # K1: encounterEffects store (endOfEncounter, re-seeded at deploy) + addEncounterEffect
-                             # + run triggers (encounterStart/turnStart/deploy); beginTurn seeds fatigue + encounter effects
+                             # K1: encounterEffects store (endOfEncounter, re-seeded at deploy) + addEncounterEffect;
+                             # beginTurn seeds fatigue + encounter effects
                              # K3: pre-turn redraw (handleRedrawCards at the turn-intro gate; per-turn budget, v13)
                              # K3.5: ONE map per encounter — rollEncounterMap in beginEncounter → Run.encounterMap (v14);
                              # beginTurn keeps only worldSeed + the wave re-roll per turn

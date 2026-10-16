@@ -87,7 +87,6 @@ import {
 import type { BattleRule } from '../sim/battleRules';
 import { foldRunStats, RUN_STAT_BASES, type RunStatKey, type RunStatModifier } from './runStats';
 import { cloneEffect, mergeEffectInto, type StatusEffect } from '../sim/statusEffects';
-import { TriggerDispatcher } from '../sim/triggers';
 import type { RunCommand } from './Command';
 import { RECRUITMENT } from '../config/recruitment';
 import { TERRAIN } from '../config/terrain';
@@ -779,21 +778,6 @@ export interface RunSnapshot {
   lastTurn: LastTurn | null;
 }
 
-/**
- * K1 — the run-lifecycle trigger vocabulary (the Run-side analogue of the
- * World combat triggers in `src/sim/triggers.ts`). Handlers — Phase-L daemons —
- * typically respond by calling `Run.addEncounterEffect`. `turnStart` fires
- * before the turn's battle is built, so a handler's encounter effect is seeded
- * that same turn; `deploy` fires after a unit is fielded (its effect lands on
- * subsequent turns); `encounterStart` fires once per encounter after the
- * per-encounter reset.
- */
-export interface RunTriggerContextMap {
-  encounterStart: { hop: number; nodeId: number };
-  turnStart: { turn: number; hop: number };
-  deploy: { rosterIndex: number; template: UnitTemplate };
-}
-
 // Balance constants now live in config/*.json — see src/config/recruitment.ts.
 // Bound to locals here just for readability at the call sites. (The G4 enemy
 // budget reads `config/difficulty.json` inside `src/run/enemyBudget.ts`.)
@@ -916,14 +900,6 @@ export class Run {
    * `deploymentCounts`). Round-trips in the Run save (v12).
    */
   encounterEffects: StatusEffect[][];
-  /**
-   * K1 — run-lifecycle trigger dispatch (`encounterStart` / `turnStart` /
-   * `deploy`), the Run-side analogue of the World's combat triggers. The
-   * Phase-L daemon system registers handlers here (which typically call
-   * `addEncounterEffect`); K1 ships the dispatch + fire points + tests with no
-   * production handler. NOT snapshotted — re-created on construct / rehydrate.
-   */
-  private runTriggers!: TriggerDispatcher<RunTriggerContextMap, Run>;
   /**
    * H5 — the card deck (draw → hand → discard), holding `rosterIndex` values.
    * Each turn draws up to `effectiveDrawAmount` cards into `hand` (65a — the
@@ -1214,10 +1190,8 @@ export class Run {
       : this.character.roster.map((a) => rollUnit(a, teamRng, STARTING_LEVEL));
     // H3 — one deployment slot per roster unit, all zero at run start.
     this.deploymentCounts = new Array(this.team.length).fill(0);
-    // K1 — one (empty) encounter-effect list per roster unit + the run-trigger
-    // dispatcher (no handler until a daemon registers one in L).
+    // K1 — one (empty) encounter-effect list per roster unit.
     this.encounterEffects = this.team.map(() => []);
-    this.runTriggers = new TriggerDispatcher<RunTriggerContextMap, Run>();
     // H5 — the deck is empty until an encounter builds + shuffles it
     // (`beginEncounter`); piles round-trip but mean nothing between encounters.
     this.drawPile = [];
@@ -2182,10 +2156,7 @@ export class Run {
         `hop ${this.currentHop}`,
       );
     }
-    // K1 — clear the encounter-effect store + fire `encounterStart` so a daemon
-    // can grant fresh encounter buffs for this encounter (no-op at the default,
-    // no handler registered → byte-identical). Fired AFTER the map roll so a
-    // future daemon can read `encounterMap`.
+    // K1 — clear the encounter-effect store.
     this.resetEncounterEffects();
     // 49e — the pending out-of-battle buffs (overclock) land NOW, right
     // after the reset (the pending-until-start ordering, the 49e shape-lock),
@@ -2193,10 +2164,9 @@ export class Run {
     // reset-at-start doctrine; run-duration injections persist).
     this.drainPendingEncounterEffects();
     this.injectedEncounterRules = [];
-    this.fireTrigger('encounterStart', { hop: this.currentHop, nodeId: this.currentNodeId });
-    // 47e — daemon `encounterStart` instant hooks fire alongside the K1
-    // trigger (no launch daemon authors one — byte-identical until content
-    // does; a chance-gated hook here would draw off `daemonRng`).
+    // 47e — daemon `encounterStart` instant hooks fire here (no launch daemon
+    // authors one — byte-identical until content does; a chance-gated hook
+    // here would draw off `daemonRng`).
     this.executeInstantOps(
       resolveInstantHooks(
         this.daemons,
@@ -2400,10 +2370,6 @@ export class Run {
     // walk, one draw; never re-resolve). Applied before the `turn:starting`
     // emit so the gate screen reads post-effect state.
     this.executeInstantOps(resolution.instants);
-    // K1 — `turnStart` fires before the turn's battle is built (on both the
-    // gated + headless paths), so a daemon's encounter effect added here is
-    // seeded onto this turn's hand in `beginTurn`. No-op at the default.
-    this.fireTrigger('turnStart', { turn: this.turnIndex + 1, hop: this.currentHop });
     if (this.pauseAtTurnGates) {
       this.phase = 'turn-intro';
       this.bus.emit('turn:starting', this.turnStartingPayload());
@@ -3057,11 +3023,6 @@ export class Run {
     // H3 — record this turn's deployment (the drawn hand). The deployment
     // counter finally varies per turn here (pre-H5 it was the whole roster).
     this.recordDeployment(this.hand);
-    // K1 — `deploy` fires once per fielded slot AFTER recordDeployment (a
-    // handler's encounter effect lands on subsequent turns). No-op at default.
-    for (const idx of this.hand) {
-      this.fireTrigger('deploy', { rosterIndex: idx, template: this.team[idx]! });
-    }
     const battleEncounter: BattleEncounter = {
       worldSeed,
       terrainSeed,
@@ -4241,28 +4202,6 @@ export class Run {
   }
 
   /**
-   * K1 — register a run-lifecycle trigger handler (`encounterStart` /
-   * `turnStart` / `deploy`). The Phase-L daemon seam; handlers fire in
-   * registration order and are NOT snapshotted. ⚠ 85-pre F4: no rehydrate
-   * re-registration hook exists (this method has zero callers today) —
-   * toJSON throws on a trigger-bearing run, so the first caller must build
-   * the hook rather than silently losing handlers on clone/save-load.
-   */
-  registerTrigger<K extends keyof RunTriggerContextMap>(
-    name: K,
-    handler: (ctx: RunTriggerContextMap[K], run: Run) => void,
-  ): void {
-    this.runTriggers.register(name, handler);
-  }
-
-  private fireTrigger<K extends keyof RunTriggerContextMap>(
-    name: K,
-    ctx: RunTriggerContextMap[K],
-  ): void {
-    this.runTriggers.fire(name, ctx, this);
-  }
-
-  /**
    * H5 — draw the turn's hand from the deck. Pulls from the end of
    * `drawPile`; when it empties mid-draw, the `discardPile` is shuffled back in
    * and drawing continues. Stops early only when BOTH piles are exhausted (a
@@ -4383,17 +4322,6 @@ export class Run {
   }
 
   toJSON(): RunSnapshot {
-    // 85-pre F4 — the run-trigger landmine assert (WORKLOG §85-pre finding
-    // 7): handlers are NOT snapshotted and fromJSON builds a FRESH
-    // dispatcher with no re-registration hook. Zero callers register run
-    // triggers today; the first daemon that does must build the rehydrate
-    // hook, and this throw is what makes forgetting it loud instead of a
-    // silent handler loss on every clone and save/load.
-    if (this.runTriggers.size > 0) {
-      throw new Error(
-        `Run.toJSON: ${this.runTriggers.size} run-trigger handler(s) registered but triggers are not snapshotted — build a re-registration hook before serializing a trigger-bearing run (WORKLOG §85-pre finding 7)`,
-      );
-    }
     return {
       schemaVersion: RUN_SCHEMA_VERSION,
       // 77d2 (v42) — the keyed-derivation root + the three occurrence
@@ -4518,7 +4446,6 @@ export class Run {
       clearedSector: ClearedSector | null;
       lastTurn: LastTurn | null;
       difficultyMultipliers: DifficultyMultipliers;
-      runTriggers: TriggerDispatcher<RunTriggerContextMap, Run>;
       turnGrants: TurnGrants;
       passIsFinal: boolean;
       drawAmountAdd: number;
@@ -4614,12 +4541,8 @@ export class Run {
     m.bossEncounterMap = snap.bossEncounterMap;
     m.team = snap.team.slice();
     m.deploymentCounts = snap.deploymentCounts.slice();
-    // K1 — restore the encounter-effect store (deep copy) + a fresh dispatcher.
-    // ⚠ 85-pre F4: handlers aren't snapshotted and NO re-registration hook
-    // exists (registerTrigger has zero callers) — the toJSON guard throws on a
-    // trigger-bearing run so the first run-trigger daemon must build the hook.
+    // K1 — restore the encounter-effect store (deep copy).
     m.encounterEffects = snap.encounterEffects.map((slot) => slot.map(cloneEffect));
-    m.runTriggers = new TriggerDispatcher<RunTriggerContextMap, Run>();
     m.drawPile = snap.drawPile.slice();
     m.discardPile = snap.discardPile.slice();
     m.hand = snap.hand.slice();

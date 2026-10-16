@@ -120,7 +120,6 @@ interface GenStats {
   fires: number;
   /** Blocking cells (wall, half cover, deep water) as a share of the board. */
   obstacleFraction: number;
-  connected: boolean;
   /** Blockers removed by the connectivity guard (0 = the gaps already sufficed). */
   carved: number;
   chokepoints: number;
@@ -453,7 +452,6 @@ export function generateProceduralMap(
     deepWater: deepCount,
     fires: fires.length,
     obstacleFraction: blockers / (W * H),
-    connected: true,
     carved,
     chokepoints: chokeCells.length,
   };

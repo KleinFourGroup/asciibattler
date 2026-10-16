@@ -7193,3 +7193,10 @@ batch. 123l is ☑.
   (`movement.ts:485`), corpus CAUGHT 30 of 30, so the corpus runs the
   sidestep's line. `src` −7. PATHING's mention is a dated record and
   stays.
+- **L-6 — `GenStats.connected`.** The field, its literal `true`, the
+  test line that asserted it (the same test's other lines and the
+  file's own `connected` walk still pin the bands joined) and the mapgen
+  prototype's "Connected" stat line. Proof: the corpus, 0 of 30; the
+  fuzz diff against `e63a5871`, PASS on both shapes; the hook's
+  typecheck. No plant: the line, a bare `true`, admits no edit, and
+  `refs` found no reader in the game. `src` −2, `tools` −1, a test −1.

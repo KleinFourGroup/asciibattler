@@ -235,7 +235,6 @@ function renderStats(map: ProceduralMapResult): void {
     stat('Fire', `${s.fires}`) +
     stat('Camps', `${map.campSpawns.length}`) +
     stat('Chokepoints', `${s.chokepoints}`) +
-    stat('Connected', s.connected ? '✓' : '✗') +
     stat('Carved', `${s.carved}`);
 }
 

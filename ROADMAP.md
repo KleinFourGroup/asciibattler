@@ -198,7 +198,7 @@ The cut, signed 2026-10-16 with the kickoff's five calls (WORKLOG §123,
   123l).
   - ☑ **L-3 — `sidestepWhenBlocked`** (`none`). Corpus 0 of 30, fuzz
     diff PASS; `src` −7.
-  - ☐ **L-6 — `GenStats.connected`**, with the mapgen tool's line
+  - ☑ **L-6 — `GenStats.connected`**, with the mapgen tool's line
     (`none`). Proof: sim.
   - ☐ **L-7 — the `team` loss cause** (`none`). Proof: sim.
   - ☐ **L-4 — `GeneratedTerrain`'s three tile arrays** (`none`). Proof:

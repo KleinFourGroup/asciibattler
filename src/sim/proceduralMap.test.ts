@@ -262,7 +262,6 @@ describe('generateProceduralMap', () => {
     expect(r.stats.fires).toBe(r.fires.length);
     expect(r.stats.deepWater).toBe(kindCount(r, 'deep_water'));
     expect(r.stats.chokepoints).toBe(r.chokeCells.length);
-    expect(r.stats.connected).toBe(true);
   });
 
   it('emits two 8-tile `both` spawn bands, kept clear', () => {

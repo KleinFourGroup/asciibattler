@@ -7200,3 +7200,12 @@ batch. 123l is ☑.
   fuzz diff against `e63a5871`, PASS on both shapes; the hook's
   typecheck. No plant: the line, a bare `true`, admits no edit, and
   `refs` found no reader in the game. `src` −2, `tools` −1, a test −1.
+- **L-7 — the `team` loss cause.** The variant, its doc paragraph, the
+  HUD's ternary (`HUD.ts` now reads the cause's card directly) and
+  ARCHITECTURE's mention. `LossCause` keeps its `kind: 'unit'`, which the
+  sign did not name; a one-shape type with a tag is a lead for the
+  comment pass's reader, not taken here. Proof: typecheck clean, so
+  nothing builds a team cause; the corpus, 0 of 30; the fuzz diff
+  against `437ca00f`, PASS on both shapes. The HUD is reached by no
+  headless proof; the line it changed can only have read `unit` since
+  123h. `src` −7.

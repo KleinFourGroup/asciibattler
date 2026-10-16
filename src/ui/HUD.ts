@@ -472,14 +472,14 @@ export class HUD {
 
   /** 96.5b1/b2 — deliver a loss-event batch: each event becomes an orb from
    *  its cause's card to the paying gauge (the ghost grows ON THE LANDING);
-   *  a cause with no card, a team cause, or reduced motion lands at once. */
+   *  a cause with no card, or reduced motion, lands at once. */
   private applyLosses(events: readonly PoolLossEvent[]): void {
     for (const e of events) this.deliver(e);
   }
 
   private deliver(e: PoolLossEvent): void {
     const gauge = e.target === 'player' ? this.playerGauge : this.enemyGauge;
-    const card = e.cause.kind === 'unit' ? this.cards.get(e.cause.unitId) : undefined;
+    const card = this.cards.get(e.cause.unitId);
     const land = (): void => {
       this.pending[e.target] += e.amount;
       if (!gauge) return;

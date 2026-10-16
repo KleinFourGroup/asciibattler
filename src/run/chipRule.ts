@@ -111,18 +111,11 @@ export function enemyExposure(
  * reason (the chipRule.test pin), so the bar cannot disagree with what the
  * turn books.
  *
- * `cause.kind === 'team'` is the CAUSELESS shape. No rule emits it now; a
- * future flat turn-win/loss effect (the kickoff's future-proofing — a rule
- * not built here) would, and a consumer with no card for a unit cause falls
- * back to it as well.
- *
  * Everything here is pure; `health` is injectable like the rest of the file.
  */
 type LossPhase = 'immediate' | 'end';
 
-type LossCause =
-  | { readonly kind: 'unit'; readonly unitId: number; readonly team: 'player' | 'enemy' }
-  | { readonly kind: 'team'; readonly team: 'player' | 'enemy' };
+type LossCause = { readonly kind: 'unit'; readonly unitId: number; readonly team: 'player' | 'enemy' };
 
 export interface PoolLossEvent {
   /** The pool that pays. */

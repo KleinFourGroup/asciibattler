@@ -175,7 +175,7 @@ The cut, signed 2026-10-16 with the kickoff's five calls (WORKLOG §123,
 - ☑ **123d — A-40, the leg nothing reaches** (`none`; a stop if the
   game can reach the test's state). The test found by a plant; the leg
   goes with it.
-- ☐ **123e — A-25's run share** (`none`). `NodeMap.dump`,
+- ☑ **123e — A-25's run share** (`none`). `NodeMap.dump`,
   `empowerAvailability`, `redrawAvailability`, with their tests. Proof:
   export; `reach-diff`.
 - ☐ **123f — `EncounterState.turn`** (`none`). Proof: sim.

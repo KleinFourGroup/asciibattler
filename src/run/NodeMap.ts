@@ -923,37 +923,3 @@ export function stampRootKind(map: NodeMap, kind: NodeKind): NodeMap {
     nodes: map.nodes.map((n) => (n.id === map.rootId ? { ...n, kind } : n)),
   };
 }
-
-/** Human-readable dump for eyeball verification of generated maps. */
-export function dump(map: NodeMap): string {
-  const lines: string[] = [];
-  lines.push(`NodeMap (${map.nodes.length} nodes, ${map.hops.length} hops)`);
-  for (let f = 0; f < map.hops.length; f++) {
-    const labeled = map.hops[f]!.map((id) => {
-      if (id === map.rootId) return `${id}(root)`;
-      if (id === map.terminalId) return `${id}(boss)`;
-      const node = map.nodes.find((n) => n.id === id);
-      if (node?.kind === 'rest') return `${id}(rest)`;
-      if (node?.kind === 'elite') return `${id}(elite)`;
-      if (node?.kind === 'port') return `${id}(port)`;
-      if (node?.kind === 'event') return `${id}(event)`;
-      return String(id);
-    });
-    lines.push(`  Hop ${f}: ${labeled.join(', ')}`);
-  }
-  lines.push('Edges:');
-  const byFrom = new Map<number, number[]>();
-  for (const e of map.edges) {
-    const list = byFrom.get(e.from) ?? [];
-    list.push(e.to);
-    byFrom.set(e.from, list);
-  }
-  for (const node of map.nodes) {
-    const tos = byFrom.get(node.id);
-    if (tos) {
-      tos.sort((a, b) => a - b);
-      lines.push(`  ${node.id} → ${tos.join(', ')}`);
-    }
-  }
-  return lines.join('\n');
-}

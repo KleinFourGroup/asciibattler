@@ -1,6 +1,6 @@
 /**
- * K3 — the pure redraw rules: validation + availability math for the pre-turn
- * redraw (select drawn cards → discard them → draw that many fresh).
+ * K3 — the pure redraw rules: validation for the pre-turn redraw (select
+ * drawn cards → discard them → draw that many fresh).
  *
  * Pulled out of `Run` so the modes are provable in isolation. 49d re-modeled
  * the input from the old summed per-turn config + counters to ONE GRANT
@@ -31,14 +31,6 @@ export interface RedrawGrantState {
 export interface RedrawAvailability {
   redrawsRemaining: number;
   cardsRemaining: number;
-}
-
-export function redrawAvailability(grant: RedrawGrantState): RedrawAvailability {
-  const redrawsRemaining = Math.max(0, grant.budget - grant.used);
-  return {
-    redrawsRemaining,
-    cardsRemaining: redrawsRemaining > 0 ? grant.maxCards : 0,
-  };
 }
 
 /**

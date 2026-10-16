@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { empowerAvailability, empowerRejection, empowerEffect } from './empower';
+import { empowerRejection, empowerEffect } from './empower';
 import type { EmpowerConfig } from '../config/empower';
 
 /**
@@ -21,18 +21,6 @@ const HAND = 6;
 const ONE = { used: 0, budget: 1 };
 /** Raised budget (the L-daemon alternative). */
 const MANY = { used: 0, budget: 3 };
-
-describe('empowerAvailability', () => {
-  it('reads the full budget on a fresh grant', () => {
-    expect(empowerAvailability(ONE)).toEqual({ empowersRemaining: ONE.budget });
-  });
-
-  it('decrements per use and clamps at zero', () => {
-    expect(empowerAvailability({ ...MANY, used: 1 })).toEqual({ empowersRemaining: 2 });
-    // Over-counted state (can't happen via the handler, but the math clamps).
-    expect(empowerAvailability({ ...MANY, used: 99 })).toEqual({ empowersRemaining: 0 });
-  });
-});
 
 describe('empowerRejection — one-action grant', () => {
   it('accepts any hand position on the first action', () => {

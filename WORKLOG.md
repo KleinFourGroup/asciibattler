@@ -6626,8 +6626,9 @@ Step zero, a plant at the leg (`plant --at=src/run/Run.ts:3951`, the
 `advancePastBattle()` call dropped, corpus and suite): the corpus did not
 notice, 0 of 30, and the suite caught it in `Run.test.ts` alone. The
 plant tool names the file, so the same edit was made again in a worktree
-under `output/plant/` by a scratch script, which ran that file and named
-the test: of 378, one failed, "dismissPromotion at the terminal node
+under `output/plant/` by a script kept as
+`scratch/123d/a40-which-test.mjs`, which ran that file and named the
+test: of 378, one failed, "dismissPromotion at the terminal node
 routes to the sector gate (not recruit)". It is the one the audit
 suspected. It sets `phase = 'battle'` by hand and never enters the node,
 so `encounterMap` is null on a node that is not a rest. The game sets
@@ -6646,3 +6647,24 @@ Proof (sim): typecheck clean; the corpus, 0 of 30; the fuzz diff against
 suite recorded at 123b and after: nothing lost. The step-code ceiling
 4,154 → 4,151. The first after-recording failed on the ceiling again,
 which `comment-codes` run before the recording would have shown.
+
+### 123e — A-25's run share (2026-10-16, session 854d0fbd)
+
+Gone: `NodeMap.dump`, `empowerAvailability` and `redrawAvailability`,
+with their tests (`dump`'s one, two each of the others; 3,739 → 3,734).
+`NodeMap.test.ts`'s "different seeds → different maps" read `dump` to
+tell two maps apart; it now compares the hops, edges and node kinds,
+which is what the print held. `redraw.ts`'s header no longer says it
+holds availability math.
+
+Step zero changed one thing inside the row's intent: the two result
+types, `EmpowerAvailability` and `RedrawAvailability`, were deleted with
+their functions and the type check named three readers in `tests/fuzz`
+(`empowerPolicy.ts`, `redrawPolicy.ts` and its test), which type the
+fuzz policies' view of a grant. The census row names the functions, so
+the types stay. (The audit's `refs --all` listed functions and types as
+one export each; these two stood as used, by those readers.)
+
+Proof (export): typecheck clean; `build-hash HEAD`, the same bytes, 32
+files; `reach-diff --from=42179130` of the suite recorded at 123d and
+after: nothing lost. The ceiling unchanged at 4,151.

@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { RNG } from '../core/RNG';
 import { NODE_MAP } from '../config/nodemap';
 import { computeMapMetrics } from './mapMetrics';
-import { generate, dump, stampRootKind, type NodeMap, type MapEdge } from './NodeMap';
+import { generate, stampRootKind, type NodeMap, type MapEdge } from './NodeMap';
 
 // Balance-proof: derive every bound from the config the generator actually
 // reads, so a config/nodemap.json tweak is a one-file edit, not test churn.
@@ -576,7 +576,9 @@ describe('NodeMap.generate', () => {
     it('different seeds → different maps', () => {
       const a = generate(new RNG(1));
       const b = generate(new RNG(2));
-      expect(dump(a)).not.toEqual(dump(b));
+      // The hops, the edges and the kinds: what the map's text print showed.
+      const shape = (m: NodeMap) => [m.hops, m.edges, m.nodes.map((n) => n.kind)];
+      expect(shape(a)).not.toEqual(shape(b));
     });
   });
 
@@ -610,18 +612,6 @@ describe('NodeMap.generate', () => {
       const map = generate(new RNG(7), { firstNodeKind: 'elite', hopCount: 1 });
       expect(map.rootId).toBe(map.terminalId);
       expect(nodeById(map, map.rootId).kind).toBe('boss');
-    });
-  });
-
-  describe('dump', () => {
-    it('renders root, terminal, hops, and edges', () => {
-      const map = generate(new RNG(1));
-      const text = dump(map);
-      expect(text).toContain('NodeMap');
-      expect(text).toContain('(root)');
-      expect(text).toContain('(boss)');
-      expect(text).toContain('Hop 0:');
-      expect(text).toContain('Edges:');
     });
   });
 });

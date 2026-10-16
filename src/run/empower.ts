@@ -45,10 +45,6 @@ export interface EmpowerStackView {
   readonly mods: StatusEffect['mods'];
 }
 
-export function empowerAvailability(grant: EmpowerGrantState): EmpowerAvailability {
-  return { empowersRemaining: Math.max(0, grant.budget - grant.used) };
-}
-
 /**
  * Validate one empower request against ONE grant: `handIndex` is a position
  * into the current hand (NOT a roster index — same "which card the player

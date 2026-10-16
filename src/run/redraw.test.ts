@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { redrawAvailability, redrawRejection, type RedrawGrantState } from './redraw';
+import { redrawRejection, type RedrawGrantState } from './redraw';
 
 /**
  * K3→49d — the pure redraw rules against ONE grant queue entry (the §49
@@ -16,31 +16,6 @@ const BATCH: RedrawGrantState = { used: 0, budget: 1, maxCards: 6 };
 const N_ACTIONS: RedrawGrantState = { used: 0, budget: 99, maxCards: 3 };
 
 const HAND = 6;
-
-describe('redrawAvailability', () => {
-  it('reads the full budget on a fresh grant', () => {
-    expect(redrawAvailability(BATCH)).toEqual({
-      redrawsRemaining: BATCH.budget,
-      cardsRemaining: BATCH.maxCards,
-    });
-  });
-
-  it('decrements per action; a spent grant reads 0/0 (the card cap is per action)', () => {
-    expect(redrawAvailability({ ...N_ACTIONS, used: 1 })).toEqual({
-      redrawsRemaining: 98,
-      cardsRemaining: 3,
-    });
-    expect(redrawAvailability({ ...BATCH, used: 1 })).toEqual({
-      redrawsRemaining: 0,
-      cardsRemaining: 0,
-    });
-    // Over-counted state (can't happen via the handler, but the math clamps).
-    expect(redrawAvailability({ ...BATCH, used: 5 })).toEqual({
-      redrawsRemaining: 0,
-      cardsRemaining: 0,
-    });
-  });
-});
 
 describe('redrawRejection — single-action grant', () => {
   it('accepts any subset of the hand up to the cap, including the whole hand', () => {

@@ -86,9 +86,9 @@ export interface UnitStats {
    *  slower (the slowest units ship at −14). Drives `moveCooldownTicks`
    *  through `deriveStats`. */
   readonly mobility: number;
-  /** What the unit counts for in a turn's chip of a health pool, as a
-   *  survivor or as one of the fallen, by `health.chipMode`
-   *  (`run/chipRule.ts`). Levels like any stat; no damage path reads it. */
+  /** What the unit counts for in a turn's chip of a health pool, as one of
+   *  the fallen, or as a survivor of a capped turn (`run/chipRule.ts`).
+   *  Levels like any stat; no damage path reads it. */
   readonly power: number;
 }
 

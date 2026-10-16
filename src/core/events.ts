@@ -57,9 +57,9 @@ export interface GameEvents extends Record<string, unknown> {
      * Why the battle ended: `'decisive'`, one team wiped
      * (`checkBattleEnd`); `'mutualWipe'`, both teams' last units fell
      * together; `'cap'`, the driver's per-turn tick budget ran out
-     * (`World.resolveAsDraw`). The cap penalty (`health.capPenalty`) keys on
-     * `'cap'` alone: a mutual wipe is the largest casualty turn there is,
-     * never a stall.
+     * (`World.resolveAsDraw`). The cap's survivors surcharge keys on `'cap'`
+     * alone: a mutual wipe is the largest casualty turn there is, never a
+     * stall.
      */
     reason?: 'decisive' | 'mutualWipe' | 'cap';
     xpAwards: readonly {
@@ -71,8 +71,8 @@ export interface GameEvents extends Record<string, unknown> {
     }[];
     /**
      * Σ`power` over each team's living units on the grid at battle end: what
-     * each side chips the opposing pool by under the survivors rule
-     * (`health.chipMode`), and what a cap penalty charges. A unit still in
+     * each side chips the opposing pool by on a capped turn (the survivors
+     * surcharge, `src/run/chipRule.ts`). A unit still in
      * the spawn queue is left out, since it never reached the grid, although
      * `checkBattleEnd` counts a non-empty queue as alive.
      */
@@ -568,12 +568,9 @@ export interface GameEvents extends Record<string, unknown> {
       gridH: number;
       theme: Theme;
     };
-    /** The pre-turn risk line: the most pool this turn can cost the player
-     *  under the shipped `health.chipMode`, capped at the pool
-     *  (`Run.previewPoolAtRisk`). Under survivors it is the wave's Σ power,
-     *  previewed off the keyed stream `beginTurn` rolls the wave from, so it
-     *  bounds the wave that is fielded; under casualties it is the hand's Σ
-     *  power. Display only; never serialized. */
+    /** The pre-turn risk line: the most pool this turn can cost the player,
+     *  capped at the pool (`Run.previewPoolAtRisk`): the hand's Σ power.
+     *  Display only; never serialized. */
     poolAtRisk: number;
     /** The encounter's previous turn, for the pre-turn screen's "last turn"
      *  strip: its winner, why it ended, and who fell in it (copies of the
@@ -686,8 +683,8 @@ export interface GameEvents extends Record<string, unknown> {
     /** Why the battle ended (`battle:ended.reason`, resolved by Run; a fake
      *  without one maps 'draw' to 'cap', else 'decisive'). The outcome
      *  screen labels its chip lines by the rules this reason paid
-     *  (`rulesForTurn`): a capped turn under a cap penalty pays two rules and
-     *  says so; a mutual wipe never does. */
+     *  (`rulesForTurn`): a capped turn pays two rules and says so; a mutual
+     *  wipe never does. */
     reason: 'decisive' | 'mutualWipe' | 'cap';
     /** The loss each pool took this turn, clamped at the pool ("what you
      *  lost"), whatever the chip rule. The uncapped charge rides

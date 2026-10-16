@@ -15,6 +15,7 @@
 import { describe, it, expect } from 'vitest';
 import { TelemetryAccumulator, aggregateTelemetry, type RunTelemetry } from './telemetry';
 import { HEALTH } from '../../src/config/health';
+import { turnCharges } from '../../src/run/chipRule';
 import { ALL_ARCHETYPES } from '../../src/sim/archetypes';
 import { runOne } from './harness';
 import { makeStrategy } from './strategies/registry';
@@ -151,13 +152,11 @@ describe('telemetry integration (real headless run)', () => {
     // The run fought at least one turn → at least one pool chip.
     expect(t.poolChips.length).toBeGreaterThan(0);
     // 89a → 91a2 — every chip carries the APPLIED pools AND the rule's
-    // uncapped charges, and the applied delta IS the charge clamped at 0
-    // under ANY rule; the survivors identity (charge == opposing survivors
-    // × chipMultiplier) holds while the shipped mode is survivors (91e
-    // flips the default and re-expresses that one line). Independent of the
-    // reader: the pools + charges come from Run's `pools:chipped`, the
-    // survivors/fallen/reason from the World's `battle:ended`.
-    const m = HEALTH.chipMultiplier;
+    // uncapped charges, the applied delta IS the charge clamped at 0, and
+    // the charge is the rule's arithmetic on the record's own inputs.
+    // Independent of the reader: the pools + charges come from Run's
+    // `pools:chipped`, the survivors/fallen/reason from the World's
+    // `battle:ended`.
     for (const c of t.poolChips) {
       expect(c.playerPoolBefore).toBeGreaterThanOrEqual(0);
       expect(c.playerPoolBefore).toBeLessThanOrEqual(HEALTH.playerHealthMax);
@@ -168,10 +167,13 @@ describe('telemetry integration (real headless run)', () => {
       expect(c.fallenPlayer).toBeGreaterThanOrEqual(0);
       expect(c.fallenEnemy).toBeGreaterThanOrEqual(0);
       expect(['decisive', 'mutualWipe', 'cap']).toContain(c.reason);
-      if (HEALTH.chipMode === 'survivors' && HEALTH.capPenalty === 'survivors') {
-        expect(c.playerCharge).toBe(c.enemy * m);
-        expect(c.enemyCharge).toBe(c.player * m);
-      }
+      const expected = turnCharges(
+        c.reason!,
+        { player: c.player, enemy: c.enemy },
+        { player: c.fallenPlayer!, enemy: c.fallenEnemy! },
+      );
+      expect(c.playerCharge).toBe(expected.player);
+      expect(c.enemyCharge).toBe(expected.enemy);
     }
     // Every battle produced exactly one whole chip record (the two-event
     // stitch never dropped or doubled one).

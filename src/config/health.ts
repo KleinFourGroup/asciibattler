@@ -8,16 +8,12 @@
  *   sets its own (`Encounter.healthPool`), so this is only
  *   `Run.enemyHealthPoolMax`'s answer when no encounter is selected.
  *
- * Each turn the chip rule (`src/run/chipRule.ts`) charges both pools:
- * - `chipMode` — `casualties` (shipped): each pool loses the power of its
- *   own fallen. `survivors`: each side's survivors chip the opposing pool by
- *   their summed power.
- * - `capPenalty` — the rule a turn that runs out the clock
- *   (`battle:ended.reason === 'cap'`) pays on top of `chipMode`. Shipped
- *   `survivors`, so a stall pays its own fallen and the enemy's standing
- *   power, and running out the clock is never cheaper than fighting: under
- *   `casualties` alone the share of turns that reached the cap rose. A
- *   mutual wipe never reads it.
+ * Each turn the chip rule (`src/run/chipRule.ts`) charges both pools: each
+ * pool loses the power of its own fallen, and a turn that runs out the clock
+ * (`battle:ended.reason === 'cap'`) also loses the opposing side's standing
+ * power, so running out the clock is never cheaper than fighting (under the
+ * fallen alone the share of turns that reached the cap rose). A mutual wipe
+ * pays the fallen alone.
  * - `chipMultiplier` — scales every charge, from power to pool points.
  *
  * Between fights:
@@ -56,8 +52,6 @@ const HealthSchema = z.object({
   maxTurns: z.number().int().positive(),
   maxTurnSeconds: z.number().positive(),
   chipMultiplier: z.number().nonnegative(),
-  chipMode: z.enum(['survivors', 'casualties']),
-  capPenalty: z.enum(['survivors', 'casualties']),
   restHealFraction: z.number().min(0).max(1),
   seamHealFloor: z.number().min(0).max(1),
   fatiguePerStack: z.number().nonnegative(),

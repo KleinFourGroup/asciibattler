@@ -13,8 +13,7 @@
  *   - likewise `turns` lists the turns somebody fell in, not the turns fought
  *     (a bloodless turn leaves no row);
  *   - `power` is what the casualty rule BOOKED per death (`unit:died.power`),
- *     so a side's Σ is the pool damage its fallen cost it under `chipMode:
- *     casualties`.
+ *     so a side's Σ is the pool damage its fallen cost it.
  *
  * Ordering is the ledger's own (append-only, so chronological): encounters by
  * first death, turns ascending, archetypes by first death within their scope.

@@ -1,36 +1,31 @@
 /**
  * §91a2 — THE CHIP RULE: what one turn's outcome charges each side's health
- * pool (the casualty experiment, encounter-feel-spec §The casualty chip rule).
+ * pool (the casualty rule, encounter-feel-spec §The casualty chip rule; kept
+ * at §93).
  *
- * Two rules, both alive behind `health.chipMode`:
- * - `survivors` — the pre-§91 rule: each side's pool loses the OPPOSING
- *   side's standing Σ`power` (the loser pays the winner's survivors; a won
- *   turn costs 0; a lost turn costs most of the wave).
- * - `casualties` — each side's pool loses the power of ITS OWN fallen
- *   (a Pyrrhic victory costs; the enemy pool reads "their strength — every
- *   kill removes some"; a player's per-turn exposure is the power they
- *   fielded, so the risk line is a number they can add up).
+ * Each pool loses the power of ITS OWN fallen (a Pyrrhic victory costs; the
+ * enemy pool reads "their strength — every kill removes some"; a player's
+ * per-turn exposure is the power they fielded, so the risk line is a number
+ * they can add up). That is the `casualties` rule.
  *
- * The CAP PENALTY (`health.capPenalty`) is the rule a turn that the driver's
- * tick budget force-resolved (`reason === 'cap'`, `World.resolveAsDraw`)
- * ALSO pays: the turn charges by every rule named in {chipMode, capPenalty}.
- * Under (casualties, survivors) a stall pays its own fallen PLUS the enemy's
- * standing power — a surcharge, never a replacement, so kiting to the cap is
- * never cheaper than fighting. Under (survivors, survivors) — the shipped
- * pair until 91e — a cap turn charges exactly what it did before §91
- * (byte-identical). A MUTUAL WIPE is a `'draw'` too, but it is the largest
- * casualty turn there is, never a stall: it never reads `capPenalty` (the
- * §91 kickoff review's finding 3 — `checkBattleEnd` emits 'draw' for it).
+ * A turn that the driver's tick budget force-resolved (`reason === 'cap'`,
+ * `World.resolveAsDraw`) ALSO pays the `survivors` rule: each pool loses the
+ * OPPOSING side's standing Σ`power`. A stall pays its own fallen PLUS the
+ * enemy's standing power — a surcharge, never a replacement, so kiting to
+ * the cap is never cheaper than fighting. A MUTUAL WIPE is a `'draw'` too,
+ * but it is the largest casualty turn there is, never a stall: it never pays
+ * the surcharge (the §91 kickoff review's finding 3 — `checkBattleEnd` emits
+ * 'draw' for it).
  *
  * Every charge is UNCAPPED pool-HP (× `chipMultiplier`): the caller clamps
  * at 0 when it applies, and reports both (the applied delta AND the charge —
  * the 89d rider: the overkill read needs the pre-clamp number). Pure —
- * `health` is injectable so the matrix pins never mutate the live config.
+ * `health` is injectable so the pins never mutate the live config.
  */
 
 import { HEALTH, type HealthConfig } from '../config/health';
 
-export type ChipRule = HealthConfig['chipMode'];
+export type ChipRule = 'survivors' | 'casualties';
 /** Why a battle ended (`battle:ended.reason`, §91a1). */
 export type TurnEndReason = 'decisive' | 'mutualWipe' | 'cap';
 
@@ -45,73 +40,61 @@ interface TurnCharges {
   readonly enemy: number;
 }
 
-/** The rules a turn ending for `reason` charges by (the set, so a cap turn
- *  under (survivors, survivors) is ONE rule, not the same rule twice). */
-export function rulesForTurn(
-  reason: TurnEndReason,
-  health: Pick<HealthConfig, 'chipMode' | 'capPenalty'> = HEALTH,
-): ReadonlySet<ChipRule> {
-  const rules = new Set<ChipRule>([health.chipMode]);
-  if (reason === 'cap') rules.add(health.capPenalty);
+/** The rules a turn ending for `reason` charges by: casualties, and on a
+ *  cap turn the survivors surcharge as well. */
+export function rulesForTurn(reason: TurnEndReason): ReadonlySet<ChipRule> {
+  const rules = new Set<ChipRule>(['casualties']);
+  if (reason === 'cap') rules.add('survivors');
   return rules;
 }
 
 /**
  * The turn's charges. `survivors` = each side's STANDING Σpower at battle
  * end (`battle:ended.survivorPower`); `fallen` = each side's REAPED Σpower
- * (`battle:ended.fallenPower`). Under `survivors` the player's pool pays the
- * enemy's standing power (and vice versa); under `casualties` each pool pays
- * its own fallen. A cap turn adds the cap penalty's rule.
+ * (`battle:ended.fallenPower`). Each pool pays its own fallen; a cap turn
+ * adds the enemy's standing power to the player's pool (and vice versa).
  */
 export function turnCharges(
   reason: TurnEndReason,
   survivors: SidePower,
   fallen: SidePower,
-  health: Pick<HealthConfig, 'chipMode' | 'capPenalty' | 'chipMultiplier'> = HEALTH,
+  health: Pick<HealthConfig, 'chipMultiplier'> = HEALTH,
 ): TurnCharges {
-  const rules = rulesForTurn(reason, health);
   const mult = health.chipMultiplier;
   let player = 0;
   let enemy = 0;
-  if (rules.has('survivors')) {
+  if (rulesForTurn(reason).has('survivors')) {
     player += survivors.enemy * mult;
     enemy += survivors.player * mult;
   }
-  if (rules.has('casualties')) {
-    player += fallen.player * mult;
-    enemy += fallen.enemy * mult;
-  }
+  player += fallen.player * mult;
+  enemy += fallen.enemy * mult;
   return { player, enemy };
 }
 
 /**
  * §91d — the pre-turn RISK bound: the most the PLAYER pool can be charged
- * this turn by `chipMode` alone, from what each side FIELDS (`player` = the
- * hand's Σ base power, `enemy` = the wave's). Survivors: the whole wave
- * standing → the enemy's fielded power; casualties: the whole hand falling →
- * the player's own. × `chipMultiplier`, UNCAPPED (the caller clamps at the
- * pool). The cap-turn surcharge (`capPenalty`) is deliberately outside it:
- * the line bounds the ordinary turn, and a stall is the exception it exists
- * to make expensive.
+ * this turn, from what each side FIELDS (`player` = the hand's Σ base power,
+ * `enemy` = the wave's): the whole hand falling. × `chipMultiplier`,
+ * UNCAPPED (the caller clamps at the pool). The cap-turn surcharge is
+ * deliberately outside it: the line bounds the ordinary turn, and a stall is
+ * the exception it exists to make expensive.
  */
 export function playerExposure(
   fielded: SidePower,
-  health: Pick<HealthConfig, 'chipMode' | 'chipMultiplier'> = HEALTH,
+  health: Pick<HealthConfig, 'chipMultiplier'> = HEALTH,
 ): number {
-  const own = health.chipMode === 'casualties' ? fielded.player : fielded.enemy;
-  return own * health.chipMultiplier;
+  return fielded.player * health.chipMultiplier;
 }
 
 /** 96.5c2 — the ENEMY pool's mirror bound (the live bar's notch on their
- *  gauge): casualties → their own fielded wave falling; survivors → the
- *  whole hand standing → the hand's Σ power. Same exclusions as
+ *  gauge): their own fielded wave falling. Same exclusions as
  *  `playerExposure` (base power; the cap surcharge outside). */
 export function enemyExposure(
   fielded: SidePower,
-  health: Pick<HealthConfig, 'chipMode' | 'chipMultiplier'> = HEALTH,
+  health: Pick<HealthConfig, 'chipMultiplier'> = HEALTH,
 ): number {
-  const own = health.chipMode === 'casualties' ? fielded.enemy : fielded.player;
-  return own * health.chipMultiplier;
+  return fielded.enemy * health.chipMultiplier;
 }
 
 /**
@@ -120,19 +103,18 @@ export function enemyExposure(
  * a stream of LOSS EVENTS rather than by a projection, and each event fires
  * at the moment the rule makes the loss a FACT: a casualties loss at the
  * death (the dead unit's own side pays — the event's cause is the unit, so
- * the bar can be fed from its card); a survivors loss only once the battle
+ * the bar can be fed from its card); the cap surcharge only once the battle
  * has ended (a survivor's charge is not a fact until then), one event per
- * standing unit, paid by the OPPOSING pool; the cap-turn surcharge is just
- * more end events. The event stream is display-only — Run books the turn
- * through `turnCharges` exactly as before — and `sumLossEvents` over the
- * whole stream equals `turnCharges` for every rule pair × reason (the
- * chipRule.test pin), so the bar cannot disagree with what the turn books.
+ * standing unit, paid by the OPPOSING pool. The event stream is
+ * display-only — Run books the turn through `turnCharges` exactly as before
+ * — and `sumLossEvents` over the whole stream equals `turnCharges` for every
+ * reason (the chipRule.test pin), so the bar cannot disagree with what the
+ * turn books.
  *
- * `cause.kind === 'team'` is the CAUSELESS shape: the cap surcharge under
- * (survivors, casualties) charges each side's fallen total at the end with
- * no per-unit rows to hand out, and a future flat turn-win/loss effect
- * (the kickoff's future-proofing — a rule not built here) would use it too;
- * a consumer with no card for a unit cause falls back to it as well.
+ * `cause.kind === 'team'` is the CAUSELESS shape. No rule emits it now; a
+ * future flat turn-win/loss effect (the kickoff's future-proofing — a rule
+ * not built here) would, and a consumer with no card for a unit cause falls
+ * back to it as well.
  *
  * Everything here is pure; `health` is injectable like the rest of the file.
  */
@@ -166,15 +148,12 @@ interface StandingUnit {
   readonly power: number;
 }
 
-/** The IMMEDIATE events for one death: under casualties, the dead unit's
- *  own side pays its booked power now; under survivors a death charges
- *  nothing by itself (the loss lands on the killer's side's survivors at
- *  the end). A zero booking (a summon) and a neutral emit nothing. */
+/** The IMMEDIATE event for one death: the dead unit's own side pays its
+ *  booked power now. A zero booking (a summon) and a neutral emit nothing. */
 export function lossEventsForDeath(
   death: FallenUnit,
-  health: Pick<HealthConfig, 'chipMode' | 'chipMultiplier'> = HEALTH,
+  health: Pick<HealthConfig, 'chipMultiplier'> = HEALTH,
 ): readonly PoolLossEvent[] {
-  if (health.chipMode !== 'casualties') return [];
   if (death.team === 'neutral' || death.power <= 0) return [];
   return [
     {
@@ -186,23 +165,18 @@ export function lossEventsForDeath(
   ];
 }
 
-/** The END events for a turn ending for `reason`: the survivors rule (when
- *  the turn pays it) as one event per standing unit charged to the OPPOSING
- *  pool; the casualties rule ONLY when it is the cap surcharge over a
- *  survivors chip mode (under a casualties chip mode every death already
- *  fired its immediate event, and `rulesForTurn` is a set, so the rule is
- *  never paid twice) — then as one team-cause event per side off the
- *  booked fallen totals. */
+/** The END events for a turn ending for `reason`: on a cap turn, the
+ *  survivors surcharge as one event per standing unit charged to the
+ *  OPPOSING pool; otherwise none (every death already fired its immediate
+ *  event). */
 export function lossEventsAtEnd(
   reason: TurnEndReason,
   standing: readonly StandingUnit[],
-  fallen: SidePower,
-  health: Pick<HealthConfig, 'chipMode' | 'capPenalty' | 'chipMultiplier'> = HEALTH,
+  health: Pick<HealthConfig, 'chipMultiplier'> = HEALTH,
 ): readonly PoolLossEvent[] {
-  const rules = rulesForTurn(reason, health);
   const mult = health.chipMultiplier;
   const out: PoolLossEvent[] = [];
-  if (rules.has('survivors')) {
+  if (rulesForTurn(reason).has('survivors')) {
     for (const u of standing) {
       if (u.power <= 0) continue;
       out.push({
@@ -213,29 +187,16 @@ export function lossEventsAtEnd(
       });
     }
   }
-  if (rules.has('casualties') && health.chipMode !== 'casualties') {
-    for (const side of ['player', 'enemy'] as const) {
-      if (fallen[side] <= 0) continue;
-      out.push({
-        target: side,
-        amount: fallen[side] * mult,
-        phase: 'end',
-        cause: { kind: 'team', team: side },
-      });
-    }
-  }
   return out;
 }
 
 /** The loss already made a fact of BEFORE a consumer attached — a
- *  mid-battle restore opens the bar here: under casualties the booked
- *  fallen totals (every death's immediate event, summed); under survivors
- *  nothing has fired yet. Off `World.fallenPowerSoFar()`. */
+ *  mid-battle restore opens the bar here: the booked fallen totals (every
+ *  death's immediate event, summed). Off `World.fallenPowerSoFar()`. */
 export function bookedImmediateLoss(
   fallen: SidePower,
-  health: Pick<HealthConfig, 'chipMode' | 'chipMultiplier'> = HEALTH,
+  health: Pick<HealthConfig, 'chipMultiplier'> = HEALTH,
 ): SidePower {
-  if (health.chipMode !== 'casualties') return { player: 0, enemy: 0 };
   return { player: fallen.player * health.chipMultiplier, enemy: fallen.enemy * health.chipMultiplier };
 }
 

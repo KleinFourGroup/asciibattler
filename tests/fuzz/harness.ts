@@ -80,7 +80,7 @@ export interface BattleResult {
   winner: Team | 'draw' | 'hang';
   /** 91a2 — WHY the battle ended (`battle:ended.reason`): a `'draw'` is
    *  either the driver's tick cap (`'cap'` — the stall signal, the
-   *  `capPenalty` trigger) or a mutual wipe (`'mutualWipe'`, 34a). Absent on
+   *  survivors surcharge's trigger) or a mutual wipe (`'mutualWipe'`, 34a). Absent on
    *  pre-91a2 batches (there, every draw was READ as a cap — the stale
    *  `cappedDraws` comment the kickoff review caught). */
   reason?: 'decisive' | 'mutualWipe' | 'cap';

@@ -1435,7 +1435,7 @@ export function renderLayoutHopCsv(stats: readonly LayoutHopStats[]): string {
  * **player pool damage TAKEN** — the HP the chip rule charged the player's
  * encounter health pool. 91a2: read as the rule's UNCAPPED charge per turn
  * (`chargeToPlayer` / `chargeToEnemy` off the opt-in telemetry's `poolChips`,
- * pool-HP), whatever the rule (`health.chipMode`); a pre-91a2 record falls
+ * pool-HP), whatever the rule; a pre-91a2 record falls
  * back to the survivors arithmetic (enemy survivors × `HEALTH.chipMultiplier`)
  * it was recorded under — byte-identical for every old batch.
  *

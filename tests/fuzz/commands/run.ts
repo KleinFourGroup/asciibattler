@@ -132,12 +132,6 @@ export type RunModeArgs = Pick<
  * unknown paths bail loud (a typo'd probe arm must never silently measure
  * the default config). Mutation-only — no restore: each CLI process owns its
  * whole lifetime, exactly like the sweep's grid-point application.
- * 91a2 — a STRING value is admissible when the live key holds a string (the
- * chip modes: `--set=health.chipMode=survivors`); a numeric key still
- * demands a finite number, and a string key takes the raw text verbatim
- * (the zod enum already validated the SHIPPED value; a mistyped mode name
- * here would reach `turnCharges` as neither rule and charge nothing — so
- * it is checked against the key's legal literals below, loud).
  */
 function applySetOverrides(specs: readonly string[] | undefined): void {
   for (const spec of specs ?? []) {
@@ -147,15 +141,6 @@ function applySetOverrides(specs: readonly string[] | undefined): void {
       bail(`--set needs group.key=value, got "${spec}"`);
     }
     const knob = resolveKnob(spec.slice(0, eq));
-    const current = knob.obj[knob.key];
-    if (typeof current === 'string') {
-      const legal = MODE_LITERALS[`${knob.group}.${knob.key}`];
-      if (legal !== undefined && !legal.includes(raw)) {
-        bail(`--set ${knob.group}.${knob.key} must be one of ${legal.join(' | ')}, got "${raw}"`);
-      }
-      knob.obj[knob.key] = raw;
-      continue;
-    }
     const value = Number(raw);
     if (!Number.isFinite(value)) {
       bail(`--set needs a numeric value for ${knob.group}.${knob.key}, got "${spec}"`);
@@ -163,14 +148,6 @@ function applySetOverrides(specs: readonly string[] | undefined): void {
     knob.obj[knob.key] = value;
   }
 }
-
-/** 91a2 — the legal literals of every string-valued knob `--set` may address
- *  (the zod enums, restated: the loaders validate the shipped JSON, this
- *  guards the probe arm). Widen when a new enum knob joins the registry. */
-const MODE_LITERALS: Record<string, readonly string[]> = {
-  'health.chipMode': ['survivors', 'casualties'],
-  'health.capPenalty': ['survivors', 'casualties'],
-};
 
 export function runRunCli(args: RunModeArgs): void {
   // 75l — apply `--set=group.key=value` overrides FIRST, before any strategy /

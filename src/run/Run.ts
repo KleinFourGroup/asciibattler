@@ -2930,17 +2930,13 @@ export class Run {
 
   /**
    * 89e → §91d — the pre-turn RISK line's number: the most pool this turn can
-   * cost the player under the shipped `health.chipMode`, capped at the pool
-   * (you can't lose what you don't have). SURVIVORS: every enemy in the wave
-   * survives → Σ their `power` × `chipMultiplier` — the wave previewed off the
-   * same keyed stream `beginTurn` rolls it from (`rollTurnWave`, pure, no
-   * state writes). CASUALTIES: every unit in the HAND falls → Σ the hand's
-   * `power` × mult — the player's own numbers, known at the gate for free.
-   * Both read BASE template power (the number the player can add up from the
-   * cards); in-battle power buffs, a spawn-queue overflow that never lands
-   * (`World.survivorPower` excludes the queue), and the cap-turn SURCHARGE
-   * (`health.capPenalty`, the stall path) all sit outside the bound — an
-   * upper bound on the ORDINARY turn is the point (`playerExposure`).
+   * cost the player, capped at the pool (you can't lose what you don't have):
+   * every unit in the HAND falls → Σ the hand's `power` × `chipMultiplier` —
+   * the player's own numbers, known at the gate for free. It reads BASE
+   * template power (the number the player can add up from the cards);
+   * in-battle power buffs and the cap-turn SURCHARGE (the stall path) sit
+   * outside the bound — an upper bound on the ORDINARY turn is the point
+   * (`playerExposure`).
    * Display-only: consumed by `turn:starting` (and, 96.5c, re-derived on
    * `turn:handRedrawn` / `run:packetUsed`, and read by the BattleScene for
    * the live bar's ceiling tick — public for that one reader), never
@@ -2953,8 +2949,9 @@ export class Run {
 
   /** 96.5c2 — both bounds at once (the live bar's notch on EACH gauge): the
    *  player's (`playerExposure`, capped at the player pool) and the enemy's
-   *  mirror (`enemyExposure`, capped at the enemy pool). One wave preview
-   *  serves both. Display-only; never serialized; never read by the sim. */
+   *  mirror (`enemyExposure`, capped at the enemy pool), which reads the wave
+   *  previewed off the keyed stream `beginTurn` rolls it from. Display-only;
+   *  never serialized; never read by the sim. */
   previewPoolsAtRisk(): { player: number; enemy: number } {
     const { enemyTeam } = this.rollTurnWave();
     const fielded = {
@@ -3265,11 +3262,10 @@ export class Run {
 
   /**
    * H4 → §91a2 — fold one turn's outcome into the pools by the CHIP RULE
-   * (`turnCharges`, src/run/chipRule.ts): under `health.chipMode:
-   * 'survivors'` each side's survivors chip the OPPOSING pool by their
-   * Σ`power` (× `chipMultiplier`); under `'casualties'` each pool pays its
-   * OWN fallen; a tick-capped turn (`reason === 'cap'`) also pays the
-   * `capPenalty` rule. The per-turn winner is irrelevant to the charge. XP
+   * (`turnCharges`, src/run/chipRule.ts): each pool pays its OWN fallen
+   * Σ`power` (× `chipMultiplier`), and a tick-capped turn (`reason ===
+   * 'cap'`) also pays the OPPOSING side's survivors. The per-turn winner is
+   * irrelevant to the charge. XP
    * banking is the caller's job (M1 — at the turn boundary, right after this
    * resolves). Returns the APPLIED loss per pool (clamped — what each pool
    * actually lost) for the post-turn screen; the uncapped charges ride

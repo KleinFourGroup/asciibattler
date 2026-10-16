@@ -1719,8 +1719,8 @@ export class World {
     this.bus.emit('battle:ended', {
       winner,
       // Why it ended, beside who won: a draw is a mutual wipe
-      // (`checkBattleEnd`) or the tick cap (`resolveAsDraw`), and the
-      // casualty rule's `capPenalty` keys on the cap alone (a mutual wipe is
+      // (`checkBattleEnd`) or the tick cap (`resolveAsDraw`), and the chip
+      // rule's survivors surcharge keys on the cap alone (a mutual wipe is
       // the heaviest casualty turn there is, never a stall).
       reason,
       xpAwards,

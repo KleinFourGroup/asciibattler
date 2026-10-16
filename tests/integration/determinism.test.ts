@@ -177,9 +177,8 @@ function driveTwoBattles(seed: number): BattleEncounter[] {
     bus.emit('battle:ended', {
       winner: 'player',
       xpAwards: [],
-      // 91e — the chip in both rule vocabularies (survivors: the player's
-      // standing power; casualties: the enemy's fallen), so the fake drains
-      // the enemy pool under either shipped `health.chipMode`.
+      // 91e — the chip as the enemy's fallen, which drains the enemy pool;
+      // a decisive turn reads no survivors.
       survivorPower: { player: HEALTH.enemyHealthMax, enemy: 0 },
       fallenPower: { player: 0, enemy: HEALTH.enemyHealthMax },
     });

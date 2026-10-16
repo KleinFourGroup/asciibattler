@@ -1,8 +1,9 @@
 /**
  * §91d — the chip rule's player-facing words, pinned by rule set. The
  * wording is free to change; what is pinned is that each rule set names the
- * RIGHT quantity (fallen vs survivors) on each pool, that a two-rule cap
- * turn names both, and that the live labels come from `rulesForTurn`.
+ * RIGHT quantity (fallen, and survivors on a cap turn) on each pool, that a
+ * two-rule cap turn names both, and that the live labels come from
+ * `rulesForTurn`.
  */
 
 import { describe, it, expect } from 'vitest';
@@ -12,15 +13,6 @@ import { rulesForTurn, type ChipRule } from '../run/chipRule';
 const set = (...rules: ChipRule[]) => new Set<ChipRule>(rules);
 
 describe('chipLabels (§91d)', () => {
-  it('survivors alone: each line names the OPPOSING survivors, never the fallen', () => {
-    const l = chipLineLabels(set('survivors'));
-    expect(l.toEnemyPool).toMatch(/your survivors/i);
-    expect(l.toEnemyPool).toMatch(/enemy morale/i);
-    expect(l.toPlayerPool).toMatch(/enemy survivors/i);
-    expect(l.toPlayerPool).toMatch(/your morale/i);
-    expect(l.toEnemyPool + l.toPlayerPool).not.toMatch(/fallen/i);
-  });
-
   it('casualties alone: each line names the pool\'s OWN fallen, never the survivors', () => {
     const l = chipLineLabels(set('casualties'));
     expect(l.toEnemyPool).toMatch(/enemy fallen/i);
@@ -38,31 +30,24 @@ describe('chipLabels (§91d)', () => {
     expect(l.toPlayerPool).toMatch(/enemy survivors/i);
   });
 
-  it('composes with rulesForTurn: the same turn reads differently by reason under (casualties, survivors)', () => {
-    const h = { chipMode: 'casualties', capPenalty: 'survivors' } as const;
-    expect(chipLineLabels(rulesForTurn('decisive', h))).toEqual(chipLineLabels(set('casualties')));
-    expect(chipLineLabels(rulesForTurn('mutualWipe', h))).toEqual(chipLineLabels(set('casualties')));
-    expect(chipLineLabels(rulesForTurn('cap', h))).toEqual(chipLineLabels(set('casualties', 'survivors')));
-    // One rule twice is still one rule.
-    const one = { chipMode: 'survivors', capPenalty: 'survivors' } as const;
-    expect(chipLineLabels(rulesForTurn('cap', one))).toEqual(chipLineLabels(set('survivors')));
+  it('composes with rulesForTurn: the same turn reads differently by reason', () => {
+    expect(chipLineLabels(rulesForTurn('decisive'))).toEqual(chipLineLabels(set('casualties')));
+    expect(chipLineLabels(rulesForTurn('mutualWipe'))).toEqual(chipLineLabels(set('casualties')));
+    expect(chipLineLabels(rulesForTurn('cap'))).toEqual(chipLineLabels(set('casualties', 'survivors')));
   });
 
-  it('the risk line title counts the wave under survivors and the hand under casualties', () => {
-    expect(riskLineTitle('survivors')).toMatch(/every enemy in the wave surviving/i);
-    expect(riskLineTitle('casualties')).toMatch(/every unit in your hand falling/i);
-    expect(riskLineTitle('casualties')).not.toMatch(/surviving/i);
+  it('the risk line title counts the hand', () => {
+    expect(riskLineTitle()).toMatch(/every unit in your hand falling/i);
+    expect(riskLineTitle()).not.toMatch(/surviving/i);
   });
 
-  it('the power tooltip says what power COSTS under casualties and what it CHIPS under survivors', () => {
-    expect(powerTooltip('survivors')).toMatch(/chips the opposing/i);
-    expect(powerTooltip('survivors', 'enemy')).toBe(powerTooltip('survivors'));
-    expect(powerTooltip('casualties', 'player')).toMatch(/your morale loses/i);
-    expect(powerTooltip('casualties', 'enemy')).toMatch(/enemy morale loses/i);
-    expect(powerTooltip('casualties')).toMatch(/its side's morale loses/i);
+  it('the power tooltip says what power COSTS', () => {
+    expect(powerTooltip('player')).toMatch(/your morale loses/i);
+    expect(powerTooltip('enemy')).toMatch(/enemy morale loses/i);
+    expect(powerTooltip()).toMatch(/its side's morale loses/i);
     for (const t of [undefined, 'player', 'enemy'] as const) {
-      expect(powerTooltip('casualties', t)).toMatch(/falls/i);
-      expect(powerTooltip('casualties', t)).not.toMatch(/chips/i);
+      expect(powerTooltip(t)).toMatch(/falls/i);
+      expect(powerTooltip(t)).not.toMatch(/chips/i);
     }
   });
 });

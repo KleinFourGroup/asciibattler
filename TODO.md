@@ -411,8 +411,8 @@ META-ROADMAP §"Round 11 — Onboarding & Feel" names each group.
   noted; captured 2026-07-15.
 
 - [ ] **The capped turn's end sequence, read once in a browser.** A turn
-  that runs out the clock pays the survivors' rule as the cap's surcharge
-  (`health.capPenalty: survivors`), so the HUD flies one orb for each unit
+  that runs out the clock pays the survivors' rule as the cap's surcharge,
+  so the HUD flies one orb for each unit
   still standing (`src/ui/HUD.ts`, `lossEventsAtEnd`). It ships, and no
   browser read of it is on record. One capped turn in the user's Firefox,
   with the stalled battle's draw prompt above. Reworded at the Round 8.5

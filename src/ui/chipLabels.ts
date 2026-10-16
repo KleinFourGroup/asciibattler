@@ -1,10 +1,9 @@
 /**
  * §91d — the chip rule's PLAYER-FACING words, in one place. The run-side
- * `chipRule.ts` owns the arithmetic; this owns what the screens SAY about it,
- * keyed on the rule(s) a turn charges by, so the pre-turn risk line, the
- * post-turn chip lines and the unit card's power tooltip flip together when
- * `health.chipMode` does (91e flips the default) — and a tick-capped turn
- * that pays two rules says so instead of mislabeling one of them.
+ * `chipRule.ts` owns the arithmetic; this owns what the screens SAY about it:
+ * the pre-turn risk line, the post-turn chip lines and the unit card's power
+ * tooltip. A tick-capped turn that pays two rules says so instead of
+ * mislabeling one of them.
  *
  * Pure (strings in, strings out), so the wording is pinned headless even
  * though the screens that render it are eyeball-only.
@@ -20,44 +19,33 @@ export interface ChipLineLabels {
   readonly toPlayerPool: string;
 }
 
-/** Labels for the rule set a turn paid (`rulesForTurn(reason)`): survivors
- *  alone, casualties alone, or both (a cap turn under the surcharge). */
+/** Labels for the rule set a turn paid (`rulesForTurn(reason)`): casualties
+ *  alone, or both (a cap turn under the surcharge). */
 export function chipLineLabels(rules: ReadonlySet<ChipRule>): ChipLineLabels {
-  const survivors = rules.has('survivors');
-  const casualties = rules.has('casualties');
-  if (survivors && casualties) {
+  if (rules.has('survivors')) {
     return {
       toEnemyPool: t('chip.line.both.toEnemyPool'),
       toPlayerPool: t('chip.line.both.toPlayerPool'),
     };
   }
-  if (casualties) {
-    return {
-      toEnemyPool: t('chip.line.casualties.toEnemyPool'),
-      toPlayerPool: t('chip.line.casualties.toPlayerPool'),
-    };
-  }
   return {
-    toEnemyPool: t('chip.line.survivors.toEnemyPool'),
-    toPlayerPool: t('chip.line.survivors.toPlayerPool'),
+    toEnemyPool: t('chip.line.casualties.toEnemyPool'),
+    toPlayerPool: t('chip.line.casualties.toPlayerPool'),
   };
 }
 
 /** The pre-turn risk line's hover text: what the "up to N" bound counts. */
-export function riskLineTitle(mode: ChipRule): string {
-  return mode === 'casualties' ? t('chip.risk.casualties') : t('chip.risk.survivors');
+export function riskLineTitle(): string {
+  return t('chip.risk.casualties');
 }
 
 /** The unit card's POWER clarifier (the clause after "Power N —"). `team` is
  *  the card's side when the card knows it (the compact battle cards); omit it
  *  for a side-agnostic line (the roster / recruit stat rows). */
-export function powerTooltip(mode: ChipRule, team?: 'player' | 'enemy'): string {
-  if (mode === 'casualties') {
-    if (team === 'player') return t('chip.power.casualties.player');
-    if (team === 'enemy') return t('chip.power.casualties.enemy');
-    return t('chip.power.casualties.side');
-  }
-  return t('chip.power.survivors');
+export function powerTooltip(team?: 'player' | 'enemy'): string {
+  if (team === 'player') return t('chip.power.casualties.player');
+  if (team === 'enemy') return t('chip.power.casualties.enemy');
+  return t('chip.power.casualties.side');
 }
 
 /** 94e — the pool's player-facing NAMES, in one place: the two full gauges

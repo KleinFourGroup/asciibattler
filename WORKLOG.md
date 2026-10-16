@@ -6727,3 +6727,127 @@ Readings by the tool's clock (UTC): 330,749 at 14:49 before 123b's
 commit; 352,360 at 15:10 after 123d's; 371,136 at 15:16 after 123e's;
 391,908 at 15:29 after 123g's; 396,664 at 15:30, before this entry was
 written.
+
+### 123h — B-04, one chip rule (2026-10-16, session b9cfc3b3)
+
+Step zero at `7eb6f085`. The switches' readers in code, by a search of
+`src`, `tests` and `tools` for `chipMode`, `capPenalty` and `ChipRule`:
+
+- `chipRule.ts`: `rulesForTurn` reads both switches (:54-55), and
+  `chipMode` is compared at the five places the kickoff listed; the
+  either-or at :216 is the only producer of a `team` loss cause.
+- The loader (`health.ts`, the two enums) and `config/health.json`.
+- The words: `riskLineTitle` and `powerTooltip` pick by the mode, read by
+  `PreTurnScreen.ts:672` and `UnitCard.ts:287`, :592;
+  `chipLineLabels` has a branch for survivors alone, which the shipped
+  rule never pays; four strings in `locales/en/ui.json` are that half's.
+- The sweep: `MODE_LITERALS` (`commands/run.ts:170`) and the string
+  branch of `applySetOverrides`, and `resolveKnob`'s acceptance of a
+  string. The two chip keys are the only string values in the four knob
+  groups' files, so that path serves nothing once they go.
+- Tests that set a switch: `chipRule.test.ts`'s matrix,
+  `chipLabels.test.ts`, `Run.test.ts` (:1362, :1402, :1538 and the
+  §91a2 block at :6577), `encounter-loop.test.ts:156`,
+  `harnessChipMode.test.ts` (the file), `setArg.test.ts`'s string-mode
+  block, and `telemetry.test.ts:171`, whose check runs only under
+  (survivors, survivors) and so never runs.
+- Comments that name a switch: `events.ts` (four), `Unit.ts`,
+  `World.ts`, `fallenStats.ts`, `Run.ts` (four), `HUD.ts` (two, by the
+  rule's name), the fuzz harness, reporters, `balanceSweep.ts`,
+  `determinism.test.ts`; DESIGN "The encounter loop", ARCHITECTURE (three
+  lines), gotcha #129, one TODO item. BALANCE's two entries are dated
+  records of runs and stay.
+- Not reached: the save (no snapshot field holds either key) and the
+  fuzz summaries (the reporters print no config and no config hash), so
+  the kickoff's prediction of a declared mapping in the fuzz diff does
+  not arise.
+
+**The shape.** The two switches go; the two rules stay as names, since
+a capped turn pays both: `rulesForTurn(reason)` is `casualties`, with
+`survivors` added on a cap. `turnCharges` keeps its order of additions,
+so a cap turn's sum is the same float. The exposures read the hand and
+the wave, the death event and the restore's opening ghost lose their
+guard, and `lossEventsAtEnd` loses its casualties block and with it its
+`fallen` parameter (the project's `noUnusedParameters`), so `HUD.ts`
+passes two arguments. The `team` loss cause then has no producer; its
+type and the HUD's reading of it stay, for the re-skim (123l), since
+the 96.5 kickoff kept it on purpose for a rule not built. The tooltips
+take no mode. The sweep's string path goes with `MODE_LITERALS`, which
+the census row names as the sweep's registry. The harness pin's one
+check that is not about a pair, every chip equal to `turnCharges` of its
+own inputs, moves into `telemetry.test.ts` in place of its dead branch,
+and `harnessChipMode.test.ts` goes. Lines estimated before this bar:
+`src` without tests about −45, the tests about −200.
+
+**The bar** (D2), written before the code:
+
+1. *The same behaviour:* typecheck clean; the corpus, 0 of 30; the fuzz
+   diff against `7eb6f085`, PASS on both shapes; `config-dump` before
+   and after, where the only differences are the two keys in `HEALTH`
+   and in `CONFIG_SOURCES`; a plant at the cap's surcharge
+   (`rulesForTurn`), in a worktree, caught by the corpus; the shipped
+   tooltip words held by `chipLabels.test.ts` unchanged in what it
+   asserts of them; the suite and the smoke by the hook.
+2. *Source lines do not grow* (`src` without tests).
+3. *No new parameter.* None is added; two go (`rulesForTurn`'s
+   `health`, `lossEventsAtEnd`'s `fallen`) and the tooltips' `mode`.
+4. *What a reader had to know, counted:* config keys 2 → 0; places that
+   compare or read a switch, 7 in `chipRule.ts` and 2 in the tooltips →
+   0; the unshipped words, 4 strings → 0; the sweep's string-valued knob
+   path → none; `harnessChipMode.test.ts` → gone.
+
+**Built.** `health.chipMode` and `health.capPenalty` are out of
+`config/health.json` and the loader, whose header now states the rule.
+`chipRule.ts` as the shape says: `ChipRule` is its own two names,
+`rulesForTurn(reason)` reads no config, and each function's guard on the
+mode is gone; its header says the rule was kept at §93 and that the
+`team` cause has no producer now. The tooltips: `riskLineTitle()` and
+`powerTooltip(team?)`, the callers in `PreTurnScreen.ts` and
+`UnitCard.ts` dropping `HEALTH` with it; `chipLineLabels` has two
+branches. Four strings out of `ui.json`. The sweep: `MODE_LITERALS` and
+the string branch out of `commands/run.ts`, and `balanceSweep.ts`'s knob
+types and `resolveKnob` back to numbers alone, as they were before 91a2
+added the path (`20a36ef0`). Tests: `chipRule.test.ts` by reason, the
+survivors-only cases out; `chipLabels.test.ts` keeps every assertion on
+the shipped words and loses the survivors ones; in `Run.test.ts` the
+survivors preview test and the §91a2 block's survivors test are out,
+and six tests no longer set a switch: four set the shipped values, one
+set a cap penalty its decisive turn never read, and one set (survivors,
+survivors) on a cap turn with no fallen, which the rule charges alike;
+`encounter-loop`'s cap test runs once, not per pair;
+`harnessChipMode.test.ts` is deleted and its check of every chip
+against `turnCharges` runs in `telemetry.test.ts`, in place of the
+branch that never ran; `setArg.test.ts`'s string-mode block is out.
+The comments step zero listed now name the rule, not a switch. DESIGN's
+chip-rule sentences say there is one rule and the experiment was kept;
+ARCHITECTURE's three lines, gotcha #129 (its fix stands: a cap turn
+still pays both rules) and the TODO item lose the keys. BALANCE's dated
+entries stay as records of runs, one of which used the switches.
+
+Against the bar:
+
+1. *Behaviour: held.* Typecheck clean over `src`, `tools` and `tests`.
+   The corpus, 0 of 30. The fuzz diff against `7eb6f085`: PASS on both
+   shapes, every compared CSV byte-identical. `config-dump` before and
+   after, `json-diff`: 4 differences, all removals, the two keys in
+   `HEALTH` and in `CONFIG_SOURCES`. The plant, in a worktree of an
+   unreferenced commit of the tree (`e992ef3`, made through a separate
+   index): `rules.add('survivors')` dropped from `rulesForTurn`
+   (`chipRule.ts:47`); unplanted 0 of 30, planted CAUGHT, 1 of 30
+   (`player-1`). One journal of the 30 meets a capped turn, so the corpus
+   reaches the surcharge, thinly. The touched test files, 413 main and
+   11 fuzz-tier tests, green before the hook. Not run: `reach-diff`,
+   which no before-reading at `7eb6f085` exists for; the tests deleted
+   reached the unshipped branches, deleted with them.
+2. *Lines: held.* `src` without tests −72 (+126 −198), `chipRule.ts`
+   −39 of it; the tests −323 in test files and −26 in the fuzz tools;
+   `config` −2, `locales` −4. The estimate was −45 and −200.
+3. *No new parameter: held.* Three go: `rulesForTurn`'s `health`,
+   `lossEventsAtEnd`'s `fallen`, the tooltips' `mode`.
+4. *What a reader had to know: held.* Config keys 2 → 0; places that
+   read or compare a switch, 7 in `chipRule.ts` and 2 in the tooltips →
+   0; the unshipped words 4 → 0; the sweep's string-valued knob path and
+   `harnessChipMode.test.ts` → gone.
+
+Kept. The step-code ceiling 4,151 → 4,145, recorded before any suite
+run. Reading: 285,907 at 16:01, before the commit.

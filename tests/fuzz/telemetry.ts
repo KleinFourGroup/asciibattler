@@ -84,8 +84,8 @@ export interface PoolChip {
    *  pool-HP): `before` = the pool at the turn's battle start, `after` = the
    *  post-chip value (clamped at 0). `after − before` is the chip rule's actual
    *  charge, whatever the rule — the trajectory source for the alpha-strike
-   *  and arrival-pool reads; the survivor fields above are the rule's INPUT
-   *  under survivors, not its output. */
+   *  and arrival-pool reads; the survivor fields above are the cap
+   *  surcharge's INPUT, not its output. */
   playerPoolBefore: number;
   playerPoolAfter: number;
   enemyPoolBefore: number;

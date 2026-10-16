@@ -4,8 +4,6 @@
   "maxTurns": 20,
   "maxTurnSeconds": 150,
   "chipMultiplier": 1,
-  "chipMode": "casualties",
-  "capPenalty": "survivors",
   "restHealFraction": 0.25,
   "seamHealFloor": 1.0,
   "fatiguePerStack": 0,

@@ -35,7 +35,6 @@ import { ticksToSeconds } from '../config';
 import { xpProgress, displayLevel } from '../sim/xp';
 import { statusColor, statusSymbol, empowerColor, empowerLabel } from '../render/statusDisplay';
 import { STAT_LABELS } from './statLabels';
-import { HEALTH } from '../config/health';
 import { powerTooltip } from './chipLabels';
 import { attachTooltip } from './tooltip';
 import { rarityStarParts, rarityLabel } from './rarityDisplay';
@@ -278,13 +277,13 @@ function buildCompactCard(data: UnitCardData, opts: UnitCardOptions): UnitCardHa
   powerHint.className = 'unit-card__compact-hint';
   powerHint.textContent = STAT_LABELS.power;
   powerWrap.append(power, powerHint);
-  // §91d — the clarifier reads by the live chip mode + this card's side. An
-  // enemy card is a control (its click is the engage objective), so the
-  // nested text takes the long-press; a player card is inert, so a tap.
+  // §91d — the clarifier reads by this card's side. An enemy card is a
+  // control (its click is the engage objective), so the nested text takes
+  // the long-press; a player card is inert, so a tap.
   const team = opts.team ?? 'player';
   attachTooltip(
     powerWrap,
-    () => `${STAT_LABELS.power} ${power.textContent} — ${powerTooltip(HEALTH.chipMode, team)}`,
+    () => `${STAT_LABELS.power} ${power.textContent} — ${powerTooltip(team)}`,
     { touch: team === 'enemy' ? 'press' : 'tap' },
   );
   top.append(levelWrap, powerWrap);
@@ -589,7 +588,7 @@ function buildStatRow(
     // §91d — side-agnostic here (roster / recruit / promotion cards). 97e —
     // the row sits inside cards that may be controls (a recruit pick), so
     // the touch route is the long-press.
-    attachTooltip(row, () => `${STAT_LABELS.power} — ${powerTooltip(HEALTH.chipMode)}`, { touch: 'press' });
+    attachTooltip(row, () => `${STAT_LABELS.power} — ${powerTooltip()}`, { touch: 'press' });
     const hint = document.createElement('span');
     hint.className = 'unit-card__power-hint';
     hint.textContent = t('card.hint.morale');

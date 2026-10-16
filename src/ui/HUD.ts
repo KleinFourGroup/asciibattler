@@ -450,25 +450,21 @@ export class HUD {
         // 96.5b1 — the live bar: a casualties loss is a fact at the death
         // (the loss-event model, src/run/chipRule.ts); the payload's power is
         // what the World booked, so the ghost and the ledger agree by
-        // construction. Under survivors a death fires nothing here.
+        // construction.
         this.applyLosses(lossEventsForDeath(death));
       }),
     );
-    // 96.5b1 → b2 — the end sequence: the survivors rule (and the cap
-    // surcharge) becomes a fact only now. The end events launch as the orb
-    // sequence (one per standing survivor, staggered); once every orb of
-    // either kind has landed, the settle beat, then the COMMIT — and
-    // `lossesSettled()` resolves, which the BattleScene hands Game as the
-    // outro's own length (the kickoff's points 3 + 5).
+    // 96.5b1 → b2 — the end sequence: a cap turn's survivors surcharge
+    // becomes a fact only now. The end events launch as the orb sequence
+    // (one per standing survivor, staggered); once every orb of either kind
+    // has landed, the settle beat, then the COMMIT — and `lossesSettled()`
+    // resolves, which the BattleScene hands Game as the outro's own length
+    // (the kickoff's points 3 + 5).
     this.subscriptions.push(
-      bus.on('battle:ended', ({ winner, reason, fallenPower }) => {
+      bus.on('battle:ended', ({ winner, reason }) => {
         if (!this.world) return;
         const why = reason ?? (winner === 'draw' ? 'cap' : 'decisive');
-        const endEvents = lossEventsAtEnd(
-          why,
-          this.world.survivorsByUnit(),
-          fallenPower ?? this.world.fallenPowerSoFar(),
-        );
+        const endEvents = lossEventsAtEnd(why, this.world.survivorsByUnit());
         this.settled = this.runEndSequence(endEvents);
       }),
     );

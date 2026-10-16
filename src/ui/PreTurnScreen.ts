@@ -75,7 +75,6 @@ import { getLayout } from '../sim/layouts';
 import { t } from '../i18n/ui';
 import { packetById, type PacketConfig } from '../config/packets';
 import { DECK } from '../config/deck';
-import { HEALTH } from '../config/health';
 import { POOL_LABELS, chipLineLabels, riskLineTitle } from './chipLabels';
 import { rulesForTurn } from '../run/chipRule';
 import type { FallenRecord } from '../run/Run';
@@ -662,14 +661,13 @@ export class PreTurnScreen extends Screen {
     );
     panel.appendChild(pools);
     // 89e → §91d — the risk line, right under the gauges it reads against:
-    // the most pool this turn can cost under the live chip mode (survivors:
-    // the fielded wave's Σ power; casualties: the hand's own Σ power; × chip,
+    // the most pool this turn can cost (the hand's own Σ power × chip,
     // capped at the pool). The "add your own numbers" fairness surface — the
     // player sees the worst case BEFORE committing the redraw/empower.
     const risk = document.createElement('div');
     risk.className = 'preturn-risk';
     risk.tabIndex = 0;
-    attachTooltip(risk, () => riskLineTitle(HEALTH.chipMode));
+    attachTooltip(risk, () => riskLineTitle());
     panel.appendChild(risk);
     // 96.5c — held + painted through one function so the hand-swap and
     // packet-fire refreshes repaint the same line (the string through t()

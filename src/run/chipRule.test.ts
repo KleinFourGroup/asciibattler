@@ -1,8 +1,6 @@
 /**
- * §91a2 — the chip-rule matrix: {chipMode} × {capPenalty} × {reason}. Every
- * expectation is arithmetic on the injected `health`, never on the shipped
- * config (the pins hold under whichever default ships — survivors until
- * 91e, casualties after).
+ * §91a2 — the chip rule by {reason}. Every expectation is arithmetic on the
+ * injected `health`, never on the shipped config.
  */
 
 import { describe, it, expect } from 'vitest';
@@ -21,116 +19,71 @@ import { HEALTH } from '../config/health';
 
 const survivors = { player: 3, enemy: 5 };
 const fallen = { player: 2, enemy: 7 };
-const h = (chipMode: 'survivors' | 'casualties', capPenalty: 'survivors' | 'casualties', chipMultiplier = 1) => ({
-  chipMode,
-  capPenalty,
-  chipMultiplier,
-});
+const h = (chipMultiplier = 1) => ({ chipMultiplier });
 const REASONS: TurnEndReason[] = ['decisive', 'mutualWipe', 'cap'];
 
 describe('chipRule (§91a2)', () => {
-  it('survivors: each pool pays the OPPOSING standing power; the fallen are ignored, on every reason', () => {
-    for (const reason of REASONS) {
-      expect(turnCharges(reason, survivors, fallen, h('survivors', 'survivors'))).toEqual({
-        player: survivors.enemy,
-        enemy: survivors.player,
-      });
-    }
-  });
-
-  it('casualties: each pool pays its OWN fallen; the survivors are ignored, on decisive + mutual-wipe turns', () => {
+  it('each pool pays its OWN fallen; the survivors are ignored, on decisive + mutual-wipe turns', () => {
     for (const reason of ['decisive', 'mutualWipe'] as const) {
-      expect(turnCharges(reason, survivors, fallen, h('casualties', 'casualties'))).toEqual({
-        player: fallen.player,
-        enemy: fallen.enemy,
-      });
-      // The cap penalty is never consulted off the cap.
-      expect(turnCharges(reason, survivors, fallen, h('casualties', 'survivors'))).toEqual({
+      expect(turnCharges(reason, survivors, fallen, h())).toEqual({
         player: fallen.player,
         enemy: fallen.enemy,
       });
     }
   });
 
-  it('a cap turn charges by every rule named in {chipMode, capPenalty} — the surcharge, never a replacement', () => {
-    // (casualties, survivors): own fallen PLUS the enemy's standing power.
-    expect(turnCharges('cap', survivors, fallen, h('casualties', 'survivors'))).toEqual({
+  it('a cap turn pays own fallen PLUS the opposing standing power — the surcharge, never a replacement', () => {
+    expect(turnCharges('cap', survivors, fallen, h())).toEqual({
       player: fallen.player + survivors.enemy,
       enemy: fallen.enemy + survivors.player,
     });
-    // (survivors, casualties): the mirror oddity — coherent, symmetric.
-    expect(turnCharges('cap', survivors, fallen, h('survivors', 'casualties'))).toEqual({
-      player: survivors.enemy + fallen.player,
-      enemy: survivors.player + fallen.enemy,
-    });
-    // (casualties, casualties): plain casualties — a free stall is the signed
-    // default's known exposure (the searcher is pool-blind; a human stall).
-    expect(turnCharges('cap', survivors, fallen, h('casualties', 'casualties'))).toEqual({
-      player: fallen.player,
-      enemy: fallen.enemy,
-    });
   });
 
-  it('(survivors, survivors) on a cap turn is ONE rule — byte-identical to the pre-§91 charge, never doubled', () => {
-    expect(rulesForTurn('cap', h('survivors', 'survivors')).size).toBe(1);
-    expect(turnCharges('cap', survivors, fallen, h('survivors', 'survivors'))).toEqual({
-      player: survivors.enemy,
-      enemy: survivors.player,
-    });
-  });
-
-  it('a mutual wipe never reads capPenalty (the largest casualty turn is not a stall)', () => {
-    expect([...rulesForTurn('mutualWipe', h('casualties', 'survivors'))]).toEqual(['casualties']);
-    expect([...rulesForTurn('decisive', h('survivors', 'casualties'))]).toEqual(['survivors']);
-    expect([...rulesForTurn('cap', h('casualties', 'survivors'))].sort()).toEqual(['casualties', 'survivors']);
+  it('a mutual wipe never pays the surcharge (the largest casualty turn is not a stall)', () => {
+    expect([...rulesForTurn('mutualWipe')]).toEqual(['casualties']);
+    expect([...rulesForTurn('decisive')]).toEqual(['casualties']);
+    expect([...rulesForTurn('cap')].sort()).toEqual(['casualties', 'survivors']);
   });
 
   it('chipMultiplier scales every charge (pool-HP, uncapped — the caller clamps)', () => {
-    expect(turnCharges('cap', survivors, fallen, h('casualties', 'survivors', 0.5))).toEqual({
+    expect(turnCharges('cap', survivors, fallen, h(0.5))).toEqual({
       player: (fallen.player + survivors.enemy) * 0.5,
       enemy: (fallen.enemy + survivors.player) * 0.5,
     });
     // A charge past any pool stays uncapped here (the 89d rider: the overkill
     // read needs the pre-clamp number).
-    expect(turnCharges('decisive', { player: 0, enemy: 99 }, fallen, h('survivors', 'survivors', 3)).player).toBe(297);
+    expect(turnCharges('decisive', survivors, { player: 99, enemy: 0 }, h(3)).player).toBe(297);
   });
 
-  it('§91d playerExposure: the risk bound reads the WAVE under survivors and the HAND under casualties, × mult, uncapped', () => {
+  it('§91d playerExposure: the risk bound reads the HAND, × mult, uncapped', () => {
     const fielded = { player: 4, enemy: 9 };
-    expect(playerExposure(fielded, { chipMode: 'survivors', chipMultiplier: 1 })).toBe(9);
-    expect(playerExposure(fielded, { chipMode: 'casualties', chipMultiplier: 1 })).toBe(4);
-    expect(playerExposure(fielded, { chipMode: 'casualties', chipMultiplier: 2.5 })).toBe(10);
+    expect(playerExposure(fielded, h(1))).toBe(4);
+    expect(playerExposure(fielded, h(2.5))).toBe(10);
     // Never capped here (the caller clamps at the pool); the live default wires HEALTH.
-    expect(playerExposure({ player: 0, enemy: 99 }, { chipMode: 'survivors', chipMultiplier: 3 })).toBe(297);
+    expect(playerExposure({ player: 99, enemy: 0 }, h(3))).toBe(297);
     expect(playerExposure(fielded)).toBe(playerExposure(fielded, HEALTH));
   });
 
-  it('96.5c2 enemyExposure: the mirror bound — the WAVE under casualties, the HAND under survivors, × mult, uncapped', () => {
+  it('96.5c2 enemyExposure: the mirror bound — the WAVE, × mult, uncapped', () => {
     const fielded = { player: 4, enemy: 9 };
-    expect(enemyExposure(fielded, h('casualties', 'survivors', 1))).toBe(9);
-    expect(enemyExposure(fielded, h('survivors', 'survivors', 1))).toBe(4);
-    expect(enemyExposure(fielded, h('casualties', 'casualties', 2))).toBe(18);
-    // The two bounds partition the fielded power under either rule: what
-    // the player can lose plus what the enemy can lose = everything fielded.
-    for (const mode of ['survivors', 'casualties'] as const) {
-      const health = h(mode, mode, 1);
-      expect(playerExposure(fielded, health) + enemyExposure(fielded, health)).toBe(fielded.player + fielded.enemy);
-    }
+    expect(enemyExposure(fielded, h(1))).toBe(9);
+    expect(enemyExposure(fielded, h(2))).toBe(18);
+    // The two bounds partition the fielded power: what the player can lose
+    // plus what the enemy can lose = everything fielded.
+    expect(playerExposure(fielded, h(1)) + enemyExposure(fielded, h(1))).toBe(fielded.player + fielded.enemy);
   });
 
-  it('defaults to the LIVE config (the production wiring) — the shipped modes are the two legal literals', () => {
-    expect(['survivors', 'casualties']).toContain(HEALTH.chipMode);
-    expect(['survivors', 'casualties']).toContain(HEALTH.capPenalty);
+  it('defaults to the LIVE config (the production wiring)', () => {
     expect(turnCharges('decisive', survivors, fallen)).toEqual(turnCharges('decisive', survivors, fallen, HEALTH));
   });
 });
 
 /**
  * 96.5b1 — the loss-event model: the stream the live bar consumes must SUM
- * to what the turn books, whatever the rule pair and reason. Each side's
- * fielded units are fixed; the dead + the standing partition them, so the
- * per-unit rows re-derive the same `survivors` / `fallen` totals the charge
- * reads — the expectation is `turnCharges` itself, never re-typed numbers.
+ * to what the turn books, whatever the reason. Each side's fielded units are
+ * fixed; the dead + the standing partition them, so the per-unit rows
+ * re-derive the same `survivors` / `fallen` totals the charge reads — the
+ * expectation is `turnCharges` itself, never re-typed numbers.
  */
 describe('chipRule — the loss-event model (96.5b1)', () => {
   const dead = [
@@ -150,72 +103,49 @@ describe('chipRule — the loss-event model (96.5b1)', () => {
     player: rows.filter((r) => r.team === 'player').reduce((s, r) => s + r.power, 0),
     enemy: rows.filter((r) => r.team === 'enemy').reduce((s, r) => s + r.power, 0),
   });
-  const MODES = ['survivors', 'casualties'] as const;
 
-  it('Σ(immediate events over the dead) + Σ(end events) = turnCharges, for every {chipMode} × {capPenalty} × {reason} × mult', () => {
-    for (const chipMode of MODES) {
-      for (const capPenalty of MODES) {
-        for (const mult of [1, 1.5]) {
-          const health = h(chipMode, capPenalty, mult);
-          for (const reason of REASONS) {
-            const stream = [
-              ...dead.flatMap((d) => lossEventsForDeath(d, health)),
-              ...lossEventsAtEnd(reason, standing, fallenOf(dead), health),
-            ];
-            expect(sumLossEvents(stream), `${chipMode}/${capPenalty}/${reason}/×${mult}`).toEqual(
-              turnCharges(reason, standingOf(standing), fallenOf(dead), health),
-            );
-          }
-        }
+  it('Σ(immediate events over the dead) + Σ(end events) = turnCharges, for every {reason} × mult', () => {
+    for (const mult of [1, 1.5]) {
+      const health = h(mult);
+      for (const reason of REASONS) {
+        const stream = [
+          ...dead.flatMap((d) => lossEventsForDeath(d, health)),
+          ...lossEventsAtEnd(reason, standing, health),
+        ];
+        expect(sumLossEvents(stream), `${reason}/×${mult}`).toEqual(
+          turnCharges(reason, standingOf(standing), fallenOf(dead), health),
+        );
       }
     }
   });
 
-  it('casualties: a death fires ONE immediate event, the dead unit\'s own side pays, the cause is the unit; nothing fires at a decisive end', () => {
-    const health = h('casualties', 'survivors', 2);
+  it('a death fires ONE immediate event, the dead unit\'s own side pays, the cause is the unit; nothing fires at a decisive end', () => {
+    const health = h(2);
     expect(lossEventsForDeath(dead[1]!, health)).toEqual([
       { target: 'enemy', amount: 8, phase: 'immediate', cause: { kind: 'unit', unitId: 2, team: 'enemy' } },
     ]);
-    expect(lossEventsAtEnd('decisive', standing, fallenOf(dead), health)).toEqual([]);
-    expect(lossEventsAtEnd('mutualWipe', [], fallenOf(dead), health)).toEqual([]);
+    expect(lossEventsAtEnd('decisive', standing, health)).toEqual([]);
+    expect(lossEventsAtEnd('mutualWipe', [], health)).toEqual([]);
   });
 
-  it('survivors: a death fires nothing; the end fires one event PER STANDING UNIT charged to the OPPOSING pool, cause = the survivor', () => {
-    const health = h('survivors', 'survivors', 1);
-    for (const d of dead) expect(lossEventsForDeath(d, health)).toEqual([]);
-    expect(lossEventsAtEnd('decisive', standing, fallenOf(dead), health)).toEqual([
+  it('the cap surcharge: the end adds one event PER STANDING UNIT charged to the OPPOSING pool, cause = the survivor', () => {
+    expect(lossEventsAtEnd('cap', standing, h())).toEqual([
       { target: 'enemy', amount: 3, phase: 'end', cause: { kind: 'unit', unitId: 4, team: 'player' } },
       { target: 'player', amount: 5, phase: 'end', cause: { kind: 'unit', unitId: 5, team: 'enemy' } },
-    ]);
-    // (survivors, survivors) on a cap turn is one rule — the stream is not doubled.
-    expect(lossEventsAtEnd('cap', standing, fallenOf(dead), health)).toHaveLength(2);
-  });
-
-  it('the cap surcharge: under (casualties, survivors) the end adds the survivor rows; under (survivors, casualties) it adds ONE team-cause event per side off the fallen totals', () => {
-    expect(lossEventsAtEnd('cap', standing, fallenOf(dead), h('casualties', 'survivors'))).toEqual([
-      { target: 'enemy', amount: 3, phase: 'end', cause: { kind: 'unit', unitId: 4, team: 'player' } },
-      { target: 'player', amount: 5, phase: 'end', cause: { kind: 'unit', unitId: 5, team: 'enemy' } },
-    ]);
-    expect(lossEventsAtEnd('cap', standing, fallenOf(dead), h('survivors', 'casualties'))).toEqual([
-      { target: 'enemy', amount: 3, phase: 'end', cause: { kind: 'unit', unitId: 4, team: 'player' } },
-      { target: 'player', amount: 5, phase: 'end', cause: { kind: 'unit', unitId: 5, team: 'enemy' } },
-      { target: 'player', amount: 2, phase: 'end', cause: { kind: 'team', team: 'player' } },
-      { target: 'enemy', amount: 7, phase: 'end', cause: { kind: 'team', team: 'enemy' } },
     ]);
   });
 
   it('a zero booking (a summon), a neutral, and a zero-power survivor emit nothing', () => {
-    const health = h('casualties', 'survivors');
+    const health = h();
     expect(lossEventsForDeath({ unitId: 9, team: 'enemy', power: 0 }, health)).toEqual([]);
     expect(lossEventsForDeath({ unitId: 9, team: 'neutral', power: 5 }, health)).toEqual([]);
-    expect(lossEventsAtEnd('cap', [{ unitId: 9, team: 'enemy', power: 0 }], { player: 0, enemy: 0 }, health)).toEqual([]);
+    expect(lossEventsAtEnd('cap', [{ unitId: 9, team: 'enemy', power: 0 }], health)).toEqual([]);
   });
 
-  it('bookedImmediateLoss — the mid-battle restore opening: the fallen totals × mult under casualties, nothing under survivors', () => {
-    expect(bookedImmediateLoss(fallen, h('casualties', 'survivors', 2))).toEqual({ player: 4, enemy: 14 });
-    expect(bookedImmediateLoss(fallen, h('survivors', 'casualties', 2))).toEqual({ player: 0, enemy: 0 });
+  it('bookedImmediateLoss — the mid-battle restore opening: the fallen totals × mult', () => {
+    expect(bookedImmediateLoss(fallen, h(2))).toEqual({ player: 4, enemy: 14 });
     // Equal to the immediate stream summed — the restore path and the live path agree.
-    const health = h('casualties', 'casualties', 1.5);
+    const health = h(1.5);
     expect(bookedImmediateLoss(fallenOf(dead), health)).toEqual(
       sumLossEvents(dead.flatMap((d) => lossEventsForDeath(d, health))),
     );

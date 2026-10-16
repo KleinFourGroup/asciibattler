@@ -7149,3 +7149,28 @@ could be one `isIndex` call, one line shorter.
 
 The trials' budget: one of three used. If the user signs deletions,
 they are list A's kind and land as steps before the comment pass.
+
+**Signed, in part** (the user, 2026-10-16): "Can you elaborate on 2,3,4?
+Signing the others, plus the calls you made!" So:
+
+- L-5, L-6 and L-7 are signed as deletions, to land as steps before
+  123m.
+- L-1 is signed as the lean was put, which was itself a question:
+  delete unless Round 9's content wants a policy like `weakest`. That
+  question is asked again in the session's message, and L-1 waits on it.
+- The session's calls are signed: 123i's shuffle on `RNG` beside `pick`
+  rather than in `sampling.ts`; 123h's move of the per-chip check into
+  `telemetry.test.ts` with `harnessChipMode.test.ts` deleted, and the
+  sweep's string-valued `--set` path deleted with the keys; `reach-diff`
+  not run for 123h's deleted tests.
+- L-2, L-3 and L-4: the user asked for more. The session's answer, from
+  a further read: L-2's leap branch was built at J2 (`55be9035`) for the
+  gap-closer N1 was to build, and N1 (`fcc58b00`) gave the dash
+  `leapLanding` instead, since a dash's cooldown is not its motion's
+  length; since then four tests in `movement.test.ts` are its only
+  callers, and deleting it leaves `maxCells` read by `leapLanding` alone.
+  L-3's option came with J2 too, for "a future consumer that wants
+  strict queueing", and none has set it. L-4's three arrays go only to
+  `battleSetup`, which reads none of them, and are not saved; the two
+  test lines that read `.fires` (`terrainGen.test.ts:215-216`) can count
+  fire tiles on the grid. Their sign follows here.

@@ -1,43 +1,39 @@
 /**
- * T2 — the RNG-driven walk over the sector-selection meta-DAG
- * (`config/sectorMap.ts`). Pure functions: given a `SectorMap` + an `RNG`, pick
- * the run's first sector, test for completion, and advance to a successor. `Run`
- * drives these at construction (first sector) and on clearing a sector terminal
- * (next sector). Kept separate from the schema/data so the traversal is
- * unit-testable with fixture DAGs (the `NodeMap.generate` / `enemyBudget`
- * pattern: pure run-side logic over validated config).
+ * The walk over the sector map (`config/sectorMap.ts`), a DAG whose nodes
+ * each offer one or more sectors: pick the run's first sector, test for the
+ * end, and advance to a successor. Pure functions over a validated map and
+ * an `RNG`, so the walk is tested with fixture maps; `Run` calls them at
+ * construction and when a sector's terminal is cleared. `pickWeighted` also
+ * serves the encounter, layout and reward rolls.
  */
 
 import type { RNG } from '../core/RNG';
 import type { SectorMap } from '../config/sectorMap';
 
-/** A walk result: which DAG node the run is at + which sector it chose there. */
+/** A walk's result: the map node the run is at, and the sector it chose there. */
 interface SectorPick {
   readonly sectorNodeId: string;
   readonly sectorId: string;
 }
 
 /**
- * Pick one element. **Zero draws when there's no choice** (a singleton list):
- * a forced pick shouldn't consume entropy, which keeps the run's RNG stream
- * byte-identical when a list is degenerate — the property that lets the shipped
- * one-source/one-sector DAG leave node-map generation unperturbed vs the pre-T2
- * single-map run. Delegates to `rng.pick` (which throws on empty) otherwise.
+ * Pick one element uniformly. A list of one costs no draw, so a forced pick
+ * leaves the stream where it was (gotcha #111); otherwise `rng.pick`, which
+ * throws on an empty list.
  */
 export function pickOne<T>(arr: readonly T[], rng: RNG): T {
   return arr.length === 1 ? arr[0]! : rng.pick(arr);
 }
 
 /**
- * Weighted pick: choose one item with probability proportional to `weightOf`.
- * Consumes exactly ONE `rng.next()` for a real choice (same draw count as
- * `pickOne`'s `rng.pick`, so swapping uniform→weighted doesn't shift the
- * surrounding stream) and ZERO on a singleton (same no-choice-no-entropy
- * property — GOTCHAS #111). Used by the sector layout-pool roll, where each
- * `{ layoutId, weight? }` entry's `weight ?? 1` biases the pick (T1's reserved
- * seam, deployed: e.g. "The Start" weights procedural up so it appears more
- * often than a flat 1/|pool|). Weights are positive (zod-validated), so the
- * total is always > 0; the trailing return is float-rounding safety.
+ * Pick one item with probability in proportion to `weightOf`: one
+ * `rng.next()` for a real choice, the draw `pickOne`'s `rng.pick` makes, so
+ * a uniform pick can become a weighted one without shifting the stream; none
+ * for a list of one (gotcha #111). The encounter and layout rolls
+ * (`encounters/selection.ts`) and the reward roll use it. Their weights are
+ * positive by schema, so the total is above 0, and the last return covers
+ * float rounding. An empty list draws once and returns `undefined`, so a
+ * caller whose list can be filtered to nothing checks first.
  */
 export function pickWeighted<T>(arr: readonly T[], weightOf: (item: T) => number, rng: RNG): T {
   if (arr.length === 1) return arr[0]!;
@@ -57,13 +53,13 @@ function nodeSectors(map: SectorMap, nodeId: string): readonly string[] {
   return node.sectors;
 }
 
-/** Resolve a DAG node to a concrete `{ sectorNodeId, sectorId }` (sector pick). */
+/** Pick a sector at a map node. */
 function pickSectorAt(map: SectorMap, nodeId: string, rng: RNG): SectorPick {
   const sectorId = pickOne(nodeSectors(map, nodeId), rng);
   return { sectorNodeId: nodeId, sectorId };
 }
 
-/** The run's first sector: a random source node → a random sector there. */
+/** The run's first sector: a random source node, then a random sector there. */
 export function pickStartSector(map: SectorMap, rng: RNG): SectorPick {
   const sourceId = pickOne(map.sources, rng);
   return pickSectorAt(map, sourceId, rng);
@@ -75,10 +71,10 @@ export function isSectorSink(map: SectorMap, nodeId: string): boolean {
 }
 
 /**
- * Advance from a (non-sink) node to a successor: a random outgoing edge → its
- * node → a random sector there. Throws if the node has no successor — guarded at
- * load (a non-sink dead-end is rejected by the schema), so this only fires if a
- * caller advances past a sink (which `isSectorSink` is there to prevent).
+ * Advance from a node that is not a sink: a random outgoing edge, then a
+ * random sector at its node. Throws when the node has no successor; the
+ * schema rejects a non-sink node with none, so only a caller advancing past
+ * a sink reaches it, which `isSectorSink` is there to prevent.
  */
 export function pickNextSector(map: SectorMap, fromNodeId: string, rng: RNG): SectorPick {
   const successors = map.edges.filter((e) => e.from === fromNodeId).map((e) => e.to);
@@ -90,16 +86,15 @@ export function pickNextSector(map: SectorMap, fromNodeId: string, rng: RNG): Se
 }
 
 /**
- * 84b — the SHORTEST remaining path from `fromNodeId` to any sink, measured
- * in node entries: every successor node on the path contributes the length
- * of its cheapest sector (`lengthOf`, min over the node's candidates), the
- * current node contributes nothing (its own remainder is the caller's — Run
- * reads it off the live node-map). A sink returns 0. "Shortest" is the signed
- * rule for a branching DAG (round-6-spec §Kickoff resolutions) — moot on the
- * shipped linear map, where the one path IS the walk. Pure; memoized over
- * the schema-guaranteed acyclic graph; throws on an unknown node (the
- * `nodeSectors` guard) or a non-sink dead end (rejected at load, so a
- * throw here is drift, never a runtime branch).
+ * The shortest remaining path from `fromNodeId` to any sink, in node
+ * entries: each successor node on the path adds the length of its shortest
+ * sector (`lengthOf`, the least over the node's sectors), and the current
+ * node adds nothing, since the current sector's remainder is the caller's
+ * (`Run.hopsRemaining` counts it off the live node map). A sink gives 0.
+ * Shortest is the rule for a branching map; the shipped map is one path.
+ * Memoized over the graph, which the schema keeps acyclic. It throws on an
+ * unknown node or a non-sink dead end, both rejected at load, so a throw here
+ * means the map got past its schema.
  */
 export function remainingSectorHops(
   map: SectorMap,

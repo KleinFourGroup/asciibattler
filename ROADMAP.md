@@ -215,7 +215,10 @@ The cut, signed 2026-10-16 with the kickoff's five calls (WORKLOG §123,
     `knownAbilityIds`, by the load cycle's fix (WORKLOG §123, "The
     reach-diff over the seven").
 - ☐ **123m — the comment pass** (`batch`, per batch). The 19 files as
-  122o ran it; the tests wait for §126.
+  122o ran it; the tests wait for §126. Batches planned in WORKLOG §123,
+  "123m — the comment pass: the batches, planned".
+  - ◐ **Batch 1 — the run's rules and records** (12 files). Built,
+    unread.
 - ☐ **123n — `Run.ts` read again for B-15** (`stop`). A split comes back
   only with a measure that could pass it.
 

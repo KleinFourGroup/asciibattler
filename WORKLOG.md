@@ -7447,3 +7447,143 @@ load cycle's step zero; 205,391 at 21:05 after the fix's commit; 231,089
 at 21:11 after L-1's; 261,090 at 21:16 at L-2's plant; 285,670 at 21:23
 after L-2's; 296,356 at 21:30 after the reach-diff's; 301,258 at 21:30,
 at this entry.
+
+### 123m — the comment pass: the batches, planned (2026-10-16, session b975692d)
+
+The pass takes the 19 non-test `.ts` files of `src/run`, 9,230 lines
+(the kickoff counted 9,490, before 123h to 123l's deletions). Batches by
+file, grouped so the facts a batch checks sit together:
+
+1. The run's rules and records: `RunConfig.ts`, `Command.ts`, `daemon.ts`,
+   `chipRule.ts`, `Recruitment.ts`, `rewards.ts`, `empower.ts`,
+   `redraw.ts`, `fatigue.ts`, `runStats.ts`, `fallenStats.ts`,
+   `sectorWalk.ts`; 12 files, 2,213 lines.
+2. The map: `NodeMap.ts`, `mapMetrics.ts`; 1,196 lines.
+3. The encounters: `encounters/selection.ts`, `encounters/sequencer.ts`,
+   `encounters/wave.ts`, `enemyBudget.ts`; 1,069 lines.
+4. On: `Run.ts`, 4,752 lines, cut at its sections when the first of its
+   batches starts.
+
+A session takes the next batch while its reading, plus the batch's lines
+at the rate measured so far, stays under the hand-off line. Batch 1
+measured 100 tokens a line (below), which puts the pass near 920k, about
+475k of it `Run.ts`, against the kickoff's 700k at 74.
+
+Proof per batch, as 122o ran it but with 123a's control: `comment-strip
+HEAD src`, comments only, exit 0, its control named for every changed
+file; then `comment-codes --record`. The suite and the smoke by the hook.
+
+### 123m, batch 1 — the run's rules and records (2026-10-16, session b975692d)
+
+The twelve files of the plan. Their history (the step that added each
+dial, the retired roll, the fork ladder, the summed budgets the queue
+replaced, the byte identity of past landings) is out. Rules shared by
+several entries are said once: the no-op rule for a bad command in
+`Command.ts`'s header, the save rule for a dial in `RunConfig`'s header
+and above its interface. The chip rule's reasons point at DESIGN.md
+rather than restating it, and `fatigue.ts` points at `health.ts`'s
+`fatiguePerStack`.
+
+**Statements found false and corrected (rule 7)**, each checked against
+the code that does the thing:
+
+- `Recruitment.ts`: `rollUnit` drew `9 × (level − 1)`; `simulateLevelUps`
+  walks eleven growth stats a level. Now "one draw per growth stat for
+  each level above 1", which a new stat does not falsify.
+- `Command.ts`: `advanceTurn` had the pre- and post-turn screens sending it
+  on Fight and Continue. No screen shows the turn-outcome gate: `Game`
+  sends the advance after the battle's outro (`Game.ts:584`), the fuzz bot
+  directly. The header had the dispatcher closing over `() => this.run`;
+  `Game` implements `RunDispatcher` and reads its run at each dispatch.
+  `chooseCharacter` said a level not unlocked starts no run;
+  `levelWithinCeiling` clamps it, so the run starts at the ceiling, or at
+  0 for a value that is not a whole number of at least 0.
+  `dismissPromotion` named only the encounter's path; after a rest it
+  returns to `map`. `chooseEventOption` said "exactly one draw" off the
+  event stream; the outcome takes one draw from a stream keyed per choice
+  taken, and its effects draw from the same stream.
+- `RunConfig.ts`: the header's determinism contract named a fork hierarchy
+  (the node-map, team and level-up forks, in order); the constructor's fork
+  ladder is retired and streams derive per occurrence by key. `daemon`
+  unset was "a uniform roll over `DAEMONS`" on a forked child stream; the
+  roll is retired, and unset is the character's daemon. A unit `grant`
+  "levels off the abandoned team child stream"; it draws from the team
+  stream after the roster (`Run`'s constructor). `hopCount`'s default was
+  `nodemap.json`'s; unset, it is each sector's `length` (`NodeMap`'s
+  precedence: the config, the sector, the JSON). Its "a playable run needs
+  at least 2" and "2 is the minimal one-battle run" are dropped: the
+  generator takes 1, the root as the terminal, which `firstNodeKind`'s doc
+  names. `sectorHops`, `forcedEncounterId` and `firstNodeKind` each said
+  they were not saved and a reload fell back to defaults; each has a URL
+  form, so it rides the save's dials (`runSlot.ts`) and a reload keeps
+  it. `sectorMap` said the shipped map is a single sink, so a save never
+  stands mid-walk; the shipped map is two nodes, start to the deep end,
+  and the trap is a fixture-map snapshot loaded without its map, as
+  `Run.fromJSON` says. `eventCatalog`'s bespoke save rejects on load only
+  when the load does not pass the same catalog (`fromJSON` checks
+  `inputs.eventCatalog`). Plans out: the future starting-profile seam,
+  the future difficulty level, the isolation dial "once it lands".
+- `daemon.ts`: the header had `Run` rolling one daemon at construction;
+  the character seeds it. `TurnGrants` was in ownership order; a packet's
+  grant is put in at the cursor (`Run.handleUsePacket`).
+  `resolveInstantHooks`'s doc sat above `battleRulesFor`'s, so the
+  function itself had none; it moved down to it. `battleBitsDaemonIds`
+  had the tally labelled when it returns one id; the earners also take
+  the injected rules' sources (`Run.handleTurnEnded`).
+- `runStats.ts`: run stats were the daemon and packet rules' surface; only
+  daemon `modifier` rules and the `drawAmountAdd` dial fold
+  (`Run.effectiveRunStats`). `cacheSize` was "dormant until §49 builds
+  the cache". `eventCombatChance`'s reason was content planned for later,
+  and its reader "clamps to [0,1]": the reader caps it at 1, the fold
+  floors every stat at 0.
+- `rewards.ts`: `source` was "the daemon id credited" when one owned
+  daemon earns battle bits; the one earner may be an injected rule's
+  source. The chance-1 rule pointed at gotcha #115's family, which is the
+  turn-start walk; the pointer is gone.
+- `redraw.ts`, `empower.ts`: the two availability types were "what a
+  control renders"; no UI reads them, only the fuzz's redraw and empower
+  policies, which the harness and the rollout build them for.
+  `EmpowerStackView`'s copies were credited to `empowerEffect`'s deep
+  copy; `Run.empowerStacks` makes them with `cloneEffect`.
+- `fallenStats.ts`: "the screen's glyph run reads [each `rows`]
+  directly"; no shipped code reads `FallenSideStats.rows`, only its test,
+  and the game-over screen draws `byArchetype`. A side's power sum was
+  "the pool damage its fallen cost it"; it is before `chipMultiplier` and
+  without a capped turn's charge for the standing side. "So the fuzz
+  harness can call it on a results file": none does.
+- `sectorWalk.ts`: `pickWeighted` was the sector layout roll's; the
+  encounter pick and the reward roll use it too. `pickOne`'s reason was
+  the pre-T2 single-map run sharing a stream with node-map generation;
+  the sector pick has its own stream, and gotcha #111 holds the property.
+
+**Leads, not built:**
+
+- `FallenSideStats.rows` has no reader outside `fallenStats.test.ts`, a
+  deletion lead with its test.
+- For `Run.ts`'s batches, the same stale claims sit there:
+  `effectiveRunStats` names `gainBits` as "today's only consumer" and the
+  cache as §49's to come; the fatigue seed's comment at the hand's
+  handoff carries the K1 history this batch took out of `fatigue.ts`.
+
+Measured (`comment-length src/run`, at `9547e5f7` and after): comment
+lines 4,246 → 4,047, words 35,557 → 34,193, code lines 4,566 unchanged.
+The words fell less than the lines, since several corrections say more
+than the claim they replace. The step-code ceiling 4,141 → 3,932, the 209
+the twelve files held.
+
+Proof: `comment-strip HEAD src`, comments only, exit 0; its control made
+one code edit in memory in each of the 12 files and the compare named
+all 12.
+
+Cost: 117,527 at 21:53 UTC by the tool's clock as the batch started,
+339,754 at 22:16 after its proof: 222k for 2,213 lines, 100 a line.
+`Command.ts` and `RunConfig.ts` took most of it: 23 commands checked
+against their handlers in `Run.ts` and `Game.ts`, and each dial's save
+path against `runSlot.ts` and `Run.fromJSON`.
+
+**Read** (`batch`): `git show <this commit> -- src/run/RunConfig.ts
+src/run/Command.ts` against the seven rules. Wrong looks like a dial
+said to be saved or not against what `runConfigToQueryString` writes, a
+command's doc naming a path its handler in `Run.ts` does not take, a step
+code or history left, or a rule a change must respect cut (the draw
+notes in `Recruitment.ts` and `daemon.ts`).

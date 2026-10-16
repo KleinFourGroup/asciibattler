@@ -1,17 +1,17 @@
 /**
- * Run-level command channel. Carries the three player intents that used to
- * be bus-event imperatives (`run:nodeEntered`, `recruit:chosen`,
- * `run:resetRequested`). UI components no longer call `bus.emit(...)` for
- * these — they hold a `RunDispatcher` and call `dispatcher.dispatch(cmd)`.
+ * The run's commands: every player intent the UI sends a run goes through a
+ * `RunDispatcher` as one of these, never through a bus event.
  *
- * Why a dispatcher object rather than a direct `Run` reference: `Run` is
- * replaced on reset (Game.resetRun), so any UI that captured the old
- * instance would dispatch to a disposed run. The dispatcher closes over
- * `() => this.run` in Game and always resolves to the live one.
+ * The UI holds a dispatcher rather than the `Run`, because a reset replaces
+ * the `Run` (`Game.resetRun`) and a screen that kept the old one would send
+ * to a run that is gone. `Game` is the dispatcher, and reads its live run at
+ * each dispatch.
  *
- * Run processes commands synchronously (unlike `World.tick`, which drains
- * its queue at a tick boundary). Run isn't tick-driven — its lifecycle is
- * event-driven, so "apply now" is the natural semantic.
+ * `Run` applies a command at once, unlike `World.tick`, which drains its
+ * queue at a tick boundary: a run is not driven by ticks.
+ *
+ * Every command is checked before anything changes, and one that is out of
+ * its phase, names a bad index, or cannot be paid for is a silent no-op.
  */
 
 import type { UnitTemplate } from '../sim/Unit';
@@ -20,47 +20,43 @@ export type RunCommand =
   | { readonly kind: 'enterNode'; readonly nodeId: number }
   | { readonly kind: 'chooseRecruit'; readonly unitTemplate: UnitTemplate }
   /**
-   * H6b — decline the recruit offer. `chooseRecruit`'s sibling: leaves the
-   * roster + deck untouched and advances `phase='map'`. Trial default is
-   * always-available + free (no cost gate). Reverts to deck dilution — weak
-   * for the first recruit or two, growing as the roster outpaces the hand.
+   * Decline the recruit offer: the roster and deck are untouched and the run
+   * goes back to 'map'. Always allowed and free, so the cost of passing is
+   * the deck diluting without it, weak for the first recruit or two and
+   * growing as the roster outgrows the hand.
    */
   | { readonly kind: 'passRecruit' }
   /**
-   * E4 — dismiss the PromotionScene. Run rolls the recruit offer (or
-   * routes to run:victory at terminal) only after this command lands;
-   * the pause between battle-end banking and the offer is the scene
-   * the player is reading.
+   * Dismiss the promotion screen. In an encounter the run goes on from the
+   * turn's result (the recruit offer, or `run:victory` at the terminal) only
+   * once this lands, so the pause between banking the XP and the offer is
+   * the screen the player is reading; after a rest it returns to 'map'.
    */
   | { readonly kind: 'dismissPromotion' }
   /**
-   * 67a — dismiss the sector-cleared gate (the between-sector screen). The
-   * sector already advanced in `advanceSector` (state-first, the
-   * defeat/complete shape); this releases the run back to 'map' on the NEW
-   * sector at pre-root. A silent no-op outside the `sectorCleared` phase.
+   * Dismiss the sector-cleared screen. The sector already advanced in
+   * `advanceSector`; this returns the run to 'map' on the new sector, before
+   * its root. Only in the `sectorCleared` phase.
    */
   | { readonly kind: 'dismissSectorCleared' }
   /**
-   * 50c — undock from a port node (spec §Ports): the run holds in the
-   * serialized `port` phase from docking (`enterNode` on a port) until this
-   * lands, then returns to 'map' (the hop was consumed on entry — the
-   * frontier advances from the port). A no-op outside the `port` phase.
-   * §50d adds the buy/sell/remove commands that spend bits while docked.
+   * Leave a port. The run holds in the saved `port` phase from `enterNode`
+   * on a port until this lands, then returns to 'map'; the hop was spent on
+   * entry, so the frontier advances from the port. Only in the `port` phase.
    */
   | { readonly kind: 'leavePort' }
   /**
-   * 50d — buy the stocked unit at `index` into `Run.portStock.units`: spends
-   * the slot's (jittered) price via the `spendBits` chokepoint, appends the
-   * unit through the same roster path as a post-battle recruit, and marks
-   * the slot sold. Wrong phase / bad index / sold / unaffordable — silent
-   * no-ops that mutate nothing (the acceptReward discipline).
+   * Buy the stocked unit at `index` in `Run.portStock.units`: spends the
+   * slot's price, which the stock rolled with a jitter, through `spendBits`,
+   * adds the unit by the roster path a recruit takes, and marks the slot
+   * sold. Only in the `port` phase, on an unsold slot the player can afford.
    */
   | { readonly kind: 'buyPortUnit'; readonly index: number }
   /**
-   * 50d — buy the stocked packet at `index` into `Run.portStock.packets`.
-   * A FULL cache requires `swapCacheIndex` (the 49c decline-or-swap
-   * contract, `acceptReward`'s shape); affordability is validated BEFORE
-   * the swap discard. Same silent no-op contract as `buyPortUnit`.
+   * Buy the stocked packet at `index` in `Run.portStock.packets`. With the
+   * cache full, `swapCacheIndex` names the held packet to discard, as for
+   * `acceptReward`; the price is checked before that discard, so a buy that
+   * cannot be paid loses nothing.
    */
   | {
       readonly kind: 'buyPortPacket';
@@ -68,67 +64,59 @@ export type RunCommand =
       readonly swapCacheIndex?: number;
     }
   /**
-   * 50d — buy the stocked daemon at `index` into `Run.portStock.daemons`
-   * (stock was owned-excluded at roll). Same contract as `buyPortUnit`.
+   * Buy the stocked daemon at `index` in `Run.portStock.daemons`. The stock
+   * left out owned daemons when it rolled, so a duplicate cannot be bought.
    */
   | { readonly kind: 'buyPortDaemon'; readonly index: number }
   /**
-   * 50d — sell one held packet while docked (`cacheIndex` into `Run.cache`):
-   * discards the slot and refunds ⌊buy price × sellFraction⌋ via RAW
-   * `addBits` — deliberately NOT `gainBits` (a bits-gain fold above
-   * 1/sellFraction would mint an infinite buy-sell loop). Port phase only.
+   * Sell a held packet at a port (`cacheIndex` in `Run.cache`): discards it
+   * and refunds `⌊buy price × sellFraction⌋` through the raw `addBits`, not
+   * `gainBits`, since a bits-gain fold above `1 / sellFraction` would make
+   * buying and selling an endless source of bits.
    */
   | { readonly kind: 'sellPacket'; readonly cacheIndex: number }
   /**
-   * 50d — the pay-to-remove service: spend the flat `unitRemovalPrice`, then
-   * remove `rosterIndex` through the single `removeRosterUnit` chokepoint
-   * (all six roster-parallel structures fixed in one place). Port phase
-   * only; the last unit can't be removed; every reject is a silent no-op
-   * that charges nothing.
+   * The port's removal service: spends the flat `unitRemovalPrice`, then
+   * removes `rosterIndex` through `removeRosterUnit`, the one place a roster
+   * unit is removed. Only in the `port` phase, and never the last unit.
    */
   | { readonly kind: 'payToRemoveUnit'; readonly rosterIndex: number }
   /**
-   * 48b — accept ONE pending reward portion (`index` into
-   * `Run.pendingRewards`). Bits settle through `gainBits` (the fold applies
-   * at accept time); a daemon joins the ownership list immediately. Only
-   * valid in the `reward` phase with a live offer — anything else (wrong
-   * phase, out-of-range index) is a silent no-op. Resolving the last
-   * portion re-enters the gate chain (promotion → recruit/victory).
+   * Accept one pending reward portion (`index` in `Run.pendingRewards`).
+   * Bits settle through `gainBits`, so the fold applies as it is accepted; a
+   * daemon is owned at once. Only in the `reward` phase. Resolving the last
+   * portion goes on to the next gate (the promotion, then the recruit offer
+   * or victory).
    */
   | {
       readonly kind: 'acceptReward';
       readonly index: number;
-      /** 49c — the decline-or-swap contract for a packet portion hitting a
-       *  FULL cache: the held slot to discard first. Required (and consumed)
-       *  ONLY in that case — with room it's ignored, and a full-cache accept
-       *  without a valid one is a silent no-op that leaves the offer intact. */
+      /** For a packet portion when the cache is full: the held packet to
+       *  discard first. Ignored when the cache has room; a full-cache accept
+       *  without a valid one does nothing and leaves the offer as it was. */
       readonly swapCacheIndex?: number;
     }
   /**
-   * 48b — decline ONE pending reward portion (the declinable-per-portion
-   * spec lock; `passRecruit`'s sibling). Same validity + no-op contract as
-   * `acceptReward`.
+   * Decline one pending reward portion; each portion may be declined on its
+   * own. Checked as `acceptReward` is.
    */
   | { readonly kind: 'declineReward'; readonly index: number }
   /**
-   * H4b — advance past a turn gate (the pre-turn or post-turn screen). From
-   * `turn-intro` it starts the turn's tactical battle; from `turn-outcome` it
-   * continues the encounter (next turn) or ends it (recruit / promotion /
-   * defeat). The pre/post-turn screens dispatch it on their Fight/Continue
-   * click (the H4b auto-timers are gone — pre-turn in K3, post-turn in M3).
-   * A no-op outside those two phases. Only reachable when
-   * `Run.pauseAtTurnGates` is on (the headless loop has no gates to advance).
+   * Advance past a turn gate. From `turn-intro` it starts the turn's battle;
+   * the pre-turn screen sends it on Fight. From `turn-outcome` it goes on to
+   * the next turn or ends the encounter; no screen shows that gate, and
+   * `Game` sends the advance itself after the battle's outro (the fuzz bot
+   * sends it directly). The run enters these phases only with
+   * `Run.pauseAtTurnGates` on, so a headless loop has no gate to advance.
    */
   | { readonly kind: 'advanceTurn' }
   /**
-   * K3 — redraw selected hand cards at the pre-turn gate: send them to the
-   * discard, draw that many fresh (the deck's normal reshuffle cycle applies).
-   * `handIndices` are positions into the current hand (not roster indices).
-   * 49d: `grantIndex` targets ONE redraw grant in the turn's queue (per-
-   * source now — the 47d summed budget is retired); under the strict
-   * finality mode it must be the ACTIVE grant. Only valid in `turn-intro`
-   * within that grant's budget — anything else is a silent no-op that
-   * consumes no budget. The redrawn hand re-emits via `turn:handRedrawn`.
+   * Redraw picked hand cards at the pre-turn gate: they go to the discard
+   * and as many are drawn into their places, by the deck's usual reshuffle.
+   * `handIndices` are positions in the current hand, not roster indices.
+   * `grantIndex` names one redraw grant in the turn's queue, which in strict
+   * mode must be the active one. Only in `turn-intro`, within that grant's
+   * budget. Emits `turn:handRedrawn`.
    */
   | {
       readonly kind: 'redrawCards';
@@ -136,52 +124,44 @@ export type RunCommand =
       readonly grantIndex: number;
     }
   /**
-   * K4 — empower one drawn card at the pre-turn gate: its roster slot gains
-   * the granting source's buff for the rest of the ENCOUNTER (the K1
-   * encounter-effect store — re-seeded onto the unit each turn at deploy, so
-   * it survives being redrawn away or benched). `handIndex` is a position
-   * into the current hand (not a roster index), same contract as
-   * `redrawCards`. Only valid in `turn-intro` within the grant's budget —
-   * anything else is a silent no-op that consumes no budget. Emits
-   * `turn:unitEmpowered`.
+   * Empower a drawn card at the pre-turn gate: its roster slot gains the
+   * granting source's buff for the rest of the encounter, in the encounter
+   * effect store, which re-seeds it onto the unit every turn, so it outlasts
+   * the card being redrawn away or benched. `handIndex` is a position in the
+   * current hand, as for `redrawCards`. Only in `turn-intro`, within the
+   * grant's budget. Emits `turn:unitEmpowered`.
    */
   | {
       readonly kind: 'empowerUnit';
       readonly handIndex: number;
-      /** 47d→49d — which grant (an index into the turn's grant QUEUE —
-       *  `Run.grantViews()`); strict mode requires the active one.
-       *  Out-of-range / wrong-kind = the usual silent no-op. */
+      /** The grant, an index in the turn's grant queue (`Run.grantViews()`);
+       *  strict mode requires the active one. */
       readonly grantIndex: number;
     }
   /**
-   * 49d — finalize the ACTIVE grant unspent (the guided strip's Pass).
-   * Engine-enforced finality (the §49 shape-lock): meaningful only under
-   * `deck.json#grantQueue.passIsFinal` — free mode is a deliberate no-op.
-   * No index: it always finalizes the derived cursor (first pending grant).
-   * Emits `turn:grantPassed`.
+   * Close the active grant unspent (the guided strip's Pass). It does
+   * something only in strict mode (`passIsFinal`, from
+   * `config/deck.json`'s `grantQueue` unless the run config overrides it);
+   * in free mode it does nothing. It takes no index: it closes the first
+   * pending grant. Emits `turn:grantPassed`.
    */
   | { readonly kind: 'passGrant' }
   /**
-   * 49b — discard one cache slot (`cacheIndex` into `Run.cache`): the
-   * at-will discard (spec §Cache) and the instrument of the 49f forced-keep
-   * shrink flow (the modal dispatches one per drop-choice). Deliberately
-   * legal in ANY phase — pure run-level state with no sim seam, and the
-   * cache modal opens on every screen. Out-of-range / fractional = the
-   * usual silent no-op. Emits `run:cacheChanged`.
+   * Discard one held packet (`cacheIndex` in `Run.cache`), at will, or one
+   * of the drops when the cache shrinks below what it holds (the modal sends
+   * one for each). Allowed in any phase, since the cache is run state with
+   * no part in the sim and its modal opens on every screen. Emits
+   * `run:cacheChanged`.
    */
   | { readonly kind: 'discardPacket'; readonly cacheIndex: number }
   /**
-   * 49e — fire one held packet (`cacheIndex` into `Run.cache`): the consume
-   * path of the earn-store-use loop. The context derives from the PHASE
-   * (`turn-intro` → `preTurn`; `map` → `outOfBattle` — the 49e shape-lock;
-   * anything else rejects), and the packet's authored `usableIn` must admit
-   * it. A `unit`-target packet takes `handIndex` (preTurn — a position into
-   * the current hand) or `rosterIndex` (outOfBattle — a `Run.team` slot);
-   * the other field is ignored, and a missing/invalid one rejects. Every
-   * reject is a silent no-op that consumes NOTHING (validation before any
-   * mutation — the acceptReward discipline); a fire consumes the packet
-   * immediately and irrevocably (the §49 kickoff lock — no batching, no
-   * undo). Emits `run:cacheChanged` + `run:packetUsed`.
+   * Use a held packet (`cacheIndex` in `Run.cache`). The context follows the
+   * phase, `preTurn` in `turn-intro` and `outOfBattle` in `map`, and the
+   * packet's `usableIn` must allow it. A packet that targets a unit takes
+   * `handIndex` in `preTurn` (a position in the current hand) or
+   * `rosterIndex` in `outOfBattle` (a `Run.team` slot); the other field is
+   * ignored, and a missing or invalid one rejects. A use spends the packet
+   * at once, with no undo. Emits `run:cacheChanged` and `run:packetUsed`.
    */
   | {
       readonly kind: 'usePacket';
@@ -190,35 +170,35 @@ export type RunCommand =
       readonly rosterIndex?: number;
     }
   /**
-   * 74b — resolve one choice on the active event page (`choiceIndex` into
-   * `Run.currentEventPage().choices`). Rolls the choice's weighted outcome
-   * off the dedicated `eventRng` (exactly one draw), executes its effects,
-   * then routes `next`: a page id moves the cursor (emitting
-   * `event:pageChanged`), `return-to-map` releases to 'map' (the leavePort
-   * silent-transition pattern), `start-encounter` closes the event and opens
-   * the named fight (with an optional pinned reward table). Wrong phase /
-   * bad index / failing condition — the usual silent no-op.
+   * Take a choice on the active event page (`choiceIndex` in
+   * `Run.currentEventPage().choices`), if its condition holds. The choice's
+   * weighted outcome takes one draw from the event stream, keyed per choice
+   * taken, which its effects then draw from as well. Then `next`: a page id
+   * moves to that page (`event:pageChanged`), `return-to-map` returns to
+   * 'map', and `start-encounter` closes the event and opens the named fight,
+   * with its reward refs pinned if the event gives them.
    */
   | { readonly kind: 'chooseEventOption'; readonly choiceIndex: number }
   /**
-   * Take an option at the rest gate: the run holds in the serialized `rest`
-   * phase from `enterNode` on a rest node until this lands. Option 0, the
-   * only one today, is the rest itself: the pool heals, every unit banks the
-   * rest's XP, and the run goes to 'promotion' if anyone levelled, else back
-   * to 'map'. The index is the seam for further options. Wrong phase or any
-   * other index is a silent no-op. Draws nothing.
+   * Take an option at the rest gate: the run holds in the saved `rest` phase
+   * from `enterNode` on a rest node until this lands. Option 0, the only one,
+   * is the rest itself: the pool heals, every unit banks the rest's XP, and
+   * the run goes to 'promotion' if anyone levelled, else back to 'map'. Any
+   * other index does nothing. Draws nothing.
    */
   | { readonly kind: 'chooseRestOption'; readonly optionIndex: number }
   | { readonly kind: 'resetRun' }
   /**
-   * 63e — confirm the starting character on the CharacterSelectScene. GAME-
-   * handled (the `resetRun` shape): it CONSTRUCTS the Run (the choice must
-   * exist before Run construction — the §63 seam), so Run itself only ever
-   * sees it as a misrouted no-op. `characterId` is a characters.json id;
-   * Game validates it loud (the scene only offers catalog entries).
-   * `escalation` is the Escalation level picked with the character (0 is
-   * off); Game holds it to the character's ceiling before the run is made
-   * (src/store/progress.ts), so a level that isn't unlocked starts no run.
+   * Confirm the starting character on the character-select screen. `Game`
+   * handles it, as it does `resetRun`: it constructs the `Run`, since the
+   * choice comes before the run exists, so a `Run` sees it only if
+   * misrouted, and ignores it. `characterId` is an id in
+   * `config/characters.json`, which `Game` checks loudly. `escalation` is
+   * the Escalation level picked with the character (0 is off); `Game` holds
+   * it to the character's ceiling before making the run
+   * (`levelWithinCeiling`, `src/store/progress.ts`), so a level past the
+   * ceiling starts the run at the ceiling, and one that is not a whole
+   * number of at least 0 starts it at 0.
    */
   | { readonly kind: 'chooseCharacter'; readonly characterId: string; readonly escalation: number };
 

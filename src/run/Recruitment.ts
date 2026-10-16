@@ -1,36 +1,27 @@
 /**
- * Post-victory unit-offer generation.
+ * The unit offers: the post-battle recruit offer, and a port's unit stock.
  *
- * §61c — each offer slot is an INDEPENDENT rarity-weighted draw: roll a tier
- * (the `RECRUITMENT.rarityWeights` config, renormalized over the NON-EMPTY
- * tiers of the draft pool — an unpopulated tier costs no probability mass),
- * then a WEIGHTED pick among that tier's draftable archetypes (§63b:
- * `archetypeWeights`, absent = 1 — the character weight-override seam; the
- * default pool is `DRAFTABLE_BY_TIER`, so the §29-close `draftable:false`
- * exclusions still never appear, and §63c swaps in blacklist-filtered pools). Duplicate
- * archetypes in one offer are ALLOWED by design (kickoff lock: rolled levels +
- * growth differentiate, and under weight overrides dupes ARE the character
- * identity working; the named fallback if playtest shows degenerate offers is
- * one resample per duplicate — deliberately not pre-built). This replaced F1's
- * distinct-sample partial Fisher–Yates, so `size` is no longer capped at the
- * pool size.
+ * Each offer slot is its own rarity-weighted draw: a tier, by the tier
+ * weights over the tiers of the draft pool that hold archetypes (so an empty
+ * tier takes no probability from the others), then a weighted pick among
+ * that tier's archetypes (`archetypeWeights`, 1 when absent, the character's
+ * overrides). The default pool is `DRAFTABLE_BY_TIER`, so an archetype
+ * marked `draftable: false` never appears, and `Run` passes the character's
+ * pools with its blacklist taken out. The same archetype may fill two slots
+ * of one offer: rolled levels and growth tell them apart, and under weight
+ * overrides a repeat is the character working.
  *
- * Recruits arrive at `level`, which is either a flat number OR a per-card
- * function `(rng) => number`. G4: Run computes the level off the team —
- * `round(avgTeamLevel) + recruitLevelBonus(...)` (replacing E3's `currentFloor`
- * basis) so recruits scale with the *team*, not the floor. Post-G5 the
- * geometric bonus is drawn INDEPENDENTLY per card (Run passes a function over a
- * shared `round(avgTeamLevel)` base), so a lucky offer surfaces one
- * over-leveled standout rather than boosting all three cards together. Each
- * card's `rollUnit` then runs the level-ups for that card's own level.
+ * Recruits arrive at `level`, a number or a per-card `(rng) => number`.
+ * `Run` passes a function, `round(avgTeamLevel) + recruitLevelBonus(...)`
+ * capped at the level cap, so recruits scale with the team, and the bonus is
+ * drawn for each card, so a lucky offer shows one over-leveled standout
+ * rather than raising every card.
  *
- * Determinism: the sampler draws exactly 2 per slot (tier roll + within-tier
- * pick — the tier roll happens even with one non-empty tier, keeping the draw
- * shape independent of the catalog's tier occupancy); then per card the level
- * function (if supplied) draws its bonus and `rollUnit` draws `9 × (level − 1)`
- * more — all off the same `rng`. F1's distinct sampler drew 1 per slot, so §61c
- * deliberately reset the fuzz baseline (the round's first predicted stream
- * break).
+ * Draws, all from the one `rng`: two a slot, the tier roll and the pick
+ * within it (the tier roll is made even when one tier holds archetypes, so
+ * the draw count does not depend on which tiers the catalog fills); then for
+ * each card the level function's bonus, if a function is passed, and
+ * `rollUnit`'s level-ups, one draw per growth stat for each level above 1.
  */
 
 import type { RNG } from '../core/RNG';
@@ -41,10 +32,10 @@ import { RARITY_TIERS, type UnitRarity } from '../config/units';
 import { LEVELING } from '../config/leveling';
 
 /**
- * §63b — per-archetype within-tier weights (absent key = 1, the spec's
- * default). Strictly positive by authoring contract (characters.ts forbids 0
- * — a zero is spelled "blacklist", which removes the archetype from `pools`
- * instead); the sampler still guards a zero-total pool loudly.
+ * Each archetype's weight within its tier, 1 when absent. Positive, since
+ * the character schema refuses 0 (a zero is spelled as a blacklist, which
+ * takes the archetype out of `pools`); the sampler still throws on a pool
+ * whose weights sum to 0.
  */
 type ArchetypeWeights = Readonly<Partial<Record<Archetype, number>>>;
 
@@ -54,52 +45,38 @@ export function rollOffer(
   level: number | ((rng: RNG) => number) = 1,
   pools: Readonly<Record<UnitRarity, readonly Archetype[]>> = DRAFTABLE_BY_TIER,
   archetypeWeights: ArchetypeWeights = {},
-  // 64b — the tier weights are now a param (the run-stat fold's seam):
-  // Run passes the folded weights (Patrician's Seal's mult-0 lands there);
-  // the default keeps every other caller on the raw config values.
+  // The tier weights: `Run` passes the run-stat fold's (where Patrician's
+  // Seal zeroes common); the default is the config's.
   rarityWeights: Readonly<Record<UnitRarity, number>> = RECRUITMENT.rarityWeights,
-  // 64c — per-slot tier forcing (Idol of Portunus): slot i < length draws
-  // WITHIN forcedTiers[i] (tier roll consumed-and-overridden — the draw
-  // shape never changes); slots beyond the list roll normally. An empty
-  // forced tier degrades that slot to the normal roll (graceful — a
-  // blacklist-emptied legendary pool must not crash the port).
+  // Per-slot tier forcing (the Idol of Portunus, at the port): slot `i`
+  // draws within `forcedTiers[i]`, its tier roll made and then overridden so
+  // the draw count does not change; slots past the list roll as usual. A
+  // forced tier with no archetypes falls back to the usual roll for that
+  // slot, so a blacklist that empties the legendary pool cannot break the
+  // port.
   forcedTiers: readonly UnitRarity[] = [],
 ): UnitTemplate[] {
   if (size <= 0) return [];
-  // Sample every slot's archetype FIRST, then materialize the units — keeps the
-  // two-phase draw shape the F1 sampler had (all composition draws, then the
-  // per-card level/stat draws). §63b: `pools`/`archetypeWeights` default to the
-  // global draft pool at uniform weight — §63c passes the character-derived
-  // pair (blacklist-filtered pools + the character's overrides), and the port
-  // stock inherits through this same signature by construction.
+  // Every slot's archetype first, then the units: all the composition draws,
+  // then each card's level and stat draws.
   const archetypes = Array.from({ length: size }, (_, i) =>
     rollArchetypeByRarity(rng, pools, rarityWeights, archetypeWeights, forcedTiers[i]),
   );
-  // A function `level` is resolved PER CARD (drawing off the shared `rng`), so
-  // a geometric bonus rolls independently for each offered unit; a number is a
-  // flat level applied to every card (the back-compat / explicit-input form).
+  // A function `level` is called for each card, on the shared `rng`, so the
+  // bonus rolls for each offered unit; a number is one level for every card.
   return archetypes.map((a) => rollUnit(a, rng, typeof level === 'function' ? level(rng) : level));
 }
 
 /**
- * §61c — one rarity-weighted archetype draw: a weighted tier roll over the
- * non-empty tiers (renormalization = weighting only what exists), then a
- * uniform pick within the tier. Exactly 2 RNG draws, always — the tier roll is
- * taken even when only one tier is populated, so the draw shape never depends
- * on catalog occupancy (61d's tier assignments shift WHICH archetypes appear,
- * not how many draws happen).
+ * One rarity-weighted archetype draw: a weighted tier roll over the tiers
+ * that hold archetypes, then a weighted pick within the tier
+ * (`archetypeWeights`, 1 when absent). Two draws, always: the tier roll is
+ * made even when one tier holds archetypes, so the draw count never depends
+ * on which tiers the catalog fills.
  *
- * Pure, config-parameterized core (the `unitPriceFor` discipline): `rollOffer`
- * binds the live pools + weights; tests drive synthetic ones. Throws when every
- * non-empty tier carries zero weight — a broken config should be loud, not
- * silently uniform.
- *
- * §63b — the within-tier pick is WEIGHTED (`archetypeWeights`, absent key = 1;
- * the character weight-override seam). Still exactly 1 draw: the cumulative
- * walk consumes one `next()` like `rng.pick` did, and with all-default weights
- * it selects the IDENTICAL index (`floor(next()·len)` — the `RNG.pick`/`int`
- * mapping), so a no-override draw is byte-identical to the pre-63b uniform
- * pick. The kickoff audit's identity proof; pinned in the test file.
+ * Pure, with the pools and weights passed in, so a test passes its own.
+ * Throws when every tier with archetypes has weight 0, since a broken config
+ * should fail loudly rather than fall back to uniform.
  */
 export function rollArchetypeByRarity(
   rng: RNG,
@@ -108,14 +85,10 @@ export function rollArchetypeByRarity(
   archetypeWeights: ArchetypeWeights = {},
   forceTier?: UnitRarity,
 ): Archetype {
-  // 64c — a forced tier: the tier draw is CONSUMED then overridden (the
-  // 2-draws-per-slot shape stays independent of forcing — the §61c
-  // discipline), and the within-tier pick proceeds as usual (character
-  // weight overrides still govern inside the forced tier). Forcing
-  // bypasses tier WEIGHTS entirely (a Seal-zeroed common could still be
-  // forced by future content — orthogonal axes by design). An EMPTY
-  // forced pool falls through to the normal roll instead (graceful
-  // degradation — the caller guaranteed a tier the config can't supply).
+  // A forced tier: the tier draw is made and then overridden, so a slot
+  // draws twice whether forced or not, and the pick within the tier goes as
+  // usual, under the character's weights. Forcing ignores the tier weights.
+  // A forced tier with no archetypes falls through to the usual roll.
   if (forceTier !== undefined && pools[forceTier].length > 0) {
     rng.next();
     return pickWeighted(rng, pools[forceTier], archetypeWeights);
@@ -126,10 +99,10 @@ export function rollArchetypeByRarity(
     throw new Error('rollArchetypeByRarity: every non-empty tier has zero weight');
   }
   let roll = rng.next() * total;
-  // 64b hardening — the float-boundary fallback must be the last
-  // POSITIVE-weight tier, not merely the last non-empty one: with zeroed
-  // weights in play (Patrician's Seal), the old init could land a rounding
-  // edge case in a tier that holds no probability mass at all.
+  // The fallback for float rounding is the last tier with a positive
+  // weight, not merely the last with archetypes: with a weight zeroed
+  // (Patrician's Seal), a rounding edge could otherwise land in a tier that
+  // holds no probability at all.
   let tier: UnitRarity = [...tiers].reverse().find((t) => weights[t] > 0)!;
   for (const t of tiers) {
     roll -= weights[t];
@@ -142,12 +115,11 @@ export function rollArchetypeByRarity(
 }
 
 /**
- * §63c — the character-filtered draft pool: `DRAFTABLE_BY_TIER` minus the
- * character's blacklist ADDITIONS (the global `draftable:false` exclusions are
- * already out by construction). Derived at call time from the character def
- * (derive-don't-cache — a rehydrated run recomputes identically), returning
- * the shared table untouched on the empty-blacklist fast path so the default
- * character allocates nothing per offer.
+ * A character's draft pool: `DRAFTABLE_BY_TIER` without the character's
+ * blacklist (archetypes marked `draftable: false` are already out of the
+ * table). Derived on each call from the character, so a loaded run derives
+ * the same pool; an empty blacklist returns the shared table itself, so the
+ * default character allocates nothing an offer.
  */
 export function draftPoolsFor(
   blacklist: readonly Archetype[],
@@ -165,12 +137,12 @@ export function draftPoolsFor(
 }
 
 /**
- * §63b — one weighted draw from a non-empty pool (absent weight = 1). The
- * equal-weights case reduces to `pool[floor(next()·len)]` — exactly
- * `RNG.pick`'s mapping off the same single draw (integer cumulative sums, no
- * float drift), which is what keeps default draft streams byte-identical
- * across the §63 landing. A zero-total pool throws (a blacklist should have
- * REMOVED the archetype from the pool; weight 0 reaching here is a bug).
+ * One weighted draw from a pool with archetypes in it (1 for an absent
+ * weight). With equal weights it reduces to `pool[floor(next() × len)]`,
+ * `RNG.pick`'s mapping from the same single draw, since integer sums carry
+ * no float drift (`Recruitment.test.ts`). A pool whose weights sum to 0
+ * throws: a blacklist takes an
+ * archetype out of the pool, so a weight of 0 here is a bug.
  */
 function pickWeighted(rng: RNG, pool: readonly Archetype[], weights: ArchetypeWeights): Archetype {
   const total = pool.reduce((acc, a) => acc + (weights[a] ?? 1), 0);
@@ -186,13 +158,12 @@ function pickWeighted(rng: RNG, pool: readonly Archetype[], weights: ArchetypeWe
 }
 
 /**
- * G4 — the geometric level bonus stacked on `round(avgTeamLevel)` for a
- * recruit. `P(+k) = (1 − chance) · chance^k`: each successful coin (prob
- * `chance`) adds a level, the first miss stops. With chance 0.5 that's
- * 50% +0 / 25% +1 / 12.5% +2 / … — most recruits match the team average,
- * with an occasional over-leveled standout. Bounded by `LEVELING.levelCap`
- * iterations so a pathological `chance ≈ 1` can't loop unboundedly (the
- * caller also clamps the final level to the cap).
+ * A recruit's geometric level bonus over `round(avgTeamLevel)`:
+ * `P(+k) = (1 − chance) × chance^k`, each successful coin adding a level and
+ * the first miss stopping. At the shipped 0.5 that is 50% +0, 25% +1,
+ * 12.5% +2 and so on, so most recruits match the team's average and a few
+ * stand out. At most `LEVELING.levelCap` coins, so a `chance` near 1 cannot
+ * loop without end; the caller also caps the final level.
  */
 export function recruitLevelBonus(rng: RNG, chance: number): number {
   let bonus = 0;

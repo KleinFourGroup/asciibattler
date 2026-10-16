@@ -1,27 +1,23 @@
 /**
- * The run-level stat vocabulary + fold (Phase 47a — the rule vocabulary).
+ * The run's stats and their fold. A daemon's `modifier` rule adds to or
+ * multiplies one of these keys, and readers take the folded value at use
+ * time (`Run.effectiveRunStats`), derived on each call and never cached or
+ * saved, so a change of ownership is right at once.
  *
- * Run stats are the passive-modifier surface of the daemon/packet rule
- * system (cluster-3-spec §"The rule vocabulary"): a `modifier` rule
- * contributes an `add` or `mult` onto one of these keys, and consumers read
- * the folded value at use time — derived, never cached or serialized
- * (the derive-don't-cache doctrine).
- *
- * Mirrors the sim's `foldEffects` (src/sim/statusEffects.ts) with two
- * deliberate divergences:
- *  - **No rounding.** `bitsGain` is a dimensionless multiplier (base 1);
- *    rounding belongs at the read site (a bits grant rounds the final
- *    amount; a cache read floors a slot count).
- *  - **No magnitude axis.** Rule modifiers carry plain values — stacking
- *    comes from owning multiple daemons/packets, not per-instance stacks.
+ * The fold is the sim's `foldEffects` (`src/sim/statusEffects.ts`) with two
+ * differences:
+ * - no rounding: `bitsGain` is a multiplier, so rounding belongs to the
+ *   reader (a bits grant rounds the amount, a slot count is floored);
+ * - no magnitude: a modifier carries a plain value, and stacking comes from
+ *   owning several daemons.
  */
 
 import { RECRUITMENT } from '../config/recruitment';
 import { DECK } from '../config/deck';
 import { NODE_MAP } from '../config/nodemap';
 
-/** The launch run-stat keys (content-driven — grown when content demands).
- *  A tuple so the config layer's zod enum and this type share one source. */
+/** The run-stat keys, a tuple so the daemon schema's enum and this type share
+ *  one source. */
 export const RUN_STAT_KEYS = [
   'bitsGain',
   'cacheSize',
@@ -36,48 +32,36 @@ export const RUN_STAT_KEYS = [
 ] as const;
 export type RunStatKey = (typeof RUN_STAT_KEYS)[number];
 
-/** Base values before any modifier folds. §64a: bases may be CONFIG-DERIVED
- *  (recruitOfferSize reads recruitment.json — one source of truth; the import
- *  is cycle-free: recruitment.ts touches only zod/json/type-only units). */
+/** Each stat's value before any modifier. A base that is a config value reads
+ *  the config, so it has one source. */
 export const RUN_STAT_BASES: Readonly<Record<RunStatKey, number>> = {
-  /** Multiplier applied to every bits grant (1 = neutral). */
+  /** The multiplier on every bits grant; 1 changes nothing. */
   bitsGain: 1,
-  /** Cache slots (spec: base six). Dormant until §49 builds the cache. */
+  /** The packet cache's slots. */
   cacheSize: 6,
-  /** 64a — post-battle recruit-offer slots (The Cornucopia's +1). The PORT
-   *  unit count is deliberately NOT this stat (spec: "the post-encounter
-   *  pool from three to four" — `PRICES.portStock.units` is untouched). */
+  /** The post-battle recruit offer's slots (The Cornucopia adds 1). A port's
+   *  unit count is not this stat but `PRICES.portStock.units`. */
   recruitOfferSize: RECRUITMENT.defaultOfferSize,
-  /** 65a — cards drawn into the hand each turn (the H5 `DECK.handSize`,
-   *  promoted to a foldable stat; base config-derived — one source of
-   *  truth). PERSISTENT draw modifiers land here (daemons); the transient
-   *  packet draws (65c) mutate the hand directly and never touch this
-   *  fold — the Option-B budget-basis split (worklog §65-shape-lock). */
+  /** The cards drawn into the hand each turn. A lasting draw modifier lands
+   *  here; a packet's one-turn draw puts cards in the hand directly and never
+   *  touches the fold. */
   drawAmount: DECK.handSize,
-  /** 64b — the global tier weights, promoted to run stats (the no-commons
-   *  shape-lock: Patrician's Seal is a `mult 0` fold on the common weight;
-   *  the fold's max(0,·) clamp keeps a folded weight legal for the sampler).
-   *  Bases = recruitment.json — the tier roll renormalizes over non-empty
-   *  tiers, so a zeroed tier costs no probability mass. BOTH offer sites
-   *  (recruit + port) read the fold: the Seal governs drafting everywhere
-   *  (spec: ports follow the same mechanics), unlike 64a's
-   *  recruit-only scope. */
+  /** The tier weights of a unit offer. Patrician's Seal multiplies the common
+   *  weight by 0, and the fold's floor at 0 keeps a weight legal for the
+   *  sampler; the tier roll weighs only the tiers that have units, so a
+   *  zeroed tier takes no probability from the others. Both the recruit offer
+   *  and the port read the fold. */
   rarityWeightCommon: RECRUITMENT.rarityWeights.common,
   rarityWeightUncommon: RECRUITMENT.rarityWeights.uncommon,
   rarityWeightRare: RECRUITMENT.rarityWeights.rare,
   rarityWeightLegendary: RECRUITMENT.rarityWeights.legendary,
-  /** 64c — port unit slots whose TIER is forced to legendary (Idol of
-   *  Portunus's +1; the shape-lock's count-stat generalization — a second
-   *  source stacks to two forced slots, naturally clamped by the slot
-   *  count at the read site). Base 0: no guarantee without a source. */
+  /** The port unit slots whose tier is forced to legendary (the Idol of
+   *  Portunus adds 1). Sources stack, and the reader caps the count at the
+   *  slot count. */
   portLegendaryOffers: 0,
-  /** 74b — the global event-node combat-resolve chance (spec §Events: the
-   *  roll happens BEFORE the event is picked, StS ?-node style; the fight
-   *  draws from the sector's normal pool). Foldable BY CONSTRUCTION —
-   *  chance-bending daemons are planned content, so a raw config read is
-   *  wrong (the §74 shape-lock). Base config-derived (nodemap.json —
-   *  node-entry behavior lives with the node knobs); the read site
-   *  (`Run.effectiveEventCombatChance`) clamps to [0,1]. */
+  /** The chance an event node resolves to a fight instead, rolled before the
+   *  event is picked; the fight draws from the sector's pool. The reader
+   *  (`Run.effectiveEventCombatChance`) caps it at 1. */
   eventCombatChance: NODE_MAP.eventCombatChance,
 };
 
@@ -89,16 +73,12 @@ export interface RunStatModifier {
 }
 
 /**
- * Fold base run stats with active modifiers into the effective block.
+ * Fold the base stats with the active modifiers: per stat,
+ * `max(0, (base + Σ adds) × Π mults)`, adds before mults.
  *
- * Per stat: effective = max(0, (base + Σ adds) × Π mults) — adds sum
- * across instances, mults multiply across instances, adds apply before
- * mults.
- *
- * **Identity guarantee:** with no modifiers this returns `base` itself
- * (same object), so the unmodified path is byte-identical and zero-cost.
- * Only the stats a modifier touches are recomputed; the rest keep their
- * base value.
+ * With no modifiers it returns `base` itself, the same object, which
+ * `Run.effectiveRarityWeights` tests for to hand back the config's own
+ * record. Only the stats a modifier touches are recomputed.
  */
 export function foldRunStats(
   base: Readonly<Record<RunStatKey, number>>,

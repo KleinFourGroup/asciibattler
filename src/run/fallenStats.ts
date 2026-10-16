@@ -1,24 +1,22 @@
 /**
- * 102c — the run-end stats fold: a PURE aggregation of `Run.fallenLedger`
- * (94d) into the shape the GameOverScreen draws — the run's totals, then one
- * entry per encounter INSTANCE, each split per side, per archetype and per
- * turn. No Run, no bus, no config: rows in, stats out, so the fuzz harness
- * can call it on a results file as readily as the screen calls it on a live
- * run.
+ * The run-end stats: `Run.fallenLedger` folded into what the game-over
+ * screen draws, the run's totals and then one entry per encounter instance,
+ * each split by side, by archetype and by turn. Pure: rows in, stats out, no
+ * `Run`, bus or config.
  *
- * What the ledger can and cannot say (it records DEATHS, nothing else):
- *   - an encounter where nobody fell on either side left no row, so it has no
- *     entry here — `encounters` is "the fights somebody fell in", not "the
- *     fights";
- *   - likewise `turns` lists the turns somebody fell in, not the turns fought
- *     (a bloodless turn leaves no row);
- *   - `power` is what the casualty rule BOOKED per death (`unit:died.power`),
- *     so a side's Σ is the pool damage its fallen cost it.
+ * The ledger records deaths and nothing else, so:
+ * - an encounter in which nobody fell left no row and has no entry here:
+ *   `encounters` is the fights somebody fell in, not every fight;
+ * - `turns` likewise lists the turns somebody fell in;
+ * - `power` is what the casualty rule charged for each death
+ *   (`unit:died.power`), so a side's sum is what its fallen cost its pool,
+ *   before `chipMultiplier` and without a capped turn's charge for the
+ *   standing side.
  *
- * Ordering is the ledger's own (append-only, so chronological): encounters by
- * first death, turns ascending, archetypes by first death within their scope.
- * Every `rows` array is a filtered view of the input rows, in death order —
- * the screen's glyph run reads it directly.
+ * Order is the ledger's, which is only appended to and so chronological:
+ * encounters by first death, turns ascending, archetypes by first death
+ * within their scope. Each `rows` array is the input's rows filtered, in
+ * death order.
  */
 
 import type { FallenRecord } from './Run';
@@ -50,8 +48,8 @@ interface TurnFallen extends FallenBothSides {
   readonly turn: number;
 }
 
-/** One encounter INSTANCE (`sector` + `node` — an encounter id recurs across
- *  sectors, so the id alone does not name a fight). */
+/** One encounter instance, named by `sector` and `node`, since an encounter id
+ *  recurs across sectors and alone does not name a fight. */
 export interface EncounterFallen extends FallenBothSides {
   readonly sector: number;
   readonly node: number;

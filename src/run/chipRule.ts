@@ -1,32 +1,27 @@
 /**
- * §91a2 — THE CHIP RULE: what one turn's outcome charges each side's health
- * pool (the casualty rule, encounter-feel-spec §The casualty chip rule; kept
- * at §93).
+ * The chip rule: what one turn's outcome charges each side's health pool.
+ * Its design and the reasons for it are in DESIGN.md, "The encounter loop +
+ * the chip rule".
  *
- * Each pool loses the power of ITS OWN fallen (a Pyrrhic victory costs; the
- * enemy pool reads "their strength — every kill removes some"; a player's
- * per-turn exposure is the power they fielded, so the risk line is a number
- * they can add up). That is the `casualties` rule.
+ * Each pool loses the power of its own fallen: the `casualties` rule. A turn
+ * the driver's time budget resolved (`reason === 'cap'`,
+ * `World.resolveAsDraw`) also pays the `survivors` rule, each pool losing
+ * the opposing side's standing power, as a surcharge on top of its own
+ * fallen, so running out the clock is never cheaper than fighting. A mutual
+ * wipe is a draw too, but with its own reason (`mutualWipe`), and pays its
+ * fallen alone.
  *
- * A turn that the driver's tick budget force-resolved (`reason === 'cap'`,
- * `World.resolveAsDraw`) ALSO pays the `survivors` rule: each pool loses the
- * OPPOSING side's standing Σ`power`. A stall pays its own fallen PLUS the
- * enemy's standing power — a surcharge, never a replacement, so kiting to
- * the cap is never cheaper than fighting. A MUTUAL WIPE is a `'draw'` too,
- * but it is the largest casualty turn there is, never a stall: it never pays
- * the surcharge (the §91 kickoff review's finding 3 — `checkBattleEnd` emits
- * 'draw' for it).
- *
- * Every charge is UNCAPPED pool-HP (× `chipMultiplier`): the caller clamps
- * at 0 when it applies, and reports both (the applied delta AND the charge —
- * the 89d rider: the overkill read needs the pre-clamp number). Pure —
- * `health` is injectable so the pins never mutate the live config.
+ * Every charge is in pool points, times `chipMultiplier` and not capped: the
+ * caller clamps the pool at 0 as it applies a charge, and reports both the
+ * applied loss and the charge (`pools:chipped`), since a read of overkill
+ * needs the charge. Pure; `health` is a parameter so a test never edits the
+ * live config.
  */
 
 import { HEALTH, type HealthConfig } from '../config/health';
 
 export type ChipRule = 'survivors' | 'casualties';
-/** Why a battle ended (`battle:ended.reason`, §91a1). */
+/** Why a battle ended (`battle:ended.reason`). */
 export type TurnEndReason = 'decisive' | 'mutualWipe' | 'cap';
 
 export interface SidePower {
@@ -34,7 +29,7 @@ export interface SidePower {
   readonly enemy: number;
 }
 
-/** The uncapped pool-HP charge TO each side's pool this turn. */
+/** The charge to each side's pool this turn, not capped. */
 interface TurnCharges {
   readonly player: number;
   readonly enemy: number;
@@ -49,10 +44,10 @@ export function rulesForTurn(reason: TurnEndReason): ReadonlySet<ChipRule> {
 }
 
 /**
- * The turn's charges. `survivors` = each side's STANDING Σpower at battle
- * end (`battle:ended.survivorPower`); `fallen` = each side's REAPED Σpower
- * (`battle:ended.fallenPower`). Each pool pays its own fallen; a cap turn
- * adds the enemy's standing power to the player's pool (and vice versa).
+ * The turn's charges. `survivors` is each side's standing power at the
+ * battle's end (`battle:ended.survivorPower`), `fallen` each side's booked
+ * fallen power (`battle:ended.fallenPower`). Each pool pays its own fallen,
+ * and on a cap turn the other side's standing power as well.
  */
 export function turnCharges(
   reason: TurnEndReason,
@@ -73,12 +68,12 @@ export function turnCharges(
 }
 
 /**
- * §91d — the pre-turn RISK bound: the most the PLAYER pool can be charged
- * this turn, from what each side FIELDS (`player` = the hand's Σ base power,
- * `enemy` = the wave's): the whole hand falling. × `chipMultiplier`,
- * UNCAPPED (the caller clamps at the pool). The cap-turn surcharge is
- * deliberately outside it: the line bounds the ordinary turn, and a stall is
- * the exception it exists to make expensive.
+ * The pre-turn risk bound: the most the player's pool can be charged this
+ * turn, from what each side fields (`player` the hand's base power, `enemy`
+ * the wave's), which is the whole hand falling. Times `chipMultiplier`; the
+ * caller caps it at the pool. A cap turn's surcharge is left out on purpose:
+ * the line bounds an ordinary turn, and a stall is the exception the
+ * surcharge makes expensive.
  */
 export function playerExposure(
   fielded: SidePower,
@@ -87,9 +82,9 @@ export function playerExposure(
   return fielded.player * health.chipMultiplier;
 }
 
-/** 96.5c2 — the ENEMY pool's mirror bound (the live bar's notch on their
- *  gauge): their own fielded wave falling. Same exclusions as
- *  `playerExposure` (base power; the cap surcharge outside). */
+/** The enemy pool's bound, for the notch on its gauge: its own fielded wave
+ *  falling, in base power, with the cap surcharge left out as in
+ *  `playerExposure`. */
 export function enemyExposure(
   fielded: SidePower,
   health: Pick<HealthConfig, 'chipMultiplier'> = HEALTH,
@@ -98,20 +93,16 @@ export function enemyExposure(
 }
 
 /**
- * 96.5b1 — THE LOSS-EVENT MODEL (the live pool bar, Round 7 §96.5; the
- * user's design at the kickoff). The battle HUD moves each side's gauge by
- * a stream of LOSS EVENTS rather than by a projection, and each event fires
- * at the moment the rule makes the loss a FACT: a casualties loss at the
- * death (the dead unit's own side pays — the event's cause is the unit, so
- * the bar can be fed from its card); the cap surcharge only once the battle
- * has ended (a survivor's charge is not a fact until then), one event per
- * standing unit, paid by the OPPOSING pool. The event stream is
- * display-only — Run books the turn through `turnCharges` exactly as before
- * — and `sumLossEvents` over the whole stream equals `turnCharges` for every
- * reason (the chipRule.test pin), so the bar cannot disagree with what the
- * turn books.
- *
- * Everything here is pure; `health` is injectable like the rest of the file.
+ * The loss events. The battle HUD moves each side's gauge by a stream of
+ * loss events rather than by a projection, and each fires when the rule
+ * makes the loss a fact: a casualty at the death, paid by the dead unit's
+ * own side, with the unit as its cause so the bar can be fed from its card;
+ * the cap surcharge only once the battle has ended, since a survivor's
+ * charge is not a fact before then, one event per standing unit, paid by the
+ * opposing pool. The stream is for display: `Run` books the turn through
+ * `turnCharges`, and `sumLossEvents` over a whole stream equals
+ * `turnCharges` for every reason (`chipRule.test.ts`), so the bar cannot
+ * disagree with what the turn books.
  */
 type LossPhase = 'immediate' | 'end';
 
@@ -120,14 +111,15 @@ type LossCause = { readonly kind: 'unit'; readonly unitId: number; readonly team
 export interface PoolLossEvent {
   /** The pool that pays. */
   readonly target: 'player' | 'enemy';
-  /** Uncapped pool-HP (× `chipMultiplier`); the consumer clamps at the pool. */
+  /** Pool points times `chipMultiplier`, not capped; the reader clamps at the
+   *  pool. */
   readonly amount: number;
   readonly phase: LossPhase;
   readonly cause: LossCause;
 }
 
-/** The `unit:died` payload's slice the model reads. `power` is the amount
- *  the World BOOKED (a summon 0, a neutral excluded by team). */
+/** The slice of `unit:died` the model reads. `power` is what the World
+ *  booked: 0 for a summon, and a neutral is left out by its team. */
 interface FallenUnit {
   readonly unitId: number;
   readonly team: 'player' | 'enemy' | 'neutral';
@@ -141,7 +133,7 @@ interface StandingUnit {
   readonly power: number;
 }
 
-/** The IMMEDIATE event for one death: the dead unit's own side pays its
+/** The immediate event for one death: the dead unit's own side pays its
  *  booked power now. A zero booking (a summon) and a neutral emit nothing. */
 export function lossEventsForDeath(
   death: FallenUnit,
@@ -158,10 +150,9 @@ export function lossEventsForDeath(
   ];
 }
 
-/** The END events for a turn ending for `reason`: on a cap turn, the
- *  survivors surcharge as one event per standing unit charged to the
- *  OPPOSING pool; otherwise none (every death already fired its immediate
- *  event). */
+/** The end events for a turn ending for `reason`: on a cap turn, the
+ *  survivors surcharge, one event per standing unit charged to the opposing
+ *  pool; otherwise none, since every death already fired its own. */
 export function lossEventsAtEnd(
   reason: TurnEndReason,
   standing: readonly StandingUnit[],
@@ -183,9 +174,9 @@ export function lossEventsAtEnd(
   return out;
 }
 
-/** The loss already made a fact of BEFORE a consumer attached — a
- *  mid-battle restore opens the bar here: the booked fallen totals (every
- *  death's immediate event, summed). Off `World.fallenPowerSoFar()`. */
+/** The loss already a fact before a reader attached, where a mid-battle
+ *  restore opens the bar: the booked fallen totals, every death's immediate
+ *  event summed. From `World.fallenPowerSoFar()`. */
 export function bookedImmediateLoss(
   fallen: SidePower,
   health: Pick<HealthConfig, 'chipMultiplier'> = HEALTH,
@@ -193,7 +184,8 @@ export function bookedImmediateLoss(
   return { player: fallen.player * health.chipMultiplier, enemy: fallen.enemy * health.chipMultiplier };
 }
 
-/** Σ amount per paying side over a stream — the pin's left-hand side. */
+/** The sum per paying side over a stream, which `chipRule.test.ts` holds to
+ *  `turnCharges`. */
 export function sumLossEvents(events: readonly PoolLossEvent[]): TurnCharges {
   let player = 0;
   let enemy = 0;

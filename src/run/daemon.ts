@@ -1,38 +1,29 @@
 /**
- * L1→47c — the pure daemon rules: the run-start roll + the per-turn grant
- * resolution (the active daemon's `turnStart` hooks → this turn's effective
- * redraw/empower configs).
+ * The daemons' rules, pure so they are tested without a `Run` (the daemons
+ * and the RNG are parameters): each turn's grant queue and instant ops from
+ * the owned daemons' `turnStart` hooks, the instant ops of an encounter's
+ * start and end, and the battle rules handed to the World. `Run` calls them
+ * at each turn's start, at an encounter's start and end, and at battle
+ * setup. A run's daemons decide which pre-turn tools exist at all.
  *
- * Pulled out of `Run` so the grant math is provable in isolation (the daemon +
- * RNG are parameters, not the `DAEMONS` singleton / `Run.daemonRng`), mirroring
- * `redraw.ts` (K3) and `empower.ts` (K4). `Run` is a thin caller: it rolls one
- * daemon at construction and re-resolves `turnGrants` at every turn start.
+ * A turn's grants are its queue (`TurnGrant[]`): each granted `grantRedraws`
+ * or `grantEmpowers` hook is its own entry, in walk order, the order strict
+ * mode makes the player take them in.
  *
- * 47c re-authored the Phase-L gate model into the rule vocabulary
- * (`config/daemons.ts` — `Rule = modifier | hook`): a turn's redraw/empower
- * availability IS the fold of the daemon's granted `turnStart` grant hooks.
- * 49d re-modeled the resolution into THE GRANT QUEUE (`TurnGrant[]`, one
- * entry per granted hook in walk order) — the strict-mode ordering surface
- * of the §49 fire-UX shape-lock. The roguelite variance is the point: a
- * run's idol defines which pre-turn tools exist at all.
+ * Instant ops (`gainBits`, `healPool`): a `turnStart` hook's are resolved in
+ * the same walk as the grants and come back in
+ * `TurnStartResolution.instants` for `Run` to execute, since a second walk
+ * would flip each coin twice (gotcha #115). `encounterStart` and
+ * `encounterEnd` hooks resolve through `resolveInstantHooks` at their own
+ * sites (`Run.beginEncounter`, `Run.finishEncounter`). Instants are executed
+ * at once and never saved: a save after the site already holds their effect
+ * in `bits` or `playerHealth`.
  *
- * 47e — instant (non-grant) run-domain ops. A granted `turnStart`
- * `gainBits`/`healPool` hook rides the SAME walk as the grants (its coin
- * already flips there — the draw-count parity 47c preserved on purpose;
- * never add a second walk, it would double-draw) and comes back in
- * `TurnStartResolution.instants` for the caller to execute at the fire
- * site. `encounterStart`/`encounterEnd` hooks resolve via
- * `resolveInstantHooks` at THEIR fire sites (Run.beginEncounter /
- * Run.finishEncounter). Instants are executed immediately and never
- * serialized — a save taken after the fire site has already banked their
- * effects (`run.bits` / `playerHealth`).
- *
- * RNG contract (unchanged from L1): a hook draws from the daemon stream ONLY
- * when its `chance` is strictly between 0 and 1 (absent = 1; a deterministic
- * hook costs no draw, so adding a chance-less daemon never shifts another
- * daemon's flips). Within a turn, hooks are evaluated in AUTHORED RULE ORDER —
- * the fixed-order discipline the L1 redraw-then-empower contract generalized
- * into (a daemon carrying both authors its redraw hook first).
+ * Draws: a hook draws from the daemon stream only when its `chance` is
+ * strictly between 0 and 1 (absent is 1), so a daemon without chances never
+ * shifts another daemon's flips. Daemons are walked in ownership order and
+ * each one's rules in authored order, so a daemon with a redraw and an
+ * empower hook rolls them in the order it lists them.
  */
 
 import { TRIGGER_DOMAIN, type DaemonConfig, type EffectOp, type HookRule } from '../config/daemons';
@@ -40,25 +31,22 @@ import type { EmpowerConfig } from '../config/empower';
 import type { RNG } from '../core/RNG';
 import type { BattleRule, BattleRuleTrigger } from '../sim/battleRules';
 
-/** 47e — the instant (non-grant) run-domain ops a hook can carry: executed
- *  at the trigger fire site the moment they resolve, never serialized. */
+/** The instant run ops a hook can carry: executed at the trigger's site as
+ *  soon as they resolve, and never saved. */
 export type InstantOp = Extract<EffectOp, { op: 'gainBits' } | { op: 'healPool' }>;
 
-/** 49d — one grant's effect in the queue. Budgets unify onto `budget`
- *  (actions from this grant); redraw carries its per-action card cap,
- *  empower its buff. */
+/** One grant's effect: `budget` is the actions it gives; a redraw carries
+ *  its per-action card cap, an empower its buff. */
 type GrantEffect =
   | { kind: 'redraw'; budget: number; maxCards: number }
   | { kind: 'empower'; budget: number; buff: EmpowerConfig['buff'] };
 
 /**
- * 49d — one granted pre-turn tool: an entry in the ORDERED grant queue (the
- * §49 fire-UX shape-lock — this re-models 47d's `{redraw, empowers}` split
- * and deliberately REVERSES the "redraw stays one summed budget" call:
- * every grant is per-source and packet-shaped). `used`/`passed` are ENGINE
- * state, serialized (v32): `used` counts actions consumed; `passed` is the
- * strict-mode finality mark (`passGrant` — free mode never sets it).
- * `daemonId` names the source (49e packet fires push their own entries).
+ * One granted pre-turn tool, an entry in the turn's grant queue; every grant
+ * is its own entry, per source. `used` and `passed` are saved with the run:
+ * `used` counts the actions taken, and `passed` is strict mode's mark that
+ * the grant was closed unspent (`passGrant`; free mode never sets it).
+ * `daemonId` names the source: a daemon, or for a packet's grant the packet.
  */
 export interface TurnGrant {
   daemonId: string;
@@ -67,9 +55,11 @@ export interface TurnGrant {
   passed: boolean;
 }
 
-/** 49d — the queue IS the turn's grants (ownership order, rules in authored
- *  order within each idol — the resolve walk order). Round-trips in the Run
- *  save: a save at the gate restores the same flips AND the same cursor. */
+/** The turn's grants in queue order: the owned daemons in ownership order
+ *  and each one's rules in authored order, as the walk resolves them, with
+ *  a packet's grant put in at the cursor so it is the active one at once
+ *  (`Run.handleUsePacket`). Saved with the run, so a save at the gate
+ *  restores the same flips and the same cursor. */
 export type TurnGrants = TurnGrant[];
 
 /** The no-grant baseline: an empty queue. */
@@ -77,9 +67,9 @@ export function disabledTurnGrants(): TurnGrants {
   return [];
 }
 
-/** 49d — the queue cursor: the first grant still pending (not passed, budget
- *  left), or null when the queue is spent. DERIVED, never serialized —
- *  recomputes from the entries (derive-don't-cache). */
+/** The queue's cursor: the first grant still pending (not passed, budget
+ *  left), or null when the queue is spent. Derived from the entries, never
+ *  saved. */
 export function activeGrantIndex(grants: TurnGrants): number | null {
   for (let i = 0; i < grants.length; i++) {
     const grant = grants[i]!;
@@ -88,9 +78,9 @@ export function activeGrantIndex(grants: TurnGrants): number | null {
   return null;
 }
 
-/** 49d — one grant as the UI/fuzz payloads carry it (`turn:starting` etc.):
- *  the queue entry plus its index (the command key), remaining budget, and
- *  the derived cursor flag. */
+/** One grant as the payloads carry it (`turn:starting` and the others): the
+ *  entry with its index (the commands' key), its remaining budget, and
+ *  whether it is the cursor. */
 export interface TurnGrantView {
   grantIndex: number;
   daemonId: string;
@@ -101,9 +91,8 @@ export interface TurnGrantView {
   active: boolean;
 }
 
-/** Build the payload views (pure — the name lookup is injected). `active`
- *  marks the cursor in BOTH modes; strict mode enforces it, free mode may
- *  merely highlight it. */
+/** Build the views; the name lookup is passed in. `active` marks the cursor
+ *  in both modes: strict mode enforces it, free mode may only highlight it. */
 export function grantViews(
   grants: TurnGrants,
   nameOf: (daemonId: string) => string,
@@ -120,16 +109,16 @@ export function grantViews(
   }));
 }
 
-/** 47e — one turn-start walk's full result: the serialized grants (round-trip
- *  in the Run save) plus this turn's granted instant ops (executed at the
- *  fire site, then discarded — see the module header). */
+/** One turn-start walk's result: the grants, saved with the run, and the
+ *  turn's granted instant ops, executed at the site and then dropped (the
+ *  header). */
 interface TurnStartResolution {
   grants: TurnGrants;
   instants: InstantOp[];
 }
 
-/** The per-firing chance condition. Draws only on a genuine coin flip
- *  (`0 < chance < 1`) — see the RNG contract above. Absent = 1 (granted). */
+/** One firing's chance test: draws only on a real coin flip
+ *  (`0 < chance < 1`, the header), and an absent chance is 1. */
 function granted(chance: number | undefined, rng: RNG): boolean {
   const c = chance ?? 1;
   if (c >= 1) return true;
@@ -137,22 +126,17 @@ function granted(chance: number | undefined, rng: RNG): boolean {
   return rng.next() < c;
 }
 
-// 63c — `rollDaemon` (the L1 uniform run-start roll) was DELETED here:
-// characters replaced the roll (config/characters.json seeds the starting
-// daemon; the kickoff lock). The daemon stream itself survives for the
-// per-turn chance flips below.
-
-/** The daemon's authored `turnStart` hooks, in rule order (the evaluation +
- *  draw order). Pure filter — no chance resolution here. */
+/** The daemon's `turnStart` hooks, in rule order, which is the order they
+ *  are evaluated and draw in. A filter only; chances resolve elsewhere. */
 function turnStartHooks(daemon: DaemonConfig): HookRule[] {
   return (daemon.rules ?? []).filter(
     (r): r is HookRule => r.kind === 'hook' && r.on === 'turnStart',
   );
 }
 
-/** The daemon's authored redraw grant hook, if any (the `turn:starting`
- *  payload's `redrawGate` — "does this idol EVER grant it", not "granted this
- *  turn"). First match wins; the catalog authors at most one per daemon. */
+/** The daemon's authored redraw hook, if any: whether it ever grants a
+ *  redraw, not whether it did this turn (the `turn:starting` payload's
+ *  `redrawGate`). The first wins; the catalog authors at most one a daemon. */
 export function daemonRedrawHook(
   daemon: DaemonConfig | null,
 ): Extract<HookRule['effect'], { op: 'grantRedraws' }> | undefined {
@@ -163,9 +147,9 @@ export function daemonRedrawHook(
   return undefined;
 }
 
-/** The daemon's authored empower grant hook, if any (payload `empowerGate` +
- *  the badge-column buff key — the DAEMON's own buff, not the resolved turn
- *  grant, so a chance-denied turn still badges existing stacks). */
+/** The daemon's authored empower hook, if any (`empowerGate`, and the buff
+ *  key the badges read): the daemon's own buff, not the turn's resolved
+ *  grant, so a turn whose chance failed still badges the stacks a card has. */
 export function daemonEmpowerHook(
   daemon: DaemonConfig | null,
 ): Extract<HookRule['effect'], { op: 'grantEmpowers' }> | undefined {
@@ -177,21 +161,16 @@ export function daemonEmpowerHook(
 }
 
 /**
- * Resolve one turn's grants + granted instant ops from the owned daemons'
- * `turnStart` hooks. An empty list (a daemon-less run — the fuzz control
- * arm) resolves to an empty queue with no RNG draw. Daemons evaluate in
- * OWNERSHIP order, rules in authored order within each — the fixed
- * draw-order discipline, and (49d) the queue order the strict mode
- * enforces: EVERY granted hook pushes its own `TurnGrant` entry (the §49
- * per-source re-model — a granted `grantRedraws` no longer sums onto one
- * config; Mercury and Janus each prompt their own redraw). A granted
- * instant op (`gainBits`/`healPool`) collects into `instants` for the
- * caller to execute at the fire site (47e — the coin flip happens HERE, in
- * the one walk; see the module header). The DRAW COUNT is byte-identical
- * to the 47d walk — only the accumulation changed. Buffs are carried by
- * REFERENCE (safe: nothing mutates a buff — `empowerEffect` deep-copies
- * mods at apply time; the queue entries' `used`/`passed` mutate, the buffs
- * never do).
+ * Resolve one turn's grants and granted instant ops from the owned daemons'
+ * `turnStart` hooks. No daemons (the fuzz's daemon-less control arm)
+ * resolves to an empty queue with no draw. Daemons in ownership order,
+ * rules in authored order: that is the draw order, and the queue's, which
+ * strict mode enforces. Every granted grant hook pushes its own entry, so
+ * two daemons that grant redraws (Mercury, Janus) each prompt their own. A
+ * granted instant op goes to `instants`, its coin flipped here, in the one
+ * walk (the header). Buffs are carried by reference, which is safe because
+ * nothing mutates a buff: `empowerEffect` copies the mods when it applies
+ * them, and only an entry's `used` and `passed` change.
  */
 export function resolveTurnGrants(
   daemons: readonly DaemonConfig[],
@@ -201,8 +180,8 @@ export function resolveTurnGrants(
   const instants: InstantOp[] = [];
   for (const daemon of daemons) {
     for (const hook of turnStartHooks(daemon)) {
-      // Every turnStart hook rolls its chance in order (draw-count parity
-      // with the L1 gate contract), granted or not consumed below.
+      // Every `turnStart` hook rolls its chance, in order and whatever its
+      // op, so the draw count does not depend on what the switch consumes.
       if (!granted(hook.chance, rng)) continue;
       switch (hook.effect.op) {
         case 'grantRedraws':
@@ -234,9 +213,10 @@ export function resolveTurnGrants(
           instants.push(hook.effect);
           break;
         default:
-          // A battle-domain op (`applyStatus`) on a run trigger is
-          // parse-illegal (the 47b matrix); only a bespoke in-memory daemon
-          // could author one. Skip it — battle ops compile at 47f.
+          // A battle op (`applyStatus`) on a run trigger fails the schema's
+          // domain check (`config/daemons.ts`), so only a daemon built in
+          // memory could carry one. Skipped: battle ops compile in
+          // `battleRulesFor`.
           break;
       }
     }
@@ -244,34 +224,19 @@ export function resolveTurnGrants(
   return { grants, instants };
 }
 
-/** 47e — the filter context a run-lifecycle firing carries. `won` exists
- *  only at `encounterEnd` (the 47b matrix pins the `won` filter there). */
+/** The filter context a run firing carries. `won` exists only at
+ *  `encounterEnd`, the one trigger the schema lets a `won` filter sit on. */
 interface RunFireContext {
   won?: boolean;
 }
 
 /**
- * 47e — resolve the granted instant ops for an `encounterStart` /
- * `encounterEnd` firing (the `turnStart` instants ride `resolveTurnGrants`
- * instead — one walk, one coin). Same ordering discipline: daemons in
- * ownership order, rules in authored order.
- *
- * The FILTER gates before the chance rolls: a firing that doesn't match
- * (`won: true` on a lost encounter) costs no draw — the filter is part of
- * "did this hook fire at all", matching how the 47f battle-side filters
- * will behave at the sim chokepoints. Determinism holds either way (the
- * outcome itself is seed-determined); parity just stays easy to reason
- * about: draws happen only for matching, coin-carrying firings.
- */
-/**
- * 47f — compile the owned daemons' BATTLE-domain hooks into the plain
- * `BattleRule[]` the World installs at battle setup (the spec's first seam
- * crossing — see src/sim/battleRules.ts for the evaluation semantics).
- * Daemons in ownership order, rules in authored order — the same fixed
- * evaluation discipline as the run-domain walks, carried across the seam.
- * The parse-time matrix (config/daemons.ts) guarantees a battle-trigger
- * hook's op is `gainBits`/`applyStatus` and its filter is battle-legal; a
- * bespoke in-memory daemon violating that throws loudly here.
+ * Compile the owned daemons' battle hooks into the `BattleRule[]` the World
+ * installs at battle setup (the evaluation is in `src/sim/battleRules.ts`).
+ * Daemons in ownership order, rules in authored order, as in the run walks.
+ * The schema (`config/daemons.ts`) keeps a battle hook's op to `gainBits` or
+ * `applyStatus` and its filter to the battle filters; a daemon built in
+ * memory that breaks this throws here.
  */
 export function battleRulesFor(daemons: readonly DaemonConfig[]): BattleRule[] {
   const rules: BattleRule[] = [];
@@ -300,12 +265,11 @@ export function battleRulesFor(daemons: readonly DaemonConfig[]): BattleRule[] {
 }
 
 /**
- * 51a — the daemons that EARN battle-tally bits: ids of owned daemons
- * authoring a battle-domain `gainBits` hook (ownership order). The reward
- * offer's tally portion is source-labeled only when this is a singleton —
- * the World tally is one aggregate number, so a multi-earner run can't
- * attribute it (revisit per-source tallies if content ever ships a second
- * battle-bits idol worth crediting separately).
+ * The owned daemons that earn battle bits: the ids of those with a battle
+ * `gainBits` hook, in ownership order. With the injected rules' sources
+ * they are the earners `Run.handleTurnEnded` credits the tally portion to,
+ * which it does only when there is one, since the World's tally is a single
+ * number.
  */
 export function battleBitsDaemonIds(daemons: readonly DaemonConfig[]): string[] {
   const ids: string[] = [];
@@ -321,6 +285,16 @@ export function battleBitsDaemonIds(daemons: readonly DaemonConfig[]): string[] 
   return ids;
 }
 
+/**
+ * Resolve the granted instant ops of an `encounterStart` or `encounterEnd`
+ * firing; `turnStart`'s ride `resolveTurnGrants`, one walk and one coin. The
+ * same order: daemons in ownership order, rules in authored order.
+ *
+ * The filter is tested before the chance: a firing that does not match
+ * (`won: true` on a lost encounter) costs no draw, as a battle rule's filter
+ * costs none (`src/sim/battleRules.ts`), so draws happen only for matching
+ * firings that carry a coin.
+ */
 export function resolveInstantHooks(
   daemons: readonly DaemonConfig[],
   on: 'encounterStart' | 'encounterEnd',
@@ -336,9 +310,9 @@ export function resolveInstantHooks(
       if (rule.effect.op === 'gainBits' || rule.effect.op === 'healPool') {
         instants.push(rule.effect);
       }
-      // Grant ops are turnStart-only and battle ops are parse-illegal here
-      // (the 47b matrix) — anything else on these triggers is a bespoke
-      // in-memory authoring error and is skipped.
+      // The schema allows grant ops on `turnStart` alone and battle ops on
+      // battle triggers alone, so anything else here is a daemon built in
+      // memory, and is skipped.
     }
   }
   return instants;

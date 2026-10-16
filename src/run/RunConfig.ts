@@ -1,22 +1,19 @@
 /**
- * G1 — RunConfig: a single configurable entry point for *short* runs and
- * *specific* layouts, used by BOTH the browser (Game.ts) and the headless
- * paths (the fuzz harness + the tools/run-config CLI).
+ * RunConfig: the dials of one run (a short run, a forced layout or
+ * encounter, a measurement arm), read by the browser (`Game.ts`) and by the
+ * headless paths (the fuzz harness and the `tools/run-config` CLI).
  *
- * A RunConfig is a run *input* — fully reconstructable from the seed — so it
- * is deliberately NOT persisted in the Run snapshot: a save keeps the run's
- * dials as text beside the snapshot, and a load hands them back
- * (`Run.fromJSON`'s `config`). Two inputs are in the snapshot as well,
- * because a load without a config has to read them: the character's id and
- * the Escalation level. `config/nodemap.json` and
- * `config/recruitment.json` stay the defaults; a RunConfig overrides per-run.
+ * A RunConfig is a run's input, not its state, so the snapshot does not
+ * carry it. A save keeps the dials that have a URL form as query text beside
+ * the snapshot (`runConfigToQueryString`), and a load hands them back
+ * (`Run.fromJSON`'s `config`); a dial with no URL form is not saved, so a
+ * load falls back to its default. A load applies only the inputs read after
+ * construction; the rest shaped the snapshot, which wins (`Run.fromJSON`).
  *
- * Determinism contract: the default path (no config / empty config) must
- * leave the run's RNG draw sequence byte-identical to pre-G1. Every override
- * is opt-in and only takes effect when its field is set — the fork hierarchy
- * (nodeMap / team / levelup forks, in that order) is preserved regardless, so
- * even a configured run keeps the parent stream aligned; only the forked
- * child streams produce different content.
+ * Every dial takes effect only when its field is set, so a run with no
+ * config is the shipped run. The run's streams are derived per occurrence by
+ * key (`Run.streamRng`), so a dial that changes one consumer's draws never
+ * shifts another's.
  */
 
 import { ALL_ARCHETYPES, type Archetype } from '../sim/archetypes';
@@ -29,260 +26,213 @@ import { ESCALATION_MAX } from '../config/escalation';
 import type { SectorMap } from '../config/sectorMap';
 import { EVENT_IDS, type EventDef } from '../config/events';
 
-/** One starting-roster slot: an archetype at a chosen level (>= 1, capped). */
+/** One starting-roster slot: an archetype at a level (at least 1, capped). */
 export interface RosterEntry {
   readonly archetype: Archetype;
   readonly level: number;
 }
 
+/**
+ * Each dial says its URL form if it has one; one without is set only by
+ * code (the fuzz harness, a test, a tool), so a save does not keep it (the
+ * header).
+ */
 export interface RunConfig {
   /**
-   * Override the run seed. When unset, the caller picks one (the browser uses
-   * `Date.now()`). Any integer is accepted (RNG normalizes via `>>> 0`).
+   * The run seed. Unset, the caller picks one (the browser takes
+   * `Date.now()`). Any integer; the RNG takes it `>>> 0`. URL form: `seed=N`.
    */
   readonly seed?: number;
   /**
-   * Total hops including root + terminal (default
-   * `config/nodemap.json#hopCount` = 11). A *playable* run needs >= 2 (root
-   * + a terminal boss fight); `hopCount: 2` is the minimal one-battle run.
-   *
-   * 67c — setting this makes the run a bounded SINGLE-SECTOR probe: the
-   * sector's terminal IS the run terminal (the sector walk never advances) —
-   * the isolation/smoke semantic every `SHORT` harness fixture means. For a
-   * shortened run that still walks the whole sector DAG, use `sectorHops`.
-   * Mutually exclusive with `sectorHops` (construction throws on both).
+   * The hops of the run's sector, root and terminal included; unset, each
+   * sector's authored `length`. Setting it makes the run a single-sector
+   * probe: the sector's terminal is the run's terminal and the sector walk
+   * never advances, which is what every `SHORT` harness fixture means. For a
+   * shortened run that still walks the whole sector map, use `sectorHops`;
+   * the two together throw at construction. URL form: `hops=N`.
    */
   readonly hopCount?: number;
   /**
-   * 67c — the shortened FULL-WALK dial: every sector's node-map is exactly
-   * this many hops (an override of each sector's authored `length`, not a
-   * cap) while the DAG still walks to its real sink — `sectorHops: 4` on the
-   * shipped start → deep-end chain is a 4+4-hop two-act run. The cheap
-   * multi-sector balance-read shape. URL form: `sectorHops=4`. Mutually
-   * exclusive with `hopCount`; not persisted (a rehydrated run restores
-   * authored lengths).
+   * The shortened full walk: every sector's map is exactly this many hops,
+   * in place of each sector's authored `length` (not a cap), while the walk
+   * still goes on to the map's real sink, so `sectorHops: 4` on the shipped
+   * two-sector map is a 4 + 4 hop run in two acts. The cheap shape for a
+   * multi-sector read. URL form: `sectorHops=4`.
    */
   readonly sectorHops?: number;
   /**
-   * Replace the rolled starting roster with these archetypes, each at a chosen
-   * level (dev / playtest). Supersedes the old `?roster=` override. URL form:
-   * `roster=rogue:3,healer:2,melee` — `:level` is optional (default 1).
+   * Replace the starting roster with these archetypes, each at a chosen
+   * level. URL form: `roster=rogue:3,healer:2,melee`, where `:level` is
+   * optional (1 when absent).
    */
   readonly startingRoster?: readonly RosterEntry[];
-  /** Force every battle onto a named layout (a known `LAYOUT_IDS` member), or the
-   *  `FORCE_PROCEDURAL` sentinel (`'procedural'`) to force every battle onto a
-   *  freshly-rolled PROCEDURAL map. URL form: `layout=river` or `layout=procedural`. */
+  /** Force every battle onto a named layout (a `LAYOUT_IDS` member), or with
+   *  `FORCE_PROCEDURAL` (`'procedural'`) onto a fresh procedural map. URL
+   *  form: `layout=river` or `layout=procedural`. */
   readonly forcedLayoutId?: string;
   /**
-   * X2 — force the authored ENCOUNTER (a catalog `Encounter.id`) at every node
-   * whose kind matches the encounter's kind (`selectEncounter`'s force-select),
-   * bypassing the sector pool + hop gate for a clean per-encounter balance sample
-   * (the `--encounter=<id>` isolation). A kind mismatch leaves that node's normal
-   * selection (boss/elite nodes still draw their bucket). 53d — gained the URL
-   * form `encounter=artillery` (ids are case-sensitive; unknown ids dropped like
-   * `layout=`'s), so a gauntlet cell is a shareable URL: `?hops=2&encounter=X&
-   * layout=Y&seed=N&roster=…&daemon=none` pins the whole battle for BOTH the
-   * browser (the human) and the headless CLI (the bot) — note `encounter=` alone
-   * does NOT pin the board (the layout still rolls; pair it with `layout=`).
-   * Validated loud at construction. NOT persisted (a RunConfig input); a
-   * rehydrated run resets to normal selection.
+   * Force an authored encounter (a catalog `Encounter.id`) at every node
+   * whose kind matches its kind (`selectEncounter`'s force-select), past the
+   * sector's pool and hop gate, for a clean sample of one encounter. A node
+   * of another kind keeps its usual selection (boss and elite nodes still
+   * draw their own). Checked loudly at construction. URL form:
+   * `encounter=artillery`, case-sensitive, an unknown id dropped as for
+   * `layout=`. With `hops`, `layout`, `seed`, `roster` and `daemon=none`
+   * it pins the whole battle for the browser and the headless CLI alike;
+   * `encounter=` alone does not pin the board, since the layout still rolls.
    */
   readonly forcedEncounterId?: string;
   /**
-   * 68e — stamp the FIRST sector's ROOT node with this kind after generation
-   * (dev/isolation dial). The one supported value is `'elite'`: paired with
-   * `hopCount: 2` + `forcedEncounterId`, the run's first fight is the forced
-   * elite met at FULL pool — the X2d boss-read shape extended to elites,
-   * which de-censors the per-instance pool metric (the §68e finding: sparse
-   * terminal elite instances record arrival pool, not encounter strength).
-   * Zero extra RNG draws (a post-generation stamp), so the map structure and
-   * every other kind placement are byte-identical to the dial being absent.
-   * Applies to the first sector's map only (sector advances regenerate
-   * without the config, by design). Ignored when the root IS the terminal
-   * (`hopCount: 1` — boss wins). URL form: `firstNode=elite`. NOT persisted.
-   * 74b widens the value set with `'event'` — the event-phase dev/isolation
-   * shape (`?hops=2&firstNode=event`, optionally + `forcedEventId`): the
-   * stamp itself was always kind-generic, only this type gated it.
-   * 117.75a adds `'rest'`: the run opens on the rest gate
-   * (`?firstNode=rest`), so its page is one URL away.
+   * Stamp the first sector's root node with this kind after generation. The
+   * stamp draws nothing, so the map and every other node's kind are as they
+   * would be without it, and only the first sector's map takes it (a sector
+   * advance regenerates without the config, gotcha #121). Ignored when the
+   * root is the terminal (`hopCount: 1`), where the boss wins. URL form:
+   * `firstNode=elite`, `=event` or `=rest`.
+   * - `elite` — with `hopCount: 2` and `forcedEncounterId`, the run's first
+   *   fight is the forced elite met at a full pool, so its pool reading
+   *   measures the encounter and not the pool the run arrived with.
+   * - `event` — the run opens on an event (with `forcedEventId`, a named one).
+   * - `rest` — the run opens on the rest gate, so its page is one URL away.
    */
   readonly firstNodeKind?: 'elite' | 'event' | 'rest';
   /**
-   * 74b — force every event-node entry to open THIS event (a
-   * config/events.json id), skipping the eligibility-filtered pick — the
-   * `forcedEncounterId` shape for events (validated loud at construction).
-   * The combat-resolve roll still happens first (suppress it via a
-   * `eventCombatChance` modifier rule, or the §74e isolation dial once it
-   * lands), so on some seeds the node is a fight and no page opens.
-   * URL form: `event=<id>`, which with `firstNode=event` opens a run on a
-   * named event; an unknown id is dropped. It is a run dial like the others:
-   * it rides the saved dials, so a reload keeps it.
+   * Force every event node to open this event (a `config/events.json` id),
+   * past the eligibility-filtered pick; checked loudly at construction. The
+   * roll that turns an event node into a fight still comes first, so on some
+   * seeds the node is a fight and no page opens. URL form: `event=<id>`,
+   * which with `firstNode=event` opens a run on a named event; an unknown id
+   * is dropped.
    */
   readonly forcedEventId?: string;
   /**
-   * 74b — override the event catalog for headless tests (the `sectorMap`
-   * discipline: programmatic-only, NOT persisted). Bespoke defs are
-   * in-memory only — a mid-event save carrying a non-catalog id
-   * hard-rejects on load (the bespoke-daemon precedent).
+   * Replace the event catalog, for headless tests. Its defs live in memory
+   * only: a save taken mid-event under it is rejected by a load that does
+   * not pass the same catalog.
    */
   readonly eventCatalog?: readonly EventDef[];
   /**
-   * Override the middle-hop max width (default
-   * `config/nodemap.json#middleWidthMax`). Clamped up to the hop's minimum
-   * width by the generator, so a too-small value just pins to the minimum.
+   * The middle hops' maximum width; unset, `middleWidthMax` in
+   * `config/nodemap.json`. The generator raises it to a hop's minimum width,
+   * so a value too small pins to the minimum. URL form: `width=N`.
    */
   readonly mapMaxWidth?: number;
   /**
-   * 72e — override the node-map elite/port scatter chances (defaults
-   * `config/nodemap.json#eliteChance` / `#portChance`). The forced-shape
-   * probe dials for decision-grade per-kind reads: `eliteChance: 1` offers
-   * an elite on every spacing-eligible hop (the §55 force-isolate doctrine
-   * applied to node SCATTER — the assignment still places one elite per hop,
-   * so taking it stays the walker's choice; pair with `firstNodeKind` for a
-   * forced-TAKEN read). Same G1 precedence as `mapMaxWidth`; NOT persisted
-   * (a rehydrated run falls back to the authored JSON values).
-   * 74e — `eventChance` joins as the third sibling (the event-scatter dial;
-   * `eventChance: 0` is the event-free control arm, `1` the every-hop probe
-   * shape). `eventMinSpacing` stays JSON-only, matching elite/port.
+   * The map's elite, port and event scatter chances; unset, `eliteChance`,
+   * `portChance` and `eventChance` in `config/nodemap.json`. The probe dials
+   * for a read of one node kind: `eliteChance: 1` offers an elite on every
+   * hop the spacing allows (one elite a hop, so taking it is still the
+   * walker's choice; pair with `firstNodeKind` to force it taken), and
+   * `eventChance: 0` is the event-free control arm. Unlike the other map
+   * dials they shape every sector's map (`sectorAdvanceConfig`).
+   * `eventMinSpacing` is set in the JSON only, as the elite and port
+   * spacings are.
    */
   readonly eliteChance?: number;
   readonly portChance?: number;
   readonly eventChance?: number;
   /**
-   * L1 — override the run's daemon: a full `DaemonConfig` (a catalog entry or
-   * a bespoke test/profile daemon), or `null` for a daemon-LESS run (the fuzz
-   * control arm — both pre-turn gates permanently disabled). Unset → a uniform
-   * roll over `DAEMONS` off the run's dedicated daemon stream. The roll/skip
-   * happens on the forked CHILD stream, so the parent alignment is preserved
-   * either way (the G1 determinism contract). URL form: `daemon=mars` (a
-   * catalog id) or `daemon=none`. This is also the future starting-profile
-   * seam (a profile = a `startingRoster` + a `daemon`).
+   * The run's daemon: a `DaemonConfig` (a catalog entry, or one built for a
+   * test), or `null` for a run with none (the fuzz's control arm, with both
+   * pre-turn gates closed for good). Unset, the character's starting daemon.
+   * URL form: `daemon=mars` (a catalog id) or `daemon=none`.
    */
   readonly daemon?: DaemonConfig | null;
   /**
-   * §63c — the run's starting character (a resolved `config/characters.json`
-   * def). Unset → `DEFAULT_CHARACTER_ID` (The Soldier), so every bare
-   * headless constructor keeps working. Drives the starting roster, the
-   * starting daemon (the run-start daemon ROLL retired here — characters
-   * replaced it, the kickoff lock), and the draft pools (blacklist additions
-   * + within-tier weight overrides). PRECEDENCE (kickoff fork #2): an
-   * explicit `startingRoster` or `daemon` override beats the character's
-   * corresponding field, so measurement arms keep their isolation power
-   * (`--character=priest --daemon=none` = the Priest minus Minerva).
-   * URL form (63d): `character=<id>` (unknown ids dropped, the `layout=`
-   * discipline); the harness mirrors it as `--character`. NOT persisted
-   * itself — the Run serializes the resolved `characterId` (v38).
+   * The run's starting character (a resolved `config/characters.json` def);
+   * unset, `DEFAULT_CHARACTER_ID` (the Soldier), so a bare headless
+   * construction works. It gives the starting roster, the starting daemon,
+   * and the draft pools (its blacklist and its weights within a tier). An
+   * explicit `startingRoster` or `daemon` beats the character's own, so a
+   * measurement arm keeps its isolation (`--character=priest --daemon=none`
+   * is the Priest without Minerva). The snapshot keeps the resolved
+   * `characterId`. URL form: `character=<id>`, an unknown id dropped as for
+   * `layout=`; the harness's flag is `--character`.
    */
   readonly character?: CharacterConfig;
   /**
-   * T2 — override the sector-selection meta-DAG (default: the shipped
-   * `SECTOR_MAP`). Programmatic-only (a full graph object — no URL form), the
-   * seam for headless multi-sector tests + a future fuzz force-select. Like the
-   * other overrides it is NOT persisted; a rehydrated run falls back to the
-   * shipped map (the shipped DAG is a single sink, so a save never mid-walks a
-   * multi-node graph).
+   * Replace the sector map (`SECTOR_MAP` unset), for headless multi-sector
+   * tests. A load without it falls back to the shipped map, so a snapshot
+   * taken under a fixture map loads onto node ids the shipped map does not
+   * know; the game's own saves always come from the shipped map.
    */
   readonly sectorMap?: SectorMap;
   /**
-   * X1 — the per-run difficulty multipliers (the future difficulty-system seam),
-   * applied to EVERY authored-encounter wave at resolve time: `waveSize` scales
-   * the resolved count (action-economy axis), `levelBudget` the resolved level
-   * budget (individual-strength axis, saturating against a wave's `levelCap`).
-   * Programmatic-only (no URL form yet — the X2 balance sweep sets them per run);
-   * unset → the global `config/difficulty.json` defaults (1.0 = no scaling), so
-   * the default path stays byte-identical (the G1 determinism contract). NOT
-   * persisted (a RunConfig input, reconstructable). A future difficulty level /
-   * hop-ramp / ascension sets these per run; `resolveDifficultyMultipliers`
-   * (config/difficulty.ts) is the resolution seam.
+   * The per-run difficulty multipliers on every authored encounter's waves,
+   * applied as a wave resolves: `waveSizeMultiplier` scales the resolved
+   * count, `levelBudgetMultiplier` the resolved level budget (which a wave's
+   * `levelCap` still bounds). Unset, the `config/difficulty.json` defaults
+   * (1, no scaling; `resolveDifficultyMultipliers`, `config/difficulty.ts`).
    */
   readonly waveSizeMultiplier?: number;
   readonly levelBudgetMultiplier?: number;
   /**
-   * 48f — the per-run ECONOMY multiplier (the X1 siblings' third axis): scales
-   * every bits earn at the `Run.gainBits` settle, multiplicative with the
-   * folded `bitsGain` run-stat — reward rolls, battle tallies, and daemon
-   * hooks all scale uniformly (the §52 boss-wall lever). Applies at the run
-   * layer, never `WaveContext`. Programmatic-only; unset → the
-   * `config/difficulty.json` default (1.0 = no scaling); NOT persisted (the
-   * X1 discipline above).
+   * The per-run bits multiplier: scales every bits earn where `Run.gainBits`
+   * settles it, times the folded `bitsGain` stat, so reward rolls, battle
+   * tallies and daemon hooks all scale alike. Applied in the run, never in
+   * `WaveContext`. Unset, the `config/difficulty.json` default (1).
    */
   readonly bitsMultiplier?: number;
   /**
-   * The per-run enemy-morale multiplier, the fourth axis: scales every
-   * encounter's enemy pool where the Run reads it, to the nearest whole
-   * (`scaledEnemyPool`, config/difficulty.ts). Applies at the run layer,
-   * never `WaveContext`. Programmatic-only; unset → the
-   * `config/difficulty.json` default (1.0 = the authored pool); NOT
-   * persisted (the X1 discipline above).
+   * The per-run enemy-morale multiplier: scales every encounter's enemy pool
+   * where the run reads it, to the nearest whole (`scaledEnemyPool`,
+   * `config/difficulty.ts`). Applied in the run, never in `WaveContext`.
+   * Unset, the `config/difficulty.json` default (1, the authored pool).
    */
   readonly enemyMoraleMultiplier?: number;
   /**
-   * The run's Escalation level (config/escalation.ts): 1 to
-   * `ESCALATION_MAX`. Unset is 0, Escalation off. The level's factors
-   * multiply onto the four difficulty multipliers above. Unlike them the
-   * level IS saved: the Run keeps it in its snapshot, and on a load the
-   * snapshot's level is the one read, so a rollout clone, which loads with
-   * no config, plays at the live run's level. URL form: `escalation=3` (a
-   * value outside 1 to the maximum is dropped, the `layout=` discipline);
-   * a journal's seed start spells the level this way for its replay.
-   * Programmatic callers may pass 0; anything else off the ladder throws at
-   * construction.
+   * The run's Escalation level (`config/escalation.ts`), 1 to
+   * `ESCALATION_MAX`; unset is 0, Escalation off. The level's factors
+   * multiply onto the four difficulty multipliers above. The snapshot keeps
+   * the level and a load reads it from there, so a rollout clone, which
+   * loads with no config, plays at the live run's level. URL form:
+   * `escalation=3`, a value outside 1 to the maximum dropped as for
+   * `layout=`; a journal's seed start spells the level so for its replay.
+   * Code may pass 0; anything else off the ladder throws at construction.
    */
   readonly escalation?: number;
   /**
-   * 47e — override the run's starting bits balance (the spec §Bits testing
-   * override, for dev / fuzz / playtest runs). Unset → the
-   * `config/difficulty.json#startingBits` default. Pure of RNG, clamped at the
-   * zero floor by the Run constructor. URL form: `bits=100`.
+   * The run's starting bits; unset, `startingBits` in
+   * `config/difficulty.json`. Draws nothing; the constructor floors it at
+   * 0. URL form: `bits=100`.
    */
   readonly startingBits?: number;
   /**
-   * 65d — a per-run ADDITIVE `drawAmount` override (the max-hand A/B dial):
-   * folded into `effectiveRunStats` exactly like a daemon `modifier` rule,
-   * so the turn deal AND the enemy-budget basis (Option B) both see it — a
-   * FORCED persistent fold, deliberately unlike a transient packet draw.
-   * Programmatic + the fuzz `--draw-add=<n>` flag (run mode); no URL form
-   * (the bitsMultiplier discipline). Unset / 0 → no modifier is injected,
-   * so the default path keeps the fold's identity fast path (byte-identical
-   * — the G1 determinism contract). NOT persisted (a RunConfig input).
+   * A per-run amount added to `drawAmount`, the dial for an A/B read of the
+   * hand's size: `Run.effectiveRunStats` folds it as it would a daemon's
+   * `modifier` rule, so the turn's deal and the enemy budget's draw basis
+   * both see it, as a lasting fold and unlike a packet's one-turn draw. The
+   * fuzz flag is `--draw-add=<n>` (run mode). Unset or 0 injects no
+   * modifier, so the fold keeps its no-modifier path.
    */
   readonly drawAmountAdd?: number;
   /**
-   * 49d — override the grant-queue finality toggle
-   * (`deck.json#grantQueue.passIsFinal`) for this run, so tests/fuzz can
-   * exercise BOTH modes without config edits. Programmatic-only; unset → the
-   * shipped config. Pure of RNG; NOT persisted (the X1 discipline above).
+   * Override the grant queue's strict mode (`grantQueue.passIsFinal` in
+   * `config/deck.json`) for this run, so tests and the fuzz can play both
+   * modes without a config edit. Draws nothing.
    */
   readonly passIsFinal?: boolean;
   /**
-   * 68b — the kind-agnostic grant seam (the paired marginal-value
-   * instrument): hand the run these items FREE at construction, so a
-   * same-seed with/without pair reads an item's realized value. Each id
-   * resolves by catalog probe — daemon | packet | unit archetype — and an
-   * unknown id throws loud at construction. Applied IN ORDER (a cache-size
-   * daemon granted before packets raises the capacity those packets are
-   * checked against). Duplicates are legal (the addDaemon discipline — a
-   * second copy is a meaningful value probe for stacking rules). Daemon and
-   * packet grants draw NOTHING (an inert grant leaves the whole run stream
-   * byte-identical); a unit grant levels off the abandoned team child
-   * stream, so the parent fork alignment holds either way (G1).
-   * Programmatic + the fuzz `--grant` flag (run mode); no URL form (the
-   * drawAmountAdd discipline). NOT persisted — granted state serializes
-   * through the existing daemons/cache/team unions.
+   * Hand the run these items free at construction, so a same-seed pair with
+   * and without one reads the item's value. Each id resolves as a daemon, a
+   * packet or a unit archetype, in that order, and an id that is none of
+   * them throws at construction. Applied in order, so a cache-size daemon
+   * granted before packets raises the capacity they are checked against.
+   * Duplicates are legal: a second copy is a probe of a stacking rule.
+   * Daemon and packet grants draw nothing; a unit grant draws its level-ups
+   * from the team stream after the roster. The fuzz flag is `--grant` (run
+   * mode). What a grant adds is saved as the run's own daemons, cache and
+   * team.
    */
   readonly grants?: readonly string[];
 }
 
 /**
- * 72e — the slice of a RunConfig that SURVIVES a sector advance. Sector
- * regeneration deliberately drops the config (`advanceSector` passes
- * `undefined` — `hopCount`'s single-sector semantics must not leak into
- * sector 2), but the scatter probe dials are chartered to shape EVERY
- * sector's map (the deep-end elite/port reads are the point; gotcha #121).
- * 74e adds `eventChance` (same charter — an event-density probe that only
- * shaped act 1 would repeat the #121 silent-scope bug). Returns `undefined`
- * when no dial is set, so the no-dial path stays byte-identical to the
- * config-less call.
+ * The slice of a RunConfig that survives a sector advance. `advanceSector`
+ * regenerates the map without the config, so `hopCount`'s single-sector
+ * probe does not reach the second sector, but the scatter dials are meant
+ * to shape every sector's map (gotcha #121). Returns `undefined` when none
+ * is set, so the call without dials is the call without a config.
  */
 export function sectorAdvanceConfig(config?: RunConfig): RunConfig | undefined {
   if (
@@ -300,8 +250,8 @@ export function sectorAdvanceConfig(config?: RunConfig): RunConfig | undefined {
 }
 
 /**
- * URL query / CLI flag names — the single source of truth shared by the
- * browser parser and the CLI (which mirrors these as `--<name>` flags).
+ * The URL query names, one source for the browser's parser and the
+ * `tools/run-config` CLI, which takes each as a `--<name>` flag.
  */
 export const RUN_CONFIG_PARAMS = {
   seed: 'seed',
@@ -321,14 +271,15 @@ export const RUN_CONFIG_PARAMS = {
 
 type MutableRunConfig = { -readonly [K in keyof RunConfig]: RunConfig[K] };
 
-/** Any integer (incl. 0 / negative — RNG normalizes). Undefined if absent / non-integer. */
+/** Any integer, 0 and negatives included (the RNG normalizes them);
+ *  undefined when absent or not an integer. */
 function parseIntStrict(raw: string | null): number | undefined {
   if (raw === null || raw.trim() === '') return undefined;
   const n = Number(raw);
   return Number.isInteger(n) ? n : undefined;
 }
 
-/** A strictly-positive integer (hops / widths). Undefined if absent / invalid. */
+/** An integer above 0 (hops, widths); undefined when absent or invalid. */
 function parsePositiveInt(raw: string | null): number | undefined {
   const n = parseIntStrict(raw);
   return n !== undefined && n > 0 ? n : undefined;
@@ -340,10 +291,10 @@ function clampLevel(level: number): number {
 }
 
 /**
- * Comma-separated `archetype[:level]` tokens. Archetype validated against
- * `ALL_ARCHETYPES` (invalid tokens dropped); `:level` optional (default 1,
- * clamped to the level cap; a missing / non-positive level falls back to 1).
- * Undefined if no token is valid.
+ * Comma-separated `archetype[:level]` tokens. An archetype not in
+ * `ALL_ARCHETYPES` drops its token; `:level` is optional, 1 when missing or
+ * not above 0, and capped at the level cap. Undefined when no token is
+ * valid.
  */
 function parseRoster(raw: string | null): RosterEntry[] | undefined {
   if (!raw) return undefined;
@@ -358,22 +309,21 @@ function parseRoster(raw: string | null): RosterEntry[] | undefined {
   return entries.length > 0 ? entries : undefined;
 }
 
-/** Sentinel `forcedLayoutId` value that forces a PROCEDURAL map every battle
- *  (vs forcing a named hand-authored layout). Distinct from `undefined`
- *  (absent → normal procedural/layout roll). */
+/** The `forcedLayoutId` that forces a procedural map in every battle, where
+ *  a layout id forces that authored layout. Not `undefined`, which leaves
+ *  the usual roll. */
 export const FORCE_PROCEDURAL = 'procedural';
 
-/** A known layout id, or the `procedural` sentinel. Undefined if absent or not
- *  a recognized value. */
+/** A known layout id, or `procedural`; undefined when absent or unknown. */
 function parseLayout(raw: string | null): string | undefined {
   if (!raw) return undefined;
   if (raw.trim().toLowerCase() === FORCE_PROCEDURAL) return FORCE_PROCEDURAL;
   return LAYOUT_IDS.includes(raw) ? raw : undefined;
 }
 
-/** 53d — a known encounter id (case-sensitive — the catalog mixes kebab and
- *  camelCase ids). Unknown / absent → undefined (normal pool selection),
- *  matching `parseLayout`'s drop-don't-throw discipline. */
+/** A known encounter id, case-sensitive since the catalog mixes kebab and
+ *  camel case. Unknown or absent is undefined (the pool's usual pick):
+ *  dropped, as `parseLayout` drops, not thrown. */
 function parseEncounter(raw: string | null): string | undefined {
   if (!raw) return undefined;
   const token = raw.trim();
@@ -389,9 +339,8 @@ function parseEvent(raw: string | null): string | undefined {
   return EVENT_IDS.includes(token) ? token : undefined;
 }
 
-/** L1 — `none` → null (daemon-less), a catalog id → that daemon, anything
- *  else (absent / unknown id) → undefined (63d: no override → the
- *  character's daemon; the run-start roll retired at 63c). */
+/** `none` is null (no daemon), a catalog id that daemon, and anything else,
+ *  absent or unknown, undefined: no override, so the character's daemon. */
 function parseDaemon(raw: string | null): DaemonConfig | null | undefined {
   if (!raw) return undefined;
   const token = raw.trim().toLowerCase();
@@ -399,19 +348,18 @@ function parseDaemon(raw: string | null): DaemonConfig | null | undefined {
   return daemonById(token);
 }
 
-/** 63d — a catalog character id → the resolved def; absent / unknown →
- *  undefined (the parseLayout drop-don't-throw discipline). In the browser,
- *  undefined means "no URL bypass" — 63e shows the select scene; headless
- *  callers fall through to Run's Soldier default. */
+/** A catalog character id resolves to its def; absent or unknown is
+ *  undefined, dropped as `parseLayout` drops. In the browser undefined means
+ *  the character-select screen shows; a headless caller gets the Soldier. */
 function parseCharacter(raw: string | null): CharacterConfig | undefined {
   if (!raw) return undefined;
   return characterById(raw.trim().toLowerCase());
 }
 
 /**
- * Build a RunConfig from `URLSearchParams`. Unset / invalid fields are
- * omitted, so the result carries only explicit overrides. Pure (no DOM
- * access) so the CLI can call it on a synthetic params object too.
+ * Build a RunConfig from `URLSearchParams`. Unset and invalid fields are
+ * left out, so the result carries only explicit dials. Pure, with no DOM,
+ * so the CLI and a load call it on params they build.
  */
 export function parseRunConfig(params: URLSearchParams): RunConfig {
   const config: MutableRunConfig = {};
@@ -427,8 +375,8 @@ export function parseRunConfig(params: URLSearchParams): RunConfig {
   if (forcedLayoutId !== undefined) config.forcedLayoutId = forcedLayoutId;
   const forcedEncounterId = parseEncounter(params.get(RUN_CONFIG_PARAMS.encounter));
   if (forcedEncounterId !== undefined) config.forcedEncounterId = forcedEncounterId;
-  // 68e→74b — the supported stamps are 'elite', 'event' and 'rest'; other
-  // values dropped (the `layout=` unknown-token discipline).
+  // The stamps are 'elite', 'event' and 'rest'; any other value is dropped,
+  // as `layout=` drops an unknown one.
   const firstNode = params.get(RUN_CONFIG_PARAMS.firstNode);
   if (firstNode === 'elite' || firstNode === 'event' || firstNode === 'rest') {
     config.firstNodeKind = firstNode;
@@ -441,8 +389,8 @@ export function parseRunConfig(params: URLSearchParams): RunConfig {
   if (daemon !== undefined) config.daemon = daemon;
   const character = parseCharacter(params.get(RUN_CONFIG_PARAMS.character));
   if (character !== undefined) config.character = character;
-  // 47e — a nonnegative integer (0 is meaningful: force a broke run even if
-  // the config default ever moves above zero).
+  // An integer of at least 0; 0 is a dial too, a run that starts broke
+  // whatever the config's default.
   const startingBits = parseIntStrict(params.get(RUN_CONFIG_PARAMS.bits));
   if (startingBits !== undefined && startingBits >= 0) config.startingBits = startingBits;
   // A level of the ladder, 1 up. `escalation=0` says what no dial says, so it
@@ -453,9 +401,8 @@ export function parseRunConfig(params: URLSearchParams): RunConfig {
 }
 
 /**
- * Browser entry: parse from `location.search` (or an explicit query string).
- * Guarded so a headless import without a `location` global gets an empty
- * config. Replaces the old inline `?roster=` parser in Game.ts.
+ * The browser's entry: parse `location.search`, or a query string passed in.
+ * Without a `location` global (a headless import) the config is empty.
  */
 export function parseRunConfigFromURL(search?: string): RunConfig {
   const query = search ?? (typeof location !== 'undefined' ? location.search : '');
@@ -463,9 +410,10 @@ export function parseRunConfigFromURL(search?: string): RunConfig {
 }
 
 /**
- * Serialize a RunConfig back to a query string (no leading `?`) — the inverse
- * of `parseRunConfig` for the fields it sets. Used by the CLI to print a
- * browser launch URL that describes the same run.
+ * Write a RunConfig back as a query string (no leading `?`), the inverse of
+ * `parseRunConfig` for the fields it reads. `Game` keeps a run's dials in
+ * this form for its save and its journal, and the CLI prints a browser URL
+ * for the same run with it.
  */
 export function runConfigToQueryString(config: RunConfig): string {
   const params = new URLSearchParams();
@@ -500,8 +448,8 @@ export function runConfigToQueryString(config: RunConfig): string {
     params.set(RUN_CONFIG_PARAMS.width, String(config.mapMaxWidth));
   }
   if (config.daemon !== undefined) {
-    // A bespoke (non-catalog) daemon round-trips by id only if the catalog
-    // resolves it — acceptable: the URL form is a dev/playtest convenience.
+    // A daemon built outside the catalog comes back by id only if the
+    // catalog knows the id; the URL form is for a dev or playtest run.
     params.set(RUN_CONFIG_PARAMS.daemon, config.daemon === null ? 'none' : config.daemon.id);
   }
   if (config.character !== undefined) {

@@ -1,45 +1,29 @@
 /**
- * H6c → K1 → §91c — spawn-time fatigue, a status effect on CONSTITUTION.
+ * Fatigue, a debuff on a unit fielded again in the same encounter. Its stacks
+ * are the unit's earlier deployments this encounter (`Run.deploymentCounts`,
+ * read before the turn's own deployment is recorded, so a unit's first turn
+ * takes none), and the `Fatigued` status scales its constitution, its
+ * starting HP, by `1 − rate × stacks`. The rule, and why it scales
+ * constitution and not power: `fatiguePerStack` in `config/health.ts`.
  *
- * Fatigue is a debuff applied to a unit as it enters a battle: a unit that has
- * already fought N turns this encounter is fielded weaker. The stack count is
- * H3's per-encounter `deploymentCounts` (one stack per PRIOR turn the unit was
- * deployed); `fatigueEffect` turns it into a K1 `Fatigued` status effect that
- * scales the unit's `constitution` — its starting HP — by `1 − rate·stacks`.
- *
- * K1 migrated this off the H6c `Run.beginTurn` power-bake onto the status-
- * effect system. §91c (the casualty experiment) re-targeted it from `power` to
- * `constitution`: under the casualties chip rule `power` is what a unit COSTS
- * when it falls, so a power debuff made a tired unit CHEAPER to lose — the
- * opposite of a penalty. Fatigue now bites where it reads: a tired unit takes
- * the field with less HP. The Fatigued effect is a single per-turn instance:
- * magnitude = min(stacks, `fatigueMaxStacks`), a per-stack
- * `constitution × (1 − rate)` mul; the K1 fold `(1 + (mul − 1)·m)` reproduces
- * the curve `constitution × (1 − rate·stacks)` exactly, and the stack clamp is
- * the spec's cap (−10%/stack × 5 stacks = −50%). `Unit`'s constructor clamps
- * `currentHp` to the re-derived maxHp after seeding, so a fatigued unit never
- * spawns over its max.
- *
- * INERT by default: the shipped `fatiguePerStack` is 0, so `fatigueEffect`
- * returns `null` (no effect seeded) — the spawned unit is byte-identical to
- * the un-fatigued baseline. The rate is switched on as its own paired read
- * during the §92 rebalance (one change per paired read).
+ * The status is one instance a turn: magnitude `min(stacks, maxStacks)` over
+ * a per-stack mul of `1 − rate`, which the stat fold (`1 + (mul − 1) × m`,
+ * `statusEffects.ts`) makes exactly `1 − rate × stacks`. `Unit`'s constructor
+ * clamps `currentHp` to the derived maximum after seeding, so a fatigued unit
+ * never spawns over it.
  */
 
 import { HEALTH } from '../config/health';
 import type { StatusEffect } from '../sim/statusEffects';
 
-/** The `Fatigued` effect's stable key (merge `add` if ever applied at runtime;
- *  the per-turn seed is a single instance). */
+/** The `Fatigued` status's key. */
 export const FATIGUE_KEY = 'fatigued';
 
 /**
- * The `Fatigued` debuff for a unit fielded with `stacks` prior deployments
- * this encounter, or `null` when it would be a no-op (rate 0 or 0 stacks) — so
- * the default config seeds NO effect and the unit stays byte-identical. `rate`
- * and `maxStacks` default to the shipped `HEALTH.fatiguePerStack` /
- * `HEALTH.fatigueMaxStacks` (production wiring); pass them explicitly to pin
- * the mechanic in tests without touching config.
+ * The `Fatigued` status for a unit fielded with `stacks` earlier deployments
+ * this encounter, or `null` when it would do nothing (a rate or stack count
+ * of 0), so the shipped config seeds no effect at all. `rate` and
+ * `maxStacks` default to `HEALTH`'s; a test passes its own.
  */
 export function fatigueEffect(
   stacks: number,

@@ -1,36 +1,32 @@
 /**
- * 48b — the pure reward roller (the `Recruitment.rollOffer` sibling): resolve
- * an encounter's `{table, trigger}` reward refs into the concrete portions the
- * reward screen offers. Pure — all inputs injected (the table lookup too, for
- * synthetic tests); Run owns the state it settles into.
+ * The reward roller: an encounter's or a camp's reward refs, each a
+ * `{ table, trigger }`, resolved into the portions the reward screen offers.
+ * Pure, with every input passed in (the table lookup too, so a test can pass
+ * its own tables); `Run` settles the portions.
  *
- * Draw discipline (deterministic, the resolveTurnGates lineage):
- * - Each ref's `chance` is tested INDEPENDENTLY on the table stream —
- *   `chance: 1` costs NO draw (the gate-chance discipline, gotcha #115
- *   family); anything below 1 flips once (a `chance: 0` still draws — parse-
- *   legal but pointless authoring, kept simple over special-cased).
- * - Table sampling rides `pickWeighted` (gotcha #111: ZERO draws on a
- *   singleton, one draw otherwise) — so the OWNED-DAEMON EXCLUSION below
- *   makes the draw count filter-dependent, which is exactly why rewards get
- *   their own dedicated streams (never perturbs another consumer).
- * - An EMPTY-after-filter table yields nothing this trigger and MUST
- *   short-circuit before `pickWeighted` (it would both misbehave and burn a
- *   draw on an empty list).
- * - Bits `{min,max}` roll uniformly (integer, inclusive) on the SEPARATE
- *   bits stream; a degenerate range (min == max) costs no draw (the
- *   no-choice-no-entropy property).
+ * Draws:
+ * - Each ref's `chance` is tested on its own, on the table stream. A chance
+ *   of 1 costs no draw; anything below 1 draws once, a chance of 0 included.
+ * - A table is sampled with `pickWeighted`, which draws nothing on a single
+ *   entry and once otherwise (gotcha #111). The owned-daemon exclusion below
+ *   makes the draw count depend on what the run owns, which is why rewards
+ *   draw from streams of their own (`reward` and `rewardBits`, keyed per
+ *   turn boundary in `Run`) and never shift another consumer's draws.
+ * - A table the exclusion leaves empty yields nothing for its ref, and must
+ *   stop before `pickWeighted`, which would draw on an empty list and return
+ *   `undefined`.
+ * - Bits roll uniformly from `min` to `max` inclusive, on the bits stream; a
+ *   range of one value costs no draw.
  *
- * Exclusion rules:
- * - Daemon entries whose id the run already owns filter out BEFORE sampling
- *   (the spec lock — `addDaemon` never dedupes; exclusion is the caller's
- *   job, and this is the caller). Ids granted EARLIER IN THIS SAME ROLL
- *   accumulate into the exclusion too, so a multi-ref offer can never carry
- *   the same idol twice.
- * - Packet entries have NO exclusion (49c — the wholesale dormancy guard
- *   retired): duplicates are legal (one SLOT each, spec §Cache), and a full
- *   cache resolves at ACCEPT time (decline-or-swap), never at sample time —
- *   a cache-state filter here would make the draw count depend on a UI
- *   concern.
+ * Exclusions:
+ * - A daemon entry whose id the run owns is filtered out before sampling,
+ *   since `Run.addDaemon` does not check for duplicates. Ids granted earlier
+ *   in the same roll join the exclusion, so one offer never holds the same
+ *   daemon twice.
+ * - Packet entries have none: duplicates are legal, one cache slot each, and
+ *   a full cache is resolved when the portion is accepted (decline it, or
+ *   swap a packet out), not when it is sampled, so the cache's state never
+ *   changes the draw count.
  */
 
 import type { EncounterRewardRef, RewardTable } from '../config/rewards';
@@ -39,36 +35,36 @@ import type { UnitTemplate } from '../sim/Unit';
 import { rollUnit, type Archetype } from '../sim/archetypes';
 import { pickWeighted } from './sectorWalk';
 
-/** One rolled, offerable reward portion. Bits carry the ROLLED BASE — the
- *  effective amount derives at display/settle time via `Run.effectiveBits`
- *  (one shared code path, the shape-lock rider), so accepting a bits-fold
- *  daemon EARLIER in the same offer visibly boosts the portions after it.
- *  49c adds the packet member (a catalog id — `Run.addPacket` settles it,
- *  cache-full accepts resolve via the acceptReward swap field).
- *  51a adds `source` on the bits member: the daemon id CREDITED for a
- *  battle-tally earn (Laverna's per-turn plunder rides the offer now,
- *  labeled — Run v36). Display-only — the settle ignores it, and the
- *  roller here never sets it (a rolled table's bits have no single
- *  author). Set by `Run.handleTurnEnded` only when the attribution is
- *  unambiguous (exactly one owned battle-bits daemon — the aggregate
- *  World tally can't split across multiple earners). */
+/**
+ * One rolled portion of a reward offer:
+ * - `bits` — the rolled base. The amount granted is `Run.effectiveBits(base)`,
+ *   which the reward screen shows too, so a bits-gain daemon accepted earlier
+ *   in the same offer raises the portions after it. `source` names the one
+ *   source credited with a battle's bits tally, a daemon or an injected
+ *   rule's source; `Run.handleTurnEnded` sets it only when exactly one source
+ *   earns battle bits, since the tally cannot be split. It is for display:
+ *   the settle ignores it, and this roller never sets it.
+ * - `daemon` — a catalog id, settled by `Run.addDaemon`.
+ * - `packet` — a catalog id, settled by `Run.addPacket`; with the cache full,
+ *   the accept names a packet to swap out.
+ * - `unit` — the whole template, rolled at offer time on the bits stream, so
+ *   it is saved with the pending offer and the screen shows its real stats;
+ *   settled by `Run.appendRosterUnit`.
+ * - `poolHealth` — settled through the instant ops, which cap the pool at its
+ *   maximum.
+ */
 export type RewardPortion =
   | { readonly kind: 'bits'; readonly base: number; readonly source?: string }
   | { readonly kind: 'daemon'; readonly daemonId: string }
   | { readonly kind: 'packet'; readonly packetId: string }
-  // 74c — the events-round widening. `unit` carries the FULL template,
-  // pre-rolled at offer time on the bits stream (the port-stock precedent:
-  // templates serialize through `pendingRewards` like `team`, and the
-  // screen shows real stats); the settle is `Run.appendRosterUnit`.
-  // `poolHealth` settles through the instant-op executor (clamped at max).
   | { readonly kind: 'unit'; readonly template: UnitTemplate }
   | { readonly kind: 'poolHealth'; readonly amount: number };
 
 /**
- * Roll an encounter's reward refs into portions (authored ref order — the
- * deterministic evaluation order). `tableById` is the registry lookup
- * (boot-asserted for authored refs, so a miss here is a hard throw, never a
- * silent skip).
+ * Roll reward refs into portions, in the refs' authored order. `tableById` is
+ * the registry's lookup; every authored ref's table is checked at load
+ * (`config/encounters.ts`, `camps.ts`, `events.ts`), so a miss here throws
+ * rather than skipping.
  */
 export function rollRewards(
   refs: readonly EncounterRewardRef[],
@@ -78,7 +74,7 @@ export function rollRewards(
   bitsRng: RNG,
 ): RewardPortion[] {
   const portions: RewardPortion[] = [];
-  // Owned ids + ids granted earlier in this same roll (see the header).
+  // Owned ids, and ids granted earlier in this roll (the header).
   const excluded = new Set(ownedDaemonIds);
   for (const ref of refs) {
     if (ref.trigger.chance < 1 && tableRng.next() >= ref.trigger.chance) continue;
@@ -98,21 +94,19 @@ export function rollRewards(
       excluded.add(entry.daemon);
       portions.push({ kind: 'daemon', daemonId: entry.daemon });
     } else if (entry.kind === 'unit') {
-      // 74c — the template rolls NOW, on the bits stream (deliberately not a
-      // new constructor fork — the 74b stream-append cost is not paid twice).
-      // rollUnit draws only at level>1 (the no-choice-no-entropy fast path),
-      // matching the degenerate-bits-range rule above. No exclusion —
-      // duplicate recruits are legal.
+      // The template rolls now, on the bits stream. `rollUnit` draws only
+      // above level 1, as a one-value bits range draws nothing. No
+      // exclusion: duplicate recruits are legal.
       portions.push({
         kind: 'unit',
         template: rollUnit(entry.archetype as Archetype, bitsRng, entry.level ?? 1),
       });
     } else if (entry.kind === 'poolHealth') {
-      // 74c — a flat heal: no draw, no exclusion; clamping is the settle's.
+      // A flat heal: no draw, no exclusion; the settle caps it.
       portions.push({ kind: 'poolHealth', amount: entry.amount });
     } else {
-      // 49c — packets sample with no exclusion (see the header) and carry
-      // only their id; the settle is `Run.addPacket` at accept time.
+      // Packets are sampled with no exclusion (the header) and carry only
+      // their id; `Run.addPacket` settles them on accept.
       portions.push({ kind: 'packet', packetId: entry.packet });
     }
   }

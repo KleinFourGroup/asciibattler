@@ -1,42 +1,39 @@
 /**
- * U2 — the wave-list grammar + the per-turn sequencer.
+ * The wave-list grammar, and the sequencer that walks it one wave a turn.
  *
- * An encounter's `waves` is a small GRAMMAR (not a flat list): a recursive tree
- * of entries that the sequencer walks one wave per turn. The encounter's health
- * pool — NOT the list — decides when the fight ends, so the sequencer must always
- * yield a wave for any turn (a `forever` loop / an open-ended final stage are the
- * idioms for "keep fighting").
+ * An encounter's `waves` is a tree of entries, not a flat list. The
+ * encounter's health pool decides when the fight ends, not the list, so the
+ * sequencer yields a wave for every turn, from a `forever` loop or by
+ * repeating the last wave (below).
  *
- * **The grammar** (`WaveEntry`), each entry one of:
- *  - **wave** — emit this `WaveSpec` (U1) this turn.
- *  - **pick** — a weighted set of options; roll ONE when first reached (consumes
- *    `rng`), then stream that option to exhaustion. The choice is frozen in the
- *    cursor, so a resume never re-rolls.
- *  - **loop** — repeat a body `N` times or `forever`.
- *  - **stages** — the boss-phase construct: an ordered list of condition-gated
- *    segments. Run the current stage's body turn-by-turn; advance to the next
- *    stage the moment that stage's `until` condition trips (checked at the turn
- *    boundary, so a boss flips on the turn AFTER its pool crosses the threshold).
- *    The final stage omits `until` and runs open-ended to encounter end.
+ * The grammar (`WaveEntry`), each entry one of:
+ * - `wave` — field this `WaveSpec` this turn.
+ * - `pick` — weighted options; one is rolled when the pick is first reached
+ *   and played to its end. The choice is kept in the cursor, so a resumed
+ *   save never rolls it again.
+ * - `loop` — repeat a body `repeat` times, or `forever`.
+ * - `stages` — the boss-phase block: condition-gated segments in order. The
+ *   current stage's body runs turn by turn, and the block moves to the next
+ *   stage when the current one's `until` holds at a turn boundary, so a boss
+ *   changes phase on the turn after its pool crosses the threshold.
  *
- * **Bodies are themselves `WaveList`s**, so the grammar NESTS arbitrarily (a loop
- * of loops, a stage whose body is a loop of picks, any depth). The resolver is
- * recursive over a cursor that structurally mirrors the active path down the tree
- * — never a pre-expanded list (a `forever` loop can't be expanded).
+ * Bodies are `WaveList`s themselves, so the grammar nests to any depth. The
+ * walk recurses over a cursor that mirrors the active path down the tree,
+ * never over a pre-expanded list, which a `forever` loop would make endless.
  *
- * **Terminal policy** (user-locked): when a finite list with no `forever` is
- * outlasted by the encounter pool, **the last wave repeats**. Applied uniformly
- * at every list level on exhaustion; a non-final stage waiting on its condition
- * likewise repeats its last wave until the condition trips.
+ * When a list runs out, the last wave repeats: at the top level, once the
+ * pool outlasts a list with no `forever`, and in a non-final stage whose
+ * condition has not yet held. A nested list that runs out hands on to the
+ * next entry of its parent, and a final stage's body to whatever follows its
+ * block.
  *
- * **The cursor** is plain JSON (no symbols/functions in a RETURNED cursor — the
- * `EXHAUSTED` sentinel is internal only), so U3 snapshots it directly. It fully
- * captures position (list indices, loop iterations, the chosen pick option, the
- * active stage), so a mid-encounter save resumes the exact same sequence.
+ * The cursor is plain JSON (the `EXHAUSTED` sentinel never leaves this file),
+ * so the run's snapshot holds it as it is. It records every list index, loop
+ * iteration, chosen option and active stage, so a save taken mid-encounter
+ * resumes the same sequence.
  *
- * Pure + headless: the only `rng` draw is a pick roll, threaded exactly where
- * `rollEnemyWave`'s per-turn draw sits today. Deterministic from the seed + the
- * persisted cursor.
+ * Pure: the only draw is a pick's roll, off the stream the caller passes
+ * (`Run.rollTurnWave` passes the turn's keyed battle stream).
  */
 
 import type { RNG } from '../../core/RNG';
@@ -62,8 +59,9 @@ export interface PickOption {
   readonly weight: number;
 }
 
-/** One segment of a `stages` block. A non-final stage carries an `until`
- *  condition (advance when it trips); the final stage omits it (open-ended). */
+/** One segment of a `stages` block. A non-final stage moves on when its
+ *  `until` holds, and without one it never does; the final stage's `until`
+ *  is ignored. */
 export interface Stage {
   readonly until?: Condition;
   readonly body: WaveList;
@@ -117,8 +115,8 @@ export type WaveCursor = ListCursor;
  * turn (positions at the first leaf); thereafter pass back the returned cursor.
  * `state` carries the live pool for stage conditions; `rng` rolls picks.
  *
- * Returns the `WaveSpec` to resolve (via `resolveWave`, U1) plus the cursor to
- * persist for the next turn.
+ * Returns the `WaveSpec` to resolve (`resolveWave`) and the cursor to keep for
+ * the next turn.
  */
 export function waveForTurn(
   list: WaveList,
@@ -131,8 +129,8 @@ export function waveForTurn(
     next = enterList(list, rng);
   } else {
     const advanced = advanceList(list, cursor, state, rng);
-    // Top-level exhaustion → repeat the last wave (the terminal policy): keep the
-    // cursor where it is and re-emit its leaf.
+    // The top level ran out: keep the cursor where it is and field its last
+    // wave again.
     next = advanced === EXHAUSTED ? cursor : advanced;
   }
   return { spec: specAtList(list, next), cursor: next };
@@ -237,8 +235,8 @@ function advanceEntry(
       assertCursor(cursor, 'stages');
       const stage = entry.stages[cursor.stage]!;
       const isFinal = cursor.stage + 1 >= entry.stages.length;
-      // Condition jump (priority over continuing the body): a non-final stage
-      // whose `until` trips advances to the next stage immediately.
+      // The condition comes before the body: a non-final stage whose `until`
+      // holds moves to the next stage this turn.
       if (!isFinal && stage.until && conditionMet(stage.until, state)) {
         return {
           kind: 'stages',
@@ -248,9 +246,9 @@ function advanceEntry(
       }
       const advanced = advanceList(stage.body, cursor.child, state, rng);
       if (advanced !== EXHAUSTED) return { kind: 'stages', stage: cursor.stage, child: advanced };
-      // Body exhausted. Final stage → bubble up (top-level repeats its last wave).
-      // Non-final stage still waiting on its condition → repeat ITS last wave
-      // (keep the cursor on the last leaf) until the condition trips.
+      // The body ran out. A final stage hands on to its parent; a non-final
+      // stage still waiting on its condition keeps the cursor on its last
+      // leaf, repeating that wave until the condition holds.
       if (isFinal) return EXHAUSTED;
       return { kind: 'stages', stage: cursor.stage, child: cursor.child };
     }
@@ -259,8 +257,9 @@ function advanceEntry(
 
 // --- helpers ---------------------------------------------------------------
 
-/** Weighted choice of an option index. One `rng.next()` draw; non-positive total
- *  weight → the first option (a degenerate but defined fallback). */
+/** Weighted choice of an option index: one `rng.next()` draw, even for a
+ *  single option. A total weight of 0 (the loader allows weights of 0) picks
+ *  the first option with no draw. */
 function rollPick(options: readonly PickOption[], rng: RNG): number {
   const total = options.reduce((sum, o) => sum + Math.max(0, o.weight), 0);
   if (total <= 0) return 0;

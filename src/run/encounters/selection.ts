@@ -1,17 +1,15 @@
 /**
- * V1 — encounter SELECTION: choose an `(encounter, layout)` pair for a battle
- * node from the current sector's pools. The authored counterpart of U3's
- * hold-one-encounter — selection among the catalog.
+ * Encounter selection: an encounter and its battlefield for a fight node,
+ * from the current sector's pools. The encounter is drawn first, from the
+ * sector's pool of the node's encounter kind at the node's hop; then a
+ * layout, from the sector's layout pool at that hop kept to the encounter's
+ * `layouts` fit-filter. Both draws weigh each entry by its `weight`
+ * (`pickWeighted`).
  *
- * The encounter is drawn first, from the sector's hop-gated fight pool filtered
- * by node kind, and then a layout from the sector's hop-gated layout pool ∩ the
- * encounter's optional fit-filter.
- *
- * Pure: takes the sector + an id→Encounter resolver, so it's headless-testable
- * with fixture catalogs (the production wrapper in `Run` injects `getEncounter`).
- * The per-entry pool `weight` is honoured (uniform today — the V-later weighting
- * seam). A resolver that finds no eligible (encounter, layout) THROWS loudly —
- * the boot/editor guard is meant to make that unreachable in shipped content.
+ * Pure: it takes the sector and an id-to-encounter resolver, so it is tested
+ * with fixture catalogs; `Run` passes `getEncounter`. A pool draw with
+ * nothing to choose throws, and the coverage guard at the foot of this file
+ * fails the shipped sectors at load instead, so a run never meets it.
  */
 
 import type { RNG } from '../../core/RNG';
@@ -35,8 +33,8 @@ interface SelectionContext {
 
 interface SelectedEncounter {
   readonly encounter: Encounter;
-  /** The rolled battlefield: a real layout id, or `null` for a procedural map
-   *  (the `PROCEDURAL_LAYOUT_ID` sentinel resolved). */
+  /** The rolled battlefield: a layout id, or `null` for a procedural map (the
+   *  pool's `PROCEDURAL_LAYOUT_ID` entry). */
   readonly layoutId: string | null;
 }
 
@@ -44,22 +42,21 @@ interface SelectedEncounter {
 export type EncounterResolver = (id: string) => Encounter | undefined;
 
 /**
- * Which encounter kind a map node fights. A `battle` node fights a `normal`
- * encounter; a `boss` node (the sector terminal) fights a `boss` encounter (W1);
- * an `elite` node (a scattered, optional middle-hop fight) draws from the
- * sector's `elite` pool (W2). `rest` nodes never fight, so they never reach
- * selection.
+ * The encounter kind each map node kind fights (the node kinds are in
+ * `NodeMap.ts`'s header). Rest and port nodes never fight; they map to
+ * `normal` only because the table names every kind. An event node fights
+ * when its combat roll comes up or no event is eligible
+ * (`Run.enterEventNode`), and draws from the normal pool. An event's
+ * start-encounter outcome names its fight, which `selectEncounter` takes
+ * only when that fight is `normal`: the event loader does not check the
+ * kind, so a named elite or boss would be passed over for a normal draw.
  */
 const KIND_BY_NODE: Record<NodeKind, EncounterKind> = {
   battle: 'normal',
-  boss: 'boss', // W1: the terminal boss node selects from the boss pool
-  elite: 'elite', // W2: an elite node selects from the elite pool
-  rest: 'normal', // rest nodes never fight; defensive default
-  port: 'normal', // 50c: port nodes never fight either; same defensive default
-  // 74b: an event's combat-resolve fight (and its empty-pool fallback) draws
-  // from the sector's NORMAL pool — the spec's global-chance rule made
-  // structural. A start-encounter terminal bypasses the pool entirely (the
-  // forced id short-circuits inside selectEncounter).
+  boss: 'boss',
+  elite: 'elite',
+  rest: 'normal',
+  port: 'normal',
   event: 'normal',
 };
 
@@ -72,9 +69,10 @@ interface EligibleEntry {
   readonly encounter: Encounter;
 }
 
-/** The sector's hop-gated fight pool OF `kind` (Wb4 — the pool is now per-kind),
- *  resolved; the `=== kind` check stays as a defensive guard against a hand-edited
- *  bucket the schema's kind-consistency guard would otherwise have rejected. */
+/** The sector's pool of `kind` at `hop`, resolved. An id the resolver does not
+ *  know is dropped, and the kind check repeats the sector loader's
+ *  (`config/sectors.ts`) for a sector built without it, as a test's fixture
+ *  is. */
 function eligibleEncounters(
   sector: SectorDef,
   hop: number,
@@ -86,16 +84,15 @@ function eligibleEncounters(
     .filter((x): x is EligibleEntry => x.encounter !== undefined && x.encounter.kind === kind);
 }
 
-/** The sector's hop-gated layout pool ∩ the encounter's fit-filter (an omitted
- *  fit-filter admits everything, incl. the procedural sentinel). */
+/** The sector's layout pool at `hop`, kept to the encounter's fit-filter; with
+ *  no filter, every entry, the procedural one included. */
 function compatibleLayouts(sector: SectorDef, hop: number, encounter: Encounter): readonly SectorLayoutEntry[] {
   const fit = encounter.layouts;
   return layoutPoolAtHop(sector, hop).filter((e) => fit === undefined || fit.includes(e.layoutId));
 }
 
-/** Roll a layout from `compatibleLayouts`. Returns the resolved layout id (`null`
- *  = procedural). Throws if the intersection is empty (the coverage guard should
- *  preclude this in shipped content). */
+/** Roll a layout from `compatibleLayouts`: its id, or `null` for a procedural
+ *  map. Throws when no layout fits. */
 function rollLayoutFor(sector: SectorDef, hop: number, encounter: Encounter, rng: RNG): string | null {
   const pool = compatibleLayouts(sector, hop, encounter);
   if (pool.length === 0) {
@@ -121,17 +118,14 @@ function encounterFirst(sector: SectorDef, ctx: SelectionContext, rng: RNG, reso
 }
 
 /**
- * X2 — a dev-only force-select (the fuzz harness's `--encounter=<id>`): when set
- * AND the forced encounter's `kind` matches THIS node's kind, short-circuit to it
- * — bypassing the sector pool + hop gate so the encounter is fielded at EVERY
- * matching-kind node, for a clean per-encounter pool-damage sample (a natural run
- * hits a given encounter far below uniform). Its layout still rolls from the
- * sector's hop-gated pool ∩ its fit-filter (so it lands on a compatible board).
- *
- * **Per-kind aware** (Wb4): a kind MISMATCH (e.g. forcing a `normal` encounter at
- * a boss node) returns null → normal selection runs for that node, so boss/elite
- * nodes still draw their own bucket. Unknown id throws loudly (a typo should fail
- * the run, like `rollLayoutFor`); the harness also validates the id up front.
+ * The forced encounter (`RunConfig.forcedEncounterId`, or an event's
+ * start-encounter), taken at a node whose encounter kind matches its own,
+ * past the sector's pool and hop gate. Its layout still rolls from the
+ * sector's layout pool at the hop, kept to its fit-filter. At a node of
+ * another kind it returns `null` and the pool draw runs, so boss and elite
+ * nodes keep their own. An unknown id throws, since a typo should fail the
+ * run; the run checks a dial's id at construction, and the event loader a
+ * named one.
  */
 function applyForcedEncounter(
   sector: SectorDef,
@@ -149,12 +143,9 @@ function applyForcedEncounter(
 }
 
 /**
- * Select an `(encounter, layout)` for a battle node. `resolve` maps a pool
- * `encounterId` to its definition (`Run` passes `getEncounter`).
- *
- * `forcedEncounterId` (X2 — the `--encounter=<id>` isolation flag) overrides the
- * draw for nodes whose kind matches the forced encounter; see
- * `applyForcedEncounter`.
+ * Select an encounter and its layout for a fight node. `resolve` maps a
+ * pool's `encounterId` to its definition. A `forcedEncounterId` replaces the
+ * draw where its kind matches the node's (`applyForcedEncounter`).
  */
 export function selectEncounter(
   sector: SectorDef,
@@ -170,16 +161,18 @@ export function selectEncounter(
   return encounterFirst(sector, ctx, rng, resolve);
 }
 
-/** Map-node kinds that select an encounter (rest nodes never fight). The
- *  coverage guard requires every sector to fill all of these at every hop —
- *  so a sector must pool ≥ 1 normal, boss, AND elite encounter (W2). */
+/** The node kinds the coverage guard fills, one for each encounter kind, so a
+ *  sector must pool a normal, a boss and an elite encounter. An event node's
+ *  fight draws the normal pool, which `battle` covers. */
 const FIGHTING_NODE_KINDS: readonly NodeKind[] = ['battle', 'boss', 'elite'];
 
 /**
- * Boot/editor guard (the A4 loud-failure pattern): every (sector, reachable hop,
- * fighting node kind) must have ≥ 1 eligible encounter with a non-empty layout
- * intersection — so `selectEncounter` never throws mid-run. Called at module load
- * over the shipped config (below); also exercisable on fixtures in tests.
+ * The coverage guard: every sector, at every hop of its `length` and for each
+ * fighting node kind, must hold an encounter with a layout that fits it, so a
+ * pool draw never throws mid-run. The hop gates only open (`minHop`), so a hop
+ * past `length` (a `hopCount` override) is covered by the last one. A forced
+ * encounter is outside the guard. Run at module load over the shipped sectors
+ * (below), and on fixtures in tests.
  */
 export function assertSelectionCoverage(
   sectors: readonly SectorDef[],
@@ -201,6 +194,6 @@ export function assertSelectionCoverage(
   }
 }
 
-// Boot guard: fail loudly at load if the shipped catalog can't fill every battle
-// node (mis-authored content shouldn't surface as a mid-run throw).
+// Fail at load when the shipped pools cannot fill every fight node, rather
+// than mid-run.
 assertSelectionCoverage(SECTORS, getEncounter);

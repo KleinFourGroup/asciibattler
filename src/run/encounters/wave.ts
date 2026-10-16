@@ -1,81 +1,57 @@
 /**
- * U1 — the wave resolver: a pure `resolveWave(spec, context, rng) → UnitTemplate[]`.
+ * The wave resolver: `resolveWave(spec, context, rng)` turns one turn's wave
+ * spec into the enemy team. A wave spec gives a level budget, a total count,
+ * an optional level cap, and the unit types that fill it, each with its
+ * claim on the count and on the levels.
  *
- * The keystone primitive of the encounter model (ROADMAP §"Phase U"). An
- * encounter's per-turn enemy team used to come from the random `rollEnemyWave`
- * ([../enemyBudget.ts](../enemyBudget.ts)); the encounter model replaces that
- * call site with this authored resolver. Each turn's team is described by a
- * **wave spec** (a budget, a total count, and a list of unit types each with a
- * count- and level-contribution) and resolved deterministically against the
- * battle RNG.
+ * Resolution runs in two steps:
  *
- * **Two-step resolution** (the brief's worked example is the contract — encoded
- * as a test):
+ * 1. Count. The total count `C` is fixed, or the fielded hand times a
+ *    factor. Fixed-count types take their count; what is left, `max(0, C −
+ *    Σfixed)`, is shared among the weight-count types in proportion to
+ *    weight by largest remainder, with no draw. Fixed counts past `C` leave
+ *    the weighted types none.
+ * 2. Level. The total level budget `L` is fixed, or the roster's mean or
+ *    median level times the fielded hand times a factor. Fixed-level
+ *    instances take their authored level, above the cap if one is set, since
+ *    an authored level is meant. The rest of the budget, `L − Σfixed`, is
+ *    spread over the weight-level instances in proportion to each one's
+ *    weight (a type's level-weight is per unit, not shared across its
+ *    count), each held to `[1, cap]` (`distributeWeightedLevels`).
  *
- *  1. **Count.** Resolve the total count `C` (fixed, or `hand × factor`). Fixed-
- *     count units always take their fixed count; the remainder `max(0, C −
- *     Σfixed)` is split across the weight-count units in proportion to weight via
- *     the deterministic largest-remainder (Hamilton) method — NO RNG, mirroring
- *     `rollEnemyWave`'s deterministic `Math.round` archetype split. If fixed
- *     counts exceed `C`, the weight-count units resolve to 0 (allowed).
- *
- *  2. **Level.** Resolve the total level budget `L` (fixed, or `mean|median ×
- *     factor` over the roster). Fixed-level instances pin to their authored level
- *     (honoured even above the cap — an authored elite is intentional); the
- *     remaining budget `L − Σ(fixed levels)` is spread across the **weight-level
- *     instances** in proportion to weight, **per instance** (the user-locked
- *     semantics: a type's level-weight makes ITS individuals spikier), each
- *     clamped to `[1, cap]` where `cap` is the wave's optional `levelCap`
- *     (absent = unbounded — `Infinity`). This is `distributeWeightedLevels` — a strict
- *     generalization of `distributeBudget`: with uniform weights it reduces to
- *     the same tight even split (spread ≤ 1, RNG-chosen remainder), so the
- *     reproduction encounter stays faithful to today's fights.
- *
- * Pure: no `Run`/snapshot touch, fully headless-testable. The only RNG draw is
- * the level remainder (the count step is deterministic) — so a wave is
- * reproducible from its seed + context, exactly where `rollEnemyWave`'s draw
- * sits today. NOT byte-identical to `rollEnemyWave` (it loses the random swarm
- * COUNT — the encounter authors count explicitly), which is why balance is
- * re-derived in Phase X, not re-confirmed.
+ * Pure, with no `Run` or snapshot reads. The only draw is the shuffle that
+ * places the level remainder, so a wave is reproducible from its stream and
+ * context.
  */
 
 import type { RNG } from '../../core/RNG';
 import type { UnitTemplate } from '../../sim/Unit';
 import { scaledUnit, type Archetype } from '../../sim/archetypes';
 
-/** Total level budget a wave may spend across all its units. `fixed` is an
- *  absolute total; `mean`/`median` scale the player roster's mean/median level
- *  by `factor` AND the fielded hand size — i.e. `factor × centralLevel ×
- *  handSize = factor × playerTeamLevel`, the established difficulty basis (so the
- *  wave tracks the fielded team's TOTAL level, like today's enemy budget — a
- *  per-average-unit budget would shrink to nothing for a hand-sized wave). */
+/** A wave's total level budget across its units. `fixed` is an absolute
+ *  total; `mean` and `median` multiply the roster's mean or median level by
+ *  `factor` and by the fielded hand size, so the budget tracks the fielded
+ *  team's total level, where without the hand size a wave of several units
+ *  would share one unit's worth of levels. */
 export type LevelBudgetSpec =
   | { readonly kind: 'fixed'; readonly value: number }
   | { readonly kind: 'mean'; readonly factor: number }
   | { readonly kind: 'median'; readonly factor: number };
 
-/** Total unit count for a wave. `fixed` is absolute; `hand` scales the fielded
- *  hand size by `factor` (the reproduction encounter's `hand × swarmMax`). */
+/** A wave's total unit count. `fixed` is absolute; `hand` scales the fielded
+ *  hand size by `factor`. */
 export type CountSpec =
   | { readonly kind: 'fixed'; readonly value: number }
   | { readonly kind: 'hand'; readonly factor: number };
 
 /**
- * Optional per-wave ceiling on the WEIGHTED level spread (fixed-level instances
- * bypass it — an authored elite is intentional). **Absent = no cap**: the wave
- * spends its full budget and individual levels are unbounded — what you author is
- * what you field. When present, the same `[1, cap]` clamp the old random generator
- * applied globally now applies to THIS wave only:
- * - `roster` — `highestRosterLevel + delta`, the retired global cap
- *   (`DIFFICULTY.unitLevelDelta` was the global `delta`), now opt-in per wave so a
- *   "many weak bodies" fight can keep its ceiling while a "few elevated casters"
- *   fight can author past it.
- * - `fixed` — an absolute ceiling, independent of the roster.
- *
- * Pre-X the cap was a global, roster-derived constant applied to every wave (an
- * artifact of the generator deriving COUNT from it via `ceil(budget/cap)`). The
- * encounter model authors count explicitly, so the cap's only remaining job is
- * the per-instance ceiling — moved here, made optional, defaulting to off.
+ * An optional ceiling on each weight-level instance's level; fixed-level
+ * instances pass it. Absent, the wave spends its whole budget with no
+ * ceiling, so what is authored is what is fielded. Set, each such instance is
+ * held to `[1, cap]`, so a fight of many weak bodies keeps a ceiling while a
+ * fight of a few strong casters can be authored past it.
+ * - `roster` — the roster's highest level plus `delta`.
+ * - `fixed` — an absolute ceiling, whatever the roster.
  */
 export type LevelCapSpec =
   | { readonly kind: 'roster'; readonly delta: number }
@@ -100,21 +76,19 @@ export interface WaveUnitSpec {
   readonly count: UnitCountSpec;
   readonly level: UnitLevelSpec;
   /**
-   * 92e — the per-encounter POWER OVERRIDE (encounter-feel-spec §The casualty
-   * chip rule, amended 2026-09-04): the headcount weight every instance of this
-   * entry carries INSTEAD of its archetype's table power. Stamped onto the
-   * resolved template's `stats.power` (level scaling never touches it —
-   * `growthRates.power` is 0 since 91b), so the fallen ledger books it, the
-   * survivors rule counts it standing, and the pre-turn risk line reads it.
-   * Both directions are legal: a boss-shaped unit "worth 6" so its fall
-   * moves the pool, or fodder "worth 0.5" so a wipe burns half. Absent →
-   * the catalog weight (the pre-92e resolution, byte-identical).
+   * The headcount weight each unit of this entry carries under the casualty
+   * rule, in place of its archetype's table power. Stamped on the resolved
+   * template's `stats.power` after level scaling, so the fallen ledger books
+   * it, the survivors rule counts it standing, and the pre-turn risk line
+   * reads it. Either direction is legal: a boss-shaped unit worth 6, so its
+   * fall moves the pool, or fodder worth 0.5, so a wipe burns half as much.
+   * Absent, the archetype's power.
    */
   readonly power?: number;
 }
 
-/** A single wave: a level budget, a total count, and the unit types that fill it.
- *  `levelCap` is optional — absent means the weighted spread is uncapped. */
+/** One wave: a level budget, a total count, an optional level cap, and the
+ *  unit types that fill it. */
 export interface WaveSpec {
   readonly levelBudget: LevelBudgetSpec;
   readonly count: CountSpec;
@@ -123,28 +97,17 @@ export interface WaveSpec {
 }
 
 /**
- * The run-side inputs a wave resolves against. Supplied by the caller
- * (`Run.beginTurn` in U3) so the resolver stays pure + headless-testable with
- * explicit literals:
- * - `roster` — the player roster, for `mean`/`median` level budgets AND the
- *   `roster`-relative level cap (its `highestRosterLevel` basis).
- * - `handSize` — the FIELDED hand size, for `hand`-relative counts (mirrors
- *   `rollEnemyWave`'s `size`). 65b: the production caller supplies
- *   `min(roster, effectiveDrawAmount)` — the folded draw stat, so persistent
- *   draw daemons scale the opposition (Option B, worklog §65-shape-lock);
- *   pre-65b this was `min(roster, DECK.handSize)`.
- *
- * The per-instance level cap is no longer supplied here — it's authored on the
- * `WaveSpec` (`levelCap?`) and resolved against this `roster`, so the production
- * caller (`Run.beginTurn`) no longer computes it.
- *
- * X1 — `waveSizeMultiplier` / `levelBudgetMultiplier` are the per-run difficulty
- * lever (the future difficulty-system seam; `Run` sources them from the
- * `RunConfig` override or the `difficulty.json` default). `waveSize` scales the
- * resolved COUNT `C` (action-economy), `levelBudget` the resolved level BUDGET
- * `L` (individual-strength, saturating against `levelCap`). **Absent → 1** (no
- * scaling), so a pre-X1 context — and every mechanic test built with explicit
- * literals — resolves byte-identically.
+ * What a wave resolves against, passed in by the caller (`Run.rollTurnWave`)
+ * so the resolver stays pure:
+ * - `roster` — the player's roster: the basis of `mean` and `median` budgets
+ *   and of a `roster` level cap.
+ * - `handSize` — the fielded hand size, for `hand` counts and the budget. The
+ *   run passes `min(roster, effectiveDrawAmount)`, the folded draw stat, so a
+ *   daemon's draw bonus (or `RunConfig.drawAmountAdd`) raises the opposition
+ *   with the hand.
+ * - `waveSizeMultiplier`, `levelBudgetMultiplier` — the run's difficulty
+ *   multipliers on `C` and on `L` (`config/difficulty.ts`; Escalation's level
+ *   scales them). Absent, 1.
  */
 export interface WaveContext {
   readonly roster: readonly UnitTemplate[];
@@ -154,9 +117,8 @@ export interface WaveContext {
 }
 
 /**
- * Resolve a wave spec into a concrete enemy team, deterministically from `rng`.
- * The count step draws no RNG; the level remainder does (where `rollEnemyWave`'s
- * draw sits today).
+ * Resolve a wave spec into an enemy team. The count step draws nothing; the
+ * level remainder draws from `rng`.
  */
 export function resolveWave(spec: WaveSpec, context: WaveContext, rng: RNG): UnitTemplate[] {
   const totalCount = resolveTotalCount(spec.count, context);
@@ -177,18 +139,17 @@ export function resolveWave(spec: WaveSpec, context: WaveContext, rng: RNG): Uni
 
   return instances.map((inst, i) => {
     const t = scaledUnit(inst.archetype, levels[i]!);
-    // 92e — the power override is stamped AFTER scaling: the template's
-    // `stats.power` becomes the authored weight; every other stat is untouched.
+    // The power override is stamped after scaling; every other stat stays as
+    // scaled.
     return inst.power === undefined ? t : { ...t, stats: { ...t.stats, power: inst.power } };
   });
 }
 
 /**
- * The per-instance level ceiling for this wave's weighted spread. Absent →
- * `Infinity` (no cap: the spread flows through `distributeWeightedLevels`
- * unclamped, spending the full budget). `roster` → `highestRosterLevel + delta`
- * (the retired global cap, `max(1, …)` like `rollEnemyWave`/`Run.beginTurn`).
- * `fixed` → the authored absolute ceiling (≥ 1).
+ * The per-instance ceiling for this wave's weighted spread. Absent,
+ * `Infinity`, so the spread spends the full budget unclamped; `roster`, the
+ * roster's highest level (1 for an empty roster) plus `delta`; `fixed`, the
+ * authored ceiling, at least 1.
  */
 function resolveLevelCap(spec: LevelCapSpec | undefined, roster: readonly UnitTemplate[]): number {
   if (spec === undefined) return Infinity;
@@ -197,9 +158,8 @@ function resolveLevelCap(spec: LevelCapSpec | undefined, roster: readonly UnitTe
   return highest + Math.round(spec.delta);
 }
 
-/** Total wave count `C ≥ 0`, rounded to an integer. The X1 `waveSizeMultiplier`
- *  (absent → 1, exact: `raw * 1 === raw`) scales it pre-round, so the default
- *  path stays byte-identical. */
+/** The total count `C ≥ 0`, scaled by `waveSizeMultiplier` (absent, 1) and
+ *  then rounded. */
 function resolveTotalCount(spec: CountSpec, ctx: WaveContext): number {
   const raw = spec.kind === 'fixed' ? spec.value : spec.factor * ctx.handSize;
   return Math.max(0, Math.round(raw * (ctx.waveSizeMultiplier ?? 1)));
@@ -234,15 +194,15 @@ function resolveCounts(units: readonly WaveUnitSpec[], totalCount: number): numb
   return counts;
 }
 
-/** Total level budget `L ≥ 0`, rounded. `mean`/`median` = `factor × centralLevel
- *  × handSize` (= `factor × playerTeamLevel`): the budget scales with the fielded
- *  hand, matching `enemyBudgetFor`'s basis (empty roster → central basis 1, like
- *  `avgTeamLevel`). */
+/**
+ * The total level budget `L ≥ 0`: `fixed` as authored; `mean` and `median` as
+ * `factor × central level × handSize`, an empty roster's central level 1.
+ * `levelBudgetMultiplier` (absent, 1) scales either kind before the round. A
+ * capped wave's weighted levels sum to at most `n × cap`
+ * (`distributeWeightedLevels`), so the multiplier raises them only until they
+ * reach it.
+ */
 function resolveLevelBudget(spec: LevelBudgetSpec, ctx: WaveContext): number {
-  // X1 — the difficulty lever scales the TOTAL budget `L` uniformly (fixed and
-  // roster-relative alike), pre-round. Absent → 1 (exact), so the default path
-  // is byte-identical; a capped wave saturates downstream (distributeWeightedLevels
-  // clamps the spread to `n·cap`), so this only bites uncapped waves.
   const mult = ctx.levelBudgetMultiplier ?? 1;
   if (spec.kind === 'fixed') return Math.max(0, Math.round(spec.value * mult));
   const central = spec.kind === 'mean' ? rosterMeanLevel(ctx.roster) : rosterMedianLevel(ctx.roster);
@@ -262,9 +222,10 @@ function rosterMedianLevel(roster: readonly UnitTemplate[]): number {
 }
 
 /**
- * Assign a level to every expanded instance. Fixed-level instances pin to their
- * authored value (≥ 1, honoured above the cap); the remaining budget is spread
- * across the weight-level instances via `distributeWeightedLevels`.
+ * Assign a level to every expanded instance. Fixed-level instances take their
+ * authored value (at least 1, above the cap if one is set); the rest of the
+ * budget is spread over the weight-level instances by
+ * `distributeWeightedLevels`.
  */
 function resolveLevels(
   instances: readonly { readonly level: UnitLevelSpec }[],
@@ -296,24 +257,21 @@ function resolveLevels(
 }
 
 /**
- * Distribute `budget` total levels across `weights.length` instances in
- * proportion to `weights`, each clamped to `[1, cap]`. A strict generalization
- * of `distributeBudget` (../enemyBudget.ts):
+ * Spread `budget` levels over `weights.length` instances in proportion to
+ * `weights`, each held to `[1, cap]`:
  *
- * - `total = clamp(round(budget), n, n·cap)` — feasible so every instance can
- *   take ≥ 1 and ≤ cap (over-spending the budget up to `n` when it can't afford
- *   one level each — level must be ≥ 1).
- * - Seed each at 1, then hand out the `total − n` surplus ∝ weight (floored, each
- *   capped at `cap − 1`), and place the integer remainder by largest fractional
- *   share — ties broken by a deterministic Fisher–Yates shuffle.
+ * - `total = clamp(round(budget), n, n·cap)`, so every instance can take at
+ *   least 1 and at most `cap`; a budget too small for 1 each is overspent up
+ *   to `n`, since a level is at least 1.
+ * - Each starts at 1; the surplus `total − n` is handed out in proportion to
+ *   weight, floored and capped at `cap − 1` each, and the integer remainder
+ *   goes by largest fractional share, ties in shuffled order, past any
+ *   instance at its cap.
  *
- * **Uniform weights reduce to `distributeBudget`'s distribution**: equal weights
- * give equal ideal shares, so every fractional remainder ties and the shuffle
- * picks a uniformly random subset to receive the `+1` — the same `base` /
- * `base+1` even split (spread ≤ 1). The exact RNG draw *sequence* differs (a full
- * shuffle vs. a partial one), so a wave is not byte-identical to `rollEnemyWave`
- * — by design (balance is re-derived in Phase X). Non-positive total weight falls
- * back to uniform.
+ * Equal weights give every share the same fraction, so the shuffle picks a
+ * uniformly random subset for the `+1`: an even split with a spread of at
+ * most 1, as `distributeBudget` (`../enemyBudget.ts`) gives the random wave
+ * by other draws. A total weight of 0 falls back to equal weights.
  */
 export function distributeWeightedLevels(
   rng: RNG,
@@ -335,8 +293,8 @@ export function distributeWeightedLevels(
   let leftover = total - levels.reduce((a, b) => a + b, 0); // ≥ 0
 
   if (leftover > 0) {
-    // Priority order: largest fractional share first, ties → RNG shuffle (so
-    // uniform weights → a random subset, matching distributeBudget).
+    // Largest fractional share first; shuffling before the stable sort breaks
+    // the ties at random.
     const order = Array.from({ length: n }, (_, i) => i);
     rng.shuffle(order);
     const frac = idealExtra.map((x) => x - Math.floor(x));

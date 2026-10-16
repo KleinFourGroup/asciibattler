@@ -34,8 +34,8 @@
  *   (`resolveTotalCount`), the action-economy axis.
  * - `levelBudgetMultiplier` — scales every authored wave's resolved level
  *   budget (`resolveLevelBudget`), the strength axis. It saturates against a
- *   wave's `levelCap` (a capped wave clamps to `n × cap`), so it bites only
- *   uncapped waves.
+ *   wave's `levelCap`: a capped wave's levels sum to at most `n × cap`, so the
+ *   multiplier raises them only until they reach it.
  * - `bitsMultiplier` — scales every bits earned, at the `Run.gainBits`
  *   settle, multiplied with the `bitsGain` run stat, so reward rolls, daemon
  *   tallies and daemon hooks all scale alike.

@@ -7674,3 +7674,95 @@ orientation; 117,527 at 21:53 as batch 1 started; 339,754 at 22:16 after
 its proof; 355,942 at 22:18 at its commit; 421,678 at 22:26 after batch
 2's proof; 427,285 at 22:27 at its commit; 435,774 at 22:30, before this
 entry.
+
+### 123m, batch 3 — the encounters (2026-10-16, session 41f464e5)
+
+`encounters/selection.ts`, `encounters/sequencer.ts`, `encounters/wave.ts`
+and `enemyBudget.ts`. Their history (the random wave the authored waves
+replaced, the step that added each field and multiplier, the byte identity
+of past landings, the brief behind each rule) is out. `enemyBudget.ts` now
+says what it is: the random wave that only the fuzz arena and the
+spawn-overflow test fight, with `avgTeamLevel` the run's one read, and its
+keys and the budget's reasons pointed at `config/difficulty.ts`.
+`WaveContext`'s multipliers point there too.
+
+**Statements found false and corrected (rule 7)**, each checked against the
+code that does the thing:
+
+- `selection.ts`: the pool weights were "uniform today"; two sectors weigh
+  their procedural layout 2. A start-encounter outcome "bypasses the pool
+  entirely"; `applyForcedEncounter` takes a forced fight only at a node of
+  its kind, an event node draws `normal`, and the event loader checks the
+  id but not the kind, so a named elite or boss would be passed over (all
+  four shipped ones are `normal`). The force-select was the fuzz harness's
+  alone; it is also the URL dial and an event's named fight. The fighting
+  kinds' note left out the event node's fight. The coverage guard was a
+  "boot/editor guard" that keeps `selectEncounter` from ever throwing; no
+  editor calls it, and it covers the pool draw, not a forced encounter
+  with no layout that fits.
+- `sequencer.ts`: the repeat-the-last-wave rule was "applied uniformly at
+  every list level"; only the top level and a non-final stage waiting on
+  its condition repeat, and a nested list that runs out hands on to its
+  parent's next entry (`sequencer.test.ts`'s nested loops: 1, 2, 1, 2, 3
+  twice, then 3). The final stage "runs open-ended to encounter end"; its
+  body running out hands on as any list's does, its `until` is ignored, and
+  a non-final stage without one never moves on. `rollPick` was "one draw";
+  none when the total weight is 0.
+- `wave.ts`: a `mean` or `median` budget was "`factor × playerTeamLevel`";
+  that function reads the mean and `DECK.handSize`, where the run passes
+  its folded draw. `WaveContext` came from `Run.beginTurn`; it is
+  `Run.rollTurnWave`, which the pre-turn preview calls too. The multipliers
+  came from the `RunConfig` override or the JSON default; Escalation's
+  level scales them as well (`withEscalation`). The roster cap was
+  "`max(1, …)` like `Run.beginTurn`"; the run computes no cap. The level
+  multiplier "only bites uncapped waves" (here and in
+  `config/difficulty.ts`'s `levelBudgetMultiplier`, corrected in the same
+  commit since `WaveContext` points there): `wave.test.ts`'s own case
+  raises a capped wave's level from 10 to 12 at ×2, so it bites until the
+  cap's sum is reached. `unitLevelDelta` "was" the global cap's delta; the
+  random wave still reads it.
+- `enemyBudget.ts`: `rosterLevelSum` had two readers; only `avgTeamLevel`
+  calls it. The budget was "computed once per encounter and held fixed
+  while the wave re-rolls each turn"; only `buildEnemyTeam` calls it, and
+  the encounter loop resolves authored waves. The ranged slot "stays
+  generic `ranged`"; it fields `archer`. The bandit "shares Mercenary's
+  level-1 base"; its precision is 4 to the mercenary's 5, and its growth
+  is about half (mobility 0.14 to 0.26).
+
+**Leads, not built:**
+
+- `config/events.ts` could check that a start-encounter names a `normal`
+  encounter, so the pass-over above fails at load.
+- `wave.test.ts`'s title "only bites uncapped waves" says what its
+  assertions refute (for §126).
+- `assertSelectionCoverage` walks every hop of a sector, while both pools
+  only open with the hop, so hop 0 decides it.
+- `config/encounters.ts`'s note above `LevelCapSchema` repeats
+  `LevelCapSpec`'s doc (rule 4).
+
+Measured (`comment-length` on copies under `output/cl-123m-b3/`):
+
+| File | Comment lines | Comment words | Code lines |
+|---|---|---|---|
+| `wave.ts` | 172 → 130 | 1,375 → 1,017 | 182, unchanged |
+| `enemyBudget.ts` | 122 → 71 | 1,019 → 529 | 64, unchanged |
+| `sequencer.ts` | 91 → 90 | 700 → 687 | 162, unchanged |
+| `selection.ts` | 69 → 62 | 593 → 547 | 121, unchanged |
+
+`src/run` comment lines 4,018 → 3,917, words 34,116 → 33,209. The
+step-code ceiling 3,875 → 3,818, the 57 the four files held.
+
+Proof: `comment-strip HEAD src`, comments only, exit 0, its control named
+in all five changed files, `difficulty.ts` among them.
+
+Cost: 110,583 at 23:06 UTC by the tool's clock as the batch started,
+247,887 at 23:19 after its proof: 137k for 1,069 lines, 128 a line. The
+claims ran into `Run.ts`, `RunConfig.ts`, the sector, encounter, event and
+difficulty loaders, `World.ts` and `NodeMap.ts`.
+
+**Read** (`batch`): `git show <this commit> -- src/run/encounters/sequencer.ts
+src/run/encounters/selection.ts` against the seven rules. Wrong looks like
+the header's rule for a list that runs out disagreeing with `advanceEntry`,
+a forced encounter said to replace the draw at a node of another kind, a
+step code or history left, or a rule a change must respect cut (a level
+weight per unit, the power override's three readers).

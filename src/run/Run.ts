@@ -3942,14 +3942,13 @@ export class Run {
       this.continueAfterTurn(this.turnResult());
       return;
     }
-    // G3 — a rest-node promotion returns to the map (no recruit). The
-    // `advancePastBattle` leg is unreachable post-M1 (battle promotions are
-    // turn-boundary-only now), kept as the defensive default.
-    if (this.kindOf(this.currentNodeId) === 'rest') {
-      this.phase = 'map';
-    } else {
-      this.advancePastBattle();
+    // G3 — a rest-node promotion returns to the map (no recruit). A battle's
+    // promotion is dismissed inside its encounter (above), so no other node
+    // reaches here.
+    if (this.kindOf(this.currentNodeId) !== 'rest') {
+      throw new Error('Run.handleDismissPromotion: a promotion outside an encounter, on a node that is not a rest');
     }
+    this.phase = 'map';
   }
 
   /**

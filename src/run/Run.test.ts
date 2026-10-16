@@ -945,24 +945,6 @@ describe('Run', () => {
       expect(run.currentOffer).toHaveLength(3);
     });
 
-    it('dismissPromotion at the terminal node routes to the sector gate (not recruit)', () => {
-      const { run, bus } = freshLvl1RunWithBus(1);
-      run.currentNodeId = run.nodeMap.terminalId;
-      run.phase = 'battle';
-      let victoryCount = 0;
-      let offerCount = 0;
-      bus.on('run:victory', () => victoryCount++);
-      bus.on('recruit:offered', () => offerCount++);
-      winEncounter(bus, [{ unitId: 1, rosterIndex: 0, damageDealt: 0, xpGained: xpToNext(1) }]);
-      expect(run.phase).toBe('promotion');
-      run.dispatch({ kind: 'dismissPromotion' });
-      // 67c: the terminal win exits the promotion into the 67a gate (The
-      // Start's terminal stopped being a sink) — still never a recruit.
-      expect(run.phase).toBe('sectorCleared');
-      expect(victoryCount).toBe(0);
-      expect(offerCount).toBe(0);
-    });
-
     it('dismissPromotion is a no-op outside of promotion phase', () => {
       const { run } = freshRunWithBus(1);
       const phaseBefore = run.phase;

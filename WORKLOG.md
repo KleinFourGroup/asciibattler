@@ -6619,3 +6619,30 @@ Proof: typecheck clean; the corpus, 0 of 30 (the line was gated on a
 window, so no headless run reached it); `build-hash HEAD`: 3 of 33 built
 files differ, the main bundle (named by its hash, so listed under both
 names) and `index.html`, which names it, as predicted.
+
+### 123d — A-40, the leg nothing reaches (2026-10-16, session 854d0fbd)
+
+Step zero, a plant at the leg (`plant --at=src/run/Run.ts:3951`, the
+`advancePastBattle()` call dropped, corpus and suite): the corpus did not
+notice, 0 of 30, and the suite caught it in `Run.test.ts` alone. The
+plant tool names the file, so the same edit was made again in a worktree
+under `output/plant/` by a scratch script, which ran that file and named
+the test: of 378, one failed, "dismissPromotion at the terminal node
+routes to the sector gate (not recruit)". It is the one the audit
+suspected. It sets `phase = 'battle'` by hand and never enters the node,
+so `encounterMap` is null on a node that is not a rest. The game sets
+`battle` only inside an encounter, and a save carries `encounterMap`, so
+the game cannot build that state. The worktree was removed.
+
+So, as signed: the leg and that test are gone, and a promotion dismissed
+outside an encounter on a node that is not a rest now throws, where it
+went past the battle. The comment says why no other node reaches there.
+A real terminal win still routes to the sector gate under
+`Run.test.ts:766`'s test, and the suite's other promotion tests take
+the in-encounter path. Tests 3,740 → 3,739.
+
+Proof (sim): typecheck clean; the corpus, 0 of 30; the fuzz diff against
+`49e664b3`, PASS on both shapes; `reach-diff --from=81e9a664` of the
+suite recorded at 123b and after: nothing lost. The step-code ceiling
+4,154 → 4,151. The first after-recording failed on the ceiling again,
+which `comment-codes` run before the recording would have shown.

@@ -172,7 +172,7 @@ The cut, signed 2026-10-16 with the kickoff's five calls (WORKLOG §123,
   tests and `TriggerDispatcher.size`. Proof: sim; `reach-diff`.
 - ☑ **123c — A-39, the board's console line** (`none`). Proof: the
   corpus; `build-hash` moves at that file.
-- ☐ **123d — A-40, the leg nothing reaches** (`none`; a stop if the
+- ☑ **123d — A-40, the leg nothing reaches** (`none`; a stop if the
   game can reach the test's state). The test found by a plant; the leg
   goes with it.
 - ☐ **123e — A-25's run share** (`none`). `NodeMap.dump`,

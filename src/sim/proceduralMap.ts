@@ -264,13 +264,14 @@ export function generateProceduralMap(
 
   // The generated rows: from 2 to just above the midline when symmetric, the
   // copy filling the bottom, else from 2 to H − 3. Rows 0 and 1 and their
-  // partners get no terrain.
+  // partners get no terrain, so the passes below never reach a spawn band
+  // (rows 0 and H − 1) and need not test for one; the copy pass, which
+  // walks every row, does.
   const firstRow = 2;
   const lastGenRow = symmetric ? Math.max(firstRow, Math.floor(H / 2) - 1) : H - 3;
 
   const set = (x: number, y: number, v: Cell): void => {
     if (x < 0 || y < 0 || x >= W || y >= H) return;
-    if (isSpawn(x, y)) return;
     grid[y]![x] = v;
   };
   const wallAt = (x: number, y: number): void => {
@@ -347,7 +348,6 @@ export function generateProceduralMap(
   const deepCut = params.poolDensity * params.tiles.deepWaterFraction;
   for (let y = firstRow; y <= lastGenRow; y++) {
     for (let x = 0; x < W; x++) {
-      if (isSpawn(x, y)) continue;
       if (grid[y]![x] !== 'f') continue; // never overwrite a bar / gap / divider
       if (choke.has(keyOf(x, y))) continue; // never fill a chokepoint
       const n = noise(x, y);
@@ -373,7 +373,7 @@ export function generateProceduralMap(
   if (params.tiles.fire > 0) {
     for (let y = firstRow; y <= lastGenRow; y++) {
       for (let x = 0; x < W; x++) {
-        if (isSpawn(x, y) || choke.has(keyOf(x, y))) continue;
+        if (choke.has(keyOf(x, y))) continue;
         if (grid[y]![x] !== 'f') continue;
         if (rng.next() < params.tiles.fire) set(x, y, 'fire');
       }

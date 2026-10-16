@@ -7218,3 +7218,11 @@ batch. 123l is ☑.
   clean; the two terrain test files, 52; the corpus, 0 of 30; the fuzz
   diff against `f183ed13`, PASS on both shapes. No plant: the deleted
   lines are copies nothing reads. `src` −14.
+- **L-5 — the generator's three spawn checks.** Out of `set`, the noise
+  pass and the fire scatter; the row bounds' comment now says the passes
+  never reach a spawn band and that the copy pass, which walks every row,
+  keeps its test. Proof: typecheck clean; the terrain tests, 52; the
+  corpus, 0 of 30; the fuzz diff against `6fc81dcc`, PASS on both
+  shapes. No plant: what is shown is that the checks never fired, which
+  the unchanged proofs show. `src` ±0 (+4 −4): three checks out, the
+  reason in.

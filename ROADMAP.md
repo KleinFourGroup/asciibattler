@@ -203,7 +203,7 @@ The cut, signed 2026-10-16 with the kickoff's five calls (WORKLOG §123,
   - ☑ **L-7 — the `team` loss cause** (`none`). Proof: sim.
   - ☑ **L-4 — `GeneratedTerrain`'s three tile arrays** (`none`). Proof:
     sim.
-  - ☐ **L-5 — the generator's three spawn checks** (`none`). Proof:
+  - ☑ **L-5 — the generator's three spawn checks** (`none`). Proof:
     sim.
   - ☐ **L-2 — `advance`'s leap branch; `maxCells` to `leapLanding`**
     (`none`). Proof: sim; `reach-diff` over the six.

@@ -6013,3 +6013,42 @@ Hand-off at 396k, before B-04's trial.
    every step (the corpus in 25 s, the fuzz diff in under a minute); and
    the question on call 4, which showed the call was about the seam and
    not the field. I'd want all three again.
+
+## 2026-10-16 — session b9cfc3b3 (§123: 123h to 123l and five of the re-skim's deletions; started by the phase's driver session)
+
+1. *Missing from the orientation.* Little. The driver's notes covered
+   the traps I met (the ceiling before a recording, plants in worktrees,
+   `cd`). Two things step zero found that the census row could have
+   carried: B-06 put the shuffle in `sampling.ts`, whose header promises
+   one draw per function, and B-10's heal-to-cap repeat was two one-line
+   sites, so a helper could only add lines. `reach-record` wants the
+   proof id `npm-test`, not `suite` (one call, as the session before).
+2. *Norms in conflict.* The next-step box against CLAUDE.md's rule that
+   what the user must read exactly goes in the final message: I closed
+   the box without a question and put the rows in the closing message.
+   And I bent the driver's note on scripts: four node scripts with `\n`
+   in their strings went through quoted heredocs. Every anchor matched
+   and I read each diff back; nothing was mangled, but the note's way
+   was the safer one.
+3. *Pulled to claim more.* Yes, in numbers and in one phrase, again.
+   "Four tests" that six were; two line ranges off by one; `src` −15
+   for −14; and "generateTerrain writes them twice", read off a `refs`
+   column that counts writes without naming the writer. All were caught
+   on read-back before their commits. One note ("the deleted note's
+   H5") is an inference: it is the only coded comment I deleted from
+   that file.
+4. *Wasted.* About fifteen minutes of wall clock on a plant that hung
+   the suite (filed); one `reach-record` with the wrong proof id; 123j's
+   part (b), built and reverted, which cost little and was the bar
+   working.
+5. *For the next session.* WORKLOG "The hand-off after L-5".
+6. *Room.* Yes. The user's "elaborate on 2,3,4" got a turn of its own
+   before any build, as the standing decision has it; L-1's sign read as
+   a sign of a lean that was itself a question, and I asked it once
+   rather than deleting. The context line decided where I stopped, as
+   guidance; L-2 fits the next session better than the end of this one.
+   No wish to pause or stop was noticed.
+7. *What helped.* The bar written before the code, which made keep or
+   revert a reading rather than a judgement in the moment (123j's (b)
+   went back without deliberation); proofs fast enough for every step;
+   and the user's quick, warm signs. I'd want all three again.

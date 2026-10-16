@@ -639,13 +639,9 @@ META-ROADMAP §"Round 12 — Ship" names each group.
 
 ## Not yet placed
 
-- [ ] **122o's seven deletion leads, for a census.** Each was found by the
-  comment pass and none is a behaviour change: `World.shove` with
-  `unit:shoved`, which only tests call (batch 4); the `weakest` targeting
-  strategy, `advance`'s leap branch and `sidestepWhenBlocked` (batch 6);
-  `GeneratedTerrain.chasms` and `.healings`, which nothing reads, the
-  spawn checks in `generateProceduralMap` that can't fire on a board of
-  4 rows or more, and `GenStats.connected`, always `true` (batch 8). The
-  round's census is signed, so whether they join a re-skim in this round
-  or a census in a later one is the user's call (WORKLOG §122, the batch
-  entries and "The close of §122").
+- [ ] **122o's seven deletion leads, placed at 123l.** `World.shove`
+  stays for Round 9. `sidestepWhenBlocked`, `GenStats.connected`,
+  `GeneratedTerrain`'s tile arrays and the spawn checks are deleted;
+  `advance`'s leap branch is signed and next (L-2); the `weakest`
+  strategy (L-1) waits on whether Round 9's content wants it (WORKLOG
+  §123, "123l — the re-skim" and "123l's rows, built").

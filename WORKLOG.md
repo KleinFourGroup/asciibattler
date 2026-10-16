@@ -7226,3 +7226,37 @@ batch. 123l is ☑.
   shapes. No plant: what is shown is that the checks never fired, which
   the unchanged proofs show. `src` ±0 (+4 −4): three checks out, the
   reason in.
+
+### The hand-off after L-5 (2026-10-16, session b9cfc3b3)
+
+123h to 123l are ☑, and five of 123l's six signed deletions are built
+(L-3, L-6, L-7, L-4, L-5); nothing is ◐. Next, for a fresh session:
+
+- **L-2**, signed with (b): delete `advance`'s leap branch in
+  `stepAlongRoute` with its doc bullet, the file header's sentence and
+  `MovementIntent.maxCells`'s doc; make the reach `leapLanding`'s own
+  argument, so the field leaves the intent, the three callers drop
+  `maxCells: 1` (`MovementBehavior.ts:125`, `positioning.ts:219`, :252)
+  and `propose.ts:149` passes `def.rangeCells`; fold `walkAlongPath`
+  into `leapLanding`, its one caller left; delete the four leap tests in
+  `movement.test.ts` (the `maxCells > 1` block's three and the water
+  block's leap test). Proof: the corpus, the fuzz diff, a plant in
+  `leapLanding` (the rogue's dash runs it).
+- Then `reach-record npm-test --dir=output/reach-123l/after` and
+  `reach-diff output/reach-123l/a5cf0104 output/reach-123l/after
+  --from=a5cf0104`, which covers the six; the before-reading is of
+  `a5cf0104`, green, 96 s. Run `comment-codes --record` first if a
+  deleted comment held a step code.
+- L-1 waits on the user's answer (does Round 9's content want a policy
+  like `weakest`?). Then 123m, the comment pass, in fresh sessions.
+- Two plant facts: a line holding a bare literal admits no edit, and a
+  plant that makes the suite hang is counted caught only after 900 s,
+  which outruns the Bash tool's 600 s foreground limit.
+
+Readings by the tool's clock (UTC): 107,914 at 15:45 after the
+orientation; 205,680 at 15:49 after 123h's step zero; 285,907 at 16:01
+and 315,943 at 16:07, before and after 123h's commit; 332,595 at 16:12
+before 123i's; 386,598 at 16:58 before 123j's last; 400,021 at 17:07
+after 123k's; 446,136 at 17:17 at the rows; 481,445 at 17:57 at the
+sign; 496,937 at 18:11 after L-6; 501,174 at 18:16 after L-7; 510,997
+at 18:21 after L-4; 518,991 at 18:27, at this entry.

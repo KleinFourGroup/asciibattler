@@ -2902,7 +2902,6 @@ export class Run {
     const enemyPool = this.enemyPoolOf(encounter);
     const encounterState: EncounterState = {
       poolFraction: enemyPool > 0 ? this.enemyHealth / enemyPool : 0,
-      turn: this.turnIndex + 1,
     };
     const { spec, cursor } = waveForTurn(encounter.waves, this.waveCursor, encounterState, battleRng);
     const waveContext: WaveContext = {

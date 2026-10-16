@@ -6668,3 +6668,17 @@ one export each; these two stood as used, by those readers.)
 Proof (export): typecheck clean; `build-hash HEAD`, the same bytes, 32
 files; `reach-diff --from=42179130` of the suite recorded at 123d and
 after: nothing lost. The ceiling unchanged at 4,151.
+
+### 123f — `EncounterState.turn` (2026-10-16, session 854d0fbd)
+
+The field and its comment are gone from `sequencer.ts`, with its writer
+in `Run.rollTurnWave`, the encounter editor's preview
+(`{ poolFraction }`; its loop's turn still labels the rows) and 16 test
+lines that put `turn:` in a state. `waveForTurn`'s doc says the state
+carries the pool. The registry's comment, which calls itself the seam
+for a `turnAtOrAbove`, is the re-skim's to weigh with the registry. A
+script counted every anchor before it wrote a file.
+
+Proof (sim): typecheck clean, `tools` included, so an object literal
+still naming `turn` would have been refused; the corpus, 0 of 30; the
+fuzz diff against `09e4f771`, PASS on both shapes. No test was deleted.

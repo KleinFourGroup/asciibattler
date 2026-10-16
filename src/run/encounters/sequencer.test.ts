@@ -22,7 +22,7 @@ const W = (tag: number): WaveEntry => ({
 });
 const tagOf = (spec: WaveSpec): number => (spec.count.kind === 'fixed' ? spec.count.value : -1);
 
-const FULL: EncounterState = { poolFraction: 1, turn: 1 };
+const FULL: EncounterState = { poolFraction: 1 };
 
 /** Drive `turns` turns from a fresh cursor. `state` may be a constant or a
  *  per-turn function (1-based turn) — for stage-condition tests. */
@@ -140,7 +140,7 @@ describe('waveForTurn — stage blocks (boss phases)', () => {
   it('advances on the turn AFTER the pool crosses — not before', () => {
     // Pool: 1.0, 0.7 (still > 0.5), 0.4 (crossed), 0.4, 0.4.
     const pool = [1.0, 0.7, 0.4, 0.4, 0.4];
-    const out = drive(bossList, 5, { state: (t) => ({ poolFraction: pool[t - 1]!, turn: t }) });
+    const out = drive(bossList, 5, { state: (t) => ({ poolFraction: pool[t - 1]! }) });
     // Stage 0 (wave 1) holds while pool > 0.5 (incl. repeat-last on turn 2);
     // flips to stage 1 (wave 2) on turn 3, the turn after crossing; then final.
     expect(out).toEqual([1, 1, 2, 2, 2]);
@@ -148,7 +148,7 @@ describe('waveForTurn — stage blocks (boss phases)', () => {
 
   it('the final stage runs open-ended to encounter end', () => {
     const pool = [0.4, 0.4, 0.4, 0.4, 0.4, 0.4]; // crosses immediately
-    const out = drive(bossList, 6, { state: (t) => ({ poolFraction: pool[t - 1]!, turn: t }) });
+    const out = drive(bossList, 6, { state: (t) => ({ poolFraction: pool[t - 1]! }) });
     // Turn 1 emits stage 0's wave (no boundary check yet); turn 2 onward = stage 1.
     expect(out).toEqual([1, 2, 2, 2, 2, 2]);
   });
@@ -165,7 +165,7 @@ describe('waveForTurn — stage blocks (boss phases)', () => {
         ],
       },
     ];
-    expect(drive(list, 5, { state: { poolFraction: 1, turn: 1 } })).toEqual([1, 2, 2, 2, 2]);
+    expect(drive(list, 5, { state: { poolFraction: 1 } })).toEqual([1, 2, 2, 2, 2]);
   });
 
   it('NESTS — a stage body can be a loop', () => {
@@ -179,7 +179,7 @@ describe('waveForTurn — stage blocks (boss phases)', () => {
       },
     ];
     const pool = [1.0, 1.0, 1.0, 0.4, 0.4];
-    const out = drive(list, 5, { state: (t) => ({ poolFraction: pool[t - 1]!, turn: t }) });
+    const out = drive(list, 5, { state: (t) => ({ poolFraction: pool[t - 1]! }) });
     expect(out).toEqual([1, 2, 1, 3, 3]); // looping 1,2,1 then the condition flips to 3
   });
 });
@@ -196,7 +196,7 @@ describe('waveForTurn — mid-encounter resume', () => {
         ],
       },
     ];
-    const state: EncounterState = { poolFraction: 1, turn: 1 };
+    const state: EncounterState = { poolFraction: 1 };
 
     // Reference run of 8 turns, single RNG stream.
     const ref = drive(list, 8, { seed: 77 });
@@ -231,8 +231,8 @@ describe('waveForTurn — mid-encounter resume', () => {
 describe('conditionMet', () => {
   it('enemyPoolAtOrBelow is true at or below the fraction', () => {
     const c = { kind: 'enemyPoolAtOrBelow', fraction: 0.5 } as const;
-    expect(conditionMet(c, { poolFraction: 0.5, turn: 1 })).toBe(true);
-    expect(conditionMet(c, { poolFraction: 0.49, turn: 1 })).toBe(true);
-    expect(conditionMet(c, { poolFraction: 0.51, turn: 1 })).toBe(false);
+    expect(conditionMet(c, { poolFraction: 0.5 })).toBe(true);
+    expect(conditionMet(c, { poolFraction: 0.49 })).toBe(true);
+    expect(conditionMet(c, { poolFraction: 0.51 })).toBe(false);
   });
 });

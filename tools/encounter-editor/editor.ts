@@ -676,7 +676,7 @@ function refreshPreview(): void {
   try {
     for (let turn = 1; turn <= previewTurns; turn++) {
       const battleRng = master.fork();
-      const state: EncounterState = { poolFraction, turn };
+      const state: EncounterState = { poolFraction };
       const stepped = waveForTurn(e.waves, cursor, state, battleRng);
       cursor = stepped.cursor;
       const team = resolveWave(stepped.spec, ctx, battleRng);

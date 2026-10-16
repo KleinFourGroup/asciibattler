@@ -78,8 +78,6 @@ export interface Stage {
 export interface EncounterState {
   /** Enemy pool remaining as a fraction of the encounter's max pool, in [0, 1]. */
   readonly poolFraction: number;
-  /** 1-based turn index (reserved for a future `turnAtOrAbove` condition). */
-  readonly turn: number;
 }
 
 /** A stage-advance predicate. Ships ONE variant; the union + registry are the
@@ -126,7 +124,7 @@ export type WaveCursor = ListCursor;
 /**
  * Resolve the wave for one turn. Pass `cursor = null` on the encounter's first
  * turn (positions at the first leaf); thereafter pass back the returned cursor.
- * `state` carries the live pool/turn for stage conditions; `rng` rolls picks.
+ * `state` carries the live pool for stage conditions; `rng` rolls picks.
  *
  * Returns the `WaveSpec` to resolve (via `resolveWave`, U1) plus the cursor to
  * persist for the next turn.

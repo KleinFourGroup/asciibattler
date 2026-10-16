@@ -69,29 +69,29 @@ describe('the bandit king — the sequencer escalates as the pool drops', () => 
     const rng = new RNG(1);
 
     // Turn 1: full pool → phase 1 (the honour guard).
-    let r = waveForTurn(boss!.waves, null, { poolFraction: 1, turn: 1 }, rng);
+    let r = waveForTurn(boss!.waves, null, { poolFraction: 1 }, rng);
     expect(r.spec.units.map((u) => u.archetype)).toEqual(p1);
 
     // Pool crosses the first threshold → phase 2 on the next turn (the berserkers).
-    r = waveForTurn(boss!.waves, r.cursor, { poolFraction: 0.5, turn: 2 }, rng);
+    r = waveForTurn(boss!.waves, r.cursor, { poolFraction: 0.5 }, rng);
     expect(r.spec.units.map((u) => u.archetype)).toEqual(p2);
 
     // Pool crosses the second threshold → phase 3, the open-ended last stand.
-    r = waveForTurn(boss!.waves, r.cursor, { poolFraction: 0.2, turn: 3 }, rng);
+    r = waveForTurn(boss!.waves, r.cursor, { poolFraction: 0.2 }, rng);
     expect(r.spec.units.map((u) => u.archetype)).toEqual(p3);
 
     // The final phase repeats (last-wave-repeats) for the rest of the fight.
-    r = waveForTurn(boss!.waves, r.cursor, { poolFraction: 0.05, turn: 4 }, rng);
+    r = waveForTurn(boss!.waves, r.cursor, { poolFraction: 0.05 }, rng);
     expect(r.spec.units.map((u) => u.archetype)).toEqual(p3);
   });
 
   it('holds an early phase while the pool stays above its threshold', () => {
     const [p1] = phaseArchetypes(boss!.waves);
     const rng = new RNG(2);
-    let r = waveForTurn(boss!.waves, null, { poolFraction: 1, turn: 1 }, rng);
+    let r = waveForTurn(boss!.waves, null, { poolFraction: 1 }, rng);
     expect(r.spec.units.map((u) => u.archetype)).toEqual(p1);
     // Pool barely dented (above the first threshold) → still phase 1.
-    r = waveForTurn(boss!.waves, r.cursor, { poolFraction: 0.9, turn: 2 }, rng);
+    r = waveForTurn(boss!.waves, r.cursor, { poolFraction: 0.9 }, rng);
     expect(r.spec.units.map((u) => u.archetype)).toEqual(p1);
   });
 });

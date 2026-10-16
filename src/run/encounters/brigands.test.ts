@@ -57,7 +57,7 @@ describe('brigands — resolves to its own authored wave-spec', () => {
   // from hardcoded constants or difficulty.json.
   const team = roster([5, 5, 5, 5, 5]);
   const handSize = Math.min(team.length, DECK.handSize);
-  const { spec } = waveForTurn(brigands!.waves, null, { poolFraction: 1, turn: 1 }, new RNG(1));
+  const { spec } = waveForTurn(brigands!.waves, null, { poolFraction: 1 }, new RNG(1));
 
   it('fields count.factor × hand bodies of the authored archetypes', () => {
     const expectedCount =

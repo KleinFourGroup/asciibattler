@@ -7209,3 +7209,12 @@ batch. 123l is ☑.
   against `437ca00f`, PASS on both shapes. The HUD is reached by no
   headless proof; the line it changed can only have read `unit` since
   123h. `src` −7.
+- **L-4 — `GeneratedTerrain`'s three tile arrays.** `chasms`, `fires`
+  and `healings` with their docs, the layout path's copies and the
+  procedural path's empty lists; `tileGrid` gains the doc line on which
+  tiles it holds and where fire comes from. `terrainGen.test.ts`'s
+  volcanic check counts fire tiles on the grid. `proceduralMap.ts`'s doc
+  of its result says a procedural board gets no rubble. Proof: typecheck
+  clean; the two terrain test files, 52; the corpus, 0 of 30; the fuzz
+  diff against `f183ed13`, PASS on both shapes. No plant: the deleted
+  lines are copies nothing reads. `src` −14.

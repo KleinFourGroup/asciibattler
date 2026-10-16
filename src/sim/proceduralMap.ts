@@ -127,9 +127,9 @@ interface GenStats {
 
 /**
  * The generator's output: the fields `terrainGen` puts into a
- * `GeneratedTerrain` (which gives a procedural board empty chasms, healing
- * tiles and rubble), and two diagnostics that the tests and the map
- * prototype (`tools/mapgen-prototype/`) read, `chokeCells` and `stats`.
+ * `GeneratedTerrain` (which gives a procedural board no rubble), and two
+ * diagnostics that the tests and the map prototype
+ * (`tools/mapgen-prototype/`) read, `chokeCells` and `stats`.
  */
 export interface ProceduralMapResult {
   tileGrid: TileGrid;

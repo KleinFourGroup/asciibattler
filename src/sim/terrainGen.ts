@@ -57,23 +57,15 @@ type RubbleCoord = GridCoord & {
 };
 
 export interface GeneratedTerrain {
+  /** Every tile's kind, chasm, fire and healing tiles among them: a layout
+   *  declares them, and a procedural board scatters fire when its theme
+   *  has it. Standing on fire sustains burn (`World.applyTileStatuses`). */
   readonly tileGrid: TileGrid;
   readonly walls: readonly NeutralCoord[];
   /** Neutral obstacles that block movement and not sight (the def's
    *  `blocksLineOfSight: false`). A procedural board places them only as
    *  windows in its structural walls; a layout's may carry `hp`. */
   readonly halfCovers: readonly NeutralCoord[];
-  /** The chasm cells, also on `tileGrid`: impassable, and no block to
-   *  sight. No code reads this array; the World takes the grid. Empty on a
-   *  procedural board. */
-  readonly chasms: readonly GridCoord[];
-  /** The fire cells, also on `tileGrid`; standing on one sustains burn
-   *  (`World.applyTileStatuses`). A layout declares them; a procedural
-   *  board scatters them when its theme has `fire`. */
-  readonly fires: readonly GridCoord[];
-  /** The healing cells, also on `tileGrid`; standing on one sustains
-   *  rejuvenate. No code reads this array. Empty on a procedural board. */
-  readonly healings: readonly GridCoord[];
   /** Destructible rubble, spawned as neutrals with an N×N footprint
    *  (`battleSetup.spawnLayoutNeutrals`). Empty on a procedural board. */
   readonly rubble: readonly RubbleCoord[];
@@ -165,9 +157,6 @@ export function generateFromLayout(
     tileGrid,
     walls: layout.walls.slice(),
     halfCovers: layout.halfCovers ? layout.halfCovers.slice() : [],
-    chasms: layout.chasms ? layout.chasms.slice() : [],
-    fires: layout.fires ? layout.fires.slice() : [],
-    healings: layout.healings ? layout.healings.slice() : [],
     rubble: layout.rubble ? layout.rubble.slice() : [],
     campSpawns: layout.campSpawns ? layout.campSpawns.slice() : [],
     camps: layout.camps ? layout.camps.slice() : [],
@@ -189,7 +178,7 @@ function generateProcedural(
   theme: Theme,
 ): GeneratedTerrain {
   const params = sampleProceduralParams(rng, config.procedural, theme);
-  const { tileGrid, walls, halfCovers, fires, campSpawns, spawnRegions } = generateProceduralMap(
+  const { tileGrid, walls, halfCovers, campSpawns, spawnRegions } = generateProceduralMap(
     rng,
     gridW,
     gridH,
@@ -204,9 +193,6 @@ function generateProcedural(
     tileGrid,
     walls,
     halfCovers,
-    chasms: [],
-    fires,
-    healings: [],
     rubble: [],
     campSpawns,
     camps: campPool,

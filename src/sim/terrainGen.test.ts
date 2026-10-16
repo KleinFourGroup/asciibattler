@@ -212,8 +212,11 @@ describe('§81a — per-theme procedural tiles (through generateTerrain)', () =>
     const fireMax = TERRAIN.procedural.themeTiles.volcanic.fire!.max;
     for (let seed = 0; seed < SEEDS; seed++) {
       const t = generateTerrain(new RNG(seed), G, G, BASE, null, 'volcanic');
-      expect(t.fires.length).toBeLessThanOrEqual(Math.ceil(G * G * fireMax * 2));
-      for (const f of t.fires) expect(t.tileGrid.kindAt(f)).toBe('fire');
+      let fires = 0;
+      for (let y = 0; y < G; y++) {
+        for (let x = 0; x < G; x++) if (t.tileGrid.kindAt({ x, y }) === 'fire') fires++;
+      }
+      expect(fires).toBeLessThanOrEqual(Math.ceil(G * G * fireMax * 2));
     }
   });
 

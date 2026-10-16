@@ -1,37 +1,27 @@
 /**
- * Per-encounter terrain generator. Given an encounter's RNG fork, the
- * arena dimensions, and the terrain config, returns a freshly-built
- * `GeneratedTerrain` — TileGrid + wall coords + spawn regions. The
- * caller (battle setup) is responsible for turning the walls into
- * neutral-team `Unit`s via `spawnWall` and for drawing player + enemy
- * regions from the returned `spawnRegions`. That seam keeps the
- * generator independent of World construction and easy to test in
- * isolation.
+ * An encounter's terrain: the tile grid, the scenery's coords and the spawn
+ * regions (`GeneratedTerrain`). A null `layoutId` builds a procedural board
+ * (`proceduralMap.ts`); an id resolves that hand-authored layout
+ * (`layouts.ts`). The run's encounter selection rolls which, from the
+ * sector's weighted layout pool (`src/run/encounters/selection.ts`).
  *
- * Hybrid model: when `layoutId` is null the generator uses the
- * procedural path (the M6 crossbar + divider + noise blend in
- * `src/sim/proceduralMap.ts`); when non-null it dispatches to the
- * hand-authored library at `src/sim/layouts.ts`. `Run` rolls the split
- * at encounter creation time, so a given playthrough sees a mix of
- * procedural variety and tactically-tuned set pieces.
+ * It returns coords, not units: `battleSetup.applyTerrain` copies the tiles
+ * onto the World, spawns the scenery as neutral units
+ * (`spawnLayoutNeutrals`) and rolls the camps (`spawnCamps`), so the
+ * generator needs no World and is tested alone.
  *
- * **D3 — rectangular arenas.** The generator takes `(gridW, gridH)`
- * independently. Procedural builds its structure on any rectangle in the
- * configured size range; the layout path reads the layout's own
- * `gridW` × `gridH` and refuses if the caller's dimensions disagree.
+ * The width and height are separate arguments. The procedural path builds
+ * on any rectangle (a run rolls a square side, `Run.ts`); the layout path
+ * throws unless they are the layout's own `gridW` and `gridH`.
  *
- * **D5 — explicit spawn regions.** Every encounter now carries
- * `SpawnRegion[]` (each region is exactly 8 tiles + an availability
- * flag). Hand-authored layouts declare their regions in JSON;
- * procedural emits two `'both'`-availability bands on the top and
- * bottom edges of the arena. Walls + water mask against the union of
- * all spawn tiles instead of the pre-D5 `reservedSpawnRows` array
- * (retired in D5.D.A along with the editor's stripe overlay).
+ * A procedural board has two spawn regions, `'both'`-available bands of
+ * `SPAWN_REGION_TILE_COUNT` cells centred on the top and bottom rows; a
+ * layout declares its own.
  *
- * Determinism contract: same `(rng state, gridW, gridH, config,
- * layoutId)` → identical `GeneratedTerrain`. Tests rely on this so the
- * fuzz harness can replay any seed; battleSetup feeds in a per-
- * encounter RNG fork so terrain doesn't perturb the battle RNG stream.
+ * Deterministic: the same rng state, size, config, `layoutId` and theme
+ * give the same terrain. `applyTerrain` passes
+ * `deriveRng(terrainSeed, 'terrain')`, a stream of its own, so the terrain
+ * draws nothing from the battle's.
  */
 
 import { TileGrid } from './TileGrid';
@@ -48,20 +38,18 @@ import {
 import { sampleProceduralParams, generateProceduralMap } from './proceduralMap';
 
 /**
- * §40c — a wall / half-cover placement carrying an OPTIONAL per-instance `hp`.
- * Present ⇒ destructible (spawned as the `wall_destructible` / `half_cover_destructible`
- * neutral def); absent ⇒ the indestructible default. A bare `GridCoord` (the procedural
- * path emits only these) is assignable — `hp` is optional — so procedural obstacles stay
- * indestructible with no code change.
+ * A wall or half-cover placement. With `hp` it spawns destructible, as the
+ * `wall_destructible` or `half_cover_destructible` def with that pool;
+ * without, the indestructible default. The procedural path emits bare
+ * coords, so its walls and half cover are indestructible.
  */
 type NeutralCoord = GridCoord & { readonly hp?: number | undefined };
 
 /**
- * §40d — a rubble placement: a footprint CORNER plus an optional `size` (1..3,
- * default 1 — picks the `rubble_1x1/2x2/3x3` def) and an optional per-instance `hp`
- * override. Unlike a wall (`hp`-presence ⇒ destructible), rubble is always
- * destructible; `hp` only tunes the pool. `battleSetup.applyTerrain` spawns each
- * via `spawnRubble`. Hand-authored-only (procedural emits none).
+ * A rubble placement: its footprint's min corner, an optional `size` (1 to
+ * 3, default 1, which picks the `rubble_1x1`, `2x2` or `3x3` def) and an
+ * optional `hp` for that placement. Rubble is always destructible, so `hp`
+ * only tunes the pool. Layouts only; the procedural path places none.
  */
 type RubbleCoord = GridCoord & {
   readonly size?: number | undefined;
@@ -71,41 +59,31 @@ type RubbleCoord = GridCoord & {
 export interface GeneratedTerrain {
   readonly tileGrid: TileGrid;
   readonly walls: readonly NeutralCoord[];
-  /** D6: neutral-team LOS-transparent obstacles. Procedural emits these
-   *  as the noise field's half-cover share (M6); hand-authored layouts
-   *  may declare any count. Pathfinding blocks through them;
-   *  AttackBehavior shoots over. §40c: a hand-authored coord may carry `hp`
-   *  (destructible cover); procedural emits bare coords (indestructible). */
+  /** Neutral obstacles that block movement and not sight (the def's
+   *  `blocksLineOfSight: false`). A procedural board places them only as
+   *  windows in its structural walls; a layout's may carry `hp`. */
   readonly halfCovers: readonly NeutralCoord[];
-  /** D7.A: impassable tile (Infinity pathfinding cost, LOS-transparent).
-   *  Stored on `tileGrid` itself as `kind === 'chasm'`; this array is a
-   *  parallel readout so callers (renderer, editor, tests) can iterate
-   *  chasm coords without re-walking the grid. Empty for procedural —
-   *  hand-authored-only in D7. */
+  /** The chasm cells, also on `tileGrid`: impassable, and no block to
+   *  sight. No code reads this array; the World takes the grid. Empty on a
+   *  procedural board. */
   readonly chasms: readonly GridCoord[];
-  /** D7.B: fire tile coords (per-tick chip damage to standing units).
-   *  Stored on `tileGrid` as `kind === 'fire'`; parallel readout same
-   *  pattern as chasm. §81a: no longer hand-authored-only — the volcanic
-   *  theme's procedural scatter emits these too. */
+  /** The fire cells, also on `tileGrid`; standing on one sustains burn
+   *  (`World.applyTileStatuses`). A layout declares them; a procedural
+   *  board scatters them when its theme has `fire`. */
   readonly fires: readonly GridCoord[];
-  /** D7.B: healing tile coords (per-tick heal to standing units).
-   *  Stored on `tileGrid` as `kind === 'healing'`; parallel readout
-   *  same pattern as chasm. Empty for procedural. */
+  /** The healing cells, also on `tileGrid`; standing on one sustains
+   *  rejuvenate. No code reads this array. Empty on a procedural board. */
   readonly healings: readonly GridCoord[];
-  /** §40d: destructible rubble obstacles (neutral `UnitDef`s with a footprint +
-   *  HP). Each is spawned as a multi-tile neutral by `battleSetup.applyTerrain`.
-   *  Empty for procedural — hand-authored-only, like chasm/fire/healing. */
+  /** Destructible rubble, spawned as neutrals with an N×N footprint
+   *  (`battleSetup.spawnLayoutNeutrals`). Empty on a procedural board. */
   readonly rubble: readonly RubbleCoord[];
-  /** §75c: single-tile camp drip points (the portal-drip model). Consumed by
-   *  `battleSetup.spawnCamps` together with `camps` below. §81b: no longer
-   *  hand-authored-only — procedural boards roll sites from the
-   *  `procedural.camps` envelope. */
+  /** Single-tile camp spawn points; each rolls one camp from `camps`
+   *  (`battleSetup.spawnCamps`). A layout declares them; a procedural board
+   *  rolls sites from `procedural.camps`. */
   readonly campSpawns: readonly GridCoord[];
-  /** §75c: the weighted camp list (each spawn tile rolls one entry).
-   *  Non-empty whenever `campSpawns` is (the layouts.ts schema enforces the
-   *  pairing on the authored side; the §81b sampler enforces it procedurally
-   *  — an empty theme pool forces zero sites). §81b: procedural boards carry
-   *  the THEME's pool. */
+  /** The weighted camp list the camp spawns roll from. Non-empty whenever
+   *  `campSpawns` is: the layout schema refuses spawns with no camps, and a
+   *  procedural board rolls no site when its theme's pool is empty. */
   readonly camps: readonly CampRef[];
   readonly spawnRegions: readonly SpawnRegion[];
 }
@@ -116,10 +94,10 @@ export function generateTerrain(
   gridH: number,
   config: TerrainConfig,
   layoutId: string | null = null,
-  // §81a — the sector theme drives the procedural tile envelope
-  // (`themeTiles`). Ignored on the layout path (a layout carries its own
-  // theme). Defaults to the base theme so theme-agnostic callers (tests,
-  // tools) stay valid.
+  // The sector's theme picks a procedural board's tiles and camp pool
+  // (`themeTiles`, `procedural.camps.pools`); the layout path ignores it,
+  // as a layout carries its own theme. Callers with no sector (tests,
+  // tools) get `grassland`.
   theme: Theme = 'grassland',
 ): GeneratedTerrain {
   if (layoutId !== null) {
@@ -133,19 +111,16 @@ export function generateTerrain(
 }
 
 /**
- * Resolve a hand-authored layout into a `GeneratedTerrain`. Validates
- * that the caller's dimensions match the layout's own `gridW` × `gridH`;
- * a violation is a layout-authoring bug, so the dispatcher throws rather
- * than silently rescuing it (the procedural path's `ensureConnectivity`
- * wall-peel doesn't apply here — hand authored means hand verified).
+ * Resolves a hand-authored layout into a `GeneratedTerrain`. It throws when
+ * the caller's size isn't the layout's own, an authoring bug, and repairs
+ * nothing: the procedural path's connectivity carve doesn't run here, as a
+ * layout's route is checked where it is authored (the editor and
+ * `layouts.test.ts`, through `layoutConnectivity.ts`). The schema refuses a
+ * spawn tile on a wall, half cover, rubble, chasm or deep water when the
+ * file loads (`src/config/layouts.ts`), so this doesn't check again.
  *
- * D5 — wall/water overlap with spawn tiles is enforced by zod at
- * module-load time (see `src/config/layouts.ts`); the generator no
- * longer re-checks it.
- *
- * Exported (§40d) so tests can resolve a hand-built `LayoutDef` fixture
- * straight to a `GeneratedTerrain` without registering it in the global
- * `LAYOUTS` catalog — the layout-resolution seam `generateTerrain` dispatches to.
+ * Exported so a test can resolve a `LayoutDef` fixture without registering
+ * it in `LAYOUTS`.
  */
 export function generateFromLayout(
   layout: LayoutDef,
@@ -171,8 +146,6 @@ export function generateFromLayout(
   if (layout.healings) {
     for (const h of layout.healings) tileGrid.setKind(h, 'healing');
   }
-  // §37f — the five §37b terrain tiles (each an optional hand-authored array,
-  // mapped to its TileKind). Mirrors the water/chasm/fire/healing loops above.
   if (layout.deepWater) {
     for (const c of layout.deepWater) tileGrid.setKind(c, 'deep_water');
   }
@@ -203,18 +176,10 @@ export function generateFromLayout(
 }
 
 /**
- * Procedural path (M6 + §81a). Samples a concrete map-parameter set from
- * the `procedural` config envelope (the theme picks its `themeTiles`
- * entry), then builds the crossbar + divider + noise blend in
- * `src/sim/proceduralMap.ts`. Both stages consume the caller's
- * per-encounter RNG fork in sequence, so the whole thing stays
- * deterministic per `(rng state, gridW, gridH, config, theme)`. (The
- * legacy C1a scatter knobs were removed at §81a.)
- *
- * D7: procedural is hand-authored-only for chasm / healing — empty
- * arrays keep the `GeneratedTerrain` shape stable. §81a: `fires` is now
- * procedural too (the volcanic sparse scatter), alongside the §37 tiles
- * carried on `tileGrid`. Camps land at §81b.
+ * The procedural path: samples the board's knobs from the `procedural`
+ * envelope and the theme's `themeTiles` entry, then builds the board
+ * (`proceduralMap.ts`). Both stages draw on the caller's stream in turn. A
+ * procedural board has no chasm, healing tile or rubble.
  */
 function generateProcedural(
   rng: RNG,
@@ -230,10 +195,10 @@ function generateProcedural(
     gridH,
     params,
   );
-  // §81b — pair the rolled sites with the THEME's pool (the layout
-  // `campSpawns`/`camps` contract: a pool rides only when sites exist, and
-  // sites can only roll when the pool is non-empty — the sampler forces
-  // count 0 on an empty pool). Downstream (`spawnCamps`) is unchanged.
+  // The rolled sites take the theme's pool, the pairing a layout's
+  // `campSpawns` and `camps` hold: the pool goes only with a site, and no
+  // site rolls on an empty pool (`sampleProceduralParams` sets the count
+  // to 0).
   const campPool = campSpawns.length > 0 ? config.procedural.camps.pools[theme] : [];
   return {
     tileGrid,

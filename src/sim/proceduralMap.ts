@@ -1,43 +1,40 @@
 /**
- * Procedural map generation (M6 rework). Ported from the eyeball-tuned
- * `tools/mapgen-prototype/generator.ts` — the crossbar + divider + noise blend,
- * built around our top/bottom-clash topology:
+ * The procedural board: crossbars, dividers and a noise blend, built for a
+ * clash between the top and bottom rows, where the spawn bands are.
  *
- *   - CROSSBARS are wavy horizontal wall lines ACROSS the advance axis, each
- *     with a fordable GAP. They funnel the vertical advance into a chokepoint;
- *     a watered gap is an M6 bog-down ford. A vertical bridge at each waver step
- *     keeps a wavy bar a true barrier (no diagonal leak). A `windowChance` of
- *     each wall cell is a half-cover WINDOW — shoot-through, movement-blocking.
- *   - DIVIDERS are vertical partial walls: lateral structure / alternate routes
- *     (windowed the same way).
- *   - NOISE (one value-noise field) textures the open ground: high ground →
- *     SOLID cover clumps (LOS + movement blockers), low ground → organic water
- *     pools. (Half-cover is structural — it lives only in the walls above.)
- *   - §81a THEME TILES: the sector theme's tile envelope layers onto the same
- *     pass — the lowest pool slice deepens to impassable `deep_water`, the
- *     ground patches (hills/ice/sand/mud) claim open floor off their own noise
- *     fields, and volcanic scatters sparse `fire` cells (never on a ford).
- *     Deep water counts against the wall cap and both guards carve it to
- *     shallow (a drained breach), so a swampy roll can't seal the crossing.
- *   - SYMMETRY ('point' = 180° rotation, offsetting the partnered gap so
- *     chokepoints don't stack; 'mirror' = reflect across the midline; 'none' =
- *     free) keeps the clash fair.
+ * - Crossbars are wavy wall lines across the advance, each with gaps, so
+ *   the advance funnels through chokepoints. A gap is shallow water (a
+ *   ford, slow to cross) at `fordChance`, else floor. Where a bar steps
+ *   between rows the column between is walled too, so a wavy bar leaves no
+ *   diagonal leak. A `windowChance` share of the wall cells are half-cover
+ *   windows, which block movement and let shots through.
+ * - Dividers are vertical partial walls, windowed the same way: lateral
+ *   structure and alternate routes.
+ * - One value-noise field textures the open ground: its high end becomes
+ *   solid cover (walls, blocking sight and movement), its low end shallow
+ *   pools. Half cover appears only as the windows.
+ * - The theme's tiles layer onto the same pass: the lowest slice of the
+ *   pools becomes impassable `deep_water`, the ground patches (hills, ice,
+ *   sand, mud) claim open floor off fields of their own, and a theme with
+ *   `fire` scatters fire cells off the crossings. Deep water counts against
+ *   the obstacle cap, and the cap and the connectivity guard both turn it
+ *   into shallow water, so a wet roll can't seal the crossing.
+ * - Symmetry keeps the clash fair: `point` is a 180° rotation, which puts a
+ *   gap's partner at the opposite column so the chokepoints don't line up;
+ *   `mirror` reflects across the horizontal midline; `none` is free.
  *
- * Two stages:
- *   1. `sampleProceduralParams` draws a concrete `ResolvedMapParams` from the
- *      designer-set ranges/weights in `config/terrain.json#procedural`, so maps
- *      vary seed-to-seed within the envelope.
- *   2. `generateProceduralMap` builds the map from those params + the forked
- *      encounter `RNG`.
+ * Two stages: `sampleProceduralParams` draws a `ResolvedMapParams` from the
+ * `procedural` envelope in `config/terrain.json`, and
+ * `generateProceduralMap` builds the board from it and the encounter's
+ * stream. The same rng state, size and params give the same board.
  *
- * Determinism: same `(rng state, gridW, gridH, params)` → identical map. Walls
- * are neutral UNITS in the sim (not a tile kind), so they're returned as coords
- * for the caller to `spawnWall`; half-cover likewise. The connectivity guard
- * carves a watered breach if the gaps ever seal, so a degenerate roll can't
- * produce an unplayable arena.
+ * Walls and half cover are neutral units in the sim, not tile kinds, so
+ * they are returned as coords for the caller to spawn. The connectivity
+ * guard carves a breach when the crossings are sealed, so no roll leaves
+ * the teams apart.
  *
- * Kept independent of `terrainGen` (no import cycle): `terrainGen` constructs
- * the `GeneratedTerrain` from the `ProceduralMapResult` returned here.
+ * `terrainGen` imports this module, never the reverse, and assembles the
+ * `GeneratedTerrain` from the result.
  */
 import type { RNG } from '../core/RNG';
 import type { GridCoord } from '../core/types';
@@ -55,13 +52,10 @@ import { sampleRange, sampleIntRange, weightedPick } from '../core/sampling';
 export type Symmetry = 'none' | 'mirror' | 'point';
 
 /**
- * §81a — the sampled per-theme tile layer (the resolved form of one
- * `ThemeTilesConfig` entry). Undeclared knobs resolve to 0 (feature off) —
- * except the `poolDensity` override, which folds into `params.poolDensity`
- * at sample time and doesn't appear here. Ground patches (`hills`/`ice`/
- * `sand`/`mud`) are board fractions, each drawn on its own value-noise
- * field; `deepWaterFraction` deepens the lowest slice of the pool band;
- * `fire` is a per-floor-cell scatter chance.
+ * One theme's sampled tile layer, the resolved form of a `ThemeTilesConfig`
+ * entry (its keys are documented in `src/config/terrain.ts`). An undeclared
+ * knob resolves to 0, the feature off. The theme's `poolDensity` override
+ * replaces `ResolvedMapParams.poolDensity` instead of appearing here.
  */
 export interface ResolvedThemeTiles {
   deepWaterFraction: number;
@@ -72,59 +66,59 @@ export interface ResolvedThemeTiles {
   fire: number;
 }
 
-/** The ground-patch kinds, in their FIXED claim order (first hit wins when
- *  patch fields overlap). Order is part of the determinism contract. */
+/** The ground-patch kinds in claim order: where their fields overlap, the
+ *  first kind takes the cell. The order also fixes the fields' draws, so it
+ *  is part of the determinism contract. */
 const PATCH_KINDS = ['hills', 'ice', 'sand', 'mud'] as const;
 type PatchKind = (typeof PATCH_KINDS)[number];
 
-/** A concrete, fully-resolved knob set for one encounter's map (the sampled
- *  form of `ProceduralTerrainConfig`). */
+/** One encounter's knobs, sampled from `ProceduralTerrainConfig`. */
 export interface ResolvedMapParams {
   symmetry: Symmetry;
-  /** Horizontal wall lines across the advance axis. */
+  /** Wall lines across the advance. */
   crossbars: number;
-  /** Fordable gaps per crossbar (the chokepoints). */
+  /** Gaps per crossbar, the chokepoints. */
   gapsPerBar: number;
   /** Gap width in cells. */
   gapWidth: number;
-  /** Probability a gap is watered (a bog-down ford) vs bare floor. */
+  /** The chance a gap is shallow water (a ford) rather than floor. */
   fordChance: number;
-  /** Vertical wobble amplitude of a crossbar's wall row. */
+  /** How far a crossbar's row wobbles, in rows either way. */
   crossbarWaver: number;
-  /** Vertical partial walls for lateral structure. */
+  /** Vertical partial walls. */
   dividers: number;
-  /** Fraction of the noise field's HIGH ground that becomes (solid) cover. */
+  /** The top share of the noise range that becomes solid cover: a cell
+   *  whose noise is above `1 − coverDensity`. */
   coverDensity: number;
-  /** Per structural-wall cell, the chance it's a half-cover WINDOW (a
-   *  shoot-through gap in a crossbar/divider) instead of a solid wall. */
+  /** Per structural wall cell, the chance it is a half-cover window
+   *  instead of a wall. */
   windowChance: number;
-  /** Fraction of the noise field's LOW ground that becomes water pools. */
+  /** The bottom share of the noise range that becomes pools: a cell whose
+   *  noise is below it. */
   poolDensity: number;
-  /** Value-noise lattice resolution. */
+  /** The noise lattice's cells across the width; fewer gives broader
+   *  blobs. */
   noiseScale: number;
-  /** Hard ceiling on total BLOCKING cells (wall + half-cover + §81a deep
-   *  water), as a board fraction (NOT sampled). */
+  /** The ceiling on blocking cells (wall, half cover, deep water), as a
+   *  share of the board. Fixed, not sampled. */
   wallCapFraction: number;
-  /** §81a — the sampled per-theme tile layer. */
+  /** The theme's tile layer. */
   tiles: ResolvedThemeTiles;
-  /** §81b — the rolled camp-site plan: how many single-tile camp spawns this
-   *  board hosts (`count`, 0 = camp-free — forced 0 when the theme's pool is
-   *  empty), placed how (`mode`), at least `standoff` Chebyshev from every
-   *  spawn tile. WHICH camp each site becomes is not decided here — that
-   *  stays `spawnCamps`' roll on the `campSetup` stream. */
+  /** The camp-site plan: how many sites (`count`, 0 when the theme's pool
+   *  is empty), placed how (`mode`), and the least Chebyshev distance from
+   *  every spawn tile (`standoff`). Which camp a site becomes is
+   *  `spawnCamps`' roll on the `campSetup` stream. */
   camps: { count: number; mode: CampPlacementMode; standoff: number };
 }
 
 interface GenStats {
   walls: number;
   halfCovers: number;
-  /** Shallow-water cells (fords + pools + carves). */
+  /** Shallow-water cells: fords, pools, carves and drained deep water. */
   water: number;
-  /** §81a — impassable deep-water cells. */
   deepWater: number;
-  /** §81a — fire cells (volcanic scatter). */
   fires: number;
-  /** Blocking cells (wall + half-cover + deep water), over the board. */
+  /** Blocking cells (wall, half cover, deep water) as a share of the board. */
   obstacleFraction: number;
   connected: boolean;
   /** Blockers removed by the connectivity guard (0 = the gaps already sufficed). */
@@ -133,24 +127,22 @@ interface GenStats {
 }
 
 /**
- * The generator's output. A superset of `GeneratedTerrain`'s procedural
- * fields plus dev/test diagnostics (`chokeCells`, `stats`). `chasms` / `fires`
- * / `healings` are always empty for procedural (hand-authored-only), so the
- * caller fills those with `[]` when assembling a `GeneratedTerrain`.
+ * The generator's output: the fields `terrainGen` puts into a
+ * `GeneratedTerrain` (which gives a procedural board empty chasms, healing
+ * tiles and rubble), and two diagnostics that the tests and the map
+ * prototype (`tools/mapgen-prototype/`) read, `chokeCells` and `stats`.
  */
 export interface ProceduralMapResult {
   tileGrid: TileGrid;
   walls: GridCoord[];
   halfCovers: GridCoord[];
-  /** §81a — fire-cell coords (the volcanic scatter), the `GeneratedTerrain.fires`
-   *  parallel readout (procedural was hand-authored-only for fire until §81a). */
+  /** The fire cells, also on `tileGrid`. */
   fires: GridCoord[];
-  /** §81b — rolled single-tile camp sites (empty = camp-free board). The
-   *  caller pairs these with the theme's pool to fill
-   *  `GeneratedTerrain.campSpawns`/`camps`. */
+  /** The rolled camp sites, empty on a camp-free board; `terrainGen` pairs
+   *  them with the theme's pool. */
   campSpawns: GridCoord[];
   spawnRegions: SpawnRegion[];
-  /** Gap/ford cells, for the chokepoint highlight (dev tooling). */
+  /** The crossing cells: the gaps, their partners and the carved breaches. */
   chokeCells: GridCoord[];
   stats: GenStats;
 }
@@ -161,14 +153,14 @@ const intRange = (rng: RNG, s: RangeSpec): number =>
   sampleIntRange(rng, s.min, s.max, s.center, s.intensity);
 
 /**
- * Draw a concrete map-parameter set from the procedural config envelope. One
- * RNG draw per sampled knob, in the order below (`wallCapFraction` is a fixed
- * guard rail, no draw); then the THEME's tile knobs (§81a) in the fixed order
- * `poolDensity override → deepWaterFraction → hills → ice → sand → mud → fire`,
- * one draw per DECLARED knob (absent = off, no draw — so a theme's draw count
- * is fixed by its config entry); then the §81b camp plan (count + mode, two
- * UNCONDITIONAL draws). Reordering or adding a knob re-baselines the fuzz
- * stream — the usual RNG-fork caveat.
+ * Draws one encounter's knobs from the envelope, one draw a knob in the
+ * order below (`wallCapFraction` is fixed and draws none); then the theme's
+ * tile knobs in the order `poolDensity`, `deepWaterFraction`, `hills`,
+ * `ice`, `sand`, `mud`, `fire`, one draw for each the theme declares (an
+ * undeclared knob draws nothing, so the theme's entry fixes its count);
+ * then the camp plan, two draws made whatever the pool. Reordering or
+ * adding a draw changes every procedural board, and the fuzz baselines with
+ * them.
  */
 export function sampleProceduralParams(
   rng: RNG,
@@ -197,9 +189,8 @@ export function sampleProceduralParams(
     mud: optRange(themeCfg.mud),
     fire: optRange(themeCfg.fire),
   };
-  // §81b — the camp-site plan: TWO unconditional draws (count, then mode) so
-  // the stream never depends on the outcome or the pool; an empty theme pool
-  // zeroes the count AFTER the draws (pool-independent stream, camps off).
+  // The count, then the mode, drawn whatever the pool, so the stream doesn't
+  // depend on it; an empty pool zeroes the count after the draws.
   const campCount = Number(weightedPick(rng, cfg.camps.density));
   const campMode = weightedPick(rng, cfg.camps.placement) as CampPlacementMode;
   const camps = {
@@ -225,21 +216,20 @@ export function sampleProceduralParams(
   };
 }
 
-// Internal working cell: floor / wall / half-cover / shallow water, plus the
-// §81a theme tiles (deep water + the four ground patches + fire).
+// The working cell: floor, wall, half cover, shallow water (`a`), and the
+// theme's tiles.
 type Cell = 'f' | 'w' | 'h' | 'a' | 'deep' | 'hills' | 'ice' | 'sand' | 'mud' | 'fire';
-// Cells a unit can never stand on. `deep` blocks like a wall for the cap +
-// connectivity guards (§81a), but trims/carves to WATER, not floor — a drained
-// deep cell reads as a ford, on-theme.
+// Cells no unit can stand on. Deep water blocks like a wall for the cap and
+// the connectivity guard, but the cap drains it to shallow water, not floor,
+// so it reads as a ford.
 const isBlocking = (c: Cell): boolean => c === 'w' || c === 'h' || c === 'deep';
 
 const keyOf = (x: number, y: number): string => `${x},${y}`;
 const clamp = (v: number, lo: number, hi: number): number => Math.min(hi, Math.max(lo, v));
 
 /**
- * Build a procedural map from a resolved param set + a forked encounter RNG.
- * The RNG is consumed directly (no re-seeding) so the per-encounter fork
- * contract holds and the fuzz harness can replay any seed.
+ * Builds the board from the sampled knobs, drawing on `rng` directly with no
+ * re-seed, so the encounter's stream alone decides the board.
  */
 export function generateProceduralMap(
   rng: RNG,
@@ -253,7 +243,8 @@ export function generateProceduralMap(
   const grid: Cell[][] = Array.from({ length: H }, () => new Array<Cell>(W).fill('f'));
   const choke = new Set<string>();
 
-  // --- spawn bands (8 centered cells on the top + bottom rows) ---
+  // --- the spawn bands: `SPAWN_REGION_TILE_COUNT` centred cells on the top
+  // and bottom rows, or the whole row on a narrower board ---
   const band = Math.min(SPAWN_REGION_TILE_COUNT, W);
   const bandX0 = Math.floor((W - band) / 2);
   const spawnTop: GridCoord[] = [];
@@ -266,13 +257,15 @@ export function generateProceduralMap(
     (y === 0 || y === H - 1) && x >= bandX0 && x < bandX0 + band;
 
   const symmetric = params.symmetry !== 'none';
-  // The partner of a cell under the active symmetry (used to keep post-symmetry
-  // passes from breaking it). 'point' = 180° rotation; 'mirror' = reflect-Y.
+  // A cell's partner, so the passes after the symmetry copy keep it: the
+  // 180° rotation for `point`, else the reflection across the horizontal
+  // midline, which the camp pairing uses on a `none` board too.
   const partner = (x: number, y: number): GridCoord =>
     params.symmetry === 'point' ? { x: W - 1 - x, y: H - 1 - y } : { x, y: H - 1 - y };
 
-  // Generated region: the top half (rows 2..lastGenRow) when symmetric — the
-  // symmetry copy fills the bottom — else the whole interior.
+  // The generated rows: from 2 to just above the midline when symmetric, the
+  // copy filling the bottom, else from 2 to H − 3. Rows 0 and 1 and their
+  // partners get no terrain.
   const firstRow = 2;
   const lastGenRow = symmetric ? Math.max(firstRow, Math.floor(H / 2) - 1) : H - 3;
 
@@ -284,16 +277,16 @@ export function generateProceduralMap(
   const wallAt = (x: number, y: number): void => {
     if (y < firstRow || y > lastGenRow) return;
     if (choke.has(keyOf(x, y))) return; // never wall a chokepoint shut
-    // M6 windows: a structural-wall cell occasionally becomes half-cover — a
-    // shoot-through gap that still blocks movement (the bar/divider stays a
-    // barrier funneling to the fords; ranged units get a firing lane).
+    // A window at `windowChance`: half cover still blocks movement, so the
+    // bar or divider still funnels to the gaps, and it gives ranged units a
+    // firing lane.
     set(x, y, rng.next() < params.windowChance ? 'h' : 'w');
   };
 
-  // --- NOISE FIELD (built first so crossbars can waver off it) ---
+  // --- the noise field, built first since the crossbars waver off it ---
   const noise = buildValueNoise(rng, W, H, params.noiseScale);
 
-  // --- CROSSBARS: wavy horizontal walls across the width, with fordable gaps ---
+  // --- crossbars ---
   const span = Math.max(1, lastGenRow - firstRow);
   for (let b = 0; b < params.crossbars; b++) {
     const frac = (b + 1) / (params.crossbars + 1);
@@ -310,15 +303,15 @@ export function generateProceduralMap(
     for (let x = 0; x < W; x++) {
       const r = rowAt(x);
       if (gapCols.has(x)) {
-        // Open the gap (the army's crossing). Ford with `fordChance`.
+        // A gap cell: a ford at `fordChance`, else floor.
         const ford = rng.next() < params.fordChance;
         set(x, r, ford ? 'a' : 'f');
         choke.add(keyOf(x, r));
         prevRow = null; // don't bridge a wall across the gap
         continue;
       }
-      // Bridge the vertical step from the previous column so a wavy wall has no
-      // diagonal leak — fill the column between the two rows.
+      // Wall this column from the previous column's row to this one's, so a
+      // step in the bar leaves no diagonal leak.
       const lo = prevRow === null ? r : Math.min(prevRow, r);
       const hi = prevRow === null ? r : Math.max(prevRow, r);
       for (let yy = lo; yy <= hi; yy++) wallAt(x, yy);
@@ -326,7 +319,7 @@ export function generateProceduralMap(
     }
   }
 
-  // --- DIVIDERS: vertical partial walls (lateral structure) ---
+  // --- dividers ---
   for (let d = 0; d < params.dividers; d++) {
     const frac = (d + 1) / (params.dividers + 1);
     const dx = clamp(Math.round(frac * (W - 1)) + rng.int(-1, 1), 0, W - 1);
@@ -334,16 +327,15 @@ export function generateProceduralMap(
     const startY = firstRow + rng.int(0, Math.max(0, span - len));
     for (let y = startY; y < startY + len && y <= lastGenRow; y++) {
       if (grid[y]![dx] === 'f' && !choke.has(keyOf(dx, y))) {
-        set(dx, y, rng.next() < params.windowChance ? 'h' : 'w'); // windows here too
+        set(dx, y, rng.next() < params.windowChance ? 'h' : 'w'); // windowed as the bars are
       }
     }
   }
 
-  // --- NOISE texture: cover clumps (some HALF-cover) + water pools ---
-  // §81a — the theme's ground-patch fields (hills/ice/sand/mud), each its own
-  // value-noise lattice so patches don't correlate with the pools/cover field.
-  // Built for every ACTIVE kind (density > 0) in the fixed PATCH_KINDS order —
-  // the draw sequence is part of the determinism contract.
+  // --- the noise pass: solid cover, pools, deep water, ground patches ---
+  // Each active ground patch (density above 0) gets a field of its own, so
+  // the patches don't follow the pools or the cover; built in `PATCH_KINDS`
+  // order, which fixes the draws.
   const patchFields = new Map<PatchKind, (x: number, y: number) => number>();
   for (const kind of PATCH_KINDS) {
     if (params.tiles[kind] > 0) {
@@ -351,8 +343,8 @@ export function generateProceduralMap(
     }
   }
   const coverCut = 1 - params.coverDensity;
-  // §81a — the lowest slice of the pool band deepens to impassable deep water
-  // (deepest-noise-first, so a deep centre stays wrapped in shallow rim).
+  // The lowest slice of the pool band is deep water, so a deep centre keeps
+  // a shallow rim.
   const deepCut = params.poolDensity * params.tiles.deepWaterFraction;
   for (let y = firstRow; y <= lastGenRow; y++) {
     for (let x = 0; x < W; x++) {
@@ -360,8 +352,6 @@ export function generateProceduralMap(
       if (grid[y]![x] !== 'f') continue; // never overwrite a bar / gap / divider
       if (choke.has(keyOf(x, y))) continue; // never fill a chokepoint
       const n = noise(x, y);
-      // Noise cover is SOLID (rocks/rubble — full LOS + movement blockers).
-      // Half-cover lives only as windows in the structural walls (wallAt above).
       if (n > coverCut) {
         set(x, y, 'w');
         continue;
@@ -370,8 +360,6 @@ export function generateProceduralMap(
         set(x, y, n < deepCut ? 'deep' : 'a');
         continue;
       }
-      // §81a — ground patches claim open floor in the fixed order (first hit
-      // wins where fields overlap). Fractions read as board-share claimed.
       for (const [kind, field] of patchFields) {
         if (field(x, y) > 1 - params.tiles[kind]) {
           set(x, y, kind);
@@ -381,9 +369,8 @@ export function generateProceduralMap(
     }
   }
 
-  // --- §81a FIRE scatter (volcanic): sparse per-cell rolls on open floor.
-  // Never on a chokepoint (the crossing stays free) or a spawn band (`set`
-  // guards spawn cells, but skipping keeps the draw stream spawn-independent).
+  // --- the fire scatter: a roll per open floor cell, never on a crossing,
+  // so the crossing stays free ---
   if (params.tiles.fire > 0) {
     for (let y = firstRow; y <= lastGenRow; y++) {
       for (let x = 0; x < W; x++) {
@@ -394,7 +381,8 @@ export function generateProceduralMap(
     }
   }
 
-  // --- SYMMETRY: copy the generated top half onto the bottom half ---
+  // --- symmetry: each bottom-half cell copies its partner, crossings
+  // included ---
   if (symmetric) {
     for (let y = 0; y < H; y++) {
       if (2 * y <= H - 1) continue; // strict bottom half only
@@ -407,15 +395,14 @@ export function generateProceduralMap(
     }
   }
 
-  // --- OBSTACLE CAP: trim excess cover (symmetry-aware pairs) ---
+  // --- the obstacle cap: trims blockers, the structural walls among them ---
   enforceObstacleCap(grid, rng, params.wallCapFraction, isSpawn, symmetric, partner);
 
-  // --- CONNECTIVITY: guarantee a spawn-to-spawn route (symmetry-aware) ---
+  // --- connectivity: a route between the spawn bands ---
   const carved = ensureConnectivity(grid, spawnTop, spawnBottom, choke, symmetric, partner);
 
-  // --- §81b CAMP SITES: roll single-tile camp spawns onto the finished board.
-  // Placed LAST so the camp dose can never perturb the terrain (density 0 vs 2
-  // → byte-identical tiles for the same seed — the dose-independence pin).
+  // --- camp sites, last, so the number of camps never changes the terrain
+  // (`proceduralMap.test.ts` pins density 0 against 2) ---
   const campSpawns = placeCampSites(
     grid,
     rng,
@@ -448,7 +435,7 @@ export function generateProceduralMap(
         tileGrid.setKind({ x, y }, 'fire');
         fires.push({ x, y });
       } else if (c !== 'f') {
-        // The remaining §81a ground patches map 1:1 onto their TileKind.
+        // A ground patch's cell is its own `TileKind`.
         tileGrid.setKind({ x, y }, c);
       }
     }
@@ -479,9 +466,9 @@ export function generateProceduralMap(
   return { tileGrid, walls, halfCovers, fires, campSpawns, spawnRegions, chokeCells, stats };
 }
 
-/** Gap column set for a crossbar: `count` gaps of `width`, each placed RANDOMLY
- *  within its own width-segment (with an edge margin) so chokepoints land at
- *  varied positions instead of always hugging the centre. */
+/** One crossbar's gap columns: `count` gaps of `width`, each centred on a
+ *  random column of its own segment of the width, less an edge margin, so
+ *  the chokepoints vary instead of hugging the centre. */
 function chooseGapCols(rng: RNG, W: number, count: number, width: number): Set<number> {
   const cols = new Set<number>();
   const margin = Math.min(2, Math.floor(W / 6));
@@ -533,10 +520,11 @@ function buildValueNoise(
   };
 }
 
-/** Trim blocking cells (wall + half-cover + §81a deep water) until under the
- *  cap. A trimmed wall/half-cover becomes floor; trimmed deep water drains to
- *  SHALLOW (still a pool, just fordable). When symmetric, removes each together
- *  with its partner so the cap can't break symmetry. */
+/** Trims blocking cells (wall, half cover, deep water) in a shuffled order
+ *  until the count is at the cap, drawing only when it is over. A trimmed
+ *  wall or half cover becomes floor; trimmed deep water drains to shallow,
+ *  still a pool but fordable. When symmetric, each goes with its partner,
+ *  so the cap keeps the symmetry. */
 function enforceObstacleCap(
   grid: Cell[][],
   rng: RNG,
@@ -580,8 +568,8 @@ function enforceObstacleCap(
   }
 }
 
-/** BFS reachability over passable cells (floor + shallow water + ground
- *  patches; wall + half-cover + §81a deep water block). */
+/** Breadth-first reachability over eight-way moves; wall, half cover and
+ *  deep water block. */
 function hasPath(grid: Cell[][], start: GridCoord, goal: GridCoord): boolean {
   const H = grid.length;
   const W = grid[0]!.length;
@@ -618,11 +606,10 @@ const centroid = (tiles: GridCoord[]): GridCoord => {
   return { x: Math.round(sx / tiles.length), y: Math.round(sy / tiles.length) };
 };
 
-/** Remove blockers (nearest the vertical centre first, a central breach) until
- *  the spawn bands connect — walls, half-cover, and §81a deep water all carve
- *  to shallow water (a drained/forded breach, on-theme). When symmetric, carves
- *  the partner too (carving the extra cell only ever helps the path). Returns
- *  how many were cut. */
+/** Carves blockers into shallow water, nearest the centre column first and
+ *  then top to bottom, until the spawn bands' centroids connect; a carved
+ *  cell is a crossing from then on. When symmetric, the partner is carved
+ *  too, which can only add route. Returns how many were carved. */
 function ensureConnectivity(
   grid: Cell[][],
   spawnTop: GridCoord[],
@@ -648,7 +635,7 @@ function ensureConnectivity(
 
   const carve = (x: number, y: number): number => {
     if (!isBlocking(grid[y]![x]!)) return 0;
-    grid[y]![x] = 'a'; // a watered breach (reads as a ford, on-theme)
+    grid[y]![x] = 'a'; // a breach of shallow water, read as a ford
     choke.add(keyOf(x, y));
     return 1;
   };
@@ -666,24 +653,25 @@ function ensureConnectivity(
 }
 
 /**
- * §81b — roll the board's camp-site tiles per the sampled plan. Runs on the
- * FINISHED grid (post-cap, post-connectivity) so the camp dose can never
- * perturb terrain. A cell can host a camp when a unit could materialize on it
- * and it isn't in anyone's lap: passable (not wall/half-cover/deep — shallow
- * water and ground patches are fine, the fetidPond precedent), not FIRE (a
- * spawn tile that chips its own camp is a trap, not a site), not a chokepoint
- * (the crossing stays free), not a spawn-band tile, and at least `standoff`
- * Chebyshev from every spawn tile.
+ * Rolls the board's camp sites per the sampled plan, on the finished grid,
+ * after the cap and the guard, so the camps never change the terrain. A
+ * cell hosts a camp when a unit can appear on it and it is in no one's way:
+ * passable (shallow water and the ground patches count, as a layout's camp
+ * spawns may sit on them, `src/config/layouts.ts`), not fire, which would
+ * burn the camp it spawns, not a crossing, not a spawn tile, and at least
+ * `standoff` Chebyshev from every spawn tile.
  *
- * Modes (the shape-lock's user call — pair/midBand split evenly, free rare):
- *   - `pair` — one site + its symmetry partner (the map's own `partner`;
- *     for `symmetry: 'none'` that's the mirror reflection — still the fair
- *     geometry). Needs `count >= 2` and a pairable candidate; otherwise it
- *     degrades to `midBand`. Any count remainder places as midBand.
- *   - `midBand` — sites confined to the neutral middle third of rows.
- *   - `free` — anywhere hostable (the rare asymmetric spice).
- * A thin candidate set places fewer sites than `count` rather than forcing a
- * bad tile (small boards + standoff can legitimately run dry).
+ * Modes:
+ * - `pair` — a site and its `partner` (on a `none` board the reflection,
+ *   the same fair geometry). It needs a count of 2 or more and a candidate
+ *   whose partner is hostable, else it places as `midBand`; any count past
+ *   the pair places as `midBand` too.
+ * - `midBand` — the midline's row (two on an even board) and
+ *   `max(1, floor(H / 6))` rows either side, or anywhere hostable when that
+ *   band holds no candidate.
+ * - `free` — anywhere hostable.
+ * A thin candidate set places fewer sites than the count rather than force
+ * a bad tile; a small board with a wide standoff can run out.
  */
 function placeCampSites(
   grid: Cell[][],
@@ -738,7 +726,7 @@ function placeCampSites(
     mode = 'midBand'; // remainder (or the no-pairable fallback) places mid-band
   }
 
-  // The neutral middle third of rows (midBand); free uses the whole set.
+  // The middle band of rows for `midBand`; `free` takes the whole set.
   const bandHalf = Math.max(1, Math.floor(H / 6));
   const midLo = Math.floor((H - 1) / 2) - bandHalf;
   const midHi = Math.ceil((H - 1) / 2) + bandHalf;

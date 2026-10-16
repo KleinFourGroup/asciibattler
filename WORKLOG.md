@@ -6240,3 +6240,96 @@ one left.
 
 Readings by the tool's clock (UTC): 99,155 at 00:12 on 2026-10-16, the
 session's first, after the orientation.
+
+### 122o, batch 8 — the map (2026-10-15, session d7f2cfba)
+
+`proceduralMap.ts`, `terrainGen.ts`, `layoutConnectivity.ts`. Every step
+code is out (66), and the history with them: the port from the prototype,
+the D3/D5/D7 milestones, the retired `reservedSpawnRows` and scatter
+knobs, which phase made fire and camps procedural, "they were duplicated
+mirrors before". The capitals for emphasis went, and the inline comments
+that restated the header's rule (noise cover is solid; patches claim in
+order). Kept as rules: the sampler's draw order and its unconditional
+camp draws; `PATCH_KINDS` order fixing the fields' draws; the cap drawing
+only when over; camp sites placed last, with the test that pins it named;
+the terrain on its own derived stream.
+
+**Statements found false and corrected (rule 7)**, each checked against
+the code or the config:
+
+- *`layoutConnectivity.ts`.* Only "a manual player focus" or a splash
+  broke a destructible wall; an `engage` order on one does too
+  (`objectiveAtCell` resolves a click on a destructible neutral in either
+  mode, and `Targeting` pursues it). The probe was "the same heuristic the
+  editor + terrainGen use": the editor calls this function, `terrainGen`
+  probes nothing, and the procedural guard probes the bands' centroids. A
+  severed map was "an unplayable draw"; dropped, since sight crosses a
+  chasm or deep water and ranged units can fight over one.
+- *`terrainGen.ts`, the header.* A spawn region was "exactly 8 tiles"; a
+  layout's holds 1 to 10 (`SPAWN_REGION_MIN_TILES`, `_MAX_TILES`). Walls
+  "and water" masked the spawn tiles; the schema allows shallow water
+  under one and refuses walls, half cover, rubble, chasm and deep water
+  (the same error in `generateFromLayout`'s doc). The procedural path built
+  "on any rectangle in the configured size range"; the configured range is
+  a square side rolled in `Run.ts`, and the generator takes any rectangle.
+  The stream was "a per-encounter RNG fork"; it is
+  `deriveRng(terrainSeed, 'terrain')`.
+- *`terrainGen.ts`, `GeneratedTerrain`.* Procedural half cover was "the
+  noise field's half-cover share"; it is only the structural walls'
+  windows. "AttackBehavior shoots over" (no such behaviour; sight passes
+  because the def has `blocksLineOfSight: false`). `chasms` was read by
+  "the renderer, editor, tests"; nothing reads it, nor `healings`.
+- *`proceduralMap.ts`.* The header ported from
+  `tools/mapgen-prototype/generator.ts`, a file that doesn't exist; the
+  prototype (`mapgen.ts`) imports this module. The noise heading had "some
+  HALF-cover" among the cover clumps (noise cover is all wall).
+  `ProceduralMapResult` was a superset of `GeneratedTerrain`'s fields with
+  fires always empty; the volcanic scatter fills fires, and the result has
+  no chasms, healings or rubble. `chokeCells` was the gap and ford cells;
+  it holds the partners and the carved breaches too. The cap "trims excess
+  cover"; it trims any blocker, crossbar walls included. `GenStats.water`
+  left out drained deep water. The ground patches were "board fractions";
+  a patch takes open floor where its field exceeds 1 − its density, the
+  first kind winning, so the share is not the density.
+- *`midBand`.* "The neutral middle third of rows" was an approximation: on
+  the shipped 12-to-24 boards the band holds 29 to 50 per cent of the rows
+  by height. `placeCampSites` now gives the band exactly, and the same
+  line in `src/config/terrain.ts` (121j's file) points there; a comment
+  change, under the same proof.
+
+**Leads for a census** (none is a behaviour change):
+
+- `GeneratedTerrain.chasms` and `.healings` have no reader in `src`,
+  `tools` or `tests`; the World takes the grid.
+- The spawn checks in `generateProceduralMap`'s `set`, its noise pass and
+  its fire scatter can't fire on a board of 4 rows or more: every row
+  they touch is from 2 to `lastGenRow`, at most H − 2, and the spawn bands
+  are rows 0 and H − 1. Boards are 12 to 24.
+- `GenStats.connected` is the literal `true`; the guard always connects
+  (carving every blocker leaves the bands joined), and one test asserts
+  it.
+
+Measured (`comment-length` on copies at `66b371db` and after, under the
+ignored `output/122o-b8/` and `output/122o-b8-after/`): comment lines 359
+→ 305, words 2,987 → 2,566, code lines 730 unchanged. The step-code
+ceiling 4,235 → 4,169.
+
+Proof: `comment-strip HEAD src`, comments only, exit 0 (four files). The
+control in `output/wt-122o` (of `66b371db`) with a `node_modules`
+junction, the four files copied in: unplanted exit 0; with
+`proceduralMap.ts`' `firstRow = 2` planted as `3`, exit 1 naming that
+line (276 → 269); restored from a copy, byte-identical to the live file,
+as were the other three. The worktree, its junction first, and the
+copies are removed.
+
+Cost: 114,863 at 00:47 UTC as the batch started (the reads' commit),
+253,059 at 01:01 after the proof: 138k for 1,151 lines, 120 a line, the
+fact checks against callers and schemas most of it. The eight batches:
+1,127k for 15,142 lines, 74 a line.
+
+**Read** (`batch`): `git show <batch 8's commit> -- src/sim/terrainGen.ts
+src/sim/layoutConnectivity.ts`. Wrong looks like a step code or history
+left, a claim the code contradicts (procedural half cover from the noise,
+spawn regions of a fixed size, a reader of `chasms`), or a rule cut that
+a change must respect: the terrain's own stream, the sampler's draw
+order, camps placed last, rubble in neither blocker set.

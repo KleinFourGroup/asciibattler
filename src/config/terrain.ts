@@ -120,7 +120,8 @@ const CampPoolEntrySchema = z.object({
 /** The weights of the camp-site placement modes. All three keys are
  *  required, at least one positive.
  *  - `pair` — two sites at symmetry-partner cells.
- *  - `midBand` — the neutral middle third of rows.
+ *  - `midBand` — the rows about the midline (`placeCampSites` in
+ *    `src/sim/proceduralMap.ts` gives the band).
  *  - `free` — anywhere a camp fits, the rare asymmetric case. */
 const CampPlacementWeightsSchema = z
   .object({

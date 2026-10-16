@@ -152,9 +152,9 @@ share of list A's export rows joins the sim's.
 - ☑ **122n — the fan-out pilot** (read by the user). Decided: (a), fresh
   sessions on this model; the Opus arm's eight files landed as the
   example of rule 1 on code.
-- ☐ **122o — the comment pass, the rest** (`batch`), in fresh sessions
-  on this model, as 121j ran. Planned as eight batches by file (WORKLOG
-  §122, 122o).
+- ◐ **122o — the comment pass, the rest** (`batch`), in fresh sessions
+  on this model, as 121j ran. Eight batches by file, all committed; 1 to
+  7 read, batch 8 unread (WORKLOG §122, 122o).
 
 ## Phase 123 — run
 

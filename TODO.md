@@ -44,11 +44,7 @@ TODO items (list A's deletions, list B's trials) are in
 
 ### §123 run
 
-- [ ] **A loaded run can miss a field the class defaults.** `Run.fromJSON`
-  assigns each field by name past the constructor, and
-  `pauseAtTurnGates` is `undefined` on a loaded run today (harmless).
-  A test that a loaded run has a constructed run's properties would
-  catch the next. Census F-2.
+- ✅ **A loaded run can miss a field the class defaults.** `Run.test.ts` holds a loaded run's own properties to a constructed one's; `fromJSON` sets `pauseAtTurnGates` (census F-2; WORKLOG §123, 123k).
 
 ### §124 render and UI, its first steps
 

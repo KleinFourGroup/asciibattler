@@ -4414,6 +4414,8 @@ export class Run {
     const m = run as unknown as Mut;
     m.bus = bus;
     m.subscriptions = [];
+    // Not in the save: a restore starts with the gates off, as a new run does.
+    run.pauseAtTurnGates = false;
     // 115a — the config inputs, as the constructor resolves them. With no
     // config: normal procedural rolls and encounter selection, unbounded
     // full-length sectors on the shipped DAG, the shipped event catalog,

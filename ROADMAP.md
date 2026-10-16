@@ -189,8 +189,9 @@ The cut, signed 2026-10-16 with the kickoff's five calls (WORKLOG §123,
   parts kept (one weighted draw; one index test, the swap checks
   among its sites), the heal to the cap a no-op (+2 lines); `src`
   lines −32.
-- ☐ **123k — F-2's test** (`none`). A loaded run has a constructed run's
-  properties; TODO T-97.
+- ☑ **123k — F-2's test** (`none`). It failed first on
+  `pauseAtTurnGates` alone; `fromJSON` sets it; corpus 0 of 30, fuzz
+  diff PASS.
 - ☐ **123l — the re-skim** (`stop`). The one-condition registry; 122o's
   six sim leads written as rows for the user's sign.
 - ☐ **123m — the comment pass** (`batch`, per batch). The 19 files as

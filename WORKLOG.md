@@ -7021,3 +7021,24 @@ written out twice → none. **Kept.**
 
 123j in all: (a), (c) and (d) kept, (b) a no-op; `src` −32 over the
 three. Reading: 386,598 at 16:58, before (c)'s commit.
+
+### 123k — F-2's test (2026-10-16, session b9cfc3b3)
+
+Step zero at `f44c7079`: `pauseAtTurnGates` is a class field set to
+`false` (`Run.ts:1044`), outside the save by its doc, and `fromJSON`
+(:4384) builds the run with `Object.create` and assigns no value to it.
+
+The test (`Run.test.ts`, "round-trip serialization"): a run built by the
+constructor and one loaded from its snapshot through JSON have the same
+own property names. Its known answer, run before the fix: it failed, 58
+names against 59, and the only one the loaded run lacked was
+`pauseAtTurnGates`. (The census had 60 and 59; 123b's deletion of the
+run's trigger registry took a field since.) Then the one assignment:
+`fromJSON` sets `pauseAtTurnGates = false` beside the bus and the
+subscriptions, with a line saying a restore starts with the gates off.
+The test passes.
+
+Proof (sim): typecheck clean; `Run.test.ts`, 376; the corpus, 0 of 30;
+the fuzz diff against `f44c7079`, PASS on both shapes. Every reader of
+the field tests it for truth, so `undefined` and `false` read alike;
+the proofs show no run moved. TODO T-97 is ticked.

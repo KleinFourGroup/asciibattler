@@ -3725,6 +3725,15 @@ describe('Run', () => {
       expect(restored.currentSectorNodeId).toBe(run.currentSectorNodeId);
     });
 
+    it('a loaded Run has the own properties a constructed one has', () => {
+      // fromJSON builds past the constructor and assigns each field by name,
+      // so a field the class initializes and fromJSON forgets is undefined
+      // on a loaded run. This lists the names either side lacks.
+      const run = new Run(12345, new EventBus<GameEvents>());
+      const loaded = Run.fromJSON(JSON.parse(JSON.stringify(run.toJSON())), new EventBus<GameEvents>());
+      expect(Object.keys(loaded).sort()).toEqual(Object.keys(run).sort());
+    });
+
     it('a restored Run produces the same next encounter as the original', () => {
       // Walk one Run to mid-map, snapshot, restore on a fresh bus, then
       // make the same enterNode call on both — they should agree on the

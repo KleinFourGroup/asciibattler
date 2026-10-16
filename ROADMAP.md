@@ -185,8 +185,10 @@ The cut, signed 2026-10-16 with the kickoff's five calls (WORKLOG §123,
   lines −72.
 - ☑ **123i — B-06, one shuffle** (`none`). Kept, as `RNG.shuffle`
   beside `pick`; corpus 0 of 30, fuzz diff PASS; `src` lines −35.
-- ☐ **123j — B-10, `Run.ts`'s small repeats** (`none`). Four parts, each
-  kept or reverted on its own.
+- ☑ **123j — B-10, `Run.ts`'s small repeats** (`none`). Three of four
+  parts kept (one weighted draw; one index test, the swap checks
+  among its sites), the heal to the cap a no-op (+2 lines); `src`
+  lines −32.
 - ☐ **123k — F-2's test** (`none`). A loaded run has a constructed run's
   properties; TODO T-97.
 - ☐ **123l — the re-skim** (`stop`). The one-condition registry; 122o's

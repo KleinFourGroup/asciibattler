@@ -2007,14 +2007,7 @@ export class Run {
     const slot = this.portStock.packets[index];
     if (slot === undefined || slot.sold) return;
     if (!this.cacheHasRoom) {
-      if (
-        swapCacheIndex === undefined ||
-        !Number.isInteger(swapCacheIndex) ||
-        swapCacheIndex < 0 ||
-        swapCacheIndex >= this.cache.length
-      ) {
-        return;
-      }
+      if (!isIndex(swapCacheIndex, this.cache.length)) return;
       if (this.bits < slot.price) return; // validate-first: no discard on a doomed buy
       this.handleDiscardPacket(swapCacheIndex);
     }
@@ -3603,14 +3596,7 @@ export class Run {
     const peeked = this.pendingRewards[index];
     if (peeked === undefined) return;
     if (peeked.kind === 'packet' && !this.cacheHasRoom) {
-      if (
-        swapCacheIndex === undefined ||
-        !Number.isInteger(swapCacheIndex) ||
-        swapCacheIndex < 0 ||
-        swapCacheIndex >= this.cache.length
-      ) {
-        return;
-      }
+      if (!isIndex(swapCacheIndex, this.cache.length)) return;
       this.handleDiscardPacket(swapCacheIndex);
     }
     const portion = this.takePendingReward(index);

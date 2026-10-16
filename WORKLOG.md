@@ -7006,3 +7006,18 @@ returning in 900 s (stopped); `i < length` → `i <= length`, the suite
 CAUGHT, 2 of 258 files failing. (2) `src` −13 (+13 −26). (3) No new
 parameter. (4) The index test written out at seven sites → one
 function. **Kept.**
+
+**(c) Built.** The port's packet buy and the reward's accept each test
+the swap slot with `isIndex(swapCacheIndex, this.cache.length)` in one
+line, where each had eight. Against the bar: (1) typecheck clean; the
+corpus, 0 of 30; the fuzz diff against `de0cef61`, PASS on both shapes;
+the swap paths are reached by tests alone (the oracle map's port
+trades), so a plant at each call, the check negated, in a worktree of
+an unreferenced commit of the tree (`f93707fa`), against the suite,
+which unplanted failed only the set-aside `tests/licences.test.ts`: the
+port's CAUGHT, 1 of 258 files failing, and the reward's CAUGHT, 1 of
+258. (2) `src` −14 (+2 −16). (3) No new parameter. (4) The swap check
+written out twice → none. **Kept.**
+
+123j in all: (a), (c) and (d) kept, (b) a no-op; `src` −32 over the
+three. Reading: 386,598 at 16:58, before (c)'s commit.

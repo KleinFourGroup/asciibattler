@@ -4,7 +4,7 @@
  * before any gameplay runs rather than falling back to defaults.
  *
  * A combatant gives its display name, glyph, abilities (ids checked against
- * `knownAbilityIds()`), base stats, growth rates and targeting.
+ * the ability catalog), base stats, growth rates and targeting.
  * - `baseStats` — the eleven stats in canonical order: the direct-combat
  *   stats (constitution, strength, ranged, magic, luck, defense), then
  *   precision and evasion, the cadence stats speed and mobility, and power.
@@ -29,7 +29,6 @@ import { z } from 'zod';
 import { prose } from '../i18n/prose';
 import { loadProse } from '../i18n/locale';
 import unitsJson from '../../config/units.json';
-import { knownAbilityIds } from '../sim/abilities/registry';
 import { knownTargetingIds } from '../sim/targetingStrategies';
 import { ABILITY_DEFS } from './abilities';
 
@@ -84,13 +83,17 @@ const GrowthRatesSchema = z.object({
   power: z.number().min(0).max(1),
 });
 
-const ABILITY_IDS = knownAbilityIds();
+// An archetype's ability ids are checked against the ability catalog, whose
+// ids the ability registry's own load check holds equal to its factories.
+// Asking the registry instead would import the sim's effects layer, which
+// imports this module back (gotcha #114).
+const ABILITY_IDS = Object.keys(ABILITY_DEFS);
 const AbilityIdSchema = z.string().refine((id) => ABILITY_IDS.includes(id), {
   message: `unknown ability id; known: [${ABILITY_IDS.join(', ')}]`,
 });
 
 // The archetype's targeting policy, checked against the strategy registry
-// (`src/sim/targetingStrategies.ts`) at load, as ability ids are.
+// (`src/sim/targetingStrategies.ts`) at load.
 const TARGETING_IDS = knownTargetingIds();
 const TargetingIdSchema = z.string().refine((id) => TARGETING_IDS.includes(id), {
   message: `unknown targeting id; known: [${TARGETING_IDS.join(', ')}]`,
@@ -286,10 +289,9 @@ const REQUIRED_UNIT_IDS = ['mercenary', 'bandit', 'archer'] as const;
 /**
  * Boot check: every `summon` op in the ability catalog names an archetype in
  * this catalog, so a typo fails at startup and not at cast. It lives here,
- * where the valid ids are, because the ability registry's own boot check runs
- * before `UNIT_DEFS` exists, and importing it there would cycle through
- * `knownAbilityIds`. config/abilities is already loaded and never imports this
- * module. `summon` is a top-level op only, so there is no recursion.
+ * where the valid ids are; config/abilities is already loaded and never
+ * imports this module. `summon` is a top-level op only, so there is no
+ * recursion.
  */
 (function assertSummonRefsResolve(): void {
   const archetypeIds = new Set(Object.keys(UNIT_DEFS));

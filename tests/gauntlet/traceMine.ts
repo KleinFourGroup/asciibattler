@@ -33,7 +33,8 @@ import type { GameEvents } from '../../src/core/events';
 import type { GridCoord } from '../../src/core/types';
 import type { World } from '../../src/sim/World';
 import type { WorldCommand } from '../../src/sim/Command';
-import { cellKey, distanceBetween } from '../../src/sim/occupancy';
+import { distanceBetween } from '../../src/core/grid';
+import { cellKey } from '../../src/sim/occupancy';
 import {
   jamRead,
   unitsApproachingHazard,

@@ -28,14 +28,8 @@ import { isInertNeutral, type Unit } from '../sim/Unit';
 import type { ObjectiveTeam } from '../sim/objective';
 import type { GridCoord } from '../core/types';
 import type { Archetype } from '../sim/archetypes';
-import {
-  cellKey,
-  cellsOccupiedBy,
-  claimantOf,
-  distanceBetween,
-  unitAt,
-  vacancyEtaOf,
-} from '../sim/occupancy';
+import { distanceBetween } from '../core/grid';
+import { cellKey, cellsOccupiedBy, claimantOf, unitAt, vacancyEtaOf } from '../sim/occupancy';
 import { tileDef, type TileKind } from '../sim/TileGrid';
 import type { StatusDef } from '../sim/effects/statusSchema';
 import { statusDef, STATUS_DEFS } from '../config/statuses';

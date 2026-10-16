@@ -17,7 +17,7 @@ import { scaledUnit, type Archetype } from '../../sim/archetypes';
 import type { GameEvents } from '../../core/events';
 import type { GridCoord } from '../../core/types';
 import type { Team } from '../../sim/Unit';
-import { distanceBetween } from '../../sim/occupancy';
+import { distanceBetween } from '../../core/grid';
 import { TRAFFIC_SCRIPTS, TrafficScriptDriver } from '../TrafficScriptDriver';
 import { cohesionFocus } from './cohesionFocus';
 import {

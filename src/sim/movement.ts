@@ -1,4 +1,5 @@
 import type { GridCoord } from '../core/types';
+import { distanceBetween } from '../core/grid';
 import { isInertNeutral, type Unit } from './Unit';
 import type { World } from './World';
 import type { ActionProposal } from './Action';
@@ -12,7 +13,6 @@ import {
   cellKey,
   cellsOccupiedBy,
   claimEtas,
-  distanceBetween,
   footprintOf,
   vacancyEtaOf,
 } from './occupancy';
@@ -743,7 +743,7 @@ export function costAt(
   return tileCost + SIM.occupiedCellPenalty;
 }
 
-// `cellKey` and `distanceBetween` live in `occupancy.ts`; the movement and
-// targeting modules import them from here under these names.
+// `cellKey` lives in `occupancy.ts` and `distanceBetween` in `core/grid.ts`;
+// the movement modules import them from here under these names.
 export const key = cellKey;
 export const chebyshev = distanceBetween;

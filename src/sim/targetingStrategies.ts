@@ -1,7 +1,10 @@
 import type { Unit } from './Unit';
 import type { World } from './World';
+// `config/units` calls `knownTargetingIds()` while it loads, so nothing
+// imported here may reach `config/units`: a path back is an import cycle, and
+// a test file that loads this module first fails (gotcha #114).
 import { SIM } from '../config/sim';
-import { chebyshev } from './movement';
+import { distanceBetween } from '../core/grid';
 
 /**
  * The per-archetype target-selection policy. Each archetype names a strategy
@@ -60,8 +63,8 @@ function minorAxisOffset(a: { x: number; y: number }, b: { x: number; y: number 
 const nearest: TargetingStrategy = {
   id: 'nearest',
   compare(candidate, best, unit) {
-    const cd = chebyshev(unit.position, candidate.position);
-    const bd = chebyshev(unit.position, best.position);
+    const cd = distanceBetween(unit.position, candidate.position);
+    const bd = distanceBetween(unit.position, best.position);
     if (cd !== bd) return cd - bd;
     if (candidate.currentHp !== best.currentHp) return candidate.currentHp - best.currentHp;
     const ca = minorAxisOffset(unit.position, candidate.position);
@@ -72,8 +75,8 @@ const nearest: TargetingStrategy = {
   shouldRetarget(unit, current, candidate) {
     // Switch only when a rival is markedly closer than the commitment, so a
     // unit doesn't thrash between two near targets.
-    const curDist = chebyshev(unit.position, current.position);
-    const nearDist = chebyshev(unit.position, candidate.position);
+    const curDist = distanceBetween(unit.position, current.position);
+    const nearDist = distanceBetween(unit.position, candidate.position);
     return nearDist * SIM.retargetCloserRatio < curDist;
   },
 };
@@ -93,8 +96,8 @@ const weakest: TargetingStrategy = {
     if (candidate.derived.maxHp !== best.derived.maxHp) {
       return candidate.derived.maxHp - best.derived.maxHp;
     }
-    const cd = chebyshev(unit.position, candidate.position);
-    const bd = chebyshev(unit.position, best.position);
+    const cd = distanceBetween(unit.position, candidate.position);
+    const bd = distanceBetween(unit.position, best.position);
     if (cd !== bd) return cd - bd;
     return candidate.id - best.id;
   },

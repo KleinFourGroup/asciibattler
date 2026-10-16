@@ -26,7 +26,8 @@
 import type { World } from '../../sim/World';
 import type { GridCoord } from '../../core/types';
 import type { ObjectiveTeam, TeamObjective } from '../../sim/objective';
-import { distanceBetween, footprintOf } from '../../sim/occupancy';
+import { distanceBetween } from '../../core/grid';
+import { footprintOf } from '../../sim/occupancy';
 import { isInertNeutral } from '../../sim/Unit';
 import type { TrafficScript } from '../TrafficScriptDriver';
 import { armyMinCut, livingUnits, opposingTeam } from '../sensors';

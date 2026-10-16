@@ -2,7 +2,8 @@ import type { GridCoord } from '../core/types';
 import type { World } from './World';
 import { isInertNeutral } from './Unit';
 import { hasLineOfSight } from './LineOfSight';
-import { cellKey, cellsOccupiedBy, claimedCells, distanceBetween, occupiedCells } from './occupancy';
+import { distanceBetween } from '../core/grid';
+import { cellKey, cellsOccupiedBy, claimedCells, occupiedCells } from './occupancy';
 
 /**
  * The nearest reachable cell from which `from` could act on a unit at

@@ -48,6 +48,7 @@ src/
 
   core/
     EventBus.ts              # Tiny typed pub/sub; on() returns unsub
+    grid.ts                  # distanceBetween, the Chebyshev cell distance; in core so the targeting strategies reach nothing that imports config/units (gotcha #114)
     fnv1a.ts                 # 95e: 32-bit FNV-1a → 8 hex chars, PERMANENT — the 53b config fingerprint (config/configHash.ts re-exports it), the journal's snapshot hash and the i18n provenance `source` hash share it; a change would fuzzy every shipped locale at once
     RNG.ts                   # Mulberry32 PRNG; .next/.int/.pick/.shuffle/.fork
     sampling.ts              # M6: deterministic RNG samplers — weightedPick + sampleRange (triangular bias)
@@ -175,7 +176,7 @@ src/
     moveDecision.ts          # §42a: the MoveDecisionKind taxonomy + emitMoveDecision — the per-poll movement decision record (observational only, never serialized)
     actingPosition.ts        # GP4: nearestActingCell — bounded BFS to nearest firing cell in [minRange,range](+LOS) (O4 band); §29d nearestFreeCells (summon placement)
     positioning.ts           # §44a: the WHERE knowledge — firingBandCell (44-pre-c, THE shared band+LOS gate) / collectLosBlockers / engagementDirective (hold|approach|pinned) / awayStep+passable+NEIGHBORS leaves; ⚠ must not import archetypes.ts (module-eval cycle, see its import note)
-    occupancy.ts             # §35: the occupancy chokepoint — cellsOccupiedBy (footprint seam) / isFree·unitAt / occupiedCells / distanceBetween; OccupancyPlane (plane seam, ground-only)
+    occupancy.ts             # §35: the occupancy chokepoint — cellsOccupiedBy (footprint seam) / isFree·unitAt / occupiedCells; OccupancyPlane (plane seam, ground-only)
     Targeting.ts             # findTarget + currentTarget stickiness + updateTarget (E5) w/ objective branches (engage/hold/focus + updateTargetDefault); lowestWoundedAlly (E7.B); 28: behavior preempt — confusion random-team pick / blind capped acquisition; §44a: the LOS pools + band gate moved to positioning.ts
                              # dispatches the seeker's targeting strategy; ties by HP then id; skips neutrals
                              # §75e: hostileCandidate — THE shared admit rule every hostile scan runs (passive camps are scenery; hostility per-faction, both directions); currentTarget honors an ordered PASSIVE camp mark (the first-blow guarantee)

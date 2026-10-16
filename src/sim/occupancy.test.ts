@@ -13,7 +13,6 @@ import {
   cellsOccupiedBy,
   claimantOf,
   claimedCells,
-  distanceBetween,
   findOverlappingCells,
   footprintCells,
   footprintOf,
@@ -26,6 +25,7 @@ import {
   cellUnitDistance,
   vacancyEtaOf,
 } from './occupancy';
+import { distanceBetween } from '../core/grid';
 import { MoveAction } from './actions/MoveAction';
 import { moveProposal } from './movement';
 import { SIM } from '../config/sim';
@@ -76,17 +76,6 @@ describe('cellKey / cellsOccupiedBy / planeOf — the seams', () => {
     const w = wallAt(world, { x: 2, y: 2 });
     expect(planeOf(u)).toBe(GROUND);
     expect(planeOf(w)).toBe(GROUND);
-  });
-});
-
-describe('distanceBetween — the chebyshev distance seam', () => {
-  it('is the 8-connected (Chebyshev) distance', () => {
-    expect(distanceBetween({ x: 0, y: 0 }, { x: 0, y: 0 })).toBe(0);
-    expect(distanceBetween({ x: 0, y: 0 }, { x: 3, y: 0 })).toBe(3);
-    expect(distanceBetween({ x: 0, y: 0 }, { x: 0, y: 5 })).toBe(5);
-    expect(distanceBetween({ x: 0, y: 0 }, { x: 4, y: 4 })).toBe(4); // diagonal = 1 step each
-    expect(distanceBetween({ x: 1, y: 2 }, { x: 4, y: 8 })).toBe(6); // max(3, 6)
-    expect(distanceBetween({ x: 5, y: 5 }, { x: 2, y: 4 })).toBe(3); // order-independent
   });
 });
 

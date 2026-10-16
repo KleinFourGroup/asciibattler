@@ -13,6 +13,7 @@
 
 import type { GridCoord } from '../core/types';
 import type { RNG } from '../core/RNG';
+import { distanceBetween } from '../core/grid';
 import { ALL_UNIT_DEFS } from '../config/units';
 import { MOVE_ACTION_ID } from './actions/MoveAction';
 import type { Unit } from './Unit';
@@ -212,15 +213,6 @@ export function anchorFootprint(
     if (fits) return cells;
   }
   return null;
-}
-
-/**
- * The grid distance between two cells: Chebyshev, since movement is
- * eight-way and a diagonal costs one step. Cell to cell; `unitDistance`
- * measures body to body on top of it.
- */
-export function distanceBetween(a: GridCoord, b: GridCoord): number {
-  return Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y));
 }
 
 /**

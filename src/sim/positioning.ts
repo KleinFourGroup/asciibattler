@@ -56,20 +56,19 @@ import type { GridCoord } from '../core/types';
 import { isInertNeutral, type Unit } from './Unit';
 import type { World } from './World';
 import type { MovementIntent } from './movement';
-// No import from './archetypes' here: this module is evaluated inside the
-// `config/units` cycle (config/units → abilities/registry → the effects layer
-// → here), and archetypes.ts reads the catalog at evaluation
-// (`CONFIGS = UNIT_DEFS`, `ALL_ARCHETYPES`), which fails mid-cycle (gotcha
-// #114). So `engagementDirective` takes `minRange` as a parameter, and the
-// behaviours, outside the cycle, resolve it.
+// No import from './archetypes' here: `engagementDirective` takes `minRange`
+// as a parameter, and the behaviours resolve it. The parameter dates from
+// when this module sat inside the `config/units` import cycle, where
+// archetypes.ts's read of the catalog at load failed; that cycle is broken
+// now (gotcha #114).
 import { SIM } from '../config/sim';
 import { hasLineOfSight } from './LineOfSight';
 import { nearestActingCell } from './actingPosition';
+import { distanceBetween } from '../core/grid';
 import {
   cellKey,
   cellsOccupiedBy,
   claimedDestinationOf,
-  distanceBetween,
   footprintCells,
   footprintOf,
   unitDistance,

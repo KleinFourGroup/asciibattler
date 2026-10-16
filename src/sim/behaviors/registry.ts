@@ -42,8 +42,8 @@ export function createBehavior(kind: string): Behavior {
  * the non-camp one.
  *
  * Runs only at a fresh spawn; a snapshot rehydrates the chosen `kind` through
- * `createBehavior`. `UNIT_DEFS` is read at call time, not module evaluation,
- * which keeps the import cycle-safe.
+ * `createBehavior`. `UNIT_DEFS` is read at call time, not module evaluation
+ * (gotcha #114).
  */
 export function createMovementBehavior(archetype: Archetype): Behavior {
   return UNIT_DEFS[archetype].movementBehavior === 'support'

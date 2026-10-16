@@ -7,7 +7,8 @@ import type { GridCoord } from '../core/types';
 import type { Team, UnitStats, Behavior } from './Unit';
 import type { ActionProposal } from './Action';
 import { moveProposal } from './movement';
-import { distanceBetween, isClaimed, claimantOf } from './occupancy';
+import { distanceBetween } from '../core/grid';
+import { isClaimed, claimantOf } from './occupancy';
 import { SIM } from '../config/sim';
 
 /**

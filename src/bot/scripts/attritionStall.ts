@@ -67,7 +67,8 @@
 import type { World } from '../../sim/World';
 import type { GridCoord } from '../../core/types';
 import type { ObjectiveTeam, TeamObjective } from '../../sim/objective';
-import { claimantOf, distanceBetween, unitAt } from '../../sim/occupancy';
+import { distanceBetween } from '../../core/grid';
+import { claimantOf, unitAt } from '../../sim/occupancy';
 import { tileDef } from '../../sim/TileGrid';
 import type { TrafficScript } from '../TrafficScriptDriver';
 import {

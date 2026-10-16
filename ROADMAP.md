@@ -205,6 +205,11 @@ The cut, signed 2026-10-16 with the kickoff's five calls (WORKLOG §123,
     sim.
   - ☑ **L-5 — the generator's three spawn checks** (`none`). Proof:
     sim.
+  - ☑ **The load cycle, (b) and (c)** (`none`). `distanceBetween` to
+    `src/core/grid.ts`; ability ids checked against `ABILITY_DEFS`;
+    `config/units` in no import cycle (WORKLOG §123, "The load cycle").
+  - ☐ **L-1 — the `weakest` strategy** (`none`). Approved; a patch
+    waits on the load cycle's fix (WORKLOG §123).
   - ☐ **L-2 — `advance`'s leap branch; `maxCells` to `leapLanding`**
     (`none`). Proof: sim; `reach-diff` over the six.
 - ☐ **123m — the comment pass** (`batch`, per batch). The 19 files as

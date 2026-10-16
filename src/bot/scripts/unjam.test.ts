@@ -14,7 +14,7 @@ import { scaledUnit } from '../../sim/archetypes';
 import type { GameEvents } from '../../core/events';
 import type { GridCoord } from '../../core/types';
 import type { Team } from '../../sim/Unit';
-import { distanceBetween } from '../../sim/occupancy';
+import { distanceBetween } from '../../core/grid';
 import { TRAFFIC_SCRIPTS, TrafficScriptDriver } from '../TrafficScriptDriver';
 import { terrainEdgeHold } from './terrainEdgeHold';
 import { unjam, regroupCell, UNJAM_MIN_FRACTION } from './unjam';

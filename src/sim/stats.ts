@@ -82,9 +82,7 @@ export function inertDerived(maxHp: number): UnitDerived {
  * has none (the healer, the shaman, every neutral). It is for display: a damage
  * op adds its own `scaling` stat (`resolveScalars.ts`), which can differ.
  *
- * It reads `UNIT_DEFS` when called, not at module load, since stats.ts sits in
- * the `config/units` and sim import cycle, where a read at load would find the
- * catalog not yet built.
+ * It reads `UNIT_DEFS` when called, not at module load (gotcha #114).
  */
 export function damageStatFor(archetype: UnitArchetype, stats: UnitStats): number {
   const key = UNIT_DEFS[archetype]?.damageStat;

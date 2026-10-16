@@ -7260,3 +7260,99 @@ before 123i's; 386,598 at 16:58 before 123j's last; 400,021 at 17:07
 after 123k's; 446,136 at 17:17 at the rows; 481,445 at 17:57 at the
 sign; 496,937 at 18:11 after L-6; 501,174 at 18:16 after L-7; 510,997
 at 18:21 after L-4; 518,991 at 18:27, at this entry.
+
+### L-1, built and handed back (2026-10-16, session b9cfc3b3)
+
+The user approved L-1 after the hand-off ("L1 is approved!"). Built: the
+`weakest` strategy and its doc, its registry entry, the stickiness doc's
+and `Targeting.ts`'s mentions, `Targeting.test.ts`'s five weakest tests
+with the fixture's `maxHp` option only they used, the registry test
+expecting `['nearest']`, `archetypes.test.ts`'s comment. Typecheck clean;
+the corpus, 0 of 30; the fuzz diff against `34949419`, PASS on both
+shapes; `src` −29 without tests.
+
+The hook refused it: `targetingStrategies.test.ts` failed to load
+(`ReferenceError: Cannot access 'STRATEGIES' before initialization`).
+Loading `targetingStrategies.ts` first reaches `config/units.ts` through
+`movement.ts` (and `occupancy.ts` imports it too), and `units.ts` calls
+`knownTargetingIds()` at load. The file fails the same way run alone at
+`34949419`, checked in a worktree; the suite runs with `isolate: false`
+and passed only because another file in the worker loaded `units.ts`
+first. Shrinking `Targeting.test.ts` changed the schedule, and the cycle
+showed. Nothing was committed; the tree is back at `34949419`. The
+change is kept as a patch that applies to `34949419`:
+`123l-L1-weakest.patch` (the source and tests) and
+`123l-L1-docs-as-built.patch` (the records as built), in the driver's
+shared notes folder.
+
+**For the user:** how the cycle is broken. (a) The test imports
+`config/units` before the strategies, which restores what the suite
+relied on, one line, with the root cause left in TODO "§126 tests". (b)
+Break it at the root: `units.ts` stops importing from the sim at load,
+for example by checking against an id list in a module with no imports.
+The session's lean: (a) for L-1, (b) at §126, where the tests phase
+reads load order.
+
+**After that, the hook fails at `34949419` itself.** A docs-only commit
+of this entry was refused: three test files failed to load with the same
+error (`targetingStrategies.test.ts`, `Recruitment.test.ts`,
+`src/dev/boardPanel/fixtures.test.ts`, each through `config/units.ts:94`).
+Vitest schedules by the durations it caches under `node_modules/.vite`,
+and the L-1 runs rewrote them, so the latent cycle now bites at HEAD's
+code. No commit can pass the hook until the cycle is broken. This entry
+and its three sibling edits are left uncommitted in the tree.
+
+**Signed** (the user, 2026-10-16): "I'm signing b as the approach to
+take for the fresh session!" So the next session first breaks the cycle
+at its root: `distanceBetween` moves from `occupancy.ts` into `src/core`,
+so `targetingStrategies.ts` no longer imports `movement.ts`, with the
+proofs a move in sim takes (typecheck, the corpus, the fuzz diff) and
+the suite green through the hook; then commits these uncommitted
+records, applies the L-1 patch, and goes on to L-2, the `reach-diff`
+over the seven, and 123m. Vitest's duration cache is not cleared to get
+past the hook: that would hide the cycle, not break it.
+
+### The load cycle (2026-10-16, session bfbf31de)
+
+Step zero: is the move enough? An import-path probe
+(`scratch/123l-loadcycle/importPaths.mts`: static imports that are not
+type-only, shortest path) found at `34949419` the known path,
+`targetingStrategies → movement → occupancy → config/units`, and a
+second behind `units.ts`'s `knownAbilityIds()` at load:
+`abilities/registry → effects/EffectAbility → effects/propose →
+Targeting → config/units`. A one-line test importing each registry
+first, run alone in a worktree of `34949419`, failed both ways: `Cannot
+access 'STRATEGIES' before initialization` and `Cannot access
+'FACTORIES' before initialization`. So (b) alone left the second edge
+latent, and that went to the user before anything was built.
+
+**Signed** (the user, 2026-10-16): "Signing b+c and the todo!" (b) as
+signed, every importer of `distanceBetween` pointed at core with no
+re-export left in `occupancy.ts`. (c) `units.ts` checks ability ids
+against `Object.keys(ABILITY_DEFS)` and stops importing the registry:
+the same set, since the registry's `assertAbilityDefCoverage` throws at
+load unless its factories and the catalog hold the same ids; only the
+order of ids in a malformed config's error message can differ. The
+guard, a test over the import graph, goes to TODO "§126 tests".
+
+**Built.** `src/core/grid.ts` holds `distanceBetween`, its test block
+moved from `occupancy.test.ts` to `grid.test.ts`; sixteen files import
+it from core, `targetingStrategies.ts` among them in place of
+`movement.ts`'s `chebyshev`, under a comment that nothing it imports may
+reach `config/units`. `units.ts` drops the registry import. The comments
+that said the cycle exists no longer do: `positioning.ts`'s says it is
+broken, `stats.ts`'s and `behaviors/registry.ts`'s point at gotcha
+#114, which has a dated note, and `units.ts`'s summon check drops the
+clause. ARCHITECTURE's tree has `grid.ts`. Two working copies (`units.ts`, `actingPosition.ts`)
+held CRLF against an LF index and went back to LF.
+
+Proof: typecheck clean. The probe after: no module `units.ts` imports
+(`targetingStrategies`, `config/abilities`, `i18n/locale`,
+`i18n/prose`) reaches it again, so `config/units` is in no import cycle;
+the registry's path to it is one-way now. Each run alone in the
+worktree with the change applied: the two load-first tests pass, as do
+the three files that failed at HEAD (`targetingStrategies.test.ts`,
+`Recruitment.test.ts`, `src/dev/boardPanel/fixtures.test.ts`) and
+`grid.test.ts`. The config dump against `34949419`'s, no difference; the
+corpus, 0 of 30; the fuzz diff against `34949419`, PASS on both shapes.
+`src` and `tools` without tests +58 −52, tests +22 −17.

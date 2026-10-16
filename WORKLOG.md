@@ -6702,3 +6702,28 @@ nothing, and the kept version has no escape.
 Proof (export): typecheck clean, so no reader was missed; `build-hash
 HEAD`, the same bytes; the save's pin, `save-fingerprint.test.ts`, 8 of
 8. No comment changed.
+
+### The hand-off after 123g (2026-10-16, session 854d0fbd)
+
+123a to 123g are built and ticked, each `none`; nothing is ◐. The next
+step is 123h, B-04's trial. It reaches `config/health.json` and its
+loader, `chipRule.ts` and its test matrix, three tooltips, the fuzz
+harness with the sweep's registry and three of its tests, two
+integration tests and DESIGN "The encounter loop", so it looked larger
+than the room left under the line, and the session hands off at the step
+boundary, as the kickoff predicted. For the next session:
+
+- run `comment-codes` before `reach-record` after a deletion that takes
+  coded comments: twice here the suite's reading failed on the ceiling
+  and was taken again (95 s each);
+- the kickoff's prediction for 123h stands to be checked: if the fuzz
+  diff's summaries carry the chip mode, its diff differs there, read as
+  a declared mapping;
+- the suite's readings under `output/reach-123/` are of this session's
+  trees (`b6b6d57d`, then after 123b, 123d and 123e), each from a green
+  run.
+
+Readings by the tool's clock (UTC): 330,749 at 14:49 before 123b's
+commit; 352,360 at 15:10 after 123d's; 371,136 at 15:16 after 123e's;
+391,908 at 15:29 after 123g's; 396,664 at 15:30, before this entry was
+written.

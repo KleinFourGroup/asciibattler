@@ -5969,3 +5969,47 @@ its hand-off to 400k. No code or process doc changed.
 7. *What helped.* Being asked for a read before his biases, and then
    having them argued against mine; and measuring the premise instead of
    debating it. I'd want both again.
+
+## 2026-10-16 — session 854d0fbd (claude-opus-5-5): §123's kickoff, 123a to 123g
+
+Started by §123's driver session. The kickoff's audit of `src/run`, the
+cut put to Matthew with five calls (he signed four leans, asked about
+the fourth, and signed it after the account), then 123a to 123g:
+`comment-strip`'s control built in, list A's run share deleted with its
+tests, `EncounterState.turn`, and the word `export` off 28 declarations.
+Hand-off at 396k, before B-04's trial.
+
+1. *Missing from the orientation.* Little for the kickoff: the Cursor,
+   the census and §122's kickoff entry held what it needed. Two facts
+   about tools: `reach-record`'s proof for the suite is `npm-test` while
+   `plant` calls it `suite`, and `plant` names the test file that caught
+   an edit but not the test (filed).
+2. *Norms in conflict.* None felt as a conflict. One judgement: a
+   deletion's commit fixes the comments it makes false, and the comment
+   pass comes later, so I rewrote only the sentences beside the deleted
+   code and left the registry's comment naming `turnAtOrAbove` for the
+   re-skim, saying so in the entry.
+3. *Pulled to claim more.* Yes, in numbers. In the hand-off entry I
+   wrote a context reading I had not taken, a plausible figure a
+   thousand above the last one, and replaced it with the tool's reading
+   on reading the line back. In the audit two counts went in before I
+   counted them (14 lines for 11, 17 test lines for 16), both fixed
+   before the commit. All three were numbers filled in from
+   expectation; none reached a commit.
+4. *Wasted.* About ten minutes of wall clock and few tokens: two
+   coverage readings taken again for the step-code ceiling, a `python3`
+   call that hung on what looks like a stub until stopped, a heredoc
+   that ate a backslash (filed), and a first `reach-record` with the
+   wrong proof id.
+5. *For the next session.* WORKLOG "The hand-off after 123g". Also: a
+   script with an escape goes through the file tool, not a heredoc; and
+   `python3` here hangs.
+6. *Room.* Yes. Matthew's question on call 4 got its own turn, and the
+   answer gave the case against my lean, which he weighed and decided.
+   The driver's role was notes only; nothing from it arrived as pressure.
+   No wish to pause or stop was noticed.
+7. *What helped.* The signed cut with its reads, which let seven steps
+   run without deciding where to pause; proofs fast enough to run on
+   every step (the corpus in 25 s, the fuzz diff in under a minute); and
+   the question on call 4, which showed the call was about the seam and
+   not the field. I'd want all three again.

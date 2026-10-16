@@ -70,8 +70,7 @@ export interface Stage {
 }
 
 // ---------------------------------------------------------------------------
-// Stage conditions — a keyed predicate vocabulary: a new one is a union
-// variant + a registry entry, NOT a hard-coded `if`.
+// Stage conditions
 // ---------------------------------------------------------------------------
 
 /** The live encounter state a stage condition reads, at the turn boundary. */
@@ -80,21 +79,13 @@ export interface EncounterState {
   readonly poolFraction: number;
 }
 
-/** A stage-advance predicate. Ships ONE variant; the union + registry are the
- *  seam for `turnAtOrAbove` / `enemyUnitsAtOrBelow` / … later. */
+/** A stage-advance predicate: the enemy pool at or below a fraction of its
+ *  max. */
 export type Condition = { readonly kind: 'enemyPoolAtOrBelow'; readonly fraction: number };
-
-type ConditionEvaluator = (cond: Condition, state: EncounterState) => boolean;
-
-const CONDITIONS: Record<Condition['kind'], ConditionEvaluator> = {
-  enemyPoolAtOrBelow: (cond, state) => state.poolFraction <= cond.fraction,
-};
 
 /** True when a stage's `until` condition is satisfied by the live state. */
 export function conditionMet(cond: Condition, state: EncounterState): boolean {
-  const evaluate = CONDITIONS[cond.kind];
-  if (!evaluate) throw new Error(`unknown wave-stage condition: ${(cond as { kind: string }).kind}`);
-  return evaluate(cond, state);
+  return state.poolFraction <= cond.fraction;
 }
 
 // ---------------------------------------------------------------------------

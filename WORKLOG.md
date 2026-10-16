@@ -7042,3 +7042,110 @@ Proof (sim): typecheck clean; `Run.test.ts`, 376; the corpus, 0 of 30;
 the fuzz diff against `f44c7079`, PASS on both shapes. Every reader of
 the field tests it for truth, so `undefined` and `false` read alike;
 the proofs show no run moved. TODO T-97 is ticked.
+
+### 123l — the re-skim (2026-10-16, session b9cfc3b3)
+
+Read: the phase's diff of `src` and `tools` without the tests,
+`7336e42..583ac696`. 123b to 123f's part, 184 changed lines, read
+whole; 123g's is the word `export` alone (proven then); 123h to 123k's
+is this session's own. And a search of `src`, `tools`, `tests`,
+`scripts`, `shell`, `process/` and the live docs for every name the
+phase deleted.
+
+Fixed, as fix-ups of what the phase left: ARCHITECTURE's `redraw.ts`
+and `empower.ts` lines named `redrawAvailability` and
+`empowerAvailability` (123e); `triggers.ts`'s dispatcher doc kept a line
+of 116 columns from 123b's edit. Proof: `comment-strip HEAD src`,
+comments only, its control named (exit 0).
+
+**The one-condition registry** (`sequencer.ts:83-98`), sent here by the
+kickoff's fourth call, within the trials' budget (at most three from a
+phase's leads and re-skim; none used). Step zero: `Condition` is one
+variant, `enemyPoolAtOrBelow`; `CONDITIONS` maps it to its one evaluator
+through a `ConditionEvaluator` type; `conditionMet` looks the kind up and
+throws on a kind it lacks. The loader's schema takes the kind as a
+`z.literal` (`encounters.ts:111`), so no config reaches the throw, and no
+test asserts it; the section's header and the type's doc call the union
+and the record the seam for conditions not built. The shape:
+`conditionMet` returns `state.poolFraction <= cond.fraction`; the record,
+the evaluator type and the throw go, with the seam's wording. `kind`
+stays in the type, which mirrors the authored data.
+
+**The bar** (D2), written before the code:
+
+1. *The same behaviour:* typecheck clean; the corpus, 0 of 30; the fuzz
+   diff against `583ac696`, PASS on both shapes; a plant in
+   `conditionMet`, in a worktree, caught by the corpus, or by the suite
+   if no journal crosses a stage; the suite and the smoke by the hook.
+2. *Source lines do not grow.*
+3. *No new parameter.*
+4. *What a reader had to know:* a type, a record and an unreachable
+   throw → none, and the "seam" note with them.
+
+**Built.** `conditionMet` is the comparison; `CONDITIONS`,
+`ConditionEvaluator` and the throw are gone; the section header and the
+type's doc say what the condition is, not what it is a seam for.
+Against the bar: (1) typecheck clean; the corpus, 0 of 30; the fuzz diff
+against `583ac696`, PASS on both shapes; the plant, in a worktree of an
+unreferenced commit of the tree (`4c2c2e00`), `<=` → `<` in
+`conditionMet`, the one edit the line admits: the corpus CAUGHT, 1 of
+30, and the suite CAUGHT, 2 of 258 files failing (unplanted, 0 of 30
+and the set-aside `licences.test.ts`). (2) `src` −9 (+4 −13). (3) No
+new parameter. (4) A type, a record and an unreachable throw → none.
+**Kept.** One of the phase's three trials from leads and the re-skim.
+
+**The rows for the user's sign**, each checked again at `583ac696`
+(`refs` for the members, a search for the rest). 122o's six open sim
+leads (`World.shove` stays for Round 9), then 123h's:
+
+- **L-1 · The `weakest` targeting strategy** (`targetingStrategies.ts:90`).
+  All 23 archetypes in `config/units.json` take `nearest`; `weakest` is
+  reached by tests alone (`Targeting.test.ts`'s weakest block,
+  `targetingStrategies.test.ts`). `archetypes.test.ts:98-103` says why it
+  is unassigned: a forced-roster run halved the rogue's damage, so it
+  waits for a gap-closer or a ranged assassin, and points at a TODO
+  heading, "Targeting strategies", that TODO no longer has. Deleting it leaves the strategy
+  registry one entry. It is content-shaped, like the combat triggers the
+  user kept at 122m. The session's lean: ask whether Round 9's content
+  wants it; delete if not.
+- **L-2 · `advance`'s leap branch** (`movement.ts:500-506`). The three
+  shipped callers of `advance` pass `maxCells: 1` (`MovementBehavior.ts:125`,
+  `positioning.ts:219`, :252); the dash lands through `leapLanding`
+  (`propose.ts:146`), and the file's header says only tests call
+  `advance` above 1. Deleting it takes the branch and its tests, and
+  leaves `walkAlongPath` one caller to fold into. Lean: delete.
+- **L-3 · `MovementIntent.sidestepWhenBlocked`** (`movement.ts:206`).
+  Nothing in `src`, `tools` or `tests` sets it; its one read (:485) never
+  sees `false`. Lean: delete.
+- **L-4 · `GeneratedTerrain.chasms` and `.healings`** (`terrainGen.ts:69`,
+  :76). Unread by every kind of reader; written at two places in
+  `terrainGen.ts` (:168, :207 for `chasms`). A sibling found here: `.fires` is read by tests alone. Lean:
+  delete the two; `.fires` with them if its tests can read the grid.
+- **L-5 · The spawn checks in `generateProceduralMap`** (`set` at :274,
+  the noise pass at :351, the fire scatter at :377). Every call of `set`
+  and both loops stay in rows 2 to `lastGenRow` (:269-270, the crossbar's
+  clamp at :293-300, the dividers at :327-328), and the spawn bands are
+  rows 0 and H − 1, so the checks cannot fire on a board of 4 rows or
+  more; boards are 12 to 24. The copy pass's check (:390) walks every row
+  and stays. Lean: delete the three, with a line that says why the bands
+  are safe.
+- **L-6 · `GenStats.connected`** (`proceduralMap.ts:123`, the literal
+  `true` at :456). One test asserts it and, which 122o's note did not
+  say, the mapgen prototype prints it (`tools/mapgen-prototype/mapgen.ts:238`,
+  always ✓). Lean: delete, with the tool's line.
+- **L-7 · The `team` loss cause** (`chipRule.ts`, `LossCause`), from
+  123h. No rule emits it since the switches went; `HUD.ts:486` reads it
+  as "no card". The 96.5 kickoff kept it for a flat turn-win or turn-loss
+  effect that was never built. Deleting it takes the variant, its doc
+  paragraph and the HUD's ternary. Lean: delete unless that effect is
+  still planned.
+
+Seen and not over the bar: `rulesForTurn`'s set now always holds
+`casualties`, so a flag for the surcharge would say the same, but the
+labels and `chipTurn` (gotcha #129) key on the set; `TriggerDispatcher`
+keeps two type parameters for one instantiation, `World`'s, at no cost
+in lines; the sell's integer test and `undefined` lookup (`Run.ts:2045`)
+could be one `isIndex` call, one line shorter.
+
+The trials' budget: one of three used. If the user signs deletions,
+they are list A's kind and land as steps before the comment pass.

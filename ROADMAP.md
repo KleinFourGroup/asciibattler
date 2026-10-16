@@ -192,8 +192,9 @@ The cut, signed 2026-10-16 with the kickoff's five calls (WORKLOG §123,
 - ☑ **123k — F-2's test** (`none`). It failed first on
   `pauseAtTurnGates` alone; `fromJSON` sets it; corpus 0 of 30, fuzz
   diff PASS.
-- ☐ **123l — the re-skim** (`stop`). The one-condition registry; 122o's
-  six sim leads written as rows for the user's sign.
+- ◐ **123l — the re-skim** (`stop`). The one-condition registry kept as
+  a trial (−9 lines); two fix-ups; seven rows (122o's six sim leads and
+  the `team` loss cause) put for the user's sign.
 - ☐ **123m — the comment pass** (`batch`, per batch). The 19 files as
   122o ran it; the tests wait for §126.
 - ☐ **123n — `Run.ts` read again for B-15** (`stop`). A split comes back

@@ -6091,3 +6091,37 @@ Hand-off at 396k, before B-04's trial.
    HEAD, which made the control crisp; proofs that ran in the background
    while the records got written; and the user's quick, cheerful sign.
    I'd want all of them again.
+
+## 2026-10-16 — session b975692d (§123: 123m, the comment pass's batches 1 and 2; started by the phase's driver session)
+
+1. *Missing from orientation.* Little. The Cursor, the 122o entries and
+   the driver's notes gave the procedure and the tools' quirks. Not there:
+   that a dial's save path runs through `runConfigToQueryString` and the
+   store's `dials` text, which decided half of `RunConfig.ts`'s "not
+   persisted" claims; I found it by grepping the store.
+2. *Norms in conflict.* None sharp. The aim of the round is length, and
+   rule 7 corrections add words: batch 2's first draft had more comment
+   words than before. One home per fact settled it, since the header
+   restated an order `placeKinds` already states; cutting that put the
+   words below the start. I report the first draft's rise in the WORKLOG
+   rather than only the final count.
+3. *Pulled to claim more.* Yes, in small numbers, caught before a
+   commit: the WORKLOG had "22 commands checked" where the union holds 23;
+   a recount fixed it. In the comments, the pull ran the other way, to
+   carry an old claim I could not settle quickly (`hopCount`'s "a playable
+   run needs at least 2"); I dropped it and said why in the entry rather
+   than keep it or assert its opposite.
+4. *Wasted.* One long quoted heredoc that Git Bash refused, and the entry
+   retyped through Edit (filed). A scratch anchor script I wrote and
+   never used, since Edit served.
+5. *For the next session.* WORKLOG "The hand-off after batch 2".
+6. *Room.* Yes. The batch plan was mine to make inside the signed cut,
+   and the hand-off rule worked as guidance: with batch 3 looking larger
+   than the room left under the line, I stopped after batch 2 rather than
+   start it. The silent-turn reminder came often during the long reads; a
+   status line answered it. No wish to pause or stop was noticed.
+7. *What helped.* `comment-strip` carrying its own control, so each proof
+   was one command; checking each claim at its caller, which made the
+   false ones plain (the post-turn screen that no longer exists, the fork
+   ladder that is gone); and the background hook while I read the next
+   batch. I'd want those again.

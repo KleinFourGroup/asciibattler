@@ -7622,6 +7622,8 @@ Measured (`comment-length` on copies under `output/cl-123m-b2/`):
 `NodeMap.ts` comment lines 235 → 208, words 2,231 → 2,142;
 `mapMetrics.ts` 79 → 77, 622 → 634, the shear's doc now giving the gate's
 bound where it gave the bug's history; code lines unchanged (629, 186).
+A first draft read 2,254 words for `NodeMap.ts`, above the start, until
+the header's copy of `placeKinds`'s order went.
 `src/run` comment lines 4,047 → 4,018, words 34,193 → 34,116. The
 step-code ceiling 3,932 → 3,875, the 57 the two files held.
 
@@ -7638,3 +7640,37 @@ the seven rules. Wrong looks like the header's passes disagreeing with
 the code (the width rules, the seam rule, the spacing window), a sheet row
 named that `tests/nodemap-metrics.test.ts` does not gate, or a measured
 number left without what it measured.
+
+Committed as `30f43a5f`; the suite 3,722 and the smoke 613, green, by the
+hook.
+
+### The hand-off after batch 2 (2026-10-16, session b975692d)
+
+Batches 1 and 2 of 123m are built and unread (◐ in ROADMAP), each with
+its read above. Next, in fresh sessions: batch 3, the encounters
+(`encounters/selection.ts`, `sequencer.ts`, `wave.ts`, `enemyBudget.ts`;
+1,069 lines), then `Run.ts`'s batches; then 123n. This session stopped
+before batch 3 since, at batch 1's rate with its records, it looked
+larger than the room left under the line. For the next session:
+
+- Batch 3's claims will run into `Run.ts` and the config as batch 1's
+  did, so plan from batch 1's 100 a line rather than batch 2's 55.
+- Two rules now have one home each: a bad command's silent no-op in
+  `Command.ts`'s header, and which dials a save keeps in `RunConfig.ts`'s
+  header (the dials with a URL form ride the save's query text,
+  `runSlot.ts`). `Run.ts`'s handler docs that restate either can point
+  there.
+- Batch 1's leads name stale comments in `Run.ts` for its batches
+  (`effectiveRunStats`, the fatigue seed at the hand's handoff); expect
+  more of the same kinds: the retired fork ladder, the retired daemon
+  roll, a "today's only consumer".
+- Per-file numbers: `comment-length` on copies under `output/`
+  (`output/cl-123m-b2/` holds batch 2's). Write a WORKLOG entry with the
+  Edit tool, anchored on the file's last lines; a long quoted heredoc
+  failed here (filed).
+
+Readings by the tool's clock (UTC): 95,828 at 21:51 after the
+orientation; 117,527 at 21:53 as batch 1 started; 339,754 at 22:16 after
+its proof; 355,942 at 22:18 at its commit; 421,678 at 22:26 after batch
+2's proof; 427,285 at 22:27 at its commit; 435,774 at 22:30, before this
+entry.

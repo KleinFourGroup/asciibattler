@@ -6527,3 +6527,25 @@ its calls; the user's answer and the cut as signed follow here.
 
 Readings by the tool's clock (UTC): 97,392 at 13:50 after the
 orientation, 216,767 at 13:59 after the audit.
+
+**Signed** (the user, 2026-10-16): "Signing your leans for everything
+but 4", and of the cut, "yes, I was signing the cut too". On call 4,
+after the session's account of it (the field's writers, the case
+against, and that the question was whether a turn-paced boss stage was
+coming): "I had a boss idea based on that early on, but I've since
+abandoned it. I think you're clear to remove that". So:
+
+1. `comment-strip` gets its control built in, as 123a: each file that
+   differs from the ref only in comments takes one code edit in memory,
+   and the run fails when the compare doesn't flag it.
+2. 122o's six open sim leads are written as rows with their evidence at
+   the re-skim and signed at its stop (123l). `World.shove` stays for
+   Round 9.
+3. `encounterFirst` is not inlined: what goes is a name, as with
+   `updateTargetDefault` at §122.
+4. `EncounterState.turn` is deleted (123f). The one-condition registry
+   beside it goes to the re-skim, within the trials' budget.
+5. B-10's four parts are each kept or reverted on its own under the bar.
+
+The cut as signed is in ROADMAP §123. Reading: 254,365 at 14:29, before
+the commit.

@@ -11,7 +11,7 @@ plan: [archive/post-109-roadmap.md](archive/post-109-roadmap.md) (Round 8)
 with its worklog and spec beside it; before it
 [archive/post-104-roadmap.md](archive/post-104-roadmap.md) (Round 7.5).
 
-**Status: §122 ✅ CLOSED 2026-10-15, sim; §123, run, is next.**
+**Status: §123, run, in progress: the cut signed 2026-10-16.**
 The spec holds the user's intent and four signed
 decisions ([round-8.5-spec.md](round-8.5-spec.md)). The round opened with
 the oracle map, ahead of the census, as the user signed at the Round 8
@@ -161,6 +161,38 @@ board line, A-40, and the run's share of list A); B-04, B-06, B-10;
 F-2's test (TODO T-97); the comment pass; then `Run.ts` read again for
 B-15, which comes back only with a measure that could pass it. Proof:
 sim; the port trades by tests alone (the oracle map). Risk: medium.
+
+The cut, signed 2026-10-16 with the kickoff's five calls (WORKLOG §123,
+"The kickoff").
+
+- ☐ **123a — `comment-strip`'s control, built in** (`none`). A code edit
+  planted in memory in each comment-only file; the run fails when the
+  compare misses it.
+- ☐ **123b — A-36, the run's trigger registry** (`none`). With its two
+  tests and `TriggerDispatcher.size`. Proof: sim; `reach-diff`.
+- ☐ **123c — A-39, the board's console line** (`none`). Proof: the
+  corpus; `build-hash` moves at that file.
+- ☐ **123d — A-40, the leg nothing reaches** (`none`; a stop if the
+  game can reach the test's state). The test found by a plant; the leg
+  goes with it.
+- ☐ **123e — A-25's run share** (`none`). `NodeMap.dump`,
+  `empowerAvailability`, `redrawAvailability`, with their tests. Proof:
+  export; `reach-diff`.
+- ☐ **123f — `EncounterState.turn`** (`none`). Proof: sim.
+- ☐ **123g — A-26, the word `export`** (`none`). Proof: export.
+- ☐ **123h — B-04, one chip rule** (`none`). Proof: sim and config; the
+  shipped tooltip words by their test.
+- ☐ **123i — B-06, one shuffle** (`none`). Proof: sim.
+- ☐ **123j — B-10, `Run.ts`'s small repeats** (`none`). Four parts, each
+  kept or reverted on its own.
+- ☐ **123k — F-2's test** (`none`). A loaded run has a constructed run's
+  properties; TODO T-97.
+- ☐ **123l — the re-skim** (`stop`). The one-condition registry; 122o's
+  six sim leads written as rows for the user's sign.
+- ☐ **123m — the comment pass** (`batch`, per batch). The 19 files as
+  122o ran it; the tests wait for §126.
+- ☐ **123n — `Run.ts` read again for B-15** (`stop`). A split comes back
+  only with a measure that could pass it.
 
 ## Phase 124 — render and UI
 

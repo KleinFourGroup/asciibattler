@@ -133,8 +133,9 @@ export interface RunConfig {
   readonly eventChance?: number;
   /**
    * The run's daemon: a `DaemonConfig` (a catalog entry, or one built for a
-   * test), or `null` for a run with none (the fuzz's control arm, with both
-   * pre-turn gates closed for good). Unset, the character's starting daemon.
+   * test), or `null` for a run that starts with none (the fuzz's control
+   * arm); a reward, a port or an event can still add one. Unset, the
+   * character's starting daemon.
    * URL form: `daemon=mars` (a catalog id) or `daemon=none`.
    */
   readonly daemon?: DaemonConfig | null;

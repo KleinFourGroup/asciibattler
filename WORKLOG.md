@@ -7766,3 +7766,101 @@ the header's rule for a list that runs out disagreeing with `advanceEntry`,
 a forced encounter said to replace the draw at a node of another kind, a
 step code or history left, or a rule a change must respect cut (a level
 weight per unit, the power override's three readers).
+
+Committed as `56348dc1`; the suite 3,722 and the smoke 613, green, by the
+hook.
+
+### 123m — `Run.ts`'s batches, cut (2026-10-16, session 41f464e5)
+
+`Run.ts` cut at its declarations into six batches, with their lines at
+`56348dc1`:
+
+- 4a — the module's head: the header, `RunPhase`, the port and encounter
+  types, the helpers, the version, `RunSnapshot` (1–806, 806 lines).
+- 4b — the class's fields, the constructor, the streams, the subscriptions
+  and `dispatch` (807–1502, 696).
+- 4c — the nodes, events and ports, the encounter's start, sectors and
+  boards (`handleEnterNode` to `buildEncounterMap`, 1503–2332, 830).
+- 4d — the turn: its start, the run stats, bits, packets, instant ops, the
+  wave and the turn gates (`startNextTurn` to `handleAdvanceTurn`,
+  2333–3340, 1,008).
+- 4e — grants, redraw and empower, daemons, rewards, the encounter's end,
+  sectors, rest, promotion, recruits and the deck (`grantViews` to
+  `drawCard`, 3341–4226, 886).
+- 4f — save and load: `resume`, `toJSON`, `fromJSON`, the input resolvers
+  (4227–4752, 526).
+
+### 123m, batch 4a — `Run.ts`'s head (2026-10-16, session 41f464e5)
+
+The module's head, to the class. The version's doc was 240 lines of bump
+history; it is now the rule (a save at another version rejects, and a
+change to the snapshot's structure fails the fingerprint test until the
+number moves). `RunPhase` lists each phase with what enters and leaves it,
+where a comment block told when each was added. The snapshot's fields
+lost their step and version tags.
+
+**Statements found false and corrected (rule 7):**
+
+- The header: the shipped sector map was "The Start" alone, so every run
+  one sector; it is two (`config/sectorMap.ts`). The determinism note was
+  "one run RNG, forked once per major draw"; every stream derives per
+  occurrence by key. `Game` "owns the World lifecycle"; the battle scene
+  builds the World from `run.currentEncounter`. The phase diagram had a
+  non-sink terminal going to `map`; it lands on `sectorCleared`.
+- `RunPhase`: `reward` was entered "on a WON final turn"; any turn that does
+  not lose the run can offer one (its bits tally, a wiped camp's loot).
+- `sampleDistinct` named `Recruitment.sampleDistinctArchetypes`, which no
+  longer exists, and gave the port its own streams for a reason from the
+  retired fork ladder; each port's streams are keyed to it.
+- `BattleEncounter`: `generateTerrain` is in `terrainGen.ts`, not
+  `battleSetup.ts`; `layoutId` was "null-only, the library lands in C1b+";
+  a procedural side was drawn "from `battleRng`", where it comes off the
+  encounter's map stream (a boss's, the sector-entry stream).
+  `battleRules` was the daemons' hooks, which the packets' injected rules
+  follow, and reached "both construction sites"; the replays and the
+  rollout walker build Worlds from it too.
+- `resolveSelectedEncounter`'s doc sat above `cloneBattleRule`'s; it moved
+  down to its function.
+- `EncounterMap` was "rolled ONCE in `beginEncounter`"; a boss's is built
+  at the sector's entry.
+- `RunSnapshot`: `activeEvent` was checked "against the shipped catalog";
+  `fromJSON` checks the load's (`inputs.eventCatalog`). An empty
+  `daemonIds` left "both pre-turn tools permanently unavailable"; a packet
+  can grant redraws, and a reward, a port or an event can add a daemon.
+  `RunConfig.daemon`'s "both pre-turn gates closed for good" (batch 1's
+  file) said the same, and is corrected in this commit.
+  `encounterEffects` was empty "at the default (no daemon adds any)"; an
+  empower adds to it. `pendingPromotions` was "non-null only while
+  `phase === 'promotion'`"; set at the turn boundary, it stands through
+  `turn-outcome` and `reward`. `pendingRewards` left out a wiped camp's
+  loot, between the tally and the win's roll. `FallenRecord` named "the
+  cross-check the ledger test pins" for a battle's sum; the test pins a
+  turn's rows against its chips.
+
+**Leads, not built:**
+
+- GOTCHAS #111 still says only "The Start" ships and the multi-sector
+  advance is unreachable in play.
+- `resolveSelectedEncounter` loads an unknown id as no encounter, where
+  every other saved id rejects; a resumed turn would then throw in
+  `rollTurnWave`.
+- Batch 1's lead on `effectiveRunStats` stands for 4d.
+
+Measured (`comment-length` on copies under `output/cl-123m-b4a/`):
+`Run.ts` comment lines 2,345 → 2,066, words 19,900 → 17,312, code lines
+2,251 unchanged; `RunConfig.ts` 246 → 247, 1,937 → 1,943. `src/run`
+comment lines 3,917 → 3,639, words 33,209 → 30,627. The step-code ceiling
+3,818 → 3,672, `Run.ts` 683 → 537.
+
+Proof: `comment-strip HEAD src`, comments only, exit 0, its control named
+in both files.
+
+Cost: 264,862 at 23:22 UTC by the tool's clock as the batch started,
+357,368 at 23:32 after its proof: 92k for 806 lines, 115 a line. The
+phases' transitions took reading the handlers in 4c to 4e's spans.
+
+**Read** (`batch`): `git show <this commit> -- src/run/Run.ts` (the head,
+to the class) against the seven rules. Wrong looks like a phase's entry
+or exit in `RunPhase` that its handler does not take, the version's doc
+without the rule for when to bump, a load check claimed for a snapshot
+field that `fromJSON` does not make, or history left.

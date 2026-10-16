@@ -145,7 +145,7 @@
  "src/run/NodeMap.test.ts": 17,
  "src/run/Recruitment.test.ts": 23,
  "src/run/Run.test.ts": 215,
- "src/run/Run.ts": 683,
+ "src/run/Run.ts": 537,
  "src/run/RunConfig.test.ts": 1,
  "src/run/chipRule.test.ts": 3,
  "src/run/daemon.test.ts": 12,

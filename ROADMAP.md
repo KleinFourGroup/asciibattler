@@ -223,6 +223,9 @@ The cut, signed 2026-10-16 with the kickoff's five calls (WORKLOG §123,
     unread.
   - ◐ **Batch 3 — the encounters** (`encounters/selection.ts`,
     `sequencer.ts`, `wave.ts`, `enemyBudget.ts`). Built, unread.
+  - ☐ **`Run.ts`, batches 4a to 4f**, cut at its declarations (WORKLOG
+    §123, "`Run.ts`'s batches, cut").
+    - ◐ **4a — the head** (to the class). Built, unread.
 - ☐ **123n — `Run.ts` read again for B-15** (`stop`). A split comes back
   only with a measure that could pass it.
 

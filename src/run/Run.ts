@@ -1,42 +1,27 @@
 /**
- * Run-level state machine. Owns the meta state that survives across battles:
- * the seeded RNG, the generated NodeMap, the player roster, the current
- * position on the map, and which phase the run is in.
+ * The run's state machine: the state that outlives a battle (the roster and
+ * its deck, the pools, the map and the run's place on it, the daemons,
+ * packets and bits, the phase) and the rules that move it. The phases are
+ * listed on `RunPhase`.
  *
- * Phases:
+ * A run walks a sequence of sectors (`sectorWalk.ts`), each a node map with
+ * its own pools and theme. Clearing a sector's terminal moves the run to a
+ * successor sector, or wins it at a sink of the sector map; the shipped map
+ * is two sectors (`config/sectorMap.ts`).
  *
- *   map ── enterNode (frontier) ──▶ battle
- *   battle ── battle:ended (player win, non-terminal)        ──▶ recruit
- *   battle ── battle:ended (player win, terminal @ DAG sink) ──▶ complete
- *   battle ── battle:ended (player win, terminal, non-sink)  ──▶ map (next sector)
- *   battle ── battle:ended (enemy win)                       ──▶ defeat
- *   recruit ── chooseRecruit ──▶ map
+ * `Run` does not build the World. It builds the turn's `BattleEncounter`
+ * (the seeds, the board, both teams, the battle rules) and emits
+ * `battle:started`; the battle scene builds the World from
+ * `run.currentEncounter`.
  *
- * 48b — a winning final turn interposes the gate chain BEFORE the win path
- * above: reward (if the encounter's refs rolled an offer) → promotion (if
- * units leveled) → the recruit/complete fork (`continueFromTurnGate`).
+ * Inputs come in as commands through `dispatch` (`Command.ts`, whose header
+ * holds the rule for a command that does not apply); what happened goes out
+ * on the bus.
  *
- * T2 — the run is a *sequence of sectors* (a sector = one node-map + its layout
- * pool/theme/length, selected off the sector-selection DAG in `sectorWalk.ts`).
- * Clearing a sector's terminal advances to a successor sector unless that DAG
- * node is a sink (→ run complete). Only "The Start" ships (source == sink), so
- * today every run is a single sector ending in run:victory.
- *
- * Run does NOT construct the World. Instead it builds an Encounter snapshot
- * (worldSeed + rolled teams) and fires `battle:started`; Game owns the World
- * lifecycle and reads `run.currentEncounter` to set up the next battle.
- *
- * **A2 command channel.** Imperative inputs from the UI — entering a node,
- * picking a recruit, resetting the run — come in through `dispatch()` /
- * the `RunDispatcher` interface, not via bus events. Output notifications
- * (run:started, recruit:offered, run:victory, run:defeated) stay on the
- * bus. The split mirrors the inputs (commands) vs outputs (events)
- * distinction the rest of the codebase now keeps.
- *
- * The RNG hierarchy is the load-bearing determinism invariant: one run RNG,
- * forked once per major draw (nodeMap, starting team, each battle). The
- * forked battle stream is independent of the parent, so the run stream stays
- * byte-identical across replays of the same seed — see TESTING.md.
+ * Determinism: every draw comes from a stream derived per occurrence from
+ * the run's `streamRoot`, a key and stable ids (`streamRng`;
+ * `src/core/rngStreams.ts` holds the keys, which are permanent), so one
+ * occurrence's draws never shift another's. The contract is in TESTING.md.
  */
 
 import type { EventBus } from '../core/EventBus';
@@ -126,33 +111,37 @@ import { simulateLevelUps } from '../sim/leveling';
 import { growthRatesForArchetype } from '../sim/archetypes';
 import type { Archetype } from '../sim/archetypes';
 
-// H4b adds the two TURN-GATE phases (`turn-intro` / `turn-outcome`) — entered
-// only when `pauseAtTurnGates` is on, so the pre/post-turn screens can pause the
-// encounter loop. The headless loop never enters them (it runs straight through
-// `battle`), so existing headless tests + the fuzz harness are unaffected.
-// 48b adds `reward` — entered on a WON final turn when the encounter's reward
-// refs rolled a non-empty offer (both gated AND headless paths: the offer is a
-// real decision, not presentation). The locked ordering: battle → reward →
-// promotion → recruit (`continueFromTurnGate`).
-// 50c adds `port` — entered from the map when the player docks at a port node
-// (`handleEnterNode`; the rest-style inline branch, NOT the turn-gate chain —
-// a port is a map node, not a post-battle phase). Left via the `leavePort`
-// command back to 'map'. Minimal at 50c; §50d rolls stock on entry and adds
-// the buy/sell commands.
-// 67a adds `sectorCleared` — entered from `advanceSector` when a NON-SINK
-// sector terminal is cleared (the sector state has already swapped; the gate
-// is the between-sector beat). A real phase rather than a bare event so the
-// Game layer's phase-checking routes stay truthful and a mid-gate restore
-// re-shows the screen (the defeat/complete precedent — every full-screen
-// beat is phase-backed). Left via `dismissSectorCleared` back to 'map'.
-// 74b adds `event` — entered from the map when the player lands on an event
-// node that didn't combat-resolve (`handleEnterNode`; the port model — a
-// branch on the node's kind, holding the serialized {eventId,pageId} cursor).
-// Left via a terminal outcome: return-to-map (the leavePort silent
-// transition) or start-encounter (into 'battle').
-// `rest` is the gate a rest node opens (`handleEnterNode`): the run holds
-// there, saved, until `chooseRestOption` applies the rest and moves on to
-// 'promotion' or back to 'map'.
+/**
+ * Where the run stands, saved with it. Every full-screen beat is a phase, so
+ * `Game` routes on the phase and a save restores the screen (`resume`).
+ * - `map` — choosing the next node from the frontier; a run and each new
+ *   sector start here.
+ * - `port` — docked at a port node, its stock rolled on entry; `leavePort`
+ *   returns to `map`.
+ * - `event` — an event node's page; an outcome returns to `map`, opens a
+ *   fight (`battle`), or ends the run (`defeat`).
+ * - `rest` — a rest node's gate; `chooseRestOption` applies the rest, then
+ *   `promotion` if a unit leveled, else `map`.
+ * - `turn-intro` — the pre-turn gate, entered only with `pauseAtTurnGates`;
+ *   `advanceTurn` starts the battle. The headless loop goes straight to
+ *   `battle`.
+ * - `battle` — a turn being fought.
+ * - `turn-outcome` — the post-turn gate, entered only with
+ *   `pauseAtTurnGates`; `advanceTurn` runs the gate chain.
+ * - `reward` — an offer from a turn that did not lose the run: its bits
+ *   tally, a wiped camp's loot, a won encounter's loot.
+ * - `promotion` — units leveled, at a turn's end or a rest.
+ * - `recruit` — the offer after a won encounter that was not the sector's
+ *   terminal; `chooseRecruit` or `passRecruit` returns to `map`.
+ * - `sectorCleared` — a sector's terminal won with the sector map going on;
+ *   the next sector is already in place, and `dismissSectorCleared` returns
+ *   to its `map`.
+ * - `defeat`, `complete` — the run's ends.
+ *
+ * After a turn the gate chain is reward, then promotion, then the next turn
+ * or the encounter's end (`continueFromTurnGate`), on the gated and the
+ * headless path alike.
+ */
 export type RunPhase =
   | 'map'
   | 'port'
@@ -169,17 +158,14 @@ export type RunPhase =
   | 'complete';
 
 /**
- * 50d — a port's rolled stock (spec §Ports). Rolled ONCE on docking
- * (`rollPortStock`, off the two dedicated port streams), serialized while
- * docked (a mid-port save keeps the stock — the pending-offer pattern), and
- * cleared on `leavePort` (no re-visits / no rerolls — the cluster scope
- * guard; a port isn't in its own frontier anyway). Slots carry a `sold`
- * flag rather than splicing, so indices stay stable for the transaction
- * commands and §50e can render sold-out slots.
+ * A port's stock: rolled once on docking (`rollPortStock`), saved while
+ * docked so a save keeps it, and dropped on `leavePort`, since a port is
+ * never re-entered. A slot is marked `sold` rather than spliced out, so the
+ * buy commands' indices stay put and the port screen shows the slot sold.
  *
- * Unit slots carry the full rolled template (the recruit-offer pattern —
- * a `currentOffer` sibling) and a JITTERED price; packet/daemon slots carry
- * catalog ids (defs resolve at read time) and flat price-book prices.
+ * A unit slot holds the whole rolled template, as a recruit offer does, at a
+ * jittered price; a packet or daemon slot holds a catalog id at the price
+ * book's price.
  */
 interface PortUnitSlot {
   readonly template: UnitTemplate;
@@ -203,12 +189,10 @@ export interface PortStock {
 }
 
 /**
- * 50d — sample up to `count` DISTINCT entries uniformly from `pool` via a
- * partial Fisher–Yates on a copy (the `Recruitment.sampleDistinctArchetypes`
- * shape, generalized). Draws exactly `min(count, pool.length)` ints — the
- * draw count depends only on the pool SIZE, and the owned-daemon exclusion
- * makes that size filter-dependent, which is why port stock gets its own
- * streams (the two-reward-stream rationale, gotcha #111's cousin).
+ * Up to `count` distinct entries of `pool`, uniformly, by a partial
+ * Fisher–Yates on a copy. It draws `min(count, pool.length)` ints, so its
+ * draw count follows the pool's size, which the port's owned-daemon filter
+ * changes; the daemon sample is the last draw on the port's stock stream.
  */
 function sampleDistinct<T>(pool: readonly T[], count: number, rng: RNG): T[] {
   const copy = [...pool];
@@ -223,8 +207,9 @@ function sampleDistinct<T>(pool: readonly T[], count: number, rng: RNG): T[] {
 }
 
 /** One cumulative-weight draw over `items`: exactly one `next()`, a list
- *  of one included (gotcha #111), and the last item if rounding runs past
- *  the sum. The event's pick and a choice's outcome both use it. */
+ *  of one included, unlike `sectorWalk`'s `pickWeighted` (gotcha #111), and
+ *  the last item if rounding runs past the sum. The event's pick and a
+ *  choice's outcome both use it. */
 function pickWeighted<T>(items: readonly T[], weightOf: (item: T) => number, rng: RNG): T {
   const total = items.reduce((sum, item) => sum + weightOf(item), 0);
   const draw = rng.next() * total;
@@ -245,308 +230,65 @@ function isIndex(i: number | undefined, length: number): i is number {
 export interface BattleEncounter {
   readonly worldSeed: number;
   /**
-   * Independent RNG seed for terrain generation (C1a). Forked separately
-   * from the combat seed so tweaking obstacle placement doesn't shift
-   * unit roll outcomes. Drives wall + shallow-water layout via
-   * `generateTerrain` in `src/sim/battleSetup.ts`.
+   * The board generator's seed (`generateTerrain`, `src/sim/terrainGen.ts`),
+   * apart from `worldSeed` so the board's draws and the units' never shift
+   * each other.
    */
   readonly terrainSeed: number;
-  /**
-   * Optional hand-authored layout id (C1a plumbed but null-only — the
-   * library lands in C1b+). When set, `generateTerrain` bypasses the
-   * procedural path and loads a named layout from the library.
-   */
+  /** A hand-authored layout's id, which `generateTerrain` loads in place of
+   *  a procedural board; `null` for a procedural one. */
   readonly layoutId: string | null;
   /**
-   * D3 — battlefield dimensions for this encounter. Procedural encounters
-   * roll a square side length in `[TERRAIN.proceduralMinSize,
-   * TERRAIN.proceduralMaxSize]` from `battleRng` and set
-   * `gridW === gridH`; hand-authored layouts pull from their own
-   * `LayoutDef.gridW` / `LayoutDef.gridH`. Threaded into World +
-   * TerrainRenderer + camera fit at battle-setup time.
+   * The board's size: a procedural board is square, its side drawn in
+   * `[TERRAIN.proceduralMinSize, TERRAIN.proceduralMaxSize]` off the
+   * encounter's map stream; a layout gives its own `gridW` and `gridH`.
    */
   readonly gridW: number;
   readonly gridH: number;
   /**
-   * D8 — visual theme for this encounter's terrain palette. Cosmetic only;
-   * no sim effects. Hand-authored layouts pull from `LayoutDef.theme`;
-   * T2 — procedural encounters now inherit the **current sector's** theme
-   * (no per-battle theme roll), so a sector reads as one consistent place.
+   * The terrain palette, cosmetic only. A layout gives its own theme; a
+   * procedural board takes the current sector's, so a sector reads as one
+   * place.
    */
   readonly theme: Theme;
   readonly playerTeam: readonly UnitTemplate[];
   readonly enemyTeam: readonly UnitTemplate[];
   /**
-   * 47f — the owned daemons' battle-domain hooks, compiled to plain data
-   * (`battleRulesFor`) for the World to install at construction (the spec's
-   * seam crossing; evaluation semantics in src/sim/battleRules.ts). Riding
-   * the encounter is what reaches BOTH construction sites (BattleScene +
-   * the fuzz harness) for free. Optional so the integration-test fixtures
-   * that hand-build encounters stay untouched (absent = none); `beginTurn`
-   * always sets it.
+   * The battle rules the World installs at construction: the owned daemons'
+   * battle hooks (`battleRulesFor`), then the packets' injected rules, as
+   * plain data (their meaning is in `src/sim/battleRules.ts`). Riding the
+   * encounter, they reach every place that builds a World from one: the
+   * battle scene, the fuzz harness, the replays. Optional so a test's
+   * hand-built encounter can leave it out (none); `beginTurn` always sets it.
    */
   readonly battleRules?: readonly BattleRule[];
   /**
-   * 83d — the authored encounter's kind, for kind-gated battle-setup
-   * behavior. Sole consumer today: the camp pull's BOSS EXEMPTION
-   * (`spawnCamps` — the boss-side wave defends the pool instead of
-   * being diverted onto a camp; user-signed 2026-08-20, the §83c
-   * bracket having read the pull outcome-irrelevant either way).
-   * Optional so hand-built test fixtures stay untouched (absent =
-   * non-boss semantics, pull-eligible); `beginTurn` always sets it.
+   * The authored encounter's kind. Battle setup reads it for the camp pull,
+   * which a boss board goes without: the boss's wave defends the pool rather
+   * than detour onto a camp (`spawnCamps`). Optional so a test's hand-built
+   * encounter can leave it out (no boss); `beginTurn` always sets it.
    */
   readonly kind?: EncounterKind;
 }
 
-/** E4: bumped 3→5 in two steps. v4 added `xp` on UnitTemplate + the
- *  `levelupRng` stream. v5 adds `pendingPromotions` so a snapshot taken
- *  while PromotionScene is up restores in the same phase with the same
- *  per-unit deltas to render. v4 + earlier throw on load.
- *  H1: bumped 5→6. `power` was added to `UnitStats`, which changes the shape
- *  of the roster `team: UnitTemplate[]` (and `currentOffer`) that this
- *  snapshot stores. A v5 save carries `power`-less templates → reject outright
- *  rather than load a roster that NaNs on the next level-up (the World v17→18
- *  stat-shape-contract rationale, applied to the Run save). v5 + earlier throw
- *  on load.
- *  H3: bumped 6→7. Adds `deploymentCounts: number[]` (per-roster-slot
- *  deployment counter, parallel to `team`). A v6 save has no counts → reject
- *  rather than rehydrate a Run whose counter is out of sync with the roster.
- *  H4: bumped 7→8. Adds the encounter-loop state: `playerHealth` (the run-wide
- *  pool), `enemyHealth` + `turnIndex` + `encounterBudget` (the active
- *  encounter), and `pendingEncounterXp` (XP accrued across the encounter's
- *  turns, banked at encounter end). A v7 save has no pools → reject rather than
- *  rehydrate a Run mid-encounter with a missing/`NaN` health pool.
- *  H5: bumped 8→9. Adds the card deck: `drawPile` / `discardPile` / `hand`
- *  (rosterIndex values; the encounter-scoped draw→hand→discard cycle) + the
- *  dedicated `deckRng` stream. A v8 save has no deck → reject rather than
- *  rehydrate a Run mid-encounter with an undrawn (or stale) hand.
- *  I1: bumped 9→10. The roster `team: UnitTemplate[]` embeds `UnitStats`, and
- *  I1 reverted `agility → speed` + added `precision`/`evasion`. A v9 save
- *  carries the old `agility`-keyed, dodge-less stat block → reject rather than
- *  rehydrate a roster that would `NaN` on the next level-up (same stat-shape
- *  contract as the World v19 bump).
- *  I5: bumped 10→11. The roster embeds `archetype` tags, and I5 renamed
- *  `melee → mercenary` (+ new subclasses). A v10 save carries `'melee'`-tagged
- *  roster units that no longer resolve to a config → reject rather than
- *  rehydrate a roster that crashes on the next level-up / re-derive (same
- *  archetype-identity rationale as the World v20 bump).
- *  K1: bumped 11→12. Adds `encounterEffects: StatusEffect[][]` (per-roster-slot
- *  encounter-scoped status effects, parallel to `team`; the `endOfEncounter`
- *  store re-seeded each turn at deploy). A v11 save has no store → reject
- *  rather than rehydrate a Run mid-encounter with a missing buff list. (The
- *  per-turn fatigue + the World-side battle effects are NOT here — fatigue is
- *  recomputed each turn from `deploymentCounts`, and live battle effects live
- *  in the WorldSnapshot.)
- *  K3: bumped 12→13. Adds `redrawsUsedThisTurn` / `cardsRedrawnThisTurn` (the
- *  per-turn redraw budget bookkeeping). A v12 save has neither → reject rather
- *  than rehydrate a pre-turn gate whose redraw budget silently refreshed.
- *  K3.5: bumped 13→14. Adds `encounterMap` (ONE battlefield per encounter —
- *  layout/size/terrain/theme rolled once at encounter start, no longer
- *  re-rolled per turn). It's mid-encounter state that is NOT re-derivable per
- *  turn anymore, so a v13 save → reject rather than rehydrate an encounter
- *  that would re-roll its map.
- *  K4: bumped 14→15. Adds `empowersUsedThisTurn` (the per-turn empower budget
- *  bookkeeping, the redraw-counter analogue). A v14 save has no counter →
- *  reject rather than rehydrate a pre-turn gate whose empower budget silently
- *  refreshed. (The buff itself rides the v12 `encounterEffects` store — no
- *  shape change there.)
- *  L1: bumped 15→16. Adds the daemon layer: `daemon` (the run's rolled/forced
- *  daemon, stored WHOLE so a save survives catalog edits and bespoke test
- *  daemons round-trip), `daemonRng` (the dedicated roll + chance-flip stream),
- *  and `turnGates` (the CURRENT turn's resolved gates — a save taken at the
- *  pre-turn gate must restore the same Mercury flip, never re-roll it). A v15
- *  save has none of these → reject rather than rehydrate a run that would
- *  re-roll its daemon.
- *  M1: bumped 16→17. REMOVES `pendingEncounterXp` — the per-turn promotion
- *  cadence banks each turn's XP at the turn boundary, so no cross-turn XP
- *  accrual state exists anymore. A v16 save can carry accrued-but-unbanked
- *  XP that v17 code would silently drop → reject.
- *  S1: bumped 17→18 (Floor→Hop field rename on the persisted MapNode).
- *  S2: bumped 18→19 (the selectable root via the pre-root sentinel flow).
- *  T2: bumped 19→20. Adds the sector state: `currentSectorId` (the chosen
- *  sector — drives the node-map length, theme, + hop-gated layout pool) and
- *  `currentSectorNodeId` (the run's position on the sector-selection DAG, needed
- *  to pick the next sector on clearing a terminal). A v19 save predates the
- *  sector model → reject rather than rehydrate a run with no sector.
- *  U3: bumped 20→21. The encounter-model swap: retires `encounterBudget` (the
- *  per-encounter budget now lives in the authored wave spec) and adds
- *  `selectedEncounterId` + `waveCursor` (the selected encounter + the wave-list
- *  grammar position). A v20 save has a budget but no encounter/cursor → reject.
- *  V1: bumped 21→22. Encounter SELECTION + the catalog: the code-built
- *  reproduction (`selectedEncounterId: 'reproduction'`) was retired — encounters
- *  are now selected from `config/encounters.json` (ids `brigands`/`highwaymen`/
- *  `deserters`). A v21 save holding `'reproduction'` would resolve to no encounter
- *  → reject rather than rehydrate a broken run.
- *  W2: bumped 22→23. Elite map-nodes: `NodeMap.generate` now scatters `elite`
- *  nodes through the middle hops (a new RNG pass), so the persisted `nodeMap`
- *  for a given seed differs from a v22 map, and a node can now carry the new
- *  `elite` kind. A v22 save's map predates the elite scatter → reject rather
- *  than rehydrate a run whose map disagrees with the current generator.
- *  v24 — §37e renamed the terrain themes (`default → grassland`, `rock →
- *  barren`). `theme` is serialized (this `RunSnapshot`'s `encounterMap` +
- *  `currentEncounter`, both `ThemeSchema`-typed), so a v23 save carries the
- *  old strings, which now fail `ThemeSchema`. Reject-stale (no transform) —
- *  the version gate rejects the v23 save before the theme would be parsed.
- *  47c: bumped 24→25. The rule vocabulary: daemons re-authored from
- *  redraw/empower gate fields to `rules: Rule[]` (the serialized `daemon` is
- *  still stored whole, so its SHAPE changed), and the serialized `turnGates`
- *  (resolved gate configs) became `turnGrants` (the rule-engine fold —
- *  `resolveTurnGrants`). A v24 save carries a gate-shaped daemon + a
- *  `turnGates` field the rule engine can't read → reject.
- *  47d: bumped 25→26. Multi-daemon ownership: `daemon` (one whole object |
- *  null) becomes `daemonIds: string[]` (BY ID, def-resolved on load — an
- *  unknown id hard-rejects; bespoke daemons no longer round-trip, the 47
- *  shape-lock), `turnGrants.empower` becomes the per-source `empowers:
- *  EmpowerGrant[]` (the per-idol model), and `empowersUsedThisTurn` becomes
- *  a per-source array. A v25 save carries the old shapes → reject.
- *  47e: bumped 26→27. The bits substrate: adds `bits` (the run's currency
- *  balance — integer, floored at zero). A v26 save has no bits → reject.
- *  47f: bumped 27→28. The serialized `currentEncounter` (a `BattleEncounter`)
- *  gains `battleRules` (the owned daemons' compiled battle hooks — the World
- *  installs them at construction). A v27 save's mid-battle encounter lacks
- *  them → a resumed battle would silently fight without the run's daemons —
- *  reject.
- *  48b: bumped 28→29. The reward phase: adds the two dedicated reward
- *  streams (`rewardRng` sampling / `rewardBitsRng` bits rolls), the
- *  `pendingRewards` offer, and the `'reward'` member of `phase`. A v28 save
- *  lacks the streams (and could sit in a phase shape this engine routes
- *  differently) → reject.
- *  49b: bumped 29→30. The cache: adds `cache` (owned packet ids, acquisition
- *  order — the daemonIds def-resolved pattern). A v29 save has no cache →
- *  reject rather than rehydrate a run whose packets silently vanished.
- *  49c: bumped 30→31. Packet rewards activate: the `pendingRewards` portion
- *  union gains the `packet` member (the 48b "'reward' member of `phase`"
- *  precedent — a union widening is a shape change: a v30 reader would route
- *  a packet portion down the daemon arm and throw on a phantom id).
- *  49d: bumped 31→32. The grant queue: `turnGrants` re-models from the 47d
- *  `{redraw, empowers}` split into ONE ordered `TurnGrant[]` (per-source
- *  entries with serialized `used`/`passed`), and the three per-turn counters
- *  (`redrawsUsedThisTurn`/`cardsRedrawnThisTurn`/`empowersUsedThisTurn`)
- *  fold into the entries. A v31 save carries shapes this engine can't read
- *  → reject.
- *  49e: bumped 32→33. The fire engine: adds `pendingEncounterEffects` (an
- *  out-of-battle `applyBuff` fire pends until the next encounter start) and
- *  `injectedEncounterRules` + `injectedRunRules` (packet-injected battle
- *  rules, encounter- and run-duration). A v32 save has none of the three →
- *  reject rather than rehydrate a run whose fired packets silently lost
- *  their effects (the packet was already consumed — dropping the stores
- *  would eat it).
- *  50c: bumped 33→34. Ports open: `phase` gains the `port` member (the 48b
- *  precedent — a union widening is a shape change), and the NodeMap
- *  generator gains the port scatter pass, so the seed→map mapping changed:
- *  a v33 save's map has no port nodes and its serialized phase can never be
- *  'port' — but a v33 READER handed a v34 save would choke on both →
- *  reject.
- *  50d: bumped 34→35. The port engine: adds `portStock` (the docked port's
- *  rolled stock — units/packets/daemons with prices + sold flags; null
- *  undocked) and the two port streams (`portStockRng` composition /
- *  `portPriceRng` unit-price jitter — separate because the owned-daemon
- *  exclusion makes composition draw counts filter-dependent, the
- *  two-reward-stream rationale). A v34 mid-dock save has no stock to
- *  restore → reject rather than strand a docked run with nothing to buy.
- *  51a: bumped 35→36. Battle-tally bits ride the reward offer: the bits
- *  portion member gains the optional `source` label (the 49c union-widening
- *  precedent), and `pendingRewards` can now be non-null at ANY non-lost
- *  turn boundary — a v35 reader restoring a mid-encounter offer would route
- *  the run through a phase sequence it never planned for → reject.
- *  51f: bumped 36→37. The injected-rule stores gain PROVENANCE: entries are
- *  `InjectedRule` ({rule, sourceId}) instead of bare `BattleRule`s, so a
- *  packet-mined tally labels its earner. A v36 save's bare-rule arrays
- *  can't restore into the wrapped shape → reject.
- *  63c: bumped 37→38. Starting characters: adds `characterId` (BY ID,
- *  def-resolved on load — an unknown id hard-rejects, the daemonIds
- *  discipline), and the L1 run-start daemon ROLL is retired (daemons seed
- *  from the character def; the daemonRng fork survives for grant flips, so
- *  its stream position advances differently from v37). A v37 save has no
- *  characterId and its daemon/pool provenance predates the character model
- *  → reject.
- *  66a: bumped 38→39. Boss forewarning: adds the sector-start pre-roll pair
- *  `bossEncounterId` (BY ID, def-resolved on load — an unknown id
- *  hard-rejects) + `bossEncounterMap` (the fully-built board, the K3.5
- *  EncounterMap shape), rolled on the sector-entry `sectorRng` AFTER the
- *  node-map draws and consumed by the boss node's `beginEncounter` (which
- *  no longer forks/rolls — the round's second deliberate stream break,
- *  confined to the boss fight and downstream). A v38 save has no pair for
- *  its boss node to consume → reject.
- *  67a: bumped 39→40. The sector-transition gate: `RunPhase` gains
- *  `sectorCleared` — `advanceSector` lands there (emitting `sector:cleared`)
- *  instead of silently on 'map', and the `dismissSectorCleared` command
- *  releases back to 'map'. The serialized phase union widened → flat reject
- *  per the version discipline (a v39 save predates the gate).
- *  74b: bumped 40→41. Events (the Cluster-5 keystone): `NodeKind` AND
- *  `RunPhase` gain 'event' (the union-widening discipline, twice over), plus
- *  four new fields — `eventRng` (appended LAST in the fork chain, after
- *  portPriceRng; joins the `cloneRunForRollout` re-seed list, nine streams),
- *  `activeEvent` (the {eventId,pageId} cursor, id/page def-resolved on load
- *  — unknown hard-rejects), `eventFlags` (the run-lifetime chain-flag
- *  record; EXEMPT from the advanceSector reset by enumeration — the reset
- *  touches only fields it names), and `pendingRewardOverride` (a
- *  start-encounter terminal's pinned reward table, cleared at
- *  finishEncounter). A v40 save predates the event phase → reject.
- *  77d2: bumped 41→42. THE KEYED-DERIVATION CONVERSION (the §77 scheduled
- *  seed-stream break — every seed remaps): the ten serialized RNG states
- *  (`rng` + the nine E4→74b streams) RETIRE, replaced by `streamRoot` +
- *  three occurrence counters (`sectorIndex` / `deckShuffleIndex` /
- *  `eventStep`). Every stream now derives per-occurrence as
- *  `deriveRng(streamRoot, key, ...stableIds)` (src/core/rngStreams.ts is
- *  the key registry; keys are PERMANENT). Kills the append-coupling class
- *  (H5/L1/48b/50d/74b each paid a global re-baseline to add a stream) and
- *  the #49 draw-count class at the seams; outcomes become NODE-ANCHORED
- *  (a port's stock is seed-fixed regardless of route — user-signed).
- *  `cloneRunForRollout` now overrides ONE field. A v41 save carries
- *  stream states the derivation model can't resume → reject.
- *  82c: bumped 42→43. `pendingRewardOverride` widens from a single
- *  table-id string to a `{table, trigger}` ref LIST (the §82 mixed-table
- *  split made single-table overrides underpowered — an event-pinned fight
- *  now carries the same multi-table chance mix a catalog encounter does).
- *  A v42 save carries the string shape → reject.
- *  83d: bumped 43→44. The serialized `currentEncounter` gains `kind` (the
- *  camp pull's boss exemption rides it into battle setup — the 47f
- *  battleRules pattern: the encounter IS the fixture, so replayTrace and
- *  a mid-battle resume reproduce the gate). A v43 save's mid-battle boss
- *  encounter lacks it → a resumed battle would re-run setup pull-eligible
- *  and silently diverge from this engine's semantics — reject.
- *  94d: bumped 44→45. `fallenLedger` — the run-wide record of every
- *  combatant that fell (both sides; summons and neutrals excluded, the
- *  same exclusions the casualty rule books), appended off `unit:died`
- *  during a battle. Run-OWNED (the user's call at the §94 shape-lock) so it
- *  persists across encounters — the run-end stats' source, and a
- *  mid-encounter resume keeps the encounter's earlier rows. A v44 save has
- *  no ledger; a resumed run would show an encounter with rows missing
- *  from its own record → reject (the standing no-migration rule).
- *  95f: bumped 45→46. The Mars buff KEY renamed `empowered` → `honed`
- *  (Round 7 spec §11 — it collided with the EMPOWER mechanic that grants
- *  it; the user's call). The key serializes inside `encounterEffects` (and
- *  `pendingEncounterEffects`) and is the EMPOWER_DISPLAY / marker / label
- *  key, so a v45 save's stacks would resume under a key no table knows →
- *  reject (the ONE bump Round 7 authorized; no migration).
- *
- *  113e: exported, because the store's run slot is stamped with it and
- *  rejects a save at any other version before `fromJSON` sees it
- *  (src/store/runSlot.ts). A change to `RunSnapshot`'s structure now fails
- *  `npm test` until this number moves (tests/save-fingerprint.test.ts).
- *  115a: bumped 46→47. `clearedSector` (the sector-cleared gate's two
- *  facts, which were locals of `advanceSector`) and `lastTurn` (the last
- *  resolved turn's winner and reason, for the pre-turn screen's strip), so
- *  `resume()` can rebuild those two gates' payloads from a save. No v46
- *  save exists outside a test: the run slot had no writer before §115.
- *  117b: bumped 47→48. `escalation`, the run's Escalation level. The four
- *  difficulty multipliers are derived from it on a load and are not saved.
- *  A v47 save has no level and rejects; none is in a player's hands, since
- *  no build that saves has been uploaded.
- *  117.75a: bumped 48→49. `RunPhase` gains `rest`, the gate a rest node
- *  opens; no field is new. `fromJSON` takes the phase as written, so the
- *  version is what keeps a phase this build doesn't know out of it (the
- *  67a rule for a widened phase union). */
+/**
+ * The save format's version. A save at any other version is rejected, with
+ * no migration: the store's run slot is stamped with this number and
+ * refuses a save at another before `fromJSON` sees it
+ * (`src/store/runSlot.ts`), and `fromJSON` refuses one too. A change to
+ * `RunSnapshot`'s structure, a new member of a union it saves such as
+ * `RunPhase` included, fails `npm test` until this number moves
+ * (`tests/save-fingerprint.test.ts`, then `npm run save:fingerprint`).
+ */
 export const RUN_SCHEMA_VERSION = 49;
 
 /**
- * 94d — one row of the fallen ledger: a combatant that fell, where and when.
- * `sector` + `node` name the encounter INSTANCE (an encounter id recurs across
- * sectors — the adventurer sits in both pools); `turn` is 1-based (the turn
- * being fought when the unit fell); `power` is the amount the casualty rule
- * BOOKED (`unit:died.power`), so Σ over a battle per side equals
- * `battle:ended.fallenPower` — the cross-check the ledger test pins.
+ * One row of the fallen ledger: a combatant that fell, where and when.
+ * `sector` and `node` name the encounter's instance, since an encounter id
+ * can recur across sectors; `turn` is 1-based, the turn being fought when
+ * the unit fell; `power` is what the casualty rule booked
+ * (`unit:died.power`), so a side's rows over a battle sum to its
+ * `battle:ended.fallenPower`.
  */
 export interface FallenRecord {
   readonly sector: number;
@@ -561,7 +303,7 @@ export interface FallenRecord {
   readonly tick: number;
 }
 
-/** 115a — the sector-cleared gate's two facts that the Run can't re-derive
+/** The sector-cleared gate's two facts that the Run can't re-derive
  *  once the next sector has replaced the cleared one: which sector was
  *  cleared (by id; its title resolves from the catalog) and the pool before
  *  the seam's heal. */
@@ -570,22 +312,16 @@ interface ClearedSector {
   readonly poolBefore: number;
 }
 
-/** 115a — the active encounter's last resolved turn, as `turn:resolved`
+/** The active encounter's last resolved turn, as `turn:resolved`
  *  reported it. Who fell in it is already in the fallen ledger. */
 interface LastTurn {
   readonly winner: 'player' | 'enemy' | 'draw';
   readonly reason: TurnEndReason;
 }
 
-/**
- * V1 — re-resolve a persisted `selectedEncounterId` to its `Encounter` from the
- * authored catalog. A null id (no active encounter) → null; an unknown id (a
- * retired catalog entry) → null too. (U3's code-built reproduction was retired
- * in V1: every encounter, Brigands included, is now `config/encounters.json`.)
- */
-/** 49e — an independent copy of one battle rule (plain nested data, never
- *  mutated post-creation — the copy just keeps the injected-rules stores and
- *  their wire images from aliasing the packet catalog / each other). */
+/** A copy of one battle rule, so the injected-rule stores and their saved
+ *  images never share an object with the packet catalog or each other. The
+ *  rules are flat data, never mutated once made. */
 function cloneBattleRule(rule: BattleRule): BattleRule {
   const copy: BattleRule = { on: rule.on, effect: { ...rule.effect } };
   if (rule.chance !== undefined) copy.chance = rule.chance;
@@ -593,12 +329,12 @@ function cloneBattleRule(rule: BattleRule): BattleRule {
   return copy;
 }
 
-/** 51f — one packet-injected battle rule + its PROVENANCE (the source packet
- *  id). The sim never sees the wrapper — the battle compile strips to the
- *  plain rule — but the run keeps it so a rule's earnings can be credited
- *  (the reward tally's source label). No shipped packet injects a run-
- *  duration rule since 88c daemonized miner (packets.test.ts guards);
- *  encounter-duration injectors (venom) still ride this wrapper. */
+/** One packet-injected battle rule and the packet it came from. The sim
+ *  never sees the wrapper, since the battle compile strips it to the rule,
+ *  but the run keeps the source so a rule's earnings can be credited (the
+ *  bits tally's label). No shipped packet injects a run-duration rule
+ *  (`src/config/packets.test.ts`); `venom` injects an encounter-duration
+ *  one. */
 interface InjectedRule {
   rule: BattleRule;
   sourceId: string;
@@ -608,26 +344,28 @@ function cloneInjectedRule(entry: InjectedRule): InjectedRule {
   return { rule: cloneBattleRule(entry.rule), sourceId: entry.sourceId };
 }
 
+/** A saved `selectedEncounterId`'s encounter from the catalog: `null` for no
+ *  encounter, and for an id the catalog no longer holds. */
 function resolveSelectedEncounter(id: string | null): Encounter | null {
   if (id === null) return null;
   return getEncounter(id) ?? null;
 }
 
-/** 115a — the state a gate's payload is built from, which the phase
- *  guarantees; a save that breaks that throws by name at `resume()`. */
+/** The state a gate's payload is built from, which the phase guarantees; a
+ *  save that breaks that throws by name at `resume()`. */
 function gateState<T>(value: T | null, phase: RunPhase, field: string): T {
   if (value === null) throw new Error(`Run.resume: the '${phase}' phase with no ${field}`);
   return value;
 }
 
 /**
- * K3.5 — the encounter's battlefield, rolled ONCE in `beginEncounter` (the
- * pre-K3.5 per-turn rolls in `beginTurn` now read from here): one map per
- * encounter, so the pre-turn redraw decision is informed rather than a blind
- * guess, and an encounter reads as one continuous fight on one field. The
- * per-turn variety that remains is the enemy WAVE + the world seed (unit RNG).
- * `gridW`/`gridH` are stored (not re-derived) because a procedural roll's side
- * isn't recoverable from `layoutId: null`.
+ * An encounter's battlefield, built once for the whole encounter: in
+ * `beginEncounter`, or for a boss at the sector's entry with the boss's
+ * pick. One board an encounter, so the pre-turn redraw is chosen knowing
+ * the field, and an encounter reads as one fight on one field; what changes
+ * a turn is the enemy wave and the world seed. `gridW` and `gridH` are kept
+ * because a procedural board's side can't be recovered from `layoutId:
+ * null`.
  */
 interface EncounterMap {
   readonly layoutId: string | null;
@@ -639,169 +377,152 @@ interface EncounterMap {
 
 export interface RunSnapshot {
   schemaVersion: typeof RUN_SCHEMA_VERSION;
-  /** 77d2 (v42): THE run randomness root. Every stream is derived
-   *  per-occurrence as `deriveRng(streamRoot, key, ...stableIds)` (the
-   *  keyed-derivation architecture — src/core/rngStreams.ts is the key
-   *  registry); no stream STATE is serialized anymore, because every
-   *  occurrence is atomic between snapshots and re-derives from this root
-   *  plus the stable ids/counters below. Equals the run seed on a live
-   *  run; a rollout clone's wire overrides it (`cloneRunForRollout`) so
-   *  every future occurrence diverges — the clairvoyance guard, one
-   *  field instead of nine re-seeded streams. */
+  /** The run's randomness root. Every stream derives per occurrence as
+   *  `deriveRng(streamRoot, key, ...stableIds)` (`src/core/rngStreams.ts`
+   *  holds the keys), so no stream's state is saved: each occurrence
+   *  finishes between saves and derives again from this root and the ids
+   *  and counters below. A live run's is its seed as an unsigned integer; a
+   *  rollout clone replaces it (`cloneRunForRollout`), so every occurrence
+   *  after the clone differs and the rollout cannot see the real run's
+   *  draws. */
   streamRoot: number;
-  /** 77d2 (v42): sectors entered so far (0 = the starting sector) — the
-   *  first stable id in every sector-scoped stream key. */
+  /** Sectors entered so far, 0 for the starting sector: the first stable id
+   *  of every sector-scoped stream key. */
   sectorIndex: number;
-  /** 77d2 (v42): pile shuffles performed so far — the `'deck'` stream's
-   *  occurrence counter (shuffles have no natural node identity: a
-   *  mid-encounter recycle and the encounter-start shuffle both count). */
+  /** Pile shuffles so far, the `'deck'` stream's occurrence counter, since a
+   *  shuffle has no node of its own: the encounter-start shuffle and a
+   *  mid-encounter reshuffle of the discards both count. */
   deckShuffleIndex: number;
-  /** 77d2 (v42): atomic event occurrences resolved so far (a node entry
-   *  or one choice resolution) — the `'event'` stream's occurrence
-   *  counter (page routing can revisit a page, so no natural id). */
+  /** Event occurrences resolved so far (a node's entry, or one choice), the
+   *  `'event'` stream's occurrence counter, since a page can be visited
+   *  again and has no id to key on. */
   eventStep: number;
-  /** 50d: the docked port's rolled stock (null undocked) — a mid-dock save
-   *  restores the exact stock, prices, and sold flags (the pending-offer
-   *  pattern). Packet/daemon ids re-validate against the catalogs on load
-   *  (hard reject on a miss — the daemonIds discipline). */
+  /** The docked port's stock, `null` when not docked; a save restores the
+   *  stock, prices and sold flags. Its packet and daemon ids are checked
+   *  against the catalogs on load, an unknown one rejected. */
   portStock: PortStock | null;
-  /** 74b: the active event's cursor (null outside the `event` phase) — a
-   *  mid-event save restores the exact page (the portStock pending-offer
-   *  pattern). The event id AND page id re-validate against the shipped
-   *  catalog on load (hard reject — the daemonIds discipline; bespoke
-   *  `eventCatalog` defs are in-memory only). */
+  /** The open event and page, `null` outside the `event` phase; a save
+   *  restores the page. Both ids are checked on load against the catalog the
+   *  load passes (`RunConfig.eventCatalog`, else the shipped one), an unknown
+   *  one rejected. */
   activeEvent: { eventId: string; pageId: string } | null;
-  /** 74b: the run-lifetime chain-flag record (spec §Events: "the flag store
-   *  IS the chain state"), written by `setFlag` ops, read by
-   *  flagSet/flagIs conditions + (74e) pool eligibility. Namespaced
-   *  `chainId:key` by convention. EXEMPT from the advanceSector reset by
-   *  enumeration — flags deliberately span sectors. */
+  /** The event flags, for the run's whole life: written by `setFlag` ops and
+   *  by a page opening (its event's visited flag, `visitedFlagFor`), read by
+   *  `flagSet` and `flagIs` conditions and the event pool's filter. A sector
+   *  advance leaves them, so a chain of events can span sectors. */
   eventFlags: Record<string, EventFlagValue>;
-  /** 74b: a start-encounter terminal's pinned reward refs (the spec's
-   *  "predetermined reward"), replacing the fought encounter's own reward
-   *  refs at the won boundary. 82c (v43): widened from a single table id
-   *  to a full ref list — each ref's table re-validates against the
-   *  reward tables on load. Null = no override; cleared at
-   *  finishEncounter (either outcome). */
+  /** A start-encounter outcome's reward refs, which replace the fought
+   *  encounter's own at its won turn; each ref's table is checked on load.
+   *  `null` for none, and cleared when the encounter ends either way, so it
+   *  applies only to the fight the event opened. */
   pendingRewardOverride: readonly EncounterRewardRef[] | null;
-  /** L1→47d: the run's owned daemons BY ID, in acquisition order (the
-   *  def-resolved pattern — what makes uncapped multi-daemon cheap). An id
-   *  missing from the catalog on load is a hard reject (no silent drops);
-   *  bespoke non-catalog daemons are in-memory only and don't survive
-   *  save/reload (the 47 shape-lock). Empty = a daemon-less run (both
-   *  pre-turn tools permanently unavailable). */
+  /** The owned daemons by id, in the order gained, each resolved from the
+   *  catalog on load; an unknown id rejects. A daemon built in memory for a
+   *  test does not survive a save. Empty, the run holds no daemon, so no
+   *  pre-turn grant comes from one. */
   daemonIds: string[];
-  /** 63c (v38): the run's character BY ID (def-resolved on load — an
-   *  unknown id hard-rejects, the daemonIds discipline). Blacklists/weights
-   *  are derived from the def at read time, never serialized. */
+  /** The run's character by id, resolved from the catalog on load; an
+   *  unknown id rejects. Its pools and weights are read from the def, never
+   *  saved. */
   characterId: string;
-  /** 117b (v48): the run's Escalation level, 0 (off) to `ESCALATION_MAX`
-   *  (config/escalation.ts). A value off the ladder hard-rejects on load.
-   *  The difficulty multipliers are derived from it, never serialized. It
-   *  is here, and not only in the run's dials, because a rollout clone
-   *  loads the snapshot with no config. */
+  /** The run's Escalation level, 0 (off) to `ESCALATION_MAX`
+   *  (`config/escalation.ts`); a level off the ladder rejects on load. The
+   *  difficulty multipliers are derived from it, never saved. It is saved,
+   *  and not only among the run's dials, because a rollout clone loads the
+   *  snapshot with no config. */
   escalation: number;
-  /** L1→49d: the current turn's grant QUEUE (`resolveTurnGrants` output +
-   *  per-entry `used`/`passed` engine state). Persisted so a save at the
-   *  gate restores the same chance flips AND the same cursor position. */
+  /** The current turn's grant queue (`resolveTurnGrants`, with each entry's
+   *  `used` and `passed`), saved so a save at the gate restores the same
+   *  chance flips and the same cursor. */
   turnGrants: TurnGrants;
-  /** T2 — the run's position on the sector-selection DAG: the chosen sector
-   *  (`currentSectorId` — its length/theme/layout-pool drive the active map) and
-   *  the DAG node it was chosen at (`currentSectorNodeId` — the cursor the walk
-   *  advances from on clearing a sector terminal). The `SectorMap` itself isn't
-   *  persisted (a RunConfig input; a rehydrate falls back to the shipped map). */
+  /** The run's place on the sector map: the chosen sector, whose length,
+   *  theme and pools drive the active node map, and the sector-map node it
+   *  was chosen at, which the walk advances from when the sector's terminal
+   *  is cleared. The `SectorMap` itself is not saved (`RunConfig.sectorMap`;
+   *  a load falls back to the shipped map). */
   currentSectorId: string;
   currentSectorNodeId: string;
   nodeMap: NodeMap;
-  /** 66a (v39): the sector's pre-rolled boss — the forewarning pair. The
-   *  encounter BY ID (def-resolved on load, an unknown id hard-rejects —
-   *  the daemonIds discipline) + its fully-built battlefield (the K3.5
-   *  `EncounterMap` shape). Rolled once per sector entry on the sector
-   *  fork; never null — every sector's terminal is a boss. */
+  /** The sector's boss, picked at the sector's entry so it can be shown
+   *  ahead: the encounter by id, resolved on load (an unknown id rejects),
+   *  and its built battlefield. Drawn on the sector-entry stream after the
+   *  node map; never null, since every sector's terminal is a boss. */
   bossEncounterId: string;
   bossEncounterMap: EncounterMap;
   team: UnitTemplate[];
-  /** H3: per-roster-slot deployment counter, parallel to `team`. */
+  /** Each roster slot's deployment count, parallel to `team`. */
   deploymentCounts: number[];
-  /** K1: per-roster-slot encounter-scoped status effects, parallel to `team`.
-   *  The `endOfEncounter` store — set via `addEncounterEffect`, re-seeded onto
-   *  the unit each turn at deploy, reset at encounter start. Empty per slot at
-   *  the default (no daemon adds any), so a default run round-trips `[][]`. */
+  /** Each roster slot's encounter-scoped status effects, parallel to `team`:
+   *  added by `addEncounterEffect` (an empower, a drained out-of-battle
+   *  buff), put on the unit at each turn's deploy, and cleared at an
+   *  encounter's start. */
   encounterEffects: StatusEffect[][];
-  /** H5: the encounter-scoped card deck — `rosterIndex` values in three piles.
-   *  `drawPile` is the shuffled draw stack (drawn from the end), `discardPile`
-   *  collects fought hands, `hand` is the current turn's drawn cards. Rebuilt
-   *  from the roster at each encounter start. */
+  /** The encounter's card deck, as roster indices in three piles: `drawPile`
+   *  is the shuffled draw stack, drawn from its end; `discardPile` collects
+   *  fought hands; `hand` is this turn's cards. Rebuilt from the roster at
+   *  each encounter's start. */
   drawPile: number[];
   discardPile: number[];
   hand: number[];
-  /** 47e: the run's bits balance (integer, floored at zero — the spec §Bits
-   *  substrate). Persists across the whole run like `playerHealth`. */
+  /** The run's bits, an integer floored at 0, kept for the whole run. */
   bits: number;
-  /** 49b: the cache — owned packet ids in acquisition order (the `daemonIds`
-   *  def-resolved pattern: re-resolved against the catalog on load, an
-   *  unknown id hard-rejects). MAY legally exceed the derived `cacheSize`
-   *  (a shrink daemon drops capacity under current holdings; the overflow is
-   *  DERIVED state, never a serialized flag — see `Run.cacheOverflow`). */
+  /** The cache: owned packet ids in the order gained, each checked against
+   *  the catalog on load (an unknown id rejects). It may hold more than the
+   *  derived `cacheSize`, when a daemon shrinks the cache under what it
+   *  holds; the overflow is derived, never saved (`Run.cacheOverflow`). */
   cache: string[];
-  /** 49e: out-of-battle `applyBuff` fires (overclock), pending until the
-   *  NEXT encounter start — drained into `encounterEffects` right after the
-   *  K1 reset (per-roster-slot, parallel to `team`, like the live store). */
+  /** Out-of-battle `applyBuff` fires (overclock), per roster slot like
+   *  `encounterEffects`, held until the next encounter's start and moved
+   *  into `encounterEffects` right after that store is cleared. */
   pendingEncounterEffects: StatusEffect[][];
-  /** 49e: packet-injected battle rules, in fire order. `encounter`-duration
-   *  ones reset at the next encounter start (the K1 reset-at-start
-   *  doctrine); `run`-duration ones persist for the whole run. Both union
-   *  into every turn's `battleRules` compile after the daemon rules.
-   *  51f (v37): entries carry their source packet id (`InjectedRule`) so
-   *  the reward tally's label can credit a packet-mined bit. */
+  /** Packet-injected battle rules with their sources, in fire order.
+   *  `encounter`-duration ones are dropped at the next encounter's start;
+   *  `run`-duration ones last the run. Both join each turn's `battleRules`
+   *  after the daemon rules. */
   injectedEncounterRules: InjectedRule[];
   injectedRunRules: InjectedRule[];
-  /** H4: the run-wide player health pool (persists across the whole run). */
+  /** The player's pool, kept for the whole run. */
   playerHealth: number;
-  /** H4: the active encounter's enemy pool (reset each encounter). */
+  /** The active encounter's enemy pool, filled at each encounter's start. */
   enemyHealth: number;
-  /** H4: turns elapsed in the active encounter (drives the max-turns cap). */
+  /** Turns resolved in the active encounter; the max-turns cap reads it. */
   turnIndex: number;
-  /** V1: the active encounter's id (a catalog id, e.g. `brigands`), or null
-   *  outside an encounter. `fromJSON` re-resolves the Encounter from it. */
+  /** The active encounter's catalog id, `null` outside an encounter;
+   *  `fromJSON` resolves the encounter from it. */
   selectedEncounterId: string | null;
-  /** U3: the wave-list sequencer cursor (the U2 grammar position), or null
-   *  before the encounter's first turn. Plain JSON; persisted so a mid-encounter
-   *  resume continues the exact wave sequence/stage. */
+  /** The wave sequencer's cursor, `null` before the encounter's first wave;
+   *  saved so a resumed encounter continues the same waves. */
   waveCursor: WaveCursor | null;
-  /** K3.5: the active encounter's battlefield (rolled once at encounter start,
-   *  every turn fights on it). Null outside an encounter. */
+  /** The active encounter's battlefield, which every turn fights on; `null`
+   *  outside an encounter. */
   encounterMap: EncounterMap | null;
   currentNodeId: number;
   phase: RunPhase;
   currentEncounter: BattleEncounter | null;
-  /** 94d (v45): the run-wide fallen ledger, in death order. */
+  /** The run's fallen ledger, in death order. */
   fallenLedger: FallenRecord[];
   currentOffer: UnitTemplate[] | null;
   visitedNodes: number[];
-  /** E4: the promotions awaiting PromotionScene dismissal. Non-null only
-   *  while `phase === 'promotion'`. Snapshotted so a save mid-promotion
-   *  restores to the same screen with the same deltas. */
+  /** The promotions waiting to be shown: set at the turn boundary or rest
+   *  that leveled a unit, through the `reward` phase that may come first,
+   *  until `dismissPromotion`. Saved so a resumed `promotion` shows the same
+   *  deltas. */
   pendingPromotions: PromotionInfo[] | null;
-  /** 48b: the rolled-but-unresolved reward portions (the pending offer —
-   *  the `currentOffer` pattern). Built ONCE at the turn boundary (51a: the
-   *  battle tally leads at any non-lost turn; the win roll appends on won);
-   *  each accept/decline removes its portion. Snapshotted so a mid-reward
-   *  save reproduces the exact offer (the §48 exit-criterion contract). */
+  /** The reward offer not yet resolved, as `currentOffer` is for a recruit:
+   *  built once at the turn boundary (the bits tally first at any turn that
+   *  did not lose the run, then a wiped camp's loot, then a won encounter's
+   *  roll), each accept or decline removing its portion. Saved so a resumed
+   *  offer is the same offer. */
   pendingRewards: RewardPortion[] | null;
-  /** 115a (v47): non-null only while `phase === 'sectorCleared'`; the
-   *  cleared sector's id re-validates against the catalog on load. */
+  /** Set only in the `sectorCleared` phase; the cleared sector's id is
+   *  checked against the catalog on load. */
   clearedSector: ClearedSector | null;
-  /** 115a (v47): the active encounter's last resolved turn; null before an
-   *  encounter's first turn resolves and outside an encounter. */
+  /** The active encounter's last resolved turn; `null` before its first
+   *  turn resolves and outside an encounter. */
   lastTurn: LastTurn | null;
 }
 
-// Balance constants now live in config/*.json — see src/config/recruitment.ts.
-// Bound to locals here just for readability at the call sites. (The G4 enemy
-// budget reads `config/difficulty.json` inside `src/run/enemyBudget.ts`.)
-// 63c retired startingMelee/startingRanged with `rollTeam` — the starting
-// roster is the character def's list now (config/characters.json).
+/** The starting level, bound to a local for its call sites. */
 const { startingLevel: STARTING_LEVEL } = RECRUITMENT;
 
 export class Run {

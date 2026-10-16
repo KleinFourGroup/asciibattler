@@ -172,7 +172,7 @@ src/
     Command.ts               # WorldCommand union — drained at tick boundary (A2); J1: setObjective/clearObjective
     objective.ts             # O1/O2/O3: TeamObjective (atWill | engage{target} | hold | focus{target}) per team + ObjectiveTarget (tile | enemy); J3: objectiveAtCell (click cell → enemy/tile)
     Pathfinding.ts           # A* king's-move, Chebyshev heuristic, optional CostFn (C1a); J2: pathfindingStats counter; J3: bestEffort (route to nearest reachable)
-    movement.ts              # J2: shared movement seam — MovementIntent + advance (the dash hook) + routeToward (cache boundary); §42a: advance emits the mechanical unit:moveDecision
+    movement.ts              # J2: shared movement seam — MovementIntent + advance (the step) + leapLanding (the dash) + routeToward (cache boundary); §42a: advance emits the mechanical unit:moveDecision
     moveDecision.ts          # §42a: the MoveDecisionKind taxonomy + emitMoveDecision — the per-poll movement decision record (observational only, never serialized)
     actingPosition.ts        # GP4: nearestActingCell — bounded BFS to nearest firing cell in [minRange,range](+LOS) (O4 band); §29d nearestFreeCells (summon placement)
     positioning.ts           # §44a: the WHERE knowledge — firingBandCell (44-pre-c, THE shared band+LOS gate) / collectLosBlockers / engagementDirective (hold|approach|pinned) / awayStep+passable+NEIGHBORS leaves; ⚠ must not import archetypes.ts (module-eval cycle, see its import note)

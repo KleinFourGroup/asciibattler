@@ -215,7 +215,6 @@ export function engagementDirective(
       intent: {
         goals: [target.position],
         approachToward: target.position,
-        maxCells: 1,
         bestEffort: true,
       },
     };
@@ -248,7 +247,6 @@ export function engagementDirective(
       goals,
       approachToward: target.position,
       excludeUnitId: target.id,
-      maxCells: 1,
     },
   };
 }

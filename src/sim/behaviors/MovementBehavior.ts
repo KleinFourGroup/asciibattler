@@ -122,7 +122,6 @@ export class MovementBehavior implements Behavior {
         return advance(unit, world, {
           goals: [objective.target.cell],
           approachToward: objective.target.cell,
-          maxCells: 1,
           bestEffort: true,
         });
       }

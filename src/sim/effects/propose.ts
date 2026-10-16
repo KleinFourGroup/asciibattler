@@ -143,11 +143,12 @@ function proposeSelfMove(def: AbilityDef, unit: Unit, world: World): ActionPropo
   // reach.
   if (unitDistance(unit, target) <= unit.derived.attackRange) return null;
 
-  const landing = leapLanding(unit, world, {
-    goals: [target.position],
-    approachToward: target.position,
-    maxCells: def.rangeCells,
-  });
+  const landing = leapLanding(
+    unit,
+    world,
+    { goals: [target.position], approachToward: target.position },
+    def.rangeCells,
+  );
   if (landing === null) return null;
 
   const speed = unit.effectiveStats.speed;

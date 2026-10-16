@@ -30,9 +30,7 @@ const idx = (world: World, x: number, y: number): number => cellIndex({ x, y }, 
  * J2 — unit tests for the shared movement seam. The behaviour-level
  * byte-identical contract (steps, sidestep, abstains, in-range) is pinned by
  * MovementBehavior.test.ts / SupportMovementBehavior.test.ts driving real
- * ticks; this file exercises the primitive directly, and in particular the
- * `maxCells > 1` DASH HOOK that no shipped ability uses yet — proving the seam
- * already serves Phase N's gap-closer.
+ * ticks; this file exercises the primitive directly.
  */
 
 interface Spec {
@@ -176,13 +174,12 @@ describe('§36a — claims block pathing (occupied OR claimed)', () => {
   });
 });
 
-describe('movement / advance (maxCells = 1, the byte-identical step)', () => {
+describe('movement / advance (the byte-identical step)', () => {
   it('steps one cell toward the goal on open ground', () => {
     const { world, units } = scene([{ team: 'player', x: 0, y: 0 }]);
     const intent: MovementIntent = {
       goals: [{ x: 5, y: 0 }],
       approachToward: { x: 5, y: 0 },
-      maxCells: 1,
     };
     expect(landing(advance(units[0]!, world, intent))).toEqual({ x: 1, y: 0 });
   });
@@ -200,7 +197,6 @@ describe('movement / advance (maxCells = 1, the byte-identical step)', () => {
         { x: 3, y: 0 }, // open → step (1,0)
       ],
       approachToward: { x: 3, y: 0 },
-      maxCells: 1,
     };
     expect(landing(advance(units[0]!, world, intent))).toEqual({ x: 1, y: 0 });
   });
@@ -223,7 +219,6 @@ describe('movement / advance (maxCells = 1, the byte-identical step)', () => {
     const intent: MovementIntent = {
       goals: [{ x: 0, y: 0 }],
       approachToward: { x: 0, y: 0 },
-      maxCells: 1,
     };
     expect(advance(units[0]!, world, intent)).toBeNull();
   });
@@ -336,7 +331,6 @@ describe('§43b — the sidestep tie balance (cell-parity alternation)', () => {
         goals: [goal],
         approachToward: goal,
         excludeUnitId: units[2]!.id,
-        maxCells: 1,
       };
       return landing(advance(units[0]!, world, intent));
     };
@@ -344,46 +338,6 @@ describe('§43b — the sidestep tie balance (cell-parity alternation)', () => {
     const rotated = pocket((c) => ({ x: 11 - c.x, y: 11 - c.y }));
     expect(straight).toEqual({ x: 0, y: 4 }); // odd from-cell (0,5) → counter-clockwise
     expect(rotated).toEqual({ x: 11, y: 7 }); // the exact point-image of (0,4)
-  });
-});
-
-describe('movement / advance (maxCells > 1, the N1 dash hook)', () => {
-  it('leaps up to maxCells cells along the route on open ground', () => {
-    const { world, units } = scene([{ team: 'player', x: 0, y: 0 }], 16, 16);
-    const intent: MovementIntent = {
-      goals: [{ x: 8, y: 0 }],
-      approachToward: { x: 8, y: 0 },
-      maxCells: 4,
-    };
-    // 1 cell per step normally; maxCells 4 lands 4 cells along the straight route.
-    expect(landing(advance(units[0]!, world, intent))).toEqual({ x: 4, y: 0 });
-  });
-
-  it('lands on the goal when it is nearer than maxCells', () => {
-    const { world, units } = scene([{ team: 'player', x: 0, y: 0 }]);
-    const intent: MovementIntent = {
-      goals: [{ x: 3, y: 0 }],
-      approachToward: { x: 3, y: 0 },
-      maxCells: 10,
-    };
-    expect(landing(advance(units[0]!, world, intent))).toEqual({ x: 3, y: 0 });
-  });
-
-  it('stops before the first occupied cell along the leap (conservative default)', () => {
-    // 1-wide corridor on y=0 (row y=1 walled) with an ally on (3,0): the leap
-    // walks (1,0),(2,0) then hits the occupied (3,0) and lands on (2,0).
-    const specs: Spec[] = [
-      { team: 'player', x: 0, y: 0 },
-      { team: 'player', x: 3, y: 0 }, // ally blocks the corridor
-      ...[0, 1, 2, 3, 4, 5, 6, 7, 8].map((x): Spec => ({ team: 'neutral', x, y: 1, neutral: true })),
-    ];
-    const { world, units } = scene(specs, 16, 16);
-    const intent: MovementIntent = {
-      goals: [{ x: 8, y: 0 }],
-      approachToward: { x: 8, y: 0 },
-      maxCells: 5,
-    };
-    expect(landing(advance(units[0]!, world, intent))).toEqual({ x: 2, y: 0 });
   });
 });
 
@@ -413,7 +367,6 @@ describe('movement / advance — M6 water bog-down (move duration)', () => {
     const intent: MovementIntent = {
       goals: [{ x: 2, y: 0 }],
       approachToward: { x: 2, y: 0 },
-      maxCells: 1,
     };
     const p = advance(u, world, intent);
     return { land: landing(p), ticks: moveTicks(p), base: u.derived.moveCooldownTicks };
@@ -430,28 +383,6 @@ describe('movement / advance — M6 water bog-down (move duration)', () => {
     expect(wet.land).toEqual({ x: 1, y: 0 }); // still steps in — cost 2 is finite
     expect(wet.ticks).toBe(wet.base * 2); // shallow_water TILE_COST = 2 → 2× duration
     expect(wet.ticks).toBeGreaterThan(wet.base);
-  });
-
-  it('the leap (maxCells > 1) keeps base cadence even when forced through water', () => {
-    // 1-wide corridor on y=0 (row y=1 walled) with water on the first cells: the
-    // leap is FORCED through water yet keeps base cadence — wade scaling is a
-    // normal-step property, the dash's terrain interaction is N1's call.
-    const specs: Spec[] = [
-      { team: 'player', x: 0, y: 0 },
-      ...[0, 1, 2, 3, 4, 5, 6, 7, 8].map((x): Spec => ({ team: 'neutral', x, y: 1, neutral: true })),
-    ];
-    const { world, units } = scene(specs, 16, 16);
-    const u = units[0]!;
-    world.tileGrid.setKind({ x: 1, y: 0 }, 'shallow_water');
-    world.tileGrid.setKind({ x: 2, y: 0 }, 'shallow_water');
-    const intent: MovementIntent = {
-      goals: [{ x: 8, y: 0 }],
-      approachToward: { x: 8, y: 0 },
-      maxCells: 4,
-    };
-    const p = advance(u, world, intent);
-    expect(landing(p)).toEqual({ x: 4, y: 0 }); // leapt through the water
-    expect(moveTicks(p)).toBe(u.derived.moveCooldownTicks); // base, not scaled
   });
 });
 
@@ -644,7 +575,6 @@ describe('§45b — the ETA-gated wait-vs-sidestep', () => {
     const intent: MovementIntent = {
       goals: [{ x: 5, y: 0 }],
       approachToward: { x: 5, y: 0 },
-      maxCells: 1,
     };
     return advance(mover!, world, intent);
   }
@@ -686,7 +616,6 @@ describe('§45b — the ETA-gated wait-vs-sidestep', () => {
     const intent: MovementIntent = {
       goals: [{ x: 5, y: 0 }],
       approachToward: { x: 5, y: 0 },
-      maxCells: 1,
     };
     const p = advance(mover!, world, intent);
     expect(p).not.toBeNull();
@@ -729,7 +658,6 @@ describe('§45b — the ETA-gated wait-vs-sidestep', () => {
     const p = advance(mover!, world, {
       goals: [{ x: 9, y: 11 }],
       approachToward: { x: 9, y: 11 },
-      maxCells: 1,
     });
     expect(p).not.toBeNull();
     expect(p!.action.id).toBe(WAIT_ACTION_ID);
@@ -773,7 +701,6 @@ describe('§45c — the stable-route margin (anti-flicker hysteresis)', () => {
     const p = advance(mover!, world, {
       goals: [{ x: 9, y: 6 }],
       approachToward: { x: 9, y: 6 },
-      maxCells: 1,
     });
     return { proposal: p, mover: mover! };
   }
@@ -903,7 +830,6 @@ describe('56b — swap-through (the mover-initiated pass)', () => {
       goals: [enemy!.position],
       approachToward: enemy!.position,
       excludeUnitId: enemy!.id,
-      maxCells: 1,
     });
     return { proposal, decisions, world, mover: mover!, blocker: blocker!, enemy: enemy! };
   }
@@ -991,7 +917,6 @@ describe('56b — swap-through (the mover-initiated pass)', () => {
       goals: [enemy!.position],
       approachToward: enemy!.position,
       excludeUnitId: enemy!.id,
-      maxCells: 1,
     });
     expect(proposal).toBeNull();
     expect(decisions).toEqual([{ unitId: mover!.id, kind: 'queue' }]);
@@ -1019,7 +944,6 @@ describe('56b — swap-through (the mover-initiated pass)', () => {
       goals: [enemy!.position],
       approachToward: enemy!.position,
       excludeUnitId: enemy!.id,
-      maxCells: 1,
     });
     expect(proposal).not.toBeNull();
     expect(proposal!.action.id).toBe('swap');
@@ -1048,7 +972,6 @@ describe('56b — swap-through (the mover-initiated pass)', () => {
       goals: [enemy!.position],
       approachToward: enemy!.position,
       excludeUnitId: enemy!.id,
-      maxCells: 1,
     });
     expect(proposal).not.toBeNull();
     expect(proposal!.action.id).toBe('move');
@@ -1068,7 +991,6 @@ describe('56b — swap-through (the mover-initiated pass)', () => {
       goals: [enemy.position],
       approachToward: enemy.position,
       excludeUnitId: enemy.id,
-      maxCells: 1,
     });
     expect(reverse).toBeNull();
   });
@@ -1092,7 +1014,6 @@ describe('56b — swap-through (the mover-initiated pass)', () => {
       goals: [enemy!.position],
       approachToward: enemy!.position,
       excludeUnitId: enemy!.id,
-      maxCells: 1,
     };
     // Poll M1: proposes the swap; World would seat it in flight — mirror that.
     const p1 = advance(m1!, world, intent);
@@ -1136,7 +1057,6 @@ describe('56b — swap-through (the mover-initiated pass)', () => {
       goals: [enemy!.position],
       approachToward: enemy!.position,
       excludeUnitId: enemy!.id,
-      maxCells: 1,
     };
     const p1 = advance(m1!, world, intent);
     expect(p1!.action.id).toBe('swap');

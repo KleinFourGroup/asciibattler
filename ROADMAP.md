@@ -209,8 +209,9 @@ The cut, signed 2026-10-16 with the kickoff's five calls (WORKLOG §123,
     `config/units` in no import cycle (WORKLOG §123, "The load cycle").
   - ☑ **L-1 — the `weakest` strategy** (`none`). Proof: sim; `src`
     −29.
-  - ☐ **L-2 — `advance`'s leap branch; `maxCells` to `leapLanding`**
-    (`none`). Proof: sim; `reach-diff` over the seven.
+  - ☑ **L-2 — `advance`'s leap branch; `maxCells` to `leapLanding`**
+    (`none`). Proof: sim, a plant in `leapLanding` caught; `src` −34.
+    `reach-diff` over the seven next.
 - ☐ **123m — the comment pass** (`batch`, per batch). The 19 files as
   122o ran it; the tests wait for §126.
 - ☐ **123n — `Run.ts` read again for B-15** (`stop`). A split comes back

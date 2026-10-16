@@ -7369,3 +7369,27 @@ cycle is superseded by the guard. Proof: typecheck clean; all 23
 archetypes in `config/units.json` take `nearest`; the corpus, 0 of 30;
 the fuzz diff against `d7e3247d`, PASS on both shapes. `src` −29
 without tests (+3 −32), tests −65 (+3 −68).
+
+### L-2, built (2026-10-16, session bfbf31de)
+
+As signed with (b): `stepAlongRoute` takes the step with no
+`maxCells` test, and the leap tail, its doc bullet, the file header's
+sentence and `MovementIntent.maxCells` with its doc are gone.
+`leapLanding` takes `maxCells` as its own argument, `propose.ts` passes
+the dash's `rangeCells`, and the three `maxCells: 1` callers drop it
+(`MovementBehavior.ts`, `positioning.ts` twice). `walkAlongPath`, with
+one caller left, is folded into `leapLanding`. In `movement.test.ts`
+the four leap tests are deleted, with the header's clause on the dash
+hook, and 16 `maxCells: 1` lines leave the intents. ARCHITECTURE's tree
+line names `advance` the step and `leapLanding` the dash. A deleted test
+comment held `N1`: `comment-codes --record`, 4143 → 4141.
+
+Proof: typecheck clean; the corpus, 0 of 30; the fuzz diff against
+`efb80359`, PASS on both shapes. The plant, in `leapLanding`'s walk on
+an unreferenced commit of the tree (`34cd0330`), the occupied-cell check
+negated (`movement.ts:257`, the one edit the line admits): the corpus
+CAUGHT, 28 of 30, and the suite CAUGHT, 4 of 259 files, among them
+`propose.test.ts`, so a test still pins the dash's walk with the leap
+tests gone; unplanted, 0 of 30 and the set-aside `licences.test.ts`.
+`src` −34 without tests (+79 −113, most of it the step body's dedent),
+tests −80 (+2 −82).

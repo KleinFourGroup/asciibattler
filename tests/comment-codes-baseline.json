@@ -245,7 +245,7 @@
  "src/sim/moveAbortInflight.test.ts": 8,
  "src/sim/moveDecision.test.ts": 3,
  "src/sim/moveDeferred.test.ts": 1,
- "src/sim/movement.test.ts": 58,
+ "src/sim/movement.test.ts": 56,
  "src/sim/objective.test.ts": 3,
  "src/sim/occupancy.test.ts": 9,
  "src/sim/proceduralMap.test.ts": 5,

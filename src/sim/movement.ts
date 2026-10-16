@@ -22,14 +22,14 @@ import { emitMoveDecision } from './moveDecision';
 /**
  * The shared movement primitive, in three layers:
  *
- * - want — a `MovementIntent`: goals in order of preference, and how far to
- *   go. Each consumer builds its own (`positioning.ts`' firing cell then the
- *   target's cell, a rally tile, the dash's target).
+ * - want — a `MovementIntent`: goals in order of preference. Each consumer
+ *   builds its own (`positioning.ts`' firing cell then the target's cell, a
+ *   rally tile, the dash's target).
  * - route — `routeToward`, one A* search over this tick's blockers and
  *   costs, the same for every consumer.
- * - move — `advance` turns an intent into this tick's proposal: a one-cell
- *   step at `maxCells: 1`, a leap along the route above it. The dash lands
- *   through `leapLanding`; only tests call `advance` with `maxCells > 1`.
+ * - move — `advance` turns an intent into this tick's proposal, a one-cell
+ *   step; the dash lands through `leapLanding`, up to its reach along the
+ *   route.
  */
 
 /**
@@ -187,12 +187,6 @@ export interface MovementIntent {
    */
   readonly excludeUnitId?: number;
   /**
-   * Cells to go along the route: `1` is a step, which may sidestep an
-   * occupied forward cell; above 1 is a leap of up to N cells, stopping
-   * before the first occupied one, with no sidestep.
-   */
-  readonly maxCells: number;
-  /**
    * Route to the closest reachable cell when a goal is unreachable, instead
    * of abstaining. A rally and a rubble approach set it, so a wall on the
    * goal does not freeze the unit; a chase leaves it off, so a walled-off
@@ -239,44 +233,33 @@ export function advance(unit: Unit, world: World, intent: MovementIntent): Actio
  * cell, not a proposal, because a dash's cooldown is far longer than its
  * motion, where `moveProposal`'s cooldown is the move's duration; the dash's
  * proposal is built in `effects/propose.ts` (`proposeSelfMove`). Routes
- * toward the first goal with a path and walks up to `intent.maxCells` cells
- * along it, stopping before the first occupied cell (`walkAlongPath`, as
- * `advance`'s leap does). Leave the pursued enemy soft (no `excludeUnitId`),
- * so a dash at it lands a cell short.
+ * toward the first goal with a path and walks up to `maxCells` cells along
+ * it, landing on the furthest cell before the first occupied one; when even
+ * the first is occupied it tries the next goal. Leave the pursued enemy soft
+ * (no `excludeUnitId`), so a dash at it lands a cell short.
  */
-export function leapLanding(unit: Unit, world: World, intent: MovementIntent): GridCoord | null {
+export function leapLanding(
+  unit: Unit,
+  world: World,
+  intent: MovementIntent,
+  maxCells: number,
+): GridCoord | null {
   const ctx = buildMovementContext(unit, world, { excludeUnitId: intent.excludeUnitId });
   const from = unit.position;
   const footprint = footprintOf(unit); // the route fits the body's width
   for (const goal of intent.goals) {
     const path = routeToward(from, goal, ctx, world, intent.bestEffort ?? false, footprint);
     if (path.length < 2) continue;
-    const landing = walkAlongPath(path, intent.maxCells, ctx.otherUnitCells, world.gridW);
+    const limit = Math.min(maxCells, path.length - 1);
+    let landing: GridCoord | null = null;
+    for (let i = 1; i <= limit; i++) {
+      const c = path[i]!;
+      if (ctx.otherUnitCells.has(cellIndex(c, world.gridW))) break;
+      landing = c;
+    }
     if (landing !== null) return landing;
   }
   return null;
-}
-
-/**
- * Walk up to `maxCells` cells along an A* `path` (from `path[1]` onward),
- * stopping before the first cell occupied by another unit; returns the furthest
- * cell reached, or null when even `path[1]` is occupied. Shared by the `advance`
- * leap branch and `leapLanding` so the two can't drift.
- */
-function walkAlongPath(
-  path: readonly GridCoord[],
-  maxCells: number,
-  otherUnitCells: ReadonlySet<number>,
-  gridW: number,
-): GridCoord | null {
-  const limit = Math.min(maxCells, path.length - 1);
-  let landing: GridCoord | null = null;
-  for (let i = 1; i <= limit; i++) {
-    const c = path[i]!;
-    if (otherUnitCells.has(cellIndex(c, gridW))) break;
-    landing = c;
-  }
-  return landing;
 }
 
 /**
@@ -404,17 +387,12 @@ type StepOutcome =
   | 'no_route';
 
 /**
- * One route toward `goal`, then the step or steps by `intent.maxCells`:
- *
- * - 1, a step: take `path[1]`. When another unit holds it: if that body
- *   leaves within `SIM.waitForVacancyOwnSteps` of the mover's own steps,
- *   wait for it in lane; else if it is a friendly ranged unit to swap
- *   through (`roleEligibleBlocker`), swap or queue; else sidestep toward
- *   `approachToward`. A body not leaving, or a claim, has no ETA to wait
- *   on.
- * - Above 1, a leap: walk the route from `path[1]` until a cell is
- *   occupied or the cap or the goal is reached, and land on the furthest
- *   cell reached. No sidestep.
+ * One route toward `goal`, then a step: take `path[1]`. When another unit
+ * holds it: if that body leaves within `SIM.waitForVacancyOwnSteps` of the
+ * mover's own steps, wait for it in lane; else if it is a friendly ranged
+ * unit to swap through (`roleEligibleBlocker`), swap or queue; else
+ * sidestep toward `approachToward`. A body not leaving, or a claim, has no
+ * ETA to wait on.
  *
  * Returns a failure kind when there is no route or nothing can be
  * committed; `advance` goes on to its next goal either way.
@@ -440,63 +418,53 @@ function stepAlongRoute(
   const path = chooseRoute(from, goal, ctx, world, intent.bestEffort ?? false, footprint);
   if (path.length < 2) return 'no_route';
 
-  if (intent.maxCells <= 1) {
-    const to = path[1]!;
-    if (ctx.otherUnitCells.has(cellIndex(to, world.gridW))) {
-      // The occupant is moving away and frees the cell within the gate: wait
-      // for it in lane (a `WaitAction` the selector sees) rather than step
-      // sideways. Decided again every poll, so if the blocker stalls the gate
-      // fails next tick and the swap, sidestep or queue below applies; nothing
-      // freezes. A claim never reaches here: `vacatingEta` holds bodies only,
-      // and waiting on an arriving body means waiting for it to arrive and
-      // then leave, which one action does not tell.
-      const eta = ctx.vacatingEta.get(cellIndex(to, world.gridW));
-      if (eta !== undefined && eta <= SIM.waitForVacancyOwnSteps * ctx.stepTicks) {
-        return { proposal: waitProposal(), kind: 'wait' };
-      }
-      // A friendly ranged unit that belongs behind this melee one is never
-      // sidestepped: swap through it when it is between actions, else queue.
-      // The abstain keeps the mover polling each tick, and the blocker's own
-      // yield (`MovementBehavior`) covers its busy windows from the other
-      // side. The swap comes before the sidestep because a sidestep at equal
-      // distance succeeds without progress, locks the mover for a whole move,
-      // and loops.
-      const eligible = roleEligibleBlocker(unit, to, world);
-      if (eligible !== null) {
-        if (isSwappablePartner(eligible, world)) {
-          return {
-            proposal: swapProposal(
-              unit.position,
-              to,
-              eligible.id,
-              stepDurationTicks(world, to, baseTicks),
-            ),
-            kind: 'swap_through',
-          };
-        }
-        return 'blocked';
-      }
-      const side = sidestep(from, intent.approachToward, world, ctx.occupied);
-      return side === null
-        ? 'blocked'
-        : {
-            proposal: moveProposal(from, side, stepDurationTicks(world, side, baseTicks)),
-            kind: 'sidestep',
-          };
+  const to = path[1]!;
+  if (ctx.otherUnitCells.has(cellIndex(to, world.gridW))) {
+    // The occupant is moving away and frees the cell within the gate: wait
+    // for it in lane (a `WaitAction` the selector sees) rather than step
+    // sideways. Decided again every poll, so if the blocker stalls the gate
+    // fails next tick and the swap, sidestep or queue below applies; nothing
+    // freezes. A claim never reaches here: `vacatingEta` holds bodies only,
+    // and waiting on an arriving body means waiting for it to arrive and
+    // then leave, which one action does not tell.
+    const eta = ctx.vacatingEta.get(cellIndex(to, world.gridW));
+    if (eta !== undefined && eta <= SIM.waitForVacancyOwnSteps * ctx.stepTicks) {
+      return { proposal: waitProposal(), kind: 'wait' };
     }
-    return {
-      proposal: moveProposal(from, to, stepDurationTicks(world, to, baseTicks)),
-      kind: 'advance',
-    };
+    // A friendly ranged unit that belongs behind this melee one is never
+    // sidestepped: swap through it when it is between actions, else queue.
+    // The abstain keeps the mover polling each tick, and the blocker's own
+    // yield (`MovementBehavior`) covers its busy windows from the other
+    // side. The swap comes before the sidestep because a sidestep at equal
+    // distance succeeds without progress, locks the mover for a whole move,
+    // and loops.
+    const eligible = roleEligibleBlocker(unit, to, world);
+    if (eligible !== null) {
+      if (isSwappablePartner(eligible, world)) {
+        return {
+          proposal: swapProposal(
+            unit.position,
+            to,
+            eligible.id,
+            stepDurationTicks(world, to, baseTicks),
+          ),
+          kind: 'swap_through',
+        };
+      }
+      return 'blocked';
+    }
+    const side = sidestep(from, intent.approachToward, world, ctx.occupied);
+    return side === null
+      ? 'blocked'
+      : {
+          proposal: moveProposal(from, side, stepDurationTicks(world, side, baseTicks)),
+          kind: 'sidestep',
+        };
   }
-
-  // A leap: the furthest unoccupied cell along the route, within the cap. It
-  // moves at the base cadence; a step's wading (`stepDurationTicks`) does not
-  // apply.
-  const landing = walkAlongPath(path, intent.maxCells, ctx.otherUnitCells, world.gridW);
-  return landing === null
-    ? 'blocked'
-    : { proposal: moveProposal(from, landing, baseTicks), kind: 'advance' };
+  return {
+    proposal: moveProposal(from, to, stepDurationTicks(world, to, baseTicks)),
+    kind: 'advance',
+  };
 }
 
 /**

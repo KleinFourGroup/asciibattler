@@ -8008,3 +8008,17 @@ of the 40 was deleted and checked out again. After: 1,047 files
 `git diff --stat` empty before and after; each of the 40 byte for byte
 `git show HEAD:` (`cmp`, whose control, a CRLF copy of `RNG.ts`, it named
 as different). No commit: the index did not change.
+
+**(2), built.** `proofId` in `tests/oracle/reach.ts` holds the pair, and
+`reach-record`, `reach --proofs=` and `plant --proofs=` resolve each name
+through it; `reach-diff` given two folders compares each proof whose
+reading both hold, and names one only a folder holds. Also moved:
+`PROOFS`' doc sat above `JOBS_PARITY`'s. Shown, against the readings in
+`output/reach/`: a unit test of the names (each name to each tool's id,
+`suites` and a plant's `corpus-quick` refused); `reach-diff` on two
+scratch folders, where the second's `npm-test.json` had one reached line
+(`NodeMap.ts:82`) planted to 0 runs and no `smoke.json`, named that line,
+passed `corpus`, noted `smoke`, and exited 1; the folder against itself
+passed all six; a file and a folder exited 2; `reach --proofs=suite` read
+`npm-test`; `plant --proofs=npm-test,bogus` refused only `bogus`;
+`reach-record suite` against a missing tree failed as `npm-test`.

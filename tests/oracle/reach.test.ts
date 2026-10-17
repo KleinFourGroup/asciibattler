@@ -1,7 +1,8 @@
 import { readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { JOBS_PARITY, PROOFS, countAt, countBy, fromIstanbul, functionsAt, fuzzDiffShapes, lineMap, lost, parseAt, union, type Reading } from './reach';
+import { PLANT_PROOFS } from './plantProofs';
+import { JOBS_PARITY, PROOFS, countAt, countBy, fromIstanbul, functionsAt, fuzzDiffShapes, lineMap, lost, parseAt, proofId, union, type Reading } from './reach';
 
 // The reader of the coverage tool's output (reach.ts), held against a
 // coverage file written by hand, so the known answer does not come from the
@@ -192,6 +193,17 @@ describe('the proofs a reading can be taken of', () => {
   it('fails by name on a script with no vector or no shapes', () => {
     expect(() => fuzzDiffShapes('SHAPE_SCORED="--count=4 $VECTOR"\n')).toThrow(/no VECTOR/);
     expect(() => fuzzDiffShapes('VECTOR="--strategy=x.json"\nSHAPE_EXTRA="${ORACLE_EXTRA_SHAPE:-}"\n')).toThrow(/no SHAPE_/);
+  });
+
+  it('takes the suite by either name, the reading’s and the plant’s', () => {
+    const readings = PROOFS.map((proof) => proof.id);
+    expect(proofId('suite', readings)).toBe('npm-test');
+    expect(proofId('npm-test', readings)).toBe('npm-test');
+    expect(proofId('npm-test', PLANT_PROOFS)).toBe('suite');
+    expect(proofId('suite', PLANT_PROOFS)).toBe('suite');
+    expect(proofId('corpus', PLANT_PROOFS)).toBe('corpus');
+    expect(proofId('corpus-quick', PLANT_PROOFS)).toBeUndefined();
+    expect(proofId('suites', readings)).toBeUndefined();
   });
 
   it('names each proof once, and the fuzz diff by the config that holds its file', () => {

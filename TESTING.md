@@ -117,7 +117,9 @@ If the renderer ever grows pure-logic helpers (e.g. atlas UV computation), those
   record again after the code moves (about seven minutes for all six).
   Reached is not proven, and unreached is a finding: "The oracle map"
   below. `reach-diff <before> <after>` lists what the first reading runs
-  and the second does not, which is the check for a deleted test.
+  and the second does not, which is the check for a deleted test; given
+  two folders, it does so for each proof both hold. These and `plant` take
+  the whole suite as `npm-test` or `suite`.
 - **A planted break:** `npm run oracle -- plant --at=<file>:<line>` makes
   one mechanical edit at the line (a condition negated, a comparison's
   boundary moved, `+` and `-` traded, a number raised by one, or a call
@@ -315,7 +317,7 @@ smoke tier, three on every `npm test`); "fuzz diff" is
   tool does not read the `.mjs` files.
 - **A deleted test.** `npm run oracle -- reach-record npm-test` on the tree
   before and on the tree after, each into a `--dir` of its own, then
-  `reach-diff`: nothing the suite ran may be lost. Two readings of one
+  `reach-diff` on the two folders: nothing the suite ran may be lost. Two readings of one
   tree lose nothing to each other. With `src/store/backup.test.ts`
   deleted the diff names 20 lines, 4 functions and 23 branch arms of
   `backup.ts`; with `src/run/enemyBudget.test.ts` deleted, no line and two

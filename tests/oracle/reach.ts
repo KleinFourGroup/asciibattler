@@ -41,10 +41,10 @@ export interface Proof {
   readonly vitest: readonly string[];
 }
 
-/** The behaviour proofs a reading can be taken of, each as the Vitest run that executes it. */
 /** The test `npm run fuzz:smoke` leaves out (package.json): `fuzz:jobs-parity` runs it. */
 export const JOBS_PARITY = 'tests/fuzz/parallelRunDecisions.test.ts';
 
+/** The behaviour proofs a reading can be taken of, each as the Vitest run that executes it. */
 export const PROOFS: readonly Proof[] = [
   { id: 'corpus', what: 'the journal corpus, all 30 journals (the smoke tier)', vitest: ['--config', 'vitest.fuzz.config.ts', 'tests/fuzz/corpus'] },
   { id: 'corpus-quick', what: 'the corpus’s three quick rows (every npm test)', vitest: ['tests/corpus-quick.test.ts'] },
@@ -53,6 +53,15 @@ export const PROOFS: readonly Proof[] = [
   { id: 'npm-test', what: 'every test of npm test', vitest: [] },
   { id: 'smoke', what: 'every test of npm run fuzz:smoke', vitest: ['--config', 'vitest.fuzz.config.ts', '--exclude', JOBS_PARITY] },
 ];
+
+/** The whole suite is `npm-test` to a reading and `suite` to a plant (plantProofs.ts); each tool takes either. */
+const SUITE_NAMES: readonly string[] = ['npm-test', 'suite'];
+
+/** The id among `ids` that `name` means: itself, or the suite under its other name. */
+export function proofId(name: string, ids: readonly string[]): string | undefined {
+  if (ids.includes(name)) return name;
+  return SUITE_NAMES.includes(name) ? ids.find((id) => SUITE_NAMES.includes(id)) : undefined;
+}
 
 /** What the coverage tool is asked to read: the TypeScript the type checker covers, less the tests themselves. */
 export const COUNTED = ['src/**/*.ts', 'tests/**/*.ts', 'tools/**/*.ts', 'scripts/**/*.ts'];

@@ -237,7 +237,7 @@ The cut, signed 2026-10-16 with the kickoff's five calls (WORKLOG §123,
   cut"):
   - ☑ **The CRLF re-checkout** (`none`). 40 working copies to LF; no
     commit.
-  - ☐ **The reach tools take both forms** (`none`). `suite` and
+  - ☑ **The reach tools take both forms** (`none`). `suite` and
     `npm-test` one proof; `reach-diff` takes folders.
 
 ## Phase 124 — render and UI

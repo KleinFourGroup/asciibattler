@@ -10,8 +10,9 @@
  *   npm run oracle -- reach-record [proof…]       run the behaviour proofs under the coverage tool (reach.ts)
  *   npm run oracle -- reach [folder…]             the lines each proof reaches, by folder
  *   npm run oracle -- reach --at=<file>[:<a>[-<b>]]  one file or a range of its lines, proof by proof
- *   npm run oracle -- reach-diff <before> <after>  what the first reading reaches and the second does not
- *                                  [--from=<ref>]  (the first of ref, the second of the working tree)
+ *   npm run oracle -- reach-diff <before> <after>  what the first reading reaches and the second does not, or of
+ *                                  [--from=<ref>]  two folders, each proof both hold (the first of ref, the second
+ *                                                  of the working tree)
  *   npm run oracle -- build-hash [ref] [--dev]    the working tree's build against the ref's, file by file (buildHash.ts)
  *   npm run oracle -- plant --at=<file>:<line>    one mechanical edit at a line, and the proofs run against it (plant.ts)
  *   npm run oracle -- refs <file>[:<name>]        who reads each export of a file, by kind of reader (refs.ts)
@@ -37,7 +38,8 @@
  * with no proof named it records them all. `reach` and `reach-diff` read
  * what it wrote; `reach --proofs=<id,id>` reads only those, and its last
  * column, `any`, is then what those reach between them. `reach-diff` exits
- * 1 when anything is lost.
+ * 1 when anything is lost. Each of these and `plant` takes the whole suite
+ * as `npm-test` or `suite`.
  *
  * `build-hash` exits 1 when the two builds differ, and names the built files
  * that do. The ref defaults to HEAD. `--dev` compares the development-mode
@@ -84,7 +86,7 @@ import {
   total,
   writeCeiling,
 } from './stepCodes';
-import { PROOFS, READING_DIR, countAt, countBy, functionsAt, lineMap, loadReading, loadReadings, lost, parseAt, readingPath, record, union, type LineMap } from './reach';
+import { PROOFS, READING_DIR, countAt, countBy, functionsAt, lineMap, loadReading, loadReadings, lost, parseAt, proofId, readingPath, record, union, type LineMap, type Reading } from './reach';
 import { READER_KINDS, computedReads, count, exportsOf, membersOf, openProject, schemaKeys, standing, type Named } from './refs';
 import { compareStripped, controlStripped, readRef, readWorkingTree } from './strippedCompare';
 
@@ -230,10 +232,12 @@ function commentLength(roots: string[]): number {
 }
 
 const percent = (part: number, whole: number): string => (whole === 0 ? '-' : `${((100 * part) / whole).toFixed(1)}%`);
+const PROOF_IDS = PROOFS.map((proof) => proof.id);
 
-function reachRecord(ids: string[]): number {
+function reachRecord(names: string[]): number {
+  const ids = names.map((name) => proofId(name, PROOF_IDS) ?? name);
   const proofs = ids.length === 0 ? PROOFS : PROOFS.filter((proof) => ids.includes(proof.id));
-  const unknown = ids.filter((id) => !PROOFS.some((proof) => proof.id === id));
+  const unknown = ids.filter((id) => !PROOF_IDS.includes(id));
   if (unknown.length > 0) {
     console.error(`oracle: no proof named ${unknown.join(', ')}. The proofs: ${PROOFS.map((proof) => proof.id).join(', ')}`);
     return 2;
@@ -251,7 +255,7 @@ function reachRecord(ids: string[]): number {
 }
 
 function reach(folders: string[]): number {
-  const only = option('proofs')?.split(',');
+  const only = option('proofs')?.split(',').map((name) => proofId(name, PROOF_IDS) ?? name);
   const readings = new Map([...loadReadings(option('dir') ?? READING_DIR)].filter(([id]) => only === undefined || only.includes(id)));
   if (readings.size === 0) {
     console.error('oracle: no reading on disk. Take them with: npm run oracle -- reach-record');
@@ -346,7 +350,33 @@ function reachDiff(before: string, after: string): number {
   const from = option('from');
   const maps = from === undefined ? new Map<string, LineMap>() : lineMapsSince(from);
   if (from !== undefined) console.log(`oracle: ${maps.size} files changed since ${from}, compared through their diffs`);
-  const found = lost(loadReading(before), loadReading(after), maps);
+  const folders = [before, after].map((path) => existsSync(path) && statSync(path).isDirectory());
+  if (folders[0] !== folders[1]) {
+    console.error('oracle: reach-diff takes two readings, or two folders of them, not one of each');
+    return 2;
+  }
+  if (!folders[0]) return reportLost(loadReading(before), loadReading(after), maps);
+
+  // Two folders: each proof whose reading both hold, one by one.
+  const shared = PROOF_IDS.filter((id) => existsSync(readingPath(id, before)) && existsSync(readingPath(id, after)));
+  for (const id of PROOF_IDS) {
+    const [inBefore, inAfter] = [before, after].map((dir) => existsSync(readingPath(id, dir)));
+    if (inBefore !== inAfter) console.log(`oracle: only ${inBefore ? before : after} holds a reading of ${id}, so it is not compared`);
+  }
+  if (shared.length === 0) {
+    console.error(`oracle: ${before} and ${after} hold no reading of the same proof`);
+    return 2;
+  }
+  let failed = 0;
+  for (const id of shared) {
+    console.log(`oracle: ${id}, ${readingPath(id, before)} against ${readingPath(id, after)}`);
+    failed += reportLost(loadReading(readingPath(id, before)), loadReading(readingPath(id, after)), maps);
+  }
+  return failed === 0 ? 0 : 1;
+}
+
+function reportLost(before: Reading, after: Reading, maps: Map<string, LineMap>): number {
+  const found = lost(before, after, maps);
   if (found.length === 0) {
     console.log('oracle: nothing lost. The second reading runs every line, function and branch arm the first ran.');
     return 0;
@@ -401,7 +431,7 @@ async function plant(): Promise<number> {
     found.forEach((edit, i) => console.log(`  ${i}  ${describeEdit(edit)}`));
     return found.length > 0 ? 0 : 1;
   }
-  const proofs = (option('proofs') ?? 'corpus,suite').split(',') as PlantProof[];
+  const proofs = (option('proofs') ?? 'corpus,suite').split(',').map((name) => proofId(name, PLANT_PROOFS) ?? name) as PlantProof[];
   const unknown = proofs.filter((proof) => !PLANT_PROOFS.includes(proof));
   if (unknown.length > 0) {
     console.error(`oracle: no proof named ${unknown.join(', ')}. A plant's proofs: ${PLANT_PROOFS.join(', ')}`);

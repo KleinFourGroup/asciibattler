@@ -27,7 +27,7 @@ playback, per-key volume + pitch-jitter tables). What *triggers* a
 play() is split across three mechanisms of very different quality:
 
 1. **The FX_REGISTRY channel** ([fxRegistry.ts](../src/render/fxRegistry.ts))
-   — already table-driven and healthy. 25 `FxKey`s, 15 carrying a
+   — already table-driven and healthy. 25 keys, 15 carrying a
    `sound`; the §Z locked decision (one key = visual + SFX) means
    every ability/status cue is authored in one place.
    `BattleRenderer` plays `fx.sound` at its three driver sites

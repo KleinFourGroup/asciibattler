@@ -60,9 +60,4 @@ export class BackdropRenderer {
     const u = this.material.uniforms['uTime']!;
     u.value = (u.value as number) + dt;
   }
-
-  dispose(): void {
-    this.geometry.dispose();
-    this.material.dispose();
-  }
 }

@@ -9057,3 +9057,38 @@ chord prints the mode itself (`devKeys.ts`, `console.info`). Proof:
 `build-hash HEAD`, 3 of 33 built files differ, the main bundle (under
 both its names) and `index.html`, as predicted and as 123c's board line
 moved them. Typecheck by the hook.
+
+### 124d — the board's A-22 and A-28 (2026-10-17, session 94055418)
+
+Gone: `FxKey` (`fxRegistry.ts`); `dispose()` on `ApronRenderer`,
+`BackdropRenderer`, `SpriteRenderer`, `TerrainRenderer` and
+`UnitOverlayLayer`; `Renderer.stop()`, `getCameraView()` and
+`getCameraMode()`; the overlay layer's `count` getter and
+`updateLevel()`; `FontAtlas`'s `cellSizePx`, `atlasWidthPx` and
+`atlasHeightPx`. Step zero, each site read: nothing calls them in `src`,
+`tests`, `shell`, `tools` or `scripts` (the one renderer teardown that
+runs is `BattleScene`'s `battleRenderer.dispose()`, not in the row).
+`tests/board/inkCensus.json` holds a `cellSizePx: 64` that a dump wrote;
+nothing reads it, and the dump is not in the repo; `CELL_PX` stays.
+Sentences that named a removed member went with it: `halt()`'s "`stop` is
+the teardown", and `fxRegistry.ts`'s three backticked `FxKey`s, with
+ARCHITECTURE's `fxRegistry.ts` line and `plans/sound-registry.md`. Left:
+the two boot asserts' error text, "unknown FxKey", a runtime string
+`fxRegistry.test.ts` pins, and the word in three comments elsewhere, for
+the comment pass.
+
+Proof:
+
+- typecheck clean, with `noUnusedLocals` on (no import was orphaned);
+- `build-hash HEAD`: 3 of 33 built files differ, the main bundle under
+  both its names and `index.html`, as predicted (a method ships whether
+  or not it is called);
+- the page drive, one `--build` and two launches on it (124b's flags,
+  `scratch/124d/`): seed 6 with a rest first, `e9cbf755` and `6956a4f2`,
+  and seed 7 at four hops, `d6012bc8` and `064ce09d`, each its 124a
+  hashes with the scene check passing;
+- `comment-codes --record` before the suite: 3,135 → 3,132
+  (`TerrainRenderer.ts`'s two in its `dispose`, `fxRegistry.ts`'s one on
+  `FxKey`).
+
+Reading: 378,088 at 23:31, before the commit.

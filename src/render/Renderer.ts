@@ -276,10 +276,6 @@ export class Renderer {
     return this.activeCamera;
   }
 
-  getCameraView(): CameraView {
-    return this.view;
-  }
-
   /**
    * 105d — re-point the board's projection: any subset of projection / FOV /
    * pitch / yaw, re-fitted at once. Its ONE caller is the dev-only board
@@ -388,10 +384,6 @@ export class Renderer {
     this.fitCamera();
   }
 
-  getCameraMode(): CameraMode {
-    return this.cameraMode;
-  }
-
   /** 100a — the dev chord's entry (Ctrl+Alt+C, devKeys.ts): flip fit ↔
    *  scroll and report the new mode. The Backquote keydown it replaces was
    *  an unregistered, undocumented hotkey with no click route (the Round 7
@@ -431,23 +423,13 @@ export class Renderer {
   /**
    * Draw no more frames, and leave everything else as it stands: the last
    * frame stays on the canvas. The halt of a page that has failed
-   * (`Game.halt`); `stop` is the teardown. The loop books its next frame
-   * before it runs this one's body, so a call made after a frame threw
-   * cancels the frame that would have thrown again.
+   * (`Game.halt`). The loop books its next frame before it runs this one's
+   * body, so a call made after a frame threw cancels the frame that would
+   * have thrown again.
    */
   halt(): void {
     if (this.rafId !== null) cancelAnimationFrame(this.rafId);
     this.rafId = null;
-  }
-
-  stop(): void {
-    this.halt();
-    window.removeEventListener('resize', this.handleResize);
-    window.removeEventListener('keydown', this.handleKeyDown);
-    window.removeEventListener('keyup', this.handleKeyUp);
-    this.webgl.domElement.removeEventListener('mousemove', this.handleMouseMove);
-    this.webgl.domElement.removeEventListener('mouseleave', this.handleMouseLeave);
-    this.webgl.dispose();
   }
 
   private handleResize = (): void => {

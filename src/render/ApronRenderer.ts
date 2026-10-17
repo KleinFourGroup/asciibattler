@@ -278,9 +278,4 @@ export class ApronRenderer {
   clear(): void {
     this.geometry.setDrawRange(0, 0);
   }
-
-  dispose(): void {
-    this.geometry.dispose();
-    this.material.dispose();
-  }
 }

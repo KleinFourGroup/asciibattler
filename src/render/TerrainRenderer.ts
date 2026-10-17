@@ -490,15 +490,6 @@ export class TerrainRenderer {
     this.beginMarks(0, 0); // 108b
   }
 
-  dispose(): void {
-    this.geometry.dispose();
-    this.material.dispose();
-    this.bumpsGeometry.dispose(); // §37b
-    this.bumpsMaterial.dispose();
-    this.marksTexture.dispose(); // 108b
-    this.binsTexture.dispose();
-  }
-
   /** Walks every cell, computes height + color, writes 30 verts per cell. */
   private fillFromKindFn(kindAt: (x: number, y: number) => TileKind): void {
     const w = this.gridW;

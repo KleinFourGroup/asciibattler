@@ -214,11 +214,6 @@ export class UnitOverlayLayer {
     handle.root.remove();
   }
 
-  /** Number of attached overlays. Test hook. */
-  get count(): number {
-    return this.overlays.size;
-  }
-
   /**
    * Project a world position to CSS pixels and apply it to the overlay
    * root via `transform: translate3d(...)`. GPU-composited; no layout
@@ -339,12 +334,6 @@ export class UnitOverlayLayer {
     handle.progressPct = clamped;
   }
 
-  updateLevel(handle: UnitOverlayHandle, level: number): void {
-    if (handle.level === level) return;
-    handle.level = level;
-    handle.levelBadge.textContent = t('common.lv', { level: displayLevel(level) });
-  }
-
   /**
    * §32c — reconcile the board pip-strip against a unit's active status
    * readouts (one pip per status, in the readout's stable canonical order). Each
@@ -423,12 +412,6 @@ export class UnitOverlayLayer {
     for (const anchor of this.hitsplats) anchor.remove();
     this.hitsplats.clear();
     this.hitsplatCounts.clear();
-  }
-
-  /** Remove the container from the document. Page-lifetime teardown. */
-  dispose(): void {
-    this.clear();
-    this.root.remove();
   }
 
   private applyHp(handle: UnitOverlayHandle, pct: number): void {

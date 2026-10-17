@@ -410,13 +410,6 @@ export class SpriteRenderer {
     attr.needsUpdate = true;
   }
 
-  /** Dispose the GPU resources. Called when the renderer is torn down. */
-  dispose(): void {
-    this.geometry.dispose();
-    this.material.dispose();
-    this.bloomMaterial.dispose();
-  }
-
   // ---- Instance-buffer helpers ----
 
   private writePosition(slot: number, p: THREE.Vector3): void {

@@ -1,8 +1,8 @@
 /**
  * Phase Z — the renderer-owned FX registry. The sim authors only an opaque
- * `FxKey` string (on `AbilityDef.fx`, per timeline phase); it passes the key
+ * key string (on `AbilityDef.fx`, per timeline phase); it passes the key
  * through inertly and never interprets it. The renderer owns THIS mapping —
- * `FxKey → FxDescriptor` — and at fire time supplies every dynamic parameter
+ * key → `FxDescriptor` — and at fire time supplies every dynamic parameter
  * (sprite positions, team color, flight time) from the live event + world. That
  * mirrors the EffectOp union's "data, not deserialized closures" discipline on
  * the render side: a closed, typed set of channels, resolved through one map.
@@ -161,7 +161,7 @@ export interface FxOverlay {
 }
 
 /**
- * The closed set of channels an `FxKey` resolves to. Every field optional: a
+ * The closed set of channels a key resolves to. Every field optional: a
  * key lights up only the channels it names (the mage `release` key is a bare
  * projectile; its `impact` key is a burst + a sound). New mechanics add new
  * channels here, never a new resolution path — the same discipline the EffectOp
@@ -190,8 +190,7 @@ export interface FxDescriptor {
 
 /**
  * The registry. Keys are opaque to the sim; only the renderer + this module
- * know what they mean. `satisfies` validates every entry against `FxDescriptor`
- * while preserving the literal key set for `FxKey`.
+ * know what they mean. `satisfies` validates every entry against `FxDescriptor`.
  */
 export const FX_REGISTRY = {
   // The mage bolt (`magic_bolt`): a straight tracer carved out of the wind-up,
@@ -285,9 +284,6 @@ export const FX_REGISTRY = {
   blind_active: { overlay: { tint: COLORS.TERMINAL_STONE } },
   confusion_active: { overlay: { tint: COLORS.NEON_PURPLE } },
 } satisfies Record<string, FxDescriptor>;
-
-/** The closed set of authored keys — the §30 editor's option list. */
-export type FxKey = keyof typeof FX_REGISTRY;
 
 /**
  * 99c — the channels a reduced-motion player does NOT get (Round 7 §99, the

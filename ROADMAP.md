@@ -206,7 +206,7 @@ drawing. ✅ DECIDED at the kickoff: the phase cut in two, the screens as
 - ☑ **124b — T-84, the probe runner's edges** (`none`). Each by a run,
   `until`'s against HEAD's runner.
 - ☑ **124c — A-39, the camera line** (`none`). `build-hash`: 3 of 33.
-- ☐ **124d — the board's A-22 and A-28** (`none`). `FxKey`; the
+- ☑ **124d — the board's A-22 and A-28** (`none`). `FxKey`; the
   renderers' `dispose()` and `stop()`, the camera's two getters, the
   overlay layer's two members, `FontAtlas`'s three fields.
 - ☐ **124e — the apron's dither path, whole** (`batch`: the ring fades

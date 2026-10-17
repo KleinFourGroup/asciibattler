@@ -136,9 +136,6 @@ function assertGlyphsCameFromFont(atlasCtx: CanvasRenderingContext2D): void {
 
 export class FontAtlas {
   readonly texture: THREE.CanvasTexture;
-  readonly cellSizePx = CELL_PX;
-  readonly atlasWidthPx = ATLAS_W;
-  readonly atlasHeightPx = ATLAS_H;
 
   private readonly uvByGlyph: ReadonlyMap<string, GlyphUV>;
   /** §79a/§79d2 — per-glyph RAW ink bboxes measured off the rasterized cells

@@ -8570,3 +8570,30 @@ the error message fixed now or put in TODO.
 
 Readings by the tool's clock (UTC): 118,055 at 12:32 after the
 orientation; 244,968 at 12:40 after the read and the count.
+Committed as `943c7cff` (254,242 by the commit's reading).
+
+### 123n, signed; 4c to 4f read (2026-10-17, session 5b078b02)
+
+The user, at the stop: "Run.ts (and World.ts) are still both huge files
+that are probably too large for a human to walk through in a reasonable
+amount of time... But splitting things up is not going to be fully clean,
+either... My lean is that this should be fixed at some point, but it's
+rather out of scope for now. So I think I sign your lean. Let's make a
+to-do to balkanize those files eventually." And: "Signing your two leans
+for 2 & 3! ... I've read 4c-f, and they're good!" So:
+
+- **B-15 is closed** for Round 8.5, not tried. The split of `Run.ts` and
+  `World.ts` is a TODO item under "Not yet placed", with 123n's count and
+  the condition it found: a split that helps a reader moves a phase's
+  state and its share of the save with it, which is a second object.
+- **The recruit roll is left**, recorded above and not proposed: a shared
+  helper would carry the port's forced tiers for the port alone (D2's
+  third clause).
+- **`layoutDimensions`'s message** names `Run.buildEncounterMap`, the
+  method its throw comes from (`3be4d797`; the suite 3,723 and the smoke
+  613, green, by the hook).
+- **123m's batches 4c to 4f are read**, with no finding, so 123m is ☑;
+  4d's display bug stays in TODO §124.
+
+Open: the two `pickWeighted`s, which the user asked to have restated;
+then the phase's close.

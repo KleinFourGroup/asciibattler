@@ -668,6 +668,17 @@ META-ROADMAP §"Round 12 — Ship" names each group.
   strategy and `advance`'s leap branch are deleted (WORKLOG §123, "123l —
   the re-skim" and "123l's rows, built").
 
+- [ ] **Split `Run.ts` and `World.ts`.** The two longest files in `src`
+  (4,025 and 2,423 lines at `943c7cff`) are too long for a person to walk
+  through in reasonable time (the user, closing B-15 for Round 8.5). Not as
+  moves under widened access: 123n's count found every group of `Run.ts`'s
+  methods reaching private state another group owns, so a split that
+  helps a reader moves a phase's state and its share of the save with it,
+  a second object, which needs a round whose charter allows one. Its
+  candidates: the event phase, whose six fields are its own, and the deck.
+  `World.ts` was not counted (WORKLOG §123, "123n"; the script is under
+  `scratch/123n/`, on that machine only).
+
 - [ ] **`knownAbilityIds` has one reader left, the archetype editor.**
   The unit catalog stopped calling it at the load cycle's fix, so no
   test reaches it. The editor could read `Object.keys(ABILITY_DEFS)` and

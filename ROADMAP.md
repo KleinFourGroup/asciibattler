@@ -214,7 +214,7 @@ The cut, signed 2026-10-16 with the kickoff's five calls (WORKLOG §123,
   - ☑ **The `reach-diff` over the seven.** The suite lost only
     `knownAbilityIds`, by the load cycle's fix (WORKLOG §123, "The
     reach-diff over the seven").
-- ☐ **123m — the comment pass** (`batch`, per batch). The 19 files as
+- ☑ **123m — the comment pass** (`batch`, per batch). The 19 files as
   122o ran it; the tests wait for §126. Batches planned in WORKLOG §123,
   "123m — the comment pass: the batches, planned". From 4c on, a false
   claim's twin outside the batch is corrected with it and flagged.
@@ -224,17 +224,17 @@ The cut, signed 2026-10-16 with the kickoff's five calls (WORKLOG §123,
     finding.
   - ☑ **Batch 3 — the encounters** (`encounters/selection.ts`,
     `sequencer.ts`, `wave.ts`, `enemyBudget.ts`). Read, no finding.
-  - ☐ **`Run.ts`, batches 4a to 4f**, cut at its declarations (WORKLOG
+  - ☑ **`Run.ts`, batches 4a to 4f**, cut at its declarations (WORKLOG
     §123, "`Run.ts`'s batches, cut").
     - ☑ **4a — the head** (to the class). Read, no finding.
     - ☑ **4b — the fields and the constructor** (to `dispatch`). Read, no
       finding.
-    - ◐ **4c — the nodes, events, ports and the encounter's start** (to
-      `buildEncounterMap`). Built, unread.
-    - ◐ **4d to 4f — the turn; grants to the deck; save and load** (to the
-      end). Built, unread; 4d found a display bug (TODO §124).
-- ◐ **123n — `Run.ts` read again for B-15** (`stop`). Read, with a count;
-  the call is the user's (WORKLOG §123, "123n").
+    - ☑ **4c — the nodes, events, ports and the encounter's start** (to
+      `buildEncounterMap`). Read, no finding.
+    - ☑ **4d to 4f — the turn; grants to the deck; save and load** (to the
+      end). Read, no finding; 4d found a display bug (TODO §124).
+- ☑ **123n — `Run.ts` read again for B-15** (`stop`). B-15 closed, the
+  split to TODO; one fix-up (WORKLOG §123, "123n, signed").
 - ☑ **Beside the cut, signed 2026-10-17** (`none`): the CRLF re-checkout,
   the reach tools' two forms, and the twin rule above (WORKLOG §123,
   "Three items beside the cut").

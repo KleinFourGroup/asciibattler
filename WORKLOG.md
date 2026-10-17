@@ -9047,3 +9047,13 @@ Proof, by `scratch/124b/check.mjs`, every argument through `spawnSync`:
 The worktree and the build were removed. `shell/` has no proof across a
 commit (TESTING.md), so these runs are the proof. Reading: 337,394 at
 23:22, before the commit.
+
+### 124c — A-39, the camera line (2026-10-17, session 94055418)
+
+`Renderer.setCameraMode`'s `console.log('[camera] mode: …')` and its doc
+sentence are gone. Step zero: no probe, script, tool or doc reads the
+line, and `setCameraMode`'s one caller is `toggleCameraMode`, whose dev
+chord prints the mode itself (`devKeys.ts`, `console.info`). Proof:
+`build-hash HEAD`, 3 of 33 built files differ, the main bundle (under
+both its names) and `index.html`, as predicted and as 123c's board line
+moved them. Typecheck by the hook.

@@ -380,16 +380,12 @@ export class Renderer {
 
   /**
    * D4: dev/debug camera-mode swap. Re-fits the camera so the change is
-   * visible immediately. Logs to console so it's obvious which mode is
-   * active during browser-verify.
+   * visible immediately.
    */
   setCameraMode(mode: CameraMode): void {
     if (this.cameraMode === mode) return;
     this.cameraMode = mode;
     this.fitCamera();
-    if (typeof window !== 'undefined') {
-      console.log(`[camera] mode: ${mode}`);
-    }
   }
 
   getCameraMode(): CameraMode {

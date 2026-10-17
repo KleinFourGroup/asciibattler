@@ -217,17 +217,17 @@ The cut, signed 2026-10-16 with the kickoff's five calls (WORKLOG §123,
 - ☐ **123m — the comment pass** (`batch`, per batch). The 19 files as
   122o ran it; the tests wait for §126. Batches planned in WORKLOG §123,
   "123m — the comment pass: the batches, planned".
-  - ◐ **Batch 1 — the run's rules and records** (12 files). Built,
-    unread.
-  - ◐ **Batch 2 — the map** (`NodeMap.ts`, `mapMetrics.ts`). Built,
-    unread.
-  - ◐ **Batch 3 — the encounters** (`encounters/selection.ts`,
-    `sequencer.ts`, `wave.ts`, `enemyBudget.ts`). Built, unread.
+  - ☑ **Batch 1 — the run's rules and records** (12 files). Read by the
+    user, no finding.
+  - ☑ **Batch 2 — the map** (`NodeMap.ts`, `mapMetrics.ts`). Read, no
+    finding.
+  - ☑ **Batch 3 — the encounters** (`encounters/selection.ts`,
+    `sequencer.ts`, `wave.ts`, `enemyBudget.ts`). Read, no finding.
   - ☐ **`Run.ts`, batches 4a to 4f**, cut at its declarations (WORKLOG
     §123, "`Run.ts`'s batches, cut").
-    - ◐ **4a — the head** (to the class). Built, unread.
-    - ◐ **4b — the fields and the constructor** (to `dispatch`). Built,
-      unread.
+    - ☑ **4a — the head** (to the class). Read, no finding.
+    - ☑ **4b — the fields and the constructor** (to `dispatch`). Read, no
+      finding.
 - ☐ **123n — `Run.ts` read again for B-15** (`stop`). A split comes back
   only with a measure that could pass it.
 

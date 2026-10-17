@@ -7963,3 +7963,12 @@ orientation, as batch 3 started; 247,887 at 23:19 after its proof;
 264,862 at 23:22 as 4a started; 357,368 at 23:32 after its proof; 365,482
 at 23:34 as 4b started; 424,748 at 23:42 after its proof; 444,642 at
 23:46 after its commit, before this entry.
+
+### 123m, batches 1 to 4b read (2026-10-16, session 41f464e5)
+
+**Read** (the user, 2026-10-16), on the five read scripts: "you can mark
+the current reads as read! 👍 I can't find any issues!" No finding, so
+batches 1, 2, 3, 4a and 4b are read. That includes the two sentences
+corrected outside their batches' files (`config/difficulty.ts`'s
+`levelBudgetMultiplier`, batch 1's `RunConfig.daemon`), which batches 3
+and 4a flagged. No batch of 123m stays unread.

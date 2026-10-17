@@ -8438,3 +8438,37 @@ to the end) against the seven rules. Wrong looks like a load check claimed
 that `fromJSON` does not make (or one it makes left out), a dial said to be
 lost on a load, a resolver said to run only at construction, or history
 left.
+
+Committed as `55372cdc`; the suite 3,723 and the smoke 613, green, by the
+hook.
+
+### The hand-off after batch 4f (2026-10-17, session 60a71867)
+
+123m's batches are all built: 4c to 4f wait for the user's read (◐ in
+ROADMAP), each with its read above. Next, in a fresh session: 123n,
+`Run.ts` read again for B-15, a stop. This session stopped before it since
+123n reads the whole of `Run.ts` (4,045 lines) and ends at the user, which
+does not fit in the room left under the line. For the next session:
+
+- 4d's finding waits on the user: the battle HUD's enemy notch can show the
+  next wave's bound (TODO §124, with the probe at
+  `scratch/123m-b4d/notch-probe.mts`). A fix changes what the player sees.
+- `Run.ts`'s comments now point at their homes (`Command.ts` for the no-op
+  rule, `RunConfig.ts`'s header for the saved dials, `events.ts` for the
+  payloads' fields, `deck.ts`, `runStats.ts`, `chipRule.ts` and
+  `health.ts` for their rules), so 123n reads a file whose comments say
+  what the code does now: 1,618 comment lines against 2,251 of code.
+- The leads for later phases sit in the batches' entries: 4c's (the event
+  config's `Run.eventRng`, `eventFlag`'s readers, gotcha #49's reason), 4d's
+  (`CacheOverlay.ts`'s overflow cause, `deck.ts`'s budget basis) and 4f's
+  (the rollout clone loads with no config).
+- The rates ran 180, 98 and 71 tokens a line for 4d to 4f: once 4d had
+  traced the deck, the cache, the daemon stream and the gate chain, 4e and
+  4f mostly re-used those checks.
+
+Readings by the tool's clock (UTC): 116,330 at 02:54 after the
+orientation; 131,761 at 02:54 as 4d started; 312,849 at 03:12 after its
+proof; 340,779 at 03:19 at its commit; 344,760 at 03:20 as 4e started;
+431,816 at 03:28 after its proof; 447,658 at 03:33 at its commit; 451,003
+at 03:54 as 4f started; 488,342 at 03:58 after its proof; 497,820 at 04:02
+at its commit; 505,094 at 04:03, before this entry.

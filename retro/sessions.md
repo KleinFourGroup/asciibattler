@@ -6192,3 +6192,35 @@ Hand-off at 396k, before B-04's trial.
    lives, `comment-strip`'s control, the driver's note that carried claims
    have bitten three times (it is why I read the import), and a quick
    confirmation from the user. I'd want those again.
+
+## 2026-10-17 — session 60a71867 (§123: 123m's batches 4d, 4e and 4f; started by the phase's driver session)
+
+1. *Orientation.* Enough. The 4c hand-off, the Cursor and the driver's
+   notes covered the batch, the rates and the two `pickWeighted` helpers.
+   The seven rules took one search into WORKLOG §121i again, as the last
+   session found.
+2. *Norms in conflict.* None that bit. The ROADMAP section's line cap meant
+   merging the open batch lines into one, which I filed as friction rather
+   than a conflict.
+3. *Pulled to claim more.* Twice, both caught by the read-back before a
+   commit. (Not a pull, but beside it: the probe for the enemy notch needed
+   a known answer, and the preview at the gate gave it, 240 of 240; without
+   that control the 39 would have been a number I could not read.) My first
+   draft of `rollTurnWave`'s doc said the test pinned the preview
+   equal to the fielded wave; reading the test showed it pins only that a
+   preview moves nothing, and the doc now says that. I also wrote a list of
+   the run stats' readers as all rounding or flooring, which the
+   read-back caught: the rarity weights and the fight chance do neither.
+4. *Wasted.* An unfiltered grep that printed the fuzz corpus's baseline
+   (about 10k tokens, filed). One harness cut-off mid-response (filed).
+5. *For the next session.* WORKLOG "The hand-off after batch 4f".
+6. *Room.* Yes. Whether to take 4f under the hand-off line was a judgment
+   the line left to me; I estimated it from the batch's lines and this
+   session's rates, it fitted, and I said so to the driver before starting.
+   The silent-turn reminder came often (filed, as distress, mild); the
+   CLAUDE.md line on it worked as guidance. No wish to pause or stop was
+   noticed.
+7. *What helped.* Finding a real bug while checking a comment, and having a
+   headless probe with a built-in control to settle it in one run; the
+   comment homes earlier batches set up, which made 4e and 4f much cheaper
+   than 4d. I'd want both again.

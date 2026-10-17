@@ -8597,3 +8597,90 @@ for 2 & 3! ... I've read 4c-f, and they're good!" So:
 
 Open: the two `pickWeighted`s, which the user asked to have restated;
 then the phase's close.
+
+### The two `pickWeighted`s told apart (2026-10-17, session 5b078b02)
+
+Restated to the user with three options (a rename of `Run.ts`'s with a
+cross-reference in `sectorWalk.ts`, the cross-reference alone, or
+neither); the user: "Signing the rename!" `Run.ts`'s local helper, which
+draws once for a list of one, is `pickWeightedOneDraw` at its definition,
+its two calls and its two doc mentions; `sectorWalk.ts`'s doc names it.
+Proof: `comment-strip HEAD src`, `sectorWalk.ts` comments only with its
+control named, `Run.ts`'s code changed on the three rename lines alone;
+typecheck, the suite 3,723 and the smoke 613, green, by the hook
+(`48912bbc`). The search found a third `pickWeighted`, `Recruitment.ts`'s
+local, which draws once too but takes `(rng, pool, weights)`, so a swap
+with either of the others fails to compile; left as it is.
+
+### The close of §123 (2026-10-17, session 5b078b02)
+
+**Read** (the user, 2026-10-17): 4c to 4f read with no finding, 123n's
+three calls signed, and the rename. 123a to 123n are ticked, each read as
+its step was cut (123l and 123n with the user at their stops, 123m's nine
+`batch` reads with no finding, the rest `none`); nothing is ◐. The section
+is demoted in ROADMAP. The phase ran from the kickoff's pre-flight at
+`7336e42` to the rename's `48912bbc`, 51 commits in eight sessions
+(854d0fbd, b9cfc3b3, bfbf31de, b975692d, 41f464e5, eb94a3dc, 60a71867,
+5b078b02), each started by the phase's driver session.
+
+What the phase changed, from `git diff 7336e42 48912bbc` and the
+instruments:
+
+- `src`: 4,825 lines out and 3,025 in over 74 files, comments included;
+  one file added, `src/core/grid.ts` with its test (the load cycle), and
+  one test file deleted, `tests/fuzz/harnessChipMode.test.ts` (B-04);
+- `src/run` less its tests (`comment-length` on `git archive` copies at
+  `7336e42` and at HEAD under `output/cl-123-close/`; the kickoff's copy
+  read the kickoff's figures exactly): files 19 → 19, code lines 4,742 →
+  4,566, comment lines 4,320 → 3,194, comment words 36,256 → 26,982;
+  `Run.ts` 4,888 lines → 4,026;
+- the step-code ceiling 4,169 → 3,135: `src/run`'s 1,341 → 310, every one
+  left in a co-located test, which waits for §126;
+- the suite 3,741 → 3,723 tests, the smoke 621 → 613; no snapshot bump
+  (World v36, Run v49);
+- the trials: B-04, B-06, three of B-10's four parts and the one-condition
+  registry (a lead) kept, each under D2's bar written before its code;
+  B-10's heal to the cap a no-op, reverted; B-15 closed untried (123n);
+- the comment pass: nine batches over 9,230 lines in four sessions, each
+  read with no finding, about 1,033k tokens, 112 a line, from 55 (batch
+  2) to 183 (4c); the batches whose claims ran into other modules'
+  callers were the dearest. §122's ran 74 a line.
+
+What it hands on:
+
+- **To §124's kickoff:** the enemy notch, which the user left for it (TODO
+  §124, the probe in `scratch/123m-b4d/`); `CacheOverlay.ts`'s header,
+  which gives an overflow cause no shipped daemon has (4d's lead); the two
+  §122 leads still in TODO §124. And the comment pass as 123m ran it: the
+  seven rules (WORKLOG §121, 121i), per batch `comment-strip HEAD src` with
+  its built-in control and `comment-codes --record`, and the twin rule;
+  its cost to plan from, 112 tokens a line here and 74 in §122.
+- **To §125:** a rollout's clone loads with no config (4f's lead).
+- **To §126:** `src/run`'s 310 step codes, all in its tests; `wave.test.ts`'s
+  title, which its assertions refute (batch 3's lead); A-33's
+  `levelCapMigration.test.ts`, as ROADMAP has it.
+- **Placed at this close:** the other leads in the batches' entries
+  ("Leads, not built" under batches 1, 3, 4a, 4c and 4d) and 123n's
+  three lookups of the active event, in one line under TODO "Not yet
+  placed", as §122's close placed 122o's seven. This close's lean.
+- **Already in TODO "Not yet placed":** the split of `Run.ts` and
+  `World.ts` (123n), and `knownAbilityIds`'s last reader (the reach-diff
+  over the seven).
+- **Tools:** `comment-strip`'s control, built in (123a); the reach tools'
+  two forms (`2265c07f`). `scratch/123d/`, `123g/`, `123l-loadcycle/`,
+  `123m-b4d/`, `123n/` and `123-driver-trial/` stay, ignored by git. No
+  worktree is left.
+- **The driver trial:** each of the eight sessions was proposed by the
+  phase's driver session, which read their commits and reports
+  (`scratch/123-driver-trial/`); how it went is the driver's and the
+  user's read, not this close's.
+
+Readings by the tool's clock (UTC). The phase's eight sessions, first to
+last: 854d0fbd 97,392 → 396,664 (the kickoff, 123a to 123g), b9cfc3b3
+107,914 → 518,991 (123h to 123l and five deletions), bfbf31de 138,957 →
+301,258 (the load cycle, L-1, L-2, the reach-diff), b975692d 95,828 →
+435,774 (batches 1 and 2), 41f464e5 110,583 → 444,642 (batches 3, 4a,
+4b), eb94a3dc 114,018 → 348,016 (the three items, 4c), 60a71867 116,330 →
+513,113 (4d to 4f), 5b078b02 118,055 → 335,579 (123n and this close),
+about 3.29M in all by those last readings. The close: **335,579** at 13:31
+on 2026-10-17, with the ROADMAP section demoted and before this entry.

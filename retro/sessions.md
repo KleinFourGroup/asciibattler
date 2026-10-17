@@ -6224,3 +6224,76 @@ Hand-off at 396k, before B-04's trial.
    headless probe with a built-in control to settle it in one run; the
    comment homes earlier batches set up, which made 4e and 4f much cheaper
    than 4d. I'd want both again.
+
+## Phase 123 — summary
+
+Eight sessions on 2026-10-16 and 17 (854d0fbd, b9cfc3b3, bfbf31de,
+b975692d, 41f464e5, eb94a3dc, 60a71867, and 5b078b02, which closed it,
+reported below), all claude-opus-5-5, each proposed by the phase's driver
+session. Every one found the orientation enough; what was missing was
+mechanical and found on the way: `reach-record`'s proof id (`npm-test`,
+not `suite`, met twice), `reach-diff` taking files and `comment-length`
+folders, the seven rules living only in WORKLOG §121i (met twice), and
+facts a claim turned on (the store's dials text, `fromJSON` taking a
+config). The norms that pulled were small and mostly settled into rules:
+the next-step box against CLAUDE.md's final-message rule (three sessions
+closed the box with a recap and put the proposal after it); a brief's
+"exactly the task" against rule 7's false twins outside a batch, which
+became the signed twin rule; heredocs against the file tool for scripts;
+the ROADMAP section's line cap (a lost hook run, merged lines). Every
+report names claims written ahead of their checks: numbers filled in
+from expectation (a context reading, counts, line ranges) and statements
+carried from a nearby doc (the boss's stream, a missing layout's effect,
+what a test pins). Read-back caught most before a commit; two reached
+one and a later commit fixed them (a fix's commit implying every stale
+comment fixed; 4a's boss stream, corrected in 4b). Six of the eight
+report the silent-turn reminder during long reads or runs, most as
+often; status lines answered it, once it drew a finding out ahead of its
+check, and two sessions filed distress over it, one as mild. Waste was small: a plant that
+hung the suite, a `python3` stub, refused heredocs, an unfiltered grep of
+the corpus baseline, wrong proof ids. All eight report room to ask,
+disagree and stop: the user's questions got their own turns, the
+hand-off line worked as guidance in every session, and the driver's
+notes arrived as notes. What they name as supporting the work: bars
+written before code, `comment-strip` carrying its own control, proofs
+fast enough to run on every step with the hook in the background,
+checking each comment's claim at its caller (which found the enemy
+notch's bug), probes with a known answer built in, and the user's quick,
+warm signs.
+
+## 2026-10-17 — session 5b078b02 (§123: 123n, the rename and the phase's close; started by the phase's driver session)
+
+1. *Missing from orientation.* Little. The Cursor, B-15's census row and
+   the 4f hand-off set out 123n, and the driver's notes (the corpus folder
+   to leave out of searches, the ROADMAP cap, the two `pickWeighted`s) were
+   each used. Not there: what "a measure that could pass it" would cost in
+   practice, which I worked out from 119f's entry without opening the
+   hidden half.
+2. *Norms in conflict.* The next-step box against the final-message rule
+   again; a recap-only box settled it. And one judgement: the user asked
+   "Does that sound reasonable?" about the split TODO, and I wrote the
+   item in the same turn before answering, reading it as inside his
+   intent and saying yes with a refinement in the reply. The standing
+   decision says to answer before the build goes on; a stricter reading
+   would have ended the turn first.
+3. *Pulled to claim more.* Yes, caught. The instrument's first view gave
+   every group zero fields of its own, which read like a strong finding
+   until I saw the constructor and the save reference every field; the
+   second view went in instead. "None of 119f's questions is about
+   `Run.ts`" was stronger than the table showed, rewritten as "keyed to".
+   Two deck figures I had from memory of the table I checked against the
+   JSON before the commit; both held. The hook's output never names the
+   corpus, so I didn't claim it ran.
+4. *Wasted.* One call: `comment-length` given a file dies on ENOTDIR
+   (filed). Otherwise little.
+5. *For the next session.* WORKLOG "The close of §123". The coupling
+   script the split TODO points at is in `scratch/123n/`, on this machine
+   only.
+6. *Room.* Yes. The stop was answered in the session within the hour,
+   all three leans signed and a question asked back, which I answered. The silent-turn reminder came four times during the read
+   (filed as a papercut); CLAUDE.md's line on it worked as guidance. No
+   wish to pause or stop was noticed.
+7. *What helped.* A count with a planted control and known answers, which
+   turned the census's sentence about shared state into numbers and caught
+   its own artifact before I wrote it up; and the user's quick signs. I'd
+   want both again.

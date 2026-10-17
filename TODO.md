@@ -668,6 +668,13 @@ META-ROADMAP §"Round 12 — Ship" names each group.
   strategy and `advance`'s leap branch are deleted (WORKLOG §123, "123l —
   the re-skim" and "123l's rows, built").
 
+- [ ] **§123's comment-pass leads, placed at its close.** The "Leads,
+  not built" under WORKLOG §123's batches 1, 3, 4a, 4c and 4d (a field
+  only its test reads, checks a loader or `fromJSON` could make, a stale line
+  in gotcha #111, the event dial reaching later sectors' roots), and
+  123n's three lookups of the active event. The ones a later phase owns
+  are in "The close of §123".
+
 - [ ] **Split `Run.ts` and `World.ts`.** The two longest files in `src`
   (4,025 and 2,423 lines at `943c7cff`) are too long for a person to walk
   through in reasonable time (the user, closing B-15 for Round 8.5). Not as

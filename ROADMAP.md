@@ -154,90 +154,38 @@ leads it hands on are in WORKLOG §122.
   on this model, as 121j ran. Eight batches by file, each read with no
   finding; about 74 tokens a line.
 
-## Phase 123 — run
+## Phase 123 — run ✅ (closed 2026-10-17)
 
-`src/run`, 19 files: the signed rows (A-36's trigger registry, A-39's
-board line, A-40, and the run's share of list A); B-04, B-06, B-10;
-F-2's test (TODO T-97); the comment pass; then `Run.ts` read again for
-B-15, which comes back only with a measure that could pass it. Proof:
-sim; the port trades by tests alone (the oracle map). Risk: medium.
+List A's run share and the re-skim's seven deletions out, the load cycle
+broken on the way; B-04, B-06, three of B-10's parts and one lead (the
+one-condition registry) kept as trials, B-10's heal a no-op; F-2's test;
+`src/run`'s comment pass in nine batches; B-15 closed, with the split of
+`Run.ts` and `World.ts` in TODO. Over the 19 files: comment lines 4,320 →
+3,194, code lines 4,742 → 4,566, the step-code ceiling 4,169 → 3,135.
+Each step's record and the leads it hands on are in WORKLOG §123.
 
-The cut, signed 2026-10-16 with the kickoff's five calls (WORKLOG §123,
-"The kickoff").
-
-- ☑ **123a — `comment-strip`'s control, built in** (`none`). A code edit
-  planted in memory in each comment-only file; the run fails when the
-  compare misses it.
-- ☑ **123b — A-36, the run's trigger registry** (`none`). With its two
-  tests and `TriggerDispatcher.size`. Proof: sim; `reach-diff`.
-- ☑ **123c — A-39, the board's console line** (`none`). Proof: the
-  corpus; `build-hash` moves at that file.
-- ☑ **123d — A-40, the leg nothing reaches** (`none`; a stop if the
-  game can reach the test's state). The test found by a plant; the leg
-  goes with it.
-- ☑ **123e — A-25's run share** (`none`). `NodeMap.dump`,
-  `empowerAvailability`, `redrawAvailability`, with their tests. Proof:
-  export; `reach-diff`.
-- ☑ **123f — `EncounterState.turn`** (`none`). Proof: sim.
-- ☑ **123g — A-26, the word `export`** (`none`). Proof: export.
-- ☑ **123h — B-04, one chip rule** (`none`). Kept; corpus 0 of 30, fuzz
-  diff PASS, the config dump's only differences the two keys; `src`
-  lines −72.
-- ☑ **123i — B-06, one shuffle** (`none`). Kept, as `RNG.shuffle`
-  beside `pick`; corpus 0 of 30, fuzz diff PASS; `src` lines −35.
+- ☑ **123a — `comment-strip`'s control, built in** (`none`).
+- ☑ **123b — A-36, the run's trigger registry** (`none`).
+- ☑ **123c — A-39, the board's console line** (`none`).
+- ☑ **123d — A-40, the leg nothing reaches** (`none`).
+- ☑ **123e — A-25's run share** (`none`).
+- ☑ **123f — `EncounterState.turn`** (`none`).
+- ☑ **123g — A-26, the word `export`** (`none`).
+- ☑ **123h — B-04, one chip rule** (`none`). Kept; `src` −72.
+- ☑ **123i — B-06, one shuffle** (`none`). Kept, as `RNG.shuffle`;
+  `src` −35.
 - ☑ **123j — B-10, `Run.ts`'s small repeats** (`none`). Three of four
-  parts kept (one weighted draw; one index test, the swap checks
-  among its sites), the heal to the cap a no-op (+2 lines); `src`
-  lines −32.
-- ☑ **123k — F-2's test** (`none`). It failed first on
-  `pauseAtTurnGates` alone; `fromJSON` sets it; corpus 0 of 30, fuzz
-  diff PASS.
+  parts kept; the heal to the cap a no-op.
+- ☑ **123k — F-2's test** (`none`). `fromJSON` sets `pauseAtTurnGates`.
 - ☑ **123l — the re-skim** (read by the user). The one-condition
-  registry kept as a trial (−9 lines); two fix-ups; seven rows signed
-  as deletions below (WORKLOG §123, 123l).
-  - ☑ **L-3 — `sidestepWhenBlocked`** (`none`). Corpus 0 of 30, fuzz
-    diff PASS; `src` −7.
-  - ☑ **L-6 — `GenStats.connected`**, with the mapgen tool's line
-    (`none`). Proof: sim.
-  - ☑ **L-7 — the `team` loss cause** (`none`). Proof: sim.
-  - ☑ **L-4 — `GeneratedTerrain`'s three tile arrays** (`none`). Proof:
-    sim.
-  - ☑ **L-5 — the generator's three spawn checks** (`none`). Proof:
-    sim.
-  - ☑ **The load cycle, (b) and (c)** (`none`). `distanceBetween` to
-    `src/core/grid.ts`; ability ids checked against `ABILITY_DEFS`;
-    `config/units` in no import cycle (WORKLOG §123, "The load cycle").
-  - ☑ **L-1 — the `weakest` strategy** (`none`). Proof: sim; `src`
-    −29.
-  - ☑ **L-2 — `advance`'s leap branch; `maxCells` to `leapLanding`**
-    (`none`). Proof: sim, a plant in `leapLanding` caught; `src` −34.
-  - ☑ **The `reach-diff` over the seven.** The suite lost only
-    `knownAbilityIds`, by the load cycle's fix (WORKLOG §123, "The
-    reach-diff over the seven").
-- ☑ **123m — the comment pass** (`batch`, per batch). The 19 files as
-  122o ran it; the tests wait for §126. Batches planned in WORKLOG §123,
-  "123m — the comment pass: the batches, planned". From 4c on, a false
-  claim's twin outside the batch is corrected with it and flagged.
-  - ☑ **Batch 1 — the run's rules and records** (12 files). Read by the
-    user, no finding.
-  - ☑ **Batch 2 — the map** (`NodeMap.ts`, `mapMetrics.ts`). Read, no
-    finding.
-  - ☑ **Batch 3 — the encounters** (`encounters/selection.ts`,
-    `sequencer.ts`, `wave.ts`, `enemyBudget.ts`). Read, no finding.
-  - ☑ **`Run.ts`, batches 4a to 4f**, cut at its declarations (WORKLOG
-    §123, "`Run.ts`'s batches, cut").
-    - ☑ **4a — the head** (to the class). Read, no finding.
-    - ☑ **4b — the fields and the constructor** (to `dispatch`). Read, no
-      finding.
-    - ☑ **4c — the nodes, events, ports and the encounter's start** (to
-      `buildEncounterMap`). Read, no finding.
-    - ☑ **4d to 4f — the turn; grants to the deck; save and load** (to the
-      end). Read, no finding; 4d found a display bug (TODO §124).
+  registry kept as a trial; seven deletions signed and built (L-1 to
+  L-7), the load cycle broken by (b) and (c) (gotcha #114).
+- ☑ **123m — the comment pass** (`batch`, per batch). Nine batches, each
+  read with no finding; about 112 tokens a line.
 - ☑ **123n — `Run.ts` read again for B-15** (`stop`). B-15 closed, the
-  split to TODO; one fix-up (WORKLOG §123, "123n, signed").
+  split to TODO; two fix-ups (a message, a name).
 - ☑ **Beside the cut, signed 2026-10-17** (`none`): the CRLF re-checkout,
-  the reach tools' two forms, and the twin rule above (WORKLOG §123,
-  "Three items beside the cut").
+  the reach tools' two forms, and the twin rule.
 
 ## Phase 124 — render and UI
 

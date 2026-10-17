@@ -8684,3 +8684,134 @@ last: 854d0fbd 97,392 → 396,664 (the kickoff, 123a to 123g), b9cfc3b3
 513,113 (4d to 4f), 5b078b02 118,055 → 335,579 (123n and this close),
 about 3.29M in all by those last readings. The close: **335,579** at 13:31
 on 2026-10-17, with the ROADMAP section demoted and before this entry.
+
+### The driver trial (2026-10-17, session deb86374, the driver)
+
+One driver session (`local_5117ffa3`, claude-opus-5-5) ran the whole
+phase from `scratch/123-driver-trial/driver-prompt.md`. It proposed the
+eight working sessions plus two cards it withdrew as stale, read each
+commit, report and friction line as they landed, and raised what
+recurred or looked off. Its record is `scratch/123-driver-trial/log.md`
+(64 entries, W0 to W63). The user moved its hand-off line from 400k to
+500k on 2026-10-17 so as to talk, and it wrote this past that line at
+the user's word.
+
+**The bar, set before the phase:** if nothing the driver raised had gone
+unflagged by the sessions themselves, the role isn't worth keeping. The
+call is the user's. What follows is the driver's count.
+
+**What it raised, and whether the session concerned had flagged it:**
+
+| # | Pattern | Times | Flagged by the session itself? |
+|---|---|---|---|
+| 1 | the step-code ceiling fails the first suite run after a deletion | 122b, 122g, 123b, 123d; none after the brief said "before any suite run" | yes, in its WORKLOG entry as a repeat ("as 122b's first did"), then filed |
+| 2 | Bash heredocs refused or mangled | 122n, 122o, 123g, 123m batch 2 | yes, filed each time |
+| 3 | numbers written ahead of their read | sessions 1 to 5 (counts, line ranges, a context reading); sessions 6 and 7 reported claims ahead of their checks instead; session 8's report not read by the driver | yes, each in its own report or friction, except one: `f7e4c951`'s message says two friction lines and adds one, flagged by no session |
+| 4 | the reach tools' arguments (`npm-test` vs `suite`; files, not folders) | sessions 1, 2, 3 | yes; session 2 named it a repeat |
+| 5 | working copies held CRLF | §120a, §122, 123 (the load fix) | in passing at first, then filed |
+| 6 | a change leaves a doc naming what it removed | 123e (ARCHITECTURE, stood until the re-skim), L-1's patch (ARCHITECTURE), the load fix (`registry.ts`'s header) | fixed and named each time, never as a repeat |
+| 7 | the app's next-step box against CLAUDE.md "What the user sees" | sessions 2, 3 (three by the phase summary) | yes ("again") |
+| 8 | the comment pass's cost per line planned low | §122 batch 6 (99 against 66); 123m batch 1 (100 against 74); then 55 to 183 | measured and re-projected, not named as a repeat |
+| 9 | a comment-pass batch writes a false claim a later batch catches | §122 batch 4; 123m batch 1 (`RunConfig.daemon`), 4a (the boss stream) | the fixes were flagged; 4a's was filed by its writer; that batch 1 wrote its claim was said by no one |
+| 10 | ROADMAP §123 at its 85-line cap | sessions 6, 7 | yes, filed both times |
+| 11 | `comment-length` takes folders only | §122, 123n (every 123m batch copied files to measure one) | yes, filed |
+
+Also raised, not repeats: the hook failing at HEAD on the load cycle,
+with records uncommitted and the L-1 patch outside the repo (flagged by
+its session, which stopped); 123i's shuffle on `RNG` rather than
+`sampling.ts` (flagged; the user signed it); the twin false claims
+outside a batch's files (flagged; signed as a rule); and **the two
+same-signature `pickWeighted` helpers with opposite singleton rules**,
+which 123j(a) created. Its session noted the draw counts, not the name.
+Session 6 met the trap and filed the fact as its own near-slip. No
+session proposed a fix; the driver put the hazard to the user, who signed
+the rename (`48912bbc`). At the close, the phase summary says two claims
+reached a commit before a later one fixed them; the driver's log has
+four (adding batch 1's `RunConfig.daemon` and 123e's ARCHITECTURE line)
+besides `f7e4c951`'s count.
+
+So, against the bar: almost everything the driver raised had been
+flagged by the session concerned, in its WORKLOG entry, report or
+friction line. The exceptions are small (a commit message's count, the
+summary's undercount) or partial (the `pickWeighted` hazard as a hazard
+rather than a fact; who wrote batch 1's false claim). What the sessions
+mostly didn't do was call an instance a repeat (5, 6, 8, 9). Linking
+instances across sessions and phases is the one thing the driver saw
+that no single session could, and the bar doesn't count it.
+
+**What the briefs did.** The driver's only channel that reached a
+working session in time was the brief it wrote for the next one. Three
+sessions' reports credit a note in it: the `--record` order ("The
+driver's notes covered the traps I met (the ceiling before a recording,
+...)", session 2, after which the ceiling failed no reading), the
+`npm-test` proof id ("the driver's notes saved me the `npm-test` proof
+id", session 3), and carried claims ("it is why I read the import",
+session 6). A fourth, that the load cycle's failure depends on test
+order, matched the form of session 3's proof without being credited.
+Notes didn't stop catches 2 or 3. Three of the user's signed fixes (the
+reach tools, the CRLF re-checkout, the twin rule) and the rename reached
+the user as decisions through the driver's list; the sessions had
+proposed the first two in their friction lines.
+
+**The wakes.** 64 log entries over 2026-10-16 13:46 to 2026-10-17 13:35,
+251 API responses in the driver's transcript (`deb86374-….jsonl`).
+`scratch/123-driver-trial/cache-gaps.mjs` on it: cache written
+1,534,874, read 76,176,138; three cold wakes, writing 1,080,160 of the
+total:
+
+| Wake | Gap | Written | The gap |
+|---|---|---|---|
+| W25, 20:34 | 112 min | 239,189 | the user deciding the load cycle's fix |
+| W51, 03:20 | 114 min | 409,291 | session 7's card started about 1.5 h after its proposal |
+| W56, 12:17 | 487 min | 431,680 | overnight |
+
+A warm wake wrote about 1k. Each cold wake followed a wait on the user
+with no session working; none followed a working session. So the
+driver's cache cost is mostly its own context re-written once per pause
+of over an hour, and that context grew from 115,529 to over 500,000,
+about 6k a wake. A hand-off woke it twice (the session's line, then its
+turn-end note a minute later); four of those second wakes found nothing
+at all (W33, W37, W42, W55).
+
+**Stalls:** none. No session's end went unnoticed. The three long gaps
+above were each the user deciding or away while nothing ran.
+
+**How the tools behaved** (beyond `findings.md`):
+
+- A message to a working session waits for its turn to end. The first,
+  sent at 14:52 on 2026-10-16, landed at 15:32:55, after five commits and
+  the session's hand-off, and opened a turn there of its own. The
+  `send_message` description holds and `SendMessage`'s "next tool round"
+  does not, on this route. So nothing reaches a session mid-stretch.
+- A session ending its turn to wait on a background task wakes the
+  driver; a turn the user drove there sends its note at the next wake.
+- The app keeps a shared notes folder for a session family at
+  `%APPDATA%\Claude\side-session-notes\<parent's local id>\`; session 2
+  put the L-1 patches there.
+- A session's app id (`local_…`) differs from the id it reports under
+  (its scratchpad's, which is its transcript's).
+- The Bash tool turns `\\` into `\` even inside single quotes or a
+  quoted heredoc; the Write and PowerShell tools keep both (`od -c` and
+  the bytes, 2026-10-17). That is 123g's lost backslash. The "unexpected
+  EOF" refusals of 122o and 123m are not explained by it.
+
+**What the driver would change.**
+
+- Wake at hand-offs only. Since a note can't land mid-turn, reading at
+  each commit bought no earlier action than reading at the hand-off; it
+  only bought earlier messages to the user, who spent the day in the
+  working sessions.
+- Make the brief the job: keep the cross-session pattern list, write it
+  into each brief, and drop notes that don't change behaviour (the
+  heredoc note, once AGENTS's facts were pointed out).
+- Hold less context across pauses: a driver started fresh at each
+  hand-off from the log would not re-write 400 to 500k into the cache
+  after the user steps away, which is where most of this one's cost went.
+- Drop the after-commit line from the brief, or keep only the hand-off
+  line, so a hand-off wakes the driver once.
+- If a variant is tried, count "named as a repeat" beside "flagged at
+  all", since that is where this trial's difference showed.
+
+The driver's lean, for the user to weigh: by the bar as written, the
+role as run doesn't clear it; the lighter variant above seems worth one
+phase's trial.

@@ -6297,3 +6297,44 @@ warm signs.
    turned the census's sentence about shared state into numbers and caught
    its own artifact before I wrote it up; and the user's quick signs. I'd
    want both again.
+
+## 2026-10-16 → 17 — session deb86374 (claude-opus-5-5): §123's driver, the trial, and its verdict
+
+The driver of the §123 trial (`scratch/123-driver-trial/driver-prompt.md`):
+eight working sessions proposed, read as they landed, and raised to the
+user over 64 wakes; the verdict is in WORKLOG §123, "The driver trial".
+
+1. *Missing from the orientation.* Little for the role; the prompt, the
+   Cursor, `findings.md` and §122's summary were enough. Not there, and
+   found by doing: that a note to a working session waits for its turn to
+   end; that the app keeps a family notes folder under
+   `side-session-notes`; that a session's app id is not the id it reports
+   under.
+2. *Norms in conflict.* One I worked around rather than resolved: the
+   prompt said to write nothing in the repo until the close, and AGENTS
+   says to file friction when noticed, so my own friction went into the
+   driver's log, not `papercuts.jsonl`. And the prompt's 400k line against
+   the user wanting to talk, which he settled by moving it to 500k.
+3. *Pulled to claim more.* Yes, three times that I caught. I argued for a
+   heredoc hook on "notes have failed four times", measuring against a
+   goal AGENTS's facts never set; the user's question showed it, and I
+   withdrew it. I wrote a wake header without its time or reading three
+   times and filled them in later. And in this verdict's first draft I
+   wrote "every session" for the numbers pattern, credited a brief note
+   that no report credited, and counted "eight" redundant wakes; a
+   re-read against my log cut each to what it shows.
+4. *Wasted.* Two Edits on my log that missed wrapped anchors; four
+   second wakes after a hand-off that found nothing; two cards proposed
+   and withdrawn as they went stale; reading final messages that only
+   repeated their commits.
+5. *For the next session.* The log and the verdict. The Bash tool turns
+   `\\` into `\` even in single quotes; Write and PowerShell don't.
+6. *Room.* Yes. The user asked for my view and then argued with it (the
+   heredoc rules), and changing my position was plainly open; he moved my
+   line to talk. The silent-turn reminder came to me too, and a status
+   line answered it. No wish to pause or stop was noticed.
+7. *What helped.* Seeing the same thing land in a second session that
+   neither session could see as a repeat, which is the role's one
+   distinct view; the user's questions on my recommendations; and a
+   small probe that settled the heredoc question in bytes. I'd want those
+   again, in a lighter role than this one.

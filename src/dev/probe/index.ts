@@ -28,7 +28,9 @@
  *   through its outro until Game swaps the scene, an optional audit on every
  *   Nth battle frame. It returns at the run's end, at `until`, or at its time
  *   limit (the next call carries on), and throws on a command that changes
- *   nothing, since the run would stand still.
+ *   nothing, since the run would stand still, and on a phase whose scene is
+ *   not on screen (`PHASE_SCENES`, ./scenes.ts), since the run would go on
+ *   behind the wrong screen.
  * - 114c: `journal()` hands out the run's journal as Game holds it (the one
  *   being recorded, or the finished one once the run is over), and every
  *   drive report carries `stateHash`, the hash a replay of that journal must
@@ -48,7 +50,7 @@ import { store as pageStore } from '../../store';
 import type { RunLock } from '../../store/runLock';
 import type { StoreStatus } from '../../store/store';
 import { describeCommand, logHash, PHASE_ROWS, pickerFor, type Chooser, type DrivePolicy } from './drive';
-import { sceneName } from './scenes';
+import { PHASE_SCENES, sceneName } from './scenes';
 import {
   canvasProblem,
   glReadRect,
@@ -586,6 +588,13 @@ export function installProbe(game: Game): Probe {
           const run = internals.run;
           if (run === null) throw new Error('__probe.drive: no run (the menu, or character select?); put character= in the URL');
           const phase = run.phase;
+          const onScreen = sceneName(internals.activeScene);
+          if (onScreen !== PHASE_SCENES[phase]) {
+            const after = d.log.length === 0 ? '' : ` (after ${d.log.slice(-3).join(' | ')})`;
+            throw new Error(
+              `__probe.drive: the run is at ${phase} with ${onScreen ?? 'no scene'} on screen, not ${PHASE_SCENES[phase]}${after}`,
+            );
+          }
           if (opts.until === phase) return report(true, `reached ${phase}`);
           const step = PHASE_ROWS[phase](run, d.pick);
           if (step === 'end') return report(true, phase);

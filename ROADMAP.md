@@ -201,8 +201,8 @@ drawing. ✅ DECIDED at the kickoff: the phase cut in two, the screens as
 §124.5, each half with its own budget of three trials. Cut signed
 2026-10-17 (WORKLOG §124, "The kickoff").
 
-- ☐ **124a — T-91, the page drive's scene check** (`none`). The planted
-  rest swap fails the drive; the clean tree passes.
+- ☑ **124a — T-91, the page drive's scene check** (`none`). The planted
+  rest swap fails the drive by name; the clean tree keeps its hashes.
 - ☐ **124b — T-84, the probe runner's edges** (`none`). Each by a run.
 - ☐ **124c — A-39, the camera line** (`none`). `build-hash`.
 - ☐ **124d — the board's A-22 and A-28** (`none`). `FxKey`; the

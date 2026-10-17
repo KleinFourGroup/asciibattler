@@ -294,8 +294,10 @@ smoke tier, three on every `npm test`); "fuzz diff" is
   failed its own test as well). Proof that the page still plays a run: the page drive
   (`npm run probe -- shell/electron/probes/drive-run.js --seed=<n>`, about
   18 s; the same seed gives the same log hash and state hash), shown to
-  fail on a turn that is never advanced and on a sim change. The drive
-  missed a scene that never mounts and a change that is only drawn. A
+  fail on a turn that is never advanced and on a sim change. It refuses a
+  phase whose scene is not on screen (`PHASE_SCENES`,
+  `src/dev/probe/scenes.ts`), shown to fail with the map swap after a rest
+  removed; it misses a change that is only drawn. A
   change to code the game runs always moves the build's hash, so the build
   compare proves a deletion of dead code or a comment pass and cannot tell
   a careful reshaping from a break; for a reshaping here the proof is the
@@ -344,8 +346,8 @@ smoke tier, three on every `npm test`); "fuzz diff" is
   trees and `json-diff`, where the dropped field must be the only shape
   listed; `tests/save-fingerprint.test.ts` holds the version bump.
 
-**What has no proof today:** a reshaping of code that only draws; which
-scene a phase mounts; the four port trades no stored run completes
+**What has no proof today:** a reshaping of code that only draws; the
+four port trades no stored run completes
 (buying a unit, buying a daemon, selling a packet, paying to remove a
 unit); the tools' pages and the build scripts; the lines neither the
 corpus nor the fuzz diff runs, a tenth of `src/sim` and a quarter of

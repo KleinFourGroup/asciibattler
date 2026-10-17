@@ -77,13 +77,7 @@ TODO items (list A's deletions, list B's trials) are in
   batch 4d (WORKLOG §123); not seen in the pane. The user left it for
   §124's kickoff (2026-10-17).
 
-- [ ] **The page drive does not notice a phase whose scene never mounts.**
-  With `Game.dispatch`'s map swap after a rest removed, `npm run probe --
-  shell/electron/probes/drive-run.js --seed=6 --dials=hops=2&firstNode=rest`
-  ends with the same log hash and state hash as the clean tree: the driver
-  sends each phase's command to `Game` whatever screen is up. A check in
-  `__probe.drive` that the mounted scene is the phase's would make the
-  drive a proof for the scene wiring, which today has none but the eye.
+- ✅ **The page drive does not notice a phase whose scene never mounts.** `drive` refuses a phase whose scene is not on screen (`PHASE_SCENES`); the rest's map swap removed fails it (WORKLOG §124, 124a).
 
 - [ ] **The probe runner's edges** (`shell/electron/probe-cli.mjs`). Its
   JSON argument read from a file, since Git Bash does not carry JSON on

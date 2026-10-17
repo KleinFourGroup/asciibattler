@@ -8981,3 +8981,40 @@ them in tests (`comment-codes`: the rows of `render`, `scenes`, `dev` and
 the root, less `fonts.css`'s 3, which go with the screens). The cut as
 signed is in ROADMAP §124 and §124.5's charter beside it. Reading:
 258,667 at 23:02, before the commit.
+
+### 124a — T-91, the page drive's scene check (2026-10-17, session 94055418)
+
+`src/dev/probe/scenes.ts` gains `PHASE_SCENES`, the scene each phase
+shows, a `Record<RunPhase, SceneName>` written from what a player sees
+and not read from `Game`. `__probe.drive` checks it at the top of each
+step, before `until` and before the phase's command, and throws naming
+the phase, the scene on screen and the one expected, with the last three
+commands. Step zero: `turn-outcome` has no screen of its own since the
+post-turn screen went (`Game.ts`'s `turn:resolved` handler sends the
+advance after the outro), so its row is `BattleScene`; that is also why
+`until: 'turn-outcome'` never stops (T-84's fourth edge, 124b): the fight
+loop returns only at the scene swap, after the advance.
+
+Proof, by the probe runner (`scratch/124a/`, the reports kept beside
+`plant.mjs`):
+
+- the clean tree before the change and after it, two drives each: seed
+  6 with `hops=2&firstNode=rest` ended in defeat with log hash `e9cbf755`
+  and state hash `6956a4f2` both times; seed 7 with `hops=4` ended
+  complete with `d6012bc8` and `064ce09d` both times, crossing map,
+  event, port, reward, promotion and recruit;
+- the planted break, TODO's known answer: a worktree of HEAD under
+  `output/plant-124a` with the kit's diff applied, run clean first (exit
+  0, `e9cbf755`, `6956a4f2`), then with the map swap after a rest removed
+  from `Game.dispatch`: exit 1, "the run is at map with RestScene on
+  screen, not MapScene (after map: enterNode 0 | rest: chooseRestOption
+  0)". The worktree and its node_modules junction were removed;
+- typecheck clean.
+
+Not reached by these drives: `sectorCleared`, and `turn-outcome`, which
+the loop never sees; those two rows are as written, unproven. The other
+eleven phases were each checked on screen at least once.
+TESTING.md's render entry and "What has no proof today", the pane
+procedure's `drive` line and ARCHITECTURE's `probe/` line say so; TODO's
+item is ticked. The smoke does not fire (`src/dev`). Reading: 315,337 at
+23:17, before the commit.

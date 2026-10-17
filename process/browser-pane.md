@@ -67,7 +67,8 @@ app can stop the server between turns). Then:
   first, and each string it returns is a finding. The report has the
   phase, battles, commands per phase and a log hash (the same seed and
   options, the same hash). A command that changes nothing throws, since
-  the run would stand still.
+  the run would stand still, and so does a phase whose scene is not on
+  screen, by both names.
 - **`__probe.journal()` is the run's journal** as Game holds it: the one
   being recorded, or the finished one once the run is over (null with no
   run). Every drive report carries `stateHash`, the hash a replay of that

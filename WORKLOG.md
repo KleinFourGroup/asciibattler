@@ -8815,3 +8815,124 @@ above were each the user deciding or away while nothing ran.
 The driver's lean, for the user to weigh: by the bar as written, the
 role as run doesn't clear it; the lighter variant above seems worth one
 phase's trial.
+
+## Phase 124 — render and UI
+
+### The kickoff: the audit, and the cut put to the user (2026-10-17, session 94055418)
+
+At `7a7ba3b3`, the tree clean. The Cursor's test counts are the hook's at
+`48912bbc`, the last commit that touched code; nothing was run here but
+the instruments named below. Nothing was built. Each finding is from a
+search, an instrument or a read of the named lines; no file was read
+whole. The session was started by the phase's driver session and works
+with the user as usual.
+
+**The size.** The charter's 151 files are every `.ts` under `src` outside
+`sim`, `run`, `config`, `core` and `bot`, tests left out (120h's rule,
+`scratch/120h/size.mjs`, which names folders and not this list): `render`
+23, `scenes` 16, `ui` 49, `dev` 22, `store` 11, `i18n` 9, `settings` 6,
+`journal` 5, `audio`, `failure` and `diagnostics` 2 each, and the root's
+four (`Game.ts`, `main.ts`, `buildId.ts`, `config.ts`): 29,602 lines, where
+120h counted 29,619. Outside that count and inside the comment pass:
+`ui.css` (4,842 lines), `fonts.css` (33) and the 14 shaders (732), so the
+pass reads 35,209 lines. `comment-length` over the eleven folders (162
+files, stylesheet and shaders included) and over a copy of the root's
+four (`output/cl-124-kickoff/root/`): 21,468 code lines, 11,005 comment
+lines, 103,139 comment words, 4.8 words a code line against `src/run`'s
+7.6 at §123's kickoff. The most comment words: `ui.css` 10,824,
+`BattleRenderer.ts` 7,724, `Game.ts` 5,342, `HUD.ts` 3,437,
+`PreTurnScreen.ts` 3,350. `comment-codes`: 2,152 of the 3,135 step codes
+are in these folders, 104 of them in tests; `ui` 946, `render` 664.
+
+**The signed rows at HEAD.**
+
+- A-39, the camera line: `Renderer.setCameraMode` (`Renderer.ts:391`),
+  gated on a window. The dev chord prints the mode itself
+  (`devKeys.ts:116`, `console.info`), so a press prints two lines today
+  and would print one.
+- A-22: two of the 23 signed names are left, `FxKey` (`fxRegistry.ts:290`;
+  comments name it at five places) and `proseFamily`
+  (`i18n/families.ts:47`). `refs --all` over the eleven folders finds
+  those two and the kept `closeTooltip` and `openTooltipTrigger` unread,
+  and nothing else.
+- A-25: `rarityStars` (`rarityDisplay.ts:53`) and `orderRoster`
+  (`rosterOrder.ts:55`), each with its tests.
+- A-26: `refs --all`: 144 exports that only their own file reads (`ui`
+  48, `dev` 29, `render` 24, `i18n` 19, the other six folders 24), 123
+  that only tests read (A-27 keeps those), 447 used. `refs` on the root's
+  four finds none of the first kind.
+- A-28, where the row put them: `dispose()` on the five renderers
+  (`ApronRenderer.ts:282`, `BackdropRenderer.ts:64`,
+  `SpriteRenderer.ts:414`, `TerrainRenderer.ts:493`,
+  `UnitOverlayLayer.ts:429`), `Renderer.stop()` (:447),
+  `getCameraView()` (:279), `getCameraMode()` (:395), the overlay layer's
+  `count` getter (:218, documented as a test hook, which no test reads)
+  and `updateLevel()` (:342), `FontAtlas`'s three fields (:139-141;
+  `tests/board/inkCensus.json` holds a `cellSizePx` key, not yet traced),
+  the mute (`AudioPlayer.ts:287`, :291), the three overlays' `isOpen`
+  getters (`CardListModal.ts:74`, `CreditsOverlay.ts:42`,
+  `SettingsOverlay.ts:183`) and `HUD.hide()` (:596).
+- One site reaches past its row: `setDither()` (`ApronRenderer.ts:274`)
+  is the console's only way into the apron shader's Bayer stipple
+  (`apron.frag.glsl`: `bayer2`, `bayer4` and the branch at :100, under
+  `uDither`, set to 0 at `ApronRenderer.ts:146`), and `Game.ts:164`'s doc
+  keeps the field reachable as `__game.apron` for that flip. With the
+  setter gone nothing can set the uniform, and the stipple is dead code.
+
+**List B and the leads.**
+
+- B-13, read at the finder's lines (`scratch/120d/dupes-norm.json`, of
+  2026-10-13). The apron's and the terrain's buffer set-up
+  (`ApronRenderer.ts:98-122`, `TerrainRenderer.ts:278-304`) differ by the
+  terrain's UV attribute, so one helper would need a parameter for it
+  (D2's third clause); each renderer's vertex writer is its box's faces
+  written out, a call a vertex; `BattleRenderer`'s repeat is its
+  constructor's run of `this.subscriptions.push(bus.on(…))` lines; the
+  status strip (`UnitOverlayLayer.updateStatuses`,
+  `UnitCard.updateCardStatusRow`) shares an eight-line scaffold around two
+  different children. By this read none of the four takes away a thing a
+  reader has to know. Not proposed.
+- The screens' leads. `Game.dispatch`'s switch (`Game.ts:754-893`) ends
+  eight arms with the same three lines, `run.dispatch(command)` and a
+  swap to the map when the phase is `map` (`enterNode`,
+  `chooseRestOption`, `leavePort`, `chooseEventOption`, `chooseRecruit`,
+  `passRecruit`, `dismissPromotion`, `dismissSectorCleared`), and its
+  eight other arms with `run.dispatch(command)` alone. The swap's rule is
+  written at eight places, each beside a comment that restates it.
+  T-91's planted break is one of the eight. The swap control
+  (`PortScreen.ts:335`, `RewardScreen.ts:248`) shares its select of held
+  packets, and one function would take each screen's class names as a
+  parameter. The rest (the openings of `CharacterSelectScreen` and
+  `MenuScreen`, of `EventScreen` and `PortScreen`, `SettingsOverlay`'s two
+  blocks) were not opened.
+- TODO's neutral-target lead: `ObjectiveController.ts:185-191` filters by
+  the four conditions `Targeting.validNeutralObjectiveTarget`
+  (`Targeting.ts:415`) holds, in the same order.
+- 4d's lead, `CacheOverlay.ts`'s header: for the comment pass.
+
+**The two display bugs left for the kickoff.** The enemy notch
+(`BattleScene.ts:190`, as TODO has it; `scratch/123m-b4d/notch-probe.mts`
+not run again) and the ability line (`abilityDetail.ts:51`, :65: both
+damage lines add `damageStatFor(archetype, stats)`, not the op's own
+`scaling` stat; not run again). Each changes what a screen shows, and
+neither touches the sim.
+
+**The probe kit at HEAD.** `__probe.drive` (`src/dev/probe/index.ts:545`)
+sends each phase's command from `PHASE_ROWS` (`drive.ts`) to `Game`
+whatever scene is up. `scenes.ts` already names the scene on screen by
+its class (`sceneName`), with a test that its table names every scene
+file. `until` is checked against `run.phase` at the loop's top (:589);
+why `until: 'turn-outcome'` never stops there was not looked into.
+`probe-cli.mjs` is 129 lines.
+
+**The comment pass's cost.** 35,209 lines at §122's 74 tokens a line is
+about 2.6M, at §123's 112 about 3.9M: six to nine sessions at the
+hand-off line. That the lower figure fits better here, with fewer words
+a code line than `src/run`, is a guess.
+
+**The cut, as put.** In the session's final message of this turn, with
+its calls and the decision point; the user's answer and the cut as
+signed follow here.
+
+Readings by the tool's clock (UTC): 97,088 at 22:33 after the
+orientation, 226,837 at 22:47 after the audit.

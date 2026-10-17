@@ -507,12 +507,13 @@ export interface GameEvents extends Record<string, unknown> {
    * `hand` is this turn's drawn cards in draw order, drawn before this fires
    * (`Run.startNextTurn`), so it is the same templates `beginTurn` sends to
    * the World. `map` is the encounter's battlefield, one map per encounter
-   * rolled at its start, so a redraw is decided knowing the field; it is an
-   * inline shape rather than Run's `EncounterMap`, which keeps this file's
-   * imports from `src/run` few, and it leaves out the terrain seed, which
-   * the screen does not need. `grants` is this turn's grant queue, one view
-   * per granted daemon effect in the order the daemons were acquired; its
-   * `active` entry is the cursor the strict finality mode enforces.
+   * fixed before its first turn, so a redraw is decided knowing the field;
+   * it is an inline shape rather than Run's `EncounterMap`, which keeps this
+   * file's imports from `src/run` few, and it leaves out the terrain seed,
+   * which the screen does not need. `grants` is this turn's grant queue, one
+   * view per grant in queue order: the daemons' in the order they were
+   * acquired, and a packet's put in at the cursor. Its `active` entry is the
+   * cursor the strict finality mode enforces.
    * `empowerStacks` runs parallel to `hand`: each card's badge-eligible buffs
    * on its roster slot, one entry per buff key (empty when unbuffed), so a
    * card empowered on an earlier turn and drawn again keeps its badge.
@@ -671,20 +672,21 @@ export interface GameEvents extends Record<string, unknown> {
   };
 
   /**
-   * A turn just resolved into the pools: the post-turn outcome screen's cue.
-   * Fired only under `pauseAtTurnGates`. `winner` is the turn's tactical
-   * winner; `result` is the encounter's state after the turn (`ongoing`:
-   * the next `turn:starting` follows the `advanceTurn`; `won` or `lost`: the
-   * encounter ends instead). The pools are the values after the chip.
+   * A turn just resolved into the pools: the turn-outcome gate's cue. Fired
+   * only under `pauseAtTurnGates`. No screen shows it: `Game` sends
+   * `advanceTurn` after the battle's outro, and the fuzz bot at once.
+   * `winner` is the turn's tactical winner; `result` is the encounter's
+   * state after the turn (`ongoing`: the next turn follows, after any reward
+   * or promotion; `won` or `lost`: the encounter ends instead). The pools
+   * are the values after the chip.
    */
   'turn:resolved': {
     turn: number;
     winner: 'player' | 'enemy' | 'draw';
     /** Why the battle ended (`battle:ended.reason`, resolved by Run; a fake
-     *  without one maps 'draw' to 'cap', else 'decisive'). The outcome
-     *  screen labels its chip lines by the rules this reason paid
-     *  (`rulesForTurn`): a capped turn pays two rules and says so; a mutual
-     *  wipe never does. */
+     *  without one maps 'draw' to 'cap', else 'decisive'). `rulesForTurn`
+     *  gives the chip rules it paid: a capped turn pays two, a mutual wipe
+     *  one. */
     reason: 'decisive' | 'mutualWipe' | 'cap';
     /** The loss each pool took this turn, clamped at the pool ("what you
      *  lost"), whatever the chip rule. The uncapped charge rides
@@ -696,11 +698,10 @@ export interface GameEvents extends Record<string, unknown> {
     playerHealthMax: number;
     enemyHealth: number;
     enemyHealthMax: number;
-    /** The fallen ledger's story for the outcome screen: who fell this turn
-     *  (both sides, in death order) and the encounter's record so far, this
-     *  turn included. Copies of `Run.fallenLedger` rows; each side's `power`
-     *  over `thisTurn` sums to the chip the casualties rule charged, so the
-     *  screen can show the rows add up. */
+    /** Who fell this turn (both sides, in death order) and the encounter's
+     *  record so far, this turn included. Copies of `Run.fallenLedger` rows;
+     *  each side's `power` over `thisTurn` sums to the chip the casualties
+     *  rule charged. */
     fallen: {
       thisTurn: readonly FallenRecord[];
       encounter: readonly FallenRecord[];

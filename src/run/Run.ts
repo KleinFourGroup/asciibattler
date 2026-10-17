@@ -1879,33 +1879,26 @@ export class Run {
   }
 
   /**
-   * H4b — enter the next turn through the (optional) pre-turn gate. With
-   * `pauseAtTurnGates` on, pause on `turn-intro` + emit `turn:starting` so the
-   * pre-turn screen shows (it resumes via `advanceTurn`); off, fall straight
-   * into the turn's battle (the H4a path — phase stays `battle`).
-   *
-   * H5b — the hand is DRAWN here (before the gate), so `turn:starting` can carry
-   * it for the pre-turn screen and `beginTurn` simply fields the already-drawn
-   * hand. The draw runs on both paths, so the headless loop is unchanged.
+   * Start the next turn: draw its hand, resolve its grants, then with
+   * `pauseAtTurnGates` on enter `turn-intro` and emit `turn:starting` for
+   * the pre-turn screen (`advanceTurn` goes on), or with it off enter
+   * `battle` and begin the turn. The hand is drawn before the gate so
+   * `turn:starting` carries it and `beginTurn` fields it; both paths draw.
    */
   private startNextTurn(): void {
     this.drawTurnHand();
-    // L1→47c — resolve this turn's daemon grants (the `turnStart` grant
-    // hooks). A chance hook (Mercury) flips its coin off the isolated
-    // `daemonRng` exactly HERE, once per turn, on both the gated + headless
-    // paths (path-independent draw count). 49d: the resolution IS the fresh
-    // queue — per-grant `used`/`passed` start clean, so no counter resets.
-    // 77d2 — site 1 of the 'daemon' key: one occurrence per turn's grant
-    // resolution (the per-turn chance flips ride it).
+    // The daemons' `turnStart` hooks, on the `'daemon'` stream's site 1 for
+    // this turn, on both paths. A chance hook (Mercury) flips its coin here.
+    // The resolution is the turn's new queue, so no grant's `used` or
+    // `passed` carries over.
     const resolution = resolveTurnGrants(
       this.daemons,
       this.streamRng('daemon', this.sectorIndex, this.currentNodeId, 1, this.turnIndex),
     );
     this.turnGrants = resolution.grants;
-    // 47e — the walk's granted instant ops (gainBits/healPool) execute NOW,
-    // at the fire site — their coins already flipped in the walk above (one
-    // walk, one draw; never re-resolve). Applied before the `turn:starting`
-    // emit so the gate screen reads post-effect state.
+    // The walk's instant ops, executed here from its resolution: resolving
+    // again would flip each coin twice (gotcha #115). Before the emit, so the
+    // pre-turn screen reads their effect.
     this.executeInstantOps(resolution.instants);
     if (this.pauseAtTurnGates) {
       this.phase = 'turn-intro';
@@ -1917,15 +1910,13 @@ export class Run {
   }
 
   /**
-   * H4b → 115a — the `turn:starting` payload, built from the Run's state
-   * alone, so `resume()` rebuilds the one the live run emitted. Only valid
-   * at the pre-turn gate (mid-encounter).
+   * The `turn:starting` payload, whose fields `events.ts` documents, built
+   * from the run's state alone, so `resume()` rebuilds the one the live run
+   * emitted. Only valid at the pre-turn gate, inside an encounter, where the
+   * map and the encounter are set.
    */
   private turnStartingPayload(): GameEvents['turn:starting'] {
-    // K3.5 — the pre-turn gate is only reached mid-encounter, so the map is set.
     const { layoutId, gridW, gridH, theme } = this.encounterMap!;
-    // Wb1 — the selected encounter is held for the whole encounter, so it's
-    // always set here (mid-encounter, same as the map above).
     const encounter = this.selectedEncounter!;
     return {
       turn: this.turnIndex + 1,
@@ -1935,18 +1926,12 @@ export class Run {
       enemyHealth: this.enemyHealth,
       enemyHealthMax: this.enemyHealthPoolMax,
       hand: this.hand.map((idx) => this.team[idx]!),
-      // R2 — the other two piles for the pre-turn pile views (recruitment
-      // order; see resolvePileForDisplay).
       drawPile: this.resolvePileForDisplay(this.drawPile),
       discardPile: this.resolvePileForDisplay(this.discardPile),
-      // 49d — the grant queue (per-source, walk order; `active` = the
-      // cursor the strict mode enforces).
       grants: this.grantViews(),
       empowerStacks: this.empowerStacks(),
-      // 47d — the owned-daemon list (stacked banners). `redrawGate`/
-      // `empowerGate` = "does this idol EVER grant it" (authored hooks,
-      // not this turn's resolution) — the screen tells "denied this turn"
-      // from "never grants it".
+      // A gate is whether the daemon has the hook at all, not this turn's
+      // resolution.
       daemons: this.daemons.map((d) => ({
         id: d.id,
         name: d.name,
@@ -1956,15 +1941,10 @@ export class Run {
       })),
       encounter: { name: encounter.name, kind: encounter.kind },
       map: { layoutId, gridW, gridH, theme },
-      // 65e — the folded draw amount for the "Draw: N" chip (the §65
-      // transparency surface; derived, so a draw daemon moves it live).
       drawAmount: this.effectiveDrawAmount,
-      // 89e — the risk line ("at risk this turn: up to N"): the wave this
-      // turn will field, previewed off the same keyed stream `beginTurn`
-      // rolls it from (see `rollTurnWave`), summed to its chip bound.
       poolAtRisk: this.previewPoolAtRisk(),
-      // 115a — the previous turn of this encounter, for the strip; the
-      // completed turn's number is `turnIndex` (resolveTurn advanced it).
+      // The completed turn's number is `turnIndex`, which `resolveTurn`
+      // advanced.
       lastTurn:
         this.lastTurn === null
           ? null
@@ -1973,33 +1953,28 @@ export class Run {
   }
 
   /**
-   * H5b — discard the previous turn's hand and draw the next, run once per turn
-   * from `startNextTurn` (BEFORE the pre-turn gate, so `turn:starting` carries
-   * the hand). Split out of `beginTurn` so the draw happens once per turn on
-   * both the gated + headless paths. Determinism is unchanged: the deck's
-   * only draw (a possible recycle shuffle) rides its own counter-keyed
-   * occurrence, independent of every other stream — moving the deck draw
-   * earlier in wall-clock can't shift anything (structural, 77d2).
+   * Discard the last turn's hand and draw this one, once a turn from
+   * `startNextTurn`. The deck's one draw, a reshuffle, is keyed by its own
+   * counter, so when the hand is drawn moves no other stream.
    */
   private drawTurnHand(): void {
-    // 65f — per-card through the discard chokepoint (the recycle cues fire
-    // with no gate screen up — harmless, and honest at the one emit site).
+    // Each card through `discardCard`, the one discard site, which cues it.
     for (const idx of this.hand) this.discardCard(idx);
     this.hand = this.drawHand();
   }
 
   /**
-   * 47e — the effective run stats: `RUN_STAT_BASES` folded with every owned
-   * daemon's `modifier` rules, derived AT CALL TIME (derive-don't-cache —
-   * ownership changes, §49 packet modifiers, and future removal all stay
-   * correct for free). Today's only consumer is `gainBits` (`bitsGain`);
-   * §49's cache reads `cacheSize` from here.
+   * The run stats: `RUN_STAT_BASES` folded with the `drawAmountAdd` dial and
+   * every owned daemon's `modifier` rules, at each call, so a daemon gained
+   * or removed counts at once. The fold never rounds (`runStats.ts`); its
+   * readers are the bits settle and the cache, offer, port and draw getters
+   * below, which round or floor, the rarity weights and the event's fight
+   * chance.
    */
   private effectiveRunStats(): Readonly<Record<RunStatKey, number>> {
     const mods: RunStatModifier[] = [];
-    // 65d — the forced-draw A/B dial folds like a daemon modifier, so the
-    // deal AND the Option-B budget basis both see it. 0 = no injection —
-    // the identity fast path (and byte-identity) hold.
+    // The dial folds as a daemon's modifier would, so the hand dealt and the
+    // wave's basis (`rollTurnWave`) both see it; at 0 nothing is added.
     if (this.drawAmountAdd !== 0) {
       mods.push({ stat: 'drawAmount', op: 'add', value: this.drawAmountAdd });
     }
@@ -2012,43 +1987,36 @@ export class Run {
   }
 
   /**
-   * 48b/48f — the settle math for a bits earn: `base` × the folded `bitsGain`
-   * multiplier × the per-run `bitsMultiplier` difficulty lever (48f — the
-   * shape-lock's Option B: inside the settle, so reward rolls, battle
-   * tallies, and daemon hooks all scale uniformly and the §52 dial reads
-   * clean), ROUNDED once to an integer (the runStats.ts contract — the fold
-   * itself never rounds). Public and SHARED with the reward screen's display
-   * derivation (the shape-lock rider: the screen must show exactly what the
-   * settle grants — one code path, drift-impossible; accepting a bits-fold
-   * daemon mid-offer visibly re-derives the remaining portions).
+   * The bits an earn of `base` grants: `base` times the folded `bitsGain`
+   * and the run's `bits` difficulty multiplier, rounded once. The multiplier
+   * sits inside the settle, so every earn scales alike. Public because the
+   * reward screen prices its bits rows with it, so what it shows is what the
+   * settle grants, and a bits daemon taken from the offer reprices the rows
+   * left.
    */
   effectiveBits(base: number): number {
     return Math.round(base * this.effectiveRunStats().bitsGain * this.difficultyMultipliers.bits);
   }
 
   /**
-   * 47e — earn bits: the `effectiveBits` settle math, then through the
-   * floor-at-zero chokepoint. Every earn surface routes here (daemon hooks,
-   * the 48b reward settle — which, since 51a, is also how the 47f battle
-   * tally lands: as an accepted offer portion), so a bits-gain modifier
-   * daemon applies uniformly without per-surface bookkeeping.
-   * NB for §50: port SELL proceeds are a refund, not income — they must
-   * take the raw `addBits` path, never this one, or a bits fold above
-   * 1/sellFraction mints an infinite buy-sell loop (worklog §48).
+   * Earn bits: `effectiveBits`, then `addBits`. Every earn comes through
+   * here (a daemon's instant op, an event's `gainBits`, a reward's bits
+   * portion, which is how a battle's tally lands), so a `bitsGain` daemon
+   * applies to all of them. A port sale's proceeds are a refund and take the
+   * raw `addBits`: through this fold, a `bitsGain` above `1 / sellFraction`
+   * would make every buy and sale a profit.
    */
   gainBits(base: number): void {
     this.addBits(this.effectiveBits(base));
   }
 
   /**
-   * 50a — the spend chokepoint: every §50d buy/removal surface routes here.
-   * The affordability guard lives HERE (not at call sites) because `addBits`
-   * CLAMPS at zero — a raw negative delta would silently under-charge when
-   * the balance is short. Returns whether the spend happened; an
-   * unaffordable spend is a clean refusal (no emit, no partial deduction).
-   * No fold applies in either direction: prices are what they say (the
-   * `bitsGain` fold is an EARN modifier), and sell proceeds are a refund
-   * through raw `addBits` — see the `gainBits` NB above.
+   * Spend bits: the port's buys, the unit removal and an event's bits loss
+   * come through here. The affordability check is here, not at the call
+   * sites, because `addBits` floors at 0, so a raw negative delta would
+   * under-charge a short balance. Returns whether the spend happened; a
+   * spend the balance cannot cover changes nothing and emits nothing. No
+   * fold applies: a price is what it says, and `bitsGain` scales earns only.
    */
   spendBits(amount: number): boolean {
     if (!Number.isInteger(amount) || amount < 0) {
@@ -2060,26 +2028,14 @@ export class Run {
   }
 
   /**
-   * 47e — the single bits mutation chokepoint: clamps the balance at ZERO
-   * (spec §Bits — integer, floor at zero) and emits `run:bitsChanged` with
-   * the post-clamp applied delta. Emits only on a real change, so a clamped
-   * no-op spend or a ×0 grant stays silent. §50's spend surfaces will call
-   * this with negative deltas.
-   */
-  /**
-   * 94e — the ONE write to the run-wide player pool after construction:
-   * floors at 0 and emits `run:poolChanged` on a real change, whatever
-   * moved it — the chip, a rest, the seam refill, an event's heal or damage
-   * op. Each site keeps its OWN cap (the heals and the rest clamp at max,
-   * the seam only floors — a pool above the floor carries untouched, the
-   * §90 rule the T2 sentinel pins), so every write is byte-identical to the
-   * pre-94e one; the chokepoint adds the event, nothing else. The §94
-   * kickoff audit found four of the five writes emitting nothing, which is
-   * how a persistent pool chip would have gone stale on a rest; this is
-   * what makes "the pool shown everywhere" true rather than mostly true.
-   * `pools:chipped` (89a) still rides the chip site beside it — that event
-   * carries the encounter pool + the uncapped charges the telemetry reads.
-   * `max` is read at call time (the fuzz `--set` arm mutates HEALTH in place).
+   * Every write to the player's pool after construction and load: floors at
+   * 0 and emits `run:poolChanged` when the value moves, whatever moved it
+   * (the chip, a heal, an event's damage, a rest, the sector seam). Each
+   * caller applies its own cap: a heal and a rest stop at the maximum, and
+   * the seam raises a pool below its floor and leaves one above it. The chip
+   * also emits `pools:chipped`, with the enemy pool and the uncapped charges.
+   * `max` is read at each call, since the fuzz sweep's `--set` writes
+   * `HEALTH` in place.
    */
   private setPlayerHealth(next: number, reason: PoolChangeReason): void {
     const after = Math.max(0, next);
@@ -2090,6 +2046,12 @@ export class Run {
     }
   }
 
+  /**
+   * Every change to `bits` after construction and load: floors the balance
+   * at 0 and emits `run:bitsChanged` with the delta applied after the floor,
+   * only when the balance moves, so a spend of 0 or a grant rounded to 0 is
+   * silent.
+   */
   private addBits(delta: number): void {
     const next = Math.max(0, this.bits + delta);
     if (next === this.bits) return;
@@ -2098,50 +2060,28 @@ export class Run {
     this.bus.emit('run:bitsChanged', { bits: this.bits, delta: applied });
   }
 
-  /**
-   * 49b — the effective cache capacity: the `cacheSize` run-stat fold read
-   * at call time and FLOORED here (the runStats.ts contract — the fold never
-   * rounds; the read site does). Derive-don't-cache: a size-modifier daemon
-   * joining is correct with zero bookkeeping.
-   */
+  /** The packet cache's slots: the `cacheSize` fold, floored. */
   get effectiveCacheSize(): number {
     return Math.floor(this.effectiveRunStats().cacheSize);
   }
 
-  /**
-   * 64a — the effective post-battle recruit-offer size: the
-   * `recruitOfferSize` run-stat fold (base = recruitment.json's
-   * defaultOfferSize) read at call time and FLOORED here (the
-   * `effectiveCacheSize` discipline). The Cornucopia's +1 lands through
-   * this; the PORT unit count deliberately does not read it (spec scope:
-   * post-encounter only).
-   */
+  /** The post-battle recruit offer's slots: the `recruitOfferSize` fold,
+   *  floored. A port's unit count does not read it. */
   get effectiveOfferSize(): number {
     return Math.floor(this.effectiveRunStats().recruitOfferSize);
   }
 
-  /**
-   * 64c — how many port unit slots are TIER-FORCED to legendary (Idol of
-   * Portunus). The count-stat shape-lock: a second source is +1 more —
-   * stacking needs no design work; `rollPortStock` clamps at the slot
-   * count. Floored at the read site (the fold contract).
-   */
+  /** The port unit slots forced to legendary: the `portLegendaryOffers`
+   *  fold, floored; `rollPortStock` caps it at the slot count. */
   get effectivePortLegendaryOffers(): number {
     return Math.floor(this.effectiveRunStats().portLegendaryOffers);
   }
 
   /**
-   * 65a — the per-turn draw amount: the `drawAmount` run-stat fold (base =
-   * `DECK.handSize`, config-derived) read at call time and FLOORED here (the
-   * fold contract — the fold never rounds; the read site does). Clamped ≥1:
-   * the roster can't be emptied (see `removeRosterUnit`), so a turn always
-   * fields at least one card — a pathological mult-0 modifier must not zero
-   * the hand into a soft-lock. Transient packet draws (65c) bypass this fold
-   * by design (the Option-B split, worklog §65-shape-lock).
-   * 65d — clamped ABOVE by `DECK.maxHandSize` (user-signed at 8 off the
-   * A/B). The cap lives HERE, not in `drawHand`, so the deal and the
-   * Option-B budget basis move together under a capped fold (the K2
-   * desync lesson: one basis, every reader).
+   * The cards a turn draws: the `drawAmount` fold, floored, at most
+   * `DECK.maxHandSize` (`deck.ts` says why the cap sits here) and at least
+   * 1. The roster is never empty (`removeRosterUnit`), so no modifier can
+   * deal an empty hand.
    */
   get effectiveDrawAmount(): number {
     return Math.max(
@@ -2151,34 +2091,28 @@ export class Run {
   }
 
   /**
-   * 49b — packets held beyond the derived capacity (0 = none). Non-zero only
-   * after a SHRINK (a cacheSize-lowering daemon landing under current
-   * holdings — since 74c also via event `removeDaemon`) or an event
-   * `addPacket` landing on a full cache (74c honor-the-grant, user-signed)
-   * — the INTERACTIVE acquisition surfaces still gate on `cacheHasRoom`.
-   * DERIVED, never serialized: a save mid-shrink round-trips the
-   * cache + daemons and this recomputes (derive-don't-cache). While > 0 the
-   * 49f forced-keep flow demands discards.
+   * The packets held beyond the cache's size, 0 when none. An event's
+   * `addPacket` on a full cache makes one, as would a fold that shrinks the
+   * size (no shipped daemon moves `cacheSize`). Derived, never saved: a load
+   * restores the cache and the daemons, and this follows. While it is above
+   * 0 the cache overlay asks for discards.
    */
   get cacheOverflow(): number {
     return Math.max(0, this.cache.length - this.effectiveCacheSize);
   }
 
-  /** 49b — room for one more packet (the acquisition gate: 49c reward
-   *  accepts, §50 port buys). */
+  /** Room for one more packet. The reward accept, the port buy, a
+   *  construction grant and an event's `cacheHasRoom` condition read it. */
   get cacheHasRoom(): boolean {
     return this.cache.length < this.effectiveCacheSize;
   }
 
   /**
-   * 49b — append a packet to the cache (the 49c reward / §50 port
-   * acquisition seam — `addDaemon`'s sibling). Takes the ID: the cache
-   * serializes ids, so a non-catalog packet can never legally exist here
-   * (unlike bespoke in-memory daemons) — an unknown id throws, loud beats a
-   * poisoned save. Fullness is the CALLER's concern (the addDaemon duplicate
-   * discipline): acquisition surfaces gate on `cacheHasRoom` upstream, and
-   * the 49c swap flow discards before adding. Duplicate ids are legal — no
-   * stacking means one SLOT each, not one copy each (spec §Cache).
+   * Add a packet to the cache. The cache saves ids, so an id not in the
+   * catalog throws rather than poison a save. Fullness is the caller's: the
+   * reward accept and the port buy check `cacheHasRoom` first (the reward's
+   * swap discards a slot), and an event's `addPacket` keeps its grant over a
+   * full cache (`cacheOverflow`). One id may fill several slots.
    */
   addPacket(packetId: string): void {
     if (packetById(packetId) === undefined) {
@@ -2189,12 +2123,10 @@ export class Run {
   }
 
   /**
-   * 49b — discard one cache slot (the `discardPacket` command: the at-will
-   * discard, and the instrument of the 49f forced-keep shrink flow).
-   * Out-of-range / fractional = the silent no-op discipline. Deliberately
-   * NOT phase-guarded: the cache is pure run-level state with no sim seam,
-   * the modal opens on any screen (49f), and a shrink must be resolvable
-   * wherever it landed (the reward phase today, ports at §50).
+   * Discard one cache slot (the `discardPacket` command), at will or to
+   * clear an overflow. A bad index is a no-op (`Command.ts`). Allowed in any
+   * phase: the cache touches no battle, the overlay opens on any screen, and
+   * an overflow must be cleared wherever it arose.
    */
   private handleDiscardPacket(cacheIndex: number): void {
     if (!isIndex(cacheIndex, this.cache.length)) return;
@@ -2203,43 +2135,33 @@ export class Run {
   }
 
   /**
-   * 49e — fire one held packet (the `usePacket` command): the consume side
-   * of the earn-store-use loop. The contract, all shape-locked (worklog §49e):
+   * Fire one held packet (the `usePacket` command).
    *
-   * - **Context derives from the phase** — `turn-intro` → `preTurn`, `map` →
-   *   `outOfBattle`, anything else rejects. The packet's authored `usableIn`
-   *   must admit the derived context (the parse-time matrix already
-   *   guarantees op×context legality, so the engine only re-checks the
-   *   authored subset).
-   * - **Validation before ANY mutation** (the acceptReward discipline):
-   *   every reject is a silent no-op that consumes nothing.
-   * - **Consume-on-fire, irrevocable** (the §49 kickoff lock): the effect
-   *   executes, then the slot splices — no batching, no undo. Order of
-   *   consumption IS order of effect.
-   * - **Op landing sites**: `applyBuff` → the live encounter store (preTurn,
-   *   on the targeted hand card's roster slot) or the pending-until-start
-   *   store (outOfBattle, on the roster slot directly); `grantRedraws` →
-   *   a `TurnGrant` INSERTED AT THE CURSOR (immediately active — the packet
-   *   buys back the flexibility the strict idol order takes; the queue
-   *   resumes behind it); `injectRule` → the duration's injected-rules
-   *   store; `healPool` → the instant-op executor (capped at max).
+   * - The context comes from the phase: `turn-intro` is `preTurn`, `map` is
+   *   `outOfBattle`, and any other phase refuses. The packet's `usableIn`
+   *   must hold it; which contexts each op allows is checked at parse
+   *   (`PACKET_OP_CONTEXTS`).
+   * - Every check runs before anything changes, so a refusal is a no-op that
+   *   spends nothing (`Command.ts`).
+   * - The effect runs, then the slot is spent, with no undo, so packets take
+   *   effect in the order they are fired.
    */
   private handleUsePacket(cacheIndex: number, handIndex?: number, rosterIndex?: number): void {
     const context: UseContext | null =
       this.phase === 'turn-intro' ? 'preTurn' : this.phase === 'map' ? 'outOfBattle' : null;
     if (context === null) return;
     if (!isIndex(cacheIndex, this.cache.length)) return;
-    // The cache holds catalog-validated ids (addPacket/fromJSON both hard-
-    // reject unknowns), so a miss here is unreachable — guarded anyway.
+    // Every write to the cache checks the id against the catalog, as a load
+    // does, so a miss here cannot happen; it is guarded anyway.
     const packet = packetById(this.cache[cacheIndex]!);
     if (packet === undefined) return;
     if (!packet.usableIn.includes(context)) return;
-    // Resolve the unit target per context BEFORE mutating anything: preTurn
-    // targets a HAND position (the redraw/empower click contract), out-of-
-    // battle a roster slot. Target-less packets ignore both fields.
+    // The unit target, before anything changes: before a turn a hand
+    // position (as a redraw or an empower names a card), at the map a roster
+    // slot. A packet with no target ignores both.
     let targetSlot: number | null = null;
-    // 65c — hand ops need the POSITION, not just the slot (discard splices
-    // the hand). Set only on the preTurn unit-target path.
+    // A hand op needs the position as well as the slot, since a discard
+    // splices the hand. Set only for a unit target before a turn.
     let targetHandIndex: number | null = null;
     if (packet.target === 'unit') {
       if (context === 'preTurn') {
@@ -2252,21 +2174,19 @@ export class Run {
       }
     }
     const effect = packet.effect;
-    // 65c — validate-first: discarding the LAST hand card would field an
-    // empty team at beginTurn (a self-inflicted instant loss shaped like a
-    // misclick) — reject like any other illegal target, consuming nothing.
+    // Discarding the hand's last card would field an empty team, a loss
+    // that looks like a misclick, so it is refused as a bad target is.
     if (effect.op === 'discardCards' && this.hand.length <= 1) return;
-    // 65d — validate-first, the sibling guard: a draw fired at a FULL hand
-    // (≥ the cap) can deal nothing — reject rather than consume a dead
-    // packet. A mid-draw cap arrival still partial-draws (below).
+    // A draw at a full hand could deal nothing, so it is refused rather than
+    // spent. A draw that reaches the cap partway still deals what fits.
     if (effect.op === 'drawCards' && this.hand.length >= DECK.maxHandSize) return;
     let handChanged = false;
     switch (effect.op) {
       case 'applyBuff':
-        // The same builder as the empower path (magnitude 1, endOfTurn seed
-        // lifetime — the encounter store's re-seed contract, deep-copied
-        // mods). The pending store merges by key too, so double-firing
-        // overclock on one unit stacks exactly like double-empowering.
+        // The empower's builder (`empowerEffect`). Before a turn the buff
+        // goes on the encounter's store; at the map it waits in the pending
+        // store until the next encounter starts. Both merge by key, so a
+        // second fire on one unit stacks as a second empower does.
         if (context === 'preTurn') {
           this.addEncounterEffect(targetSlot!, empowerEffect(effect.buff));
         } else {
@@ -2274,11 +2194,10 @@ export class Run {
         }
         break;
       case 'grantRedraws': {
-        // Insert AT the derived cursor (or append to a spent queue) so the
-        // packet's redraw is the active grant NOW under strict finality —
-        // the previously-active idol grant resumes right behind it. The
-        // entry's source id is the PACKET id (grantViews resolves names
-        // from either catalog).
+        // Put in at the cursor, or at the end of a spent queue, so under
+        // strict finality the packet's redraw is the active grant at once
+        // and the grant it displaced comes next. Its source id is the
+        // packet's (`grantViews` names a source from either catalog).
         const entry: TurnGrant = {
           daemonId: packet.id,
           effect: {
@@ -2294,9 +2213,9 @@ export class Run {
         break;
       }
       case 'injectRule':
-        // Push a COPY so the store never aliases the catalog object (rules
-        // are never mutated, but the store serializes — keep it independent).
-        // 51f — the entry carries its source packet id (the tally label).
+        // A copy, so the saved store shares nothing with the catalog. The
+        // entry keeps its packet's id, which labels a bits tally the rule
+        // earns (`handleTurnEnded`).
         (effect.duration === 'run' ? this.injectedRunRules : this.injectedEncounterRules).push({
           rule: cloneBattleRule(effect.rule),
           sourceId: packet.id,
@@ -2306,14 +2225,12 @@ export class Run {
         this.executeInstantOps([effect]);
         break;
       case 'drawCards':
-        // 65c — the TRANSIENT draw: cards join the hand directly, the
-        // `drawAmount` fold (and with it the enemy-budget basis) untouched
-        // by design (the Option-B split, worklog §65-shape-lock). Stops
-        // early on a fully dealt deck (the H5 exhaustion contract) —
-        // consume-on-fire stands regardless (the patch-at-full-health
-        // precedent: order of consumption IS order of effect).
+        // This turn's draw: the cards join the hand, and the `drawAmount`
+        // fold, and with it the wave's basis, is untouched (`runStats.ts`).
+        // It stops at the cap or when the deck is dealt out, and the packet
+        // is spent either way, as a heal at a full pool is.
         for (let i = 0; i < effect.count; i++) {
-          if (this.hand.length >= DECK.maxHandSize) break; // 65d — the cap
+          if (this.hand.length >= DECK.maxHandSize) break;
           const card = this.drawCard();
           if (card === undefined) break;
           this.hand.push(card);
@@ -2321,16 +2238,15 @@ export class Run {
         handChanged = true;
         break;
       case 'discardCards':
-        // 65c — send the targeted card to the discard; the hand SHRINKS
-        // (no refill — that's what distinguishes it from a redraw). The
-        // discarded card recycles via the normal H5 reshuffle.
+        // The targeted card goes to the discard and the hand shrinks, with no
+        // refill as a redraw has.
         this.discardCard(this.hand[targetHandIndex!]!);
         this.hand.splice(targetHandIndex!, 1);
         handChanged = true;
         break;
     }
-    // Consume + repaint: the splice emits the shrunk cache; run:packetUsed
-    // carries the re-derived pre-turn state for the 49f strip.
+    // Spend the slot; `run:packetUsed` carries the pre-turn state derived
+    // again.
     this.cache.splice(cacheIndex, 1);
     this.emitCacheChanged();
     this.bus.emit('run:packetUsed', {
@@ -2339,21 +2255,20 @@ export class Run {
       playerHealth: this.playerHealth,
       grants: this.grantViews(),
       empowerStacks: this.empowerStacks(),
-      // 96.5c — a packet that moved the pool moved the bound's cap. The
-      // preview rolls the turn's wave, which exists only inside an encounter
-      // — at the map (a patch heal) there is no bound to re-derive: 0.
+      // A packet that moved the pool moved the bound's cap. The preview
+      // rolls the turn's wave, which exists only inside an encounter, so at
+      // the map there is no bound: 0.
       poolAtRisk: this.phase === 'turn-intro' ? this.previewPoolAtRisk() : 0,
     });
-    // 65e — the hand emit goes LAST: the cache/packet repaints above
-    // rebuild the pre-turn card row WITHOUT enter animations (the screen's
-    // enter set is one-shot), so the hand swap that carries them must be
-    // the final rebuild of the dispatch.
+    // The hand's emit goes last: the repaints above rebuild the pre-turn
+    // card row without enter animations, and the screen plays its enter set
+    // once, so the hand change that carries them must be the dispatch's
+    // last rebuild.
     if (handChanged) this.emitHandChanged();
   }
 
-  /** 49b — the one `run:cacheChanged` emit site: an authoritative copy of
-   *  the ids + the derived capacity, so consumers repaint from the payload
-   *  without re-deriving. */
+  /** The one `run:cacheChanged` emit: a copy of the ids and the size, so a
+   *  reader repaints from the payload alone. */
   private emitCacheChanged(): void {
     this.bus.emit('run:cacheChanged', {
       packetIds: this.cache.slice(),
@@ -2362,18 +2277,15 @@ export class Run {
   }
 
   /**
-   * 47e — execute a firing's resolved instant run-ops at the fire site:
-   * `gainBits` through the fold + chokepoint; `healPool` onto the run-wide
-   * player pool, capped at max (the rest-node discipline). The resolution
-   * (coin flips, filters) already happened in the daemon walk — this only
-   * applies effects, so it draws nothing.
+   * Execute resolved instant ops: `gainBits` through `gainBits`, `healPool`
+   * onto the player's pool up to its maximum. The callers resolve them (a
+   * daemon walk's coins, a packet's use, a reward's heal), so this draws
+   * nothing.
    */
   private executeInstantOps(ops: readonly InstantOp[]): void {
     for (const op of ops) {
-      // 74c hygiene — the untagged else became an exhaustive switch so a
-      // future InstantOp widening is a compile error here, never a silent
-      // heal. (The events-side union deliberately did NOT widen this one —
-      // events have their own executor, `executeEventOp`.)
+      // Exhaustive, so a new `InstantOp` fails to compile here. An event's
+      // ops have their own executor, `executeEventOp`.
       switch (op.op) {
         case 'gainBits':
           this.gainBits(op.amount);
@@ -2388,42 +2300,23 @@ export class Run {
   }
 
   /**
-   * H4 — spin up one turn: roll this turn's battlefield + a fresh enemy wave at
-   * the encounter's fixed budget, field this turn's already-drawn hand (H5b
-   * draws it in `startNextTurn`), record the deployed hand, publish the per-turn
-   * `currentEncounter`, and emit `battle:started` for the driver (BattleScene /
-   * the headless harness) to build a World.
+   * Roll the turn's world seed and enemy wave without changing the run: the
+   * turn's `'battle'` stream, keyed (sectorIndex, nodeId, turnIndex), draws
+   * the seed and then the wave, the selected encounter's waves advanced one
+   * turn (`waveForTurn`) and resolved to a team (`resolveWave`). The seed is
+   * drawn first, so the wave's varying draw count moves nothing else. A
+   * wave's stage condition reads the enemy pool's fraction as it stands.
    *
-   * Determinism (77d2): each turn's stream derives from `streamRoot` +
-   * (sectorIndex, nodeId, turnIndex) — never looked ahead / stashed — so a
-   * mid-encounter save/resume re-derives every future turn's wave from the
-   * root and counters alone.
-   */
-  /**
-   * 89e — roll the turn's world seed + enemy wave off the keyed `battle`
-   * stream WITHOUT touching run state: a pure function of the serialized
-   * state at the turn boundary (stream root, sector/node/turn, the wave
-   * cursor, the pools, the roster + fold). `beginTurn` commits its result
-   * (assigns the cursor, fields the team); the pre-turn RISK PREVIEW calls
-   * it before the gate and discards everything but Σ power. Both get the
-   * identical wave because `streamRng` is hash-DERIVED per occurrence
-   * (`deriveRng`, no parent consumption — gotcha #125), so a preview
-   * derive is byte-neutral for every other stream, and nothing between the
-   * gate and the fight can change an input: `removeRosterUnit` is
-   * map-only, packet draws mutate `hand` not the fold, `healPool` touches
-   * the PLAYER pool only (the stage condition reads the enemy pool).
-   * Pinned by the preview==fielded test in Run.test.ts.
-   *
-   * 77d2 — one turn = one 'battle' occurrence, keyed (sectorIndex, nodeId,
-   * turnIndex): worldSeed + the wave rolls ride it, and a prior encounter's
-   * LENGTH can no longer shift a later turn's stream (the old per-turn
-   * positional fork did exactly that). U3 — the per-turn enemy team comes
-   * from the selected ENCOUNTER, not the random `rollEnemyWave`: advance the
-   * wave-list grammar one turn (`waveForTurn`, U2) to get this turn's spec +
-   * cursor, then resolve it to a team (`resolveWave`, U1). Both draw
-   * `battleRng` — the last consumer, so their variable draw count stays
-   * downstream-safe. The stage condition reads the live pool fraction at
-   * this turn boundary.
+   * What it reads is saved state at the turn's boundary (the stream root,
+   * the counters, the wave cursor, the enemy pool, the roster and the
+   * fold), so a load rolls the same turns. `beginTurn` commits the result;
+   * the risk preview rolls it before the gate and keeps only the power. The
+   * two get the same wave, since a keyed stream consumes nothing from a
+   * parent (gotcha #125) and nothing at the gate moves an input:
+   * `removeRosterUnit` is refused there, a packet's draw changes `hand`
+   * and not the fold, and a heal moves the player's pool, not the enemy's.
+   * Run.test.ts pins that a preview moves nothing ("the preview derive
+   * perturbs nothing").
    */
   private rollTurnWave(): { worldSeed: number; cursor: WaveCursor | null; enemyTeam: UnitTemplate[] } {
     const battleRng = this.streamRng('battle', this.sectorIndex, this.currentNodeId, this.turnIndex);
@@ -2439,21 +2332,14 @@ export class Run {
     const { spec, cursor } = waveForTurn(encounter.waves, this.waveCursor, encounterState, battleRng);
     const waveContext: WaveContext = {
       roster: this.team,
-      // 65b — the count/budget basis is the FIELDED hand: min(roster,
-      // effectiveDrawAmount) — Option B, the FOLDED basis (worklog
-      // §65-shape-lock). Persistent daemon draw modifiers scale the
-      // opposition with the hand they grant; TRANSIENT packet draws (65c)
-      // deliberately never reach this seam — they mutate `hand` directly,
-      // not the fold. This ONE field feeds BOTH resolveTotalCount and
-      // resolveLevelBudget, so count-basis == budget-basis by construction
-      // (the K2 desync shape can only re-enter via a second supplier).
-      // ⚠ Landing note (worklog §65-shape-lock): the FIRST draw-daemon's
-      // authored description owes the coupling sentence ("Foes muster to
-      // match") — the budget consequence is surfaced nowhere else.
-      // The per-instance level cap is authored per wave (`spec.levelCap`)
-      // and resolved against `roster`, so it's no longer computed here.
+      // The basis of the wave's count and its level budget is the hand the
+      // fold deals, `min(roster, effectiveDrawAmount)`, one number for
+      // both, so they cannot disagree. A lasting draw modifier grows the
+      // opposition with the hand; a packet's draw changes `hand` and never
+      // reaches it. A daemon that moves `drawAmount` owes its description
+      // the coupling ("Foes muster to match"), since nothing else tells the
+      // player.
       handSize: Math.min(this.team.length, this.effectiveDrawAmount),
-      // X1 — the per-run difficulty lever, applied to every wave at resolve time.
       waveSizeMultiplier: this.difficultyMultipliers.waveSize,
       levelBudgetMultiplier: this.difficultyMultipliers.levelBudget,
     };
@@ -2462,29 +2348,24 @@ export class Run {
   }
 
   /**
-   * 89e → §91d — the pre-turn RISK line's number: the most pool this turn can
-   * cost the player, capped at the pool (you can't lose what you don't have):
-   * every unit in the HAND falls → Σ the hand's `power` × `chipMultiplier` —
-   * the player's own numbers, known at the gate for free. It reads BASE
-   * template power (the number the player can add up from the cards);
-   * in-battle power buffs and the cap-turn SURCHARGE (the stall path) sit
-   * outside the bound — an upper bound on the ORDINARY turn is the point
-   * (`playerExposure`).
-   * Display-only: consumed by `turn:starting` (and, 96.5c, re-derived on
-   * `turn:handRedrawn` / `run:packetUsed`, and read by the BattleScene for
-   * the live bar's ceiling tick — public for that one reader), never
-   * serialized, never read by the sim. Pure: `rollTurnWave` is keyed, so a
-   * second call previews the same wave.
+   * The pre-turn risk line: the most this turn can cost the player's pool,
+   * the whole hand falling at its base power (`playerExposure`, which says
+   * what the bound leaves out), capped at the pool. Carried by
+   * `turn:starting`, `turn:handRedrawn` and `run:packetUsed`; display only,
+   * never saved, never read by the sim.
    */
   previewPoolAtRisk(): number {
     return this.previewPoolsAtRisk().player;
   }
 
-  /** 96.5c2 — both bounds at once (the live bar's notch on EACH gauge): the
-   *  player's (`playerExposure`, capped at the player pool) and the enemy's
-   *  mirror (`enemyExposure`, capped at the enemy pool), which reads the wave
-   *  previewed off the keyed stream `beginTurn` rolls it from. Display-only;
-   *  never serialized; never read by the sim. */
+  /**
+   * Both bounds, for the notch on each of the battle HUD's gauges: the
+   * player's (`playerExposure`, capped at its pool) and the enemy's
+   * (`enemyExposure` over the previewed wave, capped at its pool). The
+   * enemy's previews this turn's wave only until `beginTurn` commits the
+   * wave cursor; after it, the roll advances from the fielded wave. Display
+   * only, never saved, never read by the sim.
+   */
   previewPoolsAtRisk(): { player: number; enemy: number } {
     const { enemyTeam } = this.rollTurnWave();
     const fielded = {
@@ -2497,11 +2378,15 @@ export class Run {
     };
   }
 
+  /**
+   * Begin one turn's battle: roll its world seed and wave (`rollTurnWave`)
+   * and commit the wave's cursor, field the hand `startNextTurn` drew,
+   * record the deployment, set `currentEncounter`, and emit
+   * `battle:started`, on which `Game` mounts the battle scene and a headless
+   * driver builds its World. The battlefield is the encounter's, built once
+   * before its first turn.
+   */
   private beginTurn(): void {
-    // K3.5 — the battlefield is the ENCOUNTER's (rolled once in
-    // `beginEncounter`); only the world seed and the enemy wave (both from
-    // `rollTurnWave`) stay per-turn. The pre-K3.5 per-turn layout/terrain/
-    // theme rolls lived right here — see `rollEncounterMap`.
     if (this.encounterMap === null) {
       throw new Error('Run.beginTurn: no encounterMap — beginTurn outside an encounter');
     }
@@ -2513,20 +2398,11 @@ export class Run {
     const { worldSeed, cursor, enemyTeam } = this.rollTurnWave();
     this.waveCursor = cursor;
 
-    // E4/H5 — the hand was drawn in `startNextTurn` (`drawTurnHand`) so the
-    // pre-turn screen could show it; here we just field it. Stamp each drawn
-    // card with its `Run.team` index so `xpAwards` can carry it back at battle
-    // end (the stamp is applied at handoff time, never on `this.team`).
-    //
-    // H6c → K1 — spawn-time fatigue is now a status effect (`fatigueEffect`),
-    // seeded onto the fielded unit alongside any persistent encounter effects
-    // for its slot. The Fatigued stack count is `deploymentCounts[idx]` PRIOR
-    // deployments this encounter (read BEFORE the recordDeployment bump below,
-    // so a debut unit reads 0 stacks → no effect). INERT at the shipped knob
-    // (`fatigueEffect` returns null) — no effect seeded, byte-identical. The
-    // encounter effects are re-seeded each turn as `endOfTurn` (the
-    // `endOfEncounter` store). `this.team`'s canonical templates are never
-    // touched (the stamp is a transient per-turn copy).
+    // Each fielded card is a copy, never `this.team`'s template: stamped with
+    // its roster index, which `xpAwards` carries back at the battle's end,
+    // and seeded with its slot's encounter effects and its fatigue. Fatigue
+    // counts the earlier deployments this encounter, read before this
+    // turn's is recorded (`fatigue.ts`).
     const stampedPlayerTeam = this.hand.map((idx) => {
       const t = this.team[idx]!;
       const seedEffects: StatusEffect[] = this.encounterEffects[idx]!.map(cloneEffect);
@@ -2538,8 +2414,6 @@ export class Run {
         ...(seedEffects.length > 0 ? { effects: seedEffects } : {}),
       };
     });
-    // H3 — record this turn's deployment (the drawn hand). The deployment
-    // counter finally varies per turn here (pre-H5 it was the whole roster).
     this.recordDeployment(this.hand);
     const battleEncounter: BattleEncounter = {
       worldSeed,
@@ -2548,19 +2422,14 @@ export class Run {
       gridW,
       gridH,
       theme,
-      // 83d — the pull's boss gate rides the encounter (see the interface note).
       kind: encounter.kind,
       playerTeam: stampedPlayerTeam,
       enemyTeam,
-      // 47f — the owned daemons' battle hooks, compiled fresh each turn
-      // (ownership can grow mid-encounter via addDaemon: a §48 reward daemon
-      // fights from the NEXT turn, matching the grant-resolution rule).
-      // 49e — packet-injected rules union in AFTER the daemon rules
-      // (daemons → run-injected → encounter-injected, fire order within
-      // each); a pre-turn injection is live this very turn (beginTurn runs
-      // after the gate).
-      // 51f — the injected entries strip to their plain rules at the seam
-      // (the sim never sees the provenance wrapper).
+      // Compiled each turn, so a daemon taken from a turn's reward fights
+      // from the next. In fire order: the daemons' rules, then the run's
+      // injected rules, then the encounter's; a rule a packet injects before
+      // the turn fights in it. The injected entries lose their source ids
+      // here, which the sim never sees.
       battleRules: [
         ...battleRulesFor(this.daemons),
         ...this.injectedRunRules.map((e) => e.rule),
@@ -2568,29 +2437,31 @@ export class Run {
       ],
     };
     this.currentEncounter = battleEncounter;
-    // 53b — the payload carries the whole fixture for the trace recorder.
+    // The whole fixture rides the payload, for the trace recorder and the
+    // journal's replay.
     this.bus.emit('battle:started', { worldSeed, encounter: battleEncounter });
   }
 
   /**
-   * Hop index of the current node. Public so UI surfaces (HUD) can label
-   * the active battle's depth without duplicating the node-lookup logic.
+   * The current node's hop, for the battle HUD, the payloads, and the
+   * encounter's and the event's picks. It throws before the first node is
+   * entered (gotcha #110).
    */
   get currentHop(): number {
     return this.hopOf(this.currentNodeId);
   }
 
   /**
-   * 84b — node entries still AHEAD of the run. The rest of the current
-   * sector's node-map (every node is one entry — hops 0..L−1, so a
-   * pre-root run has all L ahead and a run at hop h has L−1−h; read off
-   * the LIVE map, so a `hopCount` probe's shortened map counts as built)
-   * plus the shortest remaining path over the sector DAG, each future
-   * sector at its full length (`sectorHops` overrides every sector's;
-   * a `hopCount` probe's terminal IS the run terminal, so it adds
-   * nothing). DERIVED, never serialized (derive-don't-cache): the §84
-   * instrument's per-remaining-hop normalization and the §85 prior's
-   * state scaling read it. Pre-root-safe by construction (gotcha #110).
+   * The node entries still ahead of the run: the rest of the current
+   * sector's map (each hop one entry, so before the root all L are ahead
+   * and at hop h, L − 1 − h), read off the live map, so a `hopCount` dial's
+   * shorter map counts as built; plus the shortest path left over the
+   * sector graph, each sector at its length (`sectorHops` overrides every
+   * one). Under `hopCount` the first sector's terminal ends the run, so
+   * nothing is added. Derived, never saved, and safe before the root
+   * (gotcha #110). The fuzz instruments record it with each decision and
+   * divide a decision's margin by it, and a run-length rollout sizes its
+   * hop bound from it.
    */
   get hopsRemaining(): number {
     const length = this.nodeMap.hops.length;
@@ -2613,7 +2484,8 @@ export class Run {
     return node.hop;
   }
 
-  /** G3 — node kind, for the rest/battle dispatch + the post-promotion route. */
+  /** A node's kind, for the entry's dispatch, the encounter's pick and the
+   *  promotion's return. */
   private kindOf(nodeId: number): NodeKind {
     const node = this.nodeMap.nodes.find((n) => n.id === nodeId);
     if (!node) throw new Error(`Run.kindOf: no node ${nodeId} in map`);
@@ -2621,10 +2493,10 @@ export class Run {
   }
 
   /**
-   * H4 — a turn's tactical battle just ended (`battle:ended`). Resolve the turn
-   * into the health pools, then either start the next turn or finish the
-   * encounter. Replaces the pre-H4 single-battle handler: a `battle:ended` no
-   * longer ends the node — it ends a TURN.
+   * A turn's battle ended (`battle:ended`), which ends the turn, not the
+   * node. Charge the pools, bank the turn's XP and roll its rewards unless
+   * the encounter is lost, then pause at the turn-outcome gate, or with the
+   * gates off go straight on through the gate chain.
    */
   private handleTurnEnded(
     winner: GameEvents['battle:ended']['winner'],
@@ -2637,44 +2509,37 @@ export class Run {
   ): void {
     if (this.phase !== 'battle') return;
     this.currentEncounter = null;
-    // `survivorPower` / `fallenPower` / `reason` are absent only from test
-    // fakes that drive the phase machine without a real World (every real
-    // emit sets all three, §91a1): absent power is 0/0 (no charge on that
-    // half); an absent reason maps the way pre-§91a1 emitters meant it — a
-    // fake 'draw' was the driver's cap, anything else decisive.
+    // Only a test's fake leaves out `survivorPower`, `fallenPower` or
+    // `reason`; the World always sets them. Absent power charges nothing,
+    // and an absent reason reads a 'draw' as the cap and anything else as
+    // decisive.
     const sp = survivorPower ?? { player: 0, enemy: 0 };
     const fp = fallenPower ?? { player: 0, enemy: 0 };
     const why: TurnEndReason = reason ?? (winner === 'draw' ? 'cap' : 'decisive');
     const applied = this.resolveTurn(why, sp, fp);
-    // 115a — on both paths, so a gated and a headless run save the same state.
+    // On both paths, so a gated and a headless run save the same state.
     this.lastTurn = { winner, reason: why };
     const result = this.turnResult();
-    // M1 — bank THIS turn's XP at the boundary (pre-M1: accrued across the
-    // encounter, banked once at the end), so a mid-encounter level-up fields
-    // a stronger unit on the very next turn. A losing turn skips the bank:
-    // defeat is terminal, so the levels would be dead state, and a level-up
-    // pause in front of the defeat screen would be noise.
+    // The turn's XP banks at its boundary, so a unit that levels fights
+    // stronger from the next turn. A turn that loses the encounter banks
+    // nothing and rolls nothing: the defeat ends the run, so its levels and
+    // loot would be dead state, and a level-up pause before the defeat
+    // screen noise.
     if (result !== 'lost') {
       const promotions = this.bankXpAwards(xpAwards);
       if (promotions.length > 0) this.pendingPromotions = promotions;
       const portions: RewardPortion[] = [];
-      // 47f→51a — the turn's battle-earned bits (the World's serialized
-      // tally, the XP pattern) become a DECLINABLE reward portion instead of
-      // settling directly (the §51 user call): the offer rides the existing
-      // turn-gate seam, so a mid-encounter tally now interposes the reward
-      // phase between turns. The settle moved with it — `gainBits` fires at
-      // ACCEPT time (`handleAcceptReward`), so the `bitsGain` fold still
-      // applies and Laverna still stacks with Moneta. SOURCE-LABELED when
-      // exactly one owned daemon authors battle-bits hooks (the aggregate
-      // tally can't split across several earners). The tally portion leads
-      // the offer — earned in the fight, ahead of the rolled loot. Mirrors
-      // the XP bank's skip-on-lost: a defeat's loot is dead state.
+      // The bits the battle earned (the World's tally) are a reward portion
+      // the player may decline, so a tally puts the reward gate between
+      // turns. It settles at the accept through `gainBits`, so the
+      // `bitsGain` fold applies (Laverna stacks with Moneta). It leads the
+      // offer, ahead of the rolled loot.
       if (tallies !== undefined && tallies.bits > 0) {
-        // 51f — the earner pool spans BOTH rule sources: daemon battle-bits
-        // hooks (dis-pater, laverna) and packet-injected gainBits rules
-        // (no shipped instance since 88c). Dedup by id — two copies of the
-        // same idol are still ONE earner; two distinct ids are two, and the
-        // label drops (the aggregate tally can't attribute).
+        // The earners are the daemons with battle-bits hooks (Dis Pater,
+        // Laverna) and the injected `gainBits` rules' packets (no shipped
+        // packet injects one), by id: two copies of a daemon are one earner.
+        // With exactly one the portion names it; with more the tally cannot
+        // be split, and it names none.
         const earners = new Set(battleBitsDaemonIds(this.daemons));
         for (const entry of [...this.injectedRunRules, ...this.injectedEncounterRules]) {
           if (entry.rule.effect.op === 'gainBits') earners.add(entry.sourceId);
@@ -2685,19 +2550,13 @@ export class Run {
             : { kind: 'bits', base: tallies.bits },
         );
       }
-      // §75g — camp-kill loot: every camp the PLAYER wiped this turn pays
-      // its def's reward refs at the boundary REGARDLESS of the battle's
-      // winner (the shape-lock's 51a-precedent call: withholding would
-      // double-punish the detour that caused a lost battle); only the
-      // run-terminal `result === 'lost'` skips, like the XP bank above. An
-      // enemy-killed camp pays nothing — credit denial IS the player's
-      // loss (the payload's killedBy filter). Rolls ride the two existing
-      // reward streams (no new fork — a camp-free turn draws nothing), and
-      // sit between the tally and the win roll: earned in the fight, ahead
-      // of the encounter loot.
-      // 77d2 — ONE turn-boundary reward occurrence: camp-kill loot + the
-      // won-branch encounter loot ride the same two derived streams, keyed
-      // (sectorIndex, nodeId, turnIndex) — the boundary is atomic.
+      // A camp's loot: each camp the player wiped this turn pays its rewards
+      // whoever won the battle, since withholding it would punish twice the
+      // detour that lost the fight. A camp the enemy killed pays nothing,
+      // which is the player's loss. Camp loot comes after the tally and
+      // before the win's roll. One turn's boundary is one occurrence of the
+      // two reward streams, keyed (sectorIndex, nodeId, turnIndex), which
+      // the camps and the win share.
       const rewardRng = this.streamRng('reward', this.sectorIndex, this.currentNodeId, this.turnIndex);
       const rewardBitsRng = this.streamRng('rewardBits', this.sectorIndex, this.currentNodeId, this.turnIndex);
       for (const kill of campKills ?? []) {
@@ -2708,20 +2567,14 @@ export class Run {
           ...rollRewards(refs, rewardTableById, this.ownedDaemonIds(), rewardRng, rewardBitsRng),
         );
       }
-      // 48b — the winning boundary rolls the encounter's rewards, alongside
-      // the XP/tally banking above (rolled HERE, not at the gate, so a save
-      // on the turn-outcome screen already carries the exact offer). Empty
-      // offer → null → `continueFromTurnGate` skips the phase entirely (the
-      // `promotions.length > 0` shape). Draws ride the two dedicated reward
-      // streams, so a rewards-less win perturbs nothing.
+      // A won encounter rolls its rewards here, at the boundary rather than
+      // at the gate, so the state saved at the gate holds the offer. An
+      // empty offer is null, and the gate chain skips the reward phase.
       if (result === 'won') {
-        // 74b — an event's start-encounter terminal can pin the fight's
-        // loot: the override refs REPLACE the encounter's own refs
-        // wholesale (the spec's "predetermined reward"; 82c — the refs
-        // carry their own triggers now, so a pinned fight rolls the same
-        // multi-table chance mix a catalog encounter does). Cleared at
-        // finishEncounter, so it can only ever apply to the fight the
-        // event opened.
+        // An event's `start-encounter` can name the fight's loot: its refs
+        // replace the encounter's, each with its own trigger, as a catalog
+        // encounter's are. Cleared at `finishEncounter`, so it applies only
+        // to the fight the event opened.
         const rewardRefs: readonly EncounterRewardRef[] =
           this.pendingRewardOverride ?? this.selectedEncounter?.rewards ?? [];
         portions.push(
@@ -2731,21 +2584,16 @@ export class Run {
       this.pendingRewards = portions.length > 0 ? portions : null;
     }
     if (this.pauseAtTurnGates) {
-      // Pause at the turn-outcome gate (96.5d: no screen — Game dispatches
-      // the advance itself after the battle's outro; the fuzz bot dispatches
-      // it directly — the phase and the event are unchanged); the `advanceTurn`
-      // resumes into the promotion pause (if any units leveled) and then
-      // `continueAfterTurn`.
+      // The turn-outcome gate. No screen shows it: `Game` sends
+      // `advanceTurn` after the battle's outro, and the fuzz bot at once;
+      // the advance goes on through the gate chain.
       this.phase = 'turn-outcome';
       this.bus.emit('turn:resolved', {
         turn: this.turnIndex,
         winner,
-        // §91d — WHY the turn ended, so the outcome screen labels the chip
-        // lines by the rule set the turn actually paid (`rulesForTurn`).
         reason: why,
-        // §91a2 — the APPLIED losses (what each pool actually lost), not a
-        // re-derivation of the rule's arithmetic (the kickoff audit's
-        // second-copy finding); the uncapped charges ride pools:chipped.
+        // The losses applied, as each pool took them, not the rule's
+        // arithmetic again; the uncapped charges ride `pools:chipped`.
         enemyPoolChip: applied.enemy,
         playerPoolChip: applied.player,
         result,
@@ -2753,31 +2601,28 @@ export class Run {
         playerHealthMax: HEALTH.playerHealthMax,
         enemyHealth: this.enemyHealth,
         enemyHealthMax: this.enemyHealthPoolMax,
-        // 94d — who fell this turn + the encounter's record (turnIndex has
-        // already advanced in resolveTurn: it IS the completed turn).
+        // `resolveTurn` has advanced `turnIndex`, so it is the completed
+        // turn.
         fallen: this.fallenForTurn(this.turnIndex),
       });
     } else {
-      // 48b headless — the gate chain (reward → promotion → continue)
-      // interposes between the resolved turn and the loop continuing (the
-      // gated path enters the same chain from `handleAdvanceTurn`). The
-      // harness/test loop resolves each gate and re-enters.
+      // With the gates off, the gate chain runs at once; the headless loop
+      // resolves each gate it stops at, which re-enters the chain.
       this.continueFromTurnGate();
     }
   }
 
   /**
-   * 48b — the post-turn gate chain, the shape-locked ordering: reward (loot
-   * while the win is fresh) → promotion → `continueAfterTurn` (next turn /
-   * finishEncounter → recruit/victory). Every gate resolution re-enters this
-   * chain, so the ordering holds regardless of which gate a save/reload (or
-   * the gated vs headless path) lands on. `turnResult` is pure — the pools
-   * don't change across the pauses — so re-reading it here routes exactly as
-   * the original boundary would have (the H4b `continueAfterTurn` contract).
-   * 51a: `pendingRewards` can be non-null at ANY non-lost boundary now (a
-   * battle-tally portion), so the reward gate DOES interpose mid-encounter —
-   * resolving it re-enters here and `continueAfterTurn('ongoing')` starts
-   * the next turn as before.
+   * The gate chain after a turn, in order: the reward (the loot while the
+   * win is fresh), the promotion, then `continueAfterTurn` (the next turn,
+   * or the encounter's end). Any boundary the encounter does not lose can
+   * offer a reward (a tally, a camp's loot), so the reward gate can stand
+   * between two turns. The reward's last resolution re-enters here and the
+   * promotion's dismissal goes on to `continueAfterTurn`, so the order holds
+   * on both paths and whichever gate a load lands on. `turnResult` is read
+   * again here: a pause can only raise the player's pool (a `poolHealth`
+   * reward), which cannot change the route, so it routes as the boundary
+   * did.
    */
   private continueFromTurnGate(): void {
     if (this.pendingRewards !== null) {
@@ -2794,34 +2639,27 @@ export class Run {
   }
 
   /**
-   * H4 → §91a2 — fold one turn's outcome into the pools by the CHIP RULE
-   * (`turnCharges`, src/run/chipRule.ts): each pool pays its OWN fallen
-   * Σ`power` (× `chipMultiplier`), and a tick-capped turn (`reason ===
-   * 'cap'`) also pays the OPPOSING side's survivors. The per-turn winner is
-   * irrelevant to the charge. XP
-   * banking is the caller's job (M1 — at the turn boundary, right after this
-   * resolves). Returns the APPLIED loss per pool (clamped — what each pool
-   * actually lost) for the post-turn screen; the uncapped charges ride
-   * `pools:chipped` for the telemetry (the 89d rider).
-   * Decision + continuation are split out (`turnResult`/`continueAfterTurn`) so
-   * H4b's post-turn screen can show the result before the loop acts on it.
+   * Charge one turn to the pools by the chip rule (`turnCharges`, whose
+   * header gives the rule), each pool floored at 0; the turn's winner does
+   * not enter the charge. Returns the loss each pool took, after the floor;
+   * `pools:chipped` carries those and the uncapped charges. Deciding and
+   * acting on the result are apart (`turnResult`, `continueAfterTurn`) so
+   * the turn-outcome gate can stand between them.
    */
   private resolveTurn(
     reason: TurnEndReason,
     survivorPower: SidePower,
     fallenPower: SidePower,
   ): { player: number; enemy: number } {
-    // Unconditional, at the top: even a 0/0 mutual-wipe turn must advance the
-    // counter so the max-turns safety cap can terminate the encounter.
+    // First and always, so a turn that charges nothing still counts toward
+    // the turn cap.
     this.turnIndex += 1;
     const charges = turnCharges(reason, survivorPower, fallenPower);
     const playerBefore = this.playerHealth;
     const enemyBefore = this.enemyHealth;
     this.enemyHealth = Math.max(0, this.enemyHealth - charges.enemy);
     this.setPlayerHealth(this.playerHealth - charges.player, 'chip');
-    // 89a — report the APPLIED deltas from the one site that applies them
-    // (both paths; the telemetry's trajectory source — see events.ts), and
-    // §91a2 the uncapped charges beside them.
+    // On both paths, from the one site that charges the pools.
     this.bus.emit('pools:chipped', {
       turn: this.turnIndex,
       playerBefore,
@@ -2835,17 +2673,13 @@ export class Run {
   }
 
   /**
-   * H4 — the encounter's status after the just-resolved turn, WITHOUT acting on
-   * it. Precedence is fixed:
-   *   1. `playerHealth <= 0` → `lost` (run-loss is terminal — checked FIRST, so
-   *      a turn that zeroes BOTH pools is a defeat, not a win).
-   *   2. `enemyHealth <= 0` → `won`.
-   *   3. `turnIndex >= maxTurns` → safety cap: resolve by remaining pool
-   *      fraction (player loses ties). Bounds an all-mutual-wipe encounter that
-   *      would otherwise chip 0/0 forever.
-   *   4. otherwise → `ongoing`.
-   * Pure: re-reads the pools, which don't change across the turn-outcome pause,
-   * so `continueAfterTurn` can recompute it at `advanceTurn` time identically.
+   * The encounter's state after the turn just charged, without acting on
+   * it. In order: the player's pool at 0 loses, so a turn that empties both
+   * is a defeat; the enemy's at 0 wins; at `HEALTH.maxTurns` turns the
+   * larger fraction of pool left wins and the player loses a tie, which
+   * ends an encounter whose turns charge nothing; otherwise it goes on. It
+   * reads only the pools and the turn count, so the gate chain can read it
+   * again.
    */
   private turnResult(): 'won' | 'lost' | 'ongoing' {
     if (this.playerHealth <= 0) return 'lost';
@@ -2859,9 +2693,9 @@ export class Run {
   }
 
   /**
-   * H4 — act on a turn result: end the encounter (win / defeat) or roll into
-   * the next turn (through the pre-turn gate). Called synchronously in the
-   * headless path, or from `advanceTurn` (the post-turn screen) when gated.
+   * Act on a turn's result: end the encounter, won or lost, or start the
+   * next turn. The gate chain's last step, once the reward and the
+   * promotion are clear.
    */
   private continueAfterTurn(result: 'won' | 'lost' | 'ongoing'): void {
     if (result === 'lost') {
@@ -2874,19 +2708,16 @@ export class Run {
   }
 
   /**
-   * H4b — resume from a turn gate (the `advanceTurn` command). From
-   * `turn-intro` start the turn's battle; from `turn-outcome` continue the
-   * encounter (or end it). A no-op in any other phase, so a stray dispatch (a
-   * double-click or a fired-then-disposed screen timer) can't corrupt state.
+   * Go on from a turn gate (the `advanceTurn` command): from `turn-intro`
+   * begin the turn's battle, from `turn-outcome` run the gate chain. A
+   * no-op in any other phase (`Command.ts`), so a stray dispatch, a double
+   * click or a timer that outlived its screen, changes nothing.
    */
   private handleAdvanceTurn(): void {
     if (this.phase === 'turn-intro') {
       this.phase = 'battle';
       this.beginTurn();
     } else if (this.phase === 'turn-outcome') {
-      // 48b — the gate chain (reward → promotion → continue) runs AFTER the
-      // outcome screen, so the result is read first (the M1 discipline,
-      // generalized from the single promotion gate).
       this.continueFromTurnGate();
     }
   }

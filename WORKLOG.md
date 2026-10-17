@@ -8160,3 +8160,130 @@ orientation; 147,977 at 00:56 at the sign's commit; 175,574 at 01:01 at
 the reach tools' commit, as 4c started; 327,771 at 01:17 after 4c's
 proof; 340,555 at 01:22 at its commit; 348,016 at 01:23, before this
 entry.
+
+### 123m, batch 4d — `Run.ts`'s turn (2026-10-17, session 60a71867)
+
+`startNextTurn` to `handleAdvanceTurn`: the turn's start, the run stats,
+bits and the pool, the cache and packets, instant ops, the wave and its
+preview, `beginTurn`, the turn's end and the gate chain. The history (the
+step behind each split, the retired fork, the A/B behind each dial, the
+byte identity of past moves) and the capitals are out. Two docs sat above
+the wrong function (`addBits`'s above `setPlayerHealth`'s, `beginTurn`'s
+above `rollTurnWave`'s); each is down at its own. The inline copies of the
+`turn:starting` payload's field docs point at `events.ts`, and the cap and
+fold rules at `deck.ts` and `runStats.ts`, where they live.
+
+**Statements found false and corrected (rule 7):**
+
+- `startNextTurn`: the coin flipped "off the isolated `daemonRng`"; there
+  is no such field, and the flip rides the `'daemon'` stream's site 1. Off,
+  the gates' path left "phase stays `battle`"; from a reward or promotion
+  gate it is neither, and the code sets it.
+- `turn:starting`'s risk line was "the wave this turn will field ...
+  summed to its chip bound"; the player's bound is the hand's base power
+  (`playerExposure`), and the wave plays no part. The payload's grants were
+  in "walk order"; a packet's grant is put in at the cursor, and its twin in
+  `events.ts`'s `turn:starting` doc ("in the order the daemons were
+  acquired") is corrected in this commit.
+- `effectiveRunStats` (batch 1's lead): "today's only consumer is
+  `gainBits`", the cache "§49's"; seven readers, and no packet folds a stat.
+- `effectiveDrawAmount`: the cap was "user-signed at 8";
+  `DECK.maxHandSize` ships at 10.
+- `addBits`'s doc had "§50's spend surfaces will call this"; `spendBits`
+  does. `addPacket` (4c's lead) said every acquisition gates on
+  `cacheHasRoom`; the reward accept and the port buy do, and an event's
+  `addPacket` keeps its grant over a full cache. `cacheHasRoom`'s readers
+  were the reward and the port; a construction grant and an event's
+  condition read it too.
+- `executeInstantOps`: "the resolution already happened in the daemon
+  walk"; a packet's heal and a reward's heal come without one.
+- `beginTurn` rolled "this turn's battlefield + a fresh enemy wave at the
+  encounter's fixed budget"; the battlefield is the encounter's, and no
+  budget is fixed (batch 3's finding). Its map was "rolled once in
+  `beginEncounter`" (a boss's is built at the sector's entry, 4a's finding),
+  with a twin in `events.ts`'s `map` ("rolled at its start"), corrected
+  here. `rollEncounterMap` is `buildEncounterMap`.
+- `rollTurnWave`: "`removeRosterUnit` is map-only"; it is legal at the map,
+  a port or an event, and refused at the gate, which is what the argument
+  needs. "Pinned by the preview==fielded test"; `Run.test.ts` pins that a
+  preview moves nothing, and no test compares the preview with the fielded
+  wave.
+- `previewPoolAtRisk` was "read by the BattleScene ... public for that one
+  reader"; the battle scene reads `previewPoolsAtRisk`. That one's enemy
+  bound previews this turn's wave only until `beginTurn` commits the cursor
+  (the finding below), and its doc now says so.
+- `hopsRemaining`: "the §85 prior's state scaling read it"; the prior reads
+  its table unscaled (`tests/fuzz/rollout/evaluator.ts`), and the readers
+  are the fuzz decision records, their per-hop column and a run-length
+  rollout's hop bound.
+- `handleTurnEnded`: the tally named its source "when exactly one owned
+  daemon authors battle-bits hooks"; one earner, which may be an injected
+  rule's packet (its own next comment said so). "A losing turn skips the
+  bank"; a turn that loses the encounter does, and a lost battle in an
+  encounter that goes on banks. "A save on the turn-outcome screen" and
+  "the outcome screen labels the chip lines": no screen shows the gate, and
+  the three sentences of the twin in `events.ts`'s `turn:resolved` are
+  corrected here. The advance went "into the promotion pause"; it goes into
+  the reward, then the promotion.
+- `continueFromTurnGate`: "the pools don't change across the pauses"; a
+  won turn's reward can heal the player's pool (`hostage-rescue`'s
+  `poolHealth`, through an event's reward override), which cannot change
+  the route. "Every gate resolution re-enters this chain"; the promotion's
+  dismissal calls `continueAfterTurn`.
+- `resolveTurn`, `continueAfterTurn`: "H4b's post-turn screen", "from
+  `advanceTurn` (the post-turn screen)"; no screen, and the caller is the
+  gate chain. `events.ts`'s `turn:resolved` had `ongoing` followed by the
+  next `turn:starting` at the advance; any reward or promotion comes first.
+
+**Checked and kept:** Mercury's coin at the turn's start; the hand ops are
+pre-turn only (`PACKET_OP_CONTEXTS`), so a discard always has its hand
+position; Patch is the heal usable at the map; fatigue seeds nothing at the
+shipped knob (`fatigue.ts` says it); the reward screen reprices its bits
+rows (`RewardScreen.ts`'s header); the fuzz sweep writes `HEALTH` in place;
+a rest caps at the maximum (`restedPool`); one `run:cacheChanged` emit.
+
+**Found, a display bug, not built:** the battle HUD's enemy notch can show
+the next wave's bound. `BattleScene.ts:190` calls `previewPoolsAtRisk`
+after `beginTurn` has committed the wave cursor, so `waveForTurn` advances
+from the fielded wave. A probe (`scratch/123m-b4d/notch-probe.mts`, on this
+machine only) over 40 seeds, 6 turns each at the root, checked against the
+fielded team's own power: the
+preview at the gate matched on all 240 turns, which is its control; the
+read in battle differed on 39 (seed 2 alternates 9 and 8, a loop of two
+waves). The player's notch reads the hand and is right. TODO §124 has it;
+a fix changes what the player sees, so it is the user's call.
+
+**Leads, not built:**
+
+- `CacheOverlay.ts`'s header gives a shrinking daemon as the overflow's
+  cause; no shipped daemon moves `cacheSize`, and the shipped cause is an
+  event's `addPacket` (for §124).
+- `deck.ts`'s `handSize` gives the enemy budget's basis by
+  `enemyBudget.ts`'s formula; an authored wave's budget is `wave.ts`'s
+  `resolveLevelBudget`, which the run passes the folded hand.
+- For 4e: `handleDismissPromotion`'s comment carries "a won final turn →
+  recruit/victory as before" and the M1 and G3 codes.
+
+Measured (`comment-length` on copies under `output/cl-123m-b4d/`):
+`Run.ts` comment lines 1,903 → 1,734, words 15,970 → 14,552, code lines
+2,251 unchanged; `events.ts` 468 → 469, 3,828 → 3,829. `src/run` comment
+lines 3,476 → 3,307, words 29,285 → 27,867. The step-code ceiling 3,454 →
+3,293, `Run.ts` 319 → 158.
+
+Proof: `comment-strip HEAD src`, comments only, exit 0, its control named
+in both files.
+
+Cost: 131,761 at 02:54 UTC by the tool's clock as the batch started,
+312,849 at 03:12 after its first proof: 181k for 1,008 lines, 180 a line,
+with the probe. The claims ran into `daemon.ts`, `runStats.ts`,
+`chipRule.ts`, `sequencer.ts`, `wave.ts`, the deck, packet, daemon, reward
+and event configs, `Game.ts`, the battle, pre-turn, reward and cache
+screens, and the fuzz rollout.
+
+**Read** (`batch`): `git show <this commit> -- src/run/Run.ts
+src/core/events.ts` (`startNextTurn` to `handleAdvanceTurn`, and the
+`turn:starting` and `turn:resolved` docs) against the seven rules. Wrong
+looks like a bound said to read the wave where `chipRule.ts` reads the hand,
+a cache gate claimed for a path that does not check it, a screen named for
+the turn-outcome gate, the gate chain's order told otherwise than
+`continueFromTurnGate` runs it, or history left.

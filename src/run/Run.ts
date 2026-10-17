@@ -207,10 +207,11 @@ function sampleDistinct<T>(pool: readonly T[], count: number, rng: RNG): T[] {
 }
 
 /** One cumulative-weight draw over `items`: exactly one `next()`, a list
- *  of one included, unlike `sectorWalk`'s `pickWeighted` (gotcha #111), and
- *  the last item if rounding runs past the sum. The event's pick and a
- *  choice's outcome both use it. */
-function pickWeighted<T>(items: readonly T[], weightOf: (item: T) => number, rng: RNG): T {
+ *  of one included, and the last item if rounding runs past the sum. The
+ *  event's pick and a choice's outcome both use it. `sectorWalk`'s
+ *  `pickWeighted` draws nothing for a list of one (gotcha #111), hence the
+ *  name. */
+function pickWeightedOneDraw<T>(items: readonly T[], weightOf: (item: T) => number, rng: RNG): T {
   const total = items.reduce((sum, item) => sum + weightOf(item), 0);
   const draw = rng.next() * total;
   let acc = 0;
@@ -1236,7 +1237,7 @@ export class Run {
    * sector loader checks the shipped one), drop an event already visited
    * unless it is `repeatable`, and keep those whose `eligibility` holds.
    * One draw over the survivors, weight 1 when absent and a single survivor
-   * included (`pickWeighted` above); none when forced or when none
+   * included (`pickWeightedOneDraw` above); none when forced or when none
    * survives, which returns `null` and the caller makes the node a fight.
    */
   private rollEventForNode(fromStartingPool: boolean, entryRng: RNG): EventDef | null {
@@ -1266,15 +1267,15 @@ export class Run {
       eligible.push({ def, weight: entry.weight ?? 1 });
     }
     if (eligible.length === 0) return null;
-    return pickWeighted(eligible, (e) => e.weight, entryRng).def;
+    return pickWeightedOneDraw(eligible, (e) => e.weight, entryRng).def;
   }
 
   /**
    * Take one choice on the active page, if it may be taken (a choice that
    * may not is a no-op, `Command.ts`): draw its weighted outcome, one draw
-   * with a single outcome included (`pickWeighted` above), carry out the
-   * outcome's effects in authored order, then route its `next`. An effect
-   * can end the run (`damagePool`), and routing stops there.
+   * with a single outcome included (`pickWeightedOneDraw` above), carry out
+   * the outcome's effects in authored order, then route its `next`. An
+   * effect can end the run (`damagePool`), and routing stops there.
    */
   private handleChooseEventOption(choiceIndex: number): void {
     if (this.phase !== 'event' || this.activeEvent === null) return;
@@ -1289,7 +1290,7 @@ export class Run {
     const choiceRng = this.streamRng('event', this.eventStep++);
     // Weight 1 when absent; the schema makes weights positive, so the sum
     // is above 0.
-    const outcome = pickWeighted(choice.outcomes, (o) => o.weight ?? 1, choiceRng);
+    const outcome = pickWeightedOneDraw(choice.outcomes, (o) => o.weight ?? 1, choiceRng);
     for (const op of outcome.effects ?? []) {
       this.executeEventOp(op, choiceRng);
       if (this.phase !== 'event') return; // damagePool killed the run

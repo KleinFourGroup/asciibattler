@@ -33,7 +33,9 @@ export function pickOne<T>(arr: readonly T[], rng: RNG): T {
  * (`encounters/selection.ts`) and the reward roll use it. Their weights are
  * positive by schema, so the total is above 0, and the last return covers
  * float rounding. An empty list draws once and returns `undefined`, so a
- * caller whose list can be filtered to nothing checks first.
+ * caller whose list can be filtered to nothing checks first. `Run.ts`'s
+ * event draws use its own `pickWeightedOneDraw`, which draws for a list of
+ * one too.
  */
 export function pickWeighted<T>(arr: readonly T[], weightOf: (item: T) => number, rng: RNG): T {
   if (arr.length === 1) return arr[0]!;

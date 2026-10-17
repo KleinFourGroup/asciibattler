@@ -209,7 +209,7 @@ drawing. ✅ DECIDED at the kickoff: the phase cut in two, the screens as
 - ☑ **124d — the board's A-22 and A-28** (`none`). `FxKey`; the
   renderers' `dispose()` and `stop()`, the camera's two getters, the
   overlay layer's two members, `FontAtlas`'s three fields.
-- ☐ **124e — the apron's dither path, whole** (`batch`: the ring fades
+- ◐ **124e — the apron's dither path, whole** (`batch`: the ring fades
   into the mist as now; wrong is a stipple or a hard edge).
 - ☐ **124f — A-26, the word `export`** (`none`). `render` 24, `dev` 29.
 - ☐ **124g — the enemy notch** (`batch`: seed 2, the notch where the

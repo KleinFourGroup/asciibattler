@@ -41,11 +41,9 @@ import FOG_GLSL from './shaders/fogcolor.glsl?raw';
  *   equal the BackdropRenderer mist behind them (the fragment shader
  *   samples the shared `fogColorAt` where the view ray meets the mist
  *   plane), so there's nothing to alpha-sort against the billboard
- *   sprites and no extra render pass. Style is runtime-flippable between
- *   smooth smoothstep (the default — playtest call: nothing else in the
- *   game dithers yet, so the stipple read as out of place) and the
- *   Bayer-stipple dissolve via `setDither` (console:
- *   `__game.apron.setDither(true)`).
+ *   sprites and no extra render pass. The fade is a smoothstep (a
+ *   playtest call: a Bayer stipple read as out of place, since nothing
+ *   else in the game dithers).
  * - **Edge band** (playtest call): a crisp near-black outline on the
  *   ring's innermost ~0.12 tiles — the strong playable-boundary read,
  *   darker and wider than the board's own grid lines.
@@ -54,7 +52,7 @@ import FOG_GLSL from './shaders/fogcolor.glsl?raw';
  * (a) the board's buffer is sized at LAYOUT_MAX_SIDE² and a 32×32 board
  * +2/side wouldn't fit; (b) `pickCell` raycasts an explicitly-passed
  * surface, so a separate mesh is unclickable by construction; (c) the
- * fade/creep/dither shader stays out of the canonical terrain look.
+ * fade/creep shader stays out of the canonical terrain look.
  * Stays on layer 0 → never rendered into the bloom pass.
  */
 
@@ -140,10 +138,6 @@ export class ApronRenderer {
         // modulates around it and calms back to it at distance; base it
         // on #000 instead and a dark ring ghosts where mist meets void.
         uFogColor: { value: new THREE.Color(COLORS.TERMINAL_BLACK) },
-        // Playtest call: smooth fade ships as the default — nothing else
-        // in the game dithers yet, so the stipple read as out of place.
-        // setDither(true) re-enables it for A/B.
-        uDither: { value: 0 },
         uMistY: { value: BOTTOM_Y },
       },
     });
@@ -266,13 +260,6 @@ export class ApronRenderer {
   advanceTime(dt: number): void {
     const u = this.material.uniforms['uTime']!;
     u.value = (u.value as number) + dt;
-  }
-
-  /** Flip between the smooth smoothstep fade (false, the default — the
-   *  playtest call) and the Bayer-stipple dissolve. Runtime so the look
-   *  can be A/B'd live from the console: `__game.apron.setDither(true)`. */
-  setDither(on: boolean): void {
-    this.material.uniforms['uDither']!.value = on ? 1 : 0;
   }
 
   clear(): void {

@@ -161,8 +161,7 @@ export class Game implements RunDispatcher {
   private readonly cantSave: CantSaveChip;
   private runOnScreen = false;
   private readonly terrain: TerrainRenderer;
-  /** M4 — the backdrop apron ring. Dev consoles reach it as `__game.apron`
-   *  (TS `private` is runtime-accessible) for the dither A/B flip. */
+  /** M4 — the backdrop apron ring. */
   private readonly apron: ApronRenderer;
   /** M4 — the mist floor (page-lifetime scenery; only its uTime advances). */
   private readonly backdrop: BackdropRenderer;

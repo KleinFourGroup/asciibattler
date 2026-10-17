@@ -297,7 +297,9 @@ smoke tier, three on every `npm test`); "fuzz diff" is
   fail on a turn that is never advanced and on a sim change. It refuses a
   phase whose scene is not on screen (`PHASE_SCENES`,
   `src/dev/probe/scenes.ts`), shown to fail with the map swap after a rest
-  removed; it misses a change that is only drawn. A
+  removed; it misses a change that is only drawn. A shader that fails to
+  compile leaves the drive's hashes alone and shows in the report's
+  `console` list, with `--window=offscreen` so the battle renders. A
   change to code the game runs always moves the build's hash, so the build
   compare proves a deletion of dead code or a comment pass and cannot tell
   a careful reshaping from a break; for a reshaping here the proof is the

@@ -342,8 +342,8 @@ src/
                              # 108b: DRAWS THE GROUND MARKS (spec D3) — `groundMarkShaders()` splices shaders/terrainMarks.glsl into its shader pair (marks off = the two files, byte for byte); the MarkTable's two DataTextures ride uniforms SHARED with the mounds' material (a clone copies uniforms); `beginMarks` / `addMark` each frame, binned + uploaded at the first terrain draw (`onBeforeRender`); `setMarkStyle`, `setGroundMarks`, `markStats`
     ApronRenderer.ts         # M4: backdrop apron — non-playable fog-faded prism ring around the
                              # board (clamp-to-edge tile sampling; render-only, sim never sees it).
-                             # APRON_TILES is the width knob; setDither flips smooth (default) vs
-                             # stipple; near-black edge band outlines the playable boundary
+                             # APRON_TILES is the width knob; a smoothstep fade; near-black edge
+                             # band outlines the playable boundary
     BackdropRenderer.ts      # M4: the mist floor — large noise-shaded plane at BOTTOM_Y the apron
                              # dissolves into (shared fogColorAt in shaders/fogcolor.glsl, TS-concat
                              # prepended to both frags); calms to flat background with distance

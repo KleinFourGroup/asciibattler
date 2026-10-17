@@ -9092,3 +9092,35 @@ Proof:
   `FxKey`).
 
 Reading: 378,088 at 23:31, before the commit.
+
+### 124e — the apron's dither path, whole (2026-10-17, session 94055418)
+
+Gone, as call 4 signed: `ApronRenderer.setDither()`, the `uDither`
+uniform and its comment, the shader's `DITHER_CELL_PX`, `bayer2`,
+`bayer4` and the branch that chose between them (the fade now mixes on
+`fog`), and the sentences that described the A/B (the shader's header,
+`ApronRenderer`'s header and its separation note, `Game.ts`'s doc on
+`apron`, ARCHITECTURE's `ApronRenderer.ts` line). The uniform's only
+writers were the construction, with 0, and the setter, so the deleted
+branch was never taken; a search after finds `uDither` nowhere in `src`
+or `tests`.
+
+Proof (`scratch/124e/check.mjs`):
+
+- typecheck clean; `comment-codes`: the ceiling 3,132 holds, no file
+  under or over;
+- `build-hash HEAD`: 3 of 33 built files differ, the main bundle under
+  both names and `index.html` (the shader is inlined into the bundle);
+- the shader compiles: one `--build`, the seed-6 drive offscreen so the
+  battle renders, the report's console list read: no shader error (two
+  warnings, the shell's content-security notice and a Canvas2D readback
+  hint, both also in the planted run's list), and the drive's hashes
+  `e9cbf755` and `6956a4f2`;
+- the known answer: a worktree of HEAD with the same diff and the final
+  mix reading the deleted `fogMix`: "Shader Error … 'fogMix' :
+  undeclared" in the console list, with the drive passing and the same
+  two hashes. So the drive does not notice a shader that fails to
+  compile, and the console list does; TESTING.md's render entry says so.
+
+Not checked: the pixels. The read is the user's (`batch`, at 124i's
+stop). Reading: 400,370 at 23:36, before the commit.

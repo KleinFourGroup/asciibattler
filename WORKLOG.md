@@ -8479,3 +8479,94 @@ The user, on 4d's display bug: "Leave the enemy-notch bug in TODO for
 §124's kickoff; keep the comment pass going to 123n." The TODO item under
 §124 says so, and nothing is built. Next stays 123n, in a fresh session:
 this one is at 513,113, and 123n reads the whole of `Run.ts`.
+
+### 123n — `Run.ts` read again for B-15 (2026-10-17, session 5b078b02)
+
+The whole of `Run.ts` read at `0ab43047`, after 123m's six batches, with
+one instrument beside the read. Nothing in `src` is changed. The census
+row's question: does a split come back as a trial, with a measure that
+could pass it (the cold-read probe's tokens), or does B-15 close?
+
+**The census's premise at HEAD.** The row expected the comment pass to
+leave the file "about half as long". It is 82 %: 4,888 lines → 4,025, of
+which 1,618 are comment and 2,251 code (`comment-length` on a copy under
+`output/cl-123n/`; 4f's figures). It is still the longest file in `src`,
+by 1,602 lines over `World.ts` (2,423).
+
+**The instrument.** `scratch/123n/coupling.ts` parses the class with the
+TypeScript compiler and lists, for each of its 119 methods, getters and
+constructor, the members it references (`this.X`, `this['X']`, and
+`m.X` / `run.X` in `fromJSON`) and the ones it writes (an assignment or a
+mutating call rooted at the reference). The 15 groups are the read's: the
+census's runs (ports, events, the turn, rewards, the deck, packets, the
+snapshot) and the rest; every method sits in exactly one, which the
+script checks. Known answers built in: a fixture class, `handleLeavePort`
+and `drawCard`. Its control: `PLANT=1` drops element access, and the run
+fails on the fixture. A write through a local alias or an argument
+(`slot.sold = true`, `shuffle(this.drawPile)`) is not seen, so the write
+counts are a floor; the reference counts are exact for direct references.
+
+**The count** (`scratch/123n/coupling.json`, and `-behaviour.json` for
+the second view). 59 fields, 22 private. The constructor and the save
+reference every field, so every field is shared with at least those two.
+Leaving them out:
+
+- Six groups alone reference any field: events six (`eventStep`,
+  `activeEvent`, `eventFlags`, `eventCatalog`, `forcedEventId`,
+  `rootStampedByDial`), the turn three, the encounter's start two, its
+  end two, the grants one, the run stats one. `phase` is written by
+  seven groups.
+- The event phase (310 lines) is the most separable large group: its
+  state is its own. It still references nine private members it does
+  not own: four methods that change another group's state
+  (`beginEncounter`, `appendRosterUnit`, `setPlayerHealth`,
+  `handleDiscardPacket`), the `pendingRewardOverride` field that the turn
+  reads and the encounter's end clears, and `bus`, `streamRng`,
+  `currentSector`, `effectiveRunStats`.
+- The deck (76 lines) references three private members outside it, but
+  four of its own private methods are called from three other groups, and
+  four other groups write its piles.
+
+**What a split could take away, by D2's fourth clause:** nothing on its
+list. A split by phase leaves `dispatch` in the class and moves the
+handler, so adding a command touches one more file. Within D3, a split is
+either free functions over the run, which makes the members above public
+(the event phase: its nine and its five private fields, 14 that lose
+`private`, so a caller outside `src/run` could start an encounter), or a
+second object that owns its state and its share of the save, which is a
+new abstraction. The census's reasons stand at HEAD.
+
+**The probe as the measure.** None of 119f's visible questions is keyed
+to `Run.ts` (V1's key is in `chipRule.test.ts`, V2 to V5's in sim tests);
+the hidden half was not opened. A trial would need questions aimed at the moved code, written
+before it, keyed to `Run.test.ts`. At 119f's pooled spread (13 %) and
+price (106,182 a reader run), five questions at three runs on two trees
+is 30 runs, about 3.2M by the token figure, and resolves a change of
+about 10 %. A prediction, not measured: a split moves code without
+shortening it, and a reader that searches to a method reads about the
+same lines in either tree, so the effect may be under that resolution;
+its sign is unknown. The probe's reader is also an agent, where the spec
+names the user as the main reader.
+
+**Leads beside B-15, not built:**
+
+- The two `pickWeighted`s: `Run.ts:209` names `sectorWalk`'s and gotcha
+  #111; `sectorWalk.ts:29` does not name `Run.ts`'s. (Already with the
+  user, from the driver.)
+- The recruit roll, written twice: `rollPortStock` (:1537) and
+  `advancePastBattle` (:3070) pass `rollOffer` the same level function,
+  pools, weight overrides and folded weights; the port adds its forced
+  tiers. Not in the census. The phase has two of its three trials left.
+- `layoutDimensions` throws as `Run.handleEnterNode` (:4022); its callers
+  are `buildEncounterMap`'s, from `beginEncounter` and
+  `rollBossForSector`. No test matches the message. A string, so a code
+  change.
+- The active event's def is looked up three times (:1455, :1466, :1474).
+  Small; under the bar by eye.
+
+**Calls for the user, at the stop:** B-15 closed (the lean), or a trial
+with its bar written now; the recruit roll as a trial, to TODO or left;
+the error message fixed now or put in TODO.
+
+Readings by the tool's clock (UTC): 118,055 at 12:32 after the
+orientation; 244,968 at 12:40 after the read and the count.

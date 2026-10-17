@@ -233,8 +233,8 @@ The cut, signed 2026-10-16 with the kickoff's five calls (WORKLOG §123,
       `buildEncounterMap`). Built, unread.
     - ◐ **4d to 4f — the turn; grants to the deck; save and load** (to the
       end). Built, unread; 4d found a display bug (TODO §124).
-- ☐ **123n — `Run.ts` read again for B-15** (`stop`). A split comes back
-  only with a measure that could pass it.
+- ◐ **123n — `Run.ts` read again for B-15** (`stop`). Read, with a count;
+  the call is the user's (WORKLOG §123, "123n").
 - ☑ **Beside the cut, signed 2026-10-17** (`none`): the CRLF re-checkout,
   the reach tools' two forms, and the twin rule above (WORKLOG §123,
   "Three items beside the cut").

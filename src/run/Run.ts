@@ -4019,7 +4019,7 @@ function rollProceduralSide(rng: RNG): number {
 function layoutDimensions(layoutId: string): { gridW: number; gridH: number } {
   const layout = getLayout(layoutId);
   if (!layout) {
-    throw new Error(`Run.handleEnterNode: unknown layoutId="${layoutId}"`);
+    throw new Error(`Run.buildEncounterMap: unknown layoutId="${layoutId}"`);
   }
   return { gridW: layout.gridW, gridH: layout.gridH };
 }

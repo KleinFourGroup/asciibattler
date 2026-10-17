@@ -8936,3 +8936,48 @@ signed follow here.
 
 Readings by the tool's clock (UTC): 97,088 at 22:33 after the
 orientation, 226,837 at 22:47 after the audit.
+
+**Signed** (the user, 2026-10-17): "Signing the split, the cut, and all
+of your leans." So:
+
+1. The phase is cut in two: §124, the board (`render` with its shaders,
+   `scenes`, `dev` and the root's four, 15,497 lines), and §124.5, the
+   screens (`ui` with both stylesheets, `store`, `i18n`, `settings`,
+   `journal`, `audio`, `failure`, `diagnostics`, 19,712 lines), each with
+   its own kickoff, re-skim, comment pass and close. The name keeps
+   §125 to §129's numbers.
+2. `dev` and the root go with the board: 124a and 124b build in
+   `src/dev`, and `Game.ts` mounts the scenes.
+3. Each half has its own budget of three trials; 124h spends one of the
+   board's.
+4. The apron's dither path goes whole (124e): `setDither()`, the
+   `uDither` uniform, the shader's stipple and `Game.ts`'s doc line.
+5. The two display bugs are fixed, each in its half and its own commit,
+   flagged as a change to what a screen shows, under a headless pin,
+   read `batch`: the notch at 124g, the ability line at §124.5. Neither
+   touches the sim, so the board re-run the guard asks of a change does
+   not apply; they are the guard's only exceptions, and META-ROADMAP's
+   scope guard names them.
+
+124h's bar, written before its code (the spec's D2):
+
+1. the page drive's log and state hashes equal HEAD's, with 124a's
+   check passing, on drives that reach each of the eight kinds the drive
+   can reach, and those it cannot are named;
+2. `src` lines do not grow;
+3. no parameter that tells the arms apart;
+4. the swap's rule at one place, not eight (the sites counted before and
+   after).
+
+Its shape: the eight kinds as one arm's cases and the others as
+another's, `run.dispatch` written once, the `satisfies never` guard kept,
+no table. If 124a's check cannot be shown to catch its planted break,
+124h has no oracle and goes back to the user before it is built.
+
+The exit's counts for §124 by `comment-length` over `render`, `scenes`,
+`dev` and a copy of the root's four, with these as the baseline: 8,980
+code lines, 5,429 comment lines; step codes in those files 1,068, 55 of
+them in tests (`comment-codes`: the rows of `render`, `scenes`, `dev` and
+the root, less `fonts.css`'s 3, which go with the screens). The cut as
+signed is in ROADMAP §124 and §124.5's charter beside it. Reading:
+258,667 at 23:02, before the commit.

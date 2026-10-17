@@ -724,7 +724,9 @@ behaviour change (a deletion that is not byte-identical is a change, and
 goes to the user with a board re-run; a save-format bump for a slimmed
 snapshot is not one, and neither is a change that renames what is stored
 when it is byte-identical after its declared mapping back to the old
-names); no new abstractions; no gotcha
+names; two display fixes, the battle HUD's enemy notch and the ability
+line's damage, are signed exceptions, 2026-10-17, WORKLOG §124); no new
+abstractions; no gotcha
 undone without its entry read; the permanent gates never relaxed; no
 balance numbers move.
 

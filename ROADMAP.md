@@ -11,7 +11,8 @@ plan: [archive/post-109-roadmap.md](archive/post-109-roadmap.md) (Round 8)
 with its worklog and spec beside it; before it
 [archive/post-104-roadmap.md](archive/post-104-roadmap.md) (Round 7.5).
 
-**Status: §123, run, in progress: the cut signed 2026-10-16.**
+**Status: §124, render and UI's first half, in progress: the phase cut
+in two at its kickoff and the board's cut signed 2026-10-17.**
 The spec holds the user's intent and four signed
 decisions ([round-8.5-spec.md](round-8.5-spec.md)). The round opened with
 the oracle map, ahead of the census, as the user signed at the Round 8
@@ -187,16 +188,50 @@ Each step's record and the leads it hands on are in WORKLOG §123.
 - ☑ **Beside the cut, signed 2026-10-17** (`none`): the CRLF re-checkout,
   the reach tools' two forms, and the twin rule.
 
-## Phase 124 — render and UI
+## Phase 124 — render and UI: the board
 
-`render`, `scenes`, `ui`, `Game.ts` and the page's layers, 151 files.
-First the page drive's scene check and the probe runner's edges, so the
-phase has a proof for which scene a phase mounts; then the signed rows
-(A-39's camera line and this layer's share of list A); B-13's leads,
-read by eye; the comment pass. Proof: `build-hash` for dead code, the
-page drive, and the user's eye for a reshaping. Risk: medium, since
-nothing headless proves drawing. Decision point: whether the kickoff
-cuts it in two.
+`render` with its shaders, `scenes`, `dev` and the root's four
+(`Game.ts`, `main.ts`, `buildId.ts`, `config.ts`): 65 files and 14
+shaders, 15,497 lines. First the page drive's scene check and the probe
+runner's edges, so the phase has a proof for which scene a phase
+mounts; then the signed rows, the notch, one trial, the re-skim and the
+comment pass. Proof: `build-hash` for dead code, the page drive, and the
+user's eye for a reshaping. Risk: medium, since nothing headless proves
+drawing. ✅ DECIDED at the kickoff: the phase cut in two, the screens as
+§124.5, each half with its own budget of three trials. Cut signed
+2026-10-17 (WORKLOG §124, "The kickoff").
+
+- ☐ **124a — T-91, the page drive's scene check** (`none`). The planted
+  rest swap fails the drive; the clean tree passes.
+- ☐ **124b — T-84, the probe runner's edges** (`none`). Each by a run.
+- ☐ **124c — A-39, the camera line** (`none`). `build-hash`.
+- ☐ **124d — the board's A-22 and A-28** (`none`). `FxKey`; the
+  renderers' `dispose()` and `stop()`, the camera's two getters, the
+  overlay layer's two members, `FontAtlas`'s three fields.
+- ☐ **124e — the apron's dither path, whole** (`batch`: the ring fades
+  into the mist as now; wrong is a stipple or a hard edge).
+- ☐ **124f — A-26, the word `export`** (`none`). `render` 24, `dev` 29.
+- ☐ **124g — the enemy notch** (`batch`: seed 2, the notch where the
+  pre-turn screen put it; wrong is a jump at the battle's start). A
+  display change, signed as an exception to the scope guard.
+- ☐ **124h — `Game.dispatch`'s swap to the map, once** (a trial;
+  `batch`: a run through a rest, a port, an event and a recruit, the map
+  back after each). Its bar is in WORKLOG §124.
+- ☐ **124i — the re-skim** (`stop`).
+- ☐ **124j — the comment pass** (`batch`, per batch).
+- ☐ **124k — the close** (`stop`).
+
+## Phase 124.5 — render and UI: the screens
+
+`ui` with `ui.css` and `fonts.css`, `store`, `i18n`, `settings`,
+`journal`, `audio`, `failure` and `diagnostics`: 86 files and two
+stylesheets, 19,712 lines. Cut at its own kickoff, after §124's close:
+the signed rows (A-22's `proseFamily`, A-25's two, A-26's other 91,
+A-28's mute, the three overlays' `isOpen` and `HUD.hide()`); the ability
+line, a display change signed at §124's kickoff; the neutral-target lead
+and the screens' other leads; the re-skim; the comment pass, with
+`CacheOverlay.ts`'s header. Proof: as §124's, with the UI gates. Risk:
+medium.
 
 ## Phase 125 — the bot and the fuzz instruments
 

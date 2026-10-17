@@ -231,8 +231,8 @@ The cut, signed 2026-10-16 with the kickoff's five calls (WORKLOG §123,
       finding.
     - ◐ **4c — the nodes, events, ports and the encounter's start** (to
       `buildEncounterMap`). Built, unread.
-    - ◐ **4d, 4e — the turn; grants to the deck** (to `drawCard`). Built,
-      unread; 4d found a display bug (TODO §124, the enemy notch).
+    - ◐ **4d to 4f — the turn; grants to the deck; save and load** (to the
+      end). Built, unread; 4d found a display bug (TODO §124).
 - ☐ **123n — `Run.ts` read again for B-15** (`stop`). A split comes back
   only with a measure that could pass it.
 - ☑ **Beside the cut, signed 2026-10-17** (`none`): the CRLF re-checkout,

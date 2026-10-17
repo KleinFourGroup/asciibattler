@@ -8369,3 +8369,72 @@ daemon said to be unique where a construction grant can repeat it, the
 seam said to carry the pool unchanged, XP said to bank at the encounter's
 end, a list of the roster's append or removal callers left short, or
 history left.
+
+Committed as `8bf4c8cc`; the suite 3,723 and the smoke 613, green, by the
+hook.
+
+### 123m, batch 4f — `Run.ts`'s save and load (2026-10-17, session 60a71867)
+
+`resume` to the end: `resume`, `toJSON`, `fromJSON`, the forced-id
+resolvers, `RunInputs`, `resolveRunInputs`, `rollProceduralSide`. The
+history (the fork states the stream root replaced, the step behind each
+saved field, the "discipline" each check was named after) is out; each
+check now says what it rejects and why. With this batch `Run.ts` holds no
+step code.
+
+**Statements found false or out of place, and corrected (rule 7):**
+
+- `toJSON`: the comment on the grant queue's copies sat above `daemonIds`,
+  five fields from `turnGrants`; it is at its field now.
+- `fromJSON`: a fixture-map snapshot "lands on sector-node ids the shipped
+  map doesn't know (`currentSectorNodeId` isn't re-validated)"; neither
+  sector id is checked (4c's lead), and the comment names both. The selected
+  encounter was "re-resolved" from its id; one the catalog lacks loads as
+  none, where every other saved id rejects (4a's lead), and the comment says
+  so where it happens. The boss board "restores as-is"; its layout is
+  unchecked, now said.
+- `fromJSON`'s doc: a fresh bus "for replay-trace comparison"; the callers
+  are the run slot and a dev load (the game's bus) and a rollout's clone and
+  the journal's replay (a fresh one). A load's dials were "the shipped
+  defaults ... what a rollout clone wants"; the clone passes none, and the
+  run slot builds the config from the save's dials.
+- `resolveForcedLayoutId` and `resolveForcedEventId` checked "at
+  construction"; `resolveRunInputs` runs on a load too. A mistyped layout
+  would fail "silently per-battle"; `layoutDimensions` throws at the battle.
+- `resolveForcedEncounterId`: "the balance harness sets it"; the fuzz CLI's
+  `--encounter` and the URL dial do (batch 3's finding).
+- `RunInputs`: a load took them "from the same config the run was created
+  with"; from the config it is passed, which the run slot builds from the
+  save's dials.
+
+**Checked and kept:** `Game`'s autosave skips `battle` and `turn-outcome`
+(`Game.autosave`), which is why `resume` throws there; `fallenLedger` is
+never cleared, so "only grows"; `World.installBattleRules` checks the
+injected rules' status ids; `RNG.int` is inclusive at both ends; no dial
+sets `sectorMap`, so the game's saves are all of `SECTOR_MAP`; the default
+character is the Soldier.
+
+**Lead, not built:** a rollout's clone loads with no config
+(`cloneRunForRollout`), so a clone of a run with dials (`sectorHops`, a
+forced encounter, a bespoke event catalog) walks on the shipped inputs. A
+question for §125, whose code it is.
+
+Measured (`comment-length` on copies under `output/cl-123m-b4f/`):
+`Run.ts` comment lines 1,638 → 1,618, words 13,820 → 13,643, code lines
+2,251 unchanged. `src/run` comment lines 3,211 → 3,191, words 27,135 →
+26,958. The step-code ceiling 3,183 → 3,135, `Run.ts` 48 → 0. Over the six
+batches, `Run.ts` went from 2,345 comment lines and 19,900 words to 1,618
+and 13,643, and from 683 step codes to 0.
+
+Proof: `comment-strip HEAD src`, comments only, exit 0, its control named
+in `Run.ts`.
+
+Cost: 451,003 at 03:54 UTC by the tool's clock as the batch started,
+488,342 at 03:58 after its proof: 37k for 526 lines, 71 a line. Most of its
+claims were load checks that 4a to 4e had already traced.
+
+**Read** (`batch`): `git show <this commit> -- src/run/Run.ts` (`resume`
+to the end) against the seven rules. Wrong looks like a load check claimed
+that `fromJSON` does not make (or one it makes left out), a dial said to be
+lost on a load, a resolver said to run only at construction, or history
+left.

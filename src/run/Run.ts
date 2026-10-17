@@ -3510,12 +3510,12 @@ export class Run {
   }
 
   /**
-   * 115a — re-emit the gate event of the phase the run is in, so a run
-   * loaded from a save mounts the screen it was saved at: Game mounts every
-   * screen from these events. The payload is the one the live run emitted
-   * on arriving at the gate, rebuilt from saved state. `map` has no event
-   * (Game routes it by the phase). `battle` and `turn-outcome` are not gates
-   * a run is saved at, and throw.
+   * Emit again the gate event of the phase the run is in, so a run loaded
+   * from a save mounts the screen it was saved at: `Game` mounts the
+   * screens from these events. The payload is the one the live run emitted
+   * on reaching the gate, rebuilt from saved state. `map` has no event
+   * (`Game` routes it by the phase). `battle` and `turn-outcome` throw:
+   * `Game`'s autosave skips both, so no save is at either.
    */
   resume(): void {
     switch (this.phase) {
@@ -3568,15 +3568,14 @@ export class Run {
   toJSON(): RunSnapshot {
     return {
       schemaVersion: RUN_SCHEMA_VERSION,
-      // 77d2 (v42) — the keyed-derivation root + the three occurrence
-      // counters replace the ten serialized RNG states (see RunSnapshot).
+      // The stream root and the three occurrence counters, from which every
+      // stream derives.
       streamRoot: this.streamRoot,
       sectorIndex: this.sectorIndex,
       deckShuffleIndex: this.deckShuffleIndex,
       eventStep: this.eventStep,
-      // 50d — the docked stock's slots MUTATE in place (`sold`), so the wire
-      // image copies each slot (the turnGrants discipline; templates stay by
-      // reference — never mutated after the roll).
+      // A copy of each slot, since a sale sets `sold` in place; the
+      // templates go by reference, never changed after the roll.
       portStock:
         this.portStock === null
           ? null
@@ -3585,10 +3584,8 @@ export class Run {
               packets: this.portStock.packets.map((s) => ({ ...s })),
               daemons: this.portStock.daemons.map((s) => ({ ...s })),
             },
-      // 74b — the event cursor (copied: plain flat object), the flag record
-      // (copied: mutated in place by setFlag), and the pinned reward refs
-      // (82c: copied per ref — the field can alias authored catalog
-      // objects, and a wire image never shares structure with them).
+      // Copies: the event cursor, the flags (written in place), and each
+      // pinned reward ref, which can be the authored catalog's own object.
       activeEvent: this.activeEvent === null ? null : { ...this.activeEvent },
       eventFlags: { ...this.eventFlags },
       pendingRewardOverride:
@@ -3598,36 +3595,36 @@ export class Run {
               table: ref.table,
               trigger: { chance: ref.trigger.chance },
             })),
-      // 47d — daemons serialize BY ID (def-resolved on load). 49d: the
-      // queue's entries MUTATE in place (`used`/`passed`), so the wire image
-      // copies each entry (buffs stay by reference — never mutated;
-      // `empowerEffect` deep-copies mods at apply time).
+      // The daemons and the character by id, resolved from the catalogs on
+      // a load.
       daemonIds: this.daemons.map((d) => d.id),
-      // 63c — the character serializes BY ID (def-resolved on load).
       characterId: this.character.id,
-      // 117b — the level; the multipliers it gives are derived on load.
+      // The level; a load derives its multipliers.
       escalation: this.escalation,
+      // A copy of each grant, since `used` and `passed` change in place; the
+      // buffs go by reference, never changed (`empowerEffect` copies their
+      // mods when it applies one).
       turnGrants: this.turnGrants.map((g) => ({ ...g })),
       currentSectorId: this.currentSectorId,
       currentSectorNodeId: this.currentSectorNodeId,
       nodeMap: this.nodeMap,
-      // 66a — the forewarning pair: plain JSON, never mutated after the
-      // roll, so it rides by reference (the encounterMap discipline).
+      // The boss pair is never changed after its roll, so it goes by
+      // reference, as `encounterMap` does.
       bossEncounterId: this.bossEncounterId,
       bossEncounterMap: this.bossEncounterMap,
       team: this.team.slice(),
       deploymentCounts: this.deploymentCounts.slice(),
-      // K1 — deep-copy each slot's effect list (effects are mutated in place on
-      // merge, so the wire image must not share references with the live store).
+      // Deep copies: a merge changes an effect in place, so the save must
+      // share nothing with the live store.
       encounterEffects: this.encounterEffects.map((slot) => slot.map(cloneEffect)),
       drawPile: this.drawPile.slice(),
       discardPile: this.discardPile.slice(),
       hand: this.hand.slice(),
       bits: this.bits,
       cache: this.cache.slice(),
-      // 49e — the fire engine's stores: pending effects deep-copy like the
-      // live store (merge mutates in place); rules copy per entry (never
-      // mutated, but the wire image stays independent of the live arrays).
+      // The packets' stores: the pending effects deep-copied as the live
+      // store is; the injected rules copied by entry, never changed but kept
+      // apart from the live lists.
       pendingEncounterEffects: this.pendingEncounterEffects.map((slot) => slot.map(cloneEffect)),
       injectedEncounterRules: this.injectedEncounterRules.map(cloneInjectedRule),
       injectedRunRules: this.injectedRunRules.map(cloneInjectedRule),
@@ -3640,39 +3637,39 @@ export class Run {
       currentNodeId: this.currentNodeId,
       phase: this.phase,
       currentEncounter: this.currentEncounter,
-      // 94d — row copies (flat objects; the wire image stays independent of
-      // the live append-only array).
+      // Row copies, so the save shares nothing with the live list, which
+      // only grows.
       fallenLedger: this.fallenLedger.map((r) => ({ ...r })),
       currentOffer: this.currentOffer ? this.currentOffer.slice() : null,
       visitedNodes: Array.from(this.visitedNodes),
       pendingPromotions: this.pendingPromotions
         ? this.pendingPromotions.slice()
         : null,
-      // 48b — copy each portion (flat objects, mutated only by splice — the
-      // copies keep the wire image independent of the live offer).
+      // A copy of each portion, so the save is apart from the live offer,
+      // which a resolution splices.
       pendingRewards: this.pendingRewards
         ? this.pendingRewards.map((p) => ({ ...p }))
         : null,
-      // 115a — flat objects, copied.
       clearedSector: this.clearedSector === null ? null : { ...this.clearedSector },
       lastTurn: this.lastTurn === null ? null : { ...this.lastTurn },
     };
   }
 
   /**
-   * Rehydrate a Run from a snapshot. Bypasses the constructor (no
-   * `run:started` emit, no nodeMap regeneration) and assigns each field
-   * from the snapshot, then subscribes to the bus for the live
-   * `battle:ended` event. Caller supplies the bus — typically a fresh one
-   * for replay-trace comparison, or the active game bus for save/load.
+   * Rebuild a Run from a snapshot. It bypasses the constructor (no
+   * `run:started`, no new node map), assigns each field from the snapshot,
+   * then subscribes to the bus for `battle:ended`. The caller gives the
+   * bus: the run slot and a dev load pass the game's, a rollout's clone and
+   * the journal's replay a fresh one.
    *
-   * 115a — `config` is the RunConfig the run was created with: the snapshot
-   * doesn't carry the inputs a config sets (a run input, not state), so a
-   * save of a dialed run reloads with its dials. Absent, those inputs are
-   * the shipped defaults, as before (what a rollout clone wants). Only the
-   * inputs read after construction apply (`resolveRunInputs`); the ones
-   * that shaped construction (roster, daemon, bits, character, the
-   * Escalation level, grants) are in the snapshot already, which wins.
+   * `config` is the RunConfig the run was made with, since the snapshot
+   * does not carry a config's inputs; the run slot builds it from the
+   * save's dials (`RunConfig`'s header says which a save keeps). Absent,
+   * the inputs are the shipped defaults; a rollout's clone passes none.
+   * Only the inputs read after construction apply (`resolveRunInputs`);
+   * what shaped construction (the roster, the daemon, the bits, the
+   * character, the Escalation level, the grants) is in the snapshot, which
+   * wins.
    */
   static fromJSON(snap: RunSnapshot, bus: EventBus<GameEvents>, config?: RunConfig): Run {
     if (snap.schemaVersion !== RUN_SCHEMA_VERSION) {
@@ -3699,7 +3696,7 @@ export class Run {
       eventCatalog: readonly EventDef[];
       forcedEventId: string | null;
       rootStampedByDial: boolean;
-      // 77d2 — the private occurrence counters (streamRoot is public).
+      // The private occurrence counters; `streamRoot` is public.
       sectorIndex: number;
       deckShuffleIndex: number;
       eventStep: number;
@@ -3709,10 +3706,7 @@ export class Run {
     m.subscriptions = [];
     // Not in the save: a restore starts with the gates off, as a new run does.
     run.pauseAtTurnGates = false;
-    // 115a — the config inputs, as the constructor resolves them. With no
-    // config: normal procedural rolls and encounter selection, unbounded
-    // full-length sectors on the shipped DAG, the shipped event catalog,
-    // finality toggle and difficulty lever, no forced draw.
+    // The config's inputs, resolved as the constructor resolves them.
     const inputs = resolveRunInputs(config);
     m.sectorMap = inputs.sectorMap;
     m.forcedLayoutId = inputs.forcedLayoutId;
@@ -3725,11 +3719,11 @@ export class Run {
     m.rootStampedByDial = inputs.rootStampedByDial;
     m.passIsFinal = inputs.passIsFinal;
     m.drawAmountAdd = inputs.drawAmountAdd;
-    // 117b — the level is the SNAPSHOT's, whatever the config says (a
-    // rollout clone loads with none), and the multipliers are derived from
-    // it over the config's overrides. A level off the ladder is a hard
-    // reject, the daemonIds discipline: a silent fall to 0 would hand back
-    // an easier run than the one saved.
+    // The level is the snapshot's, whatever the config says (a rollout's
+    // clone loads with none), and the multipliers derive from it over the
+    // config's overrides. A level off the ladder rejects, as an unknown
+    // daemon does: a silent fall to 0 would hand back an easier run than the
+    // one saved.
     if (!isEscalationLevel(snap.escalation)) {
       throw new Error(
         `Run.fromJSON: escalation level ${String(snap.escalation)} is not on the ladder (0 to ${ESCALATION_MAX})`,
@@ -3737,16 +3731,16 @@ export class Run {
     }
     m.escalation = snap.escalation;
     m.difficultyMultipliers = withEscalation(inputs.difficultyMultipliers, snap.escalation);
-    // 77d2 (v42) — the root + counters restore; streams re-derive at their
-    // occurrence sites (nothing else to restore — occurrences are atomic).
+    // The root and the counters are all there is to restore: each stream
+    // derives again at its occurrence, and no occurrence spans a save.
     m.streamRoot = snap.streamRoot;
     m.sectorIndex = snap.sectorIndex;
     m.deckShuffleIndex = snap.deckShuffleIndex;
     m.eventStep = snap.eventStep;
-    // 47d — re-resolve owned daemons BY ID from the shipped catalog; an
-    // unknown id (retired entry / bespoke daemon) is a hard reject, never a
-    // silent drop. The CURRENT turn's resolved grants restore as-is (a save
-    // at the pre-turn gate keeps its Mercury flip — never re-rolled).
+    // The daemons by id from the shipped catalog; an unknown id (a retired
+    // entry, a bespoke daemon) rejects rather than drop silently. The turn's
+    // resolved grants restore as they are, so a save at the pre-turn gate
+    // keeps Mercury's flip.
     m.daemons = snap.daemonIds.map((id) => {
       const daemon = daemonById(id);
       if (daemon === undefined) {
@@ -3754,9 +3748,8 @@ export class Run {
       }
       return daemon;
     });
-    // 63c — re-resolve the character BY ID (the daemonIds discipline: a
-    // retired catalog entry is a hard reject, never a silent fallback —
-    // silently swapping to the Soldier would rewrite the run's draft pools).
+    // The character by id, rejecting an unknown one as the daemons do: a
+    // silent fall to the Soldier would rewrite the run's draft pools.
     const character = characterById(snap.characterId);
     if (character === undefined) {
       throw new Error(
@@ -3764,20 +3757,17 @@ export class Run {
       );
     }
     m.character = character;
-    // 49d — copy each queue entry (the live entries mutate in place); the
-    // finality toggle is a config input (above).
+    // A copy of each grant, which the live run changes in place.
     m.turnGrants = snap.turnGrants.map((g) => ({ ...g }));
-    // T2 — the sector map is a config input (above). 67c: a snapshot taken
-    // under a FIXTURE map and loaded without it lands on sector-node ids the
-    // shipped map doesn't know (`currentSectorNodeId` isn't re-validated
-    // here); shipped play's saves always come from SECTOR_MAP.
+    // Neither sector id is checked here, so a snapshot taken under a fixture
+    // sector map and loaded without it stands on ids the shipped map does
+    // not know; the game's own saves are all of `SECTOR_MAP`.
     m.currentSectorId = snap.currentSectorId;
     m.currentSectorNodeId = snap.currentSectorNodeId;
     m.nodeMap = snap.nodeMap;
-    // 66a — re-validate the pre-rolled boss id against the catalog (the
-    // daemonIds discipline: an unknown id is a hard reject, never a silent
-    // re-roll — silently re-rolling would contradict the forewarning the
-    // player already saw). The board restores as-is (plain JSON).
+    // The boss id is checked against the catalog and an unknown one
+    // rejects: rolling again would contradict the warning the player has
+    // seen. Its board restores as it is, its layout unchecked.
     if (getEncounter(snap.bossEncounterId) === undefined) {
       throw new Error(
         `Run.fromJSON: unknown boss encounter id '${snap.bossEncounterId}' (not in the catalog)`,
@@ -3787,34 +3777,33 @@ export class Run {
     m.bossEncounterMap = snap.bossEncounterMap;
     m.team = snap.team.slice();
     m.deploymentCounts = snap.deploymentCounts.slice();
-    // K1 — restore the encounter-effect store (deep copy).
     m.encounterEffects = snap.encounterEffects.map((slot) => slot.map(cloneEffect));
     m.drawPile = snap.drawPile.slice();
     m.discardPile = snap.discardPile.slice();
     m.hand = snap.hand.slice();
-    // 47e — re-clamp on load: the zero floor is an invariant, not a trust
-    // in the wire image (a hand-edited save can't restore a negative balance).
+    // Floored again: the floor at 0 is kept, not trusted to the save, so a
+    // hand-edited one cannot restore a negative balance.
     m.bits = Math.max(0, snap.bits);
-    // 49b — re-resolve each cached packet id against the catalog (the
-    // daemonIds discipline: unknown = hard reject, never a silent drop). An
-    // over-capacity cache is legal — the shrink overflow re-derives.
+    // Each packet id checked against the catalog, an unknown one rejecting.
+    // A cache over its size is legal; the overflow derives again.
     m.cache = snap.cache.map((id) => {
       if (packetById(id) === undefined) {
         throw new Error(`Run.fromJSON: unknown packet id '${id}' (not in the catalog)`);
       }
       return id;
     });
-    // 49e — restore the fire engine's stores (same copy discipline as
-    // toJSON). Injected rules are plain data; their status refs re-validate
-    // at battle setup (World.installBattleRules), never mid-tick.
+    // The packets' stores, copied as `toJSON` copies them. The injected
+    // rules are plain data, their status ids checked at battle setup
+    // (`World.installBattleRules`), never during a tick.
     m.pendingEncounterEffects = snap.pendingEncounterEffects.map((slot) => slot.map(cloneEffect));
     m.injectedEncounterRules = snap.injectedEncounterRules.map(cloneInjectedRule);
     m.injectedRunRules = snap.injectedRunRules.map(cloneInjectedRule);
     m.playerHealth = snap.playerHealth;
     m.enemyHealth = snap.enemyHealth;
     m.turnIndex = snap.turnIndex;
-    // V1 — re-resolve the held Encounter from its persisted id (the authored
-    // catalog), and restore the wave cursor as-is (plain JSON, never mutated).
+    // The encounter from its saved id; unlike the other ids, one the
+    // catalog lacks loads as none rather than rejecting. The wave cursor
+    // restores as it is, never changed in place.
     m.selectedEncounter = resolveSelectedEncounter(snap.selectedEncounterId);
     m.waveCursor = snap.waveCursor;
     m.encounterMap = snap.encounterMap;
@@ -3827,12 +3816,10 @@ export class Run {
     m.pendingPromotions = snap.pendingPromotions
       ? snap.pendingPromotions.slice()
       : null;
-    // 48b — restore the pending offer, validating daemon portions against
-    // the catalog (the daemonIds discipline: an unknown id is a hard reject,
-    // never a silently unacceptable reward). 49c — packet portions get the
-    // same treatment against the packet catalog. 74c — `unit` portions'
-    // templates pass through like `team` (the port-stock rule below);
-    // `poolHealth` carries only its amount.
+    // The pending offer, its daemon and packet portions checked against the
+    // catalogs, an unknown id rejecting rather than leave a reward that
+    // cannot be taken. A unit portion's template passes through as `team`'s
+    // do; a `poolHealth` portion carries only its amount.
     m.pendingRewards = snap.pendingRewards
       ? snap.pendingRewards.map((p) => {
           if (p.kind === 'daemon' && daemonById(p.daemonId) === undefined) {
@@ -3848,11 +3835,10 @@ export class Run {
           return { ...p };
         })
       : null;
-    // 74b — the event-phase state (the streams themselves re-derive — 77d2).
-    // The cursor's ids re-validate against the run's catalog (the daemonIds
-    // discipline; a bespoke `eventCatalog` loads only with the config that
-    // names it, like bespoke daemons never); the pinned reward table
-    // re-validates against the tables.
+    // The event's state. The cursor's ids are checked against the load's
+    // catalog, so a bespoke `eventCatalog` loads only with the config that
+    // names it (a bespoke daemon never loads); the pinned reward tables are
+    // checked against the tables.
     if (snap.activeEvent !== null) {
       const eventId = snap.activeEvent.eventId;
       const eventDef = inputs.eventCatalog.find((e) => e.id === eventId);
@@ -3883,9 +3869,8 @@ export class Run {
             table: ref.table,
             trigger: { chance: ref.trigger.chance },
           }));
-    // 50d — the docked stock (its streams re-derive — 77d2). Packet/daemon
-    // slot ids re-validate against the catalogs (the pendingRewards
-    // discipline); unit templates pass through like `team`.
+    // The docked port's stock: the packet and daemon ids checked against
+    // the catalogs, the unit templates passed through as `team`'s are.
     m.portStock =
       snap.portStock === null
         ? null
@@ -3908,8 +3893,8 @@ export class Run {
               return { ...s };
             }),
           };
-    // 115a — the two gate facts; the cleared sector re-validates against the
-    // catalog (its title is resolved from it at the gate).
+    // The two gates' facts; the cleared sector is checked against the
+    // catalog, which gives its title at the gate.
     if (snap.clearedSector !== null && getSector(snap.clearedSector.sectorId) === undefined) {
       throw new Error(
         `Run.fromJSON: cleared sector id '${snap.clearedSector.sectorId}' is not in the catalog`,
@@ -3923,11 +3908,11 @@ export class Run {
 }
 
 /**
- * G1 — validate a `RunConfig.forcedLayoutId` against the layout library at
- * construction (loud throw, mirroring `layoutDimensions`), so a typo'd layout
- * fails fast at run start rather than silently per-battle. Undefined → null
- * (normal procedural/layout roll); the `FORCE_PROCEDURAL` sentinel passes
- * through (M6 — force a fresh procedural map every battle).
+ * Check a `RunConfig.forcedLayoutId` against the layout library when the
+ * inputs resolve, at construction and on a load, so a mistyped id throws at
+ * the run's start rather than at its first battle. Absent is null (the
+ * normal roll); `FORCE_PROCEDURAL` passes through, a procedural map every
+ * battle.
  */
 function resolveForcedLayoutId(id: string | undefined): string | null {
   if (id === undefined) return null;
@@ -3939,11 +3924,11 @@ function resolveForcedLayoutId(id: string | undefined): string | null {
 }
 
 /**
- * X2 — validate a `RunConfig.forcedEncounterId` against the authored catalog at
- * construction (loud throw, mirroring `resolveForcedLayoutId`), so a typo'd id
- * fails fast at run start rather than mid-run inside selection. Undefined → null
- * (normal sector-pool selection). The balance harness (`--encounter=<id>`) sets
- * it to force one encounter at every matching-kind node.
+ * Check a `RunConfig.forcedEncounterId` against the encounter catalog when
+ * the inputs resolve, so a mistyped id throws at the run's start rather
+ * than inside a selection. Absent is null (the sector's pools). The fuzz
+ * harness's `--encounter=<id>` and the URL dial set it, to fight one
+ * encounter at every node of its kind.
  */
 function resolveForcedEncounterId(id: string | undefined): string | null {
   if (id === undefined) return null;
@@ -3954,10 +3939,9 @@ function resolveForcedEncounterId(id: string | undefined): string | null {
 }
 
 /**
- * 74b — validate a `RunConfig.forcedEventId` against the run's ACTIVE event
- * catalog at construction (loud throw, mirroring `resolveForcedEncounterId`).
- * Checked against the resolved catalog — not the shipped one — so a bespoke
- * `eventCatalog` test can force its own defs.
+ * Check a `RunConfig.forcedEventId` against the run's event catalog when
+ * the inputs resolve. The run's catalog, not the shipped one, so a test
+ * with a bespoke `eventCatalog` can force its own events.
  */
 function resolveForcedEventId(id: string | undefined, catalog: readonly EventDef[]): string | null {
   if (id === undefined) return null;
@@ -3967,9 +3951,9 @@ function resolveForcedEventId(id: string | undefined, catalog: readonly EventDef
   return id;
 }
 
-/** 115a — the config inputs a Run reads after construction. A snapshot
- *  doesn't carry them (a RunConfig is a run input), so a load takes them
- *  from the same config the run was created with. */
+/** The config inputs a Run reads after construction. A snapshot does not
+ *  carry them, so a load takes them from the config it is passed, which the
+ *  run slot builds from the save's dials. */
 interface RunInputs {
   readonly sectorMap: SectorMap;
   readonly forcedLayoutId: string | null;
@@ -3986,16 +3970,14 @@ interface RunInputs {
 }
 
 /**
- * 115a — resolve a RunConfig into the inputs the constructor and `fromJSON`
- * both assign, so a run loaded with its config reads what the live run read.
- * No config gives the shipped defaults. Pure of RNG. Throws on a forced id
- * the catalogs don't hold, and on `hopCount` with `sectorHops`: one says "a
- * bounded single-sector probe", the other "walk the full DAG on shortened
- * sectors", so together they contradict (67c).
+ * Resolve a RunConfig into the inputs the constructor and `fromJSON` both
+ * assign, so a run loaded with its config reads what the live run read. No
+ * config gives the shipped defaults. Draws nothing. Throws on a forced id
+ * the catalogs do not hold, and on `hopCount` with `sectorHops`: one is a
+ * single sector's probe, the other the whole sector walk on shortened
+ * sectors, so together they contradict.
  */
 function resolveRunInputs(config: RunConfig | undefined): RunInputs {
-  // 74b — the forced event validates against the ACTIVE catalog, so a
-  // bespoke-catalog test can force its own defs.
   const eventCatalog = config?.eventCatalog ?? EVENTS;
   const inputs: RunInputs = {
     sectorMap: config?.sectorMap ?? SECTOR_MAP,
@@ -4025,12 +4007,10 @@ function resolveRunInputs(config: RunConfig | undefined): RunInputs {
 }
 
 /**
- * D3: pick the procedural arena's side length, uniformly in
- * `[TERRAIN.proceduralMinSize, TERRAIN.proceduralMaxSize]`. Always
- * consumes one RNG step — including on layout encounters that ignore
- * the result — so the stream advances identically regardless of
- * branch. That mirrors the gotcha #49 byte-continuity invariant the
- * sector-pool roll maintains for the layout pick.
+ * The procedural arena's side, uniform over `[TERRAIN.proceduralMinSize,
+ * TERRAIN.proceduralMaxSize]`. One draw on every branch, a layout's that
+ * ignores it included, so the stream's draw count does not depend on the
+ * branch (gotcha #49).
  */
 function rollProceduralSide(rng: RNG): number {
   return rng.int(TERRAIN.proceduralMinSize, TERRAIN.proceduralMaxSize);

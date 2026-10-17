@@ -7972,3 +7972,39 @@ batches 1, 2, 3, 4a and 4b are read. That includes the two sentences
 corrected outside their batches' files (`config/difficulty.ts`'s
 `levelBudgetMultiplier`, batch 1's `RunConfig.daemon`), which batches 3
 and 4a flagged. No batch of 123m stays unread.
+
+### Three items beside the cut, signed (2026-10-17, session eb94a3dc)
+
+The phase's driver session put a list of small items to the user, who
+signed three of them there on 2026-10-17: "Signing 2, 3, and 5! 😁". This
+session set out how it would build each, and the user confirmed them here:
+"Confirming all of them, Claude! 😁".
+
+- **(2) The reach tools take both forms** (`none`). `reach-record` names
+  the suite's proof `npm-test` where `plant` names it `suite`, and
+  `reach-diff` stops on EISDIR when given the readings' folders rather than
+  their files; each has cost a call in three sessions. Either name is to be
+  the one proof in `reach-record`, `reach --proofs=` and `plant --proofs=`,
+  and `reach-diff` given two folders compares each reading the two hold,
+  proof by proof, naming a reading only one holds. Proven by a unit test
+  and a run of each form against the readings on disk.
+- **(3) The CRLF re-checkout** (`none`). Working copies held CRLF against
+  an LF index (`.gitattributes` has `* text=auto eol=lf`); §120 noted that
+  a re-checkout fixes it and changes no commit. The user's dev server
+  reloads on the files under `src`, which the user signed knowing.
+- **(5) A false claim's twin outside the batch**, for `Run.ts`'s batches
+  4c to 4f: corrected in the batch's commit and flagged in its entry, as
+  batches 3 and 4a did.
+
+**(3), done**, at `b57baf08` with a clean tree. `git ls-files --eol`
+listed 38 files `w/crlf` and 2 `w/mixed` against an LF index: 12 under
+`src` (`config.ts`, `RNG.ts` and six sim tests among them), 4 under
+`config/`, 18 under `archive/`, 3 under `tests/integration`, 3 in the
+layout editor. The two mixed ones, `archive/post-88-worklog.md` and
+`tests/integration/snapshot-roundtrip.test.ts`, held 1,525 and 50 CR bytes
+where the index holds none, the same fault, so they were taken too. Each
+of the 40 was deleted and checked out again. After: 1,047 files
+`i/lf w/lf` and none `w/crlf` or `w/mixed`; `git status --porcelain` and
+`git diff --stat` empty before and after; each of the 40 byte for byte
+`git show HEAD:` (`cmp`, whose control, a CRLF copy of `RNG.ts`, it named
+as different). No commit: the index did not change.

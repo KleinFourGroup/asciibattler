@@ -8022,3 +8022,108 @@ passed `corpus`, noted `smoke`, and exited 1; the folder against itself
 passed all six; a file and a folder exited 2; `reach --proofs=suite` read
 `npm-test`; `plant --proofs=npm-test,bogus` refused only `bogus`;
 `reach-record suite` against a missing tree failed as `npm-test`.
+
+### 123m, batch 4c — `Run.ts`'s nodes, events, ports and the encounter's start (2026-10-17, session eb94a3dc)
+
+`handleEnterNode` to `buildEncounterMap`. The history (the step that added
+each branch, the fork ladder's hazards, the byte identity of past moves,
+the spec's wording behind each port rule) is out, and with it the event
+phase's section mark. `beginEncounter` had two docs stacked above it; they
+are one. The no-op rule a handler restated points at `Command.ts`.
+
+**Statements found false and corrected (rule 7):**
+
+- `handleEnterNode` built the encounter "deterministic from a forked RNG"
+  and "announces the battle so Game can spin up a fresh World"; it
+  dispatches on the node's kind, the encounter's picks ride the `'map'`
+  stream keyed to the node, and a battle is announced at the turn's start.
+- The rest: "Nothing is drawn ... a rest takes no stream of its own"; a
+  rest that levels a unit draws on the `'levelup'` stream keyed to its node
+  (`bankXpAwards`). What holds is that no counter moves.
+- `enterEventNode`: "Exactly ONE draw per entry"; the fight roll is one
+  draw on every entry, and the pick draws after it on the same stream.
+- `rollPortStock`: the unit slots were "distinct draftable archetypes";
+  one archetype may fill two (`Recruitment.ts`'s header). "Only the daemon
+  sample's count varies"; the units' draws vary in number (the geometric
+  level bonus, then each card's level-ups), and the packets and daemons
+  come after them on the stream. The stock was "seed-fixed regardless of
+  the route"; the draws are, while what they make follows the team's level
+  and the daemons owned. That last has a twin in `src/core/rngStreams.ts`'s
+  key table ("fixed per node and seed"), corrected in this commit under
+  the twin rule.
+- `beginEncounter` "fixes the enemy level budget for the whole
+  encounter", the claim batch 3 corrected in `enemyBudget.ts`: the
+  encounter's waves resolve each turn. Its forced id "short-circuits inside
+  `selectEncounter`"; only a `normal` encounter, an event node's kind, is
+  taken (batch 3's finding, now said where the id is passed).
+- `rollBossForSector`'s draws rode "the caller's sector-entry `sectorRng`,
+  contiguous after the node-map draws"; the parameter is the sector's
+  `'boss'` stream (4b's lead). The forced-encounter dial "short-circuits"
+  at the pre-roll; there only a forced boss is taken.
+- `stampStartingEventRoot` "ships inert — every shipped `startingEvents`
+  is empty"; The Start ships one (`sector-1-start`).
+- `bossForewarning`: a layout id the catalog no longer holds leaves "the
+  board still exists (it's baked), only its display name is gone"; the
+  fight would throw in `generateTerrain`.
+- `currentSector`'s throw guarded "future drift"; a load does not check
+  the saved sector id, so a save naming a sector the catalog dropped
+  reaches it.
+- `currentSectorLength` was "the node-map hop count"; a `hopCount` dial
+  wins over it inside `NodeMap.generate`.
+- `removePacket` went through "the single mutator"; `handleUsePacket`
+  splices the cache too. `currentEventPage` was read by "the harness"; the
+  event screen and the arbitrated strategy read it.
+
+**Checked and kept:** "singletons still draw" in `rollEventForNode` and
+`handleChooseEventOption` is true. Those call `Run.ts`'s own `pickWeighted`,
+which always draws once, not `sectorWalk.ts`'s, which draws nothing for a
+list of one (gotcha #111). This session first read the claim against
+`sectorWalk.ts` and had it marked false until the import showed the local
+helper.
+
+**Leads, not built:**
+
+- `rootStampedByDial` is the run's flag, so under `firstNodeKind: event`
+  every later sector's root skips its `startingEvents` too, against
+  `advanceSector`'s "that dial is first-sector-only". No shipped effect:
+  The Deep End has none.
+- `fromJSON` checks neither the saved `currentSectorId` nor the saved
+  boards' layout ids, so a stale save fails at first use rather than at
+  load (beside 4a's lead on `resolveSelectedEncounter`).
+- `layoutDimensions`' error names `Run.handleEnterNode`, no longer its
+  caller (a string, so outside a comment pass).
+- Gotcha #49's reason, the enemy team drawn after the side on the same
+  stream, no longer holds: nothing draws on the `'map'` stream after the
+  side.
+- `config/events.ts`'s header says the draws ride `Run.eventRng`; there is
+  no such field, only the `'event'` stream keyed by `eventStep`.
+- `Run.eventFlag` has no reader outside the tests.
+- For 4d: `addPacket`'s doc says the acquisition surfaces gate on
+  `cacheHasRoom` upstream, while the event op overflows by design; and
+  `addBits`'s doc sits above `setPlayerHealth`'s, so `addBits` has none.
+- For §124: `Game.ts`'s `enterNode` and `chooseEventOption` cases say a
+  battle fires `battle:started` at once; with the turn gates on, as `Game`
+  runs, the encounter's start emits `turn:starting`.
+
+Measured (`comment-length` on copies under `output/cl-123m-b4c/`):
+`Run.ts` comment lines 1,976 → 1,903, words 16,510 → 15,970, code lines
+2,251 unchanged; `rngStreams.ts` one comment line more. `src/run` comment
+lines 3,549 → 3,476, words 29,825 → 29,285. The step-code ceiling 3,548 →
+3,454, `Run.ts` 413 → 319.
+
+Proof: `comment-strip HEAD src`, comments only, exit 0, its control named
+in both files.
+
+Cost: 175,574 at 01:01 UTC by the tool's clock as the batch started,
+327,771 at 01:17 after its proof: 152k for 830 lines, 183 a line, the
+pass's highest. The claims ran into the event, sector, layout and price
+configs, `Recruitment.ts`, `selection.ts`, the stream table, `Game.ts`
+and the event screen, and the read-back and the twin search come after.
+
+**Read** (`batch`): `git show <this commit> -- src/run/Run.ts
+src/core/rngStreams.ts` (`handleEnterNode` to `buildEncounterMap`, and
+the `portStock` key's comment) against the seven rules. Wrong looks like a
+draw said to happen or not where the stream's code does otherwise (the
+rest, the event entry, the port's order), a forced encounter said to be
+taken at a node of another kind, a load check claimed that `fromJSON` does
+not make, or history left.

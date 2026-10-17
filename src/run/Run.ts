@@ -1127,50 +1127,39 @@ export class Run {
   }
 
   /**
-   * MapScreen dispatch → run. Validates the node is a legal frontier hop,
-   * builds the battle encounter (deterministic from a forked RNG), and
-   * announces the battle so Game can spin up a fresh World.
+   * Move onto a frontier node from `map`. The node left is marked visited;
+   * then by the new node's kind: a rest opens its gate (`rest`, until
+   * `chooseRestOption`), a port rolls its stock and docks (`port`, until
+   * `leavePort`), an event node rolls for a fight or a page
+   * (`enterEventNode`), and a battle, elite or boss node starts its encounter
+   * (`beginEncounter`).
    */
   private handleEnterNode(nodeId: number): void {
     if (this.phase !== 'map') return;
     if (!this.isFrontier(nodeId)) return;
 
-    // The departing node counts as cleared. At the pre-root start there's no
-    // node to mark (the sentinel); the root is a normal battle node now (S2),
-    // so it IS marked once the player leaves it.
+    // The pre-root start is no node, so it is never marked (`visitedNodes`).
     if (this.currentNodeId !== PRE_ROOT_NODE_ID) {
       this.visitedNodes.add(this.currentNodeId);
     }
     this.currentNodeId = nodeId;
 
-    // G3 — dispatch on node kind. A rest opens its gate (no battle): the run
-    // holds in the serialized `rest` phase until `chooseRestOption`, which
-    // applies the rest. A port
-    // (50c) docks — the run holds in the serialized `port` phase until the
-    // player dispatches `leavePort` (§50d rolls stock here on entry); battle,
-    // boss, and elite all build an encounter (boss is a regular fight, just
-    // tagged — the terminal-win → run:victory path in `advancePastBattle`
-    // already handles it). The frontier check above gates entry the same for
-    // all.
     if (this.kindOf(nodeId) === 'rest') {
-      // Nothing is drawn and no counter moves here or in the option's
-      // handler: a rest takes no stream of its own, so the gate leaves every
-      // other draw of the run where it was.
+      // No counter moves here or in the option's handler, so a rest leaves
+      // every other draw of the run where it was. A level-up it gives draws
+      // on the `'levelup'` stream keyed to its node (`bankXpAwards`).
       this.phase = 'rest';
       this.bus.emit('rest:entered', { nodeId });
       return;
     }
     if (this.kindOf(nodeId) === 'port') {
       this.phase = 'port';
-      // 50d — the stock rolls ONCE, at dock (spec §Ports: "on node entry"),
-      // then serializes with the save. No rerolls, no re-visits.
+      // The stock is rolled once, on entry, and saved with the run.
       this.portStock = this.rollPortStock(nodeId);
       this.bus.emit('port:entered', { nodeId });
       return;
     }
     if (this.kindOf(nodeId) === 'event') {
-      // 74b — the third inline branch (the port model): combat-resolve or
-      // open the event; both sub-paths inside `enterEventNode`.
       this.enterEventNode(nodeId);
       return;
     }
@@ -1180,50 +1169,45 @@ export class Run {
   }
 
   /**
-   * 50c — undock: leave the port and return to the map. The hop was consumed
-   * on entry (`handleEnterNode` moved `currentNodeId` onto the port node), so
-   * leaving just releases the phase — the frontier advances from the port.
-   * Emits nothing: Game swaps the map explicitly off the phase landing on
-   * 'map' (the chooseRecruit silent-transition pattern).
+   * Leave the port for the map. Entering moved `currentNodeId` onto the
+   * port, so the frontier is already the port's successors. Emits nothing:
+   * `Game` mounts the map when the phase lands on `map`.
    */
   private handleLeavePort(): void {
     if (this.phase !== 'port') return;
-    // 50d — the stock dies with the dock (no re-visits / no rerolls — the
-    // cluster scope guard; the port isn't in its own frontier anyway).
+    // The stock goes with the visit: the map's edges run one hop forward,
+    // so a port is never entered twice.
     this.portStock = null;
     this.phase = 'map';
   }
 
-  // ── 74b: the event phase ──────────────────────────────────────────────────
+  // ── the event phase ───────────────────────────────────────────────────────
 
   /**
-   * 74b — enter an event node (spec §Events). The combat-resolve chance
-   * rolls FIRST, globally, before any event is picked — keeps event defs
-   * pure, and the fold-routed chance is the daemon seam. Exactly ONE draw
-   * per entry regardless of the chance value (the gotcha-#49 always-draw
-   * discipline), riding the node-entry occurrence stream (77d2). A resolve (or an empty
-   * eligible pool — flag-gated chains can starve the pool) degrades to a
-   * normal fight: KIND_BY_NODE maps 'event' → the sector's normal pool.
+   * Enter an event node. The fight roll comes first, before any event is
+   * picked, so event definitions hold no chance, and daemons bend it through
+   * the fold (`effectiveEventCombatChance`). The roll is drawn on every
+   * entry, whatever the chance, and the pick draws after it on the same
+   * stream. A fight, or no eligible event (flag-gated chains can empty the
+   * pool), makes the node a normal fight, an event node's encounter kind
+   * (`encounters/selection.ts`).
    *
-   * 74e — the `startingEvents` seam: on the stamped ROOT of a sector with
-   * a non-empty `startingEvents` list, entry draws from THAT list, and the
-   * combat-resolve result is IGNORED (the roll still draws — the #49
-   * discipline is draw-count stability, not honoring): an authored opening
-   * beat must not vanish 25% of the time. It still degrades on an empty
-   * ELIGIBLE pool (authors gate eligibility carefully).
+   * On a sector's root with `startingEvents`, the event comes from that list
+   * and the fight roll is drawn and ignored, so an authored opening is never
+   * lost to it. With no eligible starting event the node still becomes a
+   * fight.
    */
   private enterEventNode(nodeId: number): void {
     const sector = this.currentSector();
-    // 74i-c — the dial exemption: a `firstNodeKind: 'event'` root is the
-    // ISOLATION shape (test/dev a regular pool draw at hop 0) and must not
-    // be captured by the sector's authored opening beat.
+    // With the `firstNodeKind` dial at `event`, a root draws from the
+    // sector's regular pool, so the dial can test that pool at hop 0. The
+    // flag is the run's, so a later sector's root is exempted too.
     const fromStartingPool =
       nodeId === this.nodeMap.rootId &&
       sector.startingEvents.length > 0 &&
       !this.rootStampedByDial;
-    // 77d2 — the node-entry occurrence: the combat flip + the pool pick
-    // ride one derived stream; the serialized counter advances whether or
-    // not a page opens (the #49 always-draw discipline, occurrence-form).
+    // One stream for the entry, keyed by the saved `eventStep`, which moves
+    // whether or not a page opens.
     const entryRng = this.streamRng('event', this.eventStep++);
     const roll = entryRng.next();
     const combatResolved = roll < this.effectiveEventCombatChance() && !fromStartingPool;
@@ -1234,29 +1218,26 @@ export class Run {
       return;
     }
     this.activeEvent = { eventId: eventDef.id, pageId: eventDef.entry };
-    // 74i — mark the visit the moment the page OPENS (combat-resolved
-    // entries never reach here — the player never saw it). Marked even for
-    // `repeatable` defs: the flag records history (authored content may
-    // read it cross-event); only the pool FILTER consults `repeatable`.
+    // The visit is marked when the page opens; an entry that became a fight
+    // was never seen. A `repeatable` event is marked too, since the flag is
+    // history other events may read; only the pool's filter reads
+    // `repeatable`.
     this.eventFlags[visitedFlagFor(eventDef.id)] = true;
     this.phase = 'event';
     this.bus.emit('event:entered', { nodeId, eventId: eventDef.id });
   }
 
   /**
-   * 74b→74e — pick this node's event from the SECTOR-OWNED weighted pool
-   * (`events`, or `startingEvents` on the seam — the 74b catalog-scan
-   * placeholder retired to plan). The forced dial short-circuits (validated
-   * at construction). Pool entries hop-gate (`minHop`, the encounter-pool
-   * rule), resolve against the run's ACTIVE catalog — an entry a bespoke
-   * `eventCatalog` can't resolve is skipped, the boot guard owns shipped
-   * drift — then filter by the event def's `eligibility` against live run
-   * state (the flag-gated-chains mechanism). One cumulative-weight draw
-   * over the survivors (weight absent = 1; singletons still draw — #111
-   * applied forward). Null = nothing eligible (the caller degrades to a
-   * fight). Draw count is 1 or 0 (forced/empty) — never
-   * filter-size-dependent (isolation is structural under 77d2's
-   * per-occurrence streams, but a stable count keeps reasoning cheap).
+   * Pick the node's event from the sector's weighted pool: `events`, or
+   * `startingEvents` on its root (`enterEventNode`). The `forcedEventId`
+   * dial returns its event first; its id is checked when the run's inputs
+   * resolve. Pool entries open at their hop (`minHop`), resolve against the
+   * run's catalog (an entry a bespoke `eventCatalog` lacks is skipped; the
+   * sector loader checks the shipped one), drop an event already visited
+   * unless it is `repeatable`, and keep those whose `eligibility` holds.
+   * One draw over the survivors, weight 1 when absent and a single survivor
+   * included (`pickWeighted` above); none when forced or when none
+   * survives, which returns `null` and the caller makes the node a fight.
    */
   private rollEventForNode(fromStartingPool: boolean, entryRng: RNG): EventDef | null {
     if (this.forcedEventId !== null) {
@@ -1274,10 +1255,9 @@ export class Run {
     for (const entry of pool) {
       const def = this.eventCatalog.find((e) => e.id === entry.eventId);
       if (def === undefined) continue;
-      // 74i — the per-run no-repeat default (user-signed): a def whose
-      // `visited:` flag is set drops out unless it opts in `repeatable`.
-      // Same set-semantics as the flagSet condition; the forced dial above
-      // bypasses by construction (a force is a force).
+      // Once a run: an event whose `visited:` flag is set drops out unless
+      // it is `repeatable`, with `flagSet`'s reading of a flag. A forced
+      // event, returned above, is never filtered.
       if (def.repeatable !== true) {
         const seen = this.eventFlags[visitedFlagFor(def.id)];
         if (seen !== undefined && seen !== false) continue;
@@ -1290,12 +1270,11 @@ export class Run {
   }
 
   /**
-   * 74b — resolve one choice on the active page: validate (wrong phase /
-   * bad index / failing condition = the silent no-op discipline), roll the
-   * choice's weighted outcome (exactly ONE draw, singletons included — no
-   * zero-draw singleton class, gotcha #111's lesson applied forward),
-   * execute its effects in authored order, then route `next`. An effect can
-   * end the run (`damagePool` → defeat) — routing stops there.
+   * Take one choice on the active page, if it may be taken (a choice that
+   * may not is a no-op, `Command.ts`): draw its weighted outcome, one draw
+   * with a single outcome included (`pickWeighted` above), carry out the
+   * outcome's effects in authored order, then route its `next`. An effect
+   * can end the run (`damagePool`), and routing stops there.
    */
   private handleChooseEventOption(choiceIndex: number): void {
     if (this.phase !== 'event' || this.activeEvent === null) return;
@@ -1304,12 +1283,12 @@ export class Run {
     if (!isIndex(choiceIndex, page.choices.length)) return;
     const choice = page.choices[choiceIndex]!;
     if (choice.condition !== undefined && !this.evaluateEventCondition(choice.condition)) return;
-    // 77d2 — one choice resolution = one atomic occurrence: the outcome
-    // roll + every effect op ride one derived stream (a snapshot can land
-    // between choices, never inside one — the counter is serialized).
+    // One choice is one occurrence: the outcome and every effect draw on one
+    // stream, keyed by the saved `eventStep`, so a save lands between
+    // choices and never inside one.
     const choiceRng = this.streamRng('event', this.eventStep++);
-    // Weight absent = 1, the sector-pool convention; schema-positive, so
-    // the sum is never 0.
+    // Weight 1 when absent; the schema makes weights positive, so the sum
+    // is above 0.
     const outcome = pickWeighted(choice.outcomes, (o) => o.weight ?? 1, choiceRng);
     for (const op of outcome.effects ?? []) {
       this.executeEventOp(op, choiceRng);
@@ -1319,25 +1298,23 @@ export class Run {
   }
 
   /**
-   * 74b→74c — execute one event effect op, all eleven live (the shape-lock
-   * resolutions, worklog §74c). The standing philosophy across the union:
-   * an authored effect is ALWAYS honored, degrading gracefully rather than
-   * silently vanishing (spendBits floors; addPacket overflows; removals of
-   * absent things no-op — authors gate strictness with conditions). Loud
-   * throws are reserved for catalog corruption (unknown ids reachable only
-   * through a bespoke `eventCatalog` — the shipped one is boot-asserted).
+   * Carry out one event effect op. An authored effect is always carried out,
+   * cut down rather than dropped where it cannot be in full: a spend floors
+   * at the balance, a packet past a full cache overflows it, and removing
+   * what is not there does nothing (authors gate with conditions). It throws
+   * only on an id outside the catalogs, which only a bespoke `eventCatalog`
+   * can hold, since the loader checks the shipped one (`assertEventRefs`).
    */
   private executeEventOp(op: EventEffectOp, choiceRng: RNG): void {
     switch (op.op) {
       case 'gainBits':
-        // The earn-site fold applies (bitsGain × difficulty) — events are an
-        // earn site like rewards, not a mint (the §47 fold-at-earn law).
+        // An earn, as a reward is, so the `bitsGain` and difficulty folds
+        // apply (`gainBits`).
         this.gainBits(op.amount);
         break;
       case 'spendBits':
-        // Floors at the balance rather than rejecting: authors gate real
-        // costs with a `bitsAtLeast` condition; an ungated spend is flavor
-        // ("they take what you have") — mirror the addBits zero-floor.
+        // Floors at the balance: authors gate a real cost with
+        // `bitsAtLeast`, and an ungated spend takes what there is.
         this.spendBits(Math.min(op.amount, this.bits));
         break;
       case 'healPool':
@@ -1346,8 +1323,8 @@ export class Run {
       case 'damagePool':
         this.setPlayerHealth(this.playerHealth - op.amount, 'damage');
         if (this.playerHealth === 0) {
-          // An event CAN kill (the FTL lineage). The finishEncounter defeat
-          // shape, minus encounter state (there is none mid-event).
+          // An event can end the run: the defeat as `finishEncounter` makes
+          // it, with no encounter state to clear.
           this.activeEvent = null;
           this.phase = 'defeat';
           this.bus.emit('run:defeated', {});
@@ -1357,57 +1334,48 @@ export class Run {
         this.eventFlags[op.flag] = op.value ?? true;
         break;
       case 'addPacket':
-        // 74c — HONOR THE GRANT (user-signed): a full cache overflows into
-        // the 49f forced-keep state (legal derived state; the flow demands
-        // the discards) rather than silently dropping authored content.
-        // `addPacket` owns the unknown-id throw.
+        // The grant is kept: a full cache goes over its size, and the
+        // overflow (`cacheOverflow`) asks for discards. `addPacket` throws on
+        // an unknown id.
         this.addPacket(op.packetId);
         break;
       case 'removePacket': {
-        // 74c — removal BY ID (the first new plumbing): take the FIRST
-        // matching slot through the single mutator (`handleDiscardPacket`
-        // owns the splice + emit). Absent id = silent no-op (authors gate
-        // with `hasPacket`).
+        // The first slot holding the id, through `handleDiscardPacket`; an
+        // absent id does nothing (authors gate with `hasPacket`).
         const cacheIndex = this.cache.indexOf(op.packetId);
         if (cacheIndex !== -1) this.handleDiscardPacket(cacheIndex);
         break;
       }
       case 'addDaemon': {
-        // 74c — SKIP-IF-OWNED (user-signed): everywhere else exclusion runs
-        // upstream of the offer (reward roller, port stock), so a duplicate
-        // would be the game's first and would double-apply folds. The `not
-        // hasDaemon` gate (74c-pre) makes authoring around this possible;
-        // the skip stays as defense-in-depth.
+        // Skipped when owned: rewards and port stock leave owned daemons out,
+        // so a second copy would be the game's only one and would apply its
+        // folds twice. Authors gate with `not hasDaemon`.
         if (this.daemons.some((d) => d.id === op.daemonId)) break;
         const daemon = daemonById(op.daemonId);
         if (daemon === undefined) {
-          // Bespoke-catalog-only reachable (shipped refs are boot-asserted).
           throw new Error(`Run: event op addDaemon names unknown daemon id '${op.daemonId}'`);
         }
         this.addDaemon(daemon);
         break;
       }
       case 'removeDaemon':
-        // 74c — the push-only era ends; see the chokepoint (`removeDaemon`).
         this.removeDaemon(op.daemonId);
         break;
       case 'grantUnit': {
         if (!(ALL_ARCHETYPES as readonly string[]).includes(op.archetype)) {
-          // Bespoke-catalog-only reachable (shipped refs are boot-asserted);
-          // loud beats rollUnit crashing on a missing config.
+          // Thrown here, by name, rather than inside `rollUnit` on a missing
+          // config.
           throw new Error(`Run: event op grantUnit names unknown archetype '${op.archetype}'`);
         }
-        // The level roll rides the choice occurrence's stream (the landing
-        // note's home); rollUnit draws nothing at level ≤ 1.
+        // The level-ups draw on the choice's stream; level 1 draws nothing.
         this.appendRosterUnit(rollUnit(op.archetype as Archetype, choiceRng, op.level ?? 1));
         break;
       }
       case 'removeUnit': {
-        // 74c — the roster can't be emptied (removeRosterUnit's own law):
-        // a roster-of-1 removal is a silent no-op (authors gate with
-        // `rosterSizeAtLeast`). `random` draws ONE occurrence-stream index;
-        // weakest/strongest are deterministic — level, tie → lowest roster
-        // index (user-signed) — and draw nothing.
+        // The roster cannot be emptied, so on a roster of 1 this does
+        // nothing (authors gate with `rosterSizeAtLeast`). `random` draws one
+        // index on the choice's stream; `weakest` and `strongest` go by
+        // level, a tie to the lowest roster index, and draw nothing.
         if (this.team.length <= 1) break;
         const pick = op.pick ?? 'random';
         let index: number;
@@ -1427,10 +1395,11 @@ export class Run {
     }
   }
 
-  /** 74b — route a resolved outcome's `next`: a page id moves the cursor;
-   *  terminals close the event (return-to-map = the leavePort silent
-   *  transition; start-encounter opens the named fight with an optional
-   *  pinned reward table). */
+  /** Route a resolved outcome's `next`: a page id moves to that page
+   *  (`event:pageChanged`), and a terminal closes the event.
+   *  `return-to-map` lands on `map` with no event, so `Game` mounts the map;
+   *  `start-encounter` opens the named fight, with its reward refs in place
+   *  of the encounter's own when it gives them. */
   private resolveEventNext(next: EventNext): void {
     if (typeof next === 'string') {
       this.activeEvent = { eventId: this.activeEvent!.eventId, pageId: next };
@@ -1447,9 +1416,8 @@ export class Run {
     this.beginEncounter(next.encounterId);
   }
 
-  /** 74b — evaluate one condition against live run state (the closed v1
-   *  union). `flagSet` = present and not `false`; `flagIs` = strict
-   *  equality. */
+  /** One condition against the run as it stands. `flagSet` is a flag set
+   *  and not `false`; `flagIs` is strict equality. */
   private evaluateEventCondition(cond: EventCondition): boolean {
     switch (cond.kind) {
       case 'bitsAtLeast':
@@ -1475,99 +1443,93 @@ export class Run {
       case 'flagIs':
         return this.eventFlags[cond.flag] === cond.value;
       case 'not':
-        // 74c-pre — the one combinator (author-bounded depth; schema-recursive).
+        // The one combinator; it nests as deep as an author writes it.
         return !this.evaluateEventCondition(cond.condition);
     }
   }
 
-  /** 74b — the active event's current page (null outside the phase). The
-   *  EventScreen (74f) and the harness both read from here. */
+  /** The active event's current page, `null` outside the `event` phase. The
+   *  event screen reads it, and the fuzz bot's arbitrated strategy. */
   currentEventPage(): EventPage | null {
     if (this.activeEvent === null) return null;
     const def = this.eventCatalog.find((e) => e.id === this.activeEvent!.eventId);
     return def?.pages[this.activeEvent.pageId] ?? null;
   }
 
-  /** 101e — EVERY page of the active event, in authored order ([] outside
-   *  the phase). A LAYOUT read only: the EventScreen sizes its text and
-   *  choice slots to the tallest page so a page turn moves nothing; what is
-   *  live stays `currentEventPage` (the returned objects are the catalog's
-   *  own, so the screen finds the current page by identity). */
+  /** Every page of the active event, in authored order, `[]` outside the
+   *  phase. For layout only: the event screen sizes its text and choice
+   *  slots to the tallest page, so a page turn moves nothing. The objects
+   *  are the catalog's own, so the screen finds `currentEventPage` among
+   *  them by identity. */
   activeEventPages(): readonly EventPage[] {
     if (this.activeEvent === null) return [];
     const def = this.eventCatalog.find((e) => e.id === this.activeEvent!.eventId);
     return def === undefined ? [] : Object.values(def.pages);
   }
 
-  /** 74f — the active event's display name (null outside the phase). The
-   *  EventScreen's heading; the catalog stays private (the def is engine
-   *  state — the screen gets exactly the read it needs). */
+  /** The active event's name, `null` outside the phase, for the event
+   *  screen's heading, so the catalog itself stays private. */
   get activeEventName(): string | null {
     if (this.activeEvent === null) return null;
     const def = this.eventCatalog.find((e) => e.id === this.activeEvent!.eventId);
     return def?.name ?? this.activeEvent.eventId;
   }
 
-  /** 74b — is the page's choice at `index` currently satisfiable? The UI
-   *  renders failing choices SHOWN-DISABLED with the requirement visible
-   *  (the §74 shape-lock: players should be able to plan). */
+  /** Whether the active page's choice at `index` can be taken now. The
+   *  event screen shows one that cannot, disabled, with its requirement, so
+   *  the player can plan. */
   eventChoiceEnabled(index: number): boolean {
     const choice = this.currentEventPage()?.choices[index];
     if (choice === undefined) return false;
     return choice.condition === undefined || this.evaluateEventCondition(choice.condition);
   }
 
-  /** 74b — the enabled choice indices on the active page (the harness's
-   *  legal-move list; never empty on a live page — the 74a termination
-   *  assert guarantees an unconditioned choice on every page). */
+  /** The indices of the active page's choices that can be taken now, the
+   *  fuzz bots' legal moves. Never empty on a live page, since every page
+   *  has an unconditioned choice (`assertEventPagesTerminate`). */
   enabledEventChoices(): number[] {
     const page = this.currentEventPage();
     if (page === null) return [];
     return page.choices.map((_, i) => i).filter((i) => this.eventChoiceEnabled(i));
   }
 
-  /** 74b — read one chain flag (undefined = never set). */
+  /** One chain flag, `undefined` when never set. */
   eventFlag(flag: string): EventFlagValue | undefined {
     return this.eventFlags[flag];
   }
 
-  /** 74b — the fold-routed global combat-resolve chance (a `modifier` rule
-   *  on `eventCombatChance` bends it — the daemon seam, wrong-by-
-   *  construction to read raw). The fold floors at 0; a mult can exceed 1,
-   *  so the read site clamps the ceiling. */
+  /** The chance an event node's entry becomes a fight, through the run-stat
+   *  fold, where a daemon's `modifier` rule on `eventCombatChance` bends it;
+   *  read it here, never raw. The fold floors it at 0 and a multiplier can
+   *  take it past 1, so this caps it at 1. */
   effectiveEventCombatChance(): number {
     return Math.min(1, this.effectiveRunStats().eventCombatChance);
   }
 
   /**
-   * 50d — roll a docked port's stock (spec §Ports), all off the two
-   * dedicated port streams:
-   * - UNITS: the recruit-offer roll reused verbatim (`rollOffer` — distinct
-   *   draftable archetypes at team-scaled levels with the geometric bonus;
-   *   port recruits ARE recruits, the spec's wire-in-identically lock), each
-   *   priced by the price book's base × level curve, then JITTERED
-   *   (`±units.jitter`, the spec's "randomly chosen price") off the
-   *   'portPrice' occurrence stream and floored at 1.
-   * - PACKETS: distinct catalog sample at flat price-book prices.
-   * - DAEMONS: distinct sample from the OWNED-EXCLUDED catalog (the reward
-   *   exclusion discipline) at flat prices; fewer unowned than the count →
-   *   fewer slots (possibly zero — a maxed collector sees an empty shelf).
-   * Composition draws ride the 'portStock' occurrence stream in a fixed
-   * order (units → packets → daemons); only the daemon sample's count
-   * varies. 77d2 — both streams key on (sectorIndex, nodeId): a port's
-   * stock and prices are NODE-ANCHORED, seed-fixed regardless of the
-   * route taken to reach it (the signed node-anchored semantics).
+   * Roll a port's stock, on its two streams, both keyed to the sector and
+   * the node: the draws do not depend on the route taken there, while what
+   * they make does, through the team's level and the daemons owned.
+   * - `units` — the recruit offer (`rollOffer`), a recruit's in every way:
+   *   the character's pools and weights, the folded tier weights, levels
+   *   from the team's average with the level bonus. Each card is priced by
+   *   `unitPrice`, jittered by `±units.jitter` on the `'portPrice'` stream
+   *   and floored at 1.
+   * - `packets` — distinct packets at the price book's prices.
+   * - `daemons` — distinct daemons not owned, at the price book's prices;
+   *   fewer than the count when fewer are unowned, none when all are.
+   * The three draw on the `'portStock'` stream in that order. The units'
+   * draws vary in number (the level bonus, then each card's level-ups), so
+   * a change to them moves the packets and daemons drawn after them.
    */
   private rollPortStock(nodeId: number): PortStock {
     const stockRng = this.streamRng('portStock', this.sectorIndex, nodeId);
     const priceRng = this.streamRng('portPrice', this.sectorIndex, nodeId);
     const counts = PRICES.portStock;
     const baseLevel = Math.round(avgTeamLevel(this.team));
-    // 64c — Portunus: the first ⌊fold⌋ slots are tier-forced to legendary,
-    // clamped at the slot count (two sources under a 5-slot shelf = 2
-    // forced). The draw shape is forcing-independent (the sampler consumes
-    // the tier draw either way), and an empty legendary pool degrades those
-    // slots to the normal roll inside the sampler.
+    // The Idol of Portunus forces the first slots' tier to legendary, as
+    // many as its fold gives (`effectivePortLegendaryOffers`), up to the
+    // slot count. Forcing changes no draw (`rollOffer`).
     const forcedTiers: readonly UnitRarity[] = Array.from(
       { length: Math.min(counts.units, this.effectivePortLegendaryOffers) },
       () => 'legendary' as const,
@@ -1580,9 +1542,6 @@ export class Run {
           LEVELING.levelCap,
           baseLevel + recruitLevelBonus(cardRng, RECRUITMENT.recruitBonusChance),
         ),
-      // 63c — port recruits ARE recruits: the character's pools + weights
-      // govern here identically (the spec's ports-inherit lock). 64b — as do
-      // the folded tier weights (Patrician's Seal empties commons here too).
       this.draftPools(),
       this.character.weightOverrides,
       this.effectiveRarityWeights(),
@@ -1611,12 +1570,10 @@ export class Run {
   }
 
   /**
-   * 50d — buy a stocked unit: spend the slot's (jittered) price, then append
-   * through the SAME roster path as a post-battle recruit
-   * (`appendRosterUnit` — all four parallel structures; the deck picks the
-   * new card up at the next encounter's rebuild). Wrong phase / no stock /
-   * bad index / already sold / can't afford — all silent no-ops that mutate
-   * nothing (the acceptReward validate-first discipline).
+   * Buy a stocked unit: pay its price, then add it as a recruit is added
+   * (`appendRosterUnit`); the deck takes it at the next encounter's
+   * rebuild. A sold slot is a no-op, as is a buy out of phase or unpaid
+   * (`Command.ts`).
    */
   private handleBuyPortUnit(index: number): void {
     if (this.phase !== 'port' || this.portStock === null) return;
@@ -1628,10 +1585,10 @@ export class Run {
   }
 
   /**
-   * 50d — buy a stocked packet. A FULL cache requires a valid
-   * `swapCacheIndex` (the 49c decline-or-swap contract, acceptReward's
-   * shape) — and affordability is checked BEFORE the swap discard, so a
-   * broke buyer never loses the held packet to a swap that can't complete.
+   * Buy a stocked packet. With the cache full, `swapCacheIndex` names the
+   * held packet to discard, as a reward's accept takes it; the price is
+   * checked before that discard, so a buy that cannot be paid for loses
+   * nothing.
    */
   private handleBuyPortPacket(index: number, swapCacheIndex?: number): void {
     if (this.phase !== 'port' || this.portStock === null) return;
@@ -1639,7 +1596,7 @@ export class Run {
     if (slot === undefined || slot.sold) return;
     if (!this.cacheHasRoom) {
       if (!isIndex(swapCacheIndex, this.cache.length)) return;
-      if (this.bits < slot.price) return; // validate-first: no discard on a doomed buy
+      if (this.bits < slot.price) return;
       this.handleDiscardPacket(swapCacheIndex);
     }
     if (!this.spendBits(slot.price)) return;
@@ -1647,16 +1604,16 @@ export class Run {
     this.addPacket(slot.packetId);
   }
 
-  /** 50d — buy a stocked daemon (stock was owned-excluded at roll, so a
-   *  duplicate is unreachable). Same silent no-op guards as the unit buy. */
+  /** Buy a stocked daemon. The stock leaves owned daemons out, so the buy
+   *  cannot duplicate one. */
   private handleBuyPortDaemon(index: number): void {
     if (this.phase !== 'port' || this.portStock === null) return;
     const slot = this.portStock.daemons[index];
     if (slot === undefined || slot.sold) return;
     const daemon = daemonById(slot.daemonId);
     if (daemon === undefined) {
-      // The roll samples the catalog and decode re-validates — a miss here
-      // is corruption; loud beats a silently vanished purchase.
+      // The stock is sampled from the catalog and a load checks its ids, so
+      // a miss is corruption, and throws rather than lose the purchase.
       throw new Error(`Run.handleBuyPortDaemon: unknown daemon id '${slot.daemonId}'`);
     }
     if (!this.spendBits(slot.price)) return;
@@ -1665,11 +1622,11 @@ export class Run {
   }
 
   /**
-   * 50d — sell one held packet while docked: the cache slot discards and
-   * the refund lands via RAW `addBits` — NEVER `gainBits` (the standing
-   * warning on `gainBits`: a bitsGain fold above 1/sellFraction would mint
-   * an infinite buy-sell loop). Refund = ⌊price-book buy price ×
-   * sellFraction⌋, independent of any stocked slot's jitter.
+   * Sell a held packet at a port: the slot is discarded, and the refund
+   * (`sellPrice` of the price book's buy price) lands through `addBits`,
+   * never `gainBits`, since a refund is not an earn: through `gainBits`, a
+   * `bitsGain` fold above 1/`sellFraction` would make each buy and sell a
+   * profit.
    */
   private handleSellPacket(cacheIndex: number): void {
     if (this.phase !== 'port') return;
@@ -1681,12 +1638,10 @@ export class Run {
   }
 
   /**
-   * 50d — the pay-to-remove service: spend the flat `unitRemovalPrice`,
-   * then route through the ONE roster-shrink chokepoint
-   * (`removeRosterUnit`). The command layer converts the chokepoint's
-   * throw-conditions into silent no-ops (wrong phase is guarded here;
-   * out-of-range and last-unit are pre-checked) — the chokepoint keeps
-   * throwing for real callers-gone-wrong.
+   * The removal service: pay `unitRemovalPrice`, then remove the unit
+   * through `removeRosterUnit`. That method throws on a wrong phase, a bad
+   * index and the last unit, for callers that are wrong; a command meeting
+   * them is a no-op, so this handler checks all three first.
    */
   private handlePayToRemoveUnit(rosterIndex: number): void {
     if (this.phase !== 'port') return;
@@ -1697,24 +1652,23 @@ export class Run {
   }
 
   /**
-   * H4 — start a fresh encounter at the current node. Resets the per-encounter
-   * state (enemy pool full, turn counter zero), fixes the enemy level budget
-   * for the whole encounter, zeroes the H3 deployment counts, then kicks off
-   * the first turn. The run-wide `playerHealth` is deliberately NOT reset — it
-   * persists across encounters.
+   * Start the encounter at the current node: pick it and its battlefield,
+   * reset the encounter's state (the enemy pool full, the turn count 0, the
+   * deck rebuilt and shuffled, the deployment counts and the effect store
+   * cleared), land the pending buffs, fire the daemons' `encounterStart`
+   * hooks, and start the first turn. `playerHealth` carries over, since the
+   * pool is the run's.
+   *
+   * `eventForcedEncounterId` is an event's `start-encounter` fight. It wins
+   * over `forcedEncounterId` for this encounter, and `selectEncounter` takes
+   * it past the sector's pools when its kind is `normal`, an event node's;
+   * a fight of another kind is passed over for the pool's draw.
    */
-  /** 74b: `eventForcedEncounterId` — a start-encounter terminal's named
-   *  fight (beats the X2 dev dial for this one encounter; the forced id
-   *  short-circuits inside `selectEncounter`, so it need not be in the
-   *  sector's pools). */
   private beginEncounter(eventForcedEncounterId?: string): void {
-    // 66a — a boss node CONSUMES the sector-start pre-roll (the forewarning
-    // pair) instead of rolling: no `mapRng` fork, no selection/build draws —
-    // the fight is exactly the forewarned board. Branching on node kind is
-    // deterministic-safe (kind is serialized state, not a mid-path
-    // conditional draw — gotcha #49 governs draws within one path, not
-    // across node kinds). The id def-resolves at fight time (hot-reload
-    // safe; fromJSON re-validated it), loud on a catalog miss.
+    // A boss node takes the boss and board picked at the sector's entry
+    // (`rollBossForSector`), so the fight is the one forewarned, and draws
+    // nothing here. The id resolves now and throws on a catalog miss;
+    // `fromJSON` checks it on a load.
     if (this.kindOf(this.currentNodeId) === 'boss') {
       const boss = getEncounter(this.bossEncounterId);
       if (boss === undefined) {
@@ -1725,12 +1679,8 @@ export class Run {
       this.selectedEncounter = boss;
       this.encounterMap = this.bossEncounterMap;
     } else {
-      // V1 — select this node's encounter + its battlefield from the current
-      // sector's pools via the keyed `selectEncounter` resolver. 77d2 — the
-      // 'map' occurrence keys on (sectorIndex, nodeId): ONE derived stream
-      // drives BOTH the selection draws and the map build, and the old
-      // boss-branch hazard (zero forks vs one, diverging the parent stream
-      // by node kind) is gone — there is no parent stream to diverge.
+      // Any other node picks its encounter from the sector's pools, then
+      // builds its board, both on the `'map'` stream keyed to the node.
       const mapRng = this.streamRng('map', this.sectorIndex, this.currentNodeId);
       const selection = selectEncounter(
         this.currentSector(),
@@ -1740,49 +1690,37 @@ export class Run {
         eventForcedEncounterId ?? this.forcedEncounterId ?? undefined,
       );
       this.selectedEncounter = selection.encounter;
-      // K3.5 / V1 — build the encounter's ONE battlefield for the layout
-      // chosen by selection (the terrain-seed + procedural-side draws ride
-      // the SAME `mapRng`, contiguous after the encounter/layout picks;
-      // gotcha #49's always-draw discipline preserved in `buildEncounterMap`).
-      // Stream-order note: the map build moved ahead of the deck rebuild at
-      // 66a — cross-stream ordering (`mapRng` vs `deckRng`) is not draw-order
-      // significant, so this is byte-identical to the pre-66a sequence.
+      // The board's draws follow the selection's on the same stream.
       this.encounterMap = this.buildEncounterMap(selection.layoutId, mapRng);
     }
-    // The selected encounter seeds the per-encounter pool + owns the wave
-    // grammar; the cursor starts fresh (both branches above set the
-    // encounter + map, so the non-null assertion is structural).
+    // Both branches set the encounter: the enemy's pool fills from it, and
+    // its waves start from the top.
     this.waveCursor = null;
     this.enemyHealth = this.enemyPoolOf(this.selectedEncounter!);
     this.turnIndex = 0;
     this.lastTurn = null;
-    // H5 — rebuild + shuffle the draw deck from the CURRENT roster (so a
-    // freshly recruited card is in the deck); hand + discard start empty. The
-    // deck is per-encounter — last encounter's pile state is discarded here.
+    // The draw pile is rebuilt from the roster as it is now, so a new
+    // recruit is in it, and shuffled; the hand and discard start empty.
     this.drawPile = this.team.map((_, i) => i);
     this.streamRng('deck', this.deckShuffleIndex++).shuffle(this.drawPile);
     this.discardPile = [];
     this.hand = [];
-    // H3 — counts reset per ENCOUNTER (was per-battle pre-H4); each turn's
-    // `beginTurn` records the deployed hand.
+    // Deployment counts are the encounter's; `beginTurn` adds each turn's
+    // hand (`recordDeployment`).
     this.resetDeploymentCounts();
-    // K1 — clear the encounter-effect store.
     this.resetEncounterEffects();
-    // 49e — the pending out-of-battle buffs (overclock) land NOW, right
-    // after the reset (the pending-until-start ordering, the 49e shape-lock),
-    // and the previous encounter's injected rules expire (the same
-    // reset-at-start doctrine; run-duration injections persist).
+    // The buffs a packet put on a unit away from battle land now, after the
+    // reset that would clear them, and the last encounter's injected rules
+    // expire; a rule injected for the run stays.
     this.drainPendingEncounterEffects();
     this.injectedEncounterRules = [];
-    // 47e — daemon `encounterStart` instant hooks fire here (no launch daemon
-    // authors one — byte-identical until content does; a chance-gated hook
-    // here would draw off `daemonRng`).
+    // The daemons' `encounterStart` hooks, on the `'daemon'` stream's site
+    // 0 for this node. No shipped daemon has one.
     this.executeInstantOps(
       resolveInstantHooks(
         this.daemons,
         'encounterStart',
         {},
-        // 77d2 — site 0 of the 'daemon' key (start; turn slot 0).
         this.streamRng('daemon', this.sectorIndex, this.currentNodeId, 0, 0),
       ),
     );
@@ -1790,17 +1728,15 @@ export class Run {
   }
 
   /**
-   * 66a — roll the sector's boss forewarning pair: the boss encounter via the
-   * same keyed `selectEncounter` a fight-time roll would use (at the ACTUAL
-   * terminal hop — `nodeMap.hops.length - 1`, which tracks a `hopCount`
-   * override where `sector.length` wouldn't) + its fully-built battlefield
-   * via `buildEncounterMap` (so the G1 forced-layout override and the #49
-   * always-draw discipline apply at pre-roll exactly as they would at fight
-   * time). Draws ride the caller's sector-entry `sectorRng`, contiguous after
-   * the node-map draws; the X2 forced-encounter flag short-circuits inside
-   * `selectEncounter` (one boss node per sector makes pre-roll-time forcing
-   * behaviorally identical to fight-time forcing). Called from the
-   * constructor and `advanceSector` only — the two sector-entry seams.
+   * Pick the sector's boss and build its board at the sector's entry, so the
+   * map can forewarn of both (`bossForewarning`). The pick is
+   * `selectEncounter`'s, as a fight would make it, at the terminal hop
+   * (`nodeMap.hops.length - 1`, which follows a `hopCount` dial where the
+   * sector's `length` would not), and the board is `buildEncounterMap`'s,
+   * the forced-layout dial included. `sectorRng` is the sector's `'boss'`
+   * stream, which the two sector entries, the constructor and
+   * `advanceSector`, pass. `forcedEncounterId` applies as at a fight: a
+   * forced boss is taken, and one of another kind leaves the pool's draw.
    */
   private rollBossForSector(sectorRng: RNG): {
     bossEncounterId: string;
@@ -1821,12 +1757,10 @@ export class Run {
   }
 
   /**
-   * 74e — stamp the active sector's ROOT node `event` when the sector
-   * authors `startingEvents` (the source-node seam, zero-draw — see
-   * `stampRootKind`). Callers gate on the `firstNodeKind` dev dial where
-   * one can exist (the constructor seam); `advanceSector` calls
-   * unconditionally (the scatter slice never carries the dial). Ships
-   * inert — every shipped `startingEvents` is empty until §74i.
+   * Make the active sector's root an `event` node when the sector has
+   * `startingEvents`, with no draw (`stampRootKind`). The constructor skips
+   * it when the `firstNodeKind` dial is set; `advanceSector` always calls
+   * it, since that dial shapes the first sector only.
    */
   private stampStartingEventRoot(): void {
     if (this.currentSector().startingEvents.length > 0) {
@@ -1835,9 +1769,9 @@ export class Run {
   }
 
   /**
-   * T2 — the active sector definition. Throws if the id ever dangles; the
-   * sector-map's load-time guard rejects an unknown sector reference, so this
-   * guards against future drift rather than a runtime branch.
+   * The active sector's definition. Throws on an id the catalog does not
+   * hold: the sector map's loader checks the ids it names, but a load does
+   * not check the saved one.
    */
   private currentSector(): SectorDef {
     const sector = getSector(this.currentSectorId);
@@ -1845,32 +1779,29 @@ export class Run {
     return sector;
   }
 
-  /** T2 — the active sector's node-map hop count (NodeMap.generate length). */
+  /** The length the active sector's node map is generated at, at both
+   *  sector entries: `sectorHops` when set, else the sector's `length`. A
+   *  `hopCount` dial wins over both inside `NodeMap.generate`. */
   private currentSectorLength(): number {
-    // 67c — `sectorHops` overrides EVERY sector's length (both sector-entry
-    // seams route through here); the authored length is the default.
     return this.sectorHopsOverride ?? this.currentSector().length;
   }
 
   /**
-   * T2 — the active sector's display title (for the map-scene banner). Always
-   * available, including at the pre-root start (a run always has a current
-   * sector), unlike `currentHop` which has no node entered yet.
+   * The active sector's title. Defined at the pre-root start too, where
+   * `currentHop` throws, since a run always has a sector.
    */
   get currentSectorTitle(): string {
     return this.currentSector().title;
   }
 
   /**
-   * 66b — the forewarning display pair for the sector map: the pre-rolled
-   * boss's display name + its board's layout name (`null` = a procedural
-   * board — the VIEW renders its own "Uncharted Ground" label; flavor text
-   * lives in the UI layer, not the run). Like `currentSectorTitle`, always
-   * available (the pair is rolled at sector entry, before any node is
-   * entered). Def-resolved at read time (hot-reload safe), loud on a
-   * catalog miss (the `beginEncounter` discipline); a retired layout id
-   * degrades to the raw id rather than throwing — the board still exists
-   * (it's baked), only its display name is gone.
+   * The sector's boss as the map forewarns of it: the boss's name and its
+   * board's layout name, `null` for a procedural board, which the map labels
+   * itself. Defined from the sector's entry, before any node is entered.
+   * Read from the catalogs at each call: a boss id the catalog does not hold
+   * throws, as in `beginEncounter`, while a layout id it does not hold shows
+   * as the id here (the fight would throw building its terrain,
+   * `generateTerrain`).
    */
   get bossForewarning(): { name: string; layoutName: string | null } {
     const boss = getEncounter(this.bossEncounterId);
@@ -1887,11 +1818,10 @@ export class Run {
   }
 
   /**
-   * U3 — the active encounter's enemy health-pool MAXIMUM. Per-encounter now
-   * (`enemyPoolOf` the selected encounter), replacing the global
-   * `HEALTH.enemyHealthMax`; falls back to the global outside an encounter
-   * (defensive — readers only consult it mid-battle). The basis for the
-   * pool-fraction gauge + the stage conditions.
+   * The active encounter's enemy pool at full (`enemyPoolOf`), which the
+   * battle scene's gauge, the turn payloads and a capped turn's result read;
+   * `HEALTH.enemyHealthMax` outside an encounter, where none of them reads
+   * it.
    */
   get enemyHealthPoolMax(): number {
     return this.selectedEncounter === null
@@ -1901,7 +1831,7 @@ export class Run {
 
   /**
    * An encounter's enemy pool in this run: its authored `healthPool` under
-   * the run's enemy-morale multiplier. The ONE read of `healthPool` in the
+   * the run's enemy-morale multiplier. The one read of `healthPool` in the
    * Run. The pool a fight starts with, the maximum the gauges and payloads
    * carry and the stage condition's denominator all come from here; a
    * multiplier on one of them alone would flip a staged encounter at the
@@ -1912,29 +1842,26 @@ export class Run {
   }
 
   /**
-   * U3 — the active encounter's display name (the HUD enemy pane, replacing
-   * "Foe"). Null outside an encounter.
+   * The active encounter's name, for the battle HUD's enemy pane; `null`
+   * outside an encounter.
    */
   get currentEncounterName(): string | null {
     return this.selectedEncounter?.name ?? null;
   }
 
   /**
-   * K3.5 / T2 / V1 — build the encounter's ONE battlefield for `selectedLayoutId`
-   * (chosen by `selectEncounter` from the sector's hop-gated layout pool ∩ the
-   * encounter's fit-filter; `null` = procedural). The layout PICK moved into
-   * selection (V1) — this just realizes the chosen id into a map. The terrain-seed
-   * + procedural-side draws ALWAYS run on `mapRng` so the stream advances
-   * identically on every branch (gotcha #49): the G1 forced-layout override
-   * (`forcedLayoutId`) swaps the id WITHOUT skipping a draw. A procedural board
-   * inherits the **sector's** theme; a hand-authored layout keeps its own.
+   * Build the encounter's battlefield for `selectedLayoutId`, which
+   * `selectEncounter` picked from the sector's layout pool at the hop, kept
+   * to the encounter's fit (`null` is procedural). The terrain seed and the
+   * procedural side are drawn on every branch, the forced-layout dial
+   * included (gotcha #49). A procedural board takes the sector's theme, and
+   * a hand-authored layout its own.
    */
   private buildEncounterMap(selectedLayoutId: string | null, mapRng: RNG): EncounterMap {
     const sector = this.currentSector();
     const terrainSeed = Math.floor(mapRng.next() * 0x1_0000_0000);
-    // forcedLayoutId (G1): null = use the selection; FORCE_PROCEDURAL sentinel =
-    // force a procedural map (layoutId null); any other string = that named layout
-    // (bypassing selection — a dev/test override).
+    // `forcedLayoutId`: `null` takes the selection's, `FORCE_PROCEDURAL` a
+    // procedural board, and any other id that layout.
     const layoutId =
       this.forcedLayoutId === null
         ? selectedLayoutId

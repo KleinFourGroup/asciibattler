@@ -217,9 +217,7 @@ The cut, signed 2026-10-16 with the kickoff's five calls (WORKLOG §123,
 - ☐ **123m — the comment pass** (`batch`, per batch). The 19 files as
   122o ran it; the tests wait for §126. Batches planned in WORKLOG §123,
   "123m — the comment pass: the batches, planned". From 4c on, a false
-  claim's twin in a file outside the batch is corrected in the batch's
-  commit and flagged (signed 2026-10-17; WORKLOG §123, "Three items beside
-  the cut").
+  claim's twin outside the batch is corrected with it and flagged.
   - ☑ **Batch 1 — the run's rules and records** (12 files). Read by the
     user, no finding.
   - ☑ **Batch 2 — the map** (`NodeMap.ts`, `mapMetrics.ts`). Read, no
@@ -231,14 +229,13 @@ The cut, signed 2026-10-16 with the kickoff's five calls (WORKLOG §123,
     - ☑ **4a — the head** (to the class). Read, no finding.
     - ☑ **4b — the fields and the constructor** (to `dispatch`). Read, no
       finding.
+    - ◐ **4c — the nodes, events, ports and the encounter's start** (to
+      `buildEncounterMap`). Built, unread.
 - ☐ **123n — `Run.ts` read again for B-15** (`stop`). A split comes back
   only with a measure that could pass it.
-- Beside the cut, signed 2026-10-17 (WORKLOG §123, "Three items beside the
-  cut"):
-  - ☑ **The CRLF re-checkout** (`none`). 40 working copies to LF; no
-    commit.
-  - ☑ **The reach tools take both forms** (`none`). `suite` and
-    `npm-test` one proof; `reach-diff` takes folders.
+- ☑ **Beside the cut, signed 2026-10-17** (`none`): the CRLF re-checkout,
+  the reach tools' two forms, and the twin rule above (WORKLOG §123,
+  "Three items beside the cut").
 
 ## Phase 124 — render and UI
 

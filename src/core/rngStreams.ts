@@ -27,7 +27,8 @@ export const RNG_STREAM_KEYS = [
   //           the battle's start, 1 a turn, 2 its end
   'reward', // (sectorIndex, nodeId, turnIndex) — one turn boundary's table rolls
   'rewardBits', // (sectorIndex, nodeId, turnIndex) — one turn boundary's bits rolls
-  'portStock', // (sectorIndex, nodeId) — a port's inventory, fixed per node and seed
+  'portStock', // (sectorIndex, nodeId) — a port's inventory: the same draws at a node and
+  //              seed whatever the route, while the stock follows the team and its daemons
   'portPrice', // (sectorIndex, nodeId) — a port's price jitter
   'event', // (eventStep) — one event occurrence: a node's entry or one choice's
   //          resolution; eventStep is a serialized counter

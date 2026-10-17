@@ -9164,3 +9164,39 @@ Proof besides: typecheck clean; the seed-6 drive on one `--build`,
 19 constants by the kickoff's `refs --all` (`ui` 10, `i18n` 9), so its
 prediction is the moved bytes and this compare. Reading: 433,977 at 23:43, before the
 commit.
+
+### The hand-off after 124f (2026-10-17, session 94055418)
+
+124a to 124f are committed (`3fb846c5`, `11814f49`, `cdc39554`,
+`80a75eb2`, `b785ba0a`, `bebaa7ba`); 124e is ◐, waiting on the user's
+`batch` read at 124i's stop with 124g and 124h. Next is **124g**, the
+enemy notch, in a fresh session: this one is at 441,702, and 124g may
+touch `src/run` (the bound is read through `Run.previewPoolsAtRisk`,
+`Run.ts:2370`, which rolls the wave after `beginTurn` has committed its
+cursor), which runs the smoke, so the corpus and the fuzz diff go with
+it; 124h's drives would not fit beside it under the line.
+
+For the next session:
+
+- The probe runner builds once for a batch now: `npm run probe --
+  --build=<dir>`, then each launch with `--dist=<dir>` (124b). Each
+  drive is about 10 s on a build. The known hashes: seed 6 with
+  `hops=2&firstNode=rest`, `e9cbf755` and `6956a4f2`; seed 7 with
+  `hops=4`, `d6012bc8` and `064ce09d` (map, event, port, reward,
+  promotion, recruit). Neither reaches `sectorCleared`, so 124h's
+  `dismissSectorCleared` arm needs a drive that does, or is named as
+  unreached.
+- A plant for the page drive goes in a worktree with its own runner and
+  a node_modules junction: `scratch/124a/plant.mjs` is the pattern, and
+  `scratch/124b/check.mjs` and `scratch/124e/check.mjs` the same shape.
+- A shader edit: the drive does not notice a shader that fails to
+  compile; the report's `console` list does, with `--window=offscreen`
+  (124e).
+- The word `export` off a primitive constant moves the bytes (124f);
+  `scratch/124f/unminified-diff.mjs` is the compare, with `--self` as its
+  control.
+- Twice this session a context reading went into an entry typed rather
+  than pasted, larger than the meter's (124d, 124e, both caught before
+  the commit and filed). Paste the meter's line.
+
+Reading: 441,702 at 23:45, before the hand-off's commit.

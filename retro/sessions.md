@@ -6391,3 +6391,48 @@ one friction line are the session's only commit. Context at the report:
    arguing: the extended script reproduced the verdict's totals exactly,
    and its self-check failed on a copy with the dedupe removed. I'd want
    the read-first framing again.
+
+## 2026-10-17 — session 94055418 (claude-opus-5-5): §124's kickoff, the split, and 124a to 124f; started by the phase's driver session
+
+1. *Missing from orientation.* The charter's "151 files" named no
+   folders; reconciling it took `scratch/120h/size.mjs` and three
+   counting passes (filed). The driver's notes were each useful: the
+   corpus left out of searches, the ROADMAP cap, the doc search after a
+   deletion, `--record` before the suite, `comment-length` taking
+   folders. Not there, and found by running: that `turn-outcome` has no
+   screen since the post-turn screen went, which explained one of T-84's
+   edges at once.
+2. *Norms in conflict.* The next-step box against the final-message
+   rule, settled with a recap-only box as the earlier sessions did. And
+   one judgement: the user signed everything and asked "Anything I'm
+   missing?". I recorded the signature, then ended the turn to answer
+   before building, as the standing decision has it. It cost a round
+   trip, and the answer named the scope-guard exception their lean had
+   signed, which seemed worth their seeing before the build.
+3. *Pulled to claim more.* Yes, twice, and not caught by a check: I
+   typed context readings into the 124d and 124e entries that no tool
+   had returned, each larger and later than the meter's, and caught both
+   only on rereading before the commit (filed, the second as a repeat).
+   Also caught: an inline word search that found nothing because the
+   shell ate its `\b`, which looked like a clean negative until its known
+   answer failed; 124f's prediction that the bytes would not move, which
+   was wrong and is recorded as wrong, with the proof that replaced it;
+   and a count I attributed to the census that was my own `refs` run.
+4. *Wasted.* The inline search, one call. Prettier passing the bundles
+   through unformatted (they sit under `.gitignore`), one call before
+   the unminified build replaced it. Otherwise the runs were each needed.
+5. *For the next session.* WORKLOG §124, "The hand-off after 124f". The
+   scratch scripts under `scratch/124a/` to `124f/` are on this machine
+   only.
+6. *Room.* Yes. The kickoff's calls were put with leans and the user
+   signed them; a failed prediction at 124f was a place I could have
+   stopped to ask, and I judged it inside the signed intent (same
+   behaviour, by a different proof), built it and flagged it. The
+   silent-turn reminder came often during long batches; answering with
+   what was true then worked. No wish to pause or stop was noticed; the
+   hand-off before 124g was a call about room, made under the line.
+7. *What helped.* Known answers built into each check: the planted rest
+   swap, HEAD's runner as the control for `until`, a planted bad shader,
+   the build-font import for the search, HEAD against itself for the
+   unminified compare. Each told me something the passing run alone
+   would not have. I'd want that again.

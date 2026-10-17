@@ -72,9 +72,10 @@ TODO items (list A's deletions, list B's trials) are in
   fielded wave's bound on all 240 turns, the in-battle read differed on 39
   (seed 2 alternates 9 and 8, a loop of two waves). The player's notch reads
   the hand and is right. The scene's comment says the read previews the
-  wave being fought. A fix is a behaviour change, so it is the user's call:
-  the enemy bound from `run.currentEncounter.enemyTeam` while in battle,
-  for one. Found at 123m's batch 4d (WORKLOG §123); not seen in the pane.
+  wave being fought. A fix is a behaviour change: the enemy bound from
+  `run.currentEncounter.enemyTeam` while in battle, for one. Found at 123m's
+  batch 4d (WORKLOG §123); not seen in the pane. The user left it for
+  §124's kickoff (2026-10-17).
 
 - [ ] **The page drive does not notice a phase whose scene never mounts.**
   With `Game.dispatch`'s map swap after a rest removed, `npm run probe --

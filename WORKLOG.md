@@ -8472,3 +8472,10 @@ proof; 340,779 at 03:19 at its commit; 344,760 at 03:20 as 4e started;
 431,816 at 03:28 after its proof; 447,658 at 03:33 at its commit; 451,003
 at 03:54 as 4f started; 488,342 at 03:58 after its proof; 497,820 at 04:02
 at its commit; 505,094 at 04:03, before this entry.
+
+### The enemy notch, left for §124 (2026-10-17, session 60a71867)
+
+The user, on 4d's display bug: "Leave the enemy-notch bug in TODO for
+§124's kickoff; keep the comment pass going to 123n." The TODO item under
+§124 says so, and nothing is built. Next stays 123n, in a fresh session:
+this one is at 513,113, and 123n reads the whole of `Run.ts`.

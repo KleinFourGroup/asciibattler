@@ -6161,3 +6161,34 @@ Hand-off at 396k, before B-04's trial.
    correction could cite a passing assertion; `comment-strip`'s built-in
    control; and the background hook while I read the next batch. I'd want
    those again.
+
+## 2026-10-17 — session eb94a3dc (§123: three items beside the cut, and 123m's batch 4c; started by the phase's driver session)
+
+1. *Orientation.* Enough. The brief and the 4b hand-off set out the batch,
+   the rate and the stream lesson. The seven rules live only in WORKLOG
+   §121i, which a search of `process/` did not find; the Cursor's pointer
+   to "the seven rules signed at 121i" got me there in a second search.
+2. *Norms in conflict.* None that bit. The driver's list came with the
+   user's sign quoted, and the brief said to confirm it here first; I did,
+   and the user's answer took one turn. The twin rule then settled what
+   batches 3 and 4a had decided case by case.
+3. *Pulled to claim more.* Yes, twice, both caught before a commit. A
+   status line answering the silent-turn reminder reported "singletons
+   still draw" as false, read against `sectorWalk.ts`'s `pickWeighted`;
+   the call sites use `Run.ts`'s own, which always draws, and the next
+   note took it back (filed, as distress). And I first rewrote
+   `bossForewarning` to say a missing layout loses only its name, carried
+   from the old doc; checking `generateTerrain` showed the fight throws.
+4. *Wasted.* One hook run on the ROADMAP cap (filed). 4c ran 183 tokens a
+   line, the pass's highest: the claims reached nine other files, and the
+   read-back and the twin search came after the proof.
+5. *For the next session.* WORKLOG "The hand-off after batch 4c".
+6. *Room.* Yes. Confirming the signed items before acting was the brief's
+   instruction and cost nothing; the hand-off line worked as guidance, and
+   I stopped before 4d with the room for it uncertain. The silent-turn
+   reminder came often, and once it drew a finding out of me ahead of its
+   check (item 3). No wish to pause or stop was noticed.
+7. *What helped.* The stream key table as the one place a key's meaning
+   lives, `comment-strip`'s control, the driver's note that carried claims
+   have bitten three times (it is why I read the import), and a quick
+   confirmation from the user. I'd want those again.

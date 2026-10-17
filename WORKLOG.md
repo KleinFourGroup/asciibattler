@@ -8127,3 +8127,36 @@ draw said to happen or not where the stream's code does otherwise (the
 rest, the event entry, the port's order), a forced encounter said to be
 taken at a node of another kind, a load check claimed that `fromJSON` does
 not make, or history left.
+
+Committed as `6e2fc433`; the suite 3,723 and the smoke 613, green, by the
+hook. The first try failed `tests/docs.test.ts`: ROADMAP's §123 had gone
+to 88 lines against its cap of 85, and this session's own lines were
+trimmed to 82.
+
+### The hand-off after batch 4c (2026-10-17, session eb94a3dc)
+
+Batch 4c is built and unread (◐ in ROADMAP), with its read above. Next, in
+fresh sessions: `Run.ts`'s 4d (`startNextTurn` to `handleAdvanceTurn`,
+1,008 lines at `56348dc1`), then 4e and 4f; then 123n. This session
+stopped before 4d since, at 4c's 183 a line, 4d would end past the
+hand-off line. For the next session:
+
+- Plan 4d nearer 4c's 183 a line than 4a's 115 if its claims run into
+  other modules as 4c's did; the run stats, packets and instant ops reach
+  `runStats.ts`, `config/packets.ts` and `daemon.ts`.
+- `Run.ts` has its own `pickWeighted` (in 4a's span), which always draws
+  once, while `sectorWalk.ts`'s draws nothing for a list of one. Check a
+  draw claim against the function the call site uses.
+- Leads for 4d: `addPacket`'s doc says the acquisition surfaces gate on
+  `cacheHasRoom`, which the event op does not; `addBits`'s doc sits above
+  `setPlayerHealth`'s. Batch 1's lead on `effectiveRunStats` stands.
+- The twin rule is signed: a false claim's twin in another file is
+  corrected in the batch's commit and flagged in its entry.
+- ROADMAP §123 is at 82 of the 85 lines `tests/docs.test.ts` allows: a ◐
+  line for 4d fits, and anything longer goes here.
+
+Readings by the tool's clock (UTC): 114,018 at 00:49 after the
+orientation; 147,977 at 00:56 at the sign's commit; 175,574 at 01:01 at
+the reach tools' commit, as 4c started; 327,771 at 01:17 after 4c's
+proof; 340,555 at 01:22 at its commit; 348,016 at 01:23, before this
+entry.

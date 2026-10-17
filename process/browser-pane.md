@@ -73,7 +73,8 @@ app can stop the server between turns). Then:
   being recorded, or the finished one once the run is over (null with no
   run). Every drive report carries `stateHash`, the hash a replay of that
   journal must reach. Under the runner, `drive-run.js` with
-  `'--arg={"journal":true}'` puts the journal in the report, and
+  `'--arg={"journal":true}'` (or the same JSON in a file, `--arg-file=`)
+  puts the journal in the report, and
   `npm run replay -- <report.json>` replays it under Node and compares the
   two hashes (a dev build of a dirty tree is stamped `-dirty`, which the
   tool refuses without `--force`).

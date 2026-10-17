@@ -4,10 +4,11 @@
 //   npm run probe -- shell/electron/probes/drive-run.js --seed=7 --dials=hops=2 --arg={"seed":2}
 //   npm run probe -- shell/electron/probes/drive-run.js --seed=7 --arg={"journal":true} > report.json
 //   npm run replay -- report.json
+//   npm run probe -- shell/electron/probes/drive-run.js --seed=7 --arg-file=until.json
 //
 // The argument is `__probe.drive`'s options as JSON (seed, policy, until,
 // dt; an audit function can't cross JSON, so an audit needs a script of its
-// own). Each drive call returns at its time limit and the next carries on,
+// own), inline or from a file. Each drive call returns at its time limit and the next carries on,
 // so the run goes to its end within the runner's timeout. The result is the
 // last drive report: the phase, battles, commands per phase, the log hash,
 // the state hash. With `journal: true` it also carries the run's journal,

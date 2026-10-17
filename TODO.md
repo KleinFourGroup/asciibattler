@@ -79,14 +79,7 @@ TODO items (list A's deletions, list B's trials) are in
 
 - ✅ **The page drive does not notice a phase whose scene never mounts.** `drive` refuses a phase whose scene is not on screen (`PHASE_SCENES`); the rest's map swap removed fails it (WORKLOG §124, 124a).
 
-- [ ] **The probe runner's edges** (`shell/electron/probe-cli.mjs`). Its
-  JSON argument read from a file, since Git Bash does not carry JSON on
-  the command line safely (two scratch runners were written for that at
-  117d). One build for a batch of launches, so the tree is free while the
-  batch runs (116k waited three times). The report's shape in the header:
-  a script's value is at `result.script`. And
-  `__probe.drive({ until: 'turn-outcome' })` never stops there (117.5e
-  lost six launches to it).
+- ✅ **The probe runner's edges.** `--arg-file`, `--build` with `--dist`, the report's shape in `probe-cli.mjs`'s header, and `until: 'turn-outcome'` stopping as the battle ends (WORKLOG §124, 124b).
 
 ### §126 tests
 

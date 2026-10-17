@@ -9018,3 +9018,32 @@ TESTING.md's render entry and "What has no proof today", the pane
 procedure's `drive` line and ARCHITECTURE's `probe/` line say so; TODO's
 item is ticked. The smoke does not fire (`src/dev`). Reading: 315,337 at
 23:17, before the commit.
+
+### 124b — T-84, the probe runner's edges (2026-10-17, session 94055418)
+
+`probe-cli.mjs` takes `--arg-file=<file>` (refused beside `--arg`, and
+checked as JSON as `--arg` is), and `--build=<dir>`, which builds the
+working tree into `<dir>`, leaves a `probe-build.json` with the tree's
+stamp and exits; a launch with `--dist=<dir>` runs on that build without
+building, and is refused on a folder with no note. Its header says the
+report's shape (`result.script`, `result.ready`, `result.error`). In the
+kit, `fight` stops when the battle ends in the phase `until` names, before
+the outro, so `until: 'turn-outcome'` returns there (124a's step zero
+found why it never did). `drive-run.js`'s header, the pane procedure's
+journal line and ARCHITECTURE's `probe-cli.mjs` line name the new flags.
+
+Proof, by `scratch/124b/check.mjs`, every argument through `spawnSync`:
+
+- the control, HEAD's runner (`3fb846c5`) in a worktree under `output/`:
+  `until: 'turn-outcome'` on seed 6 ran to defeat (9 battles, the known
+  `e9cbf755` and `6956a4f2`);
+- `--build` once, then two launches on it, neither printing a build line:
+  seed 6, `e9cbf755` and `6956a4f2` again; and `--arg-file` holding
+  `{"until":"turn-outcome"}`, "reached turn-outcome" after one battle;
+- refused, exit 1, each by its message: `--arg-file` on a file that is not
+  JSON, `--arg` with `--arg-file`, `--dist` on a folder `--build` did not
+  make.
+
+The worktree and the build were removed. `shell/` has no proof across a
+commit (TESTING.md), so these runs are the proof. Reading: 337,394 at
+23:22, before the commit.

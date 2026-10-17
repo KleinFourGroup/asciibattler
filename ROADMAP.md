@@ -203,7 +203,8 @@ drawing. ✅ DECIDED at the kickoff: the phase cut in two, the screens as
 
 - ☑ **124a — T-91, the page drive's scene check** (`none`). The planted
   rest swap fails the drive by name; the clean tree keeps its hashes.
-- ☐ **124b — T-84, the probe runner's edges** (`none`). Each by a run.
+- ☑ **124b — T-84, the probe runner's edges** (`none`). Each by a run,
+  `until`'s against HEAD's runner.
 - ☐ **124c — A-39, the camera line** (`none`). `build-hash`.
 - ☐ **124d — the board's A-22 and A-28** (`none`). `FxKey`; the
   renderers' `dispose()` and `stop()`, the camera's two getters, the

@@ -16,6 +16,12 @@
 //   --size=<w>x<h>     the page's size (default 1280x720)
 //   --timeout=<s>      the run's time limit (default 120)
 //   --arg=<json>       the script's argument
+//   --arg-file=<file>  the script's argument read from a JSON file, since Git
+//                      Bash does not carry JSON on a command line safely
+//   --build=<dir>      build the working tree into <dir> (emptied first) and exit, with no
+//                      script: a batch of launches then runs on that build
+//                      with --dist=<dir>, and the tree is free meanwhile
+//   --dist=<dir>       run on a build --build made, without building
 //   --shot=<file>      save a PNG of the page as the script left it, the DOM
 //                      and the canvas together (use --window=offscreen)
 //   --profile=<dir>    the shell's userData, kept after the run; without it
@@ -28,11 +34,13 @@
 // (process/browser-pane.md). The runner wraps the file's text in a call, so
 // the function is the file's only top-level statement: a `const` above it is
 // a syntax error in the page ("Unexpected token 'const'"). Its value is the result, and `{ ok: false }`
-// fails it. Stdout carries only the JSON line (main.mjs's probe report);
-// progress goes to stderr. Exit: 0 ok, 1 a failed check or an error, 2 the
-// time limit.
+// fails it. Stdout carries only the JSON line (main.mjs's probe report):
+// `{ ok, result: { ready, script } }`, the script's value at
+// `result.script` and `ready()`'s report beside it, or `result.error` for
+// an error the page threw. Progress goes to stderr. Exit: 0 ok, 1 a failed
+// check or an error, 2 the time limit.
 import { spawn } from 'node:child_process';
-import { existsSync, mkdtempSync, rmSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
@@ -63,7 +71,34 @@ function queryOf() {
   return params.toString();
 }
 
+/** What --build leaves beside its build, so --dist can say which tree it is. */
+const BUILD_NOTE = 'probe-build.json';
+
+/** The script's argument, from --arg or --arg-file, checked as JSON. */
+function argOf() {
+  const inline = flag('arg');
+  const file = flag('arg-file');
+  if (inline !== undefined && file !== undefined) stop('give --arg or --arg-file, not both');
+  if (file !== undefined && !existsSync(resolve(file))) stop(`no such file: ${file}`);
+  const text = file !== undefined ? readFileSync(resolve(file), 'utf8').trim() : inline;
+  if (text === undefined) return undefined;
+  try {
+    JSON.parse(text);
+  } catch {
+    stop(`${file !== undefined ? `--arg-file=${file}` : '--arg'} is not JSON: ${text}`);
+  }
+  return text;
+}
+
 async function main(work) {
+  const buildTo = flag('build');
+  if (buildTo !== undefined) {
+    const tree = openTree(undefined, work, 'probe');
+    build(tree, resolve(buildTo), (line) => console.error(`probe: ${line}`));
+    writeFileSync(join(resolve(buildTo), BUILD_NOTE), `${JSON.stringify({ stamp: tree.stamp })}\n`);
+    console.error(`probe: built ${tree.stamp} into ${buildTo}; run scripts on it with --dist=${buildTo}`);
+    return 0;
+  }
   const script = process.argv.slice(2).find((a) => !a.startsWith('--'));
   if (script === undefined) stop('give the page script: npm run probe -- <script.js> [options]');
   if (!existsSync(resolve(script))) stop(`no such script: ${script}`);
@@ -75,19 +110,23 @@ async function main(work) {
   const query = queryOf();
   const profile = flag('profile');
   const shot = flag('shot');
-  const arg = flag('arg');
-  if (arg !== undefined) {
-    try {
-      JSON.parse(arg);
-    } catch {
-      stop(`--arg is not JSON: ${arg}`);
-    }
-  }
+  const arg = argOf();
 
-  const tree = openTree(undefined, work, 'probe');
-  const dist = join(work, 'dist');
-  build(tree, dist, (line) => console.error(`probe: ${line}`));
-  console.error(`probe: running ${script} on ?${query} (${tree.stamp}, ${windowMode}, ${size})`);
+  const prebuilt = flag('dist');
+  let dist;
+  let stamp;
+  if (prebuilt !== undefined) {
+    dist = resolve(prebuilt);
+    const note = join(dist, BUILD_NOTE);
+    if (!existsSync(note)) stop(`--dist=${prebuilt} holds no build of --build's (no ${BUILD_NOTE})`);
+    stamp = `${JSON.parse(readFileSync(note, 'utf8')).stamp}, prebuilt`;
+  } else {
+    const tree = openTree(undefined, work, 'probe');
+    dist = join(work, 'dist');
+    build(tree, dist, (line) => console.error(`probe: ${line}`));
+    stamp = tree.stamp;
+  }
+  console.error(`probe: running ${script} on ?${query} (${stamp}, ${windowMode}, ${size})`);
 
   const electronPath = createRequire(join(repo, 'package.json'))('electron');
   const args = [

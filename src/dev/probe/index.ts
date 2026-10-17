@@ -147,7 +147,8 @@ export interface AuditFrame {
 }
 
 export interface DriveOptions {
-  /** Stop on reaching this phase, or run to the end (the default). */
+  /** Stop on reaching this phase, or run to the end (the default).
+   *  `turn-outcome` is reached as a battle ends, before its outro. */
   readonly until?: RunPhase | 'end';
   /** The player's choices: a seeded pick (the default) or always the first. */
   readonly policy?: DrivePolicy;
@@ -297,6 +298,10 @@ export function installProbe(game: Game): Probe {
       }
       if (internals.activeScene !== scene) break;
       if (internals.run?.phase !== 'battle') {
+        // The phase the battle ended in, when `until` names it: stop before
+        // the outro, since Game's advance after it moves the phase on before
+        // the scene swaps.
+        if (opts.until === internals.run?.phase) break;
         outroSince ??= Date.now();
         if (Date.now() - outroSince > OUTRO_MAX_MS) {
           throw new Error(`__probe.drive: the battle ended ${OUTRO_MAX_MS / 1000} s ago and Game never swapped its scene`);

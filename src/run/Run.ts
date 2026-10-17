@@ -2723,13 +2723,13 @@ export class Run {
   }
 
   /**
-   * 49d — the grant queue as the payloads/fuzz/UI read it: one view per
-   * queue entry (index = the command key), with remaining budget + the
-   * derived cursor flag (`active` = first pending). Derived at call time.
+   * The grant queue as the payloads, the fuzz and the screens read it: one
+   * view per entry, whose index is the one a command names, with the budget
+   * left and `active` on the first pending grant. Derived at each call.
    */
   grantViews(): TurnGrantView[] {
-    // 49e — a grant's source id can be a PACKET now (a reroute fire inserts
-    // its own entry), so the name lookup falls through to the packet catalog.
+    // A source may be a packet (Reroute puts in its own grant), so the name
+    // falls through to the packet catalog.
     return grantViews(
       this.turnGrants,
       (sourceId) =>
@@ -2740,12 +2740,11 @@ export class Run {
   }
 
   /**
-   * 49d — the strict-mode ordering guard, shared by redraw/empower: resolve
-   * the targeted grant or null-reject. Legality: the entry exists, its
-   * effect kind matches the command, it isn't passed, and — with
-   * `passIsFinal` ON — it IS the active (first-pending) grant. Free mode
-   * accepts any pending grant in any order (the shape-lock's loosened
-   * fallback). Budget itself is the pure validators' check.
+   * The grant a redraw or an empower names, or null when it may not be
+   * used: the entry exists, its kind is the command's, it is not passed,
+   * and with `passIsFinal` on it is the active grant. With it off any grant
+   * not passed may be used, in any order. The budget is the validators'
+   * check (`redrawRejection`, `empowerRejection`).
    */
   private targetableGrant(
     grantIndex: number,
@@ -2759,24 +2758,20 @@ export class Run {
   }
 
   /**
-   * K3 — redraw selected hand cards at the pre-turn gate (the `redrawCards`
-   * command): send them to the discard, draw replacements into the SAME hand
-   * positions. 49d: the command targets ONE redraw grant (`grantIndex` into
-   * the queue — strict mode requires the active one); budget validation
-   * lives in the pure `redrawRejection`. Any reject is a silent no-op that
-   * consumes no budget (mirrors the other phase-guarded handlers).
+   * Redraw chosen hand cards at the pre-turn gate (the `redrawCards`
+   * command): discard them and draw replacements into the same positions,
+   * spending one use of the redraw grant `grantIndex` names
+   * (`targetableGrant`). A refusal is a no-op that spends nothing
+   * (`Command.ts`).
    *
-   * Order contract: positions are processed in ASCENDING hand order, so the
-   * selection's click/dispatch order never changes the outcome (determinism
-   * for the fuzz redraw policy). The selected cards are discarded BEFORE the
-   * draws, so the piles always hold enough to refill every selected position
-   * (the reshuffle cycle may hand a just-discarded card straight back when
-   * the draw pile runs dry — the deck's normal H5 recycle, accepted) and the
-   * hand size is preserved.
+   * Positions are taken in ascending order, so the order they were chosen
+   * in never changes the outcome. The cards are discarded before any draw,
+   * so the piles always hold enough to refill every position and the hand
+   * keeps its size; when the draw pile runs dry the reshuffle may hand a
+   * discarded card straight back.
    *
-   * The deployment-counter rule (a redrawn-away unit accrues NO deployment
-   * count / fatigue stack) needs no code here: `beginTurn` records only the
-   * FINAL fielded hand, and this runs strictly before it.
+   * A unit redrawn away takes no deployment and no fatigue, with no code
+   * here: `beginTurn` records only the hand it fields, and runs after this.
    */
   private handleRedrawCards(handIndices: readonly number[], grantIndex: number): void {
     if (this.phase !== 'turn-intro') return;
@@ -2796,13 +2791,12 @@ export class Run {
   }
 
   /**
-   * The one `turn:handRedrawn` emit site — the full re-derived hand state
-   * (hand + both piles + grants + the K4 badge column), so the pre-turn
-   * screen swaps everything in place from the payload. Fired by the K3
-   * redraw and (65c) the packet hand ops — any pre-turn hand mutation.
-   * R2 — the piles re-send because the mutation moved cards between them.
-   * K4 — the badge column re-derives: a refill may seat an already-empowered
-   * card, and old positions no longer line up after a splice.
+   * The one `turn:handRedrawn` emit, for every change to the hand before a
+   * turn (a redraw, a packet's draw or discard): the hand, both piles, the
+   * grants and the badges derived again, so the pre-turn screen swaps them
+   * in place. The piles go again because cards moved between them, and the
+   * badges because a refill may seat an empowered card and a discard moves
+   * the positions.
    */
   private emitHandChanged(): void {
     this.bus.emit('turn:handRedrawn', {
@@ -2811,20 +2805,18 @@ export class Run {
       discardPile: this.resolvePileForDisplay(this.discardPile),
       grants: this.grantViews(),
       empowerStacks: this.empowerStacks(),
-      // 96.5c — the bound moves with the hand (casualties reads the hand's
-      // Σ power); re-derived off the same pure preview as turn:starting.
-      // Gate-only: the preview needs the encounter's wave (a hand-changing
-      // packet fired anywhere else reads 0 — no risk line is up to repaint).
+      // The risk bound moves with the hand. Every hand change happens at the
+      // gate, where the preview has its wave; elsewhere 0.
       poolAtRisk: this.phase === 'turn-intro' ? this.previewPoolAtRisk() : 0,
     });
   }
 
   /**
-   * 49d — finalize the ACTIVE grant unspent (the `passGrant` command, the
-   * guided strip's Pass). Meaningful ONLY under `passIsFinal` — free mode is
-   * a deliberate no-op (a "pass" there is pure UI navigation; marking state
-   * would make it final by the back door). Fight ▸ needs no pass-all: the
-   * queue is rebuilt at every turn start, so unspent grants simply expire.
+   * Close the active grant unspent (the `passGrant` command, the pre-turn
+   * strip's Pass). Only under `passIsFinal`: with it off a pass is the
+   * screen's navigation, and marking the grant would make it final by the
+   * back door. Starting the fight needs no pass of the rest: the queue is
+   * built anew each turn, so a grant left unspent lapses.
    */
   private handlePassGrant(): void {
     if (this.phase !== 'turn-intro') return;
@@ -2836,33 +2828,26 @@ export class Run {
   }
 
   /**
-   * K4→78c — the per-hand-position empower stack column (parallel to `hand`,
-   * empty = unbuffed): each card's badge-eligible buffs on its roster slot's
-   * encounter store, ONE ENTRY PER KEY (78c widened the K4 summed integer,
-   * which collapsed distinct buff keys into an anonymous count and merged
-   * their hover text). Derived (never stored) so it stays correct across
-   * redraws and re-draws of an earlier turn's empowered card. L1: the
-   * buff key comes from the DAEMON's authored empower hook (not the
-   * resolved turn gate, so a chance-denied turn still badges existing
-   * stacks); no empower daemon → no key → nothing badges from idols.
+   * The badge column, parallel to `hand`, whose shape `turn:starting`'s
+   * doc gives. Derived at each call, so it stays right across redraws and
+   * an empowered card drawn again. A daemon's buff key comes from its
+   * authored empower hook, not the turn's resolution, so a turn whose coin
+   * denied the grant still badges the stacks it has.
    */
   private empowerStacks(): EmpowerStackView[][] {
-    // 47d — one badge column across ALL owned empower idols' buff keys
-    // (keys are distinct per idol by authoring convention).
+    // Every owned empower daemon's key; each daemon authors its own.
     const buffKeys = new Set<string>();
     for (const d of this.daemons) {
       const hook = daemonEmpowerHook(d);
       if (hook !== undefined) buffKeys.add(hook.buff.key);
     }
-    // 49e — packet `applyBuff` keys badge too (a hyped/overclocked card
-    // shows its stacks). Catalog-wide is safe: a key with no store presence
-    // contributes nothing.
+    // A packet's `applyBuff` key badges too. The whole catalog's, which is
+    // safe: a key the store does not hold adds nothing.
     for (const p of PACKETS) {
       if (p.effect.op === 'applyBuff') buffKeys.add(p.effect.buff.key);
     }
-    // Entry order = store order (acquisition). Copies, not references — the
-    // store merges IN PLACE, so an aliased entry in a retained payload would
-    // silently drift (cloneEffect = the seeding path's own deep copy).
+    // In store order, which is the order gained. Copies: the store merges in
+    // place, so an entry shared with a payload someone keeps would drift.
     return this.hand.map((idx) =>
       (this.encounterEffects[idx] ?? [])
         .filter((effect) => buffKeys.has(effect.key))
@@ -2874,30 +2859,25 @@ export class Run {
   }
 
   /**
-   * R2 — resolve a deck pile (`rosterIndex` values) to templates for the
-   * pre-turn pile views, in RECRUITMENT order (ascending index) rather than the
-   * stored draw order, so a view shows the pile's CONTENTS without revealing the
-   * next-draw sequence (the resolved "contents only, unordered" decision).
+   * A deck pile's roster indices as templates for the pre-turn pile views,
+   * in recruitment order (ascending index) rather than draw order, so a
+   * view shows what the pile holds without revealing the next draw.
    */
   private resolvePileForDisplay(pile: readonly number[]): UnitTemplate[] {
     return [...pile].sort((a, b) => a - b).map((idx) => this.team[idx]!);
   }
 
   /**
-   * K4 — empower one drawn card at the pre-turn gate (the `empowerUnit`
-   * command): its roster slot gains the granting source's buff in the K1
-   * encounter-effect store, so the buff lasts the rest of the ENCOUNTER
-   * (re-seeded onto the unit each turn at deploy — `beginTurn` runs after
-   * this gate, so the buff is live on the very turn it's granted). The store
-   * merges by key per the buff's policy: at the shipped `merge: "add"`,
-   * re-empowering the same unit on a later turn STACKS (magnitude 2 → double
-   * the mods). It lands on the SLOT, not the fielded copy, so it survives
-   * the card being redrawn away or benched on later turns.
-   *
-   * 49d: `grantIndex` targets the QUEUE (strict mode requires the active
-   * grant — `targetableGrant`); budget validation lives in the pure
-   * `empowerRejection`. Any reject is a silent no-op that consumes no
-   * budget (mirrors `handleRedrawCards`).
+   * Empower one hand card at the pre-turn gate (the `empowerUnit` command),
+   * spending one use of the empower grant `grantIndex` names
+   * (`targetableGrant`): its roster slot gains the grant's buff in the
+   * encounter's store, so the buff lasts the encounter, put on the unit at
+   * each turn's deploy, this turn's included, since `beginTurn` runs after
+   * the gate. The store merges by key per the buff's policy: at the shipped
+   * `merge: "add"`, empowering the unit again on a later turn stacks. The
+   * buff is on the slot, not the fielded copy, so it outlasts the card
+   * being redrawn away or left out of a later hand. A refusal is a no-op
+   * that spends nothing (`Command.ts`).
    */
   private handleEmpowerUnit(handIndex: number, grantIndex: number): void {
     if (this.phase !== 'turn-intro') return;
@@ -2918,30 +2898,26 @@ export class Run {
   }
 
   /**
-   * 47d — append a daemon to the ownership list (the §48 reward / §50 port
-   * acquisition seam). Takes effect at the NEXT turn's grant resolution —
-   * a mid-turn acquisition never retro-grants the current turn. Uncapped
-   * (the locked design); duplicates are the CALLER's concern (reward tables
-   * + port stock exclude owned ids upstream).
+   * Add a daemon (a reward, a port buy, an event's `addDaemon`). Its stat
+   * modifiers count at once; its grant hooks from the next turn's
+   * resolution and its battle rules from the next turn's battle, so an
+   * acquisition never grants the turn in hand. No cap on how many. Keeping
+   * out a second copy is the caller's: the reward tables and the port stock
+   * leave owned daemons out, and the event op skips an owned one.
    */
   addDaemon(daemon: DaemonConfig): void {
     this.daemons.push(daemon);
-    // 49b — ownership feeds the cacheSize fold: a size-modifier idol changes
-    // the DERIVED capacity (possibly into overflow — the forced-keep state)
-    // without touching the cache list, so the cache surfaces repaint off
-    // this emit too.
+    // The cache's size is a fold over the daemons, so it can move (into an
+    // overflow, even) with the cache untouched; the cache repaints.
     this.emitCacheChanged();
   }
 
   /**
-   * 74c — `addDaemon`'s inverse (daemons were push-only until the event
-   * `removeDaemon` op). Removes by ID — duplicates can't exist (every
-   * acquisition surface excludes or dedupes upstream), so first-match is
-   * whole-match. Absent id = silent no-op (the caller gates with
-   * `hasDaemon` when it matters). The fold side is free — every
-   * `effectiveRunStats` read re-derives from `this.daemons` — but the same
-   * 49b emit applies: losing a size-modifier idol can shrink the DERIVED
-   * cache capacity (possibly into the 49f forced-keep state).
+   * Remove the first daemon with `daemonId` (an event's `removeDaemon`);
+   * an id not owned is a no-op, and an event gates with `hasDaemon` where
+   * it matters. In play there is one copy at most; only a construction
+   * grant can add a second (`RunConfig.grants`). The folds follow at once,
+   * and the cache repaints, as for `addDaemon`.
    */
   removeDaemon(daemonId: string): void {
     const index = this.daemons.findIndex((d) => d.id === daemonId);
@@ -2950,35 +2926,27 @@ export class Run {
     this.emitCacheChanged();
   }
 
-  /**
-   * 48b — the ids the run currently owns, derived at call time (the only
-   * pre-48b expression was `toJSON`'s inline map). The exclusion input for
-   * reward-table sampling (and §50's port stock after it).
-   */
+  /** The owned daemons' ids, derived at each call: what the reward rolls
+   *  leave out. */
   ownedDaemonIds(): ReadonlySet<string> {
     return new Set(this.daemons.map((d) => d.id));
   }
 
   /**
-   * 48b — accept one pending reward portion (an index into `pendingRewards`).
-   * Bits settle through `gainBits` (the fold applies NOW, at accept time —
-   * so a daemon accepted earlier in this same offer already counts); a
-   * daemon joins the ownership list immediately, which also means the
-   * just-won encounter's `encounterEnd` hooks (fired later, in
-   * `finishEncounter`) include it — accepted behavior, the loot fires for
-   * the fight it dropped from (worklog §48). Outside the reward phase or
-   * out-of-range: the silent no-op discipline (a double-click can't corrupt
-   * state). Resolving the last portion re-enters the gate chain.
+   * Accept one pending reward portion (an index into `pendingRewards`).
+   * Bits settle through `gainBits` at the accept, so a daemon taken earlier
+   * in the same offer counts. A daemon joins at once, so the won
+   * encounter's `encounterEnd` hooks, which run later in `finishEncounter`,
+   * include it: the loot works for the fight it dropped from. Out of phase
+   * or a bad index is a no-op (`Command.ts`). The last portion's resolution
+   * re-enters the gate chain.
    *
-   * 49c — a packet portion settles via `addPacket`, gated by the
-   * DECLINE-OR-SWAP contract (spec §Cache): with room it just accepts
-   * (`swapCacheIndex` ignored — the gesture doesn't exist while roomy); with
-   * a FULL cache it accepts only by naming a held slot to discard first, and
-   * anything else (absent / fractional / out-of-range swap index) is the
-   * silent no-op — THE OFFER STAYS INTACT, so validation runs before the
-   * splice. The swap's discard routes through `handleDiscardPacket` (the
-   * single-mutator discipline), so a swap emits two `run:cacheChanged`
-   * repaints — idempotent by payload design.
+   * A packet portion with room in the cache is taken, `swapCacheIndex`
+   * ignored. With the cache full it is taken only by naming a held slot to
+   * discard first, and anything else is a no-op that leaves the offer
+   * whole, so the check comes before the splice. The discard goes through
+   * `handleDiscardPacket`, so a swap emits `run:cacheChanged` twice, which
+   * the payload makes harmless.
    */
   private handleAcceptReward(index: number, swapCacheIndex?: number): void {
     if (this.phase !== 'reward' || this.pendingRewards === null) return;
@@ -2989,40 +2957,39 @@ export class Run {
       this.handleDiscardPacket(swapCacheIndex);
     }
     const portion = this.takePendingReward(index);
-    if (portion === null) return; // unreachable after the peek — belt over suspenders
+    if (portion === null) return; // cannot happen after the peek; guarded anyway
     if (portion.kind === 'bits') {
       this.gainBits(portion.base);
     } else if (portion.kind === 'daemon') {
       const daemon = daemonById(portion.daemonId);
       if (daemon === undefined) {
-        // The roller only emits catalog ids (boot-asserted tables) — a miss
-        // here is corruption, and loud beats a silently vanished reward.
+        // The reward tables' daemon ids are checked at load, so a miss is
+        // corruption, and throws rather than lose the reward.
         throw new Error(`Run.handleAcceptReward: unknown daemon id '${portion.daemonId}'`);
       }
       this.addDaemon(daemon);
     } else if (portion.kind === 'unit') {
-      // 74c — the template was rolled at offer time (the port-stock shape);
-      // the settle is the one roster-append chokepoint.
+      // The template was rolled with the offer, as a port's is.
       this.appendRosterUnit(portion.template);
     } else if (portion.kind === 'poolHealth') {
-      // 74c — the instant-op executor owns the clamp-at-max.
+      // The instant ops cap the heal at the maximum.
       this.executeInstantOps([{ op: 'healPool', amount: portion.amount }]);
     } else {
-      // 49c — addPacket owns the unknown-id throw (same corruption logic).
+      // `addPacket` throws on an unknown id.
       this.addPacket(portion.packetId);
     }
     this.afterRewardResolved();
   }
 
-  /** 48b — decline one pending reward portion (the declinable-per-portion
-   *  spec lock, `passRecruit`'s sibling). Same no-op guards as accept. */
+  /** Decline one pending reward portion; each portion is declined or taken
+   *  alone. The same no-op checks as the accept. */
   private handleDeclineReward(index: number): void {
     if (this.takePendingReward(index) === null) return;
     this.afterRewardResolved();
   }
 
-  /** 48b — pop portion `index` out of the pending offer, or null when the
-   *  command is stray (wrong phase / no offer / out-of-range index). */
+  /** Take portion `index` out of the pending offer, or null for a stray
+   *  command (out of phase, no offer, a bad index). */
   private takePendingReward(index: number): RewardPortion | null {
     if (this.phase !== 'reward' || this.pendingRewards === null) return null;
     const portion = this.pendingRewards[index];
@@ -3031,9 +2998,9 @@ export class Run {
     return portion;
   }
 
-  /** 48b — after a portion resolves: wait for the rest, or (offer drained)
-   *  clear it and re-enter the gate chain (promotion next, then the
-   *  recruit/victory fork via `continueAfterTurn` → `finishEncounter`). */
+  /** After a portion resolves: wait for the rest, or with the offer empty
+   *  clear it and re-enter the gate chain (the promotion, then the next
+   *  turn or the encounter's end). */
   private afterRewardResolved(): void {
     if (this.pendingRewards !== null && this.pendingRewards.length > 0) return;
     this.pendingRewards = null;
@@ -3041,64 +3008,51 @@ export class Run {
   }
 
   /**
-   * H4 — end the encounter. On a win, bank the encounter's accrued XP ONCE
-   * (so a single PromotionScene pops for the whole encounter) then take the
-   * existing post-battle path (promotion → recruit, or run:victory at the
-   * terminal). On defeat, the pending XP is discarded (the run is over) and we
-   * route to game-over.
-   *
-   * E4 — banking BEFORE rolling the next step means the post-victory screens
-   * already reflect updated levels/stats. Level-up rolls ride their own
-   * occurrence stream; the recruit offer's is independent (77d2).
+   * End the encounter: run the daemons' `encounterEnd` hooks, clear the
+   * encounter's state, then on a defeat enter `defeat` and on a win go on
+   * (`advancePastBattle`). No XP is left to bank: each turn's, the last
+   * included, banked at its boundary, and a promotion it brought has
+   * already paused.
    */
   private finishEncounter(outcome: 'win' | 'defeat'): void {
-    // 47e — daemon `encounterEnd` instant hooks fire FIRST, on both
-    // outcomes, with the outcome as the `won` filter context (the 47b
-    // matrix pins `won` to this trigger). A defeat-path heal can leave a
-    // lost run with a positive pool — harmless, the run is already over.
+    // First, on both outcomes, with the outcome as the `won` filter, which
+    // the parse allows only on this trigger; on the `'daemon'` stream's site
+    // 2 for this node. A heal here can leave a lost run a pool above 0,
+    // which changes nothing: the run is over.
     this.executeInstantOps(
       resolveInstantHooks(
         this.daemons,
         'encounterEnd',
         { won: outcome === 'win' },
-        // 77d2 — site 2 of the 'daemon' key (end; turn slot 0).
         this.streamRng('daemon', this.sectorIndex, this.currentNodeId, 2, 0),
       ),
     );
-    // K3.5 — the battlefield is encounter-scoped; drop it with the encounter.
+    // The battlefield, the encounter and its wave cursor end with it.
     this.encounterMap = null;
-    // U3 — the selected encounter + its wave cursor are encounter-scoped too.
     this.selectedEncounter = null;
     this.waveCursor = null;
     this.lastTurn = null;
-    // 74b — an event-pinned reward table dies with its encounter (the won
-    // boundary already consumed it; clearing on BOTH outcomes keeps a
-    // defeat from leaking the override into a later fight).
+    // An event's reward override too, on either outcome, so it never
+    // outlives the fight it was for.
     this.pendingRewardOverride = null;
     if (outcome === 'defeat') {
       this.phase = 'defeat';
       this.bus.emit('run:defeated', {});
       return;
     }
-    // M1 — nothing left to bank here: each turn's XP (including the winning
-    // turn's) was banked at its own boundary, and any final-turn promotion
-    // already paused before `continueAfterTurn` routed into this win.
     this.advancePastBattle();
   }
 
   /**
-   * E4 — common tail for "battle just resolved in player's favor and
-   * the PromotionScene (if any) is done." Splits run:victory from
-   * recruit:offered the same way handleBattleEnded used to.
+   * After a won encounter: at the sector's terminal, win the run at a sink
+   * of the sector graph or go on to the next sector; anywhere else, offer
+   * a recruit.
    */
   private advancePastBattle(): void {
     if (this.currentNodeId === this.nodeMap.terminalId) {
-      // T2 — a sector terminal was cleared. At a sector-DAG sink the run is WON;
-      // otherwise advance to a successor sector (carrying the player pool +
-      // roster — a sector is a chapter of one run, not a fresh run). 67c: the
-      // shipped DAG is start → deep-end, so the non-sink branch is live play.
-      // A `hopCount`-bounded probe treats ITS terminal as the run terminal
-      // (the single-sector semantic) — the walk never advances.
+      // A sector is a chapter of one run, so the next carries the roster and
+      // the pool (raised to the seam's floor). Under the `hopCount` dial the
+      // first sector's terminal ends the run.
       if (isSectorSink(this.sectorMap, this.currentSectorNodeId) || this.singleSectorRun) {
         this.phase = 'complete';
         this.bus.emit('run:victory', {});
@@ -3107,16 +3061,14 @@ export class Run {
       }
     } else {
       this.phase = 'recruit';
-      // G4 — recruit level tracks the TEAM (round avg + geometric bonus), not
-      // the hop, so a fresh draft stays useful on a leveled roster. Post-G5:
-      // the geometric bonus is drawn INDEPENDENTLY per card over a shared
-      // `round(avgTeamLevel)` base, so a lucky offer shows one over-leveled
-      // standout rather than boosting all cards together. Each card's level is
-      // clamped to the level cap.
+      // A recruit's level follows the team, not the hop, so a draft stays
+      // useful to a leveled roster: the team's rounded mean level, plus a
+      // geometric bonus drawn for each card on its own, so a lucky offer
+      // shows one standout rather than lifting every card; each capped at
+      // the level cap. The pools and weights are the character's, the slot
+      // count and the tier weights the folds'.
       const offerRng = this.streamRng('offer', this.sectorIndex, this.currentNodeId);
       const baseLevel = Math.round(avgTeamLevel(this.team));
-      // 63c — offers draw from the character-governed pools + weights.
-      // 64a — the slot count is the folded run stat (The Cornucopia's +1).
       this.currentOffer = rollOffer(
         offerRng,
         this.effectiveOfferSize,
@@ -3127,7 +3079,6 @@ export class Run {
           ),
         this.draftPools(),
         this.character.weightOverrides,
-        // 64b — the folded tier weights (the Seal's no-commons fold).
         this.effectiveRarityWeights(),
       );
       this.bus.emit('recruit:offered', { units: this.currentOffer });
@@ -3135,36 +3086,32 @@ export class Run {
   }
 
   /**
-   * T2 — advance to the next sector after clearing a (non-sink) sector terminal.
-   * Picks a successor DAG node + a sector there, regenerates the node-map for
-   * the new sector, and returns the run to the pre-root start so the new sector's
-   * root is the next pick. The player pool + roster + deck carry across
-   * unchanged (the carry-across decision); only the map + sector cursor reset.
+   * Go on to the next sector after a terminal that is not a sink: raise the
+   * pool to the seam's floor, pick the successor on the sector graph and a
+   * sector there, build its map, roll its boss, and return to the pre-root
+   * start, so its root is the next pick. The roster carries over; the deck
+   * is built again at the next encounter, as at every one.
    *
-   * 67a — lands on the `sectorCleared` gate (emitting `sector:cleared`), not
-   * silently on 'map': state swaps FIRST (the defeat/complete shape — the
-   * screen shows a settled run), then the gate holds until
-   * `dismissSectorCleared` releases to the new sector's map. The cleared
-   * sector is captured pre-swap — by emit time the run only knows the
-   * successor — and kept in `clearedSector` (115a) for a resumed gate.
+   * It lands on the `sectorCleared` gate, not on `map`: the state swaps
+   * first, so the screen shows a settled run, as at a defeat or a win, and
+   * the gate holds until `dismissSectorCleared`. The cleared sector is
+   * taken before the swap, since after it the run knows only the successor,
+   * and kept in `clearedSector` for a resumed gate.
    */
   private advanceSector(): void {
     const clearedSectorId = this.currentSectorId;
-    // §90 — the seam floor: the pool is lifted to `seamHealFloor × max` at
-    // the act boundary (the independent-acts frame — each act opens on a
-    // known entry pool; 1.0 = a full heal, 0 = the pre-§90 carry). Applied
-    // BEFORE the emit so the payload carries both sides of the seam:
-    // `poolBefore` (the pre-floor value the seam-hazard instrument records)
-    // and `poolAfter` (what act two opens on). `max`, never `min`: a pool
-    // above the floor carries untouched. Read from HEALTH at call time — the
-    // fuzz `--set` probe arm mutates the config object in place.
+    // The seam's floor (`seamHealFloor` in `health.ts`), applied before the
+    // emit so the payload has both sides: `poolBefore`, which the fuzz
+    // harness records at each seam, and `poolAfter`, what the next sector
+    // opens on.
     const poolBefore = this.playerHealth;
     this.setPlayerHealth(
       Math.max(this.playerHealth, HEALTH.seamHealFloor * HEALTH.playerHealthMax),
       'seam',
     );
-    // 77d2 — the new sector claims the next index FIRST; its three
-    // sector-scoped streams key on it (the constructor's index-0 triple).
+    // The new sector takes the next index first: its `'sector'`,
+    // `'nodemap'` and `'boss'` streams key on it, as the constructor's do on
+    // index 0.
     this.sectorIndex++;
     const next = pickNextSector(
       this.sectorMap,
@@ -3178,16 +3125,17 @@ export class Run {
       this.sectorScatterConfig,
       this.currentSectorLength(),
     );
-    // 74e — the new sector's startingEvents stamp (the scatter slice never
-    // carries `firstNodeKind` — that dial is first-sector-only by design).
+    // The new root's `startingEvents` stamp. The scatter dials passed here
+    // leave out `firstNodeKind`, so the dial shapes only the first sector's
+    // map, though its flag still sends a later root's event to the regular
+    // pool (`enterEventNode`).
     this.stampStartingEventRoot();
-    // 66a — the NEW sector's boss pre-rolls on its own sector-scoped stream
-    // (forewarning is sector-scoped: it re-rolls at every sector entry).
+    // The boss is the sector's, rolled again at each entry for its warning.
     const bossRoll = this.rollBossForSector(this.streamRng('boss', this.sectorIndex));
     this.bossEncounterId = bossRoll.bossEncounterId;
     this.bossEncounterMap = bossRoll.bossEncounterMap;
-    // Back to the pre-root start: the new sector's root is selected like any
-    // first encounter. visitedNodes are node ids from the OLD map — clear them.
+    // Back to the pre-root start, so the new root is picked like a first
+    // encounter; the visited ids are the old map's, so they go.
     this.currentNodeId = PRE_ROOT_NODE_ID;
     this.visitedNodes.clear();
     this.phase = 'sectorCleared';
@@ -3195,8 +3143,8 @@ export class Run {
     this.bus.emit('sector:cleared', this.sectorClearedPayload());
   }
 
-  /** 115a — the `sector:cleared` payload from the gate's saved facts. Nothing
-   *  moves the pool while the gate holds (packets fire only pre-turn and on
+  /** The `sector:cleared` payload from the gate's saved facts. Nothing moves
+   *  the pool while the gate holds (a packet fires only before a turn or at
    *  the map), so `poolAfter` is the live pool. */
   private sectorClearedPayload(): GameEvents['sector:cleared'] {
     const cleared = this.clearedSector!;
@@ -3209,10 +3157,10 @@ export class Run {
   }
 
   /**
-   * 67a — release the sector-cleared gate back to the (new) sector's map. The
-   * sector state already swapped in `advanceSector`; this only flips the
-   * phase (the leavePort shape — Game's `phase === 'map'` fallback swaps the
-   * scene). A silent no-op outside the gate.
+   * Release the sector-cleared gate to the new sector's map. The state
+   * swapped in `advanceSector`; this only sets the phase, as `leavePort`
+   * does, and `Game` swaps the scene on `map`. A no-op outside the gate
+   * (`Command.ts`).
    */
   private handleDismissSectorCleared(): void {
     if (this.phase !== 'sectorCleared') return;
@@ -3221,10 +3169,9 @@ export class Run {
   }
 
   /**
-   * Take one option at the rest gate. A rest has one option today, index 0,
-   * which is the rest itself (`resolveRest`); the index is the seam for the
-   * options a later round adds. Outside the `rest` phase, or with any other
-   * index, a silent no-op.
+   * Take one option at the rest gate. A rest has one, index 0, the rest
+   * itself (`resolveRest`). Out of phase or any other index is a no-op
+   * (`Command.ts`).
    */
   private handleChooseRestOption(optionIndex: number): void {
     if (this.phase !== 'rest') return;
@@ -3250,20 +3197,16 @@ export class Run {
   }
 
   /**
-   * G3 — apply a rest (the rest gate's option; no battle). Synthesize a flat
-   * `LEVELING.restXp` award per roster slot and feed the SAME `bankXpAwards`
-   * pipeline a battle win uses (it reads only `rosterIndex` + `xpGained`), so
-   * a rest can legitimately level units and pop PromotionScene — no parallel
-   * leveling path. A rest never offers a recruit: with promotions we pause on
-   * PromotionScene (the dismiss routes back to map via `kindOf`), otherwise we
-   * return to the map silently (Game swaps MapScene on `phase === 'map'`).
+   * Take the rest: heal the pool (`restedPool`), then give every roster
+   * slot a flat `LEVELING.restXp` award through `bankXpAwards`, the path a
+   * battle's XP takes (it reads only `rosterIndex` and `xpGained`), so a
+   * rest can level units with no leveling path of its own. A rest offers no
+   * recruit: with a promotion it pauses on `promotion`, whose dismissal
+   * returns to the map, and otherwise it goes straight to `map`.
    */
   private resolveRest(): void {
-    // H6a — a rest also heals the run-wide player pool (capped at max).
-    // Unconditional + ahead of the XP/promotion branch so a rest that ALSO
-    // levels a unit still heals. §90 — a FRACTION of max (0.25 × 20 = the
-    // old absolute 5), so the heal tracks a pool-max move; packet heals stay
-    // absolute (`healPool` ops).
+    // The heal comes first and always, so a rest that levels a unit heals
+    // too.
     this.setPlayerHealth(this.restedPool(), 'rest');
     const awards = this.team.map((_, i) => ({
       unitId: i,
@@ -3281,22 +3224,21 @@ export class Run {
     }
   }
 
+  /** Dismiss the promotion screen (the `dismissPromotion` command): inside
+   *  an encounter go on with the gate chain, after a rest return to the
+   *  map. A no-op out of phase (`Command.ts`). */
   private handleDismissPromotion(): void {
     if (this.phase !== 'promotion') return;
     this.pendingPromotions = null;
-    // M1 — a battle-sourced promotion fires at the TURN boundary, while the
-    // encounter is still live (`encounterMap` set — cleared only in
-    // `finishEncounter`, and rest nodes never set it, so it cleanly
-    // discriminates the turn loop from the G3 rest path below). Re-enter the
-    // loop: the recomputed `turnResult` routes to the next turn or into
-    // `finishEncounter` (a won final turn → recruit/victory as before).
+    // A battle's promotion comes at a turn's boundary, with the encounter
+    // still on: `encounterMap` is set, cleared only in `finishEncounter`,
+    // and a rest never sets it, so it tells the two apart. `turnResult`
+    // routes to the next turn or the encounter's end.
     if (this.encounterMap !== null) {
       this.continueAfterTurn(this.turnResult());
       return;
     }
-    // G3 — a rest-node promotion returns to the map (no recruit). A battle's
-    // promotion is dismissed inside its encounter (above), so no other node
-    // reaches here.
+    // Only a rest promotes outside an encounter.
     if (this.kindOf(this.currentNodeId) !== 'rest') {
       throw new Error('Run.handleDismissPromotion: a promotion outside an encounter, on a node that is not a rest');
     }
@@ -3304,29 +3246,21 @@ export class Run {
   }
 
   /**
-   * E4 — apply an award batch to `this.team`, returning any promotion
-   * deltas for PromotionScene. For each award:
-   *   1. Find the roster template via `rosterIndex` (skip if null — a
-   *      test fixture spawn that didn't stamp the field).
-   *   2. Add `xpGained` to the template's banked XP.
-   *   3. While banked >= `xpToNext(level)` AND level < cap: spend the
-   *      threshold, level up, roll new stats via `simulateLevelUps(1)`
-   *      against the call's 'levelup' occurrence stream. At cap, drain any
-   *      remaining banked XP (no infinite-grind overflow).
-   *   4. Write the new template back into the roster slot.
+   * Bank a batch of XP awards into `this.team` and return the promotions
+   * for the promotion screen. Each award's XP is added to its slot's
+   * template, which levels while the XP reaches `xpToNext` below the cap,
+   * each level's stats rolled (`simulateLevelUps`); at the cap the XP left
+   * is dropped, so it never piles up. An award without a roster slot (only
+   * a test's fake sends one) is skipped.
    *
-   * Deterministic ordering: awards are iterated as received from the
-   * event payload, which World produces in unit-iteration order. RNG
-   * draws come off the occurrence stream in that same order, and the
-   * whole batch is synchronous (atomic between snapshots).
+   * One call is one occurrence of the `'levelup'` stream, keyed
+   * (sectorIndex, nodeId, turnIndex), drawn in the awards' order (a
+   * battle's is the World's spawn order, `computeXpAwards`). The batch runs
+   * at once, so no save lands inside it.
    */
   private bankXpAwards(
     awards: GameEvents['battle:ended']['xpAwards'],
   ): PromotionInfo[] {
-    // 77d2 — one banking call = one 'levelup' occurrence, keyed
-    // (sectorIndex, nodeId, turnIndex): award iteration order is
-    // deterministic (World's unit-iteration order), and the whole batch is
-    // synchronous — a snapshot can't land inside it.
     const levelupRng = this.streamRng('levelup', this.sectorIndex, this.currentNodeId, this.turnIndex);
     const promotions: PromotionInfo[] = [];
     for (const award of awards) {
@@ -3339,9 +3273,8 @@ export class Run {
       let xp = template.xp + award.xpGained;
       let level = template.level;
       let stats = template.stats;
-      // `xpToNext` returns Infinity at the cap, so the loop naturally
-      // exits there — the explicit cap drain below covers the
-      // "leftover xp at cap" edge case.
+      // `xpToNext` is Infinity at the cap, so the loop stops there; the drop
+      // below takes the XP left over.
       while (level < LEVELING.levelCap && xp >= xpToNext(level)) {
         xp -= xpToNext(level);
         level += 1;
@@ -3371,9 +3304,8 @@ export class Run {
 
   private handleChooseRecruit(unitTemplate: UnitTemplate): void {
     if (this.phase !== 'recruit') return;
-    // 115c — only a card of the offer joins; anything else is a silent
-    // no-op, like every other illegal command (any template used to be
-    // accepted). Compared by value: a journal's replay and a resumed
+    // Only a card of the offer joins; anything else is a no-op
+    // (`Command.ts`). Compared by value: a journal's replay and a resumed
     // screen send copies of the offer's templates, not the objects.
     const chosen = JSON.stringify(unitTemplate);
     if (!(this.currentOffer ?? []).some((t) => JSON.stringify(t) === chosen)) return;
@@ -3383,29 +3315,21 @@ export class Run {
   }
 
   /**
-   * 50d — THE roster-append chokepoint, `removeRosterUnit`'s inverse: every
-   * way a unit joins the roster (post-battle recruit, port buy) pushes the
-   * unit AND its slot in each parallel structure here, in one place.
-   * (Extracted from `handleChooseRecruit` when port buys became the second
-   * caller.)
+   * Every way a unit joins the roster (a recruit, a port buy, a reward, an
+   * event's `grantUnit`, a construction grant) comes through here, which adds
+   * its slot to each list kept parallel to `team`; `removeRosterUnit` is
+   * the inverse (gotcha #118). A new unit has no deployments and no
+   * effects.
    */
   private appendRosterUnit(unitTemplate: UnitTemplate): void {
     this.team.push(unitTemplate);
-    // H3 — keep the deployment counter parallel to the roster. A fresh
-    // recruit hasn't been deployed in the current encounter yet.
     this.deploymentCounts.push(0);
-    // K1 — keep the encounter-effect store synced with `team` (fresh slot, no
-    // effects). Parallel to the deploymentCounts append above.
     this.encounterEffects.push([]);
-    // 49e — the pending store stays parallel to `team` too.
     this.pendingEncounterEffects.push([]);
   }
 
-  /**
-   * H6b — decline the offer. `handleChooseRecruit`'s sibling MINUS the
-   * roster/deck mutation: drop the offer and return to the map, leaving the
-   * team (and its parallel `deploymentCounts`) untouched.
-   */
+  /** Decline the offer: drop it and return to the map, the roster
+   *  untouched. */
   private handlePassRecruit(): void {
     if (this.phase !== 'recruit') return;
     this.currentOffer = null;
@@ -3413,33 +3337,26 @@ export class Run {
   }
 
   /**
-   * 50b — THE roster-shrink chokepoint (spec §Ports): the only code allowed
-   * to remove a roster unit, inverting `handleChooseRecruit`'s appends in
-   * one place. The roster has only ever GROWN before this; SIX structures
-   * are keyed by / aligned with roster indices (the §50 kickoff audit — the
-   * spec's five plus 49e's `pendingEncounterEffects`), so a removal must:
+   * The only removal of a roster unit (the port's paid removal, an event's
+   * `removeUnit`), `appendRosterUnit`'s inverse (gotcha #118). Six lists
+   * hold roster indices, so a removal:
    *
-   * - splice the three parallel arrays (`deploymentCounts`,
-   *   `encounterEffects`, `pendingEncounterEffects`) in lockstep with
-   *   `team`;
-   * - renumber the three deck piles (they hold rosterIndex VALUES): drop
-   *   the removed index, shift every higher value down one. Renumbering is
-   *   UNCONDITIONAL even though map-phase piles are semantically dead
-   *   (rebuilt at the next `beginEncounter`) — the serialized invariant
-   *   (every pile value < team.length) must not depend on call-site phase
-   *   (worklog §50).
+   * - splices `deploymentCounts`, `encounterEffects` and
+   *   `pendingEncounterEffects` with `team`;
+   * - renumbers the three deck piles, which hold index values: the removed
+   *   index goes, and every higher one drops by one. Always, though away
+   *   from an encounter the piles are dead until `beginEncounter` builds
+   *   them again, since the saved rule (every pile value below
+   *   `team.length`) must not depend on the caller's phase.
    *
-   * Map-, port- or event-phase-only (50d widened it for the pay-to-remove
-   * service; 74c for the event `removeUnit` op — gotcha #118's guard, third
-   * window): outside those windows roster indices are live in places a
-   * splice can't reach (a battle's `playerRosterIds` stamp, un-banked
-   * `xpAwards`, `pendingPromotions`) — throwing beats a silent desync. The
-   * event window is as safe as the map's: no encounter state exists
-   * mid-event, and effects run BEFORE a start-encounter terminal routes.
-   * `pendingPromotions` is structurally null here (non-null only during
-   * 'promotion'). The roster can't be emptied — a zero-unit run has no deck
-   * to draw. Emits nothing: the command wrapper owns eventing, and roster
-   * UI re-derives from the live roster on render.
+   * Only at the map, a port or an event: anywhere else roster indices live
+   * where a splice cannot reach them (a battle's `playerRosterIds`, XP not
+   * yet banked, `pendingPromotions`), and a throw beats a silent desync. An
+   * event is as safe as the map: no encounter state exists during one, and
+   * its effects run before a `start-encounter` routes. `pendingPromotions`
+   * is null in all three, since a promotion is dismissed before any is
+   * entered. The roster cannot be emptied, since a run with no units has no
+   * deck to draw. Emits nothing itself.
    */
   removeRosterUnit(index: number): void {
     if (this.phase !== 'map' && this.phase !== 'port' && this.phase !== 'event') {
@@ -3467,8 +3384,8 @@ export class Run {
   }
 
   private isFrontier(nodeId: number): boolean {
-    // S2 — at the pre-root start the root is the sole frontier; thereafter the
-    // frontier is the current node's outgoing edges.
+    // Before the root the root alone is the frontier; after it, the current
+    // node's outgoing edges (gotcha #110).
     if (this.currentNodeId === PRE_ROOT_NODE_ID) return nodeId === this.nodeMap.rootId;
     for (const e of this.nodeMap.edges) {
       if (e.from === this.currentNodeId && e.to === nodeId) return true;
@@ -3476,32 +3393,25 @@ export class Run {
     return false;
   }
 
-  /**
-   * H3 — zero every deployment count. Called at encounter start. Public
-   * because it's the seam the H4 encounter loop drives (reset once per
-   * encounter, before the first turn).
-   */
+  /** Zero every deployment count, at an encounter's start
+   *  (`beginEncounter`). Public for the tests. */
   resetDeploymentCounts(): void {
     this.deploymentCounts.fill(0);
   }
 
-  /**
-   * K1 — clear every slot's encounter-effect store. Called at encounter start
-   * (alongside `resetDeploymentCounts`) so `endOfEncounter` effects don't leak
-   * into the next encounter. A fresh `[]` per slot keeps the array length
-   * synced with `team`.
-   */
+  /** Clear every slot's encounter effects, at an encounter's start beside
+   *  `resetDeploymentCounts`, so none outlasts its encounter. A new `[]` a
+   *  slot keeps the list as long as `team`. Public for the tests. */
   resetEncounterEffects(): void {
     for (let i = 0; i < this.encounterEffects.length; i++) this.encounterEffects[i] = [];
   }
 
   /**
-   * 49e — land the pending out-of-battle buffs (overclock fires) on the live
-   * encounter store, then clear the pending slots. Called from
-   * `beginEncounter` RIGHT AFTER `resetEncounterEffects` (the pending-until-
-   * start ordering — the buff must survive the K1 wipe, not precede it).
-   * The instances MOVE into the live store (merge-by-key applies), so no
-   * clone is needed — the pending slot is emptied in the same pass.
+   * Move the buffs packets put on units at the map into the encounter's
+   * store, and empty the pending slots. `beginEncounter` calls it right
+   * after `resetEncounterEffects`, so the buffs survive the reset. The
+   * instances move, merging by key, so no copy is needed: the pending slot
+   * is emptied in the same pass.
    */
   private drainPendingEncounterEffects(): void {
     for (let i = 0; i < this.pendingEncounterEffects.length; i++) {
@@ -3512,13 +3422,9 @@ export class Run {
     }
   }
 
-  /**
-   * H3 — bump the deployment count for each deployed roster slot. Called
-   * once per turn with the slots that were actually deployed (pre-H5 that's
-   * the whole roster; H5 passes the drawn hand). Out-of-range indices are
-   * ignored so a stale hand can't write past the array. Public for the
-   * same reason as `resetDeploymentCounts` — the H4 turn loop calls it.
-   */
+  /** Count a deployment for each slot fielded, once a turn with the hand
+   *  (`beginTurn`). An index out of range is ignored, so a stale hand
+   *  cannot write past the list. Public for the tests. */
   recordDeployment(rosterIndices: readonly number[]): void {
     for (const idx of rosterIndices) {
       if (idx >= 0 && idx < this.deploymentCounts.length) {
@@ -3528,12 +3434,13 @@ export class Run {
   }
 
   /**
-   * K1 — add an encounter-scoped status effect to a roster slot (the
-   * `endOfEncounter` authoring lifetime). It persists for the rest of the
-   * encounter, re-seeded onto the fielded unit each turn at deploy, merged by
-   * key per its policy. Pass an `endOfTurn`-lifetime effect (the store re-seeds
-   * it per turn). Out-of-range slots are ignored. The daemon / empower seam
-   * (K4 / L); reset at encounter start (`resetEncounterEffects`).
+   * Add a status effect to a roster slot's encounter store (the
+   * `endOfEncounter` lifetime): it lasts the encounter, put on the fielded
+   * unit at each turn's deploy, merged by key per its policy. Pass an
+   * `endOfTurn` effect, since the store puts it on afresh each turn. A slot
+   * out of range is ignored. An empower, a packet's buff and the pending
+   * store's drain add here; `resetEncounterEffects` clears it at an
+   * encounter's start.
    */
   addEncounterEffect(rosterIndex: number, effect: StatusEffect): void {
     const list = this.encounterEffects[rosterIndex];
@@ -3542,13 +3449,11 @@ export class Run {
   }
 
   /**
-   * H5 — draw the turn's hand from the deck. Pulls from the end of
-   * `drawPile`; when it empties mid-draw, the `discardPile` is shuffled back in
-   * and drawing continues. Stops early only when BOTH piles are exhausted (a
-   * roster smaller than the draw amount simply fields everyone). Returns the
-   * drawn `rosterIndex` values; the caller seats them in `this.hand`.
-   * 65a — the target is `effectiveDrawAmount` (the fold; base = the H5
-   * `DECK.handSize`), so persistent daemon modifiers move it.
+   * Draw the turn's hand, `effectiveDrawAmount` cards, from the end of
+   * `drawPile`, the discard shuffled back in when it runs out. It stops
+   * early only when both piles are empty, so a roster smaller than the draw
+   * fields everyone. Returns the roster indices; the caller seats them in
+   * `this.hand`.
    */
   private drawHand(): number[] {
     const hand: number[] = [];
@@ -3561,10 +3466,10 @@ export class Run {
   }
 
   /**
-   * 65f — discard ONE card (the `drawCard` mirror): push to the discard
-   * pile + the per-card cue, so every discard route (the turn-start hand
-   * recycle, a redraw send-off, a Cull) emits from one site. Cue-not-truth
-   * (the events.ts contract); draws no RNG.
+   * Discard one card, `drawCard`'s mirror: onto the discard pile, with its
+   * cue, so every discard (the last turn's hand, a redraw, a Cull) emits
+   * from one site. The cue is presentation, not state (`events.ts`), and
+   * draws nothing.
    */
   private discardCard(rosterIndex: number): void {
     this.discardPile.push(rosterIndex);
@@ -3575,11 +3480,10 @@ export class Run {
   }
 
   /**
-   * K3 — draw ONE card (factored out of `drawHand`, byte-identical pop +
-   * reshuffle order, so the turn draw is unchanged): pop from `drawPile`,
-   * reshuffling the discard back in when it's empty (the only RNG draw in the
-   * deck cycle, off a fresh counter-keyed 'deck' occurrence). `undefined` only when BOTH piles
-   * are exhausted. Shared by the turn draw and the redraw refill.
+   * Draw one card: pop `drawPile`, shuffling the discard back in when it is
+   * empty, the deck's one draw, on a `'deck'` occurrence keyed by its own
+   * counter. `undefined` only when both piles are empty. The turn's deal, a
+   * redraw's refill and a packet's draw share it.
    */
   private drawCard(): number | undefined {
     if (this.drawPile.length === 0) {
@@ -3587,8 +3491,8 @@ export class Run {
       this.drawPile = this.discardPile;
       this.discardPile = [];
       this.streamRng('deck', this.deckShuffleIndex++).shuffle(this.drawPile);
-      // 65f — the reshuffle cue (one event for the whole flip; post-flip,
-      // pre-pop counts). Cue-not-truth: see the events.ts contract.
+      // One cue for the whole shuffle, with the counts after it and before
+      // the pop.
       this.bus.emit('deck:reshuffled', {
         drawPile: this.drawPile.length,
         discardPile: 0,
@@ -3597,7 +3501,7 @@ export class Run {
     // The pile is guaranteed non-empty here (the guard above returned or
     // reshuffled), so the pop always yields a card.
     const card = this.drawPile.pop()!;
-    // 65f — the per-card draw cue (post-pop counts; cue-not-truth).
+    // The card's cue, with the counts after the pop.
     this.bus.emit('deck:cardDrawn', {
       drawPile: this.drawPile.length,
       discardPile: this.discardPile.length,

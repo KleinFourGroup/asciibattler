@@ -8287,3 +8287,85 @@ looks like a bound said to read the wave where `chipRule.ts` reads the hand,
 a cache gate claimed for a path that does not check it, a screen named for
 the turn-outcome gate, the gate chain's order told otherwise than
 `continueFromTurnGate` runs it, or history left.
+
+Committed as `73da9918`; the suite 3,723 and the smoke 613, green, by the
+hook.
+
+### 123m, batch 4e — `Run.ts`'s grants to the deck (2026-10-17, session 60a71867)
+
+`grantViews` to `drawCard`: the grant views and the grant guard, redraw
+and empower, the hand's emit, the daemons, the reward's accept and decline,
+the encounter's end, the sector seam, the rest, the promotion, the XP bank,
+recruits, the roster's append and removal, and the deck. The history and
+the step codes are out; the handlers' no-op rule points at `Command.ts`,
+the seam floor's ends at `health.ts`, and the badge column's shape at
+`events.ts`.
+
+**Statements found false and corrected (rule 7):**
+
+- `removeDaemon`: "duplicates can't exist (every acquisition surface
+  excludes or dedupes upstream)"; a construction grant may add a second
+  copy (`RunConfig.grants`: "Duplicates are legal"), and then only the first
+  goes.
+- `ownedDaemonIds` was the exclusion input for the rewards "and §50's port
+  stock after it"; the port builds its own owned set.
+- `finishEncounter` banked "the encounter's accrued XP ONCE" on a win and
+  discarded "the pending XP" on a defeat; each turn's XP banks at its own
+  boundary, as the function's own comment further down said. Its override
+  clear kept "a defeat from leaking the override into a later fight"; a
+  defeat ends the run, so the reason is that the override never outlives
+  its fight.
+- `advanceSector`: "The player pool + roster + deck carry across
+  unchanged"; the pool is raised to the seam's floor, and the deck is built
+  again at every encounter. "That dial is first-sector-only by design" (4c's
+  lead): the scatter dials leave `firstNodeKind` out of a later map, but its
+  flag still sends a later root's event to the regular pool
+  (`enterEventNode`).
+- `afterRewardResolved` went on to "the recruit/victory fork"; after the
+  promotion the encounter may go on to its next turn.
+- `appendRosterUnit` named the recruit and the port buy as every way a unit
+  joins; a reward, an event's `grantUnit` and a construction grant come
+  through it too.
+- `removeRosterUnit`: `pendingPromotions` "non-null only during
+  'promotion'", the claim 4a corrected in `RunSnapshot`; it is null at the
+  map, a port or an event because a promotion is dismissed before any of
+  them. It inverted "`handleChooseRecruit`'s appends"; the inverse is
+  `appendRosterUnit`.
+- `resetDeploymentCounts` and `recordDeployment` were public because "the
+  H4 encounter loop drives" them; `beginEncounter` and `beginTurn` call
+  them inside the class, and `Run.test.ts` from outside.
+- `drawCard` was shared by "the turn draw and the redraw refill"; a packet's
+  draw uses it too.
+- `emitHandChanged`: "a hand-changing packet fired anywhere else reads 0";
+  the hand ops are pre-turn only (`PACKET_OP_CONTEXTS`), so nothing changes
+  the hand away from the gate.
+- `handleChooseRestOption`'s index was "the seam for the options a later
+  round adds", a plan (rule 5); it is out.
+
+**Checked and kept:** `redrawRejection` refuses a repeated position, so the
+discards before the draws always leave enough to refill; Mars's and
+Minerva's buffs merge by `add`; `xpToNext` is `Infinity` at the cap; the
+reward tables' daemon ids are checked at load (`rewards.ts`); the `won`
+filter is allowed only on `encounterEnd` (`config/daemons.ts`); a summon
+never reaches `bankXpAwards`, since `computeXpAwards` walks only
+`playerRosterIds`; `encounterMap` is cleared only in `finishEncounter`.
+
+Measured (`comment-length` on copies under `output/cl-123m-b4e/`):
+`Run.ts` comment lines 1,734 → 1,638, words 14,552 → 13,820, code lines
+2,251 unchanged. `src/run` comment lines 3,307 → 3,211, words 27,867 →
+27,135. The step-code ceiling 3,293 → 3,183, `Run.ts` 158 → 48.
+
+Proof: `comment-strip HEAD src`, comments only, exit 0, its control named
+in `Run.ts`.
+
+Cost: 344,760 at 03:20 UTC by the tool's clock as the batch started,
+431,816 at 03:28 after its first proof: 87k for 886 lines, 98 a line. Many
+of its claims were ones 4d had already checked (the deck, the cache, the
+daemon stream, the gate chain).
+
+**Read** (`batch`): `git show <this commit> -- src/run/Run.ts`
+(`grantViews` to `drawCard`) against the seven rules. Wrong looks like a
+daemon said to be unique where a construction grant can repeat it, the
+seam said to carry the pool unchanged, XP said to bank at the encounter's
+end, a list of the roster's append or removal callers left short, or
+history left.

@@ -33,7 +33,7 @@ const Y_HALF_EXTENT = 1.0;
 const FIT_MARGIN = 1.05;
 
 /** D4: which camera framing is active. */
-export type CameraMode = 'fit' | 'scroll';
+type CameraMode = 'fit' | 'scroll';
 
 /**
  * D4 dev default. Scroll mode is implemented and toggleable via the dev

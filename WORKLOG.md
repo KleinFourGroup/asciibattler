@@ -9124,3 +9124,43 @@ Proof (`scratch/124e/check.mjs`):
 
 Not checked: the pixels. The read is the user's (`batch`, at 124i's
 stop). Reading: 400,370 at 23:36, before the commit.
+
+### 124f — A-26, the word `export` (2026-10-17, session 94055418)
+
+`refs --all src/render src/dev` again at HEAD: 54 declarations that only
+their own file reads, the kickoff's 53 and `SceneName`, which 124a
+exported. Two are left: `SUBSET_RANGES` and `SubsetRange`, which census
+A-23 keeps for `scripts/build-font.mjs` (a word search over the tracked
+files outside the type check finds the script's import of the first and
+nothing of the second; A-23's signed keep covers both). The search
+(`scratch/124f/untyped-search.mjs`) refuses unless it finds that import,
+its known answer; a first inline version found nothing at all, its `\b`
+lost to the shell. So the word is off 52, `render` 22 and `dev` 30, by
+`scratch/124f/unexport.mjs`, which checked every declaration line before
+it wrote any.
+
+**Step zero missed a prediction:** the cut said the build's bytes would
+not move. `build-hash HEAD` named 3 of 33 files, and `--dev` 4. The
+minified diff showed renames throughout, so both trees were built again
+with `--minify false` (`scratch/124f/unminified-diff.mjs`; HEAD against
+itself first, 0 of 32 and 0 of 34 files differing). Against the working
+tree, past the comparison's own noise (the worktree reaches
+`node_modules` through its junction, so its region comments read
+`../../node_modules`; the dirty tree's `BUILD_ID`; the chunks' hashed
+names and export tables) and the comments, the only differences are four
+constants the bundler had inlined while they were exported and keeps as
+variables now: `APRON_TILES` (2: `36` is now `32 + 2 * APRON_TILES`,
+`36 ** 2 - 32 ** 2` is now `(32 + 2 * APRON_TILES) ** 2 - 32 ** 2`),
+`DASHED_BIT` (4), `TRACE_RING_CAP` (80) and `PIXEL_ROWS_MAX` (256). Each
+reads the same number, and in the minified build the extra variable
+shifts every later name. Same behaviour, then, by a different proof
+than the cut named; flagged here. TESTING.md's entry for an unused
+export now says so. §122d's and §123g's bytes did not move, which this
+does not contradict: what moves them is a primitive constant that its
+own file reads.
+
+Proof besides: typecheck clean; the seed-6 drive on one `--build`,
+`e9cbf755` and `6956a4f2`. For §124.5's kickoff: its A-26 share holds
+19 constants by the kickoff's `refs --all` (`ui` 10, `i18n` 9), so its
+prediction is the moved bytes and this compare. Reading: 433,977 at 23:43, before the
+commit.

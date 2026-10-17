@@ -32,7 +32,7 @@ import { placePose, type PoseId, type PosedSpec } from './fixtures';
 import type { GameInternals, LiveBattle } from './seams';
 import type { DialState } from './state';
 
-export interface PosedMember {
+interface PosedMember {
   readonly spec: PosedSpec;
   readonly cell: { readonly x: number; readonly y: number };
   readonly ground: THREE.Vector3;

@@ -34,7 +34,7 @@ import type { BattleEncounter } from '../run/Run';
 import { configHash } from '../config/configHash';
 
 /** One applied command, exactly as `command:applied` carried it (53a). */
-export interface RecordedCommand {
+interface RecordedCommand {
   readonly tick: number;
   readonly command: GameEvents['command:applied']['command'];
 }

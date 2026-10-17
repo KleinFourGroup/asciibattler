@@ -97,7 +97,7 @@ export interface LimitResult {
   readonly cleaned: boolean;
 }
 
-export interface LimitOptions {
+interface LimitOptions {
   /** The longest value tried. */
   readonly ceiling: number;
   /** The first length tried, and how close the two answers end. */
@@ -268,7 +268,7 @@ export function timerResolution(now: () => number, samples = 20, spinLimit = 5_0
  *  frame at 60 Hz is 16.7 ms, so the last two say whether a write cost one. */
 export const TALLY_EDGES_MS = [1, 2, 4, 8, 16, 33] as const;
 
-export interface SectionTally {
+interface SectionTally {
   /** Writes made, the refused ones included. */
   n: number;
   refused: number;

@@ -35,7 +35,7 @@ export interface FrameLoad {
   readonly stress: boolean;
 }
 
-export interface BenchLeg extends FrameLoad {
+interface BenchLeg extends FrameLoad {
   /** The terrain marks compiled in (true) or the plain terrain shaders (false). */
   readonly marks: boolean;
 }
@@ -63,9 +63,9 @@ export interface BenchOptions {
 
 export const BENCH_DEFAULTS: BenchOptions = { rounds: 8, chunks: 6, chunkFrames: 8, settle: 3, plantMs: 1, warmup: 3 };
 
-export type BlockName = 'marks' | 'aa' | 'planted' | 'stress';
+type BlockName = 'marks' | 'aa' | 'planted' | 'stress';
 
-export interface BlockResult {
+interface BlockResult {
   readonly name: BlockName;
   readonly label: string;
   /** The mean over every A leg and every B leg of its median chunk, ms per frame. */
@@ -146,7 +146,7 @@ export async function runBench(rig: BenchRig, o: BenchOptions = BENCH_DEFAULTS):
   return out;
 }
 
-export interface BenchChecks {
+interface BenchChecks {
   /** The widest A/A difference: below it, a difference is noise. */
   readonly resolution: number;
   /** The planted cost read back within 20 % of its size. */

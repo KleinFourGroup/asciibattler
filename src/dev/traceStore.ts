@@ -17,7 +17,7 @@ const KEY = 'asciibattler:traces:v1';
 /** 53f rider — 40→80: the 53g human session is ~30 battles plus retries and
  *  warm-ups in ONE sitting; a 40-deep ring could evict the session's own
  *  early traces before the end-of-session export. */
-export const TRACE_RING_CAP = 80;
+const TRACE_RING_CAP = 80;
 
 export function loadTraces(): BattleTrace[] {
   try {

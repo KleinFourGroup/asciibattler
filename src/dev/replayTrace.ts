@@ -41,7 +41,7 @@ import { HEALTH } from '../config/health';
 import { configHash } from '../config/configHash';
 import type { BattleTrace } from './TraceRecorder';
 
-export interface ReplayResult {
+interface ReplayResult {
   readonly winner: GameEvents['battle:ended']['winner'];
   /** Final `world.currentTick` — comparable to `trace.outcome.ticks`. */
   readonly ticks: number;
@@ -49,7 +49,7 @@ export interface ReplayResult {
   readonly world: World;
 }
 
-export interface ReplayHooks {
+interface ReplayHooks {
   /**
    * 54c — called once per replay tick, just BEFORE that tick's stamped
    * commands are enqueued and the tick runs: the world state the hook sees

@@ -78,7 +78,7 @@ export const PRIMARY_EXCLUDES: readonly number[] = [0x229e, 0x22a0];
 
 /** One shipped face: a vendored source TTF under `assets/fonts/<dir>/`, the
  *  woff2 the generator writes beside it, and the CSS family name. */
-export interface ShippedFace {
+interface ShippedFace {
   readonly family: string;
   readonly dir: string;
   readonly source: string;

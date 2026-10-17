@@ -38,7 +38,7 @@
 import { COLORS } from './palette';
 import { t } from '../i18n/ui';
 
-export interface StatusDisplay {
+interface StatusDisplay {
   /** CSS color for the board pip, the card row's symbol and a DoT's number. */
   color: string;
   /** One character: the status's shape, drawn in `color`. DOM text, never
@@ -50,7 +50,7 @@ export interface StatusDisplay {
  *  buff has no `name` in config; its key is an identifier, and the label
  *  lives in the UI string table under `buff.<key>`). No symbol: every buff
  *  wears the one `▲` marker, and its label is its second channel. */
-export interface EmpowerDisplay {
+interface EmpowerDisplay {
   color: string;
   label: string;
 }

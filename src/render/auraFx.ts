@@ -15,7 +15,7 @@
  * once. THREE-free, so it loads under Vitest.
  */
 
-export type AuraFxMode = 'track' | 'fill';
+type AuraFxMode = 'track' | 'fill';
 
 let mode: AuraFxMode = 'track';
 

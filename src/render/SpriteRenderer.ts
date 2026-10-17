@@ -50,7 +50,7 @@ export interface SpriteHandle {
  * a world-Y lift that a perspective camera would project off-axis. Declared at
  * `addSprite` and fixed for the sprite's life.
  */
-export type SpriteAnchor = 'center' | 'base';
+type SpriteAnchor = 'center' | 'base';
 
 const DEFAULT_CAPACITY = 1024;
 

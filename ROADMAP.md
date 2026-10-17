@@ -211,7 +211,8 @@ drawing. ✅ DECIDED at the kickoff: the phase cut in two, the screens as
   overlay layer's two members, `FontAtlas`'s three fields.
 - ◐ **124e — the apron's dither path, whole** (`batch`: the ring fades
   into the mist as now; wrong is a stipple or a hard edge).
-- ☐ **124f — A-26, the word `export`** (`none`). `render` 24, `dev` 29.
+- ☑ **124f — A-26, the word `export`** (`none`). `render` 22 (A-23
+  keeps two), `dev` 30; the bytes moved, proven the same unminified.
 - ☐ **124g — the enemy notch** (`batch`: seed 2, the notch where the
   pre-turn screen put it; wrong is a jump at the battle's start). A
   display change, signed as an exception to the scope guard.

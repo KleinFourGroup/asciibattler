@@ -41,7 +41,7 @@ export const SCENE_CLASSES = {
   SectorClearedScene,
 } as const;
 
-export type SceneName = keyof typeof SCENE_CLASSES;
+type SceneName = keyof typeof SCENE_CLASSES;
 
 /** One row per phase, so a new `RunPhase` fails typecheck until it has one.
  *  The turn's outcome has no screen of its own: the battle scene plays its

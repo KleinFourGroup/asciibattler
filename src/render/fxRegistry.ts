@@ -58,7 +58,7 @@ export interface FxBurst {
  * per key (the locked decision: shake magnitude is an fx-registry parameter, not
  * a sim concern), so a heavy lob shakes harder than a bolt.
  */
-export interface FxShake {
+interface FxShake {
   intensity: number;
   durationSeconds: number;
 }
@@ -97,7 +97,7 @@ export interface FxTracer {
  * `+N`. The driver supplies the amount off the `status:ticked` event; an
  * amount of 0 (a HoT onto a full unit) draws nothing.
  */
-export interface FxHitsplat {
+interface FxHitsplat {
   kind: 'burn' | 'bleed' | 'poison' | 'heal';
 }
 
@@ -143,7 +143,7 @@ export function isDotHitsplatKind(kind: HitsplatKind): kind is 'burn' | 'bleed' 
  * burning unit puffs amber embers, a poisoned one green, etc. The driver reads
  * the unit's live sprite position; `color` is a palette hex.
  */
-export interface FxSparkle {
+interface FxSparkle {
   color: string;
 }
 
@@ -156,7 +156,7 @@ export interface FxSparkle {
  * their visibility — a frozen unit glows ice, a confused one chaos-purple. A
  * palette hex.
  */
-export interface FxOverlay {
+interface FxOverlay {
   tint: string;
 }
 

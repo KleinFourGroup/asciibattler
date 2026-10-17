@@ -22,7 +22,7 @@ import type * as THREE from 'three';
 import { secondsToTicks } from '../config';
 import type { Game } from '../Game';
 
-export const FAIL_PARAM = 'fail';
+const FAIL_PARAM = 'fail';
 
 /** How far into the first battle the two running plants wait, so the board
  *  is moving when the page fails. */

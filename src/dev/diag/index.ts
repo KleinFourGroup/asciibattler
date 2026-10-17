@@ -71,7 +71,7 @@ const BENCH_PLAN = [
 /** How long a browser's own answer is waited for before it is called silent. */
 const ANSWER_MS = 2000;
 
-export interface DiagReport {
+interface DiagReport {
   readonly diagnostics: 1;
   readonly at: string;
   readonly build: string;
@@ -145,7 +145,7 @@ interface JournalsSummary {
   }[];
 }
 
-export interface DiagHandle {
+interface DiagHandle {
   report(): Promise<DiagReport>;
   measureLimit(): DiagReport['limit'];
   bench(): DiagReport['bench'];

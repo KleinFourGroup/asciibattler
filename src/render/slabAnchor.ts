@@ -25,14 +25,14 @@ import { HILL_MOUND_ENVELOPE, type TerrainRenderer } from './TerrainRenderer';
 /** How much nearer than the nearest terrain vertex the slide lands. */
 const SLIDE_MARGIN = 1e-4;
 
-export interface SlabGround {
+interface SlabGround {
   /** Tile-top world Y of a cell (`TerrainRenderer.heightAt` with the cell's kind). */
   heightAt(gx: number, gy: number): number;
   /** Does the cell carry hill mounds (a `hills` tile)? */
   hasMounds(gx: number, gy: number): boolean;
 }
 
-export interface SlabView {
+interface SlabView {
   /** Camera forward, INTO the scene, in world space. */
   readonly fwd: THREE.Vector3;
   /** Camera position, world. */

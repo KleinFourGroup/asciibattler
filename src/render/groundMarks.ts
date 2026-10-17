@@ -33,8 +33,8 @@ import { isDestructibleObstacle } from './spriteColor';
 export type MarkShape = 'circle' | 'diamond' | 'triangle' | 'plate';
 
 /** The shader's shape code, texel 0's `w` (plus `DASHED_BIT` for a dashed plate). */
-export const SHAPE_CODE: Record<MarkShape, number> = { circle: 0, diamond: 1, triangle: 2, plate: 3 };
-export const DASHED_BIT = 4;
+const SHAPE_CODE: Record<MarkShape, number> = { circle: 0, diamond: 1, triangle: 2, plate: 3 };
+const DASHED_BIT = 4;
 
 /**
  * The look's numbers. The defaults are the signed bookmark's (WORKLOG §108
@@ -113,7 +113,7 @@ export const BINS_TEX_W = LAYOUT_MAX_SIDE * BIN_TEXELS;
 export const BINS_TEX_H = LAYOUT_MAX_SIDE;
 
 /** What a mark needs to know about the body it lies under. */
-export interface MarkSubject {
+interface MarkSubject {
   readonly team: Team;
   readonly archetype: string;
   readonly campId: number | null;

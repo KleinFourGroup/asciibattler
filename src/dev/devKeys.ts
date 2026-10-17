@@ -123,7 +123,7 @@ export function attachDevKeys(game: Game, boardPanel: BoardPanel): void {
 /** 98a — flip the root grayscale filter; returns the new state. Exported so a
  *  scratch probe (or `window.__game`-driven verify) can set it without a
  *  synthetic key event. */
-export function toggleGrayscaleAudit(force?: boolean): boolean {
+function toggleGrayscaleAudit(force?: boolean): boolean {
   const root = document.documentElement;
   const on = force ?? root.style.filter === '';
   root.style.filter = on ? 'grayscale(1)' : '';

@@ -94,7 +94,7 @@ export function applyCameraView(
   internalsOf(game).renderer.setCameraView(view);
 }
 
-export interface Seams {
+interface Seams {
   /** The patched atlas — followers read lifts through it. */
   readonly atlas: FontAtlas;
   /** 105e — write `footprint × scale` onto every live unit body whose stamped

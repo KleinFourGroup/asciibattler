@@ -87,7 +87,7 @@ export function glReadRect(
 }
 
 /** The most pixels `pixels()` lists one by one. */
-export const PIXEL_ROWS_MAX = 256;
+const PIXEL_ROWS_MAX = 256;
 
 export interface PixelSummary {
   /** FNV-1a over the RGBA bytes, top row first: equal crops, equal hashes. */

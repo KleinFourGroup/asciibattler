@@ -17,7 +17,7 @@
 
 import type * as THREE from 'three';
 
-export type CameraProjection = 'perspective' | 'orthographic';
+type CameraProjection = 'perspective' | 'orthographic';
 
 export interface CameraView {
   readonly projection: CameraProjection;
@@ -44,7 +44,7 @@ export const DEFAULT_CAMERA_VIEW: CameraView = {
   yawDeg: 45,
 };
 
-export interface CameraFit {
+interface CameraFit {
   /** Unit vector from the look-at point TOWARD the camera. */
   readonly dirX: number;
   readonly dirY: number;

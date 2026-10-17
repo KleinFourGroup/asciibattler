@@ -20,7 +20,7 @@ import type { Run, RunPhase } from '../../run/Run';
 export type DrivePolicy = 'seeded' | 'first';
 
 /** What a phase's row decides: a command to send, a battle to fight, or the end. */
-export type Step = { readonly command: RunCommand } | 'fight' | 'end';
+type Step = { readonly command: RunCommand } | 'fight' | 'end';
 
 /** A choice among `n` options: an index in [0, n). */
 export type Chooser = (n: number) => number;

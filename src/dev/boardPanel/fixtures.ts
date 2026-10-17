@@ -150,7 +150,7 @@ export interface PosedSpec {
   readonly destructible: boolean;
 }
 
-export interface Placement {
+interface Placement {
   readonly spec: PosedSpec;
   readonly cell: { readonly x: number; readonly y: number };
   /** Rides the `lift` dial (camera-up); its ground mark stays on its tile. */
@@ -255,7 +255,7 @@ function nearestFit(
 
 const SQUARE3: readonly Cell[] = [-1, 0, 1].flatMap((y) => [-1, 0, 1].map((x) => ({ x, y })));
 
-export interface PoseResult {
+interface PoseResult {
   readonly placements: readonly Placement[];
   /** One line per group: where it landed, and whether that is the ideal spot. */
   readonly notes: readonly string[];

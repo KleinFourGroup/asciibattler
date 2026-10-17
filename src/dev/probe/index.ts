@@ -86,7 +86,7 @@ interface BattleInternals {
   readonly countdown: BattleScene['countdown'];
 }
 
-export interface PageReport {
+interface PageReport {
   /** This call's number. */
   readonly call: number;
   /** The page load (`performance.timeOrigin`); a reload changes it. */
@@ -113,12 +113,12 @@ export interface PageReport {
   readonly lock: RunLock;
 }
 
-export interface CanvasCheck {
+interface CanvasCheck {
   readonly viewport: readonly [number, number];
   readonly canvas: readonly [number, number];
 }
 
-export interface FrameReport {
+interface FrameReport {
   readonly call: number;
   readonly scene: string | null;
   /** The battle's sim tick, or null outside a battle. `frame(0)` never moves it. */
@@ -126,7 +126,7 @@ export interface FrameReport {
   readonly canvas: readonly [number, number];
 }
 
-export interface PixelsReport extends PixelSummary {
+interface PixelsReport extends PixelSummary {
   readonly call: number;
   /** The rect asked for, in CSS pixels from the page's top-left. */
   readonly rect: PageRect;
@@ -137,7 +137,7 @@ export interface PixelsReport extends PixelSummary {
 }
 
 /** A battle frame the driver hands to an audit, rendered first. */
-export interface AuditFrame {
+interface AuditFrame {
   /** The driver's battle-frame count on this page. */
   readonly n: number;
   readonly tick: number;
@@ -146,7 +146,7 @@ export interface AuditFrame {
   readonly world: unknown;
 }
 
-export interface DriveOptions {
+interface DriveOptions {
   /** Stop on reaching this phase, or run to the end (the default).
    *  `turn-outcome` is reached as a battle ends, before its outro. */
   readonly until?: RunPhase | 'end';
@@ -168,7 +168,7 @@ export interface DriveOptions {
   readonly restart?: boolean;
 }
 
-export interface DriveReport {
+interface DriveReport {
   readonly call: number;
   /** True once the run is over, or `until` is reached. */
   readonly done: boolean;
@@ -191,7 +191,7 @@ export interface DriveReport {
   readonly ms: number;
 }
 
-export interface Probe {
+interface Probe {
   readonly live: true;
   ready(opts?: { timeoutMs?: number }): Promise<PageReport>;
   go(query: string): { navigating: string; next: string };

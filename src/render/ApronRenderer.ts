@@ -58,7 +58,7 @@ import FOG_GLSL from './shaders/fogcolor.glsl?raw';
 
 /** Apron width in tiles — THE M4 knob. Buffer capacity and the fade
  *  width both derive from it, so widening to 3 is a one-line change. */
-export const APRON_TILES = 2;
+const APRON_TILES = 2;
 
 /** Max |creep| the fragment shader's summed sines reach
  *  (0.18 + 0.14 + 0.13 — keep in sync with apron.frag.glsl). The fade is

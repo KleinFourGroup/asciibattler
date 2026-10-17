@@ -52,7 +52,7 @@ const CSS = `
 .board-panel details li { margin: 2px 0; }
 `;
 
-export interface PanelCallbacks {
+interface PanelCallbacks {
   onChange(key: DialKey, value: string | number | boolean): void;
   onReset(): void;
   /** 108d — run the frame-cost bench on the board on screen. */

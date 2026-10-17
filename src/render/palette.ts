@@ -85,7 +85,7 @@ const DEFAULT = {
   VOLT_YELLOW: '#F4FF3D', // overclocked
 } as const;
 
-export type PaletteName = keyof typeof DEFAULT;
+type PaletteName = keyof typeof DEFAULT;
 
 /** A palette: every name, each a `#rrggbb` hex. */
 export type Palette = Readonly<Record<PaletteName, string>>;

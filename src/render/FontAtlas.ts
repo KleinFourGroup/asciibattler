@@ -65,7 +65,7 @@ const ATLAS_H = ROWS * CELL_PX; // 384
  * The Y-axis flip from canvas convention (top-down) to GL convention
  * (bottom-up) happens once, here, when the atlas is built.
  */
-export interface GlyphUV {
+interface GlyphUV {
   readonly u0: number; // left
   readonly v0: number; // bottom (GL)
   readonly u1: number; // right

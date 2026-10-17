@@ -25,7 +25,7 @@
  */
 
 /** `null` = follow the OS; `true` / `false` = the setting's (or the dev key's) word. */
-export type MotionOverride = boolean | null;
+type MotionOverride = boolean | null;
 
 /** The root attribute the stylesheet keys off (`html[data-motion="reduced"]`). */
 export const MOTION_ATTR = 'data-motion'; // i18n-ok — an attribute name
@@ -77,7 +77,7 @@ export function cycleReducedMotionOverride(): MotionOverride {
 }
 
 /** Stamp (or clear) the root attribute from the resolved gate. No-op without a document. */
-export function stampRoot(): void {
+function stampRoot(): void {
   if (typeof document === 'undefined') return;
   const root = document.documentElement;
   if (reducedMotion()) root.setAttribute(MOTION_ATTR, MOTION_REDUCED);

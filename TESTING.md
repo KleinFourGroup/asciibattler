@@ -339,7 +339,12 @@ smoke tier, three on every `npm test`); "fuzz diff" is
   build compare. With a used export removed the check fails by naming its
   importers; an unused export added leaves the build's bytes alone. The
   check does not look for unused exports: it proves a deletion left
-  nothing dangling, and finding the candidates is a search.
+  nothing dangling, and finding the candidates is a search. The word
+  `export` taken off a constant its own file reads can move the bytes:
+  the bundler inlines an exported constant's value and keeps a local one
+  as a variable, which renames the rest of the minified bundle. There the
+  proof is both trees built with `--minify false` and compared, where the
+  constants and the comments are the only differences.
 - **A comment.** `npm run oracle -- comment-strip <ref>` for every `.ts`,
   `.glsl` and `.css` file under `src`, and the build compare beside it for
   TypeScript and the stylesheet (a comment there leaves the hash alone; a

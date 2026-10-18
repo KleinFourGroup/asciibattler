@@ -10474,6 +10474,10 @@ tested in Firefox, the kit installed last, the stand-in's names matching
 the kit's, the fixture's URL written before Game parses it, the drive
 throwing on a command that changes nothing.
 
+**Read** (the user, 2026-10-18, after the hand-off after batch 10): "I
+think we can go ahead and sign those reads; they all look good to me!"
+Batch 8 is read.
+
 ### 124j, batch 9 — the board panel (2026-10-18, session 882e1278)
 
 `dev/boardPanel/`'s nine files; 1,954 lines. Their history is out: the
@@ -10573,6 +10577,9 @@ written before `new Game`, the panel on `<body>` and not `#ui` (gotcha
 #137), keys stopped inside the panel with Ctrl+Alt chords passing,
 `inkBottomLift` left unpatched.
 
+**Read** (the user, 2026-10-18, with batches 8 and 10, in the words
+quoted under batch 8). Batch 9 is read.
+
 ### 124j, batch 10 — the diagnostics and the traces (2026-10-18, session 882e1278)
 
 `dev/diag/index.ts`, `dev/diag/measure.ts`, `TraceRecorder.ts`,
@@ -10640,6 +10647,10 @@ respect cut: the recorder a pure bus subscriber, a second
 `battle:started` discarding the open trace, a trace from another version
 or config refused, a command enqueued just before its effective tick, a
 replay hook that only observes.
+
+**Read** (the user, 2026-10-18, with batches 8 and 9, in the words
+quoted under batch 8). Batch 10 is read, and with it all ten of 124j's
+batches.
 
 ### The hand-off after batch 10 (2026-10-18, session 882e1278)
 

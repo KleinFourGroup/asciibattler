@@ -6,29 +6,25 @@ import FRAGMENT_SHADER from './shaders/void.frag.glsl?raw';
 import FOG_GLSL from './shaders/fogcolor.glsl?raw';
 
 /**
- * M4 playtest — the mist floor. A large dark plane at the prisms' bottom Y
- * running the shared `fogColorAt` noise (fogcolor.glsl), so the void
- * around the board reads as a slow dark roil instead of flat terminal
- * gray. The apron's fog fades toward this exact function sampled along
- * the view ray, so a fully-fogged apron pixel is indistinguishable from
- * the mist behind it — the board dissolves INTO the mist, no seam.
+ * The mist floor: a large dark plane at the prisms' bottom running the shared
+ * `fogColorAt` noise (fogcolor.glsl), so the void around the board reads as a
+ * slow dark roil rather than a flat colour. The apron's fog fades toward the
+ * same function sampled along the view ray, so a fully fogged apron pixel
+ * matches the mist behind it, and the board dissolves into the mist with no
+ * seam.
  *
- * The noise amplitude calms to zero with distance from the origin
- * (MIST_CALM_FAR in fogcolor.glsl), converging on the flat scene
- * background — so the plane's literal edge is invisible, and even an
- * ultrawide-aspect ray that overshoots the plane's horizon lands on a
- * matching flat color.
+ * The noise calms to nothing with distance from the origin (MIST_CALM_FAR
+ * in fogcolor.glsl), converging on the flat scene background, so the plane's
+ * edge doesn't show, and an ultrawide ray that overshoots its horizon lands
+ * on a matching flat colour.
  *
- * Page-lifetime scenery: encounter-independent (origin-centered, fixed
- * size), so Game adds it once and there's no setTiles/clear — non-battle
- * scenes fully mask the canvas with opaque DOM (the G2 rule), so it's
- * only ever seen behind a live battle. Layer 0 only — never in the bloom
- * pass; not a pick surface.
+ * Page-lifetime scenery: independent of the battle (centred on the origin,
+ * of fixed size), so Game adds it once and it has no `setTiles` or `clear`.
+ * On layer 0 only, never in the bloom pass; not a pick surface.
  */
 
-/** Half-extent in world units. The worst-case fit framing (32×32 board,
- *  45° pitch, 50° FOV) sees ~125 units of plane; 300 covers it with
- *  margin while the noise has long since calmed to the flat background. */
+/** Half-extent in world units: well past MIST_CALM_FAR (90), where the mist
+ *  has calmed to the flat background. */
 const BACKDROP_HALF = 300;
 
 export class BackdropRenderer {
@@ -54,8 +50,8 @@ export class BackdropRenderer {
     this.mesh = new THREE.Mesh(this.geometry, this.material);
   }
 
-  /** Same uTime accumulation as Terrain/ApronRenderer — drives the mist
-   *  drift. BattleScene calls it alongside the other two. */
+  /** As the terrain's and the apron's `advanceTime`, for the mist's drift;
+   *  BattleScene calls the three together. */
   advanceTime(dt: number): void {
     const u = this.material.uniforms['uTime']!;
     u.value = (u.value as number) + dt;

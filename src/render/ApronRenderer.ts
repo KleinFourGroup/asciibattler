@@ -16,62 +16,53 @@ import FRAGMENT_SHADER from './shaders/apron.frag.glsl?raw';
 import FOG_GLSL from './shaders/fogcolor.glsl?raw';
 
 /**
- * M4 — the battle-backdrop apron. A ring of non-playable prism tiles
- * around the board that continues the terrain outward and dissolves into
- * the scene background, so the board reads as *placed in a foggy world*
- * instead of floating in the void.
+ * The apron: a ring of unplayable prism tiles around the board that carries
+ * the terrain outward and dissolves into the mist, so the board reads as
+ * placed in a foggy world instead of floating in the void.
  *
- * Design calls (M4 design round, 2026-06-12):
- * - **Render-only & dynamically generated.** The sim never learns these
- *   tiles exist — no TileKind, no pathfinding/spawn/snapshot impact, and
- *   "non-traversable" is true by construction. Tile kinds are
- *   clamp-to-edge samples of the playable grid (the user's call: a river
- *   hitting the board edge flows out into the mist instead of abruptly
- *   turning into floor). Walls don't extend — they're spawned entities,
- *   and a wall *ending* looks natural where ground changing type doesn't.
- * - **Canonical look by construction.** Heights come from the live
- *   `TerrainRenderer.heightAt` (the fixed-seed simplex field is a pure
- *   function of grid coords, so it continues coherently outside the
- *   board) and colors from the exported `topColorFor`, so the ring is
- *   pixel-matched to the board until the fog term kicks in.
- * - **Legibility cues**: no grid lines out here (the apron shader has no
- *   grid stamp) and the fade starts at tile one, so the playable edge
- *   stays unambiguous.
- * - **The fog is color math, not transparency** — fully fogged pixels
- *   equal the BackdropRenderer mist behind them (the fragment shader
- *   samples the shared `fogColorAt` where the view ray meets the mist
- *   plane), so there's nothing to alpha-sort against the billboard
- *   sprites and no extra render pass. The fade is a smoothstep (a
- *   playtest call: a Bayer stipple read as out of place, since nothing
- *   else in the game dithers).
- * - **Edge band** (playtest call): a crisp near-black outline on the
- *   ring's innermost ~0.12 tiles — the strong playable-boundary read,
- *   darker and wider than the board's own grid lines.
+ * - **Render-only, generated per battle.** The sim never learns these tiles
+ *   exist: no TileKind, no pathing, spawn or snapshot, and unwalkable by
+ *   construction. Their kinds are clamp-to-edge samples of the board, so a
+ *   river reaching the board's edge flows on into the mist instead of turning
+ *   to floor. Walls don't extend: they are spawned bodies, and a wall ending
+ *   looks natural where ground changing kind doesn't.
+ * - **The board's look by construction.** Heights come from
+ *   `TerrainRenderer.heightAt` (the fixed-seed field is a pure function of
+ *   grid coordinates, so it continues past the board) and colours from
+ *   `topColorFor`, so the ring matches the board until the fog takes it.
+ * - **Legibility.** No grid lines out here, and the fade starts at the
+ *   ring's first tile, so the playable edge is never in doubt.
+ * - **The fog is colour math, not transparency.** A fully fogged pixel
+ *   equals the mist behind it (the fragment shader samples the shared
+ *   `fogColorAt` where the view ray meets the mist plane), so nothing
+ *   alpha-sorts against the billboard sprites and no pass is added. The fade
+ *   is a smoothstep, not a stipple: nothing else in the game dithers.
+ * - **The edge band**: a crisp near-black outline on the ring's innermost
+ *   0.12 tiles, the strong read of the playable edge, darker and wider than
+ *   the board's own grid lines.
  *
- * Separate from TerrainRenderer (not a widened board mesh) because:
- * (a) the board's buffer is sized at LAYOUT_MAX_SIDE² and a 32×32 board
- * +2/side wouldn't fit; (b) `pickCell` raycasts an explicitly-passed
- * surface, so a separate mesh is unclickable by construction; (c) the
- * fade/creep shader stays out of the canonical terrain look.
- * Stays on layer 0 → never rendered into the bloom pass.
+ * A mesh apart from the terrain's, not a widened board: (a) the board's
+ * buffer is sized at LAYOUT_MAX_SIDE², which the largest board plus the ring
+ * would overflow; (b) `pickCell` raycasts the surface it is passed, so a
+ * separate mesh is unclickable by construction; (c) the fade and creep stay
+ * out of the board's shader. On layer 0, so never in the bloom pass.
  */
 
-/** Apron width in tiles — THE M4 knob. Buffer capacity and the fade
- *  width both derive from it, so widening to 3 is a one-line change. */
+/** The ring's width in tiles. The buffers' capacity and the fade's width
+ *  both derive from it. */
 const APRON_TILES = 2;
 
-/** Max |creep| the fragment shader's summed sines reach
- *  (0.18 + 0.14 + 0.13 — keep in sync with apron.frag.glsl). The fade is
- *  shortened by this much so the outer rim stays fully fogged even at the
- *  creep's deepest inhale — otherwise the rim's cut edge would ghost
- *  against the void once a second. */
+/** The largest |creep| the fragment shader's summed sines reach (0.18 +
+ *  0.14 + 0.13, kept equal to apron.frag.glsl's). The fade is shortened by
+ *  this much so the outer rim stays fully fogged at the creep's deepest
+ *  inhale; otherwise the rim's cut edge would ghost against the mist. */
 const CREEP_MAX_TILES = 0.45;
 
 const VERTS_PER_TILE = 30; // same prism as TerrainRenderer: top + 4 sides
 
-/** Ring capacity at the largest board: (MAX+2A)² − MAX² tiles. 272 at
- *  A=2 — small enough that resizing per encounter isn't worth it; like
- *  the board mesh, allocate once and setDrawRange per encounter. */
+/** The ring's capacity at the largest board: (MAX + 2A)² − MAX² tiles, 272
+ *  at A = 2, small enough that resizing per battle isn't worth it; like the
+ *  board mesh, it allocates once and sets the draw range per battle. */
 const MAX_APRON_TILES =
   (LAYOUT_MAX_SIDE + 2 * APRON_TILES) ** 2 - LAYOUT_MAX_SIDE ** 2;
 
@@ -112,9 +103,8 @@ export class ApronRenderer {
     this.geometry.setAttribute('normal', this.normalAttr);
     this.geometry.setAttribute('aColor', this.colorAttr);
     this.geometry.setAttribute('aAnim', this.animAttr);
-    // Loose bounding sphere at the apron's max extent (board + ring),
-    // same rationale as the board mesh: always origin-centered, camera
-    // frames the whole arena, so culling at this radius costs nothing.
+    // A loose bounding sphere at the largest extent, board and ring, for the
+    // board mesh's reason.
     this.geometry.boundingSphere = new THREE.Sphere(
       new THREE.Vector3(0, BOTTOM_Y / 2, 0),
       LAYOUT_MAX_SIDE + 2 * APRON_TILES,
@@ -123,9 +113,9 @@ export class ApronRenderer {
 
     this.material = new THREE.ShaderMaterial({
       vertexShader: VERTEX_SHADER,
-      // fogcolor.glsl carries the shared fogColorAt (and the file's
-      // precision statement) — same snippet BackdropRenderer prepends, so
-      // the apron's fog target can't drift from the mist it fades into.
+      // fogcolor.glsl carries the shared `fogColorAt` (and the precision
+      // statement), the snippet BackdropRenderer prepends too, so the fog's
+      // target can't drift from the mist it fades into.
       fragmentShader: FOG_GLSL + FRAGMENT_SHADER,
       uniforms: {
         uLightDir: { value: LIGHT_DIR.clone() },
@@ -133,10 +123,10 @@ export class ApronRenderer {
         uTime: { value: 0 },
         uPlayHalf: { value: new THREE.Vector2(0, 0) },
         uFadeEnd: { value: APRON_TILES - CREEP_MAX_TILES },
-        // The fog BASE color MUST be the scene background
-        // (Renderer.sceneBackground, TERMINAL_BLACK) — the mist noise
-        // modulates around it and calms back to it at distance; base it
-        // on #000 instead and a dark ring ghosts where mist meets void.
+        // The fog's base colour must be the scene's background
+        // (`Renderer.sceneBackground`, TERMINAL_BLACK): the mist's noise
+        // swings around it and calms back to it with distance. Based on
+        // #000, a dark ring ghosts where the mist meets the void.
         uFogColor: { value: new THREE.Color(COLORS.TERMINAL_BLACK) },
         uMistY: { value: BOTTOM_Y },
       },
@@ -146,10 +136,10 @@ export class ApronRenderer {
   }
 
   /**
-   * Build the ring for an encounter. Same world mapping as the board
-   * (centered on the origin, halfX/halfZ from the PLAYABLE dims), so ring
-   * coordinates simply continue the grid outward into negative/overflow
-   * cells — which the height noise and the anim-phase hash both accept.
+   * Build the ring for a battle's board. The world mapping is the board's
+   * (centred on the origin, halfX and halfZ from the playable size), so the
+   * ring's coordinates continue the grid outward into negative and overflow
+   * cells, which the height noise and the phase hash both accept.
    */
   setTiles(tileGrid: TileGrid, gridW: number, gridH: number, theme: Theme = 'grassland'): void {
     const a = APRON_TILES;
@@ -189,7 +179,7 @@ export class ApronRenderer {
         this.tmpSideColor.copy(this.tmpTopColor).multiplyScalar(SIDE_SHADE);
         const top = this.tmpTopColor;
         const side = this.tmpSideColor;
-        const animType = animTypeFor(kind); // 98e — the terrain's mapping, incl. deep water's bands
+        const animType = animTypeFor(kind);
         const animPhase = (cx * 13 + cy * 7) * 0.43;
         const tileVertStart = vi;
 
@@ -255,8 +245,8 @@ export class ApronRenderer {
     (this.material.uniforms['uPlayHalf']!.value as THREE.Vector2).set(halfX, halfZ);
   }
 
-  /** Same uTime accumulation as TerrainRenderer.advanceTime — drives the
-   *  fog creep plus any clamp-extended fire/healing tile animation. */
+  /** As `TerrainRenderer.advanceTime`, for the fog's creep, the mist's drift
+   *  and the clamp-sampled tiles' animation. */
   advanceTime(dt: number): void {
     const u = this.material.uniforms['uTime']!;
     u.value = (u.value as number) + dt;

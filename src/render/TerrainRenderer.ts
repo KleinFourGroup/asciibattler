@@ -22,65 +22,61 @@ import {
 } from './groundMarks';
 
 /**
- * C1c terrain: one faceted prism per tile.
+ * The terrain: one faceted prism per tile.
  *
- * Heights come from a fixed-seed simplex field — the visual character
- * is part of the canonical look, not a per-battle roll. Floor tile tops
- * live in [FLOOR_RANGE_LO, FLOOR_RANGE_HI]; water tiles drop to a sunken
- * WATER_TOP_Y so the recess reads at a glance. Top colors lerp
- * DARK_TERMINAL_GREEN → DARK_TERMINAL_AMBER over the floor height range
- * so variance reads both geometrically and chromatically.
+ * Heights come from a fixed-seed simplex field, so the look is canonical and
+ * not a per-battle roll. Floor tops lie in [FLOOR_RANGE_LO, FLOOR_RANGE_HI];
+ * water sinks to WATER_TOP_Y so the recess reads at a glance. A floor top's
+ * colour lerps across its theme's palette by the same height
+ * (`FLOOR_PALETTE`), so the variance reads in shape and in colour.
  *
  * Geometry is non-indexed (each face owns its normals) for hard-edged
- * faceted shading. Lighting is baked from a fixed direction in the
- * fragment shader — no scene lights, so this material has no spill into
- * the sprite renderers (which are unlit by design).
+ * faceted shading. The fragment shader lights it from a fixed direction,
+ * with no scene lights, so nothing spills onto the sprite renderers, which
+ * are unlit.
  *
- * **D3 — variable map sizes.** The renderer is allocated once at the
- * largest D3-allowed grid (`LAYOUT_MAX_SIDE × LAYOUT_MAX_SIDE`) and
- * uses `geometry.setDrawRange` per `setTiles` to expose only the cells
- * the current encounter occupies. Per-encounter dimensions can change
- * freely up to that cap — no reallocation, no GPU re-upload of unused
- * vertex slots. Trade-off: a flat ~1 MB of vertex buffer reserved at
- * boot vs. a frame stall every time the board size changes.
+ * The buffers are allocated once, for the largest board
+ * (`LAYOUT_MAX_SIDE × LAYOUT_MAX_SIDE`), and `setTiles` sets the draw range
+ * to the cells a battle's board occupies, so no board size reallocates. The
+ * cost: about 1.6 MB of vertex data held from boot, all of it uploaded at
+ * each `setTiles`.
  *
- * `heightAt(cx, cy, kind)` is the public hook into the height field —
- * BattleRenderer uses it to set per-tile sprite Y so units stand on
- * their tile top instead of floating at a fixed plane.
+ * `heightAt(cx, cy, kind)` is the height field's public hook: BattleRenderer
+ * stands each sprite on its tile's top with it, and the apron and the slab
+ * rule read it too.
  *
- * **108b — the ground marks** (Round 7.5 spec D3): the terrain draws every
- * body's ground mark itself, as shapes evaluated per fragment from a per-frame
- * table binned per tile (groundMarks.ts, shaders/terrainMarks.glsl), so a mark
- * lies on tile tops, step faces and hill mounds alike, and its depth is the
- * terrain's. `beginMarks` / `addMark` each frame; the table uploads at the
+ * The ground marks: the terrain draws every body's mark itself, as shapes
+ * evaluated per fragment from a table rebuilt each frame and binned per tile
+ * (groundMarks.ts, shaders/terrainMarks.glsl), so a mark lies on tile tops,
+ * step faces and hill mounds alike, and its depth is the terrain's.
+ * `beginMarks` and `addMark` each frame; the table uploads at the frame's
  * first terrain draw.
  */
 
 const VERTS_PER_TILE = 30; // 5 quads × 2 tris × 3 verts (top + 4 sides; bottom omitted — never visible from the locked camera pitch)
-/** Lowered from -0.7 in D7.C so the chasm prism (top -1.2) still has 0.3
- *  units of side visible. Non-chasm tiles' visible sides are still bounded
- *  at the top by their topY, so the deeper bottom only shows up at the
- *  chasm boundary (and at the literal board edge, which the camera
- *  pitch barely sees). M4: exported — ApronRenderer's ring prisms share
- *  the same bottom so the apron/board seam has no visible step. */
+/** The prisms' bottom: low enough that the chasm prism (top −1.2) keeps 0.3
+ *  of side in view. Other tiles' sides are bounded above by their tops, so
+ *  the depth shows only at a chasm's edge and at the board's own edge, which
+ *  the camera's pitch barely sees. Exported: the apron's prisms share it, so
+ *  the seam has no step, and the mist floor lies at it. */
 export const BOTTOM_Y = -1.5;
 
 const WATER_TOP_Y = -0.4;
-/** D7.C: chasm top Y. Deep enough (vs water's -0.4) to read as "pit, don't
- *  step here" against the green-amber floor at the locked camera pitch. */
+/** The chasm's top: deep enough, against water's −0.4, to read at the
+ *  camera's pitch as a pit to keep out of. */
 const CHASM_TOP_Y = -1.2;
 const FLOOR_RANGE_LO = -0.3;
 const FLOOR_RANGE_HI = 0.0;
-/** §37b — mud is a shallow depression just under the floor band — a bogged-down
- *  read. Fixed (not noise-varied) so a mud flat looks uniformly waterlogged. */
+/** Mud: a fixed plane near the floor band's low end, below most floor tops,
+ *  for a bogged-down read. Not noise-varied, so a mud flat looks uniformly
+ *  waterlogged. */
 const MUD_TOP_Y = -0.25;
-/** §37b — hill bumps. The `hills` BASE tile stays flat ground (the floor band);
- *  the relief comes from a deterministic scatter of low-poly mounds overlaid
- *  per tile (the `bumpsMesh` child), not from raising the tile. Placement +
- *  size are sampled from the fixed noise field, so the look is canonical, not
- *  a per-battle roll. Each mound is a 4-sided pyramid (open base, never seen
- *  from the locked camera pitch). QUAD_OFFSETS must have BUMPS_PER_HILL_TILE
- *  entries (one base position per mound). */
+/** Hill mounds. A `hills` tile stays flat ground (the floor band); its relief
+ *  is a scatter of low-poly mounds laid over the tile (the `bumpsMesh`
+ *  child), placed and sized from the fixed noise field, so the look is
+ *  canonical. Each mound is a four-sided pyramid with an open base, which the
+ *  camera's pitch never shows. QUAD_OFFSETS holds one base position per
+ *  mound. */
 const BUMPS_PER_HILL_TILE = 4;
 const VERTS_PER_BUMP = 12; // 4 pyramid side-tris × 3 verts
 const VERTS_PER_HILL_TILE = BUMPS_PER_HILL_TILE * VERTS_PER_BUMP;
@@ -117,10 +113,11 @@ const NOISE_FREQ = 0.42;
 /** Fixed seed: the visual character is canonical, not a per-battle roll. */
 const NOISE_SEED = 0xb1c1a1b;
 
-/** Diffuse light direction in world space — view-space `normal · L` is the
- *  diffuse term. M4: exported (with AMBIENT/SIDE_SHADE below) so
- *  ApronRenderer lights its ring identically — both materials clone the
- *  vector, so neither can mutate the other's uniform. */
+/** The diffuse light's direction, in view space: the shaders dot it with the
+ *  view-space normal (`normalMatrix`), so the light turns with the camera.
+ *  Exported, with AMBIENT and SIDE_SHADE, so the apron lights its ring the
+ *  same; each material clones the vector, so neither can change the other's
+ *  uniform. */
 export const LIGHT_DIR = new THREE.Vector3(0.4, 0.85, 0.35).normalize();
 /** Ambient floor — sides never go fully black. */
 export const AMBIENT = 0.45;
@@ -129,21 +126,18 @@ export const SIDE_SHADE = 0.7;
 /** Top-face grid-line width as a fraction of cell size. */
 const GRID_LINE_WIDTH = 0.06;
 
-/** D7.C: per-tile animation type encoded into the `aAnim.x` attribute.
- *  The fragment shader switches on these values to apply a sine flicker
- *  (fire) or a slower pulse (healing). 0 = no animation. M4: exported —
- *  the apron's clamp-sampled fire/healing tiles keep animating into the
- *  fog, so its shader branches on the same encoding. 98e: id 3 is DEEP
- *  WATER — not an animation but a static band pattern (the passable /
- *  impassable tell beside the hue; both shaders, the drift a §99 seam). */
+/** The per-tile animation id in `aAnim.x`, which both fragment shaders branch
+ *  on: fire's flicker, healing's slower pulse, and deep water's bands (the
+ *  passable/impassable tell beside the hue). 0 is none. The apron's tiles
+ *  carry the same ids, so its clamp-sampled tiles keep animating into the
+ *  fog. */
 export const ANIM_NONE = 0;
 export const ANIM_FIRE = 1;
 export const ANIM_HEALING = 2;
 export const ANIM_DEEP_WATER = 3;
 
-/** 98e — the ONE kind → `aAnim.x` mapping (the terrain and the apron each
- *  carried a private ternary until 98e). Pure; pinned in
- *  TerrainRenderer.test.ts so a kind can never fall to the wrong branch. */
+/** The one kind → `aAnim.x` mapping, shared by the terrain and the apron;
+ *  pinned in TerrainRenderer.test.ts so no kind falls to the wrong branch. */
 export function animTypeFor(kind: TileKind): number {
   switch (kind) {
     case 'fire':
@@ -157,8 +151,8 @@ export function animTypeFor(kind: TileKind): number {
   }
 }
 
-/** Per-renderer-instance vertex capacity. Sized at the largest D3-allowed
- *  grid (32×32) so any per-encounter size fits without reallocating. */
+/** The buffers' capacity in tiles: the largest board, so any board fits
+ *  without reallocating. */
 const MAX_TILES = LAYOUT_MAX_SIDE * LAYOUT_MAX_SIDE;
 
 /** Replace the one occurrence of `anchor` in `source`; throw if it is not there
@@ -175,12 +169,12 @@ const VERTEX_MARKS_ANCHOR = '  vWorldPos = (modelMatrix * vec4(position, 1.0)).x
 const FRAGMENT_MARKS_ANCHOR = '  gl_FragColor = vec4(base, 1.0);'; // i18n-ok — shader source
 
 /**
- * 108b — the terrain shaders with the ground marks spliced in (spec D3; the
- * chunk is shaders/terrainMarks.glsl). Only insertions: the world-space normal
- * the tile lookup needs, the chunk before `main`, and one call before the
- * fragment's write. With the marks off the terrain uses `VERTEX_SHADER` and
- * `FRAGMENT_SHADER` untouched, which is what the frame-cost bench's before
- * leg measures.
+ * The terrain shaders with the ground marks spliced in (the chunk is
+ * shaders/terrainMarks.glsl). Only insertions: the world-space normal the
+ * tile lookup needs, the chunk and its defines before `main`, and one call
+ * before the fragment's write. With the marks off the terrain uses
+ * `VERTEX_SHADER` and `FRAGMENT_SHADER` untouched, which is what the
+ * frame-cost bench's marks-off legs measure.
  */
 export function groundMarkShaders(): { vertexShader: string; fragmentShader: string } {
   const defines =
@@ -214,16 +208,15 @@ export class TerrainRenderer {
 
   private gridW: number;
   private gridH: number;
-  /** D8: current encounter's theme, captured at `setTiles` time. Drives
-   *  the floor-tile palette branch in `topColorFor`. */
+  /** The battle's theme, captured at `setTiles`; `topColorFor` reads it for
+   *  the floor's palette. */
   private theme: Theme = 'grassland';
   private readonly geometry: THREE.BufferGeometry;
   private readonly material: THREE.ShaderMaterial;
-  /** §37b — hill-bump overlay (a child of `mesh`): low-poly mounds scattered on
-   *  `hills` tiles. Its own geometry, sized per `setTiles` to the hills count,
-   *  drawn with a DoubleSide clone of the terrain material (mounds don't
-   *  animate, so the clone's frozen `uTime` is harmless; DoubleSide spares us
-   *  per-face winding bookkeeping). */
+  /** The hill mounds (a child of `mesh`): their own geometry, sized at each
+   *  `setTiles` to the hills count, drawn with a DoubleSide clone of the
+   *  terrain material. The clone's `uTime` never advances, which mounds,
+   *  having no animation, don't need; DoubleSide spares per-face winding. */
   private readonly bumpsGeometry: THREE.BufferGeometry;
   private readonly bumpsMaterial: THREE.ShaderMaterial;
   private readonly bumpsMesh: THREE.Mesh;
@@ -231,9 +224,9 @@ export class TerrainRenderer {
   private readonly normals: Float32Array;
   private readonly colors: Float32Array;
   private readonly topUVs: Float32Array;
-  /** D7.C: per-vertex (animType, phase). animType drives the fragment-
-   *  shader effect branch (fire flicker / healing pulse); phase is a
-   *  per-tile offset so neighboring fire tiles don't pulse in unison. */
+  /** Per vertex (animType, phase): the id picks the fragment shader's
+   *  branch, and the phase, per tile, keeps neighbouring fire tiles out of
+   *  unison. */
   private readonly anims: Float32Array;
   private readonly positionAttr: THREE.BufferAttribute;
   private readonly normalAttr: THREE.BufferAttribute;
@@ -245,15 +238,15 @@ export class TerrainRenderer {
   private readonly tmpTopColor = new THREE.Color();
   private readonly tmpSideColor = new THREE.Color();
 
-  /** 108b — this frame's ground marks (groundMarks.ts). BattleRenderer begins
-   *  and fills it after the lerps; the dev explorer adds its posed marks after
-   *  that; the first terrain draw of the frame bins and uploads it. */
+  /** This frame's ground marks (groundMarks.ts). BattleRenderer begins and
+   *  fills it after the lerps, the board explorer adds its posed marks after
+   *  that, and the frame's first terrain draw bins and uploads it. */
   private readonly markTable = new MarkTable();
   private readonly marksTexture: THREE.DataTexture;
   private readonly binsTexture: THREE.DataTexture;
-  /** The marks' uniform OBJECTS, shared by the prisms' material and the
-   *  mounds' clone: `ShaderMaterial.clone()` copies uniforms (see the mound
-   *  field above), so a clone left alone would draw stale marks or none. */
+  /** The marks' uniform objects, shared by the prisms' material and the
+   *  mounds' clone: `ShaderMaterial.clone()` copies uniforms, so a clone left
+   *  alone would draw stale marks or none. */
   private readonly markUniforms: {
     readonly uMarks: THREE.IUniform<THREE.DataTexture>;
     readonly uMarkBins: THREE.IUniform<THREE.DataTexture>;
@@ -296,9 +289,9 @@ export class TerrainRenderer {
     this.geometry.setAttribute('aColor', this.colorAttr);
     this.geometry.setAttribute('aTopUV', this.topUVAttr);
     this.geometry.setAttribute('aAnim', this.animAttr);
-    // Loose bounding sphere sized at the renderer's max extent. Since the
-    // mesh is always centered on the world origin and our camera framing
-    // sees the whole arena, frustum culling at this radius costs nothing.
+    // A loose bounding sphere at the largest board's extent: the mesh is
+    // centred on the origin and the camera frames the whole board, so
+    // culling at this radius costs nothing.
     this.geometry.boundingSphere = new THREE.Sphere(
       new THREE.Vector3(0, BOTTOM_Y / 2, 0),
       LAYOUT_MAX_SIDE,
@@ -328,36 +321,34 @@ export class TerrainRenderer {
         uAmbient: { value: AMBIENT },
         uGridLineColor: { value: new THREE.Color(COLORS.TERMINAL_BLACK) },
         uGridLineWidth: { value: GRID_LINE_WIDTH },
-        // D7.C: monotonically increasing seconds since this renderer was
-        // created (or since the last advanceTime caller wraps it — there's
-        // no wrap; fp32 holds a clean second-grain accumulator for ~hours).
+        // Seconds of shader time, accumulated by `advanceTime`.
         uTime: { value: 0 },
       },
     });
 
     this.mesh = new THREE.Mesh(this.geometry, this.material);
 
-    // §37b — the hill-bump child. Empty until `setTiles` populates it; rides
-    // the parent's transform so it lands in the scene wherever `mesh` does, and
-    // its raycast is a no-op so cell-picking (which raycasts `mesh`) ignores it.
+    // The mound child. Empty until `setTiles` fills it; it rides the parent's
+    // transform, and its raycast is a no-op, so a raycast of `mesh` with its
+    // children hits only the tiles (`pickCell` doesn't take children).
     this.bumpsGeometry = new THREE.BufferGeometry();
     this.bumpsGeometry.setDrawRange(0, 0);
     this.bumpsMaterial = this.material.clone();
     this.bumpsMaterial.side = THREE.DoubleSide;
-    // 108b — the clone copied the mark uniforms; point it back at the shared ones.
+    // The clone copied the mark uniforms; point it back at the shared ones.
     Object.assign(this.bumpsMaterial.uniforms, this.markUniforms);
     this.bumpsMesh = new THREE.Mesh(this.bumpsGeometry, this.bumpsMaterial);
     this.bumpsMesh.frustumCulled = false; // small geometry, always in frame
     this.bumpsMesh.raycast = () => {}; // unclickable — picking hits the base tile
     this.mesh.add(this.bumpsMesh);
 
-    // 108b — the frame's marks are uploaded by whichever of the two meshes
-    // draws first (opaque draw order is three's to choose).
+    // The frame's marks are uploaded by whichever of the two meshes draws
+    // first (opaque draw order is three's to choose).
     this.mesh.onBeforeRender = () => this.commitMarks();
     this.bumpsMesh.onBeforeRender = () => this.commitMarks();
   }
 
-  /** 108b — the marks' look; the dev explorer dials it for the stop-1 read. */
+  /** The marks' look; the board explorer dials the plates' corner. */
   get markStyle(): MarkStyle {
     return this.style;
   }
@@ -367,15 +358,15 @@ export class TerrainRenderer {
     this.writeMarkStyle();
   }
 
-  /** 108b — are the ground marks drawn? */
+  /** Are the ground marks drawn? */
   get groundMarksOn(): boolean {
     return this.marksOn;
   }
 
   /**
-   * 108b — draw the ground marks or not. Off swaps both materials back to the
-   * plain terrain shaders (a recompile) and empties the table: the frame-cost
-   * bench's before leg, and the explorer's comparison with the §106 mock.
+   * Draw the ground marks or not. Off swaps both materials back to the plain
+   * terrain shaders (a recompile) and empties the table: the frame-cost
+   * bench's marks-off legs, and the board explorer's marks dial.
    */
   setGroundMarks(on: boolean): void {
     if (on === this.marksOn) return;
@@ -390,9 +381,9 @@ export class TerrainRenderer {
   }
 
   /**
-   * 108b — start this frame's marks for a `gridW × gridH` board; `addMark` each
-   * one. The table is binned and uploaded when the terrain next draws, so
-   * anything added before the render is in the frame.
+   * Start this frame's marks for a `gridW × gridH` board; `addMark` each one.
+   * The table is binned and uploaded when the terrain next draws, so anything
+   * added before the render is in the frame.
    */
   beginMarks(gridW: number, gridH: number): void {
     this.markTable.begin(gridW, gridH);
@@ -403,7 +394,7 @@ export class TerrainRenderer {
     if (this.marksOn) this.markTable.add(mark);
   }
 
-  /** 108b — the last upload's counts, for probes and the bench. */
+  /** The last upload's counts, for probes and the bench. */
   get markStats(): { count: number; overflow: number; maxBin: number } {
     const t = this.markTable;
     return { count: t.count, overflow: t.overflow, maxBin: t.maxBin };
@@ -428,32 +419,30 @@ export class TerrainRenderer {
   }
 
   /**
-   * Top Y of the cell at (cx, cy) given its tile kind. The same function
-   * the geometry uses, exposed so other renderers (BattleRenderer for
-   * per-tile sprite Y) can stay in sync with the surface without a
+   * The top Y of the cell at (cx, cy), given its kind. The function the
+   * geometry uses, exposed so other renderers stand on the surface without a
    * second source of truth.
    */
   heightAt(cx: number, cy: number, kind: TileKind): number {
-    // §37b: deep water is COPLANAR with shallow water — its greater depth reads
-    // through the darker color, not a sunken surface (which looked wrong butted
-    // up against regular water).
+    // Deep water is level with shallow water: its depth reads through its
+    // colour and its bands, since a sunken surface looked wrong against
+    // shallow water.
     if (kind === 'shallow_water' || kind === 'deep_water') return WATER_TOP_Y;
     if (kind === 'chasm') return CHASM_TOP_Y;
-    if (kind === 'mud') return MUD_TOP_Y; // §37b — fixed sunken plane
-    // D7.C: fire + healing live on the same noise field as floor — they're
-    // surface effects, not elevation changes. §37b: ice / sand / hills are
-    // flat-ground variants too (hills' relief is the overlaid bump mesh, not a
-    // raised tile). Sprites standing on any of these want a tile top to plant on.
+    if (kind === 'mud') return MUD_TOP_Y;
+    // Fire, healing, ice, sand and hills share the floor's noise field: they
+    // are surfaces, not elevations (hills' relief is the mound mesh), and a
+    // sprite on any of them stands on a tile top.
     const n = this.noise2D(cx * NOISE_FREQ, cy * NOISE_FREQ); // [-1, 1]
     const t = (n + 1) * 0.5;
     return FLOOR_RANGE_LO + (FLOOR_RANGE_HI - FLOOR_RANGE_LO) * t;
   }
 
   /**
-   * D7.C: advance the shader's `uTime` uniform for per-tile fire/healing
-   * animation. Called from BattleScene.tick (only ticks during battle, so
-   * non-battle scenes pay nothing). Pure accumulation — no wrap, no
-   * modular reduction; fp32 keeps a clean second-grain count for hours.
+   * Advance the shader's `uTime`, for fire's flicker, healing's pulse and
+   * deep water's drift. BattleScene calls it on the battle's scaled time and
+   * holds it under reduced motion (`advanceShaderTime`). It accumulates with
+   * no wrap; fp32 keeps a clean second-grain count for hours.
    */
   advanceTime(dt: number): void {
     const u = this.material.uniforms['uTime']!;
@@ -461,11 +450,10 @@ export class TerrainRenderer {
   }
 
   /**
-   * Configure the terrain mesh for an encounter of the given dimensions.
-   * The renderer's vertex buffers were sized once at construction for
-   * the max D3 grid; `setDrawRange` exposes the right slice for this
-   * encounter so non-square (or smaller-than-max) boards render
-   * correctly without zero-area junk geometry from unused slots.
+   * Set the mesh for a `gridW × gridH` board. The buffers were sized at
+   * construction for the largest board; the draw range covers this board's
+   * cells, so a smaller or non-square board draws no junk from the unused
+   * slots.
    */
   setTiles(tileGrid: TileGrid, gridW: number, gridH: number, theme: Theme = 'grassland'): void {
     if (gridW * gridH > MAX_TILES) {
@@ -479,15 +467,15 @@ export class TerrainRenderer {
     const kindAt = (x: number, y: number): TileKind => tileGrid.kindAt({ x, y });
     this.fillFromKindFn(kindAt);
     this.geometry.setDrawRange(0, gridW * gridH * VERTS_PER_TILE);
-    this.fillHillBumps(kindAt, gridW, gridH); // §37b
+    this.fillHillBumps(kindAt, gridW, gridH);
   }
 
   clear(): void {
     this.gridW = 0;
     this.gridH = 0;
     this.geometry.setDrawRange(0, 0);
-    this.bumpsGeometry.setDrawRange(0, 0); // §37b
-    this.beginMarks(0, 0); // 108b
+    this.bumpsGeometry.setDrawRange(0, 0);
+    this.beginMarks(0, 0);
   }
 
   /** Walks every cell, computes height + color, writes 30 verts per cell. */
@@ -526,12 +514,11 @@ export class TerrainRenderer {
         this.tmpSideColor.copy(this.tmpTopColor).multiplyScalar(SIDE_SHADE);
         const top = this.tmpTopColor;
         const side = this.tmpSideColor;
-        // D7.C per-tile anim — same value across all 30 verts of the tile.
-        // Writing it once per cell after the side/top verts is simpler than
-        // threading it through every writeVert call. Phase is a deterministic
-        // hash of (cx, cy) so neighboring fire tiles don't pulse in unison;
-        // doesn't need to be uniform-distributed, just non-coherent.
-        const animType = animTypeFor(kind); // 98e — one mapping, shared with the apron
+        // The tile's animation, the same on all 30 of its verts, written once
+        // after them rather than through every writeVert call. The phase is
+        // a hash of (cx, cy), so neighbouring fire tiles don't pulse in
+        // unison; it needs to be incoherent, not uniform.
+        const animType = animTypeFor(kind);
         const animPhase = (cx * 13 + cy * 7) * 0.43;
         const tileVertStart = vi; // captured before writes; the 30 verts
                                   // below all land in [tileVertStart, vi)
@@ -582,8 +569,6 @@ export class TerrainRenderer {
         writeVert(x0, BOTTOM_Y, zHi, -1, 0, 0, side, 0, 0);
         writeVert(x0, topY, zHi, -1, 0, 0, side, 0, 0);
 
-        // D7.C per-tile anim. All VERTS_PER_TILE verts of this cell share
-        // the same (type, phase).
         for (let i = tileVertStart; i < vi; i++) {
           const ai = i * 2;
           anim[ai] = animType;
@@ -599,13 +584,12 @@ export class TerrainRenderer {
   }
 
   /**
-   * §37b — populate the hill-bump child: a deterministic scatter of low-poly
-   * mounds on every `hills` tile (the base tile itself stays flat ground). The
-   * buffers are sized to the EXACT hills count each call — `setTiles` runs once
-   * per encounter, so the per-call allocation is cheap and avoids reserving a
-   * max-grid's worth of bump verts for boards with few or no hills. Each mound
-   * is a 4-sided pyramid; the per-face normals give the faceted low-poly shade,
-   * and `aTopUV` is pinned to cell-interior (0.5, 0.5) so the grid-line stamp
+   * Fill the mound child: a fixed scatter of low-poly mounds on every `hills`
+   * tile, whose own top stays flat ground. The buffers are sized to the hills
+   * count on each call: `setTiles` runs once per battle, so the allocation is
+   * cheap and spares holding the largest board's worth of mound verts. Each
+   * mound is a four-sided pyramid; its face normals give the faceted shade,
+   * and `aTopUV` is pinned to the cell's interior (0.5, 0.5) so the grid line
    * never paints onto a mound.
    */
   private fillHillBumps(
@@ -709,27 +693,20 @@ export class TerrainRenderer {
 }
 
 /**
- * D8 — per-theme floor-tile palette. Each entry is the (low, high) endpoints
- * of the simplex-height lerp; the same noise field shifts color across
- * adjacent floor tiles within a theme so the surface stays visually varied.
- * Water / chasm / fire / healing keep their fixed D7 palettes regardless of
- * theme — they're functional indicators players need to recognize at a
- * glance, so re-tinting them per theme would risk parsing-load (per the
- * D8 scope decision).
+ * The floor's palette per theme: each entry is the (low, high) ends of the
+ * height lerp, so the noise field varies the colour across neighbouring floor
+ * tiles. Kinds other than floor and hills keep their fixed colours on every
+ * theme: they are signals a player must know at a glance, which a per-theme
+ * tint would blur.
  *
- * - `grassland`: the canonical DARK_TERMINAL_GREEN → DARK_TERMINAL_AMBER lerp.
- * - `barren`: gray tones. Low end a stone-dark companion, high end TERMINAL_STONE
- *   — same neutral-stone family the wall sprite already uses, so a barren
- *   board reads as "stone arena."
- * - `volcanic`: dark red base climbing into amber. The high end shares
- *   DARK_TERMINAL_AMBER with the grassland palette so fire tiles (D7) blend
- *   organically into a volcanic floor instead of jumping out as alien.
- * - `tundra`: cold slate → pale ice-white (snow). · `desert`: shadowed tan →
- *   warm sand. · `swamp`: dark bog → murky olive. (§37e — fixed identity hex.)
+ * - `grassland`: DARK_TERMINAL_GREEN → DARK_TERMINAL_AMBER.
+ * - `barren`: a stone-dark companion → TERMINAL_STONE, the colour inert walls
+ *   are drawn in, so a barren board reads as a stone arena.
+ * - `volcanic`: dark red → DARK_TERMINAL_AMBER, grassland's high end, so fire
+ *   tiles blend into a volcanic floor instead of standing out.
  *
- * Adding a theme: extend `ThemeSchema` in `src/config/layouts.ts`,
- * append an entry here, and the editor + procedural picker pick it up
- * automatically (THEMES is the source of truth).
+ * Adding a theme: `ThemeSchema`'s doc in src/config/layouts.ts; the
+ * `Record<Theme, …>` type makes its entry here required.
  */
 const FLOOR_PALETTE: Record<Theme, { low: THREE.Color; high: THREE.Color }> = {
   grassland: {
@@ -737,9 +714,6 @@ const FLOOR_PALETTE: Record<Theme, { low: THREE.Color; high: THREE.Color }> = {
     high: new THREE.Color(COLORS.DARK_TERMINAL_AMBER),
   },
   barren: {
-    // Low end is a stone-dark companion to TERMINAL_STONE (same hue family,
-    // ~50% value). High end is TERMINAL_STONE itself — the same color the
-    // wall sprite uses, so a barren arena reads as "stone everywhere."
     low: new THREE.Color('#3a342f'),
     high: new THREE.Color(COLORS.TERMINAL_STONE),
   },
@@ -747,9 +721,6 @@ const FLOOR_PALETTE: Record<Theme, { low: THREE.Color; high: THREE.Color }> = {
     low: new THREE.Color('#3a0a04'),
     high: new THREE.Color(COLORS.DARK_TERMINAL_AMBER),
   },
-  // §37e — three new fixed-identity palettes (theme-independent hex, like
-  // volcanic). low = shadowed/recessed floor, high = lit crest (the noise lerp
-  // in `topColorFor` walks low→high by the per-cell height field).
   tundra: {
     low: new THREE.Color('#2c3a47'), // cold dark slate
     high: new THREE.Color('#c4d4e0'), // pale ice-white snow
@@ -764,64 +735,51 @@ const FLOOR_PALETTE: Record<Theme, { low: THREE.Color; high: THREE.Color }> = {
   },
 };
 const _waterColor = new THREE.Color('#1F5B7A');
-/** D7.C chasm: very dark (near-black) so the pit reads as inhospitable
- *  void; the depth difference (CHASM_TOP_Y vs floor) does the heavy
- *  lifting and the color just confirms the read. */
+/** Chasm: near-black, so the pit reads as a void; its depth does most of the
+ *  work, and the colour confirms it. */
 const _chasmColor = new THREE.Color('#0a0a0a');
-/** D7.C fire: dim-ember red to bright amber across the floor height range.
- *  The shader flicker (uTime + per-tile phase) is what makes it feel alive;
- *  the lerp adds spatial variance between adjacent fire tiles. */
+/** Fire: dim ember red to bright amber across the floor's height range. The
+ *  shader's flicker makes it live; the lerp varies neighbouring fire tiles. */
 const _fireLow = new THREE.Color('#aa1c00');
 const _fireHigh = new THREE.Color('#ffaa00');
-/** D7.C healing: dark teal to FLOURESCENT_BLUE-ish cyan. Deliberately
- *  distinct from TERMINAL_GREEN (ally sprite color) so healing tiles
- *  don't read as "an ally is here." Terrain doesn't render on the bloom
- *  layer (camera layer 0 only), so the bright cyan doesn't trigger the
- *  sprite bloom shader. */
+/** Healing: dark teal to the palette's cyan, kept off the green yours are
+ *  drawn in, so a healing tile doesn't read as an ally standing there. The
+ *  cyan is read from `COLORS`, so the colourblind palette, which moves it
+ *  away from its mint, moves the tile with it. Terrain draws on layer 0
+ *  only, never in the bloom pass, so a bright tile raises no halo. */
 const _healLow = new THREE.Color('#0d4d4a');
-// 116g — the high end IS the palette's cyan, so it is read from the palette:
-// a palette that moves the cyan away from its ally hue moves this with it.
 const _healHigh = new THREE.Color(COLORS.FLOURESCENT_BLUE);
-/** §37b — deep water: a darker, colder navy than shallow water (`#1F5B7A`).
- *  98e — the comment here credited a `DEEP_WATER_TOP_Y` recess for the
- *  "impassable, don't wade" read; no such constant exists — §37b made deep
- *  water COPLANAR with shallow in the same step (`heightAt`: a sunken deep
- *  tile looked wrong butted against regular water), so until 98e the ~1.9×
- *  luminance gap between the two blues was the ONLY read. The read is now
- *  the shader's static bands (`ANIM_DEEP_WATER`, terrain.frag id 3); the
- *  color confirms it (flat, like shallow water + chasm). */
+/** Deep water: a darker, colder navy than shallow water. It is level with
+ *  shallow water (`heightAt`), so the shader's bands (`ANIM_DEEP_WATER`)
+ *  carry the passable/impassable read, and the colour confirms it, flat like
+ *  shallow water and chasm. */
 const _deepWaterColor = new THREE.Color('#0e3047');
-/** §37b — mud: flat wet brown. The slight sink (MUD_TOP_Y) + dark earth read
- *  as a bog. Fixed-height tile, so every mud cell shares this one color. */
+/** Mud: a flat wet brown; with its plane low in the floor band, it reads as
+ *  a bog. One height, so every mud tile shares the colour. */
 const _mudColor = new THREE.Color('#46361f');
-/** Hills take the board theme's floor palette (the cluster-two spec: a hills
- *  tile "otherwise visually conforms to the layout's palette"); the mounds
- *  carry the read by shape. Each mound is its own tile's top colour made
- *  brighter by this factor, more for a taller mound, so a cluster reads as lit
- *  high ground in the tile's own hue. (Not a lerp toward the palette's high
- *  end: grassland's runs green → amber, which turned its hills brown.) */
+/** Hills take the theme's floor palette, so a hills tile conforms to its
+ *  board, and the mounds carry the read by shape. Each mound is its tile's
+ *  top colour brightened by this factor, more for a taller mound, so a
+ *  cluster reads as lit high ground in the tile's own hue. A lerp toward the
+ *  palette's high end would turn grassland's hills brown, its palette running
+ *  green to amber. */
 const MOUND_BRIGHTEN_MIN = 1.25;
 const MOUND_BRIGHTEN_MAX = 1.75;
-/** §37b — ice: pale blue-white, slick + cold; flat (floor band). Bright, but
- *  terrain renders on layer 0 only (no sprite bloom), like the healing cyan. */
+/** Ice: pale blue-white, flat (the floor band). Bright, but on layer 0 only,
+ *  like the healing cyan. */
 const _iceLow = new THREE.Color('#9fd0e0');
 const _iceHigh = new THREE.Color('#d8f2f8');
-/** §37b — sand: warm tan dune; flat (floor band). */
+/** Sand: warm tan, flat (the floor band). */
 const _sandLow = new THREE.Color('#b09a5e');
 const _sandHigh = new THREE.Color('#d8c488');
 
 /**
- * Top-face color. Water gets a flat blue (the recess reads through depth,
- * not color variance). Chasm gets a flat near-black (same reason — depth
- * does the work). Floor / fire / healing tiles share the simplex height
- * field and lerp their respective palette pair across it, so adjacent
- * cells of the same kind show subtle variance as well as the per-tile
- * shader animation. **D8**: only the floor branch consults `theme` (and
- * hills, which share it) — water / chasm / fire / healing / ice / sand / mud
- * keep their fixed palettes so they read the same regardless of the
- * surrounding board's theming.
- * **M4**: exported — ApronRenderer colors its ring through this exact
- * function so the apron is canonical-by-construction, not a lookalike.
+ * A top face's colour. Water, deep water, chasm and mud are flat, their depth
+ * or their fixed plane doing the work. Floor, fire, healing, ice and sand
+ * lerp their pair across the height field, so neighbouring tiles of one kind
+ * vary. Only the floor and hills read `theme`; the other kinds keep their
+ * colours on every board. Exported: the apron colours its ring through this
+ * function, so it matches the board by construction.
  */
 export function topColorFor(topY: number, kind: TileKind, theme: Theme, out: THREE.Color): void {
   if (kind === 'shallow_water') {
@@ -829,7 +787,7 @@ export function topColorFor(topY: number, kind: TileKind, theme: Theme, out: THR
     return;
   }
   if (kind === 'deep_water') {
-    out.copy(_deepWaterColor); // §37b — flat, depth does the read
+    out.copy(_deepWaterColor);
     return;
   }
   if (kind === 'chasm') {
@@ -837,7 +795,7 @@ export function topColorFor(topY: number, kind: TileKind, theme: Theme, out: THR
     return;
   }
   if (kind === 'mud') {
-    out.copy(_mudColor); // §37b — flat (fixed-height tile)
+    out.copy(_mudColor);
     return;
   }
   const t = Math.max(0, Math.min(1, (topY - FLOOR_RANGE_LO) / (FLOOR_RANGE_HI - FLOOR_RANGE_LO)));
@@ -850,11 +808,11 @@ export function topColorFor(topY: number, kind: TileKind, theme: Theme, out: THR
     return;
   }
   if (kind === 'ice') {
-    out.copy(_iceLow).lerp(_iceHigh, t); // §37b
+    out.copy(_iceLow).lerp(_iceHigh, t);
     return;
   }
   if (kind === 'sand') {
-    out.copy(_sandLow).lerp(_sandHigh, t); // §37b
+    out.copy(_sandLow).lerp(_sandHigh, t);
     return;
   }
   // Hills fall through: a flat floor-coloured base, the mound mesh carries the relief.

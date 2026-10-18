@@ -225,8 +225,8 @@ drawing. ✅ DECIDED at the kickoff: the phase cut in two, the screens as
   `build-hash`: 3 of 33; the drives' hashes unchanged.
 - ◐ **124j — the comment pass** (`batch`, per batch; ten batches,
   planned in WORKLOG §124). Batch 1, the scenes, built and read
-  2026-10-18; batches 2 and 3, the root's four and the renderer, built
-  2026-10-18, open for their reads; the spec's decision marks out as
+  2026-10-18; batches 2 to 4, the root's four, the renderer and the
+  ground, built 2026-10-18, open for their reads; the spec's decision marks out as
   codes, signed 2026-10-18 (WORKLOG §124, batch 2).
 - ☐ **124k — the close** (`stop`).
 

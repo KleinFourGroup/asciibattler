@@ -1,12 +1,11 @@
-// M4 playtest — the shared mist-color function, prepended (TS-side string
-// concat at material construction) to every fragment shader that needs
-// "what color is the fog at this world XZ": the backdrop plane displays it
-// directly; the apron fades toward it so a fully-fogged tile is
-// pixel-identical to the mist behind it. One copy — the two consumers
-// cannot drift.
+// The shared mist colour, prepended (a string concatenation at the
+// material's construction) to each fragment shader that asks what colour
+// the fog is at a world XZ: the mist floor draws it, and the apron fades
+// toward it, so a fully fogged tile matches the mist behind it. One copy, so
+// the two can't drift.
 //
-// Pure functions only — no uniform declarations (each host shader passes
-// its own time/base color), so concatenation can't double-declare.
+// Pure functions only, no uniforms (each host shader passes its own time
+// and base colour), so the concatenation can't declare one twice.
 
 precision highp float;
 

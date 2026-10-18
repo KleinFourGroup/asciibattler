@@ -9776,3 +9776,106 @@ For the next session:
   constructor doc saying "Pass `null`", which its type refuses.
 - The rate swings with reach: batch 2 ran 120 a line (`Game.ts` touches
   every scene, chip and the Run), batch 3 67.
+
+### 124j, batch 4 — the ground (2026-10-18, session f2e588ad)
+
+`TerrainRenderer.ts`, `ApronRenderer.ts`, `BackdropRenderer.ts`,
+`groundMarks.ts` and their eight shaders. Their step codes and history are
+out: the playtest calls and the design round's date, what a constant was
+lowered from, the bookmark and the mock behind the marks' look, the
+retunes behind the drift, the user's catches. So are the four spec marks,
+under batch 2's call (`TerrainRenderer` twice, `groundMarks`,
+`terrainMarks.glsl`): the decision they stood for, that the terrain draws
+the marks itself, is what the comments around them already said. The
+recipe for a new theme is said once, in `layouts.ts`'s `ThemeSchema` doc,
+where `TerrainRenderer` had a second, shorter copy.
+
+**Statements found false and corrected (rule 7):**
+
+- `TerrainRenderer`'s header: the tops lerp "DARK_TERMINAL_GREEN →
+  DARK_TERMINAL_AMBER"; that is grassland's palette, and a floor lerps
+  across its theme's (`FLOOR_PALETTE`). The buffers sized for the largest
+  board cost "~1 MB" with "no GPU re-upload of unused vertex slots": the
+  five attributes hold 52 bytes a vertex over 30,720 vertices, about
+  1.6 MB, and each `setTiles` uploads all of it, since three's
+  `WebGLAttributes.updateBuffer` sends the whole array when no update
+  range is set (`node_modules/three/src/renderers/webgl/WebGLAttributes.js`).
+  The lighting was "baked"; the fragment shader computes it.
+- `LIGHT_DIR`: a direction "in world space". The shaders dot it with
+  `normalMatrix * normal`, which three builds from the model-view matrix
+  (`WebGLRenderer.js`), so the light is in view space and turns with the
+  camera.
+- `MUD_TOP_Y`: "a shallow depression just under the floor band". −0.25
+  lies inside the band [−0.3, 0], near its low end, below most floor
+  tops; `_mudColor`'s "slight sink" went with it.
+- `uTime`: "seconds since this renderer was created". It is the battle's
+  scaled time, held under reduced motion (`BattleScene.advanceShaderTime`).
+  `advanceTime`'s doc named fire and healing only; deep water's drift
+  rides it too.
+- `setGroundMarks`: marks off served "the explorer's comparison with the
+  §106 mock". The mock went at 108f (`boardPanel/seams.ts`, ARCHITECTURE's
+  board panel line); the explorer has a `marks` dial. `markStyle`'s "the
+  dev explorer dials it" and `MarkStyle`'s "the explorer dials them": it
+  dials `plateCorner` alone (`boardPanel/index.ts`, `applyMarks`).
+- `FLOOR_PALETTE`'s recipe for a theme: extend `ThemeSchema`, add an
+  entry, and "THEMES is the source of truth". `layouts.ts` keeps `THEMES`
+  in step with `ThemeSchema` and asks for a `themeTiles` entry in
+  `terrain.json` too; the comment now points there.
+- The mound child's raycast "is a no-op so cell-picking (which raycasts
+  `mesh`) ignores it". `pickCell` raycasts its surface without children
+  (`intersectObject(surface, false)`); the no-op guards a raycast that
+  takes them.
+- `ApronRenderer`'s creep: an unfogged rim "would ghost against the void
+  once a second". The creep's three sines run at periods of 5.7 to 11.9 s,
+  and what lies behind the rim is the mist floor.
+- `apron.frag`'s edge band: "at d≈0 the fog is ≈0, so the band renders
+  effectively unfogged". The creep's 0.45 lifts the fog to about 0.3 at
+  the band's outer edge (a smoothstep over 1.55); the band stays dark
+  because the fog's target is dark too. "A sunken apron tile shows a dark
+  seam wall": the ring's inner faces face the board, so under the default
+  front-face culling one shows only on the board's far sides, where the
+  apron tile stands above the board's edge tile. That is reasoned from
+  the geometry, not seen.
+
+Dropped and not checked: `BackdropRenderer`'s "~125 units of plane" at a
+"45° pitch, 50° FOV" framing, a perspective framing older than the shipped
+orthographic camera (the half-extent's reason is now the calm at
+MIST_CALM_FAR, read from `fogcolor.glsl`); and its "non-battle scenes
+fully mask the canvas with opaque DOM", which batch 2 left for this batch:
+the twelve screens' roots are §124.5's, and a screen fades in from opacity
+0 over 180 ms (`.screen-fade`), so "fully" needs their reads.
+
+**Twin corrected outside the batch, flagged:** ARCHITECTURE's
+`TerrainRenderer.ts` line gave `DEEP_DRIFT` as 0.0; it is 0.6 in both
+shaders, pinned equal by `TerrainRenderer.test.ts`. A search of `src`,
+`tools` and `tests` for the green-to-amber lerp, the light's space,
+"1 MB", "re-upload", the mud's sink, "since … created", "once a second"
+and a sunken apron found no other. `BattleRenderer.updateGroundMarks`
+keeps "spec D3" and "the §106 mock's" for batch 7.
+
+Measured (`comment-length` on copies under `output/cl-124j-b4`): comment
+lines 642 → 559, words 6,190 → 5,382, code lines 1,183 unchanged;
+`TerrainRenderer.ts` 268 → 226. The step-code ceiling 2,784 → 2,660, the
+124 the twelve held (`TerrainRenderer` 70, `terrain.frag` 16,
+`apron.frag` 10, `groundMarks` 9, `terrain.vert` 5, `ApronRenderer` and
+`terrainMarks.glsl` 4 each, `BackdropRenderer` 2, the other four 1 each).
+
+Proof: `comment-strip HEAD src`, comments only, exit 0; its control made
+one code edit in memory in each of the 12 changed files and the compare
+named all 12.
+
+Cost: 106,081 at 14:23 on 2026-10-18 by the tool's clock, after the
+orientation, to 277,391 at 14:39 after the proof: about 171k for 1,986
+lines, about 86 a line. Batch 5 (1,887 lines) at the pass's rate so far,
+about 93 a line, is about 175k, under the hand-off line from here, so
+this session takes it.
+
+**Read** (`batch`): `git show <this commit> --
+src/render/TerrainRenderer.ts src/render/shaders/apron.frag.glsl` against
+the seven rules. Wrong looks like a step code or history left, or a rule
+a change must respect cut: the splice's anchors each found once, the mark
+uniforms shared with the mounds' clone, `DEEP_DRIFT` equal in both
+shaders, the fog's base colour the scene's background, the creep's sum
+kept equal in TS and GLSL, `uTime` held under reduced motion with no
+shader branch. And the edge band's inner-face sentence, reasoned and not
+seen.

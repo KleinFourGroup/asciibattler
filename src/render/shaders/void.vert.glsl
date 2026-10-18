@@ -1,5 +1,5 @@
-// M4 playtest — backdrop mist plane (BackdropRenderer). World position
-// through; all the look lives in the fragment's fogColorAt.
+// The mist floor's plane (BackdropRenderer). The world position passes
+// through; the look is all in the fragment's fogColorAt.
 
 precision highp float;
 

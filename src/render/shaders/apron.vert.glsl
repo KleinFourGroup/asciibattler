@@ -1,9 +1,8 @@
-// M4 apron (battle-backdrop ring). Same prism inputs as terrain.vert minus
-// the top-UV channel — the apron stamps no grid lines; the missing grid is
-// the deliberate "not playable" cue. Adds the world-position varying the
-// fragment fade needs (distance from the playable rect is a world-space
-// question, so it can't be baked per-vertex without seams on the prism
-// sides).
+// The apron's ring. The prism inputs of terrain.vert less the top UV: the
+// apron stamps no grid lines, the missing grid being the cue that it is not
+// playable. It adds the world position the fragment's fade needs (distance
+// from the playable rectangle is a world-space question, which per-vertex
+// values can't answer without seams on the prism sides).
 
 precision highp float;
 

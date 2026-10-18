@@ -1,25 +1,24 @@
 /**
- * The ground marks' table (Round 7.5 spec D3, built at 108a): what the
- * terrain shader draws under every body, rebuilt each frame and binned per
- * tile, so a terrain fragment evaluates only the few marks that can reach its
- * tile. THREE-free (the `spriteColor.ts` precedent): the binning is what a
- * headless test can pin, and the shader side only reads what this packs.
+ * The ground marks' table: what the terrain shader draws under every body,
+ * rebuilt each frame and binned per tile, so a terrain fragment evaluates
+ * only the few marks that can reach its tile. Free of THREE, so a headless
+ * test can pin the binning; the shader side only reads what this packs.
  *
- * The look is the §106 bookmark's, signed at the 106c–106d reads:
- *  - one mark per combatant, its side's SHAPE (a circle for yours, a diamond
+ * The look:
+ *  - one mark per combatant, its side's shape (a circle for yours, a diamond
  *    for the enemy's, a triangle for an active camp) at contact size, filled
  *    dark and outlined in the body's colour;
- *  - a PLATE under every scenery body: its footprint less an inset, filled
+ *  - a plate under every scenery body: its footprint less an inset, filled
  *    dark and framed in the body's colour. A destructible wall or cover gets a
- *    DASHED frame (the §108 kickoff's answer to `CRACKED_STONE` being its only
- *    tell), so the tell survives the grey read as a shape.
+ *    dashed frame, so its tell, otherwise `CRACKED_STONE`'s colour alone,
+ *    survives the grey read as a shape.
  * The shapes are world shapes on the ground plane; the shader lays them on the
  * terrain wherever it is drawn (tops, step faces, hill mounds). At yaw 45 the
  * enemy's world diamond draws as a screen rectangle while the tile and the
  * plate draw as screen diamonds, and the four stay distinct.
  *
  * Geometry, world XZ about the mark's centre, `extent` = the vertex radius r
- * (the mock's `CircleGeometry` radius) or, for a plate, the half-side:
+ * or, for a plate, the half-side:
  *  - circle: radius r;
  *  - diamond: vertices (±r, 0) and (0, ±r), on the grid axes;
  *  - triangle: apex (0, −r), toward world −z (grid +y), base (±r·√3/2, r/2);
@@ -36,10 +35,7 @@ export type MarkShape = 'circle' | 'diamond' | 'triangle' | 'plate';
 const SHAPE_CODE: Record<MarkShape, number> = { circle: 0, diamond: 1, triangle: 2, plate: 3 };
 const DASHED_BIT = 4;
 
-/**
- * The look's numbers. The defaults are the signed bookmark's (WORKLOG §108
- * Kickoff, finding 8); the explorer dials them for the stop-1 read.
- */
+/** The look's numbers; the board explorer dials `plateCorner`. */
 export interface MarkStyle {
   /** A combatant mark's size across its vertices, in tiles, per footprint tile. */
   readonly contactSize: number;
@@ -47,8 +43,8 @@ export interface MarkStyle {
   readonly contactFill: number;
   /** The combatant mark's outline opacity. */
   readonly contactOutline: number;
-  /** The outline's width as a fraction of the vertex radius, measured ALONG the
-   *  radius (the mock's ring), so across an edge it is r·stroke·cos(π/n). */
+  /** The outline's width as a fraction of the vertex radius, measured along
+   *  the radius (a ring), so across an edge it is r·stroke·cos(π/n). */
   readonly contactStroke: number;
   /** A plate's inset from its footprint's edge, world units. */
   readonly plateInset: number;
@@ -58,10 +54,10 @@ export interface MarkStyle {
   readonly plateFill: number;
   /** The plate frame's opacity. */
   readonly plateOutline: number;
-  /** The plate's corner radius, world units (0 = square; the spec's open read). */
+  /** The plate's corner radius, world units (0 = square). */
   readonly plateCorner: number;
   /** A destructible body's dashed frame: each gap's width, world units (0 =
-   *  solid). Not in the signed bookmark: 108b's proposal, read at stop 1. */
+   *  solid). */
   readonly plateDashGap: number;
 }
 
@@ -126,8 +122,8 @@ export function markShapeOf(subject: MarkSubject): MarkShape {
   return subject.campId !== null ? 'triangle' : 'plate';
 }
 
-/** A destructible wall or cover: the §40c `CRACKED_STONE` tell's bodies. Rubble
- *  keeps a solid frame (it carries its own glyph, like its colour rule). */
+/** A destructible wall or cover: the bodies `CRACKED_STONE` tells. Rubble
+ *  keeps a solid frame (it carries its own glyph, as in its colour rule). */
 export function isDashedPlate(subject: MarkSubject): boolean {
   return markShapeOf(subject) === 'plate' && isDestructibleObstacle(subject.archetype);
 }

@@ -1,20 +1,17 @@
-// Terrain (C1c faceted low-poly). Per-vertex inputs in addition to
-// `position` + `normal`:
-//   aColor  — vertex color baked from tile height + face shading.
-//   aTopUV  — (0..1, 0..1) on the top face, (0,0) on sides.
-//   aAnim   — (animType, phase). D7.C per-tile animation hook. animType
-//             0 = none, 1 = fire flicker, 2 = healing pulse, 3 = deep
-//             water's static bands (98e). Phase is a deterministic
-//             per-tile offset (hash of cell coord) so neighboring fire
-//             tiles don't pulse in unison.
+// The terrain's faceted prisms. Per-vertex inputs beside `position` and
+// `normal`:
+//   aColor  — the vertex colour, baked from the tile's height and face.
+//   aTopUV  — (0..1, 0..1) on the top face, (0, 0) on the sides.
+//   aAnim   — (animType, phase): 0 none, 1 fire's flicker, 2 healing's
+//             pulse, 3 deep water's bands. The phase is a per-tile hash of
+//             the cell, so neighbouring fire tiles don't pulse in unison.
 //
-// `vIsTop` is set from the model-space normal so the fragment can stamp
-// the grid line only on the top face. `vWorldPos` (98e-post) is the world
-// position the deep-water bands run on — the apron shader has carried the
-// same varying since M4, and ONE world-space formula in both is what keeps
-// the bands continuous across the board edge (a tile-UV formula on the
-// board ran the diagonal the other way: the tile's V axis is opposite to
-// world Z — the user's catch).
+// `vIsTop` comes from the model-space normal, so the fragment stamps the
+// grid line on the top face only. `vWorldPos` is the world position the
+// deep-water bands and the ground marks run on: the bands use one
+// world-space formula here and in the apron's shader, which keeps them
+// continuous across the board's edge (the tile's V axis runs against world
+// Z, so a tile-UV formula would turn the diagonal there).
 
 precision highp float;
 

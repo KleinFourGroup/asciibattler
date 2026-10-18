@@ -1,21 +1,17 @@
-// M4 apron fade. Lighting + per-tile animation are copied from terrain.frag
-// (same fixed light direction, same fire/healing branches) so the ring is
-// indistinguishable from the board until the fog term kicks in — the apron
-// is "the same ground continuing", not a new material. No grid-line stamp:
-// grid lines ending at the playable edge is the legibility cue.
+// The apron's fade. Lighting and the per-tile animation follow terrain.frag
+// (the same light, the same fire, healing and deep-water branches), so the
+// ring matches the board until the fog takes it: the same ground
+// continuing, not a new material. No grid stamp: grid lines ending at the
+// playable edge are the legibility cue.
 //
-// The fog itself: distance outside the playable rect (rect SDF on world XZ,
-// so corners round off), wobbled by summed sines over uTime so the mist
-// edge slowly creeps, then smoothstepped. The fog TARGET color is the
-// BackdropRenderer mist sampled where this fragment's view ray meets the
-// mist plane (`fogColorAt` + the precision statement come from
-// fogcolor.glsl, prepended at material construction) — a fully fogged
-// pixel is pixel-identical to the mist behind it, so the dissolve reads
-// as the ground sinking into fog, no transparency needed, and the
-// billboard sprites never alpha-sort against the apron.
-//
-// M4 playtest additions: the near-black edge band on the ring's innermost
-// sliver (the strong playable-boundary read) and the mist-ray fog target.
+// The fog: the distance outside the playable rectangle (a rectangle SDF on
+// world XZ, so its corners round off), wobbled by summed sines over uTime so
+// the mist's edge creeps, then smoothstepped. Its target colour is the mist
+// floor's, sampled where this fragment's view ray meets the mist plane
+// (`fogColorAt` and the precision statement come from fogcolor.glsl,
+// prepended at the material's construction), so a fully fogged pixel matches
+// the mist behind it: the ground sinks into fog with no transparency, and
+// the billboard sprites never alpha-sort against the apron.
 
 uniform vec3 uLightDir;
 uniform float uAmbient;
@@ -36,13 +32,10 @@ void main() {
   vec3 base = vColor * shading;
 
   if (vAnim.x > 2.5) {
-    // 98e — deep water's static bands (terrain.frag's id 3): the SAME
-    // world-space formula as terrain.frag (98e-post — both shaders run on
-    // vWorldPos now; a tile-UV formula on the board flipped the diagonal at
-    // the edge), one band per tile, so a clamp-sampled deep edge tile
-    // continues its pattern into the fog. The uTime term is the §99 drift
-    // (99d) — the SAME constant as terrain.frag, or the two halves of one
-    // band slide apart at the edge; reduced motion holds uTime upstream.
+    // Deep water's bands: terrain.frag's world-space formula, one band per
+    // tile, so a clamp-sampled deep tile at the edge continues its pattern
+    // into the fog. DEEP_DRIFT must equal terrain.frag's, or the two halves
+    // of a band slide apart at the edge.
     const float DEEP_DRIFT = 0.6;
     float wave = sin((vWorldPos.x + vWorldPos.z) * 6.28318530718 * 1.0 + uTime * DEEP_DRIFT);
     base *= 1.0 + 0.22 * wave;
@@ -58,18 +51,18 @@ void main() {
   vec2 outside = max(abs(vWorldPos.xz) - uPlayHalf, 0.0);
   float d = length(outside);
 
-  // M4 playtest — crisp near-black band on the ring's innermost sliver:
-  // the strong playable-edge outline (the board's own grid lines are
-  // thinner and only 0.6-mixed). Applied before the fog, but at d≈0 the
-  // fog is ≈0, so the band renders effectively unfogged. Also catches the
-  // inner-rim side faces (d=0 there), so a sunken apron tile shows a dark
-  // seam wall against the board.
+  // A crisp near-black band on the ring's innermost sliver, the strong
+  // outline of the playable edge (the board's own grid lines are thinner
+  // and mixed only 0.6). Applied before the fog, which the creep can raise
+  // to about 0.3 within the band; the band stays dark, the fog's target
+  // being dark too. It also darkens the ring's inner side faces (d = 0
+  // there), the wall an apron tile raised above the board's edge shows.
   const float EDGE_BAND_TILES = 0.12;
   const float EDGE_BAND_AA = 0.05;
   float band = 1.0 - smoothstep(EDGE_BAND_TILES - EDGE_BAND_AA, EDGE_BAND_TILES, d);
   base = mix(base, vec3(0.02), band * 0.85);
 
-  // Creep — the mist edge breathes. Amplitudes sum to CREEP_MAX_TILES
+  // The creep: the mist's edge breathes. The amplitudes sum to CREEP_MAX_TILES
   // (ApronRenderer shortens uFadeEnd by the same amount so the outer rim
   // stays fully fogged even at the creep's deepest inhale).
   float creep = 0.18 * sin(vWorldPos.x * 1.9 + uTime * 0.7)
@@ -78,15 +71,15 @@ void main() {
 
   float fog = smoothstep(0.0, uFadeEnd, d + creep);
 
-  // M4 playtest — fade toward the mist the camera would see behind this
-  // fragment: project the view ray down to the mist plane and sample the
-  // shared fogColorAt there. The ray always points downward (the camera is
-  // pitched 45° for players, never level); the min() guard keeps a
-  // degenerate near-horizontal ray from exploding the projection.
-  // 105d — under an orthographic camera the view rays are PARALLEL (the
+  // Fade toward the mist the camera would see behind this fragment: project
+  // the view ray down to the mist plane and sample the shared fogColorAt
+  // there. The ray always points down (players' camera is pitched 45°, never
+  // level); the min() guard keeps a near-horizontal ray from blowing up the
+  // projection. Under an orthographic camera the view rays are parallel (the
   // camera's forward axis, row 2 of the view rotation); a ray from
   // cameraPosition would fan out and paint a ghost ring of mist. three.js
-  // injects `isOrthographic`; the perspective branch is the pre-105d line.
+  // injects `isOrthographic`; the perspective branch serves the board
+  // explorer's perspective camera.
   vec3 rayDir = isOrthographic
     ? -vec3(viewMatrix[0][2], viewMatrix[1][2], viewMatrix[2][2])
     : normalize(vWorldPos - cameraPosition);

@@ -1,4 +1,4 @@
-// 108b — THE GROUND MARKS (Round 7.5 spec D3). Spliced into terrain.frag by
+// The ground marks, drawn by the terrain itself. Spliced into terrain.frag by
 // TerrainRenderer (`groundMarkShaders`) only while the marks are on; with
 // them off the terrain draws from its own two files, byte for byte. The
 // table is groundMarks.ts's `MarkTable`: `uMarks` holds (x, z, extent,
@@ -9,15 +9,14 @@
 // A mark is a WORLD shape on the ground plane, evaluated at this fragment's
 // world XZ wherever terrain is drawn: the tile tops; the step faces the
 // camera sees, where the face's XZ is the mark's edge, so the mark hangs down
-// the face (the §106 drape, for free); and the hill mounds, whose material
-// shares these uniforms. Depth is the terrain's own.
+// the face; and the hill mounds, whose material shares these uniforms. Depth
+// is the terrain's own.
 //
-// The look is the signed §106 bookmark's (groundMarks.ts `DEFAULT_MARK_STYLE`):
-// plates first (dark fill, then the frame in the body's colour), then every
-// contact mark's dark fill, then every contact outline, so an outline is
-// never under a neighbour's fill. A contact outline is the mock's ring: the
-// shape less the shape scaled by (1 − stroke), so across an edge it is
-// r · stroke · cos(π/n) wide.
+// The look's numbers are groundMarks.ts's `DEFAULT_MARK_STYLE`. Plates first
+// (dark fill, then the frame in the body's colour), then every contact mark's
+// dark fill, then every contact outline, so an outline is never under a
+// neighbour's fill. A contact outline is a ring: the shape less the shape
+// scaled by (1 − stroke), so across an edge it is r · stroke · cos(π/n) wide.
 //
 // Edges are anti-aliased from the world position's screen derivatives, taken
 // once, in uniform control flow: the per-tile loops below diverge within a

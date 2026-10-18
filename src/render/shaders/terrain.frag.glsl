@@ -1,37 +1,28 @@
-// Terrain (C1c faceted low-poly + D7.C per-tile animation).
+// The terrain's faceted prisms and their per-tile animation.
 //
-// Diffuse shading from a fixed light direction plus an ambient floor.
-// No scene lights — this material has no spill into the sprite renderers
-// (which are unlit by design). Grid line stamped on the top face only,
-// via `vIsTop` from the vertex shader.
+// Diffuse shading from a fixed light direction plus an ambient floor, with no
+// scene lights, so nothing spills onto the sprite renderers, which are unlit.
+// The grid line is stamped on the top face only (`vIsTop`).
 //
-// D7.C: `vAnim.x` selects a per-tile animation (0=none, 1=fire, 2=healing,
-// 3=deep water — 98d) and `vAnim.y` is the per-tile phase offset. Animation
-// is applied uniformly across the prism (top + sides) so a fire tile's side
-// faces also glow — sides are dimmer via the baked SIDE_SHADE multiplier in
-// the vertex color, so the visual amplitude tapers naturally. Animation
-// runs BEFORE the grid-line stamp so the grid stays canonical and doesn't
-// itself flicker.
+// `vAnim.x` picks the tile's animation (0 none, 1 fire, 2 healing, 3 deep
+// water) and `vAnim.y` is its phase. Fire and healing apply across the prism,
+// so a fire tile's sides glow too, dimmer by the SIDE_SHADE baked into their
+// colour. The animation runs before the grid stamp, so the grid doesn't
+// flicker.
 //
-// 98e — DEEP WATER (id 3) is not an animation but a STATIC SURFACE PATTERN:
-// diagonal bands across the top face, the "never color alone" tell for the
-// passable / impassable split (deep water is coplanar with shallow since
-// §37b, so until 98e the two blues' luminance gap was the only read). The
-// bands run in WORLD space (`vWorldPos`, 98e-post) with an integer count
-// per world unit — the same formula as apron.frag — so the pattern is
-// continuous across tile edges AND across the board edge into the apron
-// (a tile-UV formula ran the opposite diagonal there: the user's catch).
-// One band per tile (98e-post, the user's read: two read as a hazard
-// stripe); the amplitude is small (the tile stays a dark navy plane).
-// The `uTime * DEEP_DRIFT` term is the §99 drift (99d): a slow phase
-// drift along the diagonal — one band width per ~10 s at 0.6 rad/s (the
-// user's retune from a 0.4 probe, 2026-09-16) — for motion-on players;
-// the static bands are the tell, the wave is flair (the §98 kickoff's
-// call E). Under reduced motion BattleScene HOLDS
-// `uTime` (`advanceShaderTime`, the one shader-motion gate), so the bands
-// (and the fire flicker, the healing shimmer, the mist) stand still with
-// no branch here. Keep the constant equal in apron.frag — the two shaders
-// share the formula so the pattern is continuous across the board edge.
+// Deep water is a pattern, not an animation: diagonal bands across the top
+// face, so the passable/impassable split is never told by colour alone (deep
+// water is level with shallow). The bands run in world space with a whole
+// number per world unit, the formula apron.frag uses too, so the pattern is
+// continuous across tile edges and across the board's edge into the apron.
+// One band per tile, since two read as a hazard stripe; the amplitude is
+// small, so the tile stays a dark navy plane. The `uTime * DEEP_DRIFT` term
+// drifts the bands along the diagonal, one band width per ~10 s at 0.6 rad/s:
+// the bands are the tell, the drift is flair. Under reduced motion BattleScene
+// holds `uTime` (`advanceShaderTime`, the one shader-motion gate), so the
+// bands stand still, as do the fire, the healing and the mist, with no branch
+// here. DEEP_DRIFT equals apron.frag's (TerrainRenderer.test.ts pins the
+// two), or the two halves of a band slide apart at the board's edge.
 
 precision highp float;
 
@@ -53,15 +44,14 @@ void main() {
   float shading = uAmbient + (1.0 - uAmbient) * diffuse;
   vec3 base = vColor * shading;
 
-  // D7.C per-tile animation. Two sines summed for fire so the flicker
-  // reads as "alive" rather than a single rhythmic pulse. Healing uses a
-  // single slow sine with small amplitude — a gentle "I'm-here" pulse,
-  // not a flicker.
+  // The per-tile animation. Fire sums two sines, so its flicker reads as
+  // alive rather than as one rhythmic pulse; healing is one slow sine of
+  // small amplitude, a gentle pulse, not a flicker.
   if (vAnim.x > 2.5) {
-    // 98e — deep water: static diagonal bands on the top face (see the header).
-    const float DEEP_BANDS_PER_TILE = 1.0; // integer → continuous across tiles; 98e-post: 2 read as a hazard stripe
+    // Deep water: diagonal bands on the top face (see the header).
+    const float DEEP_BANDS_PER_TILE = 1.0; // whole → continuous across tiles
     const float DEEP_BAND_AMPLITUDE = 0.22;
-    const float DEEP_DRIFT = 0.6; // 99d: rad/s along the diagonal (= apron.frag); reduced motion holds uTime instead
+    const float DEEP_DRIFT = 0.6; // rad/s along the diagonal (= apron.frag)
     if (vIsTop > 0.5) {
       // World space, the apron's formula verbatim — one diagonal on both sides of the board edge.
       float wave = sin((vWorldPos.x + vWorldPos.z) * 6.28318530718 * DEEP_BANDS_PER_TILE + uTime * DEEP_DRIFT);

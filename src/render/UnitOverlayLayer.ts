@@ -8,77 +8,71 @@ import { isDotHitsplatKind, type HitsplatKind } from './fxRegistry';
 import { t } from '../i18n/ui';
 
 /**
- * E3.6 — DOM-based per-unit overlay (HP bar + action progress bar + level
- * badge). Replaces the canvas-instanced `BarRenderer`. Each unit gets a
- * single `<div class="unit-overlay">` with three children; per-frame the
- * overlay's `transform` is set from the projected world position of the
- * unit's sprite (`SpriteRenderer.getPosition`), so overlays follow the
- * sprite through SpriteAnimator lerps for free.
+ * The DOM overlay over each unit: its level badge, status pips, action bar
+ * and HP bar. Each unit gets one `<div class="unit-overlay">` holding one
+ * stack of the four; each frame BattleRenderer sets the overlay's `transform`
+ * from the projected ink top of the unit's sprite, so the overlay follows the
+ * sprite through its slides. One projection per unit per frame, not one per
+ * element, and the stack's layout is CSS alone.
  *
- * One projection per unit per frame: cheaper than three (one per bar +
- * the level badge) and the internal layout is pure CSS — no per-element
- * positioning math.
- *
- * Z-order: above the HUD but below `#scanlines` (which sits at z=1000).
- * The CRT scanline overlay still rakes across the unit overlays, so the
- * diorama framing stays unified.
- *
- * Builds on the world-to-screen projector that E6.C (hitsplats) reuses.
+ * Game inserts the layer before `#ui`, so it paints under the HUD's chrome,
+ * and `#scanlines` rakes across it with the rest of the page. The hitsplats
+ * share its world-to-screen projection.
  */
 
 export interface UnitOverlayHandle {
   readonly id: number;
   readonly root: HTMLDivElement;
-  /** §40f — the HP-bar CONTAINER (not just its fill), so a destructible-neutral
-   *  overlay can hide the whole bar (track included) until the unit is damaged. */
+  /** The HP bar's container, not just its fill, so a destructible neutral's
+   *  overlay can hide the whole bar, track included, until it is damaged. */
   readonly hpBar: HTMLDivElement;
   readonly hpFill: HTMLDivElement;
   readonly progressEl: HTMLDivElement;
   readonly progressFill: HTMLDivElement;
   readonly levelBadge: HTMLDivElement;
-  /** §32c — the status pip-strip container (above the HP bar). Its child
-   *  `.status-pip`s are reconciled by `updateStatuses`. */
+  /** The status pips' container, above the bars; `updateStatuses`
+   *  reconciles its `.status-pip`s. */
   readonly statusStrip: HTMLDivElement;
   team: Team;
   /** Last applied opacity. Skips DOM writes when unchanged. */
   alpha: number;
-  /** Last applied HP fill % (0..1). Skips DOM writes when unchanged. */
+  /** Last applied HP fill (0..1). Skips DOM writes when unchanged. */
   hpPct: number;
-  /** Last applied progress fill % (0..1), or null when hidden. */
+  /** Last applied action-bar fill (0..1), or null when hidden. */
   progressPct: number | null;
-  /** 82e2 — whether the bar currently wears the amber `.reaim` variant. */
+  /** Whether the action bar wears the amber `.reaim` variant. */
   progressReaim: boolean;
-  /** §32c — the sim tick the status strip last reconciled at. The status
-   *  readout is identical between sim ticks (it's derived from `currentTick`),
-   *  so BattleRenderer gates the per-frame recompute on this changing. `-1`
-   *  forces a first-frame update. */
+  /** The sim tick the pips were last reconciled at. The status readout
+   *  changes only between sim ticks (it is derived from `currentTick`), so
+   *  BattleRenderer recomputes it only when this differs. `-1` forces the
+   *  first frame's update. */
   statusTick: number;
-  /** §40f — a destructible neutral (rubble / breakable wall/cover): its HP bar
-   *  is shown ONLY while damaged (`hpPct < 1`), so a rubble-heavy board stays
-   *  uncluttered. `false` for combatants (their bar is always shown). */
+  /** A destructible neutral (one with HP, such as rubble or a breakable
+   *  wall): its HP bar shows only while damaged (`hpPct < 1`), so a board
+   *  full of rubble stays uncluttered. `false` for a combatant, whose bar
+   *  always shows. */
   destructible: boolean;
 }
 
 export class UnitOverlayLayer {
   readonly root: HTMLDivElement;
-  /** 107a — a getter, read per projection: the Renderer's camera is swapped
-   *  (not rebuilt) when the dev board explorer changes the projection, so a
-   *  captured camera would go stale. */
+  /** A getter, read per projection: the Renderer swaps its camera, rather
+   *  than rebuilding it, when the dev board explorer changes the projection,
+   *  so a captured camera would go stale. */
   private readonly cameraOf: () => THREE.Camera;
   private readonly canvas: HTMLCanvasElement;
   private readonly overlays = new Map<number, UnitOverlayHandle>();
   private nextId = 1;
   private readonly projectScratch = new THREE.Vector3();
-  /** E6.C — live floating-number anchors, swept on `clear`. */
+  /** The live floating numbers' anchors, swept on `clear`. */
   private readonly hitsplats = new Set<HTMLDivElement>();
-  /** E6.C — per-unit count of active hitsplats, for vertical stacking. */
+  /** Each unit's count of live floating numbers, for stacking them. */
   private readonly hitsplatCounts = new Map<number, number>();
 
   /**
-   * `insertBefore` is the reference element the overlay container is
-   * inserted before in its parent. Pass the existing `#ui` element so
-   * the overlays paint *under* HUD chrome — world content shouldn't
-   * obscure menus. Pass `null` to append at the end.
+   * The layer's container is inserted before `insertBefore` in its parent.
+   * Game passes `#ui`, so the overlays paint under the HUD's chrome and world
+   * content never covers a menu.
    */
   constructor(
     cameraOf: () => THREE.Camera,
@@ -93,9 +87,9 @@ export class UnitOverlayLayer {
   }
 
   /**
-   * Build a fresh overlay for a unit. Caller is responsible for the
-   * initial position (`updatePosition`) on the same tick — the new
-   * element is appended off-screen at (0, 0) until then.
+   * Build a unit's overlay. The caller sets its first position
+   * (`updatePosition`) on the same tick; until then it sits off-screen at
+   * (0, 0).
    */
   add(team: Team, level: number, alpha = 1): UnitOverlayHandle {
     const id = this.nextId++;
@@ -111,8 +105,7 @@ export class UnitOverlayLayer {
     levelBadge.className = 'level-badge';
     levelBadge.textContent = t('common.lv', { level: displayLevel(level) });
 
-    // §32c — the status pip-strip, just ABOVE the HP bar (below the level
-    // badge). Hidden until the unit carries at least one status.
+    // Hidden until the unit carries a status.
     const statusStrip = document.createElement('div');
     statusStrip.className = 'status-strip';
     statusStrip.hidden = true;
@@ -130,12 +123,10 @@ export class UnitOverlayLayer {
     progressFill.className = 'action-progress-fill';
     progressEl.appendChild(progressFill);
 
-    // §79e — the HP bar is the LAST (bottom-most) child, with the toggling
-    // elements above it. The stack is BOTTOM-anchored (ui.css), so growth
-    // happens upward: revealing the action-progress bar or the status strip
-    // can no longer shift the HP bar, which is the one element the eye tracks.
-    // Pre-79e order put progressEl below the HP bar, so a unit starting a cast
-    // shoved its own health bar up mid-battle.
+    // Top to bottom: the level badge, the status pips, the action bar, the HP
+    // bar. The HP bar is last and the stack is bottom-anchored (ui.css), so
+    // the stack grows upward: showing the action bar or the pips never moves
+    // the HP bar, the element the eye tracks.
     stack.appendChild(levelBadge);
     stack.appendChild(statusStrip);
     stack.appendChild(progressEl);
@@ -166,39 +157,31 @@ export class UnitOverlayLayer {
   }
 
   /**
-   * §40f — an overlay for a DESTRUCTIBLE NEUTRAL (rubble / breakable wall/cover).
-   * Reuses the combatant overlay machinery, so the existing
-   * `unit:attacked → refreshHpBar` path fills it and the per-frame loop
-   * position-follows it for free — but with three differences:
-   *   • no level badge (rubble has no level);
-   *   • the HP bar is HIDDEN until damaged (`destructible` → `applyHp` reveals
-   *     it once `hpPct < 1`), so a rubble-heavy board isn't a wall of full bars;
-   *   • the bar is SCALED to the unit's footprint (a 3×3 body gets a 3×-wide
-   *     bar, lifted to clear its taller scaled glyph) so it reads as belonging
-   *     to the big body — see the `--fp-scale` / `--fp-lift` CSS vars.
-   * The caller seeds HP + position on the same tick (as with `add`).
+   * An overlay for a destructible neutral. It is a combatant's overlay, so
+   * BattleRenderer's HP refresh on `unit:attacked` fills it and the per-frame
+   * loop moves it, with three differences:
+   * - no level badge (rubble has no level);
+   * - the HP bar is hidden until damaged (`applyHp` shows it below full), so a
+   *   board full of rubble isn't a wall of full bars;
+   * - the bar is as wide as the footprint (`applyFootprintScale`), so it reads
+   *   as the big body's.
+   * The caller seeds HP and position on the same tick, as with `add`.
    */
   addDestructible(footprint: number): UnitOverlayHandle {
     const handle = this.add('neutral', 1, 1);
     handle.destructible = true;
-    handle.levelBadge.hidden = true; // neutrals have no meaningful level
-    handle.hpBar.hidden = true; // shown once damaged (only-when-damaged)
+    handle.levelBadge.hidden = true;
+    handle.hpBar.hidden = true;
     this.applyFootprintScale(handle, footprint);
     return handle;
   }
 
   /**
-   * §40f — scale a destructible overlay to its footprint: `1×1` keeps the CSS
-   * default (`--fp-scale:1` ⇒ byte-identical to a combatant bar), a larger body
-   * widens the bar linearly so it reads as belonging to the big glyph.
-   *
-   * §79e — the companion `--fp-lift` (a per-footprint px lift, `[0,0,22,33,39]`)
-   * is DELETED. It existed because the pre-79d world anchor did NOT scale with
-   * footprint, so a 3×3's bar needed hand-tuned CSS px to clear the taller
-   * glyph. §79d made the anchor `GLYPH_HALF_HEIGHT * footprint` — the lift is
-   * now applied twice, and at 33px it swamped the base gap entirely (measured
-   * at the 79e eyeball: a 3×3's bar sat ~40px clear of its slab against a
-   * ~7px target). One scale factor, no lift.
+   * Widen a destructible's bar to its footprint: a 1×1 keeps the CSS default
+   * (`--fp-scale: 1`, a combatant's width), and a larger body's bar widens in
+   * step (a 3×3's is three times as wide). The bar takes no lift for the
+   * taller glyph: the caller's anchor, the glyph's ink top, already rises with
+   * the footprint, and a lift here would count it twice.
    */
   private applyFootprintScale(handle: UnitOverlayHandle, footprint: number): void {
     if (footprint <= 1) return;
@@ -212,16 +195,13 @@ export class UnitOverlayLayer {
   }
 
   /**
-   * Project a world position to CSS pixels and apply it to the overlay
-   * root via `transform: translate3d(...)`. GPU-composited; no layout
-   * thrash. If the point projects behind the camera the overlay is
-   * hidden (visibility: hidden, preserving the DOM node).
+   * Project a world point to CSS pixels and set it on the overlay's root as
+   * `translate3d`, which the GPU composites with no layout. A point behind the
+   * camera or past the far plane hides the overlay (`visibility: hidden`,
+   * the node kept) rather than placing it, so it leaves no half-drawn ghost.
    */
   updatePosition(handle: UnitOverlayHandle, worldPos: THREE.Vector3): void {
     const p = this.projectToCss(worldPos);
-    // Off-screen (behind camera / past far plane): hide rather than
-    // translate to negative pixels so overlays don't pile up off-canvas
-    // as half-rendered ghosts.
     if (!p) {
       if (handle.root.style.visibility !== 'hidden') handle.root.style.visibility = 'hidden';
       return;
@@ -231,9 +211,8 @@ export class UnitOverlayLayer {
   }
 
   /**
-   * Project a world point to CSS pixel coords, or null when it's behind the
-   * camera / past the far plane. Shared by per-frame overlay position-follow
-   * and E6.C hitsplats — one source of truth for world→screen.
+   * A world point in CSS pixels, or null when it lies behind the camera or
+   * past the far plane. The overlays and the floating numbers share it.
    */
   private projectToCss(worldPos: THREE.Vector3): { x: number; y: number } | null {
     const v = this.projectScratch.copy(worldPos).project(this.cameraOf());
@@ -244,22 +223,18 @@ export class UnitOverlayLayer {
   }
 
   /**
-   * E6.C — spawn a transient floating number above a unit's sprite. The anchor
-   * is positioned ONCE in screen space (it does not follow the unit for its
-   * ~0.6s life, which is fine at that duration). The inner element runs the CSS
-   * rise+fade keyframe and self-removes on animationend. Concurrent hitsplats
-   * sharing a `stackKey` (the unit id) stagger upward so clustered hits don't
-   * overlap. No-op when the anchor point is off-screen.
+   * Float a number above a unit's sprite. The anchor is placed once in screen
+   * space and doesn't follow the unit through its 0.6 s life (ui.css's
+   * `hitsplat-rise`), which is short enough not to show; the inner element
+   * runs the rise and fade and removes itself on `animationend`. Numbers
+   * sharing a `stackKey` (the unit's id) stack upward, so clustered hits
+   * don't overlap. A no-op when the point is behind the camera or past the
+   * far plane.
    *
-   * §79d — `worldTop` is the glyph's visual TOP, already lifted along
-   * CAMERA-UP by the caller (`aboveAnchor` off the ground anchor), so ONE
-   * projection lands it on the glyph's top: camera-up preserves screen X
-   * exactly and scales the lift like the quad (under a perspective camera it
-   * also shrinks with distance). This retires the I2 dual-projection
-   * workaround that lived here (project the world-Y-lifted point, keep only
-   * its Y, take X from the center — the fix for "hitsplats drift sideways for
-   * units off to the edge" under the old perspective camera): the anchor
-   * convention makes that drift impossible upstream, under any camera.
+   * `worldTop` is the glyph's visible top, already lifted along the camera's
+   * up by the caller (`aboveAnchor`), so one projection lands on it: a lift
+   * along camera-up keeps the screen X and scales like the quad, so the
+   * number doesn't drift sideways at the board's edge under any camera.
    */
   spawnHitsplat(
     worldTop: THREE.Vector3,
@@ -280,9 +255,10 @@ export class UnitOverlayLayer {
 
     const el = document.createElement('div');
     el.className = `hitsplat hitsplat--${kind}`;
-    // 98d — a DoT number draws in its STATUS hue (the kind is the status id):
-    // pip, card swatch and number from one table. The other kinds keep their
-    // CSS colors (`.hitsplat--crit` red, `--heal` cyan, `--miss` white).
+    // A DoT's number draws in its status's hue (the kind is the status id), so
+    // the pip, the card row and the number share one table. The other kinds
+    // keep their CSS colors (`.hitsplat--crit` red, `--heal` cyan, `--miss`
+    // white).
     if (isDotHitsplatKind(kind)) el.style.color = statusColor(kind);
     el.textContent = text;
     anchor.appendChild(el);
@@ -309,10 +285,10 @@ export class UnitOverlayLayer {
     this.applyHp(handle, clamped);
   }
 
-  /** Show + fill the progress bar at `pct`, or pass `null` to hide it. */
-  /** 82e2 — `reaim` switches the bar to the amber re-aim variant (the
-   *  `.reaim` class; ui.css). The class toggles only on a variant CHANGE, so
-   *  the per-frame cost stays one width write. */
+  /** Show and fill the action bar at `pct`, or hide it with `null`. `reaim`
+   *  switches it to the amber re-aim variant (the `.reaim` class, ui.css);
+   *  the class toggles only when the variant changes, so a frame's cost stays
+   *  one width write. */
   updateProgress(handle: UnitOverlayHandle, pct: number | null, reaim = false): void {
     if (pct === null) {
       if (handle.progressPct === null) return;
@@ -332,17 +308,17 @@ export class UnitOverlayLayer {
   }
 
   /**
-   * §32c — reconcile the board pip-strip against a unit's active status
-   * readouts (one pip per status, in the readout's stable canonical order). Each
-   * pip is the status's SYMBOL over a depleting bar: the bar's fill WIDTH =
-   * `durationFraction`, its fill OPACITY brightens with stack count (an `add`
-   * status escalates), and symbol and bar wear the status's display hue. The
-   * symbol is the read that isn't the hue (116g): a camp unit has no card, so
-   * its pip is all a player has. Hidden when there are no statuses (no empty row).
+   * Reconcile the unit's pips with its status readouts: one pip per status, in
+   * the readout's stable order. A pip is the status's symbol over a depleting
+   * bar: the fill's width is `durationFraction`, its opacity brightens with
+   * the stack count (an `add` status escalates), and symbol and bar wear the
+   * status's hue. The symbol is the read that isn't the hue: a camp unit has
+   * no card, so its pip is all a player has. The strip hides when there are no
+   * statuses.
    *
-   * Cheap by construction: BattleRenderer gates the call on the sim tick
-   * advancing (the readout is identical between ticks), and per-pip writes are
-   * dataset-cached so an unchanged pip skips its DOM mutations.
+   * Cheap by construction: BattleRenderer calls it only when the sim tick has
+   * advanced, and each pip caches its writes in its dataset, so an unchanged
+   * pip skips the DOM.
    */
   updateStatuses(handle: UnitOverlayHandle, readouts: readonly StatusReadout[]): void {
     const strip = handle.statusStrip;
@@ -362,11 +338,10 @@ export class UnitOverlayLayer {
       const pip = strip.children[i] as HTMLDivElement;
       const symbol = pip.firstElementChild as HTMLDivElement;
       const fill = pip.lastElementChild!.firstElementChild as HTMLDivElement;
-      // Recolor only when this slot's status identity changes (the common
-      // per-tick path keeps the same status here and skips the write). 97e —
-      // no title and no tooltip: the overlay host is `pointer-events: none`,
-      // so the old hover name was never reachable, and the compact card's
-      // status row (symbol + name + meta) is the read for this pip.
+      // Recolor only when this slot's status changes; the common path keeps
+      // the same status here and skips the writes. No title or tooltip: the
+      // layer is `pointer-events: none`, so no hover could reach one, and the
+      // card's status row is the read for this pip.
       if (pip.dataset.sid !== r.statusId) {
         pip.dataset.sid = r.statusId;
         const color = statusColor(r.statusId);
@@ -395,17 +370,16 @@ export class UnitOverlayLayer {
   }
 
   /**
-   * Tear down every overlay. Called when the BattleRenderer detaches
-   * between battles, so the next mount starts with an empty container.
+   * Tear down every overlay. BattleRenderer calls it as it detaches after a
+   * battle, so the next mount starts with an empty container.
    */
   clear(): void {
     for (const handle of this.overlays.values()) {
       handle.root.remove();
     }
     this.overlays.clear();
-    // E6.C — drop any in-flight hitsplats so they don't linger into the
-    // next scene. Removing the element skips its animationend, so reset
-    // the per-unit counts explicitly here.
+    // Drop the numbers in flight too, so none lingers into the next scene.
+    // Removing an element skips its animationend, so the counts reset here.
     for (const anchor of this.hitsplats) anchor.remove();
     this.hitsplats.clear();
     this.hitsplatCounts.clear();
@@ -415,8 +389,7 @@ export class UnitOverlayLayer {
     handle.hpPct = pct;
     handle.hpFill.style.width = `${(pct * 100).toFixed(2)}%`;
     handle.hpFill.style.background = hpFillColor(pct);
-    // §40f — a destructible neutral shows its bar only while damaged; a full-HP
-    // (or reap-healed) rubble hides the whole bar so the board stays clean.
+    // A destructible neutral shows its bar only while damaged.
     if (handle.destructible) {
       const hidden = pct >= 1;
       if (handle.hpBar.hidden !== hidden) handle.hpBar.hidden = hidden;
@@ -424,19 +397,14 @@ export class UnitOverlayLayer {
   }
 }
 
-/* §40f's `FOOTPRINT_LIFT_PX = [0, 0, 22, 33, 39]` lived here — the per-footprint
-   HP-bar lift, retired at §79e. It compensated for a world anchor that didn't
-   scale with footprint; §79d's does (`GLYPH_HALF_HEIGHT * footprint`), which
-   made it a double-count. See `applyFootprintScale`. */
-
-/** E6.C — vertical stagger between concurrent hitsplats on the same unit so
- *  clustered hits read as a stack rather than overlapping. In rem (14px at
- *  the default size), since the numbers are text and grow with the text
- *  scale: a pitch in px would let a larger number cover the one under it. */
+/** The vertical step between a unit's concurrent floating numbers, so
+ *  clustered hits read as a stack. In rem (14px at the default size), since
+ *  the numbers are text and grow with the text scale: a step in px would let
+ *  a larger number cover the one under it. */
 const HITSPLAT_STACK_REM = 0.875;
 
-/** §32c — build one empty pip: the symbol's line, then a dark track with a
- *  colored depleting fill. `updateStatuses` reads the two by position. */
+/** One empty pip: the symbol's line, then a dark track with a colored
+ *  depleting fill. `updateStatuses` reads the two by position. */
 function makePip(): HTMLDivElement {
   const pip = document.createElement('div');
   pip.className = 'status-pip';
@@ -452,10 +420,10 @@ function makePip(): HTMLDivElement {
 }
 
 /**
- * §32c — pip fill opacity by stack count. An `add` status (bleed/poison) brightens
- * as it escalates (1 stack ≈ 0.7 → caps at 1.0); every other merge sits at full
- * (its magnitude is a potency scalar, not a count, so brightness wouldn't read as
- * "more"). The card row carries the exact stack number.
+ * A pip's fill opacity by stack count. An `add` status (bleed, poison)
+ * brightens as it escalates, from 0.7 at one stack to 1 at three; every other
+ * merge sits at 1, since its magnitude is a potency, not a count, and
+ * brightness wouldn't read as "more". The card row gives the exact count.
  */
 function pipBrightness(r: StatusReadout): number {
   if (r.merge !== 'add') return 1;
@@ -463,10 +431,9 @@ function pipBrightness(r: StatusReadout): number {
 }
 
 /**
- * HP gradient: green at full → amber at half → red at zero. Mirrors the
- * B3 BarRenderer pick — same color for both teams so HP state reads
- * independent of which side the unit is on. Returns a CSS rgb() string.
- * 116f — the three stops are the palette's, read when this module loads.
+ * The HP gradient: green at full, amber at half, red at zero, the same for
+ * both teams, so HP reads apart from the unit's side. The three stops are the
+ * palette's, read when this module loads. Returns a CSS `rgb()`.
  */
 const _gradHigh = new THREE.Color(COLORS.TERMINAL_GREEN);
 const _gradMid = new THREE.Color(COLORS.TERMINAL_AMBER);

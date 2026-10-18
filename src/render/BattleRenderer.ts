@@ -280,8 +280,9 @@ export class BattleRenderer {
     // for §28/§29 to drive (e.g. a frozen `active` tint, an on-hit apply flash).
     this.subscriptions.push(bus.on('status:ticked', this.onStatusTicked));
     // 28 — the held `active` overlay: a behavior status recolors the unit's glyph
-    // for its whole lifetime (the ONLY cue for frozen/blind/panic/confusion — they
-    // have no per-tick pulse). Apply tints; expire restores the team color.
+    // for its whole lifetime (the one cue on the body for frozen/blind/panic/
+    // confusion — they have no per-tick pulse; the pip strip shows them too).
+    // Apply tints; expire restores the team color.
     this.subscriptions.push(bus.on('status:applied', this.onStatusApplied));
     this.subscriptions.push(bus.on('status:expired', this.onStatusExpired));
     // D7.B: keep HP bars in sync with ability-heal chip. E6.C floats a cyan `+N`.
@@ -1205,7 +1206,7 @@ export class BattleRenderer {
 
   /**
    * E6.A / Z3 — the melee lunge. The caster shoves toward its target and snaps
-   * back. Driven off `action:phase` via the `melee_swing` fx key (the four
+   * back. Driven off `action:phase` via the `melee_swing` fx key (the melee
    * weapons author it on `impact`, the rogue gambit on `windup`), so it fires on
    * a MISS too — the phase boundary doesn't care whether the strike connected.
    * Direction comes from the cell centers (stable even while the sprite is
@@ -1238,7 +1239,8 @@ export class BattleRenderer {
   /**
    * E6.B / Z3 — the ranged tracer. Fly a `*` glyph in a straight line from the
    * caster's sprite to the target's and despawn on arrival. Driven off
-   * `action:phase` via the `ranged_shot` fx key (the bow, on `impact`), so it
+   * `action:phase` via the `ranged_shot` fx key (the bow and the pistol, on
+   * `impact`), so it
    * fires on a MISS too. Damage already landed this tick (the sim is
    * instantaneous); the bolt is a cosmetic. Spawn from the live sprite positions
    * so it emanates from / lands on what the player sees, falling back to cell

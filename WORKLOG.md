@@ -10082,3 +10082,108 @@ cell's pixels depend on its glyph alone. A prediction, unmeasured: on
 today's layout that changes no cell, since the block glyphs' overrun, if
 any, falls off the canvas or into the empty last cell. It goes to the
 user as a call before it is built.
+
+### 124j, batch 6 — FX and overlays (2026-10-18, session fc5ce5cf)
+
+`fxRegistry.ts`, `auraFx.ts`, `statusDisplay.ts`, `UnitOverlayLayer.ts`.
+Their step codes and history are out: the phase each channel came in,
+the decisions "locked with the user" said as the decisions, the DoTs that
+once shared one `burn` kind, the apply flash's removal (its reason kept:
+an apply can fire while the sprite still slides onto the tile), the
+aura's third mode, the retired `BarRenderer`, the footprint lift and its
+numbers, the dual projection the anchor convention replaced, the label
+that was the key capitalized. The comments restating each status row's
+hue are gone; the doc above the table says what the hues are for.
+`updateProgress`'s two stacked doc comments are one.
+
+**Statements found false and corrected (rule 7):**
+
+- `fxRegistry`: the melee swing was "shared by the four weapons + the
+  rogue gambit". Eight melee weapons author `melee_swing` on `impact`
+  (sword, club, katana, whip, cleaver, the ghoul's claw, halberd, cane;
+  `config/abilities.json`), every single-target melee strike there is.
+  "The bow flies a straight tracer": the pistol's shot is `ranged_shot`
+  too. The vial was "the lobbed poison flask"; its flight is `straight`,
+  and the molotov throws the same key. The descriptor's example had the
+  mage's impact key as "a burst + a sound"; it shakes as well, and the
+  example is gone. `FxProjectile` had the driver take "the from/to off the
+  live sprites"; a straight flight ends at the captured target cell
+  (`launchProjectileFx`). The header had `unit:healed` carry "the
+  ability-vs-tile distinction"; a tile's heal is the rejuvenate status, and
+  `healerId` tells an ability's heal from any other. The behavior
+  statuses' held tint "IS their visibility" (twice): the pip strip shows
+  them too, so the tint is their one cue on the body. On expiry the driver
+  restores the latest tint still held, not always the team color
+  (`onStatusExpired`).
+- `UnitOverlayLayer`'s header: an overlay was "a single div with three
+  children"; it holds one stack of four (the level badge, the pips, the
+  action bar, the HP bar). "Z-order: above the HUD but below #scanlines":
+  Game inserts the layer before `#ui`, neither has a z-index, so it paints
+  under the HUD, as the constructor's own doc said. The constructor's
+  "Pass `null` to append at the end", which its type refuses (batch 2's
+  find). `addDestructible`'s bar was "lifted to clear its taller scaled
+  glyph — see the `--fp-scale` / `--fp-lift` CSS vars": `--fp-lift` is
+  gone (ui.css says so), and the height comes from the caller's ink-top
+  anchor, which scales with the footprint (`inkTopLiftFor`). The pip strip
+  sat "just ABOVE the HP bar"; the action bar is between them.
+- `statusDisplay`: the symbol was "drawn wherever the hue is", but an
+  aura's motes wear the hue with no symbol (`updateAuraFx` colors them by
+  `statusColor`); `StatusDisplay.color`'s list now names the motes.
+
+Dropped and not checked: `statusDisplay`'s "rarely co-occur on one unit"
+for burn with panic and poison with rejuvenate (the comment now names the
+two pairs as the ones to retune), `honed`'s blue as "the K4 badge accent
+the player already knows" (the badge was not looked for), and
+`UnitOverlayLayer`'s "(or reap-healed) rubble": "reap" in the sim is the
+removal of the dead (`World.reapUnit`), and a path that heals a neutral
+was not looked for; the comment now says only that the bar shows while
+damaged.
+
+**Twins corrected outside the batch, flagged:** in `BattleRenderer.ts`,
+batch 7's file, `triggerShoveFx`'s "the four weapons", `triggerTracerFx`'s
+"the bow" alone (now the bow and the pistol), and the subscription's "the
+ONLY cue for frozen/blind/panic/confusion". A search with the Grep tool
+of the repo (the corpus, `archive`, `output` and `scratch` left out) for
+"four weapons", "the bow, on", "above the HUD", "three children", "ONLY
+cue", "IS the/their visibility", "burst + a sound", "lobbed poison",
+"ability-vs-tile", "from/to off", "reap-healed", "fp-lift" and "Pass
+`null`" found no other: ui.css's "`--fp-lift` is GONE" is history, and
+§124.5's, and the rest were the WORKLOG's own.
+
+Found and left for batch 7: `onActionPhase`'s doc says a phase with no key
+is "every melee/bow/heal verb in Z1", whose FX "still rides
+`unit:attacked` / `unit:healed`"; the melee and bow strikes have keys now.
+It is not a twin of this batch's claims.
+
+A slip, caught: a first search for `buffKeyLabel` (Git Bash `grep -rn`
+with `--include=*.ts`, cause not looked into) came back without
+`UnitCard.ts`, and `empowerLabel`'s pointer to it was dropped as naming no
+function. The Grep tool found it (`UnitCard.buffKeyLabel` calls
+`empowerLabel`), and the pointer is back. The absences above are the Grep
+tool's.
+
+Measured (`comment-length` on copies under `output/cl-124j-b6`): comment
+lines 481 → 394, words 4,416 → 3,418, code lines 463 unchanged;
+`fxRegistry.ts` 203 → 165, `UnitOverlayLayer.ts` 173 → 141. The
+step-code ceiling 2,566 → 2,460, the 106 the four held (`fxRegistry` 48,
+`UnitOverlayLayer` 38, `statusDisplay` 18, `auraFx` 2).
+
+Proof: `comment-strip HEAD src`, comments only; its control made one code
+edit in memory in each of the 5 changed files (the four and
+`BattleRenderer.ts`) and the compare named all 5.
+
+Cost: 111,797 at 15:34 on 2026-10-18 by the tool's clock, after the
+orientation, to 269,121 at 15:46 after the proof: about 157k for 1,020
+lines, about 154 a line, against 86 and 87 for batches 4 and 5. The
+claims named their callers, so about 1,100 lines of BattleRenderer's FX
+driver and overlay path, ui.css's overlay rules and the status config were
+read to check them.
+
+**Read** (`batch`): `git show <this commit> -- src/render/fxRegistry.ts
+src/render/UnitOverlayLayer.ts` against the seven rules. Wrong looks like
+a step code or history left, or a rule a change must respect cut: one key
+for the visual and the sound, every dispatch through `fxDescriptor` with
+the motion gate's answer, the cast sound once a cast and not once a
+victim, no flash on a status's apply, the channels a reduced-motion player
+keeps and why, the HP bar last in a bottom-anchored stack, no CSS lift for
+a footprint, a DoT number's hue from the status table.

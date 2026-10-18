@@ -18,9 +18,10 @@
 //   --arg=<json>       the script's argument
 //   --arg-file=<file>  the script's argument read from a JSON file, since Git
 //                      Bash does not carry JSON on a command line safely
-//   --build=<dir>      build the working tree into <dir> (emptied first) and exit, with no
-//                      script: a batch of launches then runs on that build
-//                      with --dist=<dir>, and the tree is free meanwhile
+//   --build=<dir>      build the working tree into <dir> (emptied first)
+//                      and exit, with no script: a batch of launches then
+//                      runs on that build with --dist=<dir>, and the tree
+//                      is free meanwhile
 //   --dist=<dir>       run on a build --build made, without building
 //   --shot=<file>      save a PNG of the page as the script left it, the DOM
 //                      and the canvas together (use --window=offscreen)

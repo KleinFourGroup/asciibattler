@@ -9340,3 +9340,51 @@ port, an event and a recruit, with the map back after each.
 
 Reading: 284,042 at 01:32 on 2026-10-18, by the tool's clock, before the
 commit.
+
+### 124i — the re-skim (2026-10-17, session 5b9d2da6)
+
+Read: the phase's diff of `src`, `shell`, `tools` and `scripts` without
+the tests, `88418f86..abf2788b` (38 files, 193 lines added, 327 deleted).
+124a to 124e's part was read whole; 124f's is the word `export` alone
+(proven then); 124g's and 124h's are this session's own. Then a search of
+`src`, `tools`, `tests`, `scripts`, `shell`, `process/`, `plans/`, TODO
+and the live docs for every name the phase deleted: `FxKey`, the five
+renderers' `dispose()`, `Renderer.stop`, `getCameraView`,
+`getCameraMode`, the overlay layer's `count` and `updateLevel`,
+`FontAtlas`'s three fields, `setDither`, `uDither`, `bayer2`, `bayer4`,
+`DITHER_CELL_PX`, `fogMix` and the camera line. It found only what 124d
+left on purpose: `FxKey` in the boot asserts' names and error text and in
+three comments (`eventSounds.ts`, `BattleRenderer.ts`, `BattleScene.ts`),
+for the comment pass, and `inkCensus.json`'s `cellSizePx`, which nothing
+reads.
+
+Fixed, as fix-ups of what the phase left: two comment lines from 124b's
+edit, 98 and 91 columns among lines of 80, in `drive-run.js`'s header and
+`probe-cli.mjs`'s list of flags, rewrapped. `comment-strip` holds `.js`
+and `.mjs` byte for byte, so it cannot prove this; the proof is each
+file's lines with its `//` lines dropped, hashed against HEAD's: equal
+for both, and the same check on a planted pair differing in one code
+line tells them apart.
+
+**The row for the user's sign:**
+
+- **R-1 · `UnitOverlayHandle.level`** (`UnitOverlayLayer.ts:51-52`, set
+  in `add`'s handle literal). Its doc says "Last applied level": it was
+  `updateLevel`'s cache, read only by that method's skip, and 124d
+  deleted the method. Nothing in `src` or `tests` reads it now;
+  `add`'s `level` parameter still writes the badge. Deleting it takes the
+  field, its doc line and the literal's `level,`. Lean: delete, as the
+  rest of A-28's row.
+
+Seen and not over the bar: `previewPoolsAtRisk` is named a preview and
+now also reads the fielded wave in battle (the name still says what the
+gate's caller gets, and a rename reaches `src/run`); `Run.previewPoolAtRisk`
+is `previewPoolsAtRisk().player` under a second name, with three callers
+in `Run.ts`, outside this phase. The kickoff's other leads belong to §124.5 (the swap control,
+the neutral-target rule) or were read and not proposed (B-13).
+
+The trials' budget: one of the board's three used (124h); the re-skim
+proposes none.
+
+Reading: 323,479 at 01:37 on 2026-10-18, by the tool's clock, before the
+commit.

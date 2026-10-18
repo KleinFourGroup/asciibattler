@@ -8,12 +8,12 @@
 //
 // The argument is `__probe.drive`'s options as JSON (seed, policy, until,
 // dt; an audit function can't cross JSON, so an audit needs a script of its
-// own), inline or from a file. Each drive call returns at its time limit and the next carries on,
-// so the run goes to its end within the runner's timeout. The result is the
-// last drive report: the phase, battles, commands per phase, the log hash,
-// the state hash. With `journal: true` it also carries the run's journal,
-// which `npm run replay` replays under Node and holds against that state
-// hash (§114c).
+// own), inline or from a file. Each drive call returns at its time limit
+// and the next carries on, so the run goes to its end within the runner's
+// timeout. The result is the last drive report: the phase, battles,
+// commands per phase, the log hash, the state hash. With `journal: true`
+// it also carries the run's journal, which `npm run replay` replays under
+// Node and holds against that state hash (§114c).
 export default async function driveRun(arg = {}) {
   const { journal, ...drive } = arg;
   let report;

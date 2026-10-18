@@ -40,8 +40,8 @@ framework; the UI is plain HTML/CSS over the canvas.
 The public build is on itch.io, uploaded by the user at a round's close and
 tagged, so a fix on `main` reaches players only then. A critical fix
 between rounds is built from the last uploaded tag, since `main` may hold a
-save-format bump. The page's address is kept out of this public repo; ask
-the user if you need it.
+save-format bump. The GitHub Pages address is kept out of this repo; the
+itch page may be named.
 
 ## Load-bearing invariants
 

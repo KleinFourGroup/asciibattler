@@ -9523,6 +9523,10 @@ or history left, a comment naming a screen that no longer exists, or a
 rule a change must respect cut: the mount order, the countdown on real
 time, the one gate for shader motion under reduced motion.
 
+**Read** (the user, 2026-10-18, after the hand-off): "I've finished that
+read early and can find no issues, so you can go ahead and check it off!"
+Batch 1 is read.
+
 ### The hand-off after batch 1 (2026-10-18, session 5b9d2da6)
 
 124g to 124i and 124i-post landed and were read or signed; 124j's batch 1

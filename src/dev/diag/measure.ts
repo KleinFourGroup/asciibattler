@@ -1,23 +1,23 @@
 /**
- * THE DIAGNOSTICS' MEASUREMENTS (116l), apart from the page so a headless test
- * can hold each one to a known answer (measure.test.ts): a storage with a
+ * The diagnostics' measurements, apart from the page so a headless test can
+ * hold each one to a known answer (measure.test.ts): a storage with a
  * planted quota, a clock that steps by a planted amount.
  *
- *  - `censusOf`: what a `localStorage` holds, the game's keys apart from
- *    everyone else's. On itch every HTML game shares one origin, so the keys
- *    that aren't ours are other games', and they count against the same quota.
- *  - `findLimit`: the longest value one more key will take. It doubles a fill
- *    key until a write is refused and then bisects between the last length
- *    taken and the first refused, so its answer is a pair that brackets the
- *    limit, never a guess: `lastOk` was written and `firstFail` was refused.
- *    A storage that takes everything up to the ceiling is reported as that
- *    (`hitCeiling`), not as a limit.
- *  - `timeWrites`: what one `setItem` costs at each of a list of sizes.
- *  - `timerResolution`: the clock's own step. A browser may round
- *    `performance.now()` to a millisecond or more, and a single write timed
- *    with such a clock reads as 0 or as one step; the mean over many writes
- *    is the number to read, and this says how coarse the rest is.
- *  - `WriteTally`: every write the game itself made, by section.
+ * - `censusOf`: what a `localStorage` holds, the game's keys apart from
+ *   everyone else's. On itch every HTML game shares one origin, so the keys
+ *   that aren't ours are other games', and they count against the same quota.
+ * - `findLimit`: the longest value one more key will take. It doubles a fill
+ *   key until a write is refused and then bisects between the last length
+ *   taken and the first refused, so its answer is a pair that brackets the
+ *   limit, never a guess: `lastOk` was written and `firstFail` was refused.
+ *   A storage that takes everything up to the ceiling is reported as that
+ *   (`hitCeiling`), not as a limit.
+ * - `timeWrites`: what one `setItem` costs at each of a list of sizes.
+ * - `timerResolution`: the clock's own step. A browser may round
+ *   `performance.now()` to a millisecond or more, and a single write timed
+ *   with such a clock reads as 0 or as one step; the mean over many writes
+ *   is the number to read, and this says how coarse the rest is.
+ * - `WriteTally`: every write the game itself made, by section.
  *
  * Nothing here is imported by the game. It is reached only from
  * src/dev/diag/index.ts, which only a build made with `VITE_DIAG=1` loads.

@@ -1,22 +1,22 @@
 /**
- * 53b — the localStorage ring buffer for battle traces (the shape-locked D2
- * call: auto-record every battle, keep the last `TRACE_RING_CAP`, export in
- * bulk — no per-battle save friction mid-session).
+ * The localStorage ring of battle traces: every battle recorded, the last
+ * `TRACE_RING_CAP` kept, exported in bulk, so a play session pays no save
+ * step per battle.
  *
- * DOM-zone glue (browser-only, eyeball-verified per the TESTING policy) — the
- * testable assembly logic lives in `TraceRecorder.ts`. Wired in `main.ts`'s
- * DEV block; the shipped bundle never touches this. Bulk export: the
- * `Ctrl+Alt+D` dev key (devKeys.ts, 53f) downloads the whole ring as one
- * JSON file; `__game.dumpTraces()` returns it from the console.
+ * Browser-only glue, checked by eye; the testable assembly is
+ * `TraceRecorder.ts`. The dev entry wires it (./devEntry.ts), so the
+ * shipped bundle never touches this. Bulk export: the `Ctrl+Alt+D` dev key
+ * (./devKeys.ts) downloads the whole ring as one JSON file;
+ * `__game.dumpTraces()` returns it from the console.
  */
 
 import type { BattleTrace } from './TraceRecorder';
 
 const KEY = 'asciibattler:traces:v1';
 
-/** 53f rider — 40→80: the 53g human session is ~30 battles plus retries and
- *  warm-ups in ONE sitting; a 40-deep ring could evict the session's own
- *  early traces before the end-of-session export. */
+/** A human gauntlet session is about 30 battles, with retries and warm-ups,
+ *  in one sitting; the ring holds that with room, so the session's early
+ *  traces survive to the export at its end. */
 const TRACE_RING_CAP = 80;
 
 export function loadTraces(): BattleTrace[] {
@@ -39,8 +39,9 @@ export function pushTrace(trace: BattleTrace): void {
     while (ring.length > TRACE_RING_CAP) ring.shift();
     localStorage.setItem(KEY, JSON.stringify(ring));
   } catch (err) {
-    // Quota or serialization trouble must never break a dev play session —
-    // the recorder is passive by contract. Lose the trace, say so, move on.
+    // Quota or serialization trouble must never break a dev play session,
+    // since the recorder is passive by contract: lose the trace, say so,
+    // move on.
     console.warn('[traces] failed to persist battle trace:', err);
   }
 }

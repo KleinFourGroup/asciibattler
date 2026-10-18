@@ -1,20 +1,22 @@
 /**
- * THE DIAGNOSTICS PANEL (116l): what a build's storage is like in the shell it
- * runs in, read from inside that shell. It exists for the places a dev page
- * can't go: a production build in itch's iframe, in a real browser's own
- * storage, in the Electron window.
+ * The diagnostics panel: what a build's storage is like in the shell it runs
+ * in, read from inside that shell. It exists for the places a dev page can't
+ * go: a production build in itch's iframe, in a real browser's own storage,
+ * in the Electron window.
  *
- * ONLY A BUILD MADE WITH `VITE_DIAG=1` CARRIES IT. `main.ts` loads this module
- * by a dynamic import behind that constant, so a build made without it has no
- * part of this file (README "The diagnostics build").
+ * Only a build made with `VITE_DIAG=1` carries it. `main.ts` loads this
+ * module by a dynamic import behind that constant, so a build made without
+ * it has no part of this file (README "The itch build and the diagnostics
+ * build").
  *
  * What it adds to the page:
- *  - a `diag` tab on the right edge, which opens the panel;
- *  - a wrapper round the store's three writing calls, which times each one
- *    (the serialization and the adapter's write together, as the game pays
- *    for them) and counts it by section. The tally is kept across page loads
- *    in `asciibattler:diag`, a key that is no section of the store;
- *  - `window.__diag`, the same readings for a script.
+ * - a `diag` tab on the right edge, which opens the panel;
+ * - a wrapper round the store's three section writes (`writeStrict`,
+ *   `patch`, `clear`; a whole-store restore is not counted), which times
+ *   each one (the serialization and the adapter's write together, as the
+ *   game pays for them) and counts it by section. The tally is kept across
+ *   page loads in `asciibattler:diag`, a key that is no section of the store;
+ * - `window.__diag`, the same readings for a script.
  *
  * The panel reads on demand: where the page is, what the store and the
  * two-tab lock said at boot and say now, what the browser's storage holds
@@ -108,7 +110,7 @@ interface DiagReport {
     readonly runLock: LockProbe | null;
     /** Whether the manager lists the run lock as held now, by any tab. The
      *  lock itself never asks this: Firefox refuses it in a partitioned
-     *  frame. */
+     *  frame (gotcha #140). */
     readonly heldNow: boolean | string;
     readonly otherLocks: number | null;
     readonly queryMs: number | null;

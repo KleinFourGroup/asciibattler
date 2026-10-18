@@ -10572,3 +10572,105 @@ patch falling through at the default dial, the fixture's run pairs
 written before `new Game`, the panel on `<body>` and not `#ui` (gotcha
 #137), keys stopped inside the panel with Ctrl+Alt chords passing,
 `inkBottomLift` left unpatched.
+
+### 124j, batch 10 — the diagnostics and the traces (2026-10-18, session 882e1278)
+
+`dev/diag/index.ts`, `dev/diag/measure.ts`, `TraceRecorder.ts`,
+`replayTrace.ts`, `traceStore.ts`; 1,225 lines. The diagnostics were
+written under the voice rule and held one code apiece and capitals; the
+trace files held the history: the steps behind the recorder, the stamp,
+the replay and the hook, "the 53c audit note", "N2's cap unification",
+the ring's 40 before its 80, "the shape-locked D2 call".
+
+**Statements found false and corrected (rule 7):**
+
+- Who wires the traces: `TraceRecorder.ts` had the ring "wired in
+  `main.ts`'s DEV block via the `onTrace` callback", and `traceStore.ts`
+  was "Wired in `main.ts`'s DEV block"; the dev entry hands the ring in
+  (batch 8's twins, left for here).
+- `replayTrace.ts` "mirrors the two production battle-construction sites
+  exactly (they are already mirrors of each other)"; there is one shared
+  helper, `spawnEncounter`, which the journal replay, the fuzz harness,
+  the chaos test and the arena call, and whose steps BattleScene runs
+  inline in the same order.
+- `diag/index.ts` wrapped "the store's three writing calls"; the store has
+  a fourth, `restore`, which the wrapper leaves out, so it is "the three
+  section writes" now, named. The README's section is "The itch build and
+  the diagnostics build".
+
+**Checked at the code they name and kept:** the `VITE_DIAG` gate in
+main.ts; `NAMESPACE` as `asciibattler:`; the store's methods as closures
+(none of `patch`, `writeStrict`, `clear` reads `this`), so the wrapper's
+detached calls work; `JOURNALS_BUDGET`'s 1,000,000; the lock never
+querying (runLock.ts's header and gotcha #140, now cited); the font
+coverage test reading the strings under `src`; `measure.ts` imported by
+the panel alone; `battle:started` carrying the encounter and
+`command:applied` its effective tick (World's drain); `objective.test.ts`;
+the gauntlet (`tests/gauntlet`) and its trace mining through `beforeTick`
+(`traceMine.ts`); Run.test's eight synthetic `battle:ended` emits;
+BattleScene's turn cap and `resolveAsDraw`; the fidelity test's pin on the
+markers' interleaving; the ring's 80.
+
+Dropped, none a true-looking claim to restore: the steps and their audit
+notes. Kept as written, unchecked: "a save is 3 to 49 KB and its journal
+some 15 KB more", "on itch every HTML game shares one origin", and the
+human session's 30 battles behind the ring's 80.
+
+**Twins corrected outside the batch, flagged:** ARCHITECTURE's
+`replayTrace.ts` line ("reconstruction ≡ both production
+battle-construction sites"); it now names `spawnEncounter`.
+
+Measured (`comment-length` on copies under `output/cl-124j-b10`): comment
+lines 257 → 255, words 2,223 → 2,223, code lines 887 unchanged. The
+step-code ceiling 2,142 → 2,122, the 20 the five files held.
+
+Proof: `comment-strip HEAD src`, comments only, exit 0; its control made
+one code edit in memory in each of the 5 changed files and the compare
+named all 5.
+
+Cost: 368,076 at 18:05 on 2026-10-18 by the tool's clock, after batch 9's
+commit, to 414,313 at 18:09 after this batch's proof: about 46k for 1,225
+lines, about 38 a line, with the store, the lock and BattleScene's mount
+already read for batches 8 and 9.
+
+**Read** (`batch`): `git show <this commit> -- src/dev/replayTrace.ts
+src/dev/TraceRecorder.ts src/dev/traceStore.ts` against the seven rules.
+Wrong looks like a step code or history left, or a rule a change must
+respect cut: the recorder a pure bus subscriber, a second
+`battle:started` discarding the open trace, a trace from another version
+or config refused, a command enqueued just before its effective tick, a
+replay hook that only observes.
+
+### The hand-off after batch 10 (2026-10-18, session 882e1278)
+
+124j's ten batches are committed; batches 8 to 10, this session's, are
+open for their `batch` reads. Next is **124j-post**, the atlas's 17 unused
+glyphs (a code change, read `none`, signed, by a pane compare of every
+kept glyph's cell; "124j-post, planned" above), then **124j-post2**, the
+drops sweep (`batch`, read at 124k's stop), then **124k**, the close
+(`stop`), in a fresh session: this one is at 418,900 before this entry,
+and 124j-post's build, pane compare and doc search would not fit beside
+it with room under the hand-off line.
+
+For the next session:
+
+- 124j-post is a code change: `npm run oracle -- comment-codes --record`
+  before the suite, and a search of the docs (ARCHITECTURE, DESIGN,
+  TESTING, GOTCHAS, `process/`, `plans/`) for every glyph and name it
+  removes.
+- The drops sweep starts with two answers (batch 9's entry): batch 1's
+  dropped board sizes do not hold, and batch 7's kept-unchecked
+  `unitAnchorPos` paragraph does. Batches 8 to 10 checked their own drops
+  in place (one restored, in batch 8), and each entry lists what it kept
+  unchecked.
+- Rates: batch 8 about 86 a line with the signs' commit inside it, batch
+  9 at most 65, batch 10 about 38. The dev folder's comments named few
+  files outside it, and each later batch reused the earlier ones' reads
+  (the store, the lock, BattleScene's mount, Game's private members).
+- Found and left: TODO §124's two console lines of the dev load key and
+  the unused `force` (batch 8). GOTCHAS #134 names three key sets a chord
+  must clear, the registry's bound codes among them, which the
+  registry's modifier filter has since made moot; it is history, left.
+
+Reading: 418,900 at 18:10 on 2026-10-18 by the tool's clock, before this
+entry.

@@ -1,31 +1,27 @@
 /**
- * 53b — the passive DEV battle-trace recorder.
+ * The passive dev battle-trace recorder.
  *
  * A pure bus subscriber: it never touches the World, the Run, or the DOM, so
  * recording cannot perturb the deterministic sim (the same guarantee the
- * renderer leans on). One battle's trace is
+ * renderer leans on). One battle's trace is the `BattleEncounter` (the
+ * self-contained fixture `battle:started` carries), the `command:applied`
+ * stream (every player or bot order, stamped with the tick it took effect)
+ * and the outcome, and determinism makes that replay byte-identically (the
+ * world seed and the command stream give the same battle;
+ * `objective.test.ts`). The `configHash` stamp is the invalidation key: a
+ * trace recorded under different balance JSON must be refused by the replay
+ * path (./replayTrace.ts), not silently mis-replayed.
  *
- *   `BattleEncounter` (the self-contained fixture `battle:started` now
- *   carries) + the `command:applied` stream (every player/bot order, stamped
- *   with the tick it took effect — 53a) + the outcome,
- *
- * and the determinism doctrine guarantees that tuple replays byte-identically
- * (worldSeed + command stream → the same battle; `objective.test.ts`). The
- * `configHash` stamp is the invalidation key: a trace recorded under
- * different balance JSON must be refused by the replay path (53c), not
- * silently mis-replayed.
- *
- * Lifecycle notes:
- * - A second `battle:started` while a trace is open DISCARDS the open one —
- *   an abandoned battle (e.g. `resetRun` mid-fight) has no outcome and an
- *   outcome-less trace is worthless to the gauntlet.
+ * - A second `battle:started` while a trace is open discards the open one:
+ *   an abandoned battle (`resetRun` mid-fight, say) has no outcome, and an
+ *   outcome-less trace is worthless to the gauntlet (tests/gauntlet).
  * - `battle:ended` with no open trace is ignored (Run.test fixtures emit
  *   synthetic ends; the recorder must not fabricate a trace for them).
- * - DEFERRAL LANDING NOTE — persistence and the export surface are NOT here:
- *   the localStorage ring lives in `traceStore.ts` (wired in `main.ts`'s DEV
- *   block via the `onTrace` callback), and the export/download KEY lands
- *   with 53f's dev-key listener. This class must stay storage-agnostic so
- *   the 53c replay tests and the 53e gauntlet can drive it headless.
+ * - Persistence and the export are not here: the localStorage ring is
+ *   ./traceStore.ts, which the dev entry hands in as `onTrace`
+ *   (./devEntry.ts), and the download is the dev keys' Ctrl+Alt+D. The
+ *   class stays storage-agnostic so the replay tests and the gauntlet can
+ *   drive it headless.
  */
 
 import type { EventBus } from '../core/EventBus';
@@ -33,7 +29,7 @@ import type { GameEvents } from '../core/events';
 import type { BattleEncounter } from '../run/Run';
 import { configHash } from '../config/configHash';
 
-/** One applied command, exactly as `command:applied` carried it (53a). */
+/** One applied command, exactly as `command:applied` carried it. */
 interface RecordedCommand {
   readonly tick: number;
   readonly command: GameEvents['command:applied']['command'];
@@ -42,14 +38,14 @@ interface RecordedCommand {
 /** The serializable trace of one battle. `version` gates the replay path. */
 export interface BattleTrace {
   readonly version: 1;
-  /** `configHash()` at record time — the replay-invalidation key. */
+  /** `configHash()` at record time, the replay-invalidation key. */
   readonly configHash: string;
   /** The self-contained battle fixture (deep-copied at `battle:started`). */
   readonly encounter: BattleEncounter;
   readonly commands: readonly RecordedCommand[];
   readonly outcome: {
     readonly winner: GameEvents['battle:ended']['winner'];
-    /** The last tick the recorder saw — the battle's length. */
+    /** The last tick the recorder saw: the battle's length. */
     readonly ticks: number;
   };
 }
@@ -69,8 +65,8 @@ export class TraceRecorder {
   ) {
     this.unsubscribes = [
       bus.on('battle:started', ({ encounter }) => {
-        // Deep-copy: the Run re-reads/replaces its currentEncounter across
-        // turns; the trace must pin the encounter as it was at record time.
+        // Deep-copied: the Run replaces its currentEncounter across turns,
+        // and the trace must pin the encounter as it was at record time.
         this.open = { encounter: structuredClone(encounter), commands: [], lastTick: 0 };
       }),
       bus.on('command:applied', (applied) => {

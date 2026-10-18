@@ -1,33 +1,32 @@
 /**
- * 53c — replay a recorded `BattleTrace` headlessly, byte-identically.
+ * Replay a recorded `BattleTrace` headlessly, byte-identically.
  *
- * The reconstruction mirrors the two production battle-construction sites
- * exactly (they are already mirrors of each other — the 53c audit note):
- * `new World(bus, new RNG(worldSeed), gridW, gridH)` → `installBattleRules`
- * → `spawnEncounter` (BattleScene performs the same `applyTerrain` →
- * `setupRngFor` → `pickSpawnRegions` → `spawnTeam`×2 sequence off the same
- * single fork; its interleaved render calls touch no RNG). The drive loop
- * mirrors BattleScene's clock body: tick while alive, `resolveAsDraw` once
- * `currentTick` reaches the turn cap — so a draw-at-cap trace replays as a
- * draw at the same tick.
+ * The reconstruction is the battle's own: `new World(bus, new
+ * RNG(worldSeed), gridW, gridH)`, `installBattleRules`, then
+ * `spawnEncounter` (sim/battleSetup.ts), which runs the sequence BattleScene
+ * runs (`applyTerrain`, `setupRngFor`, `pickSpawnRegions`, `spawnTeam`
+ * twice) on the same setup stream; BattleScene's interleaved render calls
+ * touch no RNG. The drive loop is BattleScene's clock body: tick while
+ * alive, `resolveAsDraw` once `currentTick` reaches the turn cap, so a
+ * draw-at-cap trace replays as a draw at the same tick.
  *
- * Command injection is the one uniform rule the 53c stamp amendment bought:
- * every recorded command is stamped with its EFFECTIVE tick E (the first
- * tick whose unit actions can observe it), so the replay enqueues it just
- * before tick E runs — no parked-vs-in-tick case split, no BattleScene
- * pause state to reproduce.
+ * Command injection is one uniform rule: every recorded command is stamped
+ * with its effective tick E (the first tick whose unit actions can observe
+ * it), so the replay enqueues it just before tick E runs, with no
+ * parked-or-in-tick case split and no BattleScene pause state to reproduce.
  *
  * Validation is strict by design: a trace from another schema version or
- * another config fingerprint is REFUSED, never best-effort replayed — a
- * silently-diverging replay is worse than no replay (it poisons paired-seed
- * comparisons, the gauntlet's unit of evidence).
+ * another config fingerprint is refused, never best-effort replayed. A
+ * silently diverging replay is worse than none, since it poisons paired-seed
+ * comparisons, the gauntlet's unit of evidence.
  *
- * Fidelity contract: UNIT-OBSERVABLE identity — same outcome, same tick
- * count, same sim-event stream, byte-identical final `world.toJSON()` (RNG
- * state included). The one thing a replay does NOT reproduce is bus-marker
- * interleaving around parked drains (live emits the command markers between
- * `tick` markers; the replay emits them just after tick E's marker) — zero
- * unit-observable effect, pinned as such by the fidelity test.
+ * Fidelity contract: unit-observable identity, so the same outcome, the same
+ * tick count, the same sim-event stream and a byte-identical final
+ * `world.toJSON()` (RNG state included). The one thing a replay does not
+ * reproduce is the bus markers' interleaving around a parked drain (live
+ * emits the command markers between `tick` markers; the replay emits them
+ * just after tick E's marker), which no unit can observe, as the fidelity
+ * test pins.
  */
 
 import { World } from '../sim/World';
@@ -43,7 +42,7 @@ import type { BattleTrace } from './TraceRecorder';
 
 interface ReplayResult {
   readonly winner: GameEvents['battle:ended']['winner'];
-  /** Final `world.currentTick` — comparable to `trace.outcome.ticks`. */
+  /** Final `world.currentTick`, comparable to `trace.outcome.ticks`. */
   readonly ticks: number;
   /** The ended world, for deeper assertions (`toJSON()` comparisons). */
   readonly world: World;
@@ -51,13 +50,13 @@ interface ReplayResult {
 
 interface ReplayHooks {
   /**
-   * 54c — called once per replay tick, just BEFORE that tick's stamped
-   * commands are enqueued and the tick runs: the world state the hook sees
-   * is exactly what the live player saw when they issued those commands
-   * (the trace-mining sample point). `commands` is empty on non-command
-   * ticks. OBSERVATION ONLY — a hook that mutates the world or enqueues
-   * commands voids the fidelity contract (the replay would diverge from
-   * the recorded battle by construction).
+   * Called once per replay tick, just before that tick's stamped commands
+   * are enqueued and the tick runs: the world state the hook sees is what
+   * the live player saw when they issued those commands (the gauntlet's
+   * trace-mining sample point, tests/gauntlet/traceMine.ts). `commands` is
+   * empty on a tick with none. Observation only: a hook that mutates the
+   * world or enqueues commands voids the fidelity contract, since the
+   * replay would diverge from the recorded battle by construction.
    */
   readonly beforeTick?: (world: World, tick: number, commands: readonly WorldCommand[]) => void;
 }
@@ -67,8 +66,8 @@ interface ReplayHooks {
  * commands at their stamped ticks. Pass a bus to observe the replay's events
  * (fidelity tests subscribe before calling); defaults to a fresh silent one.
  * Throws on a version or configHash mismatch, or if the trace's commands
- * outlive the replayed battle (a fidelity failure by definition — the live
- * battle demonstrably ran longer).
+ * outlive the replayed battle (a fidelity failure by definition, since the
+ * live battle ran longer).
  */
 export function replayTrace(
   trace: BattleTrace,
@@ -105,13 +104,13 @@ export function replayTrace(
     winner = payload.winner;
   });
 
-  // BattleScene's clock body, verbatim semantics (N2's cap unification).
+  // BattleScene's clock body, the same in effect.
   const maxTurnTicks = secondsToTicks(HEALTH.maxTurnSeconds);
   while (!world.ended) {
     const next = world.currentTick + 1;
     const stamped = byTick.get(next) ?? [];
-    // 54c — the observation hook fires on the pre-tick state (what the live
-    // player saw when issuing this tick's commands). See `ReplayHooks`.
+    // The observation hook fires on the pre-tick state (what the live player
+    // saw when issuing this tick's commands). See `ReplayHooks`.
     hooks.beforeTick?.(world, next, stamped);
     for (const command of stamped) world.enqueueCommand(command);
     byTick.delete(next);

@@ -10187,3 +10187,155 @@ the motion gate's answer, the cast sound once a cast and not once a
 victim, no flash on a status's apply, the channels a reduced-motion player
 keeps and why, the HP bar last in a bottom-anchored stack, no CSS lift for
 a footprint, a DoT number's hue from the status table.
+
+### 124j, batch 7 — `BattleRenderer.ts` (2026-10-18, session fc5ce5cf)
+
+The file alone. Its step codes and history are out, "spec D3" and "the
+§106 mock's" with them: the phases behind each handler, the events and
+the color flash the FX registry retired, the playtest dates and fixes,
+the user's calls said as the reasons they gave, the retired anchor lifts
+and their measurements, the reversal behind the ink-top anchor (its reason
+and its price kept), "bump freely". The overflow spawn is the sim's own
+term, as batch 5 found, and stays where it is meant.
+
+**Statements found false and corrected (rule 7):**
+
+- Who calls what: the header had Game calling `update(dt)`; BattleScene
+  does. The audio parameter had BattleScene keeping "the non-keyed sounds
+  (death, fanfares, tile chips)"; BattleScene subscribes no sound, and the
+  cues with no key are rows of `src/audio/eventSounds.ts`, which Game
+  attaches (BattleScene's own comment says so). The `unit:missed`
+  subscription named a `triggerAttackVisual`, which no code has.
+  `onActionPhase` had "every melee/bow/heal verb" falling through with its
+  FX on `unit:attacked`; the melee and bow strikes have keys (batch 6's
+  find).
+- The moves and the dead: the status subscription had a unit's position
+  snap onto its tile "at move-START"; it flips at the move's impact
+  boundary, mid-slide (batch 5's find in `SpriteAnimator`), which is still
+  why an apply has no cue. The same comment had only burn and the heal tick
+  play a sound (all four do) and kept the `applied`, `expired` and `active`
+  slots "for §28/§29 to drive", though `active` is driven. The spawn
+  handler and the fade-in's type had only overflow spawns fade in; a
+  summon and a camp's portal drip (`instant: false`) fade too. `onUnitSwapAborted`
+  had a dead participant's handle "already gone"; `onUnitDied` keeps it
+  until the fade ends, so the sprite settles as it fades (reasoned from the
+  handler and the animator's separate lerp and fade maps, not seen). The
+  held tints were cleared on "reset" (twice); there is no `reset`, and
+  `detach` clears them. `refreshOverlayTint` ran on "overlay cleanup" too,
+  and an "expiring burn/frozen tint" repainted a wall; it runs on apply and
+  expiry, and burn has no tint. The release-gate hold's doc left out a
+  target that died during the wind-up (`unit:actionHeld`'s doc has it).
+- The burst lane and the projectiles: `ExplosionParticle` was "a
+  magic-bolt explosion" particle lerping "in XZ", and its fields' docs the
+  same; the lane carries the duds, the sparkles and the aura ring too, and
+  `updateExplosions` lerps all three axes (the sparkles and the ring rise).
+  `spawnProjectile` flew "in a straight line"; `arcHeight` lobs the
+  catapult's. The dud read as "thud, no hit", and the catapult constants
+  had it land only "on an aborted shot"; it fires on every landing, as
+  `spawnBurstFx` says. The tracer rendered "at the same world size as a
+  unit glyph (no per-instance scale)"; PROJECTILE_SIZE shrinks it to 0.6
+  (gotcha #108). The explosion's tuning was the magic bolt's; every
+  `explosion` burst uses it. `detach` had the pulse's motes in
+  `explosions`; the tracked pulse has its own lane.
+- The overlays and the marker: the number's top was "the ground anchor
+  lifted a full quad height"; it is the ink top (`inkTopLiftFor`).
+  `updateOverlays` had "three responsibilities" and projected "the
+  sprite's current world position"; it has four (the status pips) and
+  projects the ink top. The objective field drew a marker for "only its
+  `engage` target"; `focus` draws one too. `onObjectiveSet` had the
+  marker placed "same frame, end of update()"; the handler places it at its
+  own end. `_ENEMY_LIFT` rode above the target's "visual CENTER"; its own
+  doc and `updateObjectiveMarker` measure from the ink top. The `X` was
+  the atlas's "last cell"; the catalog's glyphs follow the static list.
+  `GLYPH_HALF_HEIGHT` gave a glyph's visual center and top; a unit's are
+  ink-aware, and the constant serves a tile's center and a unit gone.
+  `UNIT_PICK_SIZE`: units "always render at the default size"; an N×N body
+  draws at N, and `destructibleBillboards` scales the pick. The aura's `.`
+  was an atlas cell for "HUD punctuation" (batch 5's find).
+  `gridToWorld`'s "only external consumer" was BattleScene's camera
+  scroll; BattleScene doesn't call it, and the board explorer's poses do,
+  setting Y themselves.
+- `detach` cited "HANDOFF gotcha #15"; the gotchas are in GOTCHAS.md.
+
+And one of this session's own, in batch 6's `fxRegistry` header:
+`healerId` "tells an ability's heal from any other", but only an ability's
+heal op emits `unit:healed` (`executeHeal`); a status's heal ticks on
+`status:ticked` (`World.applyPeriodicEffects` says so). Both the header
+and the healed subscription now say that.
+
+Dropped and not checked: `updateObjectiveMarker`'s case of a target that
+"died this tick" with its sprite gone (the handle lives through the death
+fade, so the case it names is not the one where the sprite is missing; the
+comment now says what the code does), `onStatusTicked`'s "DoT ticks are
+always ≥ 1" (a tick's damage passes through `dealDamage`), the click's
+"either button, armed or not", the ink-top anchor's price as "~5px"
+(now "at different heights"), the abort handler's plan ("inert until
+§37/§40"; World says a knockback or a changed tile could abort one), and
+the spawn fade-in's death "if checkBattleEnd or AoE wipes" a new unit.
+`unitAnchorPos`'s paragraph on the view and the rubble's spawn before
+`fitToBoard` is kept as written, unchecked.
+
+**Twins corrected outside the batch, flagged:** TODO's sparkle item had
+the apply fire "at move-START" (now mid-slide), beside two stale numbers in
+the same sentence, `SPARKLE_Y_OFFSET = 0.0` (it is −0.175) and a
+`HITSPLAT_Y_OFFSET` that no longer exists; the item's status is left as
+it was. ARCHITECTURE's `BattleRenderer.ts` line named `tileWorldPos`; it
+is `tileGroundPos`. A search with the Grep tool for the claims above
+("triggerAttackVisual", "thud, no hit", "last atlas cell", "HUD
+punctuation", "only external consumer", "no per-instance scale", "Three
+responsibilities", "full quad height", "magic-bolt explosion", "non-keyed
+sounds", "move-START", "until reset", "overflow-spawn",
+"dual-projection") found no other but GOTCHAS #108's history, which is
+right as history. Found and left: GOTCHAS #43 to #45 still name
+`tileWorldPos`. "Hold/Stop" carry no target was right after all: Stop is
+a command that reverts to `atWill` (`ObjectiveController`), and the
+comment keeps it.
+
+Measured (`comment-length` on copies under `output/cl-124j-b7`, before as
+batch 6 left it): comment lines 848 → 761, words 7,737 → 6,795, code
+lines 1,183 unchanged. The step-code ceiling 2,460 → 2,248, the 212 the
+file held.
+
+Proof: `comment-strip HEAD src`, comments only, exit 0; its control made
+one code edit in memory in each changed file and the compare named them
+(the final run's count is in the commit message).
+
+Cost: 279,915 at 15:49 on 2026-10-18 by the tool's clock, after batch 6's
+commit, to 421,057 at 16:03 after the first proof: about 141k for 2,124
+lines, about 66 a line, with about 700 of them already read for batch 6's
+checks.
+
+**Read** (`batch`): `git show <this commit> -- src/render/BattleRenderer.ts`
+against the seven rules. Wrong looks like a step code or history left, or
+a rule a change must respect cut: the overlays after the slides and the
+marker after the overlays in `update`, the action bar on the render clock
+and hidden for moves and the spawn lockout, the re-aim drain kept through
+a move, no cue on a status's apply, the swap's two settles, the ground
+lerp's climb-early profile, the ink top for overlays and numbers and the
+ink center for FX ends, camera-up lifts and never world-Y, the dud on
+every landing, the sweep in `detach` of everything the animator doesn't
+own.
+
+### The hand-off after batch 7 (2026-10-18, session fc5ce5cf)
+
+Batches 6 and 7 are committed and open for their `batch` reads. Next is
+**batch 8, the probe kit and the dev keys** (`dev/probe/`, `devEntry.ts`,
+`devKeys.ts`, `failPlant.ts`; 1,443 lines), in a fresh session: this one
+is at 421,057 before this entry, and batch 8 at about 100 a line is about
+144k, past the hand-off line.
+
+For the next session:
+
+- Rates so far: batch 6 ran 154 a line, since its claims named
+  BattleRenderer, ui.css and the status config, all read to check them;
+  batch 7 ran 66, with a third of its file already read. A batch whose
+  comments name other files costs the reading of those files.
+- Use the Grep tool for a search whose empty answer is a claim: a Git
+  Bash `grep -rn … --include=*.ts` here missed `UnitCard.ts`'s
+  `buffKeyLabel` (batch 6's entry, "A slip, caught").
+- ui.css's overlay and hitsplat comments, §124.5's, hold history this pass
+  took out of the TS beside them (the retired `BarRenderer`, `--fp-lift`
+  "GONE", the 79e story); GOTCHAS #43 to #45 name `tileWorldPos`.
+- The hand-off after batch 5 still holds: `comment-strip` exits 1 when a
+  comment holding a `TOOL_READ` marker is reworded, and a false claim's
+  twins can hide in the batch's own files.

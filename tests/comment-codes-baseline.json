@@ -89,7 +89,6 @@
  "src/journal/journal.ts": 5,
  "src/journal/replayJournal.ts": 2,
  "src/journal/replayTool.ts": 1,
- "src/render/BattleRenderer.ts": 212,
  "src/render/FontAtlas.test.ts": 3,
  "src/render/SpriteRenderer.test.ts": 1,
  "src/render/TerrainRenderer.test.ts": 8,

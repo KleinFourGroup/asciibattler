@@ -45,26 +45,24 @@ import { isDashedPlate, markExtent, markShapeOf, type MarkShape } from './ground
 
 /**
  * The simulation/render seam. Subscribes to sim events and turns them into
- * SpriteRenderer + UnitOverlayLayer calls — sim never imports from render.
- * New events get a new handler here; the renderers stay dumb instance-buffer
- * / DOM managers.
+ * SpriteRenderer and UnitOverlayLayer calls; the sim never imports from
+ * render. A new event gets a handler here, and the renderers stay plain
+ * instance-buffer and DOM managers.
  *
- * Owns the per-frame SpriteAnimator that turns unit:moved events into smooth
- * lerps. Game calls `update(dt)` once per render frame; that drives sprite
- * lerps, overlay position-follow, and progress-bar fill (B3 lineage, E3.6
- * DOM port).
+ * Owns the SpriteAnimator that turns `unit:moved` into slides. BattleScene
+ * calls `update(dt)` once per render frame, which drives the slides, the
+ * overlays' follow and the action bars' fill.
  */
 
-/** Tracks an in-flight action's start so the progress bar fills smoothly between sim ticks. */
+/** An in-flight action's start, so its bar fills smoothly between sim ticks. */
 interface ActiveProgress {
-  /** `world.tick` at which the current activeAction began. Identity check so we re-anchor when the action changes. */
+  /** The action's `startTick`; a different one re-anchors the bar. */
   startTick: number;
-  /** `renderClockMs` (Q1: the scaled-dt accumulator, NOT wall-clock) when this
-   *  run was first observed by the render loop. Anchoring on the render clock —
-   *  which advances by the same speed-scaled `dt` the sim sees, and freezes at
-   *  pause — keeps the bar's fill rate locked to game speed. */
+  /** `renderClockMs` when the render loop first saw this action. The render
+   *  clock advances by the same speed-scaled `dt` the sim sees and freezes at
+   *  pause, so the fill keeps to the game's speed. */
   startedAtMs: number;
-  /** Total duration in ms, computed from `(finishTick - startTick) / TICK_RATE`. */
+  /** The action's length in ms, `(finishTick - startTick) / TICK_RATE`. */
   durationMs: number;
 }
 
@@ -74,9 +72,9 @@ interface OverlayFade {
   readonly handle: UnitOverlayHandle;
 }
 
-/** E3.6 — overflow-spawn overlay fade-in. Lerps overlay opacity 0 → 1
- *  over `duration`; the progress bar stays hidden during the spawn
- *  lockout (filtered alongside MoveAction in `updateProgressFill`). */
+/** A mid-battle spawn's overlay fade-in: opacity 0 → 1 over `duration`. The
+ *  action bar stays hidden through the spawn lockout (`updateProgressFill`
+ *  filters SpawnAction beside MoveAction). */
 interface OverlayFadeIn {
   elapsed: number;
   readonly duration: number;
@@ -84,11 +82,11 @@ interface OverlayFadeIn {
 }
 
 /**
- * E7.C — one particle of a magic-bolt explosion (the central flash or one of
- * the outward sparks). A standalone sprite (not a unit, not in `handles`)
- * driven per render frame: lerps `from → to` in XZ while growing `sizeFrom →
- * sizeTo` and fading alpha 1 → 0, then self-removes. Swept by `detach` like
- * the projectile tracers.
+ * One particle of the burst lane: an explosion's flash or spark, a dud's, a
+ * sparkle's mote or an aura ring's. A standalone sprite (not a unit, not in
+ * `handles`) driven per render frame: it eases `from → to` while its size
+ * goes `sizeFrom → sizeTo` and its alpha fades to 0, then removes itself.
+ * Swept by `detach` like the projectiles.
  */
 interface ExplosionParticle {
   readonly handle: SpriteHandle;
@@ -98,15 +96,15 @@ interface ExplosionParticle {
   readonly to: THREE.Vector3;
   readonly sizeFrom: number;
   readonly sizeTo: number;
-  /** §76g2 — peak-alpha multiplier on the 1→0 fade (default 1). Lets the aura
-   *  ring ride the same lane at a whisper without dimming existing bursts. */
+  /** The fade's peak alpha (1 by default), so the aura ring rides the lane
+   *  at a whisper without dimming the bursts. */
   readonly alphaScale: number;
 }
 
 /**
- * §76g4 — one mote of a `track`-mode aura pulse (the modes and their story
- * are in ./auraFx.ts): it re-anchors to its carrier's live sprite every
- * frame, so the wave glides with the carrier.
+ * One mote of a `track`-mode aura pulse (the modes are in ./auraFx.ts): it
+ * re-anchors to its carrier's live sprite every frame, so the wave glides
+ * with the carrier.
  */
 interface AuraPulseParticle {
   readonly handle: SpriteHandle;
@@ -120,7 +118,7 @@ interface AuraPulseParticle {
 }
 
 /**
- * 108b — a body's ground mark, fixed at spawn: its side's shape, its colour
+ * A body's ground mark, fixed at spawn: its side's shape, its colour
  * (linear RGB of `spriteColorForUnit`, which no held tint reaches) and, for an
  * N×N body, where it lies. Recorded then because a dying body leaves
  * `world.units` at once while its sprite, and so its mark, fades.
@@ -139,76 +137,74 @@ interface MarkSpec {
 
 export class BattleRenderer {
   private readonly handles = new Map<number, SpriteHandle>();
-  /** 108b — unitId → its ground mark, for every body in `handles`. */
+  /** unitId → its ground mark, for every body in `handles`. */
   private readonly markSpecs = new Map<number, MarkSpec>();
   private readonly markColour = new THREE.Color();
   private readonly overlayHandles = new Map<number, UnitOverlayHandle>();
   /**
-   * 28 — per-unit held status-overlay tints, keyed `unitId → (statusId → tint
-   * hex)`. A behavior status's `fx.active` overlay recolors the unit's glyph for
-   * its whole lifetime (apply→expire); the inner Map's INSERTION ORDER resolves
-   * which tint shows when several stack (last-applied wins), and restoring the
-   * team color on the last expiry. Cleared on death + `reset`.
+   * Each unit's held status tints, `unitId → (statusId → tint hex)`. A
+   * behavior status's `fx.active` overlay recolors the unit's glyph from
+   * apply to expiry; the inner Map's insertion order decides which tint shows
+   * when several are held (the latest applied) and when the team color
+   * returns (at the last expiry). Cleared on death and by `detach`.
    */
   private readonly statusOverlays = new Map<number, Map<string, string>>();
   private readonly subscriptions: Array<() => void> = [];
   private readonly animator: SpriteAnimator;
-  /** E6.B: in-flight ranged projectile sprite handles. They live in the
-   *  shared SpriteRenderer but NOT in `handles` (they're not units), so
-   *  detach sweeps them separately. */
+  /** In-flight projectile sprites (the tracers, the flights, the chain's
+   *  arcs). They live in the shared SpriteRenderer but not in `handles`
+   *  (they're not units), so `detach` sweeps them separately. */
   private readonly projectiles = new Set<SpriteHandle>();
-  /** E7.C: in-flight magic-bolt explosion particles (flash + sparks). Like
-   *  `projectiles`, they live in the shared SpriteRenderer but not in
-   *  `handles`, and are swept by `detach`. */
+  /** The burst lane's live particles. Like `projectiles`, they live in the
+   *  shared SpriteRenderer but not in `handles`, and `detach` sweeps them. */
   private readonly explosions: ExplosionParticle[] = [];
-  /** §76g2 — accumulator gating the aura-ring mote shed (speed-scaled dt, so
-   *  the ring slows with playback and freezes at pause). */
+  /** Gates the aura ring's mote shed, in speed-scaled dt, so the ring slows
+   *  with playback and freezes at pause. */
   private auraRingClock = 0;
-  /** §76g3 — accumulator gating the aura PULSE (the expanding wavefront),
-   *  independent of the shed clock so the two cadences tune separately. */
+  /** Gates the aura's pulse (the expanding wavefront), apart from the ring's
+   *  clock so the two cadences tune separately. */
   private auraPulseClock = 0;
-  /** §76g4 — carrier-TRACKED pulse motes ('track' mode): position re-derived
-   *  from the live sprite each frame, so they can't live in `explosions`
-   *  (whose from/to are fixed at spawn). Swept by `detach`. */
+  /** The `track` mode's carrier-tracked pulse motes: each frame's position
+   *  comes from the live sprite, so they can't live in `explosions`, whose
+   *  from and to are fixed at spawn. Swept by `detach`. */
   private readonly auraPulses: AuraPulseParticle[] = [];
-  /** §76g4 — scratch for the tracked-pulse carrier-center read, separate from
-   *  `scratchPos` (which holds the per-mote position in the same loop). */
+  /** Scratch for the tracked pulse's carrier-center read, apart from
+   *  `scratchPos`, which holds each mote's position in the same loop. */
   private readonly auraScratch = new THREE.Vector3();
   /** unitId → in-flight action timing for the progress bar. */
   private readonly progress = new Map<number, ActiveProgress>();
-  /** 82e2 — unitId → the re-aim drain window (`unit:actionHeld`). Entries
-   *  expire by render-clock time in `updateProgressFill`, or are superseded
-   *  the moment a real action bar claims the element. */
+  /** unitId → the re-aim drain window (`unit:actionHeld`). An entry expires
+   *  by render-clock time in `updateProgressFill`, or the moment a real
+   *  action bar claims the element. */
   private readonly reaims = new Map<number, { startedAtMs: number; durationMs: number }>();
-  /** Q1 — render-time accumulator in ms, advanced by the speed-scaled `dt` each
-   *  frame (the same `dt` BattleScene feeds the sim). The progress bar fills
-   *  against THIS, not `performance.now()`, so it tracks game speed and freezes
-   *  at pause (`dt === 0`). Every other animation here already advances by `dt`;
-   *  the bar was the lone wall-clock holdout. */
+  /** Render time in ms, advanced by the speed-scaled `dt` each frame (the
+   *  `dt` BattleScene feeds the sim). The action bar fills against this, not
+   *  `performance.now()`, so it keeps to the game's speed and freezes at
+   *  pause (`dt === 0`). */
   private renderClockMs = 0;
   /** unitId → ongoing post-death overlay fade. */
   private readonly overlayFades = new Map<number, OverlayFade>();
-  /** E3.6: unitId → ongoing overflow-spawn overlay fade-in. */
+  /** unitId → a mid-battle spawn's overlay fade-in. */
   private readonly overlayFadeIns = new Map<number, OverlayFadeIn>();
   /** Scratch vector to avoid per-frame allocation when reading sprite positions. */
   private readonly scratchPos = new THREE.Vector3();
-  /** F3 — dedicated scratch for a homing projectile's per-frame target re-read,
-   *  kept separate from `scratchPos` so the two can't alias mid-frame. */
+  /** Scratch for a homing projectile's per-frame target read, apart from
+   *  `scratchPos` so the two can't alias mid-frame. */
   private readonly homingScratch = new THREE.Vector3();
   /**
-   * J3 — the active player objective TARGET + its marker sprite. The marker is
-   * the `X` glyph billboard; `updateObjectiveMarker` repositions it every frame
-   * (a tile stays put, an enemy mark tracks the target's live, lerped position).
-   * State is driven entirely by `objective:set` / `objective:cleared`, so the
-   * marker is correct however the objective was set (mouse / hotkey / AI/fuzz).
-   * O1 — only the PLAYER team's objective draws a marker, and only its `engage`
-   * target (an `atWill`/`hold` objective has no target → null, no marker).
+   * The player's objective target and its marker sprite, an `X` billboard
+   * (`!` for focus) that `updateObjectiveMarker` places every frame: a tile
+   * stays put, an enemy mark tracks the target's live position. Driven by
+   * `objective:set` / `objective:cleared` alone, so the marker is right
+   * however the objective was set (mouse, hotkey, AI, fuzz). Only the
+   * player's objective draws one, and only one with a target (`engage` or
+   * `focus`).
    */
   private objective: ObjectiveTarget | null = null;
   private objectiveMarker: SpriteHandle | null = null;
-  /** §91-pre2b — the marker's CURRENT glyph ('X' engage / '!' focus), so the
-   *  placement can subtract that glyph's own ink-bottom lift (the terminal-
-   *  cell room) and stand the INK, not the anchor, at the designed gap. */
+  /** The marker's glyph ('X' engage, '!' focus), so the placement can
+   *  subtract that glyph's own ink-bottom lift (the terminal cell's room) and
+   *  stand the ink, not the anchor, at the designed gap. */
   private objectiveMarkerGlyph: string = OBJECTIVE_MARKER_GLYPH;
   /**
    * The currently-attached battle World. Null when no battle is running (map
@@ -219,96 +215,85 @@ export class BattleRenderer {
   constructor(
     private readonly sprites: SpriteRenderer,
     private readonly overlays: UnitOverlayLayer,
-    /** C1c: queried at sprite spawn + move endpoints so units stand on
-     *  the tile top instead of floating at a fixed plane. */
+    /** Queried at sprite spawn and at move endpoints, so units stand on the
+     *  tile top instead of floating at a fixed plane. */
     private readonly terrain: TerrainRenderer,
-    /** §Z + J3 — the render host. The FX driver triggers `shakeCamera` (Z2's
-     *  non-sprite channel); `updateObjectiveMarker` reads `renderer.camera` to
-     *  lift the enemy mark along the camera's up (screen-up) axis so it sits atop
-     *  the unit without the off-axis skew a world-Y lift causes under pitch. */
+    /** The render host: the FX driver kicks its `shakeCamera`, and every
+     *  camera-up lift (`aboveAnchor`) reads its camera, so a lift doesn't
+     *  skew off-axis the way a world-Y lift does under pitch. */
     private readonly renderer: Renderer,
-    /** §Z — the FX driver plays a cue's unified sound (one FxKey → visual +
-     *  SFX). The renderer is the sole owner of every keyed combat cue; BattleScene
-     *  keeps only the non-keyed sounds (death, fanfares, tile chips). */
+    /** The FX driver plays a cue's sound (one key, its visual and its
+     *  sound). The renderer plays every keyed combat cue; the cues with no key
+     *  (a death, the ability heal, the dash's leap) are rows of
+     *  src/audio/eventSounds.ts, which Game attaches. */
     private readonly audio: AudioPlayer,
     bus: EventBus<GameEvents>,
   ) {
-    // §Z / 27e boot assert: every `fx` key the ability AND status catalogs
-    // reference must resolve in the registry, so a typo fails here (battle start)
-    // not silently on screen.
+    // Every `fx` key the ability and status catalogs name must resolve in the
+    // registry, so a typo throws here, at battle start, not silently on screen.
     assertFxKeysResolve(ABILITY_DEFS);
     assertStatusFxKeysResolve(STATUS_DEFS);
     this.animator = new SpriteAnimator(this.sprites);
     this.subscriptions.push(bus.on('unit:spawned', this.onUnitSpawned));
     this.subscriptions.push(bus.on('unit:moved', this.onUnitMoved));
     this.subscriptions.push(bus.on('unit:moveAborted', this.onUnitMoveAborted));
-    // 82e2 — a release-gate hold: start the amber DRAIN bar over the re-aim
-    // window (the bar element self-hides on the action clear; this is the
-    // "unit is re-aiming, not idle" tell — see updateProgressFill).
+    // A release-gate hold: the amber drain bar over the re-aim window, the
+    // tell that the unit is re-aiming, not idle (`updateProgressFill`).
     this.subscriptions.push(bus.on('unit:actionHeld', this.onUnitActionHeld));
     this.subscriptions.push(bus.on('unit:swapped', this.onUnitSwapped));
     this.subscriptions.push(bus.on('unit:swapAborted', this.onUnitSwapAborted));
     this.subscriptions.push(bus.on('unit:attacked', this.onUnitAttacked));
-    // I2: a dodged single-target strike. The attacker still swung/shot (same
-    // triggerAttackVisual lunge/tracer), but a "Miss" floats instead of damage.
+    // A dodged single-target strike: "Miss" floats instead of a number. The
+    // swing rides `action:phase`, which fires on a miss too.
     this.subscriptions.push(bus.on('unit:missed', this.onUnitMissed));
     this.subscriptions.push(bus.on('unit:died', this.onUnitDied));
-    // §Z — the FX driver. Every keyed combat cue resolves off the action's phase
-    // boundaries: `actionId → AbilityDef.fx[phase] → FX_REGISTRY → descriptor`,
-    // then drives the named channels + sound. The mage bolt / catapult lob launch
-    // their projectile on `release` (carved out of the wind-up, so it travels
-    // DURING the charge and arrives on the impact tick) and detonate on `impact`.
-    // This retired the ad-hoc `magic:detonated` / `catapult:fired` events (the Y4
-    // strangler artifacts) — the impact burst now rides `action:phase{impact}`,
-    // same tick, same pre-hitsplat ordering.
+    // The FX driver: every keyed combat cue resolves off the action's phase
+    // boundaries (`actionId → AbilityDef.fx[phase] → FX_REGISTRY →
+    // descriptor`), then drives the named channels and the sound. The mage
+    // bolt and the catapult launch on `release` and fly through the `travel`
+    // phase, so they land on the impact tick, and detonate on `impact`.
     this.subscriptions.push(bus.on('action:phase', this.onActionPhase));
-    // 29c — the chain-lightning arc, drawn PER HOP off `unit:chained` (the §29c
-    // per-hop delay): each event fires on the tick its hop's damage lands, so the
-    // tracer travels jump by jump (the hitsplat rides the normal `unit:attacked`
-    // each hop's inner damage op emits — this draws only the connecting arc).
+    // The chain lightning's arc, drawn once a hop off `unit:chained`: each
+    // event fires on the tick its hop's damage lands, so the tracer travels
+    // jump by jump. The hop's number rides its own `unit:attacked`; this draws
+    // only the connecting arc.
     this.subscriptions.push(bus.on('unit:chained', this.onUnitChained));
-    // 27e — the status-effect viz, resolved through the §Z FX registry exactly
-    // like `action:phase` (status def's `fx[moment]` → key → descriptor →
-    // channels). Only the `ticked` moment is wired: the per-tick pulse puffs a
-    // recolored mote burst + floats the DoT/HoT amount hitsplat + plays the
-    // re-homed tile cue (burn / healtick) + keeps the HP bar in sync. The
-    // `applied` flash was DROPPED after the first playtest — a unit's logical
-    // position snaps onto a tile at move-START (`MoveAction`), so an apply cue
-    // fired while the sprite was still lerping in (reading as "burning before
-    // arrival"); the first tick — one interval later, sprite settled — is the
-    // first cue now. The `applied`/`expired`/`active` fx slots stay in the schema
-    // for §28/§29 to drive (e.g. a frozen `active` tint, an on-hit apply flash).
+    // The status cues, resolved through the FX registry like `action:phase`
+    // (the status def's `fx[moment]` → key → descriptor → channels). Only
+    // `ticked` is wired: each tick puffs a recolored mote burst, floats the
+    // amount, plays the status's sound and keeps the HP bar in sync. There is
+    // no cue on `applied`: a unit's position flips onto its new tile mid-slide
+    // (`MoveAction`), so an apply cue would show a burn before the sprite
+    // arrives; the first tick, one interval later, is the first cue.
     this.subscriptions.push(bus.on('status:ticked', this.onStatusTicked));
-    // 28 — the held `active` overlay: a behavior status recolors the unit's glyph
-    // for its whole lifetime (the one cue on the body for frozen/blind/panic/
-    // confusion — they have no per-tick pulse; the pip strip shows them too).
-    // Apply tints; expire restores the team color.
+    // The held `active` tint: a behavior status recolors the unit's glyph for
+    // its whole lifetime, its one cue on the body (it has no per-tick pulse;
+    // the pip strip shows it too). Apply tints; expiry restores the latest
+    // tint still held, or the team color.
     this.subscriptions.push(bus.on('status:applied', this.onStatusApplied));
     this.subscriptions.push(bus.on('status:expired', this.onStatusExpired));
-    // D7.B: keep HP bars in sync with ability-heal chip. E6.C floats a cyan `+N`.
-    // A heal onto a full unit emits a no-op (gotcha #80), so skip amount <= 0.
+    // An ability's heal: keep the HP bar in sync and float a cyan `+N`. A heal
+    // onto a full unit emits `amount: 0` (gotcha #80), so skip amount <= 0.
     this.subscriptions.push(
       bus.on('unit:healed', ({ unitId, amount, healerId }) => {
         this.refreshHpBar(unitId);
         if (amount > 0) {
           this.spawnHitsplat(unitId, `+${amount}`, 'heal');
-          // F5: the cyan twinkle is for ABILITY heals only (healerId set). The
-          // regen-TILE heal is now the `rejuvenate` status (27d) and gets its own
-          // cyan sparkle via the status-fx driver; a `null`-source `unit:healed`
-          // (hypothetical env heal) keeps just the `+N`.
+          // The cyan twinkle needs a healer. A status's heal never reaches this
+          // event: it ticks on `status:ticked`, with its own sparkle.
           if (healerId !== null) this.spawnSparkle(unitId, COLORS.FLOURESCENT_BLUE);
         }
       }),
     );
-    // J3 — the objective marker. set spawns/repoints the `X`; cleared removes it.
+    // The objective marker: `set` spawns or repoints it, `cleared` removes it.
     this.subscriptions.push(bus.on('objective:set', this.onObjectiveSet));
     this.subscriptions.push(bus.on('objective:cleared', this.onObjectiveCleared));
   }
 
   /** Per-render-frame tick. Drives sprite lerps + overlay position-follow + progress fill. */
   update(dt: number): void {
-    // Q1 — advance the render clock by the speed-scaled `dt` (0 at pause), so
-    // the progress bar that anchors on it tracks game speed like everything else.
+    // Advance the render clock by the speed-scaled `dt` (0 at pause), so the
+    // action bar that anchors on it keeps to the game's speed.
     this.renderClockMs += dt * 1000;
     this.animator.update(dt);
     this.updateExplosions(dt);
@@ -318,16 +303,16 @@ export class BattleRenderer {
     // After overlays so an enemy mark reads the target's already-lerped position
     // this frame (no one-frame lag behind the unit it's pinned to).
     this.updateObjectiveMarker();
-    // 108b — after every sprite has moved and faded for this frame.
+    // After every sprite has moved and faded for this frame.
     this.updateGroundMarks();
   }
 
   /**
-   * 108b — this frame's ground marks: one per body with a sprite, the dying
-   * included at their fading alpha, handed to the terrain, which bins and
-   * uploads them at its next draw (spec D3). A 1×1 body's mark follows its
-   * sprite's ground point through every lerp and shove, as the §106 mock's
-   * did; an N×N body's lies on its footprint.
+   * This frame's ground marks: one per body with a sprite, the dying included
+   * at their fading alpha, handed to the terrain, which draws the marks
+   * itself and bins and uploads them at its next draw. A 1×1 body's mark
+   * follows its sprite's ground point through every slide and shove; an N×N
+   * body's lies on its footprint.
    */
   private updateGroundMarks(): void {
     const world = this.world;
@@ -355,9 +340,9 @@ export class BattleRenderer {
   }
 
   /**
-   * E7.C — advance every live explosion particle: ease its position out
-   * toward `to`, grow its size, fade its alpha, and remove it once its
-   * lifetime elapses. Iterates back-to-front so in-place removal is safe.
+   * Advance every live particle of the burst lane: ease its position toward
+   * `to`, grow its size, fade its alpha, and remove it once its life ends.
+   * Iterates back to front so removal in place is safe.
    */
   private updateExplosions(dt: number): void {
     for (let i = this.explosions.length - 1; i >= 0; i--) {
@@ -378,34 +363,32 @@ export class BattleRenderer {
   }
 
   /**
-   * §76g2/g3 — the aura-range FX (playtest insertion: the recipient pips prove
-   * the buff APPLIES, but nothing showed the radius). Two layers, both riding
-   * the explosion-particle lane, both anchored to the carrier's LIVE sprite
-   * (the user call: half a cell of dishonesty during a move lerp beats a ring
-   * that snaps cell to cell) and colored by the aura status's pip color
-   * (`statusColor`), so ring, pulse, and recipient pips read as one system:
+   * The aura's range: the recipients' pips show the buff applies, and this
+   * shows the radius. Two layers, both on the burst lane, both anchored to
+   * the carrier's live sprite (half a cell off during a slide reads better
+   * than a ring that snaps cell to cell) and colored by the aura status's
+   * pip color (`statusColor`), so ring, pulse and pips read as one system:
    *
-   *  - the RING (76g2): every AURA_RING_INTERVAL_SECONDS each live carrier
-   *    sheds a few faint motes at random points along the aura's Chebyshev
-   *    boundary — the square perimeter at `radius + AURA_RING_EDGE`, the
-   *    affected cells' outer edge (matching the sim's `unitDistance ≤ radius`
-   *    gate for a 1×1 carrier). The idle "you can look for it" layer.
-   *  - the PULSE (76g3): every AURA_PULSE_INTERVAL_SECONDS a full square
-   *    wavefront of motes expands from the carrier out to that same boundary
-   *    and fades as it arrives — a sonar ping that reads "this RADIATES" at a
-   *    glance. The expanding square is the honest wavefront of the aura's
-   *    Chebyshev distance metric, not an approximation of a circle. The
-   *    ease-out lerp the lane already applies (fast start, settle at the
-   *    edge) is exactly a wave losing energy at its extent.
+   * - the ring: every AURA_RING_INTERVAL_SECONDS each live carrier sheds a
+   *   few faint motes at random points on the aura's Chebyshev boundary, the
+   *   square at `radius + AURA_RING_EDGE`, the affected cells' outer edge
+   *   (the sim's `unitDistance ≤ radius` gate for a 1×1 carrier). The idle
+   *   layer, there when looked for.
+   * - the pulse: every AURA_PULSE_INTERVAL_SECONDS a square wavefront of
+   *   motes expands from the carrier to that boundary and fades as it
+   *   arrives, a sonar ping that says "this radiates". The square is the
+   *   true wavefront of the aura's Chebyshev distance, not an approximate
+   *   circle, and the lane's ease-out is a wave losing energy at its edge.
    *
-   * Y hugs the carrier's own ground plane — no per-mote terrain sampling, so
-   * on a slope the far edge floats/sinks a touch (eyeball-accepted for v1).
-   * Both clocks advance by the speed-scaled `dt`: faster at fast-forward,
-   * frozen at pause, breathing at REAL dt during the pre-battle countdown
-   * (the Q2 countdown branch feeds unscaled dt — see BattleScene.tick).
+   * In `fill` mode the ring samples the whole area and there is no pulse.
+   * Y hugs the carrier's own ground plane, with no terrain sampling per
+   * mote, so on a slope the far edge floats or sinks a touch. Both clocks
+   * advance by the speed-scaled `dt`: faster at fast-forward, frozen at
+   * pause, at real `dt` during the pre-battle countdown (BattleScene's
+   * countdown branch feeds it unscaled).
    *
-   * 116b — the mode is a setting, read each frame (./auraFx.ts), so a change
-   * shows mid-battle.
+   * The mode is a setting, read each frame (./auraFx.ts), so a change shows
+   * mid-battle.
    */
   private updateAuraFx(dt: number): void {
     if (!this.world) return;
@@ -441,9 +424,8 @@ export class BattleRenderer {
     }
   }
 
-  /** §76g4 'fill' — the whole-area shed: like the boundary ring, but motes
-   *  sample the full aura square uniformly (the boundary is implied by where
-   *  the motes STOP appearing rather than drawn as a line). */
+  /** The `fill` mode's shed: like the ring, but the motes sample the whole
+   *  aura square uniformly, and the boundary shows where they stop. */
   private shedAuraFill(center: THREE.Vector3, reach: number, color: string): void {
     for (let i = 0; i < AURA_FILL_MOTES; i++) {
       const dx = (Math.random() * 2 - 1) * reach;
@@ -468,12 +450,12 @@ export class BattleRenderer {
     }
   }
 
-  /** §76g3/g4 'track' — the radiating pulse: one square wavefront of
-   *  evenly-spaced motes (AURA_PULSE_SAMPLES_PER_SIDE per side, offset half a
-   *  step from the corners so adjacent sides interleave instead of doubling
-   *  the corner motes), ground-flat. Each mote stores its OFFSET + the
-   *  carrier id, and `updateAuraPulseParticles` re-derives its position from
-   *  the live sprite every frame — the wave glides with the Officer. */
+  /** The `track` mode's pulse: one square wavefront of evenly spaced motes
+   *  (AURA_PULSE_SAMPLES_PER_SIDE a side, offset half a step from the corners
+   *  so adjacent sides interleave instead of doubling the corner motes), flat
+   *  on the ground. Each mote stores its offset and its carrier's id, and
+   *  `updateAuraPulseParticles` re-derives its position from the live sprite
+   *  every frame, so the wave glides with the carrier. */
   private shedAuraPulseTracked(
     unitId: number,
     center: THREE.Vector3,
@@ -508,10 +490,10 @@ export class BattleRenderer {
     }
   }
 
-  /** §76g4 'track' — advance the carrier-tracked pulse motes: position =
-   *  live carrier center + offset × eased(t) (the ease-out the explosion lane
-   *  applies: fast start, settling at the edge), alpha fading over the lifetime. A mote whose carrier sprite is
-   *  gone (death fade finished / detach race) is removed on the spot. */
+  /** Advance the carrier-tracked pulse motes: the live carrier center plus
+   *  the offset × eased(t) (the burst lane's ease-out: a fast start, settling
+   *  at the edge), alpha fading over the life. A mote whose carrier sprite is
+   *  gone (its death fade done, or a detach) is removed on the spot. */
   private updateAuraPulseParticles(dt: number): void {
     if (this.auraPulses.length === 0) return;
     for (let i = this.auraPulses.length - 1; i >= 0; i--) {
@@ -541,8 +523,8 @@ export class BattleRenderer {
     }
   }
 
-  /** §76g2 — the idle boundary shed: AURA_RING_MOTES faint motes at random
-   *  points on the square perimeter, rising gently and fading in place. */
+  /** The ring's shed: AURA_RING_MOTES faint motes at random points on the
+   *  square perimeter, rising gently and fading in place. */
   private shedAuraRing(center: THREE.Vector3, reach: number, color: string): void {
     for (let i = 0; i < AURA_RING_MOTES; i++) {
       // A random point on the square perimeter: pick a side, then a spot
@@ -571,11 +553,10 @@ export class BattleRenderer {
     }
   }
 
-  /** J3 — record the new objective target and lazily spawn the marker sprite
-   *  (one per battle, reused across re-sets). `updateObjectiveMarker` positions
-   *  it. O1 — only the PLAYER team draws a marker; a non-targeted objective
-   *  (atWill / O2 hold) has no target, so it drops the marker like a clear. O3 —
-   *  `focus` carries a target too (like `engage`), so it draws the marker. */
+  /** Record the new objective target, spawning the marker sprite if there is
+   *  none (one a battle, reused across re-sets); `updateObjectiveMarker`
+   *  places it. Only the player's objective draws a marker, and an objective
+   *  with no target (`atWill`, `hold`) drops it like a clear. */
   private onObjectiveSet = ({ team, objective }: GameEvents['objective:set']): void => {
     if (team !== 'player') return;
     if (objective.mode !== 'engage' && objective.mode !== 'focus') {
@@ -583,16 +564,16 @@ export class BattleRenderer {
       return;
     }
     this.objective = objective.target;
-    // Q3 — the glyph reads the mode: 'X' for engage, '!' for focus. The single
-    // marker sprite is reused across re-sets, so swap the glyph in place when the
-    // mode flips (engage ⇄ focus) rather than recreating it.
+    // The glyph reads the mode: 'X' for engage, '!' for focus. The one marker
+    // sprite is reused across re-sets, so the glyph swaps in place when the
+    // mode flips rather than the sprite being made again.
     const glyph = objective.mode === 'focus' ? OBJECTIVE_MARKER_FOCUS_GLYPH : OBJECTIVE_MARKER_GLYPH;
     this.objectiveMarkerGlyph = glyph;
     if (!this.objectiveMarker) {
-      // Seed at the origin; updateObjectiveMarker (same frame, end of update())
-      // moves it to the real spot before it's ever drawn. BASE-anchored: the
-      // X/! stands on the marker position (its ink's own lift is subtracted
-      // there, per glyph, so the glyph swap below needs nothing more).
+      // Seed at the origin; `updateObjectiveMarker`, at this handler's end,
+      // moves it before it is drawn. Base-anchored: the X or ! stands on the
+      // marker position (its ink's own lift is subtracted there, per glyph, so
+      // the glyph swap below needs nothing more).
       this.objectiveMarker = this.sprites.addSprite(
         glyph,
         OBJECTIVE_MARKER_COLOR,
@@ -606,15 +587,15 @@ export class BattleRenderer {
     this.updateObjectiveMarker();
   };
 
-  /** J3 — objective gone (player reverted it to at-will, or an enemy mark
-   *  auto-reverted on the target's death): drop the marker. Enemy-team objective
-   *  events never draw a marker (O1). */
+  /** The objective is gone (the player reverted it to at-will, or an enemy
+   *  mark reverted on the target's death): drop the marker. An enemy team's
+   *  objective never draws one. */
   private onObjectiveCleared = ({ team }: GameEvents['objective:cleared']): void => {
     if (team !== 'player') return;
     this.dropObjectiveMarker();
   };
 
-  /** J3/O1 — clear the player objective marker state + sprite. */
+  /** Clear the player's objective marker, its state and its sprite. */
   private dropObjectiveMarker(): void {
     this.objective = null;
     if (this.objectiveMarker) {
@@ -624,12 +605,10 @@ export class BattleRenderer {
   }
 
   /**
-   * J3 — position the objective marker for the current frame. A tile objective
-   * sits (larger) on its rally cell; an enemy objective rides atop the target's
-   * billboard, tracking its live position. If the target's sprite is briefly
-   * gone (it died this tick — the enemy objective auto-clears at the next
-   * top-of-tick, a ≤1-frame gap before `objective:cleared` lands), hide the
-   * marker rather than stranding it at a stale spot.
+   * Place the objective marker for this frame. A tile objective's marker
+   * sits, larger, on its rally cell; an enemy's rides above the target's
+   * glyph, tracking its live position. A target with no sprite hides the
+   * marker rather than strand it at a stale spot.
    */
   private updateObjectiveMarker(): void {
     const marker = this.objectiveMarker;
@@ -642,7 +621,7 @@ export class BattleRenderer {
       // it hugs its cell at the screen edges too). The X's ink starts at the
       // font baseline, `inkBottomLift` above its quad bottom, so the anchor
       // drops by that much × the marker's size; without it the X floats a
-      // quarter-cell up (the 79d2 eyeball find).
+      // quarter-cell up.
       const pos = aboveAnchor(
         this.tileGroundPos(obj.cell),
         OBJECTIVE_MARKER_TILE_LIFT -
@@ -664,13 +643,12 @@ export class BattleRenderer {
       this.sprites.updateSprite(marker, { alpha: 0 });
       return;
     }
-    // §79d/79d2 — the mark's ink stands OBJECTIVE_MARKER_ENEMY_LIFT above the
-    // target glyph's visible INK TOP, via the shared camera-up helper (this
-    // site's J3 hand-rolled `setFromMatrixColumn` lift was copy #1 of the
-    // pattern the helper unifies). The target's ground anchor is live (tracks
-    // its lerp). Both ends are ink-true: the target's ink top via
-    // `inkTopLift`, and the mark's own `inkBottomLift` subtracted so ITS ink,
-    // not its quad bottom, sits the gap above.
+    // The mark's ink stands OBJECTIVE_MARKER_ENEMY_LIFT above the target
+    // glyph's visible ink top, lifted along camera-up (`aboveAnchor`). The
+    // target's ground anchor is live (it tracks the slide). Both ends are
+    // ink-true: the target's ink top by `inkTopLift`, and the mark's own
+    // `inkBottomLift` subtracted so its ink, not its quad's bottom, sits the
+    // gap above.
     const target = this.world.findUnit(obj.unitId);
     const inkTop = target
       ? this.sprites.atlas.inkTopLift(target.glyph) * footprintOf(target)
@@ -691,12 +669,11 @@ export class BattleRenderer {
   }
 
   /**
-   * J3 — living enemy units as click candidates for the billboard hit-test
-   * (`Renderer.pickInstance`), using each sprite's LIVE rendered position (the
-   * exact billboard the player sees, incl. a mid-move lerp) rather than the
-   * logical cell — so clicking a moving enemy's glyph still selects it. The
-   * objective controller calls this to resolve an objective click (either
-   * button, armed or not) onto the unit you actually clicked, before falling
+   * Living enemy units as click candidates for the billboard hit-test
+   * (`Renderer.pickInstance`), at each sprite's live position (the billboard
+   * the player sees, mid-slide included) rather than the logical cell, so a
+   * click on a moving enemy's glyph selects it. The ObjectiveController calls
+   * this to resolve an objective click onto the unit clicked, before it falls
    * back to the terrain cell.
    */
   enemyBillboards(): PickCandidate[] {
@@ -711,11 +688,11 @@ export class BattleRenderer {
         id: unitId,
         position: pos.clone(),
         size: UNIT_PICK_SIZE,
-        // §79a/79d2 — atlas-derived ink (padded for click feel), measured off
-        // the same rasterization on screen.
+        // The atlas's ink box, padded for click feel, from the same
+        // rasterization as the screen.
         ink: this.sprites.atlas.getPaddedGlyphInk(unit.glyph),
-        // §79d — unit sprites stand on their quad bottom; the clickbox must
-        // mirror the same anchor exactly.
+        // Unit sprites stand on their quad's bottom; the clickbox mirrors the
+        // same anchor exactly.
         anchor: { x: 0, y: BASE_ANCHOR_Y },
       });
     }
@@ -723,17 +700,15 @@ export class BattleRenderer {
   }
 
   /**
-   * §40e — living DESTRUCTIBLE neutrals (rubble / a destructible wall or cover)
-   * as click candidates for the objective billboard hit-test, symmetric to
-   * `enemyBillboards`: the player can manually order an attack on one (a
-   * `focus` / `engage`, the "demolish this obstacle" order). The pick quad scales
-   * with the footprint — a 2×2/3×3 rubble renders ONE glyph at `size = N` (§39d),
-   * so the visible glyph stays clickable at any size (the cell-fallback in the
-   * ObjectiveController covers footprint tiles the single glyph doesn't overlap).
-   * Indestructible walls (hp-less) are excluded — they stay unclickable.
-   * §75h — ACTIVE neutrals (camp members) join the pool: the click-to-engage
-   * order rides the same neutral-kind objective (the sim admits it since 75e,
-   * and the ordered first blow is what aggros the camp).
+   * Living destructible neutrals (rubble, a destructible wall or cover) and
+   * camp members as click candidates for the objective hit-test, beside
+   * `enemyBillboards`: the player can order an attack on one (`focus` or
+   * `engage`). The pick quad scales with the footprint, since a 2×2 or 3×3
+   * body draws one glyph at `size = N`, and the ObjectiveController's cell
+   * fallback covers the footprint tiles the glyph doesn't overlap.
+   * Indestructible walls (no HP) stay unclickable. A camp member's order rides
+   * the same neutral objective, and the ordered first blow is what aggroes
+   * the camp.
    */
   destructibleBillboards(): PickCandidate[] {
     if (!this.world) return [];
@@ -769,8 +744,8 @@ export class BattleRenderer {
    * stay live — only the World reference and the per-battle state are reset.
    *
    * Side effect: any in-flight death fades (started in the same tick
-   * battle:ended fired) get cut short. Acceptable: subsequent screens hide
-   * the cut-short visual. See HANDOFF gotcha #15.
+   * battle:ended fired) get cut short. Acceptable: the screens after hide
+   * the cut-short visual (gotcha #15).
    */
   detach(): void {
     this.animator.clear();
@@ -778,24 +753,23 @@ export class BattleRenderer {
       this.sprites.removeSprite(handle);
     }
     this.handles.clear();
-    // 108b — the marks go with the bodies; the terrain draws none until the
-    // next battle's first frame.
+    // The marks go with the bodies; the terrain draws none until the next
+    // battle's first frame.
     this.markSpecs.clear();
     this.terrain.beginMarks(0, 0);
-    // E6.B — animator.clear() drops the projectile lerps without firing
-    // their onComplete (the despawn callback), so sweep the tracer sprites
+    // animator.clear() drops the projectile lerps without firing their
+    // onComplete (the despawn callback), so sweep the projectile sprites
     // here. removeSprite is idempotent, so a late callback is harmless.
     for (const proj of this.projectiles) this.sprites.removeSprite(proj);
     this.projectiles.clear();
-    // E7.C — same deal for in-flight explosion particles: animator.clear()
-    // doesn't own them, so sweep their sprites here.
+    // The burst lane's particles too: the animator doesn't own them.
     for (const p of this.explosions) this.sprites.removeSprite(p.handle);
     this.explosions.length = 0;
-    // §76g2/g3 — the aura ring/pulse motes live in `explosions` (swept above);
-    // just rewind the shed clocks so the next battle starts on fresh intervals.
+    // The ring's motes live in `explosions` (swept above); rewind the shed
+    // clocks so the next battle starts on fresh intervals.
     this.auraRingClock = 0;
     this.auraPulseClock = 0;
-    // §76g4 — the carrier-TRACKED pulse motes have their own lane; sweep it.
+    // The tracked pulse's motes have their own lane; sweep it.
     for (const p of this.auraPulses) this.sprites.removeSprite(p.handle);
     this.auraPulses.length = 0;
     // overlays.clear() drops every <div> the overlay layer owns in a single
@@ -812,7 +786,7 @@ export class BattleRenderer {
     this.progress.clear();
     this.reaims.clear();
     this.renderClockMs = 0;
-    // J3 — drop the objective marker + state so the next battle starts clean.
+    // Drop the objective marker and its state so the next battle starts clean.
     this.dropObjectiveMarker();
     this.world = null;
   }
@@ -828,13 +802,13 @@ export class BattleRenderer {
     if (!unit) return;
     const footprint = footprintOf(unit);
     const spritePos = this.unitAnchorPos(unit.position, footprint);
-    // §40c — a destructible wall/cover renders in the CRACKED_STONE tint (its
-    // tell); every other unit reads its team/stone color via the same helper.
-    // §79d — BASE-anchored: the glyph stands on its ground anchor, rising
-    // screen-up (the off-axis fix; see SpriteAnchor).
+    // A destructible wall or cover wears CRACKED_STONE, its tell; every other
+    // unit its team's or the stone's color, through the same helper.
+    // Base-anchored: the glyph stands on its ground anchor and rises
+    // screen-up (`SpriteAnchor`).
     const handle = this.sprites.addSprite(unit.glyph, spriteColorForUnit(unit), spritePos, 'base');
     this.handles.set(unit.id, handle);
-    // 108b — its ground mark: the side's shape, or scenery's plate.
+    // Its ground mark: the side's shape, or scenery's plate.
     const colour = this.markColour.set(spriteColorForUnit(unit));
     const centre =
       footprint > 1
@@ -849,30 +823,27 @@ export class BattleRenderer {
       b: colour.b,
       fixed: centre && { x: centre.x, z: centre.z },
     });
-    // §39d — a multi-tile body renders as one glyph scaled to its footprint
-    // (the SpriteRenderer per-instance `size`, E6.B). Single-cell units keep the
-    // default size, so the shipped roster's render is untouched.
+    // A multi-tile body draws as one glyph scaled to its footprint (the
+    // per-instance `size`); a 1×1 keeps the default.
     if (footprint !== 1) this.sprites.updateSprite(handle, { size: footprint });
 
-    // INERT neutrals (walls, environment) are background — suppress the halo.
-    // An INDESTRUCTIBLE wall still skips the overlay (an HP bar it could never
-    // move would be visual noise). §40f — a DESTRUCTIBLE neutral (rubble /
-    // breakable wall/cover) opts back in: it gets an overlay so you can watch it
-    // chipped down. The bar hides until damaged + scales to the footprint (both
-    // owned by UnitOverlayLayer.addDestructible); registering it in
-    // overlayHandles means the existing unit:attacked → refreshHpBar path fills
-    // it and the per-frame loop position-follows it, no new plumbing.
-    // §75h — an ACTIVE neutral (camp member) skips this return and takes the
-    // full combatant path below: natural bloom, the level-badge + HP-bar
-    // overlay, and the mid-battle fade-in — the portal drip spawns with
-    // `instant: false`, so a member MATERIALIZES at the anchor for free.
+    // Inert neutrals (walls, scenery) are background: no halo. An
+    // indestructible wall gets no overlay either, since an HP bar it could
+    // never move would be noise. A destructible neutral (rubble, a breakable
+    // wall or cover) gets one, so its chipping shows; its bar hides until
+    // damaged and scales to the footprint (`UnitOverlayLayer.addDestructible`).
+    // Registered in `overlayHandles`, it is filled by `unit:attacked`'s HP
+    // refresh and moved by the per-frame loop like any overlay. An active
+    // neutral (a camp member) skips this return and takes the combatant path
+    // below: natural bloom, the level badge and HP bar, and the fade-in, since
+    // the portal drip spawns with `instant: false`.
     if (isInertNeutral(unit)) {
       this.sprites.updateSprite(handle, { bloomIntensity: 0 });
       if (isDestructibleNeutral(unit.archetype)) {
         const overlay = this.overlays.addDestructible(footprint);
         this.overlays.updateHp(overlay, Math.max(0, unit.currentHp) / unit.derived.maxHp);
-        // §79e — overlays anchor on the glyph's visible INK TOP (the per-frame
-        // follow recomputes the same point). See `inkTopLiftFor`.
+        // Overlays anchor on the glyph's visible ink top (`inkTopLiftFor`);
+        // the per-frame follow recomputes the same point.
         this.overlays.updatePosition(
           overlay,
           aboveAnchor(spritePos, this.inkTopLiftFor(unit), this.renderer.camera, this.scratchPos),
@@ -882,12 +853,12 @@ export class BattleRenderer {
       return;
     }
 
-    // Q2 — battle-start placements (`instant: true`) appear IMMEDIATELY: the M3
-    // materialize fade "read as loading", and the pre-battle COUNTDOWN now owns
-    // the reaction-time window. Only D5.C mid-battle overflow spawns
-    // (`instant: false`) still fade — they lerp alpha 0 → 1 over the SpawnAction
-    // lockout so the fade and the lockout line up (reinforcements arriving, not
-    // a battle-open materialize). Walls/neutrals returned above and still pop.
+    // A unit placed at battle start (`instant: true`) appears at once; the
+    // pre-battle countdown is the reaction window. A mid-battle spawn
+    // (`instant: false`: an overflow spawn, a summon, a camp's portal drip)
+    // fades alpha 0 → 1 over the SpawnAction lockout, so the fade and the
+    // lockout end together. Walls and other inert neutrals returned above, and
+    // pop.
     const overlay = this.overlays.add(unit.team, unit.level, instant ? 1 : 0);
     const pct = Math.max(0, unit.currentHp) / unit.derived.maxHp;
     this.overlays.updateHp(overlay, pct);
@@ -921,28 +892,27 @@ export class BattleRenderer {
   };
 
   /**
-   * §36c — the settle-back. A deferred move aborted mid-flight (its destination
-   * went invalid while the sprite was sliding toward it). Ease the sprite from
-   * wherever it reached back to `from` — its logical cell, since a pre-flip unit
-   * never left it. Lerps from the sprite's LIVE position (like animateStep), so
-   * the reversal is continuous from the slide's current point and overrides the
-   * in-flight move lerp (single lerp per handle). A short, fixed duration keeps
-   * the recoil from lingering into a concurrent melee-hit anim (the spec's
-   * worry). A §35b selection-time abort never started a slide, so the sprite is
-   * already on `from` and this lerps in place — a clean no-op. Inert in real play
-   * until §37/§40 can invalidate a claimed destination.
+   * The settle-back. A deferred move aborted mid-flight (its destination went
+   * invalid while the sprite slid toward it): ease the sprite from wherever it
+   * reached back to `from`, its logical cell, since a unit doesn't leave it
+   * before the flip. It lerps from the sprite's live position (like
+   * `animateStep`), so the reversal continues from the slide's current point
+   * and replaces the move's lerp (one lerp per handle). A short, fixed
+   * duration keeps the recoil from lingering into a concurrent melee hit. An
+   * abort at selection time never started a slide, so the sprite is already
+   * on `from` and this lerps in place, a no-op.
    */
   private onUnitMoveAborted = ({ unitId, from }: GameEvents['unit:moveAborted']): void => {
     this.settleSpriteTo(unitId, from);
   };
 
   /**
-   * 82e2 — a release-gate hold (the catapult's target left the firing band
-   * mid-windup): anchor the re-aim DRAIN window on the render clock (the Q1
-   * scaled-dt accumulator — freezes at pause, tracks game speed, same as the
-   * fill bar). `updateProgressFill` draws it full→empty in TERMINAL_AMBER
-   * while no real action bar claims the element. Duration derives from the
-   * event's (already speed-scaled) tick count.
+   * A release-gate hold (the catapult's locked target left the firing band,
+   * or died, during the wind-up): anchor the re-aim drain window on the render clock, which
+   * freezes at pause and keeps to the game's speed, as the fill bar does.
+   * `updateProgressFill` draws it full to empty in TERMINAL_AMBER while no
+   * real action bar claims the element. The length is the event's tick
+   * count, already scaled by the unit's speed.
    */
   private onUnitActionHeld = ({ unitId, reaimTicks }: GameEvents['unit:actionHeld']): void => {
     this.reaims.set(unitId, {
@@ -952,14 +922,14 @@ export class BattleRenderer {
   };
 
   /**
-   * 56e-pre2 — a swap ended WITHOUT its flip (abort at the impact boundary,
-   * or a participant removed pre-flip). BOTH sprites began the dual lerp at
-   * swap-start, so both settle back to their true cells — the one-body
-   * `unit:moveAborted` this replaces settled only the actor, leaving the
-   * partner's sprite resting on a slide the sim never honored (the 56e
-   * labyrinth desync: a melee attacking from a tile it wasn't on). A dead
-   * participant's handle is already gone (`unit:died` owns that sprite) —
-   * `settleSpriteTo` skips it.
+   * A swap ended without its flip (aborted at the impact boundary, or a
+   * participant removed before the flip). Both sprites began the paired
+   * slide at the swap's start, so both settle back to their true cells;
+   * settling only one would leave the partner resting on a slide the sim
+   * never made, and a melee unit would then attack from a tile it isn't on.
+   * `onUnitDied` keeps a dead unit's handle until its fade ends, so a dead
+   * participant's sprite settles as it fades; once the fade has ended,
+   * `settleSpriteTo` finds no handle and skips it.
    */
   private onUnitSwapAborted = ({
     unitA,
@@ -971,8 +941,8 @@ export class BattleRenderer {
     this.settleSpriteTo(unitB, cellB);
   };
 
-  /** The §36c settle: ease the sprite from its LIVE position to `cell`'s rest
-   *  position (single lerp per handle — overrides any in-flight slide). */
+  /** The settle: ease the sprite from its live position to `cell`'s rest
+   *  position (one lerp per handle, replacing any slide in flight). */
   private settleSpriteTo(unitId: number, cell: GridCoord): void {
     if (!this.world) return;
     const handle = this.handles.get(unitId);
@@ -980,13 +950,13 @@ export class BattleRenderer {
     const footprint = this.footprintFor(unitId);
     const restPos = this.unitAnchorPos(cell, footprint);
     const origin = (this.sprites.getPosition(handle, this.scratchPos) ?? restPos).clone();
-    // §81c2 — same ground profile as animateStep (a settle-back is a ground
-    // relocation too; an abort can land the sprite on a different-height tile).
+    // The same ground profile as `animateStep`: a settle-back is a ground
+    // relocation too, and can land the sprite on a tile of another height.
     this.animator.startGroundLerp(handle, origin, restPos, SETTLE_BACK_SECONDS);
   }
 
   /**
-   * GP5.1 — a swap (`SwapAction`) animates as two simultaneous steps in
+   * A swap (`SwapAction`) animates as two simultaneous steps in
    * opposite directions. Each sprite lerps from its LIVE position (see
    * `animateStep`), which is what keeps a partner caught mid-step from
    * jittering.
@@ -1021,13 +991,13 @@ export class BattleRenderer {
     if (!this.world) return;
     const handle = this.handles.get(unitId);
     if (!handle) return;
-    // §39d — lerp between FOOTPRINT-centered anchors so a multi-tile mover stays
-    // centered over its block through the slide (n=1 → tileGroundPos, identical).
+    // Lerp between footprint-centred anchors, so a multi-tile mover stays
+    // centred over its block through the slide (n = 1 is `tileGroundPos`).
     const footprint = this.footprintFor(unitId);
     const origin = (this.sprites.getPosition(handle, this.scratchPos) ?? this.unitAnchorPos(from, footprint)).clone();
-    // §81c2 — ground lerp: climb-early/descend-late Y so a low→high step never
-    // spends its second half with the anchor under the destination tile top
-    // (the glyph-through-the-ground clip).
+    // The ground lerp climbs early and descends late in Y, so a low-to-high
+    // step never spends its second half with the anchor under the
+    // destination's tile top, the glyph clipping through the ground.
     this.animator.startGroundLerp(
       handle,
       origin,
@@ -1037,13 +1007,12 @@ export class BattleRenderer {
   }
 
   /**
-   * §79d — the GROUND point of cell `coord`: XZ from gridToWorld, Y the terrain
-   * top-of-tile (per-cell from `TerrainRenderer.heightAt`). This is the world
-   * ANCHOR convention: a thing's true scene location carries NO presentation
-   * lift (pre-79d this added `SPRITE_CENTER_OFFSET` — the world-Y lift the 79b
-   * probe measured skewing edge sprites ±9px off their tiles). A unit's
-   * base-anchored quad STANDS on this point (screen-up, via `instanceAnchor`);
-   * anything stacked above it goes through `aboveAnchor`.
+   * The ground point of cell `coord`: XZ from gridToWorld, Y the terrain's
+   * tile top (`TerrainRenderer.heightAt`). This is the world anchor
+   * convention: a thing's true location in the scene carries no presentation
+   * lift, since a world-Y lift skews a sprite off its tile at the screen's
+   * edge. A unit's base-anchored quad stands on this point (screen-up, via
+   * `instanceAnchor`); anything stacked above it goes through `aboveAnchor`.
    */
   private tileGroundPos(coord: GridCoord): THREE.Vector3 {
     if (!this.world) throw new Error('BattleRenderer.tileGroundPos: no attached world');
@@ -1053,9 +1022,9 @@ export class BattleRenderer {
     return pos;
   }
 
-  /** §79d — the visual CENTER of cell `coord` for FX aimed at a tile (blast
-   *  flashes, ground-target bolt endpoints): half a glyph up the screen from
-   *  the ground point — where a standing glyph's center reads. */
+  /** The visual center of cell `coord`, for FX aimed at a tile (blast
+   *  flashes, a ground-target bolt's end): half a glyph up the screen from
+   *  the ground point, where a standing glyph's center reads. */
   private cellVisualCenter(coord: GridCoord): THREE.Vector3 {
     return aboveAnchor(
       this.tileGroundPos(coord),
@@ -1066,12 +1035,12 @@ export class BattleRenderer {
   }
 
   /**
-   * §79d — the visual CENTER of a unit's live glyph: its ground anchor (which
-   * tracks move lerps) lifted up the SCREEN to the middle of the VISIBLE INK
-   * (§79d2 — ink-aware, so a bolt aimed "at the unit" hits the letterform's
-   * body, not the taller empty quad's midpoint). The one point FX endpoints /
-   * sparkles mean by "at the unit". Null when the handle is gone
-   * (mid-teardown), like `getPosition`.
+   * The visual center of a unit's live glyph: its ground anchor (which
+   * tracks the slides) lifted up the screen to the middle of the visible ink,
+   * so a bolt aimed at the unit hits the letterform's body, not the taller
+   * empty quad's midpoint. The one point the FX endpoints and sparkles mean
+   * by "at the unit". Null when the handle is gone (mid-teardown), like
+   * `getPosition`.
    */
   private unitVisualCenter(
     handle: SpriteHandle,
@@ -1085,29 +1054,27 @@ export class BattleRenderer {
   }
 
   /**
-   * §79e — the camera-up lift from a unit's GROUND anchor to the top of its
-   * visible ink, footprint-scaled. The one definition shared by everything that
-   * must sit a fixed SCREEN distance off the top of a glyph: the HP-overlay
-   * stack and the hitsplat anchor.
+   * The camera-up lift from a unit's ground anchor to the top of its visible
+   * ink, scaled by the footprint. The one definition for everything that sits
+   * a fixed screen distance off a glyph's top: the overlay stack and the
+   * floating number.
    *
-   * §79d2 anchored the overlay stack on the uniform half-quad line instead —
-   * deliberately, so bars across a row of mixed glyphs stayed on one scannable
-   * line. The 79e native eyeball REVERSED that call (user, on the built
-   * result): the uniform line is glyph-BLIND, so short glyphs (`a`, `r`) wore
-   * their bar visibly high while tall ones (`M`) ran cramped — and since the
-   * CSS gap is screen-px against a depth-blind anchor, near rows read tight and
-   * far rows read high *at the same time*, with no single gap value fixing
-   * both. An ink-top anchor scales with perspective on its own, so the CSS gap
-   * means the same thing at every depth and letterform. The price, accepted:
-   * bars sit ~5px apart for an `a` vs an `M` at equal depth instead of on one
-   * line. `inkCenterLift`'s consumers (FX endpoints) are unaffected.
+   * Not one line for every glyph: a shared line is blind to the glyph, so a
+   * short glyph (`a`, `r`) wore its bar visibly high and a tall one (`M`) ran
+   * cramped, and since the CSS gap is in screen pixels against an anchor
+   * blind to depth, near rows read tight and far rows high at once, with no
+   * one gap fixing both. The ink top scales with perspective, so the gap
+   * means the same at every depth and letterform. The price, accepted: bars
+   * over an `a` and an `M` at equal depth sit at different heights instead of
+   * on one line. `inkCenterLift`'s users, the FX endpoints, are apart from
+   * this.
    */
   private inkTopLiftFor(unit: Unit): number {
     return this.sprites.atlas.inkTopLift(unit.glyph) * footprintOf(unit);
   }
 
   /**
-   * §39d/§79d — the GROUND anchor for a unit's BODY sprite, footprint-aware.
+   * The ground anchor for a unit's body sprite, footprint-aware.
    * `corner` is the canonical `unit.position` (the min-XY cell); the N×N block
    * extends +x/+y (see `footprintCells`). A 1×1 body stands on its tile's
    * ground point. An N×N body is one scaled glyph (`instanceSize = n`),
@@ -1144,16 +1111,13 @@ export class BattleRenderer {
   }
 
   /**
-   * E6 — float a damage hitsplat over the target: neon-red for a crit (the E1
-   * `crit` flag), white otherwise. The pre-E6 attacker/target color flash is
-   * gone — the §Z3 shove/tracer (driven off `action:phase`) shows who's acting
-   * and the hitsplat shows the impact, so the flash is redundant. Also refreshes
-   * the target's HP bar (the sim has applied damage by the time this fires).
-   *
-   * Z3 — the swing CUE left this handler: it now rides `action:phase` via the
-   * fx registry (so it plays on a MISS too, off the same phase event). This
-   * handler keeps only the DAMAGE-coupled visuals (the hitsplat + HP bar), which
-   * need the resolved `damage` / `crit` that `action:phase` doesn't carry.
+   * Float the damage over the target, neon red for a crit and white
+   * otherwise, and refresh its HP bar (the sim has applied the damage when
+   * this fires). The shove or tracer on `action:phase` shows who acts, and
+   * the number shows the impact. The swing's cue rides `action:phase`
+   * through the FX registry, so it plays on a miss too; this handler keeps
+   * the visuals that need the resolved `damage` and `crit`, which
+   * `action:phase` doesn't carry.
    */
   private onUnitAttacked = ({
     targetId,
@@ -1165,23 +1129,22 @@ export class BattleRenderer {
   };
 
   /**
-   * I2 — a single-target strike was dodged: float a desaturated "Miss" over the
-   * target instead of a damage number. No HP-bar refresh: a miss mutates no HP.
-   * Z3 — the swing itself now rides `action:phase` (which fires on hit AND miss),
-   * so this handler no longer triggers the lunge/tracer; it floats only the splat.
+   * A single-target strike was dodged: float "Miss" over the target instead
+   * of a number. No HP refresh: a miss changes no HP. The swing rides
+   * `action:phase`, which fires on a hit and a miss alike, so this floats
+   * only the word.
    */
   private onUnitMissed = ({ targetId }: GameEvents['unit:missed']): void => {
     this.spawnHitsplat(targetId, t('hitsplat.miss'), 'miss');
   };
 
   /**
-   * E6.C — float a number over a unit, anchored at the *top* of the glyph so
-   * it reads off the top edge. §79d: the top is the ground anchor lifted a
-   * full quad height along CAMERA-UP (`aboveAnchor`) — drift-free by
-   * construction, one projection in UnitOverlayLayer. A world-unit lift keeps
-   * the offset tracking the sprite's apparent size across camera zoom (a CSS
-   * % offset wouldn't). No-op if the unit has no live sprite (mid-teardown)
-   * or projects off-screen.
+   * Float a number over a unit, anchored at the top of its visible ink so it
+   * reads off the glyph's top edge. The lift runs along camera-up
+   * (`aboveAnchor`), so one projection in UnitOverlayLayer places it with no
+   * sideways drift, and a lift in world units tracks the sprite's apparent
+   * size across zoom, where a CSS % offset wouldn't. A no-op if the unit has
+   * no live sprite (mid-teardown) or doesn't project.
    */
   private spawnHitsplat(
     unitId: number,
@@ -1194,21 +1157,18 @@ export class BattleRenderer {
     if (!pos) return;
     if (!this.world) return;
     const unit = this.world.findUnit(unitId);
-    // §79d/79d2 — anchor at the glyph's visible INK TOP (ink-aware: the number
-    // floats just above the letterform, not above the taller empty quad).
-    // Camera-up projects to the same screen X as the anchor by construction,
-    // which is what retired the I2 dual-projection workaround in
-    // UnitOverlayLayer.spawnHitsplat.
+    // The ink top, so the number floats just above the letterform, not above
+    // the taller empty quad.
     const lift = unit ? this.inkTopLiftFor(unit) : 2 * GLYPH_HALF_HEIGHT;
     const top = aboveAnchor(pos, lift, this.renderer.camera, pos);
     this.overlays.spawnHitsplat(top, text, kind, unitId);
   }
 
   /**
-   * E6.A / Z3 — the melee lunge. The caster shoves toward its target and snaps
-   * back. Driven off `action:phase` via the `melee_swing` fx key (the melee
-   * weapons author it on `impact`, the rogue gambit on `windup`), so it fires on
-   * a MISS too — the phase boundary doesn't care whether the strike connected.
+   * The melee lunge: the caster shoves toward its target and snaps back.
+   * Driven off `action:phase` by the `melee_swing` fx key (the melee weapons
+   * author it on `impact`, the rogue gambit on `windup`), so it fires on a
+   * miss too: the phase boundary doesn't care whether the strike connected.
    * Direction comes from the cell centers (stable even while the sprite is
    * mid-lerp); `startShove` captures the sprite's live position as the origin.
    * No archetype keying: only defs that author the key reach here, so the mage's
@@ -1237,11 +1197,10 @@ export class BattleRenderer {
   }
 
   /**
-   * E6.B / Z3 — the ranged tracer. Fly a `*` glyph in a straight line from the
-   * caster's sprite to the target's and despawn on arrival. Driven off
-   * `action:phase` via the `ranged_shot` fx key (the bow and the pistol, on
-   * `impact`), so it
-   * fires on a MISS too. Damage already landed this tick (the sim is
+   * The ranged tracer: fly a `*` in a straight line from the caster's sprite
+   * to the target's and remove it on arrival. Driven off `action:phase` by
+   * the `ranged_shot` fx key (the bow and the pistol, on `impact`), so it
+   * fires on a miss too. Damage already landed this tick (the sim is
    * instantaneous); the bolt is a cosmetic. Spawn from the live sprite positions
    * so it emanates from / lands on what the player sees, falling back to cell
    * centers if a handle is mid-teardown.
@@ -1252,9 +1211,9 @@ export class BattleRenderer {
     if (!attacker) return;
     const attackerHandle = this.handles.get(casterId);
     if (!attackerHandle) return;
-    // §79d — endpoints are the glyphs' visual CENTERS (ground anchor + half the
-    // quad up the screen), so the bolt emanates from / lands on what the player
-    // sees; falls back to the cell's visual center if a handle is mid-teardown.
+    // The ends are the glyphs' visual centers, so the bolt leaves and lands on
+    // what the player sees; a cell's visual center stands in if a handle is
+    // mid-teardown.
     const from = (
       this.unitVisualCenter(attackerHandle, attacker, this.scratchPos) ??
       this.cellVisualCenter(attacker.position)
@@ -1269,15 +1228,14 @@ export class BattleRenderer {
   }
 
   /**
-   * §29c — one ARC of a chain attack. Fires per hop (`unit:chained`), on the tick
-   * that hop's damage lands, so with `hopDelaySeconds > 0` the bolt visibly travels
-   * jump by jump. Flies a fast `*` tracer from the arc's source cell (`from` — the
-   * caster for jump 0, else the previous victim) to the live target sprite (falling
-   * back to the recorded `to` cell), team-coloured by the caster, plus the gentle
-   * per-hop jolt the `chain_arc` registry entry authors. The DAMAGE feedback (the
-   * hitsplat + HP) rides the normal `unit:attacked` each hop emits — this is the
-   * connecting arc only. The arc is a cosmetic, like the bow tracer: damage already
-   * landed this hop's tick, the bolt just shows the path.
+   * One arc of a chain attack. Fires once a hop (`unit:chained`), on the tick
+   * that hop's damage lands, so with `hopDelaySeconds > 0` the bolt travels
+   * jump by jump. Flies a fast `*` from the arc's source cell (`from`: the
+   * caster's for jump 0, else the previous victim's) to the live target
+   * sprite (else the recorded `to` cell), in the caster's team color, with
+   * the gentle jolt the `chain_arc` entry authors. The damage's number and
+   * HP ride each hop's `unit:attacked`; this is the connecting arc only, a
+   * cosmetic like the bow's tracer: the damage already landed this tick.
    */
   private onUnitChained = ({ casterId, targetId, from, to }: GameEvents['unit:chained']): void => {
     if (!this.world) return;
@@ -1292,25 +1250,23 @@ export class BattleRenderer {
       this.cellVisualCenter(to)
     ).clone();
     this.spawnProjectile(fromPos, toPos, color, undefined, 0, CHAIN_ARC_SECONDS, undefined, PROJECTILE_SIZE);
-    // The per-hop zap + the gentle electric jolt (the registry authors both; the
-    // unified one-key = visual + SFX model, like onActionPhase).
+    // The hop's zap and its jolt, both from the registry's one key.
     const fx = fxDescriptor('chain_arc', reducedMotion());
     if (fx?.sound) this.audio.play(fx.sound);
     if (fx?.shake) this.renderer.shakeCamera(fx.shake.intensity, fx.shake.durationSeconds);
   };
 
   /**
-   * E6.B/E7.C — fly a `*` tracer in a straight line `from → to` over
-   * `durationSeconds` (default `PROJECTILE_SECONDS`) and despawn on arrival.
-   * Shared by the ranged strike (shooter → target) and, since F3, the mage
-   * bolt + catapult lob launched on their `release` boundary (timed via
-   * `ticksToSeconds(travelTicks)` to arrive on impact). The tracer lives in
-   * `projectiles` (not `handles`) so `detach` sweeps it; note `animator.clear()`
-   * drops the lerp WITHOUT firing `onArrive` (gotcha #108), so a battle that
-   * ends mid-flight spawns no orphan callback. `targetProvider` (F3) makes the
-   * lerp HOME on a moving target sprite (the catapult lob); absent → a fixed
-   * destination (ranged tracer, mage ground-target bolt). `size` (Z3) overrides
-   * the tracer glyph scale so an fx key can author it (defaults to PROJECTILE_SIZE).
+   * Fly a `*` from `from` to `to`, level or in an arc of `arcHeight`, over
+   * `durationSeconds` (default PROJECTILE_SECONDS), and remove it on arrival.
+   * Shared by the tracers, the chain's arcs and the flights launched on
+   * `release` (timed by `ticksToSeconds(travelTicks)` to land on the impact
+   * tick). It lives in `projectiles`, not `handles`, so `detach` sweeps it;
+   * `animator.clear()` drops the lerp without firing `onArrive` (gotcha
+   * #108), so a battle that ends mid-flight leaves no orphan callback.
+   * `targetProvider` makes the lerp home on a moving sprite (the catapult);
+   * without it the destination is fixed. `size` overrides the glyph's scale,
+   * so an fx key can author it (default PROJECTILE_SIZE).
    */
   private spawnProjectile(
     from: THREE.Vector3,
@@ -1341,13 +1297,12 @@ export class BattleRenderer {
   }
 
   /**
-   * §Z — the FX driver. Resolves the action's per-phase cue
-   * (`actionId → AbilityDef.fx[phase] → FX_REGISTRY`) and drives its channels:
-   * the unified sound, a `release`-boundary projectile, an `impact` burst. The
-   * def-resolve path (the renderer reads the key off the def, not the event)
-   * keeps the lean `action:phase` payload authoritative on the def. Any phase /
-   * action with no `fx` key (every melee/bow/heal verb in Z1) falls straight
-   * through — its FX still rides `unit:attacked` / `unit:healed`.
+   * The FX driver. Resolves the action's cue for this phase
+   * (`actionId → AbilityDef.fx[phase] → FX_REGISTRY`) and drives its
+   * channels: the sound, a projectile, a burst, the shake, the shove, the
+   * tracer. The key is read off the def, not the event, so `action:phase`
+   * stays lean. A phase or action with no `fx` key falls through; the
+   * numbers ride `unit:attacked` and `unit:healed`.
    */
   private onActionPhase = ({
     unitId,
@@ -1358,34 +1313,33 @@ export class BattleRenderer {
   }: GameEvents['action:phase']): void => {
     const key = ABILITY_DEFS[actionId]?.fx?.[phase];
     if (!key) return;
-    // 99c — the gate rides the resolver: under reduced motion the shake, the
-    // burst and the sparkle channels come back absent (REDUCED_MOTION_STRIPS).
+    // The motion gate rides the resolver: under reduced motion the shake, the
+    // burst and the sparkle come back absent (REDUCED_MOTION_STRIPS).
     const fx = fxDescriptor(key, reducedMotion());
     if (!fx || !this.world) return;
 
-    // Unified cue (the Z VFX+SFX decision): the sound fires WITH the visual.
+    // One key: the sound plays with the visual.
     if (fx.sound) this.audio.play(fx.sound);
     if (fx.projectile) this.launchProjectileFx(fx.projectile, unitId, targetId, targetCell);
     if (fx.burst) this.spawnBurstFx(fx.burst, unitId, targetId, targetCell);
-    // Z2 — the camera shake is a Renderer-owned channel (it owns the camera +
-    // render loop), so the driver just kicks it; the registry authors the magnitude.
+    // The Renderer owns the camera and the render loop, so the driver only
+    // kicks the shake; the registry authors its size.
     if (fx.shake) this.renderer.shakeCamera(fx.shake.intensity, fx.shake.durationSeconds);
-    // Z3 — the single-target strike cues. They fire on the phase boundary the key
-    // is authored on (impact for the weapons / bow, windup for the gambit), so a
-    // MISS plays them for free: `action:phase` fires on hit AND miss alike.
+    // The single-target strikes' cues fire on the phase the key is authored on
+    // (`impact` for the weapons, `windup` for the gambit), so a miss plays them
+    // too: `action:phase` fires on a hit and a miss alike.
     if (fx.shove) this.triggerShoveFx(fx.shove, unitId, targetId);
     if (fx.tracer) this.triggerTracerFx(fx.tracer, unitId, targetId);
   };
 
   /**
-   * 27e — the status-lifecycle FX driver (the `onActionPhase` sibling). Resolves
-   * the status def's `fx[moment]` → registry descriptor, then drives the named
-   * channels off the LIVE unit: the unified sound (one key = visual + SFX), a
-   * recolored sparkle on the body, and the DoT/HoT amount hitsplat + an HP-bar
-   * refresh (when an `amount` is supplied). General over `moment`, but today only
-   * `ticked` is wired (the apply flash was dropped post-playtest — see the
-   * `status:ticked` subscription); §28/§29 can drive other moments. No-op when
-   * the status/moment authors no key.
+   * The status cues' driver, `onActionPhase`'s sibling: resolves the status
+   * def's `fx[moment]` to a descriptor and drives its channels off the live
+   * unit: the sound, a recolored sparkle on the body, and the DoT or HoT
+   * amount with an HP-bar refresh when an `amount` is given. General over
+   * `moment`, though only `ticked` calls it (the constructor says why); the
+   * held tint goes through `onStatusApplied`. A no-op when the status or the
+   * moment names no key.
    */
   private driveStatusFx(
     statusId: string,
@@ -1400,17 +1354,15 @@ export class BattleRenderer {
     if (fx.sound) this.audio.play(fx.sound);
     if (fx.sparkle) this.spawnSparkle(unitId, fx.sparkle.color);
     if (fx.hitsplat && amount !== undefined && amount > 0) {
-      // 98d — the kind's prefix glyph rides the number (`+N` heal, `~N` burn,
-      // `‡N` bleed, `☠N` poison): the shape channel beside the hue.
+      // The kind's prefix glyph rides the number, the shape beside the hue.
       this.spawnHitsplat(unitId, hitsplatText(fx.hitsplat.kind, amount), fx.hitsplat.kind);
       this.refreshHpBar(unitId);
     }
   }
 
   /**
-   * A no-op tick (a HoT onto a full-HP unit, amount 0) drives nothing — no
-   * sound, sparkle, or `+0` (the gotcha #80 "no zero-effect spam" rule the old
-   * tile chip-heal followed). DoT ticks are always ≥ 1, so only HoTs short here.
+   * A tick that changed nothing (a HoT on a full unit, amount 0) drives
+   * nothing: no sound, no sparkle, no `+0` (gotcha #80).
    */
   private onStatusTicked = ({ unitId, statusId, amount }: GameEvents['status:ticked']): void => {
     if (amount === 0) return;
@@ -1418,7 +1370,7 @@ export class BattleRenderer {
   };
 
   /**
-   * 28 — a behavior status with an `fx.active` overlay starts tinting the unit's
+   * A behavior status with an `fx.active` overlay starts tinting the unit's
    * glyph. Tracked per-unit so a re-apply is idempotent (delete + re-set keeps
    * the last-applied-wins order) and an expiry restores the correct color.
    * Statuses with no `active` overlay (the DoTs, which cue on their ticks) no-op.
@@ -1438,8 +1390,8 @@ export class BattleRenderer {
   };
 
   /**
-   * 28 — a behavior status expired: drop its tint and recolor the unit to the
-   * next-most-recent held overlay, or back to its team color when none remain.
+   * A behavior status expired: drop its tint and recolor the unit to the
+   * next most recent held tint, or back to its team color when none remain.
    */
   private onStatusExpired = ({ unitId, statusId }: GameEvents['status:expired']): void => {
     const tints = this.statusOverlays.get(unitId);
@@ -1449,9 +1401,9 @@ export class BattleRenderer {
   };
 
   /**
-   * 28 — write the unit's current glyph color: the last-applied held overlay
-   * tint, or its team color when no overlay remains. No-op when the unit's sprite
-   * is gone (dead / detached). Reused on apply, expiry, and overlay cleanup.
+   * Write the unit's current glyph color: the latest held tint, or its base
+   * color when none remains. A no-op when the unit's sprite is gone (dead,
+   * detached). Called on apply and on expiry.
    */
   private refreshOverlayTint(unitId: number): void {
     const handle = this.handles.get(unitId);
@@ -1463,16 +1415,16 @@ export class BattleRenderer {
       for (const tint of tints.values()) color = tint;
     } else {
       const unit = this.world?.findUnit(unitId);
-      // §40c — restore to the unit's BASE color, which for a destructible wall/cover
-      // is the cracked tint (not the plain stone), so an expiring burn/frozen tint
-      // doesn't repaint it as an indestructible wall.
+      // The unit's base color, which for a destructible wall or cover is the
+      // cracked tint, not the plain stone, so an expiring tint doesn't repaint
+      // it as an indestructible wall.
       if (unit) color = spriteColorForUnit(unit);
     }
     if (color !== undefined) this.sprites.updateSprite(handle, { color });
   }
 
   /**
-   * §Z (was F3's `onActionPhase` body) — fly a caster's projectile from its live
+   * Fly a caster's projectile from its live
    * sprite toward the target, timed to ARRIVE on the impact tick. The flight
    * duration is read from the caster's live `travel` phase length (one source of
    * truth with the sim — no duplicated render const, no rounding drift).
@@ -1497,7 +1449,7 @@ export class BattleRenderer {
     const flightSeconds = travelTicks > 0 ? ticksToSeconds(travelTicks) : PROJECTILE_SECONDS;
     const color = colorForTeam(caster.team);
     const casterHandle = this.handles.get(casterId);
-    // §79d — visual-center endpoints throughout (see triggerTracerFx).
+    // Visual-center ends throughout (see triggerTracerFx).
     const from = (
       (casterHandle && this.unitVisualCenter(casterHandle, caster, this.scratchPos)) ??
       this.cellVisualCenter(caster.position)
@@ -1525,13 +1477,11 @@ export class BattleRenderer {
   }
 
   /**
-   * §Z (was `onMagicDetonated` / `onCatapultFired`) — the impact burst. An
-   * `explosion` detonates a team-colored flash + spark ring at the captured
-   * blast cell (mage); a `dud` kicks a neutral dust puff at the boulder's impact
-   * cell — the live target sprite, falling back to the cast cell (catapult).
-   * Z1 note: the dud now fires on EVERY landing (a boulder craters whether or
-   * not it connected) — retiring the `hit`-carrying `catapult:fired` event
-   * dropped the hit/abort distinction, and an always-on crater reads cleanly.
+   * The impact burst. An `explosion` flashes, team-colored, with a ring of
+   * sparks at the captured blast cell (the mage); a `dud` kicks a neutral dust
+   * puff where the boulder lands, the live target sprite, else the cast cell
+   * (the catapult). The dud fires on every landing, hit or not: a boulder
+   * craters either way, and `action:phase` carries no hit.
    */
   private spawnBurstFx(
     spec: FxBurst,
@@ -1560,10 +1510,10 @@ export class BattleRenderer {
   }
 
   /**
-   * E7.C — flash + spark-ring burst at `center`. One central flash glyph
-   * that grows + fades, plus a ring of sparks that shoot outward to roughly
-   * the 3×3 blast edge and fade. All ride the shared bloom pipeline so the
-   * burst glows in the team color. Tunable via the EXPLOSION_* consts below.
+   * A flash and a ring of sparks at `center`: one central flash glyph that
+   * grows and fades, and a ring of sparks that shoot out to about a 3×3
+   * blast's edge and fade, all in `color` and glowing through the bloom.
+   * Tuned by the EXPLOSION_* constants below.
    */
   private spawnExplosion(center: THREE.Vector3, color: string): void {
     // Central flash: stays put, grows large, fades.
@@ -1594,10 +1544,10 @@ export class BattleRenderer {
   }
 
   /**
-   * E7.D — a small gray dust puff for a catapult-shot landing: a central
-   * glyph that grows + fades plus a few short low-glow sparks, all in the
-   * neutral stone color so it reads as "thud, no hit" rather than a team-
-   * colored impact. Reuses the explosion-particle lane (swept by `detach`).
+   * A small gray dust puff for a catapult shot's landing: a central glyph
+   * that grows and fades and a few short low-glow sparks, all in the neutral
+   * stone color, so it reads as a landing rather than a team-colored blast.
+   * Rides the burst lane (swept by `detach`).
    */
   private spawnDud(center: THREE.Vector3): void {
     this.addExplosionParticle(
@@ -1628,23 +1578,23 @@ export class BattleRenderer {
   }
 
   /**
-   * F5 / 27e — a brief recolored mote burst ON a unit. One shape serves both the
-   * F5 ability-heal twinkle (cyan, gated to ability heals in the `unit:healed`
-   * handler) and the 27e status cues (amber burn embers, green poison, red
-   * bleed, cyan rejuvenate), parameterized by `color`. Reads the unit's LIVE
-   * sprite position like `spawnHitsplat` (so it tracks a mid-lerp sprite), but
-   * anchors on the BODY (`SPARKLE_Y_OFFSET`) rather than the top edge where the
-   * number floats — in a crowd that keeps the cloud reading as on THIS unit, not
-   * the one behind it. A handful of `*` motes rise + fan out and fade, reusing
-   * the explosion-particle lane (swept by `detach`).
+   * A brief recolored mote burst on a unit. One shape serves the ability
+   * heal's twinkle (cyan, for a heal with a healer in the `unit:healed`
+   * handler) and the status ticks' cues (amber burn, green poison, red bleed,
+   * cyan rejuvenate), by `color`. Reads the unit's live sprite position like
+   * `spawnHitsplat`, so it tracks a sliding sprite, but anchors on the body
+   * (`SPARKLE_Y_OFFSET`) rather than the top edge where the number floats: in
+   * a crowd the cloud then reads as on this unit, not the one behind it. A
+   * handful of `*` motes rise, fan out and fade on the burst lane (swept by
+   * `detach`).
    */
   private spawnSparkle(unitId: number, color: string): void {
     const handle = this.handles.get(unitId);
     if (!handle) return;
     const unit = this.world?.findUnit(unitId);
     if (!unit) return;
-    // §79d — the burst hugs the glyph as SEEN: the ink's visual center + the
-    // tuned camera-up nudge (SPARKLE_Y_OFFSET), with the mote fan in world XZ.
+    // The burst hugs the glyph as seen: the ink's visual center plus the tuned
+    // camera-up nudge (SPARKLE_Y_OFFSET), with the motes fanned in world XZ.
     const center = this.unitVisualCenter(handle, unit, this.scratchPos);
     if (!center) return;
     aboveAnchor(center, SPARKLE_Y_OFFSET, this.renderer.camera, center);
@@ -1715,17 +1665,16 @@ export class BattleRenderer {
     this.animator.cancel(handle);
     this.progress.delete(unitId);
     this.reaims.delete(unitId);
-    // 28 — drop any held status-overlay tints (the unit fades out in its last
-    // tint; the map entry would otherwise leak until reset).
+    // Drop the held tints: the unit fades out in its last one, and the entry
+    // would otherwise stay until `detach`.
     this.statusOverlays.delete(unitId);
-    // D5.C — if the unit died mid-spawn-in fade (rare but possible if
-    // checkBattleEnd or AoE wipes a freshly-queued unit), drop the
-    // overlay fade-in so it doesn't fight the fade-out below.
+    // A unit can die during its spawn fade-in; drop the overlay's fade-in so
+    // it doesn't fight the fade-out below.
     this.overlayFadeIns.delete(unitId);
     this.animator.startFade(handle, FADE_SECONDS, () => {
       this.sprites.removeSprite(handle);
       this.handles.delete(unitId);
-      this.markSpecs.delete(unitId); // 108b — the mark faded with the sprite
+      this.markSpecs.delete(unitId); // the mark faded with the sprite
     });
     const overlay = this.overlayHandles.get(unitId);
     if (overlay) {
@@ -1735,28 +1684,23 @@ export class BattleRenderer {
   };
 
   /**
-   * Per-frame overlay driver. Three responsibilities:
+   * The per-frame overlay driver:
    *
-   * 1. Overlay position-follow: project the sprite's *current* world
-   *    position to CSS pixels each frame. Reading from
-   *    SpriteRenderer.getPosition picks up SpriteAnimator lerps for
-   *    free, so overlays glide with their unit through a move instead
-   *    of teleporting to the destination cell.
-   * 2. Progress bar fill: anchor the render clock to `activeAction.startTick`
-   *    transitions so progress fills smoothly between sim ticks. The
-   *    Clock owns sub-tick time and doesn't expose it, but anchoring on
-   *    `renderClockMs` (Q1: the scaled-dt accumulator) at the first frame we
-   *    observe an activeAction gives equivalent smoothness for actions long
-   *    enough to matter — AND, because that clock advances at game speed and
-   *    freezes at pause, the fill rate tracks speed (the pre-Q1 wall-clock
-   *    `performance.now()` filled at 1× regardless / kept running while paused).
-   *    The progress bar is hidden (null) when no action is in flight.
-   * 3. Overlay fade on death / spawn: lerp opacity 0↔1 over FADE_SECONDS
-   *    or the spawn lockout, then remove the overlay on death.
+   * 1. Position: project each glyph's live ink top to CSS pixels. The
+   *    sprite's position, read through SpriteRenderer.getPosition, carries
+   *    the animator's slides, so an overlay glides with its unit through a
+   *    move instead of jumping to the destination cell.
+   * 2. The action bar's fill, anchored on `renderClockMs` at the first frame
+   *    an action is seen, so it fills smoothly between sim ticks (the Clock
+   *    keeps its sub-tick time to itself) and, since that clock keeps the
+   *    game's speed and freezes at pause, at the game's pace. Hidden (null)
+   *    when no action is in flight.
+   * 3. The fades: opacity 1 → 0 over FADE_SECONDS on death, then the
+   *    overlay is removed; 0 → 1 over the spawn lockout for a mid-battle
+   *    spawn.
+   * 4. The status pips, once a sim tick.
    */
   private updateOverlays(dt: number): void {
-    // Q1 — the progress bar's clock is the scaled-dt render accumulator, not
-    // `performance.now()`; that's what makes it honor speed + pause.
     const now = this.renderClockMs;
 
     // Drive post-death fades; remove when complete.
@@ -1772,9 +1716,8 @@ export class BattleRenderer {
       }
     }
 
-    // D5.C — drive overflow-spawn fade-ins; overlay lerps 0 → 1, the
-    // progress bar stays hidden (the spawn lockout is filtered out of
-    // updateProgressFill, so no progress writes will fight this).
+    // Mid-battle spawns' fade-ins. The bar stays hidden: `updateProgressFill`
+    // filters the spawn lockout, so no fill write fights this.
     for (const [unitId, fadeIn] of this.overlayFadeIns) {
       fadeIn.elapsed += dt;
       const t = fadeIn.elapsed >= fadeIn.duration ? 1 : fadeIn.elapsed / fadeIn.duration;
@@ -1789,10 +1732,9 @@ export class BattleRenderer {
       const handle = this.handles.get(unitId);
       const unit = world.findUnit(unitId);
       if (!handle || !unit) continue;
-      // §79e — follow the glyph's visible INK TOP so the CSS stack sits a fixed
-      // SCREEN distance off the letterform at any board edge and any depth
-      // (`--overlay-gap`). Supersedes §79d2's deliberate uniform half-quad
-      // line — see `inkTopLiftFor` for the reversal and what it costs.
+      // Follow the glyph's visible ink top, so the CSS stack sits a fixed
+      // screen distance off the letterform at any board edge and any depth
+      // (`--overlay-gap`; `inkTopLiftFor` says why, and what it costs).
       const spritePos = this.sprites.getPosition(handle, this.scratchPos);
       if (!spritePos) continue;
       const inkTop = aboveAnchor(
@@ -1805,9 +1747,9 @@ export class BattleRenderer {
       this.overlays.updatePosition(overlay, inkTop);
       this.updateProgressFill(unitId, unit, overlay, now);
 
-      // §32c — refresh the status pip-strip only when the sim tick advanced
-      // (the readout is identical between ticks; CSS smooths the depletion),
-      // so this recomputes at most once per tick per unit, not every frame.
+      // Refresh the pips only when the sim tick has advanced (the readout is
+      // the same between ticks, and CSS smooths the depletion), so this
+      // recomputes at most once a tick per unit, not every frame.
       if (overlay.statusTick !== world.currentTick) {
         overlay.statusTick = world.currentTick;
         this.overlays.updateStatuses(overlay, readUnitStatuses(unit.effects, world.currentTick));
@@ -1827,9 +1769,8 @@ export class BattleRenderer {
     // doing something that takes time" (attack swings, charge-ups, channels);
     // movement is handled by the sprite lerp itself.
     //
-    // D5.C — also hide during SpawnAction lockout. The fade-in is the
-    // visual feedback for spawning; a second progress bar on top of a
-    // half-faded sprite would compete for attention.
+    // Hidden through the SpawnAction lockout too: the fade-in is the spawn's
+    // feedback, and a bar over a half-faded sprite would compete with it.
     if (
       !active ||
       active.finishTick <= active.startTick ||
@@ -1837,10 +1778,10 @@ export class BattleRenderer {
       active.action.id === SPAWN_ACTION_ID
     ) {
       if (this.progress.has(unitId)) this.progress.delete(unitId);
-      // 82e2 — no action bar claiming the element: a live re-aim window
-      // draws the amber DRAIN (full → empty). Deliberately kept up through
-      // an interleaved MOVE (the catapult repositioning mid-re-aim is still
-      // re-aiming); a real action bar supersedes it below.
+      // No action bar claims the element: a live re-aim window draws the
+      // amber drain, full to empty. It stays up through a move in between
+      // (a catapult moving mid-re-aim is still re-aiming); a real action bar
+      // replaces it below.
       const reaim = this.reaims.get(unitId);
       if (reaim !== undefined) {
         const remaining = 1 - (now - reaim.startedAtMs) / reaim.durationMs;
@@ -1880,37 +1821,35 @@ export class BattleRenderer {
 const FADE_SECONDS = 0.3;
 
 /**
- * E6.A — melee shove geometry. The attacker lunges this far (world units,
- * ≈ tiles) toward its target, then recovers. A fast snap out + a slightly
- * slower recover reads as a committed strike rather than a wobble; total
- * ~0.2s comfortably fits inside the shortest attack cadence.
+ * The melee shove. The attacker lunges this far (world units, about tiles)
+ * toward its target, then recovers. A fast snap out and a slightly slower
+ * recovery read as a committed strike rather than a wobble; the 0.2 s in all
+ * fits well inside the shortest attack cadence.
  */
 const SHOVE_DISTANCE = 0.35;
 const SHOVE_OUT_SECONDS = 0.07;
 const SHOVE_BACK_SECONDS = 0.13;
 
 /**
- * §36c — settle-back recoil. When a deferred move aborts mid-flight, the sprite
- * eases from wherever the slide reached back to its `from` cell over this window.
- * Short (a touch above the shove's ~0.2s out+back) so it reads as a quick "pulled
- * back" recoil and clears before any concurrent melee-hit anim — but long enough
- * to register as motion rather than a teleport (the snap the design call rejected).
+ * The settle-back's recoil. When a deferred move aborts mid-flight, the
+ * sprite eases from wherever the slide reached back to its `from` cell over
+ * this window. Short (a touch above the shove's 0.2 s out and back), so it
+ * reads as a quick pull back and clears before a concurrent melee hit, but
+ * long enough to read as motion rather than a teleport.
  */
 const SETTLE_BACK_SECONDS = 0.22;
 
 /**
- * E6.B — ranged projectile tracer. The glyph flies a straight line from
- * shooter to target (per the E6 decision) over a fixed duration regardless
- * of distance, so a shot reads as fast and stays well inside the attack
- * cadence. The tracer reuses the shared SpriteRenderer, so it renders at
- * the same world size as a unit glyph (no per-instance scale); `*` reads
- * smaller than a letter thanks to its internal whitespace. PROJECTILE_BLOOM
- * pushes it above the unit baseline (0.15) so it glows like a bolt.
+ * The ranged tracer. The glyph flies a straight line from shooter to target
+ * over a fixed time, whatever the distance, so a shot reads as fast and
+ * stays well inside the attack cadence. PROJECTILE_SIZE shrinks it (gotcha
+ * #108); PROJECTILE_BLOOM lifts it above a unit's default bloom (0.15), so it
+ * glows like a bolt.
  */
 const PROJECTILE_GLYPH = '*';
 const PROJECTILE_SECONDS = 0.18;
-// §29c — the chain arc flies faster than a bow bolt so each zap arrives within its
-// hop's delay window (`hopDelaySeconds` ≈ 0.1s), reading as a snappy "zap…zap…zap".
+// The chain's arc flies faster than a bow's bolt, so each zap arrives within
+// its hop's delay (`hopDelaySeconds`, 0.1 s by default): zap, zap, zap.
 const CHAIN_ARC_SECONDS = 0.08;
 const PROJECTILE_BLOOM = 1.2;
 /** Per-sprite size multiplier for the tracer (1 = full unit-glyph size).
@@ -1918,12 +1857,11 @@ const PROJECTILE_BLOOM = 1.2;
 const PROJECTILE_SIZE = 0.6;
 
 /**
- * E7.C — magic-bolt explosion tuning. The flash is a central `*` that grows
- * from FLASH_SIZE_FROM → FLASH_SIZE_TO while fading; the spark ring is 8 `*`
- * tracers that shoot RING_SPREAD world units outward (cells are 1×1, blast
- * radius is 1, so ~1.1 lands the sparks at the 3×3 edge) and fade. EXPLOSION_
- * BLOOM pushes the whole burst well above the unit baseline so it glows. All
- * eyeball-tuned — bump freely.
+ * The explosion, every `explosion` burst's. The flash is a central `*` that
+ * grows from FLASH_SIZE_FROM to FLASH_SIZE_TO while fading; the spark ring is
+ * 8 `*`s that shoot RING_SPREAD world units outward (cells are 1×1, so 1.1
+ * lands the sparks at a radius-1 blast's 3×3 edge) and fade. EXPLOSION_BLOOM
+ * lifts the whole burst well above a unit's bloom, so it glows. Tuned by eye.
  */
 const EXPLOSION_FLASH_GLYPH = '*';
 const EXPLOSION_FLASH_SIZE_FROM = 0.8;
@@ -1947,12 +1885,10 @@ const EXPLOSION_RING_DIRS: ReadonlyArray<readonly [number, number]> = [
 ];
 
 /**
- * F5 / 27e — sparkle tuning (a small mote burst ON a unit). One shape, recolored
- * per caller: the F5 ability-heal twinkle (cyan) and the 27e status cues (burn
- * amber, bleed red, poison green, rejuvenate cyan). Reuses the explosion-particle
- * lane: a few `*` motes that rise + fan out gently and fade; smaller/dimmer than
- * the mage explosion (a soothe / affliction pulse, not a boom). The COLOR is
- * passed by the caller (`spawnSparkle`). All eyeball-tunable — bump freely.
+ * The sparkle, a small mote burst on a unit, recolored by its caller
+ * (`spawnSparkle`): the ability heal's twinkle and the status ticks' cues. A
+ * few `*` motes on the burst lane rise, fan out gently and fade; smaller and
+ * dimmer than an explosion (a pulse, not a boom). Tuned by eye.
  */
 const SPARKLE_GLYPH = PROJECTILE_GLYPH; // already in the FontAtlas
 const SPARKLE_SIZE = 0.4;
@@ -1960,14 +1896,13 @@ const SPARKLE_SPREAD = 0.45; // lateral fan, world units
 const SPARKLE_RISE = 0.35; // upward drift from the anchor, world units (the "lift")
 const SPARKLE_SECONDS = 0.45;
 const SPARKLE_BLOOM = 1.6;
-/** Camera-up nudge of the sparkle's anchor, from the glyph's VISUAL CENTER
- *  (§79d: `unitVisualCenter` + this via `aboveAnchor`). Deliberately decoupled
- *  from the hitsplat (which floats at the visual TOP, where the number goes):
- *  the sparkle hugs the unit's BODY so in a crowd it reads as on THIS unit,
- *  not the one standing behind it. §32c (32d fold-in) — dropped from center
- *  (0) to -0.175 so the puff sits a touch LOWER on the body; with SPARKLE_RISE
- *  (0.35) the cloud peaks around +0.175, well clear of the floating number.
- *  Eyeball-tunable: toward 0 raises it, more-negative lowers it further. */
+/** Camera-up nudge of the sparkle's anchor from the glyph's visual center
+ *  (`unitVisualCenter`, then this through `aboveAnchor`). Apart from the
+ *  number, which floats at the visual top: the sparkle hugs the unit's body,
+ *  so in a crowd it reads as on this unit, not the one behind it. Below
+ *  center, so the puff sits a touch low on the body; with SPARKLE_RISE (0.35)
+ *  the cloud peaks around +0.175, clear of the floating number. Toward 0
+ *  raises it. */
 const SPARKLE_Y_OFFSET = -0.175;
 /** Center mote + 4 orthogonal fan directions (XZ plane); every mote also
  *  rises by SPARKLE_RISE so the burst lifts off the unit. */
@@ -1980,14 +1915,11 @@ const SPARKLE_DIRS: ReadonlyArray<readonly [number, number]> = [
 ];
 
 /**
- * §76g2 — aura-range ring tuning (the playtest insertion: pips only prove the
- * buff applies; the ring makes the RADIUS legible). Faint `.` motes shed along
- * the aura's square boundary, rising gently and fading. Deliberately a
- * whisper — small, half-alpha, sub-unit bloom — legible when looked for, not
- * competing with combat FX; the density knobs (interval × motes) trade
- * legibility against clutter with multiple carriers. `.` is already an atlas
- * cell (HUD punctuation), so the ring costs no atlas budget. All
- * eyeball-tunable — bump freely.
+ * The aura's ring: faint `.` motes shed along the aura's square boundary,
+ * rising gently and fading. A whisper by design (small, half alpha, a bloom
+ * under 1), legible when looked for and not competing with combat FX; the
+ * density knobs (interval × motes) trade legibility against clutter with
+ * several carriers. `.` is in glyphs.ts's static list. Tuned by eye.
  */
 const AURA_RING_GLYPH = '.';
 const AURA_RING_INTERVAL_SECONDS = 0.15;
@@ -1998,24 +1930,21 @@ const AURA_RING_EDGE = 0.5;
 const AURA_RING_SIZE = 0.3;
 /** Gentle upward drift over the mote's life (world units). */
 const AURA_RING_RISE = 0.22;
-/** Hug the ground: §79d made the sprite anchor the GROUND point itself, so a
- *  small POSITIVE world-Y float keeps the motes just off the floor (same world
- *  height as the pre-79d −0.35 under the old +0.5-lifted center). World-Y is
- *  correct here — the ring is a world-space floor decoration, not a
- *  screen-stacked overlay. */
+/** Hug the ground: the sprite's anchor is the ground point itself, so a
+ *  small positive world-Y float keeps the motes just off the floor. World-Y
+ *  is right here: the ring is a floor decoration in world space, not an
+ *  overlay stacked on the screen. */
 const AURA_RING_Y_OFFSET = 0.15;
 const AURA_RING_SECONDS = 0.6;
 const AURA_RING_BLOOM = 0.8;
 const AURA_RING_ALPHA = 0.5;
 
 /**
- * §76g3 — aura pulse tuning (the layered "sonar ping", user-requested after
- * the 76g2 ring read well). A full square wavefront expands from the carrier
- * to the boundary every interval — brighter and more coherent than the idle
- * ring (it's the "this radiates" statement; the ring is the "where's the
- * edge" reference), but still under combat-FX intensity. Interval is long
- * enough that the ping punctuates rather than strobes. All eyeball-tunable —
- * bump freely.
+ * The aura's pulse, the sonar ping: a square wavefront expands from the
+ * carrier to the boundary every interval, brighter and more coherent than
+ * the idle ring (the pulse says "this radiates", the ring says where the
+ * edge is), but still under combat FX. The interval is long enough that the
+ * ping punctuates rather than strobes. Tuned by eye.
  */
 /** 4 per side × 4 sides = 16 motes per pulse per carrier. */
 const AURA_PULSE_SAMPLES_PER_SIDE = 4;
@@ -2028,19 +1957,17 @@ const AURA_PULSE_SECONDS = 1.8;
 const AURA_PULSE_BLOOM = 1.1;
 const AURA_PULSE_ALPHA = 0.7;
 
-/** §76g4 'fill' — motes per shed interval when the whole aura AREA is sampled
+/** The `fill` mode's motes per shed interval, sampling the whole aura area
  *  instead of the boundary. Higher than AURA_RING_MOTES because the area
  *  (~(2r)² cells) dilutes density that the perimeter (~8r) concentrated. */
 const AURA_FILL_MOTES = 8;
 
 /**
- * E7.D — catapult shot tuning. The lobbed boulder arcs CATAPULT_ARC_HEIGHT
- * world units above the straight caster→impact line (peak at the midpoint),
- * reading as an over-the-wall siege shot rather than a flat bolt. On an
- * aborted shot (target died mid-charge) the projectile lands in a gray dust
- * DUD — a small central puff + 4 short low-glow sparks in the neutral stone
- * color, so a fizzle shows "thud, no hit" instead of nothing. All eyeball-
- * tunable — bump freely.
+ * The catapult's shot. The boulder arcs CATAPULT_ARC_HEIGHT world units
+ * above the straight line from caster to impact (its peak at the midpoint),
+ * reading as a siege shot over a wall rather than a flat bolt. Every landing
+ * kicks a gray dust dud: a small central puff and 4 short low-glow sparks in
+ * the neutral stone color. Tuned by eye.
  */
 const CATAPULT_ARC_HEIGHT = 2.0;
 const CATAPULT_DUD_COLOR = COLORS.TERMINAL_STONE;
@@ -2052,72 +1979,58 @@ const CATAPULT_DUD_SECONDS = 0.35;
 const CATAPULT_DUD_BLOOM = 0.3;
 
 /**
- * §79d — half a unit glyph's quad height in world units (`uSpriteSize` 1 × the
- * default `instanceSize` 1). THE vertical vocabulary of the anchor convention:
- * a base-anchored glyph's visual CENTER is one of these above its ground
- * anchor (×footprint for scaled bodies), its visual TOP is two — always along
- * CAMERA-UP via `aboveAnchor`, never world-Y. Replaces the retired
- * `SPRITE_CENTER_OFFSET` (the world-Y anchor lift the 79b probe measured
- * skewing edge sprites off their tiles) and `HITSPLAT_Y_OFFSET` (subsumed by
- * "the visual top").
+ * Half a unit glyph's quad height in world units (`uSpriteSize` 1 × the
+ * default `instanceSize` 1). A base-anchored quad's center is one of these
+ * above its ground anchor and its top two, always along camera-up through
+ * `aboveAnchor`, never world-Y. A tile's visual center uses it
+ * (`cellVisualCenter`); a unit's own lifts are ink-aware (the atlas's
+ * `inkCenterLift`, `inkTopLift`), and the quad's top stands in when the unit
+ * is gone.
  */
 const GLYPH_HALF_HEIGHT = 0.5;
 
 /**
- * J3 — the in-battle objective marker (an `X` glyph billboard). Pure-VFX render
- * consts (the ROADMAP allows isolated render consts for VFX rather than config):
- *  - `_COLOR`  amber so it reads as a waypoint, distinct from player-green /
- *              enemy-red, and `_BLOOM` gives it a faint glow so it pops.
- *  - tile vs enemy SIZE: a rally tile draws LARGER (the user's call — a big X on
- *    the ground); an enemy mark rides smaller, just atop the target glyph.
- *  - `_TILE_LIFT` — the camera-up gap the rally X's INK stands above its
- *    cell's ground point (base-anchored, minus the glyph's own
- *    `inkBottomLift` × size, so the gap is ink-true).
- *    `_ENEMY_LIFT` — the camera-up gap the enemy mark rides above the target
- *    glyph's visual CENTER — see `updateObjectiveMarker`.
- *
- * J3 playtest fixes (2026-06-09): enemy size 1.0→0.5 (was ~2× too large) and the
- * enemy lift moved off world-Y onto camera-up (a world-Y offset projects
- * off-axis under the pitched perspective → the mark skewed sideways for units
- * away from screen center; the same off-axis drift the I2 hitsplat fix solved —
- * §79d generalized that fix into the anchor convention + `aboveAnchor`).
+ * The in-battle objective marker (an `X` billboard), render constants rather
+ * than config:
+ * - `_COLOR` — amber, so it reads as a waypoint apart from the player's green
+ *   and the enemy's red; `_BLOOM` gives it a faint glow.
+ * - the sizes — a rally tile's draws larger (a big X on the ground); an enemy
+ *   mark rides smaller, just above the target glyph.
+ * - `_TILE_LIFT` — the camera-up gap the rally X's ink stands above its
+ *   cell's ground point (base-anchored, less the glyph's own `inkBottomLift`
+ *   × size, so the gap is ink-true).
+ * - `_ENEMY_LIFT` — the camera-up gap the enemy mark rides above the target
+ *   glyph's ink top (`updateObjectiveMarker`).
  */
-/** J3 — the world-space quad extent of a unit billboard for the click hit-test
- *  (`enemyBillboards`): uSpriteSize (1) × the unit's instanceSize (1). Units
- *  always render at the default size — only projectiles/markers override it. */
+/** The world-space quad extent of a unit billboard for the click hit-test:
+ *  uSpriteSize (1) × the default instanceSize (1). A 1×1 unit draws at the
+ *  default size; `destructibleBillboards` scales it by the footprint. */
 const UNIT_PICK_SIZE = 1;
 
-const OBJECTIVE_MARKER_GLYPH = 'X'; // registered in glyphs.ts (J3, last atlas cell).
-/** Q3 — the FOCUS marker glyph (vs engage's 'X'), so the player reads which mode
- *  a steered objective is. Already in the glyph atlas (a punctuation cell), so no
- *  grid resize. Hold/Stop carry no target → no marker at all. */
+const OBJECTIVE_MARKER_GLYPH = 'X'; // in glyphs.ts's static list
+/** The focus marker's glyph (engage's is 'X'), so the player reads which mode
+ *  a steered objective is; in glyphs.ts's static list. Hold and Stop carry
+ *  no target (Stop reverts to `atWill`), so no marker. */
 const OBJECTIVE_MARKER_FOCUS_GLYPH = '!';
 const OBJECTIVE_MARKER_COLOR = COLORS.TERMINAL_AMBER;
 const OBJECTIVE_MARKER_BLOOM = 0.6;
 const OBJECTIVE_MARKER_TILE_SIZE = 1.6;
 const OBJECTIVE_MARKER_ENEMY_SIZE = 0.5;
 const OBJECTIVE_MARKER_TILE_LIFT = 0.1;
-/** §79d2 — the camera-up GAP between the target glyph's visible INK TOP and
- *  the enemy mark's own ink (both ends are ink-true: the target's top via
- *  `inkTopLift`, the mark's bottom via `inkBottomLift`). 0.2 reproduces the
- *  pre-79d2 look, where 0.6-above-center worked out to ≈0.19 above the ink. */
+/** The camera-up gap between the target glyph's visible ink top and the
+ *  enemy mark's own ink (both ends ink-true: the target's top by
+ *  `inkTopLift`, the mark's bottom by `inkBottomLift`). */
 const OBJECTIVE_MARKER_ENEMY_LIFT = 0.2;
 
 /**
  * Grid → world coordinates (XZ only). Cells are 1×1; the grid is centered
- * on the world origin. `cell.y` (grid axis 2) maps to world `-z` so grid
- * (0, 0) is the near-left cell from the camera's POV — matches the
- * "(0, 0) is bottom-left" convention in core/types.ts.
+ * on the world origin. `cell.y` (grid axis 2) maps to world `-z`, so grid
+ * (0, 0) is the near-left cell from the camera, as core/types.ts has it.
+ * The X and Z half-extents come from `gridW` and `gridH` apart, so a
+ * rectangular arena stays centered on the origin.
  *
- * D3: X and Z half-extents come from `gridW` and `gridH` independently
- * so rectangular arenas stay centered on the world origin (pre-D3 took
- * a single `gridSize`).
- *
- * Y defaults to 0 (the flat ground plane) for callers without per-tile-height
- * context — the only external consumer (BattleScene's camera-scroll anchor)
- * reads XZ only; BattleRenderer sets Y per cell via `tileGroundPos`. (§79d:
- * this default was `SPRITE_CENTER_OFFSET` back when world anchors carried the
- * presentation lift.)
+ * Y is 0, the flat ground plane; a caller with the tile heights sets it
+ * (BattleRenderer's `tileGroundPos`, the board explorer's poses).
  */
 export function gridToWorld(cell: GridCoord, gridW: number, gridH: number): THREE.Vector3 {
   const halfX = gridW / 2;

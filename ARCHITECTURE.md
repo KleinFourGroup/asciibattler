@@ -348,7 +348,7 @@ src/
                              # dissolves into (shared fogColorAt in shaders/fogcolor.glsl, TS-concat
                              # prepended to both frags); calms to flat background with distance
     BattleRenderer.ts        # Sim/render seam: subscribes to unit:* + action:phase (F3)
-                             # tileWorldPos(coord) for per-tile sprite Y (C1c). E6/E7: melee shove,
+                             # tileGroundPos(coord) for per-tile sprite Y (C1c). E6/E7: melee shove,
                              # ranged/lobbed projectiles, explosion/dud/heal-sparkle VFX + hitsplats
                              # §Z: the FX driver (holds Renderer + AudioPlayer) — onActionPhase resolves def.fx via fxRegistry → projectile/burst/sound/shake/shove/tracer
                              # §76g2–g4: the aura-range FX (boundary-mote ring + radiating square wavefront, statusColor-tinted, sprite-anchored; carriers derived per shed from unit.abilities[].aura); 116b: the mode (`track` | `fill`) is the `aura` setting, read each frame from auraFx.ts (THREE-free module state: `auraFxMode` / `setAuraFxMode`) — `fixed` and the `__auraFx` console switch deleted

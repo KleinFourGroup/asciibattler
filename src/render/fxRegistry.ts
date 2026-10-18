@@ -11,8 +11,8 @@
  * One key drives both the visual and the sound, so a new status or mechanic
  * authors a single key and gets the whole cue; hence `sound` sits on the
  * descriptor beside the visual channels. An ability heal's sparkle has no key:
- * it rides `unit:healed`, whose `healerId` tells an ability's heal from any
- * other.
+ * it rides `unit:healed`, which only an ability's heal emits (a status's heal
+ * ticks on `status:ticked`).
  *
  * No three.js import, so the resolution and the boot asserts run headless.
  */

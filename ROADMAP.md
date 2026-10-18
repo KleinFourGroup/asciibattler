@@ -229,15 +229,21 @@ drawing. ✅ DECIDED at the kickoff: the phase cut in two, the screens as
   overlays, `BattleRenderer.ts`, the probe kit and the dev keys, the board
   panel, and the diagnostics and the traces; the spec's decision marks
   out as codes, signed 2026-10-18 (WORKLOG §124, batch 2).
-- ☐ **124j-post — the atlas's 17 unused glyphs** (`none`, signed
+- ☑ **124j-post — the atlas's 16 unused glyphs** (`none`, signed
   2026-10-18, by a pane compare of every kept glyph's cell). Batch 5's
   find, put in the roadmap by the user at its read (WORKLOG §124,
-  "124j-post, planned").
+  "124j-post, planned"). Built 2026-10-18 with `@` kept and each glyph
+  clipped to its cell, both signed at step zero (WORKLOG §124,
+  "124j-post — step zero, the signs and the proof").
 - ☐ **124j-post2 — the drops sweep** (`batch`, signed 2026-10-18, read
   at 124k's stop). The true-looking claims in every batch's "Dropped and
   not checked" paragraph, checked at the code they name, and those that
   hold restored; `comment-strip`, comments only (WORKLOG §124, "The
-  signs after batch 7").
+  signs after batch 7"). Its scope, signed 2026-10-18: batches 8 to 10's
+  "Kept as written, unchecked" claims too, and a claim about something
+  outside the code checked where a tool here reaches it, else kept as
+  written with its source named (WORKLOG §124, "124j-post — step zero,
+  the signs and the proof").
 - ☐ **124k — the close** (`stop`).
 
 ## Phase 124.5 — render and UI: the screens

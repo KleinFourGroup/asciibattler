@@ -507,7 +507,7 @@ says what it must do:
    status pip was the same residual, hue-only until every status got a
    symbol at 116g.)
 5. *It does not spend the atlas per team.* The glyph atlas is budgeted
-   (`ATLAS_CELL_BUDGET` = 48, 47 cells used at this writing); a per-team
+   (`ATLAS_CELL_BUDGET` = 48, 31 cells used on 2026-10-18); a per-team
    copy of each glyph is not the route.
 
 The standing idioms bind it like any surface: render-only, never sim; not

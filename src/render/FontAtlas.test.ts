@@ -25,11 +25,10 @@ describe('FontAtlas glyph coverage', () => {
     }
   });
 
-  it('keeps the non-unit glyphs (root / HUD digits / projectile / objective) registered', () => {
-    // A representative sample of the static NON_UNIT_GLYPHS set — the glyphs the
-    // renderer draws directly (not via the catalog), which a botched refactor of
-    // glyphs.ts could drop.
-    for (const glyph of ['@', '0', '9', '*', 'X']) {
+  it('keeps the non-unit glyphs (tracer / aura ring / objective / the clump pose) registered', () => {
+    // The static NON_UNIT_GLYPHS set, whole: the glyphs drawn directly (not via
+    // the catalog), which a botched refactor of glyphs.ts could drop.
+    for (const glyph of ['@', '.', '!', '*', 'X']) {
       expect(registered.has(glyph), `non-unit glyph "${glyph}" dropped from GLYPHS`).toBe(true);
     }
   });

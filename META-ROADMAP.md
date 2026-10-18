@@ -754,7 +754,12 @@ at the Round 7.5 close, user-signed: `archive/post-104-worklog.md` §The
 Round 7.5 close, C1.)_
 
 **Pre-step, at the first phase that needs a new glyph: the atlas resize**
-(moved from Round 10, 2026-09-26). The atlas uses 47 of its 48 cells (21
+(moved from Round 10, 2026-09-26). **Moot unless the round needs more
+than 17 new glyphs:** 124j-post took 16 unused non-unit glyphs out on
+2026-10-18, so the atlas uses 31 of its 48 cells (5 non-unit + 26
+distinct unit glyphs, counted by `GLYPHS.length`), and the five consumers
+below fit (WORKLOG §124, "124j-post — step zero, the signs and the
+proof"). As written before: the atlas used 47 of its 48 cells (21
 non-unit glyphs + 26 distinct unit glyphs, counted), and this round's exit
 ships a consumer per seam (a vampire, a special, a marine, a flyer, a
 walking 2×2): two new glyphs overflow it. The grid bump is ~5 lines,

@@ -30,17 +30,11 @@ export const ATLAS_CELL_BUDGET = 48;
 /**
  * The glyphs no catalog unit owns, hand-listed: the sprites' own (`*` for
  * tracers, sparkles and blasts, `.` for the aura ring, `X` and `!` for the
- * objective marker) and the rest of the digits, punctuation and `@`, which
- * no sprite draws. A new non-unit glyph goes here; a new unit glyph needs no
- * edit.
+ * objective marker) and `@`, a body in the board panel's clump pose
+ * (src/dev/boardPanel/fixtures.ts), which copies the board geometry tests'
+ * clump. A new non-unit glyph goes here; a new unit glyph needs no edit.
  */
-const NON_UNIT_GLYPHS: readonly string[] = [
-  '@',
-  '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-  '.', ':', '/', '-', '+', '%', '!', '?',
-  '*',
-  'X',
-];
+const NON_UNIT_GLYPHS: readonly string[] = ['@', '.', '!', '*', 'X'];
 
 /**
  * The registered atlas glyph set: the static non-unit glyphs followed by every

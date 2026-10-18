@@ -10685,3 +10685,95 @@ For the next session:
 
 Reading: 418,900 at 18:10 on 2026-10-18 by the tool's clock, before this
 entry.
+
+### 124j-post — step zero, the signs and the proof (2026-10-18, session b25b9ccf)
+
+Step zero of "124j-post, planned" above found three things the plan did
+not foresee.
+
+1. **`@` is drawn.** The board panel's `clump` pose places it as one of
+   its nine bodies (`CLUMP` in `src/dev/boardPanel/fixtures.ts`), a copy
+   of the board geometry tests' `CLUMP_GLYPHS` that `fixtures.test.ts`
+   pins equal. Batch 5's search covered the renderer's `addSprite` calls,
+   not the posed set's. Without `@` the panel would skip that body with a
+   note (`posed.ts`, `inAtlas`); the geometry tests read
+   `tests/board/inkCensus.json`, not the atlas. The other 16 have no draw
+   site: the renderer's own glyphs are `*`, `.`, `X` and `!`, and the
+   posed set's are catalog glyphs and `@`.
+2. **`╥` inks past its cell.** Drawn alone on a 192-pixel canvas at the
+   atlas's font and size, it puts 84 pixels at full alpha in the 6 rows
+   below its cell; `▄` ends on its cell's last row, and `#` and the rest
+   stay inside. A planted one-pixel overrun beside an `M` was caught. At
+   index 40, the canvas's last row, the edge cut it; at index 24 it would
+   land in cell 32, empty now and the second new unit glyph's.
+3. **A gap in the signed proof.** `▄` and `╥` ink their cell's bottom
+   row (35 and 14 pixels at row 63, alpha up to 255), and in the canvas's
+   last row the texture clamps to that row (`wrapT` is clamp-to-edge).
+   Mid-grid the row below is transparent, so where a block's bottom edge
+   falls near a pixel centre, its bottom screen row blends toward it. The
+   cell compare can't see that. Simulated on the live atlas by setting
+   `wrapT` to repeat (the canvas's top row is transparent at its top, so
+   it stands in for the row below), on `bp=board-open15_pose-row` at
+   1280 × 720 with the clock and shader time held: 10 pixels differ, one
+   screen row at one `╥`'s bottom edge (anchor y 262.65), by at most 13 of
+   255; the other seven blocks' edges show nothing. A null control (two
+   renders) and the switch back both read 0. A tile is about 39 pixels
+   tall there (orthographic, 18.28 world units over 720 pixels).
+
+**Signed** (the user, 2026-10-18): "Signing all of your leans, Claude!
+😁", on these picks:
+
+- keep `@`, so 16 glyphs go, with the reason in `glyphs.ts`;
+- the per-cell clip (the signed fallback) in this step;
+- accept the edge change as the deletion's price, since it is the edge
+  every other glyph already has; the read stays `none`, with the cell
+  compare and a board compare across the reload recorded;
+- **the drops sweep's scope (124j-post2):** it takes batches 8 to 10's
+  "Kept as written, unchecked" claims, and batch 7's one, beside batches
+  1 to 7's "Dropped and not checked"; a claim about something outside the
+  code (a browser, itch, the pane) is checked where a tool here reaches it
+  (the pane's `zoom` with a region, which the tool's schema says it
+  takes), and otherwise kept as written, with its source named in the
+  entry.
+
+The build: `NON_UNIT_GLYPHS` is `@ . ! * X`, its comment saying why `@`
+stays; `FontAtlas.create` draws each glyph under a clip to its cell;
+`FontAtlas.test.ts` checks all five static glyphs where it sampled
+`@ 0 9 * X`. The atlas holds 31 glyphs (`uvByGlyph.size` in the pane),
+17 cells free.
+
+The proof, in the pane (the `dev-preview` server, the fixture above,
+before at `3b119a3`, after on the edited tree, the captures kept in the
+pane's `localStorage`):
+
+- The baseline twice across a reload: the board's hash `6c9066fa` both
+  times, every cell identical. A planted one-byte change in `M`'s cell
+  was named, alone.
+- The cells after: the 31 kept glyphs' cells identical byte for byte,
+  every ink box equal, the 16 gone, and no ink in any unused cell, cell
+  32 included, so the clip holds `╥`'s stems. A planted byte in `╥`'s
+  cell was named, alone.
+- The board after: 112 pixels differ from the baseline, the switch's 10
+  (at most 13) and 102 more at most 1 of 255. Moving the same atlas
+  pixels by whole cell rows, with every UV moved to match, accounts for
+  all of them: by 0 rows, 0 pixels differ; by 1, 33 (at most 2); by 2,
+  which puts every catalog glyph back in its old cell, the board reads
+  byte-identical to the baseline. So every difference comes from where a
+  cell sits in the texture, none from a cell's content. By inference, the
+  102 are the filter rounding `v`, whose row offsets are sixths and
+  inexact in binary, and the 10 are the clamp. None of the five static
+  glyphs was on the board in that frame, so their cells are covered by
+  the cell compare only.
+
+Docs: GOTCHAS #33's example "a HUD digit" is out; DESIGN's count reads
+31; ARCHITECTURE's `FontAtlas.ts` line names the clip; META-ROADMAP's
+Round 9 pre-step, the atlas resize, is marked moot unless the round needs
+more than 17 new glyphs, with its old text kept, since striking a plan
+line is the user's call. Searched across the docs for `atlas`,
+`NON_UNIT`, `HUD digit`, `root marker` and the counts 47 and 48; the
+removed glyphs are single characters with no name of their own, so those
+words are how a claim about them reads. `tests/board/inkCensus.json`
+keeps the 16 removed glyphs' rows: it is a dated dump of the atlas, and
+the geometry tests read it only by the glyphs they name. The font's
+README and `scripts/build-font.mjs` quote a dated measurement ("45 of the
+47") and stay.

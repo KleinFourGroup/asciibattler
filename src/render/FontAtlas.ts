@@ -192,7 +192,15 @@ export class FontAtlas {
       const cx = col * CELL_PX;
       const cy = row * CELL_PX;
 
+      // Clipped to the cell: a glyph can ink past it (`╥` reaches six rows
+      // below), and what lands in the next cell would show on that cell's
+      // glyph and widen its ink box.
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(cx, cy, CELL_PX, CELL_PX);
+      ctx.clip();
       ctx.fillText(glyph, cx + CELL_PX / 2, cy + CELL_PX / 2);
+      ctx.restore();
 
       // Measure the glyph's ink box off the cell just drawn, so the click box
       // hugs the visible glyph (pick.ts) with no hand-measured table to keep.

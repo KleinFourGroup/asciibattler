@@ -213,9 +213,10 @@ drawing. ✅ DECIDED at the kickoff: the phase cut in two, the screens as
   into the mist as now; wrong is a stipple or a hard edge).
 - ☑ **124f — A-26, the word `export`** (`none`). `render` 22 (A-23
   keeps two), `dev` 30; the bytes moved, proven the same unminified.
-- ☐ **124g — the enemy notch** (`batch`: seed 2, the notch where the
-  pre-turn screen put it; wrong is a jump at the battle's start). A
-  display change, signed as an exception to the scope guard.
+- ◐ **124g — the enemy notch** (`batch`, re-scripted at step zero:
+  seed 4 as soldier, the root's first turn, all nine foes down: the enemy
+  ghost ends on its notch; wrong is a ghost one past it). A display
+  change, signed as an exception to the scope guard.
 - ☐ **124h — `Game.dispatch`'s swap to the map, once** (a trial;
   `batch`: a run through a rest, a port, an event and a recruit, the map
   back after each). Its bar is in WORKLOG §124.

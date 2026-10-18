@@ -183,9 +183,8 @@ export class BattleScene implements Scene {
       // the hardcoded "Foe").
       enemyHealthMax: run.enemyHealthPoolMax,
       ...(run.currentEncounterName ? { enemyName: run.currentEncounterName } : {}),
-      // 96.5c/c2 — the two bounds as each bar's NOTCH (the same pure preview
-      // the risk line read; the wave roll is keyed, so a re-derive here
-      // previews the wave being fought).
+      // 96.5c/c2 — the two bounds as each bar's NOTCH: the player's is the
+      // risk line's number, the enemy's the fielded wave's.
       ...(() => {
         const bounds = run.previewPoolsAtRisk();
         return { poolAtRisk: bounds.player, enemyPoolAtRisk: bounds.enemy };

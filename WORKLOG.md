@@ -9200,3 +9200,77 @@ For the next session:
   the commit and filed). Paste the meter's line.
 
 Reading: 441,702 at 23:45, before the hand-off's commit.
+
+### 124g — the enemy notch (2026-10-17, session 5b9d2da6)
+
+A change to what a screen shows, signed as one of the scope guard's two
+exceptions. In battle, `Run.previewPoolsAtRisk` takes the enemy's bound
+over `currentEncounter.enemyTeam`, the wave `beginTurn` fielded; outside
+one, over the wave `rollTurnWave` rolls, as before. `currentEncounter` is
+set only while a battle runs (`beginTurn` sets it, `handleTurnEnded`
+clears it, a load restores it), so every read at the gate is unchanged.
+Changed with it: the method's doc, `BattleScene`'s comment on the call
+(it said the read previews the wave being fought), and `rollTurnWave`'s
+line on what `Run.test.ts` pins. Read before the new comment was written:
+`previewPoolAtRisk` (the player's half, which the gate's payloads carry
+at `turn-intro`), `HUD.ts`'s doc on `enemyPoolAtRisk` (it names the
+method and makes no claim about the wave), `chipRule.enemyExposure`,
+`poolGauge`'s doc on the notch, DESIGN's notch paragraph and
+ARCHITECTURE's two lines. Each says "the pre-turn bound and its enemy
+mirror", which the fix makes true, so none of them changed.
+
+**Step zero: the premise held, the read's script did not.** The pre-turn
+screen draws no enemy notch: its gauges come from `renderPoolGauge`,
+which sets no ceiling, and its risk line is the player's. So "where the
+pre-turn screen put it" can't be read. Also, the cut's seed 2 was the
+headless fixture's (`freshRunWithBus`, no events) and not the game's: in
+the game, seed 2's first turn at the root shows the same bound on HEAD as
+on the fix. The read below is written again inside the cut's intent;
+flagged for 124i's stop.
+
+Proof:
+
+- the pin, `Run.test.ts` "the enemy notch in battle is the fielded
+  wave's bound, the one the gate previewed": the fixture's seed 2, six
+  turns at the root. On each turn, the gate's preview and the read in
+  battle must both equal the fielded team's power, summed by hand and
+  capped at the pool, and the bounds seen must take more than one value.
+  Its control: run before the fix, it failed on turn 1, in battle,
+  "expected 8 to be 9", with the gate's assertion passing;
+- `Run.test.ts`, 377 passed; typecheck clean;
+- the corpus: 0 of 30 journals differ. The fuzz diff against HEAD: PASS,
+  byte-identical on both shapes. Nothing headless reads the enemy half,
+  since `BattleScene` is its one reader;
+- the page (`scratch/124g/check.mjs` and `notch.js`): one `--build` of the
+  tree, and one of HEAD in a worktree. Seeds 1 to 8 played as soldier,
+  six battles each. At each battle's start the script reads the HUD's
+  enemy notch back as a bound (`pool − left × max`) and checks it against
+  the bound of the World's own enemy units, on the board and in the spawn
+  queue, which the fix does not read. The tree: 48 of 48 battles match.
+  HEAD, the known answer: 13 of 48 differ, on seeds 2, 4, 5, 7 and 8.
+  Seed 4's root fields 9, then 8, and HEAD's notch showed 8, then 9.
+
+The page instrument was wrong twice before it was right, each time caught
+by rows that disagreed with the fix and with HEAD alike. First, `drive`
+reports `done` at `until` as well as at the run's end, so the first
+version read no battle. Second, a wave larger than its spawn region
+queues its extra units (`spawnTeam`, then `World.runOverflowScan` seats
+them), so the board alone undercounts: seed 4's first wave has 8 on the
+board and one queued. Two more facts for a page probe: the page
+serializes the notch's `left` to about six digits, so the read-back is
+compared within 0.01; and in the hidden window, outgoing HUDs stay in the
+DOM for a while (2 or 3 `.hud-enemy-pool`), so the script reads the active
+scene's own HUD. The scan's report is `scratch/124g/check.txt`.
+
+The read (`batch`, at 124i's stop): seed 4 as soldier
+(`?seed=4&character=soldier`), the root's first turn, nine foes against a
+pool of 22, one of them entering from the queue once a tile frees. When
+all nine have fallen, the enemy gauge's ghost ends exactly on its notch
+(`13 (−9) / 22`); wrong is a ghost that runs one past it, which is where
+HEAD's notch sat. That turn is the same for any player who enters the
+root straight away, since its wave reads the seed and the starting
+roster. In the driven battle all nine fell; if some survive, the ghost
+stops short and tells nothing.
+
+Reading: 231,032 at 01:21 on 2026-10-18, by the tool's clock, before the
+commit.

@@ -64,18 +64,7 @@ TODO items (list A's deletions, list B's trials) are in
   the hit never gets. `scalingStatValue(op.scaling, stats)` is the sim's
   number. Found at 122o's batch 2 (WORKLOG §122); not checked in the pane.
 
-- [ ] **The battle HUD's enemy notch can show the next wave's bound.**
-  `BattleScene.ts:190` calls `run.previewPoolsAtRisk()` after `beginTurn`
-  has committed the wave cursor, so `rollTurnWave` advances from the
-  fielded wave and resolves the one after it. A headless probe over 40
-  seeds, 6 turns each at the root: the preview at the gate matched the
-  fielded wave's bound on all 240 turns, the in-battle read differed on 39
-  (seed 2 alternates 9 and 8, a loop of two waves). The player's notch reads
-  the hand and is right. The scene's comment says the read previews the
-  wave being fought. A fix is a behaviour change: the enemy bound from
-  `run.currentEncounter.enemyTeam` while in battle, for one. Found at 123m's
-  batch 4d (WORKLOG §123); not seen in the pane. The user left it for
-  §124's kickoff (2026-10-17).
+- ✅ **The battle HUD's enemy notch can show the next wave's bound.** In battle `Run.previewPoolsAtRisk` reads the fielded wave; `Run.test.ts` pins it on seed 2 (WORKLOG §124, 124g).
 
 - ✅ **The page drive does not notice a phase whose scene never mounts.** `drive` refuses a phase whose scene is not on screen (`PHASE_SCENES`); the rest's map swap removed fails it (WORKLOG §124, 124a).
 

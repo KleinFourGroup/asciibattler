@@ -2317,7 +2317,7 @@ export class Run {
    * `removeRosterUnit` is refused there, a packet's draw changes `hand`
    * and not the fold, and a heal moves the player's pool, not the enemy's.
    * Run.test.ts pins that a preview moves nothing ("the preview derive
-   * perturbs nothing").
+   * perturbs nothing") and that the gate's preview is the fielded wave's.
    */
   private rollTurnWave(): { worldSeed: number; cursor: WaveCursor | null; enemyTeam: UnitTemplate[] } {
     const battleRng = this.streamRng('battle', this.sectorIndex, this.currentNodeId, this.turnIndex);
@@ -2362,13 +2362,13 @@ export class Run {
   /**
    * Both bounds, for the notch on each of the battle HUD's gauges: the
    * player's (`playerExposure`, capped at its pool) and the enemy's
-   * (`enemyExposure` over the previewed wave, capped at its pool). The
-   * enemy's previews this turn's wave only until `beginTurn` commits the
-   * wave cursor; after it, the roll advances from the fielded wave. Display
-   * only, never saved, never read by the sim.
+   * (`enemyExposure` over the turn's wave, capped at its pool). In battle
+   * the wave is the fielded one; before it, the one `rollTurnWave` rolls,
+   * since a roll after `beginTurn` has committed the wave cursor would be
+   * the next wave. Display only, never saved, never read by the sim.
    */
   previewPoolsAtRisk(): { player: number; enemy: number } {
-    const { enemyTeam } = this.rollTurnWave();
+    const enemyTeam = this.currentEncounter?.enemyTeam ?? this.rollTurnWave().enemyTeam;
     const fielded = {
       player: this.hand.reduce((sum, idx) => sum + this.team[idx]!.stats.power, 0),
       enemy: enemyTeam.reduce((sum, t) => sum + t.stats.power, 0),

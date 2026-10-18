@@ -1423,6 +1423,39 @@ describe('Run', () => {
       expect(gated).toEqual(headless);
     });
 
+    it("the enemy notch in battle is the fielded wave's bound, the one the gate previewed", () => {
+      // Read at the battle's start, after `beginTurn` has committed the wave
+      // cursor, a wave rolled again would be the next one. Seed 2's root
+      // encounter loops two waves of different power, which tells them apart.
+      const { run, bus } = freshRunWithBus(2);
+      run.pauseAtTurnGates = true;
+      const phase = (): string => run.phase;
+      // The bound re-derived from the fielded team, summed here by hand.
+      const waveBound = (team: readonly { stats: { power: number } }[]): number =>
+        Math.min(run.enemyHealth, team.reduce((s, t) => s + t.stats.power, 0) * HEALTH.chipMultiplier);
+      run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
+      const bounds = new Set<number>();
+      let turns = 0;
+      for (let turn = 1; turn <= 6 && phase() === 'turn-intro'; turn++) {
+        const atGate = run.previewPoolsAtRisk().enemy;
+        run.dispatch({ kind: 'advanceTurn' });
+        expect(phase()).toBe('battle');
+        const fielded = waveBound(run.currentEncounter!.enemyTeam);
+        expect(atGate, `turn ${turn}, at the gate`).toBe(fielded);
+        expect(run.previewPoolsAtRisk().enemy, `turn ${turn}, in battle`).toBe(fielded);
+        bounds.add(fielded);
+        turns++;
+        chipTurn(bus, { player: 1, enemy: 0 });
+        while (phase() === 'turn-outcome' || phase() === 'reward' || phase() === 'promotion') {
+          if (phase() === 'turn-outcome') run.dispatch({ kind: 'advanceTurn' });
+          else if (phase() === 'reward') run.dispatch({ kind: 'declineReward', index: 0 });
+          else run.dispatch({ kind: 'dismissPromotion' });
+        }
+      }
+      expect(turns).toBeGreaterThan(2);
+      expect(bounds.size).toBeGreaterThan(1);
+    });
+
     it('drives a full gated encounter: intro → battle → outcome → recruit on a win', () => {
       const { run, bus } = freshRunWithBus(1);
       run.pauseAtTurnGates = true;

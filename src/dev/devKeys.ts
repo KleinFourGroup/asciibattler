@@ -1,67 +1,46 @@
 /**
- * 53f — the dev export/load keys (DOM-zone glue, browser-only, eyeball-
- * verified per the TESTING policy; the run swap it drives is Game-layer
- * wiring, so the step is browser-verified by contract).
+ * The dev keys: Ctrl+Alt chords on a window listener of their own, on a DEV
+ * page only (./devEntry.ts attaches them). They are not on the Keybindings
+ * registry, since its schema requires every action in the shipped config
+ * JSON (src/config/keybindings.ts), so a dev-only action can't ride it.
+ * `Keybindings.handleKeyDown` ignores a keydown with Ctrl, Alt or Meta held,
+ * so a chord never fires a battle hotkey too, whatever key the player has
+ * bound.
  *
- * A separate DEV-only window listener, deliberately NOT the Keybindings
- * registry — its zod schema requires every action present in the shipped
- * config JSON, so a dev-only action can't ride it (worklog §53 kickoff).
- * All chords are Ctrl+Alt+<key>. Since 116b `Keybindings.handleKeyDown`
- * ignores a keydown with Ctrl, Alt or Meta held, so a chord never co-fires a
- * battle hotkey, whatever key the player has bound. (Before that the chord
- * keys had to stay off the registry's bound codes, which is why the notes
- * below say a key is "off the bound codes".)
+ * - `Ctrl+Alt+S` — export the run: `Run.toJSON()` as a JSON download, from
+ *   any phase.
+ * - `Ctrl+Alt+L` — load a run: a file picker, then `Game.devLoadRun`, which
+ *   swaps the run in at the saved gate's screen. A `battle` or
+ *   `turn-outcome` export has no screen to resume at and is refused.
+ * - `Ctrl+Alt+D` — download the trace ring: the whole localStorage ring as
+ *   one JSON file.
+ * - `Ctrl+Alt+K` — cycle the loss FX's shake policy (player, enemy, both,
+ *   none), live in a battle and logged to the console: the seam for telling
+ *   whether a shake reads as "you got hurt" or as "you achieved something".
+ * - `Ctrl+Alt+G` — toggle the grayscale audit: `filter: grayscale(1)` on
+ *   the root element, so the canvas and the DOM UI desaturate together. A
+ *   surface that reads in grayscale says nothing by colour alone, so it
+ *   reads under every colour-vision deficiency. The root filter makes
+ *   `<html>` the containing block for `position: fixed` descendants, which
+ *   is the viewport anyway, since the page never scrolls.
+ * - `Ctrl+Alt+A` — cycle the reduced-motion override (OS, reduced, full,
+ *   OS) in src/render/motion.ts, the one gate the CSS root attribute and
+ *   every JS motion consumer read; the motion setting sets the same
+ *   override. The pane cannot emulate `prefers-reduced-motion` (its tools
+ *   set the colour scheme alone), so this is how a browser reads reduced
+ *   motion without the OS setting.
+ *   Not R: Firefox takes Ctrl+Alt+R (Reader View) before the page sees it
+ *   (gotcha #134).
+ * - `Ctrl+Alt+C` — toggle the camera mode, fit or scroll
+ *   (`Renderer.toggleCameraMode`). Fit is the only production view; the
+ *   scroll mode's pan keys (WASD and the arrows) and edge-scroll attach in
+ *   Renderer on a DEV page only.
+ * - `Ctrl+Alt+P` — toggle the board explorer (src/dev/boardPanel), a live
+ *   dial panel whose state is a `?bp=` bookmark.
  *
- *   Ctrl+Alt+S — export the run: Run.toJSON() → a JSON download.
- *   Ctrl+Alt+L — load a run: file picker → Run.fromJSON → the Game run swap
- *                (any gate since 115e: the run resumes at the saved screen;
- *                a battle or turn-outcome export is refused).
- *   Ctrl+Alt+D — dump the trace ring: the whole localStorage ring → one JSON
- *                download (D not T — KeyT is the bound stopObjective code).
- *   Ctrl+Alt+K — 96.5b2: cycle the loss-fx SHAKE POLICY (player → enemy →
- *                both → none) — the user's A/B seam: does a shake read as
- *                "you got hurt" or as "you achieved something"? Flippable
- *                live in a battle; logged to the console.
- *   Ctrl+Alt+G — 98a: toggle the GRAYSCALE audit (`filter: grayscale(1)` on
- *                the root element — the canvas AND the DOM UI desaturate
- *                together). The Round 7 "never color alone" lint: a surface
- *                that survives this survives every colour-vision deficiency
- *                (spec §1). Dev-only by design — the CVD-safe palette proper
- *                is a Round 8 setting; this is the audit, not the feature.
- *                (KeyG is off the registry's bound codes; a root filter makes
- *                `<html>` the containing block for `position: fixed`
- *                descendants, which is the viewport anyway — the page body
- *                never scrolls.)
- *   Ctrl+Alt+A — 99a: cycle the REDUCED-MOTION override (OS → reduced → full
- *                → OS; src/render/motion.ts — the ONE gate the CSS root
- *                attribute and every JS motion consumer read). The preview
- *                pane cannot emulate `prefers-reduced-motion`, so this is
- *                the browser read for the whole §99 surface; Round 8's
- *                setting sets the same override. (A = accessibility; KeyA is
- *                off the bound codes. It shipped as KeyR for one commit —
- *                FIREFOX OWNS Ctrl+Alt+R (Reader View) at the chrome level,
- *                so the page never saw the keydown; gotcha #134.)
- *   Ctrl+Alt+C — 100a: toggle the CAMERA MODE (fit ↔ scroll,
- *                `Renderer.toggleCameraMode`). It replaces the D4 Backquote
- *                keydown — an unregistered hotkey with no click route (the
- *                Round 7 kickoff audit §C); the §100 charter gates the camera
- *                dev-only, and Round 7.5 (D7) kept it there: fit is the
- *                only production view. The pan keys (WASD / arrows) and
- *                edge-scroll, turned by the yaw since 107c, attach in
- *                Renderer under the same DEV flag. (C = camera; KeyC is off
- *                the bound codes and this file's, and neither browser binds
- *                Ctrl+Alt+C — the user's Firefox read confirms, per #134.)
- *   Ctrl+Alt+P — 105b: toggle the BOARD EXPLORER (src/dev/boardPanel — the
- *                Round 7.5 projection spike's live dial panel; its state is a
- *                `?bp=` bookmark). (P = projection / panel; KeyP is off the
- *                bound codes and this file's; the user's Firefox press is
- *                the check that counts, per #134.)
- *
- * ⚠ A new chord must clear two key sets: this file's, and the BROWSERS' own
- * Ctrl+Alt chords — the pane is Chromium and cannot catch a Firefox-reserved
- * chord; test a new chord in Firefox before calling it verified.
- *
- * Wired in main.ts's DEV block; the shipped bundle never touches this.
+ * A new chord must clear this file's chords and the browsers' own Ctrl+Alt
+ * chords. The pane is Chromium and cannot catch a chord Firefox reserves,
+ * so a new chord is tested in Firefox before it is called verified.
  */
 
 import type { Game } from '../Game';
@@ -110,8 +89,8 @@ export function attachDevKeys(game: Game, boardPanel: BoardPanel): void {
         break;
       case 'KeyC': {
         e.preventDefault();
-        // Game keeps `renderer` TS-private; the dev convention (main.ts's
-        // `bus` reach-in) is a cast — private is runtime-accessible.
+        // Game keeps `renderer` private to TypeScript; a cast reaches it, as
+        // ./devEntry.ts reaches Game's `bus`.
         const renderer = (game as unknown as { renderer: Renderer }).renderer;
         console.info(`[dev-keys] camera mode → ${renderer.toggleCameraMode()}`);
         break;
@@ -120,9 +99,8 @@ export function attachDevKeys(game: Game, boardPanel: BoardPanel): void {
   });
 }
 
-/** 98a — flip the root grayscale filter; returns the new state. Exported so a
- *  scratch probe (or `window.__game`-driven verify) can set it without a
- *  synthetic key event. */
+/** Flip the root grayscale filter, or set it to `force`; returns the new
+ *  state. */
 function toggleGrayscaleAudit(force?: boolean): boolean {
   const root = document.documentElement;
   const on = force ?? root.style.filter === '';

@@ -64,6 +64,14 @@ TODO items (list A's deletions, list B's trials) are in
   the hit never gets. `scalingStatValue(op.scaling, stats)` is the sim's
   number. Found at 122o's batch 2 (WORKLOG §122); not checked in the pane.
 
+- [ ] **The dev load key's console lines still give the map-only rule.**
+  `src/dev/devKeys.ts`'s `exportRun` warns that "the load key only accepts
+  'map'-phase saves", and the load logs "back on the map", but
+  `Game.devLoadRun` takes a save at any gate and refuses only a `battle`
+  or `turn-outcome` one. Code, so outside the comment pass; beside it,
+  `toggleGrayscaleAudit`'s `force` parameter, which no caller passes.
+  Found at 124j's batch 8 (WORKLOG §124).
+
 - ✅ **The battle HUD's enemy notch can show the next wave's bound.** In battle `Run.previewPoolsAtRisk` reads the fielded wave; `Run.test.ts` pins it on seed 2 (WORKLOG §124, 124g).
 
 - ✅ **The page drive does not notice a phase whose scene never mounts.** `drive` refuses a phase whose scene is not on screen (`PHASE_SCENES`); the rest's map swap removed fails it (WORKLOG §124, 124a).

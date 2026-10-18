@@ -1,16 +1,16 @@
 /**
- * 117.5i — THE PLANTED FAILURES (DEV only: the dev entry, ./devEntry.ts, calls
- * it, and main.ts reaches that through a DEV-gated dynamic import, so a
- * production build carries neither this module nor the query).
+ * The planted failures. DEV only: the dev entry (./devEntry.ts) calls them,
+ * and main.ts reaches that through a DEV-gated dynamic import, so a
+ * production build carries neither this module nor the query.
  * `?fail=<what>` makes the page fail the way a player's might, so the
  * failure plate (src/failure, src/ui/FailurePlate.ts) can be read:
  *
- *   ?fail=webgl     no canvas gives a WebGL context: the boot fails in
- *                   three.js, as it does where WebGL is off or missing
- *   ?fail=font      the font files fail to load: the boot fails in the atlas
- *   ?fail=frame     two seconds into the first battle, every frame throws
- *   ?fail=context   two seconds into the first battle, the WebGL context is
- *                   lost and never restored
+ * - `?fail=webgl` — no canvas gives a WebGL context: the boot fails in
+ *   three.js, as it does where WebGL is off or missing.
+ * - `?fail=font` — the font files fail to load: the boot fails in the atlas.
+ * - `?fail=frame` — two seconds into the first battle, every frame throws.
+ * - `?fail=context` — two seconds into the first battle, the WebGL context
+ *   is lost and never restored.
  *
  * Each plants the failure at the browser's edge or in the loop and leaves
  * the game's own handling to run. `fail` is no run dial, so `?fail=frame`

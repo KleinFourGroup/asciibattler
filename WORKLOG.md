@@ -10378,3 +10378,98 @@ this session's brief relayed them, and the user confirmed them here:
    the import), not at a nearby doc.
 
 The user's fourth point at that read, no hook for `cd`, needs no record.
+
+### 124j, batch 8 — the probe kit and the dev keys (2026-10-18, session 882e1278)
+
+`dev/probe/` (five files), `devEntry.ts`, `devKeys.ts`, `failPlant.ts`;
+1,443 lines. The probe kit held few codes, one in each header; the dev
+keys and the dev entry held the history: each chord's step and round, the
+keys "off the bound codes" a chord had to avoid before the registry
+ignored a modified keydown, the Backquote keydown the camera chord
+replaced, the R the reduced-motion chord shipped on for one commit (its
+reason, gotcha #134, kept), the status hook's wait for an applier that
+shipped long ago, the 40 s a fresh dev server once held the modules.
+
+**Statements found false and corrected (rule 7):**
+
+- `devKeys.ts`: the keys were "Wired in main.ts's DEV block"; the dev
+  entry attaches them, and main.ts loads the dev entry. The camera case's
+  cast cited "main.ts's `bus` reach-in"; the reach-in is the dev entry's.
+  `toggleGrayscaleAudit` was "Exported so a scratch probe … can set it";
+  it is not exported, and no caller passes its `force`.
+- `devEntry.ts`: the dev keys' line had the load key take "map-phase saves
+  only"; `Game.devLoadRun` takes any gate and refuses only a `battle` or
+  `turn-outcome` save, as the dev keys' header said.
+- `probe/index.ts`: main.ts loaded the kit "by a DEV-gated dynamic
+  import"; it loads the dev entry that way, which imports the kit. "Every
+  call gets a number": `running()`, `hide()` and `journal()` take none, so
+  they stop no running call (the journal's own comment said so). The
+  drive's returns left out its `battles` limit.
+- `probe/bootstrap.ts` was "Plain ES5"; the text calls `Promise` and
+  `Object.assign`, which are ES2015's, so it is ES5 syntax.
+
+**Checked at the code they name and kept:** the stand-in's hand-over and
+its refusal by the failure plate's text (page.test.ts's cases); the dev
+server only (`probeBootstrap`, `apply: 'serve'`); every build minifying
+class names (the shell builds with `vite build --mode development`, and
+`vite.config.ts` sets no `minify`); the rest gate's one option
+(`Run.handleChooseRestOption` takes 0 alone); the canvas at `100vw` ×
+`100vh` (`ui.css`) and its buffer at the box times the pixel ratio
+(`Renderer.handleResize`, `setPixelRatio`); the loop's body
+(`Renderer.start`: the scroll input, `onFrame`, the shake around
+`renderTwoPass`) and Game's `onFrame` (the scene tick, then the depth
+sort); `frame(0)` never moving a tick (the countdown and the clock both
+advance by the frame's `dt`); the fixture's URL written before Game's
+constructor parses the run dials; the registry's schema requiring every
+action (`config/keybindings.ts`) and `handleKeyDown`'s modifier filter;
+the shake and motion cycles' orders; the motion setting's override
+(Game's `setMotion`); the ring's 80; `dev-scan.mjs`'s marker for the
+planted failures; `bootsToMenu` for a bare `?fail=`.
+
+Restored, a drop of this batch's that holds: the pane cannot emulate
+`prefers-reduced-motion`, since its tools set the colour scheme alone
+(the `resize_window` interface this session has). Kept as written,
+unchecked: `showCrop`'s "(the pane's zoom returns the whole screenshot)"
+and browser-pane.md's twin ("the `zoom` action can't crop"), since this
+session's `zoom` takes a region but neither was tried; and the grayscale
+audit's premise, that a surface that reads in grayscale reads under every
+colour-vision deficiency, which DESIGN states too. Dropped: the user's
+Firefox reads of Ctrl+Alt+C and P (history), the colour-vision palette
+"a Round 8 setting" (a plan), and the `applyStatus` console examples,
+which restated its signature.
+
+**Twins corrected outside the batch, flagged:** ARCHITECTURE's `devKeys.ts`
+line gave the registry's reason as "bare-code dispatch would co-fire
+chords on bound codes", which the modifier filter answers; it now gives
+the schema. Its `probe/` line had every call numbered, and the drive's
+fixed answers as "the fuzz harness's", buying nothing, where the harness
+buys at a port. browser-pane.md had a long call stopped by any later kit
+call. Left for their batches: "main.ts's DEV block(s)" in
+`boardPanel/boot.ts`, `boardPanel/index.ts` and `boardPanel/state.ts`
+(batch 9) and `traceStore.ts` (batch 10).
+
+**Found and left:** two console lines in `devKeys.ts`, code and so outside
+the pass: `exportRun` warns that the load key takes only map-phase saves,
+and the load logs "back on the map". TODO §124 carries them, with
+`force`.
+
+Measured (`comment-length` on copies under `output/cl-124j-b8`): comment
+lines 379 → 353, words 3,434 → 3,208, code lines 981 unchanged. The
+step-code ceiling 2,248 → 2,211, the 37 the eight files held.
+
+Proof: `comment-strip HEAD src`, comments only, exit 0; its control made
+one code edit in memory in each of the 8 changed files and the compare
+named all 8.
+
+Cost: 110,436 at 17:23 on 2026-10-18 by the tool's clock, after the
+orientation, to 234,128 at 17:49 after the first proof: about 124k, the
+signs' commit inside it, for 1,443 lines: about 86 a line, less the
+signs' share, which was not read apart.
+
+**Read** (`batch`): `git show <this commit> -- src/dev/devKeys.ts
+src/dev/devEntry.ts src/dev/probe/index.ts` against the seven rules. Wrong
+looks like a step code or history left, a chord's line that the switch
+below it contradicts, or a rule a change must respect cut: a new chord
+tested in Firefox, the kit installed last, the stand-in's names matching
+the kit's, the fixture's URL written before Game parses it, the drive
+throwing on a command that changes nothing.

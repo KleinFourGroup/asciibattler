@@ -1,8 +1,8 @@
 /**
- * 112d — the kit's names for the scene on screen. Every build minifies class
+ * The kit's names for the scene on screen. Every build minifies class
  * names, a development-mode one included (the runner's and the recorder's),
  * so `constructor.name` reads `Pp` there; a scene is named by what it is an
- * instance of. scenes.test.ts checks this table names every scene file in
+ * instance of. scenes.test.ts checks this table names every scene class in
  * `src/scenes/`.
  *
  * `PHASE_SCENES` is the scene each run phase shows, written from what a

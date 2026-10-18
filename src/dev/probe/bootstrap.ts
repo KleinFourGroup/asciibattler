@@ -1,23 +1,22 @@
 /**
- * 112a — the probe kit's stand-in, injected into `index.html` by the dev
- * server only (vite.config.ts, `probeBootstrap`; `apply: 'serve'`, so no
- * build carries it).
+ * The probe kit's stand-in, injected into `index.html` by the dev server
+ * only (vite.config.ts, `probeBootstrap`; `apply: 'serve'`, so no build
+ * carries it).
  *
  * The HTML is up before the page's modules: a freshly started dev server
- * holds them for a moment (40 s until its file watcher stopped covering the
- * fuzz output, vite.config.ts; under a second since), and in that window
- * the kit, the Game and the stylesheets are not there yet. This inline
- * script runs as the HTML parses, so a pane session's
- * first call, `await __probe.ready()`, waits for the real kit instead of
- * throwing a ReferenceError or measuring an unloaded page. The real kit
- * replaces `window.__probe` when it installs (./index.ts), and the stand-in
- * hands the wait over to it. A boot that failed never installs the kit: the
- * stand-in then fails by name with what the failure plate says, at once. Every other kit call refuses by name until then
- * (the names are the kit's, ./index.ts; page.test.ts checks the two lists
- * match).
+ * can hold them for a moment, and in that window the kit, the Game and the
+ * stylesheets are not there yet. This inline script runs as the HTML
+ * parses, so a pane session's first call, `await __probe.ready()`, waits
+ * for the real kit instead of throwing a ReferenceError or measuring an
+ * unloaded page. The real kit replaces `window.__probe` when it installs
+ * (./index.ts), and the stand-in hands the wait over to it with the time
+ * left. A boot that failed never installs the kit, so the stand-in then
+ * fails by name at once, with what the failure plate says. Every other kit
+ * call refuses by name until then (the names are the kit's, ./index.ts;
+ * page.test.ts checks the two lists match).
  *
- * Plain ES5 in a string: it is injected as it stands, and page.test.ts runs
- * this exact text against a fake window.
+ * ES5 syntax in a string: it is injected as it stands, and page.test.ts
+ * runs this exact text against a fake window.
  */
 export const PROBE_BOOTSTRAP = `(function () {
   if (window.__probe) return;

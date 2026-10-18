@@ -1,5 +1,5 @@
 /**
- * 117.5j — THE DEV ENTRY: the one module `main.ts` loads on a DEV page, by a
+ * The dev entry: the one module `main.ts` loads on a DEV page, by a
  * DEV-gated dynamic import, and through it everything else under `src/dev`
  * that a page uses. A production build drops that import, so it carries
  * none of this folder: tests/dev-guard.test.ts holds `src/dev` to gated
@@ -52,13 +52,14 @@ type DevGame = Game & {
 export function installDevHandle(game: Game): void {
   const handle = window as unknown as { __game: DevGame };
   handle.__game = game;
-  // 53b — the passive battle-trace recorder (page-lifetime). Every battle
-  // auto-records into the localStorage ring (last 80); from the console:
-  //   __game.dumpTraces()   → the ring, newest last (copy(...) to clipboard)
-  //   __game.clearTraces()  → empty the ring
-  // Bulk download: Ctrl+Alt+D (devKeys.ts, 53f).
-  // Game keeps `bus` TS-private; the dev convention (devApplyStatus's
-  // activeScene reach-in below) is a cast — private is runtime-accessible.
+  // The battle-trace recorder, for the page's life: every battle records
+  // into the localStorage ring, the last 80 (./traceStore.ts). From the
+  // console, `__game.dumpTraces()` returns the ring, newest last, and
+  // `__game.clearTraces()` empties it; Ctrl+Alt+D downloads it
+  // (./devKeys.ts).
+  // Game keeps `bus` private to TypeScript, and the dev code reaches it, as
+  // `devApplyStatus` reaches the scene, by a cast: private is not enforced
+  // at run time.
   const bus = (game as unknown as { bus: EventBus<GameEvents> }).bus;
   handle.__game.traceRecorder = new TraceRecorder(bus, pushTrace);
   handle.__game.dumpTraces = () => {
@@ -67,31 +68,25 @@ export function installDevHandle(game: Game): void {
     return traces;
   };
   handle.__game.clearTraces = clearTraces;
-  // 53f — the dev keys (Ctrl+Alt+S export the run / Ctrl+Alt+L load one,
-  // map-phase saves only / Ctrl+Alt+D dump the trace ring). A separate window
-  // listener, NOT the Keybindings registry (its zod schema ships every
-  // action — worklog §53).
-  // 105b — the board explorer (Ctrl+Alt+P; Round 7.5's projection spike). Its
-  // seams install HERE, at boot, so a `?bp=` bookmark is live before the first
-  // battle stamps a sprite. From the console: __game.boardPanel.set('cue', 'outline').
+  // The board explorer (Ctrl+Alt+P), then the dev keys. The explorer's
+  // seams install here, at boot, so a `?bp=` bookmark is live before the
+  // first battle stamps a sprite. From the console:
+  // `__game.boardPanel.set('cue', 'outline')`.
   handle.__game.boardPanel = attachBoardPanel(game);
   attachDevKeys(game, handle.__game.boardPanel);
-  // 28 dev hook — apply a status to units in the ACTIVE battle so the behavior
-  // statuses (blind/panic/frozen/confusion) are observable BEFORE §29's
-  // status-on-hit applier ships. From the browser console:
-  //   __game.applyStatus('confusion')            → every living enemy (default)
-  //   __game.applyStatus('frozen', 'player')     → every living player unit
-  //   __game.applyStatus('blind', 7)             → just unit id 7
+  // `__game.applyStatus(id, target?)` applies a status to the living units
+  // of a team in the battle on screen (the enemy by default), or to one
+  // unit by id, so a status can be watched without a unit that applies it.
   handle.__game.applyStatus = (statusId, target = 'enemy') => devApplyStatus(game, statusId, target);
-  // 117.5i — the planted running failures (`?fail=frame`, `?fail=context`).
+  // The planted running failures (`?fail=frame`, `?fail=context`).
   plantRunFailure(location.search, game);
-  // 112a — `window.__probe`, installed last so a `ready()` that returns sees
-  // the whole dev handle (and a board fixture's battle) in place. A pane
+  // `window.__probe`, installed last so a `ready()` that returns sees the
+  // whole dev handle (and a board fixture's battle) in place. A pane
   // session starts with `await __probe.ready()`.
   installProbe(game);
 }
 
-/** 28 — the `__game.applyStatus` body. */
+/** The `__game.applyStatus` body. */
 function devApplyStatus(g: Game, statusId: string, target: number | Team): void {
   const world = (g as unknown as { activeScene: { world?: World | null } | null }).activeScene?.world;
   if (!world) {
@@ -109,8 +104,8 @@ function devApplyStatus(g: Game, statusId: string, target: number | Team): void 
     typeof target === 'number'
       ? world.units.filter((u) => u.id === target && u.currentHp > 0)
       : world.units.filter(
-          // §75e — 'neutral' as a team filter reaches ACTIVE neutrals (camp
-          // members) only; inert scenery stays out of the dev status sprayer.
+          // As a team, `neutral` takes the active neutrals (a camp's
+          // members) alone, and leaves the inert scenery out.
           (u) => u.team === target && (u.team !== 'neutral' || u.campId !== null) && u.currentHp > 0,
         );
   for (const u of targets) world.applyStatusEffect(u, def, null);

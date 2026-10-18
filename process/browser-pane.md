@@ -80,7 +80,8 @@ app can stop the server between turns). Then:
   tool refuses without `--force`).
 - **`__probe.check()`** is the canvas check every kit read makes.
 - **A call the tool gave up on** (it stops waiting at 45 s) keeps running
-  in the page. A long kit call stops as soon as a later kit call starts;
+  in the page. A long kit call stops as soon as a later kit call starts,
+  except `running()`, `hide()` and `journal()`, which stop nothing;
   `__probe.running()` lists what is still running. Your own scripts get no
   such guard, so never `await requestAnimationFrame` in a pane probe: a
   suspended one resumes a step at every later screenshot. Call `frame()`.

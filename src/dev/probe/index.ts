@@ -1,8 +1,8 @@
 /**
- * 112a — the pane probe kit: `window.__probe`, the Browser pane's known traps
- * held in code instead of tips (process/browser-pane.md). DEV only: main.ts
- * loads this module by a DEV-gated dynamic import, so no build for players
- * carries it.
+ * The pane probe kit: `window.__probe`, the Browser pane's known traps held
+ * in code instead of tips (process/browser-pane.md). DEV only: it comes in
+ * through the dev entry (../devEntry.ts), which main.ts loads by a
+ * DEV-gated dynamic import, so no build for players carries it.
  *
  * A pane session starts with `await __probe.ready()`. Before the page's
  * modules load, the dev server's stand-in answers that call and waits for
@@ -10,34 +10,36 @@
  *
  * - `ready()` waits until the page is live and reports it. It fails by name,
  *   never with a quiet wrong read: a canvas the hidden pane left at 0×0, a
- *   stylesheet that failed to load (the page up with no layout), or a URL
- *   that isn't the one `go()` asked for.
+ *   stylesheet that failed to load (the page up with no layout), a page
+ *   halted under its failure plate, or a URL that isn't the one `go()`
+ *   asked for.
  * - `go(query)` navigates, but only once `ready()` has passed on this page,
  *   since a URL set before then can be replaced by the pane's own first load.
  *   The next `ready()` checks the new URL.
  * - `check()` is the canvas-size check every read makes.
- * - 112b: `frame(dt = 0)` runs one frame of the loop's own body now, so a
- *   read after a change never sees the previous view (a hidden pane runs no
+ * - `frame(dt = 0)` runs one frame of the loop's own body now, so a read
+ *   after a change never sees the previous view (a hidden pane runs no
  *   frames of its own), and `frame(0)` never advances the sim.
  *   `pixels(rect)` renders and reads a crop of the canvas in one call (the
  *   drawing buffer isn't kept between tasks) and returns numbers; with
  *   `show`, it also draws the crop magnified on the page for a screenshot,
  *   until `hide()`.
- * - 112c: `drive(opts)` plays the run: each phase's command from ./drive.ts
- *   sent through `Game.dispatch`, each battle fought by hand-driven frames
+ * - `drive(opts)` plays the run: each phase's command from ./drive.ts sent
+ *   through `Game.dispatch`, each battle fought by hand-driven frames
  *   through its outro until Game swaps the scene, an optional audit on every
- *   Nth battle frame. It returns at the run's end, at `until`, or at its time
- *   limit (the next call carries on), and throws on a command that changes
- *   nothing, since the run would stand still, and on a phase whose scene is
- *   not on screen (`PHASE_SCENES`, ./scenes.ts), since the run would go on
- *   behind the wrong screen.
- * - 114c: `journal()` hands out the run's journal as Game holds it (the one
+ *   Nth battle frame. It returns at the run's end, at `until`, after
+ *   `battles` battles, or at its time limit (the next call carries on), and
+ *   throws on a command that changes nothing, since the run would stand
+ *   still, and on a phase whose scene is not on screen (`PHASE_SCENES`,
+ *   ./scenes.ts), since the run would go on behind the wrong screen.
+ * - `journal()` hands out the run's journal as Game holds it (the one
  *   being recorded, or the finished one once the run is over), and every
  *   drive report carries `stateHash`, the hash a replay of that journal must
  *   reach (`npm run replay`).
- * - Every call gets a number, and a long call stops at its next poll once a
- *   later call starts, so a call the tool gave up on (it stops waiting at
- *   45 s) can't keep acting. `running()` lists the calls still running.
+ * - Every call but `running()`, `hide()` and `journal()` gets a number, and
+ *   a long call stops at its next poll once a later numbered call starts, so
+ *   a call the tool gave up on (it stops waiting at 45 s) can't keep acting.
+ *   `running()` lists the calls still running.
  */
 
 import type { Game } from '../../Game';
@@ -230,8 +232,8 @@ export function installProbe(game: Game): Probe {
    * brought current first. The loop moves the overlays inside `onFrame` and
    * three.js updates the camera's matrices only inside the render, so the
    * loop's first frame after a camera change projects the bars with the old
-   * camera (measured in the pane at 112b: the bars one frame behind, then
-   * right). The camera shake the loop adds around its render is left out, so
+   * camera (measured in the pane: the bars one frame behind, then right).
+   * The camera shake the loop adds around its render is left out, so
    * a read is never jittered.
    */
   const runFrame = (dt: number): void => {
@@ -259,11 +261,11 @@ export function installProbe(game: Game): Probe {
 
   /**
    * Fight the battle scene on screen until Game swaps it for the next one.
-   * The fight starts at once (the countdown's Fight, as Space does), and the
-   * frames are driven by hand, since a hidden pane runs none. After the last
-   * tick the phase has moved on, but the scene plays its outro and Game
-   * advances only after it; the outro settles as the scene ticks and its
-   * timer runs on wall time, so the frames go on, slower, until the swap.
+   * The fight starts at once (the countdown's Fight, as the pause key does),
+   * and the frames are driven by hand, since a hidden pane runs none. After
+   * the last tick the phase has moved on, but the scene plays its outro and
+   * Game advances only after it; the outro settles as the scene ticks and
+   * its timer runs on wall time, so the frames go on, slower, until the swap.
    * Returns false when the call's time runs out first.
    */
   const fight = async (call: number, d: Driver, opts: DriveOptions, until: number): Promise<boolean> => {
@@ -396,7 +398,7 @@ export function installProbe(game: Game): Probe {
       );
     }
     // A same-origin stylesheet that failed to load stays in the list with
-    // rules nobody can read (a dev server restarted mid-request did this).
+    // rules nobody can read (a dev server restarted mid-request can leave one).
     const failed = [...document.styleSheets]
       .filter((s) => s.href !== null && s.href.startsWith(location.origin))
       .filter((s) => {

@@ -1,6 +1,6 @@
 /**
- * 112a — the probe kit's pure checks, kept apart from the page so a test can
- * plant each trap without a browser (page.test.ts).
+ * The probe kit's pure checks, kept apart from the page so a test can plant
+ * each trap without a browser (page.test.ts).
  */
 
 /** What the canvas check reads off the page. */
@@ -62,7 +62,7 @@ export interface PageRect {
 }
 
 /**
- * 112b — a page rectangle as `gl.readPixels` takes it: drawing-buffer pixels
+ * A page rectangle as `gl.readPixels` takes it: drawing-buffer pixels
  * (CSS × the pixel ratio), with y counted up from the buffer's bottom row.
  * Throws when the rectangle is empty or leaves the buffer, rather than
  * reading a clipped crop that looks whole.

@@ -228,7 +228,8 @@ drawing. ✅ DECIDED at the kickoff: the phase cut in two, the screens as
   the renderer, the ground and the sprites, built and read 2026-10-18;
   the spec's decision marks out as codes, signed 2026-10-18 (WORKLOG
   §124, batch 2). Batches 6 and 7, FX and overlays and
-  `BattleRenderer.ts`, built and read 2026-10-18.
+  `BattleRenderer.ts`, built and read 2026-10-18. Batch 8, the probe kit
+  and the dev keys, built 2026-10-18, its read open.
 - ☐ **124j-post — the atlas's 17 unused glyphs** (`none`, signed
   2026-10-18, by a pane compare of every kept glyph's cell). Batch 5's
   find, put in the roadmap by the user at its read (WORKLOG §124,

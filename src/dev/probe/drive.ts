@@ -1,5 +1,5 @@
 /**
- * 112c — the whole-run driver's decisions: one row per run phase, each
+ * The whole-run driver's decisions: one row per run phase, each
  * answering "what would a player send here" from the live Run. The loop
  * that sends them, fights the battles and audits the frames is the kit's
  * (`__probe.drive`, ./index.ts); this module is pure over the Run, so it is

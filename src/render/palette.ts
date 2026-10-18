@@ -1,7 +1,7 @@
-// THE PALETTE. `COLORS` is the vocabulary code reaches for, and the single
+// The palette. `COLORS` is the vocabulary code reaches for, and the single
 // source of truth for every hue with a name.
 //
-// 116f — A PALETTE IS CHOSEN BY NAME AT BOOT. `COLORS` is the chosen one:
+// A palette is chosen by name at boot. `COLORS` is the chosen one:
 // the settings' boot (src/settings/boot.ts, `main.ts`'s second import) calls
 // `choosePalette` with the stored name before any module that reads `COLORS`
 // is evaluated, and the binding below is live, so those modules read the
@@ -22,7 +22,6 @@
 // Palette setting's choices (src/settings/settings.ts, `PALETTE_CHOICES`) are
 // the names here, held equal by tests/palette-colourblind.test.ts.
 
-// Hex values pulled from the user's previous game (rogue-terminal/src/colors.ts).
 const DEFAULT = {
   TERMINAL_BLACK: '#282828',
   TERMINAL_GREEN: '#33FF00',
@@ -31,37 +30,31 @@ const DEFAULT = {
   DARK_TERMINAL_AMBER: '#664600',
   FLOURESCENT_BLUE: '#15f4ee',
   DARK_FLOURESCENT_BLUE: '#034947',
-  // 74e follow-up — a true terminal BLUE (user call: event nodes need their
-  // own hue; "terminal blue for now"). Deliberately distinct from the cyan
-  // FLOURESCENT_BLUE, which is spoken for as the map's frontier/clickable
-  // STATE color — a kind accent in the same hue would read as actionable.
-  // Bright enough to carry a 16px glyph on #000. Revisit with the §74i/§77
-  // content rounds if the map palette gets crowded.
+  // A true terminal blue, the event nodes' own hue. Apart from the cyan
+  // FLOURESCENT_BLUE, which the map spends on its frontier (clickable)
+  // state: a node kind in the same hue would read as actionable.
   TERMINAL_BLUE: '#3D7BFF',
-  NEON_RED: '#FF3131', // User flagged this one as unsatisfying in the prior game — revisit.
+  NEON_RED: '#FF3131',
   DARK_NEON_RED: '#990000',
   NEON_PURPLE: '#9D00FF',
-  // Desaturated warm gray for environment entities (walls, future shrines).
-  // Picked to read as "inert" — sits between TERMINAL_BLACK and
-  // DARK_TERMINAL_AMBER on the warm axis, doesn't fight green/red for
-  // attention. INERT neutrals also have bloom suppressed at the renderer
-  // side so they don't compete with combatants for halo budget (§75h: an
-  // ACTIVE neutral — a camp member, TERMINAL_AMBER — blooms like a
-  // combatant; it's a fighter, not furniture).
+  // A desaturated warm grey for scenery (walls), picked to read as inert and
+  // not to fight green and red for attention. Inert neutrals also draw with
+  // no bloom, so they take no halo from the combatants; an active neutral (a
+  // camp member, TERMINAL_AMBER) blooms like a combatant, being a fighter,
+  // not furniture.
   TERMINAL_STONE: '#7A7066',
-  // §40c — a weathered ochre for DESTRUCTIBLE walls / half-cover. Warmer + more
-  // saturated than the inert TERMINAL_STONE so a breakable obstacle reads as
-  // cracked/mortared masonry, distinct at a glance from a permanent wall (which
-  // shares its `#` / `╥` glyph) — the §40c "visual tell". Sits on the warm amber
-  // axis (between TERMINAL_AMBER and DARK_TERMINAL_AMBER) so it doesn't fight the
-  // green/red team colors for attention; inert neutrals keep bloom suppressed.
-  // Distinct enough from the §75h camp TERMINAL_AMBER (#FFB000 — brighter,
-  // fully saturated, blooming) that scenery and the third faction don't blur.
+  // A weathered ochre for destructible walls and half-cover, warmer and more
+  // saturated than TERMINAL_STONE, so a breakable obstacle reads as cracked
+  // masonry, told at a glance from the permanent wall that shares its `#` or
+  // `╥`. It sits on the warm amber axis, between TERMINAL_AMBER and
+  // DARK_TERMINAL_AMBER, clear of the green and red teams, and apart enough
+  // from the camp's TERMINAL_AMBER (brighter, fully saturated, blooming)
+  // that scenery and the third faction don't blur.
   CRACKED_STONE: '#B5843C',
 
-  // 116f — THE SHADES the stylesheet held as its own tokens: each is a hue
-  // above, lighter or dimmer, so a palette that moves the hue has to move
-  // its shade with it. The hexes are the sheet's, as it spelled them.
+  // The shades: each a hue above, lighter or dimmer, so a palette that moves
+  // the hue moves its shade with it. The hexes are the stylesheet's, as it
+  // spelled them.
   AMBER_HOVER: '#ffd060',
   AMBER_DIM: '#997700',
   AMBER_FAINT: '#332300',
@@ -70,9 +63,9 @@ const DEFAULT = {
   BLUE_RULE: '#0e4f4c',
   BOSS_RED: '#ff3030',
 
-  // 116f — THE STATUS AND EMPOWER HUES (statusDisplay.ts says which status
-  // or buff wears each, and why the hues sit where they do). The behaviour
-  // statuses and `honed` wear a hue from the first block.
+  // The status and empower hues (statusDisplay.ts says which status or buff
+  // wears each, and why the hues sit where they do). The behaviour statuses
+  // and `honed` wear a hue from the first block.
   EMBER_ORANGE: '#FF6A00', // burn — hotter than amber
   BLOOD_CRIMSON: '#D41E3A', // bleed — deeper than NEON_RED
   TOXIC_GREEN: '#8FC31F', // poison — a yellow-green
@@ -95,9 +88,9 @@ export type Palette = Readonly<Record<PaletteName, string>>;
 export const DEFAULT_PALETTE = 'default';
 
 /**
- * 116g — THE COLOURBLIND PALETTE: the default with eighteen names moved.
+ * The colourblind palette: the default with eighteen names moved.
  *
- * THE GATE (tests/palette-colourblind.test.ts, on every `npm test`): the five
+ * The gate (tests/palette-colourblind.test.ts, on every `npm test`): the five
  * hues the board tells its bodies apart by (yours, the enemy's, a camp's,
  * stone, cracked stone) are at least 0.130 apart, pair by pair, to normal
  * vision and under each simulation of protanopia, deuteranopia and
@@ -108,7 +101,8 @@ export const DEFAULT_PALETTE = 'default';
  * palette that moves fewer): yours goes to a mint, the enemy's to a hot pink,
  * and stone a step darker. Amber and cracked stone stay.
  *
- * NOT GATED, re-picked and reported (WORKLOG §116g has the tables):
+ * Not gated, re-picked and reported (archive/post-109-worklog.md has the
+ * tables):
  *   - the cyan moves toward blue and darkens, since the mint landed 0.015
  *     from it; it is now 0.10 from the mint and still vivid;
  *   - seven status and empower hues move, by a search for the least move

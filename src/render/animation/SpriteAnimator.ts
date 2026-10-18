@@ -2,15 +2,14 @@ import * as THREE from 'three';
 import type { SpriteHandle, SpriteRenderer } from '../SpriteRenderer';
 
 /**
- * Bridges discrete sim moves to continuous on-screen motion. The sim updates
- * `unit.position` instantly on the tick it moves; this class keeps the sprite
- * visually mid-step, lerping over the cooldown duration so the eye sees a
- * smooth glide.
+ * Bridges the sim's discrete moves to continuous motion on screen. The sim
+ * moves `unit.position` in one jump, at the move's flip (`MoveAction`); this
+ * class slides the sprite across the step's whole duration, so the eye sees
+ * a glide.
  *
- * Single in-flight lerp per handle. If a second `startLerp` arrives before
- * the first finishes (rare — would require `moveCooldownTicks` < tick
- * granularity), the second replaces the first; the visual jolt of snapping
- * to the new `from` is acceptable.
+ * One lerp per handle: a second replaces the first, starting from the `from`
+ * it is given. BattleRenderer's steps pass the sprite's current position, so
+ * a step that replaces another continues without a jump.
  */
 interface ActiveLerp {
   readonly from: THREE.Vector3;
@@ -18,35 +17,33 @@ interface ActiveLerp {
   readonly duration: number;
   elapsed: number;
   /**
-   * E7.D — peak extra height (world-Y) of a parabolic arc added on top of the
-   * straight from→to interpolation: `+arcHeight · 4t(1−t)`, zero at both
-   * endpoints, max at the midpoint. 0 (the default) means a flat line — moves,
-   * the ranged tracer, and the mage bolt all stay straight; only the catapult
-   * lob passes a positive value.
+   * The peak extra height (world Y) of a parabolic arc over the straight
+   * from → to line: `+arcHeight · 4t(1−t)`, zero at both ends, highest at the
+   * midpoint. 0 (the default) is a straight line; only the catapult's lob
+   * passes a positive value.
    */
   readonly arcHeight: number;
-  /** Fired once when the lerp completes. E6.B uses it to despawn a
-   *  projectile sprite on arrival. Undefined for plain move lerps. */
+  /** Fired once when the lerp completes: a projectile despawns on arrival.
+   *  Undefined for plain move lerps. */
   readonly onComplete: (() => void) | undefined;
   /**
-   * F3 — optional moving-target source for a homing projectile. When present,
-   * `to` is refreshed from it each frame before interpolating, so the lerp
-   * tracks a target sprite that moves during flight (the catapult lob). A
-   * null return holds the last `to` (e.g. the target's sprite was swept on
-   * death). Undefined for fixed-destination lerps (moves, mage bolt, tracer).
+   * A moving target for a homing projectile. When present, `to` is refreshed
+   * from it each frame before the interpolation, so the lerp follows a target
+   * sprite that moves during the flight (the catapult's lob). A null return
+   * holds the last `to` (the target's sprite was swept on death, say).
+   * Undefined for a fixed destination.
    */
   readonly targetProvider: (() => THREE.Vector3 | null) | undefined;
   /**
-   * §81c2 — ground-aware Y profile for unit GROUND relocations (moves, swaps,
-   * settle-backs). The per-cell terrain height field means from.y and to.y can
-   * differ; a linear Y spends the whole second half of a low→high step with
-   * the anchor BELOW the destination tile's surface, depth-clipping the
-   * glyph's lower band into the ground (the §81 eyeball catch). The profile:
-   * climb EARLY (a rising Y completes by t=0.5) and descend LATE (a falling Y
-   * starts at t=0.5) — matching the §36 logical-position flip at the 50% mark,
-   * so the anchor is at (or above) the surface of whichever cell it's visually
-   * over, continuously, with no terrain sampling. XZ stays linear. False for
-   * projectiles/tracers (they fly).
+   * The Y profile for a unit's ground relocation (moves, swaps, settle-backs).
+   * The terrain's heights mean from.y and to.y can differ, and a linear Y
+   * spends the second half of a low → high step with the anchor below the
+   * destination tile's top, the ground clipping the glyph's lower band. So a
+   * rising Y completes by t = 0.5 and a falling Y starts at t = 0.5, at the
+   * sim's flip (`SIM.moveFlipFraction`, shipped 0.5, which this does not
+   * read), and the anchor stays at or above the top of whichever cell it is
+   * over, with no terrain sampling. XZ stays linear. False for projectiles,
+   * which fly.
    */
   readonly groundStepY: boolean;
 }
@@ -62,10 +59,9 @@ interface ActiveFade {
 }
 
 /**
- * E6.A — melee shove. A there-and-back position animation: the sprite
- * lunges from `origin` to `peak` over `outDuration`, then recovers to
- * `origin` over `backDuration`. Used to make a melee swing read as a
- * physical strike instead of a static color flash.
+ * The melee shove, a there-and-back animation: the sprite lunges from
+ * `origin` to `peak` over `outDuration`, then recovers to `origin` over
+ * `backDuration`, so a melee swing reads as a physical strike.
  *
  * Shove and move-lerp are mutually exclusive per handle: `startShove`
  * drops any in-flight lerp and `startLerp` drops any in-flight shove, so
@@ -98,8 +94,8 @@ export class SpriteAnimator {
     arcHeight = 0,
     targetProvider?: () => THREE.Vector3 | null,
   ): void {
-    // A move overrides any in-flight melee shove (E6.A) so the two never
-    // fight over this sprite's position.
+    // A move overrides any in-flight melee shove, so the two never fight
+    // over this sprite's position.
     this.shoves.delete(handle);
     if (durationSeconds <= 0) {
       this.sprites.updateSprite(handle, { position: to });
@@ -120,10 +116,10 @@ export class SpriteAnimator {
   }
 
   /**
-   * §81c2 — a unit GROUND relocation: a plain fixed-destination lerp with the
-   * climb-early / descend-late Y profile (see `ActiveLerp.groundStepY`).
-   * Callers: move/swap steps + the §36c settle-backs — anything whose from/to
-   * are both terrain ground anchors. Same override semantics as `startLerp`.
+   * A unit's ground relocation: a fixed-destination lerp with the
+   * climb-early, descend-late Y profile (`ActiveLerp.groundStepY`). For the
+   * move and swap steps and the settle-backs, anything whose from and to are
+   * both ground anchors. It overrides as `startLerp` does.
    */
   startGroundLerp(
     handle: SpriteHandle,
@@ -150,7 +146,7 @@ export class SpriteAnimator {
   }
 
   /**
-   * E6.A — start a melee shove: lunge from the sprite's current position
+   * Start a melee shove: lunge from the sprite's current position
    * toward `(dirX, 0, dirZ)` (expected unit-length in XZ) by `distance`
    * world units over `outSeconds`, then recover over `backSeconds`. A
    * no-op if the handle has no live sprite. Drops any in-flight move lerp
@@ -207,9 +203,9 @@ export class SpriteAnimator {
   }
 
   /**
-   * D5.C — overflow-spawn fade-in. Sprite snaps to alpha 0 immediately,
-   * then lerps to 1 over `durationSeconds`. Replaces any in-flight fade
-   * for the same handle. No onComplete — the sprite stays at full alpha
+   * The fade-in of a body that joins a battle under way: the sprite snaps to
+   * alpha 0, then lerps to 1 over `durationSeconds`. Replaces any in-flight
+   * fade for the same handle. No onComplete; the sprite stays at full alpha
    * after.
    */
   startFadeIn(handle: SpriteHandle, durationSeconds: number): void {
@@ -236,10 +232,9 @@ export class SpriteAnimator {
   }
 
   /**
-   * Drops every in-flight lerp and fade without firing fade onComplete
-   * callbacks. Used by BattleRenderer.detach to flush state between battles
-   * without triggering removeSprite on handles that are about to be wiped
-   * out anyway.
+   * Drops every in-flight lerp, shove and fade without firing an onComplete.
+   * BattleRenderer.detach flushes with it between battles, so no removeSprite
+   * runs on handles about to be wiped anyway.
    */
   clear(): void {
     this.lerps.clear();
@@ -250,24 +245,23 @@ export class SpriteAnimator {
   update(dt: number): void {
     for (const [handle, lerp] of this.lerps) {
       lerp.elapsed += dt;
-      // F3 — homing: re-point `to` at the moving target each frame (a null
-      // return holds the last destination). The provider writes into a
-      // caller-owned scratch we immediately copy out of, so it can't alias
-      // this.scratch used just below.
+      // Homing: re-point `to` at the moving target each frame (a null return
+      // holds the last destination). The provider writes into a scratch its
+      // caller owns, copied out at once, so it can't alias this.scratch below.
       if (lerp.targetProvider) {
         const tgt = lerp.targetProvider();
         if (tgt) lerp.to.copy(tgt);
       }
       const t = lerp.elapsed >= lerp.duration ? 1 : lerp.elapsed / lerp.duration;
       this.scratch.copy(lerp.from).lerp(lerp.to, t);
-      // §81c2 — ground steps re-time Y: rising completes by t=0.5, falling
-      // starts at t=0.5 (see ActiveLerp.groundStepY). XZ keeps the linear t.
+      // A ground step re-times Y: rising completes by t = 0.5, falling starts
+      // at t = 0.5 (ActiveLerp.groundStepY). XZ keeps the linear t.
       if (lerp.groundStepY && lerp.from.y !== lerp.to.y) {
         const yT = lerp.to.y > lerp.from.y ? Math.min(1, 2 * t) : Math.max(0, 2 * t - 1);
         this.scratch.y = lerp.from.y + (lerp.to.y - lerp.from.y) * yT;
       }
-      // E7.D — parabolic arc: lift Y by arcHeight·4t(1−t) (0 at the ends,
-      // peak at the midpoint). arcHeight 0 leaves the straight-line path.
+      // The parabolic arc: lift Y by arcHeight·4t(1−t) (0 at the ends, the
+      // peak at the midpoint). arcHeight 0 leaves the straight line.
       if (lerp.arcHeight !== 0) this.scratch.y += lerp.arcHeight * 4 * t * (1 - t);
       this.sprites.updateSprite(handle, { position: this.scratch });
       if (t >= 1) {
@@ -275,8 +269,8 @@ export class SpriteAnimator {
         lerp.onComplete?.();
       }
     }
-    // E6.A — melee shoves. Two-phase: origin → peak over outDuration, then
-    // peak → origin over backDuration. On completion snap exactly home so
+    // Melee shoves, in two phases: origin → peak over outDuration, then
+    // peak → origin over backDuration. At the end, snap exactly home so
     // floating-point drift can't leave the sprite off its cell.
     for (const [handle, shove] of this.shoves) {
       shove.elapsed += dt;

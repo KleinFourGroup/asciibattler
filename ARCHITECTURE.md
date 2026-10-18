@@ -684,7 +684,7 @@ Internally manages a single `InstancedMesh` with instanced attributes for `posit
 
 ### `SpriteAnimator`
 
-Bridges simulation and rendering. Subscribes to `unit:moved` events and starts a lerp from the old cell to the new cell over the move-cooldown duration. Per frame, it interpolates every active lerp and pushes positions to the `SpriteRenderer`. Owns visual transient state (in-flight lerps, fade-outs) that has no place in the simulation. §81c2: unit GROUND relocations (moves/swaps/settle-backs) go through `startGroundLerp`, which re-times Y only — climbs complete by the 50% mark and descents start there (matching the §36 logical-position flip) — so an anchor never sits below the surface of the cell it's visually over; projectiles keep the plain linear lerp.
+Bridges simulation and rendering. On each `unit:moved`, BattleRenderer starts a lerp from the sprite's live position to the new cell over the event's `durationTicks`. Per frame, it interpolates every active lerp and pushes positions to the `SpriteRenderer`. Owns visual transient state (in-flight lerps, fade-outs) that has no place in the simulation. §81c2: unit GROUND relocations (moves/swaps/settle-backs) go through `startGroundLerp`, which re-times Y only — climbs complete by the 50% mark and descents start there (matching the §36 logical-position flip) — so an anchor never sits below the surface of the cell it's visually over; projectiles keep the plain linear lerp.
 
 ## Event catalog (outputs)
 

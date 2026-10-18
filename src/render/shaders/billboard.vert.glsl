@@ -12,28 +12,25 @@ attribute vec3 instancePosition;
 attribute vec4 instanceGlyphUV;
 attribute vec3 instanceColor;
 attribute float instanceAlpha;
-// Per-sprite multiplier on the sprite's contribution to the bloom buffer
-// (B1.1 selective bloom). Only the bloom-layer fragment shader applies
-// it; the main-layer shader ignores it. 0.0 = no halo (sprite still
-// visible at natural color); 1.0 = natural contribution (halo iff color
-// crosses the high-pass threshold); >1.0 = forced strong glow for
-// emphasis (attack windups, criticals, elite tier). Lerping 0↔1 fades
-// the halo smoothly while the sprite's visible color never changes.
+// The sprite's multiplier on its contribution to the bloom buffer. Only the
+// bloom layer's fragment shader applies it; the main layer's ignores it. 0 is
+// no halo (the sprite still visible at its own colour); 1 the colour's own
+// halo (the bloom's threshold is 0, so any colour halos); above 1 a stronger
+// glow. Lerping 0 ↔ 1 fades the halo while the sprite's visible colour never
+// changes.
 attribute float instanceBloomIntensity;
-// Per-sprite size multiplier on top of the global uSpriteSize. 1.0 = the
-// default unit/wall glyph size; <1.0 shrinks (E6.B ranged tracers spawn
-// smaller so they read as a bolt rather than a full glyph). Scales the
-// quad about the instance ANCHOR (below), so the bloom mesh — which
-// shares this shader + these buffers — shrinks its halo to match for free.
+// The sprite's size multiplier over the global uSpriteSize: 1 is a unit's or
+// wall's glyph; below 1 shrinks (a tracer reads as a bolt, not a full glyph).
+// It scales the quad about the instance's anchor (below), so the bloom mesh,
+// which shares this shader and these buffers, shrinks its halo to match.
 attribute float instanceSize;
-// §79c — the quad-local point (quad spans [-0.5, 0.5]²) that coincides with
-// the projected instancePosition. (0, 0) = the quad CENTERS on its anchor
-// (the historical behavior — projectiles, markers, motes float AT a point);
-// (0, -0.5) = the quad's BASE sits on its anchor (a unit STANDS on its
-// tile). Applied in VIEW space, where X/Y are screen-right/up by
-// construction — so the vertical rise off a ground anchor is always
-// screen-up, never the off-axis diagonal a world-Y lift projects to under
-// the pitched camera (the I2/J3/79b off-axis class, killed structurally).
+// The quad-local point (the quad spans [-0.5, 0.5]²) that meets the projected
+// instancePosition. (0, 0): the quad centres on its anchor (projectiles,
+// motes, the aura ring float at a point); (0, -0.5): the quad's base sits on
+// its anchor (a unit stands on its tile). Applied in view space, where X and Y
+// are screen-right and up by construction, so the rise off a ground anchor is
+// always screen-up, never the off-axis diagonal a world-Y lift projects to
+// under a perspective camera.
 attribute vec2 instanceAnchor;
 
 uniform float uSpriteSize;
@@ -49,19 +46,17 @@ void main() {
   mvPos.xy += offset;
   gl_Position = projectionMatrix * mvPos;
 
-  // 107d-post — UPRIGHT DEPTH for a sprite that stands (base-anchored: its
-  // anchor sits below the quad's centre). The camera-facing card leans back
-  // by the camera's pitch, so a tile just behind the anchor that stands higher
-  // (a diagonal move past a higher corner) was nearer than the card's lower
-  // band and hid it. Each vertex keeps its screen position and takes the depth
-  // of the world-vertical card through the anchor instead: world-up in view
-  // space is (0, upV.y, upV.z), so a point `offset.y` up the screen stands
-  // `offset.y * upV.z / upV.y` nearer. Terrain behind the anchor can no longer
-  // cut into a standing glyph; terrain in front of it still hides the feet.
-  // Exact under ortho; under a dev lens the depth is the upright point's, taken
-  // at this vertex. Pinned by tests/board/clip.test.ts. The hop (lifting a
-  // diagonal move over the corner) was measured once the ground marks
-  // existed and did not ship; the movement polish in TODO reopens it once.
+  // Upright depth for a sprite that stands (base-anchored: its anchor sits
+  // below the quad's centre; gotcha #139). The camera-facing card leans back
+  // by the camera's pitch, so a higher tile just behind the anchor (a diagonal
+  // move past a higher corner) would be nearer than the card's lower band and
+  // hide it. Each vertex keeps its screen position and takes the depth of the
+  // world-vertical card through the anchor instead: world-up in view space is
+  // (0, upV.y, upV.z), so a point `offset.y` up the screen stands
+  // `offset.y * upV.z / upV.y` nearer. Terrain behind the anchor can't cut into
+  // a standing glyph; terrain in front of it still hides the feet. Exact under
+  // ortho; under a dev lens the depth is the upright point's, taken at this
+  // vertex. Pinned by tests/board/clip.test.ts.
   if (instanceAnchor.y < 0.0) {
     vec3 upV = mat3(viewMatrix) * vec3(0.0, 1.0, 0.0);
     vec4 upright = mvPos;

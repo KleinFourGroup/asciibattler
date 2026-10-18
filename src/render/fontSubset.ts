@@ -1,34 +1,30 @@
 /**
- * §79-post / §101a — the faces we ship + the codepoint ranges their subsets
- * keep. (i18n-ok-file: a build table — the labels are never rendered.)
+ * The faces we ship and the codepoint ranges their subsets keep.
+ * (i18n-ok-file: a build table — the labels are never rendered.)
  *
- * Moved out of `scripts/build-font.mjs` so the coverage guard
- * (`tests/font-coverage.test.ts`) and the renderer (`FontAtlas`'s font stack)
- * can import them WITHOUT executing the generator: gen:font's own checks only
- * run when someone runs gen:font, which is precisely the moment nobody forgets
- * the font. The test makes the contract structural — a new catalog glyph or a
- * new UI glyph outside the shipped subsets fails `npm test` instead of
- * degrading to an OS fallback (the §79f class on the canvas: ink metrics that
- * move the click boxes and lifts on someone else's machine; the §101 class in the
- * DOM: a fallback face's taller ascent growing a line box — the 46 / 45 px
- * chip).
+ * Kept apart from `scripts/build-font.mjs` so the coverage guard
+ * (`tests/font-coverage.test.ts`) and the renderer (`FontAtlas`'s font
+ * stack) import them without running the generator, whose own checks run
+ * only when someone runs gen:font. The test makes the contract structural:
+ * a catalog glyph or a UI glyph outside the shipped subsets fails `npm test`
+ * instead of falling to an OS face, which on the canvas moves the click boxes
+ * and lifts on someone else's machine, and in the DOM grows a line box with
+ * its taller ascent.
  *
- * TWO FACES (§101a, user-signed 2026-09-17 — the §79f multi-face trigger
- * fired on purpose): JetBrains Mono is the PRIMARY and supplies every glyph
- * it has; DejaVu Sans Mono is the ONE shipped FALLBACK and its subset keeps
- * only what the primary lacks inside SUBSET_RANGES, so a glyph the primary
- * can't paint still comes from a face we ship — the same letterform on every
- * machine, a line box that never grows (DejaVu's ascent / descent 0.93 / 0.24
- * sit inside JetBrains' 1.02 / 0.30; its 0.602 advance matches the 0.600
- * cell). The CSS `font-family` chain and the canvas atlas's `ctx.font` both
- * use FONT_STACK, so the DOM and the atlas share one provenance rule.
+ * Two faces: JetBrains Mono is the primary and supplies every glyph it has;
+ * DejaVu Sans Mono is the one shipped fallback, its subset keeping only what
+ * the primary lacks inside SUBSET_RANGES, so a glyph the primary can't paint
+ * still comes from a face we ship: the same letterform on every machine, and
+ * a line box that never grows (the fallback's ascent and descent sit inside
+ * the primary's, which the guard test pins). The CSS `font-family` chain and
+ * the atlas's `ctx.font` both use FONT_STACK, so the DOM and the atlas share
+ * one provenance rule.
  *
- * Deliberate HEADROOM (user-signed at the 79g shape-lock): whole blocks, not
- * the glyphs in use, so a new glyph choice inside a kept block needs no
- * regeneration. Upstream JetBrains coverage: ASCII, Latin-1, box-drawing and
- * blocks COMPLETE; every other block PARTIAL — the fallback fills the rest
- * where DejaVu has it, and the guard test (not this table) is what says
- * whether a given codepoint is shipped.
+ * The ranges are whole blocks, not the glyphs in use, so a new glyph inside a
+ * kept block needs no regeneration. Upstream, JetBrains covers ASCII,
+ * Latin-1, box drawing and the blocks whole, and every other block in part;
+ * the fallback fills the rest where DejaVu has it, and the guard test, not
+ * this table, says whether a codepoint is shipped.
  *
  * Regenerate the fonts after changing these: `npm run gen:font`.
  */
@@ -56,23 +52,18 @@ export function subsetCovers(codePoint: number): boolean {
 }
 
 /**
- * 101a-post — codepoints the PRIMARY face carries but draws WRONG, so the
- * generator drops them from its subset and the fallback supplies them.
- * JetBrains Mono 2.304 has U+229E SQUARED PLUS and U+22A0 SQUARED TIMES
- * SWAPPED (its ⊞ paints a boxed X, its ⊠ a boxed plus) — caught by the
- * user's eye on the map chip the morning after 101a widened the ranges
- * (before that, `⊞` sat outside the subset and the OS face painted it
- * right). Audited then: a mutual-swap search over all 338 codepoints both
- * faces carry (ink-bbox-normalized density grids, JetBrains vs DejaVu) found
- * this pair and only this pair. Re-check on a JetBrains upgrade; the guard
- * test pins that a fallback really has every entry.
- *
- * Triaged 2026-09-18: a DRAWING error in the raw vendored TTF (cmap + `post`
- * names are right — `uni229E` / `uni22A0` — the outlines under them are each
- * other's), known upstream as JetBrains/JetBrainsMono#676, OPEN; the fix is
- * PR #702 (unmerged — blocked behind an unrelated regression, #699). v2.304
- * is still the latest release. Nothing of ours to report; empty this list
- * only on a vendored release that carries #702, after a swap-search re-run.
+ * Codepoints the primary face carries but draws wrong, so the generator drops
+ * them from its subset and the fallback supplies them. JetBrains Mono 2.304
+ * has U+229E SQUARED PLUS and U+22A0 SQUARED TIMES swapped (its ⊞ paints a
+ * boxed X, its ⊠ a boxed plus): a drawing error in the vendored TTF, whose
+ * cmap and `post` names (`uni229E`, `uni22A0`) are right and whose outlines
+ * under them are each other's, known upstream as JetBrains/JetBrainsMono#676.
+ * A swap search over the 338 codepoints both faces carry (ink-normalized
+ * density grids, JetBrains against DejaVu) found this pair and only this
+ * pair. The guard test counts them as missing from the primary, so one in
+ * use must come from the fallback. Empty the list
+ * only on a vendored release that fixes the pair, after the swap search is
+ * run again.
  */
 export const PRIMARY_EXCLUDES: readonly number[] = [0x229e, 0x22a0];
 

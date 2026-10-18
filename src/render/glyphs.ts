@@ -1,51 +1,45 @@
 /**
- * The registered glyph set for the font atlas. Lives in its own module —
- * deliberately free of any THREE / DOM dependency — so it can be imported
- * by both `FontAtlas.ts` (which builds the canvas atlas) and headless
- * vitest tests (which can't touch canvas/WebGL).
+ * The glyph set the font atlas rasterizes. Its own module, free of THREE and
+ * the DOM, so `FontAtlas.ts` and the headless tests can both import it.
  *
- * §38e — the KEYSTONE payoff: the **unit** glyphs are now DERIVED from the
- * `config/units.json` catalog (`ALL_UNIT_DEFS`) rather than hand-listed here, so
- * authoring a brand-new unit in the archetype editor renders with **no code
- * edit** — the last code-edit dependency the unit-data keystone set out to
- * remove. Only the NON-unit glyphs (the root marker, the numeric HUD
- * digits/punctuation, the projectile tracer, the objective marker) stay a static
- * list, since nothing in the catalog owns them.
+ * The unit glyphs come from the `config/units.json` catalog (`ALL_UNIT_DEFS`),
+ * so a unit authored in the archetype editor renders with no code edit. Only
+ * the glyphs no catalog entry owns stay a static list.
  *
- * EVERY glyph the renderer asks for must appear in the exported `GLYPHS` or
- * `FontAtlas.getGlyphUV` throws at render time. Unit-glyph coverage is now
- * STRUCTURAL (a catalog entry's glyph is in the set by construction — it can't
- * drift), so `FontAtlas.test.ts` only has to guard the two things left: the
- * derived set fits the atlas grid, and the static non-unit glyphs are present.
+ * Every glyph the renderer asks for must be in `GLYPHS`, or
+ * `FontAtlas.getGlyphUV` throws at render time (gotcha #33). A catalog
+ * entry's glyph is in the set by construction, so `FontAtlas.test.ts`
+ * guards the two things left: the set fits the atlas's grid, and the static
+ * glyphs are present.
  *
- * The atlas is rebuilt from this list every boot and UVs are addressed by the
- * glyph char (not by index), so ordering is free — but the count must stay under
- * `ATLAS_CELL_BUDGET` (the `COLS × ROWS` grid in FontAtlas).
+ * The atlas is rebuilt from this list at every boot and addressed by the
+ * glyph, not by index, so order is free; the count must stay within
+ * `ATLAS_CELL_BUDGET`.
  */
 
 import { ALL_UNIT_DEFS } from '../config/units';
 
 /**
- * The FontAtlas grid capacity (`COLS × ROWS` = 8 × 6). Kept here as the single
- * budget the headless test asserts against; FontAtlas owns the actual grid dims
- * and re-checks this at build time. §29 grew the grid 8×4 = 32 → 8×6 = 48; the
- * next overflow needs another FontAtlas.ts resize (and this constant bumped).
+ * The atlas grid's capacity (FontAtlas's `COLS × ROWS`, 8 × 6): the one budget
+ * the headless test and the archetype editor check against. FontAtlas owns
+ * the grid and checks the count again at build; a larger set needs both
+ * grown.
  */
 export const ATLAS_CELL_BUDGET = 48;
 
 /**
- * Glyphs the renderer needs that AREN'T owned by any unit in the catalog: the
- * player root/base marker, the numeric HUD digits + punctuation, the projectile
- * tracer, and the in-battle objective marker. These stay hand-listed because no
- * `config/units.json` entry declares them. Append new NON-unit glyphs here; a new
- * UNIT glyph needs no edit at all (it flows in from the catalog below).
+ * The glyphs no catalog unit owns, hand-listed: the sprites' own (`*` for
+ * tracers, sparkles and blasts, `.` for the aura ring, `X` and `!` for the
+ * objective marker) and the rest of the digits, punctuation and `@`, which
+ * no sprite draws. A new non-unit glyph goes here; a new unit glyph needs no
+ * edit.
  */
 const NON_UNIT_GLYPHS: readonly string[] = [
-  '@', // player root / base marker (Phase A).
+  '@',
   '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-  '.', ':', '/', '-', '+', '%', '!', '?', // numeric HUD punctuation.
-  '*', // E6.B: ranged projectile tracer glyph.
-  'X', // J3: in-battle objective marker (the rally-tile / target-enemy 'X').
+  '.', ':', '/', '-', '+', '%', '!', '?',
+  '*',
+  'X',
 ];
 
 /**
@@ -68,12 +62,10 @@ export const GLYPHS: readonly string[] = ((): readonly string[] => {
 })();
 
 /**
- * §38e — the atlas cell count a catalog with these unit glyphs would occupy: the
- * static non-unit glyphs plus the distinct unit glyphs. The archetype editor
- * calls this on its working set to warn (and block Save) before an authored unit
- * would grow the atlas past `ATLAS_CELL_BUDGET` — a check that used to live in the
- * editor's now-deleted closed-union "wire-up" panel, but now that unit glyphs are
- * catalog-derived it's the real budget guard.
+ * The atlas cells a catalog with these unit glyphs would take: the static
+ * glyphs plus the distinct unit glyphs. The archetype editor calls it on its
+ * working set to warn, and to block Save, before an authored unit would grow
+ * the atlas past `ATLAS_CELL_BUDGET`.
  */
 export function atlasCellsFor(unitGlyphs: Iterable<string>): number {
   const set = new Set<string>(NON_UNIT_GLYPHS);
@@ -82,24 +74,18 @@ export function atlasCellsFor(unitGlyphs: Iterable<string>): number {
 }
 
 /**
- * A glyph's normalized INK rectangle within its atlas cell — which, since
- * `FontAtlas.getGlyphUV` maps the FULL cell onto the billboard quad, is also the
- * fraction of the QUAD the visible ink actually fills. Coordinates are in [0,1]
- * with the ORIGIN at the bottom-left and y pointing UP (the quad / view-space
- * convention), so a half-height glyph that inks the bottom of its cell has a low
+ * A glyph's normalized ink rectangle within its atlas cell, which, since
+ * `FontAtlas.getGlyphUV` maps the whole cell onto the billboard quad, is also
+ * the part of the quad the visible ink fills. Coordinates are in [0, 1] with
+ * the origin at the bottom-left and y up (the quad's and view space's
+ * convention), so a half-height glyph inking the bottom of its cell has a low
  * `y1`.
  *
- * The click hit-test (`pickInstanceAtNdc`) derives its box from this instead of
- * the whole quad, so the clickbox HUGS the glyph rather than the empty corners /
- * top. §79a — the rects are DERIVED at atlas build (`FontAtlas.getGlyphInk`
- * measures every rasterized cell's alpha bbox via `inkRectFromRgba` below),
- * replacing the old hand-measured one-entry table: every glyph is tight for
- * free, and authoring a new glyph needs no measure-and-hardcode chore.
- *
- * FORWARD NOTE: for a glyph where a rectangle over-selects (an irregular shape —
- * a future giant, say) the same per-cell atlas alpha is where a pixel-perfect
- * COVERAGE mask would live; the ink-rect then becomes that mask's cheap
- * bounding-box pre-reject — a stepping stone, not a throwaway.
+ * The click hit-test (`pickInstanceAtNdc`) builds its box from this and not
+ * the whole quad, so the click box hugs the glyph, not the empty corners and
+ * top. The rectangles are measured at the atlas's build (`FontAtlas`, through
+ * `inkRectFromRgba` below), so every glyph is tight and a new glyph needs no
+ * measuring by hand.
  */
 export interface GlyphInk {
   readonly x0: number; // left   (0 = cell left)
@@ -108,42 +94,34 @@ export interface GlyphInk {
   readonly y1: number; // top    (1 = cell top)
 }
 
-/** The whole cell — the fallback for any glyph the atlas hasn't measured (and
- *  for an all-transparent cell) → the pick box stays the symmetric full quad,
- *  byte-identical to the pre-ink hit-test. */
+/** The whole cell: the fallback for a glyph the atlas hasn't measured, and
+ *  for an all-transparent cell, so the pick box stays the full quad. */
 export const FULL_GLYPH_INK: GlyphInk = { x0: 0, y0: 0, x1: 1, y1: 1 };
 
-/**
- * §79a — alpha above this counts as ink when deriving a glyph's bbox. Matches
- * the one-off browser rasterization that produced the old hand-measured `▄`
- * entry (`> 16`), so the derived rect reproduces it; low enough to catch faint
- * antialiased edges, high enough to ignore blend noise.
- */
+/** Alpha above this counts as ink when measuring a glyph's box: low enough
+ *  to catch faint antialiased edges, high enough to ignore blend noise. */
 export const INK_ALPHA_THRESHOLD = 16;
 
 /**
- * §79a rider (user call, 2026-08-14) — pixels of breathing room added on every
- * side of the derived bbox (clamped to the cell), so the clickbox hugs the
- * glyph without demanding pixel-perfect aim. In CELL pixels (of `CELL_PX` 64),
- * which ≈ screen pixels at the default board zoom. The first quick test read
- * the raw boxes as a touch too tight; tune by feel here. 79e (user call): 3 → 5
- * at the native eyeball — still tight to the letterform, but forgiving enough
- * that a click aimed at a thin glyph's stroke lands.
+ * Pixels of room added on every side of the measured box (clamped to the
+ * cell), so the click box hugs the glyph without asking for pixel-perfect
+ * aim. In cell pixels (of `CELL_PX`, 64). Shipped 5; 3 read as a touch
+ * tight. At 5 the box is still tight to the letterform, and a click aimed at
+ * a thin glyph's stroke lands.
  */
 export const INK_PAD_PX = 5;
 
 /**
- * §79a — the alpha bounding box of one rasterized cell, as a normalized y-up
- * `GlyphInk`. Pure + DOM-free (takes the raw RGBA byte array an
- * `ImageData.data` yields, row-major, canvas convention: row 0 = TOP), so it's
- * headless-testable on synthetic buffers; `FontAtlas.create` feeds it each
- * glyph's cell at build time. The canvas→GL y flip happens here, mirroring
- * `getGlyphUV`'s convention. An all-transparent cell returns `FULL_GLYPH_INK`
- * (no ink to hug — keep the full-quad behavior rather than a degenerate box).
+ * The alpha bounding box of one rasterized cell, as a normalized, y-up
+ * `GlyphInk`. Pure and free of the DOM (it takes the raw RGBA bytes an
+ * `ImageData.data` holds, row-major, row 0 at the top), so it is tested
+ * headless on synthetic buffers; `FontAtlas.create` feeds it each glyph's
+ * cell at build. The canvas-to-GL y flip happens here, as in `getGlyphUV`.
+ * An all-transparent cell returns `FULL_GLYPH_INK`, the full quad rather
+ * than a degenerate box.
  *
- * §79d2 — returns the RAW bbox (no padding): the raw rect is what the lifts
- * (`liftToCellY`) consume. The +INK_PAD_PX click feel moved to `padInk`,
- * applied where PICK candidates are built.
+ * The box is raw (no padding): the lifts (`liftToCellY`) read it, and
+ * `padInk` adds the click's room where pick candidates are built.
  */
 export function inkRectFromRgba(
   data: ArrayLike<number>,
@@ -175,10 +153,10 @@ export function inkRectFromRgba(
 }
 
 /**
- * §79d2 — widen an ink rect by `pad` (normalized cell fraction; the default is
- * `INK_PAD_PX` of a `cellPx` cell) on every side, clamped to the cell. The
- * CLICKBOX half of the 79a rider: pick candidates get the breathing room, while
- * the lifts read the raw rect. `FULL_GLYPH_INK` passes through untouched.
+ * Widen an ink box by `pad` (a fraction of the cell; FontAtlas passes
+ * `INK_PAD_PX` of its cell) on every side, clamped to the cell. Pick
+ * candidates get the room; the lifts read the raw box. `FULL_GLYPH_INK`
+ * passes through untouched.
  */
 export function padInk(ink: GlyphInk, pad: number): GlyphInk {
   if (ink === FULL_GLYPH_INK || pad === 0) return ink;

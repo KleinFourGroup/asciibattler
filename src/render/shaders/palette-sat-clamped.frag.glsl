@@ -1,4 +1,4 @@
-// B1 variant (c): full-RGB pass-through with saturation clamped to a band.
+// A full-RGB pass-through with saturation clamped to a band.
 //
 // Anything goes hue/luminance-wise, but saturation is forced into
 // [uSatMin, uSatMax]. This prevents muddy mid-saturations (anything

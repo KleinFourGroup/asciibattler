@@ -9879,3 +9879,146 @@ shaders, the fog's base colour the scene's background, the creep's sum
 kept equal in TS and GLSL, `uTime` held under reduced motion with no
 shader branch. And the edge band's inner-face sentence, reasoned and not
 seen.
+
+### 124j, batch 5 — the sprites (2026-10-18, session f2e588ad)
+
+`SpriteRenderer.ts`, `FontAtlas.ts`, `fontSubset.ts`, `glyphs.ts`,
+`palette.ts`, `spriteColor.ts`, `animation/SpriteAnimator.ts` and the
+other six shaders. Their step codes and history are out: the bugs behind
+the font guard and the atlas's grid, the hand-measured table the ink
+boxes replaced, the dates and the upstream PR's state behind the swapped
+pair, the user's calls behind the pad and the blue, the plans (an
+in-canvas HUD, shrines, a giant's coverage mask). So are the capitals for
+emphasis. `fullscreen-pass.vert.glsl` needed nothing.
+
+**Statements found false and corrected (rule 7):**
+
+- The bloom's threshold, batch 3's twin twice more: `SpriteRenderer`'s
+  header ("blooms iff color crosses threshold") and
+  `billboard.vert.glsl`'s `instanceBloomIntensity` ("halo iff color
+  crosses the high-pass threshold"). The threshold is 0. The same doc gave
+  the intensities above 1 as "attack windups, criticals, elite tier";
+  BattleRenderer's are the blast (2.2), the sparkle (1.6), the projectile
+  (1.2) and the aura's pulse (1.1), and the list is gone.
+- `SpriteRenderer`'s header: callers "never touch three.js directly", so
+  the renderer can be replaced "without any call-site change". They pass
+  `THREE.Vector3` and colour values; ARCHITECTURE's principle 4 promises
+  the instanced buffers and uniforms hidden and the sim untouched, which
+  the comment now says. The scratch "THREE.Vector3 ... per addSprite" is a
+  `THREE.Color`, used by `writeColor`. The bloom material's "sharing the
+  uAtlas uniform value would let the textures diverge": the two materials
+  hold separate uniforms set to one texture, and sharing would not make
+  them diverge. `sortByDepth`'s "six buffer uploads" and
+  `repackByOrder`'s "six calls": seven, the anchor's among them.
+- `billboard.vert.glsl`'s `instanceAnchor`: "markers" float at a point
+  with the quad centred. The objective marker is base-anchored
+  (`addSprite(…, 'base')`, gotcha #139).
+- `FontAtlas`: "Append new glyphs there (gotcha #33, append-only)"; the
+  gotcha and `glyphs.ts` say order is free. `GlyphUV`: "the sprite shader
+  do[es] a single `mix(zw, xy, uv)`"; the billboard vertex shader does
+  `mix(xy, zw, uv)`. The font guard: `╥` and `▄` were "every wall,
+  half-cover and rubble entity", batch 2's twin from `main.ts`, which its
+  search missed (a wall is `#`); the guard is now said without the
+  incident. "~47 pairs": the set is 48 (22 static, 26 from the catalog),
+  and the comment says a pair per glyph. "The build-time check in
+  `scripts/build-font.mjs` is the hard gate": `tests/font-coverage.test.ts`
+  holds `GLYPHS` to the shipped faces on every `npm test`; both are named.
+- `glyphs.ts`'s static list: "the player root/base marker, the numeric HUD
+  digits + punctuation, the projectile tracer, the objective marker". No
+  sprite draws `@` or the digits: the six `addSprite` call sites and the
+  marker's glyph swap draw the catalog's glyphs, `*` (tracers, sparkles,
+  the blast), `.` (the aura ring), and `X` and `!` (the marker). `padInk`'s
+  "the default is `INK_PAD_PX` of a `cellPx` cell": it has no default.
+- `fontSubset`'s `PRIMARY_EXCLUDES`: "the guard test pins that a fallback
+  really has every entry". `font-coverage.test.ts` counts the entries as
+  missing from the primary, so it pins the fallback only for one in use.
+- `SpriteAnimator`'s header: "The sim updates `unit.position` instantly on
+  the tick it moves", the lerp "over the cooldown duration". The position
+  flips at the move's impact boundary, `SIM.moveFlipFraction` (0.5) of the
+  way (`MoveAction`), and BattleRenderer slides over `unit:moved`'s
+  `durationTicks`. A replacing lerp's "jolt of snapping to the new
+  `from`": the steps and settle-backs pass the sprite's live position, so
+  nothing snaps. `clear` dropped "every in-flight lerp and fade"; the
+  shoves too. The ground profile's 0.5 is the flip's shipped fraction, and
+  the comment now says it doesn't read the config.
+- `spriteColor`: "Amber is otherwise unused on battle sprites". The
+  objective marker, burn's sparkle and panic's held tint wear
+  TERMINAL_AMBER; no other body's base colour is amber.
+- `sprite.frag.glsl`: the discard "keeps the depth buffer clean". The
+  sprites write no depth (`depthWrite: false`); the discard skips a
+  fragment that adds nothing to the blend.
+
+Dropped and not checked: `TERMINAL_BLUE`'s "16px glyph on #000" (the
+event node's glyph size was not found), `TERMINAL_STONE`'s place "between
+TERMINAL_BLACK and DARK_TERMINAL_AMBER", DejaVu's metrics (0.93 / 0.24
+and its 0.602 advance; the comment now says the guard test pins the
+fallback's ascent and descent inside the primary's), and `INK_PAD_PX`'s
+"≈ screen pixels at the default board zoom".
+
+**Twin corrected outside the batch, flagged:** ARCHITECTURE's
+`SpriteAnimator` section had it subscribing to `unit:moved` and lerping
+"over the move-cooldown duration"; BattleRenderer subscribes and passes
+the event's `durationTicks`. A search of `src`, `tools` and `tests` for
+the threshold, the windup list, floating markers, "append-only",
+`mix(zw`, "every wall", "root marker" and "numeric HUD", "instantly",
+"otherwise unused" and "depth buffer clean" found no other.
+
+Found and left: 17 of the atlas's 48 cells (`@`, the ten digits, `:`,
+`/`, `-`, `+`, `%`, `?`) hold glyphs no sprite draws, with the atlas at its
+budget; dropping them moves the atlas's layout, a code change, so it is
+the user's or the census's. BattleRenderer's "overflow spawn" is the
+sim's own term (`World.spawnFromQueue`), not a false one.
+
+Measured (`comment-length` on copies under `output/cl-124j-b5`): comment
+lines 761 → 688, words 6,824 → 6,043, code lines 965 unchanged;
+`glyphs.ts` 120 → 98, `FontAtlas.ts` 119 → 104. The step-code ceiling
+2,660 → 2,566, the 94 the twelve held (`FontAtlas` 19, `SpriteAnimator`
+16, `glyphs` 14, `palette` 12, `fontSubset` 9, `billboard.vert` and
+`spriteColor` 7 each, `SpriteRenderer` 6, the other four shaders 1 each).
+
+Proof: `comment-strip HEAD src` exits 1, naming one file that differs in
+more than comments: `fontSubset.ts`'s header, which holds `i18n-ok-file`
+and so is held as code (`TOOL_READ`; WORKLOG §121 expected rewording it to
+show). Read: the marker stays on line 3, inside the five lines
+`literalScan.ts` reads for it, so the scan skips the file as before. The
+control made one code edit in memory in each of the other 11 changed
+files and the compare named all 11.
+
+Cost: 277,391 at 14:39 on 2026-10-18 by the tool's clock, after batch 4's
+proof, to 440,909 at 14:58 after this proof: about 164k for batch 4's
+entry and commit and this batch's 1,887 lines, under 87 a line.
+
+**Read** (`batch`): `git show <this commit> -- src/render/glyphs.ts
+src/render/animation/SpriteAnimator.ts
+src/render/shaders/billboard.vert.glsl` against the seven rules, and
+`fontSubset.ts`'s header, the oracle's one named difference. Wrong looks
+like a step code or history left, or a rule a change must respect cut:
+the atlas's budget equal in FontAtlas and `glyphs.ts`, every glyph the
+renderer asks for in `GLYPHS` (gotcha #33), the faces fetched before
+rasterizing, the depth sort's planar key over all seven buffers, the
+ground profile's 0.5 at the sim's flip, the upright depth for a standing
+sprite (gotcha #139), bloomIntensity never darkening the visible sprite.
+
+### The hand-off after batch 5 (2026-10-18, session f2e588ad)
+
+Batches 4 and 5 are committed and open for their `batch` reads, beside 2
+and 3. Next is **batch 6, FX and overlays** (`fxRegistry.ts`,
+`auraFx.ts`, `statusDisplay.ts`, `UnitOverlayLayer.ts`; 1,020 lines), in
+a fresh session: this one is at 440,909 before this entry's commit, and
+batch 6 at about 90 a line is about 92k, past the hand-off line.
+
+For the next session:
+
+- Batch 6 holds two finds left for it: `UnitOverlayLayer`'s constructor
+  doc says "Pass `null`", which its type refuses (batch 2's), and its
+  "B3 BarRenderer pick", history (batch 3's).
+- `comment-strip` exits 1 when a comment holding `i18n-ok` or another
+  `TOOL_READ` marker is reworded; read the named difference and say in the
+  entry why it is inert, as batch 5's entry does.
+- A false claim's twins hide in the batch itself too: batch 3's threshold
+  search missed two in batch 5's files, and batch 2's "every wall" search
+  one more; search the shortest token across `src`, `tools`, `tests` and
+  the docs, ARCHITECTURE included (it held a twin in both batches).
+- Batch 7, `BattleRenderer.ts`, keeps "spec D3" and "the §106 mock's",
+  its to take out, and the sim's "overflow spawn" term, which is right.
+- The rate: batch 4 ran 86 a line, batch 5 under 87.

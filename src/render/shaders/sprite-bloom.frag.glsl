@@ -1,13 +1,10 @@
-// Sprite fragment shader for the bloom-only render layer (B1.1 selective
-// bloom). Identical to sprite.frag.glsl except output color is scaled by
-// the per-instance bloomIntensity attribute: this controls how much each
-// sprite contributes to the bloom-buffer that gets blurred + composited
-// back onto the main scene. 0 = sprite contributes nothing (no halo),
-// 1 = natural contribution (the bloom's threshold is 0, so any color halos),
-// >1 = amplified contribution (forced strong glow). The main mesh on
-// layer 0 renders the sprite's visible color independently, so changing
-// bloomIntensity here NEVER darkens the visible sprite — it only adjusts
-// the halo strength.
+// The sprite fragment shader for the bloom-only layer. sprite.frag.glsl's,
+// with the colour scaled by the per-instance bloomIntensity: how much the
+// sprite gives the bloom buffer that is blurred and added back onto the
+// main frame. 0 gives nothing (no halo), 1 the colour's own (the bloom's
+// threshold is 0, so any colour halos), above 1 a stronger glow. The main
+// mesh on layer 0 draws the visible colour on its own, so bloomIntensity
+// never darkens the visible sprite; it sets only the halo's strength.
 
 precision highp float;
 

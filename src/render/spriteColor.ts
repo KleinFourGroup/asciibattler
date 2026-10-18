@@ -1,26 +1,25 @@
 /**
- * Sprite base-color selection. Extracted from BattleRenderer as a THREE-free
- * module so the color LOGIC is headless-testable (BattleRenderer itself pulls
- * THREE and can't load under vitest).
+ * A sprite's base colour. Free of THREE, so the colour logic is tested
+ * headless.
  *
- * A combatant reads its TEAM color; a neutral reads the inert stone gray —
- * EXCEPT a destructible wall / half-cover (§40c), which reads the CRACKED_STONE
- * tint so a breakable obstacle is legible against its indestructible, SAME-GLYPH
- * sibling (`#` / `╥`). That ambiguity is exactly why the tell exists.
+ * A combatant wears its team's colour; a neutral the inert stone grey, except
+ * a destructible wall or half-cover, which wears CRACKED_STONE, so a
+ * breakable obstacle is told from its indestructible sibling of the same
+ * glyph (`#` or `╥`). That shared glyph is why the tell exists.
  *
- * §75h — an ACTIVE neutral (a camp member, `campId !== null`) is the THIRD
- * FACTION: TERMINAL_AMBER, the warm "alive but not yours" lane between the
- * player green and the enemy red. Amber is otherwise unused on battle sprites
- * (stone/ochre are the scenery lane), and a camp bandit shares the enemy
- * bandit's glyph — the color IS the tell, same argument as §40c. One color for
- * passive AND hostile camps in v1; the §75j feel pass may split them.
+ * An active neutral (a camp member, `campId !== null`) is the third faction:
+ * TERMINAL_AMBER, the warm "alive but not yours" lane between your green and
+ * the enemy's red. No other body's base colour is amber (stone and ochre are
+ * scenery's), and a camp's bandit shares the enemy's bandit's glyph, so the
+ * colour is the tell, as with cracked stone. One colour for passive and
+ * hostile camps.
  *
- * Rubble is deliberately EXCLUDED: it's destructible too, but it's auto-target
- * debris carrying its OWN glyph (`▄`), already distinct from a wall, so it keeps
- * the stone color the user confirmed. The `isDestructibleNeutral && !isAutoTarget`
- * predicate is the data-driven expression of "a destructible obstacle that shares
- * a glyph with an indestructible one" — a future destructible-wall kind gets the
- * tell for free; a future auto-target debris keeps its own glyph/color.
+ * Rubble is left out: it is destructible too, but it is auto-target debris
+ * with its own glyph (`▄`), already distinct from a wall, so it keeps the
+ * stone colour. The `isDestructibleNeutral && !isAutoTarget` predicate says
+ * "a destructible obstacle that shares a glyph with an indestructible one"
+ * from the catalog's data, so a new destructible wall kind gets the tell
+ * with no code, and new auto-target debris keeps its own glyph and colour.
  */
 
 import { COLORS } from './palette';
@@ -35,19 +34,19 @@ export function colorForTeam(team: Team): string {
 }
 
 /**
- * §40c — is this archetype a DESTRUCTIBLE wall / half-cover (the tell target)?
- * A destructible neutral that is NOT auto-target debris (rubble) — i.e. one that
- * shares its glyph with an indestructible sibling and so needs a color to tell
- * them apart. Keyed off the catalog (data-driven), never a hardcoded id set.
+ * Is this archetype a destructible wall or half-cover, the tell's target? A
+ * destructible neutral that is not auto-target debris (rubble): one that
+ * shares its glyph with an indestructible sibling and needs a colour to be
+ * told apart. Keyed off the catalog, never a hard-coded set of ids.
  */
 export function isDestructibleObstacle(archetype: string): boolean {
   return isDestructibleNeutral(archetype) && !isAutoTargetNeutral(archetype);
 }
 
-/** The base glyph color for a unit's sprite: the §75h camp amber for an
- *  active neutral, the §40c cracked tint for a destructible wall/cover, else
- *  the team/stone color. Structural param (the `isActiveNeutral` pattern) so
- *  snapshots qualify, not just live Units. */
+/** The base colour of a unit's sprite: the camp's amber for an active
+ *  neutral, cracked stone for a destructible wall or cover, else the team's
+ *  or stone's. A structural parameter (as `isActiveNeutral` takes), so a
+ *  snapshot qualifies, not only a live Unit. */
 export function spriteColorForUnit(unit: {
   team: Team;
   archetype: string;

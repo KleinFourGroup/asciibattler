@@ -5,30 +5,29 @@ import VERTEX_SHADER from './shaders/billboard.vert.glsl?raw';
 import FRAGMENT_SHADER from './shaders/sprite.frag.glsl?raw';
 import BLOOM_FRAGMENT_SHADER from './shaders/sprite-bloom.frag.glsl?raw';
 
-/** Three.js layer the bloom-only sprite mesh lives on (B1.1 selective bloom). */
+/** The three.js layer the bloom-only sprite mesh lives on. */
 export const BLOOM_LAYER = 1;
 
 /**
- * Renders all in-scene ASCII sprites with selective per-sprite bloom. One
+ * Renders every in-scene ASCII sprite, with a bloom chosen per sprite. One
  * `InstancedBufferGeometry` quad, seven per-instance attributes (position,
- * glyph UV rect, color, alpha, bloomIntensity, size, anchor), and two
+ * glyph UV rect, colour, alpha, bloomIntensity, size, anchor), and two
  * camera-facing billboard meshes sharing those buffers:
  *
- *   - `mesh` (default layer 0): renders the visible sprite at its natural
- *     color. Ignores bloomIntensity. This is what the player sees.
- *   - `bloomMesh` (layer BLOOM_LAYER): renders `color * bloomIntensity`
- *     into the bloom-only render target. Multiplier semantics:
- *     0 = no halo, 1 = natural (blooms iff color crosses threshold),
- *     >1 = forced strong glow. The main mesh is unaffected.
+ *   - `mesh` (layer 0): the visible sprite at its own colour, bloomIntensity
+ *     ignored. What the player sees.
+ *   - `bloomMesh` (layer BLOOM_LAYER): `color * bloomIntensity` into the
+ *     bloom-only target. 0 is no halo, 1 the colour's own halo (the bloom's
+ *     threshold is 0, so any colour halos), above 1 a stronger glow. The main
+ *     mesh is unaffected.
  *
- * The bloom mesh is sent to a separate `EffectComposer` (see Renderer.ts)
- * that runs the bloom blur + high-pass, then additively mixes the result
- * back onto the main framebuffer. Decoupling the two means bloomIntensity
- * never darkens the visible sprite.
+ * The bloom mesh goes to a separate `EffectComposer` (Renderer.ts), which
+ * blurs it and adds the result onto the main frame, so bloomIntensity never
+ * darkens the visible sprite.
  *
- * Gameplay code holds an opaque `SpriteHandle` and never touches three.js
- * directly — the renderer can be replaced (e.g. with WebGPU) without any
- * call-site change. See ARCHITECTURE.md guiding principle 4.
+ * Callers hold an opaque `SpriteHandle` and never touch the instanced
+ * buffers or the shaders' uniforms, so the implementation can change without
+ * touching the sim (ARCHITECTURE's guiding principle 4).
  */
 
 export interface SpriteHandle {
@@ -36,19 +35,19 @@ export interface SpriteHandle {
 }
 
 /**
- * §79c — where a sprite's quad sits relative to its anchor (`instancePosition`):
+ * Where a sprite's quad sits relative to its anchor (`instancePosition`):
  *
- *  - `'center'` — the quad CENTERS on the anchor (the historical behavior;
- *    right for things that float AT a point: projectiles, motes).
- *  - `'base'` — the glyph STANDS on the anchor: its quad BOTTOM
- *    (`BASE_ANCHOR_Y`) coincides with the anchor, for every glyph, and the
- *    glyph rises screen-up from it. The ground mark under the glyph says
- *    where it touches the ground, so no glyph needs a stand line of its own.
+ *  - `'center'` — the quad centres on the anchor, for things that float at a
+ *    point: projectiles, motes.
+ *  - `'base'` — the glyph stands on the anchor: its quad's bottom
+ *    (`BASE_ANCHOR_Y`) meets the anchor, for every glyph, and the glyph rises
+ *    screen-up from it. The ground mark under the glyph says where it touches
+ *    the ground, so no glyph needs a stand line of its own.
  *
- * The offset is applied in VIEW space by the vertex shader, so a base-anchored
- * glyph rises straight up the screen from its anchor's projection, never along
- * a world-Y lift that a perspective camera would project off-axis. Declared at
- * `addSprite` and fixed for the sprite's life.
+ * The vertex shader applies the offset in view space, so a base-anchored
+ * glyph rises straight up the screen from its anchor's projection, never
+ * along a world-Y lift that a perspective camera would project off-axis.
+ * Declared at `addSprite` and fixed for the sprite's life.
  */
 type SpriteAnchor = 'center' | 'base';
 
@@ -92,9 +91,9 @@ export class SpriteRenderer {
   private readonly aSize: THREE.InstancedBufferAttribute;
   private readonly aAnchor: THREE.InstancedBufferAttribute;
 
-  /** §79a — public so billboard-builder consumers (BattleRenderer's pick
-   *  candidates) can read the SAME atlas the glyphs render from — the ink
-   *  bboxes (`getGlyphInk`) must match the rasterization on screen. */
+  /** Public so the billboard builders (BattleRenderer's pick candidates) read
+   *  the atlas the glyphs render from: the ink boxes (`getGlyphInk`) must
+   *  match the rasterization on screen. */
   readonly atlas: FontAtlas;
 
   // Slot management. `slotByHandle` lets removal find a sprite by id; on
@@ -105,11 +104,11 @@ export class SpriteRenderer {
   private readonly slotByHandle = new Map<number, number>();
   private readonly handleAtSlot: number[] = [];
 
-  // Scratch THREE.Vector3 to avoid allocating per addSprite.
+  // A scratch colour, so `writeColor` allocates nothing.
   private static readonly _scratchColor = new THREE.Color();
 
-  // Qb#2 depth-sort scratch — all reused across frames so the per-frame sort
-  // allocates nothing (stays GC-neutral). `_order` holds the live instances'
+  // The depth sort's scratch, reused across frames so the sort allocates
+  // nothing. `_order` holds the live instances'
   // slot indices, sorted far→near by `_depths`; `_repackScratch` gathers one
   // attribute at a time during the in-place reorder; `_handleScratch` snapshots
   // the handle-at-slot map across the overlapping read/write of the rebuild.
@@ -177,10 +176,9 @@ export class SpriteRenderer {
       },
     });
 
-    // Separate material for the bloom-only render. Same vertex shader and
-    // atlas uniform — only the fragment shader differs (multiplies output
-    // by per-instance bloomIntensity). Sharing the uAtlas uniform value
-    // would let the textures diverge accidentally; cheap to recreate.
+    // The bloom-only render's material: the same vertex shader and atlas,
+    // with its own uniforms; only the fragment shader differs, multiplying
+    // the colour by the per-instance bloomIntensity.
     this.bloomMaterial = new THREE.ShaderMaterial({
       vertexShader: VERTEX_SHADER,
       fragmentShader: BLOOM_FRAGMENT_SHADER,
@@ -206,9 +204,8 @@ export class SpriteRenderer {
     this.bloomMesh.layers.set(BLOOM_LAYER);
   }
 
-  /** Add a sprite. Returns an opaque handle for later removal/update.
-   *  `anchor` (§79c) declares how the quad sits on `position` — see
-   *  `SpriteAnchor`; the default `'center'` is the historical behavior. */
+  /** Add a sprite. Returns an opaque handle for later removal or update.
+   *  `anchor` declares how the quad sits on `position` (`SpriteAnchor`). */
   addSprite(
     glyph: string,
     color: THREE.ColorRepresentation,
@@ -251,8 +248,8 @@ export class SpriteRenderer {
       glyph?: string;
       alpha?: number;
       bloomIntensity?: number;
-      /** Per-sprite size multiplier (1 = default glyph size). E6.B tracers
-       *  spawn below 1 so they read smaller than a unit glyph. */
+      /** The sprite's size multiplier (1 = a unit glyph's size); tracers are
+       *  smaller. */
       size?: number;
     },
   ): void {
@@ -306,7 +303,7 @@ export class SpriteRenderer {
     return out.set(arr[slot * 3]!, arr[slot * 3 + 1]!, arr[slot * 3 + 2]!);
   }
 
-  /** 108b — a sprite's current alpha, or `null` once removed. A body's ground
+  /** A sprite's current alpha, or `null` once removed. A body's ground
    *  mark reads it, so the mark fades with its glyph (death, a reinforcement's
    *  arrival). */
   getAlpha(handle: SpriteHandle): number | null {
@@ -316,32 +313,31 @@ export class SpriteRenderer {
   }
 
   /**
-   * Qb#2 — depth-sort the live instances back-to-front for `camera`, so the
-   * painter's-order draw (instances rasterize in slot order, 0→count) matches
-   * camera depth. The glyph billboards are `depthWrite: false` — a transparent
-   * blend can't share the single-value depth buffer (see the material's
-   * comment) — so draw order is the ONLY sprite-vs-sprite occlusion arbiter;
-   * without this a farther sprite in a higher slot paints over a nearer one
-   * (the reported "attacker draws in front of the closer target").
+   * Depth-sort the live instances back to front for `camera`, so the
+   * painter's-order draw (instances rasterize in slot order, 0 → count)
+   * matches camera depth. The glyph billboards write no depth (a transparent
+   * blend can't share the one-value depth buffer; see the material's
+   * comment), so draw order alone decides which sprite covers which; without
+   * the sort a farther sprite in a higher slot paints over a nearer one.
    *
-   * Reorders all seven per-instance attribute buffers + the handle⇄slot maps in
-   * place, using only the preallocated scratch above (no per-frame allocation,
-   * so it stays GC-neutral). Cheap: one along-view depth key per instance (a
-   * dot product), an O(n log n) index sort, and a 15-float-per-instance gather
-   * — negligible at our sprite counts. Game calls it once per frame after all
-   * sprite positions have settled, just before the render.
+   * Reorders all seven per-instance buffers and the handle ⇄ slot maps in
+   * place, with only the preallocated scratch above, so a frame allocates
+   * nothing. Cheap: one along-view depth key per instance (a dot product), an
+   * O(n log n) index sort and a 15-float gather per instance. Game calls it
+   * once a frame, after every sprite position has settled and before the
+   * render.
    */
   sortByDepth(camera: THREE.Camera): void {
     const n = this.activeCount;
     if (n < 2) return;
 
-    // The camera's world look direction (-Z). `dot(pos, dir)` is the signed
-    // distance ALONG the view axis — larger = farther into the scene. The
-    // camera-position term is constant across instances, so it drops out of the
-    // ordering; only the direction matters. (This planar depth is the correct
-    // painter's key — sorting by radial distance-to-camera mis-orders at frame
-    // edges.) getWorldDirection also refreshes the camera's world matrix, so
-    // the key is correct even though the renderer hasn't rendered yet.
+    // The camera's world look direction (−Z). `dot(pos, dir)` is the signed
+    // distance along the view axis, larger being farther into the scene. The
+    // camera-position term is the same for every instance, so it drops out of
+    // the ordering. This planar depth is the right painter's key; a radial
+    // distance to the camera mis-orders at the frame's edges.
+    // getWorldDirection also refreshes the camera's world matrix, so the key
+    // is right before the renderer has rendered.
     camera.getWorldDirection(this._camDir);
     const dx = this._camDir.x;
     const dy = this._camDir.y;
@@ -357,9 +353,9 @@ export class SpriteRenderer {
     }
     order.sort(this._depthCompare);
 
-    // Already in order (nothing moved relative to the camera)? Skip the repack
-    // + the six buffer uploads. A stable sort keeps equal-depth runs identity,
-    // so this hits often when the board is static.
+    // Already in order (nothing moved relative to the camera)? Skip the
+    // repack and the seven buffer uploads. The sort is stable, so equal-depth
+    // runs keep their order, and this hits often on a still board.
     let changed = false;
     for (let i = 0; i < n; i++) {
       if (order[i] !== i) {
@@ -393,8 +389,8 @@ export class SpriteRenderer {
    * Gather one instanced attribute's live range into the `_order` permutation
    * and write it back in place (via `_repackScratch`). Old data is read from
    * `attr` and the result overwrites it, so callers must not have mutated
-   * `attr` for this sort yet — each attribute is independent, so the six calls
-   * in `sortByDepth` are safe in any order.
+   * `attr` for this sort yet; each attribute is independent, so the seven
+   * calls in `sortByDepth` are safe in any order.
    */
   private repackByOrder(attr: THREE.InstancedBufferAttribute, stride: number, n: number): void {
     const arr = attr.array as Float32Array;

@@ -1,7 +1,6 @@
-// Additively composites the bloom-buffer onto the main framebuffer
-// (B1.1 selective bloom). The bloom buffer is the output of a separate
-// EffectComposer that ran the bloom layer through UnrealBloomPass — so
-// it already contains the blurred halo color, ready to add.
+// Adds the bloom buffer onto the main frame. The bloom buffer is the output
+// of a separate EffectComposer that ran the bloom layer through
+// UnrealBloomPass, so it already holds the blurred halo, ready to add.
 //
 // Plain addition: bright halos brighten what's underneath; black pixels
 // in the bloom buffer leave the main color untouched. This is the same

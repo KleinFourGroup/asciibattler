@@ -12,58 +12,48 @@ import {
 import { FONT_STACK } from './fontSubset';
 
 /**
- * Generates a monospace glyph atlas at startup. Each glyph occupies a fixed-
- * size cell on a canvas2d, gets uploaded as a single `THREE.CanvasTexture`, and
- * is addressable via `getGlyphUV(glyph)` for the sprite shader (Step 2.2) and
- * any HUD that wants in-canvas text later.
+ * Builds a monospace glyph atlas at startup. Each glyph takes a fixed-size
+ * cell on a 2D canvas, uploaded as one `THREE.CanvasTexture`, and is
+ * addressed by `getGlyphUV(glyph)` for the sprite shaders.
  *
- * Glyphs are drawn white on transparent so per-instance color in the sprite
- * shader can tint freely — the texture is a coverage mask, not a colored image.
+ * Glyphs are drawn white on transparent so the per-instance colour tints
+ * freely: the texture is a coverage mask, not a coloured image.
  *
- * Construction is async because canvas2d's `ctx.fillText` only respects a
- * web font once the font has actually parsed. `document.fonts.ready` alone is
- * NOT enough: it resolves once every font that has *started* loading settles,
- * but a CSS-declared `@font-face` is only fetched when something first USES it.
- * If the atlas builds before any DOM text triggers that fetch, `ready` resolves
- * with JetBrains Mono still absent and `fillText` bakes the serif fallback into
- * the atlas (the bug: glyphs render serif on a cold load / in a clean browser
- * where the font isn't a system install). So we explicitly `document.fonts.load`
- * the exact face first — that kicks off the fetch and resolves once it's ready —
- * then await `ready` as a belt-and-suspenders settle.
+ * Construction is async because `ctx.fillText` uses a web font only once the
+ * font has parsed. `document.fonts.ready` alone is not enough: it settles the
+ * fonts that have started loading, and a CSS `@font-face` is fetched only when
+ * something first uses it. If the atlas builds before any DOM text starts
+ * that fetch, `ready` resolves with the face still absent and `fillText`
+ * bakes a serif fallback into the atlas, which shows on a cold load or in a
+ * browser without the font installed. So `create` calls `document.fonts.load`
+ * on the exact face first, which starts the fetch and resolves once it's
+ * ready, then awaits `ready` to settle anything else.
+ *
+ * The font is FONT_STACK (src/render/fontSubset.ts): the primary face and
+ * the one shipped fallback, the chain the sheet's `--font-mono` names, so a
+ * glyph the primary lacks rasterizes from a face we ship, never the OS's.
  */
-
-// The font is FONT_STACK (src/render/fontSubset.ts): the primary face + the
-// one shipped fallback (101a), the same chain the sheet's --font-mono names,
-// so a glyph the primary lacks rasterizes from a face we ship — never the OS.
 
 /** Pixel size of each square cell in the atlas. */
 const CELL_PX = 64;
 /** Font size we draw at — leaves a small margin inside the cell. */
 const FONT_PX = 56;
 
+/** The grid. `COLS * ROWS` must equal `ATLAS_CELL_BUDGET` (glyphs.ts), the
+ *  budget the headless test and the archetype editor check against. */
 const COLS = 8;
-// §29 (gotcha #33) — bumped 4 → 6 to seat the new demo roster's glyphs. The
-// J3 'X' filled the old 8×4 = 32; the status-on-hit/chain/summon archetypes
-// (reaver/corrupter/…) overflow it, so the grid grew to 8×6 = 48. §38e now
-// derives the unit glyphs from the catalog, so the count grows whenever a unit
-// is authored — `COLS * ROWS` must stay `=== ATLAS_CELL_BUDGET` (glyphs.ts).
 const ROWS = 6;
 const ATLAS_W = COLS * CELL_PX; // 512
 const ATLAS_H = ROWS * CELL_PX; // 384
 
-// The registered glyph set moved to ./glyphs (a THREE-free module) so the
-// headless suite can import it without pulling in the renderer — see
-// FontAtlas.test.ts for the archetype-glyph-coverage guard. Append new
-// glyphs there (gotcha #33, append-only).
-
 /**
- * UV rectangle for one glyph in the atlas, in **GL texture space** (not
- * canvas space): `(u0, v0)` is the bottom-left of the glyph cell, `(u1, v1)`
- * is the top-right. Sampling at these UVs gives the glyph right-side up,
- * which lets the sprite shader do a single `mix(zw, xy, uv)` with no Y flip.
+ * UV rectangle for one glyph in the atlas, in GL texture space (not canvas
+ * space): `(u0, v0)` is the bottom-left of the glyph's cell, `(u1, v1)` the
+ * top-right. Sampled at these UVs the glyph is right side up, so the
+ * billboard vertex shader does a single `mix(xy, zw, uv)` with no Y flip.
  *
- * The Y-axis flip from canvas convention (top-down) to GL convention
- * (bottom-up) happens once, here, when the atlas is built.
+ * The flip from canvas convention (top-down) to GL convention (bottom-up)
+ * happens once, here, when the atlas is built.
  */
 interface GlyphUV {
   readonly u0: number; // left
@@ -73,28 +63,25 @@ interface GlyphUV {
 }
 
 /**
- * §79g — DEV guard: prove every registered glyph actually came from a
- * shipped face (`FONT_STACK`) and not from an OS fallback.
+ * A DEV guard: every registered glyph came from a shipped face (`FONT_STACK`)
+ * and not from an OS fallback.
  *
- * The bug this exists to prevent (found at §79f, fixed at §79g): we loaded a
- * font subset that silently lacked `╥` and `▄`, so those two — every wall,
- * half-cover and rubble entity — rasterized from whatever the OS substituted.
- * Nothing failed; the atlas built, the glyphs had ink, the game looked fine on
- * the developer's machine. It matters because the ink measured from these very
- * cells places the click boxes and the three lifts (bars, FX endpoints, the
- * objective markers), so a fallback font's different letterform geometry
- * silently moves them — a regression reproducible only on someone else's
- * machine.
+ * A subset that lacks a glyph fails nothing: the atlas builds, the glyph has
+ * ink, and the game looks right on the machine that built it. But the ink
+ * measured from these cells places the click boxes and the three lifts
+ * (bars, FX endpoints, the objective markers), so a fallback's different
+ * letterform moves them on someone else's machine only.
  *
- * The test: draw the char with the family backed by `serif`, then by
- * `sans-serif`. If the family supplied the glyph, both draws are the SAME glyph
- * and the alpha channels match exactly; if it fell through, the two fallbacks
- * differ. Cheap (one small canvas, ~47 pairs, DEV only) and it needs no glyph
- * table to maintain — it asks the rasterizer the question directly.
+ * The check: draw the glyph with the stack backed by `serif`, then by
+ * `sans-serif`. If the stack supplied it, both draws are the same glyph and
+ * the alpha channels match; if it fell through, the two fallbacks differ.
+ * Cheap (one small canvas, a pair per glyph, DEV only), and it needs no glyph
+ * table: it asks the rasterizer directly.
  *
- * Warns rather than throws: a missing glyph should be loud during development,
- * but must not brick the game for a player whose browser did something
- * unexpected. The build-time check in `scripts/build-font.mjs` is the hard gate.
+ * Warns rather than throws: a missing glyph should be loud in development but
+ * must not break the game for a player whose browser did something unexpected.
+ * The hard gates are gen:font's own checks and tests/font-coverage.test.ts,
+ * which runs on every `npm test`.
  */
 function assertGlyphsCameFromFont(atlasCtx: CanvasRenderingContext2D): void {
   const probe = document.createElement('canvas');
@@ -138,8 +125,8 @@ export class FontAtlas {
   readonly texture: THREE.CanvasTexture;
 
   private readonly uvByGlyph: ReadonlyMap<string, GlyphUV>;
-  /** §79a/§79d2 — per-glyph RAW ink bboxes measured off the rasterized cells
-   *  at build (no padding — see `getPaddedGlyphInk` for the clickbox rects). */
+  /** Each glyph's raw ink box, measured off its rasterized cell at build (no
+   *  padding; `getPaddedGlyphInk` gives the click boxes). */
   private readonly inkByGlyph: ReadonlyMap<string, GlyphInk>;
 
   private constructor(
@@ -153,9 +140,9 @@ export class FontAtlas {
   }
 
   static async create(): Promise<FontAtlas> {
-    // §38e — the unit glyphs are catalog-derived, so the set grows as units are
-    // authored. Guard the grid capacity loudly: an over-budget count would
-    // otherwise place glyphs off-canvas (row ≥ ROWS) and silently render blanks.
+    // The unit glyphs come from the catalog, so the set grows as units are
+    // authored. Guard the grid loudly: an over-budget count would place
+    // glyphs off the canvas (row ≥ ROWS) and render blanks without a word.
     if (GLYPHS.length > COLS * ROWS) {
       throw new Error(
         `FontAtlas: ${GLYPHS.length} glyphs exceed the ${COLS * ROWS}-cell atlas grid ` +
@@ -163,19 +150,16 @@ export class FontAtlas {
           `or trim the unit catalog.`,
       );
     }
-    // Force the JetBrains Mono fetch (the self-hosted subset `@font-face` in
-    // src/fonts.css — generated by gen:font since §79g — imported in main.ts)
-    // BEFORE rasterizing, so
-    // the atlas never bakes the serif fallback. `load` matches the same
-    // size/family string `fillText` uses below; it resolves with the loaded
-    // FontFace(s), or an empty array if the family is undeclared, which
-    // degrades to the old fallback rather than failing the boot.
-    // `await fonts.ready` then settles any stragglers.
-    // `load` with the whole stack fetches EVERY listed face (101a: the
-    // fallback too, so a fallback-supplied glyph never bakes serif either).
-    // A declared face whose FILE fails to load is the other case: `load`
-    // rejects with a NetworkError that names nothing, so it is thrown on
-    // under a message that says what failed, for the failure plate
+    // Fetch the faces (the self-hosted subsets' `@font-face` rules in
+    // src/fonts.css, built by gen:font and imported in main.ts) before
+    // rasterizing, so the atlas never bakes a serif fallback. `load` takes
+    // the size and stack `fillText` uses below and fetches every face in the
+    // stack, the fallback too; it resolves with the loaded FontFaces, or an
+    // empty array if the family is undeclared, which degrades to a fallback
+    // face rather than failing the boot. `await fonts.ready` then settles any
+    // stragglers. A declared face whose file fails to load is the other case:
+    // `load` rejects with a NetworkError that names nothing, so it is thrown
+    // on under a message that says what failed, for the failure plate
     // (src/failure) to show.
     try {
       await document.fonts.load(`${FONT_PX}px ${FONT_STACK}`);
@@ -210,9 +194,9 @@ export class FontAtlas {
 
       ctx.fillText(glyph, cx + CELL_PX / 2, cy + CELL_PX / 2);
 
-      // §79a — measure the glyph's ink bbox off the cell just drawn, so the
-      // click hit-box hugs the visible glyph (pick.ts) with no hand-measured
-      // table to maintain. One 64×64 getImageData per glyph at boot — trivial.
+      // Measure the glyph's ink box off the cell just drawn, so the click box
+      // hugs the visible glyph (pick.ts) with no hand-measured table to keep.
+      // One 64×64 getImageData per glyph at boot.
       inkByGlyph.set(
         glyph,
         inkRectFromRgba(ctx.getImageData(cx, cy, CELL_PX, CELL_PX).data, CELL_PX, CELL_PX),
@@ -235,9 +219,7 @@ export class FontAtlas {
     const texture = new THREE.CanvasTexture(canvas);
     texture.colorSpace = THREE.SRGBColorSpace;
     // Bilinear filtering keeps glyph edges smooth when sprites render at
-    // non-native cell sizes. (The original rationale cited the planned
-    // palette-quantization post-pass, dropped at B1 — the filtering choice
-    // simply outlived it.)
+    // other than the cell's size.
     texture.magFilter = THREE.LinearFilter;
     texture.minFilter = THREE.LinearFilter;
     texture.generateMipmaps = false;
@@ -247,42 +229,43 @@ export class FontAtlas {
   }
 
   /**
-   * §79a — the glyph's measured RAW ink bbox (normalized, y-up — see
-   * `GlyphInk`), or `FULL_GLYPH_INK` for a glyph the atlas hasn't measured.
-   * Fallback rather than throw (unlike `getGlyphUV`): a missing ink rect
-   * degrades to the full quad, not a crash. Anchoring/lift math reads THIS;
-   * clickboxes read `getPaddedGlyphInk`.
+   * The glyph's measured raw ink box (normalized, y up; `GlyphInk`), or
+   * `FULL_GLYPH_INK` for a glyph the atlas hasn't measured: unlike
+   * `getGlyphUV` it falls back rather than throws, a missing box degrading to
+   * the full quad. The anchoring and lift math read this; the click boxes
+   * read `getPaddedGlyphInk`.
    */
   getGlyphInk(glyph: string): GlyphInk {
     return this.inkByGlyph.get(glyph) ?? FULL_GLYPH_INK;
   }
 
-  /** §79d2 — the ink bbox widened by `INK_PAD_PX` for click feel (the 79a
-   *  rider), for PICK candidates only. */
+  /** The ink box widened by `INK_PAD_PX` for the click's feel, for pick
+   *  candidates only. */
   getPaddedGlyphInk(glyph: string): GlyphInk {
     return padInk(this.getGlyphInk(glyph), INK_PAD_PX / CELL_PX);
   }
 
-  /** §79d2 — camera-up lift (world units at size 1; callers scale by
-   *  footprint) from a base-anchored sprite's ANCHOR to its ink's visual
-   *  CENTER. What "at the unit" means for FX endpoints and sparkles. */
+  /** The camera-up lift (world units at size 1; callers scale by footprint)
+   *  from a base-anchored sprite's anchor to its ink's visual centre: what
+   *  "at the unit" means for FX endpoints and sparkles. */
   inkCenterLift(glyph: string): number {
     const ink = this.getGlyphInk(glyph);
     return liftToCellY((ink.y0 + ink.y1) / 2);
   }
 
-  /** §79d2 — camera-up lift from a base-anchored sprite's ANCHOR to its ink's
-   *  visual TOP. Where a hitsplat floats: just above the visible glyph, not
-   *  above the (taller) empty quad. */
+  /** The camera-up lift from a base-anchored sprite's anchor to its ink's
+   *  visual top: where a hitsplat floats, just above the visible glyph and
+   *  not above the taller empty quad. */
   inkTopLift(glyph: string): number {
     return liftToCellY(this.getGlyphInk(glyph).y1);
   }
 
-  /** Camera-up lift from a base-anchored sprite's ANCHOR to its ink's visual
-   *  BOTTOM. A sprite that must stand its INK, not its quad, a fixed gap above
-   *  a point (the objective markers) subtracts this from the gap: a
-   *  letterform's ink starts at the font baseline, about a quarter-cell above
-   *  the quad bottom it stands on. 0 for a block that fills its cell floor. */
+  /** The camera-up lift from a base-anchored sprite's anchor to its ink's
+   *  visual bottom. A sprite that must stand its ink, not its quad, a fixed
+   *  gap above a point (the objective markers) subtracts this from the gap:
+   *  a letterform's ink starts at the font baseline, about a quarter-cell
+   *  above the quad bottom it stands on. 0 for a block that fills its cell's
+   *  floor. */
   inkBottomLift(glyph: string): number {
     return liftToCellY(this.getGlyphInk(glyph).y0);
   }

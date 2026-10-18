@@ -10991,3 +10991,6 @@ f30471d9 130,963 → 397,148 (batches 2 and 3), f2e588ad 106,081 →
 190,437 → the reading below (124j-post, 124j-post2 and this close; its
 first reading came after 124j-post's step zero, as no call was made at
 the orientation).
+
+The close: **502,429** at 22:51 on 2026-10-18 by the tool's clock, after
+the close's commit `f0de9a93`.

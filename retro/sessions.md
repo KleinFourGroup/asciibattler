@@ -6678,3 +6678,47 @@ control, `comment-strip`'s control, a relocation that reproduced the old
 render byte for byte), finding a comment false at its own code (the
 light's space, the 1.6 MB upload, the overlay's order, the trace ring),
 the driver's notes saving calls, and the user's quick, warm signs.
+
+## 2026-10-18 — session b25b9ccf (claude-opus-5-5): 124j-post, 124j-post2 and §124's close; started by the phase's driver session
+
+1. *Missing from the orientation.* Nothing to start. The hand-off after
+   batch 10 and the driver's notes gave the order (`--record` before the
+   suite, the doc search, `comment-length` one folder a call, Edit and
+   `-F`), and each applied. Step zero found what the plan could not: the
+   board panel's clump poses `@`, which batch 5's absence claim had
+   missed, and `╥` inks six rows past its cell. AGENTS's line on itch's
+   address meant the GitHub Pages one (filed).
+2. *Norms in conflict.* A step signed `none` against a step zero that
+   changed its intent (16 glyphs, not 17; a clip; an edge change against
+   the round's no-behaviour-change guard). AGENTS says take that to the
+   user before building; I did, with leans, and it cost one stop, which
+   the user signed whole. In the sweep, a kept claim that failed its
+   check: correcting it seemed inside the sweep's intent, and each is
+   flagged in the entry.
+3. *Pulled to claim more than verified.* Twice, caught on reread before a
+   commit: I first wrote the drops rule into the Cursor as stronger than
+   the sign (it says "with room before its hand-off"), and the pass's 84
+   a line is a sum of rates times lines, labelled approximate. Before the
+   first proposal I had reasoned that the edge blend needs a quad over 64
+   pixels; an edge's sub-pixel place makes it possible at any size, which
+   I caught before writing and then measured. The journal's size is
+   corrected from the archive's later measurement, not a rerun, and the
+   entry says so.
+4. *Wasted.* The board's copy for the close, one `git show` a file, some
+   two minutes in the background; a `cd` in my first search, against the
+   brief's note, harmless; an Edit whose anchor ran across a line break;
+   a step-code-shaped file name in a comment (filed).
+5. *For the next session.* WORKLOG §124, "The close of §124", then
+   §124.5's kickoff. This session's probes (the atlas's overrun, the seed
+   and wade hunts, the font metrics) are in its scratch directory only.
+6. *Room.* Yes. Step zero's stop was a real pause, answered "Signing all
+   of your leans"; the close's stop was answered hours later, with
+   nothing waiting on me. The silent-turn reminder came often during the
+   sweep's checks, and a status line answered each. No wish to pause or
+   stop was noticed.
+7. *What helped.* The relocation control: moving the new atlas back two
+   rows reproduced the old render byte for byte, which turned 102
+   unexplained one-step pixels into a proof. Rerunning the seed hunts with
+   the fixtures' pinned seeds as known answers. Checking claims at their
+   code found the ones that only looked true (the trace ring, the zoom).
+   And the user's warmth at each sign. I would want all of these again.

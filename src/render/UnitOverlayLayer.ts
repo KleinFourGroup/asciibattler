@@ -48,8 +48,6 @@ export interface UnitOverlayHandle {
   progressPct: number | null;
   /** 82e2 — whether the bar currently wears the amber `.reaim` variant. */
   progressReaim: boolean;
-  /** Last applied level. */
-  level: number;
   /** §32c — the sim tick the status strip last reconciled at. The status
    *  readout is identical between sim ticks (it's derived from `currentTick`),
    *  so BattleRenderer gates the per-frame recompute on this changing. `-1`
@@ -159,7 +157,6 @@ export class UnitOverlayLayer {
       hpPct: 1,
       progressPct: null,
       progressReaim: false,
-      level,
       statusTick: -1,
       destructible: false,
     };

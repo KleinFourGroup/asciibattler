@@ -209,19 +209,20 @@ drawing. ✅ DECIDED at the kickoff: the phase cut in two, the screens as
 - ☑ **124d — the board's A-22 and A-28** (`none`). `FxKey`; the
   renderers' `dispose()` and `stop()`, the camera's two getters, the
   overlay layer's two members, `FontAtlas`'s three fields.
-- ◐ **124e — the apron's dither path, whole** (`batch`: the ring fades
-  into the mist as now; wrong is a stipple or a hard edge).
+- ☑ **124e — the apron's dither path, whole** (`batch`, read
+  2026-10-18: the ring fades into the mist as before).
 - ☑ **124f — A-26, the word `export`** (`none`). `render` 22 (A-23
   keeps two), `dev` 30; the bytes moved, proven the same unminified.
-- ◐ **124g — the enemy notch** (`batch`, re-scripted at step zero:
-  seed 4 as soldier, the root's first turn, all nine foes down: the enemy
-  ghost ends on its notch; wrong is a ghost one past it). A display
-  change, signed as an exception to the scope guard.
-- ◐ **124h — `Game.dispatch`'s swap to the map, once** (a trial, kept:
-  its bar met; `batch`: a run through a rest, a port, an event and a
-  recruit, the map back after each). Its bar is in WORKLOG §124.
-- ◐ **124i — the re-skim** (`stop`). Two fix-ups; one row for the
-  user's sign, R-1 (WORKLOG §124, 124i).
+- ☑ **124g — the enemy notch** (`batch`, re-scripted at step zero, read
+  2026-10-18: on seed 4 as soldier the enemy ghost ends on its notch). A
+  display change, signed as an exception to the scope guard.
+- ☑ **124h — `Game.dispatch`'s swap to the map, once** (a trial, kept:
+  its bar met; `batch`, read 2026-10-18: the map back after a rest, a
+  port, an event and a recruit). Its bar is in WORKLOG §124.
+- ☑ **124i — the re-skim** (`stop`). Two fix-ups; R-1 signed
+  2026-10-18 (WORKLOG §124, 124i).
+- ☑ **124i-post — R-1, the overlay handle's `level`** (`none`).
+  `build-hash`: 3 of 33; the drives' hashes unchanged.
 - ☐ **124j — the comment pass** (`batch`, per batch).
 - ☐ **124k — the close** (`stop`).
 

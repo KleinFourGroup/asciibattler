@@ -9388,3 +9388,23 @@ proposes none.
 
 Reading: 323,479 at 01:37 on 2026-10-18, by the tool's clock, before the
 commit.
+
+**Read and signed** (the user, 2026-10-18): "All the reads looked great!
+Signing R-1 too!" So 124e, 124g (on its re-scripted read) and 124h are
+read, R-1 is signed as a deletion, the rest of A-28's row, to land as a
+step before 124j, read `none`, and 124i is ☑. Reading: 335,536 at 12:38
+on 2026-10-18, by the tool's clock.
+
+### 124i-post — R-1, the overlay handle's `level` (2026-10-18, session 5b9d2da6)
+
+Gone: `UnitOverlayHandle.level`, its doc line and the `level,` in `add`'s
+handle literal; `add`'s `level` parameter still writes the badge. Step
+zero: a search of `src`, `tests`, `shell`, `tools` and `scripts`, the
+untyped probes included, finds no read of the field on a handle.
+
+Proof: typecheck clean; `comment-codes`, the ceiling 3,114 holds;
+`build-hash HEAD`, 3 of 33 built files differ, the main bundle under both
+its names and `index.html`, as predicted (a field write ships); the page
+drive on one `--build`, seed 6 with a rest first, `e9cbf755` and
+`6956a4f2`, and seed 7 at four hops, `d6012bc8` and `064ce09d`. Reading:
+343,404 at 12:40 on 2026-10-18, by the tool's clock, before the commit.

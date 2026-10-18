@@ -1,7 +1,7 @@
 /**
- * GameOverScene (A5). DOM-only wrapper around GameOverScreen. Variant
- * ('defeat' | 'complete') is fixed at construction — the run:victory /
- * run:defeated bus event determines which one Game spawns.
+ * GameOverScene wraps GameOverScreen, DOM only. Its variant ('defeat' or
+ * 'complete') is fixed at construction, by which of `run:defeated` and
+ * `run:victory` Game heard.
  */
 
 import { GameOverScreen, type GameOverVariant } from '../ui/GameOverScreen';
@@ -15,9 +15,9 @@ export class GameOverScene implements Scene {
 
   mount(ctx: SceneContext): void {
     this.screen = new GameOverScreen(ctx.uiMount, ctx.dispatcher, ctx.audio, ctx.journal, ctx.menu.atBoot);
-    // 102d — the finished run is still `ctx.run` here (a reset replaces it
-    // only off this screen's own button); its ledger is the stats' source,
-    // and its stream root the seed the screen shows (116c-post2).
+    // The finished run is still `ctx.run` here, replaced only when the player
+    // leaves this screen: its ledger is the stats' source, and its stream
+    // root the seed the screen shows.
     const run = ctx.run;
     this.screen.show(
       this.variant,

@@ -1,8 +1,8 @@
 /**
- * MenuScene (116c). DOM-only wrapper around MenuScreen, the boot screen on a
- * plain URL (src/scenes/menuRules.ts). With the CharacterSelectScene, one of
- * the two scenes that mount with `ctx.run === null`: the menu comes before
- * any run, and after one has ended.
+ * MenuScene wraps MenuScreen, DOM only: the boot screen on a plain URL
+ * (src/scenes/menuRules.ts). With CharacterSelectScene, one of the two
+ * scenes that mount with no run: the menu comes before any run, and after
+ * one has ended.
  */
 
 import { MenuScreen } from '../ui/MenuScreen';

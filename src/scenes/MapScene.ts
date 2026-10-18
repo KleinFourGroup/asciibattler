@@ -1,12 +1,7 @@
 /**
- * MapScene (A5). DOM-only wrapper around MapScreen. Reads node-map state
- * from `ctx.run` on mount — no constructor args, since the run state is the
- * source of truth.
- *
- * tick(dt) is a no-op: the map is event-driven (clicks dispatch enterNode);
- * there's nothing animating per frame yet. If a future feature adds idle
- * animation to the map view (parallax, hover effects, the 3D map of A5's
- * own deferred-motivation), it goes here.
+ * MapScene wraps MapScreen, DOM only, reading the node map off `ctx.run` at
+ * mount; the run holds the state, so the constructor takes nothing. Nothing
+ * on the map animates, so `tick` does nothing.
  */
 
 import { MapScreen } from '../ui/MapScreen';
@@ -24,8 +19,8 @@ export class MapScene implements Scene {
       run.visitedNodes,
       run.team,
       run.currentSectorTitle,
-      // 66b — the boss forewarning (pre-rolled at sector entry, so it's
-      // always available — same contract as currentSectorTitle).
+      // Set at the sector's entry, as the sector's title is, so it is always
+      // there.
       run.bossForewarning,
     );
   }

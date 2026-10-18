@@ -9408,3 +9408,139 @@ its names and `index.html`, as predicted (a field write ships); the page
 drive on one `--build`, seed 6 with a rest first, `e9cbf755` and
 `6956a4f2`, and seed 7 at four hops, `d6012bc8` and `064ce09d`. Reading:
 343,404 at 12:40 on 2026-10-18, by the tool's clock, before the commit.
+
+### 124j — the comment pass: the batches, planned (2026-10-18, session 5b9d2da6)
+
+The pass takes the board's 79 files: the non-test `.ts` of `render`,
+`scenes` and `dev`, the 14 shaders, and the root's four, 15,320 lines
+(the kickoff counted 15,497, before 124d to 124h's deletions). Ten
+batches by file, grouped so the facts a batch checks sit together:
+
+1. The scenes: the 16 files of `src/scenes`; 1,071 lines.
+2. The root's four: `Game.ts`, `main.ts`, `buildId.ts`, `config.ts`;
+   1,366 lines.
+3. The renderer and the camera: `Renderer.ts`, `cameraFit.ts`, `pick.ts`,
+   `PostProcess.ts`, `anchor.ts`, `slabAnchor.ts`, `motion.ts`; 1,274
+   lines.
+4. The ground: `TerrainRenderer.ts`, `ApronRenderer.ts`,
+   `BackdropRenderer.ts`, `groundMarks.ts` and their eight shaders
+   (`terrain.*`, `terrainMarks.glsl`, `apron.*`, `fogcolor.glsl`,
+   `void.*`); 1,986 lines.
+5. The sprites: `SpriteRenderer.ts`, `FontAtlas.ts`, `fontSubset.ts`,
+   `glyphs.ts`, `palette.ts`, `spriteColor.ts`,
+   `animation/SpriteAnimator.ts` and the other six shaders; 1,887 lines.
+6. FX and overlays: `fxRegistry.ts`, `auraFx.ts`, `statusDisplay.ts`,
+   `UnitOverlayLayer.ts`; 1,020 lines.
+7. `BattleRenderer.ts` alone, 2,124 lines.
+8. The probe kit and the dev keys: `dev/probe/`, `devEntry.ts`,
+   `devKeys.ts`, `failPlant.ts`; 1,443 lines.
+9. The board panel: `dev/boardPanel/`; 1,954 lines.
+10. The diagnostics and the traces: `dev/diag/`, `TraceRecorder.ts`,
+    `replayTrace.ts`, `traceStore.ts`; 1,225 lines.
+
+A session takes the next batch while its reading, plus the batch's lines
+at the rate measured so far, stays under the hand-off line, and hands off
+otherwise. At §122's 74 tokens a line the pass is about 1.1M, at §123's
+112 about 1.7M.
+
+Proof per batch, as 123m ran it: `comment-strip HEAD src`, comments
+only, exit 0, its built-in control naming every changed file; then
+`comment-codes --record` before the suite. The suite by the hook (these
+folders do not stage the smoke). The read is `batch`, per batch, with
+its script in the batch's entry.
+
+### 124j, batch 1 — the scenes (2026-10-18, session 5b9d2da6)
+
+The 16 files of `src/scenes`. Their history is out: the step behind each
+piece, the materialize hold the countdown replaced, the post-turn screen,
+the pre-turn screen's auto-advance, the move of the "Nowhere" string, the
+camera heuristic the spawn anchor replaced. The mount order is said once,
+in `BattleScene`'s header, where two comments said it.
+
+**Statements found false and corrected (rule 7):**
+
+- `Scene.ts`: `ctx.run`'s doc had every scene but the menu and character
+  select assert `requireRun` at mount. `GameOverScene` reads `ctx.run`
+  with null checks, and `PromotionScene` and `SectorClearedScene` never
+  touch it. It was null "exactly when no Run exists yet"; it is also null
+  at the menu after a run has ended or been left (`Game.quitToMenu`, and a
+  run's end on a page booted to the menu). `requireRun`'s doc repeated the
+  first claim. `playback`'s doc had the HUD's button and hotkey cycling
+  the speed; the pane has a button and a hotkey for each speed
+  (`HUD.selectSpeed`).
+- `BattleScene.ts`: after `outro`, Game was "swapping the outcome screen
+  in"; it sends the turn's `advanceTurn` (`Game.ts`, the `turn:resolved`
+  handler). The pools "chip on the post-turn screen", and the cap's draw
+  "rolls on through the post-turn screen": no such screen exists. The
+  charge books at `resolveTurn`. `titleCaseTheme` gave the themes as
+  "default / rock / volcanic"; they are `grassland`, `barren`, `volcanic`
+  and on (`THEMES`). `advanceShaderTime` had the non-battle scenes calling
+  `terrain.clear()`; the battle scene's `dispose` does. The battle rules
+  were "the run's compiled daemon battle-hooks"; `Run.beginTurn` compiles
+  the daemons', the run's injected rules and the encounter's.
+- `PromotionScene.ts`: `dismissPromotion` resolved into "the normal
+  post-battle step (recruit offer or run:victory)". Inside an encounter it
+  goes on to the next turn or the encounter's end, and after a rest to the
+  map (`Run.handleDismissPromotion`).
+- `EventScene`, `PortScene`, `RestScene`, `SectorClearedScene`: each named
+  Game's case for its command as the swap, by a "pattern" named after
+  another case. Since 124h the swap is one arm of `Game.dispatch`, and
+  each now says Game's dispatch swaps the map in (124h flagged these as
+  true but left for the pass).
+- `RecruitScene.ts`: its reason for the constructor argument (a swap that
+  may come before `currentOffer` is read) is gone, unconfirmed; it says
+  where the offer comes from.
+
+Dropped and not corrected: `MapScene`'s plan for an animated map (rule
+5), and `BattleScene`'s board sizes beside `fitToBoard` (procedural up to
+20×20, authored up to 32×32), which were not checked.
+
+**Twins corrected outside the batch, flagged:** a post-turn screen named
+as live beside `Game.ts`'s promotion swap and its `pauseAtTurnGates` line
+(batch 2's file), and in `ui/chipLabels.ts`, `ui/poolGauge.ts` (twice) and
+`ui/PoolOverlay.ts` (twice), which are §124.5's. Each now names the
+pre-turn screen alone or the battle's outro. Left for §124.5's pass:
+`PreTurnScreen.ts`'s three "the post-turn screen's replacement" and
+ARCHITECTURE's `PreTurnScreen.ts` line, which are history and not false.
+
+Measured (`comment-length` on copies under `output/cl-124j-b1`): comment
+lines 436 → 371, words 3,839 → 3,264, code lines 501 unchanged. The
+step-code ceiling 3,114 → 3,020, the 94 the 16 files held (`BattleScene`
+47, `Scene` 15, `PreTurnScene` 11).
+
+Proof: `comment-strip HEAD src`, comments only, exit 0; its control made
+one code edit in memory in each of the 20 changed files (the 16 and the
+twins' four) and the compare named all 20.
+
+Cost: 343,404 at 12:40 on 2026-10-18 by the tool's clock, before R-1's
+commit and this plan, to 450,267 at 12:54 after the proof: about 107k for
+1,071 lines and the twins, at most 100 a line with the plan's reading
+inside it.
+
+**Read** (`batch`): `git show <this commit> -- src/scenes/BattleScene.ts
+src/scenes/Scene.ts` against the seven rules. Wrong looks like a step code
+or history left, a comment naming a screen that no longer exists, or a
+rule a change must respect cut: the mount order, the countdown on real
+time, the one gate for shader motion under reduced motion.
+
+### The hand-off after batch 1 (2026-10-18, session 5b9d2da6)
+
+124g to 124i and 124i-post landed and were read or signed; 124j's batch 1
+is committed with this entry and open for its `batch` read. Next is
+**batch 2, the root's four** (1,366 lines), in a fresh session: this one
+is at 450,267, and batch 2 at this batch's rate is about 137k, past the
+hand-off line.
+
+For the next session:
+
+- `Game.ts` is batch 2's largest file, with 145 step codes. Two of its
+  comments were corrected here as twins (the promotion swap's
+  "mid-encounter" line and `pauseAtTurnGates`'s), codes kept; its
+  dispatch switch was rewritten at 124h and needs only a read.
+- `comment-length` takes paths under the repo: copy the batch's files to
+  `output/cl-124j-b<n>/before` (`git archive HEAD <paths> | tar -x`) and
+  `after`.
+- `comment-strip` holds `.js` and `.mjs` byte for byte and reads `.ts`,
+  GLSL and CSS, so batches 4 and 5 (the shaders) are within its reach.
+- A context reading goes into an entry from a meter call made on its own,
+  not typed beside it (filed at 124h).

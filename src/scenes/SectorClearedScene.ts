@@ -1,9 +1,9 @@
 /**
- * SectorClearedScene (67b). DOM-only wrapper around SectorClearedScreen —
- * the GameOverScene shape: the display pair is fixed at construction (from
- * the `sector:cleared` payload Game hands over; the cleared sector is
- * unnameable from Run getters by then). Its button dispatches
- * `dismissSectorCleared`, whose Game route swaps to the new sector's map.
+ * SectorClearedScene wraps SectorClearedScreen, DOM only, as GameOverScene
+ * does: what it shows is fixed at construction, from the `sector:cleared`
+ * payload Game hands over, since by then the run's getters name the new
+ * sector. Its button sends `dismissSectorCleared`, and Game's dispatch swaps
+ * in the new sector's map.
  */
 
 import { SectorClearedScreen } from '../ui/SectorClearedScreen';
@@ -15,7 +15,7 @@ export class SectorClearedScene implements Scene {
   constructor(
     private readonly clearedSectorTitle: string,
     private readonly nextSectorTitle: string,
-    // §90 — the seam pool pair (pre-floor → post-floor) from the same payload.
+    // The pool before the seam's floor and after it, from the same payload.
     private readonly poolBefore: number,
     private readonly poolAfter: number,
   ) {}

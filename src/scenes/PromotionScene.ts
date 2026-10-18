@@ -1,9 +1,8 @@
 /**
- * PromotionScene (E4). DOM-only wrapper around PromotionScreen. Takes
- * the promotion list via constructor — Game pulls it from the
- * `promotion:pending` event payload at swap time. Dismiss button
- * dispatches `dismissPromotion`, which Run resolves into the normal
- * post-battle step (recruit offer or run:victory).
+ * PromotionScene wraps PromotionScreen, DOM only. It takes the promotions in
+ * its constructor, from the `promotion:pending` payload at the swap. Its
+ * button sends `dismissPromotion`, which Run resolves into the run's next
+ * step: the encounter's next turn or its end, or the map after a rest.
  */
 
 import { PromotionScreen } from '../ui/PromotionScreen';

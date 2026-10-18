@@ -1,12 +1,13 @@
 /**
- * BattleScene (A5). Owns the per-battle ensemble: World, BattleRenderer, HUD,
- * and the simulation Clock. Reads the encounter from `ctx.run.currentEncounter`
- * — Run has already announced `battle:started` by the time Game constructs
- * this scene, so the encounter is guaranteed present.
+ * BattleScene owns one battle: the World and its clock, the BattleRenderer,
+ * the HUD, the objective controller and the pre-battle countdown. It reads
+ * the encounter from `ctx.run.currentEncounter`, which `Run.beginTurn` sets
+ * before it emits `battle:started`, on which Game mounts this scene.
  *
- * Mount order matters: HUD.show and BattleRenderer.attach must both run
- * BEFORE spawnTeam, so their `unit:spawned` handlers find the world bound.
- * Same ordering rule the pre-A5 Game.beginBattle observed.
+ * Mount order matters: the HUD's `show` and the BattleRenderer's `attach`
+ * run before the teams spawn, so their `unit:spawned` handlers find the
+ * world bound, and the terrain goes in before the teams, so the spawn
+ * regions are clear of scenery.
  */
 
 import { Clock } from '../core/Clock';
@@ -29,19 +30,15 @@ import { PreBattleCountdown } from './PreBattleCountdown';
 import { requireRun, type Scene, type SceneContext } from './Scene';
 import { reducedMotion } from '../render/motion';
 
-/** D8 — banner suffix helper. The theme enum stores lowercase
- *  (default / rock / volcanic); the banner wants Title Case so the
- *  suffix reads as a proper noun. */
+/** The theme as the banner's suffix shows it: themes are stored lowercase
+ *  (`grassland`, `volcanic`, …), and the suffix reads as a proper noun. */
 function titleCaseTheme(theme: Theme): string {
   return theme.charAt(0).toUpperCase() + theme.slice(1);
 }
 
-// N2 — the per-turn tick cap, the SAME single source as the fuzz harness + arena
-// (`config/health.json` maxTurnSeconds via the TICK_RATE contract). A live turn
-// that reaches it without a decisive end is force-resolved as a DRAW rather than
-// ticking forever — the driver wiring `World.resolveAsDraw` was always meant to
-// have (the headless harness already did this; the live game never did until now,
-// so a true stall used to soft-lock the battle).
+// The turn's cap, `maxTurnSeconds` in ticks, as the fuzz harness has it: a
+// turn that reaches it undecided is resolved as a draw (the clock's callback
+// below).
 const MAX_TURN_TICKS = secondsToTicks(HEALTH.maxTurnSeconds);
 
 export class BattleScene implements Scene {
@@ -52,34 +49,31 @@ export class BattleScene implements Scene {
   /** Held only so `dispose` can clear the terrain's per-tile state — the
    *  renderer itself is page-lifetime and owned by Game. */
   private terrain: TerrainRenderer | null = null;
-  /** M4 — same holding pattern as `terrain`: page-lifetime renderer, held
-   *  so `dispose` can clear the ring and `tick` can drive its fog creep. */
+  /** Held, as `terrain` is, so `dispose` can clear the ring and `tick` can
+   *  drive its fog. */
   private apron: ApronRenderer | null = null;
-  /** M4 — the mist floor; battle-time only drives its uTime (no per-
-   *  encounter content, so no clear on dispose). */
+  /** The mist floor: a battle drives only its time, so nothing is cleared on
+   *  dispose. */
   private backdrop: BackdropRenderer | null = null;
-  /** I3 — the page-lifetime fast-forward controller (from ctx). Read live in
-   *  `tick` so a mid-battle speed change takes effect next frame. */
+  /** The page-lifetime playback speed (from ctx), read each tick so a change
+   *  mid-battle takes effect the next frame. */
   private playback: PlaybackSpeed | null = null;
-  /** J3 — the objective input controller (canvas clicks — 78a left=engage /
-   *  right=focus / armed pick → setObjective/clearObjective commands).
-   *  Battle-scoped; torn down in dispose so its canvas listeners don't
-   *  outlive the battle. */
+  /** The objective input (`ObjectiveController`): a left click sets Engage,
+   *  a right click Focus, and a left click after an arm sets the armed mode.
+   *  Disposed with the battle, so its canvas listeners do not outlive it. */
   private objective: ObjectiveController | null = null;
-  /** Q2 — the pre-battle countdown (replaces the M3 materialize hold): the sim
-   *  clock stays parked while the player reads the board + sets orders, then the
-   *  fight starts. Counted in REAL dt (a fast-forward speed can't shorten it —
-   *  and the sim is paused during it anyway). Render-only: the world just starts
-   *  ticking later — the tick sequence itself is untouched. Null between
-   *  battles; built fresh on mount. */
+  /** The pre-battle countdown: the sim's clock stays parked while the player
+   *  reads the board and sets orders, then the fight starts. Counted in real
+   *  time, so a speed-up cannot shorten it; the world starts ticking later,
+   *  and its tick sequence is unchanged. Null between battles; built at
+   *  mount. */
   private countdown: PreBattleCountdown | null = null;
 
-  /** 96.5b2 — the after-turn outro's OWN settle: resolves once the HUD's
-   *  loss orbs have all landed, the ghost has committed and the settle
-   *  beat has passed (the end sequence under the survivors rule can run
-   *  past the fixed outro). Game waits for the LONGER of this and
-   *  TURN_OUTRO_MS before swapping the outcome screen in. Resolved at once
-   *  when no battle is up. */
+  /** The after-turn outro's own settle: resolves once the HUD's loss orbs
+   *  have landed, the ghost has committed and the settle beat has passed,
+   *  which under the survivors rule can run past the fixed outro. Game
+   *  waits for the longer of this and `TURN_OUTRO_MS`, then sends the
+   *  turn's advance. Resolved at once with no battle up. */
   outro(): Promise<void> {
     return this.hud?.lossesSettled() ?? Promise.resolve();
   }
@@ -92,17 +86,15 @@ export class BattleScene implements Scene {
     }
 
     this.world = new World(ctx.bus, new RNG(encounter.worldSeed), encounter.gridW, encounter.gridH);
-    // 47f — install the run's compiled daemon battle-hooks (data on the
-    // encounter; the fuzz harness mirrors this at ITS construction site).
+    // The turn's battle rules, as `Run.beginTurn` compiled them; the fuzz
+    // harness installs them the same way.
     this.world.installBattleRules(encounter.battleRules ?? []);
     this.clock = new Clock(TICK_RATE, () => {
       const w = this.world;
       if (!w || w.ended) return;
       w.tick();
-      // N2 — enforce the per-turn cap: a turn that runs to the budget without a
-      // decisive end force-resolves as a DRAW (chips both pools; the run rolls on
-      // through the post-turn screen) instead of ticking forever. resolveAsDraw is
-      // a no-op once ended, so a tick that races a natural end can't double-resolve.
+      // The turn's cap. `resolveAsDraw` does nothing once the battle has
+      // ended, so a tick that ends it naturally cannot resolve it twice.
       if (!w.ended && w.currentTick >= MAX_TURN_TICKS) w.resolveAsDraw();
     });
     this.battleRenderer = new BattleRenderer(
@@ -114,20 +106,19 @@ export class BattleScene implements Scene {
       ctx.bus,
     );
     this.playback = ctx.playback;
-    // J3 — the objective controller needs the World (to enqueue commands + read
-    // enemy positions) and the Renderer (canvas listeners + screen→cell pick).
-    // Built before the HUD so the HUD's buttons/hotkeys can drive it; the HUD
-    // reflects its armed state back via onArmedChange.
-    // The enemy-billboard provider reads the BattleRenderer's LIVE sprite
-    // positions (created just above), so the click hit-test matches the glyph
-    // on screen. Null-guarded for the brief window before/after a battle.
+    // The objective controller takes the World (to queue its commands and read
+    // the enemies' places) and the Renderer (its canvas listeners and the
+    // screen-to-cell pick). It is built before the HUD, whose buttons and
+    // hotkeys drive it, and the HUD shows its armed state through
+    // `onArmedChange`. Its billboard providers read the BattleRenderer's live
+    // sprite positions, so a click hits the glyph on screen.
     this.objective = new ObjectiveController(
       this.world,
       ctx.renderer,
       ctx.terrain,
       () => this.battleRenderer?.enemyBillboards() ?? [],
-      // §40e — destructible neutrals (rubble / a destructible wall) as click
-      // candidates too, so a manual focus/engage can order an attack on one.
+      // Destructible neutrals are click targets too, so a manual Engage or
+      // Focus can order an attack on one.
       () => this.battleRenderer?.destructibleBillboards() ?? [],
     );
     this.hud = new HUD(
@@ -141,28 +132,16 @@ export class BattleScene implements Scene {
     );
     this.objective.onArmedChange = (mode) => this.hud?.setObjectiveArmed(mode);
 
-    // Battle audio has no subscriptions here (§104). Every KEYED attack /
-    // status cue (one FxKey → visual + sound, §Z) rides the FX registry,
-    // driven by BattleRenderer off `action:phase` — so a MISS plays its
-    // whoosh for free. The per-EVENT cues with no fx key (death, the
-    // ability heal, the dash leap) are rows of the event-sound registry
-    // (src/audio/eventSounds.ts), attached once by Game.
+    // Battle audio subscribes nothing here. A keyed attack or status cue (one
+    // fx key, its visual and its sound) plays through the FX registry, driven
+    // by the BattleRenderer off `action:phase`, so a miss plays its whoosh
+    // too. The cues with no fx key (a death, the ability heal, the dash's
+    // leap) are rows of src/audio/eventSounds.ts, which Game attaches once.
 
-    // HUD and BattleRenderer must be bound BEFORE any spawn so unit:spawned
-    // handlers find the world. Terrain comes before teams so the spawn
-    // tiles are guaranteed clear (walls + water never land on them per
-    // the D5 schema in src/config/layouts.ts and the procedural mask in
-    // src/sim/terrainGen.ts).
-    //
-    // C1d follow-up: resolve the encounter's layoutId to a display name for
-    // the top banner. Procedural encounters (layoutId === null) read as the
-    // shared `map.uncharted` UI string (R3: one string, so the banner + the
-    // pre-turn map line can't drift — was "Nowhere" here; §95c moved it from
-    // the sim constant PROCEDURAL_MAP_NAME to the UI table).
-    // D8: append the theme as a banner suffix (e.g. "Corridor — Volcanic")
-    // so the visual reskin reads as deliberate flavor, not a bug. The
-    // `grassland` theme is the canonical look — no suffix added, to keep
-    // the banner clean when the palette is the baseline (§37e rename).
+    // The banner: the layout's name, or `map.uncharted` for a procedural
+    // board (the pre-turn screen's map line reads the same string), with the
+    // theme after it ("Corridor — Volcanic") unless it is `grassland`, the
+    // baseline look.
     const locationName =
       encounter.layoutId === null
         ? t('map.uncharted')
@@ -171,20 +150,17 @@ export class BattleScene implements Scene {
       encounter.theme === 'grassland'
         ? locationName
         : `${locationName} — ${titleCaseTheme(encounter.theme)}`;
-    // H4b — surface the encounter pools + the turn being fought. `turnIndex`
-    // counts RESOLVED turns, so the current turn is +1. Pools are this turn's
-    // pre-chip state (they chip on the post-turn screen).
+    // The pools as they stand before this turn is charged, and the turn being
+    // fought (`turnIndex` counts the resolved turns).
     this.hud.show(this.world, run.currentHop, bannerText, {
       turn: run.turnIndex + 1,
       playerHealth: run.playerHealth,
       playerHealthMax: HEALTH.playerHealthMax,
       enemyHealth: run.enemyHealth,
-      // U3 — per-encounter pool max + name (replaces the global enemyHealthMax /
-      // the hardcoded "Foe").
       enemyHealthMax: run.enemyHealthPoolMax,
       ...(run.currentEncounterName ? { enemyName: run.currentEncounterName } : {}),
-      // 96.5c/c2 — the two bounds as each bar's NOTCH: the player's is the
-      // risk line's number, the enemy's the fielded wave's.
+      // The notch on each gauge: the player's bound is the risk line's
+      // number, the enemy's the fielded wave's.
       ...(() => {
         const bounds = run.previewPoolsAtRisk();
         return { poolAtRisk: bounds.player, enemyPoolAtRisk: bounds.enemy };
@@ -192,35 +168,30 @@ export class BattleScene implements Scene {
     });
     this.battleRenderer.attach(this.world);
     const spawnRegions = applyTerrain(this.world, encounter);
-    // After terrain is in place, the terrain renderer reflects the tile
-    // grid. Walls render via SpriteRenderer (they're neutral-team Units),
-    // and their per-tile Y is picked up via `terrain.heightAt` inside
-    // BattleRenderer.
+    // The terrain renderer draws the tile grid. Walls draw as sprites (they
+    // are neutral units), each at its tile's height, which the BattleRenderer
+    // reads from `terrain.heightAt`.
     ctx.terrain.setTiles(this.world.tileGrid, this.world.gridW, this.world.gridH, encounter.theme);
     this.terrain = ctx.terrain;
-    // M4 — the backdrop apron continues the board outward (clamp-to-edge
-    // tile sampling) and fog-fades it into the void. Same grid + theme as
-    // the board mesh; the sim never sees these tiles.
+    // The apron continues the board outward, clamping at its edge tiles, and
+    // fades into the mist: the board mesh's grid and theme, in tiles the sim
+    // never sees.
     ctx.apron.setTiles(this.world.tileGrid, this.world.gridW, this.world.gridH, encounter.theme);
     this.apron = ctx.apron;
     this.backdrop = ctx.backdrop;
-    // D3 — frame the camera to whatever rectangle this encounter rolled
-    // (procedural sizes range up to 20×20; hand-authored up to 32×32).
     ctx.renderer.fitToBoard(this.world.gridW, this.world.gridH);
 
-    // D5 — pick a region for each team off the same fork the fuzz
-    // harness uses, then place units one per shuffled tile within
-    // their region.
+    // One setup stream picks each team's region and shuffles its tiles, the
+    // stream `spawnEncounter` draws for the fuzz harness and the replays, so
+    // they place the teams as this scene does.
     const setupRng = setupRngFor(encounter);
     const { player: playerRegion, enemy: enemyRegion } = pickSpawnRegions(spawnRegions, setupRng);
 
-    // D5.E — anchor the scroll-mode camera on the centroid of the
-    // player's rolled spawn region (replaces D4's `(0, gridH/2 - 2)`
-    // legacy heuristic from the row-formation era). Region tiles are
-    // grid coords; convert the mean through `gridToWorld` so the anchor
-    // lands in the same world-XZ space the renderer pans. fit mode
-    // ignores this visually, but the target is preserved across the
-    // dev mode toggle (Ctrl+Alt+C). Renderer.clampCameraTarget caps to the board.
+    // Anchor the scroll-mode camera on the centre of the player's spawn
+    // region, converted through `gridToWorld` into the world space the
+    // renderer pans. Fit mode does not show it, but the target is kept across
+    // the dev chord's mode toggle (Ctrl+Alt+C); the renderer clamps it to the
+    // board.
     let sumX = 0;
     let sumY = 0;
     for (const t of playerRegion.tiles) {
@@ -235,98 +206,86 @@ export class BattleScene implements Scene {
     spawnTeam(this.world, 'player', encounter.playerTeam, playerRegion, setupRng);
     spawnTeam(this.world, 'enemy', encounter.enemyTeam, enemyRegion, setupRng);
 
-    // Q2 — open the pre-battle countdown: the combatants are placed (instantly,
-    // no materialize fade now), the board is fully readable, and the sim is
-    // parked while the player sets orders. Pausing `playback` is what makes the
-    // unified pause key double as "Fight now" — resuming (Space / the ▶ button /
-    // a speed button) is the skip signal `tick` watches for. See `tick`.
+    // Open the countdown: the units are placed, the board is readable, and the
+    // sim is parked while the player sets orders. Pausing `playback` lets the
+    // pause control double as Fight now: resuming it (Space, the ▶ button, a
+    // speed button) is the skip `tick` watches for.
     this.countdown = new PreBattleCountdown(PLAYBACK.countdownSeconds);
     this.playback?.pause();
   }
 
   tick(dt: number): void {
-    // Q2 — while the sim is PARKED (the pre-battle countdown or a mid-battle
-    // pause) it never reaches the top-of-tick command drain, so apply any queued
-    // player orders here. That's what makes an objective's X marker appear the
-    // moment it's issued instead of only when the sim resumes — no unit acts
-    // while parked, so it's observably identical to draining at the next tick.
+    // While the sim is parked (the countdown, or a pause) it never reaches the
+    // command drain at the top of a tick, so queued orders are applied here,
+    // and an objective's marker shows when it is issued. No unit acts while
+    // parked, so this is the same as draining at the next tick.
     if (this.countdown?.active || this.playback?.isPaused) this.world?.drainCommands();
 
-    // 116d — HELD (the settings modal is up over this battle): everything
-    // below stands still. After the countdown that needs nothing here, since
-    // `playback.current` reads 0 while held and the frame is a paused one.
-    // The countdown runs on real time, so it is stopped by hand.
+    // Held (the settings modal is up over the battle): everything below
+    // stands still. After the countdown that needs nothing here, since
+    // `playback.current` reads 0 while held; the countdown runs on real time,
+    // so it is stopped by hand.
     const held = this.playback?.isHeld === true;
 
-    // Q2 — the pre-battle countdown. While it holds, the sim is parked and only
-    // the visuals advance, at REAL dt (a fast-forward can't shorten the window).
+    // The countdown: the sim is parked and only the visuals advance, on real
+    // time, so a speed-up cannot shorten it.
     if (this.countdown?.active) {
       // The countdown's own frame time: none while held, so the readout, the
       // sprites and the shaders all stand still with it.
       const countdownDt = held ? 0 : dt;
       this.countdown.advance(countdownDt);
-      // Fight now: the unified pause control / a speed button resumed playback —
-      // that unpause is the skip signal (no separate hotkey, no double-fire).
+      // Fight now: a resumed playback (the pause control, a speed button) is
+      // the skip, so there is no hotkey of its own to fire twice.
       if (!held && this.playback && this.playback.pauseEnabled && !this.playback.isPaused) {
         this.countdown.skip();
       }
       if (this.countdown.active) {
-        // Still counting: paint the readout + advance visuals only.
-        // 97f-post — the compact cards' status rows + empower markers paint
-        // in refreshStatuses, which the running path below calls per frame;
-        // this branch returned before reaching it, so a seeded status or a
-        // pre-turn empower showed only when the countdown ended (the 78d
-        // reset assumed a pass that never ran here — the user's §97
-        // playtest catch). The HUD's tick gate keeps it a no-op after the
-        // first pass on the parked clock.
-        // 101d — it runs BEFORE showCountdown: the readout's entry measure
-        // reads the enemy pane's bottom, and these rows are part of it (the
-        // old order measured a pane that grew one call later, every time an
-        // enemy carried a seeded status). The HUD re-measures for the
-        // countdown's life as well; this makes the first measure right.
+        // Still counting: paint the readout and advance the visuals.
+        // `refreshStatuses` runs here as on the running path, so a seeded
+        // status or an empower shows during the countdown (the HUD's tick
+        // gate makes it a no-op after the first pass), and before
+        // `showCountdown`, whose first measure reads the enemy pane's bottom,
+        // which these rows are part of.
         this.hud?.refreshStatuses();
         this.hud?.showCountdown(this.countdown.displaySeconds);
         this.battleRenderer?.update(countdownDt);
         this.advanceShaderTime(countdownDt);
       } else {
-        // Just ended (expiry or skip): start the sim at the selected speed and
-        // clear the readout. The sim's first tick lands NEXT frame — this
-        // boundary frame's leftover dt is dropped (≤ one frame, invisible), the
-        // same M3 rule that kept the parked-hold determinism-clean.
+        // Just ended, by expiry or skip: start the sim at the selected speed
+        // and clear the readout. The first tick lands next frame; this frame's
+        // leftover `dt`, at most one frame, is dropped, and the tick sequence
+        // is unchanged.
         this.playback?.resume();
         this.hud?.hideCountdown();
       }
       return;
     }
-    // I3 — fast-forward. Scale the real frame `dt` by the active speed and feed
-    // it to EVERYTHING in the battle (sim clock + render animations + terrain
-    // shader) so the whole scene stays visually coherent at 2×/3×. Determinism
-    // is preserved: the Clock still fires whole fixed-timestep ticks — scaling
-    // `dt` only changes how many tick()s land per frame, not the tick sequence
-    // or its RNG (a tick-batch, not a TICK_RATE change). Read live so a
-    // mid-battle cycle takes effect immediately.
+    // The speed scales the frame's `dt` for everything in the battle (the
+    // sim's clock, the render animations, the shaders), so the scene stays
+    // coherent at 2× and 3×. The clock still fires whole fixed ticks, so a
+    // speed changes how many land in a frame, not the tick sequence or its
+    // rolls.
     const dtScaled = dt * (this.playback?.current ?? 1);
     this.clock?.advance(dtScaled);
     this.battleRenderer?.update(dtScaled);
-    // §32c — refresh the compact cards' status rows (gated on the sim tick
-    // inside the HUD; the readout is constant between ticks).
+    // The compact cards' status rows, which the HUD repaints only when the
+    // sim's tick has moved.
     this.hud?.refreshStatuses();
     this.advanceShaderTime(dtScaled);
   }
 
   /**
-   * D7.C: drive the terrain shader's `uTime` for per-tile fire flicker and
-   * healing pulse. Lives on tick (not the rAF loop) because only BattleScene
-   * puts animated tile kinds into the renderer — non-battle scenes call
-   * terrain.clear() and don't need the animation to advance. M4 — the apron's
-   * fog creep (and any clamp-extended fire/healing flicker) + the mist
-   * floor's drift ride the same scaled time as the board's tile animation.
+   * Advance the shaders' `uTime` on the battle's scaled time: the board's
+   * fire flicker and healing pulse, the apron's fog creep and the mist
+   * floor's drift. It runs from `tick` and not the renderer's loop, since
+   * only a battle puts animated tiles on the board, and the terrain is
+   * cleared when the battle scene goes.
    *
-   * 99d — THE ONE shader-motion gate: under reduced motion the clock HOLDS
-   * (dt → 0), so every `uTime`-driven motion — the fire flicker, the healing
-   * shimmer, the mist creep, the fog, deep water's band drift — freezes at
-   * once, in all three shaders, with no uniform and no shader branch. The
-   * gate is read per frame, so the dev chord (Ctrl+Alt+A) flips it live.
+   * The one gate for shader motion: under reduced motion the time holds, so
+   * every `uTime`-driven motion (the fire, the healing shimmer, the mist, the
+   * fog, deep water's bands) stops at once in all three shaders, with no
+   * uniform and no shader branch. The gate is read each frame, so the dev
+   * chord (Ctrl+Alt+A) flips it live.
    */
   private advanceShaderTime(dt: number): void {
     const d = reducedMotion() ? 0 : dt;
@@ -340,9 +299,8 @@ export class BattleScene implements Scene {
     this.battleRenderer?.detach();
     this.battleRenderer?.dispose();
     this.hud?.dispose();
-    // Drop the terrain's per-battle tile visuals so the next non-battle
-    // scene (map / recruit / gameover) isn't painting stale terrain under
-    // nothing.
+    // Clear the battle's tiles, so the next scene is not drawn over a stale
+    // board.
     this.terrain?.clear();
     this.apron?.clear();
     this.battleRenderer = null;
@@ -353,9 +311,8 @@ export class BattleScene implements Scene {
     this.terrain = null;
     this.apron = null;
     this.backdrop = null;
-    // Q2 — never leave the page-lifetime playback stuck paused if the scene
-    // tears down mid-countdown (an abnormal swap; the normal path already
-    // resumed when the countdown ended). No-op when already running.
+    // A swap mid-countdown must not leave the page-lifetime playback paused.
+    // Otherwise the countdown's end has resumed it, and this does nothing.
     this.playback?.resume();
     this.playback = null;
     this.countdown = null;

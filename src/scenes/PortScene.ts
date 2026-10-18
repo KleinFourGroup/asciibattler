@@ -1,11 +1,9 @@
 /**
- * PortScene (50e). DOM-only wrapper around PortScreen — the RewardScene
- * shape. Takes no payload: the screen reads the LIVE docked stock from
- * `ctx.run.portStock` (rolled at dock, §50d) and re-renders in place after
- * every transaction. `leavePort` lands the run back on 'map' with no event
- * emit, so Game's leavePort case swaps the map explicitly (the
- * chooseRecruit silent-transition pattern) — this scene never dismisses
- * itself.
+ * PortScene wraps PortScreen, DOM only, as RewardScene does. It takes no
+ * payload: the screen reads the live stock off `ctx.run.portStock`, rolled
+ * at the dock, and re-renders in place after each trade. It never dismisses
+ * itself: `leavePort` lands the run on 'map' with no event, and Game's
+ * dispatch swaps the map in.
  */
 
 import { PortScreen } from '../ui/PortScreen';

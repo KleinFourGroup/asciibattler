@@ -1,20 +1,19 @@
 /**
- * Scene system (A5). A Scene owns the "what's on screen right now" — at most
- * one is active at a time, and Game swaps them on Run phase transitions.
+ * A scene owns what is on screen: one is active at a time, and Game swaps
+ * them as the run's phase changes (`Game.swap`).
  *
- * Three lifecycle hooks:
- *   - `mount(ctx)` — wire up DOM / 3D content, bus subscriptions, etc. Called
- *     once, immediately after construction.
- *   - `tick(dt)` — driven from Renderer's RAF loop. Drives in-flight
- *     animation, simulation clock, etc. DOM-only scenes typically no-op.
- *   - `dispose()` — tear everything down: remove DOM, detach 3D, unsubscribe
- *     from the bus. Called by Game before mounting the next Scene.
+ * The lifecycle:
+ *   - `mount(ctx)` — wire up the DOM, the 3D content and the bus
+ *     subscriptions. Called once, right after construction.
+ *   - `tick(dt)` — each frame of the renderer's loop, for animation and the
+ *     battle's clock; a DOM-only scene usually does nothing.
+ *   - `dispose()` — tear it all down: remove the DOM, detach the 3D content,
+ *     unsubscribe. Called by Game before the next scene mounts.
  *
- * `SceneContext` is the bundle of persistent, page-lifetime resources every
- * Scene may need. Built fresh by Game on each swap so `ctx.run` reflects the
- * current run (the field gets replaced on reset). Scenes that need
- * scene-specific arguments (recruit offer, gameover variant) take them via
- * their constructor.
+ * `SceneContext` bundles the page-lifetime resources a scene may need. Game
+ * builds it at each swap, so `ctx.run` is the current run. A scene that
+ * needs arguments of its own (the recruit offer, the game-over variant)
+ * takes them in its constructor.
  */
 
 import type * as THREE from 'three';
@@ -38,18 +37,17 @@ import type { Keybindings } from '../ui/Keybindings';
 export interface SceneContext {
   readonly bus: EventBus<GameEvents>;
   readonly scene3D: THREE.Scene;
-  /** D3: BattleScene calls `renderer.fitToBoard(gridW, gridH)` per encounter so
-   *  the camera frames variable-size arenas. Non-battle scenes ignore it. */
+  /** BattleScene fits the camera to each battle's board with it
+   *  (`fitToBoard`). */
   readonly renderer: Renderer;
   readonly sprites: SpriteRenderer;
   readonly overlays: UnitOverlayLayer;
   readonly terrain: TerrainRenderer;
-  /** M4 — the backdrop apron ring around the playable board. BattleScene
-   *  feeds it the same tile grid as `terrain`; non-battle scenes ignore it
-   *  (it clears alongside terrain on battle dispose). */
+  /** The apron ring around the board. BattleScene gives it the board's tile
+   *  grid and clears it with the terrain on dispose. */
   readonly apron: ApronRenderer;
-  /** M4 — the mist floor the apron dissolves into. Encounter-independent
-   *  scenery; BattleScene only drives its uTime. */
+  /** The mist floor the apron fades into, the same for every encounter;
+   *  BattleScene drives only its time. */
   readonly backdrop: BackdropRenderer;
   readonly fontAtlas: FontAtlas;
   readonly uiMount: HTMLElement;
@@ -58,32 +56,31 @@ export interface SceneContext {
    *  this to mount the control into. */
   readonly controlSlot: HTMLElement;
   readonly dispatcher: RunDispatcher;
-  /** 63e — NULL exactly when no Run exists yet (the menu and the
-   *  CharacterSelectScene mount before Run construction). Every other
-   *  scene asserts via `requireRun(ctx)` at mount — the compiler makes each
-   *  scene say whether it can run pre-Run (the kickoff shape-lock). */
+  /** Null when no run is live: the menu and character select mount without
+   *  one. A scene that needs the run takes it through `requireRun`, so the
+   *  type makes each scene say whether it can mount without one. */
   readonly run: Run | null;
   /** The run's journal as Game holds it now (`Game.currentJournal`): the one
    *  being recorded, or the finished one once the run has ended; null with
    *  no run. A function, because the journal of a run that just ended closes
    *  after the end screen has mounted. */
   readonly journal: () => RunJournal | null;
-  /** 115g — the saved run, as the menu asks after it. Functions, read when
-   *  the screen is drawn. */
+  /** The saved run, as the menu asks after it. Functions, read when the
+   *  screen is drawn. */
   readonly save: SaveContext;
-  /** 116c — the menu's routes: where a run's end goes, New run and Back. */
+  /** The menu's routes: where a run's end goes, New run and Back. */
   readonly menu: MenuContext;
-  /** 117e — the Escalation unlocks, as character select and the end screen
-   *  ask after them. */
+  /** The Escalation unlocks, as character select and the end screen ask
+   *  after them. */
   readonly escalation: EscalationContext;
   readonly audio: AudioPlayer;
-  /** I3 — the page-lifetime fast-forward speed. BattleScene reads `current`
-   *  live each tick to scale `dt`; the HUD button + hotkey cycle it. Persists
-   *  across scene swaps (set-and-forget), so it lives here, not on the Scene. */
+  /** The page-lifetime playback speed. BattleScene reads `current` each tick
+   *  to scale `dt`; the HUD's speed pane and its hotkeys set it. It lasts
+   *  across swaps, so it lives here and not on a scene. */
   readonly playback: PlaybackSpeed;
-  /** J3 — the page-lifetime rebindable-hotkey registry. The HUD subscribes its
-   *  battle-scoped handlers (fast-forward + the objective controls) on mount
-   *  and tears them down on dispose; a rebind persists across scenes. */
+  /** The page-lifetime registry of rebindable hotkeys. The HUD subscribes its
+   *  battle controls' hotkeys on mount and drops them on dispose; a rebind
+   *  lasts across scenes. */
   readonly keybindings: Keybindings;
 }
 
@@ -99,7 +96,7 @@ export interface SaveContext {
 }
 
 /**
- * 116c — the menu's side of the game. These are routes between two screens
+ * The menu's side of the game. These are routes between two screens
  * that have no run, so they are functions here and not run commands: a
  * command kind would join the journal's kinds and the chaos census.
  */
@@ -116,17 +113,17 @@ export interface MenuContext {
   newRun(seedText: string): void;
   /** Character select's Back: the menu, with nothing started. */
   back(): void;
-  /** 116d — the menu's Settings row: open the settings modal, the one the
-   *  chip opens during a run (src/ui/SettingsOverlay.ts). */
+  /** The menu's Settings row: open the settings modal, the one the chip
+   *  opens during a run (src/ui/SettingsOverlay.ts). */
   openSettings(): void;
-  /** 116j — the menu's Credits row: open the credits panel
+  /** The menu's Credits row: open the credits panel
    *  (src/ui/CreditsOverlay.ts). */
   openCredits(): void;
 }
 
 /**
- * 117e — what a screen may know of the Escalation unlocks (the store's
- * progress, src/store/progress.ts). The screens never read the store.
+ * What a screen may know of the Escalation unlocks (the store's progress,
+ * src/store/progress.ts). The screens never read the store.
  */
 export interface EscalationContext {
   /** The highest level `characterId` may start a run at, as the store has
@@ -144,10 +141,9 @@ export interface Scene {
   dispose(): void;
 }
 
-/** 63e — assert the context carries a live Run (every scene except the
- *  MenuScene and the CharacterSelectScene). A null here is a Game sequencing
- *  bug — a run-dependent scene mounted before select confirmed — so throw
- *  loud. */
+/** The context's live run, for a scene that needs one. A null here is a
+ *  sequencing bug in Game (a scene that needs the run mounted before one was
+ *  made), so it throws. */
 export function requireRun(ctx: SceneContext): Run {
   if (ctx.run === null) {
     throw new Error('Scene requires a live Run, but none exists yet (pre-select boot)');

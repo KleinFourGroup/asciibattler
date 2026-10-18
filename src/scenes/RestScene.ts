@@ -1,9 +1,9 @@
 /**
- * RestScene. DOM-only wrapper around RestScreen — the EventScene shape.
- * Takes no payload: the screen reads what the rest would do off `ctx.run`.
- * It never dismisses itself: the option's command lands the run on
- * 'promotion' (`promotion:pending` swaps) or on 'map' (Game's
- * `chooseRestOption` case swaps the map).
+ * RestScene wraps RestScreen, DOM only, as EventScene does. It takes no
+ * payload: the screen reads what the rest would do off `ctx.run`. It never
+ * dismisses itself: the option's command lands the run on 'promotion'
+ * (`promotion:pending` swaps) or on 'map' (Game's dispatch swaps the map
+ * in).
  */
 
 import { RestScreen } from '../ui/RestScreen';

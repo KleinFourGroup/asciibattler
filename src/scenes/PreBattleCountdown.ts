@@ -1,17 +1,14 @@
 /**
- * Q2 — the pre-battle countdown timer.
+ * The pre-battle countdown's timer, on real time, for the window that opens
+ * every turn: the board shows, the sim is parked while the player reads it
+ * and sets orders, then the fight starts. A pause with a timer that
+ * unpauses: `BattleScene` pauses `playback` on mount and resumes it when
+ * this ends, by expiry or the player's Fight now.
  *
- * A tiny real-dt timer for the reaction-time window that opens every turn: the
- * board is shown but the sim is parked while the player reads it and sets
- * orders, then the fight starts. Conceptually it's "a pause with an auto-unpause
- * timer" — `BattleScene` pauses `playback` on mount and resumes it when this
- * countdown ends (by expiry or a player Fight-now skip).
- *
- * This holds ONLY the timer so it's unit-testable without a DOM/renderer
- * (`BattleScene` itself isn't). The skip-via-unpause wiring + the visuals live
- * in `BattleScene`; the readout lives in `HUD`. Counted in REAL dt — a
- * fast-forward speed must not shorten it (and the sim is paused during it
- * anyway), so the caller passes the unscaled frame `dt`.
+ * It holds only the timer, so it is tested without a DOM or a renderer; the
+ * skip's wiring and the visuals are `BattleScene`'s, and the readout the
+ * HUD's. The caller passes the unscaled frame `dt`, so a speed-up cannot
+ * shorten it.
  */
 export class PreBattleCountdown {
   // The recorder holds the countdown by patching `advance` on the instance and

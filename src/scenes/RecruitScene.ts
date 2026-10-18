@@ -1,8 +1,7 @@
 /**
- * RecruitScene (A5). DOM-only wrapper around RecruitScreen. Takes the offer
- * via constructor — the bus payload from `recruit:offered` is the freshest
- * source, and a Scene swap may happen before `ctx.run.currentOffer` is
- * read, so caller passes it explicitly.
+ * RecruitScene wraps RecruitScreen, DOM only. It takes the offer in its
+ * constructor, from the `recruit:offered` payload Game hands over at the
+ * swap.
  */
 
 import { RecruitScreen } from '../ui/RecruitScreen';

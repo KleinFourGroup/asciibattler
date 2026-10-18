@@ -1,8 +1,8 @@
 /**
- * CharacterSelectScene (63e). DOM-only wrapper around CharacterSelectScreen —
- * the GameOverScene shape. With the MenuScene, one of the two scenes that
- * mount with `ctx.run === null` (it exists precisely so the choice can
- * precede Run construction); it deliberately never calls `requireRun`.
+ * CharacterSelectScene wraps CharacterSelectScreen, DOM only, as
+ * GameOverScene does. With MenuScene, one of the two scenes that mount with
+ * no run: the choice comes before the run is made, so it never calls
+ * `requireRun`.
  */
 
 import { CharacterSelectScreen } from '../ui/CharacterSelectScreen';

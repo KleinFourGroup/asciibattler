@@ -1,7 +1,7 @@
 /**
- * 116c — the menu's rules, pure, so they are pinned without a page.
+ * The menu's rules, pure, so they are pinned without a page.
  *
- * WHEN THE MENU BOOTS (Round 8 spec D6): on a plain URL. A run dial that
+ * When the menu boots: on a plain URL. A run dial that
  * parses (`seed=`, `character=`, …) or a board-explorer bookmark (`bp=`) is a
  * dev entry, and the page boots as it did before the menu: the map with a
  * character pinned, character select without. Every driver pins `character=`
@@ -9,15 +9,15 @@
  * so none of them meets the menu. A dial whose value parses to nothing
  * (`?character=nobody`) changed nothing, so that page is a plain boot.
  *
- * THE SEED FIELD holds digits only. Its text is cleaned as it is typed, so
+ * The seed field holds digits only. Its text is cleaned as it is typed, so
  * the field has no refused state to show, and it is read through the URL
  * dial's own parser, so the field and `?seed=` accept the same seeds.
  *
- * THE SEED A RUN SHOWS (116c-post2, on its end screen) is what the field
- * takes back: `seedShown`, below.
+ * The seed a run shows on its end screen is what the field takes back:
+ * `seedShown`, below.
  *
- * THE CREDITS ON THE WAY (116j): a won run's end screen leads to the menu,
- * and the first time by way of the credits. `creditsOnTheWay` is the rule.
+ * The credits on the way: a won run's end screen leads to the menu, and the
+ * first time by way of the credits. `creditsOnTheWay` is the rule.
  */
 
 import { parseRunConfig, RUN_CONFIG_PARAMS } from '../run/RunConfig';

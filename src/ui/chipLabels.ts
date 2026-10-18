@@ -49,7 +49,7 @@ export function powerTooltip(team?: 'player' | 'enemy'): string {
 }
 
 /** 94e — the pool's player-facing NAMES, in one place: the two full gauges
- *  (pre/post-turn screens, the HUD) and the persistent chip's short label.
+ *  (the pre-turn screen, the HUD) and the persistent chip's short label.
  *  94f flips these to the "morale" wording (the user's DESIGN call) — the
  *  config keys and snapshot fields keep their names. */
 export const POOL_LABELS = {

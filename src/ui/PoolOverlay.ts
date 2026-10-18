@@ -3,7 +3,7 @@
  * (the 48d/49f ownership pattern — Game owns it, it never rides the Scene
  * mount/dispose cycle), the FOURTH chip of the left column (bits · cache · the 78e sector-map chip · this).
  * The user's §93 verdict item 7b: the pool "must be displayed during events —
- * really, everywhere." The battle HUD and the pre/post-turn screens keep
+ * really, everywhere." The battle HUD and the pre-turn screen keep
  * their own full gauges (the authoritative in-encounter read) — and since
  * 96.5a the chip HIDES while one of those is up (`setSuppressed`, pushed
  * from Game's swap), so morale reads once per screen; everywhere else (the
@@ -42,7 +42,7 @@ export class PoolOverlay {
   private readonly pulse: () => void;
   /** Hidden by the RUN's state: pre-run / defeat / victory (the 94e wiring). */
   private runHidden: boolean;
-  /** 96.5a — hidden by the SCENE: a pre-turn / battle / post-turn screen is
+  /** 96.5a — hidden by the SCENE: a pre-turn or battle screen is
    *  up, where the full gauges are the one morale read (the §95 playtest's
    *  "morale reads twice" finding). Pushed by Game's swap chokepoint. Two
    *  flags, one class: `is-hidden` = either, so a defeat inside a battle

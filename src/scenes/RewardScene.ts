@@ -1,11 +1,10 @@
 /**
- * RewardScene (48c). DOM-only wrapper around RewardScreen — the
- * PromotionScene shape. Takes no payload: the screen reads the LIVE offer
- * from `ctx.run.pendingRewards` (the reward:offered payload is a copy; the
- * live list shrinks as portions resolve, and bits displays derive from the
- * run's current folds). Resolving the last portion advances the run, whose
- * follow-on event (promotion:pending / recruit:offered / run:victory) drives
- * the next swap.
+ * RewardScene wraps RewardScreen, DOM only. It takes no payload: the screen
+ * reads the live offer off `ctx.run.pendingRewards`, since the
+ * `reward:offered` payload is a copy, the live list shrinks as portions
+ * resolve, and the bits rows are priced from the run's folds as they stand.
+ * Resolving the last portion moves the run on, and the event that follows
+ * (`promotion:pending`, `recruit:offered`, `run:victory`) swaps the scene.
  */
 
 import { RewardScreen } from '../ui/RewardScreen';

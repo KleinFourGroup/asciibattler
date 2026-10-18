@@ -495,7 +495,7 @@ export class Game implements RunDispatcher {
     // Run rolls the recruit offer only after `dismissPromotion`, so
     // recruit:offered still fires exactly once per non-terminal win.
     // M1: promotions fire at TURN boundaries, so this swap also lands
-    // mid-encounter (post-turn screen → here → the next pre-turn screen).
+    // mid-encounter (the battle's outro → here → the next pre-turn screen).
     this.bus.on('promotion:pending', ({ promotions }) =>
       this.swap(new PromotionScene(promotions)),
     );
@@ -1038,9 +1038,9 @@ export class Game implements RunDispatcher {
     };
     const seed = config.seed ?? Date.now();
     const run = new Run(seed, this.bus, config);
-    // H4b — the live game pauses at turn gates so the pre/post-turn screens can
-    // show. (Headless tests + the fuzz harness leave this off → the synchronous
-    // H4a loop, so they're unaffected.)
+    // H4b — the live game pauses at turn gates so the pre-turn screen can show
+    // and the battle's outro can play. (Headless tests + the fuzz harness
+    // leave this off → the synchronous H4a loop, so they're unaffected.)
     run.pauseAtTurnGates = true;
     // The journal's start: the seed and the run dials as the URL would spell
     // them, the character among them. Game's config comes from the URL alone,

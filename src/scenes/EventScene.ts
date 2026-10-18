@@ -1,12 +1,11 @@
 /**
- * EventScene (74f). DOM-only wrapper around EventScreen — the PortScene
- * shape. Takes no payload: the screen reads the LIVE active page off
- * `ctx.run` (`currentEventPage` / `eventChoiceEnabled`) and re-renders off
- * `event:pageChanged`. Terminal exits never dismiss this scene from
- * inside: a return-to-map lands the run on 'map' with no emit, so Game's
- * chooseEventOption case swaps the map explicitly (the leavePort
- * silent-transition pattern), and a start-encounter fires
- * `battle:started`, whose subscription swaps the BattleScene.
+ * EventScene wraps EventScreen, DOM only, as PortScene does. It takes no
+ * payload: the screen reads the live page off `ctx.run`
+ * (`currentEventPage`, `eventChoiceEnabled`) and re-renders on
+ * `event:pageChanged`. It never dismisses itself: a return to the map lands
+ * the run on 'map' with no event, and Game's dispatch swaps the map in; a
+ * start-encounter emits `battle:started`, whose subscription swaps in the
+ * BattleScene.
  */
 
 import { EventScreen } from '../ui/EventScreen';

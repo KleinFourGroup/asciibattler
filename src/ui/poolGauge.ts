@@ -1,8 +1,8 @@
 /**
  * H4b — a labeled health-pool gauge (player or enemy): a name + `current / max`
- * readout above a proportional fill bar. Shared by the pre-turn screen, the
- * post-turn outcome screen, and (compactly) the in-battle HUD so the two pools
- * read identically everywhere. Pure DOM, no state — re-render to update.
+ * readout above a proportional fill bar. Shared by the pre-turn screen and
+ * (compactly) the in-battle HUD so the two pools read identically everywhere.
+ * Pure DOM, no state — re-render to update.
  *
  * 96.5b1 — THE GHOST. The battle HUD's gauges are live now (the loss-event
  * model, src/run/chipRule.ts): a loss the rule has made a FACT of but Run has
@@ -12,8 +12,8 @@
  * fill at the outro's end so the bar leaves the screen at the number the
  * next screen's gauge shows. The pending loss is clamped at the pool (the
  * applied charge is), so the ghost never crosses zero. `createPoolGauge`
- * returns the live handle; `renderPoolGauge` is the one-shot form the turn
- * screens keep (a ghost of 0 renders exactly the H4b gauge).
+ * returns the live handle; `renderPoolGauge` is the one-shot form the
+ * pre-turn screen keeps (a ghost of 0 renders exactly the H4b gauge).
  */
 
 import { chipPulse } from './chip';

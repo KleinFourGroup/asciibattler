@@ -1,16 +1,18 @@
 /**
- * 105b — the board explorer's DOM shell: one control per `DIALS` row, built
- * from the table (a new dial needs no code here). Dev chrome, deliberately
- * outside every UI idiom: it mounts on `<body>`, NOT `#ui` (gotcha #137 — a
+ * The board explorer's DOM shell: one control per `DIALS` row, built from
+ * the table (a new dial needs no code here). Dev chrome, deliberately
+ * outside every UI idiom: it mounts on `<body>`, not `#ui` (gotcha #137: a
  * direct child of `#ui` inherits an ID-specificity `pointer-events` rule),
- * carries its own injected `<style>` (nothing lands in ui.css, so the focus /
- * motion / token pins never see it), and uses native controls.
+ * carries its own injected `<style>` (nothing lands in ui.css, so the focus,
+ * motion and token pins never see it), and uses native controls.
  *
- * Keys typed INSIDE the panel stop here: the Keybindings registry dispatches
- * on bare `KeyboardEvent.code` with no modifier or focus check, so an arrow
- * key on a slider would pan the dev camera and Space on a checkbox would
- * pause the battle. Ctrl+Alt chords pass through (Ctrl+Alt+P must close the
- * panel from inside it, Ctrl+Alt+G must grey the board while a dial has focus).
+ * Keys typed inside the panel stop here. The Keybindings registry skips a
+ * keydown only in a text field, and a slider, a checkbox and a select are
+ * not one; the dev camera's pan keys listen on the window too. So without
+ * the stop an arrow key on a slider would pan the dev camera and Space on a
+ * checkbox would pause the battle. Ctrl+Alt chords pass through (Ctrl+Alt+P
+ * must close the panel from inside it, Ctrl+Alt+G must grey the board while
+ * a dial has focus).
  */
 
 import {
@@ -55,7 +57,7 @@ const CSS = `
 interface PanelCallbacks {
   onChange(key: DialKey, value: string | number | boolean): void;
   onReset(): void;
-  /** 108d — run the frame-cost bench on the board on screen. */
+  /** Run the frame-cost bench on the board on screen. */
   onBench(): void;
 }
 
@@ -114,7 +116,7 @@ export class BoardPanelView {
     this.status.className = 'bp-status';
     this.root.appendChild(this.status);
 
-    // 105e — the known cosmetic artefacts, collapsed: what NOT to file.
+    // The known cosmetic artefacts, collapsed: what not to file.
     const known = document.createElement('details');
     const summary = document.createElement('summary');
     summary.textContent = `known artefacts (${KNOWN_ARTEFACTS.length}) - not findings`;

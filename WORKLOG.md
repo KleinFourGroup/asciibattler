@@ -10473,3 +10473,102 @@ below it contradicts, or a rule a change must respect cut: a new chord
 tested in Firefox, the kit installed last, the stand-in's names matching
 the kit's, the fixture's URL written before Game parses it, the drive
 throwing on a command that changes nothing.
+
+### 124j, batch 9 — the board panel (2026-10-18, session 882e1278)
+
+`dev/boardPanel/`'s nine files; 1,954 lines. Their history is out: the
+spike's steps behind each dial and fixture, the spec's D3 and its quote,
+the §105 scope guard's wording, the spike's retired hooks, the hop dial
+gone with upright depth, the user's sign on units-only scaling, the
+measurement steps ("105a measured", "the step-zero hunt"). Capitals for
+emphasis are out across the folder.
+
+**Statements found false and corrected (rule 7):**
+
+- Who wires it: `index.ts` was "Wired from main.ts's DEV blocks only",
+  `boot.ts` had "main.ts's DEV blocks call both" halves, and `state.ts`
+  was "referenced only from main.ts's DEV block". The dev entry attaches
+  the panel and calls the first half from `beforeBoot`; the panel's attach
+  calls the second. `seams.ts` called its casts "the devKeys / main.ts cast
+  convention"; main.ts casts nothing, the dev entry does.
+- `seams.ts`: "Each is guarded at install"; the prototype's three members
+  are, but a renamed `handles` map reads as no battle on screen
+  (`liveBattleOf`). `inkBottomLift`'s consumer, the objective marker's
+  glyph, "stays size 1"; it draws at 1.6 on a tile and 0.5 over an enemy.
+  `stampSizes` had inert neutrals "stay size 1"; an N×N rubble keeps the N
+  spawn gave it. The hooks list left out the size stamp.
+- `panel.ts`: the registry "dispatches on bare `KeyboardEvent.code` with
+  no modifier or focus check"; it ignores a modified keydown and one in a
+  text field (`isTextEntry`), and the arrow keys pan through the
+  Renderer's own window listener. The stop is still needed, since a
+  slider, a checkbox and a select are not text fields.
+- `bench.ts`: the report's `clockStep` was "the smallest step"; benchRig's
+  `clockStep()` returns the median of 50.
+- `fixtures.ts`: the posed row's "sides alternate"; the row is an enemy,
+  two blocks, two players and an enemy. The row scan's "a near row is the
+  biggest on screen" holds only under a perspective lens, and the default
+  is ortho.
+- `posed.ts`: a fresh build's size 1 was "the atlas default"; it is what
+  `addSprite` writes.
+
+**Checked at the code they name and kept:** rubble spawning before the
+camera's fit (`BattleScene.mount`: `applyTerrain`, then `fitToBoard`);
+procedural boards 12 to 24 square (`config/terrain.json`) and no authored
+24×24 (the eleven layouts' sizes, the table's four among them as
+`expect` has them); the 5 s countdown (`config/playback.json`); the
+enemy budget scaling with the roster (`enemyBudget.ts`); seed 91's pin
+(fixtures.test.ts, "open15 hosts every pose on its measured spot, except
+the far-row clump"), `RUN_DIAL_KEYS` against `RUN_CONFIG_PARAMS`, `CLUMP`
+against `CLUMP_GLYPHS`, the defaults against `DEFAULT_CAMERA_VIEW` and
+`DEFAULT_MARK_STYLE`, the artefacts' pin; TODO's items for rounded plates
+and the hop; the overlay layer's camera getter and its `remove` after a
+`clear`; `inkTopLiftFor` reading the patched atlas; `isInertNeutral`;
+`gridToWorld`'s near row; the park recipe in browser-pane.md;
+TerrainRenderer.test's byte-for-byte off leg; 15×15 as the geometry
+tests' reference size. The flyer's lift, "105a measured 1.0", is now its
+geometry: at yaw 45 and pitch 45 the diagonal neighbour is √2 of ground
+behind, which the pitch foreshortens by sin 45° to 1.0 up the screen.
+
+Dropped, none a true-looking claim to restore: the atlas's 48 cells
+(`ATLAS_CELL_BUDGET` is their home), "15×15 is §79b's live board", "the
+cut's definition of wrong", benchRig's "verified in the pane and read in
+Firefox by the user". Kept as written, unchecked: the seed hunts' counts
+(43 of 1..600 at 15×15, 30 of 1..400 at 24, the wade's 25 diagonals),
+the wade's arc of 0.1 to 0.4 world, "an unpinned root is the sector's
+starting event", and the run dials that "ride the fuzz hook".
+
+**Twins corrected outside the batch, flagged:** ARCHITECTURE's
+`boardPanel/` line had main.ts load the module by a dynamic import (the
+dev entry carries it) and `applyCameraView` re-point the overlay layer's
+captured camera (the layer reads a getter). Left for batch 10:
+`traceStore.ts`'s "main.ts's DEV block".
+
+**For 124j-post2, the drops sweep:** batch 1's dropped board sizes
+("procedural up to 20×20, authored up to 32×32") do not hold: procedural
+boards roll 12 to 24, and the largest authored one is 12×32. Batch 7's
+`unitAnchorPos` paragraph, kept unchecked, holds: the rubble spawns in
+`applyTerrain`, before `fitToBoard`.
+
+Measured (`comment-length` on copies under `output/cl-124j-b9`): comment
+lines 396 → 406, words 3,970 → 3,960, code lines 1,416 unchanged; the
+lines rose with the list format in two headers and with the reasons the
+corrections needed (the panel's keys, the seams' guards, the flyer's
+geometry). The step-code ceiling 2,211 → 2,142, the 69 the nine files
+held.
+
+Proof: `comment-strip HEAD src`, comments only, exit 0; its control made
+one code edit in memory in each of the 9 changed files and the compare
+named all 9.
+
+Cost: 234,128 at 17:49 on 2026-10-18 by the tool's clock, after batch 8's
+proof, to 360,200 at 18:03 after this one's: about 126k, batch 8's entry
+and commit inside it, for 1,954 lines; at most 65 a line.
+
+**Read** (`batch`): `git show <this commit> -- src/dev/boardPanel/seams.ts
+src/dev/boardPanel/state.ts src/dev/boardPanel/panel.ts` against the
+seven rules. Wrong looks like a step code or history left, a dial's doc
+the code below it contradicts, or a rule a change must respect cut: every
+patch falling through at the default dial, the fixture's run pairs
+written before `new Game`, the panel on `<body>` and not `#ui` (gotcha
+#137), keys stopped inside the panel with Ctrl+Alt chords passing,
+`inkBottomLift` left unpatched.

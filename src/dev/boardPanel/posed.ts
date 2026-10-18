@@ -1,23 +1,24 @@
 /**
- * 105c — the POSED SET: 105b's posed row, generalized. Whatever pose the dial
- * names (fixtures.ts `placePose` — the row, 105a's three clumps, the edge
- * units, the fake flyer) is stood on the live board as RENDER-ONLY sprites:
- * dev sprites through the public `SpriteRenderer.addSprite`, and REAL overlay
- * stacks through `UnitOverlayLayer.add` — the production bar DOM and CSS, so
- * the bar-line read is honest. No sim unit exists for any of them: they cannot
- * be clicked, targeted or walked around (a live unit walks THROUGH them — read
- * a pose on a parked board). That is the charter's "render-only explorer", and
- * it is why a fixture can never disturb the seeded fight it stands in.
+ * The posed set. Whatever pose the dial names (fixtures.ts `placePose`: the
+ * row, the three clumps, the edge units, the fake flyer) is stood on the
+ * live board as render-only sprites: dev sprites through the public
+ * `SpriteRenderer.addSprite`, and real overlay stacks through
+ * `UnitOverlayLayer.add` and `addDestructible`, the production bar DOM and
+ * CSS, so the bar-line read is honest. No sim unit exists for any of them:
+ * they cannot be clicked, targeted or walked around (a live unit walks
+ * through them, so read a pose on a parked board). That is what keeps the
+ * explorer render-only, and why a fixture can never disturb the seeded
+ * fight it stands in.
  *
- * WHERE things stand is fixtures.ts (pure, tested); this file only asks the
+ * Where things stand is fixtures.ts (pure, tested); this file only asks the
  * live board which tiles are clear and puts sprites on the answer.
  *
- * The FLYER is the one member that moves per frame: its sprite rides the
- * `lift` dial along CAMERA-up (`aboveAnchor` — so it stays "straight up the
- * screen" under whatever camera 105d dials in), its bar rides above that, and
- * its ground point keeps its mark (index.ts puts it on the terrain's table),
- * which is the whole read: the glyph lands over the unit behind it and only
- * the ground says which tile.
+ * The flyer is the one member whose sprite moves per frame: it rides the
+ * `lift` dial along camera-up (`aboveAnchor`, so it stays "straight up the
+ * screen" under whatever camera the dials set), its bar rides above that,
+ * and its ground point keeps its mark (index.ts puts it on the terrain's
+ * table), which is the whole read: the glyph lands over the unit behind it
+ * and only the ground says which tile.
  */
 
 import * as THREE from 'three';
@@ -43,8 +44,8 @@ interface PosedMember {
 
 export class PosedSet {
   private members: PosedMember[] = [];
-  /** 105e — the scale the members' quads were last sized to (a fresh build
-   *  starts at 1, the atlas default). */
+  /** The scale the members' quads were last sized to (a fresh build starts
+   *  at 1, the size `addSprite` writes). */
   private sizedAt = 1;
   private readonly scratch = new THREE.Vector3();
   private readonly lifted = new THREE.Vector3();
@@ -104,8 +105,8 @@ export class PosedSet {
     this.where = notes.join('\n');
   }
 
-  /** `getGlyphUV` throws on a glyph outside the 48-cell atlas — a pose names
-   *  glyphs by hand, so it asks first and says what it skipped. */
+  /** `getGlyphUV` throws on a glyph the atlas lacks, and a pose names glyphs
+   *  by hand, so it asks first and says what it skipped. */
   private inAtlas(glyph: string): boolean {
     try {
       this.atlas.getGlyphUV(glyph);
@@ -115,10 +116,10 @@ export class PosedSet {
     }
   }
 
-  /** Per frame: the bars follow the SAME lift the live units' bars do (the
+  /** Per frame: the bars follow the same lift the live units' bars do (the
    *  atlas's `inkTopLift`, which seams.ts scale-patches on this instance: a
    *  posed body is a unit body, so it wears the glyph scale too), and the
-   *  flyer follows the lift dial along the CURRENT camera's up. */
+   *  flyer follows the lift dial along the current camera's up. */
   sync(dials: DialState): void {
     const { sprites, overlays, renderer } = this.internals;
     if (this.sizedAt !== dials.scale) {
@@ -140,7 +141,7 @@ export class PosedSet {
     }
   }
 
-  /** Idempotent — safe after the battle's own `overlays.clear()`. */
+  /** Idempotent, and safe after the battle's own `overlays.clear()`. */
   clear(): void {
     const { sprites, overlays } = this.internals;
     for (const m of this.members) {

@@ -1,26 +1,26 @@
 /**
- * 105c — the board explorer's FIXTURES (pure, headless-tested): the fixed
- * things every bookmark of the §105 cross is read against. Two tables.
+ * The board explorer's fixtures (pure, headless-tested): the fixed things a
+ * bookmark is read against. Two tables.
  *
- * BOARDS — which battle is on screen. A board fixture is a set of the SHIPPED
- * run dials (`seed=…&layout=…`, src/run/RunConfig.ts) plus what they must open
- * (`expect` — the known answer, pinned headless through the real `Run` in
- * fixtures.test.ts and re-checked live by the loader). The run dials are parsed
- * inside `new Game`, before the panel exists, so the fixture cannot be applied
- * after boot: `bp=board-<id>` is the ONE source, and `fixtureSearch` rewrites
- * the run pairs from this table before Game reads them (boot.ts) — a fixture
- * that opens a different board on reload is what the cut calls wrong, and a
- * hand-edited `seed=` next to a `board-` cannot cause it. Every fixture pins
- * `roster=` as well: the enemy budget scales with the roster (step zero
- * measured 8 enemies vs 5 on the same seed).
- *
- * POSES — render-only posed sprites on whatever board is up (the 105b row's
- * mechanism, generalized): the three clumps and the flyer are 105a's fixtures
- * cell for cell (tests/board/geometry.ts `clumpAt` / the flyer at the centre
- * with its three far neighbours), so what the eye reads is what the instrument
- * measured. A pose lands on its IDEAL cells when they are clear and on the
- * nearest clear fit otherwise — and says so (`notes`), because a displaced
- * clump is not the measured one.
+ * - `BOARDS`, which battle is on screen. A board fixture is a set of the
+ *   shipped run dials (`seed=…&layout=…`, src/run/RunConfig.ts) plus what
+ *   they must open (`expect`, the known answer, pinned headless through the
+ *   real `Run` in fixtures.test.ts and checked again live by the loader).
+ *   The run dials are parsed inside `new Game`, before the panel exists, so
+ *   the fixture cannot be applied after boot: `bp=board-<id>` is the one
+ *   source, and `fixtureSearch` rewrites the run pairs from this table
+ *   before Game reads them (boot.ts). A fixture that opens a different board
+ *   on reload is wrong, and a hand-edited `seed=` next to a `board-` cannot
+ *   cause it. Every fixture pins `roster=` as well, since the enemy budget
+ *   scales with the roster (`enemyBudget.ts`; 8 enemies against 5 on the
+ *   same seed, measured).
+ * - Poses, render-only posed sprites on whatever board is up: the three
+ *   clumps and the flyer are the board geometry tests' cell for cell
+ *   (tests/board/geometry.ts `clumpAt`, and the flyer at the centre with its
+ *   three far neighbours), so what the eye reads is what that instrument
+ *   measures. A pose lands on its ideal cells when they are clear and on the
+ *   nearest clear fit otherwise, and says so (`notes`), because a displaced
+ *   clump is not the measured one.
  */
 
 import type { Team } from '../../sim/Unit';
@@ -43,16 +43,16 @@ export interface BoardFixture {
   };
 }
 
-/** `firstNode=elite` makes the ROOT a battle (an unpinned root is the sector's
+/** `firstNode=elite` makes the root a battle (an unpinned root is the sector's
  *  starting event); `character=` skips the select screen. */
 const RUN_BASE =
   'character=soldier&firstNode=elite&roster=mercenary,archer,rogue,healer,mage,catapult';
 
 export const BOARDS: Record<BoardId, BoardFixture> = {
-  // 15×15 is §79b's live board and 105a's headline row. THE POSE HOST: of the
-  // 43 seeds in 1..600 that roll 15×15, NONE hosts every pose on its measured
-  // spot (a team spawns where the far-row clump goes); seed 91 is the first of
-  // two where that clump is the ONLY thing that moves — pinned by the test.
+  // The pose host, at 15×15, the geometry tests' reference size: of the 43
+  // seeds in 1..600 that roll 15×15, none hosts every pose on its measured
+  // spot (a team spawns where the far-row clump goes); seed 91 is the first
+  // of two where that clump is the only thing that moves, pinned by the test.
   open15: {
     label: 'procedural 15x15 (the 105a reference size, the pose host)',
     run: `seed=91&layout=procedural&${RUN_BASE}`,
@@ -71,8 +71,9 @@ export const BOARDS: Record<BoardId, BoardFixture> = {
     park: true,
     expect: { layoutId: 'endlessCorridors', gridW: 12, gridH: 32 },
   },
-  // No authored 24×24 exists; procedural rolls 12..24 square — seed 10 is the
-  // first of 30 in 1..400 that rolls the maximum (the step-zero hunt).
+  // No authored 24×24 exists; procedural rolls 12..24 square
+  // (`config/terrain.json`), and seed 10 is the first of 30 in 1..400 that
+  // rolls the maximum.
   big24: {
     label: 'procedural 24x24 (the largest square, by seed hunt)',
     run: `seed=10&layout=procedural&${RUN_BASE}`,
@@ -80,18 +81,17 @@ export const BOARDS: Record<BoardId, BoardFixture> = {
     expect: { layoutId: null, gridW: 24, gridH: 24 },
   },
   // The same fight under every bookmark: the sim is deterministic in the seed
-  // and no render dial reaches it. Not parked — the normal 5 s countdown runs.
+  // and no render dial reaches it. Not parked: the normal 5 s countdown runs.
   live: {
     label: 'River 12x12, LIVE (the countdown runs)',
     run: `seed=7&layout=river&${RUN_BASE}`,
     park: false,
     expect: { layoutId: 'river', gridW: 12, gridH: 12 },
   },
-  // 108c — the hop's read. A diagonal between two water tiles past a corner on
-  // land arcs 0.1-0.4 world; `live`'s fight has no such move. Seed 1 had the
-  // most of 12 icebergs seeds in a headless hunt: 25, the first 2.9 s in. The
-  // dial is gone (upright depth shipped alone); the fixture stays for the
-  // movement polish, which reopens the hop (TODO).
+  // The hop's read. A diagonal between two water tiles past a corner on land
+  // arcs 0.1 to 0.4 world; `live`'s fight has no such move. Seed 1 had the
+  // most of 12 icebergs seeds in a headless hunt: 25, the first 2.9 s in.
+  // Kept for the movement polish, which reopens the hop (TODO).
   wade: {
     label: 'Icebergs 16x16, LIVE (units wade diagonally past the floes: the hop read)',
     run: `seed=1&layout=icebergs&${RUN_BASE}`,
@@ -121,9 +121,9 @@ export const RUN_DIAL_KEYS = [
 
 /**
  * A raw `location.search` with its run dials replaced by `board`'s (or just
- * dropped, for `null`), every OTHER pair — `bp` included — byte-for-byte where
- * it was. Idempotent: a search that already IS the fixture's comes back equal,
- * which is how boot.ts knows not to touch the URL.
+ * dropped, for `null`), every other pair, `bp` included, byte for byte where
+ * it was. Idempotent: a search that already is the fixture's comes back
+ * equal, which is how boot.ts knows not to touch the URL.
  */
 export function fixtureSearch(search: string, board: BoardId | null): string {
   const owned = new Set<string>(RUN_DIAL_KEYS);
@@ -139,13 +139,13 @@ export function fixtureSearch(search: string, board: BoardId | null): string {
 export const POSE_IDS = ['row', 'clump', 'edges', 'flyer'] as const;
 export type PoseId = (typeof POSE_IDS)[number];
 
-/** A posed sprite's identity — structurally a `MarkSubject` (render/groundMarks.ts). */
+/** A posed sprite's identity, structurally a `MarkSubject` (render/groundMarks.ts). */
 export interface PosedSpec {
   readonly glyph: string;
   readonly team: Team;
   readonly archetype: string;
   readonly campId: number | null;
-  /** HP shown on the bar — below 1 so a destructible's bar un-hides. */
+  /** HP shown on the bar, below 1 so a destructible's bar shows. */
   readonly hp: number;
   readonly destructible: boolean;
 }
@@ -182,7 +182,8 @@ const block = (glyph: string, archetype: string): PosedSpec => ({
   destructible: true,
 });
 
-/** 105b's row `g ▄ ╥ M a r` — sides alternate so the cue's shapes sit together. */
+/** The row `g ▄ ╥ M a r`: an enemy, two blocks, two players, an enemy, so
+ *  every side's cue shape stands beside another side's. */
 export const POSED_ROW: readonly PosedSpec[] = [
   fighter('g', 'enemy', 'ghoul'),
   block('▄', 'rubble_1x1'),
@@ -192,8 +193,8 @@ export const POSED_ROW: readonly PosedSpec[] = [
   fighter('r', 'enemy', 'rogue'),
 ];
 
-/** 105a's CLUMP_GLYPHS, in its row-major order (pinned equal by the test). A
- *  melee clump is both sides interleaved. */
+/** The geometry tests' `CLUMP_GLYPHS`, in their row-major order (pinned
+ *  equal by the test). A melee clump is both sides interleaved. */
 export const CLUMP: readonly PosedSpec[] = (
   [
     ['M', 'mercenary'],
@@ -219,7 +220,7 @@ const EDGE_GLYPHS: readonly (readonly [string, string])[] = [
   ['s', 'shaman'],
 ];
 
-/** 105a: the flyer is `V`, the unit behind it `M`. */
+/** The flyer is `V`, as in the geometry tests, and the units behind it `M`. */
 const FLYER = fighter('V', 'player', 'reaver');
 const BEHIND = fighter('M', 'enemy', 'mercenary');
 
@@ -261,7 +262,8 @@ interface PoseResult {
   readonly notes: readonly string[];
 }
 
-/** Grid y = 0 is the camera-NEAR row (render `gridToWorld`), as in 105a. */
+/** Grid y = 0 is the camera-near row (render `gridToWorld`), as in the
+ *  geometry tests. */
 export function placePose(pose: PoseId, board: PoseBoard): PoseResult {
   const placements: Placement[] = [];
   const notes: string[] = [];
@@ -295,7 +297,7 @@ export function placePose(pose: PoseId, board: PoseBoard): PoseResult {
   };
 
   if (pose === 'clump') {
-    // 105a's three: the centre, the near-left corner, the far row.
+    // The geometry tests' three: the centre, the near-left corner, the far row.
     group('centre', cx, cy, SQUARE3, CLUMP);
     group('near corner', 1, 1, SQUARE3, CLUMP);
     group('far row', cx, board.gridH - 2, SQUARE3, CLUMP);
@@ -323,8 +325,9 @@ export function placePose(pose: PoseId, board: PoseBoard): PoseResult {
       );
     });
   } else if (pose === 'flyer') {
-    // The flyer, then the three units in the row BEHIND it (y + 1 is farther):
-    // under yaw "up the screen" lands on a diagonal one (105a's blind spot).
+    // The flyer, then the three units in the row behind it (y + 1 is farther):
+    // under yaw, "up the screen" lands on a diagonal one, the case a single
+    // neighbour straight behind would miss.
     group(
       'flyer',
       cx,
@@ -339,9 +342,9 @@ export function placePose(pose: PoseId, board: PoseBoard): PoseResult {
       (i) => i === 0,
     );
   } else {
-    // 105b's scan, unchanged: the first run of six, centred-out on each row,
-    // from the middle row TOWARD the camera (a near row is the biggest on
-    // screen, for reads a few atlas pixels wide), then away.
+    // The first run of six, centred-out on each row, from the middle row
+    // toward the camera (under a perspective lens a near row is the biggest
+    // on screen, for reads a few atlas pixels wide), then away.
     const run = POSED_ROW.map((_, i) => ({ x: i, y: 0 }));
     const start = Math.max(0, Math.floor((board.gridW - run.length) / 2));
     const rows: number[] = [];

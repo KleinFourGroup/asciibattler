@@ -1,8 +1,8 @@
 /**
- * 108d — THE FRAME-COST BENCH (spec D3: "frame time before and after at the
- * user's resolution, with the per-tile bin size reported"). Pure: the legs,
- * their order, the statistics and the report; `benchRig.ts` is the live
- * WebGL side. Headless-tested against a fake clock (bench.test.ts).
+ * The frame-cost bench: the frame time with the terrain marks and without,
+ * at the user's resolution, with the per-tile bin size reported. Pure: the
+ * legs, their order, the statistics and the report; `benchRig.ts` is the
+ * live WebGL side. Headless-tested against a fake clock (bench.test.ts).
  *
  * The render loop's own clock is paced by the display, so a cost below the
  * refresh interval never shows in it. A bench frame is therefore driven by
@@ -14,9 +14,9 @@
  * linear drift the median still equals the leg's mean. Every leg starts from
  * the same marks-toggle round trip, so no leg gains from staying in its mode.
  *
- * First `warmup` rounds of the marks block, discarded: in the pane's first
- * run, without them, the A legs fell from 2.0 to 1.4 ms across the blocks and
- * the A/A read −0.27 ms, a warm-up that no leg order cancels. Then four
+ * First `warmup` rounds of the marks block, discarded: measured in the pane
+ * without them, the A legs fell from 2.0 to 1.4 ms across the blocks and the
+ * A/A read −0.27 ms, a warm-up that no leg order cancels. Then four
  * blocks, each `rounds` of A B B A (a drift linear across the round cancels
  * in the paired difference):
  *  - marks: the plain terrain shaders against the marks compiled in (the off
@@ -114,7 +114,7 @@ function runLeg(rig: BenchRig, leg: BenchLeg, o: BenchOptions): number {
   return median(chunks);
 }
 
-/** One A B B A round, run back to back (a pause inside it let the noise differ from leg to leg), then a pause. */
+/** One A B B A round, run back to back (a pause inside it lets the noise differ from leg to leg), then a pause. */
 async function runRound(rig: BenchRig, a: BenchLeg, b: BenchLeg, o: BenchOptions): Promise<[number, number, number, number]> {
   const a1 = runLeg(rig, a, o);
   const b1 = runLeg(rig, b, o);
@@ -185,7 +185,7 @@ export interface BenchReport {
   readonly canvas: readonly [number, number];
   readonly gpu: string;
   readonly board: string;
-  /** The smallest step `performance.now()` took, ms (browsers coarsen it). */
+  /** The median step `performance.now()` took, ms (browsers coarsen it). */
   readonly clockStep: number;
   /** The table under the marks leg, and under the full bins. */
   readonly bins: BinStats;

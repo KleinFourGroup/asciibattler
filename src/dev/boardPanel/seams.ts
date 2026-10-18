@@ -1,30 +1,28 @@
 /**
- * 105b — the board explorer's SEAMS: how a dev dial reaches the renderer
- * without the renderer knowing. The §105 scope guard is "nothing ships to
- * players; the one production seam is 105d's fit", so every hook here is a
- * RUNTIME patch applied from `src/dev` (TS `private` is runtime-accessible —
- * the devKeys / main.ts cast convention), and every patch falls through to
- * the original at the default dial, so an untouched panel is today's board.
+ * The board explorer's seams: how a dev dial reaches the renderer without
+ * the renderer knowing. Nothing here ships to players, and the explorer's
+ * one production seam is `Renderer.setCameraView`, so every hook here is a
+ * runtime patch applied from `src/dev` (TypeScript's `private` is not
+ * enforced at run time; the dev entry and the dev keys reach Game the same
+ * way), and every patch falls through to the original at the default dial,
+ * so an untouched panel is today's board.
  *
  * The hooks, each in its own section below:
- *  - 105e's glyph scale: the two unit lifts on the atlas instance
- *    (`inkTopLift` · `inkCenterLift`) and the two pick builders on the
- *    BattleRenderer prototype (patched once: a BattleRenderer is built per
- *    battle).
- *  - `SpriteRenderer.sortByDepth` (instance) — Game calls it once per frame
- *    AFTER the scene has settled sprite positions and BEFORE the render, which
- *    is exactly when a follower (the posed set's bars and marks) must sync.
- *    Wrapping it costs no frame of lag, unlike a second rAF.
- *  - `restampSlabs`: no patch, it calls the production slab rule
- *    (`render/slabAnchor.ts`) again after a view change.
- * The spike's other hooks went as their questions closed: the anchor dial's
- * stand-line override (the quad-bottom anchor is the only rule), the bar-line
- * patch on `inkTopLiftFor` (the ink-top line stays), 106b's `unitAnchorPos`
- * patch (its rule shipped), and the mock marks and the hop.
+ * - The glyph scale: the two unit lifts on the atlas instance
+ *   (`inkTopLift`, `inkCenterLift`), the two pick builders on the
+ *   BattleRenderer prototype (patched once: a BattleRenderer is built per
+ *   battle), and the unit bodies' size, stamped per frame.
+ * - `SpriteRenderer.sortByDepth` (instance): Game calls it once per frame
+ *   after the scene has settled sprite positions and before the render,
+ *   which is exactly when a follower (the posed set's bars and marks) must
+ *   sync. Wrapping it costs no frame of lag, unlike a second rAF.
+ * - `restampSlabs`: no patch, it calls the production slab rule
+ *   (`render/slabAnchor.ts`) again after a view change.
  *
- * ⚠ These are name-keyed reaches into private members tsc cannot check. Each
- * is guarded at install: a renamed seam logs a loud `[board-panel]` error and
- * the dial goes inert, instead of silently reading as "no visible change".
+ * The prototype's members are reached by name, which tsc cannot check, so
+ * each is guarded at install: a renamed one logs a `[board-panel]` error and
+ * its dial goes inert, instead of silently reading as "no visible change".
+ * A renamed `handles` map reads as no battle on screen (`liveBattleOf`).
  */
 
 import type * as THREE from 'three';
@@ -43,7 +41,7 @@ import { isInertNeutral } from '../../sim/Unit';
 import type { World } from '../../sim/World';
 import type { DialState } from './state';
 
-/** What the panel reaches on the live Game (all TS-private there). */
+/** What the panel reaches on the live Game (all private there). */
 export interface GameInternals {
   readonly renderer: Renderer;
   readonly sprites: SpriteRenderer;
@@ -82,9 +80,9 @@ export function seamMoved(what: string): void {
 }
 
 /**
- * 105d — dial the projection through the phase's ONE production seam
- * (`Renderer.setCameraView`, typed — tsc checks this one). Every holder reads
- * the camera per use since 107a (`UnitOverlayLayer` takes a getter), so a
+ * Dial the projection through the explorer's one production seam
+ * (`Renderer.setCameraView`, typed, so tsc checks this one). Every holder
+ * reads the camera per use (`UnitOverlayLayer` takes a getter), so a
  * perspective ⇄ ortho swap needs no re-pointing here.
  */
 export function applyCameraView(
@@ -97,11 +95,12 @@ export function applyCameraView(
 interface Seams {
   /** The patched atlas — followers read lifts through it. */
   readonly atlas: FontAtlas;
-  /** 105e — write `footprint × scale` onto every live unit body whose stamped
-   *  size differs (walls and other inert neutrals stay size 1). Idempotent per
-   *  frame: a Map lookup per unit, a buffer write only on change. */
+  /** Write `footprint × scale` onto every live unit body whose stamped size
+   *  differs (walls and other inert neutrals keep their spawned size).
+   *  Idempotent per frame: a Map lookup per unit, a buffer write only on
+   *  change. */
   stampSizes(battle: LiveBattle): number;
-  /** 107b — re-stand every live N×N body by the production slab rule under
+  /** Re-stand every live N×N body by the production slab rule under
    *  the current camera (the slide is view-dependent). Call after a view dial
    *  changes or a battle mounts. Returns the bodies written. */
   restampSlabs(battle: LiveBattle): number;
@@ -111,11 +110,12 @@ export function installSeams(game: Game, dials: () => DialState, onFrame: () => 
   const { sprites } = internalsOf(game);
   const atlas = sprites.atlas;
 
-  // --- 105e: the two UNIT lifts scale with the glyph --------------------------
+  // --- the two unit lifts scale with the glyph -------------------------------
   // `inkTopLift` (bars, hitsplats, the marker over its target) and
   // `inkCenterLift` (FX endpoints) are world units at size 1, so a scaled quad's
-  // ink top and centre are `scale` × further up. `inkBottomLift` is NOT patched:
-  // its one consumer is the objective marker's OWN glyph, which stays size 1.
+  // ink top and centre are `scale` × further up. `inkBottomLift` is not
+  // patched: its one consumer is the objective marker's own glyph, which keeps
+  // its own size.
   const inkTopLiftAtSize1 = atlas.inkTopLift.bind(atlas);
   const inkCenterLiftAtSize1 = atlas.inkCenterLift.bind(atlas);
   // BattleRenderer's `inkTopLiftFor` (the overlay stack, hitsplats) and the
@@ -129,7 +129,7 @@ export function installSeams(game: Game, dials: () => DialState, onFrame: () => 
     unitAnchorPos?: (this: BattleRenderer, corner: GridCoord, footprint: number) => THREE.Vector3;
   };
 
-  // --- 105e: the mirror pick follows the scaled quad -------------------------
+  // --- the mirror pick follows the scaled quad -------------------------------
   // A candidate's `size` is the quad's world extent; its `ink` and `anchor` are
   // quad-local, so scaling `size` alone keeps the click box on the visible ink.
   for (const name of ['enemyBillboards', 'destructibleBillboards'] as const) {
@@ -145,7 +145,7 @@ export function installSeams(game: Game, dials: () => DialState, onFrame: () => 
     };
   }
 
-  // --- 107b: re-standing the N×N bodies ---------------------------------------
+  // --- re-standing the N×N bodies --------------------------------------------
   // The production slab rule (`unitAnchorPos` → `render/slabAnchor.ts`) reads
   // the camera when a body is placed, and rubble never moves, so after a dev
   // view change a slab would keep the old view's slide: shifted a little on
@@ -174,8 +174,8 @@ export function installSeams(game: Game, dials: () => DialState, onFrame: () => 
     sortByDepth(camera);
   };
 
-  // --- 105e: the unit bodies' size ---------------------------------------------
-  // Spawn writes a unit's size ONCE (`footprint`, BattleRenderer.onUnitSpawned)
+  // --- the unit bodies' size ------------------------------------------------
+  // Spawn writes a unit's size once (`footprint`, BattleRenderer.onUnitSpawned)
   // and nothing tweens it, so a per-frame "stamp what differs" is the whole
   // mechanism. Keyed by handle id: a new battle's handles are new ids, and a
   // dead unit's handle simply stops appearing.
@@ -189,7 +189,7 @@ export function installSeams(game: Game, dials: () => DialState, onFrame: () => 
       if (!handle) continue;
       const footprint = footprintOf(unit);
       const size = footprint * scale;
-      // Spawn's own write IS `footprint`, so an untouched dial writes nothing.
+      // Spawn's own write is `footprint`, so an untouched dial writes nothing.
       if ((stampedSize.get(handle.id) ?? footprint) === size) continue;
       sprites.updateSprite(handle, { size });
       stampedSize.set(handle.id, size);

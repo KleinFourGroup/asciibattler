@@ -1,15 +1,17 @@
 /**
- * 105b — THE BOARD EXPLORER (Round 7.5, §105 the projection spike): a
- * dev-only, render-only panel of live dials over the battle board, toggled by
- * Ctrl+Alt+P (devKeys.ts), its state a bookmark in the URL (`?bp=…`, state.ts).
- * Wired from main.ts's DEV blocks only — the shipped bundle never contains it.
+ * The board explorer: a dev-only, render-only panel of live dials over the
+ * battle board, toggled by Ctrl+Alt+P (../devKeys.ts), its state a bookmark
+ * in the URL (`?bp=…`, state.ts). The dev entry attaches it (../devEntry.ts),
+ * so the shipped bundle never contains it.
  *
  * This file is the glue: it owns the dial state, installs the seams once at
- * boot (so a bookmarked dial is live BEFORE the first battle's sprites are
- * stamped), and runs the pre-render frame sync — the posed set's ground marks
- * and bars. The dial table is state.ts; how a
- * dial reaches the renderer is seams.ts; 105c's fixtures are fixtures.ts (what
- * and where), posed.ts (the sprites) and boot.ts (straight to the battle).
+ * boot (so a bookmarked dial is live before the first battle's sprites are
+ * stamped), and runs the pre-render frame sync: the posed set's ground marks
+ * and bars, and the unit bodies' sizes. The dial table is state.ts; how a
+ * dial reaches the renderer is seams.ts; the fixtures are fixtures.ts (what
+ * and where), posed.ts (the sprites) and boot.ts (straight to the battle);
+ * the panel's DOM is panel.ts, and the frame-cost bench bench.ts and
+ * benchRig.ts.
  */
 
 import * as THREE from 'three';
@@ -49,7 +51,7 @@ export interface BoardPanel {
   /** For console / pane probes: `__game.boardPanel.set('yaw', 30)`. */
   set(key: DialKey, value: string | number | boolean): void;
   readonly dials: DialState;
-  /** 108d — the frame-cost bench on the board on screen (the panel's button runs the defaults). */
+  /** The frame-cost bench on the board on screen (the panel's button runs the defaults). */
   bench(options?: BenchOptions): Promise<BenchReport | string>;
   /** Live counts, for a probe that must not trust the panel's own readout. */
   probe(): {
@@ -59,11 +61,11 @@ export interface BoardPanel {
       flies: boolean;
       ground: [number, number, number];
     }[];
-    /** 105e — size writes so far (unit bodies stamped `footprint × scale`). */
+    /** Size writes so far (unit bodies stamped `footprint × scale`). */
     sized: number;
-    /** 107b — N×N bodies re-stood by the last view or battle change. */
+    /** N×N bodies re-stood by the last view or battle change. */
     slabs: number;
-    /** 108b — the terrain marks' last upload: marks, dropped placements, the fullest bin. */
+    /** The terrain marks' last upload: marks, dropped placements, the fullest bin. */
     marks: { count: number; overflow: number; maxBin: number };
     battle: boolean;
     fixture: FixtureReport | null;
@@ -74,13 +76,13 @@ export function attachBoardPanel(game: Game): BoardPanel {
   let dials = parseDials(new URLSearchParams(location.search).get(BOARD_PANEL_PARAM));
   const internals = internalsOf(game);
   const markColour = new THREE.Color();
-  // The atlas INSTANCE is what installSeams patches below (the glyph scale),
+  // The atlas instance is what installSeams patches below (the glyph scale),
   // so the posed set's lifts read the dialled scale.
   const posed = new PosedSet(internals, internals.sprites.atlas);
   let lastBattleRenderer: LiveBattle['battleRenderer'] | null = null;
-  /** 105e — cumulative size writes (a probe reads it before / after a dial). */
+  /** Cumulative size writes (a probe reads it before and after a dial). */
   let lastSized = 0;
-  /** 107b — N×N bodies re-stood by the last view or battle change. */
+  /** N×N bodies re-stood by the last view or battle change. */
   let lastSlabs = 0;
   let fixture: FixtureReport | null = null;
 
@@ -92,8 +94,8 @@ export function attachBoardPanel(game: Game): BoardPanel {
       lastBattleRenderer = current;
       posed.clear();
       if (battle && dials.pose !== 'off') posed.build(battle, dials.pose);
-      // 107b — rubble spawns before the camera is re-fitted to THIS board, and
-      // a dialled lens's slide reads the camera's position. Under ortho the
+      // Rubble spawns before the camera is re-fitted to this board, and a
+      // dialled lens's slide reads the camera's position. Under ortho the
       // re-stand writes the positions the rubble already has.
       if (battle) lastSlabs = seams.restampSlabs(battle);
       describe();
@@ -102,7 +104,7 @@ export function attachBoardPanel(game: Game): BoardPanel {
       for (const m of posed.live) {
         // A posed body's mark goes on the same table as the live bodies'
         // (BattleRenderer began this frame's before this hook ran), at its
-        // ground point: a flyer's mark stays on its TILE, and only the glyph
+        // ground point: a flyer's mark stays on its tile, and only the glyph
         // leaves.
         const shape = markShapeOf(m.spec);
         markColour.set(spriteColorForUnit(m.spec));
@@ -126,12 +128,12 @@ export function attachBoardPanel(game: Game): BoardPanel {
   // `onFrame` runs only from the sortByDepth hook, after this returns.
   const seams = installSeams(game, () => dials, onFrame);
 
-  // 105d — a bookmarked projection is live before the first battle mounts. An
+  // A bookmarked projection is live before the first battle mounts. An
   // untouched panel never calls the seam: the Renderer boots at the default.
   if (VIEW_DIALS.some((key) => dials[key] !== DIALS[key].def)) {
     applyCameraView(game, cameraViewOf(dials));
   }
-  // 108b — so are bookmarked terrain marks (typed calls on the terrain, no patch).
+  // So are bookmarked terrain marks (typed calls on the terrain, no patch).
   const applyMarks = (): void => {
     internals.terrain.setGroundMarks(dials.marks);
     internals.terrain.setMarkStyle({ ...DEFAULT_MARK_STYLE, plateCorner: dials.plateCorner });
@@ -156,11 +158,11 @@ export function attachBoardPanel(game: Game): BoardPanel {
     view.setStatus(lines.join('\n'));
   };
 
-  /** What a dial change must DO beyond being read next frame. */
+  /** What a dial change must do beyond being read next frame. */
   const apply = (key: DialKey): void => {
     if (VIEW_DIALS.includes(key)) applyCameraView(game, cameraViewOf(dials));
     if (key === 'marks' || key === 'plateCorner') applyMarks();
-    // 107b — the slab rule reads the camera, so a view change re-stands it.
+    // The slab rule reads the camera, so a view change re-stands it.
     if (VIEW_DIALS.includes(key)) {
       const battle = liveBattleOf(game);
       if (battle) lastSlabs = seams.restampSlabs(battle);
@@ -189,7 +191,7 @@ export function attachBoardPanel(game: Game): BoardPanel {
     describe();
   };
 
-  // 108d — one bench at a time; its report goes to the panel and the console.
+  // One bench at a time; its report goes to the panel and the console.
   let benching: Promise<BenchReport | string> | null = null;
   const bench = (options?: BenchOptions): Promise<BenchReport | string> => {
     benching ??= (async () => {
@@ -214,8 +216,8 @@ export function attachBoardPanel(game: Game): BoardPanel {
     onBench: () => void bench(),
     onChange: set,
     onReset: () => {
-      // "Today" is about the TREATMENTS: the board under them stays (resetting
-      // it would reload), and so does where the panel starts.
+      // "Today" is about the treatments: the board under them stays (resetting
+      // it would reload), and so does whether the panel starts hidden.
       const { hide, board } = dials;
       dials = { ...defaultDials(), hide, board };
       apply('proj');
@@ -231,7 +233,7 @@ export function attachBoardPanel(game: Game): BoardPanel {
   const bookmarked = new URLSearchParams(location.search).has(BOARD_PANEL_PARAM);
   if (bookmarked && !dials.hide) view.setOpen(true);
 
-  // 105c — a `board-` bookmark goes straight to its battle (boot.ts). After the
+  // A `board-` bookmark goes straight to its battle (boot.ts). After the
   // seams, so the fixture's first sprites are stamped under the dialled rules.
   fixture = enterBoardFixture(game);
   describe();

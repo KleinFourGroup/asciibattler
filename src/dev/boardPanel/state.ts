@@ -1,20 +1,19 @@
 /**
- * 105b — the board explorer's DIAL TABLE + its URL codec (pure, headless-
- * tested). The board explorer (Round 7.5's projection spike, §105, kept as a
- * dev tool) is a dev-only, render-only panel of live dials; a dial is one row
- * of `DIALS`, and everything else — the
- * panel's controls, the typed state, the `?bp=` bookmark — derives from that
- * row, so 105d/105e add a projection or glyph-scale dial as one line here.
+ * The board explorer's dial table and its URL codec (pure, headless-tested).
+ * The explorer is a dev-only, render-only panel of live dials; a dial is one
+ * row of `DIALS`, and everything else (the panel's controls, the typed
+ * state, the `?bp=` bookmark) derives from that row, so a new dial is one
+ * row here.
  *
- * The state lives in the URL (`?bp=yaw-30_pose-row`), NEVER in
- * `RunConfig`: the run dials ship to players and ride the fuzz hook
- * (src/run), this is `src/dev`, referenced only from main.ts's DEV block.
- * Only NON-default values are written, so the default state is no param at
- * all and a bookmark names exactly what differs from today's board. Unknown
- * keys / values are dropped (the `layout=` unknown-token discipline), never
- * thrown on — a stale bookmark degrades to defaults.
+ * The state lives in the URL (`?bp=yaw-30_pose-row`), never in `RunConfig`:
+ * the run dials ship to players and ride the fuzz hook (src/run), and this
+ * is `src/dev`, which only a DEV page loads (../devEntry.ts). Only
+ * non-default values are written, so the default state is no param at all
+ * and a bookmark names exactly what differs from today's board. Unknown keys
+ * and values are dropped, as `layout=` drops an unknown id, never thrown on:
+ * a stale bookmark degrades to defaults.
  *
- * Codec: pairs joined by `_`, key and value by the FIRST `-` (so a later
+ * Codec: pairs joined by `_`, key and value by the first `-` (so a later
  * negative number survives); every character used is one URLSearchParams
  * leaves unescaped (`-`, `_`, `.`, alphanumerics), so the address bar stays
  * readable. Keys therefore never contain `_` or `-`.
@@ -47,11 +46,11 @@ export type DialSpec =
     };
 
 export const DIALS = {
-  /** 105c — WHICH BATTLE is on screen (fixtures.ts `BOARDS`). Unlike every
-   *  other dial this one cannot apply live: the run dials it stands for are
-   *  parsed inside `new Game`, so a change rewrites the URL and RELOADS, and
-   *  boot.ts re-derives the run pairs from the table on every load. `off` = the
-   *  panel leaves the run alone (your own `?seed=` / `?layout=` apply). */
+  /** Which battle is on screen (fixtures.ts `BOARDS`). Unlike every other
+   *  dial this one cannot apply live: the run dials it stands for are parsed
+   *  inside `new Game`, so a change rewrites the URL and reloads, and boot.ts
+   *  re-derives the run pairs from the table on every load. `off` = the
+   *  panel leaves the run alone (your own `?seed=` and `?layout=` apply). */
   board: {
     kind: 'enum',
     label: 'board',
@@ -59,8 +58,8 @@ export const DIALS = {
     def: 'off',
     hint: 'a fixed battle, straight from boot — changing it RELOADS and replaces your run dials (seed, layout, roster…)',
   },
-  /** 105d — THE PROJECTION, through the phase's one production seam
-   *  (`Renderer.setCameraView`). The defaults ARE `DEFAULT_CAMERA_VIEW`
+  /** The projection, through the explorer's one production seam
+   *  (`Renderer.setCameraView`). The defaults are `DEFAULT_CAMERA_VIEW`
    *  (state.test.ts pins the four against it), so an untouched panel never
    *  calls the seam with anything but today's camera. */
   proj: {
@@ -97,12 +96,12 @@ export const DIALS = {
     def: 45,
     hint: 'degrees about the vertical — 45 = the diamond board (shipped); 0 = square to the board',
   },
-  /** 105e — THE GLYPH SCALE: a multiplier on every UNIT BODY's quad (user-
-   *  signed: units only — walls, projectiles and markers stay size 1, so a
-   *  wall run never overlaps itself and the read is about the units). Threaded
-   *  through the mirror pick (`enemyBillboards` / `destructibleBillboards`)
-   *  and the two unit lifts (`inkTopLift` · `inkCenterLift`), so bars,
-   *  hitsplats, FX endpoints and click boxes stay glued to the bigger glyph. */
+  /** The glyph scale: a multiplier on every unit body's quad. Units only:
+   *  walls, projectiles and markers keep their size, so a wall run never
+   *  overlaps itself and the read is about the units. Threaded through the
+   *  mirror pick (`enemyBillboards`, `destructibleBillboards`) and the two
+   *  unit lifts (`inkTopLift`, `inkCenterLift`), so bars, hitsplats, FX
+   *  endpoints and click boxes stay glued to the bigger glyph. */
   scale: {
     kind: 'range',
     label: 'glyph scale',
@@ -112,18 +111,17 @@ export const DIALS = {
     def: 1,
     hint: 'unit bodies only (walls stay one tile) — bars, hitsplats and click boxes follow',
   },
-  /** The shipped ground marks, drawn by the terrain (spec D3). Off = the plain
-   *  terrain shaders, the frame-cost bench's before leg. */
+  /** The shipped ground marks, drawn by the terrain. Off = the plain terrain
+   *  shaders, the frame-cost bench's before leg. */
   marks: {
     kind: 'bool',
     label: 'terrain marks',
     def: true,
     hint: 'the shipped marks, drawn by the terrain - off = the plain terrain shader',
   },
-  /** The plate corner radius (`MarkStyle.plateCorner`), the one look dial kept
-   *  once the marks' values were signed: square shipped, and the rounding waits
-   *  for organic scenery such as trees (TODO). The default IS the shipped
-   *  style's (state.test.ts). */
+  /** The plate corner radius (`MarkStyle.plateCorner`). Square shipped; the
+   *  rounding is for organic scenery such as trees (TODO). The default is the
+   *  shipped style's (state.test.ts). */
   plateCorner: {
     kind: 'range',
     label: 'plate corner',
@@ -133,9 +131,10 @@ export const DIALS = {
     def: 0,
     hint: 'the plate corner radius, world units - 0 = square; a large radius drifts toward the player circle',
   },
-  /** 105c — the posed fixtures (fixtures.ts `placePose`): render-only sprites
-   *  with real overlay bars, on whatever board is up. `row` is 105b's
-   *  `g ▄ ╥ M a r`; the clumps and the flyer are 105a's, cell for cell. */
+  /** The posed fixtures (fixtures.ts `placePose`): render-only sprites with
+   *  real overlay bars, on whatever board is up. `row` is `g ▄ ╥ M a r`; the
+   *  clumps and the flyer are the board geometry tests'
+   *  (tests/board/geometry.ts), cell for cell. */
   pose: {
     kind: 'enum',
     label: 'pose',
@@ -143,8 +142,9 @@ export const DIALS = {
     def: 'off',
     hint: 'row = g ▄ ╥ M a r · clump = centre + near corner + far row · edges = corners + mids · flyer = V over three far neighbours',
   },
-  /** The fake flyer's camera-up lift, world units (105a measured 1.0: at yaw 45
-   *  / pitch 45 that lands it exactly ON its diagonal neighbour). */
+  /** The fake flyer's camera-up lift, world units. At yaw 45 and pitch 45,
+   *  1.0 lands it on its diagonal neighbour: √2 of ground behind it, which
+   *  the pitch foreshortens by sin 45° to 1.0 up the screen. */
   lift: {
     kind: 'range',
     label: 'flyer lift',
@@ -225,9 +225,10 @@ export function encodeDials(state: DialState): string {
 
 /**
  * Replace (or drop, when `encoded` is `''`) the `bp` pair in a raw
- * `location.search`, leaving EVERY other pair byte-for-byte as the user typed
- * it. `URLSearchParams.set` would re-serialize the whole query — it turned a
- * hand-typed `roster=a,b` into `roster=a%2Cb` on the first dial change (105b).
+ * `location.search`, leaving every other pair byte for byte as the user
+ * typed it. `URLSearchParams.set` would re-serialize the whole query, and
+ * turn a hand-typed `roster=a,b` into `roster=a%2Cb` on the first dial
+ * change.
  */
 export function spliceBookmark(search: string, encoded: string): string {
   const kept = (search.startsWith('?') ? search.slice(1) : search)
@@ -237,9 +238,10 @@ export function spliceBookmark(search: string, encoded: string): string {
   return kept.length === 0 ? '' : `?${kept.join('&')}`;
 }
 
-/** The four projection dials as the Renderer's `CameraView` (105d). Structural
- *  on purpose — state.ts stays free of render imports; index.ts hands it to
- *  `Renderer.setCameraView`, where tsc checks the shape. */
+/** The four projection dials as the Renderer's `CameraView`. Structural on
+ *  purpose, so state.ts stays free of render imports: index.ts hands it to
+ *  seams.ts's `applyCameraView`, typed as `Renderer.setCameraView`'s
+ *  argument, where tsc checks the shape. */
 export function cameraViewOf(state: Pick<DialState, 'proj' | 'fov' | 'pitch' | 'yaw'>): {
   projection: 'perspective' | 'orthographic';
   fovDeg: number;
@@ -257,10 +259,10 @@ export function cameraViewOf(state: Pick<DialState, 'proj' | 'fov' | 'pitch' | '
 export const VIEW_DIALS: readonly DialKey[] = ['proj', 'fov', 'pitch', 'yaw'];
 
 /**
- * 105e — THE KNOWN COSMETIC ARTEFACTS of a dialled board, shown on the panel
- * so a read discounts them instead of filing them. Each is a seam the dev
- * dials reach and production does not: an artefact of the shipped board
- * itself belongs in TODO, not here. Text only — the panel renders it,
+ * The known cosmetic artefacts of a dialled board, shown on the panel so a
+ * read discounts them instead of filing them. Each is a seam the dev dials
+ * reach and production does not: an artefact of the shipped board itself
+ * belongs in TODO, not here. Text only: the panel renders it, and
  * state.test.ts pins that none is empty.
  */
 export const KNOWN_ARTEFACTS: readonly string[] = [

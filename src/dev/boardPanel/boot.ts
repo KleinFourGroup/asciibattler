@@ -1,19 +1,19 @@
 /**
- * 105c — the board explorer's STRAIGHT-TO-BATTLE loader, in two halves that
- * straddle `new Game` (main.ts's DEV blocks call both; neither ships).
+ * The board explorer's straight-to-battle loader, in two halves that
+ * straddle `new Game`: the dev entry's `beforeBoot` calls the first, and
+ * the panel's attach (./index.ts) the second, so neither ships.
  *
- * BEFORE Game: `applyBoardFixtureUrl` — Game parses the run dials from
- * `location.search` in its constructor, so a board fixture has to be IN the
- * URL by then. `bp=board-<id>` is the one source: the run pairs are re-derived
- * from the BOARDS table on every load (a `replaceState`, no navigation), so a
- * bookmark can only ever open the board its `board-` names.
- *
- * AFTER Game: `enterBoardFixture` — the two dispatches a player's two clicks
- * would make (the root node, then the pre-turn screen's Fight), then the
- * countdown parked for a `park` fixture. The loader CHECKS what it opened
- * against the fixture's `expect` and says so loudly: "a fixture that opens a
- * different board" is the cut's definition of wrong, so the panel is where it
- * must show.
+ * - Before Game, `applyBoardFixtureUrl`: Game parses the run dials from
+ *   `location.search` in its constructor, so a board fixture has to be in
+ *   the URL by then. `bp=board-<id>` is the one source: the run pairs are
+ *   re-derived from the BOARDS table on every load (a `replaceState`, no
+ *   navigation), so a bookmark can only ever open the board its `board-`
+ *   names.
+ * - After Game, `enterBoardFixture`: the two dispatches a player's two
+ *   clicks would make (the root node, then the pre-turn screen's Fight),
+ *   then the countdown parked for a `park` fixture. The loader checks what
+ *   it opened against the fixture's `expect` and says so on the panel and
+ *   the console, since a fixture that opens a different board is wrong.
  */
 
 import type { Game } from '../../Game';
@@ -26,7 +26,7 @@ function boardInUrl(): BoardId | null {
   return board === 'off' ? null : board;
 }
 
-/** Call BEFORE `new Game`. No `board-` in the bookmark ⇒ the URL is untouched. */
+/** Call before `new Game`. No `board-` in the bookmark ⇒ the URL is untouched. */
 export function applyBoardFixtureUrl(): void {
   const board = boardInUrl();
   if (board === null) return;
@@ -41,7 +41,7 @@ export interface FixtureReport {
   readonly text: string;
 }
 
-/** Call AFTER `game.start()`. Null when the bookmark names no board. */
+/** Call after `game.start()`. Null when the bookmark names no board. */
 export function enterBoardFixture(game: Game): FixtureReport | null {
   const board = boardInUrl();
   if (board === null) return null;
@@ -79,9 +79,10 @@ export function enterBoardFixture(game: Game): FixtureReport | null {
 
   let parked = '';
   if (fixture.park) {
-    // The pane recipe (process/browser-pane.md): the countdown object is per-battle, so an instance
-    // patch parks THIS board only. Space / a speed button still skips it
-    // (BattleScene.tick reads the unpause), so a parked board is one key from live.
+    // The pane's recipe (process/browser-pane.md): the countdown object is
+    // per battle, so an instance patch parks this board only. The pause key
+    // or a speed button still skips it (BattleScene.tick reads the unpause),
+    // so a parked board is one key from live.
     const countdown = (
       internalsOf(game).activeScene as { countdown?: { advance?: unknown } } | null
     )?.countdown;

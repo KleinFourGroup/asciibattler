@@ -1,11 +1,10 @@
 /**
- * 108d — the frame-cost bench's live side (bench.ts is the pure side). One
- * bench frame is the render loop's frame without the scene tick: the
+ * The frame-cost bench's live side (bench.ts is the pure side). One bench
+ * frame is the render loop's frame without the scene tick: the
  * BattleRenderer's per-frame update at dt 0 (where the marks table is built),
  * the sort with the explorer's frame hook, the two-pass render, then a
  * one-pixel `readPixels` that waits for the GPU. The sim does not step, so
- * every leg draws the same board. DOM and WebGL glue, verified in the pane
- * and read in Firefox by the user.
+ * every leg draws the same board. DOM and WebGL glue, with no test.
  */
 
 import type * as THREE from 'three';
@@ -69,12 +68,12 @@ function clockStep(): number {
 /** A `RENDERER` string that names the browser, not the GPU (Chromium's). */
 const GENERIC_RENDERERS = new Set(['WebKit WebGL']);
 
-/** The GPU's name: `RENDERER` first, and the debug extension only when that is
- *  generic. The user's Firefox run logged a console message at the extension
- *  query (not pasted; most likely a deprecation warning), so the query is
- *  skipped wherever `RENDERER` already reads as a name. Unverified in Firefox:
- *  what its `RENDERER` returns. If the report's GPU line reads generic there,
- *  add that string to the set above. */
+/** The GPU's name: `RENDERER` first, and the debug extension only when that
+ *  is generic. A Firefox run logged a console message at the extension's
+ *  query (most likely a deprecation warning), so the query is skipped wherever
+ *  `RENDERER` already reads as a name. What Firefox's `RENDERER` returns is
+ *  unverified: if the report's GPU line reads generic there, add that string
+ *  to the set above. */
 function gpuName(gl: WebGL2RenderingContext | WebGLRenderingContext): string {
   const plain: unknown = gl.getParameter(gl.RENDERER);
   if (typeof plain === 'string' && plain !== '' && !GENERIC_RENDERERS.has(plain)) return plain;

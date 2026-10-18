@@ -9670,6 +9670,11 @@ wins and the credits' flag, the outro waiting for both the floor and the
 settle, main.ts's three first imports in their order. And the call on the
 spec's marks.
 
+**The call, signed** (the user, 2026-10-18, after the hand-off): "You
+absolutely made the right call on those decision codes, Claude!" The
+spec's decision marks come out as codes in the rest of the pass, the
+decision said instead. The batch's read itself is still open.
+
 ### 124j, batch 3 — the renderer and the camera (2026-10-18, session f30471d9)
 
 `Renderer.ts`, `cameraFit.ts`, `pick.ts`, `PostProcess.ts`, `anchor.ts`,
@@ -9761,9 +9766,9 @@ reading inside batch 1's) is about 190k, past the hand-off line.
 For the next session:
 
 - Batch 4 holds four of the spec's marks (`TerrainRenderer.ts` twice,
-  `groundMarks.ts`, `terrainMarks.glsl`, "Round 7.5 spec D3"). If the
-  user's read of batch 2 has not settled the call, take them out as
-  batches 2 and 3 did and flag it again.
+  `groundMarks.ts`, `terrainMarks.glsl`, "Round 7.5 spec D3"). They come
+  out, the decision said instead: the user signed the call after this
+  hand-off (batch 2's entry, "The call, signed").
 - `comment-length` takes folders under the repo: `before` by `git archive
   HEAD <paths> | tar -x -C output/cl-124j-b<n>/before`, `after` by copy.
 - A claim that reaches into another batch's file is checked there and,

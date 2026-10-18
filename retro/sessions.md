@@ -6642,3 +6642,39 @@ one friction line are the session's only commit. Context at the report:
    satisfying. The driver's notes (Edit for entries, `-F` for commit
    messages, the `comment-length` form) each saved a call. I'd want those
    conditions again.
+
+## Phase 124 — summary
+
+Seven sessions on 2026-10-17 and 18 (94055418, 5b9d2da6, f30471d9,
+f2e588ad, fc5ce5cf, 882e1278, and b25b9ccf, which closed it, reported
+below), all claude-opus-5-5, each proposed by the phase's driver session.
+Every one found the orientation enough; what was missing turned up in the
+work: the charter's "151 files" naming no folders, a read signed at the
+kickoff from a TODO line that named a notch no screen draws,
+`fontSubset.ts`'s header showing in `comment-strip` (put in the hand-offs
+after batch 5), batch 6's claims reaching 1,100 lines outside it, and an
+`@` that batch 5 said no sprite draws, posed by the board panel's clump.
+The norm that pulled most, in five reports, was checking each kept claim
+at its code against a batch's budget: sessions dropped true-looking claims
+unchecked (the board sizes, DejaVu's metrics, the event node's share, the
+screens' masking), which the user turned into the drops rule and the
+sweep that restored ten of them. Others: the next-step box against the
+final-message rule (settled as before), the spec's decision marks
+against "Voice" (flagged, then signed), the twin rule reaching into
+§124.5's files and TODO (flagged). Every report names claims written
+ahead of their checks: context readings typed with no tool result (three
+in two sessions, all caught on reread), counts written before counting
+(commit subjects; the atlas called full at 48 when it held 47, which
+reached a commit and was corrected), a general claim from one Firefox
+run, and a false "false" from a Git Bash grep that missed a function the
+Grep tool found. Waste was small: a broken page instrument, a refused
+heredoc, `comment-length` over two folders, a slow copy loop, and `cd`s
+against the brief's note in five sessions, all harmless. All seven report
+room to ask, disagree and stop; hand-offs came from the rate rule's
+arithmetic, and the silent-turn reminder, frequent through the checking
+stretches, was answered with status lines. What they name as supporting
+the work: known answers built into each check (a planted swap, HEAD as a
+control, `comment-strip`'s control, a relocation that reproduced the old
+render byte for byte), finding a comment false at its own code (the
+light's space, the 1.6 MB upload, the overlay's order, the trace ring),
+the driver's notes saving calls, and the user's quick, warm signs.

@@ -188,64 +188,36 @@ Each step's record and the leads it hands on are in WORKLOG §123.
 - ☑ **Beside the cut, signed 2026-10-17** (`none`): the CRLF re-checkout,
   the reach tools' two forms, and the twin rule.
 
-## Phase 124 — render and UI: the board
+## Phase 124 — render and UI: the board ✅ (closed 2026-10-18)
 
-`render` with its shaders, `scenes`, `dev` and the root's four
-(`Game.ts`, `main.ts`, `buildId.ts`, `config.ts`): 65 files and 14
-shaders, 15,497 lines. First the page drive's scene check and the probe
-runner's edges, so the phase has a proof for which scene a phase
-mounts; then the signed rows, the notch, one trial, the re-skim and the
-comment pass. Proof: `build-hash` for dead code, the page drive, and the
-user's eye for a reshaping. Risk: medium, since nothing headless proves
-drawing. ✅ DECIDED at the kickoff: the phase cut in two, the screens as
-§124.5, each half with its own budget of three trials. Cut signed
-2026-10-17 (WORKLOG §124, "The kickoff").
+The page drive's scene check and the probe runner's edges first; then the
+board's signed rows (A-22, A-26, A-28, A-39), the apron's dither path,
+the enemy notch (a display fix), one trial kept (124h), the re-skim and
+R-1; the comment pass in ten batches; the atlas's 16 unused glyphs and
+the drops sweep after it. Over the 79 files: comment lines 5,429 →
+4,866, code lines 8,980 → 8,879, the step-code ceiling 3,135 → 2,122
+(the board's files 1,013 → 0). The screens are §124.5. Each step's
+record and what it hands on are in WORKLOG §124.
 
-- ☑ **124a — T-91, the page drive's scene check** (`none`). The planted
-  rest swap fails the drive by name; the clean tree keeps its hashes.
-- ☑ **124b — T-84, the probe runner's edges** (`none`). Each by a run,
-  `until`'s against HEAD's runner.
-- ☑ **124c — A-39, the camera line** (`none`). `build-hash`: 3 of 33.
-- ☑ **124d — the board's A-22 and A-28** (`none`). `FxKey`; the
-  renderers' `dispose()` and `stop()`, the camera's two getters, the
-  overlay layer's two members, `FontAtlas`'s three fields.
-- ☑ **124e — the apron's dither path, whole** (`batch`, read
-  2026-10-18: the ring fades into the mist as before).
-- ☑ **124f — A-26, the word `export`** (`none`). `render` 22 (A-23
-  keeps two), `dev` 30; the bytes moved, proven the same unminified.
-- ☑ **124g — the enemy notch** (`batch`, re-scripted at step zero, read
-  2026-10-18: on seed 4 as soldier the enemy ghost ends on its notch). A
-  display change, signed as an exception to the scope guard.
-- ☑ **124h — `Game.dispatch`'s swap to the map, once** (a trial, kept:
-  its bar met; `batch`, read 2026-10-18: the map back after a rest, a
-  port, an event and a recruit). Its bar is in WORKLOG §124.
-- ☑ **124i — the re-skim** (`stop`). Two fix-ups; R-1 signed
-  2026-10-18 (WORKLOG §124, 124i).
+- ☑ **124a — T-91, the page drive's scene check** (`none`).
+- ☑ **124b — T-84, the probe runner's edges** (`none`).
+- ☑ **124c — A-39, the camera line** (`none`).
+- ☑ **124d — the board's A-22 and A-28** (`none`).
+- ☑ **124e — the apron's dither path, whole** (`batch`, read).
+- ☑ **124f — A-26, the word `export`** (`none`). `render` 22, `dev` 30.
+- ☑ **124g — the enemy notch** (`batch`, read). A display change, signed
+  as an exception to the scope guard.
+- ☑ **124h — `Game.dispatch`'s swap to the map, once** (a trial, kept;
+  `batch`, read).
+- ☑ **124i — the re-skim** (`stop`). R-1 signed.
 - ☑ **124i-post — R-1, the overlay handle's `level`** (`none`).
-  `build-hash`: 3 of 33; the drives' hashes unchanged.
-- ☑ **124j — the comment pass** (`batch`, per batch; ten batches,
-  planned in WORKLOG §124). All ten built and read 2026-10-18: the
-  scenes, the root's four, the renderer, the ground, the sprites, FX and
-  overlays, `BattleRenderer.ts`, the probe kit and the dev keys, the board
-  panel, and the diagnostics and the traces; the spec's decision marks
-  out as codes, signed 2026-10-18 (WORKLOG §124, batch 2).
-- ☑ **124j-post — the atlas's 16 unused glyphs** (`none`, signed
-  2026-10-18, by a pane compare of every kept glyph's cell). Batch 5's
-  find, put in the roadmap by the user at its read (WORKLOG §124,
-  "124j-post, planned"). Built 2026-10-18 with `@` kept and each glyph
-  clipped to its cell, both signed at step zero (WORKLOG §124,
-  "124j-post — step zero, the signs and the proof").
-- ◐ **124j-post2 — the drops sweep** (`batch`, signed 2026-10-18, read
-  at 124k's stop). Built 2026-10-18: ten claims restored, four kept ones
-  corrected (WORKLOG §124, "124j-post2 — the drops sweep"). The true-looking claims in every batch's "Dropped and
-  not checked" paragraph, checked at the code they name, and those that
-  hold restored; `comment-strip`, comments only (WORKLOG §124, "The
-  signs after batch 7"). Its scope, signed 2026-10-18: batches 8 to 10's
-  "Kept as written, unchecked" claims too, and a claim about something
-  outside the code checked where a tool here reaches it, else kept as
-  written with its source named (WORKLOG §124, "124j-post — step zero,
-  the signs and the proof").
-- ☐ **124k — the close** (`stop`).
+- ☑ **124j — the comment pass** (`batch`, per batch). Ten batches, each
+  read with no finding; about 84 tokens a line.
+- ☑ **124j-post — the atlas's 16 unused glyphs** (`none`). `@` kept, each
+  glyph clipped to its cell.
+- ☑ **124j-post2 — the drops sweep** (`batch`, read at 124k's stop). Ten
+  claims restored, four kept ones corrected.
+- ☑ **124k — the close** (`stop`). Read 2026-10-18; three calls signed.
 
 ## Phase 124.5 — render and UI: the screens
 

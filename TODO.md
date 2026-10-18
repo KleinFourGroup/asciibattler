@@ -46,7 +46,10 @@ TODO items (list A's deletions, list B's trials) are in
 
 - ✅ **A loaded run can miss a field the class defaults.** `Run.test.ts` holds a loaded run's own properties to a constructed one's; `fromJSON` sets `pauseAtTurnGates` (census F-2; WORKLOG §123, 123k).
 
-### §124 render and UI, its first steps
+### §124 and §124.5 render and UI
+
+§124, the board, closed 2026-10-18; the open items below are §124.5's,
+the screens', for its kickoff (WORKLOG §124, "The close of §124").
 
 - [ ] **A third copy of the neutral-target rule, a lead for the kickoff.**
   `ObjectiveController.ts:185-191` filters the neutrals a click may order
@@ -70,7 +73,8 @@ TODO items (list A's deletions, list B's trials) are in
   `Game.devLoadRun` takes a save at any gate and refuses only a `battle`
   or `turn-outcome` one. Code, so outside the comment pass; beside it,
   `toggleGrayscaleAudit`'s `force` parameter, which no caller passes.
-  Found at 124j's batch 8 (WORKLOG §124).
+  Found at 124j's batch 8 (WORKLOG §124); a row for §124.5's kickoff,
+  signed at §124's close.
 
 - ✅ **The battle HUD's enemy notch can show the next wave's bound.** In battle `Run.previewPoolsAtRisk` reads the fielded wave; `Run.test.ts` pins it on seed 2 (WORKLOG §124, 124g).
 

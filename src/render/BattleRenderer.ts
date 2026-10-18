@@ -1063,13 +1063,13 @@ export class BattleRenderer {
    *
    * Not one line for every glyph: a shared line is blind to the glyph, so a
    * short glyph (`a`, `r`) wore its bar visibly high and a tall one (`M`) ran
-   * cramped, and since the CSS gap is in screen pixels against an anchor
-   * blind to depth, near rows read tight and far rows high at once, with no
-   * one gap fixing both. The ink top scales with perspective, so the gap
-   * means the same at every depth and letterform. The price, accepted: bars
-   * over an `a` and an `M` at equal depth sit a seventh of a tile apart
-   * (some 5 px at 1280 × 720 on a 15 × 15 board) instead of on one line. `inkCenterLift`'s users, the FX endpoints, are apart from
-   * this.
+   * cramped. The ink top is in world units, so it keeps to the glyph at any
+   * depth: the shipped orthographic camera draws every row at one scale, and
+   * under a lens (the board panel's `proj` dial) it shrinks with the glyph.
+   * The price, accepted: bars over an `a` and an `M` at equal depth sit a
+   * seventh of a tile apart (some 5 px at 1280 × 720 on a 15 × 15 board)
+   * instead of on one line. `inkCenterLift`'s users, the FX endpoints, are
+   * apart from this.
    */
   private inkTopLiftFor(unit: Unit): number {
     return this.sprites.atlas.inkTopLift(unit.glyph) * footprintOf(unit);

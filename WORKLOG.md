@@ -10898,3 +10898,96 @@ says the repo keeps out.
 The read is `batch`, at 124k's stop: `git show <this commit>`. Wrong
 looks like a restored claim that the code it names contradicts, or
 history coming back with it.
+
+### The close of §124 (2026-10-18, session b25b9ccf)
+
+**Read** (the user, 2026-10-18): "I read post2, and it looks great! 😁
+As for the calls, signing your leans for 1, 2, and 4." 124a to 124k are
+ticked, each read as its step was cut (124e, 124g and 124h by the user's
+`batch` reads, 124i and this close at their stops, 124j's ten batches and
+124j-post2 by `batch` reads with no finding, the rest `none`); nothing is
+◐. The section is demoted in ROADMAP. The phase ran from the driver's
+prompt commit `7a7ba3b3` to the drops sweep's `6f24010e`, 38 commits in
+seven sessions (94055418, 5b9d2da6, f30471d9, f2e588ad, fc5ce5cf,
+882e1278, b25b9ccf), each started by the phase's driver session.
+
+The three calls, as signed:
+
+1. The dev load key's two console lines and `toggleGrayscaleAudit`'s
+   unused `force` go to §124.5's kickoff as a row (TODO).
+2. `BattleRenderer.inkTopLiftFor`'s reason, the drops sweep's find, is
+   corrected in this commit: the ink top is in world units (`aboveAnchor`
+   lifts along camera-up), so it keeps to the glyph at any depth; the
+   shipped camera is orthographic (`DEFAULT_CAMERA_VIEW`), and the depth
+   case is the board panel's `proj` lens. A search for its wording ("far
+   rows", "scales with perspective", "blind to depth") found no twin;
+   DESIGN's far-row line describes the orthographic camera and holds.
+   `comment-strip HEAD src`: comments only, its control naming the one
+   changed file.
+4. TODO's §124 section is retitled to hold §124.5's items too.
+
+The third, the itch account's subdomain in archive/post-109-worklog.md:
+the user says it is fair game ("The itch page outright links back to
+this repository"); it was the GitHub Pages address that stays out. It
+stays. AGENTS "The project" and the Cursor say the itch page's address
+is kept out; that wording goes to the user.
+
+What the phase changed, from `git diff 7a7ba3b3 6f24010e` and the
+instruments:
+
+- `src`: 3,785 lines out and 3,139 in over 86 files, comments included;
+  no file added or deleted in `src`, `tests` or `tools`;
+- the board's 79 files (the non-test `.ts` of `render`, `scenes` and
+  `dev`, the 14 shaders, the root's four; `comment-length` on copies at
+  both ends under `output/cl-124-close/`, whose start read the kickoff's
+  baseline exactly): code lines 8,980 → 8,879, comment lines 5,429 →
+  4,866, comment words 49,529 → 43,926;
+- the step-code ceiling 3,135 → 2,122, the board's files 1,013 → 0; its
+  tests keep 55 (54 in `render`, `scenes` and `dev`, one in
+  `config.test.ts`), which wait for §126;
+- the suite 3,723 → 3,724 tests (124g's pin), the smoke 613; no snapshot
+  bump (World v36, Run v49);
+- the signed rows A-22, A-26, A-28 and A-39 in the board's files, the
+  apron's dither path, R-1, and the atlas's 16 unused glyphs (`@` kept,
+  each glyph clipped to its cell); one trial, 124h's single swap to the
+  map, kept under its bar; the enemy notch fixed, a display change signed
+  as an exception to the scope guard;
+- the comment pass: ten batches over 15,320 lines in five sessions, each
+  read with no finding, about 1.29M tokens by the batches' own rates
+  (each batch's rate times its lines, so approximate), about 84 a line,
+  from 38 (batch 10) to 154 (batch 6); a batch whose comments name other
+  files' code costs the reading of those files; then the drops sweep,
+  ten claims restored and four kept ones corrected.
+
+What it hands on:
+
+- **To §124.5's kickoff:** its charter's rows (ROADMAP §124.5); TODO's
+  three items under "§124 and §124.5" (the neutral-target lead, the
+  ability line, the dev load key's lines with `force`); `src/fonts.css`'s
+  three step codes; ui.css's overlay and hitsplat comments, which hold
+  history the board's TypeScript lost (the hand-off after batch 7); and
+  the comment pass as 124j ran it, with the drops rule from its signs
+  (check a drop while its file is in context; a claim outside the pass's
+  files stays as written) and the sweep's lesson that "Kept as written,
+  unchecked" claims are cheap to check where a rerun exists (the seed
+  hunts) and dearest where a claim names a measurement's size.
+- **To §126:** the board's 55 step codes in its tests.
+- **Unchanged, already placed:** the census rows of §125 and §126, as
+  ROADMAP has them.
+- **Tools and scratch:** `scratch/124a/`, `124b/` and `124d/` to `124h/`,
+  `124-driver-trial/`
+  and this session's probes (in its scratch directory: the atlas's
+  overrun measure, the seed and wade hunts, the font metrics) stay off
+  git. No worktree is left.
+- **The driver trial:** each of the seven sessions was proposed by the
+  phase's driver session; its verdict is the driver's to write here.
+
+Readings by the tool's clock (UTC). The phase's seven sessions, first to
+last: 94055418 97,088 → 441,702 (the kickoff, 124a to 124f), 5b9d2da6
+115,609 → 450,267 (124g to 124i, R-1, the pass's plan and batch 1),
+f30471d9 130,963 → 397,148 (batches 2 and 3), f2e588ad 106,081 →
+454,381 (batches 4 and 5), fc5ce5cf 111,797 → 437,788 (batches 6 and 7),
+882e1278 110,436 → 418,900 (the signs, batches 8 to 10), b25b9ccf
+190,437 → the reading below (124j-post, 124j-post2 and this close; its
+first reading came after 124j-post's step zero, as no call was made at
+the orientation).

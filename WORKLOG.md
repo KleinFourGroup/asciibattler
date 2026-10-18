@@ -9274,3 +9274,69 @@ stops short and tells nothing.
 
 Reading: 231,032 at 01:21 on 2026-10-18, by the tool's clock, before the
 commit.
+
+### 124h — `Game.dispatch`'s swap to the map, once (2026-10-17, session 5b9d2da6)
+
+A trial, the first of the board's three. `Game.dispatch` now calls
+`run.dispatch(command)` once, before its switch. The switch has two arms
+and the `satisfies never` default: the eight kinds that can land the run
+on the map with no event (`enterNode`, `chooseRestOption`, `leavePort`,
+`chooseEventOption`, `chooseRecruit`, `passRecruit`, `dismissPromotion`,
+`dismissSectorCleared`), whose arm swaps the map in when the phase is
+`map`, and the other thirteen, whose arm does nothing. Each arm has one
+comment, which names what each kind lands on. The comments it replaced
+carried two stale lines: "the one exception is recruit → map" in the
+method's doc (the kinds are eight; the doc is corrected), and
+`dismissSectorCleared`'s claim that its scene "lands at 67b" and the gate
+is reachable only headlessly (`SectorClearedScene` exists, and the drives
+below reach it).
+
+Step zero: the eight sites were as the kickoff read them, and the drive's
+`PHASE_ROWS` can send all eight kinds (`passRecruit` by a seeded pick,
+`dismissSectorCleared` in a run of more than one sector, which the
+`sectorHops` dial gives). Six drives on HEAD (`22c6d5ce`, built once,
+`scratch/124h/drives.mjs`), each with its journal: seed 6 with
+`hops=2&firstNode=rest`, seed 7 with `hops=4`, and seeds 1 to 4 with
+`sectorHops=2`. They send all eight kinds. A kind followed by an
+`enterNode`, which the drive sends only at the map, landed the run there,
+and the scene check then held `MapScene` on screen: the rest 1 of 1, the
+undock 1 of 1, an event option 5 of 10, a recruit taken 4 of 4, a recruit
+passed 1 of 1, the sector gate 4 of 4. Two landings no drive reaches:
+`enterNode` comes back to the map only when the hop is refused, and the
+drive never sends a refused hop (a command that changes nothing throws);
+`dismissPromotion` lands on the map only after a rest's promotion, and the
+only rest driven levelled no one. Seeds 6 and 7 gave 124a's hashes, so
+124g moved no drive.
+
+The bar, written at the kickoff:
+
+1. the page drive's log and state hashes equal HEAD's on all six drives,
+   with 124a's check passing: `e9cbf755`/`6956a4f2`, `d6012bc8`/`064ce09d`,
+   `90897319`/`cd769299`, `4aa3012a`/`b085c19f`, `7782aa61`/`3c53e3f9`,
+   `4e42b562`/`029d4fe1`, the same kinds sent and the same landings. The
+   two unreached landings are named above. Met;
+2. `src` lines: `Game.ts` 20 added, 124 deleted, and nothing else in `src`
+   changed. Met;
+3. no parameter tells the arms apart. Met;
+4. the swap's rule: 8 sites at HEAD, 1 after; `run.dispatch(command)`, 16
+   calls at HEAD, 1 after. Met.
+
+Proof besides: the known answer (`scratch/124h/plant.mjs`), a worktree of
+HEAD with the fold's diff applied, was driven clean first (seed 6 with a
+rest, `e9cbf755` and `6956a4f2`), then with the one swap line removed:
+exit 1, "the run is at map with RestScene on screen, not MapScene (after
+map: enterNode 0 | rest: chooseRestOption 0)". The worktree and its
+junction were removed. Typecheck clean. `comment-codes --record`, run
+before the suite: 3,132 → 3,114, all 18 from `Game.ts` (163 → 145).
+
+Left for the comment pass: the headers of `EventScene`, `PortScene` and
+`RestScene` and of `ui/EventScreen.ts` say that Game's case for their
+command swaps the map, naming the rule after a case ("the leavePort
+silent-transition pattern"). Each is still true, since the case is in the
+arm that swaps.
+
+The read (`batch`, at 124i's stop, as signed): a run through a rest, a
+port, an event and a recruit, with the map back after each.
+
+Reading: 284,042 at 01:32 on 2026-10-18, by the tool's clock, before the
+commit.

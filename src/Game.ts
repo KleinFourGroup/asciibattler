@@ -721,8 +721,8 @@ export class Game implements RunDispatcher {
    * routes:
    *   - `resetRun` → tear down the current Run and start a fresh one.
    *   - everything else → forward to `this.run.dispatch(cmd)`. Most phase
-   *     transitions emit a bus event that drives the Scene swap; the one
-   *     exception is recruit → map, which is silent, so we swap explicitly.
+   *     transitions emit a bus event that drives the Scene swap; a landing
+   *     on the map emits none, so the switch below swaps the map in.
    */
   dispatch(command: RunCommand): void {
     // 117.5i — a halted game applies nothing (`halt`). What still arrives is
@@ -750,146 +750,42 @@ export class Game implements RunDispatcher {
     // journal; the `settle` after the switch closes the journal if this
     // command ended the run.
     this.journaling((recorder) => recorder.command(command));
+    run.dispatch(command);
     switch (command.kind) {
       case 'enterNode':
-        // If the hop is accepted, Run synchronously emits `battle:started`,
-        // which fires the BattleScene swap before this line returns.
-        // Rejected hops (non-frontier, wrong phase) emit nothing — we stay
-        // on the map.
-        run.dispatch(command);
-        // 50e — docking emits `port:entered`, whose bus subscription swaps
-        // the PortScene (the reward:offered pattern) — nothing to do here.
-        // A rest node (`rest:entered`), an event page (`event:entered`) and a
-        // battle (`battle:started`) each fire their own swap too. The phase
-        // is still 'map' only when the hop was rejected, and the map is
-        // remounted then as it always was.
-        if (run.phase === 'map') {
-          this.swap(new MapScene());
-        }
-        break;
       case 'chooseRestOption':
-        // The rest gate's option. A rest that levelled someone emits
-        // `promotion:pending`, which swaps itself; otherwise the run lands
-        // on 'map' with no event (the leavePort pattern), so swap here.
-        run.dispatch(command);
-        if (run.phase === 'map') {
-          this.swap(new MapScene());
-        }
-        break;
       case 'leavePort':
-        // 50c — undock lands on 'map' with no event emit (the chooseRecruit
-        // silent-transition pattern), so swap explicitly.
-        run.dispatch(command);
-        if (run.phase === 'map') {
-          this.swap(new MapScene());
-        }
-        break;
       case 'chooseEventOption':
-        // 74b — resolve an event choice. A page hop re-renders the (74f)
-        // EventScreen off `event:pageChanged`; a start-encounter terminal
-        // fires `battle:started` (self-swapping); a return-to-map terminal
-        // lands on 'map' with no emit (the leavePort silent-transition
-        // pattern), so swap explicitly.
-        run.dispatch(command);
-        if (run.phase === 'map') {
-          this.swap(new MapScene());
-        }
+      case 'chooseRecruit':
+      case 'passRecruit':
+      case 'dismissPromotion':
+      case 'dismissSectorCleared':
+        // Each of these can land the run on 'map', and no event says so: a
+        // hop refused, a rest that levelled no one, an undock, an event's
+        // return to the map, a recruit taken or passed short of the run's
+        // end, a promotion after a rest, the sector gate released onto the
+        // new sector's map. Their other landings emit an event whose
+        // subscription swaps the scene or re-renders it.
+        if (run.phase === 'map') this.swap(new MapScene());
         break;
       case 'buyPortUnit':
       case 'buyPortPacket':
       case 'buyPortDaemon':
       case 'sellPacket':
       case 'payToRemoveUnit':
-        // 50d — port transactions: run-level state only, no phase change
-        // (the §50e port screen re-renders in place after dispatch, the
-        // RewardScreen pattern; the overlays repaint off run:bitsChanged /
-        // run:cacheChanged).
-        run.dispatch(command);
-        break;
-      case 'chooseRecruit':
-        run.dispatch(command);
-        // Non-terminal recruit: phase falls back to 'map' with no event
-        // emit. The terminal-floor case fires `run:victory` which is handled
-        // by the bus subscription above.
-        if (run.phase === 'map') {
-          this.swap(new MapScene());
-        }
-        break;
-      case 'passRecruit':
-        // H6b — declining the offer also lands on 'map' with no event emit,
-        // so swap explicitly (same pattern as chooseRecruit). A non-terminal
-        // recruit is the only phase that reaches here; the terminal floor
-        // routes through run:victory, never the recruit screen.
-        run.dispatch(command);
-        if (run.phase === 'map') {
-          this.swap(new MapScene());
-        }
-        break;
-      case 'dismissPromotion':
-        // M1: mid-encounter, Run resolves dismiss back into the turn loop —
-        // the next turn:starting (gated) fires its own swap. On a won final
-        // turn it resolves into recruit:offered (non-terminal) or run:victory
-        // (terminal), likewise self-swapping. After a G3 rest-triggered
-        // promotion it instead falls back to 'map' with no event, so swap
-        // explicitly (same pattern as chooseRecruit / enterNode above).
-        run.dispatch(command);
-        if (run.phase === 'map') {
-          this.swap(new MapScene());
-        }
-        break;
       case 'advanceTurn':
-        // H4b — resume from a turn gate (pre/post-turn screen). The continuation
-        // (start the battle, the next pre-turn screen, recruit, promotion, or
-        // defeat) emits its own bus event that drives the scene swap, so there's
-        // nothing to swap explicitly here.
-        run.dispatch(command);
-        break;
-      case 'dismissSectorCleared':
-        // 67a — release the between-sector gate; Run falls back to 'map' on
-        // the NEW sector with no event emit, so swap explicitly (the
-        // chooseRecruit / dismissPromotion pattern). The SectorClearedScene
-        // that dispatches this lands at 67b — until then the gate is only
-        // reachable headlessly (the shipped DAG has no non-sink terminal).
-        run.dispatch(command);
-        if (run.phase === 'map') {
-          this.swap(new MapScene());
-        }
-        break;
       case 'acceptReward':
       case 'declineReward':
-        // 48c — resolve one reward portion. Mid-offer the RewardScreen
-        // re-renders in place; the LAST resolution advances the run, whose
-        // event (promotion:pending / recruit:offered / run:victory) drives
-        // its own swap — no silent-map path exists off a won encounter.
-        run.dispatch(command);
-        break;
       case 'redrawCards':
-        // K3 — redraw at the pre-turn gate. The phase doesn't change (the
-        // pre-turn screen stays up and refreshes in place off the
-        // `turn:handRedrawn` emit), so there's no scene swap here either.
-        run.dispatch(command);
-        break;
       case 'empowerUnit':
-        // K4 — empower at the pre-turn gate. Same in-place pattern as
-        // redrawCards: the screen refreshes off `turn:unitEmpowered`.
-        run.dispatch(command);
-        break;
       case 'discardPacket':
-        // 49b — cache discard: run-level state only, legal in any phase; the
-        // cache surfaces repaint off `run:cacheChanged` (no scene swap).
-        run.dispatch(command);
-        break;
       case 'passGrant':
-        // 49d — finalize the active grant at the pre-turn gate. Same
-        // in-place pattern as redrawCards: the screen refreshes off
-        // `turn:grantPassed` (no phase change, no scene swap).
-        run.dispatch(command);
-        break;
       case 'usePacket':
-        // 49e — fire a held packet. No phase change in either context (the
-        // pre-turn screen / map stay up); consumers repaint off
-        // `run:cacheChanged` + `run:packetUsed` (no scene swap).
-        run.dispatch(command);
+        // None of these lands on 'map' from another phase. A port trade, a
+        // packet used or discarded, the gate's redraw, empower and pass, and
+        // a reward resolved before the last leave the phase as it is, and
+        // the screen repaints in place; a turn gate's advance and a reward's
+        // last resolution move on through an event that swaps the scene.
         break;
       default:
         // Exhaustiveness guard (48c): this switch re-enumerates RunCommand by

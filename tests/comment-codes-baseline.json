@@ -1,5 +1,5 @@
 {
- "src/Game.ts": 163,
+ "src/Game.ts": 145,
  "src/audio/AudioPlayer.test.ts": 4,
  "src/audio/AudioPlayer.ts": 31,
  "src/audio/eventSounds.test.ts": 1,

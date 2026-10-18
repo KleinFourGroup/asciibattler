@@ -217,9 +217,9 @@ drawing. ✅ DECIDED at the kickoff: the phase cut in two, the screens as
   seed 4 as soldier, the root's first turn, all nine foes down: the enemy
   ghost ends on its notch; wrong is a ghost one past it). A display
   change, signed as an exception to the scope guard.
-- ☐ **124h — `Game.dispatch`'s swap to the map, once** (a trial;
-  `batch`: a run through a rest, a port, an event and a recruit, the map
-  back after each). Its bar is in WORKLOG §124.
+- ◐ **124h — `Game.dispatch`'s swap to the map, once** (a trial, kept:
+  its bar met; `batch`: a run through a rest, a port, an event and a
+  recruit, the map back after each). Its bar is in WORKLOG §124.
 - ☐ **124i — the re-skim** (`stop`).
 - ☐ **124j — the comment pass** (`batch`, per batch).
 - ☐ **124k — the close** (`stop`).

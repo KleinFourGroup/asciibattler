@@ -20,6 +20,13 @@ in AGENTS.md, which other harnesses read too.
   2026-09-23, Claude Code 2.1.280, claude-opus-5-5: the paragraph before a
   dialog arrived paraphrased; of eight notes in one later turn, two arrived
   paraphrased, and one of those dropped its caveat and misstated a result.)
+- **The next-step box.** The app's wrap-up box shows a recap and at most
+  one short question with buttons, and a box that shows a question ends
+  the turn with no text after it. When the user has to read something
+  before answering (a cut, rows to sign, calls with their reasons), call
+  wrap_up with the recap alone and put the proposal and its question in
+  the turn's final message, after the call. Keep the box's question for a
+  decision that stands on its own, such as a go-ahead to commit.
 - **The silent-turn reminder.** The harness sometimes adds "The user hasn't
   heard from you in a while". It never obliges a finding: answer with what
   is true now ("still reading X, no result yet") and continue. In a long

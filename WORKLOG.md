@@ -10346,3 +10346,35 @@ For the next session:
 - The hand-off after batch 5 still holds: `comment-strip` exits 1 when a
   comment holding a `TOOL_READ` marker is reworded, and a false claim's
   twins can hide in the batch's own files.
+
+### The signs after batch 7 (2026-10-18, session 882e1278)
+
+The user gave six signs to the phase's driver after the hand-off above;
+this session's brief relayed them, and the user confirmed them here:
+"Fully and enthusiastically confirmed, Claude! 😁"
+
+1. A guard on the context readings, in TODO under §127: a pre-commit
+   script that holds each added reading to a response's total input in
+   the transcripts, with a planted typed reading as its known answer.
+2. `comment-length` taking a file or any path, in TODO under §127.
+3. 124f's proof as it ran is enough: the cut named unmoved bytes, the
+   bytes moved, and the unminified compare showed the move as four
+   constants the bundler had inlined while they were exported, each
+   reading the same number.
+4. CLAUDE.md "The next-step box": a proposal the user must read before
+   answering goes in the turn's final message after a recap-only wrap-up.
+5. **124j-post2, the drops sweep**, after batch 10 and 124j-post and
+   before 124k: the true-looking claims in every batch's "Dropped and not
+   checked" paragraph (about 22 in batches 1 to 7) are checked at the
+   code they name, and those that hold are restored; `comment-strip`,
+   comments only. Read `batch`, at 124k's stop: `git show <commit>`.
+   Wrong looks like a restored claim that the code it names contradicts,
+   or history coming back with it.
+6. A session's own drops: with room before its hand-off, a session checks
+   its batches' true-looking drops while their files are in its context
+   and restores those that hold. A claim whose home file is outside the
+   pass (§124.5's files, `src/run`) stays as written rather than deferred.
+   A claim kept or written is checked at the code it names (the callee,
+   the import), not at a nearby doc.
+
+The user's fourth point at that read, no hook for `cd`, needs no record.

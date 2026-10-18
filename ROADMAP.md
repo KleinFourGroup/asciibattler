@@ -233,6 +233,11 @@ drawing. ✅ DECIDED at the kickoff: the phase cut in two, the screens as
   2026-10-18, by a pane compare of every kept glyph's cell). Batch 5's
   find, put in the roadmap by the user at its read (WORKLOG §124,
   "124j-post, planned").
+- ☐ **124j-post2 — the drops sweep** (`batch`, signed 2026-10-18, read
+  at 124k's stop). The true-looking claims in every batch's "Dropped and
+  not checked" paragraph, checked at the code they name, and those that
+  hold restored; `comment-strip`, comments only (WORKLOG §124, "The
+  signs after batch 7").
 - ☐ **124k — the close** (`stop`).
 
 ## Phase 124.5 — render and UI: the screens

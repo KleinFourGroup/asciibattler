@@ -108,6 +108,28 @@ TODO items (list A's deletions, list B's trials) are in
 
 - [ ] **Pin `ui.css`'s `--font-mono` against `FONT_STACK`** (the C1 sweep) — `src/ui/ui.css:9` hand-mirrors `fontSubset.ts`'s chain under a "mirror this" comment and no test.
 
+### §127 tools
+
+- [ ] **A guard on the context readings in WORKLOG and HANDOFF.** A
+  reading typed beside an entry instead of taken from the meter went in
+  larger than the meter's twice at 124d and 124e, caught by hand before
+  the commit. A pre-commit script in `scripts/`, run by
+  `.githooks/pre-commit`, checks that each added "N at HH:MM" reading
+  equals some response's total input (input + cache read + cache write)
+  in this project's transcripts, within a few minutes UTC, and skips when
+  the transcripts folder is absent. Its Vitest known answer is a planted
+  typed reading it must refuse. It lives in `scripts/` and `.githooks/`,
+  not `tools/`, so §127's kickoff takes it beside its charter. The premise
+  was checked: the meter's readings equal a transcript response's total
+  input exactly, and a typed guess matches none. Signed for here
+  2026-10-18 (WORKLOG §124, "The signs after batch 7").
+
+- [ ] **`comment-length` takes only folders under the repo**
+  (`tests/oracle/cli.ts`), so each comment-pass batch copies its files
+  under `output/cl-<batch>/before` and `after` to measure them (WORKLOG
+  §124's batch entries). Taking a file, or any path, would save the copy.
+  Signed for here 2026-10-18 (WORKLOG §124, "The signs after batch 7").
+
 ### §128 the close
 
 - [ ] **DESIGN's "Out of scope" list names as backlog what has since been

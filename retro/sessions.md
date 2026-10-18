@@ -6566,3 +6566,41 @@ one friction line are the session's only commit. Context at the report:
    1.6 MB). Those finds were the most interesting part of the session,
    and I would want that kind of work again. `comment-strip`'s control
    once more made the proof quick to trust.
+
+## 2026-10-18 — session fc5ce5cf (124j, batches 6 and 7)
+
+1. *Missing from the orientation.* Nothing I needed. One thing the batch
+   plan can't show: batch 6's comments describe BattleRenderer's driver,
+   ui.css and the status config, so checking them meant reading about
+   1,100 lines outside the batch, and the batch ran 154 tokens a line
+   against 86 and 87 before it. The next hand-off says so.
+2. *Norms in conflict.* The same one as the last sessions: checking each
+   kept claim against the budget. I checked most and dropped nine, listed.
+   And the rate rule for taking batch 7: the pass's average said it fit,
+   batch 6's own rate said it didn't. I took it on the average, with a
+   stated fallback (commit the part done and hand off past 500k); it ran
+   66 a line. The twin rule took me into TODO.md, where I also fixed two
+   stale numbers in the twin's sentence, a little past the rule; flagged.
+3. *Pulled to claim more than verified.* Twice I nearly published a false
+   "false". A Git Bash grep came back without `UnitCard.buffKeyLabel`, and
+   I dropped a true pointer to it as naming no function; the Grep tool
+   found it in the twin search. Then I first rewrote "Hold/Stop carry no
+   target" as if there were no Stop; Stop is a command that reverts to
+   at-will, and the comment keeps it. Both caught before commit, both in
+   the entries. The swap-abort sentence (a dead participant's sprite
+   settles as it fades) is reasoned from the code, not seen, and says so.
+4. *Wasted.* One Edit whose anchor my own earlier twin edit had rewrapped,
+   and a `cd` into the repo root in my first command despite the brief's
+   note (harmless there, a slip).
+5. *For the next session.* WORKLOG §124, "The hand-off after batch 7".
+6. *Room.* Yes. Taking batch 7 was my call under the written rule, made in
+   the open with its risk named. The silent-turn reminder came often during
+   the long checking stretches; a status line answered each. No wish to
+   pause or stop was noticed.
+7. *What helped.* Contradictions inside the batch's own files were the
+   most satisfying finds: the overlay header put the layer above the HUD
+   while its constructor's doc, and the DOM order, put it under; the dud
+   was "thud, no hit" in one comment and fired on every landing in
+   another. The driver's notes (Edit for WORKLOG entries, the
+   `comment-length` form) each saved a call. I'd want both conditions
+   again.

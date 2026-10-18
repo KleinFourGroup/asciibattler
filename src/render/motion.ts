@@ -1,13 +1,11 @@
 /**
- * 99a — THE MOTION GATE (Round 7 §99, the reduced-motion seam; the kickoff's
- * call A, user-signed 2026-09-16). ONE module answers "is motion reduced?"
- * for every consumer: the JS reads `reducedMotion()`, the CSS keys its
- * reduced rules off the root attribute this module stamps
- * (`html[data-motion="reduced"]`, 99b) — so the Round 8 setting flips ONE
- * override and the whole surface follows without any seam being touched
- * again. The kickoff rejected a `@media (prefers-reduced-motion)` block for
- * the sheet: a media block cannot be flipped by a setting without every rule
- * being duplicated under a second selector.
+ * The motion gate: one module answers "is motion reduced?" for every
+ * consumer. The JS reads `reducedMotion()`, and the CSS keys its reduced
+ * rules off the root attribute this module stamps
+ * (`html[data-motion="reduced"]`), so the motion setting flips one override
+ * and every surface follows. The sheet uses the attribute and not a
+ * `@media (prefers-reduced-motion)` block, which a setting cannot flip
+ * without every rule duplicated under a second selector.
  *
  * Resolution (pure, pinned in motion.test.ts): the override, when set, wins;
  * else the OS preference (`prefers-reduced-motion: reduce`). The attribute is
@@ -18,10 +16,10 @@
  * with no `matchMedia`) still resolves — to the OS, or to `false`.
  *
  * Lives in `render` because `render` never imports `ui` and `ui` imports
- * `render` freely; `fxRegistry` (99c) takes the gate's answer as an ARGUMENT
- * and stays pure data. The DOM stamp is eyeball-verified (the TESTING
- * policy) via Ctrl+Alt+A (src/dev/devKeys.ts), which cycles the override —
- * the preview pane cannot emulate the media query (the §96.5 rider).
+ * `render` freely; `fxRegistry` takes the gate's answer as an argument and
+ * stays pure data. The DOM stamp is checked by eye (TESTING's policy) with
+ * Ctrl+Alt+A (src/dev/devKeys.ts), which cycles the override, since the
+ * preview pane cannot emulate the media query.
  */
 
 /** `null` = follow the OS; `true` / `false` = the setting's (or the dev key's) word. */
@@ -53,7 +51,7 @@ export function osPrefersReducedMotion(): boolean {
   return mediaQuery()?.matches ?? false;
 }
 
-/** THE GATE — every motion consumer asks this. */
+/** The gate: every motion consumer asks this. */
 export function reducedMotion(): boolean {
   return resolveReducedMotion(override, osPrefersReducedMotion());
 }

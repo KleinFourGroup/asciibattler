@@ -9669,3 +9669,105 @@ chips' repaint after a Run is replaced (gotcha #116), the win recorded at
 wins and the credits' flag, the outro waiting for both the floor and the
 settle, main.ts's three first imports in their order. And the call on the
 spec's marks.
+
+### 124j, batch 3 — the renderer and the camera (2026-10-18, session f30471d9)
+
+`Renderer.ts`, `cameraFit.ts`, `pick.ts`, `PostProcess.ts`, `anchor.ts`,
+`slabAnchor.ts`, `motion.ts`. Their step codes and history are out: the
+camera's dates, the functions and keys each piece replaced, the bugs that
+made a rule structural, the bookmark behind a number. So are the capitals
+for emphasis, and three of the spec's marks under batch 2's call
+(`Renderer`'s two D7s, `cameraFit`'s D1).
+
+**Statements found false and corrected (rule 7):**
+
+- `Renderer`'s scroll-mode listeners: "`stop()` removes them
+  unconditionally". The Renderer has no `stop()`; `halt` cancels the next
+  frame and removes nothing.
+- `Renderer`'s main composer: the mix's `uBloom` was "wired up after
+  construction since renderTarget2 is only valid after EffectComposer's
+  first .render() initializes it". three's `EffectComposer` builds
+  `renderTarget2` in its constructor
+  (`node_modules/three/examples/jsm/postprocessing/EffectComposer.js`);
+  the uniform is set each frame in `renderTwoPass`.
+- `Renderer`'s bloom composer: the black clear mattered because
+  "UnrealBloomPass *additively* composites its bloom output onto the
+  un-cleared input", the clear "well below the bloom threshold". The
+  threshold is 0 and the final copy is patched to normal blending
+  (`PostProcess.ts`, patch 2); a non-zero floor would pass the high-pass
+  and glow. The "raw 0.157" figure went with it, unchecked.
+- `PostProcess`'s header: a sprite's stronger bloom came from "pushing
+  the output color past the bloom threshold ... without a separate render
+  layer". The threshold is 0, and the bloom is the bloomMesh's own layer
+  (`SpriteRenderer`, gotcha #30). `createBloomPass`'s linear knob was for
+  "B3 HP-bar fade and C2 charge-up ramps"; the HP bars are DOM overlays
+  (`UnitOverlayLayer`) and draw no bloom, so it now says what a step would
+  do to any low intensity. `createBloomMixPass` had `uBloom` passed "after
+  each frame"; it is set between the two composers' renders.
+- `Renderer.setCameraTarget`: called "after team spawn to anchor the
+  scroll camera on the player area". BattleScene passes the centre of the
+  player's spawn region, at mount.
+- `Renderer.pickInstance`: a glyph "floats ~0.5 above its tile". It
+  stands on its base anchor (`BASE_ANCHOR_Y`) and rises from it, as
+  `pick.ts` has it.
+
+Dropped and not checked: `slabAnchor`'s "3.3 % at FOV 20". Dropped under
+rule 5: the shake's "a heavy lob shakes harder than a bolt" (an example)
+and the windowed view that "belongs to the round that builds mobile" (a
+plan).
+
+**Twin corrected outside the batch, flagged:**
+`render/shaders/sprite-bloom.frag.glsl` had an intensity of 1 giving a
+"halo iff color crosses the bloom threshold"; it is batch 5's file, its
+code kept. A search for `stop()`, `renderTarget2`, the threshold and the
+HP bars' bloom found no other.
+
+Found and left: `UnitOverlayLayer.ts`'s "B3 BarRenderer pick", history
+for batch 6. GOTCHAS #53 has `clampCameraTarget` running inside
+`setCameraTarget`; it runs in `fitCamera`'s scroll branch, which
+`setCameraTarget` calls, so a target set in fit mode is clamped when the
+mode turns to scroll. The gotcha is the incident's record and stays.
+
+Measured (`comment-length` on copies under `output/cl-124j-b3`): comment
+lines 529 → 500, words 4,496 → 4,134, code lines 637 unchanged. The
+step-code ceiling 2,862 → 2,784, the 78 the seven held (`Renderer` 45,
+`cameraFit` 9, `PostProcess` and `pick` 6 each, `anchor` and `motion` 5
+each, `slabAnchor` 2).
+
+Proof: `comment-strip HEAD src`, comments only, exit 0; its control made
+one code edit in each of the 8 changed files (the seven and the shader)
+and the compare named all 8.
+
+Cost: 302,967 at 13:54 on 2026-10-18 by the tool's clock, after batch 2's
+commit, to 388,826 at 14:04 after the proof: about 86k for 1,274 lines,
+about 67 a line.
+
+**Read** (`batch`): `git show <this commit> -- src/render/Renderer.ts
+src/render/PostProcess.ts` against the seven rules. Wrong looks like a
+step code or history left, or a rule a change must respect cut:
+`renderer.camera` read per use (a captured camera goes stale), the
+bloom's threshold of 0 and its black clear, the two patches to
+UnrealBloomPass (gotchas #29, #30), the scroll mode DEV-only, the fit's
+bits pinned at the older view.
+
+### The hand-off after batch 3 (2026-10-18, session f30471d9)
+
+Batches 2 and 3 are committed, open for their `batch` reads, with batch
+2's call on the spec's marks. Next is **batch 4, the ground** (1,986
+lines), in a fresh session: this one is past 389k, and batch 4 at the
+pass's rate so far (about 96 a line over batches 1 to 3, the plan's
+reading inside batch 1's) is about 190k, past the hand-off line.
+
+For the next session:
+
+- Batch 4 holds four of the spec's marks (`TerrainRenderer.ts` twice,
+  `groundMarks.ts`, `terrainMarks.glsl`, "Round 7.5 spec D3"). If the
+  user's read of batch 2 has not settled the call, take them out as
+  batches 2 and 3 did and flag it again.
+- `comment-length` takes folders under the repo: `before` by `git archive
+  HEAD <paths> | tar -x -C output/cl-124j-b<n>/before`, `after` by copy.
+- A claim that reaches into another batch's file is checked there and,
+  if false, corrected as a twin; batch 6 has `UnitOverlayLayer`'s
+  constructor doc saying "Pass `null`", which its type refuses.
+- The rate swings with reach: batch 2 ran 120 a line (`Game.ts` touches
+  every scene, chip and the Run), batch 3 67.

@@ -1,21 +1,20 @@
 /**
- * The N×N slab rule: where an N×N body's one scaled glyph stands (107b, the
- * Round 7.5 spec's D2; it replaced the near-row rule, which assumed a camera
- * square to the board). Pure: three.js as math only.
+ * The N×N slab rule: where an N×N body's one scaled glyph stands. Pure:
+ * three.js as math only.
  *
- *  1. The slab stands on its footprint CENTRE, at the footprint's HIGHEST tile
- *     top. That alone clears every tile prism: each ray from the quad above
- *     its base climbs from at least that height, so no footprint tile can sit
- *     in front of it, at any yaw, under either projection.
- *  2. Then it SLIDES along its own view ray until it is nearer than every
+ *  1. The slab stands on its footprint's centre, at the footprint's highest
+ *     tile top. That alone clears every tile prism: each ray from the quad
+ *     above its base climbs from at least that height, so no footprint tile
+ *     can sit in front of it, at any yaw, under either projection.
+ *  2. Then it slides along its own view ray until it is nearer than every
  *     footprint terrain vertex, which matters only for the hill mounds, which
  *     stand above the tile top. Under an orthographic camera the slide moves
  *     nothing on screen (only the depth test and the sprite sort); under a
- *     lens it draws the slab slightly bigger (3.3 % at FOV 20).
+ *     lens it draws the slab slightly bigger.
  *
  * `tests/board/slab.test.ts` pins this function through the board
- * instrument's measures (askew, off its plot, bitten, sort cost), which share
- * no code with it.
+ * instrument's measures (askew, off its plot, bitten, and the sort), which
+ * share no code with it.
  */
 
 import * as THREE from 'three';
@@ -33,7 +32,7 @@ interface SlabGround {
 }
 
 interface SlabView {
-  /** Camera forward, INTO the scene, in world space. */
+  /** Camera forward, into the scene, in world space. */
   readonly fwd: THREE.Vector3;
   /** Camera position, world. */
   readonly position: THREE.Vector3;

@@ -1,15 +1,15 @@
 /**
- * 105d — THE camera fit, pure (three.js as TYPES only, no DOM): how far back — or, under
- * an orthographic projection, how wide — the camera must sit for a box around
- * its look-at point to fill the viewport, under any pitch / yaw / FOV.
+ * The camera fit, pure (three.js as types only, no DOM): how far back (or,
+ * under an orthographic projection, how wide) the camera must sit for a box
+ * around its look-at point to fill the viewport, under any pitch, yaw and
+ * FOV.
  *
- * This is the ONE fit (gotcha #52): `Renderer`'s fit mode and scroll mode both
- * call it, and a projection is a branch inside it, never a second function.
- * It generalizes the pre-105d `computeCameraDistance`, whose derivation
- * hard-coded right = (1, 0, 0) (no yaw) and read `camera.fov` (no ortho). At
- * that function's view (perspective · 50° · pitch 45 · yaw 0, the default until
- * 107d) the result is BIT-identical to it — `cameraFit.test.ts` pins it
- * against a frozen copy across boards × aspects, with failing controls.
+ * This is the one fit (gotcha #52): `Renderer`'s fit mode and scroll mode
+ * both call it, and a projection is a branch inside it, never a second
+ * function. At perspective, 50°, pitch 45 and yaw 0 its result is bit for
+ * bit the older, yaw-less fit's: `cameraFit.test.ts` keeps that fit as a
+ * frozen copy and pins this one against it across boards and aspects, with
+ * failing controls.
  *
  * Players get `DEFAULT_CAMERA_VIEW`; the dev-only board explorer dials the
  * others (`Renderer.setCameraView`).
@@ -30,12 +30,11 @@ export interface CameraView {
 }
 
 /**
- * The shipped camera (Round 7.5, spec D1, 107d): orthographic, pitched 45°,
- * yawed 45° so the board reads as a diamond. Under ortho a world vertical
- * draws as a screen vertical on every tile (the lean pin,
- * `tests/board/cameraFit.test.ts`), and the far rows don't shrink. `fovDeg`
- * sets only the ortho stand-off distance (see `fitCameraToBox`), never the
- * picture; 50 keeps the camera exactly where the §106 bookmark put it.
+ * The shipped camera: orthographic, pitched 45°, yawed 45° so the board
+ * reads as a diamond. Under ortho a world vertical draws as a screen
+ * vertical on every tile (the lean pin, `tests/board/cameraFit.test.ts`),
+ * and the far rows don't shrink. `fovDeg` sets only the ortho stand-off
+ * distance (see `fitCameraToBox`), never the picture.
  */
 export const DEFAULT_CAMERA_VIEW: CameraView = {
   projection: 'orthographic',
@@ -45,7 +44,7 @@ export const DEFAULT_CAMERA_VIEW: CameraView = {
 };
 
 interface CameraFit {
-  /** Unit vector from the look-at point TOWARD the camera. */
+  /** Unit vector from the look-at point toward the camera. */
   readonly dirX: number;
   readonly dirY: number;
   readonly dirZ: number;
@@ -53,7 +52,7 @@ interface CameraFit {
    *  the distance does not change the picture: it is the 50° perspective fit's
    *  plus enough stand-off to keep the near ground in front of the camera. */
   readonly distance: number;
-  /** Half the orthographic frustum's HEIGHT in world units (its half-width is
+  /** Half the orthographic frustum's height in world units (its half-width is
    *  this × aspect); 0 under `perspective`. */
   readonly orthoHalfHeight: number;
 }
@@ -95,11 +94,11 @@ export function applyCameraFit(
 const DEG = Math.PI / 180;
 
 /**
- * 107c — a screen-space pan as a world-XZ move of the look-at point: `right`
- * and `up` are screen amounts (W / mouse-near-top is up = +1), turned by the
- * view's yaw. On the ground, screen-up is the camera's `dir` flattened and
- * reversed, (−sinψ, 0, −cosψ), and screen-right is (cosψ, 0, −sinψ) (the basis
- * under `fitCameraToBox`). At yaw 0 this is the pre-107c world-axis pan.
+ * A screen-space pan as a world-XZ move of the look-at point: `right` and
+ * `up` are screen amounts (W or a mouse near the top is up = +1), turned by
+ * the view's yaw. On the ground, screen-up is the camera's `dir` flattened
+ * and reversed, (−sinψ, 0, −cosψ), and screen-right is (cosψ, 0, −sinψ) (the
+ * basis under `fitCameraToBox`). At yaw 0 it is the world-axis pan.
  */
 export function panToWorld(view: CameraView, right: number, up: number): { dx: number; dz: number } {
   const yaw = view.yawDeg * DEG;
@@ -147,9 +146,9 @@ export function fitCameraToBox(
   const fovDeg = view.projection === 'perspective' ? view.fovDeg : DEFAULT_CAMERA_VIEW.fovDeg;
   const fovV = (fovDeg * Math.PI) / 180;
   const tanV = Math.tan(fovV / 2);
-  // Through atan and back, as the pre-105d fit wrote it: `tanV * aspect` is the
-  // same number on paper and 1 ulp away at some aspects (1919 / 947 — the pin
-  // found it), and "unchanged at the default" means the bits.
+  // Through atan and back, as the pin's frozen fit computes it: `tanV *
+  // aspect` is the same number on paper and 1 ulp away at some aspects
+  // (1919 / 947), and the pin holds the bits.
   const tanH = Math.tan((2 * Math.atan(tanV * aspect)) / 2);
 
   let maxD = 0;

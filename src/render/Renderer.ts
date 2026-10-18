@@ -32,43 +32,42 @@ const Y_HALF_EXTENT = 1.0;
 /** Distance multiplier on top of the analytic fit so nothing hugs the frame edge. */
 const FIT_MARGIN = 1.05;
 
-/** D4: which camera framing is active. */
+/** Which camera framing is active: the whole board (`fit`), or a fixed
+ *  window panned by keys and the screen's edge (`scroll`). */
 type CameraMode = 'fit' | 'scroll';
 
 /**
- * D4 dev default. Scroll mode is implemented and toggleable via the dev
- * chord (100a: Ctrl+Alt+C in src/dev/devKeys.ts → `toggleCameraMode`).
- * Fit is the only production view (Round 7.5, spec D7); a windowed view
- * belongs to the round that builds mobile, its consumer.
+ * The starting mode. Scroll mode is a dev seam, toggled by the dev chord
+ * (Ctrl+Alt+C, src/dev/devKeys.ts → `toggleCameraMode`); fit is the only
+ * production view.
  */
 const DEV_DEFAULT_MODE: CameraMode = 'fit';
 
-/** 100a — the scroll-mode INPUT (pan keys + edge-scroll) is DEV-only: the
- *  listeners attach only under `import.meta.env.DEV`, so the shipped bundle
- *  never sees a camera keydown (the mode itself is unreachable there — the
- *  toggle lives in devKeys, which main.ts wires under the same flag). The
- *  `typeof` guard is the locale.ts precedent for a non-Vite import. */
+/** The scroll mode's input (the pan keys, the edge-scroll) is DEV-only:
+ *  its listeners attach only under `import.meta.env.DEV`, so the shipped
+ *  bundle never sees a camera keydown, and the mode itself is unreachable
+ *  there (its toggle is a dev key, and the dev keys come in under the same
+ *  flag, main.ts). The `typeof` guard is for an import outside Vite, where
+ *  `import.meta.env` is undefined. */
 const DEV = typeof import.meta.env !== 'undefined' && import.meta.env.DEV === true;
 
 /**
- * D4 scroll-mode visible window — tiles per side. Matches the pre-D3
- * `GRID_SIZE` so scroll-mode framing feels like the original game zoom
- * on any board that's >= this size; smaller boards fall back to "show
- * everything" (camera clamps to the world origin in that dim).
+ * The scroll mode's window, in tiles per side. A board smaller than it in
+ * a dimension shows whole in that dimension (the camera centres at the
+ * origin there, `clampCameraTarget`).
  */
 const SCROLL_WINDOW_TILES = 12;
 
-/** D4 edge-scroll trigger zone: px from canvas edge that activates pan. */
+/** The edge-scroll zone: px from the canvas edge that pans. */
 const EDGE_SCROLL_THRESHOLD_PX = 40;
 
-/** D4 pan speed (tiles/sec) for both WASD and edge-scroll. */
+/** The pan speed (tiles/sec), for the keys and the edge-scroll alike. */
 const PAN_SPEED_TILES_PER_SEC = 12;
 
-/** D4 pan keys: WASD and arrow keys (both active simultaneously). Tracked
- *  in `keysHeld` and summed into a screen pan direction in
- *  `updateScrollFromInput`. `e.code` is layout-independent. DEV-only since
- *  100a (see `DEV`); the Backquote mode toggle that lived beside them moved
- *  to the devKeys chord the same step. */
+/** The pan keys: WASD and the arrows, both live at once. Tracked in
+ *  `keysHeld` and summed into a screen pan direction in
+ *  `updateScrollFromInput`. `e.code` is layout-independent. DEV-only (see
+ *  `DEV`). */
 const PAN_KEY_CODES = new Set<string>([
   'KeyW', 'KeyA', 'KeyS', 'KeyD',
   'ArrowUp', 'ArrowLeft', 'ArrowDown', 'ArrowRight',
@@ -79,21 +78,20 @@ const PAN_KEY_CODES = new Set<string>([
  * loop. The scene, camera, and clear color live here so gameplay code never
  * reaches into three.js directly.
  *
- * The camera's VIEW (projection · FOV · pitch · yaw) is `DEFAULT_CAMERA_VIEW`
- * — orthographic, pitch 45°, yaw 45° since 107d — for every player; 105d made
- * it state so the dev-only board explorer can dial it (`setCameraView`). The
- * visible-arena size is set per-encounter via `fitToBoard(gridW, gridH)` (D3);
- * pre-D3 the size was a fixed `GRID_SIZE × GRID_SIZE` constant.
+ * The camera's view (projection, FOV, pitch, yaw) is `DEFAULT_CAMERA_VIEW`
+ * (cameraFit.ts) for every player. It is state so the dev-only board
+ * explorer can dial it (`setCameraView`). The framed board's size is set
+ * per encounter by `fitToBoard(gridW, gridH)`.
  */
 export class Renderer {
   readonly scene: THREE.Scene;
   readonly webgl: THREE.WebGLRenderer;
 
-  /** 105d — BOTH cameras live for the Renderer's whole life and the view picks
-   *  one (`cameraFor`), so a projection swap is a re-point, never a rebuild.
-   *  ⚠ Read `renderer.camera` per use; a holder that CAPTURES it goes stale on
+  /** Both cameras live for the Renderer's whole life and the view picks one
+   *  (`cameraFor`), so a projection swap is a re-point, never a rebuild.
+   *  Read `renderer.camera` per use: a holder that captures it goes stale on
    *  a swap. The two RenderPasses below are the only captures, re-pointed in
-   *  `setCameraView`; `UnitOverlayLayer` takes a getter (107a). */
+   *  `setCameraView`; `UnitOverlayLayer` takes a getter. */
   private readonly perspectiveCamera: THREE.PerspectiveCamera;
   private readonly orthographicCamera: THREE.OrthographicCamera;
   private activeCamera: FitCamera;
@@ -102,8 +100,8 @@ export class Renderer {
   private aspect = 1;
   private readonly renderPasses: RenderPass[] = [];
 
-  // B1.1 selective bloom: two composers driven off the same scene+camera
-  // via layer membership. `bloomComposer` renders only BLOOM_LAYER (the
+  // The selective bloom: two composers driven off the same scene and camera
+  // by layer membership (gotcha #30). `bloomComposer` renders only BLOOM_LAYER (the
   // SpriteRenderer's bloomMesh) and blurs the result; `mainComposer`
   // renders the visible scene (layer 0) and additively mixes the bloom
   // output back in. Decoupling means sprite-level bloomIntensity controls
@@ -118,42 +116,39 @@ export class Renderer {
   private rafId: number | null = null;
   private lastFrameMs = 0;
 
-  /** Current arena dimensions used by `fitCamera`. Defaults to the
-   *  square `GRID_SIZE × GRID_SIZE` so the boot map-screen render before
-   *  any battle has a sensible frame. BattleScene overrides via
-   *  `fitToBoard` on mount. */
+  /** The framed board's size, for `fitCamera`. `GRID_SIZE` square until
+   *  the first battle, so a render before it has a sensible frame;
+   *  BattleScene sets it by `fitToBoard` on mount. */
   private boardW: number = GRID_SIZE;
   private boardH: number = GRID_SIZE;
 
   /**
-   * D4 camera state. `cameraMode` swaps between fit (whole arena framed)
-   * and scroll (fixed window pannable with WASD + edge-scroll). Target
-   * is the world XZ point the scroll camera is centered on; ignored in
-   * fit mode but preserved across toggles so flipping back to scroll
-   * resumes where the player left it.
+   * The camera's mode and the scroll mode's target, the world XZ point
+   * its window is centred on. Fit mode ignores the target but keeps it, so
+   * a toggle back to scroll resumes where it was left.
    */
   private cameraMode: CameraMode = DEV_DEFAULT_MODE;
   private cameraTargetX = 0;
   private cameraTargetZ = 0;
 
-  /** D4 input state. Held WASD keys + last-known mouse XY relative to
-   *  the canvas (null when mouse is outside the canvas — edge-scroll
-   *  shouldn't fire from a mouse parked over the HUD or browser chrome). */
+  /** The scroll mode's input: the pan keys held, and the mouse's last XY
+   *  on the canvas (null off it, so a mouse parked over the HUD or the
+   *  browser's chrome doesn't edge-scroll). */
   private readonly keysHeld = new Set<string>();
   private mouseX: number | null = null;
   private mouseY: number | null = null;
 
-  /** J3 — reusable raycast scratch for `pickCell` (screen → grid cell), kept as
-   *  fields so a per-click pick allocates nothing. */
+  /** The raycast scratch for `pickCell` (screen → grid cell), kept as
+   *  fields so a pick allocates nothing. */
   private readonly pickRaycaster = new THREE.Raycaster();
   private readonly pickNdc = new THREE.Vector2();
 
   /**
-   * §Z camera shake — a transient screen-aligned jitter applied to the camera
+   * The camera shake: a transient screen-aligned jitter applied to the camera
    * around the render pass (never persisted into the base position), triggered
    * by an FX cue via `shakeCamera`. Decays linearly to zero over its duration.
-   * Runs on the loop's WALL-CLOCK dt: it's a viewport effect, not a world event,
-   * so it deliberately doesn't scale with playback speed (a sub-second wobble).
+   * Runs on the loop's wall-clock dt: a viewport effect, not a world event,
+   * so it doesn't scale with the playback speed (a sub-second wobble).
    */
   private shakeIntensity = 0;
   private shakeDurationSec = 0;
@@ -177,9 +172,9 @@ export class Renderer {
 
     this.perspectiveCamera = new THREE.PerspectiveCamera(DEFAULT_CAMERA_VIEW.fovDeg, 1, 0.1, 1000);
     this.orthographicCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 1000);
-    // 107a — from the view, never a fixed pick: `fitCamera` builds the fit for
-    // `this.view`, and an ortho fit on the perspective camera frames the board
-    // from the ortho stand-off at a 50° lens (too far back).
+    // From the view, never a fixed pick: `fitCamera` builds the fit for
+    // `this.view`, and an ortho fit on the perspective camera would frame the
+    // board from the ortho stand-off at a 50° lens (too far back).
     this.activeCamera = this.cameraFor(this.view);
     // Position + lookAt are set by fitCamera() in handleResize once aspect is
     // known; no placeholder needed because handleResize runs before start().
@@ -188,14 +183,11 @@ export class Renderer {
     //
     // The render loop swaps scene.background to null and camera.layers to
     // BLOOM_LAYER before .render(); RenderPass picks up both. The explicit
-    // (0,0,0)/alpha-0 clear color is critical: the renderer's default
-    // clear color is TERMINAL_BLACK sRGB (`#282828`), which lands as raw
-    // 0.157 in the HalfFloat linear target — well below the bloom
-    // threshold, but UnrealBloomPass *additively* composites its bloom
-    // output onto the un-cleared input, so any non-zero ground floor
-    // leaks across the whole bloom buffer and brightens the final mix.
-    // Pure-black ground floor means the bloom buffer ends up containing
-    // only the sprite bloomMesh contribution + its blurred halo.
+    // black, alpha-0 clear matters: the bloom's threshold is 0
+    // (PostProcess.ts), so any non-zero floor, the renderer's TERMINAL_BLACK
+    // clear among them, would pass the high-pass and glow across the whole
+    // buffer. With a black floor the buffer holds only the sprites'
+    // bloomMesh and its blurred halo.
     this.bloomComposer = new EffectComposer(this.webgl);
     this.bloomComposer.renderToScreen = false;
     const bloomRenderPass = new RenderPass(
@@ -212,12 +204,8 @@ export class Renderer {
     //
     // Saturation-clamp first so any color the bloom mix adds doesn't get
     // re-saturated (bloom is meant to be additive HDR-ish glow on top of
-    // the clamped main render). MixPass reads bloomComposer's output via
-    // its uBloom uniform — wired up after construction since renderTarget2
-    // is only valid after EffectComposer's first .render() initializes it.
-    //
-    // CRT scanlines live as a CSS overlay on `#scanlines` (B5), not a
-    // post-process pass.
+    // the clamped main render). MixPass reads bloomComposer's output
+    // through its uBloom uniform, set each frame in `renderTwoPass`.
     this.bloomMixPass = createBloomMixPass();
     this.mainComposer = new EffectComposer(this.webgl);
     const mainRenderPass = new RenderPass(this.scene, this.activeCamera);
@@ -228,19 +216,15 @@ export class Renderer {
     // OutputPass converts the composer's internal linear-sRGB framebuffer to
     // the canvas's sRGB output space. Without this last step, every linear
     // RGB value gets written to the screen as if it were sRGB, which makes
-    // brights look dim and shifts hues unpredictably (TERMINAL_GREEN #33FF00
-    // rendered as #08FF00, background snapped to amber, etc.).
+    // brights look dim and shifts hues unpredictably.
     this.mainComposer.addPass(new OutputPass());
 
     this.handleResize();
     window.addEventListener('resize', this.handleResize);
-    // D4 input listeners: keys on window so the user doesn't need to focus
-    // the canvas; mouse position on the canvas so edge-scroll only triggers
-    // when the cursor is over the play area (HUD hover doesn't pan).
-    // 100a — DEV-only: scroll mode is a dev seam (fit is the only production
-    // view, Round 7.5's D7), so the shipped bundle attaches none of them
-    // (`stop()` removes them unconditionally — a no-op for a never-attached
-    // listener).
+    // The scroll mode's listeners: keys on window so the canvas needn't be
+    // focused; the mouse on the canvas so edge-scroll only triggers over the
+    // play area (a HUD hover doesn't pan). DEV-only (see `DEV`), so the
+    // shipped bundle attaches none of them.
     if (DEV) {
       window.addEventListener('keydown', this.handleKeyDown);
       window.addEventListener('keyup', this.handleKeyUp);
@@ -260,7 +244,7 @@ export class Renderer {
 
       if (this.cameraMode === 'scroll') this.updateScrollFromInput(dt);
       this.onFrame(dt);
-      // §Z — add the shake offset just before render and strip it right after,
+      // Add the shake offset just before render and strip it right after,
       // so the jitter is visible this frame but never corrupts the base position
       // the camera modes manage.
       this.applyCameraShake(dt);
@@ -277,12 +261,12 @@ export class Renderer {
   }
 
   /**
-   * 105d — re-point the board's projection: any subset of projection / FOV /
-   * pitch / yaw, re-fitted at once. Its ONE caller is the dev-only board
-   * explorer (src/dev/boardPanel — Round 7.5's projection spike); nothing a
-   * player can reach calls it, so the shipped camera is `DEFAULT_CAMERA_VIEW`.
-   * The caller owns the dial ranges — pitch must stay clear of 0° and 90°
-   * (the fit divides by tan θ under ortho, and `lookAt` degenerates overhead).
+   * Re-point the board's projection: any subset of projection, FOV, pitch
+   * and yaw, re-fitted at once. Its one caller is the dev-only board
+   * explorer (src/dev/boardPanel); nothing a player can reach calls it, so
+   * the shipped camera is `DEFAULT_CAMERA_VIEW`. The caller owns the dial
+   * ranges: pitch must stay clear of 0° and 90° (the fit divides by tan θ
+   * under ortho, and `lookAt` degenerates overhead).
    */
   setCameraView(change: Partial<CameraView>): void {
     this.view = { ...this.view, ...change };
@@ -301,15 +285,14 @@ export class Renderer {
   }
 
   /**
-   * D3: BattleScene calls this on mount with the current encounter's
-   * dimensions so the camera frames the arena. Idempotent; safe to call
-   * mid-battle if size ever changes. Map/Recruit/GameOver scenes don't
-   * call this and inherit whatever the last battle left (or the
-   * `GRID_SIZE × GRID_SIZE` default at boot) — they don't render
-   * arena content so the camera state is irrelevant for them.
+   * BattleScene calls this on mount with the encounter's dimensions, so the
+   * camera frames the board. Idempotent. The other scenes don't call it and
+   * keep whatever the last battle left (or the `GRID_SIZE` default at
+   * boot); they draw no board, so the camera's state doesn't matter to
+   * them.
    *
-   * D4: in scroll mode the board size also drives the clamp range for
-   * `cameraTargetX/Z`, so calling this re-clamps the saved target.
+   * In scroll mode the board's size also sets the clamp on
+   * `cameraTargetX/Z`, so a call re-clamps the saved target.
    */
   fitToBoard(gridW: number, gridH: number): void {
     this.boardW = gridW;
@@ -318,10 +301,10 @@ export class Renderer {
   }
 
   /**
-   * D4: BattleScene calls this after team spawn to anchor the scroll
-   * camera on the player area. World XZ; gets clamped to the board on
-   * apply. No-op for fit mode visually, but the target is preserved so
-   * a toggle to scroll picks up at this anchor.
+   * BattleScene calls this on mount with the centre of the player's spawn
+   * region, to anchor the scroll camera there. World XZ, clamped to the
+   * board in scroll mode. Fit mode draws no change, but keeps the target,
+   * so a toggle to scroll starts at this anchor.
    */
   setCameraTarget(worldX: number, worldZ: number): void {
     this.cameraTargetX = worldX;
@@ -330,13 +313,13 @@ export class Renderer {
   }
 
   /**
-   * J3 — screen → grid cell. Raycasts a viewport pixel (a click's
+   * Screen → grid cell. Raycasts a viewport pixel (a click's
    * `clientX/clientY`) through the camera against the `surface` mesh (the
-   * TERRAIN mesh — every cell has a top face at its real height), then inverts
-   * `gridToWorld` to the integer cell. Hitting the actual surface (not a flat
-   * plane) is what makes the pick exact on raised/lowered tiles — a flat-plane
-   * pick drifts by a tile where the terrain height differs from the plane (the
-   * playtest "off by a tile"). Returns null when the ray misses the surface
+   * terrain mesh, where every cell has a top face at its real height), then
+   * inverts `gridToWorld` to the integer cell. Hitting the surface and not a
+   * flat plane is what makes the pick exact on raised and lowered tiles: a
+   * flat-plane pick drifts by a tile where the terrain's height differs from
+   * the plane's. Returns null when the ray misses the surface
    * (clicked into the void off the board) or the hit lands off-board. The
    * inversion mirrors `gridToWorld`: worldX = x + 0.5 − boardW/2,
    * worldZ = boardH/2 − y − 0.5 ⇒ x = ⌊worldX + boardW/2⌋, y = ⌊boardH/2 − worldZ⌋.
@@ -359,12 +342,13 @@ export class Renderer {
   }
 
   /**
-   * J3 — screen → sprite. The billboard-aware counterpart to `pickCell`: tests
-   * the cursor against each candidate's camera-facing quad (NOT the terrain), so
-   * clicking a unit's GLYPH selects that unit. A glyph floats ~0.5 above its
-   * tile, so a terrain raycast through it lands on the cell behind — hence the
-   * objective controller tries this first, then falls back to `pickCell`.
-   * Returns the frontmost candidate id under the cursor, or null.
+   * Screen → sprite. The billboard-aware counterpart to `pickCell`: tests the
+   * cursor against each candidate's camera-facing quad (not the terrain), so
+   * clicking a unit's glyph selects that unit. A glyph stands above its tile,
+   * so a terrain raycast through it lands on the cell behind; the objective
+   * controller (src/ui/ObjectiveController.ts) tries this first, then falls
+   * back to `pickCell`. Returns the frontmost candidate id under the cursor,
+   * or null.
    */
   pickInstance(clientX: number, clientY: number, candidates: readonly PickCandidate[]): number | null {
     const rect = this.webgl.domElement.getBoundingClientRect();
@@ -375,8 +359,8 @@ export class Renderer {
   }
 
   /**
-   * D4: dev/debug camera-mode swap. Re-fits the camera so the change is
-   * visible immediately.
+   * The dev camera-mode swap. Re-fits the camera so the change is visible
+   * at once.
    */
   setCameraMode(mode: CameraMode): void {
     if (this.cameraMode === mode) return;
@@ -384,26 +368,24 @@ export class Renderer {
     this.fitCamera();
   }
 
-  /** 100a — the dev chord's entry (Ctrl+Alt+C, devKeys.ts): flip fit ↔
-   *  scroll and report the new mode. The Backquote keydown it replaces was
-   *  an unregistered, undocumented hotkey with no click route (the Round 7
-   *  kickoff audit §C) — gating it dev-only is the §100 charter's call, and
-   *  Round 7.5 (D7) kept it there: fit is the only production view. */
+  /** The dev chord's entry (Ctrl+Alt+C, devKeys.ts): flip fit ↔ scroll
+   *  and report the new mode. */
   toggleCameraMode(): CameraMode {
     this.setCameraMode(this.cameraMode === 'fit' ? 'scroll' : 'fit');
     return this.cameraMode;
   }
 
   /**
-   * Two-pass render for B1.1 selective bloom:
+   * The two-pass render of the selective bloom:
    *
    * 1. Bloom layer: camera.layers → BLOOM_LAYER and scene.background → null
-   *    so the bloom RenderPass sees ONLY the sprite bloomMesh against a
+   *    so the bloom RenderPass sees only the sprite bloomMesh against a
    *    transparent black background. UnrealBloomPass then high-passes +
    *    blurs the result into bloomComposer.renderTarget2.
    * 2. Main layer: camera.layers → 0 and scene.background restored, so the
-   *    main RenderPass sees the visible scene. MixPass adds the blurred
-   *    bloom buffer in, then OutputPass finishes the chain.
+   *    main RenderPass sees the visible scene. After the saturation clamp,
+   *    MixPass adds the blurred bloom buffer in, and OutputPass finishes the
+   *    chain.
    *
    * scene.background must be cleared during the bloom pass: otherwise the
    * full-screen background quad fills every pixel and the bloom buffer
@@ -448,7 +430,7 @@ export class Renderer {
    * fixed window in scroll mode) sits inside the viewport at the current
    * view and aspect.
    *
-   * The math is `fitCameraToBox` (cameraFit.ts — ONE fit for both modes and
+   * The math is `fitCameraToBox` (cameraFit.ts, one fit for both modes and
    * both projections, gotcha #52) and `applyCameraFit` is where it becomes a
    * camera. The two modes differ only in (a) the half-extents of the box, and
    * (b) the look-at point — fit always points at world origin; scroll points
@@ -487,15 +469,15 @@ export class Renderer {
   }
 
   /**
-   * D4 per-frame scroll-camera driver. Sums WASD and edge-scroll input
-   * into a SCREEN direction, turns it by the view's yaw into world XZ
-   * (`panToWorld`, 107c), then translates the camera target at
+   * The scroll camera's per-frame driver. Sums the keys' and the
+   * edge-scroll's input into a screen direction, turns it by the view's yaw
+   * into world XZ (`panToWorld`), then translates the camera target at
    * PAN_SPEED_TILES_PER_SEC scaled by dt. Cheap to call every frame;
    * skips the matrix update + clamp when no input is active.
    *
-   * W / mouse-near-top pans screen-up at any yaw (world −Z at yaw 0, the far
-   * edge of the arena). The clamp stays WORLD-axis (gotcha #53), so under a
-   * yaw a pan along a diagonal slides along the board's edge.
+   * W or a mouse near the top pans screen-up at any yaw (world −Z at yaw 0,
+   * the board's far edge). The clamp stays on the world axes (gotcha #53),
+   * so under a yaw a pan along a diagonal slides along the board's edge.
    */
   private updateScrollFromInput(dt: number): void {
     let right = 0;
@@ -523,11 +505,11 @@ export class Renderer {
   }
 
   /**
-   * §Z — kick a camera shake: a screen-aligned jitter that decays linearly to
-   * zero over `durationSeconds`. Authored per FX key (the registry's `shake`
-   * channel), so a heavy lob shakes harder than a bolt. `intensity` is the
-   * offset amplitude in world units. A fresh trigger restarts the decay (a new
-   * impact wins rather than stacking), keeping the wobble bounded.
+   * Kick a camera shake: a screen-aligned jitter that decays linearly to
+   * zero over `durationSeconds`, authored per FX key (the registry's `shake`
+   * channel). `intensity` is the offset amplitude in world units. A fresh
+   * trigger restarts the decay (a new impact wins rather than stacking),
+   * keeping the wobble bounded.
    */
   shakeCamera(intensity: number, durationSeconds: number): void {
     if (intensity <= 0 || durationSeconds <= 0) return;
@@ -537,7 +519,7 @@ export class Renderer {
   }
 
   /**
-   * §Z — add this frame's decaying shake offset to the camera, just before the
+   * Add this frame's decaying shake offset to the camera, just before the
    * render pass. Jitters along the camera's right (matrix col 0) + up (col 1)
    * axes so the wobble reads as on-screen shake regardless of pitch / mode.
    * `clearCameraShake` strips it after render, so the base position the camera
@@ -558,7 +540,7 @@ export class Renderer {
     this.camera.position.add(this.shakeOffset);
   }
 
-  /** §Z — restore the base camera position after render (shake never persists). */
+  /** Restore the base camera position after render (shake never persists). */
   private clearCameraShake(): void {
     this.camera.position.sub(this.shakeOffset);
   }

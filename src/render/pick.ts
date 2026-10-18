@@ -2,24 +2,24 @@ import * as THREE from 'three';
 import { type GlyphInk, FULL_GLYPH_INK } from './glyphs';
 
 /**
- * J3 — a click candidate for the billboard hit-test: a sprite's world-space
- * center + its full world-space quad extent (`uSpriteSize × instanceSize`).
+ * A click candidate for the billboard hit-test: a sprite's world-space
+ * center and its full world-space quad extent (`uSpriteSize × instanceSize`).
  */
 export interface PickCandidate {
   readonly id: number;
   readonly position: THREE.Vector3;
   readonly size: number;
-  /** §40e-follow-up — the glyph's normalized ink rect within the quad (see
+  /** The glyph's normalized ink rect within the quad (see
    *  `FontAtlas.getGlyphInk`). The hit-test tests only this sub-rect, so the
-   *  clickbox hugs the visible glyph rather than the empty full quad. Omitted ⇒
-   *  the full quad (`FULL_GLYPH_INK`) — byte-identical to the pre-ink behavior. */
+   *  clickbox hugs the visible glyph rather than the empty full quad.
+   *  Omitted, the full quad (`FULL_GLYPH_INK`). */
   readonly ink?: GlyphInk;
-  /** §79c — the quad-local anchor point (`BASE_ANCHOR_Y` for a base sprite;
-   *  quad spans [-0.5, 0.5]²) the candidate's sprite carries. The
-   *  hit-test mirrors the shader: the quad sits at `position`'s view-space
-   *  projection offset by `-anchor·size`, so a base-anchored glyph's clickbox
-   *  rises above its ground anchor exactly as the visible quad does. Omitted ⇒
-   *  center-anchored (the historical behavior). */
+  /** The quad-local anchor point (`BASE_ANCHOR_Y` for a base sprite; the
+   *  quad spans [-0.5, 0.5]²) the candidate's sprite carries. The hit-test
+   *  mirrors the shader: the quad sits at `position`'s view-space projection
+   *  offset by `-anchor·size`, so a base-anchored glyph's clickbox rises
+   *  above its ground anchor exactly as the visible quad does. Omitted,
+   *  centre-anchored. */
   readonly anchor?: { readonly x: number; readonly y: number };
 }
 
@@ -28,15 +28,15 @@ const _centerNdc = new THREE.Vector3();
 const _cornerNdc = new THREE.Vector3();
 
 /**
- * J3 — screen-space hit-test against camera-facing billboard sprites, given the
- * cursor in NDC ([-1,1]). Replicates `billboard.vert.glsl` EXACTLY: transform
- * the instance center into view space, offset the quad's half-extent in VIEW
- * space (so it faces the camera), then project. That's why this — not the
- * terrain cell-pick — is what "click the glyph you see" needs: the billboard
- * floats above its tile, so a ground raycast through the glyph lands on the tile
- * BEHIND the unit.
+ * The screen-space hit-test against camera-facing billboard sprites, given
+ * the cursor in NDC ([-1,1]). It replicates `billboard.vert.glsl` exactly:
+ * transform the instance center into view space, offset the quad's
+ * half-extent in view space (so it faces the camera), then project. That is
+ * why this, not the terrain cell-pick, is what "click the glyph you see"
+ * needs: the billboard stands above its tile, so a ground raycast through
+ * the glyph lands on the tile behind the unit.
  *
- * Returns the FRONTMOST (nearest-camera) candidate whose quad contains the
+ * Returns the frontmost (nearest-camera) candidate whose quad contains the
  * cursor, or null. Pure (camera matrices in, id out) so it's node-testable
  * without a canvas/WebGL — `Renderer.pickInstance` just feeds it the cursor NDC.
  *
@@ -50,27 +50,28 @@ export function pickInstanceAtNdc(
   camera: THREE.Camera,
 ): number | null {
   let bestId: number | null = null;
-  // View space looks down -Z, so a NEARER sprite has the LARGER (less negative)
-  // z; track the max so overlapping billboards resolve front-to-back.
+  // View space looks down -Z, so a nearer sprite has the larger (less
+  // negative) z; track the max so overlapping billboards resolve
+  // front-to-back.
   let bestZ = -Infinity;
   for (const c of candidates) {
     const v = _view.copy(c.position).applyMatrix4(camera.matrixWorldInverse); // → view space
     if (v.z >= 0) continue; // at/behind the camera — never clickable
     const half = 0.5 * c.size;
-    // §79c — mirror the shader's anchor offset: the quad CENTER sits at the
+    // Mirror the shader's anchor offset: the quad's centre sits at the
     // anchor's view-space projection minus `anchor·size` (so a base anchor
-    // (0, -0.5) raises the quad half its height — the glyph stands ON the
-    // point). Default (0, 0) = centered, byte-identical to the pre-anchor test.
+    // (0, -0.5) raises the quad half its height, and the glyph stands on the
+    // point). The default (0, 0) is centred.
     const qx = v.x - (c.anchor?.x ?? 0) * c.size;
     const qy = v.y - (c.anchor?.y ?? 0) * c.size;
-    // §40e-follow-up — test the glyph's INK sub-rect, not the whole quad, so the
-    // clickbox hugs the visible glyph (a half-height `▄` slab otherwise stays
-    // clickable a full cell above its ink). The rect is normalized [0,1] with the
-    // origin bottom-left, y up; map a coord t∈[0,1] to a view-space offset from
-    // the instance center as (2t−1)·half. The default FULL_GLYPH_INK ({0,0,1,1})
-    // gives cxOff/cyOff 0 and hx/hy = half — the original symmetric full quad,
-    // byte-identical. The ink center shares the instance's view-Z (the quad is
-    // camera-facing), so depth (`v.z`) is unchanged.
+    // Test the glyph's ink sub-rect, not the whole quad, so the clickbox hugs
+    // the visible glyph (a half-height `▄` slab would otherwise stay
+    // clickable a full cell above its ink). The rect is normalized [0,1] with
+    // the origin bottom-left, y up; a coord t∈[0,1] maps to a view-space
+    // offset from the instance center of (2t−1)·half. The default
+    // FULL_GLYPH_INK ({0,0,1,1}) gives cxOff/cyOff 0 and hx/hy = half, the
+    // symmetric full quad. The ink center shares the instance's view-Z (the
+    // quad is camera-facing), so depth (`v.z`) is unchanged.
     const ink = c.ink ?? FULL_GLYPH_INK;
     const cxOff = (ink.x0 + ink.x1 - 1) * half; // ink-center x offset from center
     const cyOff = (ink.y0 + ink.y1 - 1) * half; // ink-center y offset from center

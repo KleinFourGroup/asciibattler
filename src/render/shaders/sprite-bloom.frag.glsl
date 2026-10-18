@@ -3,7 +3,7 @@
 // the per-instance bloomIntensity attribute: this controls how much each
 // sprite contributes to the bloom-buffer that gets blurred + composited
 // back onto the main scene. 0 = sprite contributes nothing (no halo),
-// 1 = natural contribution (halo iff color crosses the bloom threshold),
+// 1 = natural contribution (the bloom's threshold is 0, so any color halos),
 // >1 = amplified contribution (forced strong glow). The main mesh on
 // layer 0 renders the sprite's visible color independently, so changing
 // bloomIntensity here NEVER darkens the visible sprite — it only adjusts

@@ -20,7 +20,9 @@ import FOG_GLSL from './shaders/fogcolor.glsl?raw';
  *
  * Page-lifetime scenery: independent of the battle (centred on the origin,
  * of fixed size), so Game adds it once and it has no `setTiles` or `clear`.
- * On layer 0 only, never in the bloom pass; not a pick surface.
+ * Every other scene's screen covers the canvas in opaque black once it has
+ * faded in (src/ui/ui.css), so the floor shows only behind a battle. On
+ * layer 0 only, never in the bloom pass; not a pick surface.
  */
 
 /** Half-extent in world units: well past MIST_CALM_FAR (90), where the mist

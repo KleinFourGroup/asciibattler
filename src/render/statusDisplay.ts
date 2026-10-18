@@ -98,7 +98,9 @@ export function statusSymbol(statusId: string): string {
  * and packet catalogs, so a new buff key fails until it has a color and a
  * label.
  *
- * The colors, tuned by eye: `honed` is FLOURESCENT_BLUE, and the rest are
+ * The colors, tuned by eye: `honed` is FLOURESCENT_BLUE, the empower accent
+ * the player already knows (the pre-turn card's empower chip falls back to
+ * it, src/ui/ui.css), and the rest are
  * clear of the status table's hues: `warded` a pale lavender for a calm
  * defense, `hyped` pink, `shielded` steel blue, `overclocked` a volt yellow,
  * brighter and greener than `emboldened`'s gold, which never shares a surface

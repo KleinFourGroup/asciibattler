@@ -57,7 +57,8 @@ app can stop the server between turns). Then:
   buffer isn't kept between tasks): a hash, the mean, distinct colours, and
   each pixel as `#rrggbb` for a crop of 256 pixels or fewer. `{ show: true }`
   also draws it magnified in the page's top-left for a screenshot (the
-  `zoom` action can't crop); `__probe.hide()` removes it. The crop is the
+  `zoom` action crops a screenshot but doesn't magnify it: a 1280 × 720
+  page came back in an 800 × 450 frame); `__probe.hide()` removes it. The crop is the
   WebGL canvas only: the bars, badges and hitsplats are DOM.
 - **`__probe.drive(opts)` plays the run**: each phase's command, battles
   fought by hand-driven frames through their outro, a seeded pick for the

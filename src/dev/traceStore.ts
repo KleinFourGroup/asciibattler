@@ -14,9 +14,11 @@ import type { BattleTrace } from './TraceRecorder';
 
 const KEY = 'asciibattler:traces:v1';
 
-/** A human gauntlet session is about 30 battles, with retries and warm-ups,
- *  in one sitting; the ring holds that with room, so the session's early
- *  traces survive to the export at its end. */
+/** A trace is one battle, a turn of an encounter. The human gauntlet session
+ *  behind the gauntlet's human-trace fixture (tests/gauntlet/fixtures/)
+ *  played some 30 encounters in 104 battles, with retries and warm-ups
+ *  besides, and overran this ring: clear it at a session's start
+ *  (`__game.clearTraces()`) and export midway. */
 const TRACE_RING_CAP = 80;
 
 export function loadTraces(): BattleTrace[] {

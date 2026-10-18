@@ -32,13 +32,15 @@ const DEFAULT = {
   DARK_FLOURESCENT_BLUE: '#034947',
   // A true terminal blue, the event nodes' own hue. Apart from the cyan
   // FLOURESCENT_BLUE, which the map spends on its frontier (clickable)
-  // state: a node kind in the same hue would read as actionable.
+  // state: a node kind in the same hue would read as actionable. Bright
+  // enough for the map node's 16 px glyph on #000 (a 5.5 : 1 contrast).
   TERMINAL_BLUE: '#3D7BFF',
   NEON_RED: '#FF3131',
   DARK_NEON_RED: '#990000',
   NEON_PURPLE: '#9D00FF',
-  // A desaturated warm grey for scenery (walls), picked to read as inert and
-  // not to fight green and red for attention. Inert neutrals also draw with
+  // A desaturated warm grey for scenery (walls), warmer than TERMINAL_BLACK
+  // and cooler than DARK_TERMINAL_AMBER, picked to read as inert and not to
+  // fight green and red for attention. Inert neutrals also draw with
   // no bloom, so they take no halo from the combatants; an active neutral (a
   // camp member, TERMINAL_AMBER) blooms like a combatant, being a fighter,
   // not furniture.

@@ -60,8 +60,9 @@ const BENCH_KEY = `${NAMESPACE}diag-bench`;
 const LIMIT_CEILING = 64 * 1024 * 1024;
 const LIMIT_STEP = 1024;
 
-/** A save is 3 to 49 KB and its journal some 15 KB more; the finished
- *  journals are kept to 1,000,000 characters and written once a run. */
+/** A save's snapshot is 3 to 49 KB, and its journal adds 570 to 960
+ *  characters a battle; the finished journals are kept to 1,000,000
+ *  characters and written once a run. */
 const BENCH_PLAN = [
   { chars: 4 * 1024, reps: 50 },
   { chars: 16 * 1024, reps: 50 },

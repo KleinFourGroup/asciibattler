@@ -673,8 +673,8 @@ export class BattleRenderer {
    * (`Renderer.pickInstance`), at each sprite's live position (the billboard
    * the player sees, mid-slide included) rather than the logical cell, so a
    * click on a moving enemy's glyph selects it. The ObjectiveController calls
-   * this to resolve an objective click onto the unit clicked, before it falls
-   * back to the terrain cell.
+   * this to resolve an objective click, either button, armed or not, onto
+   * the unit clicked, before it falls back to the terrain cell.
    */
   enemyBillboards(): PickCandidate[] {
     if (!this.world) return [];
@@ -900,7 +900,9 @@ export class BattleRenderer {
    * and replaces the move's lerp (one lerp per handle). A short, fixed
    * duration keeps the recoil from lingering into a concurrent melee hit. An
    * abort at selection time never started a slide, so the sprite is already
-   * on `from` and this lerps in place, a no-op.
+   * on `from` and this lerps in place, a no-op. Nothing in play aborts a
+   * slide today: every placement skips a claimed cell and no tile changes
+   * mid-battle (World's in-flight abort names what could).
    */
   private onUnitMoveAborted = ({ unitId, from }: GameEvents['unit:moveAborted']): void => {
     this.settleSpriteTo(unitId, from);
@@ -1065,8 +1067,8 @@ export class BattleRenderer {
    * blind to depth, near rows read tight and far rows high at once, with no
    * one gap fixing both. The ink top scales with perspective, so the gap
    * means the same at every depth and letterform. The price, accepted: bars
-   * over an `a` and an `M` at equal depth sit at different heights instead of
-   * on one line. `inkCenterLift`'s users, the FX endpoints, are apart from
+   * over an `a` and an `M` at equal depth sit a seventh of a tile apart
+   * (some 5 px at 1280 × 720 on a 15 × 15 board) instead of on one line. `inkCenterLift`'s users, the FX endpoints, are apart from
    * this.
    */
   private inkTopLiftFor(unit: Unit): number {
@@ -1362,7 +1364,9 @@ export class BattleRenderer {
 
   /**
    * A tick that changed nothing (a HoT on a full unit, amount 0) drives
-   * nothing: no sound, no sparkle, no `+0` (gotcha #80).
+   * nothing: no sound, no sparkle, no `+0` (gotcha #80). Today only a HoT
+   * ticks for 0: each DoT in config/statuses.json has a `might` of 1 or
+   * more, and none is applied at a magnitude that scales it down.
    */
   private onStatusTicked = ({ unitId, statusId, amount }: GameEvents['status:ticked']): void => {
     if (amount === 0) return;

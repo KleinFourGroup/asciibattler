@@ -88,8 +88,9 @@ export const BOARDS: Record<BoardId, BoardFixture> = {
     park: false,
     expect: { layoutId: 'river', gridW: 12, gridH: 12 },
   },
-  // The hop's read. A diagonal between two water tiles past a corner on land
-  // arcs 0.1 to 0.4 world; `live`'s fight has no such move. Seed 1 had the
+  // The hop's read. A diagonal between two water tiles slides past a land
+  // corner standing 0.1 to 0.4 world above it (`TerrainRenderer.heightAt`),
+  // which a hop would arc over; `live`'s fight has no such move. Seed 1 had the
   // most of 12 icebergs seeds in a headless hunt: 25, the first 2.9 s in.
   // Kept for the movement polish, which reopens the hop (TODO).
   wade: {

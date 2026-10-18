@@ -10777,3 +10777,124 @@ keeps the 16 removed glyphs' rows: it is a dated dump of the atlas, and
 the geometry tests read it only by the glyphs they name. The font's
 README and `scripts/build-font.mjs` quote a dated measurement ("45 of the
 47") and stay.
+
+### 124j-post2 — the drops sweep (2026-10-18, session b25b9ccf)
+
+The scope signed at 124j-post: batches 1 to 7's "Dropped and not
+checked" claims, batches 8 to 10's "Kept as written, unchecked" ones and
+batch 7's one, each checked at the code it names; a claim about something
+outside the code is checked where a tool here reaches it. The dropped
+text was read from each batch's commit (`git show`), not from memory.
+
+**Restored, ten claims that hold** (the code each was checked at in
+brackets):
+
+- `Game.ts`: an event node opens its page on about three entries in four
+  (the base `eventCombatChance` is 0.25, `config/nodemap.json`; the roll
+  in `Run.enterEventNode`).
+- `BackdropRenderer.ts`: every other scene's screen covers the canvas in
+  opaque black once faded in, so the floor shows only behind a battle,
+  batch 2's and batch 4's drop restored once, in its home (all twelve
+  screens' roots in ui.css are `inset: 0` on `--color-black`; the rest
+  page wears `.event-screen`).
+- `palette.ts`: TERMINAL_BLUE bright enough for the map node's 16 px glyph
+  on #000 (`.map-node` is `--text-16` on `--color-black`, `#000`; the
+  contrast, computed, is 5.5 : 1); TERMINAL_STONE warmer than
+  TERMINAL_BLACK and cooler than DARK_TERMINAL_AMBER (R − B: 0, 20, 102;
+  it is lighter than both, so "between" holds in warmth only).
+- `fontSubset.ts`: DejaVu's 0.93 / 0.24 inside JetBrains' 1.02 / 0.30,
+  and its 0.602 advance against the 0.600 cell (read off both TTFs by
+  `tools/font/ttfMetrics.ts` and a table-directory parse: DejaVu hhea and
+  win 0.928 / 0.236, typo 0.760 / 0.240, advance 0.6021).
+- `statusDisplay.ts`: `honed`'s FLOURESCENT_BLUE is the empower accent
+  the player already knows (the pre-turn card's empower chip falls back
+  to it, ui.css; ui.css and PreTurnScreen call it the empower accent).
+- `BattleRenderer.ts`, four: only a HoT ticks for 0 today (each DoT's
+  `might` is 2, 2 or 1, no config sets a `magnitude`, and `dealDamage`
+  floors a hit at `minDamage` 1; a magnitude that rounds to 0 would make
+  a 0 DoT tick, so the restored line says "today"); the objective click
+  resolves through `enemyBillboards` for either button, armed or not
+  (`onClick` and `onContextMenu` both call `setFromClient`); the bars over
+  an `a` and an `M` sit a seventh of a tile apart, some 5 px at 1280 × 720
+  on a 15 × 15 board (the census's ink tops, 0.75 and 0.89, at the 39
+  pixels a tile measured in the pane at 124j-post); and nothing in play
+  aborts a slide (every placement, the summon's, the camp's drip, the
+  overflow scan and the reposition, skips a claimed cell; tiles change
+  only at setup; `World.shove` has no caller outside tests). The last
+  one's "until §37/§40" was a plan and stays out.
+
+**Held, already in their home files:** the apron on layer 0 and outside
+the pick (`ApronRenderer.ts`), `#scanlines` at z-index 1000 over the
+overlays (ui.css), the terrain's prism per tile with water in it
+(`TerrainRenderer.ts`). Batch 2 dropped them from `Game.ts` as belonging
+there, and they are said there.
+
+**Not restored, nine:** batch 1's board sizes (batch 9's answer: 12 to 24
+procedural, 12 × 32 authored); "raw 0.157" (the clear reads 0.0212 in
+the linear target: `getClearColor` in the pane); the slab's "3.3 % at FOV
+20" (a 106a measurement of one slab size, and the slide is 0.70 for a
+2 × 2 and about 1.05 for a 3 × 3, so one figure fits one of them); the
+backdrop's "~125 units" (a 50° lens framing a 32 × 32 board, neither
+shipped); `INK_PAD_PX` "≈ screen pixels at the default board zoom" (a
+64-pixel cell draws 39 pixels tall at 1280 × 720, and the fit moves with
+the window); "reap-healed" rubble (a reap removes the dead); the marker's
+"died this tick" (batch 7's own reading); the fade-in death "if
+checkBattleEnd or AoE wipes" (ending a battle kills no one); and "rarely
+co-occur" for poison and rejuvenate, which the code allows (poison from
+an ability, rejuvenate from a healing tile) and which only a play
+measurement could count.
+
+**Kept-unchecked claims, now checked:**
+
+- Hold, kept: the board panel's seed hunts, rerun on today's sim with the
+  test's own `opened` and `realBoard` reading, the fixtures' pinned seeds
+  as known answers: 43 of seeds 1 to 600 open 15 × 15, none hosts every
+  pose, 91 and 437 move only the far-row clump; 30 of 1 to 400 open
+  24 × 24, seed 10 first. The wade's hunt, driven as the fuzz harness
+  drives a battle: icebergs seeds 1 to 12 count 8 to 25 diagonals between
+  two water tiles past a land corner, seed 1 the most at 25, the first
+  at 2.85 s. "An unpinned root is the sector's starting event" (the first
+  sector, where a fixture opens, has `startingEvents`; the second has
+  none). The run dials that "ride the fuzz hook" (RunConfig's header names
+  the harness). "On itch every HTML game shares one origin", against the
+  deployed build's record (archive/round-8-spec.md: the frame's origin is
+  `https://html-classic.itch.zone`, the game's id only in the path, with
+  6.4 MB in use against our ~100 bytes). The save's snapshot, 3 to 49 KB
+  (the archived measurement of eight runs, 555 saves; not rerun). The
+  grayscale premise, a claim about vision that no tool here checks, kept
+  as written; its source is DESIGN.
+- Corrected, four: `showCrop` and browser-pane.md's "can't crop" (the
+  pane's `zoom` with a region returned a crop, "not magnified", in an
+  800 × 450 frame for the 1280 × 720 page); the wade's "arcs 0.1 to 0.4"
+  (the hop was deleted, its code at `d045497`, so the sprite slides flat;
+  the corner stands 0.1 to 0.4 above the water, land's −0.3 to 0 against
+  water's −0.4); the journal's "some 15 KB more" (the later measurement,
+  archive/post-109-worklog.md, put a run at 570 to 960 characters a
+  battle and the 15 KB estimate low by up to half); and the trace ring,
+  batch 10's "holds that with room", which the record contradicts: the
+  human session played some 30 encounters in 104 battles and overran
+  the 80 (archive/post-52-worklog.md). A first wording named the fixture
+  by its file name, whose step code put `traceStore.ts` over its ceiling
+  at `--record`; it names the folder instead.
+
+Proof: `comment-strip HEAD src` exits 1, naming `fontSubset.ts`, whose
+header holds `i18n-ok-file` and is held as code, as at batch 5. Read: the
+marker stays on line 3, inside the five lines `literalScan.ts` reads, so
+the scan skips the file as before. The control made one code edit in
+memory in each of the other 9 changed files and the compare named all 9.
+browser-pane.md is the one doc touched.
+
+Measured (`comment-length` on copies under `output/cl-124j-post2`):
+comment lines 1,756 → 1,774, words 16,241 → 16,450, code lines 3,239
+unchanged. The step-code ceiling stays 2,122.
+
+Found and left, for 124k's stop: `BattleRenderer.inkTopLiftFor`'s reason
+says a screen-pixel gap reads tight on near rows and high on far ones and
+that the ink top scales with perspective, a perspective camera's case;
+the shipped camera is orthographic. And archive/post-109-worklog.md
+(lines 451 and 7523) names the itch account's subdomain, which AGENTS
+says the repo keeps out.
+
+The read is `batch`, at 124k's stop: `git show <this commit>`. Wrong
+looks like a restored claim that the code it names contradicts, or
+history coming back with it.

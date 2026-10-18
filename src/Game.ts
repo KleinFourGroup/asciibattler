@@ -462,8 +462,9 @@ export class Game implements RunDispatcher {
     // Docking at a port. The screen reads the live stock off
     // ctx.run.portStock.
     this.bus.on('port:entered', () => this.swap(new PortScene()));
-    // An event node opened its page. The screen reads the live page off
-    // ctx.run.
+    // An event node opened its page, on about three entries in four: the
+    // base `eventCombatChance` (config/nodemap.json) is 0.25, and the rest
+    // become fights. The screen reads the live page off ctx.run.
     this.bus.on('event:entered', () => this.swap(new EventScene()));
     // A rest node opened its gate (or a loaded run resumed at it). The
     // screen reads what the rest would do off ctx.run.

@@ -15,8 +15,10 @@
  * DejaVu Sans Mono is the one shipped fallback, its subset keeping only what
  * the primary lacks inside SUBSET_RANGES, so a glyph the primary can't paint
  * still comes from a face we ship: the same letterform on every machine, and
- * a line box that never grows (the fallback's ascent and descent sit inside
- * the primary's, which the guard test pins). The CSS `font-family` chain and
+ * a line box that never grows (the fallback's ascent and descent, 0.93 / 0.24
+ * of the em in hhea and win, sit inside the primary's 1.02 / 0.30, which the
+ * guard test pins; its 0.602 advance matches the primary's 0.600 cell). The
+ * CSS `font-family` chain and
  * the atlas's `ctx.font` both use FONT_STACK, so the DOM and the atlas share
  * one provenance rule.
  *

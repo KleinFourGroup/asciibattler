@@ -235,8 +235,9 @@ drawing. ✅ DECIDED at the kickoff: the phase cut in two, the screens as
   "124j-post, planned"). Built 2026-10-18 with `@` kept and each glyph
   clipped to its cell, both signed at step zero (WORKLOG §124,
   "124j-post — step zero, the signs and the proof").
-- ☐ **124j-post2 — the drops sweep** (`batch`, signed 2026-10-18, read
-  at 124k's stop). The true-looking claims in every batch's "Dropped and
+- ◐ **124j-post2 — the drops sweep** (`batch`, signed 2026-10-18, read
+  at 124k's stop). Built 2026-10-18: ten claims restored, four kept ones
+  corrected (WORKLOG §124, "124j-post2 — the drops sweep"). The true-looking claims in every batch's "Dropped and
   not checked" paragraph, checked at the code they name, and those that
   hold restored; `comment-strip`, comments only (WORKLOG §124, "The
   signs after batch 7"). Its scope, signed 2026-10-18: batches 8 to 10's

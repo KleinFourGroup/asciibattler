@@ -643,8 +643,9 @@ export function installProbe(game: Game): Probe {
 
 /**
  * Draw a crop magnified in the page's top-left corner, above the game and
- * its scanlines, so a screenshot shows a few pixels large (the pane's zoom
- * returns the whole screenshot). The crop is the canvas alone: DOM overlays
+ * its scanlines, so a screenshot shows a few pixels large (the pane's `zoom`
+ * crops a screenshot but doesn't magnify it, and the screenshot is scaled
+ * below the page's size). The crop is the canvas alone: DOM overlays
  * (bars, hitsplats) aren't in it. It stays until `__probe.hide()` or the
  * next shown crop. Returns the magnification.
  */

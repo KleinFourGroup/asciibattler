@@ -9675,6 +9675,9 @@ absolutely made the right call on those decision codes, Claude!" The
 spec's decision marks come out as codes in the rest of the pass, the
 decision said instead. The batch's read itself is still open.
 
+**Read** (the user, 2026-10-18, after the hand-off after batch 5): "the
+batch 2 & 3 reads look great! 😁" Batch 2 is read.
+
 ### 124j, batch 3 — the renderer and the camera (2026-10-18, session f30471d9)
 
 `Renderer.ts`, `cameraFit.ts`, `pick.ts`, `PostProcess.ts`, `anchor.ts`,
@@ -9754,6 +9757,9 @@ step code or history left, or a rule a change must respect cut:
 bloom's threshold of 0 and its black clear, the two patches to
 UnrealBloomPass (gotchas #29, #30), the scroll mode DEV-only, the fit's
 bits pinned at the older view.
+
+**Read** (the user, 2026-10-18, after the hand-off after batch 5): "the
+batch 2 & 3 reads look great! 😁" Batch 3 is read.
 
 ### The hand-off after batch 3 (2026-10-18, session f30471d9)
 

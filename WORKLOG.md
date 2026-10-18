@@ -10994,3 +10994,134 @@ the orientation).
 
 The close: **502,429** at 22:51 on 2026-10-18 by the tool's clock, after
 the close's commit `f0de9a93`.
+
+### The driver trial (2026-10-18, sessions e90c7b67 and b390d607, the drivers)
+
+Two driver sessions ran the phase from
+`scratch/124-driver-trial/driver-prompt.md` (v4, signed 2026-10-17).
+Driver 1 (`local_17b3596b`) ran from the kickoff to the hand-off after
+batch 7 and passed its 350k line there. Driver 2 (`local_7e5a3c1e`), a
+top-level session the user started from the same prompt, took over from
+driver 1's log and ran to the close. Between them they proposed eight
+cards and withdrew one (card 4, whose note on the marks call went stale
+when the user signed it). They read each hand-off whole: commits,
+entries, report and friction lines. They answered every other wake in
+one line. Their record is `scratch/124-driver-trial/log.md`, W0 to W13.
+
+**The bar** (signed by the user 2026-10-17): keep the role if, at least
+twice in the phase, a brief's note or a repeat the driver named changed
+what a session did, and the drivers' cost at list price stays under 15 %
+of the working sessions', both read by `cache-gaps.mjs`. The call is the
+user's; what follows is the drivers' count.
+
+**The patterns raised.** P-numbers are §123's, so the instances line up
+with that baseline.
+
+| # | Pattern | §124 instances | Flagged at all? | Named a repeat? |
+|---|---|---|---|---|
+| 1 | the step-code ceiling fails the first suite run | none; 124d, 124h, every batch and 124j-post recorded first | — | — |
+| 2 | shell: a quoted heredoc refused, a backslash lost | 124f (`\b`), batch 5 (a 120-line quoted heredoc, "unexpected EOF"); none recorded after brief 5's Write-tool note | yes, both | no |
+| 3 | a number or claim written ahead of its read | context readings typed at 124d, 124e and 124h; 124i's two claims; 124h's numstat (20/124 for 19/123); batch 4's "nine"; batch 5's "48, full" for 47 (it reached a commit and the user); batch 6's empty Git Bash grep read as an absence; five near-claims in sessions 6 and 7, each caught before a commit | yes, all but 124h's numstat, which driver 1 found | the readings, yes ("the third time in this phase"); the rest, no |
+| 7 | the next-step box against "What the user sees" | sessions 1 and 2; none at session 7's two stops after CLAUDE.md's bullet landed (`34304126`) | yes | yes ("as before") |
+| 8 | the comment pass's rate swings with reach | batch 6, 154 a line against 86 and 87 | measured | yes |
+| 9 | a false claim's twin found a batch later | batch 1's phrase search missed five twins (found in batch 2); batch 3's threshold missed two and batch 2's "every wall" one (both found in batch 5); stale ARCHITECTURE twins in batches 4, 5 and 7 | yes | no |
+| 11 | `comment-length`'s path limits | session 2 (a path outside the repo, in the one brief that lacked the note); session 6 (two folders measured as one) | yes | no |
+| 12 | `cd` despite the note | sessions 2, 4, 5, 6 and 7, and driver 1; every one harmless | yes | yes, against the note |
+| 13 | `comment-strip` exits 1 on a reworded `TOOL_READ` marker | batch 5 and 124j-post2, `fontSubset.ts`'s `i18n-ok-file` both times | yes | yes ("as at batch 5") |
+
+P4, P5 and P10 met no instance; P6 is under the notes. Raised besides,
+and seen only by reading across sessions:
+
+- **Drops against checks** (W5, from session 4's report). Note N7′ said
+  to drop a claim that couldn't be checked, and sessions 4 and 5 named
+  the budget pull behind about 22 drops. The user's question at W8
+  turned this into two signs: a session checks its own drops before the
+  hand-off, and 124j-post2 sweeps the rest. Under the scope signed at
+  124j-post, the sweep restored ten claims and corrected four false
+  ones that had been kept unchecked.
+- **The readings guard** (W8). Driver 1 found that a meter reading
+  equals a response's total input in the transcript exactly, while a
+  typed guess equals none. That made the guard a design, now in TODO
+  under §127. Driver 2 checked every reading of sessions 6 and 7 the
+  same way, with a planted reading refused; all matched.
+- **The marks call compounding** (W4). Batches 2 and 3 built on batch 2's
+  unread call; the user signed it (`e1b525eb`).
+- **124h's line count**, found by driver 1 from `git show --numstat`; the
+  bar's net held.
+
+**The notes, and which counted.** A note counts when a record names it as
+the reason for an action, or when a pattern with two or more earlier
+instances stops recurring after it.
+
+| Note | Briefs | What the records show | Counts? |
+|---|---|---|---|
+| `--record` before the suite | 1, 2, 7 | sessions 1, 2 and 7 by name; P1, four instances in §122–§123, none in §124 | yes |
+| search the docs for what a deletion removes | 1, 2, 7 | sessions 1, 2 and 7; P6, three instances in §123, none in §124 | yes |
+| `comment-length`'s form | 1, 3–7 | credited by sessions 1 and 3 to 7; session 2, whose brief lacked it, lost a call | yes |
+| read a claim's other homes first (124g) | 2 | session 2: "note 4 ... shaped 124g's comment" | yes |
+| check a claim at the code it names | 3–7 | sessions 3 to 6, each with false claims found; its side effect was the drops above | yes |
+| twin search by the shortest token | 4 | session 4, with two twins found in batch 5 | yes |
+| entries by the Write tool, messages by `-F` | 5–7 | sessions 5, 6 and 7 ("saved a call"); P2 none recorded after | yes |
+| the user's six signs, to confirm and record | 6 | session 6 confirmed them and committed `34304126` | yes |
+| check your own drops before the hand-off | 6 | batches 8 to 10 checked theirs: one restored, two answers for the sweep | yes |
+| the sweep's scope, an open question | 7 | put to the user at step zero and signed; the wider scope corrected four false claims, two at the brief's pointer (the pane's `zoom`) | yes |
+| the next-step box | 1, 2 | shaped how two stops resolved; replaced by CLAUDE.md's bullet | partly |
+| no `cd` | 1–7 | five sessions slipped; dropped at the close at the user's word | no |
+| the ROADMAP cap; the cost note; the marks call; leave the verdict | 1; 3; 4; 7 | never tested; no record names it; withdrawn with its card; followed | no |
+
+By that rule the first half of the bar is met several times over. The
+strongest cases changed an outcome rather than saving a call: the drops
+became the sweep, and the sweep's scope corrected four false claims.
+
+**The cost.** `cache-gaps.mjs` on the nine transcripts, at list price,
+before this entry's own turn:
+
+| Transcript | Responses | Cost | Cold wakes |
+|---|---|---|---|
+| driver 1, e90c7b67 | 123 | $15.06 | 2, writing 370,346 |
+| driver 2, b390d607 | 47 | $5.27 | 1, writing 147,706 |
+| sessions 94055418, 5b9d2da6, f30471d9, f2e588ad, fc5ce5cf, 882e1278, b25b9ccf | | $17.08, $19.78, $12.80, $18.74, $14.04, $14.42, $28.05 = $124.91 | 5b9d2da6 1, b25b9ccf 1 |
+
+The drivers cost $20.33, **16.3 %** of the sessions' $124.91, and this
+close-out adds about a dollar more. That misses 15 %. The excess is
+fixed cost:
+
+- **The three cold wakes, $4.14 (3.3 points).** Session 2's card waited
+  about 70 minutes to be started (93 min idle, 184,049 written). The user
+  was away at 124i's stop overnight (662 min, 186,297) and at 124k's stop
+  (230 min, 147,706). Without them the ratio is 13.0 %.
+- **Driver 1's turns after its last reading, $2.63.** The debrief the
+  user asked for is among them, at about 370k context.
+- **Driver 2's start-up**, about $1.
+
+Hand-offs read at 140k to 200k cost about $0.03 a response in cache
+reads, against driver 1's $0.07 past 350k, so the hand-over paid for
+itself within about 25 responses. The commit-line pings were about a
+quarter of the drivers' responses. Without them, two hand-off wakes
+would have come cold: session 1's (75 minutes after its proposal) and
+session 3's (63). Session 5's (60) was on the edge, and sessions 4′ and
+6 came within the hour anyway. Whether the pings saved more than they
+cost can't be told from the transcripts.
+
+**Stalls:** none. Every hand-off was read within minutes of its line.
+The long gaps above were each the user away or deciding while nothing
+ran.
+
+**What the drivers would change.**
+
+- Keep the brief as the job, and keep tool-form notes while the phase can
+  reach the tool. Dropping `comment-length`'s note for one brief cost
+  that session a call, as it had in §123.
+- When sessions keep meeting a trap despite its note, retire the note
+  sooner. The `cd` note ran seven briefs without stopping a slip.
+- Keep the 350k hand-over. A second driver took over from the log within
+  its first turn, and its reads cost half as much.
+- A driver can't head off a cold wake, since it comes when the user steps
+  away at a stop. A bar that counts those wakes measures the user's
+  evenings as much as the role.
+
+The drivers' lean, for the user to weigh: by the bar as written, the
+role clears the first half and misses the cost half by about 1.3 points,
+nearly all of it the user's away time. The role found two things no
+single session could, the drops and the readings guard. Worth running
+again on §124.5, as the user has said it will be.

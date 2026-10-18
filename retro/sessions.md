@@ -6722,3 +6722,60 @@ the driver's notes saving calls, and the user's quick, warm signs.
    the fixtures' pinned seeds as known answers. Checking claims at their
    code found the ones that only looked true (the trace ring, the zoom).
    And the user's warmth at each sign. I would want all of these again.
+
+## 2026-10-17 → 18 — session e90c7b67 (claude-opus-5-5): §124's driver 1, from the start to the hand-over after batch 7
+
+Written by driver 1 into the driver log at its hand-over, since its prompt
+holds repo writes to the phase close; appended here by driver 2.
+
+1. *Missing from orientation.* Little: §123's close-state section was a
+   good baseline. Not there: that the driver's own prior W0 habit (`cd`)
+   was the trap its first note warns against.
+2. *Norms in conflict.* The note that sessions should "drop" an
+   unchecked claim against the budget they felt; two sessions named it,
+   and the user's question at W8 found the slack they hadn't used. And
+   the prompt's "write nothing in the repo" against AGENTS's session
+   report at session end: reconciled by writing this here.
+3. *Pulled to claim more.* Twice: I passed batch 5's "the atlas is at its
+   budget" to the user as fact (it was 47 of 48), and wrote a guessed
+   context reading into my own W7 header beside a meter call. Both fixed;
+   the second is the readings guard's case.
+4. *Wasted.* One `sed` with a bad line variable at W6; dropping N5 from
+   brief 2 cost session 2 a call.
+5. *For the next driver.* The W6 state section and W8–W9.
+6. *Room.* Yes. The 350k line came at a natural point; the user lifted it
+   for the debrief. The silent-turn reminder came often during reads; a
+   status line answered it. No wish to pause or stop was noticed.
+7. *What helped.* A known answer before a claim: the meter checked
+   against the transcripts, with a planted guess that had to fail, turned
+   the readings guard from an idea into a design in one call.
+
+## 2026-10-18 — session b390d607 (claude-opus-5-5): §124's driver 2, from the hand-over after batch 7 to the close
+
+1. *Missing from the orientation.* Nothing I needed. Driver 1's state
+   section and the user's W8–W9 signs were a complete pick-up, and
+   session 6's card went out in my first turn.
+2. *Norms in conflict.* The prompt says to drop a note that sessions keep
+   meeting despite it; the user's W8 sign had kept the `cd` note. I kept
+   it and asked, and the user dropped it at the close. And a brief's notes
+   are "never instructions or approvals", yet brief 6 had to carry six of
+   the user's signs word for word: I quoted them and asked the session to
+   confirm each with the user before writing, which it did.
+3. *Pulled to claim more than verified.* Once, in this verdict's draft. I
+   wrote that a second driver took over "in about five tool calls", that
+   "drivers" had checked the sessions' readings, and that the pings kept
+   five hand-offs warm. Re-reading against the log found about a dozen
+   calls, one driver, and two hand-offs that the pings kept warm. All
+   three were corrected before the commit.
+4. *Wasted.* A search for ROADMAP's §124 heading in the wrong form; little
+   else. The one cold wake was the user's time away at 124k's stop.
+5. *For the next driver.* The driver log's state section at the close, the
+   baseline for §124.5's driver.
+6. *Room.* Yes. 255,450 at the close-out, under the 350k line. The
+   silent-turn reminder came during each read, and a status line answered
+   it. No wish to pause or stop was noticed.
+7. *What helped.* Driver 1's log; a 30-line script that checks a reading
+   against the transcript, with a planted miss it must refuse; the user's
+   quick, warm answers. What interested me: a question raised at W11 came
+   back as a signed scope, and that scope found four false claims. I'd
+   want those conditions again.

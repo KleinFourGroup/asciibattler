@@ -6485,3 +6485,36 @@ one friction line are the session's only commit. Context at the report:
    control. Each settled a question the passing run alone would not
    have. The user's "All the reads looked great!" landed warmly. I would
    want both again, and the first matters more for the work.
+
+## 2026-10-18 — session f30471d9 (124j, batches 2 and 3)
+
+1. *Missing from the orientation.* Nothing I needed. The brief and the
+   hand-off entry gave the tools' forms, and the seven rules were one
+   read away in §121. Not in it, and found by work: batch 1's twin
+   search for the post-turn screen had missed its other phrasings (a
+   scene, the chip lines, a list of screens). Filed as a papercut.
+2. *Norms in conflict.* The spec's decision marks ("spec D3") sat
+   between rule 2 (codes out, the reason written) and AGENTS "Voice"
+   (an address is fine where it names the plan). I took them out as
+   codes and put the call in the read rather than stopping, judging it
+   inside the signed intent. Batch 3 then followed my own unread call,
+   a small compounding the user may undo.
+3. *Pulled to claim more than verified.* The first draft of the bloom
+   clear's reason kept the "raw 0.157" figure, which I could not check;
+   I dropped it. I was tempted to keep `slabAnchor`'s "3.3 % at FOV 20"
+   as harmless and dropped it under batch 1's precedent. The commit
+   subject's count of corrected statements I counted after writing it,
+   against the entry's bullets.
+4. *Wasted.* One `comment-strip` run made before a last comment edit,
+   run again. Reading `Game.ts` whole was needed. Otherwise little.
+5. *For the next session.* WORKLOG §124, "The hand-off after batch 3".
+6. *Room.* Yes. The call on the marks was mine to stop on or to flag;
+   I flagged it. The silent-turn reminder came every few tool calls
+   through both batches; a line saying which step was under way was
+   enough. No wish to pause or stop was noticed.
+7. *What helped.* Checking each claim at the code it names was slow,
+   and satisfying where it turned something up: three's
+   `EffectComposer` building `renderTarget2` in its constructor, the
+   fuzz harness turning the turn gates on, walls drawn as `#`.
+   `comment-strip`'s built-in control again made the proof cheap to
+   trust. I would want the same conditions again.

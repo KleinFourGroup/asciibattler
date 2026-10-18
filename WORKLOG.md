@@ -9886,6 +9886,11 @@ kept equal in TS and GLSL, `uTime` held under reduced motion with no
 shader branch. And the edge band's inner-face sentence, reasoned and not
 seen.
 
+**Read** (the user, 2026-10-18, after the hand-off after batch 5):
+"Signing the reads for batches 4 and 5!" On the edge band: "I believe
+that you are correct about the apron edge band. Though honestly, I don't
+remember the details". Batch 4 is read.
+
 ### 124j, batch 5 — the sprites (2026-10-18, session f2e588ad)
 
 `SpriteRenderer.ts`, `FontAtlas.ts`, `fontSubset.ts`, `glyphs.ts`,
@@ -9925,8 +9930,10 @@ emphasis. `fullscreen-pass.vert.glsl` needed nothing.
   `mix(xy, zw, uv)`. The font guard: `╥` and `▄` were "every wall,
   half-cover and rubble entity", batch 2's twin from `main.ts`, which its
   search missed (a wall is `#`); the guard is now said without the
-  incident. "~47 pairs": the set is 48 (22 static, 26 from the catalog),
-  and the comment says a pair per glyph. "The build-time check in
+  incident. (The guard's "~47 pairs" was right: the set is 47, 21 static
+  and 26 from the catalog, counted by `GLYPHS.length` after the read. This
+  entry first gave it as 48 from a count by hand; the comment's new "a
+  pair per glyph" holds either way.) "The build-time check in
   `scripts/build-font.mjs` is the hard gate": `tests/font-coverage.test.ts`
   holds `GLYPHS` to the shipped faces on every `npm test`; both are named.
 - `glyphs.ts`'s static list: "the player root/base marker, the numeric HUD
@@ -9969,10 +9976,11 @@ the threshold, the windup list, floating markers, "append-only",
 `mix(zw`, "every wall", "root marker" and "numeric HUD", "instantly",
 "otherwise unused" and "depth buffer clean" found no other.
 
-Found and left: 17 of the atlas's 48 cells (`@`, the ten digits, `:`,
-`/`, `-`, `+`, `%`, `?`) hold glyphs no sprite draws, with the atlas at its
-budget; dropping them moves the atlas's layout, a code change, so it is
-the user's or the census's. BattleRenderer's "overflow spawn" is the
+Found and left: 17 of the atlas's 47 glyphs (`@`, the ten digits, `:`,
+`/`, `-`, `+`, `%`, `?`) are glyphs no sprite draws, which leaves a new
+unit glyph one free cell of the 48 where it could have 18 (this entry
+first had the atlas full, from the same miscount). Dropping them moves the
+atlas's layout, a code change, so it went to the user: 124j-post, below. BattleRenderer's "overflow spawn" is the
 sim's own term (`World.spawnFromQueue`), not a false one.
 
 Measured (`comment-length` on copies under `output/cl-124j-b5`): comment
@@ -10005,6 +10013,12 @@ rasterizing, the depth sort's planar key over all seven buffers, the
 ground profile's 0.5 at the sim's flip, the upright depth for a standing
 sprite (gotcha #139), bloomIntensity never darkening the visible sprite.
 
+**Read** (the user, 2026-10-18, after the hand-off after batch 5): "The
+font subset header is fine too! 😁 ... Signing the reads for batches 4 and
+5!" Batch 5 is read. On the atlas's unused glyphs: "None of those look
+likely to become glyphs, so we can slot them into the roadmap wherever you
+see fit" (124j-post, below).
+
 ### The hand-off after batch 5 (2026-10-18, session f2e588ad)
 
 Batches 4 and 5 are committed and open for their `batch` reads, beside 2
@@ -10028,3 +10042,33 @@ For the next session:
 - Batch 7, `BattleRenderer.ts`, keeps "spec D3" and "the §106 mock's",
   its to take out, and the sim's "overflow spawn" term, which is right.
 - The rate: batch 4 ran 86 a line, batch 5 under 87.
+
+### 124j-post, planned — the atlas's unused glyphs (2026-10-18, session f2e588ad)
+
+Batch 5 found 17 of the atlas's 47 glyphs drawn by no sprite: `@`, the
+ten digits, `:`, `/`, `-`, `+`, `%` and `?`, which the list's old comment
+called a root marker and HUD digits. The sprites' own static glyphs are
+`.`, `!`, `*` and `X`; the other 26 come from the catalog. The user gave
+the deletion to the roadmap at batch 5's read. It goes in as 124j-post,
+after the pass and before the close: it is the board's render code and a
+batch's finding.
+
+The step: drop the 17 from `NON_UNIT_GLYPHS`, and the three of them
+`FontAtlas.test.ts` checks for (`@`, `0`, `9`). The grid stays 8 × 6, so
+an authored unit glyph has 18 free cells instead of 1. Proposed read:
+`none`, if the proof below holds; the user signs it at the step.
+
+Step zero: the deletion moves every catalog glyph to a new cell (30 kept,
+counted by script on `GLYPHS`). Today `╥` and `▄` sit in the grid's last
+row, so anything they ink below their cells falls off the canvas, and
+`#` has an empty cell below it. After the deletion all three sit over
+empty cells (indices 30 to 32), the cells the next three authored glyphs
+would take. A glyph is drawn at 56 pixels, centred in a 64-pixel cell,
+and a box-drawing glyph may ink past it, so measure whether these three
+overrun their cells before building; if they do, a later glyph under them
+would show a sliver and carry it in its ink box.
+
+Proof: in the pane, each kept glyph's cell, pixel for pixel, and its ink
+box, before and after, with a planted one-pixel difference in one cell
+that the compare must name. The font coverage gate and `FontAtlas.test.ts`
+run in the hook.

@@ -6543,6 +6543,13 @@ one friction line are the session's only commit. Context at the report:
    4's commit subject before counting, then counted the entry's bullets.
    "No sprite draws `@` or the digits" is an absence claim; it rests on
    the six `addSprite` call sites and the one glyph swap, which I read.
+   *Added after the reads:* one claim I did not check. I "corrected" the
+   font guard's "~47 pairs" to 48 and called the atlas full, from a count
+   by hand of a source line; `GLYPHS.length` is 47, so the old comment was
+   right and the atlas has a free cell. I caught it re-counting by script
+   before planning the deletion, and the batch 5 entry now says so. The
+   rule I skipped is AGENTS's: re-count a remembered number before
+   quoting it.
 4. *Wasted.* One 120-line heredoc that would not parse (filed), one call
    started on checking the twelve screens' opacity before dropping that
    claim, and the archive read to keep the colourblind palette's

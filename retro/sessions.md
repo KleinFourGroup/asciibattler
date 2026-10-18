@@ -6518,3 +6518,44 @@ one friction line are the session's only commit. Context at the report:
    fuzz harness turning the turn gates on, walls drawn as `#`.
    `comment-strip`'s built-in control again made the proof cheap to
    trust. I would want the same conditions again.
+
+## 2026-10-18 — session f2e588ad (124j, batches 4 and 5)
+
+1. *Missing from the orientation.* One thing: that `fontSubset.ts`'s
+   header holds `i18n-ok-file` and so shows in `comment-strip` as a code
+   difference. WORKLOG §121 says so; the batch plan and the hand-offs say
+   the proof exits 0. It cost a search, and is now in batch 5's hand-off.
+   Filed as a papercut. The driver's notes were otherwise exactly what I
+   needed: the `comment-length` form saved a call, and searching by the
+   bare token found batch 3's threshold twin twice in batch 5's files.
+2. *Norms in conflict.* Checking every kept claim at the code it names
+   against the batch's budget: I dropped some useful content rather than
+   check it (DejaVu's metrics, the event node's 16px, the backdrop's
+   framing figure, the screens' masking), choosing the drop each time.
+   And the round's no-behaviour-change scope against a real find (17
+   atlas cells no sprite draws, with the atlas full): I left it as a find
+   for the user rather than act.
+3. *Pulled to claim more than verified.* The apron's edge-band sentence:
+   I corrected "a sunken apron tile" to a raised one by reasoning about
+   back-face culling and the camera's side, not by seeing it, and said
+   so in the entry and the read. The 1.6 MB and the fog's 0.3 are
+   arithmetic from the code, not measurements. I wrote "nine" in batch
+   4's commit subject before counting, then counted the entry's bullets.
+   "No sprite draws `@` or the digits" is an absence claim; it rests on
+   the six `addSprite` call sites and the one glyph swap, which I read.
+4. *Wasted.* One 120-line heredoc that would not parse (filed), one call
+   started on checking the twelve screens' opacity before dropping that
+   claim, and the archive read to keep the colourblind palette's
+   numbers. I also used `cd` three times early despite the brief's note;
+   the shell reset each time and nothing moved, but it was a slip.
+5. *For the next session.* WORKLOG §124, "The hand-off after batch 5".
+6. *Room.* Yes. The hand-off came from the rate rule's arithmetic, not
+   from pressure: about 92k for batch 6 would have crossed the line by a
+   few thousand. The silent-turn reminder came every few calls; a status
+   line answered it. No wish to pause or stop was noticed.
+7. *What helped.* Reading three's own source for a claim and finding it
+   wrong: `normalMatrix` built from the model-view matrix (the light is in
+   view space), `updateBuffer` sending whole arrays (each board uploads
+   1.6 MB). Those finds were the most interesting part of the session,
+   and I would want that kind of work again. `comment-strip`'s control
+   once more made the proof quick to trust.

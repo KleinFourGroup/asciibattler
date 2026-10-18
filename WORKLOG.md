@@ -9548,3 +9548,124 @@ For the next session:
   GLSL and CSS, so batches 4 and 5 (the shaders) are within its reach.
 - A context reading goes into an entry from a meter call made on its own,
   not typed beside it (filed at 124h).
+
+### 124j, batch 2 — the root's four (2026-10-18, session f30471d9)
+
+`Game.ts`, `main.ts`, `buildId.ts`, `config.ts`. Their step codes and
+history are out, and so are the Round 8 spec's decision marks ("spec
+D3"), taken as codes standing for a reason under rule 2, the decision
+said instead (a call for the read, below). What a renderer, a chip or a
+registry does is said in its own file, and Game's comment names the file:
+the terrain's buffers, the apron's seam, the chips' lifecycle (BitsOverlay's
+header, gotcha #116), the outro's settle (`BattleScene.outro`), the sound
+registry's safety. The header's list of scene swaps, which named some as
+all, is now a sentence pointing at where they happen.
+
+**Statements found false and corrected (rule 7):**
+
+- `TURN_OUTRO_MS`: the board lingered "before the post-turn outcome
+  screen replaces it". Game sends the turn's `advanceTurn`, after the
+  longer of the floor and the battle's settle.
+- The header: Game forwarded "`enterNode` / `chooseRecruit`" and handled
+  `resetRun`; it handles `chooseCharacter` too and forwards every other
+  command. `dispatch`'s doc had the same two routes.
+- `playback`: "1×/2×/3×", and the HUD's "button + hotkey that cycle it"
+  (the twin batch 1 corrected in `Scene.ts`). The steps are
+  `config/playback.json`'s (½× to 3×, and pause), a button and a hotkey
+  for each.
+- `keybindings`: per-battle consumers only, "so a hotkey only does
+  anything during a battle", and page-lifetime "so a future in-game rebind
+  sticks". Game subscribes the map and tooltip keys on every screen, and
+  the settings' key overrides exist (`setKeys`). The keydown sink's "a
+  no-op until a scene subscribes" went with it.
+- `run`: null "while the CharacterSelectScene is up"; at the menu too.
+- `menuBoot`: a run's end on a page booted by a dial went "as before [to]
+  the menu". It goes to a fresh run with a `character` dial and to
+  character select without one; `resetRun`'s doc had "a fresh run" for
+  every dial.
+- `activeScene`: "null only briefly during swap()". `swap` never sets it
+  null; it is null until the constructor's first swap.
+- `pendingSwapTimer`: "a scheduled deferred swap". It is the outro's
+  timer, whose action sends the advance.
+- `createRun`: "Headless tests + the fuzz harness leave this off". The fuzz
+  harness turns `pauseAtTurnGates` on for its gate-aware strategies
+  (`tests/fuzz/harness.ts`), and the journal replay does too; the comment
+  now points at the flag's doc on `Run`, which names all three. Its
+  journal-start line, "Game's config comes from the URL alone": the
+  character, the level and the menu's seed are layered over it, which is
+  why the dials are spelled from the layered config.
+- `dispatch`'s exhaustiveness guard: "a missing case silently DROPS the
+  command". The Run gets every command before the switch; a missing case
+  would miss only the map swap.
+- `devExportRun`: "the map-only load rule". `devLoadRun` loads at any gate
+  and refuses `battle` and `turn-outcome`.
+- The sector-cleared swap: "the cleared sector is gone from Run by emit
+  time, so no getter can name it". The Run keeps it (`clearedSector`) to
+  rebuild the payload for a resume; the comment says what the payload
+  carries.
+- `swap`'s pool line: "the pre/post-turn gauges".
+- `main.ts`'s font: imported "first" so the atlas finds it "when
+  document.fonts.ready resolves". It is the fourth import, and the atlas
+  loads the face by name (`document.fonts.load`, FontAtlas's header).
+  `╥`/`▄` drew "every wall, half-cover and rubble entity"; a wall is `#`
+  (`config/units.json`).
+- `config.ts`: `GRID_SIZE` was "Battle grid dimensions"; it is the board
+  the renderer frames before the first battle (`Renderer.boardW`), a
+  battle's grid being its encounter's. `ticksToSeconds` was "used by the
+  renderer/animator"; the UI uses it too (`UnitCard`, `promotionDelta`).
+
+Dropped and not checked: the apron's layer and the pick that skips it,
+the mist floor showing only behind a battle because the other scenes mask
+the canvas, the event node's "~75%" entry share, `#scanlines`' z-index,
+and the terrain's prism-per-tile and water. Each belongs to its own file,
+and batches 3 to 6 read them there.
+
+**Twins corrected outside the batch, flagged:** `ui/BitsOverlay.ts`'s
+header had the first run's `run:started` firing "from Game's field
+initializer" (Game's constructor, and only on a page booted with a
+`character` dial), "`Run` is never null", and "the opaque
+reward/recruit/post-turn scenes". And the post-turn screen named as live
+where batch 1's search did not reach: `ui/PoolOverlay.ts`'s
+`setSuppressed` ("post-turn scene"), `ui/chipLabels.ts` twice ("the
+post-turn chip lines", now the last-turn strip's, on the pre-turn screen),
+and `ui/Screen.ts`'s "eleven" screens with the post-turn among them (now
+the twelve that extend `Screen`, the menu and the rest added). Their codes
+are kept for §124.5's pass.
+
+Found and left for its batch: `render/UnitOverlayLayer.ts`'s constructor
+doc says "Pass `null` to append at the end", but the parameter is typed
+`HTMLElement` and dereferenced (batch 6). GOTCHAS #116 has the same "Game
+field initializer"; it is the incident's record and stays. `src/fonts.css`
+holds three step codes and is §124.5's.
+
+**A call for the read:** the spec's decision marks ("Round 8 spec D3",
+"spec D8") came out as codes: four in `Game.ts`, one each in `main.ts`
+and `buildId.ts`. Nine more are in the board's later batches (`Renderer`,
+`cameraFit`, `TerrainRenderer` twice, `groundMarks`, `terrainMarks.glsl`,
+`BattleRenderer`, the board panel's `bench` and `state`). If the marks
+should stay as pointers into the archived spec, the seven come back and
+the later batches keep theirs.
+
+Measured (`comment-length` on copies under `output/cl-124j-b2`): comment
+lines 638 → 558, words 5,905 → 5,244, code lines 664 unchanged; `Game.ts`
+532 → 454. The step-code ceiling 3,020 → 2,862, the 158 the three files
+held (`Game` 145, `main` 12, `buildId` 1).
+
+Proof: `comment-strip HEAD src`, comments only, exit 0; its control made
+one code edit in memory in each of the 8 changed files (the four and the
+twins' four) and the compare named all 8.
+
+Cost: 130,963 at 13:26 on 2026-10-18 by the tool's clock, after the
+orientation, to 294,966 at 13:51 after the proof: about 164k for 1,366
+lines and the twins, about 120 a line. Batch 3 at that rate is about
+153k, under the hand-off line from here, so this session takes it.
+
+**Read** (`batch`): `git show <this commit> -- src/Game.ts src/main.ts`
+against the seven rules. Wrong looks like a step code or history left, a
+screen or a route named that doesn't exist, or a rule a change must
+respect cut: the screen host before the columns (the Tab walk), the
+chips' repaint after a Run is replaced (gotcha #116), the win recorded at
+`run:victory` and not at the end screen, `store.update` for the record of
+wins and the credits' flag, the outro waiting for both the floor and the
+settle, main.ts's three first imports in their order. And the call on the
+spec's marks.

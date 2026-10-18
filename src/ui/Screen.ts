@@ -1,8 +1,8 @@
 /**
- * 96c — the Screen base: ONE show / hide / fade lifecycle for the eleven
- * full-viewport DOM screens (character select · map · pre-turn · post-turn
- * · promotion · recruit · reward · port · event · sector cleared · game
- * over). Before it, each re-implemented the same four lines around
+ * 96c — the Screen base: ONE show / hide / fade lifecycle for the twelve
+ * full-viewport DOM screens (menu · character select · map · pre-turn ·
+ * promotion · recruit · reward · port · event · rest · sector cleared ·
+ * game over). Before it, each re-implemented the same four lines around
  * `fade.ts` by hand (the Round 7 kickoff audit §E "screen shells ×13").
  *
  * The shape, chosen so no scene call site and no `show()` signature moved:

@@ -11,19 +11,20 @@
  * - Run's constructor sets `bits` directly — no `run:bitsChanged` fires for
  *   the starting balance, so the first paint reads the live value via the
  *   injected getter.
- * - The FIRST run's `run:started` fires from Game's field initializer,
- *   BEFORE any constructor subscription exists — here it serves only as the
- *   reset re-SHOW signal. It cannot drive the reset re-PAINT either: it
+ * - On a page booted with a `character` dial, the FIRST run's
+ *   `run:started` fires from Game's constructor BEFORE this chip exists —
+ *   here it serves only as the re-SHOW signal. It cannot drive the reset
+ *   re-PAINT either: it
  *   emits from inside the new Run's constructor, i.e. before Game has
  *   reassigned `this.run`, so the getter would read the OLD run's balance
  *   (browser-verified: the chip kept the dead run's total). Game calls
  *   `refresh()` from `resetRun` AFTER the assignment instead.
- * - `Run` is never null; the overlay hides on `run:defeated`/`run:victory`
+ * - The overlay hides on `run:defeated`/`run:victory`
  *   (a bits chip floating over the game-over screen reads as leftover
  *   chrome) and re-shows on the next `run:started`.
  *
  * Layering: z-index 15 — above every screen (screens carry no z-index, so
- * the chip stays visible over the opaque reward/recruit/post-turn scenes),
+ * the chip stays visible over the opaque reward/recruit scenes),
  * below the corner card-list buttons (20) and modals (30 — a focused modal
  * may dim it), and below the #scanlines rake (1000) so the CRT treatment
  * covers it like every other piece of chrome.

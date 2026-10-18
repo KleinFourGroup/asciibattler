@@ -1,7 +1,7 @@
 /**
- * The build's ID (Round 8 spec D2): `<version>+<commit>`, with `-dirty` when
- * the tree had uncommitted changes and `-dev` when it is served live (the dev
- * server, Vitest), where the tree can change under a running server. Baked by
+ * The build's ID: `<version>+<commit>`, with `-dirty` when the tree had
+ * uncommitted changes and `-dev` when it is served live (the dev server,
+ * Vitest), where the tree can change under a running server. Baked by
  * `vite.config.ts`'s `define` from scripts/build-id.mjs, which lists the
  * forms. It is stamped on the store, the saves and the journals.
  *

@@ -62,53 +62,38 @@ import { PROGRESS_SECTION, bestWinAfter, escalationCeiling, levelWithinCeiling, 
 import type { RunLock } from './store/runLock';
 import { lastRunJournal, openRunSlot, type RunSlot, type RunSlotRead } from './store/runSlot';
 
-/** M3 — the after-turn outro (ms): how long the resolved battle board
- *  lingers (death fades, hitsplats drain) before the post-turn outcome
- *  screen replaces it. Tunable by feel during playtest. */
+/** The after-turn outro's floor (ms): the resolved board lingers at least
+ *  this long (death fades, hitsplats drain) before Game sends the turn's
+ *  `advanceTurn`, and longer while the battle's own settle runs
+ *  (`BattleScene.outro`). */
 const TURN_OUTRO_MS = 900;
 
 /**
- * Top-level orchestrator. Owns the EventBus, Renderer, FontAtlas, persistent
- * 3D meshes (TerrainRenderer + SpriteRenderer), and the Run state machine —
- * everything that lives for the page's lifetime.
+ * The top-level orchestrator. It holds what lives for the page's life (the
+ * EventBus, the Renderer and its persistent meshes, the chrome) and the live
+ * Run, and it manages the scenes.
  *
- * A5 turned Game from a battle host into a scene manager. The "what's on
- * screen right now" lives in `activeScene`, which is swapped on Run
- * lifecycle events:
+ * What is on screen is `activeScene`. It is swapped on the Run's lifecycle
+ * events (the subscriptions in the constructor), on a landing on the map,
+ * which no event announces (`dispatch`), and on the transitions no Run
+ * owns: the boot, a character confirmed, a run reset, left or continued,
+ * and the menu's New run and Back.
  *
- *   - battle:started → BattleScene
- *   - recruit:offered → RecruitScene
- *   - run:victory → the win recorded in the store's progress, if the run
- *     counts (`recordWin`), then GameOverScene('complete')
- *   - run:defeated → GameOverScene('defeat')
- *   - chooseRecruit returning to phase=='map' → MapScene (driven from
- *     dispatch, since no bus event fires for that transition)
- *   - resetRun → MapScene (new Run) with a `?character=` pin; else the
- *     MenuScene on a page that booted to it (116c), or the
- *     CharacterSelectScene on a page booted by a run dial (63e — the choice
- *     is per-run)
- *   - chooseCharacter (63e, select-scene confirm) → construct the Run, at
- *     the picked Escalation level held to the character's ceiling →
- *     MapScene
- *   - the menu's New run → CharacterSelectScene, and its Back → MenuScene
- *     (116c; neither is a command, since no run exists on either side)
- *
- * A2: implements `RunDispatcher`. UI screens (now Scene-owned) hold this as
- * their command sink. Game forwards `enterNode` / `chooseRecruit` to the
- * live Run and handles `resetRun` itself (a Run can't reset itself).
- * Because UI captures `Game` rather than `Run`, swapping the underlying Run
- * on reset is invisible to the UI.
+ * Game is the `RunDispatcher` the screens and the chips send commands to.
+ * It handles `chooseCharacter` and `resetRun` itself, since they make or
+ * replace the Run, and forwards the rest to the live Run. The UI holds
+ * Game, not the Run, so a Run replaced under it is invisible to the UI.
  */
 export class Game implements RunDispatcher {
   private readonly bus = new EventBus<GameEvents>();
   /**
-   * The run journal's recorder (Round 8 spec D4; src/journal). Page-lifetime
-   * and on the bus before any Run, as its header asks. `dispatch` hands it
-   * each command before the Run applies it; `createRun` and `devLoadRun`
-   * open a journal, `resetRun` abandons one. Every call goes through
-   * `journaling`, so a recorder that throws can't take the game with it.
-   * A journal closed by its run's end is kept in the store
-   * (src/store/journals.ts), within that section's size budget.
+   * The run journal's recorder (src/journal). Page-lifetime, and on the bus
+   * before any Run, as its header asks. `dispatch` hands it each command
+   * before the Run applies it; `createRun` and `devLoadRun` open a journal,
+   * `continueRun` resumes one, and `resetRun` and `quitToMenu` abandon one.
+   * Every call goes through `journaling`, so a recorder that throws can't
+   * take the game with it. A journal closed by its run's end is kept in the
+   * store (src/store/journals.ts), within that section's budget.
    */
   private readonly journalRecorder = new JournalRecorder(
     this.bus,
@@ -126,8 +111,8 @@ export class Game implements RunDispatcher {
   /** Set when the recorder threw: this page records no more. */
   private journalBroken = false;
   /**
-   * 115f — the run slot as this tab may use it (src/store/runSlot.ts). Every
-   * read, write and clear of the save goes through it, so a second tab (the
+   * The run slot as this tab may use it (src/store/runSlot.ts). Every read,
+   * write and clear of the save goes through it, so a second tab (the
    * two-tab lock held by another) leaves the first tab's save alone and
    * plays unsaved.
    */
@@ -136,132 +121,126 @@ export class Game implements RunDispatcher {
   private readonly fontAtlas: FontAtlas;
   private readonly sprites: SpriteRenderer;
   private readonly overlays: UnitOverlayLayer;
-  /** 48d — the persistent bits chip (page-lifetime, survives scene swaps);
-   *  held for `resetRun`'s post-reassignment `refresh()`. */
+  /** The bits, pool and cache chips (the cache's with its modal):
+   *  page-lifetime chrome in the chrome column, which no scene swap
+   *  touches. Their lifecycle is in BitsOverlay's header (gotcha #116):
+   *  repainted after the Run is replaced (`refresh`), shown for a loaded
+   *  run (`reveal`), hidden for one that was left (`conceal`). */
   private readonly bitsOverlay: BitsOverlay;
-  /** 94e — the persistent run-pool chip (the bits chip's sibling). */
   private readonly poolOverlay: PoolOverlay;
-  /** 49f — the persistent cache chip + modal (the bits chip's sibling; same
-   *  gotcha #116 lifecycle, incl. the resetRun `refresh()`). */
   private readonly cacheOverlay: CacheOverlay;
-  /** 78e — the sector-map chip + read-only overlay (a chrome-column
-   *  chip). Scene-derived availability is pushed from `swap`. */
+  /** The sector-map chip and its read-only overlay. Whether it is offered
+   *  is the scene's, pushed from `swap`. */
   private readonly sectorMapOverlay: SectorMapOverlay;
-  /** 116d — the settings chip and modal (the chip is the control column's
-   *  first row). The menu opens the same modal through the scene context. */
+  /** The settings chip and modal; the chip is the control column's first
+   *  row. The menu opens the same modal through the scene context. */
   private readonly settingsOverlay: SettingsOverlay;
   /** The control column's second row (src/ui/chip.ts): the screen that is up
    *  mounts its own top-right control here, through the scene context. */
   private readonly controlSlot: HTMLDivElement;
-  /** 116j — the credits panel: the menu's row opens it, and so does the end
-   *  of the first won run (`resetRun`). */
+  /** The credits panel: the menu's row opens it, and so does leaving the
+   *  first won run's end screen on a page that goes to the menu
+   *  (`resetRun`). */
   private readonly credits: CreditsOverlay;
-  /** 116i — the can't-save chip, and whether a run is on screen (live, and
-   *  not at its end screen), which is when a second tab's chip shows. */
+  /** The can't-save chip, and whether a run is on screen (live, and not at
+   *  its end screen), which is when a second tab's chip shows. */
   private readonly cantSave: CantSaveChip;
   private runOnScreen = false;
   private readonly terrain: TerrainRenderer;
-  /** M4 — the backdrop apron ring. */
+  /** The backdrop apron, the fogged ring around the board. */
   private readonly apron: ApronRenderer;
-  /** M4 — the mist floor (page-lifetime scenery; only its uTime advances). */
+  /** The mist floor (page-lifetime scenery; only its uTime advances). */
   private readonly backdrop: BackdropRenderer;
-  /** 100e2 — the SCREEN HOST: the scenes' mount (every Screen + the HUD),
-   *  created FIRST inside #ui so it sits BEFORE the chrome column and the
-   *  tooltip host in DOM order. A static, unsized div — the screens are
-   *  absolute / fixed and resolve against #ui exactly as before; the column
-   *  is fixed with its own z-index, so stacking never depended on DOM order.
-   *  What DOES depend on it is the Tab walk: with the column first, the only
-   *  forward path from a screen's last control to the chips ran off the
-   *  document's end — through Firefox's own UI — and around (the user's
-   *  100c1 + 100e reads). Screens first, chips last, no detour. */
+  /** The screen host: the scenes' mount (every screen and the HUD), the
+   *  first child of #ui, ahead of the two columns and the tooltip host.
+   *  Stacking doesn't rest on that order: the host is a static, unsized
+   *  div whose screens are absolute or fixed against #ui, and the columns
+   *  are fixed with their own z-index. The Tab walk does: with the chips
+   *  ahead, a screen's last control would reach them only past the
+   *  document's end, through the browser's own UI, and around. */
   private readonly screenHost: HTMLDivElement;
   private readonly audio: AudioPlayer;
   /**
-   * I3 — fast-forward speed (1×/2×/3×). Page-lifetime so the chosen speed
-   * persists across turns/battles; surfaced to every Scene via buildContext.
-   * The HUD owns the per-battle button + hotkey that cycle it.
+   * The battle's playback speed, page-lifetime so the chosen speed carries
+   * across turns and battles; every scene has it through the context. The
+   * steps are `config/playback.json`'s, and in a battle the HUD's pane has
+   * a button and a hotkey for each (`HUD.selectSpeed`).
    */
   private readonly playback = new PlaybackSpeed();
-  /** 65f — the deck-cue buffer (page-lifetime): the deal's per-card cues
-   *  fire before `turn:starting` mounts the scene, so Game buffers them and
-   *  hands the sequence over at swap time (see the wiring comment). */
+  /** The deck-cue buffer: the deal's cues fire before the pre-turn scene
+   *  mounts, so Game holds them for it (the wiring in the constructor). */
   private readonly deckCues: DeckCue[] = [];
   /**
-   * J3 — the page-lifetime keybinding registry. Owns the single `window`
-   * keydown listener (attached in the constructor); per-battle consumers (the
-   * HUD) subscribe via `keybindings.on(...)` and tear down on dispose, so a
-   * hotkey only does anything during a battle. Persists across scene swaps so a
-   * future in-game rebind sticks — hence page-lifetime, surfaced via
-   * buildContext like `playback`.
+   * The page-lifetime keybinding registry. It owns the one `window` keydown
+   * listener (attached in the constructor) and takes the settings' key
+   * overrides. Game subscribes the keys that work on every screen (the
+   * map, the tooltip); a battle's HUD subscribes its own through the scene
+   * context and lets them go on dispose.
    */
   private readonly keybindings = new Keybindings();
-  /** 116b — the page's settings (src/settings). The constructor connects
-   *  them to what they set; a dev console reaches them as `__game.settings`. */
+  /** The page's settings (src/settings). The constructor connects them to
+   *  what they set; a dev console reaches them as `__game.settings`. */
   private readonly settings = settings;
   /**
-   * Active run. Replaced on `resetRun`, and — 63e — NULL while the
-   * CharacterSelectScene is up (the choice precedes Run construction; a
-   * `?character=` pin skips that state entirely). Every method treats
-   * `this.run` as the authoritative source for meta state; run-level
-   * commands arriving while null are dropped loud in `dispatch`.
+   * The live run, or null when there is none: at the menu and at character
+   * select (a `character` dial constructs one at boot, skipping both).
+   * Replaced on a reset, a Continue and a dev load. A run-level command
+   * that arrives while it is null is dropped loudly in `dispatch`.
    */
   private run: Run | null;
   /**
-   * G1 — the RunConfig parsed once from the launch URL. Reused on `resetRun`
-   * so a reset re-rolls a fresh run with the *same* shape (short floor count /
-   * forced layout / roster). A pinned `seed` reproduces the same run on reset;
-   * an unset seed gives a new `Date.now()` run each time.
+   * The RunConfig parsed once from the launch URL, the base of every run
+   * this page creates (`createRun`), so a reset re-rolls a run of the same
+   * shape. A pinned `seed` gives the same run on each reset; with none,
+   * each run is seeded from the clock.
    */
   private readonly runConfig: RunConfig;
   /**
-   * 116c — whether this page booted to the menu: a plain URL, with no run
-   * dial and no board bookmark (src/scenes/menuRules.ts). Fixed for the
-   * page's life. It decides the first screen and where a run's end goes: the
-   * menu here, and as before the menu on a page booted by a dial, so no
-   * driver's path changed.
+   * Whether this page booted to the menu: a plain URL, with no run dial and
+   * no board bookmark (src/scenes/menuRules.ts). Fixed for the page's life.
+   * It decides the first screen and where a run's end goes: the menu here;
+   * on a page booted by a dial, a fresh run with a `character` dial and
+   * character select without one.
    */
   private readonly menuBoot: boolean;
   /**
-   * 116c — the menu's seed field, as text. The menu hands it over with New
-   * run, character select's Back finds it as it was left, and the run that
-   * is created takes it (`createRun`), which empties it: a seed is one run's,
-   * so the run after it is seeded from the clock again.
+   * The menu's seed field, as text. The menu hands it over with New run,
+   * character select's Back finds it as it was left, and the run that is
+   * created takes it (`createRun`), which empties it: a seed is one run's.
    */
   private seedText = '';
-  /** The scene currently mounted. Null only briefly during swap(). */
+  /** The scene mounted now; null only until the constructor's first swap. */
   private activeScene: Scene | null = null;
-  /** 96.5b2 — the in-flight outro's cancellation token (`afterOutro`);
-   *  null when no outro is pending. */
+  /** The in-flight outro's cancellation token (`afterOutro`); null when no
+   *  outro is pending. */
   private pendingOutro: { cancelled: boolean } | null = null;
-  /** 115e — the live run's dials as URL query text: what its journal's
-   *  seed start holds, and what the run slot keeps beside the snapshot, so
-   *  a load reads the inputs the run was created with. */
+  /** The live run's dials as URL query text: what its journal's seed start
+   *  holds, and what the run slot keeps beside the snapshot, so a load
+   *  reads the inputs the run was created with. */
   private runDials = '';
-  /** 117e — the Escalation level the live run's won end opened for its
-   *  character, for the end screen to say; null until a win opens one, and
-   *  again when another run takes its place. */
+  /** The Escalation level the live run's won end opened for its character,
+   *  for the end screen to say; null until a win opens one, and again when
+   *  another run takes its place. */
   private unlocked: number | null = null;
-  /** M3 — a scheduled deferred swap (the after-turn outro). Any direct
-   *  swap() cancels it, so a scheduled scene can never replace one that
-   *  arrived after it. */
+  /** The outro's timer (`afterOutro`). Any swap cancels it, with the
+   *  token, so an advance set before a swap never fires after it. */
   private pendingSwapTimer: number | null = null;
-  /** 117.5i — set once the page has failed (`halt`), for its life. */
+  /** Set once the page has failed (`halt`), for its life. */
   private halted = false;
 
   constructor(canvas: HTMLCanvasElement, fontAtlas: FontAtlas, uiMount: HTMLElement, runLock: RunLock) {
     this.fontAtlas = fontAtlas;
-    // 115f — before any run exists: a pinned boot saves below.
+    // Before any run exists: a boot with a character dial saves below.
     this.runSlot = openRunSlot(store, this.bus, runLock);
-    // 100e2 — the screen host goes in before any other #ui child (see the
-    // field): the chrome column + the tooltip host append after it below.
-    // (#ui itself is not kept — the page-lifetime chrome takes it here, at
-    // construction, and nothing reads it later.)
+    // The screen host goes in before any other #ui child (see the field).
+    // #ui itself is not kept: the page-lifetime chrome takes it here, and
+    // the scenes get the host.
     this.screenHost = document.createElement('div');
     this.screenHost.className = 'screen-host';
     uiMount.appendChild(this.screenHost);
     this.audio = new AudioPlayer();
-    // 116b — the settings reach what they set: each consumer takes its stored
-    // value here, before the first screen mounts, and its new value on every
+    // The settings reach what they set: each consumer takes its stored value
+    // here, before the first screen mounts, and its new value on every
     // change (src/settings/apply.ts). The page's life is the subscription's.
     connectSettings(this.settings, {
       setVolume: (master, sfx) => this.audio.setVolume(master, sfx),
@@ -275,55 +254,46 @@ export class Game implements RunDispatcher {
       setTextScale,
     });
 
-    // G1 — one URL parser builds the RunConfig (seed / floors / roster /
-    // layout / width). No params ⇒ empty config ⇒ a normal `Date.now()`-seeded
-    // run, byte-identical to pre-G1. Supersedes the old inline `?roster=`.
+    // The RunConfig from the URL's run dials; with none, an empty config,
+    // and each run is seeded from the clock.
     this.runConfig = parseRunConfigFromURL();
     this.menuBoot = bootsToMenu(location.search);
 
-    // 63e — construct the Run NOW only when `?character=` pins the choice;
-    // otherwise it stays null until the CharacterSelectScene confirms
-    // (`confirmCharacter`). Late Run construction is safe ordering-wise:
-    // Game has no direct battle:ended listener, and every Run follow-on
-    // event (recruit:offered/run:victory/run:defeated) is emitted from
-    // within Run's own handler AFTER it updates phase — subscription order
-    // doesn't matter for those (the devLoadRun precedent).
+    // The Run is built now only when a `character` dial names the
+    // character; otherwise it stays null until character select confirms
+    // (`confirmCharacter`) or the menu's Continue loads one. A Run built
+    // after Game's subscriptions behaves as one built before them: Game
+    // listens to none of the events the Run listens to (`battle:ended`,
+    // `unit:died`), and the Run emits each event Game swaps on after it has
+    // set its phase.
     this.run = this.runConfig.character !== undefined ? this.createRun() : null;
-    // 115e — a boot with a character in its dials starts its own run, never
-    // continues one, and saves over the slot (the §115 shape-lock, call 8).
+    // A boot with a character in its dials starts its own run, never
+    // continues one, and saves over the slot.
     if (this.run !== null) this.autosave(this.run);
 
-    // Renderer drives the per-frame tick of whatever scene is active. After the
-    // scene has updated (sprite positions lerped for this frame), Qb#2 depth-
-    // sorts the transparent sprite billboards back-to-front so their paint order
-    // matches camera depth — they're `depthWrite: false`, so draw order is their
-    // only occlusion arbiter. Runs before the render, which follows onFrame.
+    // The Renderer runs the active scene's tick each frame. After it (the
+    // sprites lerped for the frame) the glyph billboards are sorted back to
+    // front: they are `depthWrite: false`, so draw order is their only
+    // occlusion. The render follows onFrame.
     this.renderer = new Renderer(canvas, (dt) => {
       this.activeScene?.tick(dt);
       this.sprites.sortByDepth(this.renderer.camera);
     });
 
-    // C1c terrain: faceted low-poly prism-per-tile. Renders floor + water
-    // tiles directly (no separate WaterRenderer); BattleScene calls
-    // setTiles after applyTerrain has populated world.tileGrid. D3
-    // sizes the vertex buffers at LAYOUT_MAX_SIDE² so any per-encounter
-    // grid up to that cap renders without reallocation; setDrawRange
-    // exposes only the active cells.
+    // The terrain: one mesh for every board, sized once for the largest
+    // (src/render/TerrainRenderer.ts); BattleScene gives it each battle's
+    // tiles.
     this.terrain = new TerrainRenderer();
     this.renderer.scene.add(this.terrain.mesh);
 
-    // M4: the backdrop apron — a fog-faded non-playable ring continuing
-    // the board outward so it doesn't float in the void. Reads heights
-    // through the live TerrainRenderer (same fixed-seed noise field) so
-    // the seam is invisible. Layer 0 only — never in the bloom pass, and
-    // pickCell raycasts terrain.mesh explicitly so the ring is unclickable.
+    // The apron: a fogged, unplayable ring that carries the board outward
+    // so it doesn't float in the void, its heights read through the terrain
+    // so the seam doesn't show (src/render/ApronRenderer.ts).
     this.apron = new ApronRenderer(this.terrain);
     this.renderer.scene.add(this.apron.mesh);
 
-    // M4: the mist floor the apron dissolves into. Encounter-independent
-    // (origin-centered, fixed size) so it's added once and never reset;
-    // non-battle scenes mask the canvas with opaque DOM (G2), so it only
-    // shows behind live battles.
+    // The mist floor the apron dissolves into: independent of the
+    // encounter, so it is added once and never reset.
     this.backdrop = new BackdropRenderer();
     this.renderer.scene.add(this.backdrop.mesh);
 
@@ -334,33 +304,25 @@ export class Game implements RunDispatcher {
     this.renderer.scene.add(this.sprites.mesh);
     this.renderer.scene.add(this.sprites.bloomMesh);
 
-    // E3.6: per-unit DOM overlay (HP bar + action progress + level
-    // badge). Replaces the pre-E3.6 canvas-instanced BarRenderer. The
-    // container is inserted BEFORE the existing #ui mount so HUD panels
-    // paint on top — overlays are world content, the HUD is chrome and
-    // wins z-order disputes. #scanlines (z-index 1000) still rakes
-    // across the overlays.
+    // The per-unit DOM overlay (the HP bar, the action bar, the level
+    // badge). Its container goes in before #ui, so the HUD and the screens
+    // paint over it: the overlays are world content, the HUD is chrome.
     this.overlays = new UnitOverlayLayer(() => this.renderer.camera, canvas, uiMount);
 
-    // 48d: the persistent bits overlay — page-lifetime chrome appended once
-    // to the shared #ui mount, NEVER touched by scene swaps (the first UI
-    // element to survive them). The first paint happens in its constructor
-    // (Run's init never emits run:bitsChanged, and the first run:started
-    // predates this line); resetRun re-paints via refresh() after the run
-    // reassignment (see the ordering note there).
-    // 63e — getters are null-safe (a pre-select boot has no run; the chip
-    // starts hidden then and `run:started` reveals it on confirm).
-    // 96e — the chips mount into ONE chrome column (src/ui/chip.ts);
-    // their order is CSS `order`, not construction order, so the
-    // construction (and subscription) order below is untouched.
-    // The control column goes into the tree first: Tab leaves a screen for
-    // Settings and the screen's own control, then walks the chips, and the
-    // can't-save chip stays the walk's last stop.
+    // The chrome chips. Each one's first paint is its constructor's read of
+    // its getter, and every getter is null-safe: with no run yet, each chip
+    // starts hidden and the run's `run:started` shows it (the lifecycle is
+    // in BitsOverlay's header). The chips mount into the chrome column
+    // (src/ui/chip.ts), where CSS `order` places them, so the construction
+    // and subscription order below is free. The control column goes into
+    // the tree first: Tab leaves a screen for Settings and the screen's own
+    // control, then walks the chips, and the can't-save chip is the walk's
+    // last stop.
     const controls = createControlColumn(uiMount);
     this.controlSlot = controls.slot;
     const chips = createChromeColumn(uiMount);
-    // 97a — the ONE tooltip host (src/ui/tooltip.ts): page-lifetime chrome
-    // like the column; every `attachTooltip` site renders into it.
+    // The one tooltip host (src/ui/tooltip.ts), page-lifetime like the
+    // columns; every `attachTooltip` renders into it.
     installTooltipHost(uiMount);
     this.bitsOverlay = new BitsOverlay(
       chips,
@@ -369,9 +331,6 @@ export class Game implements RunDispatcher {
       this.run === null,
     );
 
-    // 94e: the persistent run-pool chip — the bits chip's page-lifetime
-    // sibling (the user's "the pool everywhere"); the same first-paint /
-    // refresh() ordering as the bits chip.
     this.poolOverlay = new PoolOverlay(
       chips,
       this.bus,
@@ -379,9 +338,7 @@ export class Game implements RunDispatcher {
       this.run === null,
     );
 
-    // 49f: the cache chip — the bits chip's page-lifetime sibling (stacked
-    // below it). Getters close over `this.run` so a reset's Run swap is
-    // invisible (the dispatcher pattern); `this` is the RunDispatcher.
+    // The cache chip and its modal, which sends its commands to Game.
     this.cacheOverlay = new CacheOverlay(
       uiMount,
       chips,
@@ -398,12 +355,10 @@ export class Game implements RunDispatcher {
       this.run === null,
     );
 
-    // 78e: the sector-map chip + read-only overlay — a chrome-column chip
-    // (bits → cache → map). One view getter closing over `this.run`
-    // (the dispatcher pattern — a reset's Run swap is invisible); the
-    // `toggleSectorMap` keybind subscribes at THIS layer, the first
-    // page-lifetime keybind consumer, so `M` works on every screen the chip
-    // shows on (scene availability is pushed from `swap`).
+    // The sector-map chip and its overlay. Its view getter reads the live
+    // run, so a replaced Run is invisible to it. Its key subscribes here,
+    // at the page's layer, so the map opens on every screen that offers the
+    // chip (`swap` says which).
     this.sectorMapOverlay = new SectorMapOverlay(
       uiMount,
       chips,
@@ -423,9 +378,9 @@ export class Game implements RunDispatcher {
       () => this.keybindings.labelFor('toggleSectorMap'),
     );
     this.keybindings.on('toggleSectorMap', () => this.sectorMapOverlay.toggle());
-    // 116d — the settings: a chip while a run is live, and the modal that
-    // chip and the menu's row both open. The modal holds the playback and
-    // suspends the key registry while it is up (src/ui/SettingsOverlay.ts).
+    // The settings: a chip while a run is live, and the modal that chip and
+    // the menu's row both open. The modal holds the playback and suspends
+    // the key registry while it is up (src/ui/SettingsOverlay.ts).
     this.settingsOverlay = new SettingsOverlay(
       uiMount,
       controls.column,
@@ -437,7 +392,7 @@ export class Game implements RunDispatcher {
         runLive: () => this.run !== null,
         runSaved: () => this.runSlot.peek() === 'saved',
         quitToMenu: () => this.quitToMenu(),
-        // 116h — the data rows: the whole store out and in (src/store/backup.ts),
+        // The data rows: the whole store out and in (src/store/backup.ts),
         // and the journal of the last run that ended (src/store/runSlot.ts).
         data: {
           backup: () => {
@@ -448,7 +403,7 @@ export class Game implements RunDispatcher {
             this.runSlot.lock === 'elsewhere' ? 'elsewhere' : store.status().canSave ? null : 'unavailable',
           restore: (backup) => store.restore(backup.sections),
           lastRun: () => lastRunJournal(store, this.runSlot),
-          // 118f — the player's diagnostics (src/diagnostics/report.ts): each
+          // The player's diagnostics (src/diagnostics/report.ts): each
           // reading is taken when the row is clicked, and a section of the
           // store is told by its size alone.
           diagnostics: () => {
@@ -473,46 +428,45 @@ export class Game implements RunDispatcher {
       },
     );
     this.credits = new CreditsOverlay(uiMount, this.audio);
-    // 116i — the can't-save chip: last in the column and in the Tab walk,
-    // shown while the page can't save (src/ui/CantSaveChip.ts). The store's
-    // status is its last write's, so the chip goes when a write lands again;
-    // `swap` paints it too, for a second tab's run (`paintCantSave`).
+    // The can't-save chip: last in the column and in the Tab walk, shown
+    // while the store's status says the page can't save
+    // (src/ui/CantSaveChip.ts); `swap` paints it too, for a second tab's run
+    // (`paintCantSave`).
     this.cantSave = new CantSaveChip(chips, cantSaveReason(store.status().canSave, this.runSlot.lock, false));
     store.onStatus((status) => {
       this.paintCantSave();
       if (!status.canSave) console.warn("[store] can't save:", status.error); // i18n-ok: a dev console line
     });
-    // 97b — the tooltip key, page-lifetime like the map key: pin the open
+    // The tooltip key, page-lifetime like the map key: pin the open
     // tooltip / close a pinned one / open pinned for the focused or hovered
     // trigger (src/ui/tooltip.ts).
     this.keybindings.on('showTooltip', () => toggleTooltipKey());
 
-    // Scene transitions driven by Run lifecycle events. All of the
-    // post-battle handlers fire *after* Run has already updated phase +
-    // currentOffer, so the new Scene can read ctx.run consistently.
+    // The scene swaps on the Run's lifecycle events. The Run emits each
+    // after it has set its phase and the gate's state, so the new scene
+    // reads ctx.run as the gate has it.
     this.bus.on('battle:started', () => this.swap(new BattleScene()));
-    // E4: promotion fires BEFORE recruit:offered when units leveled up.
-    // Run rolls the recruit offer only after `dismissPromotion`, so
-    // recruit:offered still fires exactly once per non-terminal win.
-    // M1: promotions fire at TURN boundaries, so this swap also lands
-    // mid-encounter (the battle's outro → here → the next pre-turn screen).
+    // A turn that levelled units comes here after its reward and before
+    // the next turn or the encounter's end, so the recruit offer, rolled at
+    // the encounter's end, still comes once per won encounter short of the
+    // sector's terminal. A rest that levelled units comes here too, and
+    // goes on to the map.
     this.bus.on('promotion:pending', ({ promotions }) =>
       this.swap(new PromotionScene(promotions)),
     );
     this.bus.on('recruit:offered', ({ units }) => this.swap(new RecruitScene(units)));
-    // 48c — the reward offer's screen (battle → rewards → promotion →
-    // recruit). No payload: the screen reads the live offer off ctx.run.
+    // The reward offer's screen, a turn's first gate (the reward, the
+    // promotion, then the next turn or the encounter's end). The screen
+    // reads the live offer off ctx.run.
     this.bus.on('reward:offered', () => this.swap(new RewardScene()));
-    // 50e — docking at a port (replaces the 50c interim auto-undock stub).
-    // No payload: the screen reads the live stock off ctx.run.portStock.
+    // Docking at a port. The screen reads the live stock off
+    // ctx.run.portStock.
     this.bus.on('port:entered', () => this.swap(new PortScene()));
-    // 74f — an event node opened its page (the ~75% non-resolve entry).
-    // No payload: the screen reads the live page off ctx.run (the port
-    // pattern). This closes the 74e interim hazard — the event phase has
-    // a scene now.
+    // An event node opened its page. The screen reads the live page off
+    // ctx.run.
     this.bus.on('event:entered', () => this.swap(new EventScene()));
-    // A rest node opened its gate (and a loaded run resumed at it). No
-    // payload: the screen reads what the rest would do off ctx.run.
+    // A rest node opened its gate (or a loaded run resumed at it). The
+    // screen reads what the rest would do off ctx.run.
     this.bus.on('rest:entered', () => this.swap(new RestScene()));
     this.bus.on('run:defeated', () => this.swap(new GameOverScene('defeat')));
     // The win is recorded here and not at the end screen's button: the
@@ -522,60 +476,51 @@ export class Game implements RunDispatcher {
       this.recordWin();
       this.swap(new GameOverScene('complete'));
     });
-    // 67b — the between-sector beat (the 67a gate's screen). Titles ride the
-    // payload: the cleared sector is gone from Run by emit time, so no getter
-    // can name it (the GameOverScene fixed-at-construction shape).
-    // §90 — the seam pool pair rides along: the screen names the floor's heal.
+    // The between-sector screen. The payload carries both sectors' titles
+    // and the pool before and after the seam's floor raised it.
     this.bus.on('sector:cleared', (e) =>
       this.swap(
         new SectorClearedScene(e.clearedSectorTitle, e.nextSectorTitle, e.poolBefore, e.poolAfter),
       ),
     );
 
-    // H4b — the turn gates. These only fire when `run.pauseAtTurnGates` is
-    // on (Game sets it in createRun); the headless loop never emits them.
-    // `turn:starting` opens the pre-turn screen; `turn:resolved` is the
-    // turn-outcome gate, which since 96.5d has NO screen — Game advances it
-    // itself after the outro. Both continue via the `advanceTurn` command,
-    // whose continuations (battle:started / the next turn:starting /
-    // recruit:offered / promotion:pending / run:*) drive their own swaps.
+    // The turn gates, which fire only with `run.pauseAtTurnGates` on (Game
+    // sets it on every run it makes or loads). `turn:starting` opens the
+    // pre-turn screen. `turn:resolved` has no screen: Game sends its
+    // `advanceTurn` after the outro. Each advance goes on to an event whose
+    // subscription swaps the scene (`battle:started`, a reward, a
+    // promotion, the next `turn:starting`, a recruit, a sector's end, the
+    // run's end).
     //
-    // M3 — turn:resolved fires from inside the ending world.tick(), but the
-    // advance is DEFERRED by a brief outro so the final board state breathes
-    // (death fades + hitsplats drain + the 96.5b2 orbs landing) before the
-    // next screen masks it. Safe to linger: World.tick() no-ops once
-    // `_ended`, so the BattleScene's clock spins harmlessly through the
-    // outro, and nothing else can advance until the deferred dispatch —
-    // swap() cancels the timer anyway, defensively.
-    // 65f — the deck-cue buffer: the deal's per-card cues fire DURING
-    // `startNextTurn`, before `turn:starting` mounts the scene, so a
-    // scene-scoped subscription can never see them. Game (page-lifetime)
-    // buffers them and hands the deal sequence to the scene at swap time;
-    // `battle:started` clears the buffer (any cue after it belongs to the
-    // NEXT turn's recycle+deal — gate-time cues the mounted scene consumed
-    // live are flushed with it).
+    // `turn:resolved` fires inside the World's last tick, and the advance
+    // waits for the outro, so the final board plays out before the next
+    // screen covers it. Lingering is safe: an ended World's tick does
+    // nothing, so the battle scene's clock spins through the outro, and
+    // nothing else advances the run before the deferred dispatch; a swap
+    // cancels the timer anyway.
+    //
+    // The deck-cue buffer: the deal's cues fire inside `startNextTurn`,
+    // before `turn:starting` mounts the scene, so no scene's subscription
+    // can see them. Game holds them and hands the deal to the scene at the
+    // swap. `battle:started` empties the buffer, and with it the cues the
+    // mounted pre-turn scene took live at its gate (a redraw).
     this.bus.on('deck:cardDrawn', (e) => this.deckCues.push({ kind: 'drawn', ...e }));
     this.bus.on('deck:cardDiscarded', (e) => this.deckCues.push({ kind: 'discarded', ...e }));
     this.bus.on('deck:reshuffled', (e) => this.deckCues.push({ kind: 'reshuffled', ...e }));
     this.bus.on('battle:started', () => {
       this.deckCues.length = 0;
     });
-    // 96.5d → 115e — the previous turn's outcome (the "last turn" strip)
+    // The previous turn's outcome (the pre-turn screen's "last turn" strip)
     // rides the payload, from the Run, so a pre-turn screen resumed from a
     // save shows it too.
     this.bus.on('turn:starting', (info) => {
       this.swap(new PreTurnScene(info, this.deckCues.splice(0)));
     });
-    // 96.5b2 → 96.5d — the after-turn outro: the LONGER of the fixed
-    // TURN_OUTRO_MS and the BattleScene's own settle (the loss orbs landing
-    // + the ghost commit + the settle beat), so a survivors end sequence is
-    // never cut short and a decisive casualties end still breathes the full
-    // 900 ms. Then, instead of mounting the post-turn screen (deleted at
-    // 96.5d — the live bar carries the outcome), Game dispatches the
-    // `advanceTurn` the screen's Continue used to: Run's turn-outcome phase
-    // is untouched (the fuzz bot drives it the same way), and the
-    // continuation (reward / promotion / recruit / the next turn:starting /
-    // run:*) drives its own swap.
+    // The after-turn outro: the longer of TURN_OUTRO_MS and the battle's own
+    // settle (`BattleScene.outro`), so a long end sequence is never cut
+    // short and a short one still lingers. Then Game sends the turn's
+    // `advanceTurn`, as the fuzz bot does, and its continuation swaps the
+    // scene.
     this.bus.on('turn:resolved', () => {
       const settle =
         this.activeScene instanceof BattleScene ? this.activeScene.outro() : Promise.resolve();
@@ -584,28 +529,23 @@ export class Game implements RunDispatcher {
       });
     });
 
-    // §104 — every EVENT-keyed sound, one subscriber over the registry
-    // (src/audio/eventSounds.ts: which event plays what, and why the rest
-    // are silent). Page-lifetime, so it survives scene swaps; the battle
-    // cues (death / heal / dash) are safe here because BattleScene builds
-    // the only World on this bus.
+    // Every event-keyed sound, one page-lifetime subscriber over the
+    // registry (src/audio/eventSounds.ts: which event plays what, why the
+    // rest are silent, and why the battle's cues are safe at this layer).
     attachEventSounds(this.bus, this.audio);
 
-    // J3 — one page-lifetime keydown sink for every rebindable hotkey. On
-    // `window` (not the canvas) so a binding fires without the play area being
-    // focused, matching the I3 fast-forward listener it replaces. Dispatch is a
-    // no-op until a scene subscribes a handler, so this can attach once at boot.
+    // The one keydown sink for every rebindable hotkey, on `window` (not the
+    // canvas) so a binding fires without the play area focused.
     window.addEventListener('keydown', this.keybindings.handleKeyDown);
 
-    // Boot into the map (a `?character=` pin constructed the Run above), the
-    // menu (116c — a plain URL), or the character select (a run dial with no
-    // character: 63e — the choice precedes Run construction).
+    // Boot into the map (a `character` dial built the Run above), the menu
+    // (a plain URL), or character select (a run dial with no character).
     if (this.run !== null) this.swap(new MapScene());
     else this.swap(this.menuBoot ? new MenuScene() : new CharacterSelectScene());
   }
 
   /**
-   * 116c — the menu's New run: on to character select, holding the seed
+   * The menu's New run: on to character select, holding the seed
    * field's text for the run that is confirmed there. A run saved in the slot
    * is untouched until then, so Back still finds Continue.
    */
@@ -619,7 +559,7 @@ export class Game implements RunDispatcher {
   }
 
   /**
-   * 116d — Quit to menu, from the settings modal during a run. It is what
+   * Quit to menu, from the settings modal during a run. It is what
    * closing the tab is: the slot keeps the run as of its last gate (a fight
    * in progress comes back at its turn's pre-turn screen, DESIGN "Saving"),
    * and the menu's Continue returns to it. So the slot is left as it is,
@@ -642,7 +582,7 @@ export class Game implements RunDispatcher {
     this.swap(new MenuScene());
   }
 
-  /** 116c — character select's Back: the menu, with nothing started. */
+  /** Character select's Back: the menu, with nothing started. */
   private backToMenu(): void {
     if (this.run !== null) {
       console.warn('[Game] character select Back ignored: a run is already live');
@@ -652,17 +592,16 @@ export class Game implements RunDispatcher {
   }
 
   /**
-   * 63e — the CharacterSelectScreen's confirm: resolve the chosen character
-   * and CONSTRUCT the Run (the §63 seam — Game holds the choice, constructs
-   * on confirm). The new Run's `run:started` re-shows the overlay chips
-   * (their subscriptions are live by now — unlike the pinned-boot path);
-   * the refresh() pair after the assignment is the 48d/49f re-paint
-   * ordering. A confirm while a Run already exists is a misroute — ignore.
+   * Character select's confirm: resolve the chosen character and build the
+   * Run. The new Run's `run:started` shows the chips, whose subscriptions
+   * are live by now; the `refresh` calls after the assignment repaint them
+   * from the new run (gotcha #116). A confirm while a Run already exists is a
+   * misroute, and is ignored.
    *
-   * THE UNLOCKS ARE READ HERE, and nowhere else in a run's life (Round 8
-   * spec D8): the picked level is held to the character's ceiling as the
-   * store's progress has it now. The screen offers no level above the
-   * ceiling, so the clamp only bites on a command that didn't come from it.
+   * The unlocks are applied here, and nowhere else in a run's life: the
+   * picked level is held to the character's ceiling as the store's
+   * progress has it now. The screen offers no level above the ceiling, so
+   * the clamp only bites on a command that didn't come from it.
    * The picked level is the run's: a level in the URL beside no character is
    * replaced by it, where one beside `character=` never comes through here
    * and is played as written, unclamped (a driver's run, or a journal
@@ -687,7 +626,7 @@ export class Game implements RunDispatcher {
   }
 
   /**
-   * 117d — a won run, written into the store's progress if it counts
+   * A won run, written into the store's progress if it counts
    * (src/store/progress.ts): its dials hold its character, at most a level,
    * and nothing else, and its level is within that character's ceiling. The
    * record is the highest level won, so a win told twice (`Run.resume()`
@@ -717,22 +656,19 @@ export class Game implements RunDispatcher {
   }
 
   /**
-   * RunDispatcher entry point. UI screens (held by Scenes) call this; Game
-   * routes:
-   *   - `resetRun` → tear down the current Run and start a fresh one.
-   *   - everything else → forward to `this.run.dispatch(cmd)`. Most phase
-   *     transitions emit a bus event that drives the Scene swap; a landing
-   *     on the map emits none, so the switch below swaps the map in.
+   * The RunDispatcher's entry, which the screens and the chips call.
+   * `chooseCharacter` builds a Run and `resetRun` replaces it; every other
+   * command goes to the live Run. Most of the Run's transitions emit an
+   * event whose subscription swaps the scene; a landing on the map emits
+   * none, so the switch below swaps the map in.
    */
   dispatch(command: RunCommand): void {
-    // 117.5i — a halted game applies nothing (`halt`). What still arrives is
-    // a timer set before the failure, an outro's advance for one.
+    // A halted game applies nothing (`halt`). What still arrives is a timer
+    // set before the failure, an outro's advance for one.
     if (this.halted) return;
-    // 63e — the two GAME-level commands work without a live Run:
-    // chooseCharacter CONSTRUCTS it (the select-precedes-Run seam);
-    // resetRun tears down whatever exists. Everything else needs a Run —
-    // a run-level command arriving pre-select is a scene sequencing bug,
-    // so warn loud and drop rather than silently no-op it.
+    // The two game-level commands work without a live Run. Every other one
+    // needs a Run: a run-level command with none is a scene's sequencing
+    // bug, so it is dropped with a warning rather than silently.
     if (command.kind === 'chooseCharacter') {
       this.confirmCharacter(command.characterId, command.escalation);
       return;
@@ -788,11 +724,8 @@ export class Game implements RunDispatcher {
         // last resolution move on through an event that swaps the scene.
         break;
       default:
-        // Exhaustiveness guard (48c): this switch re-enumerates RunCommand by
-        // hand, and a missing case silently DROPS the command — exactly how
-        // acceptReward/declineReward shipped unroutable in 48b (the bridge
-        // dispatched into the void; the browser-verify caught it). A new
-        // command now fails to compile until it's routed here.
+        // The switch lists RunCommand by hand, so a new command fails to
+        // compile until it is put in one of the two groups above.
         command satisfies never;
         break;
     }
@@ -801,13 +734,12 @@ export class Game implements RunDispatcher {
   }
 
   /**
-   * 115e — THE AUTOSAVE (Round 8 spec D3). After every command the run
-   * waits at a gate (every phase but `battle` and `turn-outcome`), the run
-   * slot gets the snapshot, the dials, and the journal as the save keeps it;
-   * a run's end empties the slot. A write the store refuses is silent here:
-   * the run plays on, unsaved, and the can't-save chip says so from the
-   * store's status (116i). In a second tab the slot refuses every write and
-   * clear (115f).
+   * The autosave. When the run waits at a gate (every phase but `battle`
+   * and `turn-outcome`) after a command or its start, the run slot gets the
+   * snapshot, the dials, and the journal as the save keeps it; a run's end
+   * empties the slot. A write the store refuses is silent here: the run
+   * plays on, unsaved, and the can't-save chip says so from the store's
+   * status. In a second tab the slot refuses every write and clear.
    */
   private autosave(run: Run): void {
     if (run.phase === 'defeat' || run.phase === 'complete') {
@@ -824,13 +756,13 @@ export class Game implements RunDispatcher {
   }
 
   /**
-   * 115e — load the saved run from the run slot and go on from the screen it
-   * was saved at (spec D3): the Run with its dials, its journal resumed in a
-   * new segment, and the gate's screen re-mounted by `Run.resume()`. Returns
-   * the read: on `empty` or `rejected` nothing changes, and a rejected
-   * slot's text stays in place (`store.readStrict`); on `elsewhere` the run
-   * is open in another tab and the slot was not read (115f). The menu's
-   * Continue row calls this, through the scene context's `save`.
+   * Load the saved run from the run slot and go on from the screen it was
+   * saved at: the Run with its dials, its journal resumed in a new segment,
+   * and the gate's screen mounted again (`adopt`). Returns the read: on
+   * `empty` or `rejected` nothing changes, and a rejected slot's text stays
+   * in place (`store.readStrict`); on `elsewhere` the run is open in
+   * another tab and the slot was not read. The menu's Continue row calls
+   * this, through the scene context's `save`.
    */
   continueRun(): RunSlotRead {
     const read = this.runSlot.read();
@@ -843,13 +775,13 @@ export class Game implements RunDispatcher {
   }
 
   /**
-   * 53f → 115e — swap the live Run for a loaded one (the `resetRun` teardown
-   * ordering) and mount the screen of the gate it was saved at. The caller
-   * has already loaded it, so a corrupt save or a stale schema threw with
-   * the live run untouched (both runs are bus-subscribed for the lines in
-   * between; nothing emits synchronously there). `pauseAtTurnGates` is set
-   * by hand: `fromJSON` leaves the headless default (false), which would
-   * skip every pre-turn screen, and the H4b flag is Game's to set.
+   * Swap the live Run for a loaded one and mount the screen of the gate it
+   * was saved at: the map here, any other through `Run.resume()`'s event.
+   * The caller has loaded it already, so a save that failed to load left
+   * the live run untouched (both runs are subscribed to the bus for the
+   * lines in between, and nothing emits there). `pauseAtTurnGates` is set
+   * by hand: `fromJSON` leaves it off, which would skip every pre-turn
+   * screen, and the flag is Game's to set.
    */
   private adopt(restored: Run, dials: string, journal: (recorder: JournalRecorder) => void): void {
     restored.pauseAtTurnGates = true;
@@ -862,15 +794,15 @@ export class Game implements RunDispatcher {
     this.unlocked = null;
     // The replaced run's deal cues belong to no screen of this one.
     this.deckCues.length = 0;
-    // 48d/49f — re-paint the page-lifetime chips AFTER the reassignment so
-    // their getters read the new run.
+    // Repaint the chips after the assignment, so their getters read the new
+    // run (gotcha #116).
     this.bitsOverlay.refresh();
     this.poolOverlay.refresh();
     this.cacheOverlay.refresh();
-    // 115g — and show them. A created run's `run:started` reveals the chips;
-    // a loaded run emits none, so one continued from the boot screen (or
-    // loaded after a run's end) would play with its chips hidden. Before the
-    // resume, so a loaded end state's own event hides them again.
+    // And show them. A created run's `run:started` shows the chips; a loaded
+    // run emits none, so one continued from the menu (or loaded after a
+    // run's end) would play with its chips hidden. Before the resume, so a
+    // loaded end state's own event hides them again.
     this.bitsOverlay.reveal();
     this.poolOverlay.reveal();
     this.cacheOverlay.reveal();
@@ -910,7 +842,7 @@ export class Game implements RunDispatcher {
   }
 
   /**
-   * 117.5i — the page has failed and is about to say so (the failure plate,
+   * The page has failed and is about to say so (the failure plate,
    * src/failure). The loop stops with its last frame on the canvas, no
    * hotkey fires, and no command is applied from here on: a failure can
    * leave a run half-changed, and a command applied after it would save
@@ -923,10 +855,11 @@ export class Game implements RunDispatcher {
   }
 
   /**
-   * Tear down the current Run and leave its end screen. Wired to the
-   * GameOverScreen's first button via the `resetRun` command. On a page that
-   * booted to the menu that is the menu (116c); on a page booted by a run
-   * dial it is a fresh run, seeded from the clock unless the URL pins a seed.
+   * Tear down the current Run and leave its end screen, the `resetRun` of
+   * the GameOverScreen's first button. On a page that booted to the menu
+   * that goes to the menu; on a page booted by a run dial, to a fresh run
+   * with a `character` dial (seeded from the clock unless the URL pins a
+   * seed) and to character select without one.
    *
    * This empties the run slot, so it is the route for a run that is over.
    * Quit to menu leaves a live run saved for Continue, so it has its own
@@ -941,24 +874,22 @@ export class Game implements RunDispatcher {
     const won = this.run?.phase === 'complete';
     this.run?.dispose();
     this.unlocked = null;
-    // 115e — the replaced run is gone, so its save goes with it; a pinned
-    // character's new run saves over the slot below.
+    // The replaced run is gone, so its save goes with it; a `character`
+    // dial's new run saves over the slot below.
     this.runSlot.clear();
-    // 63e — the locked reset fork: a `?character=` pin goes straight to a
-    // fresh run + map; without it no run exists until a character is chosen
-    // (the choice is per-run, not sticky). The chips were hidden by the
-    // run:defeated/run:victory that preceded the reset button, so that path
-    // leaves them hidden until the next run:started.
+    // A `character` dial goes straight to a fresh run and its map; without
+    // one no run exists until a character is chosen, since the choice is
+    // per run. The chips were hidden by the run's end event, so that path
+    // leaves them hidden until the next `run:started`.
     if (this.runConfig.character !== undefined) {
       this.run = this.createRun();
       this.autosave(this.run);
-      // 48d — re-paint the bits chip AFTER the reassignment: the new Run's
-      // `run:started` fired mid-construction (before this.run pointed at
-      // it), so the overlay's event-driven paint would have read the dead
-      // run.
+      // Repaint the chips after the assignment: the new Run's `run:started`
+      // fired inside its constructor, before this.run pointed at it, so an
+      // event-driven paint would have read the dead run (gotcha #116). The
+      // cache chip's refresh closes a stale modal too.
       this.bitsOverlay.refresh();
       this.poolOverlay.refresh();
-      // 49f — same ordering for the cache chip (also closes a stale modal).
       this.cacheOverlay.refresh();
       this.swap(new MapScene());
     } else {
@@ -966,16 +897,16 @@ export class Game implements RunDispatcher {
       this.bitsOverlay.refresh();
       this.poolOverlay.refresh();
       this.cacheOverlay.refresh();
-      // 116c — a run's end goes to the menu on a page that booted to it, the
-      // defeat and the win alike (the §116 shape-lock, call 3).
+      // A run's end goes to the menu on a page that booted to it, the defeat
+      // and the win alike.
       this.swap(this.menuBoot ? new MenuScene() : new CharacterSelectScene());
-      // 116j — the first won run goes there by way of the credits: the panel
-      // opens over the menu, once. The flag is stored as the panel is shown,
-      // so a tab closed on the credits doesn't bring them back.
-      // 117d-post — asked of the flag as it is stored now, and written the
-      // same way (`store.update`): another tab may have shown them since
-      // this page read the section, and the write must not put this page's
-      // copy of the record of wins back over that tab's.
+      // The first won run goes there by way of the credits: the panel opens
+      // over the menu, once. The flag is stored as the panel is shown, so a
+      // tab closed on the credits doesn't bring them back. It is asked of
+      // the flag as it is stored now, and written the same way
+      // (`store.update`): another tab may have shown them since this page
+      // read the section, and the write must not put this page's copy of
+      // the record of wins back over that tab's.
       const credits = { show: false };
       store.update(PROGRESS_SECTION, ({ creditsSeen }) => {
         if (!creditsOnTheWay(won, this.menuBoot, creditsSeen)) return {};
@@ -987,10 +918,10 @@ export class Game implements RunDispatcher {
   }
 
   /**
-   * 53f — the dev export half: the live run's wire image, for the DEV export
-   * key ([devKeys.ts](src/dev/devKeys.ts)). A read-only dump — phase gating
-   * (the map-only load rule) is enforced on the LOAD side, so any phase may
-   * be exported (a non-map file is still headless-fixture material).
+   * The dev export: the live run's wire image, for the dev export key
+   * (src/dev/devKeys.ts). A read-only dump, so any phase may be exported;
+   * the load refuses a phase with no screen to resume at (`devLoadRun`),
+   * and such a file is still a headless fixture.
    */
   devExportRun(): RunSnapshot {
     if (this.run === null) {
@@ -1000,7 +931,7 @@ export class Game implements RunDispatcher {
   }
 
   /**
-   * 53f → 115e — the dev load half: swap the live Run for one loaded from an
+   * The dev load: swap the live Run for one loaded from an
    * exported snapshot, at any gate (`Run.resume()` re-mounts its screen). A
    * file holds no dials, so the run loads with none, and its journal starts
    * from the snapshot. A `battle` or `turn-outcome` export has no screen to
@@ -1017,15 +948,14 @@ export class Game implements RunDispatcher {
   }
 
   /**
-   * G1 — build a fresh Run from the parsed RunConfig. Shared by the
-   * constructor, `resetRun`, and — 63e — `confirmCharacter`, which passes
-   * the scene-chosen character (layered over the URL config; a URL
-   * `?character=` pin means this is never called with one). 116c — the
-   * menu's seed field is layered the same way, for this run alone: its seed
-   * goes into the run's dials, which is how a seeded run is told from one
-   * seeded by the clock (the slot and the journal's start keep the dials).
-   * 117d — and so is the Escalation level picked with the character, which
-   * the dials spell for the journal's replay (level 0 by no dial).
+   * Build a fresh Run from the parsed RunConfig, for the constructor,
+   * `resetRun` and `confirmCharacter`. Three inputs are layered over the
+   * URL's config, for this run alone: the character chosen at select (with
+   * a URL `character` dial none is passed), the Escalation level picked
+   * with it, and the menu's seed field. They go into the run's dials, which
+   * the slot and the journal's start keep, so a seeded run is told from one
+   * seeded by the clock and the journal's replay plays the same level
+   * (level 0 by no dial).
    */
   private createRun(character?: CharacterConfig, escalation?: number): Run {
     const typedSeed = seedFromText(this.seedText);
@@ -1038,14 +968,12 @@ export class Game implements RunDispatcher {
     };
     const seed = config.seed ?? Date.now();
     const run = new Run(seed, this.bus, config);
-    // H4b — the live game pauses at turn gates so the pre-turn screen can show
-    // and the battle's outro can play. (Headless tests + the fuzz harness
-    // leave this off → the synchronous H4a loop, so they're unaffected.)
+    // The live game stops at the turn gates (`Run.pauseAtTurnGates`), so the
+    // pre-turn screen can show and the battle's outro can play.
     run.pauseAtTurnGates = true;
     // The journal's start: the seed and the run dials as the URL would spell
-    // them, the character among them. Game's config comes from the URL alone,
-    // so that text reconstructs it (src/journal/replayJournal.ts); the run
-    // slot keeps the same text (115e).
+    // them, the layered inputs among them, so that text rebuilds the config
+    // (src/journal/replayJournal.ts); the run slot keeps the same text.
     this.runDials = runConfigToQueryString(config);
     this.unlocked = null;
     const dials = this.runDials;
@@ -1071,39 +999,34 @@ export class Game implements RunDispatcher {
     this.activeScene?.dispose();
     this.activeScene = next;
     next.mount(this.buildContext());
-    // 78e — scene-derived map-chip availability: hidden on the map itself
-    // (the live view is already up), pre-run (no run → no map), and
-    // game-over. Pushed here so every swap path (event-driven, boot, reset)
-    // stays covered by the one chokepoint.
+    // Whether the map chip is offered: not with no run, not on the map
+    // itself (the live view is up), at character select or at a run's end.
+    // Pushed here so every swap path (an event, the boot, a reset) is
+    // covered by the one chokepoint.
     this.sectorMapOverlay.setAvailable(
       this.run !== null &&
         !(next instanceof MapScene) &&
         !(next instanceof CharacterSelectScene) &&
         !(next instanceof GameOverScene),
     );
-    // 116d — the settings chip shows while a run is live, up to its end
-    // screen (the menu has its own row). The same chokepoint.
+    // The settings chip shows while a run is live, up to its end screen
+    // (the menu has its own row). The same chokepoint.
     this.runOnScreen = this.run !== null && !(next instanceof GameOverScene);
     this.settingsOverlay.setAvailable(this.runOnScreen);
-    // 116i-post — and the can't-save chip, which a second tab shows for as
-    // long as its unsaved run is on screen.
+    // And the can't-save chip, which a second tab shows for as long as its
+    // unsaved run is on screen.
     this.paintCantSave();
-    // 96.5a — the morale chip hides while a turn screen or the battle is up:
-    // the HUD's gauges and the pre/post-turn gauges are the one in-encounter
-    // read (the §95 playtest: "morale reads twice"). Same chokepoint, same
-    // reason — every swap path is covered. The chrome column collapses the
-    // slot (96e decision D: the pool chip is display-only, nothing below it
-    // shifts).
+    // The pool chip hides while the pre-turn screen or the battle is up, so
+    // the pools are read once in an encounter, from those screens' own
+    // gauges. The chrome column collapses its slot; the chip below it is
+    // display-only, so no click target moves.
     this.poolOverlay.setSuppressed(next instanceof PreTurnScene || next instanceof BattleScene);
   }
 
-  /** M3 → 96.5b2 → 96.5d — run `action` after BOTH `ms` (the fixed after-turn
-   *  outro, letting the current scene play out) and `settle` (the battle's
-   *  own outro: the loss orbs + the ghost commit). The action runs at fire
-   *  time against the freshest state; superseded by any direct swap() — the
-   *  timer is cleared and the token flips, so a reset mid-outro never fires
-   *  a stale advance. (M3's `swapAfter` mounted the post-turn screen here;
-   *  96.5d's action dispatches the advance the screen's Continue used to.) */
+  /** Run `action` after both `ms` (the outro's floor) and `settle` (the
+   *  battle's own outro). The action runs at fire time against the freshest
+   *  state. Any swap supersedes it: the timer is cleared and the token
+   *  flips, so a reset mid-outro never fires a stale advance. */
   private afterOutro(ms: number, settle: Promise<void>, action: () => void): void {
     this.cancelPendingSwap();
     const token = { cancelled: false };
@@ -1121,7 +1044,7 @@ export class Game implements RunDispatcher {
     });
   }
 
-  /** 116i — show the can't-save chip for as long as the page has a reason
+  /** Show the can't-save chip for as long as the page has a reason
    *  it can't save (src/ui/cantSave.ts): the store's status, on every
    *  screen, or a second tab's run while it is on screen. */
   private paintCantSave(): void {
@@ -1150,8 +1073,7 @@ export class Game implements RunDispatcher {
       apron: this.apron,
       backdrop: this.backdrop,
       fontAtlas: this.fontAtlas,
-      // 100e2 — the scenes mount into the screen host (before the chrome
-      // column in DOM order); the page-lifetime chrome keeps #ui itself.
+      // The scenes mount into the screen host (see the field).
       uiMount: this.screenHost,
       controlSlot: this.controlSlot,
       dispatcher: this,

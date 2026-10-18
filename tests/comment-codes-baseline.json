@@ -1,5 +1,4 @@
 {
- "src/Game.ts": 145,
  "src/audio/AudioPlayer.test.ts": 4,
  "src/audio/AudioPlayer.ts": 31,
  "src/audio/eventSounds.test.ts": 1,
@@ -27,7 +26,6 @@
  "src/bot/scripts/unjam.ts": 12,
  "src/bot/sensors.test.ts": 3,
  "src/bot/sensors.ts": 36,
- "src/buildId.ts": 1,
  "src/config.test.ts": 1,
  "src/config/abilities.test.ts": 8,
  "src/config/camps.test.ts": 1,
@@ -91,7 +89,6 @@
  "src/journal/journal.ts": 5,
  "src/journal/replayJournal.ts": 2,
  "src/journal/replayTool.ts": 1,
- "src/main.ts": 12,
  "src/render/ApronRenderer.ts": 4,
  "src/render/BackdropRenderer.ts": 2,
  "src/render/BattleRenderer.ts": 212,

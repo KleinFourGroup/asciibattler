@@ -91,8 +91,8 @@ export class PoolOverlay {
   }
 
   /** 96.5a — the scene-derived hide (Game's `swap` pushes it on every
-   *  swap path, the 78e map-chip precedent): true while a pre-turn / battle
-   *  / post-turn scene is mounted. The chrome column collapses the slot. */
+   *  swap path, the 78e map-chip precedent): true while a pre-turn or battle
+   *  scene is mounted. The chrome column collapses the slot. */
   setSuppressed(suppressed: boolean): void {
     this.suppressed = suppressed;
     this.applyHidden();

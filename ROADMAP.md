@@ -223,9 +223,10 @@ drawing. ✅ DECIDED at the kickoff: the phase cut in two, the screens as
   2026-10-18 (WORKLOG §124, 124i).
 - ☑ **124i-post — R-1, the overlay handle's `level`** (`none`).
   `build-hash`: 3 of 33; the drives' hashes unchanged.
-- ☐ **124j — the comment pass** (`batch`, per batch; ten batches,
+- ◐ **124j — the comment pass** (`batch`, per batch; ten batches,
   planned in WORKLOG §124). Batch 1, the scenes, built and read
-  2026-10-18.
+  2026-10-18; batch 2, the root's four, built 2026-10-18, open for its
+  read.
 - ☐ **124k — the close** (`stop`).
 
 ## Phase 124.5 — render and UI: the screens

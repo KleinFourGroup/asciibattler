@@ -1,9 +1,9 @@
 /**
  * §91d — the chip rule's PLAYER-FACING words, in one place. The run-side
  * `chipRule.ts` owns the arithmetic; this owns what the screens SAY about it:
- * the pre-turn risk line, the post-turn chip lines and the unit card's power
- * tooltip. A tick-capped turn that pays two rules says so instead of
- * mislabeling one of them.
+ * the pre-turn risk line, the last-turn strip's chip lines and the unit
+ * card's power tooltip. A tick-capped turn that pays two rules says so
+ * instead of mislabeling one of them.
  *
  * Pure (strings in, strings out), so the wording is pinned headless even
  * though the screens that render it are eyeball-only.
@@ -12,8 +12,9 @@
 import type { ChipRule } from '../run/chipRule';
 import { t } from '../i18n/ui';
 
-/** The two post-turn chip lines: what hit the ENEMY pool (the line the player
- *  is glad about) and what hit the PLAYER pool. */
+/** The last-turn strip's two chip lines (on the pre-turn screen): what hit
+ *  the ENEMY pool (the line the player is glad about) and what hit the
+ *  PLAYER pool. */
 export interface ChipLineLabels {
   readonly toEnemyPool: string;
   readonly toPlayerPool: string;

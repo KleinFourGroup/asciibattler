@@ -10188,6 +10188,10 @@ victim, no flash on a status's apply, the channels a reduced-motion player
 keeps and why, the HP bar last in a bottom-anchored stack, no CSS lift for
 a footprint, a DoT number's hue from the status table.
 
+**Read** (the user, 2026-10-18, after the hand-off after batch 7):
+"That's looking great, Claude! 😁 Batches 6 and 7 are read, and I see no
+issues." Batch 6 is read.
+
 ### 124j, batch 7 — `BattleRenderer.ts` (2026-10-18, session fc5ce5cf)
 
 The file alone. Its step codes and history are out, "spec D3" and "the
@@ -10315,6 +10319,9 @@ lerp's climb-early profile, the ink top for overlays and numbers and the
 ink center for FX ends, camera-up lifts and never world-Y, the dud on
 every landing, the sweep in `detach` of everything the animator doesn't
 own.
+
+**Read** (the user, 2026-10-18, after the hand-off after batch 7):
+"Batches 6 and 7 are read, and I see no issues." Batch 7 is read.
 
 ### The hand-off after batch 7 (2026-10-18, session fc5ce5cf)
 

@@ -6604,3 +6604,41 @@ one friction line are the session's only commit. Context at the report:
    another. The driver's notes (Edit for WORKLOG entries, the
    `comment-length` form) each saved a call. I'd want both conditions
    again.
+
+## 2026-10-18 — session 882e1278 (the signs after batch 7, 124j batches 8 to 10)
+
+1. *Missing from the orientation.* Nothing I needed. The driver's brief
+   carried six signs Matthew had given another session; confirming them
+   with him before writing cost one round trip, which was the right cost.
+2. *Norms in conflict.* "No history" against keeping a measurement as a
+   reason: the bench's warm-up numbers, the seed hunts' counts. I kept
+   them as measured reasons. And "a kept claim is checked at the code it
+   names" against claims about things outside the code (itch's shared
+   origin, the pane's zoom, a Firefox console message): I kept those as
+   written, unchecked, and each entry lists them.
+3. *Pulled to claim more than verified.* Twice, both caught before the
+   proof. Rewording benchRig's note, I first turned one observed Firefox
+   console message into "Firefox logs a console message", a general claim
+   from one run; it says "A Firefox run logged" now. And I replaced the
+   flyer's "105a measured 1.0" with a derivation of my own (√2 × sin 45°);
+   the comment gives it as geometry, not as a measurement, and nothing ran
+   it. Once I wasn't sure an Edit had landed before a copy sent in the
+   same message, so I copied and measured again (the numbers were equal).
+4. *Wasted.* Two `cd`s despite the brief's note, both harmless: one in a
+   search command, one stray `cd /dev/null` inside a subshell. A `node -e`
+   given a Git Bash path failed once (it needed `C:/`). One
+   `comment-length` call over both folders at once, which groups them as
+   one.
+5. *For the next session.* WORKLOG §124, "The hand-off after batch 10".
+6. *Room.* Yes. The signs went to Matthew before anything was written, and
+   he answered at once. Taking batches 9 and 10 was my call under the
+   written rule, with the reading stated. The silent-turn reminder came
+   often during the checking stretches; a status line answered each. No
+   wish to pause or stop was noticed.
+7. *What helped.* The dev folder's comments mostly describe the dev folder,
+   so their claims were quick to check, and each batch reused the last
+   one's reads; batch 10 ran 38 a line. Seeing one false shape ("main.ts's
+   DEV block") recur in five files and fixing each where it lived was
+   satisfying. The driver's notes (Edit for entries, `-F` for commit
+   messages, the `comment-length` form) each saved a call. I'd want those
+   conditions again.

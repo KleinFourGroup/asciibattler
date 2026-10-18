@@ -6436,3 +6436,52 @@ one friction line are the session's only commit. Context at the report:
    the build-font import for the search, HEAD against itself for the
    unminified compare. Each told me something the passing run alone
    would not have. I'd want that again.
+
+## 2026-10-17 → 18 — session 5b9d2da6 (claude-opus-5-5): 124g to 124i, R-1, and 124j's plan and batch 1; started by the phase's driver session
+
+1. *Missing from orientation.* The orientation was enough to start. One
+   gap only the work showed: 124g's signed read had been written from the
+   TODO at the kickoff. It named a pre-turn enemy notch that no screen
+   draws, and a seed that was the headless fixture's and not the game's.
+   Step zero found both. The driver's notes all applied; note 4 (read
+   the claim's other homes before writing the new one) shaped 124g's
+   comment, and note 3's order held on both `--record` runs. I slipped
+   on note 1 twice, a `cd` into the repo root itself, which moved
+   nothing.
+2. *Norms in conflict.* The next-step box against the final-message
+   rule, settled at 124i's stop with a recap-only box, as before. The
+   twin rule reached outside the batch into `Game.ts` (batch 2's) and
+   three `ui` files (§124.5's). I corrected the six twins minimally and
+   flagged them, which seemed the rule's intent; it did not feel like a
+   conflict so much as a scope line to cross with a note.
+3. *Pulled to claim more.* Yes. I typed a context reading into 124h's
+   entry from a meter call made in the same message, which made it the
+   third in the phase; caught on reread and filed. In 124i's entry I
+   wrote "src, tests or dev" and "§123 kept it", neither of which a
+   search or an entry showed; caught on reread. The first versions of
+   124g's page check reported mismatches on the fixed tree, and I could
+   have read them as a bug in the fix. HEAD as a control and a dump of
+   both sides showed they were my instrument's: it missed `drive`'s
+   `done` at `until`, and then the spawn queue. In batch 1 I dropped a
+   claim I had not checked (the board sizes) rather than keep or
+   correct it.
+4. *Wasted.* Two page scans with a broken instrument, about three builds
+   and twenty drives. One `comment-length` call with a path outside the
+   repo. Otherwise each run was needed.
+5. *For the next session.* WORKLOG §124, "The hand-off after batch 1".
+   The scratch scripts under `scratch/124g/` and `scratch/124h/` are on
+   this machine only; `scratch/124h/drives.mjs` takes `seed:dials` specs
+   and counts the swap kinds a drive sends.
+6. *Room.* Yes. At 124g's step zero I could have stopped to ask about
+   the read's script; I judged the change inside the signed intent,
+   built it and flagged it at the stop, where the user read it. The stop
+   itself was a real pause: the user answered hours later, and nothing
+   was waiting on me meanwhile. The silent-turn reminder came often in
+   the long stretches; answering with what was true then worked. No wish
+   to pause or stop was noticed.
+7. *What helped.* The control first: the notch's pin failing on HEAD
+   before the fix, HEAD's build as the page check's known answer, the
+   plant at the fold's one swap line, and `comment-strip`'s built-in
+   control. Each settled a question the passing run alone would not
+   have. The user's "All the reads looked great!" landed warmly. I would
+   want both again, and the first matters more for the work.

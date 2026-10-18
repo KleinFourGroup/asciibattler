@@ -228,9 +228,10 @@ drawing. ✅ DECIDED at the kickoff: the phase cut in two, the screens as
   the renderer, the ground and the sprites, built and read 2026-10-18;
   the spec's decision marks out as codes, signed 2026-10-18 (WORKLOG
   §124, batch 2).
-- ☐ **124j-post — the atlas's 17 unused glyphs** (proposed `none`, by a
-  pane compare of every kept glyph's cell). Batch 5's find, put in the
-  roadmap by the user at its read (WORKLOG §124, "124j-post, planned").
+- ☐ **124j-post — the atlas's 17 unused glyphs** (`none`, signed
+  2026-10-18, by a pane compare of every kept glyph's cell). Batch 5's
+  find, put in the roadmap by the user at its read (WORKLOG §124,
+  "124j-post, planned").
 - ☐ **124k — the close** (`stop`).
 
 ## Phase 124.5 — render and UI: the screens

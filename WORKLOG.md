@@ -10072,3 +10072,13 @@ Proof: in the pane, each kept glyph's cell, pixel for pixel, and its ink
 box, before and after, with a planted one-pixel difference in one cell
 that the compare must name. The font coverage gate and `FontAtlas.test.ts`
 run in the hook.
+
+**Signed** (the user, 2026-10-18): "That sounds good to me, Claude! 😁
+If the proof fails, then I'm sure that there are alternate ways to
+generate the atlas that we can work through at the time, right? Either
+way, signed!" The read is `none`. If the compare fails, the way to try
+first, said in answer: draw each glyph clipped to its own cell, so a
+cell's pixels depend on its glyph alone. A prediction, unmeasured: on
+today's layout that changes no cell, since the block glyphs' overrun, if
+any, falls off the canvas or into the empty last cell. It goes to the
+user as a call before it is built.

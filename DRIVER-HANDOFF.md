@@ -11,9 +11,10 @@ driver log ([archive/driver-trial/log-124.md](archive/driver-trial/log-124.md)).
 - **Phase:** **§124.5, the screens** (ROADMAP §124.5), driven from
   2026-10-19. Session 1 (8fb7e4a9) ran the kickoff and 124.5a to 124.5f
   and handed off at `009fd1fa` (WORKLOG §124.5, "The hand-off after
-  124.5f"); read 17:25 UTC. Next: session 2, from 124.5g, the re-skim (a
-  stop); its card is proposed after this commit. Open for Matthew: ◐
-  124.5e's `batch` read, and the `damageStat` row the re-skim puts.
+  124.5f"); read 17:25 UTC. 124.5e read by Matthew in session 1 after
+  the hand-off (`cded409f`), so no ◐ is open. Next: session 2, from
+  124.5g, the re-skim (a stop); its card was proposed again without the
+  read. Open for Matthew: the `damageStat` row the re-skim puts.
 - **Driver:** `local_3addf3c2-a6af-469e-a40b-932696f5bc61` (scratchpad
   id 9b60fb27), the first under `process/driving.md`.
 - **Friction read through:** line 287 of `retro/papercuts.jsonl`

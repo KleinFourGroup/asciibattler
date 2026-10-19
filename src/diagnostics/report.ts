@@ -1,19 +1,19 @@
 /**
- * 118f — THE PLAYER'S DIAGNOSTICS: a short report a player copies from
- * Settings › Data and pastes beside a bug report. It says what nobody but
+ * The player's diagnostics: a short report a player copies from Settings ›
+ * Data and pastes beside a bug report. It says what nobody but
  * the player's own browser can: which build this is, the browser and the
  * window it runs in, the graphics card, the settings, and how the game's
  * storage stands. On itch that storage is partitioned to the page, so there
  * is no other way to look.
  *
- * It is in every build. The diagnostics PANEL (src/dev/diag) is the long
+ * It is in every build. The diagnostics panel (src/dev/diag) is the long
  * form, with the write tally and the two measurements that hold the page,
  * and only a build made with `VITE_DIAG=1` carries it.
  *
- * WHAT IS NOT IN IT: anything a run holds. A stored section is told by its
+ * What is not in it: anything a run holds. A stored section is told by its
  * size alone (`sectionSizes`), so no save, journal or seed leaves by this
- * route; Export run and the backup are the rows that hand those over, as
- * files the player chooses to send. The page's address is told by its origin
+ * route; the Last run row's Export run and the backup's Export everything
+ * hand those over, as files the player chooses to send. The page's address is told by its origin
  * and no more.
  *
  * This file is the pure half: what the report is made of, and how each

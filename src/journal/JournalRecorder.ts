@@ -4,25 +4,25 @@
  * `RunCommand` before applying it, and the bus gives it the battle's side:
  * the orders as they take effect and each battle's end.
  *
- * PASSIVE. It reads the bus and copies what it is handed. It never emits,
- * never touches the Run or a World, and draws no randomness, so recording
- * cannot change a run. The clock it is given only fills `ms`.
+ * It is passive: it reads the bus and copies what it is handed. It never
+ * emits, never touches the Run or a World, and draws no randomness, so
+ * recording cannot change a run. The clock it is given only fills `ms`.
  *
- * STORAGE-AGNOSTIC. A closed journal goes to the `onClosed` callback; where
- * it is kept is the caller's business. This module runs headless.
+ * It keeps nothing: a closed journal goes to the `onClosed` callback, and
+ * where it is kept is the caller's business. This module runs headless.
  *
- * CONSTRUCT IT BEFORE THE RUN, on the bus the Run will use. Handlers run in
+ * Construct it before the Run, on the bus the Run will use. Handlers run in
  * subscription order, and a Run with the turn gates off answers
  * `battle:ended` by starting the next battle inside the same emit; the
  * recorder has to see the end first.
  *
- * WHO CALLS WHAT. `open` when a Run is constructed, or `resume` (115d) when
- * one is loaded with the journal its save kept; `command` before each
- * command is applied, then `settle` once it has been; `saved` for the copy
- * a save keeps; `abandon` when the Run is reset or replaced. A run's end is noticed on the bus
- * (`run:defeated`, `run:victory`) and closed at the next `settle`, because
- * the Run can still be changing state when it emits: the hash is taken once
- * control is back with the caller.
+ * Who calls what: `open` when a Run is constructed, or `resume` when one is
+ * loaded with the journal its save kept; `command` before each command is
+ * applied, then `settle` once it has been; `saved` for the copy a save
+ * keeps; `abandon` when the Run is reset or replaced. A run's end is noticed
+ * on the bus (`run:defeated`, `run:victory`) and closed at the next
+ * `settle`, because the Run can still be changing state when it emits: the
+ * hash is taken once control is back with the caller.
  */
 
 import type { EventBus } from '../core/EventBus';
@@ -51,8 +51,8 @@ interface OpenSegment extends JournalSegment {
 }
 
 export class JournalRecorder {
-  /** 115d — the segments a load carried over from the save's journal, each
-   *  ended; the segment being recorded follows them. */
+  /** The segments a load carried over from the save's journal, each ended;
+   *  the segment being recorded follows them. */
   private earlier: JournalSegment[] = [];
   private segment: OpenSegment | null = null;
   private snapshot: (() => RunSnapshot) | null = null;
@@ -115,8 +115,8 @@ export class JournalRecorder {
   }
 
   /**
-   * 115d — begin the next segment of `saved`, the journal a save kept, for a
-   * Run just loaded from that save's `snapshot` with `dials`. On the build
+   * Begin the next segment of `saved`, the journal a save kept, for a Run
+   * just loaded from that save's `snapshot` with `dials`. On the build
    * and config that recorded the save's segment, the new one starts from the
    * snapshot's hash (`resume`); on another, from the whole snapshot. A
    * journal that doesn't end `saved` at this snapshot's hash (none, another
@@ -140,7 +140,7 @@ export class JournalRecorder {
   }
 
   /**
-   * 115d — the journal as a save keeps it beside `snapshot`: every segment,
+   * The journal as a save keeps it beside `snapshot`: every segment,
    * the one being recorded ended `saved` with the snapshot's hash. The
    * recording goes on. Null with no journal open.
    */
@@ -164,7 +164,7 @@ export class JournalRecorder {
   }
 
   /**
-   * Record a command, BEFORE it is applied. The command is copied: a
+   * Record a command, before it is applied. The command is copied: a
    * `chooseRecruit` carries the offered template itself, which the Run goes
    * on to own. With no journal open (the run has ended) it is dropped.
    */

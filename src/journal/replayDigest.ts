@@ -11,7 +11,7 @@
  * battle. A stored journal replayed on two trees must give the same digests,
  * and a digest that differs names the battle.
  *
- * A MAPPING is for a change that renames what is emitted and changes nothing
+ * A mapping is for a change that renames what is emitted and changes nothing
  * else (a team's name, an id). It is applied to each payload before hashing,
  * so the new tree's events hash as the old tree's did when the mapping takes
  * every new name back to its old one. Without one, a rename shows as every

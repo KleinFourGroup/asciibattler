@@ -3,13 +3,13 @@
  * reached what the journal recorded.
  *
  * Each segment is replayed on its own: the Run from the segment's start (a
- * seed or a snapshot, with its dials; for a `resume`, 115d, the Run the
- * segment before left, through its text, as the page loaded the save), the
- * turn gates on as the game plays,
- * and a World per battle, built the way both production sites and
- * `replayTrace` build it (`new World` on the encounter's seed →
- * `installBattleRules` → `spawnEncounter`) and ticked with the live clock's
- * body (a draw once the turn cap is reached).
+ * seed or a snapshot, with its dials; for a `resume`, the Run the segment
+ * before left, through its text, as the page loaded the save), the turn
+ * gates on as the game plays, and a World per battle, built as the fuzz
+ * harness and `replayTrace` build it (`new World` on the encounter's seed,
+ * `installBattleRules`, `spawnEncounter`, which draws the setup stream the
+ * battle scene's own steps draw) and ticked with the live clock's body (a
+ * draw once the turn cap is reached).
  *
  * The entries are applied in order, each at its place:
  *  - a `run` command outside a battle is dispatched as it comes; one sent
@@ -22,7 +22,7 @@
  * journal's. A journal whose segment has no end yet (a run still being
  * played) replays as far as it goes, with nothing to compare at the end.
  *
- * TWO KINDS OF FAILURE. `JournalRefused`: this code can't replay the journal
+ * Two kinds of failure. `JournalRefused`: this code can't replay the journal
  * at all (another format, another config hash), and a best-effort replay
  * would diverge without saying why. `JournalDivergence`: the replay stopped
  * matching, and the message names the segment, the battle and the entry
@@ -131,9 +131,9 @@ export function runFromStart(start: JournalStart, bus: EventBus<GameEvents>, bef
   return run;
 }
 
-/** 115d — why a `resume` segment can't follow the one before it, or null. A
- *  resume replays on from the segment before, so that one must have ended
- *  `saved` at the hash the resume starts from, on the same build and config. */
+/** Why a `resume` segment can't follow the one before it, or null. A resume
+ *  replays on from the segment before, so that one must have ended `saved`
+ *  at the hash the resume starts from, on the same build and config. */
 function resumeRefusal(segments: readonly JournalSegment[], i: number): string | null {
   const start = segments[i]!.start;
   if (start.kind !== 'resume') return null;

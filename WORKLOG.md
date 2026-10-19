@@ -11899,3 +11899,58 @@ code, a spec code or capitals left, history kept, or a rule a change must
 respect cut: the store never throws, the two read policies and when to use
 `update`, a refusal of the lock confirmed by a control lock and never by
 `locks.query()`, a second tab saving nothing.
+
+### 124.5h, batch 2 — the journal, the failure watch and the diagnostics (2026-10-19, session ff99ffb0)
+
+The 9 files of `src/journal`, `src/failure` and `src/diagnostics`, all
+changed. Out: the step codes (most of them the save-and-load step's, on
+the `resume` start and the `saved` end) and the spec's decision codes,
+the capitals that headed the paragraphs (`PASSIVE.`, `SEGMENTS.`, `TWO
+KINDS OF FAILURE.` and their kin), and the history of what the journal's
+format 2 added. The failure kinds are in the one list format.
+
+**Statements found false and corrected (rule 7):**
+
+- `replayJournal.ts`: a battle's World was built "the way both production
+  sites and `replayTrace` build it", through `spawnEncounter`. The battle
+  scene does not call `spawnEncounter`; it calls its steps
+  (`applyTerrain`, `pickSpawnRegions`, `spawnTeam`) on the same setup
+  stream, which `BattleScene.ts` says. It now names the fuzz harness and
+  `replayTrace` as the builders it copies, and the stream it shares with
+  the battle scene.
+- `report.ts`: "Export run and the backup are the rows that hand those
+  over". Export run is a button, the Last run row's (it reuses the game
+  over screen's `gameover.export`), and the backup's is Export
+  everything; it names both buttons.
+
+**Kept, checked at the code they name:** the camp pull a battle's setup
+enqueues (`battleSetup.ts`, the enemy's `setObjective` on a camp member);
+a Run with the turn gates off running the gate chain inside the
+`battle:ended` handler (`Run.ts`, `continueFromTurnGate`); `-dev` and
+`-dirty` as `buildId.ts` describes them; `scripts/replay.ts` with
+`commitStamp`; the drive's report carrying `journal` and `stateHash`;
+`main.ts` importing the failure watch third, after the store and the
+settings' boot; `tests/failure-boot.test.ts`; the classic script in
+`index.html` hearing errors by origin; the HUD's `ResizeObserver`; the
+atlas wrapping the font's error as `cause`; `VITE_DIAG=1`. Nothing was
+dropped unchecked.
+
+Measured (`comment-length` on copies under `output/cl-1245h-b2`): comment
+lines 449 → 447, words 4,114 → 4,096, code lines 893 unchanged. The
+step-code ceiling 2,096 → 2,080, the 16 these files held. Like the store,
+these files were written in the signed voice at Round 8, and the pass
+took codes, capitals and two false claims from them, not length.
+
+Proof: `comment-strip HEAD src`, comments only, exit 0; its control made
+one code edit in memory in each of the 9 changed files and the compare
+named all 9.
+
+Cost: 373,352 at 18:38 on batch 1's commit to 425,715 at 18:43 after the
+proof, about 52k for 1,448 lines, 36 a line.
+
+**Read** (`batch`): `git show <this commit> -- src/journal/journal.ts
+src/journal/JournalRecorder.ts` against the seven rules. Wrong looks like
+a step code or capitals left, history kept, or a rule a change must
+respect cut: a journal holds inputs and checkpoints and never state; the
+recorder is built before the Run on its bus and records a command before
+it is applied; a run's end closes at the next `settle`.

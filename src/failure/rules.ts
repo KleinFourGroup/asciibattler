@@ -1,6 +1,6 @@
 /**
- * 117.5i — WHAT COUNTS AS A FAILURE, and what the page does with one. The
- * pure half of the failure watch (index.ts is the page's half): which of the
+ * What counts as a failure, and what the page does with one. The pure half
+ * of the failure watch (index.ts is the page's half): which of the
  * browser's reports are the game failing, what a thrown value reads as, the
  * watch that lets the first failure speak and no other, and the wait on a
  * lost WebGL context. Nothing here touches the DOM, so `npm test` holds it.
@@ -8,10 +8,10 @@
 
 /**
  * Which plate a failure gets (src/ui/FailurePlate.ts):
- *   - `webgl`    the boot failed on a page that can make no WebGL 2 context;
- *   - `boot`     the boot failed some other way (the font files, a module);
- *   - `run`      something threw once the game was running;
- *   - `context`  the WebGL context was lost and has not come back.
+ * - `webgl` — the boot failed on a page that can make no WebGL 2 context.
+ * - `boot` — the boot failed some other way (the font files, a module).
+ * - `run` — something threw once the game was running.
+ * - `context` — the WebGL context was lost and has not come back.
  */
 export type FailureKind = 'webgl' | 'boot' | 'run' | 'context';
 

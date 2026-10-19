@@ -1,5 +1,5 @@
 /**
- * 118f — the page's own readings for the player's diagnostics (report.ts):
+ * The page's own readings for the player's diagnostics (report.ts):
  * where the game runs and in what. Each is read when the report is asked
  * for, and `diagnosticsReport` guards the call, so a browser that refuses
  * one of these costs the report this field and no other.

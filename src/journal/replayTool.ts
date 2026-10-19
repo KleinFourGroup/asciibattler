@@ -3,14 +3,14 @@
  * text (scripts/replay.ts reads the file, asks git for the tree's stamp and
  * prints the lines).
  *
- * THE FILE is a journal as the game exports it, or a probe report that
+ * The file is a journal as the game exports it, or a probe report that
  * carries one (`journal`, with the page's `stateHash` beside it:
  * shell/electron/probes/drive-run.js).
  *
- * WHICH BUILDS ARE ACCEPTED. A journal replays on the build that recorded
+ * Which builds are accepted. A journal replays on the build that recorded
  * it, so each segment's build ID is held against the tree the tool runs in:
  *  - another commit is refused, with the commit to check out;
- *  - a `-dirty` build is refused (Round 8 spec D2): its code is in no commit;
+ *  - a `-dirty` build is refused: its code is in no commit;
  *  - an ID that names no commit is refused: `unbaked` (nothing stamped it),
  *    `nogit`, or a pinned one;
  *  - `-dev` is accepted: a dev server stamps each page with the commit and
@@ -19,12 +19,11 @@
  * refusal, and `force` does not reach it. `forceConfig` does: it is for asking
  * whether a config change moved a recorded run (a replay that still reaches
  * the journal's battles and end says it did not, on that run), and only this
- * tool has it. A tree with uncommitted changes of its own
- * is not the build either; that is a warning, since the tool can't tell a
- * changed comment from changed code and the replay itself says if it
- * diverged.
+ * tool has it. A tree with uncommitted changes of its own is not the build
+ * either; that is a warning, since the tool can't tell a changed comment
+ * from changed code and the replay itself says if it diverged.
  *
- * EXIT CODES: 0 every segment replayed to what the journal recorded (and to
+ * Exit codes: 0 every segment replayed to what the journal recorded (and to
  * the page's hash, when the file carries one); 1 a divergence, a hash that
  * doesn't match, or a file that isn't a journal; 2 a refusal.
  */

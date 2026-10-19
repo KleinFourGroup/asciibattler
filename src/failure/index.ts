@@ -1,5 +1,5 @@
 /**
- * 117.5i — THE PAGE'S FAILURE WATCH, made when this module is evaluated.
+ * The page's failure watch, made when this module is evaluated.
  * `main.ts` imports it third, after the store and the settings' boot and
  * ahead of the game's modules, so a module that throws as it loads (a
  * catalog that fails its schema) is already heard. What it reaches stays

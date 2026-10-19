@@ -11,8 +11,8 @@ plan: [archive/post-109-roadmap.md](archive/post-109-roadmap.md) (Round 8)
 with its worklog and spec beside it; before it
 [archive/post-104-roadmap.md](archive/post-104-roadmap.md) (Round 7.5).
 
-**Status: §124, render and UI's first half, in progress: the phase cut
-in two at its kickoff and the board's cut signed 2026-10-17.**
+**Status: §124.5, render and UI's second half, in progress: the
+screens' cut signed 2026-10-19.**
 The spec holds the user's intent and four signed
 decisions ([round-8.5-spec.md](round-8.5-spec.md)). The round opened with
 the oracle map, ahead of the census, as the user signed at the Round 8
@@ -229,7 +229,26 @@ A-28's mute, the three overlays' `isOpen` and `HUD.hide()`); the ability
 line, a display change signed at §124's kickoff; the neutral-target lead
 and the screens' other leads; the re-skim; the comment pass, with
 `CacheOverlay.ts`'s header. Proof: as §124's, with the UI gates. Risk:
-medium.
+medium. The cut, signed 2026-10-19 (WORKLOG §124.5, "The kickoff"):
+
+- ☐ **124.5a — A-22's `proseFamily` and A-25's two** (`none`).
+  `rarityStars` and `orderRoster` out, their tests onto the kept pair.
+- ☐ **124.5b — A-28's share, and two members** (`none`). The mute whole,
+  the three `isOpen`, `HUD.hide()`, `ModalHandle.isOpen`,
+  `PoolGaugeHandle.set`.
+- ☐ **124.5c — A-26, the word `export`** (`none`). 91 by the kickoff's
+  `refs`; the build's bytes move, by 124f's unminified compare.
+- ☐ **124.5d — the dev load key's lines and `force`** (`none`).
+- ☐ **124.5e — the ability line** (`batch`). A damage or heal number
+  reads the op's own scaling, under a pin over the catalog; a display
+  change signed at §124's kickoff. Read: `?roster=corrupter,ice_mage,rioter:5`,
+  `vial`, `ice_storm` and `molotov` read `2 dmg`; wrong if another number
+  moved.
+- ☐ **124.5f — the neutral-target lead** (a trial, `none`). Its bar is
+  in the WORKLOG.
+- ☐ **124.5g — the re-skim** (`stop`).
+- ☐ **124.5h — the comment pass** (`batch`, per batch), as 124j ran.
+- ☐ **124.5i — the close** (`stop`).
 
 ## Phase 125 — the bot and the fuzz instruments
 

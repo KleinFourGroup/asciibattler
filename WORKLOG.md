@@ -11219,3 +11219,148 @@ the doc's Claude Code section as their report, for §124.5 to confirm.
 **Context readings** (the meter, UTC, 2026-10-19): 165,244 at 12:45, after
 the reading; 204,829 at 14:28 (`e27b563e`); 238,184 at 14:34
 (`08582e24`); 255,437 at 14:38 (`25662d6a`).
+
+### The kickoff: the audit, and the cut put to the user (2026-10-19, session 8fb7e4a9)
+
+At `38d40e5a`, the tree clean. The session was started by the phase's
+driver session and works with the user as usual. Nothing was built.
+Nothing was run but the instruments named below and one probe; each
+finding is from a search, an instrument or a read of the named lines, and
+no file was read whole.
+
+**The size.** The 86 non-test `.ts` files (`ui` 49, `store` 11, `i18n`
+9, `settings` 6, `journal` 5, `audio`, `failure` and `diagnostics` 2
+each), `ui.css` (4,842 lines) and `fonts.css` (33): 19,714 lines by `wc
+-l`. The charter's 19,712 is of `7a7ba3b3`; 124j's twins touched five of
+these files since (`git diff --stat 7a7ba3b3`: 26 lines in, 24 out).
+`comment-length` over the eight folders, one a call, and over a copy of
+`fonts.css` (`output/cl-1245-kickoff/fonts/`): 12,502 code lines, 5,595
+comment lines, 53,754 comment words, 4.3 words a code line against the
+board's 5.5 at §124's kickoff. The most comment words: `ui.css` 10,824,
+`HUD.ts` 3,437, `PreTurnScreen.ts` 3,350, `UnitCard.ts` 2,099,
+`SettingsOverlay.ts` 1,566. `src/ui` also holds `HITSPLATS.md` (192
+lines), a guide to the hitsplat rules in `ui.css`, which `comment-length`
+does not read. `comment-codes`: 1,084 of the 2,122 step codes are in these
+files (`ui` 946, `audio` 48, `store` 38, `i18n` 21, `journal` 12,
+`settings` 9, `failure` 4, `diagnostics` 3, and `fonts.css`'s 3 in the
+`src` row), 49 of them in tests, which wait for §126; the pass's files
+hold 1,035.
+
+**The signed rows at HEAD.**
+
+- A-22: `proseFamily` (`i18n/families.ts:47`). `refs --all` over the
+  eight folders (`output/refs-1245/all.json`) finds it and the kept
+  `closeTooltip` and `openTooltipTrigger` unread, and nothing else.
+- A-25: `rarityStars` (`rarityDisplay.ts:53`) and `orderRoster`
+  (`rosterOrder.ts:55`), each with its tests; ARCHITECTURE names both
+  (:419, :447).
+- A-26: `refs --all`: 91 exports that only their own file reads (`ui` 48,
+  `i18n` 19, `store` 6, `journal` 6, `failure` 4, `diagnostics` 4,
+  `audio` 2, `settings` 2): 46 interfaces, 21 types, 19 constants (`ui`
+  10, `i18n` 9) and 5 functions. 83 that only tests read (A-27 keeps
+  those), 242 used. The 19 constants are 124f's prediction for this
+  share: the build's bytes move, and its unminified compare
+  (`scratch/124f/unminified-diff.mjs`) is the proof.
+- A-28: the mute is a field, a guard and two members.
+  `private muted = false` (`AudioPlayer.ts:225`) is read only by
+  `if (this.muted) return;` (:258), and `setMuted()` (:287) and `isMuted`
+  (:291) are called by nothing; with the setter gone the field is always
+  false, so "mute just being volume zero" takes the field and the guard
+  too. `plans/music.md:20` and `plans/sound-registry.md:155` name
+  `setMuted`. The three `isOpen` getters (`CardListModal.ts:74`,
+  `CreditsOverlay.ts:42`, `SettingsOverlay.ts:183`) and `HUD.hide()`
+  (:596): a word search of `src`, `tests`, `tools` and the docs (the Grep
+  tool) finds no reader of `.isOpen`, `isMuted`, `setMuted` or a HUD's
+  `hide()`; the docs that name them are the census, ROADMAP and WORKLOG.
+
+**Two members the census left to this kickoff.** Its walk listed the
+interface members nothing reads as leads for each subsystem's kickoff.
+`refs --members` at HEAD: `ModalHandle.isOpen` (`modal.ts:61`, its getter
+at :178) and `PoolGaugeHandle.set` (`poolGauge.ts:26`, its body at :125)
+are unread. The first is the handle under the three `isOpen` getters,
+which test their own field for a handle instead; `modal.ts`'s `open` flag stays,
+since the close reads it (:161). The rest of that list in these folders is
+the diagnostics report's fields (read as JSON outside the type check, as
+the census says), the backup file's own `format` and `store`, a union's
+`policy` tag, and `Settings.volumeMusic`, which is stored with no control
+since §116b and waits for Round 11's music (`plans/music.md`).
+
+**The ability line.** `scratch/1245-kickoff/ability-line-probe.ts` holds
+the card's number against the sim's (`scalingStatValue(op.scaling, ...)`,
+which `resolveDamageScalars` and `resolveHealAmount` use) for every damage
+and heal op of every unit's abilities, chains' inner ops included: 20 ops.
+At each unit's own level-1 stats it named two (corrupter's `vial`,
+ice_mage's `ice_storm`), since rioter's `ranged` is 0 there; at strength
+3, ranged 5 and magic 7, so no difference hides behind a zero, it names
+three, TODO's three: `vial` 9 against 2, `ice_storm` 7 against 2,
+`molotov` 7 against 2, each a damage op scaled `none`. The heal line
+(`abilityDetail.ts:49`) writes `might + stats.magic`, the same shape; no
+heal op differs today, as the one heal op scales by `magic`. The roster
+dial should reach the three cards (`RunConfig.ts` documents
+`roster=rogue:3,healer:2,melee`); not tried here.
+
+**The neutral-target lead.** `ObjectiveController.ts:185-191` filters
+neutrals by the four conditions `validNeutralObjectiveTarget`
+(`Targeting.ts:415-423`) holds, in the same order, and its comment
+(:181-184) restates the rule. `World.findUnit` is a map lookup, so
+calling the function per neutral costs nothing at a click.
+
+**The screens' leads** (the census's B-12 to B-14 "Screens" line; line
+numbers from `scratch/120d/dupes-norm.json` of 2026-10-13, read at HEAD).
+None is proposed:
+
+- The swap control (`PortScreen.ts:335`, `RewardScreen.ts:248`): the
+  held-packet select is the same code, but `ui.css` styles the two apart
+  (`.port-swap__select` green with 6px padding and an 8px gap,
+  `.reward-swap__select` amber with 6px 8px and 6px), so one function
+  would take each screen's class as a parameter (D2's third clause).
+- The openings of `CharacterSelectScreen` and `MenuScreen`, and of
+  `EventScreen` and `PortScreen`: each screen's constructor, `show()` and
+  first element, the shape `Screen.ts` sets. The `unsubscribes` loop the
+  second pair shares is in those two screens only.
+- `SettingsOverlay`'s two export rows (the backup and the last run): one
+  helper for two calls in one file, with nothing on D2's fourth list gone.
+- Within `tooltip.ts`, `AudioPlayer.ts` and `eventSounds.ts`: tables of
+  keys, which the census calls look-alikes.
+
+**The comment pass's cost.** 19,714 lines at §124's 84 tokens a line is
+about 1.66M, at §122's 74 about 1.46M, at §123's 112 about 2.21M: five to
+seven sessions at the hand-off line. Of the 13 `i18n-ok` marker lines in
+six files (the driver's count, re-counted here: `literalScan.ts` 3 and its
+test 3, `Keybindings.ts` 3, `lossFx.ts` 2, `SettingsOverlay.ts` 1,
+`modal.ts` 1), `literalScan.ts:32` is a doc comment that names the marker,
+which `TOOL_READ` holds as code.
+
+**The cut, as put.** In the session's final message of this turn, with
+its calls; the user's answer and the cut as signed follow here.
+
+Readings by the tool's clock (UTC): 105,520 at 16:03 after the
+orientation, 226,359 at 16:17 during the audit, 241,621 at 16:20 when the
+cut was put.
+
+**Signed** (the user, 2026-10-19): "Signing the cut and all of your
+leans!" So:
+
+1. 124.5b takes `ModalHandle.isOpen` and `PoolGaugeHandle.set` beside
+   A-28's members.
+2. 124.5e corrects the heal line with the damage lines; it shows no
+   change today.
+3. 124.5f is read `none`, on its truth table.
+4. Not proposed, and left: the screens' near-duplicate leads and
+   `Settings.volumeMusic`.
+
+124.5f's bar, written before its code (the spec's D2):
+
+1. a truth table over the four conditions and a missing unit, the old
+   filter against `validNeutralObjectiveTarget`, equal on every row, and
+   shown to fail on a planted break (one condition dropped);
+2. `src` lines do not grow;
+3. no parameter that tells the two copies apart;
+4. the four-condition rule in code at one place, not two (the sites
+   counted by search before and after), and the comment that restates it
+   gone.
+
+The exit's counts for §124.5 by `comment-length` over the eight folders
+and a copy of `fonts.css`, with these as the baseline: 12,502 code lines,
+5,595 comment lines, 53,754 comment words; step codes in those files
+1,084, 49 of them in tests. The cut as signed is in ROADMAP §124.5.

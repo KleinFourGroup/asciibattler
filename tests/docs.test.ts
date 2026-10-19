@@ -26,6 +26,10 @@ import { fileURLToPath } from 'node:url';
 //      legal ROADMAP mutations are one-liners + a pointer, so growth stays
 //      bounded. (Landed with the Economy roadmap at the Cluster-3 kickoff,
 //      as the note here promised.)
+//   7. DRIVER-HANDOFF-as-log — the driver trial's state lived in a per-phase
+//      log, and §124's reached 889 lines with four state sections, each
+//      added on top of the last. The state is now rewritten in place
+//      (process/driving.md), and the caps hold it to that.
 // All are forcing functions: when one trips, do the cleanup it points at — or
 // bump the threshold deliberately if the growth is legitimate.
 
@@ -277,6 +281,21 @@ describe('docs hygiene', () => {
       'Merge the new lesson into an existing line or replace one; if it only applies on a trigger, put it in the process/ doc for that trigger (AGENTS "Where things go"). Raise the cap only deliberately, with the user.';
     expect(text.length, `AGENTS.md is ${text.length} chars. ${hint}`).toBeLessThanOrEqual(AGENTS_MAX_CHARS);
     expect(lineCount(text), `AGENTS.md is ${lineCount(text)} lines. ${hint}`).toBeLessThanOrEqual(AGENTS_MAX_LINES);
+  });
+
+  // DRIVER-HANDOFF.md is a phase driver's live state, read whole by every
+  // driver that starts or takes over (rot pattern 7). It opened at ~5.7k
+  // chars and 96 lines on 2026-10-19; the caps leave about twice that for
+  // patterns that accumulate across phases.
+  const DRIVER_HANDOFF_MAX_CHARS = 12_000;
+  const DRIVER_HANDOFF_MAX_LINES = 160;
+
+  it(`DRIVER-HANDOFF.md stays under ${DRIVER_HANDOFF_MAX_CHARS} chars and ${DRIVER_HANDOFF_MAX_LINES} lines`, () => {
+    const text = read('DRIVER-HANDOFF.md');
+    const hint =
+      'It is live state, rewritten in place: move patterns quiet for two phases to the closed list, and prune the closed list and older instances first (process/driving.md "DRIVER-HANDOFF.md"), or bump the cap deliberately.';
+    expect(text.length, `DRIVER-HANDOFF.md is ${text.length} chars. ${hint}`).toBeLessThanOrEqual(DRIVER_HANDOFF_MAX_CHARS);
+    expect(lineCount(text), `DRIVER-HANDOFF.md is ${lineCount(text)} lines. ${hint}`).toBeLessThanOrEqual(DRIVER_HANDOFF_MAX_LINES);
   });
 
   // ARCHITECTURE.md "Top-level structure" is the single canonical source tree

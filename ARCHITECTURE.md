@@ -590,6 +590,7 @@ process/                     # agent procedures read on a trigger (AGENTS.md "Be
   oracles.md                 # refactor oracles, failing controls, instrument self-checks
   welfare-and-efficacy.md    # reading the friction log, session reports, phase-stats, friction-scan
   browser-pane.md            # Claude Code's Browser pane: getting a live page, the hidden pane, fixtures
+  driving.md                 # the phase driver: briefs, hand-off reads, DRIVER-HANDOFF.md, each harness's calls
 
 archive/                     # superseded roadmaps + feedback + phase worklogs
 

@@ -8,14 +8,17 @@ driver log ([archive/driver-trial/log-124.md](archive/driver-trial/log-124.md)).
 
 ## Cursor
 
-- **Phase:** none being driven. §124 closed 2026-10-18 with two drivers
-  (e90c7b67, b390d607). Next: **§124.5, the screens** (ROADMAP §124.5),
-  at its kickoff. No card waits and no session is working.
-- **Driver:** none. A driver writes its app id here.
+- **Phase:** **§124.5, the screens** (ROADMAP §124.5), driven from
+  2026-10-19. §124 closed 2026-10-18 with two drivers (e90c7b67,
+  b390d607). A card waits for session 1, the kickoff; no session is
+  working.
+- **Driver:** `local_3addf3c2-a6af-469e-a40b-932696f5bc61` (scratchpad
+  id 9b60fb27), the first under `process/driving.md`.
 - **Friction read through:** line 285 of `retro/papercuts.jsonl` (b390d607
-  at §124's close, 2026-10-18 23:27 UTC).
-- **Notes for the next brief** (§124's drivers' recommendation; the next
-  driver decides):
+  at §124's close, 2026-10-18 23:27 UTC); none filed since, at 15:50 UTC
+  on 2026-10-19.
+- **Notes in the latest brief** (§124.5 session 1, the kickoff), all five
+  of §124's drivers' recommendation:
   - for any deletion step, `comment-codes --record` before the first
     suite run, and a search of the docs for what the deletion removes
     (P1, P6);
@@ -66,13 +69,15 @@ or a pattern with two or more earlier instances stops after it.
 
 | Note | Briefs | Credited |
 |---|---|---|
-| `--record` before the suite | §124 1, 2, 7 | yes |
-| search the docs for what a deletion removes | §124 1, 2, 7 | yes |
-| `comment-length`'s form | §124 1, 3–7 | yes; session 2, whose brief lacked it, lost a call |
+| `--record` before the suite | §124 1, 2, 7; §124.5 1 | yes |
+| search the docs for what a deletion removes | §124 1, 2, 7; §124.5 1 | yes |
+| `comment-length`'s form | §124 1, 3–7; §124.5 1 | yes; session 2, whose brief lacked it, lost a call |
 | read a claim's other homes first | §124 2 | yes |
 | check a claim at the code it names | §124 3–7 | yes; now in the Cursor's comment-pass line |
 | a twin searched by its shortest token | §124 4 | yes |
-| entries by the Write tool, messages by `-F` | §124 5–7 | yes |
+| entries by the Write tool, messages by `-F` | §124 5–7; §124.5 1 | yes; kept though AGENTS says it, since AGENTS said it from `f0e3f150` (10-11) through P2's slips at 124f and 124j b5 |
+| the `i18n-ok` marker and `comment-strip` | §124.5 1 | not yet |
+| a step-code-shaped file name | §124.5 1 | not yet |
 | the next-step box | §124 1, 2 | partly; now CLAUDE.md's bullet |
 | no `cd` | §124 1–7 | no; dropped (P12) |
 

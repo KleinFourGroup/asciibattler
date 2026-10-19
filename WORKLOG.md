@@ -12683,3 +12683,60 @@ level span and never inside it; only the promotion skin writes
 `levelValue`; the derived block holds its height from the landing;
 Continue is always enabled and dismisses at once; a skipped beat is
 silent.
+
+### The hand-off after 124.5h's batch 7 (2026-10-19, session d8214ecc)
+
+The session recorded batches 5 and 6's reads (`e211595c`) and ran batch 7
+(`4daf4966`), and this one. Batch 7's first commit, `0df83900`, carried
+the same tree with "fourteen" in its subject; it was amended to the
+entry's count, twenty-one, before anything referred to it. The smoke ran
+on that first commit (613 green); the amend's hook ran the suite alone.
+
+It hands off before batch 8 at 329,694. Batch 8 (the map and the run's
+screens: `MapScreen.ts`, `SectorMapOverlay.ts`, `PortScreen.ts`,
+`RewardScreen.ts`, `EventScreen.ts`, `eventConditionText.ts`,
+`RestScreen.ts`, `SectorClearedScreen.ts`, `GameOverScreen.ts`,
+`escalationText.ts`; 1,975 lines) is about 144k at batch 6's 73 a line and
+249k at batch 7's 126, which from here would end between about 475k and
+580k before its entry and commit, the line inside that range. It holds no
+`i18n-ok` marker line.
+
+**Open.** Batch 7's `batch` read (its script in its entry), and its two
+findings for the user, not built: the stars' touch route on the pre-turn
+hand and the port's crew picker, and `UnitRarity`'s re-export with no
+reader. Both are code, so the round's no-behaviour-change guard puts the
+first outside the pass; where each goes is the user's call. No ◐ in
+ROADMAP: 124.5h is one step, ☐ until its twelve batches are built.
+
+**For batch 8 and after.**
+
+- Search the whole repo for a name before calling it absent. Batch 7's
+  chain comment named `damageOpOf`, which this builder doesn't call; it
+  exists in `config/abilities.ts`, so the comment was re-pointed, not
+  false. The same search found the twin there.
+- Batch 7's false claims were again lists gone stale (a builder's users,
+  a skin's defaults, a label table's readers) and states from before a
+  later step (the rarity CSS "not shipped", a header refinement planned
+  and never made). The chip rule as shipped charges a side's pool its
+  fallen's power, plus the opposing side's standing power on a cap turn
+  (`chipRule.ts`); a comment that has power chip the pools "each turn" is
+  stale.
+- `PortScreen.ts` builds its units for sale with the unit card's recruit
+  skin and `clickable: false`; the port's crew removal is the card-list
+  modal's picker.
+- Run's routes after a gate, for the screens' headers: a promotion comes
+  at a turn's end or a rest, and `handleDismissPromotion` sends it on;
+  `resolveRest` heals, then a promotion or the map; a recruit offer
+  follows a won encounter that was not the sector's terminal
+  (`advancePastBattle`), and `chooseRecruit` and `passRecruit` return to
+  the map. The phase list at the top of `Run.ts` gives the rest.
+- Count the false claims from the entry before writing the commit's
+  subject (filed).
+
+**Tools, off git.** `output/cl-1245h-b7/` (the copies, the strip, codes,
+length and hook logs, the message files). No worktree, background task or
+preview server is left.
+
+**Readings** (the meter, UTC, 2026-10-19): 120,151 at 23:08 (the
+orientation), 298,237 (batch 7's proof), 313,696 (batch 7's commit),
+325,100 (the amend), 329,694 at 23:37 at the hand-off.

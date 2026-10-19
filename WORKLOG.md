@@ -11784,3 +11784,63 @@ Proof:
   3,722 tests (the block's three gone), read in the next entry.
 
 Lines, by `git diff --numstat`: `src` and `tools` outside the tests 5 in, 25 out; the tests 8 in, 50 out; `config/units.json` 21 out.
+
+The hook on `a957c8c9`, as predicted: 3,722 tests and 613 smoke.
+
+### 124.5h — the comment pass: the batches, planned (2026-10-19, session ff99ffb0)
+
+The pass takes the screens' files as they are after 124.5g-post3: the
+non-test `.ts` of `ui`, `store`, `i18n`, `settings`, `journal`, `audio`,
+`failure` and `diagnostics`, with `ui.css` and `src/fonts.css`: 19,639
+lines by `wc -l` (the kickoff's 19,714, before 124.5a to 124.5g-post2).
+Twelve batches by file, grouped so the facts a batch checks sit together:
+
+1. The store: the 11 files of `src/store`; 1,332 lines.
+2. The journal, the failure plate's rules and the diagnostics: `src/journal`,
+   `src/failure`, `src/diagnostics`; 1,448 lines.
+3. Words, settings and sound: `src/i18n`, `src/settings`, `src/audio`;
+   1,821 lines.
+4. The UI's parts: `modal.ts`, `tooltip.ts`, `pressable.ts`, `button.ts`,
+   `chip.ts`, `fade.ts`, `copyText.ts`, `download.ts`, `Screen.ts`,
+   `reserveSlot.ts`; 1,092 lines.
+5. The battle HUD: `HUD.ts`, `PlaybackSpeed.ts`, `ObjectiveController.ts`,
+   `poolGauge.ts`, `PoolOverlay.ts`, `lossFx.ts`, `fallenSide.ts`,
+   `chipLabels.ts`; 2,021 lines.
+6. The pre-turn screen: `PreTurnScreen.ts`, `CacheOverlay.ts` (its header
+   among the cut's items), `BitsOverlay.ts`, `CardListModal.ts`; 1,796
+   lines.
+7. The unit card and the screens around it: `UnitCard.ts`,
+   `abilityDetail.ts`, `promotionDelta.ts`, `PromotionScreen.ts`,
+   `RecruitScreen.ts`, `rarityDisplay.ts`, `rosterOrder.ts`,
+   `statLabels.ts`; 1,412 lines.
+8. The map and the run's screens: `MapScreen.ts`, `SectorMapOverlay.ts`,
+   `PortScreen.ts`, `RewardScreen.ts`, `EventScreen.ts`,
+   `eventConditionText.ts`, `RestScreen.ts`, `SectorClearedScreen.ts`,
+   `GameOverScreen.ts`, `escalationText.ts`; 1,975 lines.
+9. The menu, the settings and the plates: `MenuScreen.ts`,
+   `CharacterSelectScreen.ts`, `SettingsOverlay.ts`, `CreditsOverlay.ts`,
+   `Keybindings.ts`, `CantSaveChip.ts`, `cantSave.ts`, `FailurePlate.ts`,
+   `textScale.ts`; 1,867 lines.
+10. to 12. `ui.css` (4,842 lines) in three parts, each cut at a section
+    header when the batch starts, with `fonts.css` (33) in the first.
+    `src/ui/HITSPLATS.md` (192 lines), a guide that `ui.css` points to
+    from its hitsplat rules, is a doc and not shortened; its claims are
+    checked against the rules in the batch that holds them.
+
+A session takes the next batch while its reading, plus the batch's lines
+at the rate measured so far, stays under the hand-off line, and hands off
+otherwise. At §124's 84 tokens a line the pass is about 1.65M, four or
+five sessions.
+
+Proof per batch, as 124j ran it: `comment-strip HEAD src`, comments only,
+exit 0, its built-in control naming every changed file; then
+`comment-codes --record` before the suite. The suite by the hook; none of
+these folders stages the smoke. The counts by `comment-length` on copies
+of the batch's files under `output/cl-1245h-b<n>/before` and `after`. The
+read is `batch`, per batch, with its script in the batch's entry. A
+comment holding the `i18n-ok` marker is read by `literalScan.ts`, so
+`comment-strip` exits 1 on an edit to one by design, and the literal pin
+in `npm test` is that comment's proof (13 marker lines in six files, the
+kickoff's count).
+
+Reading: 307,881 at 18:27, before this entry.

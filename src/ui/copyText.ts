@@ -1,9 +1,9 @@
 /**
- * 118f — put text on the player's clipboard, by whichever way the page is
- * let. The clipboard API is asked first. A page in another site's frame can
- * be refused it (itch's frame is the case this is for), and a page that is
- * no secure context has none, so the old command is the second way: the
- * text selected in a field and the document asked to copy the selection.
+ * Put text on the player's clipboard, by whichever way the page is let. The
+ * clipboard API is asked first. A page in another site's frame can be
+ * refused it (itch's frame is the case this is for), and a page that is no
+ * secure context has none, so the old command is the second way: the text
+ * selected in a field and the document asked to copy the selection.
  * `false` means both were refused, and the caller hands the text over some
  * other way.
  *

@@ -1,26 +1,21 @@
 /**
- * 96d — THE BUTTON FACTORY: one place that mints a `<button>` (Round 7
- * §96, the idiom pass). Before it, 28 inline `createElement('button')`
- * sites repeated the same four lines — and three of them forgot
- * `type="button"` (the kickoff audit; harmless without a form, wrong on
- * principle) — while `actionButton()` lived byte-identical in PortScreen
- * AND RewardScreen.
+ * The button factory: one place that mints a `<button>`, always with
+ * `type="button"`.
  *
- * Deliberately dumb: type · class · label · click. The audio cue stays in
- * the caller's handler (most play `click`, a few `pickup`, the sector-map
- * close plays nothing — the factory must not decide). Chrome comes from
- * the CLASS: `btn--primary` is THE primary-action idiom (ui.css), with the
- * two look modifiers that name a deliberate per-site delta —
- * `btn--dim` (a pass, 0.7 until hovered) and `btn--exit` (the end screens'
- * controls, game over and sector cleared: amber fill on hover, with
- * nothing else on screen to act on). A site's POSITION stays on its
- * own class (`.preturn-continue` pins bottom-center) — layout is the
+ * Deliberately dumb: type, class, label, click. The audio cue stays in the
+ * caller's handler (most play `click`, a few `pickup`), since the factory
+ * must not decide. The look comes from the class: `btn--primary` is the
+ * primary-action idiom (ui.css), with two modifiers that name a deliberate
+ * per-site delta, `btn--dim` (a pass, 0.7 until hovered) and `btn--exit`
+ * (the end screens' controls, game over and sector cleared: an amber fill
+ * on hover, with nothing else on screen to act on). A site's position stays
+ * on its own class (`.preturn-continue` pins bottom-center): layout is the
  * screen's, look is the idiom's. A control in the control column (Roster,
- * Leave port) wears the chip's plate instead: `chip control-chip`.
+ * Leave port) wears the chip's plate instead, `chip control-chip`.
  *
  * `label` may be '' for a button that carries children (the character
- * select card); `tooltip` (97d) attaches the §97 tooltip — a control, so a
- * long-press on touch, the tap keeps acting.
+ * select card); `tooltip` attaches the tooltip as a control's, so touch
+ * opens it with a long-press and the tap keeps acting.
  */
 
 import { attachTooltip, type TooltipContent } from './tooltip';

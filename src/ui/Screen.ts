@@ -1,31 +1,29 @@
 /**
- * 96c — the Screen base: ONE show / hide / fade lifecycle for the twelve
- * full-viewport DOM screens (menu · character select · map · pre-turn ·
- * promotion · recruit · reward · port · event · rest · sector cleared ·
- * game over). Before it, each re-implemented the same four lines around
- * `fade.ts` by hand (the Round 7 kickoff audit §E "screen shells ×13").
+ * The Screen base: one show, hide and fade lifecycle for the twelve
+ * full-viewport DOM screens (menu, character select, map, pre-turn,
+ * promotion, recruit, reward, port, event, rest, sector cleared, game
+ * over).
  *
- * The shape, chosen so no scene call site and no `show()` signature moved:
+ * The shape:
  *
  *   show(...args) {            // the subclass keeps its own arguments
- *     this.hide();             // EXPLICIT, first — the subclass's hide()
- *                              // tears down ITS state; PreTurnScreen then
+ *     this.hide();             // explicit, first: the subclass's hide()
+ *                              // tears down its state; PreTurnScreen then
  *                              // seeds fresh state before rendering, so the
  *                              // base must never hide implicitly
  *     …build el…
- *     this.present(el);        // mount + fade in (the only shared part)
+ *     this.present(el);        // mount and fade in (the only shared part)
  *   }
  *   override hide() {          // only if the subclass has its own teardown
  *     …its teardown…
- *     super.hide();            // fade out + remove + null the container
+ *     super.hide();            // fade out, remove, null the container
  *   }
  *
- * `present` does NOT hide a previous container: a screen that presents
+ * `present` does not hide a previous container: a screen that presents
  * twice without hiding would leak the first, and that is the subclass's
- * bug to see, not the base's to paper over. The HUD is not a Screen — it
- * is seven independently faded panes over the battle canvas (HUD.ts) and
- * keeps its own lifecycle; the two modals (CardListModal, the cache modal)
- * and the sector-map overlay are the 96f shell's business.
+ * bug to see, not the base's to paper over. The HUD is not a Screen: it is
+ * seven independently faded panes over the battle canvas (HUD.ts) and keeps
+ * its own lifecycle; the modals and overlays are modal.ts's.
  */
 
 import { fadeIn, fadeOutAndRemove } from './fade';
@@ -42,20 +40,19 @@ export abstract class Screen {
     el.classList.add('screen-fade');
     this.mount.appendChild(el);
     this.container = el;
-    // 100e — the screen takes focus on present (`tabindex=-1`, no scroll, no
-    // ring: `.screen-fade:focus { outline: none }` — a container is not a
-    // control, the 96f modal precedent), so the next Tab enters THIS screen's
-    // controls instead of resuming from wherever the previous screen's
-    // removed control sat — which, in Firefox, ran the walk off the document
-    // through the browser UI and around to the chrome column (the user's
-    // 100c1 read; TODO §100 riders holds the DOM-order call).
+    // The screen takes focus on present (`tabindex=-1`, no scroll, no ring:
+    // `.screen-fade:focus { outline: none }`, since a container is not a
+    // control, as the modal shell's isn't), so the next Tab enters this
+    // screen's controls instead of resuming from wherever the previous
+    // screen's removed control sat, which in Firefox ran the walk off the
+    // document, through the browser's UI and around to the chrome column.
     el.tabIndex = -1;
     el.focus({ preventScroll: true });
     fadeIn(el);
   }
 
-  /** Fade the root out and remove it after FADE_MS; the reference drops NOW
-   *  so a show() during the fade never touches the dying element. */
+  /** Fade the root out and remove it after FADE_MS; the reference drops at
+   *  once, so a show() during the fade never touches the dying element. */
   hide(): void {
     if (this.container) {
       fadeOutAndRemove(this.container);

@@ -1,5 +1,5 @@
-// Step 5.2: shared fade-in / fade-out helpers for UI screen transitions.
-// Pairs with `.screen-fade` and `.screen-fade.is-visible` in ui.css.
+// The shared fade-in and fade-out helpers for the UI's screen transitions,
+// paired with `.screen-fade` and `.screen-fade.is-visible` in ui.css.
 //
 // fadeIn requires the element to already carry the `screen-fade` class and
 // to be in the DOM. fadeOutAndRemove removes the element from the DOM after

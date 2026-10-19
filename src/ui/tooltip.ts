@@ -1,47 +1,47 @@
 /**
- * 97a — THE TOOLTIP (Round 7 §97): one component, ONE live element, the
- * terminal plate. Replaces the native `title=` — hover-only, delayed,
- * unstyled, dead on touch and keyboard (the Round 7 kickoff audit: 20
- * sites, four of them the only place a fact was written).
+ * The tooltip: one component, one live element, the terminal plate. The
+ * native `title=` is hover-only, delayed, unstyled and dead on touch and
+ * keyboard, so the presentation layer uses none (tests/ui-tooltips.test.ts).
  *
  * `attachTooltip(el, content, opts)` registers a trigger; the content is a
- * string or a LAZY getter (string | Node) resolved at every open, so a site
+ * string or a lazy getter (string or Node) resolved at every open, so a site
  * whose words are live (the HUD's pause label) attaches once. The host is
  * one `.tooltip` in the ui root (`installTooltipHost`, Game-owned,
  * page-lifetime like the chrome column), `role="tooltip"`; while open the
  * trigger carries `aria-describedby` to it.
  *
- * ROUTES (the spec's four, the §97 kickoff calls B + D):
- *   hover   — mouse/pen `pointerenter`, HOVER_DELAY_MS (no delay inside
- *             WARM_MS of the last close: sweeping a row of buttons reads
- *             like one tooltip moving); `pointerleave` closes unless pinned.
- *   focus   — `focus` on the trigger when `:focus-visible` holds (keyboard
- *             focus; a mouse click or a tap that focuses a button shows
- *             nothing); `blur` closes, pinned or not (focus-out is a gate).
- *   touch   — `touch: 'tap'` (the default; the non-interactive text sites):
- *             a tap TOGGLES it. `touch: 'press'` (the controls, whose tap
- *             must keep acting): a LONG-PRESS of PRESS_MS opens it PINNED and
- *             the trailing click is swallowed (a window-capture listener),
- *             Android's own long-press `contextmenu` is suppressed while the
- *             press is armed. `touch: 'none'` — the enemy compact card, whose
- *             contextmenu is already the focus objective (the §100 note).
- *   key     — `toggleTooltipKey()` (97b binds `showTooltip`): with one open,
- *             pin it (a pointer user parks the hover) or, pinned, close it;
- *             with none open, open PINNED for the focused trigger, else the
- *             hovered one.
- * CLOSES: Esc (window capture — the first Esc takes the tooltip, the next
- * the modal under it), pointer-leave (unpinned), focus-out, a pointerdown
- * outside the trigger (pinned / tap-opened), the trigger leaving the
- * document or losing its box (a rAF poll while open, which also follows a
- * trigger that moves — a card shifting when a unit dies).
+ * The routes that open one:
+ * - hover — a mouse or pen `pointerenter`, after `HOVER_DELAY_MS` (no delay
+ *   while another is open or inside `WARM_MS` of the last close, so sweeping
+ *   a row of buttons reads like one tooltip moving); `pointerleave` closes
+ *   unless pinned.
+ * - focus — `focus` on the trigger when `:focus-visible` holds (keyboard
+ *   focus; a mouse click or a tap that focuses a button shows nothing);
+ *   `blur` closes, pinned or not.
+ * - touch — `touch: 'tap'` (the default, for the non-interactive text
+ *   sites): a tap toggles it. `touch: 'press'` (the controls, whose tap must
+ *   keep acting): a long-press of `PRESS_MS` opens it pinned and the click
+ *   that follows is swallowed (a window-capture listener), and Android's own
+ *   long-press `contextmenu` is suppressed while the press is armed.
+ *   `touch: 'none'`: the enemy compact card, whose contextmenu is already
+ *   the focus objective.
+ * - key — `toggleTooltipKey()`, on the `showTooltip` action: with one open,
+ *   pin it (a pointer user parks the hover) or, pinned, close it; with none
+ *   open, open one pinned for the focused trigger, else the hovered one.
  *
- * POSITION: `position: fixed`, above the trigger's center, FLIPPED below
+ * It closes on Esc (window capture: the first Esc takes the tooltip, the
+ * next the modal under it), on pointer-leave (unpinned), on focus-out, on a
+ * pointerdown outside the trigger and the box, and when the trigger leaves
+ * the document or loses its box (a rAF poll while open, which also follows a
+ * trigger that moves, as a card shifts when a unit dies).
+ *
+ * Position: `position: fixed`, above the trigger's center, flipped below
  * when the top would clip, clamped inside the viewport, the caret kept on
- * the trigger's center — the layout never shifts (the box is out of flow).
+ * the trigger's center; the box is out of flow, so the layout never shifts.
  * The math is `placeTooltip`, pure and pinned in tooltip.test.ts; the
- * gestures + the fade are eyeball-only per TESTING.
+ * gestures and the fade are checked by eye.
  *
- * No prose lives here; every site's words go through `t()` at its touch.
+ * No prose lives here; every site passes words it got from `t()`.
  */
 
 /** Hover: the wait before a tooltip opens (a sweep across a row must not
@@ -87,7 +87,7 @@ interface Placement {
   readonly x: number;
   readonly y: number;
   readonly side: 'above' | 'below';
-  /** The caret's x INSIDE the box (its tip points at the trigger's center). */
+  /** The caret's x inside the box (its tip points at the trigger's center). */
   readonly caretX: number;
 }
 
@@ -164,8 +164,8 @@ export function installTooltipHost(mount: HTMLElement): HTMLDivElement {
   host.id = HOST_ID;
   host.setAttribute('role', 'tooltip');
   host.hidden = true;
-  // Reduced motion (the rise dropped, the fade kept) is the sheet's — the §99
-  // block keys off the root attribute the motion gate stamps (99b).
+  // Reduced motion (the rise dropped, the fade kept) is the sheet's: its
+  // reduced-motion block keys off the root attribute the motion gate stamps.
   body = document.createElement('div');
   body.className = 'tooltip__body';
   caret = document.createElement('div');
@@ -323,7 +323,7 @@ export function attachTooltip(
   };
 }
 
-/** Re-resolve the content of an OPEN tooltip on `el` (a no-op otherwise) —
+/** Re-resolve the content of an open tooltip on `el` (a no-op otherwise),
  *  for a site whose words changed under an open tooltip. */
 export function refreshTooltip(el: HTMLElement): void {
   if (current === null || current.el !== el) return;
@@ -331,8 +331,8 @@ export function refreshTooltip(el: HTMLElement): void {
   position(current);
 }
 
-/** The key (97b): pin the open one, close a pinned one, or open pinned for
- *  the focused — else the hovered — trigger. */
+/** The key: pin the open one, close a pinned one, or open one pinned for
+ *  the focused trigger, else the hovered one. */
 export function toggleTooltipKey(): void {
   if (current !== null) {
     if (pinned) close();

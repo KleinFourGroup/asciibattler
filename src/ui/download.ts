@@ -1,6 +1,6 @@
 /**
- * Hand the player a file: `text` as a download named `filename` (the run
- * journal's export, Round 8 spec D5). The browser saves it where it saves
+ * Hand the player a file: `text` as a download named `filename` (a run's
+ * journal, the backup, a report). The browser saves it where it saves
  * downloads; nothing is sent anywhere.
  *
  * The link is put in the document for the click and taken out after it, and

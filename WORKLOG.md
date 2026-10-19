@@ -12126,3 +12126,77 @@ table's reason lost (why the ticks are quieter, why a one-shot doesn't
 jitter, why the crowd cues jitter more), or a rule a change must respect
 cut: a missing locale entry throws and never falls back to English, a
 fuzzy one falls back with a marker, the locale resolves once, at load.
+
+### 124.5h, batch 4 — the UI's parts (2026-10-19, session ebe41cd8)
+
+The 10 files: `modal.ts`, `tooltip.ts`, `pressable.ts`, `button.ts`,
+`chip.ts`, `fade.ts`, `copyText.ts`, `download.ts`, `Screen.ts`,
+`reserveSlot.ts`; all changed. Out: the step codes and the spec's codes,
+the capitals, and the history these idiom files opened with (what each
+replaced, the kickoff audits' counts of hand-rolled copies, the chips' old
+hand-measured tops, the old `min-width`, the Firefox read that led to the
+screen's focus, the measured header heights across the ✕'s flip). Each
+reason those stories carried stays as the reason: the ✕ keeps its slot so
+the rows under it hold, the screen takes focus so the next Tab enters it,
+the chip plate is border-box because some chips are buttons and some
+divs. The tooltip's routes are in the one list format. `modal.ts`'s
+`i18n-ok` marker line was not touched.
+
+**Statements found false and corrected (rule 7):**
+
+- `modal.ts`: an absent `title` made "a headerless panel". The panel
+  variant always builds the header with its ✕; an absent title starts
+  empty, and the cache modal fills it with `setTitle`.
+- `modal.ts`: the shell served "the three modal surfaces"; it serves six
+  (the card list, the cache, the sector map, the settings, the credits,
+  the failure plate), and the panels that play `click` on the ✕ are four,
+  not "the card-list and cache modals".
+- `Screen.ts`: the modals were "the two modals (CardListModal, the cache
+  modal) and the sector-map overlay"; it now says the modals and overlays
+  are `modal.ts`'s.
+- `download.ts`: the download was "the run journal's export"; it also
+  saves the backup and the diagnostic report (`SettingsOverlay.ts`).
+- `button.ts`: "the sector-map close plays nothing" stood as a caller of
+  the factory; the sector map builds no `button()`, its close is the
+  modal shell's ✕. Dropped from the factory's list.
+- `tooltip.ts`: the hover route opened at once only "inside `WARM_MS` of
+  the last close"; it also opens at once while another is open
+  (`current !== null`), and an outside pointerdown spares the box as well
+  as the trigger.
+
+**Kept, checked at the code they name:** the cache's `setDismissable`
+and the failure plate's; the four `onCloseClick` sites; `tabindex=-1` and
+the Tab trap; `.screen-fade:focus`; `touch: 'none'` on the enemy compact
+card (HUD.ts) and its contextmenu as the focus objective; `showTooltip`
+bound in `config/keybindings.json` and Game; the tooltip's 120 ms fade in
+ui.css and its reduced-motion rule (the rise dropped, the fade kept);
+`placeTooltip` pinned in tooltip.test.ts and zero `title=` pinned in
+tests/ui-tooltips.test.ts; `pressable`'s four consumers and its Enter pin;
+the key sink on `window` (Game); the map node and the cache chip as real
+buttons; `.btn--dim`'s 0.7, `.btn--exit`'s amber fill and its two
+screens, `.preturn-continue`'s bottom-center, `chip control-chip` on
+Roster and Leave port; the chips' CSS `order` (1, 2, 4, 5, 6), the cache
+chip hiding only outside a run, the column's `pointer-events`, its
+z-index 15 under the corner buttons' 20, the hop chip's offset
+(`--column-side`), the control column made before the chrome column; the
+twelve `Screen` subclasses; the HUD's seven faded panes. Nothing was
+dropped unchecked.
+
+Measured (`comment-length` on copies under `output/cl-1245h-b4`): comment
+lines 369 → 347, words 3,277 → 3,030, code lines 643 unchanged. The
+step-code ceiling 2,011 → 1,963, the 48 these files held (`fade.ts`'s
+"Step 5.2" was not counted as one).
+
+Proof: `comment-strip HEAD src`, comments only, exit 0; its control made
+one code edit in memory in each of the 10 changed files and the compare
+named all 10.
+
+Cost: 288,240 at 21:18 on batch 3's commit to 356,973 at 21:27 after the
+proof, about 69k for 1,092 lines, 63 a line.
+
+**Read** (`batch`): `git show <this commit> -- src/ui/tooltip.ts
+src/ui/chip.ts` against the seven rules. Wrong looks like a step code or
+capitals left, history kept (what a file replaced, an audit's count), or a
+reason or rule cut: the first Esc takes the tooltip and the next the modal
+under it; a hidden chip collapses and still moves no click target; a
+chip's modal never mounts into the column.

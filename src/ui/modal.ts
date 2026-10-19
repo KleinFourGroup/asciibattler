@@ -1,46 +1,41 @@
 /**
- * 96f — THE MODAL SHELL (Round 7 §96, the idiom pass): ONE overlay +
- * dismissal + focus discipline for the three modal surfaces that each
- * hand-rolled their own (the R1 card-list modal, the 49f cache modal that
- * re-created the same classes by hand, the 78e sector-map overlay) —
- * three Esc handlers, three backdrop checks, two ✕ styles, and NO focus
- * management anywhere (the kickoff audit).
+ * The modal shell: one overlay, one dismissal and one focus discipline for
+ * every modal surface (the card list, the cache, the sector map, the
+ * settings, the credits, the failure plate).
  *
- * Two variants, both reproducing the DOM + classes the consumers had
- * (the cascade is untouched; ui.css gains only a focus-outline rule):
- *   - `panel`    — `.roster-overlay` (the dimmed backdrop) › `.roster-modal`
- *                  (the bordered, capped panel) › a `.roster-modal-header`
- *                  with the title + the ✕; the consumer appends its body
- *                  after the header (or `replaceBody`s it on a re-render).
- *   - `viewport` — `.sector-map-overlay` (an opaque full-viewport host) with
- *                  the pinned `✕ close`; the consumer renders INTO it.
+ * Two variants:
+ * - `panel` — `.roster-overlay` (the dimmed backdrop) › `.roster-modal` (the
+ *   bordered, capped panel) › a `.roster-modal-header` with the title and
+ *   the ✕; the consumer appends its body after the header (or
+ *   `replaceBody`s it on a re-render).
+ * - `viewport` — `.sector-map-overlay` (an opaque full-viewport host) with
+ *   the pinned `✕ close`; the consumer renders into it.
  *
- * Dismissal: Esc, a click on the backdrop itself, and the ✕ — all three
- * gated by ONE `dismissable` flag (`setDismissable(false)` hides the ✕ and
- * ignores the other two; the cache's forced-keep shrink flow), so a shell
- * can never be half-dismissable. `onClose` fires EXACTLY ONCE per open,
- * from any route including `handle.close()` — a consumer puts all its
- * teardown there and nowhere else.
+ * Dismissal: Esc, a click on the backdrop itself, and the ✕, all three gated
+ * by one `dismissable` flag (`setDismissable(false)` hides the ✕ and ignores
+ * the other two: the cache's forced-keep shrink, the failure plate), so a
+ * shell can never be half-dismissable. `onClose` fires exactly once per
+ * open, from any route including `handle.close()`, so a consumer puts all
+ * its teardown there and nowhere else.
  *
- * Focus (NEW behavior — the one the §96 kickoff signed in, decision E):
- * on open the container takes focus (`tabindex=-1`, no scroll), Tab and
- * Shift+Tab cycle among the focusables inside (none → the key is eaten,
- * focus stays on the container), and on close focus returns to whatever
- * had it before — the chip or corner button that opened the modal, when
- * it is still in the document. `role="dialog"` + `aria-modal` +
- * `aria-labelledby` (a titled panel) ride along; they change nothing
- * visible.
+ * Focus: on open the container takes focus (`tabindex=-1`, no scroll), Tab
+ * and Shift+Tab cycle among the focusables inside (with none, the key is
+ * eaten and focus stays on the container), and on close focus returns to
+ * whatever had it before (the chip or corner button that opened the modal)
+ * when that is still in the document. `role="dialog"`, `aria-modal` and, on
+ * a panel, `aria-labelledby` ride along; they change nothing visible.
  *
  * Sounds stay the consumer's: `onCloseClick` fires on the ✕ only (the
- * card-list and cache modals play `click` there; the sector map plays
- * nothing) — Esc and the backdrop were always silent.
+ * panels play `click` there; the sector map plays nothing), and Esc and the
+ * backdrop are silent.
  */
 
 import { t } from '../i18n/ui';
 
 interface ModalOptions {
   readonly variant?: 'panel' | 'viewport';
-  /** The header title (panel variant). Absent = a headerless panel. */
+  /** The header's title (panel variant). Absent, the title starts empty and
+   *  `setTitle` fills it (the cache modal); the header and its ✕ stay. */
   readonly title?: string;
   /** Extra class(es) on the panel (e.g. `cache-modal`). */
   readonly panelClass?: string;
@@ -48,7 +43,7 @@ interface ModalOptions {
   readonly closeText?: string;
   /** Fires on the ✕ click only (the consumer's sound cue). */
   readonly onCloseClick?: () => void;
-  /** Fires exactly once when the shell closes, from ANY route. */
+  /** Fires exactly once when the shell closes, from any route. */
   readonly onClose: () => void;
 }
 
@@ -133,8 +128,8 @@ export function openModal(mount: HTMLElement, opts: ModalOptions): ModalHandle {
     }
     if (e.key !== 'Tab') return;
     const focusables = [...overlay.querySelectorAll<HTMLElement>(FOCUSABLE)].filter(
-      // 101e — a reserved slot (`.is-reserved`, visibility: hidden) still has
-      // a box, so `offsetParent` alone would hand the trap an element that
+      // A reserved slot (`.is-reserved`, visibility: hidden) still has a
+      // box, so `offsetParent` alone would hand the trap an element that
       // silently refuses focus and strand the Tab wrap on it.
       (el) => !el.hidden && el.offsetParent !== null && el.closest('.is-reserved') === null,
     );
@@ -179,9 +174,9 @@ export function openModal(mount: HTMLElement, opts: ModalOptions): ModalHandle {
     },
     setDismissable(on) {
       dismissable = on;
-      // 101e — the ✕ keeps its slot (the header measured 21 ⇄ 26 px across
-      // the flip, moving every row under it); reserveSlot's two halves,
-      // toggled because this one comes back.
+      // The ✕ keeps its slot, so the header's height, and every row under
+      // it, holds across the flip: reserveSlot's two halves, toggled, since
+      // this one comes back.
       closeButton.classList.toggle('is-reserved', !on);
       if (on) closeButton.removeAttribute('aria-hidden');
       else closeButton.setAttribute('aria-hidden', 'true');

@@ -48,13 +48,6 @@ export function rarityStarParts(tier: UnitRarity): { filled: string; hollow: str
   };
 }
 
-/** The fixed-width star run as one string: `rank` filled + the rest hollow,
- *  always `RARITY_TIERS.length` glyphs long. */
-export function rarityStars(tier: UnitRarity): string {
-  const { filled, hollow } = rarityStarParts(tier);
-  return filled + hollow;
-}
-
 export function rarityLabel(tier: UnitRarity): string {
   return RARITY_LABEL[tier];
 }

@@ -51,14 +51,6 @@ export function orderRosterWithIndices(
   return decorated.sort((a, b) => compare(order, a, b));
 }
 
-/** The undecorated view (the R1 shape — display order only). */
-export function orderRoster(
-  roster: readonly UnitTemplate[],
-  order: RosterOrder = DEFAULT_ROSTER_ORDER,
-): readonly UnitTemplate[] {
-  return orderRosterWithIndices(roster, order).map((d) => d.unit);
-}
-
 function compare(
   order: Exclude<RosterOrder, 'recruited'>,
   a: OrderedRosterEntry,

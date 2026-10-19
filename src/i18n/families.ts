@@ -43,7 +43,3 @@ export const PROSE_FAMILIES: readonly ProseFamily[] = [
   ABILITIES_PROSE,
   LAYOUTS_PROSE,
 ];
-
-export function proseFamily(family: string): ProseFamily | undefined {
-  return PROSE_FAMILIES.find((f) => f.family === family);
-}

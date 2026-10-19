@@ -6,19 +6,25 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { RARITY_TIERS } from '../config/units';
-import { RARITY_LABEL, STAR_FILLED, STAR_HOLLOW, rarityLabel, rarityRank, rarityStars } from './rarityDisplay';
+import { RARITY_TIERS, type UnitRarity } from '../config/units';
+import { RARITY_LABEL, STAR_FILLED, STAR_HOLLOW, rarityLabel, rarityRank, rarityStarParts } from './rarityDisplay';
 
-describe('98b — rarityStars', () => {
+/** The star run as the card shows it, its two halves side by side. */
+function starRun(tier: UnitRarity): string {
+  const { filled, hollow } = rarityStarParts(tier);
+  return filled + hollow;
+}
+
+describe('98b — rarityStarParts', () => {
   it('every tier renders exactly RARITY_TIERS.length glyphs (fixed width)', () => {
     for (const tier of RARITY_TIERS) {
-      expect([...rarityStars(tier)], tier).toHaveLength(RARITY_TIERS.length);
+      expect([...starRun(tier)], tier).toHaveLength(RARITY_TIERS.length);
     }
   });
 
   it('the filled count is the 1-based tier rank, hollow fills the rest', () => {
     RARITY_TIERS.forEach((tier, i) => {
-      const run = [...rarityStars(tier)];
+      const run = [...starRun(tier)];
       expect(rarityRank(tier), tier).toBe(i + 1);
       expect(run.filter((g) => g === STAR_FILLED), tier).toHaveLength(i + 1);
       expect(run.filter((g) => g === STAR_HOLLOW), tier).toHaveLength(RARITY_TIERS.length - i - 1);
@@ -28,8 +34,8 @@ describe('98b — rarityStars', () => {
   });
 
   it('the lowest tier is one filled star, the highest is all filled', () => {
-    expect(rarityStars(RARITY_TIERS[0])).toBe(STAR_FILLED + STAR_HOLLOW.repeat(RARITY_TIERS.length - 1));
-    expect(rarityStars(RARITY_TIERS[RARITY_TIERS.length - 1]!)).toBe(STAR_FILLED.repeat(RARITY_TIERS.length));
+    expect(starRun(RARITY_TIERS[0])).toBe(STAR_FILLED + STAR_HOLLOW.repeat(RARITY_TIERS.length - 1));
+    expect(starRun(RARITY_TIERS[RARITY_TIERS.length - 1]!)).toBe(STAR_FILLED.repeat(RARITY_TIERS.length));
   });
 
   it('every tier has a non-empty label distinct from the others', () => {

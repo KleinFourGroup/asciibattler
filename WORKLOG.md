@@ -11364,3 +11364,21 @@ The exit's counts for §124.5 by `comment-length` over the eight folders
 and a copy of `fonts.css`, with these as the baseline: 12,502 code lines,
 5,595 comment lines, 53,754 comment words; step codes in those files
 1,084, 49 of them in tests. The cut as signed is in ROADMAP §124.5.
+
+### 124.5a — A-22's `proseFamily` and A-25's two (2026-10-19, session 8fb7e4a9)
+
+`proseFamily` (`i18n/families.ts`), `rarityStars` (`ui/rarityDisplay.ts`)
+and `orderRoster` (`ui/rosterOrder.ts`) are deleted. Each test file keeps
+its expectations through a local helper over the function the game calls:
+`starRun` joins `rarityStarParts`' two halves, and `displayOrder` maps
+`orderRosterWithIndices`' entries to their units. The helpers take new
+names so that no test holds a deleted export's name. The test that held
+`orderRoster` to `orderRosterWithIndices` goes with it, as there is no
+second function left to agree with. ARCHITECTURE's two lines name the
+kept functions. A search of every tracked file outside the records
+(census, ROADMAP, WORKLOG) finds none of the three names.
+
+Proof: typecheck clean; `reach-record npm-test` before (on `950f88d1`)
+and after, then `reach-diff --from=HEAD` through the 7 changed files:
+nothing lost; `build-hash HEAD`: the same bytes, 32 files. The step-code
+ceiling 2,122 → 2,121 (`orderRoster`'s doc named R1). No smoke.

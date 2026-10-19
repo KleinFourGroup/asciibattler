@@ -236,7 +236,7 @@
  "src/ui/rarityDisplay.ts": 5,
  "src/ui/reserveSlot.ts": 1,
  "src/ui/rosterOrder.test.ts": 1,
- "src/ui/rosterOrder.ts": 5,
+ "src/ui/rosterOrder.ts": 4,
  "src/ui/statLabels.ts": 2,
  "src/ui/textScale.test.ts": 1,
  "src/ui/textScale.ts": 3,

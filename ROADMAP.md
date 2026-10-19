@@ -231,8 +231,9 @@ and the screens' other leads; the re-skim; the comment pass, with
 `CacheOverlay.ts`'s header. Proof: as §124's, with the UI gates. Risk:
 medium. The cut, signed 2026-10-19 (WORKLOG §124.5, "The kickoff"):
 
-- ☐ **124.5a — A-22's `proseFamily` and A-25's two** (`none`).
-  `rarityStars` and `orderRoster` out, their tests onto the kept pair.
+- ☑ **124.5a — A-22's `proseFamily` and A-25's two** (`none`).
+  `rarityStars` and `orderRoster` out, their tests onto the kept pair;
+  `reach-diff`: nothing lost.
 - ☐ **124.5b — A-28's share, and two members** (`none`). The mute whole,
   the three `isOpen`, `HUD.hide()`, `ModalHandle.isOpen`,
   `PoolGaugeHandle.set`.

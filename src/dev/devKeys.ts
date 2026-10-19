@@ -99,11 +99,10 @@ export function attachDevKeys(game: Game, boardPanel: BoardPanel): void {
   });
 }
 
-/** Flip the root grayscale filter, or set it to `force`; returns the new
- *  state. */
-function toggleGrayscaleAudit(force?: boolean): boolean {
+/** Flip the root grayscale filter; returns the new state. */
+function toggleGrayscaleAudit(): boolean {
   const root = document.documentElement;
-  const on = force ?? root.style.filter === '';
+  const on = root.style.filter === '';
   root.style.filter = on ? 'grayscale(1)' : '';
   return on;
 }
@@ -121,10 +120,10 @@ function exportTraces(): void {
 
 function exportRun(game: Game): void {
   const snap = game.devExportRun();
-  if (snap.phase !== 'map') {
+  if (snap.phase === 'battle' || snap.phase === 'turn-outcome') {
     console.warn(
-      `[dev-keys] exporting a '${snap.phase}'-phase save — the load key only accepts ` +
-        `'map'-phase saves, so this file is headless-fixture material only`,
+      `[dev-keys] exporting a '${snap.phase}'-phase save — the load key refuses a ` +
+        `save that is not at a gate, so this file is headless-fixture material only`,
     );
   }
   const stamp = new Date().toISOString().replace(/[:.]/g, '-');
@@ -142,8 +141,9 @@ function pickAndLoadRun(game: Game): void {
     void file.text().then(
       (text) => {
         try {
-          game.devLoadRun(JSON.parse(text) as RunSnapshot);
-          console.info('[dev-keys] run loaded — back on the map');
+          const snap = JSON.parse(text) as RunSnapshot;
+          game.devLoadRun(snap);
+          console.info(`[dev-keys] run loaded at its '${snap.phase}' gate`);
         } catch (err) {
           console.warn('[dev-keys] load failed (the live run is untouched):', err);
         }

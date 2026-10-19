@@ -11440,4 +11440,15 @@ lines), the tooltip's four timings and its slop (5), `CHIP_PULSE_MS`,
 ORB_LANDING_GRACE_MS` where the backstop read 500). Each `var` holds the
 value the line read. The minifier strips the comments and region lines,
 so the shipped build differs by those names, as 124f predicted for this
-share. Typecheck clean. No smoke.
+share. Typecheck clean. No smoke. The hook read 3,724. Reading: 333,531
+at 17:03, on the commit `b5ea1cf9`.
+
+### 124.5d — the dev load key's lines and `force` (2026-10-19, session 8fb7e4a9)
+
+`src/dev/devKeys.ts`: `exportRun` warns when the save it writes is a
+`battle` or `turn-outcome` one, which `Game.devLoadRun` refuses, where
+it warned on any phase but `map`; the load's log names the gate the run
+came back at (`run loaded at its '<phase>' gate`), where it said "back on
+the map". `toggleGrayscaleAudit` loses `force`, which no caller passed.
+ARCHITECTURE's dev-key line already gives the load as "any gate". Dev
+console lines only, so no player sees it; typecheck clean. No smoke.

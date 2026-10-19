@@ -240,7 +240,7 @@ medium. The cut, signed 2026-10-19 (WORKLOG §124.5, "The kickoff"):
 - ☑ **124.5c — A-26, the word `export`** (`none`). 91 by the kickoff's
   `refs`; the build's bytes move, by 124f's unminified compare: 13
   constants read by name, the same values.
-- ☐ **124.5d — the dev load key's lines and `force`** (`none`).
+- ☑ **124.5d — the dev load key's lines and `force`** (`none`).
 - ☐ **124.5e — the ability line** (`batch`). A damage or heal number
   reads the op's own scaling, under a pin over the catalog; a display
   change signed at §124's kickoff. Read: `?roster=corrupter,ice_mage,rioter:5`,

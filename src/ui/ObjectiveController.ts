@@ -27,7 +27,7 @@ import type { Renderer, PickCandidate } from '../render/Renderer';
 import type { TerrainRenderer } from '../render/TerrainRenderer';
 import { objectiveAtCell, type EnemyAtCell, type NeutralAtCell, type ObjectiveTarget } from '../sim/objective';
 import { cellsOccupiedBy } from '../sim/occupancy';
-import { isDestructibleNeutral } from '../config/units';
+import { validNeutralObjectiveTarget } from '../sim/Targeting';
 
 /** The two target-requiring modes the pane ARMS (Q3) — `hold`/`stop` apply
  *  immediately and are never armed. */
@@ -178,17 +178,10 @@ export class ObjectiveController implements ObjectiveControls {
     const enemies: EnemyAtCell[] = this.world.units
       .filter((u) => u.team === 'enemy' && u.currentHp > 0)
       .map((u) => ({ id: u.id, cell: u.position }));
-    // §75h — active neutrals (camp members) join the destructibles: a click
-    // on one orders an ATTACK (the same neutral-kind objective — camp = a
-    // fight to pick, not an obstacle to demolish; the sim-side admit is 75e's
-    // validNeutralObjectiveTarget, and the ordered first blow aggros the camp).
+    // The neutrals an order may name. A click on a camp member orders an
+    // attack, and that first blow aggros its camp.
     const neutrals: NeutralAtCell[] = this.world.units
-      .filter(
-        (u) =>
-          u.team === 'neutral' &&
-          u.currentHp > 0 &&
-          (isDestructibleNeutral(u.archetype) || u.campId !== null),
-      )
+      .filter((u) => validNeutralObjectiveTarget(this.world, u.id) !== null)
       .map((u) => ({ id: u.id, cells: cellsOccupiedBy(u) }));
     this.enqueueObjective(mode, objectiveAtCell(cell, enemies, neutrals));
     return true;

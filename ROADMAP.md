@@ -246,8 +246,8 @@ medium. The cut, signed 2026-10-19 (WORKLOG §124.5, "The kickoff"):
   change signed at §124's kickoff. Read: `?roster=corrupter,ice_mage,rioter:5`,
   `vial` and `ice_storm` read `2 dmg` (were 8), `molotov` `2 dmg` as
   before; wrong if another number moved.
-- ☐ **124.5f — the neutral-target lead** (a trial, `none`). Its bar is
-  in the WORKLOG.
+- ☑ **124.5f — the neutral-target lead** (a trial, `none`). Kept: the
+  truth table equal on 126 rows, `src` −7, the rule at one site.
 - ☐ **124.5g — the re-skim** (`stop`).
 - ☐ **124.5h — the comment pass** (`batch`, per batch), as 124j ran.
 - ☐ **124.5i — the close** (`stop`).

@@ -51,13 +51,7 @@ TODO items (list A's deletions, list B's trials) are in
 §124, the board, closed 2026-10-18; the open items below are §124.5's,
 the screens', for its kickoff (WORKLOG §124, "The close of §124").
 
-- [ ] **A third copy of the neutral-target rule, a lead for the kickoff.**
-  `ObjectiveController.ts:185-191` filters the neutrals a click may order
-  an attack on by the rule `Targeting.validNeutralObjectiveTarget` holds;
-  `World` calls that function since 122h (B-08). Calling it here too is
-  B-08's shape in UI code, whose proof for a reshaping is the eye or a
-  truth table (`scratch/122f/truth.ts` is one). Signed at 122m (WORKLOG
-  §122, 122m).
+- ✅ **A third copy of the neutral-target rule, a lead for the kickoff.** `ObjectiveController` calls `validNeutralObjectiveTarget`, kept as a trial on a truth table (WORKLOG §124.5, 124.5f).
 
 - ✅ **The ability line overstates three units' damage.** The card's damage and heal numbers come from the sim's own functions, under a pin over the catalog (WORKLOG §124.5, 124.5e).
 

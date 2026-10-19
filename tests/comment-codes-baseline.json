@@ -195,7 +195,7 @@
  "src/ui/Keybindings.ts": 12,
  "src/ui/MapScreen.ts": 35,
  "src/ui/MenuScreen.ts": 7,
- "src/ui/ObjectiveController.ts": 24,
+ "src/ui/ObjectiveController.ts": 22,
  "src/ui/PlaybackSpeed.test.ts": 1,
  "src/ui/PlaybackSpeed.ts": 14,
  "src/ui/PoolOverlay.ts": 14,

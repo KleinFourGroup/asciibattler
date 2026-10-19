@@ -12515,3 +12515,7 @@ started survives.
 orientation), 312,426 (batch 5's proof), 325,543 (batch 5's commit),
 456,435 (batch 6's proof), 463,935 (batch 6's commit), 468,377 at 22:49 at
 the hand-off.
+
+**Batches 5 and 6, read** (the user, 2026-10-19, at the next session's
+start, session d8214ecc): "They both look good to me, Claude!" Both
+batches are read; no read is open.

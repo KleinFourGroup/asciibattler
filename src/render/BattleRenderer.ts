@@ -35,6 +35,7 @@ import { STATUS_DEFS } from '../config/statuses';
 import { MOVE_ACTION_ID } from '../sim/actions/MoveAction';
 import { SPAWN_ACTION_ID } from '../sim/actions/SpawnAction';
 import { footprintOf } from '../sim/occupancy';
+import { validNeutralObjectiveTarget } from '../sim/Targeting';
 import { isDestructibleNeutral } from '../config/units';
 import { readUnitStatuses } from '../sim/statusReadout';
 import { SIM } from '../config/sim';
@@ -700,23 +701,19 @@ export class BattleRenderer {
   }
 
   /**
-   * Living destructible neutrals (rubble, a destructible wall or cover) and
-   * camp members as click candidates for the objective hit-test, beside
-   * `enemyBillboards`: the player can order an attack on one (`focus` or
-   * `engage`). The pick quad scales with the footprint, since a 2×2 or 3×3
-   * body draws one glyph at `size = N`, and the ObjectiveController's cell
-   * fallback covers the footprint tiles the glyph doesn't overlap.
-   * Indestructible walls (no HP) stay unclickable. A camp member's order rides
-   * the same neutral objective, and the ordered first blow is what aggroes
-   * the camp.
+   * The neutrals an order may name (`validNeutralObjectiveTarget`) as click
+   * candidates for the objective hit-test, beside `enemyBillboards`: the
+   * player can order an attack on one (`focus` or `engage`). The pick quad
+   * scales with the footprint, since a 2×2 or 3×3 body draws one glyph at
+   * `size = N`, and the ObjectiveController's cell fallback covers the
+   * footprint tiles the glyph doesn't overlap.
    */
   destructibleBillboards(): PickCandidate[] {
     if (!this.world) return [];
     const out: PickCandidate[] = [];
     for (const [unitId, handle] of this.handles) {
       const unit = this.world.findUnit(unitId);
-      if (!unit || unit.team !== 'neutral' || unit.currentHp <= 0) continue;
-      if (!isDestructibleNeutral(unit.archetype) && unit.campId === null) continue;
+      if (!unit || validNeutralObjectiveTarget(this.world, unitId) === null) continue;
       const pos = this.sprites.getPosition(handle, this.scratchPos);
       if (!pos) continue;
       out.push({

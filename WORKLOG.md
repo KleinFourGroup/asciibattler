@@ -11690,3 +11690,35 @@ specifically as a post step. So your leans in all cases 😂" So R-1 is
 124.5g-post, 124.5f's finish and not a trial (two of the screens' three
 are still left); R-2 is 124.5g-post2 and R-3 124.5g-post3, each a
 deletion; all three read `none`. Reading: 212,585 at 18:00.
+
+### 124.5g-post — R-1, the renderer's copy of the neutral-target rule (2026-10-19, session ff99ffb0)
+
+124.5f's finish, signed at 124.5g, and not a trial.
+`BattleRenderer.destructibleBillboards()` skips a handle with
+`if (!unit || validNeutralObjectiveTarget(this.world, unitId) === null)`,
+where it wrote the four conditions negated on two lines, and imports the
+function from `sim/Targeting`; `isDestructibleNeutral` stays imported for
+the spawn's line that gives a destructible its HP overlay. The doc names the function where it restated
+the rule, whose own doc says what an indestructible wall and a camp
+member's order do.
+
+Against 124.5f's bar:
+
+1. The truth table (`scratch/1245g-post/truth.ts`): the filter at
+   `55053c10`, copied, against the new line calling the function for real,
+   over 127 rows (124.5f's 126 and a handle whose unit the world does not
+   hold): 10 admitted, no row differs. Its two plants, the hp condition
+   dropped and the camp condition dropped, are rejected on 20 and 4 rows.
+2. `src` lines: 8 in, 11 out.
+3. No parameter: the call takes the world and the id.
+4. The rule written out in full, by search: two sites before
+   (`Targeting.ts:417-420`, `BattleRenderer.ts:718-719`), one after. With
+   124.5f's, three before the two steps and one after, which is the bar's
+   item 4 as written. `isCombatTargetable` holds a different rule.
+
+Proof besides: typecheck clean; one `--build` (`output/build-1245g-post`)
+and the seed-7 drive at four hops: complete, 9 battles, `d6012bc8` and
+`064ce09d`, no finding, and in the console only the two known warnings
+(Electron's CSP notice, Canvas2D's readback hint). The drive does not
+click the board, so the filter itself rests on the table. No smoke.
+Reading: 227,204 at 18:05, before the commit.

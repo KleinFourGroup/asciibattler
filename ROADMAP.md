@@ -252,7 +252,8 @@ medium. The cut, signed 2026-10-19 (WORKLOG §124.5, "The kickoff"):
 - ☑ **124.5g-post — R-1, the renderer's copy of the neutral-target rule**
   (`none`). 124.5f's finish, not a trial: the table equal on 127 rows,
   `src` −3, the rule at one site.
-- ☐ **124.5g-post2 — R-2, `poolGauge`'s `mx`** (`none`).
+- ☑ **124.5g-post2 — R-2, `poolGauge`'s `mx`** (`none`). The unminified
+  build: only those lines differ.
 - ☐ **124.5g-post3 — R-3, `damageStatFor` and the catalog's
   `damageStat`** (`none`).
 - ☐ **124.5h — the comment pass** (`batch`, per batch), as 124j ran.

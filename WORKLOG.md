@@ -11722,3 +11722,20 @@ and the seed-7 drive at four hops: complete, 9 battles, `d6012bc8` and
 (Electron's CSP notice, Canvas2D's readback hint). The drive does not
 click the board, so the filter itself rests on the table. No smoke.
 Reading: 227,204 at 18:05, before the commit.
+
+### 124.5g-post2 — R-2, `poolGauge`'s `mx` (2026-10-19, session ff99ffb0)
+
+`createPoolGauge`'s `const mx = max;` is gone and its 9 reads take the
+parameter `max` (the handle's `reading()` returns `max` by shorthand).
+124.5b took `set`, the alias's only writer. `scratch/1245g-post2/edit.mjs`
+checked the declaration and the 9 reads before it wrote.
+
+Proof: typecheck clean; the unminified build compare
+(`scratch/1245g-post2/`, 124.5c's two scripts writing under their own
+folder), HEAD against the working tree: 2 of 32 production files and 4 of
+34 development files differ. Read as multisets, `index.js` (production)
+and `configHash.js` (development) each lose the declaration and seven
+lines reading `mx` and gain the same seven lines reading `max`, with the
+object's `max: mx` as `max`; everything else in the six files is region
+paths, the build ID and the chunks' hashed names. The instrument's HEAD
+against itself was run at 124.5c and not again here. No smoke.

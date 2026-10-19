@@ -91,17 +91,16 @@ export function createPoolGauge(
   const pulse = chipPulse(gauge);
 
   let cur = current;
-  const mx = max;
   let pend = 0;
   let ceil = 0;
 
   const paint = (): void => {
-    const parts = poolValueParts(cur, mx, pend);
+    const parts = poolValueParts(cur, max, pend);
     remainingText.data = `${parts.remaining}`;
     pendingEl.textContent = parts.pending > 0 ? ` (−${parts.pending})` : '';
     pendingEl.hidden = parts.pending === 0;
     maxText.data = ` / ${parts.max}`;
-    const pct = (n: number): number => (mx > 0 ? Math.max(0, Math.min(1, n / mx)) : 0);
+    const pct = (n: number): number => (max > 0 ? Math.max(0, Math.min(1, n / max)) : 0);
     fill.style.width = `${pct(Math.max(0, cur)) * 100}%`;
     // The ghost sits over the fill's leading segment: from the projected
     // remainder to the booked pool.
@@ -113,7 +112,7 @@ export function createPoolGauge(
     // it. Hidden when there is no bound, and when the bound covers the whole
     // pool (a notch at zero morale is the bar's own end).
     const floor = Math.max(0, cur) - ceil;
-    risk.hidden = ceil <= 0 || mx <= 0 || floor <= 0;
+    risk.hidden = ceil <= 0 || max <= 0 || floor <= 0;
     risk.style.left = `${pct(Math.max(0, floor)) * 100}%`;
   };
   paint();
@@ -125,7 +124,7 @@ export function createPoolGauge(
       paint();
     },
     commit(): void {
-      const parts = poolValueParts(cur, mx, pend);
+      const parts = poolValueParts(cur, max, pend);
       cur = parts.remaining;
       pend = 0;
       // 96.5c2 — the notch is THIS turn's bound; the commit ends the turn,
@@ -135,12 +134,12 @@ export function createPoolGauge(
       paint();
     },
     reading(): { current: number; max: number; pending: number } {
-      return { current: cur, max: mx, pending: pend };
+      return { current: cur, max, pending: pend };
     },
     anchor(): { x: number; y: number } {
       const r = bar.getBoundingClientRect();
-      const parts = poolValueParts(cur, mx, pend);
-      const frac = mx > 0 ? Math.max(0, Math.min(1, parts.remaining / mx)) : 0;
+      const parts = poolValueParts(cur, max, pend);
+      const frac = max > 0 ? Math.max(0, Math.min(1, parts.remaining / max)) : 0;
       return { x: r.left + r.width * frac, y: r.top + r.height / 2 };
     },
     pulse,

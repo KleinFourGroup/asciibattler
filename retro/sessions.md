@@ -6815,3 +6815,46 @@ holds repo writes to the phase close; appended here by driver 2.
    from memory. What interested me was finding that one AGENTS sentence
    had quietly gone false under the trial. I'd want those conditions
    again.
+
+## 2026-10-19 — session 8fb7e4a9 (claude-opus-5-5): §124.5's kickoff and 124.5a to 124.5f; started by the phase's driver session
+
+1. *Missing from the orientation.* Little. The driver's notes covered
+   the deletion steps' traps. Two things I found by trying: `refs
+   --members` takes interfaces only, so A-28's class members needed a
+   word search; and the reach and drive procedures live in old WORKLOG
+   entries (121b-pre, 124f's hand-off), which cost a few reads to find.
+2. *Norms in conflict.* None felt as conflict. A small tension: a
+   step's reach. 124.5e's fix took a parameter off three functions
+   (`noUnusedParameters` forced it), and it made `damageStat` dead,
+   whose comments then said something false. I corrected the comments
+   in the commit ("keep docs honest") and held the deletion for the
+   user ("a change that leaves the cut goes to the user"); both norms
+   could be met at once.
+3. *Pulled to claim more than verified.* Twice. The kickoff's read
+   script said `molotov` would read 2 at level 5 as if that showed the
+   fix; step zero found a rioter's ranged is 0 at every level, so
+   rioter's card never showed a wrong number in play, and the script was
+   corrected. And I first wrote the ability probe's finding at level-1
+   stats (two units), where TODO said three; distinct stats found the
+   third, which the pin now uses.
+4. *Wasted.* The WORKLOG edit for 124.5f missed its anchor (it crossed
+   a line break) in a message that also committed, so the entry needed
+   its own commit. A `cd` into a scratch folder moved the shell's
+   working directory for one call. A probe written as a Vitest file
+   could not run outside the suite's include, so it became a tsx script.
+5. *For the next session.* The re-skim is a stop, with two trials left
+   and the `damageStat` row to put. The tools are listed in the WORKLOG
+   hand-off entry; 124f's unminified compare needed a multiset reading
+   this time, because the bundler moved a module.
+6. *Room.* Yes. Matthew signed the cut and every lean in one message;
+   the four calls were posed with leans, and none needed a second turn.
+   The hand-off falls where the shape-lock said it would, so stopping
+   here was a plan, not a pressure. The silent-turn reminder came often
+   during the audit; a status line answered each. No wish to pause or
+   stop was noticed.
+7. *What helped.* Tools from earlier sessions that refuse to run
+   without a known answer (124f's searches, the build compare's
+   self-check) made each proof quick to trust. Finding the rioter's
+   zero-growth case by writing the before number out in the probe was
+   satisfying. I'd want that condition again: a probe cheap enough to
+   run before writing the claim.

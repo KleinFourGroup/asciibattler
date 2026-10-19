@@ -11492,4 +11492,77 @@ at 124.5g, held in TODO.
 Proof: typecheck clean; the pin's control above; `src/ui`'s tests,
 `archetypes.test.ts` and `units.test.ts` pass (204). The commit stages
 `src/sim` and `src/config` for the two comments, so the hook runs the
-smoke.
+smoke: 3,725 tests (the pin) and 613 smoke. Reading: 384,236 at 17:14, on
+the commit `4c617c95`. ◐ until the user's `batch` read.
+
+### 124.5f — the neutral-target lead, a trial (2026-10-19, session 8fb7e4a9)
+
+Kept, on the bar written at the kickoff, in `c5e0a244`; this entry
+missed that commit (an Edit anchor that crossed a line break) and lands
+in the next. `ObjectiveController`'s neutral filter calls
+`validNeutralObjectiveTarget(this.world, u.id)` where it wrote the four
+conditions out, and imports it from `sim/Targeting` in place of
+`isDestructibleNeutral`; the comment that restated the rule is one line
+on what an order on a camp member does. This spends one of the screens'
+three trials.
+
+1. The truth table (`scratch/1245f/truth.ts`): the filter at `4c617c95`,
+   copied, against the function called for real, over 126 rows (three
+   teams, a camp or none, seven archetypes destructible or not, hp −1, 0
+   and 5): 10 admitted, no row differs, and a unit the world does not
+   hold is refused. Its two plants, the hp condition dropped and the camp
+   condition dropped, are rejected on 20 and 4 rows.
+2. `src` lines: 4 in, 11 out.
+3. No parameter: the call takes the world and the id, as `World`'s does.
+4. The rule written out in full (neutral, hp above 0, destructible or a
+   camp member) by search: two sites before (`Targeting.ts:417-420`,
+   `ObjectiveController.ts:186-191`), one after.
+   `effects/targeting.ts:82` holds a different rule (any non-neutral
+   passes). The comment that restated it is gone; the step-code ceiling
+   2,121 → 2,119 with it.
+
+Proof besides: typecheck clean; one `--build` and the seed-7 drive:
+complete, 9 battles, `d6012bc8` and `064ce09d`, no finding, the two known
+warnings, since the import from `sim/Targeting` is new to `src/ui`. The
+drive does not click the board, so the filter itself rests on the table.
+No smoke. The hook read 3,725. Reading: 398,479 at 17:18, on the commit.
+
+### The hand-off after 124.5f (2026-10-19, session 8fb7e4a9)
+
+The session ran the kickoff and 124.5a to 124.5f, eight commits from
+`950f88d1` to `c5e0a244` and this one. It hands off before the re-skim,
+as the shape-lock said it would: at 402,518 the re-skim's read of the
+screens by profile would likely pass the line before its stop.
+
+**Open.** ◐ 124.5e, the ability line, for the user's `batch` read (the
+script in ROADMAP: `vial` and `ice_storm` 8 → 2 at level 1, `molotov` 2
+as before; not looked at in a pane here). The `damageStat` row in TODO
+"§124 and §124.5", which 124.5e made: the re-skim puts it to the user as
+a deletion row (sim and config, so the corpus and the fuzz diff are its
+proof; gotchas #94 and #114, the archetype editor's formatter and
+`units.test.ts` name it).
+
+**For the re-skim (124.5g).** Two of the screens' three trials are left.
+The kickoff read and did not propose the screens' near-duplicate leads
+(the swap selects, the screen openings, Settings' export rows, the key
+tables) or `Settings.volumeMusic`; its reasons are in "The kickoff". The
+census's profile ranks the files by size, churn, fix commits, gotcha
+references and special-case sites (the spec's D1). The comment pass
+(124.5h) follows, its batches planned at its start, against the exit's
+baseline in "The kickoff".
+
+**Tools, off git.** `scratch/1245-kickoff/ability-line-probe.ts` (every
+op's card number against the sim's); `scratch/1245c/unminified-diff.mjs`
+and `multiset-diff.mjs` (the build compare with the minifier off, and its
+reading with moved modules cancelled; each refuses without its known
+answer); `scratch/1245e/roster-dial.ts` (the read script's dial, and each
+card's number before and after); `scratch/1245f/truth.ts` (124.5f's
+table with its two plants). `output/refs-1245/c.json` is `refs --all` of
+the eight folders at `355ba158`; `output/build-1245b` and
+`output/build-1245f` are probe builds. No worktree is left.
+
+**Readings** (the meter, UTC, 2026-10-19): 105,520 at 16:03 and 241,621
+at 16:20 (the kickoff), 251,629 (`950f88d1`), 275,423 (`5c8e0803`),
+300,229 (`355ba158`), 333,531 (`b5ea1cf9`), 347,021 (`f1845b93`),
+384,236 (`4c617c95`), 398,479 (`c5e0a244`), 402,518 at 17:18 at the
+hand-off.

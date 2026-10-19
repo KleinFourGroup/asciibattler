@@ -1,22 +1,20 @@
 /**
- * Audio playback layer (B6). Preloads a fixed set of SFX/music clips and
- * exposes overlap-safe `play(key)`. HTMLAudioElement is enough for our
- * scope; revisit Web Audio API if we ever need spatialization, precise
- * scheduling, or fade curves.
+ * The sound player: preloads every clip in `SOUND_SOURCES` and plays one by
+ * key, overlap-safe. `HTMLAudioElement` is enough: nothing here needs
+ * spatialization, precise scheduling or fade curves, which would take Web
+ * Audio.
  *
- * Overlap: each sound has a small ring of cloned `<audio>` nodes. play()
- * picks the next slot, rewinds it, and plays. With POOL_SIZE=4 we can
- * absorb four simultaneous triggers (e.g. multi-unit attacks on the same
- * tick) before stealing the oldest.
+ * Overlap: each sound has a ring of `POOL_SIZE` `<audio>` elements, and
+ * `play` takes the next one, rewinds it and plays it, so four triggers on
+ * one tick (several units attacking at once) play before the oldest is
+ * stolen.
  *
- * Browsers block audio playback until the first user gesture. The first
- * trigger in this game is a click on a menu row (a map node on a page booted
- * by a run dial) — itself a gesture — so the unlock happens transparently.
- * play() rejections from the autoplay policy are swallowed: gameplay should
- * not break when audio is blocked.
+ * Browsers block audio until the first user gesture. The first sound the
+ * game plays is a click on a menu row (a map node, on a page a run dial
+ * booted), itself a gesture, so the unlock needs nothing of its own.
  *
- * Assets live in `public/audio/` and are referenced by relative path so
- * the same build works under any deploy subpath (vite.config.ts uses
+ * Assets live in `public/audio/` and are referenced by relative path, so the
+ * same build works under any deploy subpath (vite.config.ts sets
  * `base: './'`).
  */
 
@@ -47,31 +45,36 @@ export type SoundKey =
   | 'wail'
   | 'win';
 
+/**
+ * Every clip, by key. The ones `scripts/gen-sfx.mjs` makes
+ * (`npm run gen:sfx`, deterministic) are listed there; the rest are
+ * hand-made files, which a regeneration leaves alone. AudioPlayer.test.ts
+ * holds every key to a file and every file to a key.
+ */
 export const SOUND_SOURCES: Record<SoundKey, string> = {
   burn: 'audio/burn.wav',
-  // §29c — the stormcaller's chain-lightning arc. Plays per HOP (off the
-  // `chain_arc` fx key on `unit:chained`), so a 3-jump cast crackles zap-zap-zap.
+  // The stormcaller's chain lightning, once a hop (the `chain_arc` fx key on
+  // `unit:chained`), so a three-jump cast crackles three times.
   chain: 'audio/chain.wav',
   click: 'audio/click.wav',
-  // N1 — the rogue's dash-leap whoosh (off a >1-cell `unit:moved`).
+  // The rogue's dash, off `unit:dashed` in the event-sound registry.
   dash: 'audio/dash.wav',
   death: 'audio/death.wav',
   healtick: 'audio/healtick.wav',
   lose: 'audio/lose.wav',
-  // E7.C — the mage bolt's detonation. One per cast (§Z: played via the FX
-  // registry's `magic_bolt_burst` cue on `action:phase{impact}`).
+  // The mage bolt's detonation, once a cast (the `magic_bolt_burst` fx key on
+  // the impact phase).
   magicboom: 'audio/magicboom.wav',
   melee: 'audio/melee.wav',
-  // 48c — the reward-pickup coin blip (gen-sfx recipe), one per accepted
-  // reward portion on the RewardScreen.
+  // A coin blip, once per reward portion accepted and per buy or sell at a
+  // port.
   pickup: 'audio/pickup.wav',
   recruit: 'audio/recruit.wav',
   shoot: 'audio/shoot.wav',
   win: 'audio/win.wav',
-  // §32b — the status / afflicter / summon cues. Eight are procedurally
-  // generated (scripts/gen-sfx.mjs → `npm run gen:sfx`, deterministic); `thud`
-  // is the hand-made catapult crash. bleed/poison are DoT-tick cues; the five
-  // afflicter casts fire once per cast; summon on the raise; thud on the lob.
+  // `bleed` and `poison` play on each tick of their status; the afflicters'
+  // casts (`vial`, `freeze`, `hex`, `lightray`, `wail`) once a cast;
+  // `summon` on the shaman's raise; `thud` on the catapult's landing.
   bleed: 'audio/bleed.wav',
   poison: 'audio/poison.wav',
   vial: 'audio/vial.wav',
@@ -81,50 +84,47 @@ export const SOUND_SOURCES: Record<SoundKey, string> = {
   wail: 'audio/wail.wav',
   summon: 'audio/summon.wav',
   thud: 'audio/thud.wav',
-  // 96.5b2-post — the live pool bar's LANDING cue (src/ui/lossFx.ts): the
-  // user's chiptone placeholder, hand-dropped like `thud` (not generated).
-  // Played by the HUD on every orb landing, scaled per play (`lossCue` —
-  // gain up + rate down with the loss's fraction of the pool max).
+  // The pool bar's landing cue, played by the HUD on every orb landing and
+  // scaled per play by `lossCue` (src/ui/lossFx.ts): gain up and rate down
+  // with the loss's share of the pool max.
   moraleloss: 'audio/morale_loss.wav',
-  // §104c — the sector-cleared sting (gen-sfx recipe): `win`'s little
-  // sibling, off `sector:cleared` in the event-sound registry.
+  // The sector-cleared sting, `win`'s little sibling, off `sector:cleared`
+  // in the event-sound registry.
   sectorwin: 'audio/sectorwin.wav',
-  // §104d — the promotion card's reveal tick (gen-sfx recipe); a direct UI
-  // site (PromotionScreen's reveal timeline), not a registry row.
+  // The promotion card's reveal tick, played by PromotionScreen's reveal
+  // timeline, not by the registry.
   stattick: 'audio/stattick.wav',
 };
 
 /**
- * Per-sound volume relative to master. SFX play loud (1.0); the longer
- * fanfares are softer so they don't dominate when win/lose lands at the
- * same loudness as the impact sounds that preceded them. D7.C burn +
- * healtick are quieter — they fire on a tick cadence (every 0.5s for
- * fire, every 1.0s for healing) so the sustained beat would dominate at
- * full SFX volume.
+ * Each sound's own level, under master × SFX (`soundVolume`). Impacts play
+ * at 1. The fanfares (`win`, `lose`, `sectorwin`) are softer, so a result
+ * doesn't land louder than the hits before it. The status ticks (`burn`,
+ * `bleed`, `poison`, `healtick`) are quieter: a status ticks once a second
+ * on every unit that holds it, and that sustained beat would dominate at
+ * full level.
  */
 const VOLUMES: Record<SoundKey, number> = {
   burn: 0.6,
-  // §29c — fires per hop (up to 3 rapid plays per cast), so kept just under the
-  // mage's signature `magicboom` (0.9) to keep a multi-hop crackle from dominating.
+  // Up to three plays a cast, one a hop, so it sits under `magicboom`.
   chain: 0.8,
   click: 0.7,
-  // N1 — a movement whoosh; just under the 1.0 impact cues so it reads as
-  // motion, not a hit.
+  // A movement whoosh, under the impacts so it reads as motion, not a hit.
   dash: 0.9,
   death: 1.0,
   healtick: 0.55,
   lose: 0.7,
-  // E7.C — the mage's signature impact. Slightly under the melee/shoot 1.0 so
-  // a two-mage barrage (~one cast each per 2s) doesn't dominate the mix.
+  // The mage's signature impact, under `melee` and `shoot` so a two-mage
+  // barrage doesn't dominate the mix.
   magicboom: 0.9,
   melee: 1.0,
-  // 48c — a positive one-shot chime; click-adjacent loudness, not an impact.
+  // A positive chime at the click's level, not an impact.
   pickup: 0.7,
   recruit: 0.8,
   shoot: 1.0,
   win: 0.7,
-  // §32b — DoT ticks are quiet (they fire on a cadence, like burn 0.6); the
-  // afflicter casts + summon sit mid; the catapult `thud` is a heavy crash.
+  // The casts and the raise sit mid; `thud`, the catapult's landing, is a
+  // heavy crash.
   bleed: 0.6,
   poison: 0.55,
   vial: 0.75,
@@ -134,65 +134,53 @@ const VOLUMES: Record<SoundKey, number> = {
   wail: 0.75,
   summon: 0.8,
   thud: 0.85,
-  // 96.5b2-post — the landing cue's CEILING: `lossCue` scales the per-play
-  // gain from ~half of this at a one-point loss up to all of it at the
-  // shake ceiling, so a small loss ticks and a big one lands.
+  // The landing cue's ceiling: `lossCue` scales each play's gain from about
+  // half of this at a small loss up to all of it at the shake's ceiling, so
+  // a small loss ticks and a big one lands.
   moraleloss: 0.85,
-  // §104c — a fanfare, so it sits with win / lose (0.7), under the impacts.
   sectorwin: 0.7,
-  // §104d — fires ~5 beats in a row per promoted card; a touch over the
-  // `healtick` (0.55) it replaces because the sample is far shorter.
+  // A beat for the level and one per grown stat, in a row; the sample is
+  // short, so it sits a touch over `healtick`.
   stattick: 0.6,
 };
 
 /**
- * Per-sound pitch variance. On each play() the playbackRate is jittered
- * to `1 ± variance` (uniform), which shifts pitch AND tempo together —
- * exactly what you want for repeated impact SFX so the ear doesn't lock
- * onto a single tone. Capped at ~0.1 (±10%): beyond that the variation
- * is perceptible as a "broken sample" rather than just a different hit.
- * One-shot cues (click, recruit, fanfares) stay at 0 — variation on
- * something you only hear once reads as inconsistency, not life.
- *
- * D7.C — burn fires on a 5-tick cadence (every 0.5s) and many units may
- * burn the same tick if a fire band spans the board, so its jitter is
- * pushed up to 0.12 to break up the rhythm aggressively. healtick fires
- * on a 10-tick cadence and is much rarer, but a single healing tile can
- * still hold one unit for many ticks; ±0.08 keeps the heal cue feeling
- * organic without losing the "I'm being healed" identity.
+ * Each sound's pitch jitter. Every play sets the playback rate to
+ * `1 ± variance` (uniform), which shifts pitch and tempo together, so a
+ * repeated impact doesn't lock the ear onto one tone. An impact stays at 0.1
+ * or under: past that it reads as a broken sample rather than a different
+ * hit. The cues that fire in crowds (`burn`, `bleed`, `poison`, and
+ * `chain`'s hops, which land 0.1 s apart) go to 0.12, so many at once read
+ * as a crackle, not a stutter. A one-shot cue (`click`, `recruit`, `pickup`,
+ * the fanfares) stays at 0: variation on something heard alone reads as
+ * inconsistency, not life.
  */
 const PITCH_VARIANCE: Record<SoundKey, number> = {
   burn: 0.12,
-  // §29c — the hops of one cast fire ~0.1s apart, so push the jitter up (±12%)
-  // to break the rapid repeat into a crackle rather than a stuttered single tone.
   chain: 0.12,
   click: 0,
-  // N1 — light jitter so several rogues dashing the same tick don't sound like
-  // one stuttered sample (dashes are rare per-unit at a 10s cooldown).
+  // So several rogues dashing on one tick don't sound like one stuttered
+  // sample.
   dash: 0.08,
   death: 0.08,
+  // A healing tile holds a unit for many ticks; light jitter keeps the cue
+  // organic without losing it.
   healtick: 0.08,
-  // 96.5b2-post — a landing cue that can fire in a burst (seven deaths at
-  // a wipe): light jitter on top of the per-play rate `lossCue` sets.
+  // Can fire in a burst, one a loss; light jitter on top of the rate
+  // `lossCue` sets.
   moraleloss: 0.05,
   lose: 0,
-  // E7.C — subtle jitter so repeated booms don't sound identical, but kept
-  // low (±8%): too much tempo shift makes an explosion read as a broken sample.
   magicboom: 0.08,
   melee: 0.1,
-  // 48c — a deliberate one-shot cue (the click/recruit rule: variation on
-  // something heard in isolation reads as inconsistency, not life).
   pickup: 0,
   recruit: 0,
-  sectorwin: 0, // a one-shot fanfare (the click / recruit rule)
+  sectorwin: 0,
   shoot: 0.1,
-  // §104d — a counter, not an impact: the beats of one tally must match
-  // (the `healtick` borrow brought ±8% jitter a counter never wanted).
+  // A counter, not an impact: the beats of one tally must match.
   stattick: 0,
   win: 0,
-  // §32b — DoT ticks jitter hard (±12%, like burn) so a board-wide tick reads
-  // as a crackle; the characterful casts/wail keep low jitter (too much reads as
-  // a broken sample); thud gets a touch for a less-repetitive siege crash.
+  // The casts, the wail and the raise keep low jitter; `thud` takes a touch,
+  // so a siege's crashes don't repeat exactly.
   bleed: 0.12,
   poison: 0.12,
   vial: 0.07,
@@ -205,15 +193,14 @@ const PITCH_VARIANCE: Record<SoundKey, number> = {
 };
 
 const POOL_SIZE = 4;
-/** The loudness the game had before it had a volume setting; the settings'
- *  fallback for the master level is this (src/settings/settings.ts). */
+/** The master level an `AudioPlayer` starts at, before the settings reach
+ *  it. The settings' fallback for it (src/settings/settings.ts) is equal,
+ *  which AudioPlayer.test.ts holds. */
 export const DEFAULT_MASTER_VOLUME = 0.5;
 
 /**
- * 116b — one sound's volume (Round 8 spec D7): master × SFX × the sound's
- * own level, times a per-play gain, clamped to what an `<audio>` element
- * takes. Music, when it lands, is master × music × its own level; the split
- * needs no Web Audio.
+ * One sound's volume: master × SFX × the sound's own level, times a per-play
+ * gain, clamped to what an `<audio>` element takes.
  */
 export function soundVolume(master: number, sfx: number, own: number, gain = 1): number {
   return Math.max(0, Math.min(1, master * sfx * own * gain));
@@ -246,12 +233,12 @@ export class AudioPlayer {
   }
 
   /**
-   * Play one cue. 96.5b2-post — the optional per-play SCALE: `gain`
-   * multiplies the key's table volume (clamped to [0, 1] with the master)
-   * and `rate` multiplies the playback rate under the key's jitter — the
-   * live pool bar's landing cue scales both with the loss (`lossCue`,
-   * src/ui/lossFx.ts). Both are set on the node per play, so a scaled play
-   * never leaks into the next unscaled one on the same pool node.
+   * Play one cue. The optional `scale` is per play: `gain` multiplies the
+   * key's own level (the product clamped to [0, 1] with the master) and
+   * `rate` multiplies the playback rate under the key's jitter; the pool
+   * bar's landing cue scales both with the loss (`lossCue`,
+   * src/ui/lossFx.ts). Both are set on the element at every play, so a
+   * scaled play never leaks into the next unscaled one on the same element.
    */
   play(key: SoundKey, scale?: { readonly gain?: number; readonly rate?: number }): void {
     const pool = this.pools[key];
@@ -269,8 +256,8 @@ export class AudioPlayer {
     });
   }
 
-  /** 116b — the two levels the settings hold, each 0 to 1. A sound already
-   *  playing takes the new level at once; `play` sets it again per play. */
+  /** The two levels the settings hold, each 0 to 1. A sound already playing
+   *  takes the new level at once; `play` sets it again per play. */
   setVolume(master: number, sfx: number): void {
     this.masterVolume = Math.max(0, Math.min(1, master));
     this.sfxVolume = Math.max(0, Math.min(1, sfx));

@@ -12005,3 +12005,124 @@ plan), 369,664 (batch 1's proof), 425,715 (batch 2's proof), 433,934 at
 **Batches 1 and 2, read** (the user, 2026-10-19, after the hand-off):
 "That all looks great! Signing those two reads!" Both batches are read;
 no read is open.
+
+### 124.5h, batch 3 — words, settings and sound (2026-10-19, session ebe41cd8)
+
+The 17 files of `src/i18n`, `src/settings` and `src/audio`; 16 changed,
+`model.ts` needed nothing. Out: the step codes (the i18n layer's, the
+settings', and one on most keys of the sound tables) and the spec's codes,
+the capitals that headed paragraphs, the history (the literal scan's old
+scope, the `emboldened` story, what `stattick` and `sectorwin` borrowed
+before they had clips, "the user's chiptone placeholder"), and the plans
+(music "when it lands", "revisit Web Audio if", the feel sweep's
+worklist). The sound tables' shared reasons (the one-shot rule, the
+broken-sample ceiling, the crowd cues' extra jitter, why the ticks are
+quieter) are said once in each table's header instead of on each key, and
+the clips `gen-sfx.mjs` makes are listed there, not again here.
+
+**Statements found false and corrected (rule 7):**
+
+- `AudioPlayer.ts`, both tables: `burn` was said to tick every 0.5 s on a
+  5-tick cadence and `healtick` on a 10-tick one. Both statuses tick once a
+  second (`config/statuses.json`, `everySeconds: 1`, 20 ticks at 20 Hz).
+- `AudioPlayer.ts`: `dash` played "off a >1-cell `unit:moved`"; it plays
+  off `unit:dashed` in the event-sound registry, whose note says a one-cell
+  dash still whooshes.
+- `AudioPlayer.ts`: `pickup` played once per reward portion on the reward
+  screen; the port's buys and sells play it too (`PortScreen.transact`).
+- `AudioPlayer.ts`: `thud` played "on the lob"; it is the `catapult_burst`
+  fx key's, on the landing.
+- `AudioPlayer.ts`: the player preloaded "SFX/music clips" in rings of
+  "cloned" nodes; nothing plays music, and each element is its own
+  `new Audio`.
+- `locale.ts`: a loader "calls `applyLocale`"; every loader calls
+  `loadProse`, which calls it. And `applyLocale` returned sites with
+  "post-resolution values"; a site's `value` is read when walked, before
+  resolution, and only the catalog's data is written.
+- `locale.ts` and `ui.ts`: a locale switch "is a setting and reloads the
+  page". There is no locale control; the stored locale is set at boot, so a
+  change takes a reload, which is what they now say.
+- `ui.ts`: `UI_EN` was read by "the extract"; its readers are the key-scan
+  pins and `npm run i18n:review` (`scripts/i18n-extract.ts` imports only
+  the families).
+- `literalScan.ts`: the baseline "ratchets to zero as" four later phases
+  extract the screens; it is empty (`{}`), so a new literal in a scanned
+  file fails the pin. Its reason quoted AGENTS in a wording AGENTS no
+  longer has; it now gives the reason. Its list of what is excluded named
+  five kinds and left out four (the developer checks, the three dev
+  properties, the class and style plumbing, the file marker); it names all
+  nine.
+- `atBoot.ts`: the list of settings the game applies left out the text
+  scale; it points to `apply.ts` instead.
+- `eventSounds.ts`: the module answered what "a run-level moment" sounds
+  like; three of its seven cues are battle events (a death, an ability
+  heal, a dash), as `attachEventSounds`'s note says.
+- Its twin outside the batch: `src/config/layouts.ts`'s header gave a
+  layout's `description` "for the UI". It is editor metadata, never shown,
+  as `families.ts` says, the same file's note at `LAYOUTS_PROSE` says, and
+  no UI site reads it. Corrected here and flagged; it stages `src/config`,
+  so the hook runs the smoke.
+
+Re-pointed, not false: `settings.ts` named BattleRenderer.ts for the aura
+mode, whose meaning lives in `auraFx.ts`; `index.ts`'s headless roots gain
+`src/journal`, which the guard walks too; `settings.ts`'s "the fallbacks
+are what the game did before it had settings" became the rule the tests
+hold, that a fallback is what its consumer starts at. Dropped as unclear:
+`extract.ts`'s "every editor's emit convention" for its JSON (the text
+editors' or the config editors'? the archetype editor writes its own
+layout). Two figures were dropped rather than kept: the mage's "one cast
+each per 2s" (its bolt's cooldown is 2.5 s) and "seven deaths at a wipe".
+
+**Kept, checked at the code they name:** `creditsOf` in the review script
+and `localeCredits` in `CreditsOverlay.ts`; every prose loader calling
+`loadProse`, and only `extract.ts` importing `families.ts` under
+`src/i18n`; camps, encounters, sectors and layouts keeping `description`
+plain; the fuzzy pin over every `locales/<lang>/`; the address example in
+`locales/en/events.json`; the event condition's `not` through `z.lazy`,
+and `eligibility`; `z.custom` in encounters.ts and camps.ts; `fnv1a.ts`
+naming the provenance hash permanent; the review script's two roles;
+`STAT_LABELS`, `COPY` and `OBJECTIVE_BUTTONS` calling `t()` at module
+level; `settings-boot.test.ts`'s exact graph (without `apply.ts`) and
+`main.ts`'s second import; `store-guard.test.ts`'s roots; `tokenOverrides`
+empty for the default palette; `apply.test.ts`'s fresh-page test and
+`AudioPlayer.test.ts` holding the master fallback; the recorder reaching
+`pools` (`record-page.js`); the `chain_arc`, `magic_bolt_burst`,
+`summon_raise` and status-tick fx keys; the chain's three jumps 0.1 s
+apart (`maxJumps`, `hopDelaySeconds`'s default); `lossCue`'s gain from
+half; the HUD playing the landing on every orb; PromotionScreen's beats;
+gotcha #80, read to its end, for the zero heal; scenery as a neutral with
+no camp (`isInertNeutral`); Game attaching the sounds once, and the replay
+tools building their Worlds on buses of their own. Nothing was dropped
+unchecked.
+
+Measured (`comment-length` on copies under `output/cl-1245h-b3`): comment
+lines 598 → 590, words 5,139 → 4,880, code lines 1,070 unchanged. The
+step-code ceiling 2,080 → 2,011, the 69 these files held, 31 of them in
+`AudioPlayer.ts`.
+
+Proof: `comment-strip HEAD src` exits 1, as the plan said it would on this
+batch. 17 files differ; its control made one code edit in memory in each
+of the 16 that changed in comments only, and the compare named all 16
+(`layouts.ts` among them). The seventeenth, `literalScan.ts`, is named at
+its header, the comment holding the `i18n-ok` marker, which the oracle
+holds as code. That file's proof is a second compare with every comment
+out, held ones included (`scratch/1245h-b3/held-compare.mts`, off git):
+1,093 code pieces on each side, equal; with `'i18n-ok'` planted as
+`'i18n-ok!'` in memory, it fails at that piece. No tool reads the marker
+in that header, since `src/i18n` is outside `SCAN_ROOTS`; the literal pin
+runs in the hook's `npm test`.
+
+Cost: 103,686 at 20:57 (the session's first reading, after its
+orientation) to 272,330 at 21:16 after the proof, about 169k for 1,821
+lines with the orientation in it, about 93 a line. The hand-off's second
+figure was the likelier, as it said: the sound tables carried a code and
+some history on most keys, and their numbers were checked against the
+config.
+
+**Read** (`batch`): `git show <this commit> -- src/audio/AudioPlayer.ts
+src/i18n/locale.ts` against the seven rules. Wrong looks like a step code
+or capitals left, history kept (a clip's borrowed past, a placeholder), a
+table's reason lost (why the ticks are quieter, why a one-shot doesn't
+jitter, why the crowd cues jitter more), or a rule a change must respect
+cut: a missing locale entry throws and never falls back to English, a
+fuzzy one falls back with a marker, the locale resolves once, at load.

@@ -1,31 +1,31 @@
 /**
- * §95e — PROVENANCE per translated entry (Round 7 spec §5): the authorship
- * chain a volunteer locale carries, and the FUZZY discipline built on it.
+ * Provenance per translated entry: the authorship chain a volunteer locale
+ * carries, and the fuzzy discipline built on it.
  *
- * A non-en locale entry may be a plain string (UNSTAMPED — nothing proves
+ * A non-en locale entry may be a plain string (unstamped: nothing proves
  * which English it was translated from) or the provenance object:
  *
  *   { "text": "…", "source": "<fnv1a of the English at translation time>",
  *     "translator": { "who": "…", "on": "YYYY-MM-DD" },
  *     "reviewer":   { "who": "…", "on": "YYYY-MM-DD" } }
  *
- * `source` is the whole mechanism: when the English moves under a translation
- * the stored hash no longer matches and the entry is FUZZY (the gettext flag,
- * rebuilt on the pin the sidecar already needed). The runtime falls back to
- * English for a fuzzy entry (locale.ts / ui.ts — with a dev-mode marker), the
- * pin fails a shipped locale that has one (tests/i18n-en-extract.test.ts,
- * tests/i18n-ui-keys.test.ts), and `npm run i18n:review` is the only writer
- * of the stamps (scripts/i18n-review.ts): the translator role stamps `source`
- * + `translator` on the entries that were unstamped or fuzzy (dropping any
- * reviewer — a re-translation needs a fresh sign-off), the reviewer role
- * stamps `reviewer` on CURRENT entries only. English carries no provenance:
- * its authorship is git's. The credits (creditsOf) read the stamps for the
- * Round 8 credits screen — the volunteer path.
+ * `source` is the whole mechanism: when the English moves under a
+ * translation the stored hash no longer matches and the entry is fuzzy
+ * (gettext's flag). The runtime falls back to English for a fuzzy entry
+ * (locale.ts and ui.ts, with a dev-mode marker), the pins fail a shipped
+ * locale that has one (tests/i18n-en-extract.test.ts,
+ * tests/i18n-ui-keys.test.ts), and `npm run i18n:review`
+ * (scripts/i18n-review.ts) is the only writer of the stamps: the translator
+ * role stamps `source` and `translator` on the entries that were unstamped
+ * or fuzzy, dropping any reviewer, since a re-translation needs a fresh
+ * sign-off; the reviewer role stamps `reviewer` on current entries only.
+ * English carries no provenance: its authorship is git's. `creditsOf` reads
+ * the stamps for the credits screen.
  *
  * The `text` of a UI table entry may itself be a plural object (ui.ts), so
  * the hash canonicalizes an object source with sorted keys; a string hashes
- * as itself. `fnv1a` is PERMANENT (src/core/fnv1a.ts) — a hash change would
- * fuzzy every shipped locale.
+ * as itself. `fnv1a` is permanent (src/core/fnv1a.ts): a changed hash would
+ * mark every entry of every shipped locale fuzzy.
  */
 
 import { fnv1a } from '../core/fnv1a';
@@ -54,7 +54,7 @@ export function validateStamp(stamp: Stamp, context: string): void {
   }
 }
 
-/** The object shape — keyed by `text`. A UI plural entry (`{ one, other }`) has no `text` and is NOT one. */
+/** The object shape, told by its `text`. A UI plural entry (`{ one, other }`) has no `text` and is not one. */
 export function isProvenanceEntry(entry: unknown): entry is ProvenanceEntry {
   return typeof entry === 'object' && entry !== null && !Array.isArray(entry) && 'text' in entry;
 }
@@ -103,7 +103,7 @@ interface LocaleAudit {
   readonly fuzzy: readonly string[];
 }
 
-/** The four checks the pins run over one locale file against its English (all four empty = shippable). */
+/** The four checks the pins run over one locale file against its English; all four empty is shippable. */
 export function auditLocale(english: Readonly<Record<string, unknown>>, file: Readonly<Record<string, unknown>>): LocaleAudit {
   const missing: string[] = [];
   const unstamped: string[] = [];
@@ -125,13 +125,13 @@ export function isAuditClean(audit: LocaleAudit): boolean {
   return audit.missing.length === 0 && audit.orphan.length === 0 && audit.unstamped.length === 0 && audit.fuzzy.length === 0;
 }
 
-/** The translator's stamp: text + the CURRENT English's hash + who/when. Any reviewer is dropped — a re-translation needs a fresh sign-off. */
+/** The translator's stamp: the text, the current English's hash, and who and when. Any reviewer is dropped (the header). */
 export function translatorStamp<T>(text: T, english: unknown, stamp: Stamp): ProvenanceEntry<T> {
   validateStamp(stamp, 'translator');
   return { text, source: sourceHash(english), translator: stamp };
 }
 
-/** The reviewer's stamp on a CURRENT entry (the caller checks currency — a fuzzy entry cannot be signed off). */
+/** The reviewer's stamp on a current entry. The caller checks currency, since a fuzzy entry cannot be signed off. */
 export function reviewerStamp<T>(entry: ProvenanceEntry<T>, stamp: Stamp): ProvenanceEntry<T> {
   validateStamp(stamp, 'reviewer');
   return { ...entry, reviewer: stamp };

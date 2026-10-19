@@ -1,6 +1,6 @@
 /**
- * THE SETTINGS (Round 8 spec D7): the store's lenient `settings` section,
- * one field per setting, each with its schema and its fallback.
+ * The settings: the store's lenient `settings` section, one field per
+ * setting, each with its schema and its fallback.
  *
  * Lenient is the store's word (src/store/store.ts): a stored value its
  * schema refuses takes its fallback alone, an unknown key is dropped and a
@@ -8,8 +8,10 @@
  * field's name is a key in every player's browser and is permanent; a field
  * whose meaning changes gets a new name. settings.test.ts pins the names.
  *
- * The fallbacks are what the game did before it had settings, so a player
- * with an empty store plays the game as it was.
+ * A fallback is what its consumer starts at on its own, so a player with an
+ * empty store hears and sees the game the consumers make before any setting
+ * reaches them; apply.test.ts and AudioPlayer.test.ts hold that for the
+ * fields they cover.
  *
  * A field here is what is stored, not what a consumer accepts. `keys` holds
  * any action name against any key code and `speed` any positive number: the
@@ -32,7 +34,7 @@ export const SHAKE_CHOICES = ['player', 'enemy', 'both', 'none'] as const;
 export type ShakeChoice = (typeof SHAKE_CHOICES)[number];
 
 /** How an aura shows its range: waves that follow their carrier, or motes
- *  over the whole area (src/render/BattleRenderer.ts). */
+ *  over the whole area (src/render/auraFx.ts). */
 export const AURA_CHOICES = ['track', 'fill'] as const;
 export type AuraChoice = (typeof AURA_CHOICES)[number];
 
@@ -44,7 +46,7 @@ export interface Settings {
   /** 0 to 1. A sound plays at master × SFX × its own level. */
   volumeMaster: number;
   volumeSfx: number;
-  /** Stored from day one; nothing plays music yet, so it has no control. */
+  /** Stored, but nothing plays music, so it has no control. */
   volumeMusic: number;
   /** The player's rebinds, action → `KeyboardEvent.code`, over the config's
    *  defaults. An action that isn't here keeps its default. */

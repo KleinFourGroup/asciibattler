@@ -1,26 +1,26 @@
 /**
- * §95a — the prose marker + the two walkers the i18n layer rests on.
+ * The prose marker and the two walkers the i18n layer rests on.
  *
- * THE DECLARATION IS THE MANIFEST. A config loader marks a user-facing
- * string field with `prose()` instead of `z.string()`; nothing else is
+ * The declaration is the manifest: a config loader marks a user-facing
+ * string field with `prose()` instead of `z.string()`, and nothing else is
  * declared anywhere. `prosePatterns(schema)` derives the field paths by
- * walking the zod def tree (zod 4: `schema._zod.def.type` + `shape` /
- * `element` / `valueType` / `innerType` / `options`), and
- * `proseSites(family, schema, data)` walks the PARSED data along those
- * patterns to yield one site per prose value with a stable ADDRESS:
+ * walking zod 4's def tree (`schema._zod.def`, the fields `ZodDefLike`
+ * names), and `proseSites(family, schema, data)` walks the parsed data
+ * along those patterns to yield one site per prose value with a stable
+ * address:
  *
- *   `<family>.<entity id>.<field path…>` — e.g. `events.corrupted-shrine.pages.start.text`
+ *   `<family>.<entity id>.<field path…>`, e.g. `events.corrupted-shrine.pages.start.text`
  *
  * Arrays are keyed by the element's string `id` when it has one, else by
- * index (an index address is a positional joint — the 95a spec gave event
- * choices an `id` for exactly this reason); records by key. The walker
- * throws on a zod shape it does not know (a new def type must be
- * dispositioned here, never silently skipped), on an address segment
- * containing the separator, and on an address collision.
+ * index; records by key. An index address moves when an element is put
+ * ahead of it, which is why event choices take an optional `id`. The walker
+ * throws on a zod shape it does not know (a new def type is dispositioned
+ * here, never silently skipped), on an address segment containing the
+ * separator, and on an address collision.
  *
- * Consumers: `applyLocale` (locale.ts — resolves each site at catalog
- * load), the extract (extract.ts — `locales/en/<family>.json`), and the
- * sidecar pins (tests/i18n-en-extract.test.ts). Round 7 spec §5.
+ * Consumers: `applyLocale` (locale.ts, which resolves each site at catalog
+ * load), the extract (extract.ts, `locales/en/<family>.json`), and the
+ * sidecar pins (tests/i18n-en-extract.test.ts).
  */
 
 import { z } from 'zod';
@@ -67,13 +67,13 @@ export function prosePatterns(schema: z.ZodType): readonly (readonly string[])[]
 }
 
 /** A recursive grammar (the event condition's `not` combinator is a `z.lazy`
- *  back to itself) would otherwise walk forever. The cut is per PATH: a schema
- *  already on the current descent is not re-entered — its prose leaves were
- *  captured at the first entry, and a prose value nested inside its own
- *  recursion has no finite address anyway. The same schema reached at two
- *  sibling positions (a condition under `eligibility` and under a choice) is
- *  walked at both. The depth guard is the loud backstop for a lazy whose
- *  getter mints a fresh schema per call. */
+ *  back to itself) would otherwise walk forever. The cut is per path: a
+ *  schema already on the current descent is not re-entered, since its prose
+ *  leaves were captured at the first entry and a prose value nested inside
+ *  its own recursion has no finite address anyway. The same schema reached
+ *  at two sibling positions (a condition under `eligibility` and under a
+ *  choice) is walked at both. The depth guard is the loud backstop for a
+ *  lazy whose getter mints a fresh schema per call. */
 const MAX_SCHEMA_DEPTH = 64;
 
 function walkSchema(schema: z.ZodType, path: readonly string[], out: string[][], stack: Set<z.ZodType>): void {
@@ -129,8 +129,8 @@ function walkSchemaDef(schema: z.ZodType, path: readonly string[], out: string[]
       if (def.right) walkSchema(def.right, path, out, stack);
       return;
     // Leaves: no prose can hide inside these. `custom` is the opaque
-    // validator (`z.custom<Archetype>(…)` in encounters.ts / camps.ts) — a
-    // prose field must be declared with `prose()`, never wrapped in one.
+    // validator (`z.custom<Archetype>(…)` in encounters.ts and camps.ts); a
+    // prose field is declared with `prose()`, never wrapped in one.
     case 'number':
     case 'boolean':
     case 'literal':
@@ -156,17 +156,17 @@ function walkSchemaDef(schema: z.ZodType, path: readonly string[], out: string[]
   }
 }
 
-/** A registered prose FAMILY: a catalog with `prose()` fields + its parsed
- *  data (post-resolution). Built by `loadProse` (locale.ts) in each loader,
+/** A registered prose family: a catalog with `prose()` fields and its parsed
+ *  data, already resolved. Built by `loadProse` (locale.ts) in each loader,
  *  listed in families.ts for the extract and the pins. */
 export interface ProseFamily {
-  /** The address prefix — `events`, `daemons`, … (matches the config file stem). */
+  /** The address prefix (`events`, `daemons`, …), the config file's stem. */
   readonly family: string;
   readonly schema: z.ZodType;
   readonly data: unknown;
 }
 
-/** One prose value in a parsed catalog: its address, its current (inline) value, and a setter. */
+/** One prose value in a parsed catalog: its address, its value when walked, and a setter. */
 export interface ProseSite {
   readonly address: string;
   readonly value: string;

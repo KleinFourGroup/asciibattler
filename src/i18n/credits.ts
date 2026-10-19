@@ -1,10 +1,10 @@
 /**
- * §95e — the translators credit: every name stamped into the REGISTERED
- * locale tables (the config sidecars from locale.ts + the UI tables from
- * ui.ts), per language. Pure over what is registered, so the Round 8
- * credits screen reads it in the browser with no file access; `en` carries
- * no stamps (English authorship is git's) and is skipped. The same
- * `creditsOf` runs over the on-disk files in `npm run i18n:review`.
+ * The translators' credit: every name stamped into the registered locale
+ * tables (the config sidecars from locale.ts and the UI tables from ui.ts),
+ * per language. Pure over what is registered, so the credits screen
+ * (src/ui/CreditsOverlay.ts) reads it in the browser with no file access.
+ * `en` carries no stamps (English authorship is git's) and is skipped. The
+ * same `creditsOf` runs over the files on disk in `npm run i18n:review`.
  */
 
 import { DEFAULT_LOCALE, registeredLocaleFiles } from './locale';

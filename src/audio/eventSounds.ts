@@ -1,23 +1,24 @@
 /**
- * The event-keyed sound registry (§104). Two tables that together
- * disposition EVERY bus event: `EVENT_SOUNDS` (this event plays this key,
- * optionally behind a named predicate) and `SILENT_EVENTS` (this event
- * plays nothing here, and WHY). A new event in `GameEvents` fails the
- * typecheck AND `npm test` (eventSounds.test.ts — the coverage pin, a
- * permanent gate) until its author picks one: no event ships silent by
- * default.
+ * The event-keyed sound registry. Two tables that together disposition every
+ * bus event: `EVENT_SOUNDS` (this event plays this key, optionally behind a
+ * named predicate) and `SILENT_EVENTS` (this event plays nothing here, and
+ * why). A new event in `GameEvents` fails the typecheck and `npm test`
+ * (eventSounds.test.ts, the coverage pin, a permanent gate) until its
+ * author picks one: no event ships silent by default.
  *
- * Two tables, two jobs: FX_REGISTRY (src/render/fxRegistry.ts) answers
- * "what does this MECHANIC sound like" (one FxKey = visual + SFX, driven by
- * BattleRenderer); this module answers "what does this run-level MOMENT
- * sound like". UI interaction sounds (`click`, `pickup`, the promotion
- * ticks, the HUD's scaled `moraleloss` landing) stay direct `play()` sites —
- * they are keyed to DOM handlers / presentation timelines, not bus events.
+ * Two tables, two jobs: `FX_REGISTRY` (src/render/fxRegistry.ts) answers
+ * what a mechanic sounds like (one fx key is the visual and the sound,
+ * driven by BattleRenderer); this module answers what a bus event sounds
+ * like when no fx key carries it, the run's moments and three battle
+ * events. UI interaction sounds (`click`, `pickup`, the promotion ticks, the
+ * HUD's scaled `moraleloss` landing) stay direct `play()` sites, keyed to
+ * DOM handlers and presentation timelines, not bus events.
  *
  * Presentation only: sim code never imports this, and no sound choice may
- * feed back into sim logic (the law FX_REGISTRY lives under). The registry
- * maps event → key and nothing else — volume + jitter stay in AudioPlayer's
- * tables (plans/sound-registry.md "What Cluster 6 must not break").
+ * feed back into sim logic (the rule `FX_REGISTRY` lives under too). The
+ * registry maps event → key and nothing else; volume and jitter stay in
+ * AudioPlayer's tables (plans/sound-registry.md, "What Cluster 6 must not
+ * break").
  */
 
 import type { EventBus } from '../core/EventBus';
@@ -25,8 +26,8 @@ import type { GameEvents } from '../core/events';
 import type { AudioPlayer, SoundKey } from './AudioPlayer';
 
 /**
- * The catalog's LITERAL keys. `GameEvents extends Record<string, unknown>`,
- * so a bare `keyof GameEvents` is `string | number` — the index signature
+ * The catalog's literal keys. `GameEvents extends Record<string, unknown>`,
+ * so a bare `keyof GameEvents` is `string | number`: the index signature
  * swallows the literals and an exhaustiveness check against it checks
  * nothing. The `as` clause drops the index signatures and keeps the rest.
  */
@@ -36,19 +37,20 @@ export type GameEventKey = keyof {
 
 interface EventSoundCue<K extends GameEventKey> {
   readonly sound: SoundKey;
-  /** Play only when this holds for the payload. A NAMED, exported function —
-   *  the filter stays typed and unit-testable instead of buried in a closure. */
+  /** Play only when this holds for the payload. A named, exported function,
+   *  so the filter stays typed and unit-testable instead of buried in a
+   *  closure. */
   readonly when?: (payload: GameEvents[K]) => boolean;
 }
 
 type EventSoundTable = { readonly [K in GameEventKey]?: EventSoundCue<K> };
 
 /**
- * A death cries unless it is an INERT neutral's: walls have HP plumbed, but
- * the combat death cry would read as a unit dying rather than a wall
- * crumbling (C1b). An ACTIVE neutral — a camp member, `campId` on the
- * payload; the dead unit is already spliced out, so no lookup — IS a unit
- * dying (§75h).
+ * A death cries unless it is scenery's (a neutral with no camp: a wall,
+ * half-cover, rubble), since the cry on a crumbling wall would read as a
+ * unit dying. A camp member is a unit dying. The payload carries `team` and
+ * `campId`, since the dead unit is already out of the world and nothing can
+ * look it up.
  */
 export function audibleDeath({ team, campId }: GameEvents['unit:died']): boolean {
   return !(team === 'neutral' && campId === null);
@@ -64,36 +66,35 @@ export const EVENT_SOUNDS = {
   'recruit:offered': { sound: 'recruit' },
   'run:victory': { sound: 'win' },
   'run:defeated': { sound: 'lose' },
-  // A victory moment, just not the last one: its own short sting (104c),
-  // `win`'s little sibling — it borrowed `win` itself from 67b until then.
+  // A victory moment, just not the last one: its own short sting.
   'sector:cleared': { sound: 'sectorwin' },
   'unit:died': { sound: 'death', when: audibleDeath },
-  // D7.C — the ABILITY-heal cue (the heal mechanic's own event). The
-  // healing-TILE chip rides the `rejuvenate` tick fx instead (27d).
+  // The ability heal's cue, on the heal op's own event. A healing tile's
+  // heal sounds through the `rejuvenate` tick's fx key instead.
   'unit:healed': { sound: 'healtick', when: positiveAmount },
-  // N1 — keyed off the LEAP itself, not an inferred move distance, so a
-  // one-cell dash still whooshes. Team-agnostic.
+  // Keyed off the leap itself, not an inferred move distance, so a one-cell
+  // dash still whooshes. Either team's.
   'unit:dashed': { sound: 'dash' },
 } as const satisfies EventSoundTable;
 
 /**
  * Why an event plays nothing from this table:
- * - `bookkeeping` — movement / state plumbing; a cue would be noise, or the
- *   event is a deliberate cut (27e: status apply flashes were CUT — a status
- *   signals only on its ticks).
- * - `fxChannel` — already audible through FX_REGISTRY (BattleRenderer's
- *   action-phase / chain-hop / status-tick drivers); a second cue here
+ * - `bookkeeping` — movement or state plumbing, where a cue would be noise,
+ *   or a deliberate cut: a status signals only on its ticks, with no cue on
+ *   apply.
+ * - `fxChannel` — already audible through `FX_REGISTRY` (BattleRenderer's
+ *   action-phase, chain-hop and status-tick drivers); a second cue here
  *   would double-fire.
  * - `uiChannel` — already audible through a direct UI site on a
  *   presentation timeline this table cannot express.
- * - `candidate` — silent TODAY, and plausibly wants a cue: the Round 11
- *   feel sweep's worklist. Promoting one = move it to EVENT_SOUNDS.
+ * - `candidate` — silent, and plausibly wants a cue. Promoting one is
+ *   moving it to `EVENT_SOUNDS`.
  */
 type SilentReason = 'bookkeeping' | 'fxChannel' | 'uiChannel' | 'candidate';
 
-/** Every event NOT in EVENT_SOUNDS, each with its reason. The annotation is
- *  the tsc half of the coverage pin: a missing key is a missing property, a
- *  key in BOTH tables is an excess property. */
+/** Every event not in `EVENT_SOUNDS`, each with its reason. The annotation
+ *  is the tsc half of the coverage pin: a missing key is a missing
+ *  property, a key in both tables is an excess property. */
 export const SILENT_EVENTS: Readonly<
   Record<Exclude<GameEventKey, keyof typeof EVENT_SOUNDS>, SilentReason>
 > = {
@@ -101,8 +102,8 @@ export const SILENT_EVENTS: Readonly<
 
   'battle:started': 'candidate',
   // The end-of-battle losses land their own `moraleloss` cues (the HUD's
-  // end sequence, scaled per landing by `lossCue`); the win / lose stings
-  // fire at RUN level.
+  // end sequence, scaled per landing by `lossCue`); the win and lose stings
+  // fire at run level.
   'battle:ended': 'uiChannel',
 
   'unit:spawned': 'bookkeeping', // a summon's cue rides its fx key
@@ -114,12 +115,12 @@ export const SILENT_EVENTS: Readonly<
   'unit:moveDecision': 'bookkeeping',
   'unit:waited': 'bookkeeping',
   'unit:shoved': 'bookkeeping',
-  // The swing / whoosh rides `action:phase` (so a MISS plays it for free).
+  // The swing or whoosh rides `action:phase`, so a miss plays it too.
   'unit:attacked': 'fxChannel',
   'unit:missed': 'fxChannel',
   'unit:chained': 'fxChannel', // `chain_arc`, per hop
 
-  'status:applied': 'bookkeeping', // 27e — the apply flash was CUT
+  'status:applied': 'bookkeeping',
   'status:ticked': 'fxChannel',
   'status:expired': 'bookkeeping',
   'action:phase': 'fxChannel',
@@ -146,15 +147,15 @@ export const SILENT_EVENTS: Readonly<
   'deck:cardDiscarded': 'candidate',
   'deck:reshuffled': 'candidate',
   'turn:handRedrawn': 'candidate',
-  'turn:unitEmpowered': 'candidate', // §78d gave it a visual; no sound
+  'turn:unitEmpowered': 'candidate', // it has a visual and no sound
   'turn:grantPassed': 'bookkeeping',
   'turn:resolved': 'candidate',
-  'pools:chipped': 'bookkeeping', // telemetry (89a)
+  'pools:chipped': 'bookkeeping', // telemetry
 };
 
 /**
- * Subscribe every EVENT_SOUNDS entry — the ONE generic subscriber. Attach
- * once at the PAGE layer (Game): the three battle cues are page-safe
+ * Subscribe every `EVENT_SOUNDS` entry, the one generic subscriber. Attach
+ * once at the page layer (Game): the three battle cues are page-safe
  * because BattleScene builds the only World on the game bus, so their
  * events cannot fire outside a battle. Returns the detach.
  */
@@ -170,7 +171,7 @@ export function attachEventSounds(
   };
 }
 
-/** Generic over ONE key so the cue's predicate and the bus payload stay
+/** Generic over one key so the cue's predicate and the bus payload stay
  *  correlated (a loop over the key union loses that pairing). */
 function subscribe<K extends GameEventKey>(
   bus: EventBus<GameEvents>,

@@ -1,19 +1,19 @@
 /**
- * §95a/§95b — the registry of prose FAMILIES: every config catalog whose
- * schema carries `prose()` fields, with its parsed data. Each loader builds
- * its own descriptor with `loadProse` (locale.ts) right after its parse and
- * exports it as `<FAMILY>_PROSE`; this list is the census the extract
+ * The registry of prose families: every config catalog whose schema carries
+ * `prose()` fields, with its parsed data. Each loader builds its own
+ * descriptor with `loadProse` (locale.ts) right after its parse and exports
+ * it as `<FAMILY>_PROSE`; this list is the census the extract
  * (`npm run i18n:extract` → `locales/en/<family>.json`) and the sidecar pins
- * (tests/i18n-en-extract.test.ts) iterate. A loader that marks prose but is
- * not listed here ships no sidecar and no pin — listing is part of migrating
- * a family.
+ * (tests/i18n-en-extract.test.ts) iterate. A loader that marks prose and is
+ * not listed here gets no extract and no pin, and nothing fails, so a new
+ * family is listed here in the change that marks its prose.
  *
- * NOT here, by the Round 7 spec §6: camps (name + description are editor
- * metadata, never rendered) and the encounter / sector / layout
- * `description` fields — all plain strings.
+ * Not here: camps (their name and description are editor metadata, never
+ * rendered) and the encounter, sector and layout `description` fields, all
+ * plain strings for the same reason.
  *
  * Import direction: this module imports the loaders; the loaders import
- * prose.ts / locale.ts only. Nothing under src/i18n/ imports this file
+ * prose.ts and locale.ts only. Nothing under src/i18n/ imports this file
  * except extract.ts.
  */
 
@@ -32,8 +32,8 @@ import { LAYOUTS_PROSE } from '../config/layouts';
 export type { ProseFamily } from './prose';
 
 export const PROSE_FAMILIES: readonly ProseFamily[] = [
-  EVENTS_PROSE, // 95a
-  ENCOUNTERS_PROSE, // 95b ↓
+  EVENTS_PROSE,
+  ENCOUNTERS_PROSE,
   DAEMONS_PROSE,
   PACKETS_PROSE,
   CHARACTERS_PROSE,

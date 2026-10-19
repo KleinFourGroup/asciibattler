@@ -2,8 +2,8 @@
  * The hand-authored battlefields. Source of truth at `config/layouts.json`, a
  * flat array; a layout reaches a battle only through a sector's pool
  * (sectors.ts). Each pins a tactical situation onto a rectangular arena: its
- * own grid size, walls, optional water and tiles, spawn regions, and a `name`
- * and `description` for the UI and the editor.
+ * own grid size, walls, optional water and tiles, spawn regions, a `name` for
+ * the UI and a `description` for the editor.
  *
  * To add one, paint and export it in `tools/layout-editor/`, or append it to
  * the JSON. Its `id` must be unique, and `name`, `description`, `gridW`,

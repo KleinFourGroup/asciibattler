@@ -1,10 +1,9 @@
 /**
- * §95a — the extract: a family's prose as the flat `locales/en/<family>.json`
- * map (address → inline English, in catalog order so the file diffs like
- * the config it mirrors). The committed `en` files are DERIVED ARTIFACTS
- * of the catalogs — the sidecar pins (tests/i18n-en-extract.test.ts) fail
- * when they drift (the prior-table tripwire shape), and
- * `npm run i18n:extract` rebuilds them.
+ * The extract: a family's prose as the flat `locales/en/<family>.json` map
+ * (address → inline English, in catalog order, so the file diffs like the
+ * config it mirrors). The committed `en` files are derived from the
+ * catalogs: the sidecar pins (tests/i18n-en-extract.test.ts) fail when they
+ * drift, and `npm run i18n:extract` rebuilds them.
  */
 
 import { proseSites } from './prose';
@@ -23,7 +22,7 @@ export function extractFamily(f: ProseFamily): Record<string, string> {
   return out;
 }
 
-/** The on-disk shape: 2-space JSON + a trailing newline (every editor's emit convention). */
+/** The on-disk shape: 2-space JSON and a trailing newline. */
 export function formatLocaleFile(entries: Readonly<Record<string, unknown>>): string {
   return `${JSON.stringify(entries, null, 2)}\n`;
 }

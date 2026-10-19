@@ -1,15 +1,13 @@
 /**
  * What the settings decide before the game's modules load. The catalogs
  * resolve their prose through the active locale as they are evaluated, so
- * the locale is set here, ahead of them; boot.ts calls this as `main.ts`'s
- * second import. Pure over its seams, so a test hands it a planted locale.
- * The palette is chosen here for the same reason (116f): the render modules
- * read `COLORS` into their own tables as they are evaluated.
+ * the locale is set here, ahead of them; boot.ts, `main.ts`'s second
+ * import, calls this. Pure over its seams, so a test hands it a planted
+ * locale. The palette is chosen here for the same reason: the render
+ * modules read `COLORS` into their own tables as they are evaluated.
  *
- * Everything else a setting changes is applied by the game once it exists
- * (the volume, the keys, the speed, the motion override, the shake, the
- * aura mode), since those consumers read their value when they run, not
- * when they load.
+ * The other settings are the game's to apply once it exists (apply.ts),
+ * since their consumers read a value when they run, not when they load.
  */
 
 import type { Settings } from './settings';

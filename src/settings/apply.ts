@@ -1,13 +1,13 @@
 /**
- * 116b — from a setting to the thing it sets. Each consumer is a function the
- * game hands over, so this module names no audio player, registry or
- * renderer, and a test connects recording stand-ins or the real modules.
+ * From a setting to the thing it sets. Each consumer is a function the game
+ * hands over, so this module names no audio player, registry or renderer,
+ * and a test connects recording stand-ins or the real modules.
  *
- * `connectSettings` gives every consumer its stored value at once (the boot)
- * and its new value on every change (live). Three fields have no consumer
- * here: the locale and the palette are applied before the game's modules
- * load (atBoot.ts), so a change to either takes a reload, and the music
- * level is stored while nothing plays music yet.
+ * `connectSettings` gives every consumer its stored value at once (the
+ * boot) and its new value on every change (live). Three fields have no
+ * consumer here: the locale and the palette are applied before the game's
+ * modules load (atBoot.ts), so a change to either takes a reload, and the
+ * music level is stored while nothing plays music.
  *
  * Never imported by boot.ts or index.ts: the consumers' modules are the
  * game's, and the settings' boot graph stays clear of them

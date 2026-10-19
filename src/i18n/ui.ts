@@ -1,33 +1,33 @@
 /**
- * §95c — the UI string table: `t(key, params?)` for every literal that lives
- * in CODE rather than in a config catalog (Round 7 spec §5). Unlike config
- * prose (the sidecar — English inline, other locales derived), the UI table's
- * English is the SOURCE: `locales/en/ui.json`, an explicit-key flat map.
- * Keys are namespaced dot paths (`stat.power`, `roster.empty`,
- * `cache.overflow`), and a call site's key is ALWAYS a string literal — the
- * key-scan pins (tests/i18n-ui-keys.test.ts) read the literals to prove
- * every referenced key exists and every table key is referenced.
+ * The UI string table: `t(key, params?)` for every string that lives in
+ * code rather than in a config catalog. Unlike config prose, whose English
+ * is inline in the catalogs (locale.ts), the UI table's English is the
+ * source: `locales/en/ui.json`, a flat map with explicit keys. Keys are
+ * namespaced dot paths (`stat.power`, `roster.empty`), and a call site's
+ * key is always a string literal: the key-scan pins
+ * (tests/i18n-ui-keys.test.ts) read the literals to prove every referenced
+ * key exists and every table key is referenced.
  *
- * Entries: a plain string, or a PLURAL entry — an object keyed by CLDR
- * plural category (`one` / `other` / …, `other` required) selected by
- * `Intl.PluralRules` on the `count` param. Placeholders are `{name}`;
- * a number param is formatted by `Intl.NumberFormat` (locale-correct
- * grouping and digits). No dependency — the browser's Intl is the engine.
- * A word that changes with a branch is two whole entries, never a fragment
- * (the spec's rule: word order belongs to the translator).
+ * Entries: a plain string, or a plural entry, an object keyed by CLDR
+ * plural category (`one`, `other`, …; `other` required) and selected by
+ * `Intl.PluralRules` on the `count` param. Placeholders are `{name}`; a
+ * number param is formatted by `Intl.NumberFormat` (the locale's grouping
+ * and digits). No dependency: the browser's Intl is the engine. A word
+ * that changes with a branch is two whole entries, never a fragment, since
+ * word order is the translator's.
  *
  * Failure is loud: an unknown key, a missing placeholder param, a plural
- * entry with no numeric `count`, or a non-en locale lacking a key all THROW
- * (the empower-pin discipline — never a silent English fallback).
+ * entry with no numeric `count`, or a non-en locale lacking a key all
+ * throw, never a silent English fallback.
  *
- * Calling `t()` at module level (STAT_LABELS, the game-over COPY, the HUD
- * button table) is fine: the locale is fixed for the page's life (a switch
- * is a Round 8 setting and reloads).
+ * Calling `t()` at module level (`STAT_LABELS`, the game-over `COPY`, the
+ * HUD's `OBJECTIVE_BUTTONS`) is fine: the locale is set at boot and fixed
+ * for the page's life, and a change takes a reload.
  *
- * §95e — a non-en table entry may carry provenance (provenance.ts:
+ * A non-en table entry may carry provenance (provenance.ts:
  * `{ text, source, … }`, where `text` is the string or plural entry). A
- * FUZZY entry (its `source` no longer hashes the English) resolves to the
- * ENGLISH entry with the dev marker and lands in the shared census as
+ * fuzzy entry (its `source` no longer hashes the English) resolves to the
+ * English entry with the dev marker and lands in the shared census as
  * `ui.<key>`; the pin (tests/i18n-ui-keys.test.ts) keeps one out of a
  * shipped table.
  */
@@ -46,7 +46,7 @@ type TParams = Readonly<Record<string, string | number>>;
 
 const tables = new Map<string, UiLocaleTable>([[DEFAULT_LOCALE, uiEn as UiTable]]);
 
-/** The English source table (the key-scan pins + the extract read it). */
+/** The English source table (the key-scan pins and `npm run i18n:review` read it). */
 export const UI_EN: UiTable = uiEn as UiTable;
 
 export function registerUiLocale(lang: string, table: UiLocaleTable): void {

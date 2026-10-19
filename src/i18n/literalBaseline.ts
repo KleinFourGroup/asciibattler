@@ -1,8 +1,9 @@
 /**
- * §95d — the literal scan over the repo: walk SCAN_ROOTS, run `scanSource`
- * on every non-test `.ts`, and shape the result as the per-file baseline
- * (`tests/i18n-literal-baseline.json`). Shared by the ratchet test and the
- * `npm run i18n:baseline` regenerator so both count the same way.
+ * The literal scan over the repo: walk `SCAN_ROOTS`, run `scanSource` on
+ * every non-test `.ts`, and shape the result as the per-file baseline
+ * (`tests/i18n-literal-baseline.json`). Shared by the pin
+ * (tests/i18n-literal-pin.test.ts) and `npm run i18n:baseline`, which
+ * writes the file, so both count the same way.
  */
 
 import { readdirSync, readFileSync, statSync } from 'node:fs';

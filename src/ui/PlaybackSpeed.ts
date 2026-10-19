@@ -1,30 +1,24 @@
 /**
- * Q1 — the playback speed + pause controller (was I3's cycle holder).
+ * The playback speed and pause, held for the page's life. Game owns it and
+ * passes it through `SceneContext`, so a speed carries across turns and
+ * battles (set 2× once and every later battle keeps it), while the speed
+ * strip that drives it is the HUD's, rebuilt each battle. `BattleScene.tick`
+ * reads `current` each frame, so a change takes effect on the next.
  *
- * A page-lifetime holder for the current sim-speed multiplier. Owned by `Game`
- * and threaded through `SceneContext`, so the value PERSISTS across
- * turns/battles (set 2× once and every later battle keeps it) even though the
- * *control surface* — the speed pane — is rebuilt per battle by the `HUD` (and
- * torn down on its `dispose`). `BattleScene.tick` reads `current` live each
- * frame, so a mid-battle speed change takes effect on the next frame.
+ * A speed is set by value, from the enabled steps, and pause is speed 0:
+ * pause keeps the running speed, and `resume()` returns to it. The
+ * pre-battle countdown is a pause with its own timer, so resuming is its
+ * Fight now.
  *
- * I3 was a single cycle-through-steps button. Q1 turns it into a **set-by-value
- * model** over the enabled steps (0.5× / 1× / 2× / 3×) plus a **pause** (speed
- * 0). Pause remembers the running speed and `resume()` restores it (the
- * ROADMAP §Q1 "resume-at-prior-speed"). The countdown (Q2) is just a pause with
- * an auto-unpause timer — the same "is the sim advancing?" state, so the single
- * pause key doubles as the countdown's "Fight now" once Q2 lands.
+ * The steps and `pauseEnabled` come from `config/playback.json`
+ * (`PLAYBACK`), but are injectable so mechanic tests pin literals of their
+ * own, never the shipped JSON.
  *
- * The steps + the `pauseEnabled` flag come from `config/playback.json`
- * (`PLAYBACK`), but are injectable so mechanic tests pin explicit literals
- * (never the shipped JSON).
+ * The hotkeys are the `Keybindings` registry's (`speedHalf` to `speed3`,
+ * `togglePause`); the HUD subscribes each to `setSpeed` or `togglePause`.
+ * This class is the state alone.
  *
- * J3 — the hotkeys live in the unified `Keybindings` registry
- * (`config/keybindings.json`: `speedHalf` / `speed1` / `speed2` / `speed3` /
- * `togglePause`). The HUD subscribes each to the matching `setSpeed` /
- * `togglePause` call; this class is purely the speed state.
- *
- * 116d — A HOLD is not a pause. A surface that covers the battle and takes
+ * A hold is not a pause. A surface that covers the battle and takes
  * the player's attention (the settings modal) holds the sim while it is up:
  * `current` reads 0, and the pre-battle countdown stands still too, which a
  * pause does not do (the countdown runs on real time through a pause and
@@ -47,7 +41,7 @@ export class PlaybackSpeed {
   /** The running speed (one of `stepValues`); what `resume()` returns to. */
   private selected = HOME_SPEED;
   private paused = false;
-  /** 116d — how many holds are live (the header). */
+  /** How many holds are live (the header's hold). */
   private holds = 0;
   private readonly selectListeners = new Set<() => void>();
 
@@ -59,20 +53,20 @@ export class PlaybackSpeed {
     this.canPause = pauseEnabled;
   }
 
-  /** The active multiplier `BattleScene.tick` scales `dt` by. **0 while paused
-   *  or held** — `Clock.advance(0)` fires no ticks and freezes the board
-   *  visuals too. */
+  /** The multiplier `BattleScene.tick` scales `dt` by, 0 while paused or
+   *  held: `Clock.advance(0)` fires no ticks, and the board's visuals stand
+   *  still too. */
   get current(): number {
     return this.paused || this.holds > 0 ? 0 : this.selected;
   }
 
-  /** 116d — whether a hold is live. `BattleScene.tick` stands the countdown
+  /** Whether a hold is live. `BattleScene.tick` stands the countdown
    *  still while it is. */
   get isHeld(): boolean {
     return this.holds > 0;
   }
 
-  /** 116d — hold the sim until the returned release is called. Holds count,
+  /** Hold the sim until the returned release is called. Holds count,
    *  so two surfaces can each hold; a release called twice releases once. */
   hold(): () => void {
     this.holds++;
@@ -103,17 +97,16 @@ export class PlaybackSpeed {
     return this.stepValues;
   }
 
-  /** Select a running speed by value (and unpause — picking a speed means
-   *  "run at this speed"). A disabled/unknown value is a **no-op** so a hotkey
-   *  for a speed the difficulty system disabled does nothing. Returns whether it
-   *  took (the caller re-renders either way). */
+  /** Select a running speed by value and unpause: picking a speed means run
+   *  at it. A value the config disables, or doesn't have, does nothing.
+   *  Returns whether it took (the caller repaints either way). */
   setSpeed(value: number): boolean {
     if (!this.select(value)) return false;
     this.paused = false;
     return true;
   }
 
-  /** 116b — select a running speed and leave pause as it is: the starting
+  /** Select a running speed and leave pause as it is: the starting
    *  speed, a setting, is taken at boot and when its row changes, which can
    *  be while a battle is paused behind the settings. A disabled/unknown
    *  value is a no-op, as in `setSpeed`. */
@@ -125,7 +118,7 @@ export class PlaybackSpeed {
     return true;
   }
 
-  /** 116d — called after the selected speed changes, by whichever route: the
+  /** Called after the selected speed changes, by whichever route: the
    *  speed pane repaints its buttons when the settings change the speed from
    *  outside it. Returns the unsubscribe. */
   onSelect(listener: () => void): () => void {

@@ -1,13 +1,12 @@
 /**
- * 102d — ONE side's fallen as a cell: its label, a glyph run (`nobody fell`
- * when none) and the loss the rows add up to. Lifted from the pre-turn
- * screen's "last turn" strip (96.5d) when the run-end stats became its second
- * consumer — the strip draws one turn, the GameOverScreen draws an encounter
- * and the whole run, all three off `Run.fallenLedger` rows.
+ * One side's fallen as a cell: its label, a glyph run ("nobody fell" when
+ * none) and the loss the rows add up to. The pre-turn screen's last-turn
+ * strip draws one turn with it, and the game-over screen an encounter and
+ * the whole run, all three off `Run.fallenLedger`'s rows.
  *
- * The idioms it carries for both: a glyph run with a tooltip is a text site
- * (focusable, tap toggles — §97d); the side is named in WORDS, the hue is the
- * second channel (§98); nothing here animates or changes after mount.
+ * The idioms it keeps for both: a glyph run with a tooltip is a text site
+ * (focusable, and a tap toggles it); the side is named in words, with the
+ * hue as a second channel; nothing here animates or changes after mount.
  */
 
 import type { FallenRecord } from '../run/Run';
@@ -44,7 +43,7 @@ export function fallenLines(rows: readonly FallenRecord[]): string {
     .join('\n');
 }
 
-/** The run-wide form, where one glyph per fallen would not fit: `M×5 A×2`. */
+/** The run-wide form, where one glyph per fallen would not fit: `M×5 a×2`. */
 export function archetypeGlyphRun(groups: readonly ArchetypeFallen[]): string | null {
   return groups.length === 0
     ? null

@@ -1,8 +1,8 @@
-// In-battle HUD: the four card/control panes (Q1 speed · Q3 objective · Q4
-// player cards · Q5 enemy cards) plus the hop/turn chip and the location
-// banner. Q6 dismantled the old monolithic side panel (both team rosters, the
-// per-unit stat lines, and the inline You/Foe pools) now that the card panes
-// own the live HP and the pool gauges. Live-updates from unit:* events.
+// The battle HUD: the speed strip, the objective pane, the two card panes
+// (the player's at the bottom, the enemy's at the top, each with its pool
+// gauge), the hop chip, the location banner and the pre-battle countdown.
+// The cards follow the battle off the bus (`unit:*`, `status:ticked`), and
+// the gauges' ghosts follow the deaths and the battle's end.
 
 import type { EventBus } from '../core/EventBus';
 import { t } from '../i18n/ui';
@@ -40,7 +40,7 @@ import {
 } from './lossFx';
 import { reducedMotion } from '../render/motion';
 
-/** 96.5b2 — a wall-clock wait (the loss fx are presentation: never the sim's clock). */
+/** A wall-clock wait: the loss fx are presentation and never read the sim's clock. */
 function delay(ms: number): Promise<void> {
   return new Promise((resolve) => window.setTimeout(resolve, ms));
 }
@@ -50,9 +50,9 @@ import type { Keybindings } from './Keybindings';
 import type { KeybindAction } from '../config/keybindings';
 import type { ObjectiveControls, ObjectiveArmMode } from './ObjectiveController';
 
-/** Q1 — which rebindable action sets each speed, for the pane's per-button
- *  hotkey subscription + tooltip. A config speed outside this set still gets a
- *  button (no hotkey); a hotkey for a disabled speed is simply not subscribed. */
+/** The rebindable action that sets each speed, for its button's hotkey and
+ *  tooltip. A config speed outside this map still gets a button, with no
+ *  hotkey; a hotkey for a disabled speed is not subscribed. */
 const SPEED_HOTKEY: ReadonlyMap<number, KeybindAction> = new Map([
   [0.5, 'speedHalf'],
   [1, 'speed1'],
@@ -60,18 +60,17 @@ const SPEED_HOTKEY: ReadonlyMap<number, KeybindAction> = new Map([
   [3, 'speed3'],
 ]);
 
-/** Q3 — the four objective-pane commands. `stop` is O's at-will default (to the
- *  player it reads as "clear other objectives"). `engage`/`focus` ARM a target
- *  pick; `hold`/`stop` apply on click. */
+/** The objective pane's four commands. `stop` returns the team to at-will.
+ *  `engage` and `focus` arm a target pick; `hold` and `stop` apply on click. */
 type ObjectiveButtonMode = ObjectiveArmMode | 'hold' | 'stop';
 
 interface ObjectiveButtonDef {
   readonly mode: ObjectiveButtonMode;
   readonly label: string;
-  /** A small leading glyph — the engage `⌖` / focus `!` echo the board marker. */
+  /** A small leading glyph; focus's `!` is the board's focus marker. */
   readonly icon: string;
   readonly action: KeybindAction;
-  /** engage/focus arm a target pick; hold/stop apply immediately. */
+  /** Whether the button arms a target pick (engage, focus) or applies at once. */
   readonly arms: boolean;
 }
 
@@ -94,23 +93,22 @@ const OBJECTIVE_BUTTONS: readonly ObjectiveButtonDef[] = [
   { mode: 'stop', label: t('hud.objective.stop'), icon: '✕', action: 'stopObjective', arms: false },
 ];
 
-/** H4b — the encounter pool snapshot the HUD renders (from `Run` state). */
+/** The pools the HUD shows, as BattleScene reads them from the Run. */
 interface EncounterPools {
   turn: number;
   playerHealth: number;
   playerHealthMax: number;
   enemyHealth: number;
   enemyHealthMax: number;
-  /** U3 — the encounter's display name, labelling the enemy pool gauge (replaces
-   *  the old hardcoded "Foe"). Falls back to "Foe" when absent. */
+  /** The encounter's name, the enemy gauge's label; "Foe" when absent. */
   enemyName?: string;
-  /** 96.5c — the pre-turn risk bound (`Run.previewPoolAtRisk`, the number
-   *  the risk line showed): the player gauge marks it as a NOTCH the ghost
-   *  grows toward, so the two reads are one across the seam. */
+  /** The pre-turn risk bound (`Run.previewPoolAtRisk`, the risk line's
+   *  number): the player gauge's notch, which the ghost grows toward, so the
+   *  two screens read as one. */
   poolAtRisk?: number;
-  /** 96.5c2 — the enemy pool's mirror bound (`Run.previewPoolsAtRisk().enemy`)
-   *  for the enemy gauge's notch — the user's playtest: one gauge notched and
-   *  the other not read as an oversight. */
+  /** The enemy pool's bound (`Run.previewPoolsAtRisk().enemy`), the enemy
+   *  gauge's notch: one gauge notched and the other not reads as an
+   *  oversight. */
   enemyPoolAtRisk?: number;
 }
 
@@ -119,16 +117,17 @@ export class HUD {
   /** The hop chip's and the banner's row (ui.css `.hud-top`). */
   private readonly topRow: HTMLElement;
   private readonly hopLabel: HTMLElement;
-  /** Q1 — the speed-command pane (top-right): one button per enabled speed
-   *  (ascending) + a pause/play toggle. Repainted on each speed change; the
-   *  underlying speed + paused state live on the page-lifetime `playback`. */
+  /** The speed strip (the control column's second row): a pause toggle and
+   *  one button per enabled speed, repainted on each change. The speed and
+   *  the paused state live on the page-lifetime `playback`. */
   private readonly speedPane: HTMLElement;
   /** Speed value → its pane button, for the active-state repaint. */
   private readonly speedButtons = new Map<number, HTMLButtonElement>();
   /** The pause/play toggle, or null when `pauseEnabled` is off (no control). */
   private readonly pauseButton: HTMLButtonElement | null;
-  /** Q2 — the pre-battle countdown readout (centered): a "Battle begins in N"
-   *  count + a Fight-now button. BattleScene drives it via show/hideCountdown. */
+  /** The pre-battle countdown (centered): "Battle begins in" over the count,
+   *  and a Fight now button. BattleScene drives it through `showCountdown`
+   *  and `hideCountdown`. */
   private readonly countdownEl: HTMLElement;
   private readonly countdownCount: HTMLElement;
   /** Whether the countdown is on-screen — flips the pause toggle's label to
@@ -136,66 +135,61 @@ export class HUD {
   private inCountdown = false;
   /** Last whole-second painted into the readout, to skip redundant DOM writes. */
   private countdownShown = -1;
-  /** 101d — tears down the countdown's anchor watch (the enemy pane's
-   *  ResizeObserver + the window resize listener); null while not counting. */
+  /** Tears down the countdown's anchor watch (the enemy pane's
+   *  ResizeObserver and the window's resize listener); null while not
+   *  counting. */
   private countdownAnchorWatch: (() => void) | null = null;
   private readonly playback: PlaybackSpeed;
-  /** J3 — the rebindable-hotkey registry. The HUD subscribes its control
-   *  surface (fast-forward + the objective controls) to it and reads `labelFor`
-   *  for button labels so a rebind shows up in the UI. */
+  /** The hotkey registry. The HUD subscribes the speed strip's and the
+   *  objective pane's controls to it, and reads `labelFor` for their words,
+   *  so a rebind shows. */
   private readonly keybindings: Keybindings;
-  /** J3/Q3 — the objective input controller (arm engage/focus, or hold/stop).
-   *  Owned by BattleScene; the HUD pane buttons + hotkeys drive it. */
+  /** The objective input controller, owned by BattleScene; the pane's
+   *  buttons, their hotkeys and the enemy cards drive it. */
   private readonly objective: ObjectiveControls;
-  /** 96.5b2-post — the page-lifetime audio player (from ctx via
-   *  BattleScene), for the live bar's landing cue. */
+  /** The page-lifetime audio player (from the scene's context), for the
+   *  landing cue. */
   private readonly audio: AudioPlayer;
-  /** Q3 — the objective-command pane (bottom-right): Engage / Focus / Hold /
-   *  Stop on O's typed model. Lives outside the side-panel root (like the speed
-   *  pane) so it anchors bottom-right; same screen-fade lifecycle. */
+  /** The objective pane (bottom right): Engage, Focus, Hold and Stop. */
   private readonly objectivePane: HTMLElement;
   /** Objective mode → its pane button, for the active/armed repaint. */
   private readonly objectiveButtons = new Map<ObjectiveButtonMode, HTMLButtonElement>();
   /** The mode currently being target-picked (engage/focus), or null — flipped by
    *  the controller via `setObjectiveArmed`. */
   private armedMode: ObjectiveArmMode | null = null;
-  /** The player team's current objective mode, tracked off `objective:set` /
-   *  `objective:cleared` so the active button reads "engaged". `'atWill'` is
-   *  the default-state sentinel and matches NO button — 73d (user call): the
-   *  at-will default used to fold onto `stop`, so Stop sat highlighted from
-   *  the moment every battle mounted, reading as "an objective is engaged"
-   *  when none was. Stop is an ACTION (clear the objective), not a state. */
+  /** The player team's objective mode, tracked off `objective:set` and
+   *  `objective:cleared`, so the active button reads engaged. `'atWill'`, the
+   *  default, matches no button: Stop is an action (clear the objective), not
+   *  a state, so it is never highlighted. */
   private activeObjectiveMode: ObjectiveButtonMode | 'atWill' = 'atWill';
-  /** Q4 — the player unit pane (bottom-center): a wrapping grid of `compact`
-   *  cards for the fielded player units + the relocated run health-pool gauge
-   *  beneath them. Lives outside the side-panel root (like the other panes) so
-   *  it anchors bottom-center; same screen-fade lifecycle. */
+  /** The player's pane (bottom center): a wrapping row of compact cards for
+   *  the fielded units, with the run's pool gauge under it. */
   private readonly playerCardPane: HTMLElement;
   /** The wrapping row the compact cards mount into. */
   private readonly playerCardRow: HTMLElement;
   /** The run health-pool gauge's slot beneath the cards (repainted in show()). */
   private readonly playerPoolWrap: HTMLElement;
-  /** Q5 — the enemy unit pane (top-center, below the banner): the enemy
-   *  encounter pool gauge above an analogous wrapping grid of red-teamed
-   *  `compact` cards. The vertical mirror of the player pane. */
+  /** The enemy's pane (top center, under the banner): the encounter's pool
+   *  gauge over a wrapping row of the enemy's compact cards, the player
+   *  pane's mirror. */
   private readonly enemyCardPane: HTMLElement;
   /** The wrapping row the enemy compact cards mount into. */
   private readonly enemyCardRow: HTMLElement;
   /** The enemy encounter-pool gauge's slot above the cards (repainted in show()). */
   private readonly enemyPoolWrap: HTMLElement;
-  /** 96.5b1 — the live gauge handles (null on a bare mount with no
-   *  encounter): the loss-event stream moves their ghosts. */
+  /** The live gauge handles, null when `show` gets no encounter; the loss
+   *  events move their ghosts. */
   private playerGauge: PoolGaugeHandle | null = null;
   private enemyGauge: PoolGaugeHandle | null = null;
-  /** 96.5b1 — the un-booked loss per pool so far this battle (uncapped
-   *  pool-HP; the gauge clamps). Opens at the booked fallen on a restore. */
+  /** The loss per pool not yet booked this battle (uncapped; the gauge
+   *  clamps). A restore opens it at the fallen already booked. */
   private pending = { player: 0, enemy: 0 };
-  /** 96.5b2 — the orbs in flight (cancelled on dispose so a teardown
-   *  mid-flight leaves no glyph on the page) and their landing promises. */
+  /** The orbs in flight (cancelled on dispose, so a teardown mid-flight
+   *  leaves no glyph on the page) and their landing promises. */
   private readonly orbs = new Set<OrbHandle>();
   private readonly inFlight = new Set<Promise<void>>();
-  /** 96.5b2 — the after-battle settle: the end sequence launched, every orb
-   *  landed, the settle beat, the commit. Null until `battle:ended`. */
+  /** The after-battle settle: the end sequence launched, every orb landed,
+   *  the settle beat, the commit. Null until `battle:ended`. */
   private settled: Promise<void> | null = null;
   /** unitId → its compact card handles, for O(1) HP refresh + death gray-out.
    *  BOTH teams (player + enemy); dead cards stay (grayed) for positional
@@ -203,18 +197,16 @@ export class HUD {
    *  only the append target (which pane's row) differs. */
   private readonly cards = new Map<number, UnitCardHandles>();
   private world: World | null = null;
-  /** §32c — the sim tick the card status rows last reconciled at. The readout is
-   *  identical between sim ticks, so `refreshStatuses` recomputes ≤ once per tick
-   *  (BattleScene calls it every frame). `-1` forces a first update. */
+  /** The sim tick the cards' status rows were last painted at. The readout
+   *  is the same between ticks, so `refreshStatuses` recomputes at most once
+   *  a tick (BattleScene calls it every frame). `-1` forces a first pass. */
   private statusTick = -1;
-  /**
-   * Bus unsubscribers. A5 makes HUD a per-battle object (owned by
-   * BattleScene), so subscriptions get torn down on dispose to keep them
-   * from accumulating across battles.
-   */
+  /** Bus and hotkey unsubscribers. The HUD lives for one battle (BattleScene
+   *  owns it), so `dispose` tears them down and they don't pile up across
+   *  battles. */
   private readonly subscriptions: Array<() => void> = [];
-  /** 97c — the enemy cards' tooltip detaches, keyed by unit (torn down with
-   *  the cards at `show()` and `dispose()`). */
+  /** The enemy cards' tooltip detaches, keyed by unit (torn down with the
+   *  cards at `show()` and `dispose()`). */
   private readonly cardTooltips = new Map<number, () => void>();
 
   constructor(
@@ -233,9 +225,7 @@ export class HUD {
     this.objective = objective;
     this.audio = audio;
 
-    // C1d follow-up: top-of-screen banner naming the current battle's
-    // layout ("Corridor" / "Diamond" / "Labyrinth" / "Uncharted Ground" for
-    // procedural). Centered at the top; same screen-fade lifecycle as the panes.
+    // The banner: the battle's ground, as BattleScene words it.
     this.banner = document.createElement('div');
     this.banner.className = 'battle-banner screen-fade';
     // The top row holds the hop chip and the banner between the two columns
@@ -244,30 +234,26 @@ export class HUD {
     this.topRow.className = 'hud-top';
     mount.appendChild(this.topRow);
 
-    // Q6 — the hop/turn chip, the one survivor of the dismantled side panel,
-    // now a standalone top-left element, with the banner centered between it
-    // and the control column. Its own screen-fade lifecycle.
+    // The hop chip, top left, with the banner centered between it and the
+    // control column.
     this.hopLabel = document.createElement('div');
-    // 101b — it wears the shared `.chip` plate; `.hud-hop` keeps only its
-    // position, derived from the chrome column's width (ui.css).
+    // It wears the shared `.chip` plate; `.hud-hop` gives only its place in
+    // the row (ui.css).
     this.hopLabel.className = 'chip hud-hop screen-fade';
     this.topRow.append(this.hopLabel, this.banner);
 
-    // Q1 — the speed strip: one cell per ENABLED speed (ascending) + a
-    // pause/play toggle, the control column's second row in a battle (top
-    // right, under the settings chip); same screen-fade lifecycle. Each
-    // button is the in-battle affordance; the hotkeys (J3 rebindable registry:
-    // `speedHalf`/`speed1`/`speed2`/`speed3`, `togglePause`) mirror them. All
-    // route through the shared `playback`, which holds the speed + paused state
-    // so they persist into the next battle. Hotkey subscriptions are
-    // battle-scoped — pushed onto `subscriptions` so dispose tears them down
-    // (the registry + its window listener are page-lifetime; only these handlers
-    // come and go per battle). Space=pause doubles as the Q2 countdown's "Fight
-    // now" once that lands (a countdown is a pause with an auto-unpause timer).
+    // The speed strip, the control column's second row in a battle (top
+    // right, under the settings chip): a pause toggle, then one button per
+    // enabled speed, ascending. The hotkeys (`speedHalf` to `speed3`,
+    // `togglePause`) do what the buttons do, and all of them go through the
+    // page-lifetime `playback`, so the speed and the pause carry into the
+    // next battle. The hotkey subscriptions are this battle's, on
+    // `subscriptions`; the registry and its window listener are the page's.
+    // During the countdown, resuming is Fight now.
     this.speedPane = document.createElement('div');
     this.speedPane.className = 'hud-speed-pane screen-fade';
-    // 116d — the starting-speed setting selects a speed from outside this
-    // pane (the settings modal, open over the battle), so the buttons follow
+    // The starting-speed setting selects a speed from outside this pane
+    // (the settings modal, open over the battle), so the buttons follow
     // the controller and not only this pane's own clicks.
     this.subscriptions.push(playback.onSelect(() => this.renderSpeedPane()));
     // Pause leads — it's the slowest (speed 0), so it sits leftmost ahead of the
@@ -277,7 +263,7 @@ export class HUD {
       this.pauseButton.type = 'button';
       this.pauseButton.className = 'hud-speed hud-speed--pause';
       this.pauseButton.addEventListener('click', () => this.togglePause());
-      // 97c — the words are live (pause ↔ resume ↔ fight now), so the
+      // The words are live (pause, resume, fight now), so the
       // content is a thunk read at every open; renderSpeedPane refreshes an
       // open one when the hotkey path flips the label.
       attachTooltip(
@@ -305,7 +291,7 @@ export class HUD {
       // through to the browser rather than being silently swallowed.
       const action = SPEED_HOTKEY.get(value);
       if (action) this.subscriptions.push(keybindings.on(action, () => this.selectSpeed(value)));
-      // 97c — the tooltip carries the live binding (a rebind shows up).
+      // The tooltip carries the live binding, so a rebind shows.
       attachTooltip(
         btn,
         action
@@ -319,11 +305,10 @@ export class HUD {
     controlSlot.appendChild(this.speedPane);
     this.renderSpeedPane();
 
-    // Q2 — the pre-battle countdown readout (centered, under the banner). Shown
-    // only while the sim is parked at turn start; BattleScene drives it via
-    // show/hideCountdown. The Fight-now button just RESUMES playback — that
-    // unpause is the skip signal BattleScene watches, so the button, the ▶ pause
-    // toggle, and the Space hotkey are one unified "start the fight" control.
+    // The countdown (centered, under the banner), shown while the sim waits
+    // at the turn's start. Fight now resumes playback, which is the skip
+    // BattleScene watches for, so this button, the pause toggle, its hotkey
+    // and a speed button all start the fight the same way.
     this.countdownEl = document.createElement('div');
     this.countdownEl.className = 'battle-countdown screen-fade';
     const countdownLabel = document.createElement('div');
@@ -334,7 +319,7 @@ export class HUD {
     const fightNow = document.createElement('button');
     fightNow.type = 'button';
     fightNow.className = 'battle-countdown__fight';
-    // 116b — the key is part of the button's words, so a rebind made while
+    // The key is part of the button's words, so a rebind made while
     // this battle is up re-labels it (the tooltips read theirs at each open).
     const labelFightNow = (): void => {
       fightNow.textContent = `▶ ${t('hud.pause.fightNow')} (${keybindings.labelFor('togglePause')})`;
@@ -345,14 +330,11 @@ export class HUD {
     this.countdownEl.append(countdownLabel, this.countdownCount, fightNow);
     mount.appendChild(this.countdownEl);
 
-    // Q3 — the objective-command pane (bottom-right): Engage / Focus / Hold /
-    // Stop on O's typed objective model. Engage + Focus ARM a target pick (the
-    // next left-click; 78a unarmed fast paths: left-click the board → engage,
-    // right-click → focus); Hold + Stop apply
-    // immediately. Lives outside the side-panel root (like the speed pane) so it
-    // anchors bottom-right; same screen-fade lifecycle. Each button is a
-    // rebindable hotkey too; the labels show the live binding so a rebind shows
-    // up. Hotkey subscriptions are battle-scoped (pushed onto `subscriptions`).
+    // The objective pane: Engage and Focus arm a target pick (the next left
+    // click), Hold and Stop apply at once. Unarmed, a left click on the board
+    // engages and a right click focuses (ObjectiveController). Each button
+    // has a hotkey too, a subscription of this battle's, and its words show
+    // the live binding.
     this.objectivePane = document.createElement('div');
     this.objectivePane.className = 'hud-objective-pane screen-fade';
     for (const def of OBJECTIVE_BUTTONS) {
@@ -363,9 +345,9 @@ export class HUD {
       this.objectiveButtons.set(def.mode, btn);
       this.objectivePane.appendChild(btn);
       this.subscriptions.push(keybindings.on(def.action, () => this.invokeObjective(def)));
-      // 97c (78a) — the fast-path hint per mode: engage owns the bare
-      // left-click, focus owns the right-click; hold / stop just name
-      // themselves. The key is read live so a rebind shows up.
+      // Each mode's hint: engage names the bare left click, focus the right
+      // click, and hold and stop name themselves. The key is read at each
+      // open, so a rebind shows.
       const hint =
         def.mode === 'engage'
           ? t('hud.tooltip.engage')
@@ -380,12 +362,12 @@ export class HUD {
     }
     mount.appendChild(this.objectivePane);
     this.renderObjectivePane();
-    // 116b — the buttons' words carry their keys, so a rebind redraws them.
+    // The buttons' words carry their keys, so a rebind redraws them.
     this.subscriptions.push(keybindings.onChange(() => this.renderObjectivePane()));
-    // Track the player team's live objective mode so the active button reads
-    // "engaged" however it was set (pane / hotkey / board click). A `set` carries
-    // the mode; a `clear` (or an explicit atWill set) reverts to the `'atWill'`
-    // sentinel — which highlights NOTHING (73d: Stop is never highlighted).
+    // Track the player team's objective so the active button reads engaged
+    // however it was set (the pane, a hotkey, a board click). A `set` carries
+    // the mode, an at-will one included; a `clear` reverts to `'atWill'`,
+    // which highlights nothing.
     this.subscriptions.push(
       bus.on('objective:set', ({ team, objective }) => {
         if (team !== 'player') return;
@@ -401,14 +383,11 @@ export class HUD {
       }),
     );
 
-    // Q4 — the player unit pane (bottom-center): a wrapping grid of `compact`
-    // UnitCards for the fielded player units, with the run health-pool gauge
-    // (relocated from the old HUD `pools` block — which stays until Q6) beneath
-    // them. Cards are built on `unit:spawned`, their HP bars driven on
-    // attacked/status-ticked/healed, and grayed in place on death (kept, not removed,
-    // so the grid order is positionally stable across the turn). Lives outside
-    // the side-panel root (like the speed/objective panes) so it anchors
-    // bottom-center; same screen-fade lifecycle.
+    // The player's pane (bottom center): compact cards for the fielded units,
+    // with the run's pool gauge under them. A card is built on
+    // `unit:spawned`, its bar driven by `unit:attacked`, `status:ticked` and
+    // `unit:healed`, and grayed in place at a death, kept so the row's order
+    // holds through the turn.
     this.playerCardPane = document.createElement('div');
     this.playerCardPane.className = 'hud-player-pane screen-fade';
     this.playerCardRow = document.createElement('div');
@@ -418,15 +397,12 @@ export class HUD {
     this.playerCardPane.append(this.playerCardRow, this.playerPoolWrap);
     mount.appendChild(this.playerCardPane);
 
-    // Q5 — the enemy unit pane (top-center, below the banner): the enemy
-    // encounter pool gauge ABOVE an analogous wrapping grid of `compact` cards
-    // (red-teamed). The vertical mirror of the player pane — anchored at the top
-    // and growing down, with the pool above the cards (the player pane's cards
-    // sit above its pool). Cards are built/updated/grayed by the SAME unit:*
-    // handlers as the player cards (the `cards` map + the addCard team-switch);
-    // the gauge (relocated from the old HUD `pools` block, which stays until Q6)
-    // repaints in show(). A capped card-row height + scroll keeps a large
-    // post-N2 swarm from overrunning the board.
+    // The enemy's pane (top center, under the banner): the encounter's pool
+    // gauge over the enemy's compact cards, growing down, the player pane's
+    // mirror. The same handlers build and update both teams' cards (one
+    // `cards` map; `addCard` picks the row), and the gauge is painted in
+    // `show`. The row's capped height and its scroll keep a large swarm off
+    // the board (ui.css `.hud-enemy-cards`).
     this.enemyCardPane = document.createElement('div');
     this.enemyCardPane.className = 'hud-enemy-pane screen-fade';
     this.enemyCardRow = document.createElement('div');
@@ -438,28 +414,24 @@ export class HUD {
 
     this.subscriptions.push(bus.on('unit:spawned', ({ unitId }) => this.addUnit(unitId)));
     this.subscriptions.push(bus.on('unit:attacked', ({ targetId }) => this.refreshHp(targetId)));
-    // Q4 — the compact cards' HP bars must track ALL visible HP changes, not
-    // just direct attacks: a periodic status tick (the 27d fire-tile burn /
-    // healing-tile rejuvenate, a §29 bleed/poison) or a healer's heal moves HP
-    // too. The roster rows get the same refresh for free.
+    // A card's bar follows every HP change, not only a strike: a status tick
+    // (a burn, a rejuvenate) or a heal moves HP too.
     this.subscriptions.push(bus.on('status:ticked', ({ unitId }) => this.refreshHp(unitId)));
     this.subscriptions.push(bus.on('unit:healed', ({ unitId }) => this.refreshHp(unitId)));
     this.subscriptions.push(
       bus.on('unit:died', (death) => {
         this.removeUnit(death.unitId);
-        // 96.5b1 — the live bar: a casualties loss is a fact at the death
-        // (the loss-event model, src/run/chipRule.ts); the payload's power is
-        // what the World booked, so the ghost and the ledger agree by
-        // construction.
+        // A casualty's loss is a fact at the death (the loss-event model,
+        // src/run/chipRule.ts), and the payload's power is what the World
+        // booked, so the ghost and the ledger agree.
         this.applyLosses(lossEventsForDeath(death));
       }),
     );
-    // 96.5b1 → b2 — the end sequence: a cap turn's survivors surcharge
-    // becomes a fact only now. The end events launch as the orb sequence
-    // (one per standing survivor, staggered); once every orb of either kind
-    // has landed, the settle beat, then the COMMIT — and `lossesSettled()`
-    // resolves, which the BattleScene hands Game as the outro's own length
-    // (the kickoff's points 3 + 5).
+    // The end sequence: a cap turn's survivors surcharge is a fact only now.
+    // The end events fly as orbs, one per standing survivor, staggered; once
+    // every orb in flight has landed comes the settle beat, then the commit,
+    // and `lossesSettled()` resolves. It is BattleScene's `outro`, which Game
+    // waits on before the turn advances.
     this.subscriptions.push(
       bus.on('battle:ended', ({ winner, reason }) => {
         if (!this.world) return;
@@ -470,9 +442,9 @@ export class HUD {
     );
   }
 
-  /** 96.5b1/b2 — deliver a loss-event batch: each event becomes an orb from
-   *  its cause's card to the paying gauge (the ghost grows ON THE LANDING);
-   *  a cause with no card, or reduced motion, lands at once. */
+  /** Deliver a batch of loss events: each flies as an orb from its cause's
+   *  card to the gauge that pays, and the ghost grows on the landing. A cause
+   *  with no card, a missing gauge, or reduced motion lands at once. */
   private applyLosses(events: readonly PoolLossEvent[]): void {
     for (const e of events) this.deliver(e);
   }
@@ -486,10 +458,10 @@ export class HUD {
       gauge.setPending(this.pending[e.target]);
       gauge.pulse();
       const max = gauge.reading().max;
-      // 96.5b2-post — the landing cue, scaled with the loss (gain up, pitch
-      // down); it plays under reduced motion too (a sound is not motion),
-      // and for either pool whatever the shake policy — the shake is the
-      // policy's, the cue is every landing's.
+      // The landing cue, scaled with the loss (gain up, pitch down). It plays
+      // under reduced motion too, a sound being no motion, and for either
+      // pool whatever the shake policy: the shake follows the policy, the
+      // cue every landing.
       this.audio.play('moraleloss', lossCue(e.amount, max));
       if (shakeAllowed(e.target)) shakeView(e.amount, max);
     };
@@ -517,8 +489,8 @@ export class HUD {
     this.inFlight.add(flight);
   }
 
-  /** 96.5b2 — launch the end events at the stagger, wait for every orb in
-   *  flight (the last deaths' included), the settle beat, then commit. */
+  /** Launch the end events at the stagger, wait for every orb in flight
+   *  (the last deaths' included), the settle beat, then commit. */
   private async runEndSequence(events: readonly PoolLossEvent[]): Promise<void> {
     const reduced = reducedMotion();
     for (let i = 0; i < events.length; i++) {
@@ -530,59 +502,58 @@ export class HUD {
     this.commitLosses();
   }
 
-  /** 96.5b2 — resolves when the after-battle sequence has committed (at
-   *  once when no battle has ended on this HUD). */
+  /** Resolves when the after-battle sequence has committed (at once when no
+   *  battle has ended on this HUD). */
   lossesSettled(): Promise<void> {
     return this.settled ?? Promise.resolve();
   }
 
-  /** 96.5b1 — the ghost becomes the fill (Run has already booked the same
-   *  charge through `resolveTurn`; this is the bar catching up to it). */
+  /** The ghost becomes the fill: Run has already booked the same charge
+   *  through `resolveTurn`, and this is the bar catching up to it. */
   private commitLosses(): void {
     this.playerGauge?.commit();
     this.enemyGauge?.commit();
     this.pending = { player: 0, enemy: 0 };
   }
 
-  /** 96.5b2 — drop every orb (a teardown mid-flight, or a fresh show()). */
+  /** Drop every orb (a teardown mid-flight, or a fresh `show()`). */
   private cancelOrbs(): void {
     for (const orb of this.orbs) orb.cancel();
     this.orbs.clear();
   }
 
   /**
-   * Bind to a fresh battle world. Must be called *before* the battle starts
-   * spawning so unit:spawned events find a world to look up against.
-   * `locationName` populates the top banner — pass `t('map.uncharted')`
-   * ("Uncharted Ground") for procedural encounters (no hand-authored layout).
+   * Bind to a fresh battle world. Call it before the teams spawn, so the
+   * `unit:spawned` handlers find a world. `locationName` is the banner's
+   * text (BattleScene's: the layout's name, or `map.uncharted` for a
+   * procedural board).
    */
   show(world: World, hop: number, locationName: string, encounter?: EncounterPools): void {
     this.world = world;
-    // Q6 — the hop chip folds in the per-turn counter (the dropped HUD-pool
-    // "Turn N" line) so no run context is lost with the old panel gone.
+    // The hop chip carries the turn too, when there is an encounter.
     this.hopLabel.textContent = encounter
       ? t('hud.hopTurn', { hop, turn: encounter.turn })
       : t('common.hop', { hop });
     this.banner.textContent = locationName;
-    // Q4/Q5 — reset both card panes: drop last battle's cards (one map covers
-    // both teams), repaint the pool gauges from this encounter's pools.
+    // Reset both panes: last battle's cards out (one map holds both teams),
+    // the gauges painted from this encounter's pools.
     this.playerCardRow.replaceChildren();
     this.enemyCardRow.replaceChildren();
     this.cards.clear();
     this.detachCardTooltips();
     this.renderPlayerPool(encounter);
     this.renderEnemyPool(encounter);
-    // 96.5b1 — the opening ghost: a fresh battle has booked nothing; a
-    // mid-battle restore opens at the deaths already booked (World v36
-    // serializes the accumulator), so the bar reads the same after a reload.
+    // The opening ghost: a fresh battle has booked nothing; a mid-battle
+    // restore opens at the deaths already booked (the World's snapshot keeps
+    // the accumulator), so the bar reads the same after a reload.
     this.pending = bookedImmediateLoss(world.fallenPowerSoFar());
     this.playerGauge?.setPending(this.pending.player);
     this.enemyGauge?.setPending(this.pending.enemy);
-    // 96.5b2 — a fresh battle starts with no orbs and no settle pending.
+    // A fresh battle starts with no orbs and no settle pending.
     this.cancelOrbs();
     this.settled = null;
-    // 96.5c/c2 — the notch on EACH bar: the pre-turn bound on the player's,
-    // its mirror on the enemy's.
+    // The notch on each bar: the pre-turn bound on the player's, its mirror
+    // on the enemy's.
     this.playerGauge?.setCeiling(encounter?.poolAtRisk ?? 0);
     this.enemyGauge?.setCeiling(encounter?.enemyPoolAtRisk ?? 0);
     fadeIn(this.hopLabel);
@@ -594,21 +565,19 @@ export class HUD {
   }
 
   /**
-   * Permanent teardown — BattleScene calls this when the battle ends.
-   * Unsubscribes from the bus, then fades the root out and removes it so the
-   * following Scene's screen-fade can take over cleanly.
+   * Permanent teardown, from BattleScene's `dispose` when the scene is
+   * swapped out. Unsubscribes everything, then fades out and removes each
+   * element, so the next scene's fade takes over cleanly.
    */
   dispose(): void {
-    // J3 — this also drops the per-speed + pause keybinding subscriptions (they
-    // were pushed onto `subscriptions`), so the hotkeys stop firing across
-    // battles. The chosen speed + paused state survive — they live on the
-    // page-lifetime `playback`; the registry + its window listener are
-    // page-lifetime too.
+    // The hotkey subscriptions are on `subscriptions` too, so the hotkeys
+    // stop here. The speed and the pause survive on the page-lifetime
+    // `playback`, and the registry and its window listener are the page's.
     for (const unsub of this.subscriptions) unsub();
     this.subscriptions.length = 0;
     this.detachCardTooltips();
-    // 101d — a dispose mid-countdown (a scene swap) must not leave the
-    // observer + the window listener behind.
+    // A dispose mid-countdown (a scene swap) must not leave the observer and
+    // the window listener behind.
     this.unwatchCountdownAnchor();
     fadeOutAndRemove(this.hopLabel);
     fadeOutAndRemove(this.banner);
@@ -619,27 +588,27 @@ export class HUD {
     fadeOutAndRemove(this.playerCardPane);
     fadeOutAndRemove(this.enemyCardPane);
     fadeOutAndRemove(this.countdownEl);
-    // 96.5b2 — an orb mid-flight would outlive the panes it flew between.
+    // An orb mid-flight would outlive the panes it flew between.
     this.cancelOrbs();
     this.world = null;
   }
 
-  /** Q1 — select a running speed (the click + hotkey handler), then repaint. */
+  /** Select a running speed (the click and hotkey handler), then repaint. */
   private selectSpeed(value: number): void {
     this.playback.setSpeed(value);
     this.renderSpeedPane();
   }
 
-  /** Q1 — pause/unpause the sim (the toggle + hotkey handler), then repaint. */
+  /** Pause or resume the sim (the toggle and hotkey handler), then repaint. */
   private togglePause(): void {
     this.playback.togglePause();
     this.renderSpeedPane();
   }
 
-  /** Q1 — paint the speed pane: the selected running speed reads "engaged"
-   *  (`aria-pressed` + `.is-active`), but only while NOT paused; the pause
-   *  toggle shows ⏸ when running / ▶ when paused and engages while paused.
-   *  Tooltips show the live binding so a rebind is reflected here. */
+  /** Paint the speed strip: the selected speed reads engaged (`aria-pressed`
+   *  and `.is-active`) only while not paused; the pause toggle shows `❚❚`
+   *  while running and ▶ while paused, and engages while paused. The
+   *  tooltips show the live binding, so a rebind shows here. */
   private renderSpeedPane(): void {
     const paused = this.playback.isPaused;
     const selected = this.playback.selectedSpeed;
@@ -649,28 +618,28 @@ export class HUD {
       btn.setAttribute('aria-pressed', String(active));
     }
     if (this.pauseButton) {
-      // 101a — `❚❚`, not U+23F8 ⏸: neither shipped face has the pause
-      // symbol (the inventory pin), and a heavy bar pair reads as one.
+      // `❚❚`, not U+23F8 ⏸: the shipped font lacks the pause symbol
+      // (tests/font-coverage.test.ts), and a heavy pair of bars reads as one.
       this.pauseButton.textContent = paused ? '▶' : '❚❚';
       this.pauseButton.classList.toggle('is-active', paused);
       this.pauseButton.setAttribute('aria-pressed', String(paused));
       this.pauseButton.setAttribute('aria-label', this.pauseLabel());
-      // 97c — an open tooltip re-reads the label (the hotkey path repaints
+      // An open tooltip re-reads the label (the hotkey path repaints
       // without a click; the click path refreshes itself).
       refreshTooltip(this.pauseButton);
     }
   }
 
-  /** Q2 — during the countdown the board is held and ▶ means "start the
-   *  fight", so the toggle reads "Fight now" rather than "Resume". */
+  /** During the countdown the board waits and ▶ starts the fight, so the
+   *  toggle reads "Fight now" rather than "Resume". */
   private pauseLabel(): string {
     if (this.inCountdown) return t('hud.pause.fightNow');
     return this.playback.isPaused ? t('hud.pause.resume') : t('hud.pause.pause');
   }
 
-  /** Q2 — show / update the pre-battle countdown readout (BattleScene drives it
-   *  each held frame with the whole seconds remaining). Re-renders the speed
-   *  pane on entry so the pause toggle reads "Fight now" while held. */
+  /** Show or update the countdown (BattleScene calls it each frame of the
+   *  countdown with the whole seconds left). Repaints the speed strip on
+   *  entry, so the pause toggle reads "Fight now" while it counts. */
   showCountdown(seconds: number): void {
     if (!this.inCountdown) {
       this.inCountdown = true;
@@ -686,17 +655,15 @@ export class HUD {
   }
 
   /**
-   * Q5 fix — keep the countdown readout clear of the top enemy pane. The CSS
-   * default (`max(18%, 230px)`) clears a ONE-row pane on any viewport, but on a
-   * narrow/short screen the enemy cards wrap to 2–3 rows and the pane bottom
-   * grows past any static value — so measure it and push the readout below the
-   * pane's actual bottom when needed. Only ever moves it DOWN from the CSS
-   * default (never above the aesthetic 18%/230 placement the one-row case uses).
-   * Measured on countdown entry AND re-measured for the countdown's life
-   * (`watchCountdownAnchor`, 101d) — "the pane is static while the sim is
-   * parked" was the assumption that broke: a card added mid-hold, a status or
-   * empower row un-hiding (`refreshStatuses` paints them on the parked clock
-   * since 97f-post), a wrap from a window resize all move the pane's bottom.
+   * Keep the countdown clear of the enemy pane. The CSS default
+   * (`max(18%, 230px)`) clears a one-row pane on any viewport, but on a
+   * narrow or short screen the enemy cards wrap to two or three rows and the
+   * pane's bottom passes any fixed value, so this measures the pane and
+   * moves the readout below it when needed, never above the CSS default. It
+   * runs on the countdown's entry and for as long as it counts
+   * (`watchCountdownAnchor`): a card added during the countdown, a status or
+   * empower row appearing (`refreshStatuses` paints them on the waiting
+   * clock) and a re-wrap on a resize all move the pane's bottom.
    */
   private positionCountdown(): void {
     const enemyBottom = this.enemyCardPane.getBoundingClientRect().bottom;
@@ -706,16 +673,16 @@ export class HUD {
   }
 
   /**
-   * 101d — the once-measured countdown RE-MEASURES. The enemy pane's bottom is
-   * the readout's anchor and the countdown is its only consumer, so instead of
-   * reserving a status + empower row on every compact tile (6–10 tiles of
-   * vertical budget to hold one number still), the consumer follows the
-   * anchor: a ResizeObserver on the pane (its box changes whenever a card is
-   * added, a row un-hides or the cards re-wrap) plus the window's `resize` (a
-   * height-only resize moves the 18% default without resizing the pane). Both
-   * live only while the countdown holds — `unwatchCountdownAnchor` runs on
-   * hide and on dispose. The observer delivers between layout and paint, so
-   * the readout never paints a frame at a stale `top`.
+   * Re-measure the countdown as its anchor moves. The enemy pane's bottom is
+   * the readout's anchor and the countdown its only consumer, so the readout
+   * follows the pane rather than every compact card reserving its status and
+   * empower rows to hold one number still. A ResizeObserver on the pane (its
+   * box changes when a card is added, a row appears or the cards re-wrap)
+   * and the window's `resize` (a height-only resize moves the 18% default
+   * without resizing the pane) both live only while the countdown counts;
+   * `unwatchCountdownAnchor` runs on hide and on dispose. The observer
+   * delivers between layout and paint, so the readout never paints a frame
+   * at a stale `top`.
    */
   private watchCountdownAnchor(): void {
     this.unwatchCountdownAnchor();
@@ -738,7 +705,7 @@ export class HUD {
     this.countdownAnchorWatch = null;
   }
 
-  /** Q2 — hide the countdown readout (the fight has started). */
+  /** Hide the countdown (the fight has started). */
   hideCountdown(): void {
     if (!this.inCountdown) return;
     this.inCountdown = false;
@@ -748,34 +715,34 @@ export class HUD {
     this.renderSpeedPane();
   }
 
-  /** Q2 — the Fight-now control (the readout button): resume playback. That
-   *  unpause is the skip signal BattleScene watches, so this button, the ▶ pause
-   *  toggle, and the Space hotkey all start the fight through one path. */
+  /** Fight now (the countdown's button): resume playback. That is the skip
+   *  BattleScene watches for, as the pause toggle, its hotkey and a speed
+   *  button are. */
   private fightNow(): void {
     this.playback.resume();
     this.renderSpeedPane();
   }
 
-  /** Q3 — dispatch an objective-pane button (click or hotkey): engage/focus arm
-   *  a target pick, hold/stop apply immediately. */
+  /** Run an objective button (click or hotkey): engage and focus arm a
+   *  target pick, hold and stop apply at once. */
   private invokeObjective(def: ObjectiveButtonDef): void {
     if (def.mode === 'engage' || def.mode === 'focus') this.objective.arm(def.mode);
     else if (def.mode === 'hold') this.objective.hold();
     else this.objective.stop();
   }
 
-  /** Q3 — BattleScene flips this when the controller arms/disarms (via
-   *  onArmedChange), so the armed button shows its "click a target" state
-   *  whether arming came from the pane or the hotkey. */
+  /** BattleScene calls this when the controller arms or disarms
+   *  (`onArmedChange`), so the armed button shows its pick prompt whether the
+   *  arm came from the pane or a hotkey. */
   setObjectiveArmed(mode: ObjectiveArmMode | null): void {
     this.armedMode = mode;
     this.renderObjectivePane();
   }
 
-  /** Q3 — paint the objective pane: the team's ACTIVE mode reads "engaged"
-   *  (`.is-active` + `aria-pressed`); the armed target-pick button (engage/focus)
-   *  swaps to a "click a target" prompt + `.is-armed`. Labels carry the live
-   *  hotkey so a rebind shows up. */
+  /** Paint the objective pane: the team's active mode reads engaged
+   *  (`.is-active` and `aria-pressed`); the armed button (engage or focus)
+   *  swaps to the pick prompt and `.is-armed`. The words carry the live
+   *  hotkey, so a rebind shows. */
   private renderObjectivePane(): void {
     for (const def of OBJECTIVE_BUTTONS) {
       const btn = this.objectiveButtons.get(def.mode);
@@ -797,48 +764,41 @@ export class HUD {
     if (!this.world) return;
     const unit = this.world.findUnit(unitId);
     if (!unit) return;
-    // Neutrals (walls, environment) are background, not combatants — no card.
-    // §75h — ACTIVE neutrals (camp members) stay card-less too, DELIBERATELY:
-    // the kickoff shape-lock's signed "no HUD cards for camp units in v1"
-    // (sprite/overlay treatment only; a hostile-camp row is a possible later
-    // follow-up). Don't "fix" this by widening the gate.
+    // Neutrals (walls, scenery) are background, not combatants: no card.
+    // Camp members are neutrals and get none either, by a signed decision
+    // (a camp reads through its sprites and overlays); don't widen the gate.
     if (unit.team === 'neutral') return;
-    // Q4/Q5 — both teams get a compact card in their pane (player bottom-center,
-    // enemy top).
+    // Both teams get a compact card, each in its own pane.
     this.addCard(unitId, unit);
   }
 
-  /** Q4/Q5 — build a compact card for a freshly spawned combatant and append it
-   *  to its team's pane (player bottom-center / enemy top). Append order = spawn
-   *  order (≈ hand-slot order for the player), so each grid stays positionally
-   *  stable across the turn. */
+  /** Build a compact card for a newly spawned combatant and append it to its
+   *  team's pane. The order is the spawn order (about the hand's slot order
+   *  for the player), so each row holds still through the turn. */
   private addCard(unitId: number, unit: Unit): void {
     const team = unit.team === 'enemy' ? 'enemy' : 'player';
     const handles = buildUnitCard(unitCardFromUnit(unit), { mode: 'compact', skin: 'hud', team });
-    // 78d fix — invalidate the per-tick status/marker cache: the Q2 countdown
-    // PARKS the clock at tick 0, so a card added after this tick's one
-    // refresh pass would show no empower markers (or seeded statuses) until
-    // the countdown ends and the tick finally advances (user catch). A reset
-    // makes the next frame's refreshStatuses repopulate every card even on a
-    // parked clock.
+    // Reset the per-tick status and marker gate: the countdown holds the
+    // clock at tick 0, so a card added after this tick's one pass would show
+    // no empower markers or seeded statuses until the fight starts. With the
+    // reset, the next frame's `refreshStatuses` repaints every card on the
+    // waiting clock.
     this.statusTick = -1;
-    // 78b — ENEMY cards are objective click targets (left=engage / right=focus,
-    // the board fast paths extended to the cards). Player cards stay inert —
-    // the shape-lock dropped them: a player-card click has no coherent meaning
-    // under the team-wide objective model (per-unit objectives are out of
-    // cluster scope). Liveness is gated at CLICK time, not build time, so a
-    // dead unit's grayed card goes inert the moment it dies.
+    // Enemy cards are objective targets: a left click engages and a right
+    // click focuses, the board's fast paths on the cards. Player cards stay
+    // inert, since a click on one has no meaning under the team-wide
+    // objective. Liveness is checked at the click, not here, so a card goes
+    // inert the moment its unit dies.
     if (team === 'enemy') {
       handles.el.classList.add('hud-card-targetable');
-      // 100c2 — the keyboard route (role=button + Enter; Space is the pause
-      // hotkey in battle and the helper defers to it — pressable.ts). The
-      // tooltip's focus route (97c's rider) lands with the tab stop.
+      // The keyboard route: role=button and Enter (Space is the battle's
+      // pause hotkey, and `pressable` defers to it). The tab stop gives the
+      // tooltip its focus route.
       pressable(handles.el);
-      // 97c — hover / key only (`touch: 'none'`): the card's contextmenu IS
-      // the focus objective, so a long-press cannot also be the tooltip; a
-      // tap acts (100c2: it honours an armed pick, so touch has the focus
-      // objective through the pane too). Never sole-source — the objective
-      // pane carries the same two actions.
+      // Hover and focus only (`touch: 'none'`): the card's contextmenu is the
+      // focus objective, so a long press can't also be the tooltip, and a tap
+      // acts. The tooltip is never the only route: the objective pane
+      // carries the same two actions.
       this.cardTooltips.set(
         unitId,
         attachTooltip(
@@ -850,10 +810,9 @@ export class HUD {
           { touch: 'none' },
         ),
       );
-      // 100c2 — the click HONOURS an armed pick (the board pick always did;
-      // the card passed 'engage' literally since 78b — the kickoff audit §G):
-      // arm Focus on the pane (or F), then click / tap / Enter the card. That
-      // is the focus objective's keyboard AND touch route; right-click stays
+      // A click honours an armed pick, as the board's does: arm Focus on the
+      // pane (or by its hotkey), then click, tap or Enter the card. That is
+      // the focus objective's keyboard and touch route; a right click stays
       // the mouse's shortcut.
       handles.el.addEventListener('click', () =>
         this.setObjectiveOnCard(unitId, this.armedMode ?? 'engage'),
@@ -867,9 +826,9 @@ export class HUD {
     (team === 'enemy' ? this.enemyCardRow : this.playerCardRow).appendChild(handles.el);
   }
 
-  /** 78b — an enemy-card click: set the objective in `mode` on that unit,
-   *  through the same `ObjectiveControls` chokepoint as the pane buttons. A
-   *  dead or reaped unit no-ops (the grayed death readout is not a target). */
+  /** An enemy card's click: set the objective in `mode` on that unit,
+   *  through the same `ObjectiveControls` as the pane's buttons. A dead or
+   *  reaped unit does nothing (a grayed card is not a target). */
   private setObjectiveOnCard(unitId: number, mode: ObjectiveArmMode): void {
     const unit = this.world?.findUnit(unitId);
     if (!unit || unit.currentHp <= 0) return;
@@ -884,23 +843,22 @@ export class HUD {
     if (card) updateCardHp(card, unit);
   }
 
-  /** 97c — drop every enemy card's tooltip registration (closing an open one). */
+  /** Drop every enemy card's tooltip registration (closing an open one). */
   private detachCardTooltips(): void {
     for (const detach of this.cardTooltips.values()) detach();
     this.cardTooltips.clear();
   }
 
   private removeUnit(unitId: number): void {
-    // Q4 — the card is NOT removed: it grays in place (death readout) so the
-    // grid keeps a stable order through the turn. Empty the bar in case the
-    // lethal hit's clamp left it above 0.
+    // The card stays, grayed in place, so the row keeps its order through
+    // the turn; its bar empties whatever the last HP event drew.
     const card = this.cards.get(unitId);
     if (card) {
       card.el.classList.add('is-dead');
       if (card.hpFill) card.hpFill.style.width = '0%';
-      // 100c2 — a dead enemy card leaves the Tab order (the click path already
-      // no-ops on a dead unit; the tab stop would be a dead end). The 100c1
-      // map-node shape: `aria-disabled`, never `disabled`.
+      // A dead enemy card leaves the Tab order: a click on it does nothing,
+      // so its tab stop would be a dead end. `aria-disabled`, never
+      // `disabled`, as the map's inert nodes have it.
       if (card.el.getAttribute('role') === 'button') {
         card.el.tabIndex = -1;
         card.el.setAttribute('aria-disabled', 'true');
@@ -908,14 +866,13 @@ export class HUD {
     }
   }
 
-  /** Q4 — paint the run health-pool gauge beneath the player cards (the brief's
-   *  "player run health-pool bar"). Cleared when no encounter info is supplied
-   *  (e.g. a bare test mount). */
+  /** Paint the run's pool gauge under the player's cards; empty when `show`
+   *  gets no encounter. */
   private renderPlayerPool(e?: EncounterPools): void {
     this.playerPoolWrap.replaceChildren();
     this.playerGauge = null;
     if (!e) return;
-    // 96.5b1 — a live handle (the ghost moves per loss event), not a one-shot.
+    // A live handle: the ghost moves with each loss event.
     this.playerGauge = createPoolGauge(
       'player',
       t('hud.pool.you'),
@@ -925,8 +882,8 @@ export class HUD {
     this.playerPoolWrap.appendChild(this.playerGauge.el);
   }
 
-  /** Q5 — paint the enemy encounter health-pool gauge above the enemy cards.
-   *  Cleared when no encounter info is supplied (e.g. a bare test mount). */
+  /** Paint the encounter's pool gauge over the enemy's cards; empty when
+   *  `show` gets no encounter. */
   private renderEnemyPool(e?: EncounterPools): void {
     this.enemyPoolWrap.replaceChildren();
     this.enemyGauge = null;
@@ -941,7 +898,7 @@ export class HUD {
   }
 
   /**
-   * §32c — refresh every compact card's status row. Called each frame by
+   * Refresh every compact card's status row. Called each frame by
    * BattleScene but gated on the sim tick advancing: the readout is constant
    * between ticks (it's derived from `currentTick`), so this recomputes at most
    * once per tick. A reaped unit (`findUnit` → null) clears its row, so a dead
@@ -954,11 +911,10 @@ export class HUD {
     for (const [unitId, card] of this.cards) {
       const unit = world.findUnit(unitId);
       updateCardStatusRow(card, unit ? readUnitStatuses(unit.effects, world.currentTick) : []);
-      // 78d — the empower markers ride the same per-tick gate: the
-      // badge-eligible stat buffs `readUnitStatuses` deliberately skips
-      // (EMPOWER_DISPLAY membership IS the eligibility filter — one table
-      // drives color + presence). A reaped unit clears its markers like it
-      // clears its status row.
+      // The empower markers ride the same gate: the stat buffs
+      // `readUnitStatuses` skips, those in EMPOWER_DISPLAY (one table gives a
+      // marker its colour and decides whether it shows). A reaped unit
+      // clears its markers as it clears its status row.
       updateCardEmpowerMarkers(
         card,
         unit ? unit.effects.filter((e) => e.key in EMPOWER_DISPLAY) : [],
@@ -967,8 +923,8 @@ export class HUD {
   }
 }
 
-/** Q4 — drive a compact card's HP bar from the live unit. Clamps like the sim:
- *  currentHp can dip negative for ~1 tick before DeathBehavior fires. */
+/** Drive a compact card's bar from the live unit, clamped: currentHp can sit
+ *  below 0 until the unit is reaped (`World.reapUnit`). */
 function updateCardHp(card: UnitCardHandles, unit: Unit): void {
   if (!card.hpFill) return;
   const hp = Math.max(0, unit.currentHp);

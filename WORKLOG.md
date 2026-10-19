@@ -12250,3 +12250,122 @@ at the hand-off.
 **Batches 3 and 4, read** (the user, 2026-10-19, after the hand-off):
 "Those look great, Claude!", and asked whether that signed the two reads,
 "Yes, those were reads". Both batches are read; no read is open.
+
+### 124.5h, batch 5 — the battle HUD (2026-10-19, session bcd08e32)
+
+The 8 files: `HUD.ts`, `PlaybackSpeed.ts`, `ObjectiveController.ts`,
+`poolGauge.ts`, `PoolOverlay.ts`, `lossFx.ts`, `fallenSide.ts`,
+`chipLabels.ts`; all changed, and `BattleScene.ts` for a twin. Out: the
+step codes (the UI round's pane letters on most comments, the live pool
+bar's, the objectives' and the countdown's) and the `§` marks, the
+capitals, and the history: the dismantled side panel and its "relocated"
+gauges, what the speed pane replaced, the at-will default that once lit
+Stop, the playtest stories behind the enemy notch, the landing cue and the
+orb's backstop, the kickoff audit's counts, and an inspiration's name. Each
+reason those stories carried stays as the reason: Stop is an action and
+never highlighted, one notched gauge alone reads as an oversight, the
+notch leaves with the commit or it jumps during the outro, a stalled orb
+lands on the clock so Game's outro can't wait forever. `lossFx.ts`'s two
+`i18n-ok` marker lines were not touched.
+
+**Statements found false and corrected (rule 7):**
+
+- `HUD.ts`: the objective buttons' icons echoed the board marker, engage's
+  as `⌖`. Engage's icon is `◎` and the board's engage marker is `X`
+  (`BattleRenderer.ts`); only focus's `!` is the marker's.
+- `HUD.ts`: `dispose` ran "when the battle ends"; BattleScene's `dispose`
+  calls it when the scene is swapped out, after the outro.
+- `HUD.ts`: the status-tick refresh reached "the roster rows" too; the HUD
+  has no roster rows. And `updateCardHp`'s clamp waited on "DeathBehavior",
+  which doesn't exist: the World reaps a dead unit (`reapUnit`).
+- `HUD.ts`: the speed strip's toggle showed ⏸ while running; it shows `❚❚`,
+  since the font lacks ⏸, as the same function's other comment says.
+- `HUD.ts`: the pause key would double as Fight now "once that lands"; it
+  has. And the start routes were the button, the toggle and Space; a speed
+  button resumes playback too, which BattleScene reads as the skip.
+- `HUD.ts`: the gauges were cleared "on a bare test mount"; no test mounts
+  the HUD, and BattleScene, its one caller, always passes an encounter. It
+  now says what `show` does with none.
+- `PlaybackSpeed.ts`: a disabled speed was the "difficulty system['s]"; no
+  difficulty setting touches the speeds (`config/difficulty.json`); it is
+  the playback config's `enabled`.
+- `ObjectiveController.ts`: the second billboard list and the cell
+  fallback took "destructible" neutrals. Both take any neutral an order may
+  name, a camp member too (`validNeutralObjectiveTarget`, which
+  `destructibleBillboards` filters by, as its own comment says). The header
+  resolved a click "through `objectiveAtCell`" alone, skipping the
+  billboards; it points to `setFromClient`. And `enqueueObjective` served
+  "all three resolve paths"; `setOn` uses it too.
+- Its twin outside the batch: `BattleScene.ts` said "Destructible neutrals
+  are click targets too". Corrected here and flagged.
+- `poolGauge.ts`: the gauge was "pure DOM, no state"; `createPoolGauge`'s
+  handle holds the live numbers. And the HUD showed it "compactly"; the
+  HUD's gauges are the wider form (20rem against 13.75rem, ui.css, for the
+  encounter's name).
+- `PoolOverlay.ts`: Game called `refresh()` "from `resetRun` / `restore`";
+  there is no `restore`, and the calls are in `resetRun`,
+  `confirmCharacter` and `adopt`. The first run's `run:started` fires
+  before the chip exists only on a page booted with a `character` dial; it
+  now says so and names gotcha #116.
+- `lossFx.ts`: the module was "eyeball-verified"; `lossFx.test.ts` pins the
+  shake's size, the cue, the orb's size and the policy. And "a settings
+  toggle is Round 8's": the Shake setting exists (`settings.ts`, applied by
+  Game through `setShakePolicy`), beside the dev chord.
+- `fallenSide.ts`: the run-wide glyph run's example was `M×5 A×2`; the
+  archer's glyph is `a` (`config/units.json`).
+- `chipLabels.ts`: `POOL_LABELS` named "the two full gauges (the pre-turn
+  screen, the HUD)"; the HUD's gauges are labelled `hud.pool.you` and the
+  encounter's name. It serves the pre-turn screen's gauges and the chip.
+
+**Kept, checked at the code they name:** the speed and objective hotkeys
+in `config/keybindings.json` and the sink's `preventDefault` only with a
+handler, so an unsubscribed digit falls through; the playback schema's
+enabled 1×; `SettingsOverlay` as the hold's one caller and Game's
+`setSpeed` calling `select`; BattleScene's countdown (`playback.pause`, a
+resume as the skip, the hold standing it still, `refreshStatuses` before
+`showCountdown`); `outro()` as `lossesSettled()`, which Game waits on
+beside `TURN_OUTRO_MS`; Run booking the charge at `battle:ended` through
+`resolveTurn`; `lossEventsForDeath`, `lossEventsAtEnd`,
+`bookedImmediateLoss` and `rulesForTurn`; every damage going through
+`dealDamage`, whose callers emit `unit:attacked` or `status:ticked`; the
+countdown's CSS default `max(18%, 230px)`; `.hud-enemy-cards`'s 30vh and
+scroll; the notch's 2px; `.loss-orb`'s z-index 25 between the corner
+buttons' 20 and the modals' 30; the two greens of `.is-active` and
+`.is-armed`; `#game-canvas`, `#ui` and `#scanlines`; Ctrl+Alt+K; ⏸ absent
+from the font (`tests/font-coverage.test.ts`); `readUnitStatuses` skipping
+plain stat effects and `EMPOWER_DISPLAY`'s colour and label; `pressable`
+deferring Space; the map's inert nodes on `aria-disabled`; a camp's sprite
+colour and ground mark (`spriteColor.ts`, `groundMarks.ts`), so "camp
+members get no card" stands as a signed decision with its reason; the
+player pool's 40 and a mercenary's power of 1; Run's constructor setting
+the pool; `setPlayerHealth`'s five reasons; Game's swap, `adopt` and
+`quitToMenu` driving the chip; the chip fourth in the column (CSS `order`
+5 after 1, 2 and 4); `summarizeFallen` over the ledger; the locale strings
+the comments quote. Nothing was dropped unchecked.
+
+Left for `ui.css`'s batches: its `.battle-countdown` comment has the HUD
+measuring the pane "on countdown entry" (it re-measures through the
+countdown), and its `.pool-overlay` comment lists the screens the chip
+shows on, a list `PoolOverlay.ts` no longer keeps.
+
+Measured (`comment-length` on copies under `output/cl-1245h-b5`): comment
+lines 697 → 637, words 6,727 → 6,031, code lines 1,179 unchanged. The
+step-code ceiling 1,963 → 1,775, the 188 these files held, 114 of them in
+`HUD.ts`.
+
+Proof: `comment-strip HEAD src`, comments only, exit 0; its control made
+one code edit in memory in each of the 9 changed files and the compare
+named all 9 (`BattleScene.ts` among them).
+
+Cost: 115,509 at 22:10 (the session's first reading, after its
+orientation) to 312,426 at 22:25 after the proof, about 197k for 2,021
+lines with the orientation in it, about 97 a line. As the hand-off said,
+these files carried a code and some history on most comments.
+
+**Read** (`batch`): `git show <this commit> -- src/ui/ObjectiveController.ts
+src/ui/lossFx.ts` against the seven rules. Wrong looks like a step code or
+capitals left, history kept (a remap at a shape-lock, a playtest's story),
+or a reason or rule cut: a right click focuses whatever is armed; a
+command lands at the drain at the top of a tick, never mid-tick; the
+shake's motion gate sits on `shakeView` itself; a stalled orb lands on the
+clock.

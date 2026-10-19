@@ -117,8 +117,9 @@ export class BattleScene implements Scene {
       ctx.renderer,
       ctx.terrain,
       () => this.battleRenderer?.enemyBillboards() ?? [],
-      // Destructible neutrals are click targets too, so a manual Engage or
-      // Focus can order an attack on one.
+      // The neutrals an order may name (a destructible or a camp member) are
+      // click targets too, so a manual Engage or Focus can order an attack
+      // on one.
       () => this.battleRenderer?.destructibleBillboards() ?? [],
     );
     this.hud = new HUD(

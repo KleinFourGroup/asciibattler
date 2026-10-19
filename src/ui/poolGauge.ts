@@ -1,19 +1,19 @@
 /**
- * H4b — a labeled health-pool gauge (player or enemy): a name + `current / max`
- * readout above a proportional fill bar. Shared by the pre-turn screen and
- * (compactly) the in-battle HUD so the two pools read identically everywhere.
- * Pure DOM, no state — re-render to update.
+ * A labelled pool gauge, the player's or the enemy's: a name and a
+ * `current / max` readout over a proportional fill. The pre-turn screen and
+ * the battle HUD (wider there, for the encounter's name; ui.css) both use
+ * it, so the pools read the same on both.
  *
- * 96.5b1 — THE GHOST. The battle HUD's gauges are live now (the loss-event
- * model, src/run/chipRule.ts): a loss the rule has made a FACT of but Run has
- * not yet booked (the charge books at `resolveTurn`) shows as a ghost
- * segment at the fill's leading edge — the solid fill stays the booked pool,
- * the readout reads `33 (−7) / 40`, and `commit()` folds the ghost into the
- * fill at the outro's end so the bar leaves the screen at the number the
- * next screen's gauge shows. The pending loss is clamped at the pool (the
- * applied charge is), so the ghost never crosses zero. `createPoolGauge`
- * returns the live handle; `renderPoolGauge` is the one-shot form the
- * pre-turn screen keeps (a ghost of 0 renders exactly the H4b gauge).
+ * The ghost: the HUD's gauges are live (the loss-event model,
+ * src/run/chipRule.ts). A loss the rule has made a fact but Run has not yet
+ * booked (the charge books at `resolveTurn`) shows as a ghost segment at the
+ * fill's leading edge. The solid fill stays the booked pool, the readout
+ * reads `33 (−7) / 40`, and `commit()` folds the ghost into the fill at the
+ * outro's end, so the bar leaves the screen at the number the next screen's
+ * gauge shows. The pending loss is clamped at the pool, as the charge is, so
+ * the ghost never crosses zero. `createPoolGauge` returns the live handle;
+ * `renderPoolGauge` is the one-shot form the pre-turn screen uses, with no
+ * ghost.
  */
 
 import { chipPulse } from './chip';
@@ -26,18 +26,18 @@ export interface PoolGaugeHandle {
   setPending(loss: number): void;
   /** Fold the ghost into the fill: the pool becomes `current − pending`. */
   commit(): void;
-  /** 96.5b2 — the live numbers (the shake scales by `max`). */
+  /** The live numbers (the shake scales by `max`). */
   reading(): { current: number; max: number; pending: number };
-  /** 96.5b2 — the orb's landing point (viewport): the fill's leading edge
+  /** The orb's landing point (viewport): the fill's leading edge
    *  as the ghost currently leaves it — where the next loss grows from. */
   anchor(): { x: number; y: number };
-  /** 96.5b2 — the landing flash (`.is-pulsing`, the chip's pulse). */
+  /** The landing flash (`.is-pulsing`, the chip's pulse). */
   pulse(): void;
-  /** 96.5c/c2 — the NOTCH: a 2px slice out of the fill at `current − loss`
-   *  (the pre-turn "at risk: up to N" bound, or its enemy mirror), the most
-   *  the ghost can reach on an ordinary turn; 0 hides it, as does a bound
-   *  covering the whole pool. Anchored to the BOOKED pool, so it holds still
-   *  while the ghost grows toward it; `commit()` clears it (the turn's over). */
+  /** The notch: a 2px slice out of the fill at `current − loss` (the
+   *  pre-turn risk bound, or its enemy mirror), the most the ghost can reach
+   *  on an ordinary turn; 0 hides it, as does a bound covering the whole
+   *  pool. It is anchored to the booked pool, so it holds still while the
+   *  ghost grows toward it; `commit()` clears it, since the turn is over. */
   setCeiling(loss: number): void;
 }
 
@@ -107,7 +107,7 @@ export function createPoolGauge(
     ghost.style.left = `${pct(parts.remaining) * 100}%`;
     ghost.style.width = `${(pct(parts.remaining + parts.pending) - pct(parts.remaining)) * 100}%`;
     gauge.classList.toggle('is-pending', parts.pending > 0);
-    // 96.5c2 — the NOTCH sits at the booked pool minus the bound: the
+    // The notch sits at the booked pool minus the bound: the
     // ghost's leading edge can reach it and, on an ordinary turn, not pass
     // it. Hidden when there is no bound, and when the bound covers the whole
     // pool (a notch at zero morale is the bar's own end).
@@ -127,9 +127,9 @@ export function createPoolGauge(
       const parts = poolValueParts(cur, max, pend);
       cur = parts.remaining;
       pend = 0;
-      // 96.5c2 — the notch is THIS turn's bound; the commit ends the turn,
-      // so it leaves with the ghost (the user's playtest: it used to
-      // re-derive against the dropped pool and jump during the outro).
+      // The notch is this turn's bound, and the commit ends the turn, so it
+      // leaves with the ghost; kept, it would re-derive against the lowered
+      // pool and jump during the outro.
       ceil = 0;
       paint();
     },

@@ -1,28 +1,25 @@
 /**
- * 94e — the persistent run-pool chip: the bits chip's page-lifetime sibling
- * (the 48d/49f ownership pattern — Game owns it, it never rides the Scene
- * mount/dispose cycle), the FOURTH chip of the left column (bits · cache · the 78e sector-map chip · this).
- * The user's §93 verdict item 7b: the pool "must be displayed during events —
- * really, everywhere." The battle HUD and the pre-turn screen keep
- * their own full gauges (the authoritative in-encounter read) — and since
- * 96.5a the chip HIDES while one of those is up (`setSuppressed`, pushed
- * from Game's swap), so morale reads once per screen; everywhere else (the
- * map, an event, the port, a reward, a recruit, the sector seam) this chip
- * is the one read of the run's real budget.
+ * The run's pool chip, page-lifetime like the bits chip: Game owns it, and
+ * it never rides a scene's mount and dispose. It is fourth in the chrome
+ * column, after bits, the cache and the sector map. The pool is shown
+ * everywhere in a run. The battle HUD and the pre-turn screen have full
+ * gauges of their own, so the chip hides while one of them is up
+ * (`setSuppressed`, from Game's swap) and morale reads once per screen; on
+ * every other screen of a run this chip is the one read of the pool.
  *
- * Wiring (the BitsOverlay notes apply verbatim):
- * - Run's constructor sets `playerHealth` directly — no event — so the first
- *   paint reads the live value via the injected getter.
- * - The FIRST run's `run:started` fires before any constructor subscription
- *   exists and, on a reset, before Game reassigns `this.run`; it serves as
- *   the re-SHOW signal only. Game calls `refresh()` from `resetRun` /
- *   `restore` AFTER the assignment.
- * - `run:poolChanged` (94e) is the paint signal: the ONE Run chokepoint
- *   (`setPlayerHealth`) emits it for every write — the chip, a rest, the
- *   seam refill, an event's heal or damage op — so the chip cannot go stale
- *   on a path that used to write the field silently (the kickoff audit
- *   found four of the five writes emitted nothing).
- * - Hides on `run:defeated` / `run:victory`, re-shows on `run:started`.
+ * Wiring:
+ * - Run's constructor sets `playerHealth` with no event, so the first paint
+ *   reads the live value through the injected getter.
+ * - `run:started` only shows the chip again: the first run's, on a page
+ *   booted with a `character` dial, fires before the chip exists, and a
+ *   later one before Game assigns the new run. Game calls `refresh()` after
+ *   each assignment (`resetRun`, `confirmCharacter`, `adopt`); gotcha #116.
+ * - `run:poolChanged` is the paint signal: Run's one writer,
+ *   `setPlayerHealth`, emits it for every change (a turn's charge, a rest,
+ *   the seam's refill, an event's heal or damage), so no path leaves the
+ *   chip stale.
+ * - It hides on `run:defeated` and `run:victory`, and shows again on
+ *   `run:started`.
  */
 
 import type { EventBus } from '../core/EventBus';
@@ -40,17 +37,18 @@ export class PoolOverlay {
   private readonly value: HTMLSpanElement;
   private readonly fill: HTMLDivElement;
   private readonly pulse: () => void;
-  /** Hidden by the RUN's state: pre-run / defeat / victory (the 94e wiring). */
+  /** Hidden by the run's state: before a run, after a defeat or a victory,
+   *  and after Quit to menu. */
   private runHidden: boolean;
-  /** 96.5a — hidden by the SCENE: a pre-turn or battle screen is
-   *  up, where the full gauges are the one morale read (the §95 playtest's
-   *  "morale reads twice" finding). Pushed by Game's swap chokepoint. Two
-   *  flags, one class: `is-hidden` = either, so a defeat inside a battle
-   *  and the game-over swap that follows cannot fight over the class. */
+  /** Hidden by the scene: a pre-turn or battle screen is up, whose full
+   *  gauges are the one morale read, and the chip would make it read twice.
+   *  Pushed by Game's swap. Two flags, one class: `is-hidden` is either, so
+   *  a defeat inside a battle and the game-over swap after it can't fight
+   *  over the class. */
   private suppressed = false;
 
   constructor(
-    /** 96e — the chrome column (src/ui/chip.ts), not the page mount. */
+    /** The chrome column (src/ui/chip.ts), not the page mount. */
     mount: HTMLElement,
     bus: EventBus<GameEvents>,
     private readonly getPool: () => PoolReading,
@@ -90,9 +88,9 @@ export class PoolOverlay {
     bus.on('run:victory', () => this.setRunHidden(true));
   }
 
-  /** 96.5a — the scene-derived hide (Game's `swap` pushes it on every
-   *  swap path, the 78e map-chip precedent): true while a pre-turn or battle
-   *  scene is mounted. The chrome column collapses the slot. */
+  /** The scene's hide, pushed by Game's `swap` on every swap: true while a
+   *  pre-turn or battle scene is mounted. The chrome column collapses the
+   *  slot. */
   setSuppressed(suppressed: boolean): void {
     this.suppressed = suppressed;
     this.applyHidden();
@@ -105,7 +103,7 @@ export class PoolOverlay {
     this.setRunHidden(false);
   }
 
-  /** 116d — hide the chip for a run that was left, not ended (Quit to menu):
+  /** Hide the chip for a run that was left, not ended (Quit to menu):
    *  no `run:defeated` or `run:victory` says so. */
   conceal(): void {
     this.setRunHidden(true);
@@ -120,8 +118,8 @@ export class PoolOverlay {
     this.el.classList.toggle('is-hidden', this.runHidden || this.suppressed);
   }
 
-  /** Re-read the live pool (the first paint + Game's post-reassignment
-   *  re-paint — the sites where the pool changes without an event). */
+  /** Re-read the live pool: the first paint, and Game's repaint after it
+   *  assigns a run, the places the pool changes with no event. */
   refresh(): void {
     const { current, max } = this.getPool();
     this.el.classList.remove('is-losing');

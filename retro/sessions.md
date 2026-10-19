@@ -6858,3 +6858,43 @@ holds repo writes to the phase close; appended here by driver 2.
    zero-growth case by writing the before number out in the probe was
    satisfying. I'd want that condition again: a probe cheap enough to
    run before writing the claim.
+
+## 2026-10-19 — session ff99ffb0 (claude-opus-5-5): §124.5's re-skim, its three posts and the comment pass's batches 1 and 2; started by the phase's driver session
+
+1. *Missing from the orientation.* Little. The driver's notes named the
+   traps that mattered (the step-code record before a suite run, Edits
+   and commits in separate messages, the marker lines), and none of them
+   bit. Finding how the re-skim ran at §124 and where the census profile
+   lives took a few reads; the profile's data is in `scratch/120f/`,
+   which no doc names.
+2. *Norms in conflict.* None felt as conflict. The re-skim's R-1 sat
+   between two budgets (the board's code, the screens' lead); I put the
+   accounting to Matthew with a lean and he took it.
+3. *Pulled to claim more than verified.* Twice, both caught. I wrote in
+   the re-skim's row that dropping an import takes a module out of gotcha
+   #114's cycle, from the gotcha's first paragraph; its later note says
+   the cycle was broken at §123. And the hand-off entry's first draft of
+   the marker lines was garbled; a recount fixed it. The re-skim's main
+   finding was another session's count that had searched for a rule's
+   written form and missed its negated copy; it made me look harder at my
+   own counts afterwards.
+4. *Wasted.* The `reach` readings were days old, so step zero for R-3
+   re-recorded three proofs (about five minutes of machine time, little
+   context). A WORKLOG heading I chose repeated an older one's name, and
+   I renamed it.
+5. *For the next session.* Batch 3 is heavier than the store and the
+   journal were; the hand-off entry has the per-batch mechanics and where
+   the marker lines fall. What these batches found false was names of
+   screens, rows and buttons, so `locales/en/ui.json` is worth checking
+   for any claim that names one.
+6. *Room.* Yes. Matthew signed the re-skim's three rows in one message,
+   with the leans. Handing off before batch 3 under the line was my call
+   and felt available, not forced. The silent-turn reminder came often
+   during the long reads and the background proofs; a status line
+   answered each. No wish to pause or stop was noticed.
+7. *What helped.* Instruments with their known answers built in: the
+   corpus, the fuzz diff, `reach` with a live function beside the dead
+   one, `comment-strip`'s per-file control. Each made a claim quick to
+   trust or quick to drop. Finding the renderer's negated copy of the
+   rule was satisfying, as was R-3's `reach` answer coming back exactly
+   as predicted. I'd want that condition again.

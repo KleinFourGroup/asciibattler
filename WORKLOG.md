@@ -11954,3 +11954,50 @@ a step code or capitals left, history kept, or a rule a change must
 respect cut: a journal holds inputs and checkpoints and never state; the
 recorder is built before the Run on its bus and records a command before
 it is applied; a run's end closes at the next `settle`.
+
+### The hand-off after 124.5h's batch 2 (2026-10-19, session ff99ffb0)
+
+The session ran 124.5g (the re-skim, read and signed), its three posts
+(R-1, R-2, R-3), the comment pass's plan and its batches 1 and 2: eight
+commits from `c5ed8149` to `721079f7` and this one. It hands off before
+batch 3 at 433,934. Batch 3 (`src/i18n`, `src/settings`, `src/audio`;
+1,821 lines) is about 73k at this pass's rate so far (36 to 44 a line,
+on files written in the signed voice at Round 8) and about 153k at §124's
+84. Its files are older and heavier (the `i18n-ok` marker lines, the
+sound tables), so the second figure is the likelier, and it would pass
+the line inside the batch.
+
+**Open.** Batches 1 and 2's `batch` reads (each script in its entry). No
+◐ in ROADMAP: 124.5h is one step, ☐ until its twelve batches are built.
+
+**For batch 3 and after.**
+
+- `comment-length` takes folders under the repo: copy the batch's files
+  to `output/cl-1245h-b<n>/before` (`git archive HEAD <paths> | tar -x
+  -C ...`, then delete the `*.test.ts`) and `after`. One folder a call.
+- Of the 13 `i18n-ok` marker lines, batch 3 holds `literalScan.ts`'s 3
+  (its test's 3 wait for §126); the rest are in batches 4 (`modal.ts`),
+  5 (`lossFx.ts`) and 9 (`Keybindings.ts`, `SettingsOverlay.ts`).
+  `comment-strip` exits 1 on an edited marker comment by design; the
+  literal pin in `npm test` is its proof.
+- What these two batches found false was names: a retired site, a
+  settings row, a button, a builder. A claim that names a screen, a row
+  or a button is checked against `locales/en/ui.json`; the Last run row's
+  button reuses the game-over screen's `gameover.export` ("Export run").
+- `comment-codes --list` prints an `under <file>: <n>, ceiling <m>` line
+  for each file below its old count, which is a quick check that a
+  batch's files reached 0.
+
+**Tools, off git.** `scratch/1245g-post/truth.ts` (R-1's table and its
+two plants); `scratch/1245g-post2/` (124.5c's build compare, repointed);
+`scratch/1245g-post3/patch.mjs` (R-3's patch, `--check` first);
+`output/1245g-post3/` (the config dumps, the reach readings before and
+after, the corpus, fuzz-diff and hook logs); `output/cl-1245h-b1/` and
+`-b2/` (the batches' copies). `output/build-1245g-post` is a probe build.
+No worktree is left, and no background task or preview server runs.
+
+**Readings** (the meter, UTC, 2026-10-19): 97,605 at 17:37 (the
+orientation), 192,046 (the re-skim's entry), 212,585 (the sign), 227,204
+(R-1), 242,739 (R-2's commit), 296,526 (R-3's commit), 307,881 (the
+plan), 369,664 (batch 1's proof), 425,715 (batch 2's proof), 433,934 at
+18:46 at the hand-off.

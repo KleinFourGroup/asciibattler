@@ -11566,3 +11566,7 @@ at 16:20 (the kickoff), 251,629 (`950f88d1`), 275,423 (`5c8e0803`),
 300,229 (`355ba158`), 333,531 (`b5ea1cf9`), 347,021 (`f1845b93`),
 384,236 (`4c617c95`), 398,479 (`c5e0a244`), 402,518 at 17:18 at the
 hand-off.
+
+**124.5e, read** (the user, 2026-10-19, after the hand-off commit):
+"Confirming that read, Claude! 😁 All three read 2 now!" Ticked in
+ROADMAP; no ◐ is open.

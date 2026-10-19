@@ -241,11 +241,10 @@ medium. The cut, signed 2026-10-19 (WORKLOG §124.5, "The kickoff"):
   `refs`; the build's bytes move, by 124f's unminified compare: 13
   constants read by name, the same values.
 - ☑ **124.5d — the dev load key's lines and `force`** (`none`).
-- ◐ **124.5e — the ability line** (`batch`). A damage or heal number
-  reads the op's own scaling, under a pin over the catalog; a display
-  change signed at §124's kickoff. Read: `?roster=corrupter,ice_mage,rioter:5`,
-  `vial` and `ice_storm` read `2 dmg` (were 8), `molotov` `2 dmg` as
-  before; wrong if another number moved.
+- ☑ **124.5e — the ability line** (`batch`, read). A damage or heal
+  number reads the op's own scaling, under a pin over the catalog; a
+  display change signed at §124's kickoff. Read 2026-10-19: all three
+  read `2 dmg`.
 - ☑ **124.5f — the neutral-target lead** (a trial, `none`). Kept: the
   truth table equal on 126 rows, `src` −7, the rule at one site.
 - ☐ **124.5g — the re-skim** (`stop`).

@@ -1,6 +1,6 @@
 /**
- * PROGRESS (Round 8 spec D1): the store's lenient `progress` section, what a
- * player has done across runs, and the rules that read and write it.
+ * Progress: the store's lenient `progress` section, what a player has done
+ * across runs, and the rules that read and write it.
  *
  * Lenient is the store's word (store.ts): a stored value its schema refuses
  * takes its fallback alone, an unknown key is dropped and a missing one takes
@@ -8,15 +8,14 @@
  * is a key in every player's browser and is permanent; a field whose meaning
  * changes gets a new name. progress.test.ts pins the names.
  *
- * THE ESCALATION UNLOCKS (spec D8). What is stored is a fact, `bestWin`: the
- * highest Escalation level each character has won a run at. What a player
- * may pick is derived from it and never stored (`escalationCeiling`): the
- * level above the best win, so a character with no win plays at 0 and each
- * win at the ceiling opens the next level, for that character alone. Another
- * reading of the same record (unlocked content, Round 10) changes no stored
- * meaning.
+ * The Escalation unlocks. What is stored is a fact, `bestWin`: the highest
+ * Escalation level each character has won a run at. What a player may pick
+ * is derived from it and never stored (`escalationCeiling`): the level above
+ * the best win, so a character with no win plays at 0 and each win at the
+ * ceiling opens the next level, for that character alone. A new reading of
+ * the same record changes no stored meaning.
  *
- * A WIN IS RECORDED (`runCounts`) when the run's dials hold a character, at
+ * A win is recorded (`runCounts`) when the run's dials hold a character, at
  * most a level beside it, and nothing else, and its level is within that
  * character's ceiling. A typed seed, a `?bits=` run continued on a plain
  * page, and a level reached by URL without the wins under it are each

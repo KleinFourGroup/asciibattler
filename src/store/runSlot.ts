@@ -1,26 +1,25 @@
 /**
- * THE RUN SLOT: the store's strict section for the one saved run, and the
- * rule for when a save is refused (Round 8 spec D2, D3).
+ * The run slot: the store's strict section for the one saved run, and the
+ * rule for when a save is refused.
  *
  * A save is rejected when its format changed or when loading it fails, not
  * on every build, so a hotfix upload keeps the runs in progress. The format
  * is `RUN_SCHEMA_VERSION`, and the slot is stamped with it: a slot at any
  * other version is `rejected: stale` before `Run.fromJSON` sees it, and one
- * `fromJSON` throws on (an unknown daemon, character or boss id; damaged
- * data) is `rejected: unreadable`. Either way the stored text stays in
- * place, since a rejected run's journal stays exportable, and the lenient
- * sections beside it are untouched: the player keeps their settings and
- * unlocks.
+ * `fromJSON` throws on (an id the catalog no longer holds, or damaged data)
+ * is `rejected: unreadable`. Either way the stored text stays in place,
+ * since a rejected run's journal stays exportable, and the lenient sections
+ * beside it are untouched: the player keeps their settings and unlocks.
  *
- * `Game` writes the slot at every gate and empties it at a run's end (115e),
- * through `openRunSlot`, which is where the two-tab lock holds (115f): in a
- * second tab the slot is neither read, written nor emptied.
+ * `Game` writes the slot at every gate and empties it at a run's end,
+ * through `openRunSlot`, which is where the two-tab lock holds: in a second
+ * tab the slot is neither read, written nor emptied.
  *
- * A REJECTED SAVE'S JOURNAL IS KEPT (116h). The slot is one, so the next
- * run's first save goes over a rejected one. Before it does, `openRunSlot`
- * moves that save's journal to the finished journals (journals.ts), where
- * "Export last run" finds it; until then the same row reads it out of the
- * slot (`lastRunJournal`). A save's copy of a journal ends `saved`
+ * A rejected save's journal is kept. The slot is one, so the next run's
+ * first save goes over a rejected one. Before it does, `openRunSlot` moves
+ * that save's journal to the finished journals (journals.ts), where the
+ * settings' Last run row finds it; until then the same row reads it out of
+ * the slot (`lastRunJournal`). A save's copy of a journal ends `saved`
  * (src/journal/journal.ts), which is where that run stopped.
  *
  * This module imports the run model, so the store's boot module must never
@@ -37,7 +36,7 @@ import { finishedJournals, isJournal, keepJournal } from './journals';
 import type { RunLock } from './runLock';
 import type { Store, StrictRead, StrictSection } from './store';
 
-/** What the slot stores (Round 8 spec D1, D3). */
+/** What the slot stores. */
 export interface RunSlotWire {
   readonly snapshot: RunSnapshot;
   /** The run's dials as URL query text, as its journal's seed start holds
@@ -116,7 +115,7 @@ function journalIn(raw: string): RunJournal | null {
 }
 
 /**
- * THE SLOT'S ONE DOOR. Every read, write and clear of the run slot goes
+ * The slot's one door. Every read, write and clear of the run slot goes
  * through here, so the two-tab lock holds in one place: when the lock is
  * another tab's (`elsewhere`), the slot is that tab's, and this one neither
  * loads the save, writes over it, nor empties it. With the lock held, or
@@ -183,11 +182,11 @@ export function openRunSlot(store: Store, bus: EventBus<GameEvents>, lock: RunLo
 }
 
 /**
- * The journal "Export last run" hands over (Round 8 spec D2, D5): the
- * newest finished run's, or, while the slot holds a rejected save, that
- * save's, since it is the later run and its journal stays exportable. Once a
- * new run has taken the slot, the rejected save's journal is the newest
- * finished one, so the answer is the same either side of it.
+ * The journal the settings' Last run row hands over: the newest finished
+ * run's, or, while the slot holds a rejected save, that save's, since it is
+ * the later run and its journal stays exportable. Once a new run has taken
+ * the slot, the rejected save's journal is the newest finished one, so the
+ * answer is the same either side of it.
  */
 export function lastRunJournal(store: Store, slot: RunSlot): RunJournal | null {
   return slot.rejectedJournal() ?? finishedJournals(store).at(-1) ?? null;

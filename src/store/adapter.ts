@@ -1,6 +1,6 @@
 /**
- * The storage adapter: where the store's text is kept (Round 8 spec D1).
- * Three cases share this shape: `localStorage` on the web, the same inside
+ * The storage adapter: where the store's text is kept. Three cases share
+ * this shape: `localStorage` on the web, the same inside
  * itch's iframe, and Electron's file under `userData`, handed over by the
  * preload. The store (store.ts) is the only caller; it catches whatever an
  * adapter throws, so an adapter is free to fail.

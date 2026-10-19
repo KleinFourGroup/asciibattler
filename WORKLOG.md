@@ -11844,3 +11844,58 @@ in `npm test` is that comment's proof (13 marker lines in six files, the
 kickoff's count).
 
 Reading: 307,881 at 18:27, before this entry.
+
+### 124.5h, batch 1 — the store (2026-10-19, session ff99ffb0)
+
+The 11 files of `src/store`; 10 changed, `electron.ts` needed nothing.
+Out: the spec's decision codes ("Round 8 spec D1" and its kin) and the
+step codes beside them, the capitals that headed the paragraphs, the plan
+in `store.ts`'s section list ("later achievements, seen-flags") and in
+`progress.ts` (a later phase's unlocked content; its reason stays: a new
+reading of the record changes no stored meaning), the date the journals'
+budget was signed (its two measurements stay as the reason), and how the
+lock used to confirm a refusal (`runLock.ts`; gotcha #140's reason stays).
+`store.ts`'s section list is in the one list format and gives the
+journals' policy, strict, which it left out.
+
+**Statements found false and corrected (rule 7):**
+
+- `web.ts`: the adapter served "the Pages site", which is retired; it
+  serves a page of its own and itch's iframe.
+- `runSlot.ts`, twice: the settings row was "Export last run"; the row is
+  Last run (`settings.data.lastRun`).
+
+**Kept, checked at the code they name:** `Game` writes the slot at every
+gate (`autosave`) and empties it at a run's end; it reads the progress
+record when a run is created and writes it at `run:victory`, through
+`store.update`; a run loaded from a file is adopted with empty dials, so
+`runCounts` refuses it; `Run.fromJSON` throws on an id its catalog lacks
+(daemon, character, boss, packet, event), so the save's example list
+became "an id the catalog no longer holds"; `menuRules.ts` reads
+`creditsSeen`; `progress.test.ts` pins the two field names; `main.ts`
+asks for the lock in the same `Promise.all` as the font atlas; the shell
+writes `store.json` beside and renames it, and `main.mjs`'s note says two
+instances share no lock; the preload reads the file with `sendSync` and
+exposes `shellStore.initial`; `journalFileName` stamps its name in the
+form `backupFileName` copies; `store-boot.test.ts` holds the boot graph to
+`src/store/` and `buildId.ts`. Nothing was dropped unchecked.
+
+Measured (`comment-length` on copies under `output/cl-1245h-b1`): comment
+lines 500 → 498, words 4,773 → 4,720, code lines 731 unchanged. The
+step-code ceiling 2,116 → 2,096, the 20 the store's non-test files held.
+The store was written in this voice at Round 8: what it carried was codes,
+capitals and two false names, not length.
+
+Proof: `comment-strip HEAD src`, comments only, exit 0; its control made
+one code edit in memory in each of the 10 changed files and the compare
+named all 10.
+
+Cost: 311,688 at 18:30 on the plan's commit to 369,664 at 18:36 after
+the proof, about 58k for 1,332 lines, 44 a line.
+
+**Read** (`batch`): `git show <this commit> -- src/store/store.ts
+src/store/runLock.ts` against the seven rules. Wrong looks like a step
+code, a spec code or capitals left, history kept, or a rule a change must
+respect cut: the store never throws, the two read policies and when to use
+`update`, a refusal of the lock confirmed by a control lock and never by
+`locks.query()`, a second tab saving nothing.

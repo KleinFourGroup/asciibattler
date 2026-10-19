@@ -1,20 +1,21 @@
 /**
- * THE PERSISTENT STORE (Round 8 spec D1): what the game keeps between
- * visits, in sections that each have their own key, version and read policy.
+ * The persistent store: what the game keeps between visits, in sections
+ * that each have their own key, version and read policy.
  *
- *   asciibattler:meta       the store's own stamp: its layout version and the
- *                           build that last wrote it
- *   asciibattler:settings   lenient
- *   asciibattler:progress   lenient (unlocks; later achievements, seen-flags)
- *   asciibattler:run        strict (the save and its journal)
- *   asciibattler:journals   finished journals
+ * - `asciibattler:meta` — the store's own stamp: its layout version and the
+ *   build that last wrote it.
+ * - `asciibattler:settings` — lenient.
+ * - `asciibattler:progress` — lenient: the wins that open Escalation levels,
+ *   and whether the credits have been shown.
+ * - `asciibattler:run` — strict: the save and its journal.
+ * - `asciibattler:journals` — strict: the finished runs' journals.
  *
  * One key per section, so a write touches only its own section and a quota
  * failure on a large one can't cost the settings. Every key holds an envelope,
  * `{ v, build, data }`: the section's version, the build that wrote it, and
  * the section's data.
  *
- * THE TWO READ POLICIES.
+ * The two read policies:
  *  - Lenient (`store.read` / `store.patch`): the section is a table of fields,
  *    each with a schema and a fallback. An unknown key is dropped, a missing
  *    key takes its fallback, and a value its schema refuses takes its fallback
@@ -31,7 +32,7 @@
  *    place and handed back as `raw`, since a rejected run's journal stays
  *    exportable.
  *
- * THE STORE NEVER THROWS. An adapter that throws on a read leaves every
+ * The store never throws. An adapter that throws on a read leaves every
  * section at its fallbacks and the store read-only for the page's life: a
  * store that couldn't read what is there must not write over it. A page with
  * no storage at all (choose.ts's fallback) starts the same way. A failed
@@ -39,7 +40,7 @@
  * "can't save", for the UI to tell the player; the value still holds in
  * memory for the page's life.
  *
- * THE WHOLE STORE AS TEXT (`dump` / `restore`; the backup file is backup.ts).
+ * The whole store as text (`dump` / `restore`; the backup file is backup.ts).
  * A restore replaces every section and removes the ones it holds no text
  * for, all or nothing. The page that restored was built from what the store
  * held before, so from the restore's first write this store saves nothing
@@ -143,7 +144,7 @@ export interface Store {
   /** Change some of a lenient section's fields. False when it couldn't be saved. */
   patch<T extends object>(section: LenientSection<T>, changes: Partial<T>): boolean;
   /**
-   * Change a lenient section from what is stored NOW: the section is read
+   * Change a lenient section from what is stored now: the section is read
    * again, `change` is handed it and returns the fields to change, and the
    * result is stored (nothing is, when it returns none). For a value another
    * tab may have written since this page read it, such as a record that only
@@ -296,7 +297,7 @@ export function createStore(options: {
     return value;
   };
 
-  /** The section as the storage holds it NOW, which another tab may have
+  /** The section as the storage holds it now, which another tab may have
    *  written since this page read it. Where the storage can't be the newer
    *  (this store reads nothing, writes nothing more, or holds a value its
    *  last write failed to store) it is the page's copy. */

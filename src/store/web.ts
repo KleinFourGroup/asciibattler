@@ -1,6 +1,6 @@
 /**
- * The web adapter: `localStorage`, on the Pages site and inside itch's iframe
- * alike. Each of the store's keys is one `localStorage` item.
+ * The web adapter: `localStorage`, in a page of its own and inside itch's
+ * iframe alike. Each of the store's keys is one `localStorage` item.
  */
 
 import type { StorageAdapter } from './adapter';

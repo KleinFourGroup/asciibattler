@@ -1,8 +1,8 @@
 /**
- * Which adapter this page gets (Round 8 spec D1's three cases, and the
- * fallback). The order is explicit: Electron's bridge when the preload put
- * one on the window, else the window's `localStorage` when it reads, else
- * memory, with the reason, and the store then says it can't save.
+ * Which adapter this page gets. The order is explicit: Electron's bridge
+ * when the preload put one on the window, else the window's `localStorage`
+ * when it reads, else memory, with the reason, and the store then says it
+ * can't save.
  */
 
 import { memoryAdapter, type StorageAdapter } from './adapter';

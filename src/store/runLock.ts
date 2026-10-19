@@ -1,5 +1,5 @@
 /**
- * THE TWO-TAB LOCK (Round 8 spec D1): the run slot has one writer.
+ * The two-tab lock: the run slot has one writer.
  *
  * Two tabs of the game share one store, and each would autosave its own run
  * into the one slot, the last write winning. So the first tab to boot takes a
@@ -9,10 +9,10 @@
  * stays the second tab for its life, even once the first has closed, since by
  * then it may be in a run of its own that the slot never held.
  *
- * NO LOCK IS NOT A SECOND TAB. A refusal alone proves nothing: a lock manager
+ * No lock is not a second tab. A refusal alone proves nothing: a lock manager
  * that can't reach its storage refuses every request, a free name included (a
  * second instance of the Electron shell on one profile does). So a tab that
- * is refused the run lock asks the same manager for a CONTROL lock, under a
+ * is refused the run lock asks the same manager for a control lock, under a
  * name no other tab can hold, and lets it go at once. A manager that grants
  * the control works, so its refusal of the run lock was a real one: the tab
  * asks for the run lock once more (the holder's tab may have closed in
@@ -26,12 +26,12 @@
  * A lone player left unable to save by a broken lock would be worse off than
  * two tabs writing over each other.
  *
- * THE LOCK NEVER ASKS `locks.query()` (gotcha #140). It used to confirm a
- * refusal by asking the manager who held the name. Firefox refuses that
+ * The lock never asks `locks.query()` (gotcha #140). Firefox refuses that
  * question in a partitioned third-party frame, which is what itch's iframe
- * is, while it grants and refuses requests there as it should; so a second
- * tab on itch read as no lock and saved over the first tab's run. The control
- * asks only for what the lock itself needs, a request answered.
+ * is, while it grants and refuses requests there as it should, so a refusal
+ * confirmed by a query reads a second tab on itch as no lock, and it saves
+ * over the first tab's run. The control asks only for what the lock itself
+ * needs, a request answered.
  *
  * The lock covers the run slot only: the lenient sections and the finished
  * journals are written from any tab. It is the browser's, so it holds between

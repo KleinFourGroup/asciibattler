@@ -1,17 +1,17 @@
 /**
- * THE BACKUP (Round 8 spec D1): the whole store as one file, for the player
- * to keep or to carry to another browser. The web store is best-effort (on
- * itch another game on the shared origin can clear or crowd it), so the
- * settings offer an export of everything and an import that puts it back.
+ * The backup: the whole store as one file, for the player to keep or to
+ * carry to another browser. The web store is best-effort (on itch another
+ * game on the shared origin can clear or crowd it), so the settings offer an
+ * export of everything and an import that puts it back.
  *
- * THE FILE holds each section's text exactly as it is stored, by section
+ * The file holds each section's text exactly as it is stored, by section
  * name, so an import writes back the bytes that were exported and each
  * section is then read by its own policy, as if this browser had stored it:
  * the settings and progress leniently, and a run saved at another format
  * rejected with its message (runSlot.ts). The file also says which build
  * exported it and when, for the player to tell two backups apart.
  *
- * WHAT IS REFUSED, before anything is written: text that isn't JSON, JSON
+ * What is refused, before anything is written: text that isn't JSON, JSON
  * that isn't this file (a run's journal, picked by mistake, is the likely
  * one), and a backup at another format or of another store layout. Inside a
  * backup a section this build doesn't know is dropped and one the file

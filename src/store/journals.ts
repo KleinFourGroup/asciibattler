@@ -1,10 +1,9 @@
 /**
- * FINISHED JOURNALS: the store's section for the journals of runs that have
- * ended (Round 8 spec D3, D4), oldest first. A run whose save was rejected
- * ended there, and its journal joins these when the slot is reused
- * (runSlot.ts, 116h).
+ * Finished journals: the store's section for the journals of runs that have
+ * ended, oldest first. A run whose save was rejected ended there, and its
+ * journal joins these when the slot is reused (runSlot.ts).
  *
- * KEPT BY SIZE, not by count, since runs differ severalfold in length: the
+ * Kept by size, not by count, since runs differ severalfold in length: the
  * newest journals whose JSON text together fits `JOURNALS_BUDGET` are kept,
  * and the oldest are dropped first. A journal that alone exceeds the budget
  * is not kept. The budget is characters of JSON, which is what
@@ -22,9 +21,9 @@
 import type { RunJournal } from '../journal/journal';
 import type { Store, StrictSection } from './store';
 
-/** About 1 MB of text, signed 2026-10-07 on its two measurements. Runs
- *  played by hand at the shipped length came to 10,283 characters (18
- *  battles) and 38,276 (40 battles), and a save continued on a later build
+/** About 1 MB of text, from two measurements. Runs played by hand at the
+ *  shipped length came to 10,283 characters (18 battles) and 38,276 (40
+ *  battles), and a save continued on a later build
  *  starts its next segment from a whole snapshot, some 43,000 more; so the
  *  budget holds 26 runs of 40 battles, or 12 of the largest journal seen.
  *  Firefox's `localStorage` takes 5,242,880 characters an origin, in a tab

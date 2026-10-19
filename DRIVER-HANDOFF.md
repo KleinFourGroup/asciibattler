@@ -10,15 +10,16 @@ driver log ([archive/driver-trial/log-124.md](archive/driver-trial/log-124.md)).
 
 - **Phase:** **§124.5, the screens** (ROADMAP §124.5), driven from
   2026-10-19. §124 closed 2026-10-18 with two drivers (e90c7b67,
-  b390d607). A card waits for session 1, the kickoff; no session is
-  working.
+  b390d607). A card waits for session 1, the kickoff (`task_4f1c86d4`,
+  proposed 15:53 UTC); no session is working.
 - **Driver:** `local_3addf3c2-a6af-469e-a40b-932696f5bc61` (scratchpad
   id 9b60fb27), the first under `process/driving.md`.
 - **Friction read through:** line 285 of `retro/papercuts.jsonl` (b390d607
   at §124's close, 2026-10-18 23:27 UTC); none filed since, at 15:50 UTC
   on 2026-10-19.
-- **Notes in the latest brief** (§124.5 session 1, the kickoff), all five
-  of §124's drivers' recommendation:
+- **Notes in the latest brief** (§124.5 session 1, the kickoff): the
+  Cursor's test count one short (3724; the hook read 3725 at `954784ac`),
+  and all five of §124's drivers' recommendation:
   - for any deletion step, `comment-codes --record` before the first
     suite run, and a search of the docs for what the deletion removes
     (P1, P6);
@@ -78,6 +79,7 @@ or a pattern with two or more earlier instances stops after it.
 | entries by the Write tool, messages by `-F` | §124 5–7; §124.5 1 | yes; kept though AGENTS says it, since AGENTS said it from `f0e3f150` (10-11) through P2's slips at 124f and 124j b5 |
 | the `i18n-ok` marker and `comment-strip` | §124.5 1 | not yet |
 | a step-code-shaped file name | §124.5 1 | not yet |
+| the Cursor's test count one short | §124.5 1 | drop once the Cursor reads 3725 or more |
 | the next-step box | §124 1, 2 | partly; now CLAUDE.md's bullet |
 | no `cd` | §124 1–7 | no; dropped (P12) |
 

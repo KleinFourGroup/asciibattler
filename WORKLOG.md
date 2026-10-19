@@ -12369,3 +12369,108 @@ or a reason or rule cut: a right click focuses whatever is armed; a
 command lands at the drain at the top of a tick, never mid-tick; the
 shake's motion gate sits on `shakeView` itself; a stalled orb lands on the
 clock.
+
+### 124.5h, batch 6 — the pre-turn screen (2026-10-19, session bcd08e32)
+
+The 4 files: `PreTurnScreen.ts`, `CacheOverlay.ts`, `BitsOverlay.ts`,
+`CardListModal.ts`; all changed. Out: the step codes and `§` marks, the
+capitals, and the history, most of it the pre-turn screen's header, which
+told eight phases' stories in turn (the auto-advance that was removed, the
+placeholder hint, the summed budgets, the single idol, the retired
+`EMPOWER`), now one description of what the screen does. Each reason those
+stories carried stays as the reason: no timer, since a redraw decision
+shouldn't race one; a spent grant never reads as denied; an early refresh
+must not consume the deck cues; a reserved slot keeps a chip under the
+pointer. The `DeckCue` doc sat above the `LastTurn` type and now sits on
+its interface. The run's chips point to gotcha #116 for their wiring
+rather than retelling it.
+
+**Statements found false and corrected (rule 7):**
+
+- `CacheOverlay.ts`, the cut's item (WORKLOG §123, batch 4d's lead): the
+  overflow came from "a size-shrinking daemon". No shipped daemon moves the
+  cache's size; the shipped cause is an event's `addPacket` into a full
+  cache (`executeEventOp`, `Run.cacheOverflow`'s note). It names both.
+- `CacheOverlay.ts`: the chip was "appended once to #ui"; it mounts in the
+  chrome column and the modal on the page mount, as the class's own
+  parameters say. The modal was "the R1 roster-modal shell"; it is
+  `modal.ts`'s.
+- `CacheOverlay.ts`: a unit-target fire at the gate offered no Fire "until
+  [the strip's arming] lands"; it has, in the pre-turn screen's packet
+  row, and those packets are Hype, Shield and Cull, not Hype alone.
+- `CacheOverlay.ts` and `BitsOverlay.ts`: Game called `refresh()` from
+  `resetRun`, and for the bits chip those were "the only sites"; it also
+  calls it from `confirmCharacter` and `adopt` (batch 5 found the same in
+  `PoolOverlay.ts`).
+- `BitsOverlay.ts`: the pulse made "an earn noticeable mid-battle". No earn
+  lands during a battle: the daemons' instant hooks run at an encounter's
+  start, a turn's start and an encounter's end, and a battle's tally
+  arrives as a reward's bits (`Run.gainBits`'s note). The pulse fires on a
+  spend too.
+- `PreTurnScreen.ts`: its fields held "the live hand + redraw budget" and
+  "the empower budget"; the screen holds no budget, the grants carry their
+  counts.
+- `PreTurnScreen.ts`: `lastTurn` was null also "when the buffered payload
+  is not the turn just before this one"; the Run sends it on the payload,
+  null only on an encounter's first turn. And the strip ran off "the
+  previous turn's `turn:resolved` payload"; it runs off `turn:starting`'s
+  `lastTurn`. Its "the encounter's last turn's rows wait for §102's run-end
+  stats" was a plan that landed, and went.
+- `PreTurnScreen.ts`: `scheduleCueSequence` ran "at the end of every
+  `refreshHand`"; it runs only on the refresh that carries the hand swap
+  (`playCuesOnNextRefresh`), as the file says twice elsewhere.
+- `PreTurnScreen.ts`: after a redraw "the whole control disappears"; the
+  strip keeps the spent chip as the turn's receipt, and only the cards stop
+  being selectable.
+- `PreTurnScreen.ts`: `updatePacketUsed` followed "a cache-modal fire"; the
+  screen's own packet row fires too. And `updateCache` said "addDaemon
+  shrink can" change the cache at the gate; no daemon is gained at the gate
+  and none shrinks the cache, so the change is a fire or a discard.
+- `PreTurnScreen.ts`: the card-list buttons were "all position: fixed", the
+  roster top right; the roster is a row of the control column, and only
+  the piles are fixed corner buttons.
+
+Re-pointed, not false: the bits chip's "z-index 15" is the chrome column's
+(the chip has none of its own), and the header says so; the risk line's
+arithmetic ("Σ power × chip") points to `Run.previewPoolAtRisk`;
+`CardListModal.ts` names the port's crew removal as the picker's one user.
+
+**Kept, checked at the code they name:** the packet catalog (targets,
+contexts, effects, names, the locale prose); Mercury's chance hook;
+`passIsFinal` on in `config/deck.json` and `grantViews` marking the cursor
+in both modes, so the strip keeps the strict shape; `drawTurnHand`
+discarding before it draws; the hand's emit going last
+(`emitHandChanged`'s callers); `previewPoolsAtRisk`; PreTurnScene's seven
+forwarded events; `maxHandSize` 10 and `handSize` 6; the piles in
+recruitment order (`Run.ts`); `orderRosterWithIndices`; the port's picker
+and its confirm text; the locale strings quoted (the risk line, the
+last-turn words, the pile and roster labels, `cardlist.title`,
+`cache.title`); `Run.handleUsePacket`'s phase rule; the cache's base size
+6; `addPacket` and a load throwing on an unknown id; the map chip a
+`<button>`; the elite badge's purple, the daemon line's blue against the
+map line's amber, the piles' corners and `position: fixed`;
+`reserveSlot`'s `visibility: hidden`; the chrome column's z-index 15 and
+the rake's 1000; Game's `adopt` repainting and showing the three chips and
+`quitToMenu` hiding them; gotcha #116, read to its end. Nothing was dropped
+unchecked.
+
+Measured (`comment-length` on copies under `output/cl-1245h-b6`): comment
+lines 577 → 516, words 5,263 → 4,798, code lines 1,102 unchanged. The
+step-code ceiling 1,775 → 1,615, the 160 these files held, 114 of them in
+`PreTurnScreen.ts`.
+
+Proof: `comment-strip HEAD src`, comments only, exit 0; its control made
+one code edit in memory in each of the 4 changed files and the compare
+named all 4.
+
+Cost: 325,543 at 22:35 on batch 5's commit to 456,435 at 22:46 after the
+proof, about 131k for 1,796 lines, 73 a line.
+
+**Read** (`batch`): `git show <this commit> -- src/ui/CacheOverlay.ts
+src/ui/BitsOverlay.ts` against the seven rules. Wrong looks like a step
+code or capitals left, history kept (what a chip once collided with, a
+precedent's name), or a reason or rule cut: `run:started` only shows a
+chip and Game repaints it after assigning a run; the forced keep can't be
+dismissed and always offers a discard; a unit-target packet at the gate
+fires from the pre-turn screen, not the modal; the modal mounts on the
+page, never in the column.

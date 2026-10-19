@@ -1,68 +1,39 @@
 /**
- * H4b — the pre-turn screen. Shown before each turn's tactical battle (on
- * `turn:starting`), it names the turn + shows both health pools and the drawn
- * hand, then waits for the player's "Fight ▸" click. (H4b shipped a 2s
- * auto-advance; K3 REMOVED it — the user's call — because the redraw decision
- * below shouldn't race a timer. M3 then removed the post-turn timer too.)
+ * The pre-turn screen, shown before each turn's battle (on `turn:starting`):
+ * the turn, the encounter, the hop and the battlefield, a line per owned
+ * daemon, both pools with the risk line and the last-turn strip, the drawn
+ * hand, the grant strip and the packet row. It waits for Fight; there is no
+ * timer, since a redraw decision shouldn't race one.
  *
- * H5b — the placeholder hint became the real **drawn hand**: a row of compact
- * cards (glyph + level) for the units the deck dealt this turn (the
- * `turn:starting.hand` payload).
+ * It re-renders only off the events PreTurnScene forwards
+ * (`turn:handRedrawn`, `turn:unitEmpowered`, `turn:grantPassed`,
+ * `run:packetUsed`, `run:cacheChanged`), so the hand on screen is always the
+ * Run's, never an optimistic local copy.
  *
- * K3 — the hand is interactive while the turn's redraw budget allows: click
- * cards to select them, then **Redraw** sends the selection to the discard and
- * draws replacements into the same positions (the `redrawCards` command;
- * budget knobs in `config/deck.json`). The screen re-renders PURELY off the
- * `turn:handRedrawn` event (forwarded by PreTurnScene), so the displayed hand
- * is always the Run's authoritative one — never an optimistic local copy.
+ * The grant strip: one chip per entry of the turn's grant queue, in the
+ * order the grants were gained (the payload's `grants`; every command
+ * carries its `grantIndex`). The active chip, the engine's cursor
+ * (`grantViews[].active`), arms itself with a glow and a hint, and the
+ * hand's cards are its targets: an armed empower fires on a card's click,
+ * and an armed redraw selects up to its cap and confirms on the chip. Pass
+ * finalizes the active grant unspent (`passGrant`); Fight is the implicit
+ * pass of them all, since the queue expires at the turn's start. Later
+ * chips wait dimmed, and passed ones are struck. The strip keeps the strict
+ * shape under a config with `passIsFinal` off (a test's or the fuzz's), so
+ * the UI never offers more than the strict order allows.
  *
- * K4 — **Empower** shares the same card selection: with EXACTLY ONE card
- * selected, the Empower button buffs it for the rest of the encounter (the
- * `empowerUnit` command). Buffed cards carry `▲` chips (78c: one chip PER
- * BUFF KEY, each hover-titled with its own mods — the `empowerStacks`
- * column the events deliver, so a card empowered on an earlier turn and
- * drawn back still badges). Same events-only refresh:
- * `turn:unitEmpowered` → `updateEmpower`.
+ * A daemon whose chance hook denied this turn (Mercury's coin) leaves an
+ * inert line where its control would be. Denial is computed once, from the
+ * fresh `turn:starting` payload, so a spent grant, which keeps its queue
+ * entry, never reads as denied.
  *
- * L1 — the gates are DAEMON-owned now: a banner under the map line names the
- * run's idol(s), the empower hints/badges derive from the granting idols'
- * buffs (payload-carried — the retired `EMPOWER` singleton ships disabled),
- * and a chance hook that denied this turn (Mercury's cold coin) renders an
- * inert "the idol is silent" line where its control would be —
- * distinguishable from "spent" (no line) because denial is computed ONCE
- * from the fresh `turn:starting` payload.
- *
- * 47d — multi-daemon: the banner is a STACKED list (one line per owned
- * idol), and empower is PER-SOURCE — one control per granting idol, so the
- * player picks which blessing lands on which card.
- *
- * 49d — the grant QUEUE: the payload's `grants` list (one entry per granted
- * idol effect in acquisition order, redraw included — the summed redraw
- * budget retired with the §49 shape-lock) drives the strip below, and
- * every command carries `grantIndex`.
- *
- * 49f — THE GUIDED FIRE STRIP (the §49 fire-UX shape-lock, rendered): one
- * chip per queue entry in acquisition order; the ACTIVE chip (the engine's
- * derived cursor — `grantViews[].active`) auto-arms with a glow + effect
- * hint, and the hand cards on screen are its click targets. An armed
- * EMPOWER fires on a single card click; an armed REDRAW multi-selects up
- * to its card cap and confirms ON THE CHIP. **Pass ▸** finalizes the
- * active grant unspent (`passGrant` — `passIsFinal` flipped TRUE in this
- * commit, the locked default; the engine enforces the order, this strip
- * just renders it honestly). Fight ▸ stays the implicit pass-all (the
- * queue expires at turn start). Later chips render queued/dimmed; passed
- * chips render struck. The strip is strict-shaped even under a free-mode
- * config override (a test/fuzz relaxation — the UI never offers more than
- * strict allows).
- *
- * 49f — the at-will PACKET row: the gate's held `preTurn`-usable packets
- * (read live from the cache via the injected thunk) render as their own
- * chips BELOW the strip — at-will, any moment during the gate, before or
- * between idol chips (the kickoff economy lock). A target-`none` packet
- * fires on chip click; a unit-target one (hype) ARMS pick-a-card targeting
- * (click again to cancel). Fires ride the same `usePacket` command the
- * cache modal uses; the screen refreshes off `run:packetUsed` /
- * `run:cacheChanged` (PreTurnScene forwards both).
+ * The packet row: the held packets usable before a turn, read live from the
+ * cache through the injected thunk, as chips under the strip, usable at will
+ * before or between the grant chips. A target-`none` packet fires on a
+ * click; a unit-target one (Hype, Shield, Cull) arms a card pick, and a
+ * second click cancels it. Fires use the `usePacket` command the cache
+ * modal uses, and the screen refreshes off `run:packetUsed` and
+ * `run:cacheChanged`.
  */
 
 import type { GameEvents } from '../core/events';
@@ -90,16 +61,16 @@ import { empowerColor, empowerLabel } from '../render/statusDisplay';
 import { CardListButton } from './CardListModal';
 import { mountControl } from './chip';
 
-/**
- * 65f — one deck-transaction cue (the `deck:*` event stream): buffered by
- * Game for the deal (the cues fire before `turn:starting` mounts the
- * scene) and forwarded live by PreTurnScene for gate-time actions. The
- * screen queues them and plays the pile pulses SERIALLY on its own clock;
- * the swap payloads stay authoritative (cue-not-truth — events.ts).
- */
-/** 115e — the previous turn, as `turn:starting` carries it for the strip. */
+/** The previous turn, as `turn:starting` carries it for the strip. */
 type LastTurn = NonNullable<GameEvents['turn:starting']['lastTurn']>;
 
+/**
+ * One deck cue (the `deck:*` events): buffered by Game for the deal, since
+ * the cues fire before `turn:starting` mounts the scene, and forwarded live
+ * by PreTurnScene for the gate's actions. The screen queues them and plays
+ * the pile pulses one at a time on its own clock; the swap payloads stay the
+ * truth (a cue is not, events.ts).
+ */
 export interface DeckCue {
   readonly kind: 'drawn' | 'discarded' | 'reshuffled';
   readonly drawPile: number;
@@ -107,76 +78,74 @@ export interface DeckCue {
 }
 
 export class PreTurnScreen extends Screen {
-  // K3 — the live hand + redraw budget (swapped by `updateHand`), the selected
-  // hand POSITIONS, and the DOM bits `refreshHand` rebuilds in place.
-  // K4 — plus the empower budget + per-card stack column (`updateEmpower`).
+  // The live hand, swapped by `updateHand`; the selected hand positions; and
+  // the DOM `refreshHand` rebuilds in place.
   private hand: readonly UnitTemplate[] = [];
-  // R1 — the full player roster (for the roster-view modal), distinct from the
-  // turn's drawn `hand`. Set in `show`.
+  // The whole roster, for the roster view; the turn's drawn `hand` is apart.
+  // Set in `show`.
   private roster: readonly UnitTemplate[] = [];
-  // R2 — the encounter deck's other two piles (resolved templates, recruitment
-  // order), for the draw/discard pile views. Set in `show`, refreshed by
-  // `updateHand` so a reopened pile view reflects a redraw.
+  // The encounter deck's other two piles (templates in recruitment order),
+  // for the pile views. Set in `show` and refreshed by `updateHand`, so a
+  // reopened view shows a redraw.
   private drawPile: readonly UnitTemplate[] = [];
   private discardPile: readonly UnitTemplate[] = [];
-  // 49d — this turn's grant queue (one control per entry, queue order).
+  // This turn's grant queue (one chip per entry, in queue order) and the
+  // hand's badge column.
   private grants: readonly TurnGrantView[] = [];
   private empowerStacks: readonly EmpowerStackView[][] = [];
-  // 49f — the pools block + its static bounds, kept so a gate-time packet
-  // fire (patch heals the player pool) can re-render the gauges in place.
+  // The pools block and its fixed bounds, held so a packet fired at the gate
+  // (Patch heals the player's pool) can repaint the gauges in place.
   private poolsEl: HTMLDivElement | null = null;
   private poolBounds = { playerMax: 0, enemy: 0, enemyMax: 0 };
-  /** 96.5c — the risk line, held so a hand swap / a packet fire re-paints
-   *  it from the payload's re-derived bound (it used to paint once at
-   *  turn start and go stale after a redraw — the kickoff audit's finding). */
+  /** The risk line, held so a hand swap or a packet fire repaints it from
+   *  the payload's bound, derived again for the new hand or pool. */
   private riskEl: HTMLDivElement | null = null;
-  /** 96.5d — the previous turn's outcome for the "last turn" strip (null on
-   *  an encounter's first turn, or when the buffered payload is not the
-   *  turn just before this one). */
+  /** The previous turn's outcome for the last-turn strip; null on an
+   *  encounter's first turn. */
   private lastTurn: LastTurn | null = null;
-  // L1→47d — the per-turn chance-denial state, computed ONCE in `show` from
-  // the FRESH `turn:starting` payload (an idol authors the hook but granted
-  // nothing → denied), so a later spent budget never reads as "denied".
+  // The chance denials, computed once in `show` from the fresh
+  // `turn:starting` payload (a daemon has the hook but granted nothing:
+  // denied), so a grant spent later never reads as denied.
   private deniedRedrawIdols: string[] = [];
   private deniedEmpowerIdols: string[] = [];
   private readonly selected = new Set<number>();
   private handWrap: HTMLDivElement | null = null;
-  // 49f — the held cache, read LIVE at render time (a thunk from
-  // PreTurnScene — `ctx.run.cache`), so the packet row always reflects the
-  // authoritative cache; and the armed unit-target packet (hype's
-  // pick-a-card state), a CACHE index. Any cache change disarms — indices
-  // shift under fires/discards, and re-deriving beats holding a stale one.
+  // The held cache, read live at render time (a thunk from PreTurnScene,
+  // `ctx.run.cache`), so the packet row always shows the Run's cache; and
+  // the armed unit-target packet (a card pick pending), as a cache index.
+  // Any cache change disarms: indices shift under fires and discards, and
+  // deriving again beats holding a stale one.
   private getCache: () => readonly string[] = () => [];
   private armedPacketIndex: number | null = null;
-  // 101e — the two reserved slots, held for the screen's life once they have
-  // appeared: the arm hint sits ABOVE the packet chip that toggles it (arming
-  // Hype pushed the chip 26 px down, out from under the pointer), and the
-  // packet row deleted itself when its last packet fired. `armSlotName` is
-  // the packet name the hidden hint is sized with.
+  // The two reserved slots, held for the screen's life once they have
+  // appeared. The arm hint sits above the packet chip that toggles it, so
+  // showing it would push the chip from under the pointer; and the packet
+  // row would vanish when its last packet fired. `armSlotName` is the packet
+  // name the hidden hint is sized with.
   private armSlotName: string | null = null;
   private packetRowHeld = false;
-  // R1/R2 — the shared card-list affordances: roster (top-right) + draw
-  // (bottom-right) + discard (bottom-left) pile views. All disposed on hide.
+  // The card-list buttons: the roster (a row of the control column) and the
+  // draw (bottom right) and discard (bottom left) piles. All disposed on
+  // hide.
   private cardListButtons: CardListButton[] = [];
-  // 65e — the folded per-turn draw amount (the "Draw: N" chip; the §65
-  // transparency surface). Set in `show` from the turn:starting payload.
+  // The turn's folded draw amount, for the "Draw: N" chip. Set in `show`
+  // from the payload.
   private drawAmount = 0;
-  // 65e — hand positions to ENTER-animate on the next `refreshHand` ('all'
-  // = the initial deal, staggered). Consumed once, then cleared — refreshes
-  // driven by non-hand events (cache/grant changes) must not replay it.
+  // Hand positions to animate in on the next `refreshHand` ('all' is the
+  // first deal, staggered). Consumed once, then cleared: a refresh driven by
+  // another event (a cache or grant change) must not replay it.
   private enterPositions: Set<number> | 'all' | null = null;
-  // 65f — the queued deck cues (seeded by `show` from Game's deal buffer,
-  // appended live by PreTurnScene at the gate), the serial-pulse timers,
-  // the transient displayed-count overrides (null = authoritative), the
-  // exit clones awaiting their cue, and named pile-button refs.
+  // The queued deck cues (seeded by `show` from Game's deal buffer, added
+  // live by PreTurnScene at the gate), the pulse timers, the shown counts
+  // while a sequence plays (null is the pile's own), the exit clones
+  // waiting for their cue, and the two pile buttons by name.
   private pendingCues: DeckCue[] = [];
-  // 65f — cues are consumed ONLY by the refresh that carries the hand swap
-  // (show / updateHand). The intermediate repaints of the same dispatch
-  // (run:cacheChanged / run:packetUsed fire BEFORE the hand emit) must
-  // neither consume the queue nor cancel a playing schedule — the first
-  // browser-verify caught exactly that: an early refresh consumed the cues
-  // and the final one killed the freshly scheduled timers, stranding the
-  // count overrides at their pre-sequence values.
+  // Cues are consumed only by the refresh that carries the hand swap
+  // (`show`, `updateHand`). The repaints earlier in the same dispatch
+  // (`run:cacheChanged` and `run:packetUsed` fire before the hand's emit)
+  // must neither consume the queue nor cancel a playing schedule: an early
+  // refresh would consume the cues, and the last one kill the timers just
+  // scheduled, leaving the counts at their values before the sequence.
   private playCuesOnNextRefresh = false;
   private cueTimers: number[] = [];
   private displayedDraw: number | null = null;
@@ -202,9 +171,8 @@ export class PreTurnScreen extends Screen {
     dealCues: readonly DeckCue[] = [],
   ): void {
     this.hide();
-    // 96.5d → 115e — the previous turn's outcome, shown as one strip under
-    // the gauges from turn 2 on (the post-turn screen's replacement). The
-    // Run sends it on the payload, null on an encounter's first turn.
+    // The previous turn's outcome, a strip under the gauges from turn 2 on.
+    // The Run sends it on the payload, null on an encounter's first turn.
     this.lastTurn = info.lastTurn;
     this.roster = roster;
     this.getCache = getCache;
@@ -215,27 +183,25 @@ export class PreTurnScreen extends Screen {
     this.drawPile = info.drawPile;
     this.discardPile = info.discardPile;
     this.drawAmount = info.drawAmount;
-    this.enterPositions = 'all'; // 65e — the initial deal animates in, staggered
-    // 65f — the deal's cue sequence, buffered by Game since the scene
-    // wasn't mounted yet. The LEADING discarded cues are the previous
-    // turn's hand recycling — its epilogue, not this turn's story — so the
-    // playback drops them (the user's turn-2 feel read): the screen opens
-    // with the discard count already at its post-recycle value and the
-    // narrative starts at the deal. The recycle is always a strict prefix
-    // (drawTurnHand discards before it draws); a mid-DEAL reshuffle stays,
-    // and on a dry-pile turn the sequence now OPENS on the reshuffle
-    // flash. Presentation policy only — the Run's cue stream stays honest
-    // at the chokepoint.
+    this.enterPositions = 'all'; // the first deal animates in, staggered
+    // The deal's cues, buffered by Game, since the scene wasn't mounted yet.
+    // The leading discarded cues are the previous turn's hand going to the
+    // discard, its epilogue and not this turn's story, so the playback drops
+    // them: the screen opens with the discard count already past them, and
+    // the story starts at the deal. They are always a strict prefix
+    // (`drawTurnHand` discards before it draws); a reshuffle during the deal
+    // stays, and on a dry-pile turn the sequence opens on its flash. This is
+    // presentation only: the Run's cue stream stays whole.
     const deal = [...dealCues];
     while (deal[0]?.kind === 'discarded') deal.shift();
     this.pendingCues = deal;
     this.playCuesOnNextRefresh = true;
     this.grants = info.grants;
     this.empowerStacks = info.empowerStacks;
-    // 49d — denial is per idol per hook kind: the idol authors the hook but
-    // this turn's queue holds no matching entry from it (the coin came up
-    // cold). Computed ONCE from the fresh payload — a spent grant keeps its
-    // queue entry, so it can never read as "denied".
+    // Denial is per daemon and hook kind: the daemon has the hook, but this
+    // turn's queue holds no entry of that kind from it (the coin came up
+    // cold). Computed once from the fresh payload: a spent grant keeps its
+    // queue entry, so it never reads as denied.
     this.deniedRedrawIdols = info.daemons
       .filter(
         (d) =>
@@ -255,7 +221,7 @@ export class PreTurnScreen extends Screen {
   }
 
   override hide(): void {
-    // 65f — kill the pulse schedule FIRST (its callbacks touch the buttons
+    // Stop the pulse schedule first (its callbacks touch the buttons
     // disposed below), drop the count overrides, and sweep any exit clones
     // still awaiting their cue.
     this.clearCueTimers();
@@ -274,29 +240,28 @@ export class PreTurnScreen extends Screen {
     this.armedPacketIndex = null;
   }
 
-  /** 65f — a live deck cue landed at the gate (PreTurnScene forwards the
-   *  `deck:*` events): queue it for the swap event that follows in the same
-   *  dispatch (the cues always precede `turn:handRedrawn` — Run emits the
-   *  hand swap LAST). */
+  /** A live deck cue landed at the gate (PreTurnScene forwards the `deck:*`
+   *  events): queue it for the swap event later in the same dispatch. The
+   *  cues always come before `turn:handRedrawn`, since the Run emits the hand
+   *  swap last. */
   enqueueCue(cue: DeckCue): void {
     this.pendingCues.push(cue);
   }
 
   /**
-   * K3 — a `turn:handRedrawn` landed (PreTurnScene forwards it): swap to the
-   * post-redraw hand + decremented budget. The selection clears — the swapped
-   * positions hold fresh cards now, and in the shipped one-batch mode the
-   * whole control disappears (budget exhausted → cards stop being selectable).
-   * K4 — the badge column comes re-derived for the NEW hand (a refill can seat
-   * an already-empowered card).
+   * A `turn:handRedrawn` landed (PreTurnScene forwards it): swap in the new
+   * hand, the piles, the grants and the badges. The selection clears, since
+   * the swapped positions hold new cards; with no grant left active, the
+   * cards stop being selectable. The badge column comes derived again for
+   * the new hand (a refill can seat a card already empowered).
    */
   updateHand(payload: GameEvents['turn:handRedrawn']): void {
-    // 65e — identity diff BEFORE the swap (payload hand entries are
+    // An identity diff before the swap (the payload's hand entries are
     // references into the run's team templates, so `===` is a stable card
-    // key): changed/new positions enter-animate; outgoing cards exit as
-    // fixed-position clones. Redraw = same length (replaced slots exit AND
-    // enter); Surge = longer (appended slots enter); Cull = shorter (the
-    // two-pointer walk finds the spliced-out cards).
+    // key): changed and new positions animate in, and outgoing cards leave
+    // as fixed-position clones. A redraw keeps the length (a replaced slot
+    // leaves and enters); Surge lengthens it (the added slots enter); Cull
+    // shortens it (the two-pointer walk finds the cards taken out).
     const prev = this.hand;
     const next = payload.hand;
     const enter = new Set<number>();
@@ -317,27 +282,27 @@ export class PreTurnScreen extends Screen {
     }
     this.animateExits(exits);
     this.enterPositions = enter.size > 0 ? enter : null;
-    this.playCuesOnNextRefresh = true; // 65f — this IS the hand-swap refresh
-    this.paintRisk(payload.poolAtRisk); // 96.5c — the bound moved with the hand
+    this.playCuesOnNextRefresh = true; // this is the hand-swap refresh
+    this.paintRisk(payload.poolAtRisk); // the bound moved with the hand
 
     this.hand = payload.hand;
-    // R2 — the redraw shuffled cards between piles; refresh the stored copies so
-    // a reopened pile view reflects it (the buttons read these at click time).
+    // The change moved cards between piles; refresh the stored copies, so a
+    // reopened pile view shows it (the buttons read these at click time).
     this.drawPile = payload.drawPile;
     this.discardPile = payload.discardPile;
     this.grants = payload.grants;
     this.empowerStacks = payload.empowerStacks;
     this.selected.clear();
     this.refreshHand();
-    // 51e — the pile counts on the chip faces moved with the cards.
+    // The pile counts on the button faces moved with the cards.
     for (const button of this.cardListButtons) button.refresh();
   }
 
   /**
-   * 65e — exit animation: clone each outgoing card at its current screen
+   * The exit animation: clone each outgoing card at its current screen
    * rect (the hand row is about to be rebuilt), let the clone fall/fade via
    * CSS, then remove it. Pure presentation — the authoritative state moved
-   * in the Run before the event fired. Positions index the OLD hand row.
+   * in the Run before the event fired. Positions index the old hand row.
    */
   private animateExits(positions: readonly number[]): void {
     if (positions.length === 0) return;
@@ -348,9 +313,9 @@ export class PreTurnScreen extends Screen {
       if (!(node instanceof HTMLElement)) continue;
       const rect = node.getBoundingClientRect();
       const clone = node.cloneNode(true) as HTMLElement;
-      // 65f — the clone holds as a static GHOST (fixed, in place) until its
-      // discard cue fires in the serial schedule; `beginExit` starts the
-      // fall. scheduleCueSequence pairs clones to cues in creation order.
+      // The clone holds as a still ghost (fixed, in place) until its
+      // discard cue fires in the schedule; `beginExit` starts the fall.
+      // `scheduleCueSequence` pairs clones with cues in creation order.
       clone.classList.add('preturn-card-ghost');
       clone.style.left = `${rect.left}px`;
       clone.style.top = `${rect.top}px`;
@@ -360,9 +325,9 @@ export class PreTurnScreen extends Screen {
     }
   }
 
-  /** 65f — start a ghost clone's exit fall + arrange its removal
-   *  (animationend is the normal path; the timeout is the safety net — a
-   *  backgrounded tab can throttle animations indefinitely). */
+  /** Start a ghost clone's fall and arrange its removal (`animationend` is
+   *  the normal path; the timeout is the safety net, since a background tab
+   *  can hold an animation indefinitely). */
   private beginExit(clone: HTMLElement): void {
     clone.classList.add('preturn-card-exit');
     const remove = (): void => clone.remove();
@@ -375,15 +340,15 @@ export class PreTurnScreen extends Screen {
     this.cueTimers = [];
   }
 
-  /** 65f — repaint just the two pile chips (their `getCount` thunks read
-   *  the displayed overrides while a pulse schedule is playing). */
+  /** Repaint just the two pile buttons (their `getCount` thunks read the
+   *  shown counts while a pulse schedule plays). */
   private refreshPileButtons(): void {
     this.drawPileButton?.refresh();
     this.discardPileButton?.refresh();
   }
 
-  /** 65f — one chip pulse: retrigger the CSS animation via class removal +
-   *  a forced reflow. */
+  /** One pile button's pulse: restart the CSS animation by removing the
+   *  class and forcing a reflow. */
   private pulse(button: CardListButton | null, cls: string): void {
     const el = button?.el;
     if (!el) return;
@@ -393,20 +358,19 @@ export class PreTurnScreen extends Screen {
   }
 
   /**
-   * 65f — play the queued deck cues SERIALLY (the §65f shape-lock: one
-   * pulse per card, counts ticking one by one; the reshuffle is a single
-   * distinct pulse). Runs at the end of every `refreshHand`:
-   * - each `drawn` cue reveals its entering card (animation-delay synced
-   *   to the pulse cadence) and pulses the draw chip;
+   * Play the queued deck cues one at a time: one pulse per card, the counts
+   * ticking one by one, and the reshuffle a single pulse of its own. It
+   * runs at the end of the refresh that carries the hand swap:
+   * - each `drawn` cue reveals its entering card (its animation delay set to
+   *   the pulse cadence) and pulses the draw pile's button;
    * - each `discarded` cue releases its exit ghost and pulses the discard
-   *   chip;
-   * - `reshuffled` pulses BOTH chips once with the distinct flash.
-   * The displayed counts ride overrides and reconcile to the authoritative
-   * piles when the schedule drains. Fight ▸ stays LIVE throughout — the
-   * user-signed fast-forward: advancing hides the screen, which clears the
-   * timers and sweeps the ghosts (never make the player wait for theater).
-   * No cues queued → the 65e quick stagger + immediate exits (the
-   * empower/cache refreshes and any diff the cues didn't cover).
+   *   pile's;
+   * - `reshuffled` pulses both once with its own flash.
+   * The shown counts ride overrides and return to the piles' own when the
+   * schedule drains. Fight stays live throughout: advancing hides the
+   * screen, which clears the timers and sweeps the ghosts, so the player
+   * never waits on the show. With no cues queued, it plays the quick
+   * stagger and the exits at once.
    */
   private scheduleCueSequence(enteringNodes: readonly HTMLElement[]): void {
     const cues = this.pendingCues;
@@ -424,7 +388,7 @@ export class PreTurnScreen extends Screen {
     }
 
     const CADENCE = 130;
-    // Seed the displayed counts at the PRE-sequence values, reconstructed
+    // Seed the shown counts at their values before the sequence, rebuilt
     // from the first cue's post-move counts.
     const first = cues[0]!;
     if (first.kind === 'drawn') {
@@ -479,7 +443,7 @@ export class PreTurnScreen extends Screen {
   }
 
   /**
-   * K4 — a `turn:unitEmpowered` landed (PreTurnScene forwards it): the hand is
+   * A `turn:unitEmpowered` landed (PreTurnScene forwards it): the hand is
    * unchanged but the picked card's slot now carries the buff. Swap in the
    * re-derived queue + the new badge column; the selection clears (the pick
    * was consumed by the action).
@@ -492,12 +456,13 @@ export class PreTurnScreen extends Screen {
   }
 
   /**
-   * 49f — a `run:packetUsed` landed while this gate is up (PreTurnScene
-   * forwards it): a cache-modal fire just changed gate state — a reroute
-   * INSERTED a redraw grant, a patch healed the player pool, a venom
-   * changed nothing visible here. Swap in the re-derived queue + badges and
-   * re-render the pools from the post-effect health (same events-only
-   * refresh as the redraw/empower paths).
+   * A `run:packetUsed` landed while this gate is up (PreTurnScene forwards
+   * it): a packet fired, from this screen's row or the cache modal, and
+   * changed the gate's state. Reroute added a redraw grant, Patch healed the
+   * player's pool, Venom changed nothing shown here. Swap in the queue and
+   * the badges, derived again, and repaint the pools from the health after
+   * the effect (the same events-only refresh as the redraw and empower
+   * paths).
    */
   updatePacketUsed(payload: GameEvents['run:packetUsed']): void {
     this.grants = payload.grants;
@@ -511,20 +476,20 @@ export class PreTurnScreen extends Screen {
         renderPoolGauge('enemy', POOL_LABELS.enemy, this.poolBounds.enemy, this.poolBounds.enemyMax),
       );
     }
-    this.paintRisk(payload.poolAtRisk); // 96.5c — the pool moved, so did the cap
+    this.paintRisk(payload.poolAtRisk); // the pool moved, so did the bound
   }
 
-  /** 96.5c — the risk line's one paint site (`turn:starting`, a hand swap,
-   *  a packet fire): "⚠ At risk this turn: up to N morale". */
+  /** The risk line's one paint site (`turn:starting`, a hand swap, a packet
+   *  fire): "⚠ At risk this turn: up to N morale". */
   private paintRisk(poolAtRisk: number): void {
     if (this.riskEl === null) return;
     this.riskEl.textContent = `⚠ ${t('preturn.risk', { n: poolAtRisk })}`;
   }
 
   /**
-   * 49f — a `passGrant` finalized the active grant (`turn:grantPassed`,
-   * strict mode): swap in the re-derived queue so the strip advances its
-   * auto-arm to the new cursor.
+   * A `passGrant` finalized the active grant (`turn:grantPassed`, with
+   * `passIsFinal` on): swap in the queue, derived again, so the strip arms
+   * the new cursor.
    */
   updateGrantPassed(payload: GameEvents['turn:grantPassed']): void {
     this.grants = payload.grants;
@@ -533,17 +498,16 @@ export class PreTurnScreen extends Screen {
   }
 
   /**
-   * 49f — the cache changed under this gate (a modal discard, a reward
-   * accept can't happen here but addDaemon shrink can): re-render the
-   * packet row from the live thunk. Indices shifted → disarm.
+   * The cache changed under this gate (a fire, or a discard from the cache
+   * modal): repaint the packet row from the live thunk, and disarm, since
+   * the indices shifted.
    */
   updateCache(): void {
     this.armedPacketIndex = null;
     this.refreshHand();
   }
 
-  /** Single advance path — the Fight button lands here. (The auto-advance
-   *  timer that used to share this funnel is gone as of K3.) */
+  /** The one advance path: the Fight button's. */
   private advance(): void {
     this.dispatcher.dispatch({ kind: 'advanceTurn' });
   }
@@ -552,15 +516,13 @@ export class PreTurnScreen extends Screen {
     const panel = document.createElement('div');
     panel.className = 'preturn-screen';
 
-    // R1/R2 — the card-list affordances (all position: fixed so they ignore
-    // this screen's vertical scroll for a tall hand): the roster view top-right,
-    // and the draw/discard pile views in the bottom corners. The pile buttons
-    // read their stored copies at click time (refreshed by `updateHand`).
-    // 51e — the face labels carry live counts ("Draw Pile · 12"), re-read
-    // via refresh() wherever the stored pile copies swap (updateHand).
-    // 65f — the pile buttons get named refs (the pulse targets), and their
-    // counts read the schedule's displayed overrides while a serial pulse
-    // sequence plays (null = the authoritative pile).
+    // The card-list buttons. The piles are fixed corner buttons, so a tall
+    // hand's scroll can't move them, and read their stored copies at click
+    // time (`updateHand` refreshes them). Their faces carry live counts
+    // ("Draw Pile · 12"), read again by `refresh()` where the copies swap.
+    // They are held by name, as the pulse targets, and while a pulse
+    // sequence plays their counts read the schedule's (null is the pile's
+    // own).
     this.drawPileButton = new CardListButton(this.mount, this.audio, {
       text: t('preturn.drawPile'),
       title: t('preturn.drawPile'),
@@ -591,13 +553,13 @@ export class PreTurnScreen extends Screen {
     mountControl(this.controlSlot, rosterButton.el);
     panel.append(this.drawPileButton.el, this.discardPileButton.el);
 
-    // 65e — the "Draw: N" chip (the §65 transparency surface): the folded
-    // per-turn draw amount, anchored above the Draw Pile button — where the
-    // player already reasons about the deck. Non-interactive.
+    // The "Draw: N" chip: the turn's folded draw amount, above the Draw Pile
+    // button, where the player already reasons about the deck. Not a
+    // control.
     const drawChip = document.createElement('div');
     drawChip.className = 'preturn-draw-chip';
     drawChip.textContent = t('preturn.draw', { n: this.drawAmount });
-    // 97d — a text site: tap toggles, Tab reaches it (the kickoff's call D).
+    // A text site: a tap toggles its tooltip, and Tab reaches it.
     drawChip.tabIndex = 0;
     attachTooltip(drawChip, t('preturn.drawChip.tooltip'));
     panel.appendChild(drawChip);
@@ -607,9 +569,9 @@ export class PreTurnScreen extends Screen {
     heading.textContent = t('preturn.turn', { turn: info.turn });
     panel.appendChild(heading);
 
-    // Wb1 — the encounter's NAME (the fight's headline), so the player reads
-    // the stakes before turn 1 instead of guessing. An elite/boss fight rides a
-    // kind badge (the elite uses the `*` map-glyph hue).
+    // The encounter's name, the fight's headline, so the player reads the
+    // stakes before turn 1. An elite or boss fight wears a kind badge (the
+    // elite in the map's `*` hue).
     const encounter = document.createElement('div');
     encounter.className = 'preturn-encounter';
     const encName = document.createElement('span');
@@ -629,11 +591,10 @@ export class PreTurnScreen extends Screen {
     sub.textContent = t('common.hop', { hop: info.hop });
     panel.appendChild(sub);
 
-    // K3.5 — the encounter's battlefield (one map per encounter), so the
-    // redraw below is an informed choice. Hand-authored layouts show their
-    // authored display name; a procedural roll shows the shared
-    // `map.uncharted` label (R3 — one string, same as the in-battle banner;
-    // §95c moved it from the sim constant to the UI table).
+    // The encounter's battlefield (one map per encounter), so the redraw
+    // below is an informed choice: a hand-authored layout's name, or
+    // `map.uncharted` for a procedural roll, the string the battle's banner
+    // shows.
     const map = document.createElement('div');
     map.className = 'preturn-map';
     const mapName = info.map.layoutId === null
@@ -642,10 +603,8 @@ export class PreTurnScreen extends Screen {
     map.textContent = `◎ ${mapName} — ${info.map.gridW}×${info.map.gridH}`;
     panel.appendChild(map);
 
-    // L1→47d — the daemon banners: one stacked line per owned idol (the 47
-    // shape-lock; a single-idol run renders exactly the old banner). The
-    // relic layer reads FLOURESCENT_BLUE (the K4 empower accent) against the
-    // amber battlefield line. Daemon-less runs (fuzz control arm) show none.
+    // One line per owned daemon, in the relic accent (FLOURESCENT_BLUE)
+    // against the amber battlefield line. A run with no daemon shows none.
     for (const daemon of info.daemons) {
       const line = document.createElement('div');
       line.className = 'preturn-daemon';
@@ -660,25 +619,25 @@ export class PreTurnScreen extends Screen {
       renderPoolGauge('enemy', POOL_LABELS.enemy, info.enemyHealth, info.enemyHealthMax),
     );
     panel.appendChild(pools);
-    // 89e → §91d — the risk line, right under the gauges it reads against:
-    // the most pool this turn can cost (the hand's own Σ power × chip,
-    // capped at the pool). The "add your own numbers" fairness surface — the
-    // player sees the worst case BEFORE committing the redraw/empower.
+    // The risk line, right under the gauges it reads against: the most
+    // morale this turn can cost (the whole hand falling,
+    // `Run.previewPoolAtRisk`), capped at the pool. The player sees the
+    // worst case before spending a redraw or an empower.
     const risk = document.createElement('div');
     risk.className = 'preturn-risk';
     risk.tabIndex = 0;
     attachTooltip(risk, () => riskLineTitle());
     panel.appendChild(risk);
-    // 96.5c — held + painted through one function so the hand-swap and
-    // packet-fire refreshes repaint the same line (the string through t()
-    // at this touch — the shell-phase rule; the ⚠ stays outside the value).
+    // Held, and painted through one function, so the hand-swap and
+    // packet-fire refreshes repaint the same line; the ⚠ stays outside the
+    // localized string.
     this.riskEl = risk;
     this.paintRisk(info.poolAtRisk);
-    // 96.5d — the "last turn" strip (the post-turn screen's replacement):
-    // the skirmish result + each side's fallen as a glyph run with its loss,
-    // right under the morale reads it explains. Turn 2 on.
+    // The last-turn strip, from turn 2 on: the skirmish's result and each
+    // side's fallen as a glyph run with its loss, under the morale reads it
+    // explains.
     if (this.lastTurn !== null) panel.appendChild(renderLastTurn(this.lastTurn));
-    // 49f — held for the packet-fire re-render (`updatePacketUsed`).
+    // Held for the packet fire's repaint (`updatePacketUsed`).
     this.poolsEl = pools;
     this.poolBounds = {
       playerMax: info.playerHealthMax,
@@ -703,15 +662,15 @@ export class PreTurnScreen extends Screen {
     return panel;
   }
 
-  /** 49f — the strip's cursor: the engine-derived active grant (first
-   *  pending — `grantViews[].active`), or null when the queue is spent. */
+  /** The strip's cursor: the engine's active grant (the first pending,
+   *  `grantViews[].active`), or null when the queue is spent. */
   private activeGrant(): TurnGrantView | null {
     return this.grants.find((g) => g.active && !g.passed && g.remaining > 0) ?? null;
   }
 
-  /** 49f — the armed unit-target packet, re-resolved from the LIVE cache
-   *  (never a held def — indices shift under fires/discards; a dangling
-   *  index resolves to null, i.e. disarmed). */
+  /** The armed unit-target packet, resolved again from the live cache, never
+   *  held (indices shift under fires and discards; an index left dangling
+   *  resolves to null, disarmed). */
   private armedPacket(): { cacheIndex: number; packet: PacketConfig } | null {
     if (this.armedPacketIndex === null) return null;
     const id = this.getCache()[this.armedPacketIndex];
@@ -721,12 +680,12 @@ export class PreTurnScreen extends Screen {
   }
 
   /**
-   * K3/K4→49f — (re)build the hand block in place: label, card row
-   * (clickable while something is armed), the GUIDED STRIP (one chip per
-   * queue entry + Pass), the at-will packet row, and the denial lines.
-   * Runs at first render and after every gate event (`turn:handRedrawn` /
-   * `turn:unitEmpowered` / `turn:grantPassed` / `run:packetUsed` /
-   * `run:cacheChanged`) — one render path, no optimistic copies.
+   * Build the hand block in place: the label, the card row (clickable while
+   * something is armed), the grant strip (one chip per queue entry, and
+   * Pass), the packet row and the denial lines. It runs at the first render
+   * and after every gate event (`turn:handRedrawn`, `turn:unitEmpowered`,
+   * `turn:grantPassed`, `run:packetUsed`, `run:cacheChanged`): one render
+   * path, no optimistic copies.
    */
   private refreshHand(): void {
     const wrap = this.handWrap;
@@ -743,20 +702,19 @@ export class PreTurnScreen extends Screen {
     const selectable = armed !== null || active !== null;
     const cards = document.createElement('div');
     cards.className = 'preturn-hand-cards';
-    // 73c — balanced two-row wrap past the standard deal: cap the row at
-    // ceil(n/2) columns so an over-drawn hand (Surge under maxHandSize 10)
-    // wraps 5+5 instead of orphaning a second row (9+1 at 1920px). Hands at
-    // or under the configured deal keep the single row. Card width/gap are
-    // the CSS vars on this class (ui.css) — no pixel constants here.
+    // A balanced two-row wrap past the standard deal: the row is capped at
+    // ceil(n/2) columns, so an over-drawn hand (Surge, up to `maxHandSize`)
+    // wraps 5 and 5 rather than leaving one card on a second row. A hand at
+    // or under the deal keeps one row. The card width and gap are this
+    // class's CSS variables (ui.css), not constants here.
     if (this.hand.length > DECK.handSize) {
       const cols = Math.ceil(this.hand.length / 2);
       cards.style.maxWidth = `calc(${cols} * var(--hand-card-w) + ${cols - 1} * var(--hand-gap))`;
     }
-    // 65e — the one-shot enter set (the initial deal, a redraw refill, a
-    // Surge draw). 65f: the entering nodes are collected in reveal order
-    // and handed to the cue scheduler, which syncs each card's delay to
-    // its `drawn` pulse (falling back to the quick stagger when no cues
-    // are queued).
+    // The one-shot enter set (the first deal, a redraw's refill, a Surge
+    // draw). The entering nodes are collected in reveal order and handed to
+    // the cue schedule, which sets each card's delay to its `drawn` pulse
+    // (or the quick stagger when no cues are queued).
     const entering = this.enterPositions;
     this.enterPositions = null;
     const enteringNodes: HTMLElement[] = [];
@@ -769,7 +727,7 @@ export class PreTurnScreen extends Screen {
       if (selectable) {
         card.classList.add('unit-card--clickable');
         if (this.selected.has(pos)) card.classList.add('is-selected');
-        // 100c2 — a keyboard route (role=button + Enter/Space, src/ui/
+        // A keyboard route (role=button, Enter and Space, src/ui/
         // pressable.ts); the hand re-renders on every pick, so the toggle's
         // `aria-pressed` is set at build time from the selection.
         pressable(card, { pressed: this.selected.has(pos) });
@@ -778,9 +736,9 @@ export class PreTurnScreen extends Screen {
       cards.appendChild(card);
     });
     wrap.appendChild(cards);
-    // 65f — the serial pile-pulse schedule plays ONLY on the hand-swap
-    // refresh; intermediate repaints (cache/grant/empower) leave the queue
-    // and any playing schedule alone (see the playCuesOnNextRefresh doc).
+    // The pile-pulse schedule plays only on the hand-swap refresh; the
+    // other repaints (a cache, grant or empower change) leave the queue and
+    // any playing schedule alone (`playCuesOnNextRefresh` says why).
     if (this.playCuesOnNextRefresh) {
       this.playCuesOnNextRefresh = false;
       this.scheduleCueSequence(enteringNodes);
@@ -794,10 +752,10 @@ export class PreTurnScreen extends Screen {
     if (packets.armable !== null) this.armSlotName = packets.armable;
     if (packets.count > 0) this.packetRowHeld = true;
 
-    // The armed-packet banner (hype's pick-a-card state) outranks the
-    // strip's own hints — it's the transient, user-initiated mode. 101e: the
-    // line keeps its slot (`visibility: hidden`, the Promotion precedent)
-    // from the moment a unit-target chip could raise it.
+    // The armed-packet banner (a card pick pending) outranks the strip's own
+    // hints, as the passing mode the player chose. The line keeps its slot
+    // (`reserveSlot`, `visibility: hidden`) from the moment a unit-target
+    // chip could raise it.
     const hintName = armed?.packet.name ?? this.armSlotName;
     if (hintName !== null) {
       const banner = document.createElement('div');
@@ -832,12 +790,11 @@ export class PreTurnScreen extends Screen {
   }
 
   /**
-   * 49f — a hand-card click routes by what's armed. An armed PACKET fires
-   * on it (usePacket, consume-on-fire); an active EMPOWER grant fires on it
-   * (one click = the pick — the strip's inline hand targeting); an active
-   * REDRAW grant toggles the multi-select up to ITS card cap (confirm on
-   * the chip). Refreshes ride the result events (the J3 events-only
-   * pattern) — a toggle re-renders locally.
+   * A hand card's click goes by what is armed. An armed packet fires on it
+   * (`usePacket`, used up on the fire); an active empower grant fires on it
+   * (one click is the pick); an active redraw grant toggles the card in its
+   * selection, up to its own cap (confirmed on the chip). Refreshes ride the
+   * result events; a toggle re-renders here.
    */
   private onCardClick(pos: number): void {
     const armed = this.armedPacket();
@@ -872,12 +829,12 @@ export class PreTurnScreen extends Screen {
   }
 
   /**
-   * 49f — the guided strip: one chip per queue entry in acquisition order
-   * (the resolve-walk order the strict engine enforces), plus Pass while a
-   * cursor exists. The ACTIVE chip glows and carries its hint; an active
-   * REDRAW chip is also the confirm button (enabled at 1..maxCards
-   * selected). Queued chips wait dimmed; spent/passed chips stay as the
-   * turn's receipt (passed = struck).
+   * The grant strip: one chip per queue entry in the order gained (the
+   * order the engine enforces with `passIsFinal` on), and Pass while a
+   * cursor exists. The active chip glows and carries its hint; an active
+   * redraw chip is also the confirm button (enabled at 1 to `maxCards`
+   * selected). Queued chips wait dimmed; spent and passed chips stay as the
+   * turn's receipt, the passed ones struck.
    */
   private renderStrip(): HTMLDivElement {
     const strip = document.createElement('div');
@@ -953,10 +910,10 @@ export class PreTurnScreen extends Screen {
   }
 
   /**
-   * 49f — the at-will packet row: the held `preTurn`-usable packets, read
-   * LIVE from the cache. A target-`none` chip fires on click (before,
-   * between, or after idol chips — the at-will economy lock); a unit-target
-   * chip (hype) toggles the pick-a-card arming state.
+   * The packet row: the held packets usable before a turn, read live from
+   * the cache. A target-`none` chip fires on click, at will (before,
+   * between or after the grant chips); a unit-target chip toggles the card
+   * pick.
    */
   private renderPacketRow(): { row: HTMLDivElement; count: number; armable: string | null } {
     const row = document.createElement('div');
@@ -984,8 +941,8 @@ export class PreTurnScreen extends Screen {
     const isArmed = this.armedPacketIndex === cacheIndex;
     chip.className = `packet-chip${isArmed ? ' packet-chip--armed' : ''}`;
     chip.textContent = `▤ ${packet.name}`;
-    // 97d — the packet's prose (config, the §95 sidecar) on the first line,
-    // the click hint on the second; a long-press on touch (the tap fires).
+    // The packet's prose (its locale entry) on the first line, the click
+    // hint on the second; a long press on touch, since the tap fires.
     attachTooltip(
       chip,
       `${packet.description}\n${packet.target === 'unit' ? t('preturn.packet.pickHint') : t('preturn.packet.fireHint')}`,
@@ -1005,14 +962,12 @@ export class PreTurnScreen extends Screen {
   }
 }
 
-/** P3 — one drawn card: the shared `full` UnitCard (pre-turn skin), so the hand
- *  shows the same all-stats + abilities-with-derived-stats + XP-to-next bar the
- *  player drafts on. K4→78c — a buffed card (its roster slot carries buffs)
- *  stacks ONE `▲` chip PER BUFF KEY in the badge corner, each titled with its
- *  own key + mods (the payload's per-key `EmpowerStackView` list — the old
- *  summed integer merged five keys' hover text into one line). The selection
- *  (K3 redraw / K4 empower) classes + click ride on top, applied by the
- *  caller. */
+/** One drawn card: the shared `full` UnitCard (the pre-turn skin), so the
+ *  hand shows the same stats, abilities and XP bar as the roster's cards. A
+ *  buffed card (its roster slot carries buffs) stacks one `▲` chip per buff
+ *  key in the badge corner, each with its own key and mods (the payload's
+ *  per-key `EmpowerStackView` list). The selection's classes and click are
+ *  the caller's. */
 function renderHandCard(unit: UnitTemplate, stacks: readonly EmpowerStackView[]): HTMLDivElement {
   const { el } = buildUnitCard(unitCardFromTemplate(unit), { mode: 'full', skin: 'preturn' });
 
@@ -1023,18 +978,18 @@ function renderHandCard(unit: UnitTemplate, stacks: readonly EmpowerStackView[])
       const chip = document.createElement('div');
       chip.className = 'preturn-card-empower-chip';
       chip.dataset['buffKey'] = stack.key;
-      // 78d — per-key color off the shared EMPOWER_DISPLAY map (the same
-      // color the in-battle marker uses, so the vocabulary carries over).
+      // The key's colour from the shared EMPOWER_DISPLAY map, the colour the
+      // battle's marker uses, so the vocabulary carries over.
       chip.style.color = empowerColor(stack.key);
       chip.textContent = stack.magnitude <= 3 ? '▲'.repeat(stack.magnitude) : `▲×${stack.magnitude}`;
-      // 97e — the persistent label beside the triangles (call E, by eye).
+      // The label beside the triangles, always shown.
       const label = document.createElement('span');
       label.className = 'preturn-card-empower-chip-label';
       label.textContent = empowerLabel(stack.key);
       chip.appendChild(label);
-      // 97d — a text site NESTED in a control (the card's click is the
-      // redraw / empower pick), so the touch route is the long-press: a tap
-      // on the badge corner belongs to the card. Tab reaches it.
+      // A text site nested in a control (the card's click is the redraw or
+      // empower pick), so the touch route is the long press: a tap on the
+      // badge corner belongs to the card. Tab reaches it.
       chip.tabIndex = 0;
       attachTooltip(chip, buffChipTooltip(stack.key, stack.magnitude, stack.mods), { touch: 'press' });
       badge.appendChild(chip);
@@ -1045,8 +1000,8 @@ function renderHandCard(unit: UnitTemplate, stacks: readonly EmpowerStackView[])
   return el;
 }
 
-/** L1 — the inert line a chance-denied gate leaves where its control would be
- *  (Mercury's cold coin). Distinct from a SPENT gate, which leaves nothing. */
+/** The inert line a chance-denied gate leaves where its control would be
+ *  (Mercury's cold coin). A spent gate leaves none. */
 function renderGateDenied(text: string): HTMLDivElement {
   const row = document.createElement('div');
   row.className = 'preturn-gate-denied';
@@ -1055,15 +1010,13 @@ function renderGateDenied(text: string): HTMLDivElement {
 }
 
 /**
- * 96.5d — THE "LAST TURN" STRIP: one line under the gauges — `Last turn ·
- * Skirmish won · yours M M −2 · theirs A M M R −7` — off the previous
- * turn's `turn:resolved` payload (the fallen rows are `Run.fallenLedger`
- * copies; each side's Σ power over `thisTurn` is the chip the casualty rule
- * charged, so the numbers here are the ledger's, not a re-derivation).
- * Replaces the post-turn screen: the live bar carried the moment, the
- * pre-turn screen is the mandatory stop, and the encounter's LAST turn's
- * rows wait for §102's run-end stats. The loss numbers carry the rule
- * wording as a hover (`chipLineLabels`, §97 turns it into a tooltip).
+ * The last-turn strip: one line under the gauges, `Last turn · Skirmish won
+ * · yours M M −2 · theirs A M M R −7`, off the previous turn as
+ * `turn:starting` carries it (`lastTurn`). The fallen rows are copies of
+ * `Run.fallenLedger`'s, and each side's power over the turn is what the
+ * casualty rule charged, so the numbers are the ledger's, not derived
+ * again. The loss numbers carry the rule's wording as a tooltip
+ * (`chipLineLabels`).
  */
 function renderLastTurn(info: LastTurn): HTMLDivElement {
   const strip = document.createElement('div');
@@ -1102,9 +1055,8 @@ function lastTurnSide(
   rows: readonly FallenRecord[],
   ruleWording: string,
 ): HTMLSpanElement {
-  // 102d — the cell itself lives in fallenSide.ts (the run-end stats is its
-  // second consumer). 97d — one fallen per line: a text site, tap toggles,
-  // Tab reaches it.
+  // The cell is fallenSide.ts's, which the run-end stats use too. One
+  // fallen per line: a text site, a tap toggles it, and Tab reaches it.
   const mine = rows.filter((r) => r.side === side);
   return fallenSide({
     side,

@@ -1,32 +1,27 @@
 /**
- * 49f — the persistent cache chip + modal: the SECOND page-lifetime UI
- * element (the 48d BitsOverlay precedent — Game-owned, appended once to
- * #ui, never rides the scene mount/dispose cycle). The chip (`▤ n/6`)
- * stacks BELOW the bits chip (the in-battle hop chip owns the slot to the
- * bits chip's right — a left-column of persistent chrome never collides;
- * §51's cohesion review owns refinements, per the .hud-hop note).
+ * The cache chip and its modal. The chip is page-lifetime, like the bits
+ * chip: Game owns it, and it never rides a scene's mount and dispose. It
+ * reads `▤ held/size`, second in the chrome column, under the bits chip.
  *
- * Gotcha #116 applies verbatim: `run:cacheChanged` drives mid-run repaints;
- * `run:started` is a re-SHOW signal only (it fires from inside the new
- * Run's constructor, before Game reassigns `this.run`, so a repaint would
- * read the DEAD run); `Game.resetRun` calls `refresh()` explicitly after
- * the reassignment; defeat/victory hide the chip (and close the modal).
+ * Gotcha #116 applies: `run:cacheChanged` drives the repaints in a run, and
+ * `run:started` only shows the chip again, since it fires before Game
+ * assigns the new run. Game calls `refresh()` after each assignment
+ * (`resetRun`, `confirmCharacter`, `adopt`). A defeat or a victory hides
+ * the chip and closes the modal.
  *
- * The modal (the chip's click target — the R1 roster-modal shell) opens
- * ANYWHERE: view + Discard always; **Fire** where the phase-derived context
- * allows (`turn-intro` → preTurn, `map` → outOfBattle — the 49e engine
- * contract; the UI derives the same way and only offers what the engine
- * would accept). Target-`none` packets fire straight from their row; a
- * unit-target OUT-OF-BATTLE packet (overclock) expands an inline roster
- * picker. A unit-target PRE-TURN packet (hype) fires from the gate's OWN
- * at-will packet row instead (PreTurnScreen — the pick-a-card arming
- * state lives where its hand targets are), so this modal offers it no
- * Fire at the gate.
+ * The modal (the chip's click, on the modal shell, src/ui/modal.ts) opens
+ * anywhere: viewing and Discard always, and Fire where the phase allows
+ * (`turn-intro` → `preTurn`, `map` → `outOfBattle`, as the engine derives
+ * it), so the UI offers only what the engine would take. A target-`none`
+ * packet fires from its row; a unit-target packet used out of battle
+ * (Overclock) opens a roster picker under its row. A unit-target packet at
+ * the gate (Hype, Shield, Cull) fires from the pre-turn screen's own packet
+ * row, where its hand cards are, so this modal offers it no Fire there.
  *
- * The forced-keep shrink flow lives here too: while `cacheOverflow > 0`
- * (a size-shrinking daemon landed under current holdings) the modal
- * FORCE-OPENS in discard-only mode and can't be dismissed until the
- * overflow resolves — discards are always available, so no soft-lock.
+ * The forced keep: while `cacheOverflow > 0` (an event gave a packet into a
+ * full cache; a daemon that shrank the cache would too, though none ships)
+ * the modal opens itself in discard-only mode and can't be dismissed until
+ * the overflow is gone. A discard is always offered, so it never locks.
  */
 
 import type { EventBus } from '../core/EventBus';
@@ -43,8 +38,8 @@ import { chipPulse } from './chip';
 import { openModal, type ModalHandle } from './modal';
 import { reserveSlot } from './reserveSlot';
 
-/** The live run state the overlay reads — injected as getters (the
- *  BitsOverlay `getBits` pattern), so a Run swap on reset is invisible. */
+/** The live run state the overlay reads, injected as getters (as the bits
+ *  chip's `getBits` is), so a new Run is read without a rewire. */
 interface CacheOverlayDeps {
   getCache: () => readonly string[];
   getSize: () => number;
@@ -54,33 +49,33 @@ interface CacheOverlayDeps {
 }
 
 export class CacheOverlay {
-  /** 100c1 — a real `<button>` (its sibling, the map chip, always was); the
-   *  `.chip` plate styles it, the ring rule + the hover twin cover focus. */
+  /** A real `<button>`, as the map chip is; the `.chip` plate styles it,
+   *  and the focus ring and the hover's focus twin cover focus. */
   private readonly el: HTMLButtonElement;
   private readonly value: HTMLSpanElement;
   private readonly pulse: () => void;
-  /** 96f — the modal shell (src/ui/modal.ts): it owns the overlay, the
+  /** The modal shell (src/ui/modal.ts): it owns the overlay, the
    *  header, the ✕, Esc / backdrop (gated by `setDismissable` — the
    *  forced-keep flow) and the focus trap; this class owns the body. */
   private modal: ModalHandle | null = null;
-  /** 101e — the last overflow count the shrink banner showed in THIS modal
-   *  session (0 = never shown). The banner is the first body node, above
-   *  every Discard; the final discard of a forced-keep flow removed it and
-   *  pulled the list up 48 px under the pointer — so once shown it keeps its
-   *  slot (reserved, same text = same box) until the modal closes. */
+  /** The last overflow count the overflow banner showed while this modal
+   *  has been open (0: never shown). The banner is the body's first node,
+   *  above every Discard, so the forced keep's last discard would remove it
+   *  and pull the list up under the pointer; once shown, it keeps its slot
+   *  (reserved, the same text and so the same box) until the modal closes. */
   private heldOverflow = 0;
 
   constructor(
-    /** The page mount — the MODAL's host (a fixed full-viewport overlay;
-     *  it must not sit inside the chrome column's stacking context). */
+    /** The page mount, the modal's host (a fixed full-viewport overlay,
+     *  which must not sit inside the chrome column's stacking context). */
     private readonly mount: HTMLElement,
-    /** 96e — the chrome column the CHIP mounts into (src/ui/chip.ts). */
+    /** The chrome column the chip mounts into (src/ui/chip.ts). */
     chips: HTMLElement,
     bus: EventBus<GameEvents>,
     private readonly dispatcher: RunDispatcher,
     private readonly audio: AudioPlayer,
     private readonly deps: CacheOverlayDeps,
-    /** 63e — start hidden pre-run (the BitsOverlay contract). */
+    /** Start hidden before a run exists, as the bits chip does. */
     startHidden = false,
   ) {
     this.el = document.createElement('button');
@@ -88,7 +83,7 @@ export class CacheOverlay {
     this.el.className = 'chip cache-overlay';
     this.pulse = chipPulse(this.el);
     if (startHidden) this.el.classList.add('is-hidden');
-    // 97c — the chip's tooltip (a long-press on touch; the tap opens the modal).
+    // The chip's tooltip (a long press on touch; the tap opens the modal).
     attachTooltip(this.el, t('cache.chipTooltip'), { touch: 'press' });
     this.value = document.createElement('span');
     this.value.className = 'cache-overlay__value';
@@ -109,14 +104,13 @@ export class CacheOverlay {
     bus.on('run:cacheChanged', () => {
       this.paintChip();
       this.pulse();
-      // A held modal re-renders in place (a fire/discard just landed); an
-      // overflow (the forced-keep shrink) force-opens it on ANY screen.
+      // An open modal re-renders in place (a fire or a discard just landed);
+      // an overflow (the forced keep) opens it on any screen.
       if (this.modal !== null) this.renderModalContents();
       else if (this.deps.getOverflow() > 0) this.openModal();
     });
-    // Re-SHOW only — the reset re-paint comes from Game.resetRun via
-    // refresh() (gotcha #116: this event fires before Game's run reference
-    // is reassigned).
+    // Shows the chip only; the repaint is Game's `refresh()` (gotcha #116:
+    // this event fires before Game assigns the new run).
     bus.on('run:started', () => this.el.classList.remove('is-hidden'));
     bus.on('run:defeated', () => this.hideForRunEnd());
     bus.on('run:victory', () => this.hideForRunEnd());
@@ -128,14 +122,15 @@ export class CacheOverlay {
     this.el.classList.remove('is-hidden');
   }
 
-  /** 116d — hide the chip, and close its modal, for a run that was left, not
+  /** Hide the chip, and close its modal, for a run that was left, not
    *  ended (Quit to menu): no `run:defeated` or `run:victory` says so. */
   conceal(): void {
     this.hideForRunEnd();
   }
 
-  /** Re-read the live cache (the first paint + Game.resetRun's re-paint).
-   *  Also closes any open modal — a reset's cache is a different run's. */
+  /** Re-read the live cache: the first paint, and Game's repaint after it
+   *  assigns a run. Also closes an open modal, since the cache is now
+   *  another run's. */
   refresh(): void {
     this.paintChip();
     this.closeModal();
@@ -153,8 +148,8 @@ export class CacheOverlay {
     this.el.classList.toggle('is-over', this.deps.getOverflow() > 0);
   }
 
-  /** The 49e engine's phase→context derivation, mirrored for availability
-   *  (the UI offers only what `usePacket` would accept). */
+  /** The engine's phase-to-context rule (`Run.handleUsePacket`), mirrored,
+   *  so the UI offers only what `usePacket` would take. */
   private currentContext(): UseContext | null {
     const phase = this.deps.getPhase();
     return phase === 'turn-intro' ? 'preTurn' : phase === 'map' ? 'outOfBattle' : null;
@@ -179,11 +174,11 @@ export class CacheOverlay {
     this.modal?.close(); // the shell's onClose nulls the handle
   }
 
-  /** (Re)build the modal BODY from live state — run at open and after
-   *  every `run:cacheChanged` while open, so a fire/discard/shrink is
-   *  reflected without an optimistic local copy (the K3 events-only
-   *  discipline, applied to a modal). The shell keeps the header: the
-   *  title re-reads, and the ✕ / Esc / backdrop gate on the overflow. */
+  /** Build the modal's body from live state, at open and after every
+   *  `run:cacheChanged` while open, so a fire, a discard or an overflow
+   *  shows with no optimistic local copy. The shell keeps the header: the
+   *  title is read again, and the ✕, Esc and the backdrop wait on the
+   *  overflow. */
   private renderModalContents(): void {
     const modal = this.modal;
     if (modal === null) return;
@@ -193,8 +188,8 @@ export class CacheOverlay {
     const overflow = this.deps.getOverflow();
 
     modal.setTitle(t('cache.title', { held: cache.length, size }));
-    // The forced-keep flow: while a shrink left more packets than slots the
-    // modal is un-dismissable until the player discards down to capacity.
+    // The forced keep: while the cache holds more packets than slots, the
+    // modal can't be dismissed until the player discards down to its size.
     modal.setDismissable(overflow === 0);
 
     const body: Node[] = [];
@@ -216,8 +211,8 @@ export class CacheOverlay {
       list.appendChild(empty);
     } else {
       cache.forEach((id, index) => {
-        // The cache holds catalog-validated ids (the 49b addPacket / load
-        // contract) — a miss is unreachable, skipped defensively.
+        // The cache holds only catalog ids (`addPacket` and a load both
+        // throw on another), so a miss can't happen; it is skipped anyway.
         const packet = packetById(id);
         if (packet !== undefined) list.appendChild(this.renderRow(packet, index, overflow > 0));
       });
@@ -226,8 +221,8 @@ export class CacheOverlay {
     modal.replaceBody(...body);
   }
 
-  /** One held slot: name + description + its actions. Mid-shrink the row is
-   *  discard-only (the forced-keep flow). */
+  /** One held slot: its name, its description and its actions. During the
+   *  forced keep the row offers Discard only. */
   private renderRow(packet: PacketConfig, cacheIndex: number, shrinkMode: boolean): HTMLDivElement {
     const row = document.createElement('div');
     row.className = 'cache-row';
@@ -251,9 +246,9 @@ export class CacheOverlay {
       !shrinkMode &&
       context !== null &&
       packet.usableIn.includes(context) &&
-      // A unit-target PRE-TURN fire (hype) targets a hand card — that
-      // arming flow belongs to the guided strip (49f commit 2); until it
-      // lands, the row simply offers no Fire at the gate.
+      // A unit-target fire at the gate targets a hand card, so it arms from
+      // the pre-turn screen's packet row, where the cards are; this row
+      // offers it no Fire there.
       (packet.target === 'none' || context === 'outOfBattle');
     if (fireable) {
       const fire = document.createElement('button');
@@ -263,8 +258,8 @@ export class CacheOverlay {
       fire.addEventListener('click', () => {
         this.audio.play('click');
         if (packet.target === 'none') {
-          // Consume-on-fire: the result comes back via run:cacheChanged /
-          // run:packetUsed (no optimistic update).
+          // Used up on the fire: the result comes back through
+          // `run:cacheChanged` and `run:packetUsed`, with no optimistic update.
           this.dispatcher.dispatch({ kind: 'usePacket', cacheIndex });
         } else {
           this.toggleRosterPicker(row, cacheIndex);
@@ -287,9 +282,9 @@ export class CacheOverlay {
     return row;
   }
 
-  /** The inline roster picker for a unit-target OUT-OF-BATTLE fire
-   *  (overclock: "pick the roster unit to buff for the next encounter").
-   *  Expands under the row; a second Fire click collapses it. */
+  /** The roster picker for a unit-target fire out of battle (Overclock: the
+   *  roster unit to buff for the next encounter). It opens under the row,
+   *  and a second Fire click closes it. */
   private toggleRosterPicker(row: HTMLDivElement, cacheIndex: number): void {
     const existing = row.querySelector('.cache-roster-pick');
     if (existing !== null) {
@@ -306,7 +301,7 @@ export class CacheOverlay {
       const button = document.createElement('button');
       button.type = 'button';
       button.className = 'cache-roster-pick-unit';
-      // §61g — the config display name, not the raw id.
+      // The archetype's display name, not its id.
       button.textContent = `${glyphForArchetype(unit.archetype)} ${nameForArchetype(unit.archetype)} — Lv ${unit.level}`;
       button.addEventListener('click', () => {
         this.audio.play('click');

@@ -1,33 +1,27 @@
 /**
- * 48d — the persistent bits overlay: the game's FIRST page-lifetime UI
- * element. Game owns it (the `playback`/`keybindings` ownership pattern;
- * the `UnitOverlayLayer` "Game-owned DOM inserted once" precedent) and it
- * deliberately never rides the Scene mount/dispose cycle — that cycle is
- * exactly what would kill it on swaps. Top-left corner (the spec lock:
- * bits own the corner in ALL cases; the battle hop chip moved to its
- * right — ui.css `.hud-hop`), visible in and out of battle.
+ * The bits chip, page-lifetime: Game owns it, and it never rides a scene's
+ * mount and dispose, which would kill it on every swap. It is first in the
+ * chrome column (src/ui/chip.ts), in the top-left corner on every screen,
+ * in battle too.
  *
- * Wiring subtleties (the §48 kickoff audit + one found browser-side):
- * - Run's constructor sets `bits` directly — no `run:bitsChanged` fires for
- *   the starting balance, so the first paint reads the live value via the
- *   injected getter.
- * - On a page booted with a `character` dial, the FIRST run's
- *   `run:started` fires from Game's constructor BEFORE this chip exists —
- *   here it serves only as the re-SHOW signal. It cannot drive the reset
- *   re-PAINT either: it
- *   emits from inside the new Run's constructor, i.e. before Game has
- *   reassigned `this.run`, so the getter would read the OLD run's balance
- *   (browser-verified: the chip kept the dead run's total). Game calls
- *   `refresh()` from `resetRun` AFTER the assignment instead.
- * - The overlay hides on `run:defeated`/`run:victory`
- *   (a bits chip floating over the game-over screen reads as leftover
- *   chrome) and re-shows on the next `run:started`.
+ * Wiring (gotcha #116):
+ * - Run's constructor sets `bits` with no `run:bitsChanged`, so the first
+ *   paint reads the live value through the injected getter.
+ * - `run:started` only shows the chip again. On a page booted with a
+ *   `character` dial, the first run's fires from Game's constructor before
+ *   this chip exists; and each run's fires inside the new Run's
+ *   constructor, before Game assigns `this.run`, so the getter would read
+ *   the old run's balance. Game calls `refresh()` after each assignment
+ *   (`resetRun`, `confirmCharacter`, `adopt`).
+ * - The chip hides on `run:defeated` and `run:victory` (a bits chip over the
+ *   game-over screen reads as leftover chrome), and shows again on the next
+ *   `run:started`.
  *
- * Layering: z-index 15 — above every screen (screens carry no z-index, so
- * the chip stays visible over the opaque reward/recruit scenes),
- * below the corner card-list buttons (20) and modals (30 — a focused modal
- * may dim it), and below the #scanlines rake (1000) so the CRT treatment
- * covers it like every other piece of chrome.
+ * Its layering is the chrome column's (ui.css `.chrome-column`, z-index
+ * 15): above every screen (screens carry no z-index, so the chip shows over
+ * the opaque reward and recruit screens), under the corner card-list
+ * buttons (20) and the modals (30), and under the #scanlines rake (1000), so
+ * the CRT covers it like every other piece of chrome.
  */
 
 import type { EventBus } from '../core/EventBus';
@@ -37,18 +31,19 @@ import { chipPulse } from './chip';
 export class BitsOverlay {
   private readonly el: HTMLDivElement;
   private readonly value: HTMLSpanElement;
-  /** A brief glow so an earn is noticeable mid-battle without a hitsplat. */
+  /** A brief glow, so an earn or a spend is noticed with no hitsplat. */
   private readonly pulse: () => void;
 
   constructor(
-    /** 96e — the chrome column (src/ui/chip.ts), not the page mount. */
+    /** The chrome column (src/ui/chip.ts), not the page mount. */
     mount: HTMLElement,
     bus: EventBus<GameEvents>,
     private readonly getBits: () => number,
-    /** 63e — start hidden when no Run exists yet (the pre-select boot); the
-     *  existing `run:started` re-show reveals the chip when select confirms
-     *  (the new Run's constructor emits it — subscription below is live by
-     *  then, unlike the pinned-boot path where Run predates this chip). */
+    /** Start hidden when no Run exists yet (a boot to the character
+     *  select); `run:started` shows the chip when the select confirms (the
+     *  new Run's constructor emits it, and the subscription below is live by
+     *  then, unlike a boot with a `character` dial, whose Run comes before
+     *  this chip). */
     startHidden = false,
   ) {
     this.el = document.createElement('div');
@@ -71,9 +66,8 @@ export class BitsOverlay {
       this.value.textContent = String(bits);
       this.pulse();
     });
-    // Re-SHOW only — the re-paint comes from Game.resetRun via refresh()
-    // (this event fires before Game's run reference is reassigned; see the
-    // header).
+    // Shows the chip only; the repaint is Game's `refresh()` (this event
+    // fires before Game assigns the new run; see the header).
     bus.on('run:started', () => this.el.classList.remove('is-hidden'));
     bus.on('run:defeated', () => this.el.classList.add('is-hidden'));
     bus.on('run:victory', () => this.el.classList.add('is-hidden'));
@@ -85,14 +79,15 @@ export class BitsOverlay {
     this.el.classList.remove('is-hidden');
   }
 
-  /** 116d — hide the chip for a run that was left, not ended (Quit to menu):
+  /** Hide the chip for a run that was left, not ended (Quit to menu):
    *  no `run:defeated` or `run:victory` says so. */
   conceal(): void {
     this.el.classList.add('is-hidden');
   }
 
-  /** Re-read the live balance (the first paint + Game.resetRun's re-paint —
-   *  the only sites where the balance changes without a `run:bitsChanged`). */
+  /** Re-read the live balance: the first paint, and Game's repaint after it
+   *  assigns a run, the places the balance changes with no
+   *  `run:bitsChanged`. */
   refresh(): void {
     this.value.textContent = String(this.getBits());
   }

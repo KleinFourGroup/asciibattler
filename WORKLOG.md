@@ -12246,3 +12246,7 @@ left.
 orientation), 272,330 (batch 3's proof), 288,240 (batch 3's commit),
 356,973 (batch 4's proof), 361,131 (batch 4's commit), 367,779 at 21:30
 at the hand-off.
+
+**Batches 3 and 4, read** (the user, 2026-10-19, after the hand-off):
+"Those look great, Claude!", and asked whether that signed the two reads,
+"Yes, those were reads". Both batches are read; no read is open.

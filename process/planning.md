@@ -195,6 +195,8 @@ cost gives a better line.
   reports to [retro/sessions.md](../retro/sessions.md), under a
   `## Phase N — summary` heading.
 - Demote the phase in HANDOFF.
+- If the phase has a driver, the close is its last hand-off, sent and read
+  as the others are ([driving.md](driving.md), "The phase close").
 
 ## Round close
 
@@ -218,7 +220,8 @@ cost gives a better line.
 ## The scratchpad sweep
 
 At each round boundary, go through [retro/scratchpad.md](../retro/scratchpad.md)
-along with [retro/sessions.md](../retro/sessions.md) and the papercut log.
+along with [retro/sessions.md](../retro/sessions.md), the papercut log, and
+the pattern list in [DRIVER-HANDOFF.md](../DRIVER-HANDOFF.md).
 Each scratchpad entry is either promoted or archived (moved to `archive/`
 with the round's docs); the scratchpad keeps only the current round's
 undistilled notes.

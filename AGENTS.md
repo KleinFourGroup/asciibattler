@@ -90,10 +90,9 @@ The user is Matthew. What helps:
   feasibility read rather than deference; the instinct behind it often
   points at a real need.
 - They often multitask, so wall-clock time is an upper bound on work time.
-- Read your context use from a tool if your harness has one (Claude Code:
-  CLAUDE.md "The context meter"); otherwise ask the user for the meter
-  reading when it matters. Don't estimate it: past estimates were off by
-  2–3× in both directions.
+- Read your context use from your harness's tool (Claude Code: CLAUDE.md
+  "The context meter") or ask the user; don't estimate it, since past
+  estimates were off by 2–3× in both directions.
 
 How the work runs:
 
@@ -269,6 +268,7 @@ to the first instead.
 | Before you… | Read |
 |---|---|
 | kick off, re-plan or close a phase or round; edit ROADMAP; sweep the scratchpad | [process/planning.md](process/planning.md) |
+| drive a phase, or resume driving one | [process/driving.md](process/driving.md) |
 | launch a fuzz or box batch, benchmark, profile, or edit balance config | [process/measurement.md](process/measurement.md), then [BALANCE.md](BALANCE.md) |
 | claim a refactor changes nothing, or build a probe or instrument that decisions will rest on | [process/oracles.md](process/oracles.md) |
 | read the friction log or the session reports at a mid-round or round-close read | [process/welfare-and-efficacy.md](process/welfare-and-efficacy.md) |
@@ -312,8 +312,9 @@ threshold.
   than the tool changing.)
 
   For a CURRENT need to pause, stop, or change approach, raise it in the
-  conversation as well; filing alone does not notify the user or summon
-  immediate help.
+  conversation as well; filing alone summons no immediate help (a phase's
+  driver, if any, passes a `distress` line to the user at your next
+  commit).
 - **The session self-report.** At the end of a session (not of a phase:
   phases span sessions and sessions span phases), append a dated entry to
   [retro/sessions.md](retro/sessions.md) answering the questions in its
@@ -371,6 +372,3 @@ task rather than bundling the fix.
   (JetBrains Mono 2.304 + DejaVu Sans Mono 2.37 under `assets/fonts/`, built
   by `npm run gen:font`)
 - Vitest 4.1.6, ESLint 10.4.0, typescript-eslint 8.59.3, prettier 3.8.3
-
-The annotated source tree is in [ARCHITECTURE.md](ARCHITECTURE.md)
-("Top-level structure").

@@ -12519,3 +12519,167 @@ the hand-off.
 **Batches 5 and 6, read** (the user, 2026-10-19, at the next session's
 start, session d8214ecc): "They both look good to me, Claude!" Both
 batches are read; no read is open.
+
+### 124.5h, batch 7 — the unit card and the screens around it (2026-10-19, session d8214ecc)
+
+The 8 files: `UnitCard.ts`, `abilityDetail.ts`, `promotionDelta.ts`,
+`PromotionScreen.ts`, `RecruitScreen.ts`, `rarityDisplay.ts`,
+`rosterOrder.ts`, `statLabels.ts`; all changed, and `src/config/abilities.ts`
+for a twin. Out: the step codes (the UI round's letters on most of the
+card's comments, the promotion reveal's, the rarity work's) and the `§`
+marks, the capitals, and the history: what the card replaced in the two
+screens it was extracted from, the label map the config's names retired,
+the rarity seam that waited for its CSS, the reveal's first cascading
+shape and the playtest that changed it, the tick the promotion borrowed,
+the summon once labelled a dash, what the stars replaced, and the plans
+(a future order toggle, a refinement of the pre-turn header). Each reason
+those stories carried stays as the reason: the summon and the pure aura
+come before the dash branch or they read as a dash; the derived block holds
+its height from the landing so the card row can't re-center; the tick is
+flat because a rising tally lost by ear; a count of stars reads as an order
+where a written tier name needs the ladder known.
+
+**Statements found false and corrected (rule 7):**
+
+- `UnitCard.ts`, the header and the rarity import's note: "no rarity CSS
+  ships yet", every tier rendering "as `common` did" until it lands. ui.css
+  tints every tier's card (`.unit-card--rarity-*`) and colours its stars.
+- `UnitCard.ts`: `UnitRarity` was "re-exported so existing importers keep
+  working"; no file imports it from the card (every importer reads
+  `config/units`). The comment now says where the tier comes from; the
+  re-export, being code, stays (below).
+- `UnitCard.ts`: the header listed the builder's users as the recruit,
+  promotion and pre-turn screens and the HUD; the card-list modal and the
+  port build cards too, so it says "every screen that shows one". The
+  `roster` skin was "display-only"; the port's crew removal makes those
+  cards clickable. The skins' defaults said only recruit and pre-turn show
+  the abilities and only pre-turn the XP bar; the roster skin shows both.
+- `UnitCard.ts`: `statRows` was "in canonical `STAT_LABELS` order"; the map
+  holds POW first, and `STAT_LABELS` ends with it. `PromotionScreen.ts`'s
+  `renderCard` said its beats ran "in canonical stat order" too, while its
+  own loop's comment said POW first. Both say POW first.
+- `UnitCard.ts`: `levelValue` was the header "for skins without a reveal";
+  the compact card's is its level span.
+- `UnitCard.ts`: the compact card's hints sat beside the numbers "because a
+  promotion rewrites `levelValue.textContent`". No promotion touches a
+  compact card: PromotionScreen is the handle's one writer, on its own
+  skin. The rule stays with its true reason, that the handle points at the
+  level span and a write to it would erase a nested hint. The level read
+  "`LV 5`"; `card.hint.level` is "Lv".
+- `UnitCard.ts`: a status chip led with "a color swatch"; it is the status's
+  symbol in its colour, as `makeStatusChip`'s note in the same file said.
+  And its numbers read `±potency/s`; damage reads `N/s`, unsigned
+  (`statusChipMeta`).
+- `UnitCard.ts`: "Pre-turn reuses the recruit format for P1 (P3 refines
+  it)"; nothing refined it, and every skin but promotion reads `Level N
+  name`.
+- `UnitCard.ts`: POW "chips the encounter health pools each turn". Under
+  the shipped rule a side's pool loses its fallen's power, and on a cap
+  turn the opposing side's standing power too (`chipRule.ts`). The power
+  row's hint was "a `pool` clarifier"; it reads `morale`
+  (`card.hint.morale`).
+- `UnitCard.ts`: the stars' touch route: "a full card is a control on the
+  recruit / pre-turn screens (its click is the pick), so nested text takes
+  the long-press there; the roster's and the promotion's cards are inert".
+  The route follows the build-time `clickable`, which only the recruit skin
+  sets. The pre-turn hand and the port's crew picker make their cards
+  controls after the build, so their star runs take the tap. The comment
+  now states the rule the code applies; the gap is a finding for the user,
+  below.
+- `PromotionScreen.ts`: the screen was "shown at turn boundaries"; a rest
+  promotes too (`resolveRest`). And `dismissPromotion` led to "next turn,
+  recruit offer, or run:victory"; Run routes it inside an encounter to the
+  gate chain (`continueAfterTurn`) and after a rest to the map. It names
+  `handleDismissPromotion`.
+- `RecruitScreen.ts`: a "post-victory recruit modal" whose show and hide
+  Game drove on `recruit:offered` "and the chooseRecruit command". It is a
+  screen, offered after a won encounter that was not the sector's terminal;
+  Game swaps in RecruitScene on `recruit:offered`, which shows it at mount
+  and hides it at dispose.
+- `statLabels.ts`: the labels served "PromotionScreen deltas + the
+  RecruitScreen card", "the two screens". The promotion's derived lines use
+  their own strings (`promotion.delta.*`); the labels serve the unit card
+  on every screen, `buffModsSummary`, and the archetype and packet
+  editors. And "I1 keeps this in sync with `STAT_KEYS`"; no test compares
+  the two orders, so it says they are kept the same by hand.
+- Its twin outside the batch: `src/config/abilities.ts` gave `damageOpOf`
+  as a read "for the display surfaces (UnitCard, the editor)". The card
+  never calls it (its detail line uses `abilityDetail.ts`'s own `opOf`);
+  the archetype editor and the tests do. Corrected here and flagged; it
+  stages `src/config`, so the hook runs the smoke.
+
+Re-pointed, not false: the chain branch's "`damageOpOf` finds none" names
+`opOf(def, 'damage')`, the lookup this builder makes (both find none); the
+reveal's "(FADE_MS=180)" names `.screen-fade`'s 180 ms fade-in, since
+`FADE_MS` times the fade-out; `abilityRow`'s list of the weapon profiles it
+shows became a pointer to `abilityDetailParts`, which shows chains, summons,
+statuses and auras besides. Dropped as a list that rots: the damage
+afflicters by name (`cleaver/vial/ice_storm/light_ray`), which left out
+`molotov`.
+
+**Kept, checked at the code they name:** the six builders of a card
+(recruit, promotion, pre-turn, the card-list modal, the port, the HUD) and
+their skins and `clickable`; only PromotionScreen writing `levelValue`;
+`rarityForArchetype`'s `common` fallback; `displayLevel` rounding; the HUD
+skipping every neutral and driving the bar on `unit:attacked`,
+`status:ticked` and `unit:healed`, the rows once a tick, and `.is-dead`;
+the player pane at the bottom center; the compact card's colours (the POW
+blue, the enemy red, the player green) and the recruit skin's amber and
+two-column stats; the promotion rows' dim amber, `.is-revealing`'s border
+and the derived block's `visibility`; `readUnitStatuses` in the catalog's
+order; the empower label's pin in `statusDisplay.test.ts`; the `▲` chip's
+tooltip shared with the pre-turn hand, and `buffModsSummary`'s two
+callers; the locale strings quoted (`unit.levelName`, `common.lv`, the
+stat labels, `card.hint.*`); every op kind against `config/abilities.json`
+(the Shaman's `raise_dead`, the Stormcaller's `chain_lightning`, the
+Warlock's `hex` and the Banshee's `wail` as pure afflicters, the dash the
+one ability not speed-scaled, the Officer's `inspire` as a shipped pure
+aura); the schema making a pure aura target `self`; no op scaling with
+power; `deriveStats`' signature; the editor's `REF_ACCURACY` of 0.6 and its
+dialable precision; `xpProgress` in `xp.test.ts`; `stattick` played only
+by PromotionScreen; `chooseRecruit` and `passRecruit` returning to the
+map, the pass free; the rarity test and the key-scan pin; `ALL_ARCHETYPES`
+in `config/units.json`'s combatant order; `payToRemoveUnit`'s
+`rosterIndex`; no caller passing a roster order. Nothing was dropped
+unchecked.
+
+**For the user, not built** (code, outside the pass):
+
+- The stars' touch route on the pre-turn hand and the port's crew picker.
+  Those cards become controls after the build, so the star run takes the
+  tap, against the rule that nested text in a control takes the
+  long-press (the hand card's own `▲` chips take it, for that reason). On
+  a touch screen a tap on the stars there opens the tier's tooltip and
+  picks the card at once: the tap route does not swallow the click. Since
+  98b, whose entry says the pre-turn's run takes the long-press; the
+  pane check then was the roster modal by hover. Desktop is untouched.
+- `export type { UnitRarity }` in `UnitCard.ts` has no reader; a
+  re-export, so A-26's count of exports read only by their own file
+  missed it.
+
+Left for `ui.css`'s batches: `.unit-card__stat--power`'s comment gives POW
+as chipping "the opposing health pool each turn", false as above.
+
+Measured (`comment-length` on copies under `output/cl-1245h-b7`): comment
+lines 437 → 401, words 4,083 → 3,720, code lines 841 unchanged. The
+step-code ceiling 1,615 → 1,508, the 107 these files held, 65 of them in
+`UnitCard.ts`.
+
+Proof: `comment-strip HEAD src`, comments only, exit 0; its control made
+one code edit in memory in each of the 9 changed files and the compare
+named all 9 (`abilities.ts` among them).
+
+Cost: 120,151 at 23:08 (the session's first reading, after its
+orientation) to 298,237 at 23:29 after the proof, about 178k for 1,412
+lines with the reads' commit in it, about 126 a line. The claims here
+named more code than the HUD's did: the card's every caller, the
+abilities' ops, the chip rule, Run's routing after a promotion.
+
+**Read** (`batch`): `git show <this commit> -- src/ui/UnitCard.ts
+src/ui/PromotionScreen.ts` against the seven rules. Wrong looks like a
+step code or capitals left, history kept (what the card replaced, a
+playtest's story, a plan), or a reason or rule cut: a hint sits beside the
+level span and never inside it; only the promotion skin writes
+`levelValue`; the derived block holds its height from the landing;
+Continue is always enabled and dismisses at once; a skipped beat is
+silent.

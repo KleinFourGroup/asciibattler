@@ -1,13 +1,11 @@
 /**
- * R1 — the roster-view ordering seam. A keyed resolver, so the roster view
- * can present its cards in different orders without a refactor: only
- * `recruited` is wired to the UI today, but `archetype` / `level` ship
- * switchable so a future order-toggle control (or a difficulty / preference
- * flag) is a data change, not a rewrite — the user's call when R1's order
- * question was locked.
+ * The card-list modal's display order, a keyed resolver. No caller passes
+ * an order, so every view shows `recruited`; `archetype` and `level` are
+ * kept, by the user's call when the roster view's order was settled, so
+ * that offering another order is a data change rather than a rewrite.
  *
- * Pure (no DOM) so it's unit-testable under the project's node test env; the
- * DOM-side `CardListModal` consumes it.
+ * Pure (no DOM), so it is tested under the project's node environment;
+ * `CardListModal` reads it.
  */
 
 import type { UnitTemplate } from '../sim/Unit';
@@ -15,32 +13,32 @@ import { ALL_ARCHETYPES } from '../sim/archetypes';
 
 export type RosterOrder = 'recruited' | 'archetype' | 'level';
 
-/** The UI default — recruitment order (the roster's natural, positionally
- *  stable order). The other strategies exist for the future toggle. */
+/** The default: recruitment order, the roster's own, which holds each
+ *  card's place. */
 export const DEFAULT_ROSTER_ORDER: RosterOrder = 'recruited';
 
-/** Canonical archetype rank for the `archetype` grouping — the `Archetype`
- *  union order, surfaced via `ALL_ARCHETYPES` (config key order) so a newly
- *  added archetype slots in automatically rather than needing a hand-kept list. */
+/** Each archetype's rank for the `archetype` order: `ALL_ARCHETYPES`'
+ *  order, the combatants in `config/units.json`'s key order, so a new
+ *  archetype takes its place with no hand-kept list. */
 const ARCHETYPE_RANK = new Map<UnitTemplate['archetype'], number>(
   ALL_ARCHETYPES.map((a, i) => [a, i] as const),
 );
 
-/** 51c — one displayed card with its position in the SOURCE array. The
- *  selectable roster view confirms in source indices (a `payToRemoveUnit`
- *  takes a rosterIndex, not a display position), so the ordering seam
- *  surfaces the mapping rather than each consumer re-deriving it. */
+/** One displayed card with its position in the source array. The
+ *  selectable view confirms in source indices (`payToRemoveUnit` takes a
+ *  `rosterIndex`, not a display position), so the order carries the
+ *  mapping rather than each caller deriving it again. */
 interface OrderedRosterEntry {
   readonly unit: UnitTemplate;
   readonly sourceIndex: number;
 }
 
 /**
- * Reorder a roster for display, carrying each unit's SOURCE index (51c — the
- * selection mapping). Returns a NEW array (never mutates the input);
- * `recruited` preserves the roster's natural order exactly. The sorts are
- * STABLE on recruitment order (the original array index breaks every tie), so
- * cards never churn position between renders for units that compare equal.
+ * Reorder a roster for display, carrying each unit's source index for the
+ * selection. Returns a new array and never mutates the input; `recruited`
+ * keeps the roster's order exactly. The sorts are stable on recruitment
+ * order (the source index breaks every tie), so units that compare equal
+ * never swap places between renders.
  */
 export function orderRosterWithIndices(
   roster: readonly UnitTemplate[],

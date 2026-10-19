@@ -1,15 +1,13 @@
 /**
- * 34b — the pure detail-string builder for a UnitCard ability row. Extracted out
- * of `UnitCard.abilityRow` so the "what does this ability DO" readout is
- * headless-testable (no DOM): it maps an `AbilityDef`'s effect ops to the terse
- * ` · `-joined parts shown under the ability name. `abilityRow` owns the DOM
- * (the name/cadence columns + the styled AoE tag); this owns the wording.
+ * The detail line of a unit card's ability row, pure so that what an
+ * ability does is tested headless: it maps an `AbilityDef`'s effect ops to
+ * the terse ` · `-joined parts shown under the ability's name.
+ * `UnitCard.abilityRow` owns the DOM (the name and cadence columns, the
+ * styled AoE tag); this owns the wording.
  *
- * It must cover every op a §29 archetype fields — `applyStatus` (afflicters),
- * `summon` (Shaman), and `chain` (Stormcaller, whose damage is NESTED in the
- * chain's inner ops) — none of which the original heal/damage-only logic built a
- * detail for, leaving those rows blank (and mislabelling the self-anchored summon
- * as a "dash").
+ * It must cover every op an archetype's ability fields, `applyStatus`,
+ * `summon` and `chain` (whose damage is nested in the chain's inner ops)
+ * among them, or that ability's row is blank.
  */
 
 import type { UnitStats } from '../sim/Unit';
@@ -22,9 +20,9 @@ export function abilityDetailParts(id: string, stats: UnitStats): string[] {
   return abilityDetailPartsForDef(abilityDef(id), stats);
 }
 
-/** The op of `kind` from a def's effects, or undefined. It takes the def
- *  rather than an id (§76a), so a not-yet-shipped def, e.g. a test's
- *  synthetic aura, is coverable headless. */
+/** The op of `kind` from a def's effects, or undefined. The builder takes
+ *  the def rather than an id, so a def outside the catalog (a test's
+ *  synthetic one) is coverable headless. */
 function opOf<K extends EffectOp['kind']>(
   def: AbilityDef,
   kind: K,
@@ -46,53 +44,52 @@ export function abilityDetailPartsForDef(def: AbilityDef, stats: UnitStats): str
     parts.push(`${resolveHealAmount(healOp, stats)} heal`, `reach ${def.rangeCells}`);
   } else if (damageOp) {
     parts.push(`${resolveDamageScalars(damageOp, stats).baseDamage} dmg`, `reach ${def.rangeCells}`);
-    // I6→51f — the per-weapon profile, DERIVED like the damage number is
-    // (base + the stat the op scales by, the §51 sweep call): hit runs the real
-    // `hitChanceFor` with this unit's precision against a neutral 0-evasion
-    // target (the same convention as damage ignoring the target's defense);
-    // crit runs the real `critChanceFor` with this unit's luck — that one is
-    // exact (no target term). Both inherit the sim's floors/caps for free.
+    // The weapon's profile, derived as the damage number is (the op's base
+    // and the unit's stat): hit runs the sim's `hitChanceFor` with this
+    // unit's precision against a target with 0 evasion (as the damage
+    // ignores the target's defense); crit runs `critChanceFor` with its luck,
+    // which is exact, having no target term. Both keep the sim's floors and
+    // caps.
     pushHitCrit(parts, damageOp, stats);
   } else if (chainOp) {
-    // 29c — the bolt's damage is NESTED in the chain's inner ops (the chain arcs
-    // and applies them per hop), so `damageOpOf` finds none; pull the inner
-    // damage out and surface it alongside the jump count.
+    // A chain's damage is nested in its inner ops (the chain arcs and
+    // applies them per hop), so `opOf(def, 'damage')` finds none; the inner
+    // damage is read out and shown with the jump count.
     const inner = chainOp.ops.find((o) => o.kind === 'damage');
     if (inner && inner.kind === 'damage') {
       parts.push(`${resolveDamageScalars(inner, stats).baseDamage} dmg`);
-      // 51f — the inner strike carries the same per-weapon profile; derive
-      // it identically (flag-gated, so an unmissable bolt adds nothing).
+      // The inner strike carries the same profile, derived the same way
+      // (gated on its flags, so an unmissable strike adds no hit chance).
       pushHitCrit(parts, inner, stats);
     }
     parts.push(`chains ${chainOp.maxJumps}`, `reach ${def.rangeCells}`);
   } else if (summonOp) {
-    // 29d — a summoner (Shaman `raise_dead`): show what it raises. This also
-    // corrects the old `self`-target branch, which mislabelled the self-anchored
-    // summon as a "dash".
+    // A summoner (the Shaman's `raise_dead`): what it raises. It targets
+    // `self`, so it must come before the dash branch.
     const { count, archetype: minion } = summonOp.summon;
     parts.push(count > 1 ? `summons ${count}×${minion}` : `summons ${minion}`, `reach ${def.rangeCells}`);
   } else if (statusOp) {
-    // 29a-b — a PURE afflicter (Warlock `hex`, Banshee `wail`): no damage, just
-    // the status it lays. (Damage afflicters fall through to the rider below.)
+    // A pure afflicter (the Warlock's `hex`, the Banshee's `wail`): no
+    // damage, only the status it lays. A damage afflicter takes the rider
+    // below instead.
     parts.push(`applies ${statusOp.statusId}`, `reach ${def.rangeCells}`);
   } else if (def.aura) {
-    // §76a — a PURE aura (no ops; targets self by schema law): the radiated
-    // status + the aura's own radius (NOT `rangeCells` — a pure aura's range
-    // field is inert). Must sit before the `self`/dash branch, which would
-    // otherwise mislabel it (the §29d summon-branch bug class).
+    // A pure aura (no ops; the schema makes it target `self`): the status
+    // it radiates and the aura's own radius, not `rangeCells`, which is the
+    // engagement reach. It must come before the dash branch, which would
+    // otherwise label it a dash.
     parts.push(`aura ${def.aura.statusId}`, `reach ${def.aura.radius}`);
   } else if (def.target.kind === 'self') {
-    // N1 — a pure-reposition leap (the dash): no damage/heal profile, just the
-    // leap distance (its recharge shows in the cadence column below).
+    // A pure reposition (the dash): no damage or heal, only the leap's
+    // distance (its recharge shows in the card's cadence column).
     parts.push(`dash ${def.rangeCells}`);
   }
 
-  // 29a — a damage afflicter (cleaver/vial/ice_storm/light_ray) lays a status ON
-  // TOP of its hit; append the rider so it isn't invisible.
+  // A damage afflicter lays a status on top of its hit; the rider shows it.
   if (statusOp && (damageOp || chainOp)) parts.push(`+${statusOp.statusId}`);
 
-  // §76a — a weapon that ALSO radiates (ops + aura): append the aura as a rider
-  // (the statusOp-rider pattern) so the passive isn't invisible on the card.
+  // An ability with ops that also radiates an aura: the aura is a rider, so
+  // the passive shows on the card.
   if (def.aura && (healOp || damageOp || chainOp || summonOp || statusOp)) {
     parts.push(`+aura ${def.aura.statusId}`);
   }
@@ -100,8 +97,8 @@ export function abilityDetailPartsForDef(def: AbilityDef, stats: UnitStats): str
   return parts;
 }
 
-/** 51f — the derived hit/crit readout for one damage op (see the damageOp
- *  branch for the vs-neutral-target convention). */
+/** The derived hit and crit chances of one damage op (the damage branch
+ *  gives the 0-evasion target's reason). */
 function pushHitCrit(
   parts: string[],
   op: { evadable: boolean; accuracy: number; critable: boolean; critBase: number },

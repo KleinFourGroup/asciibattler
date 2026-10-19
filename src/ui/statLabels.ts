@@ -1,18 +1,17 @@
 /**
- * Shared short labels for the 11 raw `UnitStats`, used by every screen that
- * lists a unit's stat block (PromotionScreen deltas + the RecruitScreen
- * card). Kept in one place so the two screens can't drift on label text or
- * ordering — iterating `Object.keys(STAT_LABELS)` yields the canonical
- * display order (CON, STR, RNG, MAG, LCK, DEF, PRC, EVA, SPD, MOB, POW). I1
- * keeps this in sync with `STAT_KEYS` (the level-up draw order) so "draw order
- * == card order" holds.
+ * The short labels of the 11 raw `UnitStats`, in one place so no list of
+ * stats can drift on a label or the order: iterating
+ * `Object.keys(STAT_LABELS)` gives the order (CON, STR, RNG, MAG, LCK, DEF,
+ * PRC, EVA, SPD, MOB, POW; the card lifts POW above its grid). It is the
+ * level-up draws' order (`STAT_KEYS` in `leveling.ts`), kept the same by
+ * hand, so the card's rows and the draws read alike.
  */
 
 import type { UnitStats } from '../sim/Unit';
 import { t } from '../i18n/ui';
 
-// §95c — the labels come from the UI string table; the KEY ORDER below is
-// the load-bearing part (it is the display order) and stays in code.
+// The labels come from the UI string table; the key order below is the
+// display order, so it stays in code.
 export const STAT_LABELS: Record<keyof UnitStats, string> = {
   constitution: t('stat.constitution'),
   strength: t('stat.strength'),

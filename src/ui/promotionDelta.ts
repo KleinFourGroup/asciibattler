@@ -1,28 +1,27 @@
 /**
- * §76g — the pure derived-delta builder for the promotion screen. The raw
- * `+N` stat chips answer "what grew"; these lines answer "what those points
- * actually BOUGHT": one `before → after` row per derived value that visibly
- * changed (Max HP, dodge, move cadence, per-ability output). Extracted as a
- * pure function (the `abilityDetailParts` precedent) so the wording is
- * headless-testable; the DOM stays eyeball-only in PromotionScreen.
+ * The promotion card's derived lines. The `+N` stat chips say what grew;
+ * these say what the points bought: one `before → after` row per derived
+ * value that visibly changed (Max HP, dodge, move cadence, each ability's
+ * output). Pure, so the wording is tested headless; the DOM is
+ * PromotionScreen's.
  *
- * Only DISPLAY-grade changes emit a line: values are formatted first and
- * compared as strings, so a stat gain that tick-rounding or a floor/cap
- * swallows (a mobility bump inside the same tick, a crit already at cap)
- * produces no row — the block never claims a change the player can't feel.
+ * Only a change the display shows emits a line: values are formatted first
+ * and compared as strings, so a gain that tick rounding or a floor or cap
+ * swallows (a mobility point inside the same tick, a crit already at its
+ * cap) makes no row, and the block never claims a change the player can't
+ * feel.
  *
- * Per-ability rows reuse `abilityDetailParts` verbatim and diff the part
- * arrays positionally (the parts' STRUCTURE depends only on the def, never
- * on stats, so old/new arrays always align). Stat-independent parts
- * (`reach N`, riders, aura lines) compare equal and drop out for free, and
- * any future op kind the detail builder learns is covered here with no new
- * code. The speed-scaled cadence (abilityRow's separate column) is diffed
- * alongside.
+ * Each ability's row reuses `abilityDetailParts` and diffs the parts by
+ * position: their structure depends only on the def, never on stats, so
+ * the old and new arrays align. Parts that don't depend on stats (`reach
+ * N`, riders, auras) compare equal and drop out, and an op kind the detail
+ * builder learns needs no code here. The speed-scaled cadence, which the
+ * card shows in its own column, is diffed beside them.
  *
- * Reference conventions (matching the card the block sits on): hit% runs vs
- * a neutral 0-evasion target (the `abilityDetailParts` convention); dodge%
- * mirrors it as a base-`REF_ACCURACY` 0-precision reference attacker (the
- * archetype editor's REF_ACCURACY convention, fixed instead of dialable).
+ * The references match the card the block sits on: hit runs against a
+ * target with 0 evasion (`abilityDetailParts`'s), and dodge is against an
+ * attacker of base accuracy `REF_ACCURACY` and 0 precision (the archetype
+ * editor's reference attacker, whose precision there is a dial).
  */
 
 import type { Archetype, UnitStats } from '../sim/Unit';
@@ -33,9 +32,9 @@ import { abilityDetailParts } from './abilityDetail';
 import { attackCooldownTicksFor, deriveStats, hitChanceFor } from '../sim/stats';
 import { ticksToSeconds } from '../config';
 
-/** The generic reference attacker's base accuracy for the dodge line (the
- *  archetype editor's convention — accuracy is per-weapon, so "dodge" needs
- *  SOME attacker to be defined against). */
+/** The reference attacker's base accuracy for the dodge line, the archetype
+ *  editor's: accuracy is per weapon, so dodge needs some attacker to be
+ *  defined against. */
 const REF_ACCURACY = 0.6;
 
 function pct(x: number): string {
@@ -58,8 +57,9 @@ export function promotionDeltaParts(
 ): string[] {
   const lines: string[] = [];
 
-  // Derived block deltas. `deriveStats`' attackRange param is ability-derived
-  // and level-independent — pass 0; only maxHp/moveCooldownTicks are read.
+  // The derived block. `deriveStats`' `attackRange` comes from the abilities
+  // and no level moves it, so 0 is passed; only `maxHp` and
+  // `moveCooldownTicks` are read.
   const oldDerived = deriveStats(oldStats, 0);
   const newDerived = deriveStats(newStats, 0);
   pushChanged(

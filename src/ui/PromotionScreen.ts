@@ -1,27 +1,22 @@
 /**
- * E4 — promotion modal; M2 — staggered reveal redesign (two-phase). Shown
- * at turn boundaries (M1) whenever at least one player unit crossed an XP
- * threshold. Phase 1: each card pops in CARD_STAGGER_MS after the previous
- * one, landing in its PRE-level state (old level, old stats, all rows dim
- * amber). Phase 2, only after the LAST card lands: cards reveal ONE AT A
- * TIME — level first, then each grown stat turns green and flips to the
- * new value with a `+N` chip — so the eye is never drawn to two units at
- * once (the active card carries .is-revealing, a brightened border). Each
- * reveal beat plays the `stattick` tick (§104d — it borrowed `healtick`
- * until then). (The original cascading-pipeline shape — cards revealing
- * while later ones were still landing — was revised to this after
- * playtest: multiple simultaneous motions.)
+ * The promotion screen, shown when at least one of the player's units
+ * leveled, at a turn's end or a rest. Its reveal runs in two phases. First
+ * each card pops in `CARD_STAGGER_MS` after the one before, in its state
+ * before the level (the old level and stats, every row dim amber). Then,
+ * only after the last card lands, the cards reveal one at a time (the
+ * level first, then each grown stat turns green and flips to its new value
+ * with a `+N` chip, then the derived lines), so the eye is never drawn to
+ * two units at once; the active card carries `.is-revealing`, a brighter
+ * border. Each beat of the reveal plays the `stattick` tick.
  *
- * Clicking anywhere except Continue fast-forwards every pending beat to
- * the fully-revealed end state (audio muted — no blip machine-gun).
- * Continue is always enabled and dismisses immediately: with M1's
- * per-turn cadence this screen is frequent, so the player is never
- * trapped behind the animation. A single "Continue" dispatches
- * `dismissPromotion`, which Run resolves into the next step (next turn,
- * recruit offer, or run:victory).
+ * A click anywhere on the panel but Continue fast-forwards every pending
+ * beat to the revealed end, silently. Continue is always enabled and
+ * dismisses at once: the screen comes at any turn a unit levels, so the
+ * player is never held behind the animation. It dispatches
+ * `dismissPromotion`, which Run routes (`handleDismissPromotion`): inside
+ * an encounter the turn's gate chain goes on, after a rest the map.
  *
- * If no units leveled, the scene is skipped entirely (no empty-state).
- * That branch lives in Run.
+ * When no unit leveled, Run skips the screen; it has no empty state.
  */
 
 import type { PromotionInfo } from '../core/events';
@@ -33,17 +28,18 @@ import { button } from './button';
 import { buildUnitCard, unitCardFromPromotion } from './UnitCard';
 import { promotionDeltaParts } from './promotionDelta';
 
-/** Reveal cadence (M2). INTRO_DELAY_MS lets the screen's own fade-in
- *  (FADE_MS=180) finish before the first card pops, so the entrance
- *  isn't masked by the container fade. */
+/** The reveal's cadence. `INTRO_DELAY_MS` lets the screen's own 180 ms
+ *  fade-in (`.screen-fade`) finish before the first card pops, so the
+ *  container's fade doesn't mask the entrance. */
 const INTRO_DELAY_MS = 220;
 const CARD_STAGGER_MS = 400;
-/** Gap between the LAST card landing and the first reveal beat — the
- *  phase boundary, where the eye settles before stats start ticking. */
+/** The gap between the last card landing and the first reveal beat: the
+ *  phases' boundary, where the eye settles before the stats tick. */
 const LAND_TO_REVEAL_MS = 660;
 const REVEAL_STAGGER_MS = 400;
-/** Extra breath between one card finishing its reveals and the next card
- *  starting (on top of the trailing REVEAL_STAGGER_MS) — the eye-jump cue. */
+/** An extra pause between one card's last reveal and the next card's
+ *  first (on top of the trailing `REVEAL_STAGGER_MS`), the cue for the eye
+ *  to move. */
 const CARD_HANDOFF_MS = 400;
 
 interface Beat {
@@ -86,22 +82,22 @@ export class PromotionScreen extends Screen {
     const cards = document.createElement('div');
     cards.className = 'promotion-cards';
     const rendered = promotions.map((p) => this.renderCard(p));
-    // Phase 1 — entrances. Every card lands before any reveal fires.
+    // The entrances: every card lands before any reveal fires.
     rendered.forEach(({ el }, i) => {
       cards.appendChild(el);
       this.scheduleBeat(INTRO_DELAY_MS + i * CARD_STAGGER_MS, () =>
         el.classList.add('is-landed'),
       );
     });
-    // Phase 2 — reveals, strictly one card at a time. The active card
-    // carries .is-revealing so the single focal point is explicit.
+    // The reveals, strictly one card at a time. The active card carries
+    // `.is-revealing`, so the one focal point is marked.
     let at =
       INTRO_DELAY_MS + (rendered.length - 1) * CARD_STAGGER_MS + LAND_TO_REVEAL_MS;
     for (const { el, reveals } of rendered) {
       this.scheduleBeat(at, () => el.classList.add('is-revealing'));
-      // 104d2 — the ONE tick site. FLAT on purpose: a per-card rising tally
-      // (each beat a major-scale degree up) was built and A/B'd by ear, and
-      // the flat tick won. A skipped beat is silent.
+      // The tick's one site. Flat on purpose: a tally rising a scale degree
+      // a beat was tried against it by ear, and the flat tick won. A skipped
+      // beat is silent.
       for (const reveal of reveals) {
         this.scheduleBeat(at, (skipped) => {
           reveal();
@@ -123,7 +119,7 @@ export class PromotionScreen extends Screen {
     });
     panel.appendChild(cont);
 
-    // Click-anywhere-to-skip (Continue excluded — its click dismisses).
+    // A click anywhere skips, but on Continue, whose click dismisses.
     panel.addEventListener('click', (ev) => {
       if (cont.contains(ev.target as Node)) return;
       this.finishTimeline();
@@ -133,12 +129,13 @@ export class PromotionScreen extends Screen {
   }
 
   /**
-   * Builds one card in its pre-level state (via the shared `UnitCard` builder,
-   * promotion skin) and returns the reveal beats that animate it: [0] the level
-   * tick, then one per grown stat, in canonical stat order. The card's DOM +
-   * styling live in the component; this screen owns only the M2 timeline,
-   * driving the card through the `levelValue` + `statRows` handles. Unchanged
-   * rows never reveal — they just print the (identical) value.
+   * Builds one card in its state before the level (the unit card, promotion
+   * skin) and returns the beats that reveal it: the level first, then one
+   * per grown stat in the card's row order (POW first), then the derived
+   * lines if any. The card's DOM and styling are the unit card's; this
+   * screen owns the timeline, driving the card through the `levelValue` and
+   * `statRows` handles. An unchanged row never reveals; it shows the same
+   * value throughout.
    */
   private renderCard(p: PromotionInfo): {
     el: HTMLDivElement;
@@ -155,8 +152,8 @@ export class PromotionScreen extends Screen {
       levelValue.classList.add('is-revealed');
     });
 
-    // Iterate the card's stat rows in render order (POW first, then the combat
-    // grid) so the reveal beats fire top-to-bottom matching the card layout.
+    // The card's stat rows in their order (POW first, then the combat grid),
+    // so the beats fire top to bottom as the card is laid out.
     for (const [key, { row, value, right }] of statRows) {
       const delta = p.newStats[key] - p.oldStats[key];
       if (delta <= 0) continue;
@@ -171,13 +168,12 @@ export class PromotionScreen extends Screen {
       });
     }
 
-    // §76g — the derived-delta block: what the grown points actually bought
-    // (Max HP / dodge / move cadence / per-ability output), one final beat
-    // after the raw stat reveals. The wording is the pure, headless-tested
-    // `promotionDeltaParts`; an empty result (e.g. a power-only level) renders
-    // no block at all. The block is in the DOM (and holds its height — the CSS
-    // gates on `visibility`) from card-land, so the reveal can't re-center the
-    // card row mid-timeline (the playtest-caught layout shift).
+    // The derived block, what the grown points bought, as one last beat
+    // after the stats. The wording is `promotionDeltaParts`, pure and tested
+    // headless; an empty result (a level that grew only power) makes no
+    // block. The block is in the DOM from the card's landing and holds its
+    // height (the CSS gates on `visibility`), so the reveal can't grow the
+    // card and re-center the card row mid-timeline.
     const deltas = promotionDeltaParts(p.oldStats, p.newStats, p.archetype);
     if (deltas.length > 0) {
       const box = document.createElement('div');

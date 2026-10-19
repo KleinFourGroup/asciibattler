@@ -1,12 +1,12 @@
 /**
- * Post-victory recruit modal. Renders the offer as a row of unit cards;
- * clicking a card dispatches a `chooseRecruit` command on the run
- * dispatcher, which Run handles by appending the template to the team and
- * transitioning back to map phase.
+ * The recruit screen, the offer after a won encounter that was not the
+ * sector's terminal. It renders the offer as a row of unit cards; a click
+ * on a card dispatches `chooseRecruit`, which Run handles by appending the
+ * template to the roster and returning to the map.
  *
- * Like MapScreen, this is a pure view — it doesn't track which card is
- * chosen or update Run.team. show/hide is driven by Game in response to
- * recruit:offered events and the chooseRecruit command.
+ * A pure view: it doesn't track the chosen card or touch the roster.
+ * RecruitScene shows it at mount, with the `recruit:offered` payload Game
+ * hands it at the swap, and hides it at dispose.
  */
 
 import type { UnitTemplate } from '../sim/Unit';
@@ -21,9 +21,8 @@ import { CardListButton } from './CardListModal';
 import { mountControl } from './chip';
 
 export class RecruitScreen extends Screen {
-  // R1 — the shared "view roster" affordance (the control column's second
-  // row). Disposed on hide so a dismissed screen can't leave an open overlay
-  // or a live Esc handler.
+  // The roster button (a row of the control column). Disposed on hide, so a
+  // dismissed screen can't leave an open overlay or a live Esc handler.
   private rosterButton: CardListButton | null = null;
 
   constructor(
@@ -53,7 +52,7 @@ export class RecruitScreen extends Screen {
     const panel = document.createElement('div');
     panel.className = 'recruit-screen';
 
-    // R1 — the roster view shows the CURRENT roster (before this pick).
+    // The roster view shows the roster as it is, before this pick.
     this.rosterButton = new CardListButton(this.mount, this.audio, {
       text: t('roster.button'),
       title: t('roster.title'),
@@ -75,9 +74,9 @@ export class RecruitScreen extends Screen {
     }
     panel.appendChild(cards);
 
-    // H6b — decline the offer. Trial default: always available + free. Leaves
-    // the roster + deck untouched and returns to the map (the deck-dilution
-    // counterplay grows as the roster outpaces the hand).
+    // Decline the offer: always offered and free. It leaves the roster and
+    // the deck as they are and returns to the map (a counter to diluting the
+    // deck, worth more as the roster outgrows the hand).
     const pass = button(t('common.pass'), {
       className: 'btn--primary btn--dim',
       onClick: () => {
@@ -91,16 +90,14 @@ export class RecruitScreen extends Screen {
   }
 
   private renderCard(template: UnitTemplate): HTMLDivElement {
-    // P1 — the card markup, stat block, and the "card can't disagree with the
-    // unit" ability readings now live in the shared `UnitCard` builder. The
-    // recruit skin keeps this screen's look (amber, two-col stats, abilities
-    // shown) and its click affordance; the click handler stays here.
+    // The card is the unit card's recruit skin (amber, two-column stats, the
+    // abilities shown, clickable); the click handler is this screen's.
     const { el } = buildUnitCard(unitCardFromTemplate(template), {
       mode: 'full',
       skin: 'recruit',
     });
 
-    // 100c2 — the keyboard route (role=button + Enter/Space, pressable.ts).
+    // The keyboard route (role=button, Enter and Space; `pressable.ts`).
     pressable(el);
     el.addEventListener('click', () => {
       this.audio.play('click');

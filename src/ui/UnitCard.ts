@@ -1,22 +1,17 @@
 /**
- * P1 — the shared unit-card component. One builder renders a unit (a roster
- * `UnitTemplate`, a battle `Unit`, or a `PromotionInfo`'s pre-level state) into
- * a card, so RecruitScreen / PromotionScreen / (P3) PreTurnScreen / (Q) the HUD
- * can't drift on layout, the stat block, or the "card can't disagree with the
- * unit" ability readings. Replaces RecruitScreen's `renderCard`/`abilityRow`/
- * `statLine` (+ its `ABILITY_UI` label map, since retired in Yb for the
- * config-owned `AbilityDef.name`) and PromotionScreen's card markup.
+ * The unit card. One builder renders a unit (a roster `UnitTemplate`, a
+ * battle `Unit`, or a `PromotionInfo`'s state before the level) for every
+ * screen that shows one, so the screens can't drift on layout or the stat
+ * block, and the ability readings can't disagree with the unit.
  *
- * The visual differences between the screens are PRESERVED (P1 is a parity
- * extraction, not a redesign): they're expressed as `skin` CSS classes + per-
- * skin header formats + section defaults, NOT baked into the DOM the component
- * emits. The M2 staggered reveal stays in PromotionScreen, which drives the
- * card via the `levelValue` + `statRows` handles this builder returns.
+ * The screens differ by skin: a CSS class, a header format and the
+ * sections shown by default, never the DOM the builder emits. The
+ * promotion's staggered reveal lives in PromotionScreen, which drives the
+ * card through the `levelValue` and `statRows` handles this returns.
  *
- * Rarity seam: every card stamps `unit-card--rarity-{rarity}` (default
- * `common`). No rarity CSS ships yet — default rarity renders exactly as today
- * — so the future rarity-accent system is a data field + a CSS block, with no
- * structural change here or in the screens.
+ * Every card carries `unit-card--rarity-{rarity}` (`common` for an
+ * archetype with none), which ui.css tints by tier; a full card's header
+ * also gives the tier as stars (`rarityDisplay.ts`).
  */
 
 import type { UnitTemplate, Archetype, UnitStats, Unit } from '../sim/Unit';
@@ -42,21 +37,19 @@ import { t } from '../i18n/ui';
 import type { StatusEffect } from '../sim/statusEffects';
 import type { EmpowerStackView } from '../run/empower';
 
-/** §61b — the accent dimension is the config rarity tier (def-resolved via
- *  `rarityForArchetype`; re-exported so existing importers keep working).
- *  Accent CSS lands at 61e; until then every tier renders as `common` did. */
+/** A card's tier is the config's (`rarityForArchetype`). */
 import type { UnitRarity } from '../config/units';
 export type { UnitRarity };
 
-/** Macro layout. `full` = recruit-style detail (stats + abilities); `compact`
- *  = the in-battle HUD card (consumed in Phase Q). */
+/** The layout: `full` is the detailed card (the stats, the abilities, the
+ *  XP bar); `compact` is the battle HUD's card. */
 type UnitCardMode = 'compact' | 'full';
 
-/** Render context — selects the theme/layout CSS, the header format, and the
- *  default section visibility. Each screen is one skin. `hud` is the Q4/Q5
- *  in-battle pane skin (only ever paired with `compact`). `roster` is the R1/R2
- *  card-list modal skin (roster view + draw/discard pile views; display-only
- *  full cards, shows the XP bar). */
+/** The context a card is drawn in: it picks the skin's CSS, the header
+ *  format and the sections shown by default. `hud` is the battle HUD's
+ *  panes, only ever `compact`. `roster` is the card-list modal's (the
+ *  roster view, the draw and discard piles, the port's crew removal): full
+ *  cards that show the XP bar. */
 type UnitCardSkin = 'recruit' | 'promotion' | 'preturn' | 'hud' | 'roster';
 
 /** Normalized card input. Adapters build this from a template / Unit /
@@ -67,34 +60,32 @@ interface UnitCardData {
   readonly level: number;
   readonly stats: UnitStats;
   readonly rarity: UnitRarity;
-  /** Banked XP toward the next level (P2 — drives the full variant's XP bar). */
+  /** Banked XP toward the next level, for the full card's XP bar. */
   readonly xp: number;
-  /** Live battle HP (Q4 — drives the `compact` variant's glyph-width HP bar).
-   *  Only the `unitCardFromUnit` adapter populates it; the template/promotion
-   *  adapters leave it undefined (those variants don't show an HP bar). */
+  /** Live battle HP, for the compact card's bar. Only `unitCardFromUnit`
+   *  sets it; the full cards show no HP. */
   readonly hp?: { readonly current: number; readonly max: number };
 }
 
 interface UnitCardOptions {
   readonly mode: UnitCardMode;
   readonly skin: UnitCardSkin;
-  /** Override the skin's default abilities-section visibility (recruit/preturn
-   *  show; promotion hides). */
+  /** Override the skin's default for the abilities section (every skin
+   *  shows it but promotion). */
   readonly showAbilities?: boolean;
-  /** Override the skin's default click affordance (recruit clicks; promotion
-   *  doesn't). The click handler itself is wired by the caller. */
+  /** Override the skin's default click affordance (only recruit's is on).
+   *  The click handler is the caller's. */
   readonly clickable?: boolean;
-  /** Override the skin's default XP-bar visibility (P2 — pre-turn shows it for
-   *  owned roster units; recruit hides it, since fresh offers carry no banked
-   *  progress; promotion is mid-level-up). */
+  /** Override the skin's default for the XP bar (pre-turn and roster show
+   *  it, for owned units with banked XP; a recruit offer has none, and
+   *  promotion is mid-level). */
   readonly showXpBar?: boolean;
-  /** Q5 — team coloring for the `compact` variant: `enemy` → red glyph + HP
-   *  bar; default `player` → the green default. Ignored by the full variants
-   *  (always player-owned). */
+  /** The compact card's side: `enemy` turns the glyph and the HP bar red;
+   *  `player`, the default, keeps them green. The full cards ignore it. */
   readonly team?: 'player' | 'enemy';
 }
 
-/** Handles into one stat row's mutable bits, for the M2 reveal. */
+/** Handles into one stat row's mutable parts, for the promotion reveal. */
 interface StatRowHandle {
   readonly row: HTMLDivElement;
   readonly value: HTMLSpanElement;
@@ -104,27 +95,29 @@ interface StatRowHandle {
 
 export interface UnitCardHandles {
   readonly el: HTMLDivElement;
-  /** The element holding the level text (the M2 level-reveal target). For
-   *  skins without a reveal it's just the header element. */
+  /** The element holding the level text, the promotion's level-flip target.
+   *  The other full skins point it at the header, the compact card at its
+   *  level span. */
   readonly levelValue: HTMLElement;
-  /** Per-stat handles in canonical `STAT_LABELS` order. Empty for `compact`
-   *  (it has no stat block to reveal). */
+  /** Per-stat handles in the card's row order, POW first and then the
+   *  grid. Empty for `compact`, which has no stat block. */
   readonly statRows: Map<keyof UnitStats, StatRowHandle>;
-  /** Q4 — the `compact` HP-bar fill, for the in-battle pane to drive on every
-   *  `unit:attacked`/`status:ticked`/`:healed`. Undefined for the full variants. */
+  /** The compact card's HP fill, which the HUD drives on every
+   *  `unit:attacked`, `status:ticked` and `unit:healed`. Undefined for the
+   *  full cards. */
   readonly hpFill?: HTMLDivElement;
-  /** §32c — the `compact` status row container; `updateCardStatusRow` reconciles
-   *  its per-status chips (the numeric readout — `Name ×N · P/s · Ns`, the §31
-   *  scaled potency made literal). Undefined for the full variants. */
+  /** The compact card's status row; `updateCardStatusRow` reconciles its
+   *  chips (`Name ×N · P/s · Ns`, the live potency as a number). Undefined
+   *  for the full cards. */
   readonly statusRow?: HTMLDivElement;
-  /** 78d — the `compact` empower-marker row (below the status row);
-   *  `updateCardEmpowerMarkers` reconciles its per-buff-key `▲` chips (the
-   *  pre-turn badge vocabulary carried into battle). Undefined for the full
-   *  variants. */
+  /** The compact card's empower-marker row, under the status row;
+   *  `updateCardEmpowerMarkers` reconciles its `▲` chips, one per buff key,
+   *  the pre-turn hand's badges carried into battle. Undefined for the full
+   *  cards. */
   readonly empowerRow?: HTMLDivElement;
 }
 
-/** Adapter: a roster/offer template → card data (recruit + P3 pre-turn). */
+/** Adapter: a roster or offer template → card data. */
 export function unitCardFromTemplate(template: UnitTemplate): UnitCardData {
   return {
     archetype: template.archetype,
@@ -136,16 +129,15 @@ export function unitCardFromTemplate(template: UnitTemplate): UnitCardData {
   };
 }
 
-/** Adapter: a live battle `Unit` → card data (Q4 — the in-battle `compact`
- *  card). Carries HP for the bar; `displayLevel` rounds the combatant level to
- *  the same value the rest of the UI shows. Power is read off the same `stats`
- *  block as every other surface, so the card can't disagree with the unit. */
+/** Adapter: a live battle `Unit` → card data, for the compact card. It
+ *  carries HP for the bar, and `displayLevel` rounds the combatant level to
+ *  the value the rest of the UI shows. Power is read off the same `stats`
+ *  as on every other surface, so the card can't disagree with the unit. */
 export function unitCardFromUnit(unit: Unit): UnitCardData {
   return {
-    // §38d — only real combatants are carded (neutral walls / half-cover are
-    // filtered out by team before this — and §75h keeps camp members out too,
-    // the signed no-cards-v1 call), so `unit.archetype` is a combatant
-    // catalog id here; it feeds the shared `Archetype` field the full variant reads.
+    // Only combatants are carded: the HUD skips every neutral (walls, cover,
+    // and camp members, which get no card by a signed call), so
+    // `unit.archetype` is a combatant catalog id here.
     archetype: unit.archetype,
     glyph: unit.glyph,
     level: displayLevel(unit.level),
@@ -156,9 +148,9 @@ export function unitCardFromUnit(unit: Unit): UnitCardData {
   };
 }
 
-/** Adapter: a `PromotionInfo`'s PRE-level state → card data. The reveal flips
- *  it to the new level/stats via the returned handles (driven by the screen).
- *  Promotion never shows the XP bar (mid-level-up), so `xp` is irrelevant. */
+/** Adapter: a `PromotionInfo`'s state before the level → card data. The
+ *  screen's reveal flips it to the new level and stats through the returned
+ *  handles. Promotion never shows the XP bar, so `xp` is unused. */
 export function unitCardFromPromotion(p: PromotionInfo): UnitCardData {
   return {
     archetype: p.archetype,
@@ -170,28 +162,29 @@ export function unitCardFromPromotion(p: PromotionInfo): UnitCardData {
   };
 }
 
-/** Whether a skin shows the abilities section by default (P1: recruit/preturn
- *  yes, promotion no — preserving each screen's current look). */
+/** Whether a skin shows the abilities section by default: every skin but
+ *  promotion. */
 function defaultShowAbilities(skin: UnitCardSkin): boolean {
   return skin !== 'promotion';
 }
 
-/** Whether a skin is clickable by default (recruit picks a unit; promotion is
- *  display-only). */
+/** Whether a skin is clickable by default: recruit's, whose click is the
+ *  pick. The pre-turn hand and the roster's picker add their click and its
+ *  class after the build. */
 function defaultClickable(skin: UnitCardSkin): boolean {
   return skin === 'recruit';
 }
 
-/** Whether a skin shows the XP-to-next bar by default. Pre-turn and the R1
- *  roster view show it (both render OWNED roster units with real banked XP);
- *  recruit offers are fresh (0) and promotion is mid-level-up. */
+/** Whether a skin shows the XP-to-next bar by default: pre-turn and roster,
+ *  whose units are owned and carry banked XP. A recruit offer has none, and
+ *  promotion is mid-level. */
 function defaultShowXpBar(skin: UnitCardSkin): boolean {
   return skin === 'preturn' || skin === 'roster';
 }
 
 export function buildUnitCard(data: UnitCardData, opts: UnitCardOptions): UnitCardHandles {
-  // Q4 — the in-battle pane card is a different shape (glyph + level/power +
-  // HP bar, no stat block), so it branches off before the full layout below.
+  // The compact battle card is another shape (the glyph, level and power, an
+  // HP bar, no stat block), so it branches off before the full layout.
   if (opts.mode === 'compact') return buildCompactCard(data, opts);
 
   const card = document.createElement('div');
@@ -211,13 +204,13 @@ export function buildUnitCard(data: UnitCardData, opts: UnitCardOptions): UnitCa
   glyph.textContent = data.glyph;
   card.appendChild(glyph);
 
-  // 98b — the star run's tooltip route: nested in a control → the long-press.
+  // The star run's touch route follows `clickable` (`buildRarityStars`).
   const { headerEl, levelValue } = buildHeader(data, opts.skin, clickable ? 'press' : 'tap');
   card.appendChild(headerEl);
 
   const { statsEl, powerRow, statRows } = buildStats(data.stats);
-  // POW (the meta pool-chip stat) sits in its own accented row right under the
-  // level, above the per-battle combat grid.
+  // POW, the pool stat, sits in its own accented row under the level, above
+  // the combat grid.
   card.appendChild(powerRow);
   card.appendChild(statsEl);
 
@@ -233,13 +226,12 @@ export function buildUnitCard(data: UnitCardData, opts: UnitCardOptions): UnitCa
 }
 
 /**
- * Q4 — the `compact` in-battle card (bottom-center player pane; Q5 mirrors it
- * for enemies). The brief's shape: a large glyph with the level small at the
- * top-left and power small at the top-right (power tinted with the established
- * POW meta-blue so the two corners read apart without wide labels), and a
- * glyph-width HP bar below. The returned `hpFill` lets the pane drive the bar
- * live; death gray-out is a `.is-dead` class the pane toggles. No stat block,
- * abilities, or XP bar — those stay on the full variants.
+ * The compact battle card, in the HUD's player pane at the bottom center
+ * and in its enemy pane. A large glyph with the level small at the top left
+ * and power small at the top right (power in the POW blue, so the two
+ * corners read apart without wide labels), and a glyph-width HP bar under
+ * it. The returned `hpFill` lets the pane drive the bar live; the pane grays
+ * a dead unit's card with `.is-dead`. No stat block, abilities or XP bar.
  */
 function buildCompactCard(data: UnitCardData, opts: UnitCardOptions): UnitCardHandles {
   const card = document.createElement('div');
@@ -249,16 +241,15 @@ function buildCompactCard(data: UnitCardData, opts: UnitCardOptions): UnitCardHa
     'unit-card--compact',
     `unit-card--rarity-${data.rarity}`,
   ].join(' ');
-  // Q5 — enemy cards recolor glyph + HP to red; player (default) stays green.
+  // An enemy card's glyph and HP bar are red; a player's, the default, green.
   if (opts.team === 'enemy') card.classList.add('unit-card--enemy');
 
   const top = document.createElement('div');
   top.className = 'unit-card__compact-top';
-  // 97e — the two numbers were bare (a hover title was their only name: the
-  // kickoff's sole-source finding). Each now carries a PERSISTENT hint in a
-  // wrapper beside the number span — never inside it, because a promotion
-  // rewrites `levelValue.textContent` and would eat a nested hint. The level
-  // needs no tooltip once it reads `LV 5`; the power keeps the §91d clarifier.
+  // Each number carries a persistent hint, in a wrapper beside its span and
+  // never inside it: `levelValue` points at the level span, and a write to
+  // the handle's `textContent` would erase a nested hint. The level needs no
+  // tooltip once it reads `Lv 5`; the power keeps its clarifier.
   const levelWrap = document.createElement('span');
   levelWrap.className = 'unit-card__compact-level-wrap';
   const levelHint = document.createElement('span');
@@ -277,9 +268,9 @@ function buildCompactCard(data: UnitCardData, opts: UnitCardOptions): UnitCardHa
   powerHint.className = 'unit-card__compact-hint';
   powerHint.textContent = STAT_LABELS.power;
   powerWrap.append(power, powerHint);
-  // §91d — the clarifier reads by this card's side. An enemy card is a
-  // control (its click is the engage objective), so the nested text takes
-  // the long-press; a player card is inert, so a tap.
+  // The clarifier reads by the card's side. An enemy card is a control (its
+  // click is the engage objective), so the nested text takes the
+  // long-press; a player card is inert, so a tap.
   const team = opts.team ?? 'player';
   attachTooltip(
     powerWrap,
@@ -299,23 +290,23 @@ function buildCompactCard(data: UnitCardData, opts: UnitCardOptions): UnitCardHa
   hpFill.style.width = `${hpPercent(data.hp) * 100}%`;
   hp.appendChild(hpFill);
 
-  // §32c — the status row (below the HP bar). Empty + hidden until the unit
-  // carries a status; `updateCardStatusRow` (driven by the HUD on the per-tick
-  // gate) reconciles its chips.
+  // The status row, under the HP bar: empty and hidden until the unit
+  // carries a status. The HUD's once-a-tick pass drives
+  // `updateCardStatusRow`.
   const statusRow = document.createElement('div');
   statusRow.className = 'unit-card__statuses';
   statusRow.hidden = true;
 
-  // 78d — the empower-marker row (below the statuses). Same lifecycle:
-  // hidden until the unit carries a badge-eligible buff; the HUD's per-tick
-  // gate drives `updateCardEmpowerMarkers`.
+  // The empower-marker row, under the statuses, on the same lifecycle:
+  // hidden until the unit carries a marked buff, and driven by the same pass
+  // (`updateCardEmpowerMarkers`).
   const empowerRow = document.createElement('div');
   empowerRow.className = 'unit-card__empowers';
   empowerRow.hidden = true;
 
   card.append(top, glyph, hp, statusRow, empowerRow);
-  // No reveal/stat block for compact — point `levelValue` at the level span so
-  // the handle is non-null, and hand back an empty `statRows`.
+  // No reveal and no stat block: `levelValue` points at the level span so
+  // the handle is non-null, and `statRows` is empty.
   return { el: card, levelValue: level, statRows: new Map(), hpFill, statusRow, empowerRow };
 }
 
@@ -326,16 +317,15 @@ function hpPercent(hp: UnitCardData['hp']): number {
 }
 
 /**
- * §32c — reconcile a compact card's status row against a unit's active status
- * readouts (the numeric counterpart to the board pip-strip). One chip per status
- * in stable canonical order: a color swatch (matching the board pip) + the name +
- * the live `×stacks · ±potency/s · Ns` numbers — where the §31 scaled potency
- * finally reads as a literal. Hidden when the unit carries no statuses (no empty
- * row, respecting the compact card's tight budget).
+ * Reconcile a compact card's status row against a unit's status readouts,
+ * the numbers beside the board's pips. One chip per status, in the
+ * catalog's order: its symbol in its colour (the board pip's), the name,
+ * and the live `×stacks · N/s · Ns` (`statusChipMeta`). Hidden when the
+ * unit carries no status, so the compact card holds no empty row.
  *
- * Cheap by construction: the HUD gates the call on the sim tick advancing, and
- * per-chip writes are dataset-cached so an unchanged field skips its DOM write.
- * A no-op when the handles carry no status row (the full variants).
+ * Cheap by construction: the HUD calls it at most once a sim tick, and each
+ * chip's writes are cached in its dataset, so an unchanged field skips its
+ * DOM write. A no-op without a status row (the full cards).
  */
 export function updateCardStatusRow(
   handles: UnitCardHandles,
@@ -358,9 +348,9 @@ export function updateCardStatusRow(
   }
 }
 
-/** Build one empty status chip: `[symbol] name  meta`. The first span keeps
- *  its `swatch` class from when it was a plain square of the status's hue;
- *  since 116g it is the status's symbol in that hue, the board pip's. */
+/** Build one empty status chip: `[symbol] name  meta`. The first span
+ *  (class `swatch`) holds the status's symbol in its colour, the board
+ *  pip's. */
 function makeStatusChip(): HTMLDivElement {
   const chip = document.createElement('div');
   chip.className = 'unit-card__status';
@@ -391,13 +381,13 @@ function applyStatusChip(chip: HTMLDivElement, r: StatusReadout): void {
 }
 
 /**
- * 78d — reconcile the `compact` empower-marker row: one `▲` chip per
- * badge-eligible buff on the LIVE unit (the pre-turn badge vocabulary carried
- * into battle — `readUnitStatuses` deliberately skips these raw stat effects,
- * so they never reach the status row above). Colored + hover-titled per key
- * off the shared `EMPOWER_DISPLAY` map. Same cheapness contract as the
- * status row: the HUD gates on the sim tick, and a signature cache skips the
- * rebuild when nothing changed. A no-op for the full variants.
+ * Reconcile the compact card's empower-marker row: one `▲` chip per buff
+ * the HUD passes from the live unit (those `EMPOWER_DISPLAY` marks), the
+ * pre-turn hand's badges carried into battle. `readUnitStatuses` skips
+ * these stat effects, so they never reach the status row. Each key's
+ * colour and label come from `EMPOWER_DISPLAY`. As cheap as the status row:
+ * the HUD calls it at most once a sim tick, and a signature cache skips the
+ * rebuild when nothing changed. A no-op for the full cards.
  */
 export function updateCardEmpowerMarkers(
   handles: UnitCardHandles,
@@ -410,17 +400,16 @@ export function updateCardEmpowerMarkers(
   row.dataset.sig = signature;
   row.replaceChildren();
   row.hidden = stacks.length === 0;
-  // 97e — a chip inside an ENEMY card is nested in a control (the card's
-  // click is the engage objective) → the long-press; a player card's → a tap.
+  // A chip in an enemy card is nested in a control (the card's click is the
+  // engage objective), so the long-press; in a player card, a tap.
   const touch = handles.el.classList.contains('unit-card--enemy') ? 'press' : 'tap';
   for (const s of stacks) {
     const chip = document.createElement('span');
     chip.className = 'unit-card__empower-chip';
     chip.style.color = empowerColor(s.key);
     chip.textContent = s.magnitude <= 3 ? '▲'.repeat(s.magnitude) : `▲×${s.magnitude}`;
-    // 97e — the persistent label (the kickoff's call E, by the user's eye):
-    // the key's name beside the triangles, so the hue is never the only
-    // channel. The tooltip carries the mods.
+    // The key's name, always shown beside the triangles, so the hue is never
+    // the only channel. The tooltip carries the mods.
     const label = document.createElement('span');
     label.className = 'unit-card__empower-chip-label';
     label.textContent = buffKeyLabel(s.key);
@@ -430,25 +419,21 @@ export function updateCardEmpowerMarkers(
   }
 }
 
-/** 78c→78d→95f — human label for a buff key. Until 95f this was the key
- *  capitalized ("no second naming table to drift"); under the i18n layer the
- *  label comes from the UI string table through EMPOWER_DISPLAY (`buff.<key>`),
- *  whose coverage pin is what stops the drift instead. Shared by the pre-turn
- *  chips and the in-battle markers. */
+/** A buff key's label, from the UI string table through `EMPOWER_DISPLAY`
+ *  (`buff.<key>`), whose coverage pin (statusDisplay.test.ts) keeps every
+ *  shipped key labelled. */
 function buffKeyLabel(key: string): string {
   return empowerLabel(key);
 }
 
-/** 97d — the `▲` chip's tooltip, one shape for the pre-turn hand card and
- *  the in-battle marker: `Name ×N` on the first line, the mods on the second. */
+/** The `▲` chip's tooltip, one shape for the pre-turn hand card and the
+ *  battle marker: `Name ×N` on the first line, the mods on the second. */
 export function buffChipTooltip(key: string, magnitude: number, mods: StatusEffect['mods']): string {
   return `${buffKeyLabel(key)} ×${magnitude}\n${buffModsSummary(mods)}`;
 }
 
-/** K4→78d — human-readable summary of a buff's mods ("+4 STR · +4 RNG") in
- *  the canonical stat order, so a hover hint can never drift from the source.
- *  Moved here from PreTurnScreen when the in-battle markers became the second
- *  consumer. */
+/** A buff's mods as text (`+4 STR · +4 RNG`), in `STAT_LABELS` order, so a
+ *  tooltip can't drift from the buff it describes. */
 export function buffModsSummary(mods: StatusEffect['mods']): string {
   const parts: string[] = [];
   for (const stat of Object.keys(STAT_LABELS) as (keyof UnitStats)[]) {
@@ -462,9 +447,9 @@ export function buffModsSummary(mods: StatusEffect['mods']): string {
   return parts.join(' · ');
 }
 
-/** The chip's numeric tail: `×stacks · ±potency/s · Ns`, omitting the parts that
- *  don't apply (no ×N unless an `add` status has stacked; no potency for a
- *  behavior status). Heal potency reads `+N/s`, damage `N/s`. */
+/** The chip's numeric tail: `×stacks · potency/s · Ns`, omitting the parts
+ *  that don't apply (no ×N unless an `add` status has stacked; no potency
+ *  for a behavior status). Heal potency reads `+N/s`, damage `N/s`. */
 function statusChipMeta(r: StatusReadout): string {
   const parts: string[] = [];
   if (r.merge === 'add' && r.stacks > 1) parts.push(`×${r.stacks}`);
@@ -478,9 +463,9 @@ function statusChipMeta(r: StatusReadout): string {
 }
 
 /**
- * Per-skin header. Recruit reads `Level N archetype` (one line); promotion
- * reads `ARCHETYPE • Lv N` with the level in its own span so the M2 beat can
- * flip it. Pre-turn reuses the recruit format for P1 (P3 refines it).
+ * The header by skin. Promotion reads `NAME • Lv N`, with the level in its
+ * own span so the reveal can flip it; every other skin reads `Level N name`
+ * on one line. Both end with the rarity stars.
  */
 function buildHeader(
   data: UnitCardData,
@@ -492,7 +477,7 @@ function buildHeader(
 
   if (skin === 'promotion') {
     const label = document.createElement('span');
-    // §61g — the config display name (nameForArchetype), not the raw id.
+    // The config's display name (`nameForArchetype`), not the raw id.
     label.textContent = `${nameForArchetype(data.archetype).toUpperCase()} • `;
     const value = document.createElement('span');
     value.className = 'unit-card__level-value';
@@ -506,23 +491,22 @@ function buildHeader(
     name: nameForArchetype(data.archetype),
   });
   header.appendChild(buildRarityStars(data.rarity, touch));
-  // No reveal for this skin — point the handle at the header itself so callers
-  // have a non-null target. (Only the promotion skin ever WRITES the handle —
-  // PromotionScreen's level flip — and that skin has its own span, so the
-  // appended star run is never clobbered; the 97e "beside, never inside"
-  // rule holds by that fact, not by luck.)
+  // No reveal for these skins: the handle points at the header so callers
+  // have a non-null target. Only the promotion skin's level flip writes the
+  // handle, and that skin has its own span, so the star run appended here
+  // is never erased.
   return { headerEl: header, levelValue: header };
 }
 
 /**
- * 98b — the rarity STARS at the header's tail (`rarityDisplay.ts`): the
- * "never color alone" channel for the tier — a fixed-width filled + hollow
- * COUNT that survives grayscale where the §61e wash cannot. Two spans so the
- * hollow half sits dimmer (CSS). The tier NAME is a §97 tooltip on the run:
- * a full card is a control on the recruit / pre-turn screens (its click is
- * the pick), so nested text takes the long-press there; the roster's and
- * the promotion's cards are inert, so a tap toggles. Full cards only — the
- * compact battle card has no room and the battle never acts on rarity.
+ * The rarity stars at the header's tail (`rarityDisplay.ts`), the tier's
+ * channel that is not colour: a fixed-width count of filled and hollow
+ * stars, which survives grayscale where the card's tint cannot. Two spans
+ * so the hollow half sits dimmer (CSS). The tier's name is a tooltip on the
+ * run, and its touch route is the caller's: the long-press when the card
+ * was built clickable (nested text in a control), a tap otherwise. Full
+ * cards only: the compact battle card has no room, and the battle never
+ * acts on rarity.
  */
 function buildRarityStars(rarity: UnitRarity, touch: 'tap' | 'press'): HTMLSpanElement {
   const run = document.createElement('span');
@@ -539,14 +523,14 @@ function buildRarityStars(rarity: UnitRarity, touch: 'tap' | 'press'): HTMLSpanE
 }
 
 /**
- * The raw stat block. The 10 per-battle combat stats render in the grid; POW —
- * the Phase-H meta-currency that chips the encounter health pools each turn, not
- * a combat dial — is pulled out as its own accented row ABOVE the grid (returned
- * separately so `buildUnitCard` can seat it right under the level). POW is
- * inserted FIRST into `statRows`, so the promotion reveal (which iterates the
- * map in order) animates it first, matching its card position. One DOM shape per
- * row (label + a right-hand value group the promotion `+N` chip appends into);
- * the grid-vs-column layout + reveal styling are pure CSS keyed on the skin.
+ * The raw stat block. The 10 combat stats render in the grid. POW, the pool
+ * stat (what the chip rule charges a side's pool, `chipRule.ts`) and not a
+ * combat stat, is its own accented row above the grid, returned apart so
+ * `buildUnitCard` can seat it under the level. POW goes into `statRows`
+ * first, so the promotion reveal, which iterates the map in order, animates
+ * it first, as it sits on the card. One DOM shape per row (the label and a
+ * right-hand value group the promotion's `+N` chip goes into); the grid or
+ * column layout and the reveal's styling are CSS keyed on the skin.
  */
 function buildStats(stats: UnitStats): {
   statsEl: HTMLDivElement;
@@ -571,8 +555,8 @@ function buildStats(stats: UnitStats): {
 }
 
 /** One stat row: `LABEL ········ value`; the right-hand group is where the
- *  promotion `+N` chip lands. `isPower` adds the meta-stat accent + a `pool`
- *  clarifier (POW chips the encounter health pools, not a per-battle stat). */
+ *  promotion's `+N` chip lands. `isPower` adds the pool stat's accent, its
+ *  `morale` hint and its tooltip. */
 function buildStatRow(
   key: keyof UnitStats,
   value: number,
@@ -585,9 +569,8 @@ function buildStatRow(
   label.className = 'unit-card__stat-label';
   label.textContent = STAT_LABELS[key];
   if (isPower) {
-    // §91d — side-agnostic here (roster / recruit / promotion cards). 97e —
-    // the row sits inside cards that may be controls (a recruit pick), so
-    // the touch route is the long-press.
+    // Side-agnostic here, on every full card. The row sits in cards that may
+    // be controls (a recruit pick), so the touch route is the long-press.
     attachTooltip(row, () => `${STAT_LABELS.power} — ${powerTooltip()}`, { touch: 'press' });
     const hint = document.createElement('span');
     hint.className = 'unit-card__power-hint';
@@ -606,11 +589,8 @@ function buildStatRow(
   return { row, handle: { row, value: valueEl, right } };
 }
 
-/**
- * The abilities list — one row per ability id (in stored order), self-
- * documenting what the unit does. Moved verbatim from RecruitScreen so the
- * "card can't disagree with the unit" guarantee is the single source of truth.
- */
+/** The abilities list: one row per ability id, in the archetype's order, so
+ *  the card says what the unit does. */
 function buildAbilities(archetype: Archetype, stats: UnitStats): HTMLDivElement {
   const abilities = document.createElement('div');
   abilities.className = 'unit-card__abilities';
@@ -627,10 +607,11 @@ function buildAbilities(archetype: Archetype, stats: UnitStats): HTMLDivElement 
 }
 
 /**
- * P2 — the XP-to-next-level bar (full variant; pre-turn skin). A thin track
- * with a green fill = progress to the next level, labelled `XP n / need` (or
- * `MAX` at the cap). The math (clamp, MAX-at-cap) is the pure, unit-tested
- * `xpProgress` in xp.ts; this just paints it.
+ * The XP-to-next-level bar, on the full cards that show it (pre-turn and
+ * roster by default). A thin track whose green fill is the progress to the
+ * next level, labelled `XP n / need`, or `MAX` at the cap. The math (the
+ * clamp, MAX at the cap) is `xpProgress` in xp.ts, pure and tested; this
+ * paints it.
  */
 function buildXpBar(data: UnitCardData): HTMLDivElement {
   const prog = xpProgress(data.xp, data.level);
@@ -654,12 +635,10 @@ function buildXpBar(data: UnitCardData): HTMLDivElement {
 }
 
 /**
- * One ability row: name, then the weapon profile (`N dmg · reach R · H% hit · C%
- * crit`, or `N heal · reach R`) with an AoE tag, then the cadence in seconds.
- * The damage/heal amount reuses the sim's single-source-of-truth helpers (the
- * op's `might` + the scaling stat) so the card can't disagree with battle.
- * Range / cadence / AoE / the I6 profile come from `config/abilities.json`
- * (the `AbilityDef`: `rangeCells`, the damage/heal op, the `aoe` selector).
+ * One ability row: the name, the detail line of what the ability does
+ * (`abilityDetailParts`) with an AoE tag, then the cadence in seconds. All
+ * of it is read from the `AbilityDef` (`config/abilities.json`) through the
+ * sim's own helpers, so the card can't disagree with battle.
  */
 function abilityRow(id: string, stats: UnitStats): HTMLDivElement {
   const def = abilityDef(id);
@@ -669,15 +648,13 @@ function abilityRow(id: string, stats: UnitStats): HTMLDivElement {
 
   const name = document.createElement('div');
   name.className = 'unit-card__ability-name';
-  // Yb QoL: the display name is config now (`AbilityDef.name`), not a hardcoded
-  // UI label map. Damage-vs-heal is read straight from the op below.
   name.textContent = def.name;
   row.appendChild(name);
 
   const detail = document.createElement('div');
   detail.className = 'unit-card__ability-detail';
-  // 34b — the detail wording is the pure `abilityDetailParts` (headless-tested);
-  // this row owns only the DOM (the styled AoE tag below + the cadence column).
+  // The wording is `abilityDetailParts`, pure and tested headless; this row
+  // owns the DOM (the styled AoE tag and the cadence column).
   detail.textContent = abilityDetailParts(id, stats).join(' · ');
   if (def.target.kind === 'aoe') {
     const side = def.target.radius * 2 + 1;
@@ -690,8 +667,8 @@ function abilityRow(id: string, stats: UnitStats): HTMLDivElement {
 
   const cadence = document.createElement('div');
   cadence.className = 'unit-card__ability-cadence';
-  // N1 — a non-speed-scaled ability's cooldown is flat (the dash); attack/heal
-  // cadence scales with the unit's speed.
+  // A non-speed-scaled ability's cooldown is flat (the dash); an attack's or
+  // a heal's cadence scales with the unit's speed.
   const seconds = def.speedScaled
     ? ticksToSeconds(attackCooldownTicksFor(def.cooldownSeconds, stats.speed))
     : def.cooldownSeconds;

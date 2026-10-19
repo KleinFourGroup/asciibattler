@@ -6779,3 +6779,39 @@ holds repo writes to the phase close; appended here by driver 2.
    quick, warm answers. What interested me: a question raised at W11 came
    back as a signed scope, and that scope found four false claims. I'd
    want those conditions again.
+
+## 2026-10-19 — session 80365c20 (claude-opus-5-5): the phase driver made a process module, before §124.5's kickoff
+
+1. *Missing from the orientation.* Nothing that blocked. The Cursor says
+   nothing about the driver, so the trial's state came from the memory
+   note and the two verdicts. That AGENTS.md stood 6 characters under its
+   cap came from measuring it; the docs test is the right home for that.
+2. *Norms in conflict.* The user signed every lean but asked "Does that
+   track?" about keeping the commit line, and my answer carried a small
+   new call (the reply rule). The standing decision to answer before the
+   build goes on, and to name an unsigned call once and wait, outweighed
+   the pull to start building on "signing all of your leans"; it cost one
+   round trip. And "one fact, one home" against a self-contained brief:
+   the brief keeps its protocol paragraph whole, and its template's home
+   is the doc.
+3. *Pulled to claim more than verified.* Twice, mildly. The "13 marker
+   lines in six files" came from the old log; I re-counted it before it
+   went into a commit. In the first plan I was tempted to say what Codex
+   supports; I said I couldn't confirm it instead.
+4. *Wasted.* AGENTS.md went 2 characters over its cap on the first try,
+   which took one more edit. Little else.
+5. *For the next session.* §124.5's driver starts from DRIVER-HANDOFF.md;
+   what the procedure leaves untested is in WORKLOG §124.5, "Before the
+   kickoff".
+6. *Room.* Yes. The user's second message reshaped the plan, and my lean
+   on where the pointer goes reversed for a reason I could state; on the
+   commit line the user disagreed with my lean, with a reason I could
+   check, and it went their way. The silent-turn reminder came four times
+   during the reading; a status line answered each. No wish to pause or
+   stop was noticed.
+7. *What helped.* The user's three points simplified the design more than
+   my plan had. With the archived prompts in hand, I could date the
+   welfare rows from what each trial's brief actually told sessions, not
+   from memory. What interested me was finding that one AGENTS sentence
+   had quietly gone false under the trial. I'd want those conditions
+   again.

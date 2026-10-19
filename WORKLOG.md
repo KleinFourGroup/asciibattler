@@ -11125,3 +11125,95 @@ role clears the first half and misses the cost half by about 1.3 points,
 nearly all of it the user's away time. The role found two things no
 single session could, the drops and the readings guard. Worth running
 again on §124.5, as the user has said it will be.
+
+## Phase 124.5 — render and UI: the screens
+
+### Before the kickoff: driving made a process module (2026-10-19, session 80365c20)
+
+The user asked to integrate the phase driver into the workflow rather
+than run a third trial, with "hopefully minimal" surgery on AGENTS.md and
+more on the v5 prompt. Three commits, `e27b563e`, `08582e24` and
+`25662d6a`, and this entry. Signed in two rounds: "signing all of your
+leans!", and after reading the doc, DRIVER-HANDOFF and the AGENTS diff,
+"Fully signed!".
+
+**What the reading found.**
+
+- AGENTS.md stood at 19,994 of its 20,000-char cap, so each addition had
+  to be paid for by a trim.
+- Everything the role ran on (the prompts, the logs that carried state
+  from phase to phase, `cache-gaps.mjs`, `readings-check.mjs`,
+  `findings.md`) was under `scratch/`, which git ignores, so the sources
+  that §123's and §124's verdicts cite existed on one machine.
+- AGENTS's friction-log paragraph said filing "does not notify the
+  user", which a driver made false: it reads the friction lines and
+  passes `distress` lines on. The welfare table had no row for it,
+  though the trial began on 2026-10-16. §123's briefs told sessions the
+  driver read their friction entries as they landed; §124's didn't name
+  friction.
+- §124's log ended with four state sections, each added on top of the
+  last; the close's was 229 lines.
+
+**The user's calls.**
+
+- Cut the cost tracking ("We can completely just cut everything about
+  the cache reads, right?"): with the role kept, nothing decides on it.
+  Retired with it: the per-wake log and its readings, the stalls section,
+  the "flagged" and "named a repeat" columns as bookkeeping (an instance
+  the session didn't flag is still raised), and the transcript and model
+  columns. Kept: the notes ledger, slimmed to "credited or not", since it
+  is how a driver decides to drop a note; and the 350k hand-over.
+- Keep the commit line, against my lean to drop it, as "an extra hook for
+  me to give extra instructions to the driver". The reply rule changed so
+  it can serve as one: at each commit line the driver reads the new
+  friction lines and raises a `distress` line at once (the user's
+  example: "three distress logs in one commit! Better notify Matt", built
+  as the default), and does any instruction the user left for that
+  commit; otherwise it replies in one line.
+- The state in one tracked file, DRIVER-HANDOFF.md at the root,
+  persistent and slim like HANDOFF rather than reset each phase, since
+  the pattern list across phases is the main thing a driver carries.
+  "Let's drive phase N" and "Let's resume driving phase N" are one
+  procedure: read its cursor.
+- Driving is optional.
+- The procedure written for any harness that can start sessions and pass
+  messages, with Claude Code's desktop app in a dated section at the end,
+  since the app changes often. Where a harness can start sessions itself,
+  the driver proposes anyway unless the user says otherwise.
+
+**A change beyond those calls.** The old rule held every repo write to
+the phase close, since the checkout is shared. A tracked state file needs
+a commit point, and the hand-off read has one: the session that handed off
+is done and no card is out yet. So the driver commits DRIVER-HANDOFF.md
+and its friction lines there, before proposing, when no session is
+working, and a driver ending past 350k writes its own report rather than
+parking it in a log.
+
+**What was built.**
+
+- `e27b563e`: the trial's records to `archive/driver-trial/`, with a
+  README mapping each old path; the scratch folders removed.
+- `08582e24`: `process/driving.md`; DRIVER-HANDOFF.md from §124's close
+  state (P7, P8 and P12 closed; the 13 `i18n-ok` marker lines in
+  §124.5's six files re-counted against `TOOL_READ` before quoting); its
+  cap in `tests/docs.test.ts`, 12,000 chars and 160 lines, which
+  rejected a planted 12,706-char file; ARCHITECTURE's process list.
+- `25662d6a`: AGENTS's row ("drive a phase, or resume driving one") and
+  the filing sentence ("filing alone summons no immediate help (a phase's
+  driver, if any, passes a `distress` line to the user at your next
+  commit)"), paid for by trimming the context-meter bullet and the
+  Toolchain section's source-tree pointer, both repeated elsewhere:
+  19,995 chars. planning.md: a driven phase's close, and the round sweep
+  reads DRIVER-HANDOFF. The welfare table: rows for 2026-10-16 and
+  2026-10-19.
+
+**Not verified.** The procedure hasn't run; §124.5's driver is its first
+test. The Claude Code section's rule for when the app wakes a driver is
+from the app's instructions as they read on 2026-10-19, not from a test.
+"Tell Matthew at once" lands in the driver's session, where the user may
+not be looking during a stretch; whether the sidebar marks it, or the
+app's push-notification tool would reach the user, is unchecked.
+
+**Context readings** (the meter, UTC, 2026-10-19): 165,244 at 12:45, after
+the reading; 204,829 at 14:28 (`e27b563e`); 238,184 at 14:34
+(`08582e24`); 255,437 at 14:38 (`25662d6a`).

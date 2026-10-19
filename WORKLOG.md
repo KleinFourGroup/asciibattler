@@ -11684,3 +11684,9 @@ trial.
 
 Readings by the tool's clock (UTC): 97,605 at 17:37 after the
 orientation, 192,046 at 17:45 before this entry.
+
+**Signed** (the user, 2026-10-19): "Signing all three, Claude! 😁 R-1
+specifically as a post step. So your leans in all cases 😂" So R-1 is
+124.5g-post, 124.5f's finish and not a trial (two of the screens' three
+are still left); R-2 is 124.5g-post2 and R-3 124.5g-post3, each a
+deletion; all three read `none`. Reading: 212,585 at 18:00.

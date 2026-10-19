@@ -247,7 +247,13 @@ medium. The cut, signed 2026-10-19 (WORKLOG §124.5, "The kickoff"):
   read `2 dmg`.
 - ☑ **124.5f — the neutral-target lead** (a trial, `none`). Kept: the
   truth table equal on 126 rows, `src` −7, the rule at one site.
-- ☐ **124.5g — the re-skim** (`stop`).
+- ☑ **124.5g — the re-skim** (`stop`). R-1 to R-3 signed; 124.5f's
+  count had missed the renderer's copy of the rule.
+- ☐ **124.5g-post — R-1, the renderer's copy of the neutral-target rule**
+  (`none`). 124.5f's finish, not a trial.
+- ☐ **124.5g-post2 — R-2, `poolGauge`'s `mx`** (`none`).
+- ☐ **124.5g-post3 — R-3, `damageStatFor` and the catalog's
+  `damageStat`** (`none`).
 - ☐ **124.5h — the comment pass** (`batch`, per batch), as 124j ran.
 - ☐ **124.5i — the close** (`stop`).
 

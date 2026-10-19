@@ -22,7 +22,7 @@
  */
 
 export const TEXT_SCALE_CHOICES = [1, 1.1, 1.25, 1.5] as const;
-export type TextScaleChoice = (typeof TEXT_SCALE_CHOICES)[number];
+type TextScaleChoice = (typeof TEXT_SCALE_CHOICES)[number];
 
 /** The offered size nearest a stored value; a tie takes the smaller. */
 export function nearestTextScale(stored: number): TextScaleChoice {
@@ -40,7 +40,7 @@ export function rootFontSize(scale: TextScaleChoice): string {
 }
 
 /** The root element, as far as this module uses it; a test hands in a stand-in. */
-export interface TextScaleRoot {
+interface TextScaleRoot {
   readonly style: { fontSize: string };
 }
 

@@ -25,7 +25,7 @@
 
 import { attachTooltip, type TooltipContent } from './tooltip';
 
-export interface ButtonOptions {
+interface ButtonOptions {
   readonly className: string;
   readonly onClick: (ev: MouseEvent) => void;
   readonly tooltip?: TooltipContent;

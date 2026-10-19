@@ -34,12 +34,12 @@ export interface PageReading {
   readonly screen: string;
 }
 
-export interface GraphicsReading {
+interface GraphicsReading {
   readonly renderer: string | null;
   readonly vendor: string | null;
 }
 
-export interface StoreReading {
+interface StoreReading {
   readonly adapter: string;
   readonly canSave: boolean;
   readonly error: string | null;
@@ -52,7 +52,7 @@ export interface StoreReading {
   readonly sections: Readonly<Record<string, number | null>> | null;
 }
 
-export interface RunReading {
+interface RunReading {
   /** Whether a run is being played on this page. */
   readonly live: boolean;
   /** What the run slot holds, as the menu reads it (src/store/runSlot.ts):
@@ -75,7 +75,7 @@ export interface DiagnosticsSources {
 /** A reading, or the sentence that stands where a refused one would be. */
 type Read<T> = T | string;
 
-export interface PlayerDiagnostics {
+interface PlayerDiagnostics {
   readonly asciibattler: 'diagnostics';
   readonly v: 1;
   readonly at: string;

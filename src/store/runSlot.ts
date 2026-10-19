@@ -49,7 +49,7 @@ export interface RunSlotWire {
 }
 
 /** A read of the slot: the loaded Run and what it was loaded from. */
-export interface SavedRun {
+interface SavedRun {
   readonly run: Run;
   readonly wire: RunSlotWire;
 }

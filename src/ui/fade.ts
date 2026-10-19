@@ -6,7 +6,7 @@
 // FADE_MS; callers must drop their reference before scheduling removal so a
 // later show() doesn't operate on the dying element.
 
-export const FADE_MS = 180;
+const FADE_MS = 180;
 
 export function fadeIn(el: HTMLElement): void {
   // rAF so the browser commits the initial opacity:0 paint before

@@ -33,7 +33,7 @@ import { orderRosterWithIndices, type RosterOrder } from './rosterOrder';
 import { openModal, type ModalHandle } from './modal';
 
 /** 51c — the picker contract. `count` cards must be selected to confirm. */
-export interface CardListSelection {
+interface CardListSelection {
   /** Exactly how many cards the picker wants. */
   readonly count: number;
   /** The confirm button's face text (e.g. "Remove ▸"). */
@@ -43,7 +43,7 @@ export interface CardListSelection {
   readonly onConfirm: (sourceIndices: number[]) => void;
 }
 
-export interface CardListModalOptions {
+interface CardListModalOptions {
   /** Display order (the pluggable seam). Defaults to recruitment order. */
   readonly order?: RosterOrder;
   /** Message shown when the list is empty (e.g. "The draw pile is empty."). */
@@ -196,9 +196,9 @@ export class CardListModal {
  *  `.card-list-button--{position}` (R2). Roster is a row of the control
  *  column (src/ui/chip.ts): it wears the chip's plate, and its screen puts
  *  it there with `mountControl`. */
-export type CardListButtonPosition = 'roster' | 'draw' | 'discard';
+type CardListButtonPosition = 'roster' | 'draw' | 'discard';
 
-export interface CardListButtonOptions {
+interface CardListButtonOptions {
   /** The button face text (e.g. "Roster", "Draw Pile"). */
   readonly text: string;
   /** The modal heading prefix (e.g. "Your Roster", "Draw Pile"). */

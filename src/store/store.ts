@@ -71,13 +71,13 @@ export function storageKey(name: SectionName): string {
 export const STORE_VERSION = 1;
 
 /** What every key holds. */
-export interface Envelope {
+interface Envelope {
   readonly v: number;
   readonly build: string;
   readonly data: unknown;
 }
 
-export interface Field<V> {
+interface Field<V> {
   readonly schema: z.ZodType<V>;
   readonly fallback: V;
 }

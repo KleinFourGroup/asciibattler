@@ -46,15 +46,15 @@
 
 /** Hover: the wait before a tooltip opens (a sweep across a row must not
  *  flash each one). */
-export const HOVER_DELAY_MS = 150;
+const HOVER_DELAY_MS = 150;
 /** Hover: inside this window after a close, the next opens with no delay. */
-export const WARM_MS = 300;
+const WARM_MS = 300;
 /** Touch: the hold that opens a control's tooltip. */
-export const PRESS_MS = 450;
+const PRESS_MS = 450;
 /** Touch: a pointer that moves this far cancels the hold (a scroll, a drag). */
-export const PRESS_SLOP_PX = 8;
+const PRESS_SLOP_PX = 8;
 /** The opacity fade (mirrors `.tooltip` in ui.css). */
-export const TOOLTIP_FADE_MS = 120;
+const TOOLTIP_FADE_MS = 120;
 /** Space between the trigger's edge and the box. */
 export const GAP_PX = 8;
 /** The box never comes closer than this to the viewport's edge. */
@@ -64,7 +64,7 @@ export const CARET_INSET_PX = 12;
 
 export type TooltipContent = string | (() => string | Node);
 
-export interface TooltipOptions {
+interface TooltipOptions {
   /** The touch route: `tap` toggles (text sites, the default); `press` is a
    *  long-press that swallows the click (controls); `none` (hover / focus /
    *  key only). */
@@ -83,7 +83,7 @@ export interface Size {
   readonly h: number;
 }
 
-export interface Placement {
+interface Placement {
   readonly x: number;
   readonly y: number;
   readonly side: 'above' | 'below';

@@ -27,7 +27,7 @@ import { fmtPool } from './SectorClearedScreen';
 
 /** The line under the rest's option: how far morale rises and the XP each
  *  unit banks. A full pool is named instead of a "+0". */
-export function restEffectLine(preview: { readonly heal: number; readonly xp: number }): string {
+function restEffectLine(preview: { readonly heal: number; readonly xp: number }): string {
   return preview.heal > 0
     ? t('rest.effect', { heal: fmtPool(preview.heal), xp: preview.xp })
     : t('rest.effectFull', { xp: preview.xp });

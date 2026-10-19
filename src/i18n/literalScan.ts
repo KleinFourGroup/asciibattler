@@ -44,12 +44,12 @@ import ts from 'typescript';
 
 export const SCAN_ROOTS: readonly string[] = ['src/ui', 'src/scenes', 'src/render', 'src/Game.ts', 'src/main.ts'];
 
-export const I18N_OK_MARKER = 'i18n-ok';
+const I18N_OK_MARKER = 'i18n-ok';
 /** In a file's first lines: the whole file is a build/dev table, never player-facing. */
-export const I18N_OK_FILE_MARKER = 'i18n-ok-file';
+const I18N_OK_FILE_MARKER = 'i18n-ok-file';
 
 /** DOM `KeyboardEvent.code` / `.key` values that are Capitalized words. */
-export const KEYBOARD_CODES: ReadonlySet<string> = new Set([
+const KEYBOARD_CODES: ReadonlySet<string> = new Set([
   'Escape',
   'Space',
   'Enter',

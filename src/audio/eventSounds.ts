@@ -34,7 +34,7 @@ export type GameEventKey = keyof {
   [K in keyof GameEvents as string extends K ? never : number extends K ? never : K]: true;
 };
 
-export interface EventSoundCue<K extends GameEventKey> {
+interface EventSoundCue<K extends GameEventKey> {
   readonly sound: SoundKey;
   /** Play only when this holds for the payload. A NAMED, exported function —
    *  the filter stays typed and unit-testable instead of buried in a closure. */
@@ -89,7 +89,7 @@ export const EVENT_SOUNDS = {
  * - `candidate` — silent TODAY, and plausibly wants a cue: the Round 11
  *   feel sweep's worklist. Promoting one = move it to EVENT_SOUNDS.
  */
-export type SilentReason = 'bookkeeping' | 'fxChannel' | 'uiChannel' | 'candidate';
+type SilentReason = 'bookkeeping' | 'fxChannel' | 'uiChannel' | 'candidate';
 
 /** Every event NOT in EVENT_SOUNDS, each with its reason. The annotation is
  *  the tsc half of the coverage pin: a missing key is a missing property, a

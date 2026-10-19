@@ -14,7 +14,7 @@
 
 import type { Settings } from './settings';
 
-export interface BootSeams {
+interface BootSeams {
   /** The locales this build ships (src/i18n/locale.ts, `SHIPPED_LOCALES`). */
   readonly shippedLocales: readonly string[];
   /** `setActiveLocale`: takes effect for catalogs loaded after the call. */

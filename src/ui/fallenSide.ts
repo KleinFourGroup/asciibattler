@@ -16,7 +16,7 @@ import { ARCHETYPE_CONFIG, glyphForArchetype } from '../sim/archetypes';
 import { t } from '../i18n/ui';
 import { attachTooltip } from './tooltip';
 
-export interface FallenSideOptions {
+interface FallenSideOptions {
   readonly side: 'player' | 'enemy';
   readonly label: string;
   /** The glyph run as drawn; `null` = nobody fell. */

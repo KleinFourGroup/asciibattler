@@ -37,8 +37,8 @@ export const DEFAULT_LOCALE = 'en';
  *  src/settings/boot.ts. */
 export const SHIPPED_LOCALES: readonly string[] = [DEFAULT_LOCALE];
 
-export type LocaleEntryObject = ProvenanceEntry<string>;
-export type LocaleEntry = string | LocaleEntryObject;
+type LocaleEntryObject = ProvenanceEntry<string>;
+type LocaleEntry = string | LocaleEntryObject;
 export type LocaleFile = Readonly<Record<string, LocaleEntry>>;
 
 /** The dev-mode prefix on a fuzzy entry's English fallback. */

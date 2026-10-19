@@ -43,7 +43,7 @@ export interface ProvenanceEntry<T = unknown> {
   readonly reviewer?: Stamp;
 }
 
-export const STAMP_DATE = /^\d{4}-\d{2}-\d{2}$/;
+const STAMP_DATE = /^\d{4}-\d{2}-\d{2}$/;
 
 export function validateStamp(stamp: Stamp, context: string): void {
   if (typeof stamp.who !== 'string' || stamp.who.trim().length === 0) {
@@ -84,7 +84,7 @@ export function sourceHash(english: unknown): string {
   return fnv1a(canonicalSource(english));
 }
 
-export type Currency = 'current' | 'unstamped' | 'fuzzy';
+type Currency = 'current' | 'unstamped' | 'fuzzy';
 
 /** Where an entry stands against the English it should have been translated from. */
 export function currencyOf(entry: unknown, english: unknown): Currency {
@@ -92,7 +92,7 @@ export function currencyOf(entry: unknown, english: unknown): Currency {
   return entry.source === sourceHash(english) ? 'current' : 'fuzzy';
 }
 
-export interface LocaleAudit {
+interface LocaleAudit {
   /** English addresses the locale file lacks. */
   readonly missing: readonly string[];
   /** File addresses no longer in the English. */

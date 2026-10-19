@@ -40,7 +40,7 @@ import {
 } from './journal';
 
 /** What every segment this page records is stamped with. */
-export interface JournalStamp {
+interface JournalStamp {
   readonly build: string;
   readonly configHash: string;
 }

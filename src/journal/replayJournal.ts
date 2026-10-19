@@ -62,7 +62,7 @@ export class JournalDivergence extends Error {
   override readonly name = 'JournalDivergence';
 }
 
-export interface SegmentReplay {
+interface SegmentReplay {
   /** The Run as the replay left it. */
   readonly run: Run;
   /** `snapshotHash` of that Run. */
@@ -75,7 +75,7 @@ export interface SegmentReplay {
   readonly endMatches: boolean;
 }
 
-export interface JournalReplay {
+interface JournalReplay {
   readonly segments: readonly SegmentReplay[];
 }
 

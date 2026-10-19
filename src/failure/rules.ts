@@ -79,7 +79,7 @@ export function failureText(thrown: unknown): string {
   return cause === undefined || cause === null ? text : `${text} (${oneText(cause)})`;
 }
 
-export interface FailureWatch {
+interface FailureWatch {
   /**
    * A failure. The first one halts the game, if it had started, and shows
    * the plate. Every later one is dropped: the first is the cause, and a
@@ -97,7 +97,7 @@ export interface FailureWatch {
   readonly reported: FailureReport | null;
 }
 
-export interface FailureWatchDeps {
+interface FailureWatchDeps {
   /** Puts the plate up. */
   readonly show: (report: FailureReport) => void;
   /** Whether this page can make a WebGL 2 context at all. Asked once, when a
@@ -161,7 +161,7 @@ export function createFailureWatch(deps: FailureWatchDeps): FailureWatch {
  */
 export const CONTEXT_LOST_GRACE_MS = 4000;
 
-export interface ContextWatchDeps {
+interface ContextWatchDeps {
   readonly graceMs: number;
   /** Whether the page is in view. */
   readonly visible: () => boolean;
@@ -171,7 +171,7 @@ export interface ContextWatchDeps {
   readonly onGone: () => void;
 }
 
-export interface ContextWatch {
+interface ContextWatch {
   lost(): void;
   restored(): void;
   /** The page went out of view or came back into it. */

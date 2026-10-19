@@ -36,13 +36,13 @@ import uiEn from '../../locales/en/ui.json';
 import { DEFAULT_LOCALE, activeLocale, fuzzyMarker, recordFuzzy } from './locale';
 import { currencyOf, entryTextOf, isProvenanceEntry, type ProvenanceEntry } from './provenance';
 
-export type PluralEntry = Readonly<Partial<Record<Intl.LDMLPluralRule, string>>> & { readonly other: string };
-export type UiEntry = string | PluralEntry;
-export type UiTable = Readonly<Record<string, UiEntry>>;
+type PluralEntry = Readonly<Partial<Record<Intl.LDMLPluralRule, string>>> & { readonly other: string };
+type UiEntry = string | PluralEntry;
+type UiTable = Readonly<Record<string, UiEntry>>;
 /** A registered (non-en) table: plain entries, or provenance-wrapped ones. */
-export type UiLocaleEntry = UiEntry | ProvenanceEntry<UiEntry>;
+type UiLocaleEntry = UiEntry | ProvenanceEntry<UiEntry>;
 export type UiLocaleTable = Readonly<Record<string, UiLocaleEntry>>;
-export type TParams = Readonly<Record<string, string | number>>;
+type TParams = Readonly<Record<string, string | number>>;
 
 const tables = new Map<string, UiLocaleTable>([[DEFAULT_LOCALE, uiEn as UiTable]]);
 
@@ -91,7 +91,7 @@ function numbersFor(lang: string): Intl.NumberFormat {
 const PLACEHOLDER = /\{(\w+)\}/g;
 
 /** Substitute `{name}` placeholders; numbers go through the locale's formatter. */
-export function formatTemplate(lang: string, key: string, template: string, params: TParams): string {
+function formatTemplate(lang: string, key: string, template: string, params: TParams): string {
   return template.replace(PLACEHOLDER, (_m, name: string) => {
     const value = params[name];
     if (value === undefined) {

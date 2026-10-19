@@ -45,7 +45,7 @@ import { reserveSlot } from './reserveSlot';
 
 /** The live run state the overlay reads — injected as getters (the
  *  BitsOverlay `getBits` pattern), so a Run swap on reset is invisible. */
-export interface CacheOverlayDeps {
+interface CacheOverlayDeps {
   getCache: () => readonly string[];
   getSize: () => number;
   getOverflow: () => number;

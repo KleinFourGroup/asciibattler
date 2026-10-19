@@ -18,7 +18,7 @@
 
 import { chipPulse } from './chip';
 
-export type PoolSide = 'player' | 'enemy';
+type PoolSide = 'player' | 'enemy';
 
 export interface PoolGaugeHandle {
   readonly el: HTMLDivElement;
@@ -43,7 +43,7 @@ export interface PoolGaugeHandle {
 
 /** The readout: `current / max`, or `remaining (−pending) / max` while a loss
  *  is pending. Pure — `remaining` and the shown loss are both clamped. */
-export function poolValueParts(
+function poolValueParts(
   current: number,
   max: number,
   pending: number,

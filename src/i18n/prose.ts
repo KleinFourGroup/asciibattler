@@ -25,10 +25,10 @@
 
 import { z } from 'zod';
 
-export const PROSE_META_KEY = 'prose';
-export const ARRAY_STEP = '[]';
-export const RECORD_STEP = '*';
-export const ADDRESS_SEPARATOR = '.';
+const PROSE_META_KEY = 'prose';
+const ARRAY_STEP = '[]';
+const RECORD_STEP = '*';
+const ADDRESS_SEPARATOR = '.';
 
 /** A user-facing prose string field: non-empty, and marked for the walkers. */
 export function prose(): z.ZodString {

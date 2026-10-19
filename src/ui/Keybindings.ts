@@ -63,7 +63,7 @@ export interface KeyLike {
 type Handler = () => void;
 
 /** Every action's key. */
-export type Bindings = Readonly<Record<KeybindAction, string>>;
+type Bindings = Readonly<Record<KeybindAction, string>>;
 
 /** Every control's own keys, which no action can take. */
 export const RESERVED_CODES: readonly string[] = ['Enter', 'NumpadEnter', 'Tab', 'Escape'];
@@ -105,7 +105,7 @@ export function isBindable(code: string): boolean {
  *    Nothing happens and the row goes on waiting.
  *  - `bind`: the row's action takes the key.
  */
-export type CaptureVerdict = 'pass' | 'walk' | 'cancel' | 'swallow' | 'bind';
+type CaptureVerdict = 'pass' | 'walk' | 'cancel' | 'swallow' | 'bind';
 
 export function captureVerdict(e: KeyLike): CaptureVerdict {
   if (e.ctrlKey === true || e.altKey === true || e.metaKey === true) return 'pass';

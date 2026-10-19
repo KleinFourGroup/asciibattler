@@ -20,12 +20,12 @@
 
 import { reducedMotion } from '../render/motion';
 
-export type PoolSideName = 'player' | 'enemy';
+type PoolSideName = 'player' | 'enemy';
 
 /** The orb's flight, card → gauge (wall-clock; fast-forward never shortens it). */
-export const ORB_FLIGHT_MS = 400;
+const ORB_FLIGHT_MS = 400;
 /** The backstop's margin past the flight before a stalled orb lands on the clock. */
-export const ORB_LANDING_GRACE_MS = 100;
+const ORB_LANDING_GRACE_MS = 100;
 /** The end sequence's launch stagger (one orb per standing survivor). */
 export const SURVIVOR_STAGGER_MS = 120;
 /** The beat after the last landing before the ghost commits. */
@@ -35,7 +35,7 @@ export const SETTLE_MS = 250;
  *  pool max — nothing below SHAKE_MIN_FRACTION (2 of 40: a one-point
  *  Mercenary never rattles the screen), SHAKE_MIN_PX at the threshold up
  *  to SHAKE_MAX_PX at SHAKE_MAX_FRACTION and above. */
-export const SHAKE_MS = 220;
+const SHAKE_MS = 220;
 export const SHAKE_MIN_FRACTION = 0.05;
 export const SHAKE_MAX_FRACTION = 0.15;
 export const SHAKE_MIN_PX = 2;
@@ -48,7 +48,7 @@ export const SHAKE_MAX_PX = 6;
  * seam for a future A/B — flip it live with the dev key (Ctrl+Alt+K,
  * src/dev/devKeys.ts) or here. A settings toggle is Round 8's.
  */
-export type ShakePolicy = 'player' | 'enemy' | 'both' | 'none';
+type ShakePolicy = 'player' | 'enemy' | 'both' | 'none';
 const SHAKE_POLICIES: readonly ShakePolicy[] = ['player', 'enemy', 'both', 'none'];
 let shakePolicy: ShakePolicy = 'player';
 
@@ -72,7 +72,7 @@ export function shakeAllowed(target: PoolSideName): boolean {
   return shakePolicy === 'both' || shakePolicy === target;
 }
 
-export interface Point {
+interface Point {
   readonly x: number;
   readonly y: number;
 }

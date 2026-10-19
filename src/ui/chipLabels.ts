@@ -15,7 +15,7 @@ import { t } from '../i18n/ui';
 /** The last-turn strip's two chip lines (on the pre-turn screen): what hit
  *  the ENEMY pool (the line the player is glad about) and what hit the
  *  PLAYER pool. */
-export interface ChipLineLabels {
+interface ChipLineLabels {
   readonly toEnemyPool: string;
   readonly toPlayerPool: string;
 }

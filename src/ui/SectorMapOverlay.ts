@@ -30,7 +30,7 @@ import { attachTooltip, keyedTooltip } from './tooltip';
 
 /** Everything a read-only map render needs — the MapScreen.show argument list,
  *  bundled (Game builds it from the live Run; null = no run yet). */
-export interface SectorMapView {
+interface SectorMapView {
   readonly map: NodeMap;
   readonly currentNodeId: number;
   readonly visited: ReadonlySet<number>;

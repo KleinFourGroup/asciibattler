@@ -57,7 +57,7 @@ export function backupFileName(backup: Backup): string {
   return `asciibattler-backup-${new Date(backup.exportedAt).toISOString().replace(/[:.]/g, '-')}.json`;
 }
 
-export type BackupRead =
+type BackupRead =
   | { readonly ok: true; readonly backup: Backup }
   /** `not-a-backup`: not JSON, or not this file. `other-version`: a backup at
    *  another format, or of another store layout. */

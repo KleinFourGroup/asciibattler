@@ -31,7 +31,7 @@ import { replayJournal, type ReplayOptions } from './replayJournal';
 /** Given an event's name and payload, the value to hash in the payload's place. */
 export type EventMapping = (name: string, payload: unknown) => unknown;
 
-export interface SegmentDigest {
+interface SegmentDigest {
   /** One digest per battle, in order. */
   readonly battles: readonly string[];
   /** Every event outside a battle. */
@@ -47,7 +47,7 @@ export interface SegmentDigest {
   readonly snapshot: RunSnapshot;
 }
 
-export interface DigestOptions {
+interface DigestOptions {
   /** `ReplayOptions.ignoreConfig`: replay past another config hash. */
   readonly ignoreConfig?: boolean;
   readonly map?: EventMapping;

@@ -13,7 +13,7 @@ import type { Store } from '../store/store';
 import { SETTINGS_SECTION, type Settings } from './settings';
 
 export type SettingKey = keyof Settings;
-export type SettingsListener = (changed: SettingKey, settings: Settings) => void;
+type SettingsListener = (changed: SettingKey, settings: Settings) => void;
 
 export interface SettingsModel {
   /** Every setting as it is now. A fresh object. */

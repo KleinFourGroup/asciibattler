@@ -48,7 +48,7 @@ export type GameOverVariant = 'defeat' | 'complete';
 /** 117e — what the end screen says of Escalation: the level the run was
  *  played at, the level its win opened for its character (null when it
  *  opened none), and the character's name for that line. */
-export interface RunEscalation {
+interface RunEscalation {
   readonly level: number;
   readonly unlocked: number | null;
   readonly character: string;

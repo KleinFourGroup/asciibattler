@@ -10,7 +10,7 @@
  * Call it from a click's own handler: both ways want the click behind them.
  */
 
-export interface CopySteps {
+interface CopySteps {
   /** The clipboard API's write; null on a page that has none. */
   readonly clipboard: ((text: string) => Promise<void>) | null;
   /** The old command. False, or a throw, is a refusal. */

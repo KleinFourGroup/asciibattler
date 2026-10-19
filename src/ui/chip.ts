@@ -47,7 +47,7 @@
 import { fadeIn } from './fade';
 
 /** How long the value-change pulse glows (`.is-pulsing`). */
-export const CHIP_PULSE_MS = 450;
+const CHIP_PULSE_MS = 450;
 
 /** The one pulse: returns a function that flashes `.is-pulsing` on `el`
  *  for CHIP_PULSE_MS, restarting the timer on a re-pulse. */
@@ -71,7 +71,7 @@ export function createChromeColumn(mount: HTMLElement): HTMLDivElement {
   return column;
 }
 
-export interface ControlColumn {
+interface ControlColumn {
   /** The column: the settings chip goes in as its first child. */
   readonly column: HTMLDivElement;
   /** The second row: the control of the screen that is up, or nothing. */

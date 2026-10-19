@@ -50,18 +50,18 @@ export type { UnitRarity };
 
 /** Macro layout. `full` = recruit-style detail (stats + abilities); `compact`
  *  = the in-battle HUD card (consumed in Phase Q). */
-export type UnitCardMode = 'compact' | 'full';
+type UnitCardMode = 'compact' | 'full';
 
 /** Render context — selects the theme/layout CSS, the header format, and the
  *  default section visibility. Each screen is one skin. `hud` is the Q4/Q5
  *  in-battle pane skin (only ever paired with `compact`). `roster` is the R1/R2
  *  card-list modal skin (roster view + draw/discard pile views; display-only
  *  full cards, shows the XP bar). */
-export type UnitCardSkin = 'recruit' | 'promotion' | 'preturn' | 'hud' | 'roster';
+type UnitCardSkin = 'recruit' | 'promotion' | 'preturn' | 'hud' | 'roster';
 
 /** Normalized card input. Adapters build this from a template / Unit /
  *  promotion so the builder never reaches into screen-specific shapes. */
-export interface UnitCardData {
+interface UnitCardData {
   readonly archetype: Archetype;
   readonly glyph: string;
   readonly level: number;
@@ -75,7 +75,7 @@ export interface UnitCardData {
   readonly hp?: { readonly current: number; readonly max: number };
 }
 
-export interface UnitCardOptions {
+interface UnitCardOptions {
   readonly mode: UnitCardMode;
   readonly skin: UnitCardSkin;
   /** Override the skin's default abilities-section visibility (recruit/preturn
@@ -95,7 +95,7 @@ export interface UnitCardOptions {
 }
 
 /** Handles into one stat row's mutable bits, for the M2 reveal. */
-export interface StatRowHandle {
+interface StatRowHandle {
   readonly row: HTMLDivElement;
   readonly value: HTMLSpanElement;
   /** The right-hand group the `+N` delta chip is appended into. */
@@ -435,7 +435,7 @@ export function updateCardEmpowerMarkers(
  *  label comes from the UI string table through EMPOWER_DISPLAY (`buff.<key>`),
  *  whose coverage pin is what stops the drift instead. Shared by the pre-turn
  *  chips and the in-battle markers. */
-export function buffKeyLabel(key: string): string {
+function buffKeyLabel(key: string): string {
   return empowerLabel(key);
 }
 

@@ -10,7 +10,7 @@
 import { proseSites } from './prose';
 import type { ProseFamily } from './families';
 
-export const LOCALES_DIR = 'locales';
+const LOCALES_DIR = 'locales';
 
 export function localeFilePath(lang: string, family: string): string {
   return `${LOCALES_DIR}/${lang}/${family}.json`;

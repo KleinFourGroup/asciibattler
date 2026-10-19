@@ -34,7 +34,7 @@ import { configHash } from '../config/configHash';
 import { JOURNAL_FORMAT, type JournalSegment, type RunJournal } from './journal';
 import { JournalDivergence, JournalRefused, replayJournal } from './replayJournal';
 
-export interface ToolResult {
+interface ToolResult {
   readonly code: 0 | 1 | 2;
   readonly lines: readonly string[];
 }

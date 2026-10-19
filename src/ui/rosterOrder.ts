@@ -30,7 +30,7 @@ const ARCHETYPE_RANK = new Map<UnitTemplate['archetype'], number>(
  *  selectable roster view confirms in source indices (a `payToRemoveUnit`
  *  takes a rosterIndex, not a display position), so the ordering seam
  *  surfaces the mapping rather than each consumer re-deriving it. */
-export interface OrderedRosterEntry {
+interface OrderedRosterEntry {
   readonly unit: UnitTemplate;
   readonly sourceIndex: number;
 }

@@ -11404,3 +11404,40 @@ Proof: typecheck clean; the step-code ceiling holds at 2,121; one
 complete, 9 battles, through map, event, port, reward, promotion and
 recruit, the hashes `d6012bc8` and `064ce09d` (124f's known answer), no
 finding, and in the console only the two warnings §124 named. No smoke.
+The hook read 3,724. Reading: 300,229 at 16:59, on the commit `355ba158`.
+
+### 124.5c — A-26, the word `export` (2026-10-19, session 8fb7e4a9)
+
+`refs --all` over the eight folders again at HEAD: the kickoff's 91
+declarations that only their own file reads, unchanged (`ui` 48, `i18n`
+19, `store` 6, `journal` 6, `failure` 4, `diagnostics` 4, `audio` 2,
+`settings` 2). 124f's word search over the tracked files outside the type
+check (`scratch/124f/untyped-search.mjs`, its known answer found) hits 20
+of the names, every hit a doc or the census, or the English words
+"Progress" (`probe-cli.mjs`'s header) and "Placement" (the editors'
+pages). One of the 91, `SilentReason` (`audio/eventSounds.ts`), is among
+census A-23's kept names, read by the permanent sound gate; the gate reads
+`SILENT_EVENTS` and not the type, so the type stays and only the word
+goes. `scratch/124f/unexport.mjs` checked every declaration line before
+it wrote any: 91 in 43 files.
+
+Proof, as 124f's, by `scratch/1245c/unminified-diff.mjs` (124f's script,
+writing under its own folder): HEAD against itself first, 0 of 32 and 0
+of 34 files differing; then the working tree, unminified, production and
+development: 2 of 32 and 4 of 34 files differ. Each differing file's
+removed and added lines were compared as multisets by
+`scratch/1245c/multiset-diff.mjs` (with a built-in known answer: a moved
+block cancels, an edited line is left), so that a module the bundler
+moved cancels out. What is left: the worktree's `node_modules` region
+paths, the build ID, the chunks' hashed names, and in `index.js`
+(production) and `configHash.js` (development) the same 22 lines, each
+reading a constant's name where it read the constant's value, beside the
+constant's new `var` and the module's comments, which the unminified build
+now keeps around it. 13 of the 19 constants reach the page:
+`ADDRESS_SEPARATOR`, `ARRAY_STEP` and `RECORD_STEP` (`i18n/prose.ts`, 12
+lines), the tooltip's four timings and its slop (5), `CHIP_PULSE_MS`,
+`FADE_MS`, and the loss FX's three (`ORB_FLIGHT_MS +
+ORB_LANDING_GRACE_MS` where the backstop read 500). Each `var` holds the
+value the line read. The minifier strips the comments and region lines,
+so the shipped build differs by those names, as 124f predicted for this
+share. Typecheck clean. No smoke.

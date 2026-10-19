@@ -27,7 +27,7 @@ export function fmtPool(n: number): string {
  * the floor didn't touch (already full, or a floor of 0) reads as the plain
  * carried value so the screen never implies a heal that didn't happen.
  */
-export function sectorClearedPoolLine(poolBefore: number, poolAfter: number): string {
+function sectorClearedPoolLine(poolBefore: number, poolAfter: number): string {
   if (poolAfter > poolBefore) {
     return t('sectorcleared.poolRestored', { before: fmtPool(poolBefore), after: fmtPool(poolAfter) });
   }

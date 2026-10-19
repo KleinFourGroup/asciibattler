@@ -65,7 +65,7 @@ import { openModal, type ModalHandle } from './modal';
 import type { PlaybackSpeed } from './PlaybackSpeed';
 import { TEXT_SCALE_CHOICES, holdTextScale, nearestTextScale } from './textScale';
 
-export interface SettingsOverlayDeps {
+interface SettingsOverlayDeps {
   /** Whether a run is live, which is when the modal offers Quit to menu. */
   runLive(): boolean;
   /** Whether that run is in the slot, for Continue to find after a quit. */
@@ -76,7 +76,7 @@ export interface SettingsOverlayDeps {
   data: SettingsData;
 }
 
-export interface SettingsData {
+interface SettingsData {
   /** The whole store as a backup, as of now; null when it can't be read. */
   backup(): Backup | null;
   /** Why this page can't import: the saved run is another tab's

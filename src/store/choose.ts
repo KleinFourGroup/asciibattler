@@ -9,7 +9,7 @@ import { memoryAdapter, type StorageAdapter } from './adapter';
 import { electronAdapter, isShellStore } from './electron';
 import { readableStorage, webAdapter } from './web';
 
-export interface AdapterChoice {
+interface AdapterChoice {
   readonly adapter: StorageAdapter;
   /** Why nothing can be saved, when the adapter is the memory fallback. */
   readonly unsaved: string | null;

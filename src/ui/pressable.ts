@@ -32,7 +32,7 @@
  * enemy compact cards in battle (where the Space rule bites).
  */
 
-export type PressableActivation = 'now' | 'deferred' | null;
+type PressableActivation = 'now' | 'deferred' | null;
 
 /** The pure key rule (pinned): Enter activates now; Space activates after
  *  the dispatch unless a hotkey claimed it; auto-repeat and every other key
@@ -44,7 +44,7 @@ export function pressableActivation(key: string, repeat: boolean): PressableActi
   return null;
 }
 
-export interface PressableOptions {
+interface PressableOptions {
   /** A TOGGLE's initial `aria-pressed` (the hand-swap and picker cards'
    *  `is-selected`, 100c2). The site that flips the class flips the
    *  attribute beside it — one line, no handle to thread. */

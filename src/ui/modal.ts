@@ -38,7 +38,7 @@
 
 import { t } from '../i18n/ui';
 
-export interface ModalOptions {
+interface ModalOptions {
   readonly variant?: 'panel' | 'viewport';
   /** The header title (panel variant). Absent = a headerless panel. */
   readonly title?: string;

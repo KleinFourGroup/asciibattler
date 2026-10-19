@@ -30,7 +30,7 @@ import type { GameEvents } from '../core/events';
 import { POOL_LABELS } from './chipLabels';
 import { chipPulse } from './chip';
 
-export interface PoolReading {
+interface PoolReading {
   readonly current: number;
   readonly max: number;
 }

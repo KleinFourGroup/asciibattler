@@ -39,7 +39,7 @@ import type { LenientSection } from './store';
  *  entry has not won a run that counted. */
 export type BestWin = Readonly<Record<string, number>>;
 
-export interface Progress {
+interface Progress {
   /** Whether the credits have been shown after a won run: the first won run
    *  goes to the menu by way of them, once (src/scenes/menuRules.ts). */
   creditsSeen: boolean;

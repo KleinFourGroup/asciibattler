@@ -79,8 +79,9 @@ export function inertDerived(maxHp: number): UnitDerived {
 
 /**
  * The value of the archetype's `damageStat` (`config/units.json`), or 0 when it
- * has none (the healer, the shaman, every neutral). It is for display: a damage
- * op adds its own `scaling` stat (`resolveScalars.ts`), which can differ.
+ * has none (the healer, the shaman, every neutral). Nothing the game runs reads
+ * it: a damage op adds its own `scaling` stat (`resolveScalars.ts`), which can
+ * differ, and the card shows that one. `archetypes.test.ts` calls it.
  *
  * It reads `UNIT_DEFS` when called, not at module load (gotcha #114).
  */

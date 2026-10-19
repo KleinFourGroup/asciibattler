@@ -11451,4 +11451,45 @@ it warned on any phase but `map`; the load's log names the gate the run
 came back at (`run loaded at its '<phase>' gate`), where it said "back on
 the map". `toggleGrayscaleAudit` loses `force`, which no caller passed.
 ARCHITECTURE's dev-key line already gives the load as "any gate". Dev
-console lines only, so no player sees it; typecheck clean. No smoke.
+console lines only, so no player sees it; typecheck clean. No smoke. The
+hook read 3,724. Reading: 347,021 at 17:06, on the commit `f1845b93`.
+
+### 124.5e — the ability line (2026-10-19, session 8fb7e4a9)
+
+A display change, signed at §124's kickoff as an exception to the scope
+guard. `abilityDetail.ts` writes a heal as `resolveHealAmount(op, stats)`
+and a damage op, a chain's inner one included, as
+`resolveDamageScalars(op, stats).baseDamage`, the sim's own functions,
+where it wrote `might + stats.magic` and `might + damageStatFor(archetype,
+stats)`. With the archetype no longer read, `noUnusedParameters` takes it
+off `abilityDetailParts`, `abilityDetailPartsForDef` and `UnitCard`'s
+`abilityRow`; `promotionDelta` keeps its own, which lists the abilities.
+Flagged: that signature change is beyond the cut's line, and inside its
+intent.
+
+The pin, in `abilityDetail.test.ts`, holds every unit's card number to
+one worked out from the raw `config/abilities.json` (the op's `might`
+plus the stat its `scaling` names), not from the functions the card now
+calls, at strength 3, ranged 5 and magic 7 so that no difference hides
+behind an equal or a zero stat. Run on the code before the fix, it failed
+naming exactly TODO's three: corrupter's `vial` 9 against 2, ice_mage's
+`ice_storm` 7 against 2, rioter's `molotov` 7 against 2. It passes after.
+
+Step zero for the read script (`scratch/1245e/roster-dial.ts`):
+`roster=corrupter,ice_mage,rioter:5` parses to those three units, and at
+those levels `vial` and `ice_storm` read `2 dmg` where the old formula
+gave 8. A rioter's `ranged` is 0 at every level (base 0, growth 0), so
+`molotov` read 2 before as after: in play only corrupter's and ice_mage's
+cards change. The read script in ROADMAP says so.
+
+A consequence, for the re-skim: nothing that runs reads `damageStatFor`
+now, nor the `damageStat` key that 21 units carry; `archetypes.test.ts`
+calls it. Its doc ("It is for display") and the schema's comment, which
+named a basic strike and the card as readers (the basic strike went at
+122b), are corrected in this commit; the deletion is a row for the user
+at 124.5g, held in TODO.
+
+Proof: typecheck clean; the pin's control above; `src/ui`'s tests,
+`archetypes.test.ts` and `units.test.ts` pass (204). The commit stages
+`src/sim` and `src/config` for the two comments, so the hook runs the
+smoke.

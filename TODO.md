@@ -59,13 +59,16 @@ the screens', for its kickoff (WORKLOG §124, "The close of §124").
   truth table (`scratch/122f/truth.ts` is one). Signed at 122m (WORKLOG
   §122, 122m).
 
-- [ ] **The ability line overstates three units' damage.**
-  `src/ui/abilityDetail.ts:51` and `:65` show a damage op as `might +
-  damageStatFor(archetype)`, but the sim adds the op's own `scaling` stat
-  (`resolveDamageScalars`). Corrupter, ice_mage and rioter carry ops scaled
-  `none` with a `damageStat` of magic or ranged, so their line adds a stat
-  the hit never gets. `scalingStatValue(op.scaling, stats)` is the sim's
-  number. Found at 122o's batch 2 (WORKLOG §122); not checked in the pane.
+- ✅ **The ability line overstates three units' damage.** The card's damage and heal numbers come from the sim's own functions, under a pin over the catalog (WORKLOG §124.5, 124.5e).
+
+- [ ] **`damageStatFor` and the catalog's `damageStat` have no reader
+  that runs.** Since 124.5e the card reads each op's own `scaling`, so
+  `src/sim/stats.ts`'s `damageStatFor` is called only by
+  `archetypes.test.ts`, and the `damageStat` key on 21 units in
+  `config/units.json` only by it. Gotchas #94 and #114 name it, the
+  archetype editor's formatter writes the key, and `units.test.ts`
+  checks it. A deletion row for the user at §124.5's re-skim (124.5g); in
+  sim and config, so the corpus and the fuzz diff are its proof.
 
 - ✅ **The dev load key's console lines still give the map-only rule.** They give `devLoadRun`'s rule, and `toggleGrayscaleAudit` has no `force` (WORKLOG §124.5, 124.5d).
 

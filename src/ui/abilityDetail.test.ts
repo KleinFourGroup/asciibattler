@@ -5,7 +5,9 @@ import { abilityDetailParts, abilityDetailPartsForDef } from './abilityDetail';
 import { ABILITY_DEFS, damageOpOf } from '../config/abilities';
 import { parseAbilityDef } from '../sim/effects/schema';
 import { hitChanceFor, critChanceFor } from '../sim/stats';
-import type { Archetype } from '../sim/Unit';
+import type { Archetype, UnitStats } from '../sim/Unit';
+import { UNIT_DEFS } from '../config/units';
+import abilitiesJson from '../../config/abilities.json';
 
 /**
  * 34b — the §29 archetypes (afflicters / summoner / chain caster) used to render
@@ -17,7 +19,7 @@ import type { Archetype } from '../sim/Unit';
  */
 function partsFor(archetype: Archetype, id: string): string[] {
   const u = rollUnit(archetype, new RNG(1));
-  return abilityDetailParts(id, archetype, u.stats);
+  return abilityDetailParts(id, u.stats);
 }
 
 describe('abilityDetailParts (34b — every §29 op kind renders a non-blank detail)', () => {
@@ -60,7 +62,7 @@ describe('abilityDetailParts (34b — every §29 op kind renders a non-blank det
     const base = rollUnit('mercenary', new RNG(1)).stats;
     const sharp = { ...base, precision: base.precision + 3, luck: base.luck + 3 };
     for (const stats of [base, sharp]) {
-      const text = abilityDetailParts('sword', 'mercenary', stats).join(' · ');
+      const text = abilityDetailParts('sword', stats).join(' · ');
       expect(text).toContain(
         `${Math.round(hitChanceFor(op.accuracy, stats.precision, 0) * 100)}% hit`,
       );
@@ -108,7 +110,7 @@ describe('abilityDetailPartsForDef (§76b — the aura branch, ahead of shipped 
   });
 
   it('a pure aura reads as its radiated status + the AURA radius, never "dash"', () => {
-    const text = abilityDetailPartsForDef(PURE_AURA, 'mercenary', stats).join(' · ');
+    const text = abilityDetailPartsForDef(PURE_AURA, stats).join(' · ');
     expect(text).toContain('aura emboldened');
     expect(text).toContain('reach 3'); // aura.radius, NOT the def's inert rangeCells (0)
     expect(text).not.toContain('dash'); // the §29d mislabel class, closed for auras
@@ -119,14 +121,51 @@ describe('abilityDetailPartsForDef (§76b — the aura branch, ahead of shipped 
       ...ABILITY_DEFS.sword!,
       aura: { radius: 2, statusId: 'emboldened', affects: 'allies' },
     });
-    const text = abilityDetailPartsForDef(radiantSword, 'mercenary', stats).join(' · ');
+    const text = abilityDetailPartsForDef(radiantSword, stats).join(' · ');
     expect(text).toMatch(/\d+ dmg/);
     expect(text).toContain('+aura emboldened');
   });
 
   it('the def-taking core matches the id path on a shipped def (no drift)', () => {
-    expect(abilityDetailPartsForDef(ABILITY_DEFS.sword!, 'mercenary', stats)).toEqual(
-      abilityDetailParts('sword', 'mercenary', stats),
+    expect(abilityDetailPartsForDef(ABILITY_DEFS.sword!, stats)).toEqual(
+      abilityDetailParts('sword', stats),
     );
+  });
+});
+
+describe("the card's damage and heal number is the one the sim uses", () => {
+  // The expectation comes from the raw config, not from the sim's helpers the
+  // card calls: an op's `might` plus the caster stat its `scaling` names. The
+  // card shows a heal first, then a damage op, then a chain's inner damage.
+  type RawOp = { kind: string; might?: number; scaling?: string; ops?: RawOp[] };
+  const RAW = abilitiesJson as unknown as Record<string, { effects: { op: RawOp }[] }>;
+
+  function expectedPart(id: string, stats: UnitStats): string | null {
+    const value = (op: RawOp): number =>
+      op.might! + (op.scaling === 'none' ? 0 : stats[op.scaling as 'strength' | 'ranged' | 'magic']);
+    const ops = RAW[id]!.effects.map((e) => e.op);
+    const heal = ops.find((o) => o.kind === 'heal');
+    if (heal) return `${value(heal)} heal`;
+    const damage =
+      ops.find((o) => o.kind === 'damage') ?? ops.find((o) => o.kind === 'chain')?.ops?.find((o) => o.kind === 'damage');
+    return damage ? `${value(damage)} dmg` : null;
+  }
+
+  it('on every unit, with strength, ranged and magic all different', () => {
+    const wrong: string[] = [];
+    let checked = 0;
+    for (const [archetype, def] of Object.entries(UNIT_DEFS)) {
+      // Distinct, so a wrong stat cannot hide behind an equal or a zero one.
+      const stats: UnitStats = { ...rollUnit(archetype as Archetype, new RNG(1)).stats, strength: 3, ranged: 5, magic: 7 };
+      for (const id of def.abilities) {
+        const expected = expectedPart(id, stats);
+        if (expected === null) continue;
+        checked++;
+        const shown = abilityDetailParts(id, stats).find((p) => / (dmg|heal)$/.test(p));
+        if (shown !== expected) wrong.push(`${archetype} ${id}: shows ${shown}, the sim uses ${expected}`);
+      }
+    }
+    expect(checked).toBeGreaterThan(0);
+    expect(wrong).toEqual([]);
   });
 });

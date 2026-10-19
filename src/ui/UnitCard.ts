@@ -621,7 +621,7 @@ function buildAbilities(archetype: Archetype, stats: UnitStats): HTMLDivElement 
   abilities.appendChild(heading);
 
   for (const id of abilityIdsForArchetype(archetype)) {
-    abilities.appendChild(abilityRow(id, archetype, stats));
+    abilities.appendChild(abilityRow(id, stats));
   }
   return abilities;
 }
@@ -661,7 +661,7 @@ function buildXpBar(data: UnitCardData): HTMLDivElement {
  * Range / cadence / AoE / the I6 profile come from `config/abilities.json`
  * (the `AbilityDef`: `rangeCells`, the damage/heal op, the `aoe` selector).
  */
-function abilityRow(id: string, archetype: Archetype, stats: UnitStats): HTMLDivElement {
+function abilityRow(id: string, stats: UnitStats): HTMLDivElement {
   const def = abilityDef(id);
 
   const row = document.createElement('div');
@@ -678,7 +678,7 @@ function abilityRow(id: string, archetype: Archetype, stats: UnitStats): HTMLDiv
   detail.className = 'unit-card__ability-detail';
   // 34b — the detail wording is the pure `abilityDetailParts` (headless-tested);
   // this row owns only the DOM (the styled AoE tag below + the cadence column).
-  detail.textContent = abilityDetailParts(id, archetype, stats).join(' · ');
+  detail.textContent = abilityDetailParts(id, stats).join(' · ');
   if (def.target.kind === 'aoe') {
     const side = def.target.radius * 2 + 1;
     const tag = document.createElement('span');

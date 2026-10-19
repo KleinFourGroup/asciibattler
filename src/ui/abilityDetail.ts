@@ -12,13 +12,14 @@
  * as a "dash").
  */
 
-import type { Archetype, UnitStats } from '../sim/Unit';
+import type { UnitStats } from '../sim/Unit';
 import type { AbilityDef, EffectOp } from '../sim/effects/schema';
 import { abilityDef } from '../config/abilities';
-import { damageStatFor, hitChanceFor, critChanceFor } from '../sim/stats';
+import { hitChanceFor, critChanceFor } from '../sim/stats';
+import { resolveDamageScalars, resolveHealAmount } from '../sim/effects/resolveScalars';
 
-export function abilityDetailParts(id: string, archetype: Archetype, stats: UnitStats): string[] {
-  return abilityDetailPartsForDef(abilityDef(id), archetype, stats);
+export function abilityDetailParts(id: string, stats: UnitStats): string[] {
+  return abilityDetailPartsForDef(abilityDef(id), stats);
 }
 
 /** The op of `kind` from a def's effects, or undefined. It takes the def
@@ -32,11 +33,7 @@ function opOf<K extends EffectOp['kind']>(
   return entry?.op as Extract<EffectOp, { kind: K }> | undefined;
 }
 
-export function abilityDetailPartsForDef(
-  def: AbilityDef,
-  archetype: Archetype,
-  stats: UnitStats,
-): string[] {
+export function abilityDetailPartsForDef(def: AbilityDef, stats: UnitStats): string[] {
   const parts: string[] = [];
 
   const healOp = opOf(def, 'heal');
@@ -46,11 +43,11 @@ export function abilityDetailPartsForDef(
   const statusOp = opOf(def, 'applyStatus');
 
   if (healOp) {
-    parts.push(`${healOp.might + stats.magic} heal`, `reach ${def.rangeCells}`);
+    parts.push(`${resolveHealAmount(healOp, stats)} heal`, `reach ${def.rangeCells}`);
   } else if (damageOp) {
-    parts.push(`${damageOp.might + damageStatFor(archetype, stats)} dmg`, `reach ${def.rangeCells}`);
+    parts.push(`${resolveDamageScalars(damageOp, stats).baseDamage} dmg`, `reach ${def.rangeCells}`);
     // I6→51f — the per-weapon profile, DERIVED like the damage number is
-    // (base + the unit's stat, the §51 sweep call): hit runs the real
+    // (base + the stat the op scales by, the §51 sweep call): hit runs the real
     // `hitChanceFor` with this unit's precision against a neutral 0-evasion
     // target (the same convention as damage ignoring the target's defense);
     // crit runs the real `critChanceFor` with this unit's luck — that one is
@@ -62,7 +59,7 @@ export function abilityDetailPartsForDef(
     // damage out and surface it alongside the jump count.
     const inner = chainOp.ops.find((o) => o.kind === 'damage');
     if (inner && inner.kind === 'damage') {
-      parts.push(`${inner.might + damageStatFor(archetype, stats)} dmg`);
+      parts.push(`${resolveDamageScalars(inner, stats).baseDamage} dmg`);
       // 51f — the inner strike carries the same per-weapon profile; derive
       // it identically (flag-gated, so an unmissable bolt adds nothing).
       pushHitCrit(parts, inner, stats);

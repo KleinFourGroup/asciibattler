@@ -83,8 +83,8 @@ export function promotionDeltaParts(
 
   for (const id of abilityIdsForArchetype(archetype)) {
     const def = abilityDef(id);
-    const before = abilityDetailParts(id, archetype, oldStats);
-    const after = abilityDetailParts(id, archetype, newStats);
+    const before = abilityDetailParts(id, oldStats);
+    const after = abilityDetailParts(id, newStats);
     const changed: string[] = [];
     for (let i = 0; i < before.length; i++) {
       if (before[i] !== after[i]) changed.push(`${before[i]} → ${after[i]}`);

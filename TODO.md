@@ -55,14 +55,7 @@ the screens', for its kickoff (WORKLOG §124, "The close of §124").
 
 - ✅ **The ability line overstates three units' damage.** The card's damage and heal numbers come from the sim's own functions, under a pin over the catalog (WORKLOG §124.5, 124.5e).
 
-- [ ] **`damageStatFor` and the catalog's `damageStat` have no reader
-  that runs.** Since 124.5e the card reads each op's own `scaling`, so
-  `src/sim/stats.ts`'s `damageStatFor` is called only by
-  `archetypes.test.ts`, and the `damageStat` key on 21 units in
-  `config/units.json` only by it. Gotchas #94 and #114 name it, the
-  archetype editor's formatter writes the key, and `units.test.ts`
-  checks it. A deletion row for the user at §124.5's re-skim (124.5g); in
-  sim and config, so the corpus and the fuzz diff are its proof.
+- ✅ **`damageStatFor` and the catalog's `damageStat` have no reader that runs.** Both deleted, with the editor's line and the tests that called them; gotchas #94 and #114 corrected (WORKLOG §124.5, 124.5g-post3).
 
 - ✅ **The dev load key's console lines still give the map-only rule.** They give `devLoadRun`'s rule, and `toggleGrayscaleAudit` has no `force` (WORKLOG §124.5, 124.5d).
 

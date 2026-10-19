@@ -254,8 +254,9 @@ medium. The cut, signed 2026-10-19 (WORKLOG §124.5, "The kickoff"):
   `src` −3, the rule at one site.
 - ☑ **124.5g-post2 — R-2, `poolGauge`'s `mx`** (`none`). The unminified
   build: only those lines differ.
-- ☐ **124.5g-post3 — R-3, `damageStatFor` and the catalog's
-  `damageStat`** (`none`).
+- ☑ **124.5g-post3 — R-3, `damageStatFor` and the catalog's
+  `damageStat`** (`none`). The corpus 0 of 30, the fuzz diff PASS, the
+  config dump the 21 keys alone.
 - ☐ **124.5h — the comment pass** (`batch`, per batch), as 124j ran.
 - ☐ **124.5i — the close** (`stop`).
 

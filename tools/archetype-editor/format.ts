@@ -96,11 +96,9 @@ export function formatArchetypesJson(config: Record<string, UnitDef>): string {
     // the absent default back to `common`.
     if (a.rarity !== undefined && a.rarity !== 'common')
       parts.push(`    "rarity": ${JSON.stringify(a.rarity)},`);
-    // §38c — the branch-killer capability fields, emitted only when present (a
-    // striker's `damageStat`; absent ⇒ non-striker/0). Optional with no schema
-    // default, so an absent field re-parses to absent — the file diff stays
-    // exactly the archetypes that declare one.
-    if (a.damageStat !== undefined) parts.push(`    "damageStat": ${JSON.stringify(a.damageStat)},`);
+    // §38c — the branch-killer capability fields, emitted only when present.
+    // Optional with no schema default, so an absent field re-parses to absent
+    // — the file diff stays exactly the archetypes that declare one.
     if (a.movementBehavior !== undefined)
       parts.push(`    "movementBehavior": ${JSON.stringify(a.movementBehavior)},`);
     if (a.retargetOnLosLoss !== undefined)

@@ -49,8 +49,7 @@ const OrphanPolicySchema = z.enum(ORPHAN_POLICIES);
 /**
  * The caster stat added to an op's flat `might` for its base output; `none`
  * adds nothing (the status DoTs and HoTs, and the abilities that deal flat
- * damage). The op's `scaling` decides, not the archetype's `damageStat`
- * (`config/units.json`), and the two can differ.
+ * damage).
  */
 const DamageScalingSchema = z.enum(['strength', 'ranged', 'magic', 'none']);
 const HealScalingSchema = z.enum(['magic', 'none']);

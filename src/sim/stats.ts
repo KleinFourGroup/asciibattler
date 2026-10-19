@@ -21,8 +21,7 @@
 
 import { secondsToTicks } from '../config';
 import { STATS } from '../config/stats';
-import { UNIT_DEFS } from '../config/units';
-import type { UnitArchetype, UnitDerived, UnitStats } from './Unit';
+import type { UnitDerived, UnitStats } from './Unit';
 
 export function deriveStats(stats: UnitStats, attackRange: number): UnitDerived {
   return {
@@ -75,19 +74,6 @@ export function inertDerived(maxHp: number): UnitDerived {
     moveCooldownTicks: 0,
     attackRange: 0,
   };
-}
-
-/**
- * The value of the archetype's `damageStat` (`config/units.json`), or 0 when it
- * has none (the healer, the shaman, every neutral). Nothing the game runs reads
- * it: a damage op adds its own `scaling` stat (`resolveScalars.ts`), which can
- * differ, and the card shows that one. `archetypes.test.ts` calls it.
- *
- * It reads `UNIT_DEFS` when called, not at module load (gotcha #114).
- */
-export function damageStatFor(archetype: UnitArchetype, stats: UnitStats): number {
-  const key = UNIT_DEFS[archetype]?.damageStat;
-  return key ? stats[key] : 0;
 }
 
 /**

@@ -14,7 +14,6 @@ import {
   DRAFTABLE_BY_TIER,
 } from './archetypes';
 import { RARITY_TIERS } from '../config/units';
-import { damageStatFor } from './stats';
 import { abilityDef } from '../config/abilities';
 import { knownTargetingIds } from './targetingStrategies';
 import { RNG } from '../core/RNG';
@@ -126,12 +125,10 @@ describe('archetypes / I5 melee family', () => {
   } as const;
   const MELEE_FAMILY = Object.keys(MELEE_WEAPON) as (keyof typeof MELEE_WEAPON)[];
 
-  it('every melee subclass carries its I6 weapon at range 1 and strikes on strength', () => {
+  it('every melee subclass carries its I6 weapon at range 1', () => {
     for (const a of MELEE_FAMILY) {
       expect(abilityIdsForArchetype(a)).toContain(MELEE_WEAPON[a]);
       expect(rangeForArchetype(a)).toBe(1);
-      const stats = rollUnit(a, new RNG(0)).stats;
-      expect(damageStatFor(a, stats)).toBe(stats.strength);
     }
   });
 
@@ -139,38 +136,6 @@ describe('archetypes / I5 melee family', () => {
     const glyphs = MELEE_FAMILY.map(glyphForArchetype);
     expect(new Set(glyphs).size).toBe(MELEE_FAMILY.length);
     expect(glyphs).toEqual(['M', 'A', 'R', 'B']);
-  });
-});
-
-describe('archetypes / §38c damageStat (catalog-driven, byte-identical)', () => {
-  // Balance-proof: `damageStatFor` now resolves the scaling stat from the
-  // `UnitDef.damageStat` catalog field instead of an 18-case switch. Derive the
-  // expectation from the SAME catalog the sim reads — so this pins the wiring
-  // (function ⇄ config), never a hand-copied number.
-  it('resolves each archetype to its configured damageStat (absent ⇒ 0)', () => {
-    for (const a of ALL_ARCHETYPES) {
-      const stats = rollUnit(a, new RNG(0)).stats;
-      const key = ARCHETYPE_CONFIG[a].damageStat;
-      expect(damageStatFor(a, stats)).toBe(key ? stats[key] : 0);
-    }
-  });
-
-  // The two non-strikers carry no `damageStat` (heal / summon only) → 0, exactly
-  // the old switch's explicit `return 0` cases. Documents intent, not arithmetic.
-  it('non-strikers (healer, shaman) resolve to 0', () => {
-    for (const a of ['healer', 'shaman'] as const) {
-      expect(ARCHETYPE_CONFIG[a].damageStat).toBeUndefined();
-      expect(damageStatFor(a, rollUnit(a, new RNG(0)).stats)).toBe(0);
-    }
-  });
-
-  it('neutrals never strike (→ 0 via the combatant-catalog optional chain)', () => {
-    // §38d — a neutral (wall / half-cover) is absent from the COMBATANT catalog,
-    // so `damageStatFor` resolves to 0 for any stat block (the removed
-    // `=== 'environment'` sentinel guard's behavior).
-    const stats = rollUnit('mercenary', new RNG(0)).stats;
-    expect(damageStatFor('wall', stats)).toBe(0);
-    expect(damageStatFor('half_cover', stats)).toBe(0);
   });
 });
 

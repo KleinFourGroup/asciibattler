@@ -33,6 +33,7 @@ const NEUTRAL_ENTRIES = Object.entries(NEUTRAL_DEFS);
  * retargetOnLosLoss); the spatial/flight block (footprint / layer /
  * statusSusceptibility) stays inert until §39/§38d/flight. These
  * tests pin that — a default drift on the still-inert fields fails loudly.
+ * `damageStat` has since been deleted, with `damageStatFor`, its one reader.
  *
  * Mechanic tests — explicit literals (not derived from config), since the point
  * is to assert the schema's fixed defaults, not balance numbers.
@@ -54,24 +55,18 @@ describe('§38b — UnitDef catalog scaffold', () => {
     }
   });
 
-  // §38c wired all three branch-killers field-by-field: 38c-1 `damageStat`
-  // (every striker; absent for the non-strikers healer/shaman), 38c-2
-  // `movementBehavior` (`support` for the healer alone), 38c-3
-  // `retargetOnLosLoss` (`true` for `ranged` alone). The field↔behavior contracts
-  // are balance-proofed in archetypes.test / registry.test / Targeting.test —
-  // here we only pin the wiring cadence (a value is present, of the right shape).
-  it('wires all three branch-killers (38c-1/2/3), each of the right shape', () => {
+  // §38c wired the branch-killers field-by-field: 38c-2 `movementBehavior`
+  // (`support` for the healer alone), 38c-3 `retargetOnLosLoss` (`true` for
+  // `ranged` alone). The field↔behavior contracts are balance-proofed in
+  // registry.test / Targeting.test — here we only pin the wiring cadence (a
+  // value is present, of the right shape).
+  it('wires the two branch-killers (38c-2/3), each of the right shape', () => {
     const combatants = COMBATANT_ENTRIES.map(([, d]) => d);
-    const withDamage = combatants.filter((d) => d.damageStat !== undefined);
     const withMove = combatants.filter((d) => d.movementBehavior !== undefined);
     const withRetarget = combatants.filter((d) => d.retargetOnLosLoss !== undefined);
-    expect(withDamage.length).toBeGreaterThan(0); // 38c-1 populated the strikers
     expect(withMove.length).toBeGreaterThan(0); // 38c-2 populated the healer
     expect(withRetarget.length).toBeGreaterThan(0); // 38c-3 populated ranged
     for (const [id, def] of COMBATANT_ENTRIES) {
-      if (def.damageStat !== undefined) {
-        expect(['strength', 'ranged', 'magic'], `${id}.damageStat`).toContain(def.damageStat);
-      }
       if (def.movementBehavior !== undefined) {
         expect(['standard', 'support'], `${id}.movementBehavior`).toContain(def.movementBehavior);
       }
@@ -90,7 +85,6 @@ describe('§38b — UnitDef catalog scaffold', () => {
       footprint: 3,
       layer: 'air' as const,
       statusSusceptibility: ['burn', 'frozen'],
-      damageStat: 'strength' as const,
       movementBehavior: 'support' as const,
       retargetOnLosLoss: true,
     };
@@ -98,7 +92,6 @@ describe('§38b — UnitDef catalog scaffold', () => {
     expect(parsed.footprint).toBe(3);
     expect(parsed.layer).toBe('air');
     expect(parsed.statusSusceptibility).toEqual(['burn', 'frozen']);
-    expect(parsed.damageStat).toBe('strength');
     expect(parsed.movementBehavior).toBe('support');
     expect(parsed.retargetOnLosLoss).toBe(true);
   });

@@ -4,7 +4,6 @@
     "glyph": "M",
     "abilities": ["sword"],
     "targeting": "nearest",
-    "damageStat": "strength",
     "baseStats": {
       "constitution": 22,
       "strength": 6,
@@ -38,7 +37,6 @@
     "abilities": ["whip"],
     "targeting": "nearest",
     "rarity": "uncommon",
-    "damageStat": "strength",
     "baseStats": {
       "constitution": 20,
       "strength": 6,
@@ -72,7 +70,6 @@
     "abilities": ["katana"],
     "targeting": "nearest",
     "rarity": "uncommon",
-    "damageStat": "strength",
     "baseStats": {
       "constitution": 22,
       "strength": 7,
@@ -105,7 +102,6 @@
     "glyph": "B",
     "abilities": ["club"],
     "targeting": "nearest",
-    "damageStat": "strength",
     "baseStats": {
       "constitution": 22,
       "strength": 6,
@@ -138,7 +134,6 @@
     "glyph": "a",
     "abilities": ["bow"],
     "targeting": "nearest",
-    "damageStat": "ranged",
     "retargetOnLosLoss": true,
     "baseStats": {
       "constitution": 18,
@@ -172,7 +167,6 @@
     "glyph": "r",
     "abilities": ["gambit_strike","dash"],
     "targeting": "nearest",
-    "damageStat": "strength",
     "baseStats": {
       "constitution": 16,
       "strength": 5,
@@ -240,7 +234,6 @@
     "abilities": ["magic_bolt"],
     "targeting": "nearest",
     "rarity": "uncommon",
-    "damageStat": "magic",
     "baseStats": {
       "constitution": 20,
       "strength": 0,
@@ -274,7 +267,6 @@
     "abilities": ["catapult_shot"],
     "targeting": "nearest",
     "rarity": "rare",
-    "damageStat": "ranged",
     "baseStats": {
       "constitution": 20,
       "strength": 0,
@@ -308,7 +300,6 @@
     "abilities": ["cleaver"],
     "targeting": "nearest",
     "rarity": "rare",
-    "damageStat": "strength",
     "baseStats": {
       "constitution": 24,
       "strength": 8,
@@ -342,7 +333,6 @@
     "abilities": ["vial"],
     "targeting": "nearest",
     "rarity": "rare",
-    "damageStat": "magic",
     "baseStats": {
       "constitution": 21,
       "strength": 0,
@@ -376,7 +366,6 @@
     "abilities": ["ice_storm"],
     "targeting": "nearest",
     "draftable": false,
-    "damageStat": "ranged",
     "baseStats": {
       "constitution": 18,
       "strength": 0,
@@ -410,7 +399,6 @@
     "abilities": ["hex"],
     "targeting": "nearest",
     "draftable": false,
-    "damageStat": "magic",
     "baseStats": {
       "constitution": 18,
       "strength": 0,
@@ -444,7 +432,6 @@
     "abilities": ["light_ray"],
     "targeting": "nearest",
     "draftable": false,
-    "damageStat": "ranged",
     "baseStats": {
       "constitution": 18,
       "strength": 0,
@@ -478,7 +465,6 @@
     "abilities": ["wail"],
     "targeting": "nearest",
     "draftable": false,
-    "damageStat": "magic",
     "baseStats": {
       "constitution": 18,
       "strength": 0,
@@ -512,7 +498,6 @@
     "abilities": ["chain_lightning"],
     "targeting": "nearest",
     "rarity": "legendary",
-    "damageStat": "magic",
     "baseStats": {
       "constitution": 18,
       "strength": 0,
@@ -579,7 +564,6 @@
     "abilities": ["ghoul_claw"],
     "targeting": "nearest",
     "draftable": false,
-    "damageStat": "strength",
     "baseStats": {
       "constitution": 11,
       "strength": 3,
@@ -654,7 +638,6 @@
     "targeting": "nearest",
     "draftable": false,
     "rarity": "legendary",
-    "damageStat": "strength",
     "baseStats": {
       "constitution": 20,
       "strength": 5,
@@ -687,7 +670,6 @@
     "glyph": "f",
     "abilities": ["molotov"],
     "targeting": "nearest",
-    "damageStat": "ranged",
     "baseStats": {
       "constitution": 15,
       "strength": 0,
@@ -721,7 +703,6 @@
     "abilities": ["pistol"],
     "targeting": "nearest",
     "rarity": "uncommon",
-    "damageStat": "ranged",
     "baseStats": {
       "constitution": 16,
       "strength": 0,
@@ -755,7 +736,6 @@
     "abilities": ["halberd"],
     "targeting": "nearest",
     "rarity": "rare",
-    "damageStat": "strength",
     "baseStats": {
       "constitution": 28,
       "strength": 6,
@@ -789,7 +769,6 @@
     "abilities": ["cane","inspire"],
     "targeting": "nearest",
     "rarity": "rare",
-    "damageStat": "strength",
     "baseStats": {
       "constitution": 20,
       "strength": 3,

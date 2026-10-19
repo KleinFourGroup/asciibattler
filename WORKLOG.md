@@ -11644,7 +11644,8 @@ gains a pointer here.
   `damageStatFor` and its doc in `src/sim/stats.ts` (12 lines), with its
   imports of `UNIT_DEFS` and `UnitArchetype`, which nothing else there
   reads, so `stats.ts` stops importing `config/units` (a module leaves the
-  cycle gotcha #114 describes; the suite's load is the check); the
+  cycle gotcha #114 describes; the suite's load is the check; wrong, as
+  §123 had broken that cycle: corrected at 124.5g-post3); the
   schema's field and its two comment lines in `src/config/units.ts`; the
   key on 21 units in `config/units.json`; the archetype editor's line that
   writes it (`tools/archetype-editor/format.ts:103`), with the comment
@@ -11739,3 +11740,47 @@ lines reading `mx` and gain the same seven lines reading `max`, with the
 object's `max: mx` as `max`; everything else in the six files is region
 paths, the build ID and the chunks' hashed names. The instrument's HEAD
 against itself was run at 124.5c and not again here. No smoke.
+
+### 124.5g-post3 — R-3, `damageStatFor` and the catalog's `damageStat` (2026-10-19, session ff99ffb0)
+
+Deleted: `damageStatFor` and its doc (`src/sim/stats.ts`), with the file's
+imports of `UNIT_DEFS` and `UnitArchetype`, which nothing else there read;
+the schema's `damageStat` field and its two comment lines
+(`src/config/units.ts`); the key on 21 units (`config/units.json`); the
+archetype editor's line that wrote it, its comment kept for the other two
+fields (`tools/archetype-editor/format.ts`); the sentence in
+`src/sim/effects/schema.ts` that set an op's `scaling` against it. Tests:
+`archetypes.test.ts`'s `§38c damageStat` block (3 tests) and the melee
+test's assertion and its "strikes on strength" title; in `units.test.ts`
+the key's lines in two tests, and the comment that named `archetypes.test`
+as its proof. GOTCHAS #94 now says the archetype tag is the unit's key
+into the catalog and names three of its readers, without the line on
+declaring a `damageStat`; #114 lists the two branch-killers left. TODO's
+row is one ✅ line. `scratch/1245g-post3/patch.mjs` checked every anchor
+in the nine files (`--check`) before it wrote any.
+
+A correction to 124.5g's row: dropping `stats.ts`'s import of
+`config/units` takes no module out of a cycle, since §123 broke the cycle
+gotcha #114 describes ("2026-10-16, the cycle broken"). The suite's load
+is still the check.
+
+Proof:
+
+- **Step zero.** `reach-record npm-test corpus fuzz-diff` at `08f40af2`
+  (`output/1245g-post3/reach-before/`), then `reach --at=src/sim/stats.ts:80-91`:
+  `damageStatFor` called 0 times by the corpus, 0 by the fuzz diff and 31
+  by the suite. The known answer on the same reading, `deriveStats` in the
+  same file: 9,560, 11,862 and 28,404.
+- **The config.** `config-dump` before and after, `json-diff`: 84
+  differences, each a `damageStat` removed, 21 units in each of
+  `ALL_UNIT_DEFS`, `UNIT_DEFS`, `CONFIG_SOURCES` and `UNITS_PROSE`, and
+  nothing else (a filter for any other difference counts 0).
+- **The corpus.** `npm run corpus`: 0 of 30 journals differ (it replays past the config stamp, `ignoreConfig`).
+- **The fuzz diff** against `08f40af2`: PASS on both shapes, the scored spread and the ARM: `summary.csv` and `rosters.csv` of each and the ARM's `decisions.csv` byte-identical.
+- **`reach-diff`** of the suite, before and after: `reach-diff --from=HEAD` through the 10 changed files, nothing lost (`output/1245g-post3/reach-after/`).
+- Typecheck clean; `comment-codes --record`: the ceiling 2,119 → 2,116, two
+  files under their old counts, `archetypes.test.ts` 7 → 6 among them. The hook runs the suite
+  and the smoke (`src/sim`, `src/config` and `config` staged); predicted,
+  3,722 tests (the block's three gone), read in the next entry.
+
+Lines, by `git diff --numstat`: `src` and `tools` outside the tests 5 in, 25 out; the tests 8 in, 50 out; `config/units.json` 21 out.

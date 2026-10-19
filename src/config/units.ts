@@ -145,13 +145,10 @@ export const CombatantUnitDefSchema = z.object({
   // lists). A blocklist, so a new status applies to everyone and an immunity
   // is an opt-out per status, such as the healer's to panic.
   statusImmunities: z.array(z.string()).optional(),
-  // `damageStat`: the stat `damageStatFor` (`stats.ts`) reads, which nothing
-  // the game runs calls (absent, the unit does not strike).
   // `movementBehavior`: the movement selector (absent, `standard`; `support`
   // is the healer's; `behaviors/registry.ts`). `retargetOnLosLoss`: drop a
   // target unseen too long, as ranged units do (absent, false;
   // `Targeting.ts`).
-  damageStat: z.enum(['strength', 'ranged', 'magic']).optional(),
   movementBehavior: z.enum(['standard', 'support']).optional(),
   retargetOnLosLoss: z.boolean().optional(),
 });

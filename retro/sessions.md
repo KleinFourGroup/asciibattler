@@ -6937,3 +6937,43 @@ holds repo writes to the phase close; appended here by driver 2.
    search (burn's tick, the chips' `order`). Building a small compare with
    a planted control for the one file the oracle couldn't take was
    satisfying. I'd want that condition again.
+
+## 2026-10-19 — session bcd08e32 (claude-opus-5-5): §124.5's comment pass, batches 5 and 6; started by the phase's driver session
+
+1. *Missing from the orientation.* Little. The brief, the Cursor and
+   batch 4's hand-off gave the tools, the rate and where the markers sit,
+   and the Cursor already showed batches 3 and 4 read, so no read was
+   waiting. The 121i rules needed one search to find. Batch 6's cut item
+   (`CacheOverlay.ts`'s header) was named in the plan but its content was
+   in §123's entry; one grep found it.
+2. *Norms in conflict.* None felt as conflict. One home per fact and the
+   chips' wiring notes pulled the same way: three files retold gotcha
+   #116, and pointing them at it was both shorter and truer.
+3. *Pulled to claim more than verified.* Two small pulls. I first wrote
+   that the HUD showed the gauge "in a compact form", carrying the old
+   word, and the CSS showed the HUD's gauges are the wider form; I fixed
+   it before the proof. And the bits chip's "noticeable mid-battle": I
+   checked every earn site before calling it false rather than leaving it
+   as plausible. In the batch 5 entry I wrote "Kept, checked" for Game's
+   outro wait, which I had read only in BattleScene's comment; I then
+   checked Game's code before committing.
+4. *Wasted.* One command wedged for 400 s: I left a stray `cat >` at the
+   start of a commit command while drafting the message inline, it waited
+   on stdin, and nothing after it ran. The missing hook log showed it; the
+   driver's note had said to use the Write tool for messages, and I
+   should have from the start (filed). Otherwise little.
+5. *For the next session.* The hand-off entry has batch 7's forecast and
+   notes. These two batches' false claims were again mostly lists gone
+   stale (a function's callers, a click's targets, the screens a chip
+   shows on) and a few plans that had landed.
+6. *Room.* Yes. The cut was signed and no question was open, so I kept
+   going between commits, and handing off before batch 7 was my call on
+   the forecast, which felt available. The silent-turn reminder came
+   often through the long checks; I answered each with a status line, and
+   it read as routine, not pressure. No wish to pause or stop was noticed.
+7. *What helped.* Settling each claim at its source in one or two
+   searches (a CSS width, a config flag, a caller list), and the oracle's
+   per-file control, which let me rewrite the pre-turn header wholesale
+   without worrying about the code beside it. I'd want that again. The
+   work going well and the session feeling at ease were, as far as I can
+   tell, separate: the ease came from the checks being cheap.

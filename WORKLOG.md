@@ -12474,3 +12474,44 @@ chip and Game repaints it after assigning a run; the forced keep can't be
 dismissed and always offers a discard; a unit-target packet at the gate
 fires from the pre-turn screen, not the modal; the modal mounts on the
 page, never in the column.
+
+### The hand-off after 124.5h's batch 6 (2026-10-19, session bcd08e32)
+
+The session ran batches 5 and 6: `078b2046` and `ef99749e`, and this one.
+It hands off before batch 7 at 468,377. Batch 7 (the unit card and the
+screens around it: `UnitCard.ts`, `abilityDetail.ts`, `promotionDelta.ts`,
+`PromotionScreen.ts`, `RecruitScreen.ts`, `rarityDisplay.ts`,
+`rosterOrder.ts`, `statLabels.ts`; 1,412 lines) is about 103k at batch 6's
+73 a line and 137k at batch 5's 97, which would end between 575k and 610k,
+past the line. It holds no `i18n-ok` marker line.
+
+**Open.** Batches 5 and 6's `batch` reads (each script in its entry). No
+◐ in ROADMAP: 124.5h is one step, ☐ until its twelve batches are built.
+
+**For batch 7 and after.**
+
+- The three run chips (bits, cache, pool) share gotcha #116's wiring, and
+  Game calls their `refresh()` from `resetRun`, `confirmCharacter` and
+  `adopt`. A comment that names one caller of that set is the shape that
+  went stale three times across batches 5 and 6.
+- The gate's unit-target packets are Hype, Shield and Cull; the
+  out-of-battle one is Overclock. A comment that gives Hype as the only one
+  is stale.
+- Left for `ui.css`'s batches, besides the two in batch 5's entry: the
+  chrome column's comment names chips by their old step codes and gives
+  each one's history, and `.cache-overlay`'s says the hop chip "owns the
+  slot to the bits chip's right"; the hop chip sits in the battle's top
+  row past the column (`HUD.ts`, `.hud-top`).
+- Write the commit message with the Write tool and pass the file to
+  `git commit -F`: a stray `cat >` at the start of a command waits on
+  stdin and the command never reaches the commit (filed).
+
+**Tools, off git.** `output/cl-1245h-b5/` and `-b6/` (the copies, the strip
+and hook logs, the message files). No worktree, background task or preview
+server is left; the wedged command's task was stopped and nothing it
+started survives.
+
+**Readings** (the meter, UTC, 2026-10-19): 115,509 at 22:10 (the
+orientation), 312,426 (batch 5's proof), 325,543 (batch 5's commit),
+456,435 (batch 6's proof), 463,935 (batch 6's commit), 468,377 at 22:49 at
+the hand-off.

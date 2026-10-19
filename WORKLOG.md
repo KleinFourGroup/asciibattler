@@ -11211,8 +11211,10 @@ parking it in a log.
 test. The Claude Code section's rule for when the app wakes a driver is
 from the app's instructions as they read on 2026-10-19, not from a test.
 "Tell Matthew at once" lands in the driver's session, where the user may
-not be looking during a stretch; whether the sidebar marks it, or the
-app's push-notification tool would reach the user, is unchecked.
+not be looking during a stretch. The user answered after this entry was
+committed: through the trial, a Windows notification came whenever a
+running session sent them something, so a raise reaches them. It is in
+the doc's Claude Code section as their report, for §124.5 to confirm.
 
 **Context readings** (the meter, UTC, 2026-10-19): 165,244 at 12:45, after
 the reading; 204,829 at 14:28 (`e27b563e`); 238,184 at 14:34

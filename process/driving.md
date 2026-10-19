@@ -232,6 +232,10 @@ has the detail.
   your sessions with their states, which is how to tell that none is
   working; `list_events` pages one's transcript, past the note's 400
   characters.
+- **Reaching Matthew.** Through the trial, a Windows notification came
+  whenever a running session sent Matthew something (his report,
+  2026-10-19), so what you raise in your session reaches him
+  mid-stretch.
 - **Don't `detach_session`** a session you proposed: it stops waking you,
   and it can't be undone from your side.
 - **A fresh driver is a top-level session Matthew starts.** A driver

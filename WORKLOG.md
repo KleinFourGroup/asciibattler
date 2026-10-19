@@ -11516,7 +11516,8 @@ three trials.
 3. No parameter: the call takes the world and the id, as `World`'s does.
 4. The rule written out in full (neutral, hp above 0, destructible or a
    camp member) by search: two sites before (`Targeting.ts:417-420`,
-   `ObjectiveController.ts:186-191`), one after.
+   `ObjectiveController.ts:186-191`), one after. (Three before and two
+   after: `BattleRenderer.ts:718-719` writes it negated; found at 124.5g.)
    `effects/targeting.ts:82` holds a different rule (any non-neutral
    passes). The comment that restated it is gone; the step-code ceiling
    2,121 → 2,119 with it.
@@ -11570,3 +11571,116 @@ hand-off.
 **124.5e, read** (the user, 2026-10-19, after the hand-off commit):
 "Confirming that read, Claude! 😁 All three read 2 now!" Ticked in
 ROADMAP; no ◐ is open.
+
+### 124.5g — the re-skim (2026-10-19, session ff99ffb0)
+
+The session was started by the phase's driver session and works with the
+user as usual. Nothing was built.
+
+Read: the phase's diff of `src`, `shell`, `tools` and `scripts` without
+the tests, `38d40e5a..c59750fa` (54 files, 125 lines added, 198
+deleted). 124.5a, b, d, e and f's part was read whole; 124.5c's is the
+word `export` alone (proven then). Then a word search (the Grep tool) of
+every tracked file outside the records, `archive/`, `scratch/` and
+`output/` for every name the phase deleted or stopped calling:
+`proseFamily`, `rarityStars`, `orderRoster`, `setMuted`, `isMuted`,
+`.isOpen`, `toggleGrayscaleAudit`, `damageStatFor` and
+`isDestructibleNeutral`. It found `setMuted` only in the two plans whose
+dated notes say the mute went, and `damageStatFor` as the hand-off named
+it. Then the census's special-case sites in the eight folders
+(`scratch/120f/special.json`, filtered), and, for the rule 124.5f moved,
+every `campId` null test in `src`, `tools` and `tests` outside the test
+files.
+
+What the deletions left is read: `modal.ts`'s `open` flag (the close
+reads it), `CardListModal.handle` and the two overlays' `modal` fields
+(each `open()` tests its own), `HUD.world` (`destroy` nulls it),
+`DEFAULT_ROSTER_ORDER` (the default of `orderRosterWithIndices`) and
+`PROSE_FAMILIES` (the two i18n scripts and a test). One local is not:
+R-2 below.
+
+**Found: 124.5f's count missed a site.** `BattleRenderer.destructibleBillboards()`
+(`src/render/BattleRenderer.ts:718-719`) writes the four conditions
+negated, as two `continue` lines: a missing unit, a non-neutral or one at
+hp 0 or below is skipped, then one that is neither destructible nor a
+camp member. That is `validNeutralObjectiveTarget`'s rule, and the list it
+builds is the second try of the click 124.5f changed
+(`ObjectiveController.setFromClient`: the enemy billboards, then these,
+then the cell fallback, which 124.5f converted). 124.5f's item 4 reads
+"two sites before, one after"; it was three before and two after. 122h's
+"a third copy" counted the same way, and B-01's list (§122, 122f) holds
+this line as a scenery site (`BattleRenderer.ts:743` then), not as the
+neutral-target rule. So 124.5f's verdict stands on D2's fourth clause (a
+special case's sites counted, 3 → 2), and not on its own bar's item 4 as
+written ("at one place, not two") until this site goes. 124.5f's entry
+gains a pointer here.
+
+**The rows for the user's sign:**
+
+- **R-1 · the renderer's copy of the neutral-target rule.**
+  `destructibleBillboards`' two `continue` lines become one,
+  `if (!unit || validNeutralObjectiveTarget(this.world, unitId) === null) continue;`
+  (`unit` is still read for its footprint and glyph), with an import from
+  `sim/Targeting`; the doc's restatement of the rule shortens to the
+  function's name. Code lines hold (−1, +1 for the import) and comment
+  lines fall. The bar is 124.5f's: its truth table
+  (`scratch/1245f/truth.ts`) gains the renderer's filter copied from HEAD,
+  equal on every row, with the two plants rejected; no parameter; the
+  sites by search 2 → 1. The drive does not click the board, so the table
+  is the proof, as at 124.5f. Lean: build it as 124.5g-post, read `none`,
+  as 124.5f's finish, since its bar's item 4 is met only then, and not as
+  a new trial. Counted as a trial instead, it is the screens' second of
+  three, though its code is the board's.
+- **R-2 · `poolGauge`'s `mx`.** Since 124.5b took `set`, its only
+  writer, `const mx = max;` (`poolGauge.ts:94`) is a second name for the
+  parameter, read 9 times. Deleting it: the reads take `max`, one line
+  goes. Proof: typecheck and the unminified build compare
+  (`scratch/1245c/unminified-diff.mjs` with its multiset reading): only
+  those lines differ, and each reads `max` where it read `mx`. Lean:
+  delete, read `none`, in the same step as R-1 or alone.
+- **R-3 · `damageStatFor` and the catalog's `damageStat`** (TODO "§124 and
+  §124.5", made by 124.5e). Nothing the game runs calls
+  `damageStatFor`; `archetypes.test.ts` does. A deletion takes:
+  `damageStatFor` and its doc in `src/sim/stats.ts` (12 lines), with its
+  imports of `UNIT_DEFS` and `UnitArchetype`, which nothing else there
+  reads, so `stats.ts` stops importing `config/units` (a module leaves the
+  cycle gotcha #114 describes; the suite's load is the check); the
+  schema's field and its two comment lines in `src/config/units.ts`; the
+  key on 21 units in `config/units.json`; the archetype editor's line that
+  writes it (`tools/archetype-editor/format.ts:103`), with the comment
+  above it reworded for the other two fields; the comment in
+  `src/sim/effects/schema.ts:52` that names it; in the tests,
+  `archetypes.test.ts`'s `§38c damageStat` block (3 tests) and one
+  assertion of the melee test, and the `damageStat` lines of two tests in
+  `units.test.ts`; in GOTCHAS, #94's sentence on what reads the archetype
+  tag and its "a new archetype declares its `damageStat`", and #114's
+  "the three 38c branch-killers". No other live doc names it. The proofs,
+  as §121 ran a config deletion: first `npm run oracle -- reach
+  --at=src/sim/stats.ts:88-91`, which should name the suite alone;
+  `comment-codes --record` before the first suite run; `config-dump` with
+  `json-diff`, the 21 keys and nothing else; the corpus, which replays past
+  the config stamp (`ignoreConfig`), 0 of 30 differing; the fuzz diff against the ref, both shapes; `reach-diff`
+  through the changed tests; the hook with the smoke. Lean: delete, read
+  `none`.
+
+**Seen and not over the bar:**
+
+- `audibleDeath` (`audio/eventSounds.ts:53-54`) and `dev/devEntry.ts:109`
+  restate `isInertNeutral`'s rule. B-01 converted both with eleven other
+  sites at 122f and was reverted on the lines clause; Round 9's B-02 holds
+  them.
+- The enemy click filter is written at two sites
+  (`ObjectiveController.ts:179`, `BattleRenderer.ts:684`): two
+  conditions, and no sim function holds them, so one would be a new
+  abstraction.
+- `HUD.addUnit`'s neutral test (`HUD.ts:805`) keeps camp members
+  card-less, signed so at §75h, as its comment says.
+- `isCombatTargetable` (`sim/effects/targeting.ts:82`) holds a different
+  rule: any non-neutral passes.
+
+The trials' budget: one of the screens' three used (124.5f). The re-skim
+proposes R-1 as 124.5f's finish; the user decides whether it counts as a
+trial.
+
+Readings by the tool's clock (UTC): 97,605 at 17:37 after the
+orientation, 192,046 at 17:45 before this entry.

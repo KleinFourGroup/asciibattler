@@ -13,13 +13,13 @@ driver log ([archive/driver-trial/log-124.md](archive/driver-trial/log-124.md)).
   hand-off `009fd1fa`. Session 2 (ff99ffb0): 124.5g, the re-skim, its
   three posts (R-1 to R-3) and 124.5h's plan and batches 1 and 2 of 12,
   hand-off `93711c80` (WORKLOG §124.5, "The hand-off after 124.5h's batch
-  2"); read 18:55 UTC. Next: session 3, from batch 3; its card is
-  proposed after this commit. Open for Matthew: batches 1 and 2's `batch`
-  reads.
+  2"); read 18:55 UTC. Batches 1 and 2 read by Matthew in session 2
+  after the hand-off (`cf3aac67`), so no read is open. Next: session 3,
+  from batch 3; its card was proposed again after this commit.
 - **Driver:** `local_3addf3c2-a6af-469e-a40b-932696f5bc61` (scratchpad
   id 9b60fb27), the first under `process/driving.md`.
-- **Friction read through:** line 289 of `retro/papercuts.jsonl`
-  (ff99ffb0, 2026-10-19 18:46 UTC).
+- **Friction read through:** line 290 of `retro/papercuts.jsonl` (the
+  driver's own, P17, 2026-10-19 20:47 UTC; line 289 was ff99ffb0's).
 - **Notes in the latest brief** (§124.5 session 3):
   - the comment tools: `comment-codes --record` before each batch's suite
     run (P1); `comment-length` on copies under `output/`, one folder a
@@ -54,6 +54,7 @@ Numbered from §123. "Quiet" means no instance in the last phase.
 | P13 | `comment-strip` exits 1 on a reworded `TOOL_READ` marker | 124j b5, 124j-post2 (`fontSubset.ts`'s `i18n-ok-file`) | open; no guard (Matthew, 2026-10-19), the note stays |
 | P14 | an Edit anchor across a line break misses, and a commit in the same message runs anyway | §124 (a first instance), 124.5f (`c5e0a244` without its entry) | open; quiet in session 2 under the note; CLAUDE.md's line is Matthew's call |
 | P15 | a rule's sites counted by its written form miss a copy written another way | 122h ("a third copy"), 124.5f's bar item 4 (both found at 124.5g: the renderer's negated copy) | open; found, flagged and named by the session; a note from brief 3 |
+| P17 | the driver: Matthew reads an open item in the old session after its hand-off, and the waiting card's brief goes stale | after sessions 1 (124.5e) and 2 (batches 1 and 2); two cards withdrawn and proposed again | open; a brief now words its open reads "unless the Cursor shows them read" |
 | P16 | a procedure, or its data, findable only in old WORKLOG entries or an unnamed scratch folder | §124.5 session 1 (reach, the drive), session 2 (the re-skim's run, the profile in `scratch/120f/`) | open; a note held the first; a home in `process/` is Matthew's call |
 
 **Closed:** P7, the next-step box against CLAUDE.md "What the user sees"

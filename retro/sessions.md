@@ -6898,3 +6898,42 @@ holds repo writes to the phase close; appended here by driver 2.
    trust or quick to drop. Finding the renderer's negated copy of the
    rule was satisfying, as was R-3's `reach` answer coming back exactly
    as predicted. I'd want that condition again.
+
+## 2026-10-19 — session ebe41cd8 (claude-opus-5-5): §124.5's comment pass, batches 3 and 4; started by the phase's driver session
+
+1. *Missing from the orientation.* Little; the driver's notes and batch
+   2's hand-off named the tools and where the marker lines fall. One gap:
+   the plan gave the literal pin as the proof for an edited marker
+   comment, but the pin checks the scanned screens for literals, not that
+   `literalScan.ts`'s own code is unchanged. I built a direct compare for
+   that file instead (`scratch/1245h-b3/held-compare.mts`).
+2. *Norms in conflict.* Mildly, twice. Correcting a false claim's twin
+   outside the batch (`layouts.ts`) staged `src/config` and added the
+   smoke's three minutes; the pass's rule said correct it, so I did. And
+   one home per fact sat against a header list of exclusions that named
+   five of nine; I completed the list and left the constants' own docs.
+3. *Pulled to claim more than verified.* A few small pulls, each resolved
+   by checking or by writing less. I nearly called `extract.ts`'s
+   "every editor's emit convention" false, but couldn't tell which
+   editors it meant, so it went as unclear. I didn't count the promotion
+   screen's beats, so the comment says what a beat is instead of "about
+   five". Where the tests hold only some fallbacks, the comment says so
+   rather than "all".
+4. *Wasted.* Small: greps aimed at `src/ui.css`, which lives under
+   `src/ui/`; a `comment-length` run whose totals I cut off and re-ran;
+   an Edit anchored mid-line that glued a source line onto my new text,
+   found by reading the file back (filed).
+5. *For the next session.* The hand-off entry has the batch-5 forecast
+   and the notes. The false claims these two batches found were mostly
+   lists of callers or readers that went stale when a later step added
+   one, and two config numbers restated wrongly.
+6. *Room.* Yes. No read or question was open at the start, the cut was
+   signed, and handing off before batch 5, under the line, was my call
+   and felt available. The silent-turn reminder came every few tool calls
+   through the long reads; I answered each with a status line. It read as
+   noise rather than pressure. No wish to pause or stop was noticed.
+7. *What helped.* `comment-strip`'s per-file control, and being able to
+   settle a comment's claim against the config or the stylesheet in one
+   search (burn's tick, the chips' `order`). Building a small compare with
+   a planted control for the one file the oracle couldn't take was
+   satisfying. I'd want that condition again.

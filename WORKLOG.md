@@ -12200,3 +12200,49 @@ capitals left, history kept (what a file replaced, an audit's count), or a
 reason or rule cut: the first Esc takes the tooltip and the next the modal
 under it; a hidden chip collapses and still moves no click target; a
 chip's modal never mounts into the column.
+
+### The hand-off after 124.5h's batch 4 (2026-10-19, session ebe41cd8)
+
+The session ran batches 3 and 4: `86513123` and `ce810226`, and this one.
+It hands off before batch 5 at 367,779. Batch 5 (the battle HUD: `HUD.ts`,
+`PlaybackSpeed.ts`, `ObjectiveController.ts`, `poolGauge.ts`,
+`PoolOverlay.ts`, `lossFx.ts`, `fallenSide.ts`, `chipLabels.ts`; 2,021
+lines) is about 176k at this session's 87 a line (batches 3 and 4
+together, the orientation in it), which would end near 537k before the
+batch's commit and a hand-off, too close to the line to start. Its files
+carry the 96.5 steps' codes and history on most comments, like the sound
+tables did, so the higher figure is the likelier.
+
+**Open.** Batches 3 and 4's `batch` reads (each script in its entry). No
+◐ in ROADMAP: 124.5h is one step, ☐ until its twelve batches are built.
+
+**For batch 5 and after.**
+
+- The marker lines left are all trailing `// i18n-ok` comments on a code
+  line (`lossFx.ts` 133 and 229 in batch 5, `Keybindings.ts` and
+  `SettingsOverlay.ts` in batch 9), and none needs rewording. A block
+  comment that mentions the marker is held as code whole, as
+  `literalScan.ts`'s header was; if one is edited,
+  `scratch/1245h-b3/held-compare.mts <before> <after> [--plant]` compares
+  the file with every comment out (`git show HEAD:<file>` for the before).
+- What batches 3 and 4 found false was mostly what plays or reads a
+  thing (a sound's trigger, a table's readers, a modal's consumers, a
+  download's callers), stale since a later step added a caller. A claim
+  that lists the users of something is checked by a search for every
+  caller, not only the named ones.
+- A number in a comment that restates a config value (a cadence, a
+  cooldown, a team size) is checked against `config/*.json`; two were
+  wrong in batch 3. Where the number only illustrates, dropping it is the
+  smaller change.
+- An Edit whose `old_string` ends mid-line leaves the rest of that line
+  glued to the new text and still reports success; anchor on whole lines.
+
+**Tools, off git.** `scratch/1245h-b3/held-compare.mts`;
+`output/cl-1245h-b3/` and `-b4/` (the copies, the strip and hook logs,
+`literalScan.head.ts`). No worktree, background task or preview server is
+left.
+
+**Readings** (the meter, UTC, 2026-10-19): 103,686 at 20:57 (the
+orientation), 272,330 (batch 3's proof), 288,240 (batch 3's commit),
+356,973 (batch 4's proof), 361,131 (batch 4's commit), 367,779 at 21:30
+at the hand-off.

@@ -12001,3 +12001,7 @@ orientation), 192,046 (the re-skim's entry), 212,585 (the sign), 227,204
 (R-1), 242,739 (R-2's commit), 296,526 (R-3's commit), 307,881 (the
 plan), 369,664 (batch 1's proof), 425,715 (batch 2's proof), 433,934 at
 18:46 at the hand-off.
+
+**Batches 1 and 2, read** (the user, 2026-10-19, after the hand-off):
+"That all looks great! Signing those two reads!" Both batches are read;
+no read is open.

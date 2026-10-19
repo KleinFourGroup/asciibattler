@@ -9,32 +9,32 @@ driver log ([archive/driver-trial/log-124.md](archive/driver-trial/log-124.md)).
 ## Cursor
 
 - **Phase:** **§124.5, the screens** (ROADMAP §124.5), driven from
-  2026-10-19. §124 closed 2026-10-18 with two drivers (e90c7b67,
-  b390d607). A card waits for session 1, the kickoff (`task_4f1c86d4`,
-  proposed 15:53 UTC); no session is working.
+  2026-10-19. Session 1 (8fb7e4a9) ran the kickoff and 124.5a to 124.5f
+  and handed off at `009fd1fa` (WORKLOG §124.5, "The hand-off after
+  124.5f"); read 17:25 UTC. Next: session 2, from 124.5g, the re-skim (a
+  stop); its card is proposed after this commit. Open for Matthew: ◐
+  124.5e's `batch` read, and the `damageStat` row the re-skim puts.
 - **Driver:** `local_3addf3c2-a6af-469e-a40b-932696f5bc61` (scratchpad
   id 9b60fb27), the first under `process/driving.md`.
-- **Friction read through:** line 285 of `retro/papercuts.jsonl` (b390d607
-  at §124's close, 2026-10-18 23:27 UTC); none filed since, at 15:50 UTC
-  on 2026-10-19.
-- **Notes in the latest brief** (§124.5 session 1, the kickoff): the
-  Cursor's test count one short (3724; the hook read 3725 at `954784ac`),
-  and all five of §124's drivers' recommendation:
+- **Friction read through:** line 287 of `retro/papercuts.jsonl`
+  (8fb7e4a9, 2026-10-19 17:18 UTC).
+- **Notes in the latest brief** (§124.5 session 2):
   - for any deletion step, `comment-codes --record` before the first
     suite run, and a search of the docs for what the deletion removes
     (P1, P6);
-  - `comment-length` on copies under `output/`, one folder a call (P11);
+  - the comment tools: `comment-length` on copies under `output/`, one
+    folder a call (P11); `comment-strip` exits 1 on a reworded `i18n-ok`
+    marker by design, and the hook's green is the proof (P13); a
+    step-code-shaped file name in a comment reads as a code to `--record`;
   - entries by the Write or Edit tool, commit messages by `git commit -F`
     (P2);
-  - a comment holding the `i18n-ok` marker, reworded, makes
-    `comment-strip` exit 1 by design; the literal pin in `npm test` is the
-    marker's gate, so the hook's green is the proof. §124.5's files hold
-    13 marker lines in six files (P13);
-  - a file name shaped like a step code, in a comment, reads as a code to
-    `comment-codes --record`.
-- **Matthew's open calls:** a guard for P13 (driver 2's lean: none, since
-  the literal pin already fails a marker that stops working); a guard for
-  P6 (never revisited, quiet).
+  - no commit in the same message as the Edits it commits (P14);
+  - where the procedures are: `reach-diff` in WORKLOG §121 "121b-pre",
+    the seed-7 drive in "The hand-off after 124f", session 1's tools in
+    "The hand-off after 124.5f"; `refs --members` reads interfaces and
+    type literals only.
+- **Matthew's open calls:** P14's fix, a note now (CLAUDE.md "Editing"
+  says the hook catches anything that slips, which a doc Edit belies).
 
 ## Patterns
 
@@ -42,26 +42,31 @@ Numbered from §123. "Quiet" means no instance in the last phase.
 
 | # | Pattern | Instances | Status |
 |---|---|---|---|
-| P1 | the step-code ceiling fails the first suite run after a deletion | 122b, 122g, 123b, 123d | quiet in §124, the note held; keep the note for deletions |
+| P1 | the step-code ceiling fails the first suite run after a deletion | 122b, 122g, 123b, 123d | quiet in §124 and 124.5a–f, the note held; keep the note for deletions |
 | P2 | shell: a quoted heredoc refused, a backslash lost | 122n, 122o, 123g, 123m b2, 124f, 124j b5 | quiet after the Write-tool note; the round close's shell audit (HANDOFF Cursor) |
-| P3 | a number or claim written ahead of its read | §123 sessions 1–7; 124d, 124e and 124h (typed readings), 124h's numstat, 124i, 124j b4, b5 (47 as "48, full"), b6 (an empty grep read as an absence) | open; TODO §127's readings guard; until then `readings-check.mjs` (tool facts) |
+| P3 | a number or claim written ahead of its read | §123 sessions 1–7; 124d, 124e and 124h (typed readings), 124h's numstat, 124i, 124j b4, b5 (47 as "48, full"), b6 (an empty grep read as an absence); 124.5's kickoff (the read script's `molotov`, caught at 124.5e's step zero) | open; TODO §127's readings guard; until then `readings-check.mjs` (tool facts) |
 | P4 | the reach tools' arguments (`npm-test` against `suite`; files, not folders) | §123 sessions 1–3 | quiet in §124 |
 | P5 | working copies holding CRLF | 120a, §122, 123's load fix | quiet in §124 |
-| P6 | a change leaves a doc naming what it removed | 123e, 123's L-1 patch, the load fix | quiet in §124, the note held; guard open (cursor) |
+| P6 | a change leaves a doc naming what it removed | 123e, 123's L-1 patch, the load fix | quiet in §124 and 124.5a–f; no guard (Matthew, 2026-10-19), the note stays |
 | P9 | a false claim's twin found a batch later | §122 b4, 123m b1 and 4a, 124j b1–b5 and b7 | open; search for the twin by its shortest token, docs included |
 | P10 | a ROADMAP phase section at its 85-line cap | §123 sessions 6, 7 | quiet in §124 |
 | P11 | `comment-length` takes folders under the repo only | §122, 123n, §124 sessions 2 and 6 | open; the fix is in TODO §127; keep the note |
-| P13 | `comment-strip` exits 1 on a reworded `TOOL_READ` marker | 124j b5, 124j-post2 (`fontSubset.ts`'s `i18n-ok-file`) | open; guard open (cursor) |
+| P13 | `comment-strip` exits 1 on a reworded `TOOL_READ` marker | 124j b5, 124j-post2 (`fontSubset.ts`'s `i18n-ok-file`) | open; no guard (Matthew, 2026-10-19), the note stays |
+| P14 | an Edit anchor across a line break misses, and a commit in the same message runs anyway | §124 (a first instance), 124.5f (`c5e0a244` without its entry) | open; flagged and named a repeat; a note from brief 2 |
 
 **Closed:** P7, the next-step box against CLAUDE.md "What the user sees"
 (§123–§124; closed by CLAUDE.md's bullet, `34304126`). P8, the comment
 pass's cost a line swinging with reach (§122–§124; the Cursor carries the
 range). P12, a `cd` despite the note (§124, five sessions and a driver;
-harmless; a hook declined and the note dropped at Matthew's word).
+harmless; a hook declined and the note dropped at Matthew's word; once
+more in §124.5 session 1, harmless).
 
 **First instances**, watch for a second: a `node -e` given a Git Bash path
-(it needs `C:/`); an Edit anchor across a line break; a doc's rule wider
-than Matthew's intent (the itch address, fixed in `2d6369d9`).
+(it needs `C:/`); a doc's rule wider than Matthew's intent (the itch
+address, fixed in `2d6369d9`); `refs --members` reading interfaces only,
+so class members took a word search (124.5b); a probe written as a Vitest
+file outside the suite's include, and procedures found only in old
+WORKLOG entries (both in §124.5 session 1's report).
 
 ## Notes ledger
 
@@ -70,18 +75,18 @@ or a pattern with two or more earlier instances stops after it.
 
 | Note | Briefs | Credited |
 |---|---|---|
-| `--record` before the suite | §124 1, 2, 7; §124.5 1 | yes |
-| search the docs for what a deletion removes | §124 1, 2, 7; §124.5 1 | yes |
-| `comment-length`'s form | §124 1, 3–7; §124.5 1 | yes; session 2, whose brief lacked it, lost a call |
+| `--record` before the suite | §124 1, 2, 7; §124.5 1, 2 | yes; P1 quiet through 124.5a–c's deletions |
+| search the docs for what a deletion removes | §124 1, 2, 7; §124.5 1, 2 | yes; 124.5a and b searched, `plans/` and ARCHITECTURE corrected |
+| `comment-length`'s form | §124 1, 3–7; §124.5 1, 2 | yes; the kickoff ran it a folder a call, `fonts.css` as a copy |
 | read a claim's other homes first | §124 2 | yes |
 | check a claim at the code it names | §124 3–7 | yes; now in the Cursor's comment-pass line |
 | a twin searched by its shortest token | §124 4 | yes |
-| entries by the Write tool, messages by `-F` | §124 5–7; §124.5 1 | yes; kept though AGENTS says it, since AGENTS said it from `f0e3f150` (10-11) through P2's slips at 124f and 124j b5 |
-| the `i18n-ok` marker and `comment-strip` | §124.5 1 | not yet |
-| a step-code-shaped file name | §124.5 1 | not yet |
-| the Cursor's test count one short | §124.5 1 | drop once the Cursor reads 3725 or more |
-| the next-step box | §124 1, 2 | partly; now CLAUDE.md's bullet |
-| no `cd` | §124 1–7 | no; dropped (P12) |
+| entries by the Write tool, messages by `-F` | §124 5–7; §124.5 1, 2 | yes; kept though AGENTS says it (Matthew signed, 2026-10-19), since AGENTS said it from `f0e3f150` through P2's slips |
+| the `i18n-ok` marker and `comment-strip` | §124.5 1, 2 | not yet; the kickoff re-counted the 13 lines |
+| a step-code-shaped file name | §124.5 1, 2 | not yet |
+| the Cursor's test count one short | §124.5 1 | dropped; the Cursor reads 3725 at `c5e0a244` |
+| no commit beside its Edits | §124.5 2 | not yet |
+| where the procedures are | §124.5 2 | not yet |
 
 ## Tool facts for this repo
 

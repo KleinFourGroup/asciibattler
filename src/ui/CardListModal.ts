@@ -71,10 +71,6 @@ export class CardListModal {
     private readonly audio: AudioPlayer,
   ) {}
 
-  get isOpen(): boolean {
-    return this.handle !== null;
-  }
-
   /** Open the modal listing `units`. `title` is the heading prefix ("Your
    *  Roster" / "Draw Pile" / "Discard Pile"); the count is appended. */
   open(title: string, units: readonly UnitTemplate[], opts?: CardListModalOptions): void {

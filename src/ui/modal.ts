@@ -58,7 +58,6 @@ export interface ModalHandle {
   /** Where the consumer's content goes: the panel, or the overlay itself
    *  for the viewport variant. */
   readonly content: HTMLDivElement;
-  readonly isOpen: boolean;
   setTitle(text: string): void;
   /** Gate Esc + backdrop + ✕ together (the ✕ hides while false). */
   setDismissable(on: boolean): void;
@@ -175,9 +174,6 @@ export function openModal(mount: HTMLElement, opts: ModalOptions): ModalHandle {
   return {
     overlay,
     content,
-    get isOpen() {
-      return open;
-    },
     setTitle(text) {
       if (titleEl !== null) titleEl.textContent = text;
     },

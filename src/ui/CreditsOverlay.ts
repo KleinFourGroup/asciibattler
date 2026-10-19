@@ -39,10 +39,6 @@ export class CreditsOverlay {
     private readonly audio: AudioPlayer,
   ) {}
 
-  get isOpen(): boolean {
-    return this.modal !== null;
-  }
-
   /** Open the panel (idempotent). Focus returns to whatever had it, the
    *  menu's row or the menu itself, when it closes (the shell's rule). */
   open(): void {

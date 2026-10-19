@@ -234,9 +234,9 @@ medium. The cut, signed 2026-10-19 (WORKLOG §124.5, "The kickoff"):
 - ☑ **124.5a — A-22's `proseFamily` and A-25's two** (`none`).
   `rarityStars` and `orderRoster` out, their tests onto the kept pair;
   `reach-diff`: nothing lost.
-- ☐ **124.5b — A-28's share, and two members** (`none`). The mute whole,
+- ☑ **124.5b — A-28's share, and two members** (`none`). The mute whole,
   the three `isOpen`, `HUD.hide()`, `ModalHandle.isOpen`,
-  `PoolGaugeHandle.set`.
+  `PoolGaugeHandle.set`; the seed-7 drive's hashes unchanged.
 - ☐ **124.5c — A-26, the word `export`** (`none`). 91 by the kickoff's
   `refs`; the build's bytes move, by 124f's unminified compare.
 - ☐ **124.5d — the dev load key's lines and `force`** (`none`).

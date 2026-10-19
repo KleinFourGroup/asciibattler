@@ -180,10 +180,6 @@ export class SettingsOverlay {
     this.chip.classList.toggle('is-hidden', !available);
   }
 
-  get isOpen(): boolean {
-    return this.modal !== null;
-  }
-
   /** Open the modal (idempotent). Focus returns to whatever had it, the chip
    *  or the menu's row, when the modal closes (the shell's rule). */
   open(): void {

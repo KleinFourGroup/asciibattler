@@ -593,18 +593,6 @@ export class HUD {
     fadeIn(this.enemyCardPane);
   }
 
-  hide(): void {
-    // Just drop is-visible; the elements stay in the DOM and fade back in on
-    // the next battle.
-    this.hopLabel.classList.remove('is-visible');
-    this.banner.classList.remove('is-visible');
-    this.speedPane.classList.remove('is-visible');
-    this.objectivePane.classList.remove('is-visible');
-    this.playerCardPane.classList.remove('is-visible');
-    this.enemyCardPane.classList.remove('is-visible');
-    this.world = null;
-  }
-
   /**
    * Permanent teardown — BattleScene calls this when the battle ends.
    * Unsubscribes from the bus, then fades the root out and removes it so the

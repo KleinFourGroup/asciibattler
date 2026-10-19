@@ -22,8 +22,6 @@ export type PoolSide = 'player' | 'enemy';
 
 export interface PoolGaugeHandle {
   readonly el: HTMLDivElement;
-  /** Repaint the BOOKED pool (keeps the pending loss). */
-  set(current: number, max: number): void;
   /** The un-booked loss to ghost (uncapped; clamped at the pool here). */
   setPending(loss: number): void;
   /** Fold the ghost into the fill: the pool becomes `current − pending`. */
@@ -93,7 +91,7 @@ export function createPoolGauge(
   const pulse = chipPulse(gauge);
 
   let cur = current;
-  let mx = max;
+  const mx = max;
   let pend = 0;
   let ceil = 0;
 
@@ -122,11 +120,6 @@ export function createPoolGauge(
 
   return {
     el: gauge,
-    set(next: number, nextMax: number): void {
-      cur = next;
-      mx = nextMax;
-      paint();
-    },
     setPending(loss: number): void {
       pend = loss;
       paint();

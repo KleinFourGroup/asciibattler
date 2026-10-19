@@ -11381,4 +11381,26 @@ kept functions. A search of every tracked file outside the records
 Proof: typecheck clean; `reach-record npm-test` before (on `950f88d1`)
 and after, then `reach-diff --from=HEAD` through the 7 changed files:
 nothing lost; `build-hash HEAD`: the same bytes, 32 files. The step-code
-ceiling 2,122 → 2,121 (`orderRoster`'s doc named R1). No smoke.
+ceiling 2,122 → 2,121 (`orderRoster`'s doc named R1). No smoke. The hook
+read 3,724 tests, one fewer. Reading: 275,423 at 16:54, on the commit
+`5c8e0803`.
+
+### 124.5b — A-28's share, and two members (2026-10-19, session 8fb7e4a9)
+
+Deleted: the mute whole (`AudioPlayer`'s `muted` field, `play`'s guard
+on it, `setMuted()`, `isMuted`), the `isOpen` getters of `CardListModal`,
+`CreditsOverlay` and `SettingsOverlay`, `HUD.hide()`, and the two members
+signed at the kickoff: `ModalHandle.isOpen` with its getter, and
+`PoolGaugeHandle.set` with its body. With `set` gone the gauge's `mx` is
+never written again, so it is a `const`. `plans/music.md` and
+`plans/sound-registry.md` say in their dated notes that the mute went and
+a volume of zero is the mute. Step zero: a search for `muted` over the
+tracked files outside the records finds only this class and other
+things' mutes (the recorder's page, the editors' styles); none of the
+names has a reader.
+
+Proof: typecheck clean; the step-code ceiling holds at 2,121; one
+`--build` (`output/build-1245b`) and the seed-7 drive with `hops=4`:
+complete, 9 battles, through map, event, port, reward, promotion and
+recruit, the hashes `d6012bc8` and `064ce09d` (124f's known answer), no
+finding, and in the console only the two warnings §124 named. No smoke.

@@ -22,7 +22,8 @@ the playback substrate they require.
   _(Since §116b, 2026-10-04: the split exists. Three levels are stored in
   the settings, master, SFX and music; a sound plays at master × SFX × its
   own level through `AudioPlayer.setVolume(master, sfx)`, and the music
-  level waits for something to play.)_
+  level waits for something to play. The mute was deleted in Round 8.5,
+  §124.5: a volume of zero is the mute.)_
 - **Autoplay unlock is an assumption**: playback is blocked until
   the first user gesture, and the current design leans on "the first
   trigger is a map-node click — itself a gesture." True for SFX;

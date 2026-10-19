@@ -222,7 +222,6 @@ export function soundVolume(master: number, sfx: number, own: number, gain = 1):
 export class AudioPlayer {
   private masterVolume = DEFAULT_MASTER_VOLUME;
   private sfxVolume = 1;
-  private muted = false;
   // The recorder reaches `pools` and wraps `play` from outside
   // (shell/electron/probes/record-page.js) to route every element into its
   // recording; AudioPlayer.test.ts pins that shape. A sound played any other
@@ -255,7 +254,6 @@ export class AudioPlayer {
    * never leaks into the next unscaled one on the same pool node.
    */
   play(key: SoundKey, scale?: { readonly gain?: number; readonly rate?: number }): void {
-    if (this.muted) return;
     const pool = this.pools[key];
     const cursor = this.cursors[key];
     const audio = pool[cursor]!;
@@ -282,13 +280,5 @@ export class AudioPlayer {
         audio.volume = target;
       }
     }
-  }
-
-  setMuted(muted: boolean): void {
-    this.muted = muted;
-  }
-
-  get isMuted(): boolean {
-    return this.muted;
   }
 }

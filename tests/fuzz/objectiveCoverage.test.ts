@@ -2,8 +2,8 @@
  * O5 — the objective COVERAGE driver. Asserts the debug-only churn bot's job:
  * it emits EVERY typed-objective mode on BOTH teams (variety), it's
  * deterministic per seed (the fuzz contract), and a churned battle always
- * TERMINATES — including under each switchable focus-tile resolution and through
- * the full run harness. NEVER asserts a win rate: a churn bot is a near-certain
+ * TERMINATES, through the full run harness. NEVER asserts a win rate: a churn
+ * bot is a near-certain
  * loss by design, which is exactly why it's kept out of the measurement path.
  */
 
@@ -20,7 +20,6 @@ import {
   COVERAGE_MAX_TICKS,
   COVERAGE_LIFETIME_MAX_TICKS,
 } from './objectiveCoverage';
-import { runArena } from './arena';
 import { runOne } from './harness';
 import { makeStrategy } from './strategies/registry';
 import { objectiveFromArgs, coverageFromArgs } from './commands/args';
@@ -97,33 +96,24 @@ describe('CoverageObjectiveDriver — determinism', () => {
   });
 });
 
-describe('coverage arena run — termination', () => {
-  it('terminates with a valid outcome each seed (no paralysis)', () => {
+describe('coverage battles — termination', () => {
+  it('every battle of a run ends with an outcome inside the coverage cap (seeds 1 to 3)', () => {
     for (const seed of [1, 2, 3]) {
-      const r = runArena(seed, { coverage: true });
-      expect(['player', 'enemy', 'draw']).toContain(r.winner);
-      expect(r.ticks).toBeGreaterThan(0);
-      expect(r.ticks).toBeLessThanOrEqual(COVERAGE_MAX_TICKS);
+      const r = runOne(seed, makeStrategy('pure-random')!, {
+        coverageObjectives: true,
+        runConfig: { hopCount: 2 },
+      });
+      expect(r.battles.length).toBeGreaterThan(0);
+      for (const b of r.battles) {
+        expect(['player', 'enemy', 'draw']).toContain(b.winner);
+        expect(b.ticks).toBeGreaterThan(0);
+        expect(b.ticks).toBeLessThanOrEqual(COVERAGE_MAX_TICKS);
+      }
     }
-  });
-
-  it('is deterministic for the same seed', () => {
-    expect(runArena(7, { coverage: true })).toEqual(runArena(7, { coverage: true }));
   });
 
   it('the coverage cap is generous (longer than one objective lifetime)', () => {
     expect(COVERAGE_MAX_TICKS).toBeGreaterThan(COVERAGE_LIFETIME_MAX_TICKS);
-  });
-});
-
-describe('coverage terminates under tile focus', () => {
-  it('ends every arena on seeds 1 and 2', () => {
-    for (const seed of [1, 2]) {
-      // Bounded cap keeps the smoke suite quick; termination holds at any cap.
-      const r = runArena(seed, { coverage: true, maxTicks: 4000 });
-      expect(['player', 'enemy', 'draw']).toContain(r.winner);
-      expect(r.ticks).toBeGreaterThan(0);
-    }
   });
 });
 

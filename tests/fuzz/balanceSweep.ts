@@ -246,7 +246,7 @@ export interface BalanceSweepConfig {
   readonly forcedEncounterId?: string | undefined;
   /**
    * J4 — hold one objective proclivity FIXED across every run at every grid
-   * point (the arena's tuned strategy, `random`, or none). Lets a difficulty
+   * point (a saved proclivity, `random`, or none). Lets a difficulty
    * sweep measure the band with objectives active. Undefined / none = no
    * objectives (byte-identical to the pre-J4 sweep).
    */

@@ -282,7 +282,7 @@ its six calls; the audit, the calls and the trials' bars are in WORKLOG
   with `grantEpsilon`'s field and override, which only the flag set.
 - ☑ **125c — A-20's `--flip-telemetry`** (`none`). The shadow tier, its
   sidecar, aggregate and merge entry; the parity test keeps two files.
-- ☐ **125d — A-20's `--arena`** (`none`). Its three files and flag; the
+- ☑ **125d — A-20's `--arena`** (`none`). Its three files and flag; the
   coverage bot's test on the harness's coverage run; `objectiveMenu`,
   `MenuEntry` and `serializeProclivity` with it (call 1).
 - ☐ **125e — the arena's wave builder** (`none`). `buildEnemyTeam` and its

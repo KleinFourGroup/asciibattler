@@ -27,12 +27,11 @@ const OFF = {
 } as const;
 
 describe('the 85g3 arg matrix (mode-by-mode, the 70a discipline relaxed)', () => {
-  it('parseArgs admits --arbitrate with --search; sweep/arena still bail', () => {
+  it('parseArgs admits --arbitrate with --search; the sweep still bails', () => {
     expect(() => parseArgs(['--search', '--arbitrate'])).not.toThrow();
     expect(() => parseArgs(['--search', '--arbitrate', '--prior-lambda=0.5'])).not.toThrow();
     expect(() => parseArgs(['--search', '--arbitrate', '--arbitrate-tier=bare'])).not.toThrow();
     expect(() => parseArgs(['--balance-sweep', '--arbitrate'])).toThrow(/run \+ search modes/);
-    expect(() => parseArgs(['--arena', '--arbitrate'])).toThrow(/run \+ search modes/);
   });
 
   it('the run-mode instruments never ride a search', () => {

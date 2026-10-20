@@ -61,10 +61,9 @@ describe('searcherFromArgs (59e — the one shared resolver)', () => {
     }
   });
 
-  it('parseArgs admits --searcher with --search and still bails for sweep/arena/k-telemetry', () => {
+  it('parseArgs admits --searcher with --search and still bails for sweep/k-telemetry', () => {
     expect(() => parseArgs(['--search', '--searcher', '--audition'])).not.toThrow();
     expect(() => parseArgs(['--balance-sweep', '--searcher'])).toThrow(/run \+ search modes/);
-    expect(() => parseArgs(['--arena', '--searcher'])).toThrow(/run \+ search modes/);
     expect(() => parseArgs(['--search', '--searcher', '--k-telemetry'])).toThrow(
       /run-mode instrument/,
     );

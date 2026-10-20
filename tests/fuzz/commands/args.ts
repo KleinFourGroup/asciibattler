@@ -106,10 +106,9 @@ export interface CliArgs {
   outFile?: string;
   // H7c — re-render an existing balance-sweep CSV as a readable report.
   report?: string;
-  // J4 — arena mode (`--arena`): a single forced World battle (no Run wrapper)
-  // for tuning objective strategies. `--objective` names ONE proclivity to
-  // inspect; absent, the arena enumerates the menu and writes best-objective.json.
-  arena: boolean;
+  // J4 — `--objective` names ONE proclivity for the player team's objective
+  // bot (`objectiveStrategy.ts`); `--objective=coverage` selects the coverage
+  // driver instead.
   objective?: string;
   // K3c3 — the redraw policy driven through the run / search / sweep modes
   // (`--redraw=<none|random:k|level:k|file.json>`; default none = gates off,
@@ -129,7 +128,7 @@ export interface CliArgs {
   character?: string;
   // §55 pre-gate — drive the §54 traffic-script bot (`trafficScripts: true`,
   // the standard registry) in every battle. RUN MODE ONLY for now (the
-  // fixed-vector probe); --search/--sweep/--arena bail loudly rather than
+  // fixed-vector probe); --search/--sweep bail loudly rather than
   // silently measuring the old bot. Mutually exclusive with --objective.
   scripts: boolean;
   // 57a — the optional `--scripts=<spec>` subset (leave-one-out / only-arm
@@ -138,7 +137,7 @@ export interface CliArgs {
   scriptsSpec?: string;
   // §57f — the portfolio rollout searcher arm (`--searcher[=<spec>]`; the
   // spec selects a nominator subset, same grammar as --scripts). RUN +
-  // SEARCH modes (59e — sweep/arena still bail); mutually exclusive with
+  // SEARCH modes (59e — the sweep still bails); mutually exclusive with
   // --objective AND --scripts (one bot arm at a time — the frozen-anchor
   // contract).
   searcher: boolean;
@@ -243,7 +242,6 @@ export function parseArgs(argv: readonly string[]): CliArgs {
     balanceSweep: false,
     dryRun: false,
     evalShard: false,
-    arena: false,
     scripts: false,
     searcher: false,
     audition: false,
@@ -378,9 +376,6 @@ export function parseArgs(argv: readonly string[]): CliArgs {
         // Empty = default to the sweep's own output dir (resolved in runReportCli).
         args.report = v ?? '';
         break;
-      case '--arena':
-        args.arena = true;
-        break;
       case '--objective':
         if (v !== undefined) args.objective = v;
         break;
@@ -464,15 +459,15 @@ export function parseArgs(argv: readonly string[]): CliArgs {
   }
   // 68b — --grant is run-mode-only (the --scripts discipline below: silent
   // ignoring would label a batch as a WITH arm while measuring the control).
-  if (args.grant !== undefined && (args.search || args.balanceSweep || args.arena)) {
-    throw new Error('--grant is not supported in --search/--balance-sweep/--arena (run mode only)');
+  if (args.grant !== undefined && (args.search || args.balanceSweep)) {
+    throw new Error('--grant is not supported in --search/--balance-sweep (run mode only)');
   }
   // §55 pre-gate — --scripts is run-mode-only until a mode needs it: a search
   // or sweep silently ignoring it would measure the OLD bot under a flag that
   // claims otherwise. Support lands mode-by-mode, deliberately.
-  if (args.scripts && (args.search || args.balanceSweep || args.arena || args.evalShard)) {
+  if (args.scripts && (args.search || args.balanceSweep || args.evalShard)) {
     throw new Error(
-      '--scripts is not supported in --search/--balance-sweep/--arena yet (run mode only)',
+      '--scripts is not supported in --search/--balance-sweep yet (run mode only)',
     );
   }
   if (args.scripts && args.objective !== undefined) {
@@ -481,12 +476,12 @@ export function parseArgs(argv: readonly string[]): CliArgs {
     );
   }
   // §57f — same contracts for the searcher arm. 59e — `--search` now
-  // SUPPORTS it (the audition-searcher regen path); sweep/arena still bail,
+  // SUPPORTS it (the audition-searcher regen path); the sweep still bails,
   // and the internal --eval-shard worker takes it via the job file, never
   // the CLI.
-  if (args.searcher && (args.balanceSweep || args.arena || args.evalShard)) {
+  if (args.searcher && (args.balanceSweep || args.evalShard)) {
     throw new Error(
-      '--searcher is not supported in --balance-sweep/--arena (run + search modes only)',
+      '--searcher is not supported in --balance-sweep (run + search modes only)',
     );
   }
   // 59e — the K-flip prefix instrument stays a serial RUN-mode read.
@@ -512,10 +507,10 @@ export function parseArgs(argv: readonly string[]): CliArgs {
   // 70a (relaxed at 85g3, the 59e mode-by-mode discipline) — `--search`
   // now SUPPORTS the arbitrated arm (the wrapStrategy seam; the eval-shard
   // children re-resolve via arbitratedWrapFromArgs, never the CLI);
-  // sweep/arena still bail — support lands mode-by-mode, deliberately.
-  if (args.arbitrate && (args.balanceSweep || args.arena || args.evalShard)) {
+  // the sweep still bails — support lands mode-by-mode, deliberately.
+  if (args.arbitrate && (args.balanceSweep || args.evalShard)) {
     throw new Error(
-      '--arbitrate is not supported in --balance-sweep/--arena yet (run + search modes only)',
+      '--arbitrate is not supported in --balance-sweep yet (run + search modes only)',
     );
   }
   // 85g3 — the run-mode INSTRUMENTS never ride a search: a search silently
@@ -668,8 +663,8 @@ export function objectiveFromArgs(
 
 /** O5 — is the dev-only objective coverage driver selected (`--objective=coverage`)?
  *  Routed separately from the proclivity since it's a both-team stateful churn
- *  bot, not a target-selection policy. Debug-only — consumed by the plain run +
- *  `--arena` modes, never by the balance sweep / search. */
+ *  bot, not a target-selection policy. Debug-only — consumed by the plain run
+ *  mode, never by the balance sweep / search. */
 export function coverageFromArgs(args: Pick<CliArgs, 'objective'>): boolean {
   return args.objective === COVERAGE_OBJECTIVE;
 }

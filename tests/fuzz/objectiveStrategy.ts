@@ -24,14 +24,13 @@
  * over the living enemies, weighted-sum → argmax. It strictly generalizes the
  * single-axis menu (any `stat`/`hp` entry is a one-hot corner of the weight
  * space) and can express combos the menu can't ("the wounded mage" = hp:low ×
- * archetype:mage). Not a menu entry (it isn't enumerable) — the arena searches
- * it via random weight vectors (`runArenaVectorSearch`), and it reaches the
- * full-run fuzz the same way every proclivity does: `--objective=<file>.json`.
+ * archetype:mage). It reaches the full-run fuzz the way every proclivity
+ * does: `--objective=<file>.json`.
  *
  * Dev-only fuzz tooling — never imported by `src/`. Mirrors the A4 config
  * pattern (zod, validate-on-load, throw on malformed) the way `scoredWeights.ts`
- * does: the single-proclivity JSON is BOTH the `--objective=<file>.json` input
- * format AND what the arena search emits as its winner.
+ * does: the single-proclivity JSON is the `--objective=<file>.json` input
+ * format.
  */
 
 import { readFileSync } from 'node:fs';
@@ -107,19 +106,13 @@ export function parseProclivity(input: unknown): ObjectiveProclivity {
 }
 
 /** Read + validate a proclivity from a JSON file — the `--objective=<file>.json`
- *  input and the arena search's emitted winner. */
+ *  input. */
 export function loadProclivityFile(path: string): ObjectiveProclivity {
   return parseProclivity(JSON.parse(readFileSync(path, 'utf8')));
 }
 
-/** Serialize a proclivity to the canonical single-object JSON (2-space indent,
- *  trailing newline) — the format `loadProclivityFile` reads back. */
-export function serializeProclivity(p: ObjectiveProclivity): string {
-  return JSON.stringify(p, null, 2) + '\n';
-}
-
-/** A short, stable label for a proclivity (the arena table + the saved-file
- *  note). The inverse of the inline forms `parseObjectiveFlag` accepts. */
+/** A short, stable label for a proclivity, as the commands print it. The
+ *  inverse of the inline forms `parseObjectiveFlag` accepts. */
 export function proclivityLabel(p: ObjectiveProclivity): string {
   switch (p.kind) {
     case 'none':
@@ -137,53 +130,15 @@ export function proclivityLabel(p: ObjectiveProclivity): string {
   }
 }
 
-export interface MenuEntry {
-  readonly label: string;
-  readonly proclivity: ObjectiveProclivity;
-}
-
-/**
- * The full proclivity menu the arena enumerates: `none`, `random`, highest /
- * lowest current-HP, highest / lowest of every base stat, and one entry per
- * enemy archetype. Config-derived — the per-stat entries track `STAT_KEYS` and
- * the per-archetype entries track `ALL_ARCHETYPES`, so a new stat or archetype
- * auto-joins the menu (no edit here), matching the `stat:<stat>` recruit-menu
- * ethos. (Archetypes that never spawn as enemies today — only `bandit`/`ranged`
- * do — select nothing → behave like `none` until enemy diversity lands.)
- */
-export function objectiveMenu(): MenuEntry[] {
-  const out: MenuEntry[] = [
-    { label: 'none', proclivity: { kind: 'none' } },
-    { label: 'random', proclivity: { kind: 'random' } },
-    { label: 'hp:highest', proclivity: { kind: 'hp', select: 'highest' } },
-    { label: 'hp:lowest', proclivity: { kind: 'hp', select: 'lowest' } },
-  ];
-  for (const stat of STAT_KEYS) {
-    out.push({
-      label: `stat:${String(stat)}:highest`,
-      proclivity: { kind: 'stat', select: 'highest', stat },
-    });
-    out.push({
-      label: `stat:${String(stat)}:lowest`,
-      proclivity: { kind: 'stat', select: 'lowest', stat },
-    });
-  }
-  for (const archetype of ALL_ARCHETYPES) {
-    out.push({ label: `archetype:${archetype}`, proclivity: { kind: 'archetype', archetype } });
-  }
-  return out;
-}
-
 /**
  * Resolve the `--objective=<value>` flag into a proclivity:
  *   none | random            → the two built-in modes
  *   <path>.json              → a saved proclivity (validated on load)
  *   stat:<stat>:<dir>        → inline, e.g. `stat:strength:highest`
  *   hp:<dir>                 → inline, e.g. `hp:lowest`
- * The inline forms are a dev convenience (the arena search emits / consumes
- * JSON). A `scored` proclivity is FILE-ONLY — a weight vector has no inline
- * form; the arena vector search emits it as best-objective.json. An absent
- * flag defaults to `none` — handled by the caller.
+ * The inline forms are a dev convenience. A `scored` proclivity is FILE-ONLY:
+ * a weight vector has no inline form. An absent flag defaults to `none` —
+ * handled by the caller.
  */
 export function parseObjectiveFlag(value: string): ObjectiveProclivity {
   if (value === 'none') return { kind: 'none' };

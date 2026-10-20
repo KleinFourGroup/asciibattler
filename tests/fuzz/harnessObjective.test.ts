@@ -29,10 +29,10 @@ describe('harness objective injection (J4)', () => {
   });
 
   it('an active objective is live — it changes at least one run vs none', () => {
-    // The arena already shows the win-rate gradient; this just guards that the
-    // wiring actually reaches the battle loop. Focus-firing the lowest-HP enemy
-    // re-orders combat vs default nearest-targeting, so over a small seed band
-    // at least one run diverges in tick count / outcome.
+    // This guards that the wiring actually reaches the battle loop.
+    // Focus-firing the lowest-HP enemy re-orders combat vs default
+    // nearest-targeting, so over a small seed band at least one run diverges
+    // in tick count / outcome.
     const obj: ObjectiveProclivity = { kind: 'hp', select: 'lowest' };
     const differs = [1, 2, 3, 4, 5, 6].some((s) => {
       const none = runOne(s, strat(), SHORT);

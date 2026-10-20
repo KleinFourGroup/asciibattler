@@ -276,8 +276,8 @@ smoke tier, three on every `npm test`); "fuzz diff" is
   it, `scored.test.ts` among them). `npm test` does not load this folder,
   so it saw nothing. Three lines in ten are run by no
   proof the coverage tool can read: 16 files hold most of them, chiefly
-  the command-line entries (the search, the sweep, the arena, the
-  parallel runner, the board), which run as command lines and under no
+  the command-line entries (the search, the sweep, the arena, since
+  deleted, the parallel runner, the board), which run as command lines and under no
   test.
 - **`src/journal`.** The recorder's proof is the suite and the build
   compare: an order recorded one tick late failed 8 test files and moved

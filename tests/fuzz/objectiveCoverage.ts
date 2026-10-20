@@ -14,8 +14,7 @@
  *     measure a win rate — only to prove the O1–O4 objective machinery survives
  *     every mode + transition without hanging or going non-deterministic. It is
  *     kept strictly OUT of the balance path (the `--balance-sweep` / `--search`
- *     modes never read it; only `--objective=coverage` on a plain run / `--arena`
- *     does).
+ *     modes never read it; only `--objective=coverage` on a plain run does).
  *
  * Two coverage levers the measurement bot lacks:
  *   - **Both teams.** It drives the ENEMY team's objective too, giving O1's
@@ -80,7 +79,7 @@ export const COVERAGE_MAX_TICKS = secondsToTicks(HEALTH.maxTurnSeconds) * COVERA
  *
  * NOT an `ObjectiveProclivity`: it carries per-battle state (the expiry timers),
  * drives both teams, and is purely a coverage instrument — so it lives outside
- * the proclivity union and is routed separately at the harness/arena boundary.
+ * the proclivity union and is routed separately at the harness boundary.
  */
 export class CoverageObjectiveDriver {
   private readonly rng: RNG;

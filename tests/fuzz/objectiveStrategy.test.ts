@@ -18,8 +18,6 @@ import {
   decideObjectiveCommand,
   parseProclivity,
   parseObjectiveFlag,
-  serializeProclivity,
-  objectiveMenu,
   proclivityLabel,
   type ObjectiveProclivity,
   type ScoredObjectiveWeights,
@@ -309,9 +307,9 @@ describe('decideObjectiveCommand (the no-thrash gate)', () => {
 });
 
 describe('proclivity JSON + flag parsing', () => {
-  it('round-trips a stat proclivity through serialize → parse', () => {
+  it('round-trips a stat proclivity through JSON → parse', () => {
     const p = { kind: 'stat', select: 'lowest', stat: 'evasion' } as const;
-    expect(parseProclivity(JSON.parse(serializeProclivity(p)))).toEqual(p);
+    expect(parseProclivity(JSON.parse(JSON.stringify(p)))).toEqual(p);
   });
 
   it('parses the built-in modes and inline forms', () => {
@@ -326,14 +324,20 @@ describe('proclivity JSON + flag parsing', () => {
     expect(parseObjectiveFlag('archetype:mage')).toEqual({ kind: 'archetype', archetype: 'mage' });
   });
 
+  it('labels each inline form as the flag that parses to it', () => {
+    for (const flag of ['none', 'random', 'hp:highest', 'stat:evasion:lowest', 'archetype:mage']) {
+      expect(proclivityLabel(parseObjectiveFlag(flag))).toBe(flag);
+    }
+  });
+
   it('rejects an unknown stat key or archetype (zod)', () => {
     expect(() => parseProclivity({ kind: 'stat', select: 'highest', stat: 'charisma' })).toThrow();
     expect(() => parseProclivity({ kind: 'archetype', archetype: 'wizard' })).toThrow();
   });
 
-  it('round-trips a scored proclivity through serialize → parse', () => {
+  it('round-trips a scored proclivity through JSON → parse', () => {
     const p = scored(zeroWeights());
-    expect(parseProclivity(JSON.parse(serializeProclivity(p)))).toEqual(p);
+    expect(parseProclivity(JSON.parse(JSON.stringify(p)))).toEqual(p);
     expect(proclivityLabel(p)).toBe('scored');
   });
 
@@ -348,25 +352,5 @@ describe('proclivity JSON + flag parsing', () => {
 
   it('rejects a garbage flag value', () => {
     expect(() => parseObjectiveFlag('biggest-nose')).toThrow();
-  });
-});
-
-describe('objectiveMenu', () => {
-  it('covers none + random + hp×2 + 2 per stat key + one per archetype', () => {
-    // Config-derived expectation: 4 fixed + 2 per base stat + 1 per archetype.
-    expect(objectiveMenu()).toHaveLength(4 + 2 * STAT_KEYS.length + ALL_ARCHETYPES.length);
-  });
-
-  it('every menu entry validates and its label matches proclivityLabel', () => {
-    for (const entry of objectiveMenu()) {
-      expect(parseProclivity(JSON.parse(serializeProclivity(entry.proclivity)))).toEqual(
-        entry.proclivity,
-      );
-      expect(proclivityLabel(entry.proclivity)).toBe(entry.label);
-    }
-  });
-
-  it('does NOT include scored (not enumerable — the vector search owns it)', () => {
-    expect(objectiveMenu().every((e) => e.proclivity.kind !== 'scored')).toBe(true);
   });
 });

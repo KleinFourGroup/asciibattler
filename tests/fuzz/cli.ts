@@ -86,28 +86,16 @@
  *   npm run fuzz -- --report                          # output/balance-sweep.csv
  *   npm run fuzz -- --report=output/balance-sweep.csv # any CSV → prints + writes .report.txt
  *
- *   # J4 — arena mode: tune an objective strategy in a single forced battle
- *   # (no Run wrapper). No --objective → enumerate the proclivity menu, rank by
- *   # win rate, write output/best-objective.json:
- *   npm run fuzz -- --arena --seeds=40 --roster=mercenary:5,mercenary:5,archer:5
- *   npm run fuzz -- --arena --objective=stat:evasion:lowest --layout=junctionAmbush
- *   npm run fuzz -- --arena --objective=output/best-objective.json   # inspect one
- *
- *   # K3c3 — scored-objective vector search: --vectors=N random-searches the
- *   # linear weight space (per-stat + hp + per-archetype) instead of the menu;
- *   # winner lands in the same best-objective.json format:
- *   npm run fuzz -- --arena --vectors=200 --seeds=40 --sampler-seed=7
- *
  *   # J4 — drive a FIXED objective strategy through the full run fuzz / --search /
- *   # --balance-sweep (default none = byte-identical baselines; tune it in --arena
- *   # first, then feed the saved JSON | random | none):
+ *   # --balance-sweep (default none = byte-identical baselines; a proclivity
+ *   # JSON file | an inline form | random | none):
  *   npm run fuzz -- --count=50 --objective=output/best-objective.json
  *   npm run fuzz -- --search --objective=random --jobs=8
  *   npm run fuzz -- --balance-sweep --knob=difficulty.budgetFactor --range=0.5:0.75:2 \
  *     --objective=output/best-objective.json --tier=medium --jobs=8
  *
  *   # §55 pre-gate — drive the §54 traffic-script bot in a plain run (the
- *   # fixed-vector probe arm; run mode ONLY — search/sweep/arena bail; mutually
+ *   # fixed-vector probe arm; run mode ONLY — search/sweep bail; mutually
  *   # exclusive with --objective per the frozen-anchor contract):
  *   npm run fuzz -- --count=120 --strategy=output/best-strategy.json --scripts
  *
@@ -193,7 +181,6 @@ import { runSearchCli } from './commands/search';
 import { runBalanceSweepCli } from './commands/sweep';
 import { runEvalShardCli } from './commands/evalShard';
 import { runReportCli } from './commands/report';
-import { runArenaCli } from './commands/arena';
 
 async function main(): Promise<void> {
   const args = parseArgs(process.argv.slice(2));
@@ -216,10 +203,6 @@ async function main(): Promise<void> {
   }
   if (args.report !== undefined) {
     runReportCli(args);
-    return;
-  }
-  if (args.arena) {
-    runArenaCli(args);
     return;
   }
   // 57f2 — run-mode parallelism: `--jobs>1` fans the seed range across child

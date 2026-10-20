@@ -238,8 +238,8 @@ export interface HarnessOptions {
    * Undefined / `{ kind: 'none' }` (the default) injects NOTHING — no objective
    * RNG is forked and no command is enqueued — so the run is byte-identical to
    * the pre-J4 fuzz path (the existing baselines stay intact unless `--objective`
-   * opts in). Tuned in isolation via the arena harness (`arena.ts`); fed here as
-   * a saved JSON / `random` / `none` so the full-run search can hold one
+   * opts in). Fed here as a saved JSON / an inline form / `random` / `none`,
+   * so the full-run search can hold one
    * objective strategy fixed while it tunes the difficulty / archetype knobs.
    */
   readonly objective?: ObjectiveProclivity;
@@ -353,8 +353,8 @@ export interface HarnessOptions {
 // `maxTurnSeconds`, converted via the TICK_RATE contract (so the E3.5 10 → 20 Hz
 // doubling didn't silently halve it — what once made grown-team battles on the
 // 32-long endlessCorridors board read as false "hangs"). N2 UNIFIED this: the
-// live game (BattleScene), this harness, and the arena all read the same config
-// value and all force-resolve a battle that reaches it as a DRAW (resolveAsDraw —
+// live game (BattleScene) and this harness both read the same config
+// value and both force-resolve a battle that reaches it as a DRAW (resolveAsDraw —
 // chips both pools, the run continues), instead of the old divergence where the
 // harness alone labeled a cap-hit a run-ending 'hang'. 'hang' now means genuine
 // non-termination only (a World invariant violation).

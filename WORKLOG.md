@@ -13957,4 +13957,45 @@ names afterwards finds only it and a history line in META-ROADMAP.
 Proof: the type check is clean; the fuzz diff against `c84a6d16` PASS on
 both shapes, the arm shape's `decisions.csv` among them (`fde861a0dacc`,
 the same as 125b's run), which the shadow fields never reached without
-the flag.
+the flag. The commit's hook: the suite 3,722, the smoke 605 in 61 files,
+the parity test 1.
+
+### 125d — A-20's `--arena` (2026-10-20, session 046c70be)
+
+`tests/fuzz/arena.ts`, `commands/arena.ts` and `arena.test.ts` are
+deleted, with the flag, its dispatch in `cli.ts` and the header's arena
+examples; the four refusals that listed `--arena` beside the sweep no
+longer do, and the two tests that passed it (`searcherArgs`,
+`arbitrateSearchCompat`) drop that line. Call 1: `objectiveMenu`,
+`MenuEntry` and `serializeProclivity` are out of `objectiveStrategy.ts`;
+its tests round-trip a proclivity through `JSON.stringify` instead, and
+the menu's label check moves to `proclivityLabel` over the inline forms
+`parseObjectiveFlag` reads (one test for three). The coverage bot's test
+(`objectiveCoverage.test.ts`) is kept and re-pointed: its two arena
+describes become one, every battle of a coverage run on seeds 1 to 3 ends
+with an outcome inside the coverage cap, through the harness; the
+arena's determinism case was already the harness describe's. Comments
+that named the arena are rewritten in `objectiveCoverage.ts`,
+`harness.ts`, `balanceSweep.ts`, `harnessObjective.test.ts`, `args.ts`
+and `src/config/health.ts`; BALANCE's registry row for `--objective` and
+TESTING's oracle-map line say the arena is deleted. 17 files, 71 lines in
+and 745 out. `difficulty.ts` and `enemyBudget.ts` still name the arena in
+their headers; 125e rewrites both.
+
+Proof:
+- The type check is clean, and the fuzz diff against `0325f26e` PASS on
+  both shapes.
+- `comment-strip HEAD src`: one file differs, `health.ts`, in its
+  comments only, and the control's edit there was named.
+- The smoke's reach, before (a worktree at `0325f26e`, 61 files, 605
+  tests) and after (60 files, 594), `reach-diff --from=HEAD`
+  (`output/reach-125d/`): lost are 35 lines and 8 functions of
+  `src/run/enemyBudget.ts` (the wave builder, which 125e deletes), one
+  branch arm of `src/sim/proceduralMap.ts`, and three arms of `args.ts`'s
+  flag switch. The switch's three are the case removed: with HEAD's
+  `--arena` arm dropped from its 63, the arms reached before and after
+  are the same, arm for arm. The `proceduralMap.ts` arm (:642, a
+  symmetric board's centre cell in the carve) had the arena as its one
+  reader in the smoke; `npm test` reaches it (`reach-record npm-test`,
+  the arm counted once), so the suite still holds it.
+- Nothing of `objectiveCoverage.ts` or `objectiveStrategy.ts` is lost.

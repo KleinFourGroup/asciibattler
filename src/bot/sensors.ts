@@ -64,10 +64,10 @@ export function livingUnits(world: World, team: ObjectiveTeam): Unit[] {
  * contested cell within this window — the unit behind it is QUEUED (§45b's
  * productive wait), not jammed. PROVISIONAL; 54c calibrates.
  */
-export const JAM_VACANCY_WINDOW_SECONDS = 0.5;
-export const JAM_VACANCY_WINDOW_TICKS = secondsToTicks(JAM_VACANCY_WINDOW_SECONDS);
+const JAM_VACANCY_WINDOW_SECONDS = 0.5;
+const JAM_VACANCY_WINDOW_TICKS = secondsToTicks(JAM_VACANCY_WINDOW_SECONDS);
 
-export interface JamRead {
+interface JamRead {
   /** Units judged traffic-jammed this tick (insertion order — deterministic). */
   readonly jammedUnitIds: readonly number[];
   /** jammed / living team units; 0 when the team is empty. */
@@ -210,11 +210,6 @@ export function barrierCellList(world: World): GridCoord[] {
     }
   }
   return out;
-}
-
-/** The `cellKey` set form of `hazardCellList`. */
-export function hazardCells(world: World): Set<string> {
-  return new Set(hazardCellList(world).map(cellKey));
 }
 
 /**
@@ -514,7 +509,7 @@ export function armyMinCut(
 // Attrition (the attrition-stall script's read)
 // ---------------------------------------------------------------------------
 
-export interface AttritionRead {
+interface AttritionRead {
   /** Σ `effectiveStats.power` over each side's living units — the same
    *  formula as `World.survivorPower` (private there; re-derived here in
    *  lockstep — it IS the pool chip each side deals at the turn boundary). */

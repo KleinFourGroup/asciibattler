@@ -14108,3 +14108,29 @@ that's signed!"): from here in §125, a step may start under 550k when
 its forecast end, plus about 15k for the hand-off, stays under 600k; a
 comment-pass batch is forecast at the pass's typical rate (about 75
 tokens a line in §124.5), not the session's first batch's.
+
+### 125f — A-25's `hazardCells`, A-26's 16 words in `src/bot` (2026-10-20, session e216d681)
+
+Step zero: `refs` on each of `src/bot`'s eleven files at `5a5c9086` gives
+the kickoff's count, 16 names that only their own file reads and
+`hazardCells` with one test reader. A `git grep -w` for each of the 17
+over `src`, `tests`, `tools`, `scripts`, `config`, `locales` and the docs
+(test files included) finds no reader outside its own file but
+`sensors.test.ts` and the census's rows; nothing imports a bot file as a
+namespace or re-exports one.
+
+The word `export` is off the 16: `RolloutSpec` (`evaluator.ts`), six
+constants in `RolloutSearchDriver.ts`, `MIN_DWELL_SECONDS`,
+`JAM_VACANCY_WINDOW_SECONDS` and `_TICKS`, `JamRead` and `AttritionRead`
+(`sensors.ts`), `STALL_RALLY_RADIUS`, `cutCenter` and `ChokeRead`, and
+`UNJAM_RALLY_RADIUS`. `hazardCells`, the `cellKey` set form of
+`hazardCellList`, is deleted; its test now reads `hazardCellList` and pins
+the row-major order the list's comment promises (`sensors.test.ts` drops
+its `cellKey` import with it). 8 files, 22 lines in and 28 out (the
+16 changed lines among them).
+
+Proof: the type check is clean, which no other reader of the 16 would
+allow; `src/bot`'s 12 test files pass, 128 tests; the fuzz diff against
+`5a5c9086` PASS on both shapes, the arm shape's `decisions.csv` at
+`fde861a0dacc` as at 125b and 125c. `comment-codes --record`: 1,078, no
+change.

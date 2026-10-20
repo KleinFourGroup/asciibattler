@@ -48,7 +48,7 @@ import { ARTILLERY_REACH, isHazardKind, jamRead, livingUnits, opposingTeam } fro
 export const UNJAM_MIN_FRACTION = 0.2;
 
 /** Regroup-tile search radius around the jammed cluster's centroid. */
-export const UNJAM_RALLY_RADIUS = 6;
+const UNJAM_RALLY_RADIUS = 6;
 
 /** Free passable 8-neighbors — the "room to re-sort" score of a rally cell. */
 function openNeighbors(world: World, cell: GridCoord): number {

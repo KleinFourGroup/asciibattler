@@ -91,7 +91,7 @@ export const STALL_MIN_POWER_DELTA = 0;
 
 /** Stand-off search radius around the own-army centroid — a bounded local
  *  back-off, never a march (the radius IS the anti-retreat structural cap). */
-export const STALL_RALLY_RADIUS = 4;
+const STALL_RALLY_RADIUS = 4;
 
 /**
  * The stand-off tile (see the header for the full contract). Null when

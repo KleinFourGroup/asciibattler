@@ -51,7 +51,7 @@ export function materialOf(world: World, team: ObjectiveTeam): number {
   return material;
 }
 
-export interface RolloutSpec {
+interface RolloutSpec {
   /** H — how far each clone rolls forward (the §57c v2 local dial: 8s). */
   readonly horizonTicks: number;
   /** The K CRN seeds. SAME array for every candidate in one search. */

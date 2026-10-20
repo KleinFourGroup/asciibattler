@@ -16,12 +16,11 @@ import type { GameEvents } from '../core/events';
 import type { GridCoord } from '../core/types';
 import type { Team } from '../sim/Unit';
 import { spawnWall } from '../sim/environment';
-import { cellKey } from '../sim/occupancy';
 import {
   jamRead,
   isHazardKind,
   isBarrierHazard,
-  hazardCells,
+  hazardCellList,
   unitsApproachingHazard,
   chokeCells,
   armiesInContact,
@@ -127,14 +126,14 @@ describe('hazard sensors', () => {
     expect(unitsApproachingHazard(world, 'player', 3)).toEqual([]);
   });
 
-  it('hazardCells scans the grid', () => {
+  it('hazardCellList scans the grid, row-major', () => {
     const world = makeWorld(6, 6);
     world.tileGrid.setKind({ x: 2, y: 3 }, 'fire');
     world.tileGrid.setKind({ x: 4, y: 1 }, 'fire');
-    const cells = hazardCells(world);
-    expect(cells.has(cellKey({ x: 2, y: 3 }))).toBe(true);
-    expect(cells.has(cellKey({ x: 4, y: 1 }))).toBe(true);
-    expect(cells.size).toBe(2);
+    expect(hazardCellList(world)).toEqual([
+      { x: 4, y: 1 },
+      { x: 2, y: 3 },
+    ]);
   });
 
   it('flags units whose advance crosses the hazard, not units past it', () => {

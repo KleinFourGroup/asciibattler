@@ -41,15 +41,15 @@ import { armiesInContact, livingUnits, opposingTeam } from './sensors';
 import { sameObjective, TRAFFIC_SCRIPTS, type TrafficScript } from './TrafficScriptDriver';
 
 /** §57c v2 local dials — PROVISIONAL until the 57g calibration arms. */
-export const SEARCH_CADENCE_SECONDS = 4;
-export const SEARCH_CADENCE_TICKS = secondsToTicks(SEARCH_CADENCE_SECONDS);
-export const ROLLOUT_HORIZON_SECONDS = 8;
-export const ROLLOUT_HORIZON_TICKS = secondsToTicks(ROLLOUT_HORIZON_SECONDS);
-export const ROLLOUTS_PER_CANDIDATE = 2;
+const SEARCH_CADENCE_SECONDS = 4;
+const SEARCH_CADENCE_TICKS = secondsToTicks(SEARCH_CADENCE_SECONDS);
+const ROLLOUT_HORIZON_SECONDS = 8;
+const ROLLOUT_HORIZON_TICKS = secondsToTicks(ROLLOUT_HORIZON_SECONDS);
+const ROLLOUTS_PER_CANDIDATE = 2;
 /** In score units (HP fractions): a challenger must beat the null arm by
  *  more than a quarter-unit of material or nothing is issued (ties→NULL
  *  and hysteresis are this one rule). */
-export const HYSTERESIS_EPSILON = 0.25;
+const HYSTERESIS_EPSILON = 0.25;
 
 export interface RolloutSearchConfig {
   /** Nominator registry; defaults to the standard TRAFFIC_SCRIPTS. */

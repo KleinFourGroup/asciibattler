@@ -288,7 +288,8 @@ its six calls; the audit, the calls and the trials' bars are in WORKLOG
 - ☑ **125e — the arena's wave builder** (`none`). `buildEnemyTeam` and its
   helpers, the seven difficulty keys that size it, the spawn-overflow test
   on a fixed team, the sweep's examples on a live knob (call 2).
-- ☐ **125f — A-25's `hazardCells`, A-26's 16 words in `src/bot`** (`none`).
+- ☑ **125f — A-25's `hazardCells`, A-26's 16 words in `src/bot`** (`none`).
+  Its test onto `hazardCellList`; the fuzz diff PASS.
 - ☐ **125g — trial: the battle start and the turn cap** (`none`, on its
   bar). The five walkers, `BattleScene` and `replayTrace` (call 4).
 - ☐ **125h — trial: the harness and walker's grant walk and port loop**

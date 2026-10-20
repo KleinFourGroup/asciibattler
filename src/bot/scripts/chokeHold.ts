@@ -39,7 +39,7 @@ export const CHOKE_MAX_CUT = 3;
 export const CHOKE_OUTNUMBER_FACTOR = 2;
 
 /** The cut's central cell: nearest the cut centroid, row-major on ties. */
-export function cutCenter(cut: readonly GridCoord[]): GridCoord {
+function cutCenter(cut: readonly GridCoord[]): GridCoord {
   const cx = cut.reduce((s, c) => s + c.x, 0) / cut.length;
   const cy = cut.reduce((s, c) => s + c.y, 0) / cut.length;
   let best = cut[0]!;
@@ -54,7 +54,7 @@ export function cutCenter(cut: readonly GridCoord[]): GridCoord {
   return best;
 }
 
-export interface ChokeRead {
+interface ChokeRead {
   readonly cut: readonly GridCoord[];
   readonly proposal: TeamObjective;
 }

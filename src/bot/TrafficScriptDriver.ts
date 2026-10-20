@@ -105,7 +105,7 @@ export const AUDITION_SCRIPTS: readonly TrafficScript[] = [
  * seconds per the TICK_RATE contract. PROVISIONAL at 54a — 54c's trace
  * mining (human command cadence per cell) is the calibration input.
  */
-export const MIN_DWELL_SECONDS = 2;
+const MIN_DWELL_SECONDS = 2;
 export const MIN_DWELL_TICKS = secondsToTicks(MIN_DWELL_SECONDS);
 
 /** Structural equality over the objective union (no helper exists sim-side;

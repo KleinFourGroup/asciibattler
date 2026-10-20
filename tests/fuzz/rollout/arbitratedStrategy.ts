@@ -252,13 +252,6 @@ export interface ArbitratedConfig {
   readonly k?: number;
   /** Resolution 3's recursion dial (default 'traffic'; `--arbitrate-tier`). */
   readonly innerTier?: InnerTier;
-  /** Per-site ε overrides; default = the pinned floors above. */
-  readonly portBuyEpsilon?: number;
-  readonly packetFireEpsilon?: number;
-  readonly rewardDaemonEpsilon?: number;
-  readonly nodeChoiceEpsilon?: number;
-  readonly eventChoiceEpsilon?: number;
-  readonly campRaidEpsilon?: number;
   /** 85g6a — the campRaid causal-arm dial (`--camp-raid=off`): false OMITS
    *  the site from the strategy (ABSENT = never raid, the pre-85d
    *  Strategy.ts contract), so an enabled-vs-disabled pair reads the
@@ -351,7 +344,7 @@ export function makeArbitratedStrategy(
     // 70e — the node-choice site (the base stays the NOMINATOR: its pick
     // is the null arm).
     pickNextNode: (frontier, run, rng) =>
-      arbitrateNodeChoice(driver, base, frontier, run, rng, config),
+      arbitrateNodeChoice(driver, base, frontier, run, rng),
     // 84c — the recruit pick stays the BASE's (never arbitrated live); under
     // the shadow the offer is ALSO recorded at the long horizon (the
     // shadow-only site — units are the §88 rarity read's item). The base
@@ -362,30 +355,30 @@ export function makeArbitratedStrategy(
       return idx;
     },
     pickPortBuy: (stock, run, _rng) =>
-      arbitratePortBuy(driver, stock, run, config.portBuyEpsilon, overlay),
+      arbitratePortBuy(driver, stock, run, overlay),
     // 70b — the fire site is LANDED: always defined, both contexts. NB
     // presence flips the harness turn gates ON (59a) — the arbitrated arm
     // therefore always rides the gated path (RNG-aligned, H4b; the
     // doctrine arm ran gated anyway via --redraw/--empower).
     pickPacketFire: (context, run, _rng) =>
-      arbitratePacketFire(driver, context, run, config.packetFireEpsilon, overlay),
+      arbitratePacketFire(driver, context, run, overlay),
     // 70c — the daemon-pick site (reward lane; the port lane rides
     // pickPortBuy above).
     pickReward: (portion, run, _rng) =>
-      arbitrateReward(driver, portion, run, config.rewardDaemonEpsilon),
+      arbitrateReward(driver, portion, run),
     // 70d — the grant site (defining this routes the harness grant walk
     // here; the --redraw/--empower policy path is superseded for the arm).
     pickGrantAction: (grantIndex, run, rng) =>
       arbitrateGrant(driver, grantIndex, run, rng),
     // 74g — the event-choice site (the doctrine's uniform-random pick is
     // the NOMINEE/null arm; see arbitrateEventChoice's header).
-    pickEventChoice: (run, rng) => arbitrateEventChoice(driver, run, rng, config),
+    pickEventChoice: (run, rng) => arbitrateEventChoice(driver, run, rng),
     // 85d — the campRaid RUN-LAYER preTurn site (the fold rider; see
     // arbitrateCampRaid's header). v1 candidates = {null, raid}. 85g6a:
     // campRaid=false OMITS the site (ABSENT = never raid — the doctrine
     // arms' permanent policy), the causal-arm dial.
     ...(config.campRaid !== false
-      ? { pickCampRaid: (run: Run, _rng: RNG) => arbitrateCampRaid(driver, run, config.campRaidEpsilon) }
+      ? { pickCampRaid: (run: Run, _rng: RNG) => arbitrateCampRaid(driver, run) }
       : {}),
   };
 }
@@ -430,7 +423,6 @@ function arbitratePortBuy(
   driver: RunArbitrationDriver,
   stock: PortStock,
   run: Run,
-  epsilonOverride: number | undefined,
   overlay: Partial<FuzzStrategy>,
 ): PortBuy | null {
   const challengers: RunDecisionCandidate[] = [];
@@ -484,7 +476,7 @@ function arbitratePortBuy(
       r.currentSectorId === dockSector && r.currentNodeId === dockNode ? null : walkPortBuy(s, r),
   };
   const winner = driver.decide('portBuy', run, challengers, {
-    epsilon: epsilonOverride ?? portBuyEpsilon(run),
+    epsilon: portBuyEpsilon(run),
     rollout: { walkPolicies },
     priorItemKeys: priorKeys,
   });
@@ -525,7 +517,6 @@ function arbitratePacketFire(
   driver: RunArbitrationDriver,
   context: UseContext,
   run: Run,
-  epsilonOverride: number | undefined,
   overlay: Partial<FuzzStrategy>,
 ): PacketFire | null {
   const challengers: RunDecisionCandidate[] = [];
@@ -596,7 +587,7 @@ function arbitratePacketFire(
       : {}),
   };
   const winner = driver.decide(`packetFire:${context}`, run, challengers, {
-    epsilon: epsilonOverride ?? packetFireEpsilon(context, run),
+    epsilon: packetFireEpsilon(context, run),
     rollout: { walkPolicies },
     // 85g1 — the candidate packet ids (fired-as-held keeps the term
     // neutral either way; the restriction kills off-key walk noise).
@@ -628,7 +619,6 @@ function arbitrateReward(
   driver: RunArbitrationDriver,
   portion: RewardPortion,
   run: Run,
-  epsilonOverride: number | undefined,
 ): boolean {
   if (portion.kind !== 'daemon') {
     return !(portion.kind === 'packet' && !run.cacheHasRoom);
@@ -643,7 +633,7 @@ function arbitrateReward(
       },
     ],
     {
-      epsilon: epsilonOverride ?? rewardDaemonEpsilon(run),
+      epsilon: rewardDaemonEpsilon(run),
       // 85g1 — the pending daemon alone. The null arm acquires IN-WALK
       // (the flipped polarity), which is why the restriction rides the
       // walk-terminal diff — the kickoff's mechanism revision.
@@ -753,7 +743,6 @@ function arbitrateNodeChoice(
   frontier: readonly number[],
   run: Run,
   rng: RNG,
-  config: ArbitratedConfig,
 ): number {
   const nominee = base.pickNextNode(frontier, run, rng);
   if (frontier.length <= 1) return nominee;
@@ -775,7 +764,7 @@ function arbitrateNodeChoice(
     nodes.push(nodeId);
   }
   const winner = driver.decide('nodeChoice', run, challengers, {
-    epsilon: config.nodeChoiceEpsilon ?? NODE_CHOICE_EPSILON,
+    epsilon: NODE_CHOICE_EPSILON,
     rollout: { strategy: rolloutStrategy },
     // 85g1 — a node has no item; walk-bought holdings' beyond-horizon
     // value flowing into a routing margin is exactly the all-holdings
@@ -813,7 +802,6 @@ function arbitrateNodeChoice(
 function arbitrateCampRaid(
   driver: RunArbitrationDriver,
   run: Run,
-  epsilonOverride: number | undefined,
 ): boolean {
   // The pre-battle layout read: `encounterMap` is rolled at encounter start
   // and lives through every turn of it (K3.5); `currentEncounter` doesn't
@@ -831,7 +819,7 @@ function arbitrateCampRaid(
       },
     ],
     {
-      epsilon: epsilonOverride ?? CAMP_RAID_EPSILON,
+      epsilon: CAMP_RAID_EPSILON,
       // 85g1 — deliberately UNRESTRICTED (the explicit 'all', not an
       // omission): the raid's payout packets are reward-rolled — not
       // statically nameable — and their prior reaching the run-layer
@@ -928,7 +916,6 @@ function arbitrateEventChoice(
   driver: RunArbitrationDriver,
   run: Run,
   rng: RNG,
-  config: ArbitratedConfig,
 ): number {
   const enabled = run.enabledEventChoices();
   if (enabled.length === 0) {
@@ -956,7 +943,7 @@ function arbitrateEventChoice(
     choices.push(choiceIndex);
   }
   const winner = driver.decide('eventChoice', run, challengers, {
-    epsilon: config.eventChoiceEpsilon ?? EVENT_CHOICE_EPSILON,
+    epsilon: EVENT_CHOICE_EPSILON,
     rollout: { strategy: rolloutStrategy },
     // 85g1 — the boon-separation instrument survives by construction:
     // the options' granted items ARE in this set; only off-key dies.

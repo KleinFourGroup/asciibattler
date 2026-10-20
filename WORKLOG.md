@@ -14406,3 +14406,20 @@ four as leaned: R-1 is 125j-post, a deletion; R-2 is 125j-post2, 125e's
 finish and not a trial; R-3 is the census's B-18, and R-4 a TODO "§126
 tests" line, both written with the sign. Reading: 429,465 at 23:00, on
 the re-skim's commit.
+
+### 125j-post — R-1, `ArbitratedConfig`'s six unset ε overrides (2026-10-20, session e216d681)
+
+The six fields and their doc line are out of `ArbitratedConfig`; the
+four private `arbitrate*` functions lose the `epsilonOverride` parameter
+they passed through, and each site reads its floor
+(`portBuyEpsilon(run)`, `packetFireEpsilon(context, run)`,
+`rewardDaemonEpsilon(run)`, `CAMP_RAID_EPSILON`, `NODE_CHOICE_EPSILON`,
+`EVENT_CHOICE_EPSILON`). `arbitrateNodeChoice` and
+`arbitrateEventChoice` took the config only for their override, so the
+type check named both unread parameters, and they go too. One file, 12
+lines in and 25 out. The driver's own per-call ε (`driver.test.ts`'s
+third case) is a different option and stays.
+
+Proof: the type check is clean; the fuzz diff against `866ba251` PASS on
+both shapes, `decisions.csv` at `fde861a0dacc`. The commit's hook runs
+the smoke and the parity test.

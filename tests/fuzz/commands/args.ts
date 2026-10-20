@@ -152,11 +152,6 @@ export interface CliArgs {
   // instrument (run it at --k=8). Both require --searcher.
   k?: number;
   kTelemetry: boolean;
-  // 60c — scale per-run bits income (`--bits-multiplier=<f>`): exposes the
-  // 48f RunConfig lever to RUN MODE ONLY (the economy lever sweeps at the
-  // fixed operating point). Run mode's runConfig wiring consumes it; other
-  // modes ignore it per the flags-are-global grammar note above.
-  bitsMultiplier?: number;
   // 65d — the forced-draw dial (`--draw-add=<n>`): exposes the RunConfig
   // `drawAmountAdd` lever to RUN MODE ONLY (the max-hand A/B — a persistent
   // fold arm, so the deal AND the Option-B budget basis both move). Run
@@ -209,11 +204,6 @@ export interface CliArgs {
   // value form exists for cheap cross-tier reads and test sizing. Requires
   // --arbitrate; must differ from the primary tier.
   flipTelemetry?: string;
-  // 71d — the grant-site ε override (`--grant-epsilon=<f>`): the ablation
-  // dial for the free-action gate diagnosis (grant margins sit under the
-  // pooled noise floor; ε=0 = spend on any positive point estimate, exact
-  // ties still pass — the strict-> rule holds). Requires --arbitrate.
-  grantEpsilon?: number;
   // 85c — λ_prior (`--prior-lambda=<f>`): the fold's board arm ({0, 0.5,
   // 1} at the §85 cohort; any finite ≥ 0 accepted — a dial, not a doctrine
   // constant). 0 = the fold path never engages (byte-identical, the board
@@ -358,9 +348,6 @@ export function parseArgs(argv: readonly string[]): CliArgs {
       case '--roster':
         if (v !== undefined) args.roster = v;
         break;
-      case '--bits-multiplier':
-        if (v !== undefined) args.bitsMultiplier = Number(v);
-        break;
       case '--draw-add':
         if (v !== undefined) args.drawAdd = Number(v);
         break;
@@ -455,9 +442,6 @@ export function parseArgs(argv: readonly string[]): CliArgs {
       case '--flip-telemetry':
         args.flipTelemetry = v ?? 'searcher';
         break;
-      case '--grant-epsilon':
-        if (v !== undefined) args.grantEpsilon = Number(v);
-        break;
       case '--prior-lambda':
         if (v !== undefined) args.priorLambda = Number(v);
         break;
@@ -547,15 +531,12 @@ export function parseArgs(argv: readonly string[]): CliArgs {
   // 85g3 — the run-mode INSTRUMENTS never ride a search: a search silently
   // ignoring them would label the batch wrong (the same 70a discipline),
   // and none of them belong in a training loop (--flip-telemetry /
-  // --shadow-horizon are telemetry, --grant-epsilon is an ablation dial).
+  // --shadow-horizon are telemetry, --camp-raid is an ablation dial).
   if (args.search && args.flipTelemetry !== undefined) {
     throw new Error('--flip-telemetry is a run-mode instrument (not supported with --search)');
   }
   if (args.search && args.shadowHorizon !== undefined) {
     throw new Error('--shadow-horizon is a run-mode instrument (not supported with --search)');
-  }
-  if (args.search && args.grantEpsilon !== undefined) {
-    throw new Error('--grant-epsilon is a run-mode ablation dial (not supported with --search)');
   }
   if (args.search && args.campRaid !== undefined) {
     throw new Error('--camp-raid is a run-mode ablation dial (not supported with --search)');
@@ -590,16 +571,6 @@ export function parseArgs(argv: readonly string[]): CliArgs {
       throw new Error(
         `--flip-telemetry=${args.flipTelemetry} equals the primary tier (${primary}) — the read would be vacuously flip-free`,
       );
-    }
-  }
-  // 71d — the grant-ε dial rides the arbitrated arm only, and a negative or
-  // non-finite ε would silently break the strict-> gate.
-  if (args.grantEpsilon !== undefined) {
-    if (!args.arbitrate) {
-      throw new Error('--grant-epsilon requires --arbitrate (it dials the grant-site gate)');
-    }
-    if (!Number.isFinite(args.grantEpsilon) || args.grantEpsilon < 0) {
-      throw new Error(`--grant-epsilon must be a finite number ≥ 0 (got '${args.grantEpsilon}')`);
     }
   }
   // 85c — the fold arm rides the arbitrated arm only; NaN/negative λ would
@@ -651,7 +622,6 @@ export function parseArgs(argv: readonly string[]): CliArgs {
       ['--encounter', args.encounter],
       ['--layout', args.layout],
       ['--draw-add', args.drawAdd],
-      ['--bits-multiplier', args.bitsMultiplier],
       ...(args.hops === undefined
         ? ([
             ['--elite-chance', args.eliteChance],
@@ -911,7 +881,7 @@ export function normalizeArbRolloutSearch(
  * (λ + both table views, loaded ONCE at resolve time — a missing table
  * throws before any seed runs, the 85c contract) + the searcher config
  * for searcher-tier rollouts. The run-mode INSTRUMENTS (`--flip-telemetry`
- * / `--shadow-horizon` / `--grant-epsilon`) are run.ts compositions passed
+ * / `--shadow-horizon` / `--camp-raid`) are run.ts compositions passed
  * through `extras` and are REFUSED with `--search` (validateArgs above).
  */
 export function arbitratedWrapFromArgs(

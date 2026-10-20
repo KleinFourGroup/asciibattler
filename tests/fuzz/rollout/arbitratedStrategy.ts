@@ -260,7 +260,6 @@ export interface ArbitratedConfig {
   readonly portBuyEpsilon?: number;
   readonly packetFireEpsilon?: number;
   readonly rewardDaemonEpsilon?: number;
-  readonly grantEpsilon?: number;
   readonly nodeChoiceEpsilon?: number;
   readonly eventChoiceEpsilon?: number;
   readonly campRaidEpsilon?: number;
@@ -382,7 +381,7 @@ export function makeArbitratedStrategy(
     // 70d — the grant site (defining this routes the harness grant walk
     // here; the --redraw/--empower policy path is superseded for the arm).
     pickGrantAction: (grantIndex, run, rng) =>
-      arbitrateGrant(driver, grantIndex, run, rng, config.grantEpsilon),
+      arbitrateGrant(driver, grantIndex, run, rng),
     // 74g — the event-choice site (the doctrine's uniform-random pick is
     // the NOMINEE/null arm; see arbitrateEventChoice's header).
     pickEventChoice: (run, rng) => arbitrateEventChoice(driver, run, rng, config),
@@ -685,7 +684,6 @@ function arbitrateGrant(
   grantIndex: number,
   run: Run,
   rng: RNG,
-  epsilonOverride: number | undefined,
 ): GrantAction | null {
   const grant = run.grantViews()[grantIndex];
   if (grant === undefined || grant.remaining <= 0) return null;
@@ -729,7 +727,7 @@ function arbitrateGrant(
 
   if (challengers.length === 0) return null;
   const winner = driver.decide(`grant:${effect.kind}`, run, challengers, {
-    epsilon: epsilonOverride ?? GRANT_EPSILON,
+    epsilon: GRANT_EPSILON,
     rollout: { redraw: { kind: 'none' }, empower: { kind: 'none' } },
     // 85g1 — grants acquire nothing: the prior term is pure walk noise here.
     priorItemKeys: [],

@@ -42,9 +42,6 @@ describe('the 85g3 arg matrix (mode-by-mode, the 70a discipline relaxed)', () =>
     expect(() => parseArgs(['--search', '--arbitrate', '--shadow-horizon=run'])).toThrow(
       /run-mode instrument/,
     );
-    expect(() => parseArgs(['--search', '--arbitrate', '--grant-epsilon=5'])).toThrow(
-      /run-mode ablation/,
-    );
   });
 });
 

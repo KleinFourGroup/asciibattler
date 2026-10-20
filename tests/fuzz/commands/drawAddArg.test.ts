@@ -1,6 +1,6 @@
 /**
- * 65d — the `--draw-add` flag (the max-hand A/B dial): parse-layer pin,
- * mirroring bitsMultiplierArg.test.ts. Run mode's nonzero-integer guard
+ * 65d — the `--draw-add` flag (the max-hand A/B dial): parse-layer pin.
+ * Run mode's nonzero-integer guard
  * owns rejecting explicit garbage values at dispatch.
  */
 

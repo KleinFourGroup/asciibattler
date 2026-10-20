@@ -107,7 +107,6 @@ export type RunModeArgs = Pick<
   | 'audition'
   | 'k'
   | 'kTelemetry'
-  | 'bitsMultiplier'
   | 'drawAdd'
   | 'escalation'
   | 'eliteChance'
@@ -117,7 +116,6 @@ export type RunModeArgs = Pick<
   | 'arbitrate'
   | 'arbitrateTier'
   | 'flipTelemetry'
-  | 'grantEpsilon'
   | 'priorLambda'
   | 'campRaid'
   | 'shadowHorizon'
@@ -194,7 +192,6 @@ export function runRunCli(args: RunModeArgs): void {
     forcedLayoutId?: string;
     forcedEncounterId?: string;
     firstNodeKind?: 'elite' | 'event';
-    bitsMultiplier?: number;
     drawAmountAdd?: number;
     escalation?: number;
     eliteChance?: number;
@@ -219,14 +216,6 @@ export function runRunCli(args: RunModeArgs): void {
       bail(`--first-node: supported stamps are "elite" and "event" (got "${args.firstNode}")`);
     }
     runConfig.firstNodeKind = args.firstNode;
-  }
-  // 60c — `--bits-multiplier=<f>` rides the 48f RunConfig lever (finite,
-  // > 0; anything else is a flag typo worth failing loudly on).
-  if (args.bitsMultiplier !== undefined) {
-    if (!Number.isFinite(args.bitsMultiplier) || args.bitsMultiplier <= 0) {
-      bail(`--bits-multiplier must be a positive number (got ${args.bitsMultiplier})`);
-    }
-    runConfig.bitsMultiplier = args.bitsMultiplier;
   }
   // 65d — `--draw-add=<n>` rides the RunConfig drawAmountAdd lever (a
   // nonzero integer; the fold's read site clamps the RESULT ≥ 1, but a
@@ -361,8 +350,6 @@ export function runRunCli(args: RunModeArgs): void {
   const wrapStrategy = arbitratedWrapFromArgs(args, {
     // 71c — the shadow tier (validated in args.ts: a real tier ≠ primary).
     ...(args.flipTelemetry !== undefined ? { shadowTier: args.flipTelemetry as InnerTier } : {}),
-    // 71d — the grant-gate ablation dial (validated in args.ts: ≥ 0).
-    ...(args.grantEpsilon !== undefined ? { grantEpsilon: args.grantEpsilon } : {}),
     // 85g6a — the campRaid causal-arm dial (validated in args.ts: on|off).
     ...(args.campRaid === 'off' ? { campRaid: false } : {}),
     // 84c — the long-horizon shadow instrument (validated in args.ts:

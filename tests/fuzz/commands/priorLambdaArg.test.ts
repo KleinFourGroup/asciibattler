@@ -3,7 +3,7 @@
  * mode ({0, 0.5, 1} at the §85 cohort). The fold's behavior is pinned at
  * evaluator level (priorBonusOf + the λ=0 byte-identity contract) and at
  * driver level (the 12c judgeLong strip) — the new surface here is only
- * the parse + guards, the grantEpsilonArg pattern.
+ * the parse + guards.
  */
 
 import { describe, it, expect } from 'vitest';

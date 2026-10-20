@@ -44,9 +44,6 @@ describe('--shadow-horizon / --shadow-sample (84c)', () => {
     );
     expect(() => parseArgs(['--arbitrate', '--layout=arena'])).toThrow(/refused with --layout/);
     expect(() => parseArgs(['--arbitrate', '--draw-add=1'])).toThrow(/refused with --draw-add/);
-    expect(() => parseArgs(['--arbitrate', '--bits-multiplier=1.5'])).toThrow(
-      /refused with --bits-multiplier/,
-    );
     // Scatter chances bite only at a sector TRANSITION (the start map rides
     // the clone's wire): refused on the walk shape, legal on a single-sector
     // (--hops) probe — the act-1 probe combos survive.

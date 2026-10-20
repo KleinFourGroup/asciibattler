@@ -13901,3 +13901,32 @@ deletion is left only in ROADMAP, the census and the WORKLOG. No code that
 runs changed, so no instrument was run; the hook's smoke and parity test
 run because `tests/fuzz` is staged. `comment-codes --record`: 1,084, no
 change (the ceiling counts `src`).
+
+### 125b — A-20's `--bits-multiplier` and `--grant-epsilon` (2026-10-20, session 046c70be)
+
+Both flags are out of the parser (field, case, guards, the
+`--arbitrate` refusal list's entry), out of run mode's wiring
+(`commands/run.ts`), and their parse tests are deleted with them
+(`bitsMultiplierArg.test.ts`, `grantEpsilonArg.test.ts`, and one case each
+in `shadowArgs.test.ts` and `arbitrateSearchCompat.test.ts`).
+`ArbitratedConfig.grantEpsilon` and `arbitrateGrant`'s override parameter
+went too: the flag was their one setter, so the grant site reads
+`GRANT_EPSILON` as it always did without the flag. Two test headers that
+named a deleted test as their pattern, and two comments in `args.ts` that
+listed `--grant-epsilon` among the run-mode instruments, now name
+`--camp-raid`, the ablation dial the same guard refuses with `--search`.
+An unknown flag throws at parse (`args.ts`, the switch's default), so a
+command that still passes either fails loudly.
+
+Proof: the type check is clean; the fuzz diff (`perf-oracle.sh` against
+`3eb74810`) PASS on both shapes, `summary.csv`, `decisions.csv` and
+`rosters.csv` byte-identical. Whether the arm shape's one run held a grant
+was not checked; the grant site's line is the same by construction, as
+its override was undefined unless the flag set it.
+
+**A finding for the re-skim.** `ArbitratedConfig`'s other six per-site ε
+overrides (`portBuyEpsilon`, `packetFireEpsilon`, `rewardDaemonEpsilon`,
+`nodeChoiceEpsilon`, `eventChoiceEpsilon`, `campRaidEpsilon`) are set by
+nothing in code, tests or config: a search for each name finds only its
+declaration and its read in `rollout/arbitratedStrategy.ts`. They were not
+the flag's, so they stay for 125j.

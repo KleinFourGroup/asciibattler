@@ -5,7 +5,7 @@
  * enumerations in readers, probes, and verify scripts derive from
  * THIS, never from a remembered literal — the 85f reader's
  * `site === 'reward'` (for 'rewardDaemon') silently dropped ~144
- * rows/arm, and verifyArbitratedRuns carried its own stale local list.
+ * rows/arm, and an exit script carried its own stale local list.
  * Adding a site = add it here in the same commit as its `decide()`
  * call; site lists elsewhere are `satisfies readonly DecisionSite[]`
  * so an unregistered literal fails to compile.

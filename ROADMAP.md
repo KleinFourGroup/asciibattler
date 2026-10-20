@@ -276,7 +276,7 @@ once its outcome on `src` is seen). The cut was signed 2026-10-20 with
 its six calls; the audit, the calls and the trials' bars are in WORKLOG
 §125, "The kickoff".
 
-- ☐ **125a — A-30 and A-31** (`none`). `verifyArbitratedRuns.ts` and the
+- ☑ **125a — A-30 and A-31** (`none`). `verifyArbitratedRuns.ts` and the
   fifteen vectors; GOTCHAS #128's sentence corrected.
 - ☐ **125b — A-20's `--bits-multiplier` and `--grant-epsilon`** (`none`),
   with `grantEpsilon`'s field and override, which only the flag set.

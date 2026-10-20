@@ -13886,3 +13886,18 @@ The exit's counts for §125, with these as the baseline: `comment-length
 src/bot` 1,108 code lines, 877 comment lines, 7,314 comment words; step
 codes 217 in `src/bot`, 180 of them in the pass's files; the ceiling
 1,084. The cut as signed is in ROADMAP §125.
+
+### 125a — A-30 and A-31 (2026-10-20, session 046c70be)
+
+`tests/fuzz/rollout/verifyArbitratedRuns.ts` (92 lines) and the fifteen
+vectors in `tests/fuzz/fixtures/` that the kickoff's search found unnamed
+are deleted; the folder keeps six files, each named by code or a doc.
+GOTCHAS #128 and `rollout/sites.ts`'s header named the script as the stale
+private site list's example; both now say an exit script, without its
+name. Proof: nothing imported the script (the type check is clean without
+it), no file is loaded from `fixtures/` by folder (a search for a
+directory read there found none), and the name searched again after the
+deletion is left only in ROADMAP, the census and the WORKLOG. No code that
+runs changed, so no instrument was run; the hook's smoke and parity test
+run because `tests/fuzz` is staged. `comment-codes --record`: 1,084, no
+change (the ceiling counts `src`).

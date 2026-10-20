@@ -3232,12 +3232,12 @@ body {
   }
 }
 
-/* ── H4b: the turn screen + shared pool gauges ─────────────────────────────
-   A full opaque overlay (same as promotion / recruit) at each tactical
-   turn's start. Pool palette throughout: player = TERMINAL_GREEN, enemy =
-   NEON_RED, accents = FLOURESCENT_BLUE. (96.5d: the post-turn screen is gone
-   — the live bar carries the outcome and the pre-turn "last turn" strip
-   records it.) */
+/* ── The pre-turn screen and the shared pool gauges ────────────────────────
+   A full opaque screen, as the promotion and recruit screens are, at each
+   turn's start. The pools' palette throughout: the player TERMINAL_GREEN,
+   the enemy NEON_RED, the accents FLOURESCENT_BLUE. A turn's outcome is
+   carried by the battle's live gauges and recorded by this screen's "last
+   turn" strip. */
 
 .preturn-screen {
   position: absolute;
@@ -3247,22 +3247,22 @@ body {
   align-items: center;
   justify-content: center;
   gap: 20px;
-  background: var(--color-black); /* opaque — DOM scenes fully mask the battle canvas */
+  background: var(--color-black); /* opaque: the screen masks the battle canvas whole */
   font-family: var(--font-mono);
 }
 
-/* P3 — the full hand cards make the pre-turn screen tall; let it scroll so a
-   6-card hand never clips the cards or pushes the Fight button off-screen.
-   `safe center` keeps short content vertically centred but switches to
-   top-aligned (no clip) once it overflows, so scrolling reaches everything.
-   border-box keeps the padding inside the inset:0 frame. */
+/* The hand's full cards make the pre-turn screen tall, so it scrolls, and a
+   hand never clips. `safe center` keeps short content vertically centred
+   but aligns it to the top (no clip) once it overflows, so scrolling
+   reaches everything. border-box keeps the padding inside the inset-0
+   frame. */
 .preturn-screen {
   justify-content: safe center;
   overflow-y: auto;
   box-sizing: border-box;
-  /* 73c — bottom clearance for the viewport-pinned Fight ▸ button: the last
-     in-flow rows (packet row / denial lines) must be able to scroll fully
-     above it. Was 24px 0, sized for a 6-card single-row hand. */
+  /* Clearance at the bottom for the Fight button, pinned to the page: the
+     last rows in the flow (the packet row, a denial line) must be able to
+     scroll fully above it. */
   padding: 24px 0 96px;
 }
 
@@ -3280,9 +3280,8 @@ body {
   color: var(--color-dark-terminal-amber);
 }
 
-/* 89e — the pre-turn RISK line: sits directly under the pool gauges it reads
-   against, in the enemy pool's hue so "at risk" and "their pool" read as the
-   same ledger. */
+/* The risk line, directly under the pool gauges it reads against, in the
+   enemy pool's hue, so "at risk" and "their pool" read as one ledger. */
 .preturn-risk {
   font-size: var(--text-12);
   letter-spacing: 0.1em;
@@ -3291,11 +3290,10 @@ body {
   margin-top: 6px;
 }
 
-/* 96.5d — THE "LAST TURN" STRIP (the post-turn screen's replacement): one
-   line under the gauges + the risk line — the label, the skirmish result in
-   the winner's hue, then each side's fallen as a glyph run with its loss in
-   the side's hue. Wraps on a narrow viewport; the sides never split
-   internally. */
+/* The "last turn" strip, from the second turn on: one line under the gauges
+   and the risk line, with the label, the skirmish's result in the winner's
+   hue, then each side's fallen as a glyph run with its loss in the side's
+   hue. It wraps on a narrow window; a side never splits. */
 .preturn-lastturn {
   display: flex;
   flex-wrap: wrap;
@@ -3358,10 +3356,10 @@ body {
   color: var(--color-neon-red);
 }
 
-/* Wb1 — the encounter NAME: the fight's headline, the second-most prominent
-   line after "Turn N". Brighter + larger than the hop/map sub-lines below it
-   (the dark-amber hop line separates it from the amber map line). An elite/boss
-   carries a bordered kind badge in its accent hue. */
+/* The encounter's name: the fight's headline, the most prominent line after
+   "Turn N". Brighter and larger than the hop and map lines below it (the
+   dark-amber hop line separates it from the amber map line). An elite or a
+   boss carries a bordered kind badge in its accent hue. */
 .preturn-encounter {
   display: flex;
   align-items: baseline;
@@ -3388,8 +3386,8 @@ body {
   color: var(--color-boss-red); /* a boss red */
 }
 
-/* K3.5 — the encounter's battlefield line (one map per encounter): brighter
-   than the hop sub-line because it's the input to the redraw decision. */
+/* The encounter's battlefield line (one map per encounter): brighter than
+   the hop line, since it is an input to the redraw decision. */
 .preturn-map {
   font-size: var(--text-12);
   letter-spacing: 0.1em;
@@ -3397,8 +3395,8 @@ body {
   color: var(--color-terminal-amber);
 }
 
-/* L1 — the run's daemon banner: the relic/meta layer reads FLOURESCENT_BLUE
-   (the K4 empower accent) against the amber battlefield line above it. */
+/* The run's daemon line: the meta layer reads FLOURESCENT_BLUE, the empower
+   accent, against the amber battlefield line above it. */
 .preturn-daemon {
   font-size: var(--text-12);
   letter-spacing: 0.1em;
@@ -3407,8 +3405,8 @@ body {
   max-width: 32.5rem;
 }
 
-/* L1 — a chance gate that denied this turn (Mercury's cold coin): an inert
-   dim line standing where the control would be. A SPENT gate leaves nothing —
+/* A chance gate that denied this turn (Mercury's cold coin): an inert dim
+   line standing where the control would be. A spent gate leaves nothing;
    only a denial speaks. */
 .preturn-gate-denied {
   font-size: var(--text-11);
@@ -3417,7 +3415,8 @@ body {
   color: var(--color-dark-terminal-amber);
 }
 
-/* H5b — the drawn hand: a small label over a row of compact unit cards. */
+/* The drawn hand: a small label over a row of full unit cards (the
+   pre-turn skin). */
 .preturn-hand {
   display: flex;
   flex-direction: column;
@@ -3433,8 +3432,8 @@ body {
 }
 
 .preturn-hand-cards {
-  /* 73c — the card metrics as vars: refreshHand computes the balanced-wrap
-     max-width from these for an over-drawn hand (> handSize cards). */
+  /* The card's metrics as vars: refreshHand computes the balanced wrap's
+     max-width from them for a hand drawn past `handSize`. */
   --hand-card-w: 11.5rem;
   --hand-gap: 12px;
   display: flex;
@@ -3443,24 +3442,25 @@ body {
   justify-content: center;
 }
 
-/* --- Pre-turn skin (P3; was .preturn-card*): the player's drawn hand rendered
-   as full cards (all stats + abilities + the XP-to-next bar), so the hand shows
-   the same detail the player drafts on. Reuses the recruit amber theme + the
-   base two-col stats; position: relative anchors the empower-badge overlay. --- */
+/* --- Pre-turn skin: the player's drawn hand as full cards (every stat, the
+   abilities and the XP bar), so the hand shows the detail the player drafts
+   on. The recruit skin's amber and the base two-column stats; `position:
+   relative` anchors the empower badge. --- */
 .unit-card--preturn {
   position: relative;
-  width: var(--hand-card-w, 11.5rem); /* 73c — sourced from .preturn-hand-cards */
-  /* 73c — border-box so the var IS the outer width: content-box + the 1px
-     borders made each card 186px, overflowing the computed balanced-wrap
-     max-width by 2px/card and wrapping one card early (4+4+2, not 5+5). */
+  width: var(--hand-card-w, 11.5rem); /* from .preturn-hand-cards */
+  /* border-box, so the var is the outer width the balanced wrap computes
+     with; at content-box the borders would widen each card past it and
+     wrap a card a row early. */
   box-sizing: border-box;
   border: 1px solid var(--color-dark-terminal-amber);
   color: var(--color-terminal-amber);
 }
 
-/* K3/K4 — a hand card turns selectable while the turn's redraw/empower budget
-   allows (hover amber, selected = FLOURESCENT_BLUE glow, mirroring the J3 armed
-   treatment), with the Redraw + Empower controls in a row underneath. */
+/* A hand card turns selectable while the turn's active grant or an armed
+   packet takes a card (the hover amber, the selected card's glow
+   FLOURESCENT_BLUE); the grants themselves are the fire strip under the
+   hand. */
 .unit-card--preturn.unit-card--clickable {
   cursor: pointer;
   transition:
@@ -3468,11 +3468,11 @@ body {
     box-shadow 0.1s;
 }
 
-/* Hover affordance only on a NOT-yet-selected card. Without the :not, this
-   compound-class :hover (0,3,0) outspecifies .unit-card--preturn.is-selected
-   (0,2,0), so the amber hover border masks the blue SELECTED border while the
-   cursor still sits on the just-clicked card (the glow shows, the border
-   doesn't, until you move the mouse). */
+/* The hover only on a card not yet selected. Without the :not, this
+   compound-class :hover (0,3,0) outranks .unit-card--preturn.is-selected
+   (0,2,0), so the amber hover border would hide the blue selected border
+   while the pointer still sits on the card just clicked (the glow showing,
+   the border not, until the mouse moves). */
 .unit-card--preturn.unit-card--clickable:hover:not(.is-selected),
 .unit-card--preturn.unit-card--clickable:focus-visible:not(.is-selected) {
   border-color: var(--color-terminal-amber);
@@ -3483,11 +3483,11 @@ body {
   box-shadow: 0 0 6px rgb(from var(--color-flourescent-blue) r g b / 0.5);
 }
 
-/* 49f — THE GUIDED FIRE STRIP (replaces the K3/K4→49d per-grant control
-   rows): one chip per queue entry in acquisition order + Pass. The ACTIVE
-   chip glows FLOURESCENT_BLUE and carries the inline hint (an active
-   redraw chip is also the confirm button); queued chips wait dim amber;
-   spent chips fade; passed chips are struck (the turn's receipt). */
+/* The fire strip: one chip per grant in the turn's queue, in the order they
+   were gained, and Pass. The active chip glows FLOURESCENT_BLUE and carries
+   the inline hint (an active redraw chip is also the confirm button);
+   queued chips wait in dim amber; spent chips fade; passed chips are
+   struck through, the turn's receipt. */
 .preturn-strip {
   display: flex;
   flex-wrap: wrap;
@@ -3519,7 +3519,7 @@ body {
   box-shadow: 0 0 8px rgb(from var(--color-flourescent-blue) r g b / 0.45);
 }
 
-/* The active REDRAW chip doubles as the confirm button — clickable once a
+/* The active redraw chip doubles as the confirm button, clickable once a
    selection exists (the :not(:disabled) gate). */
 .fire-chip--active:not(:disabled) {
   cursor: pointer;
@@ -3576,13 +3576,14 @@ body {
 
 .preturn-pass:hover,
 .preturn-pass:focus-visible {
-  border-color: var(--color-neon-red); /* pass is FINAL, the hover says so */
+  border-color: var(--color-neon-red); /* a pass is final, and the hover says so */
   color: var(--color-neon-red);
   background: rgb(from var(--color-neon-red) r g b / 0.08);
 }
 
-/* 49f — the at-will packet row (below the strip): the held preTurn-usable
-   packets, fire-on-click (or arm-then-pick for a unit target). */
+/* The packet row, below the strip: the held packets usable before a turn,
+   fired by a click (or armed, then aimed by a card pick, for a unit
+   target). */
 .preturn-packets {
   display: flex;
   flex-wrap: wrap;
@@ -3626,7 +3627,7 @@ body {
   background: rgb(from var(--color-flourescent-blue) r g b / 0.15);
 }
 
-/* The armed-packet banner (hype's pick-a-card state). */
+/* The armed packet's banner (a unit-target packet's pick-a-card state). */
 .preturn-arm-hint {
   font-family: var(--font-mono);
   font-size: var(--text-12);
@@ -3635,11 +3636,11 @@ body {
   color: var(--color-flourescent-blue);
 }
 
-/* K4→78c — the buffed-card badge: a top-right corner overlay (anchored by
-   .unit-card--preturn's position: relative) holding ONE CHIP PER BUFF KEY
-   (▲ per stack within a chip), each with its own hover title — the 78c
-   per-key split of the old single merged badge. Chips stack as a right-
-   aligned column so two sources read as two rows, not one blob. */
+/* The buffed card's badge: an overlay in the top-right corner (anchored by
+   .unit-card--preturn's `position: relative`) holding one chip per buff
+   key (a ▲ per stack, `▲×N` past three), each with its own tooltip. The
+   chips stack as a right-aligned column, so two sources read as two rows
+   and not one blob. */
 .preturn-card-empower {
   position: absolute;
   top: 8px;
@@ -3654,8 +3655,9 @@ body {
   font-size: var(--text-13);
   line-height: 1;
   letter-spacing: 0.08em;
-  /* 78d — per-key color set INLINE off EMPOWER_DISPLAY (statusDisplay.ts);
-     FLOURESCENT_BLUE stands as the no-map fallback shade. */
+  /* The key's colour is set inline from EMPOWER_DISPLAY (statusDisplay.ts),
+     whose own fallback covers a key missing from it; this
+     FLOURESCENT_BLUE shows only if no inline colour lands. */
   color: var(--color-flourescent-blue);
 }
 
@@ -3666,17 +3668,12 @@ body {
   justify-content: center;
 }
 
-/* 96d — THE PRIMARY-ACTION BUTTON: the button factory's idiom
-   (src/ui/button.ts). ONE look for the walk-on buttons that carried nine
-   near-identical rules before (51b's continue trio · the promotion
-   Continue · the recruit pass · game over · sector cleared; the
-   character-select card is a card and keeps its own chrome, and the port
-   Leave left for the control column's plate). Two modifiers name a
-   DELIBERATE per-site delta; every computed value a site had is preserved
-   (the 96d cascade oracle) — the incidental ones (a 13px here, a 24px pad
-   there) are listed in WORKLOG §96d for a later collapse. A site's POSITION
-   stays on its own class (.preturn-continue below) — layout is the
-   screen's, look is the idiom's. */
+/* The primary-action button, the button factory's idiom (src/ui/button.ts):
+   one look for the walk-on buttons (the Continues, Pass, Back, the menu's
+   rows, the end screens' exits, Fight). Two modifiers name a deliberate
+   difference a site has. A site's position stays on its own class
+   (.preturn-continue below): the layout is the screen's, the look the
+   idiom's. */
 .btn--primary {
   font-family: var(--font-mono);
   font-size: var(--text-14);
@@ -3700,8 +3697,9 @@ body {
   color: var(--color-flourescent-blue);
 }
 
-/* btn--dim — a PASS (H6b's recruit pass): muted until hovered; the hover
-   lifts the opacity, never the color. */
+/* btn--dim, a pass (the recruit screen's Pass, character select's Back):
+   muted until hovered, and the hover lifts the opacity, never the text's
+   colour. */
 .btn--primary.btn--dim {
   font-size: var(--text-13);
   padding: 8px 28px;
@@ -3718,9 +3716,9 @@ body {
   opacity: 1;
 }
 
-/* btn--exit — the controls of an opaque end screen (game over's two ·
-   sector cleared's one): a full amber frame under the subtext, and the
-   hover FILLS it. */
+/* btn--exit, the controls of an opaque end screen (the end screen's one or
+   two, sector cleared's one): a full amber frame under the subtext, which
+   the hover fills. */
 .btn--primary.btn--exit {
   margin-top: 16px;
   background: transparent;
@@ -3738,12 +3736,12 @@ body {
   color: var(--color-black);
 }
 
-/* 73c — the pre-turn Fight ▸ button is viewport-pinned: at maxHandSize 10
-   the two-row hand pushed it (and the fire strip / packet row) below the
-   fold, hiding the turn's primary action behind a scroll. Bottom-CENTER
-   because the top-right is the control column's (Settings, Roster) and the
-   bottom corners are the pile buttons' (draw BR, discard BL). The
-   .preturn-screen bottom padding keeps in-flow controls scrollable clear. */
+/* The pre-turn screen's Fight button is pinned to the page: a two-row hand
+   (`maxHandSize` is 10) would push it below the fold, hiding the turn's
+   main action behind a scroll. Bottom centre, since the top right is the
+   control column's (Settings, Roster) and the bottom corners are the pile
+   buttons' (draw at the right, discard at the left). The screen's bottom
+   padding lets the controls in the flow scroll clear of it. */
 .preturn-continue {
   position: fixed;
   bottom: 20px;
@@ -3761,21 +3759,21 @@ body {
   gap: 6px;
 }
 
-/* 96.5b2-pre — the HUD's two gauges are wider than the turn screens' (the
-   user's call): the enemy label is the ENCOUNTER NAME there, and at 220px a
-   long name already sat on two lines while a short one sat on one — the
-   gauge's height varied per encounter and moved the card row with it. */
+/* The HUD's two gauges are wider than the pre-turn screen's: the enemy's
+   label is the encounter's name there, and at the narrower width a long
+   name sat on two lines and a short one on one, so the gauge's height
+   varied by encounter and moved the card row with it. */
 .hud-player-pool .pool-gauge,
 .hud-enemy-pool .pool-gauge {
   width: 20rem; /* the longest catalog name (23 glyphs) fits beside the reserved value */
 }
 
-/* 96.5b2-pre — the head can never wrap: the live readout widens per loss
-   event (`33 (−7) / 40`) and a wrap moved the card row (the §101 failure
-   the user caught); the label gives way with an ellipsis, and the value
-   RESERVES its widest live form (`44 (−44) / 44`, 13 glyphs + the
-   letter-spacing) so its box — and the label's room — is constant through
-   a battle: `/ max` stays put, only the remaining number slides. */
+/* The head never wraps: the live readout widens with a loss
+   (`33 (−7) / 40`), and a wrap would move the card row. The label gives way
+   with an ellipsis, and the value reserves its widest live form
+   (`44 (−44) / 44`, 13 glyphs and the letter-spacing), so its box, and the
+   label's room, are constant through a battle: `/ max` stays put and only
+   the remaining number slides. */
 .pool-gauge-head {
   display: flex;
   justify-content: space-between;
@@ -3801,7 +3799,7 @@ body {
 }
 
 .pool-gauge-bar {
-  position: relative; /* 96.5b1 — the ghost is positioned over the fill */
+  position: relative; /* the ghost is positioned over the fill */
   height: 14px;
   border: 1px solid var(--color-gray-22);
   background: var(--color-gray-0a);
@@ -3812,8 +3810,8 @@ body {
   transition: width 0.2s ease;
 }
 
-/* 96.5b1 — the GHOST: the loss the turn has made a fact of but Run has not
-   booked yet (the loss-event model). It sits over the fill's leading segment
+/* The ghost: the loss the turn has made a fact of but Run has not booked
+   yet (the loss-event model). It sits over the fill's leading segment
    as the bar's dark ground hatched in the side's hue, so the solid fill still
    reads as the booked pool and the hatch as "spoken for"; `commit()` shrinks
    the fill under it and it collapses to zero width. The readout's `(−N)`
@@ -3834,14 +3832,13 @@ body {
   font-weight: normal;
 }
 
-/* 96.5c → c2 — THE NOTCH (the user's redesign of the red ceiling tick, which
-   fought the fill's hue and sat on one gauge only): the pre-turn bound is a
-   2px slice REMOVED from the fill at the booked pool minus the bound — the
-   bar's own ground showing through, so it blends by construction and reads
-   the same on either gauge. It breathes on opacity (the cut fading in and
-   out over the fill); static under reduced motion. Above the ghost so the
-   cut shows through the hatch too. The ghost grows toward it; on an
-   ordinary turn it cannot pass it. */
+/* The notch: the pre-turn bound as a 2px slice cut from the fill at the
+   booked pool less the bound, the bar's own ground showing through, so it
+   blends by construction and reads the same on either gauge, where a tick
+   in a hue of its own would fight the fill's. It breathes on opacity (the
+   cut fading in and out over the fill), and holds still under reduced
+   motion. Above the ghost, so the cut shows through the hatch too. The
+   ghost grows toward it; on an ordinary turn it can't pass it. */
 .pool-gauge-risk {
   position: absolute;
   top: 0;
@@ -3862,11 +3859,11 @@ body {
     opacity: 0.3;
   }
 }
-/* Its reduced form (no breathing) is in the §99 block at the end of the
-   sheet with every other animation's — not a local @media block (99b). */
+/* Its reduced form (no breathing) is in the reduced-motion block at the
+   sheet's end with every other animation's, not in a local @media block. */
 
-/* 96.5b2 — the landing flash (chipPulse's .is-pulsing on the gauge): the
-   readout and the fill glow for the pulse, then settle. */
+/* The landing flash (chipPulse's .is-pulsing on the gauge): the readout and
+   the fill glow for the pulse, then settle. */
 .pool-gauge.is-pulsing .pool-gauge-value {
   text-shadow: 0 0 8px currentColor;
 }
@@ -3874,11 +3871,11 @@ body {
   filter: brightness(1.5);
 }
 
-/* 96.5b2 — THE ORB (src/ui/lossFx.ts): a `●` in the paying side's hue with a
-   glow, flown card → gauge by the Web Animations API (position: fixed at the
-   launch point, the flight on transform). Above the HUD panes and the chrome
-   column (15) + the corner buttons (20), below the modals (30). No pointer
-   events — it is never a target. */
+/* The orb (src/ui/lossFx.ts): a `●` in the paying side's hue with a glow,
+   flown from a card to the gauge by the Web Animations API (fixed at the
+   launch point, the flight on `transform`). Above the HUD panes, the
+   chrome column (15) and the corner buttons (20), below the modals (30).
+   No pointer events: it is never a target. */
 .loss-orb {
   position: fixed;
   z-index: 25;
@@ -3934,22 +3931,22 @@ body {
     var(--color-gray-0a);
 }
 
-/* R1/R2 — the shared card-list affordance + modal (src/ui/CardListModal.ts).
-   The corner buttons (position: fixed so they ignore the host screens' own
-   vertical scroll) open a modal that overlays everything with a dimmed backdrop
-   and a bordered, scrollable grid of full cards. Amber terminal chrome,
-   fluorescent-blue hover — matching the pre-turn screen they sit on.
-   R2: the draw-pile (bottom-right) + discard-pile (bottom-left) buttons on
-   pre-turn. R1's roster button (Map / Recruit / pre-turn) opens the same
-   modal from the control column, in the chip's plate (`.control-chip`). */
+/* The card-list buttons and their modal (src/ui/CardListModal.ts). The
+   corner buttons (fixed, so they ignore a screen's own scroll) open a modal
+   over everything: a dimmed backdrop and a bordered, scrolling grid of full
+   cards. Amber terminal chrome with a fluorescent-blue hover, matching the
+   pre-turn screen they sit on: the draw pile (bottom right) and the
+   discard pile (bottom left). The roster button (the map, the recruit and
+   the pre-turn screens) opens the same modal from the control column, in
+   the chip's plate (`.control-chip`). */
 .card-list-button {
   position: fixed;
   z-index: 20;
   font-family: var(--font-mono);
-  font-size: var(--text-18); /* fix(R1): 1.5× the original 12px — user call */
+  font-size: var(--text-18);
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  padding: 12px 24px; /* scaled 1.5× with the font so the button isn't cramped */
+  padding: 12px 24px; /* in step with the text, so the button isn't cramped */
   border: 1px solid var(--color-dark-terminal-amber);
   background: var(--color-black);
   color: var(--color-terminal-amber);
@@ -3967,8 +3964,8 @@ body {
   color: var(--color-flourescent-blue);
 }
 
-/* Corner anchors — the piles in the bottom corners (R2), matching the
-   brief's draw-right / discard-left layout. */
+/* The piles in the bottom corners: draw at the right, discard at the
+   left. */
 .card-list-button--draw {
   bottom: 16px;
   right: 16px;
@@ -3978,11 +3975,11 @@ body {
   left: 16px;
 }
 
-/* --- 65e: the pre-turn draw/discard motion + the "Draw: N" chip. --------- */
+/* --- The pre-turn screen's draw and discard motion, and the "Draw: N" chip. */
 
-/* The chip: the folded per-turn draw amount (the §65 transparency surface),
-   anchored just above the Draw Pile button — same terminal chrome, but
-   non-interactive (informational, dimmer than the buttons). */
+/* The chip: the turn's folded draw count, just above the Draw Pile button,
+   where the player already reasons about the deck. The same terminal
+   chrome, but it takes no click (a read, dimmer than the buttons). */
 .preturn-draw-chip {
   position: fixed;
   bottom: 72px;
@@ -4015,9 +4012,9 @@ body {
   }
 }
 
-/* 65f — a departing card's GHOST: the fixed-position clone holding in place
-   until its discard cue fires in the serial schedule (the live row has
-   already rebuilt underneath it — pure send-off theater). */
+/* A departing card's ghost: a fixed clone holding in place until its
+   discard cue fires in the serial schedule (the live row has already been
+   rebuilt under it; the ghost is the send-off alone). */
 .preturn-card-ghost {
   position: fixed;
   z-index: 30;
@@ -4040,9 +4037,9 @@ body {
   }
 }
 
-/* 65f — the pile-chip pulses (the serial deck-transaction feel): one brief
-   flash per card moved; the reshuffle gets its own two-beat cyan shake on
-   BOTH chips (one conceptual action — a single distinct pulse by design). */
+/* The pile buttons' pulses, a card at a time: one brief flash per card
+   moved; the reshuffle gets its own two-beat cyan shake on both buttons,
+   one pulse for one action. */
 .card-list-button--pulse {
   animation: chip-pulse 0.18s ease-out;
 }
@@ -4085,7 +4082,7 @@ body {
 .roster-overlay {
   position: fixed;
   inset: 0;
-  z-index: 30; /* above the .roster-button + the host screen */
+  z-index: 30; /* above the card-list buttons and the host screen */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -4108,11 +4105,11 @@ body {
   box-shadow: 0 0 24px rgb(from var(--color-terminal-amber) r g b / 0.25);
 }
 
-/* 96f — the modal shell (src/ui/modal.ts) focuses its container on open
+/* The modal shell (src/ui/modal.ts) focuses its container on open
    (tabindex=-1, the trap's anchor). The container is not a control, so a
-   focus ring on it is noise — the ✕ and the body's buttons keep theirs.
-   100e — the screen root joins it: `Screen.present` focuses the screen so
-   the next Tab enters its controls (tests/ui-focus.test.ts allows exactly
+   focus ring on it is noise; the ✕ and the body's buttons keep theirs. The
+   screen's root is the same: `Screen.present` focuses the screen so the
+   next Tab enters its controls (tests/ui-focus.test.ts allows exactly
    these three containers to drop the outline). */
 .roster-modal:focus,
 .sector-map-overlay:focus,
@@ -4178,12 +4175,12 @@ body {
   padding: 24px;
 }
 
-/* --- Roster skin (R1/R2): the full card in the shared card-list modal (roster
-   view + draw/discard pile views). Display-only by default, all stats +
-   abilities + the XP-to-next bar (owned units carry banked XP). Reuses the
-   recruit amber theme + the base two-col stats, like the pre-turn skin.
-   51c: in the modal's PICKER mode the cards go clickable/selectable — the
-   pre-turn hand's affordance vocabulary (amber hover, blue selected). --- */
+/* --- Roster skin: the full card in the card-list modal (the roster and the
+   two piles). A read by default, with every stat, the abilities and the XP
+   bar (owned units carry banked XP). The recruit skin's amber and the base
+   two-column stats, as the pre-turn skin. In the modal's picker mode the
+   cards turn selectable, in the pre-turn hand's terms (an amber hover, a
+   blue selection). --- */
 .unit-card--roster {
   width: 11.5rem;
   border: 1px solid var(--color-dark-terminal-amber);
@@ -4197,8 +4194,8 @@ body {
     box-shadow 0.1s;
 }
 
-/* The :not keeps the hover border from masking the selected border while the
-   cursor still sits on the just-clicked card (the preturn-skin lesson). */
+/* The :not keeps the hover border from hiding the selected border while the
+   pointer still sits on the card just clicked, as on the pre-turn skin. */
 .unit-card--roster.unit-card--clickable:hover:not(.is-selected),
 .unit-card--roster.unit-card--clickable:focus-visible:not(.is-selected) {
   border-color: var(--color-terminal-amber);
@@ -4209,8 +4206,9 @@ body {
   box-shadow: 0 0 6px rgb(from var(--color-flourescent-blue) r g b / 0.5);
 }
 
-/* 51c — the picker footer: the confirm button under the grid, the shared
-   continue-button chrome but green-affirmed when armed (exact count met). */
+/* The picker's footer: the confirm button under the grid, in the primary
+   button's shape but green, the affirmative, once exactly the picker's
+   count is selected; dim amber while it is disabled. */
 .roster-modal-footer {
   display: flex;
   justify-content: center;
@@ -4247,16 +4245,16 @@ body {
   opacity: 0.7;
 }
 
-/* 97a — THE TOOLTIP (src/ui/tooltip.ts): ONE live element in #ui, the
-   terminal plate at the small text size, fixed + out of flow so it never
+/* The tooltip (src/ui/tooltip.ts): one live element in #ui, the
+   terminal plate at the small text size, fixed and out of flow so it never
    shifts layout; above the trigger by default, flipped below (data-side)
    when the top would clip; the caret rides `left` and points at the
    trigger's center even when the box is clamped to the viewport edge. The
-   id-qualified form beats `#ui > * { pointer-events: auto }` — a pointer
+   id-qualified form beats `#ui > * { pointer-events: auto }`: a pointer
    must never hover the tooltip itself (it would flicker over its trigger).
-   z-index 50: above the sector-map overlay (40) + its ✕ (42), below
+   z-index 50: above the sector-map overlay (40) and its ✕ (42), below
    #scanlines (1000). The fade mirrors TOOLTIP_FADE_MS; under reduced motion
-   (the §99 block at the end of the sheet) the rise goes, the fade stays. */
+   (the block at the sheet's end) the rise goes and the fade stays. */
 #ui > .tooltip {
   pointer-events: none;
 }
@@ -4319,12 +4317,12 @@ body {
   -webkit-touch-callout: none;
 }
 
-/* 97e — THE COMPACT CARD'S PERSISTENT HINTS (the §97 sole-source fix): the
-   level and power numbers each carry a tiny uppercase hint in a wrapper
-   beside the number span (`LV 5` / `1 POW`), the wrap owning the color so
-   the hint inherits it. The `▲` chips carry the buff key's name beside the
-   triangles (the kickoff's call E — by the user's eye; the hue is never the
-   only channel). */
+/* The compact card's standing hints, so a tooltip is never the only place
+   a number's meaning lives: the level and the power each carry a tiny
+   uppercase hint in a wrapper beside the number's span (`LV 5`, `1 POW`),
+   the wrapper owning the colour so the hint inherits it. The `▲` chips
+   carry the buff key's name beside the triangles, so the hue is never the
+   only channel. */
 .unit-card__compact-level-wrap,
 .unit-card__compact-power-wrap {
   display: inline-flex;
@@ -4361,10 +4359,10 @@ body {
   margin-left: 4px;
 }
 
-/* ── 116d — THE SETTINGS MODAL (src/ui/SettingsOverlay.ts) ──────────────────
-   The 96f panel with rows in it (DESIGN §UI idioms, "Fields"): a name on the
-   left, its control on the right. The body scrolls inside the panel, so the
-   header and its ✕ stay put however many rows later steps add. The boxes
+/* ── The settings modal (src/ui/SettingsOverlay.ts) ─────────────────────────
+   The modal shell's panel with rows in it (DESIGN "Fields"): a name on the
+   left, its control on the right. The body scrolls inside the panel, so
+   the header and its ✕ stay put however many rows there are. The boxes
    that hold text are sized in rem, so they grow with the text scale. */
 .settings-modal {
   width: min(92vw, 44rem);
@@ -4419,7 +4417,7 @@ body {
   gap: 6px;
 }
 
-/* A toggle of a choice, the − / + of a level, a key (116e) and a row's one
+/* A toggle of a choice, the − and + of a level, a key and a row's one
    action: one plate. */
 .settings-choice,
 .settings-step,
@@ -4454,8 +4452,8 @@ body {
   color: var(--color-amber-hover);
 }
 
-/* A row's action that has nothing to do (116g: Reload now, while the page is
-   drawn in the palette chosen) is dimmed, and its hover changes nothing. */
+/* A row's action that has nothing to do (Reload now, while the page is drawn
+   in the palette chosen) is dimmed, and its hover changes nothing. */
 .settings-action:disabled,
 .settings-action:disabled:hover,
 .settings-action:disabled:focus-visible {
@@ -4471,8 +4469,8 @@ body {
   min-height: 3em;
 }
 
-/* The chosen toggle is FILLED: a fill is a shape of light, so the choice
-   survives the grey read, where a green border beside amber ones would not. */
+/* The chosen toggle is filled: a fill is a shape of light, so the choice
+   survives in grey, where a green border beside amber ones would not. */
 .settings-choice.is-active,
 .settings-choice.is-active:hover,
 .settings-choice.is-active:focus-visible {
@@ -4511,7 +4509,7 @@ body {
   color: var(--color-terminal-green);
 }
 
-/* 116e — THE KEY ROWS. Two columns where the panel is wide enough for two
+/* The key rows. Two columns where the panel is wide enough for two
    rows side by side and one where it isn't; the rows run down the first
    column and then the second, which is also their Tab order. A key has a
    fixed width, so no row moves when its key's name changes length or while
@@ -4536,7 +4534,7 @@ body {
   white-space: nowrap;
 }
 
-/* A key that waits for a press is FILLED amber and says so in words; the
+/* A key that waits for a press is filled amber and says so in words; the
    chosen toggle's fill is green, so the two states never read as one. */
 .settings-key.is-waiting,
 .settings-key.is-waiting:hover,
@@ -4556,7 +4554,7 @@ body {
   color: var(--color-terminal-green);
 }
 
-/* 116h — the line under Chosen file says what was picked and what importing
+/* The line under Chosen file says what was picked and what importing
    it costs. Three lines are kept, its longest form, so the row under it and
    the button beside it never move as it changes. */
 .settings-data__state {
@@ -4573,13 +4571,13 @@ body {
   border-top: 1px solid var(--color-gray-22);
 }
 
-/* ── 116j — THE CREDITS (src/ui/CreditsOverlay.ts) ──────────────────────────
-   The 96f panel with a static list in it: a group per kind of credit, its
-   label in the settings sections' small caps, and under it a row per name,
-   with what is said of the name (a licence) at the row's far edge. The body
-   scrolls inside the panel on a window too short for the list, and it is a
-   tab stop so the keyboard can scroll it; its ring sits inside the box, where
-   the panel doesn't clip it. */
+/* ── The credits (src/ui/CreditsOverlay.ts) ─────────────────────────────────
+   The modal shell's panel with a static list in it: a group per kind of
+   credit, its label in the settings sections' small caps, and under it a
+   row per name, with what is said of the name (a licence) at the row's far
+   edge. The body scrolls inside the panel on a window too short for the
+   list, and it is a tab stop so the keyboard can scroll it; its ring sits
+   inside the box, where the panel doesn't clip it. */
 .credits-modal {
   width: min(92vw, 36rem);
 }
@@ -4638,7 +4636,7 @@ body {
   color: var(--color-gray-88);
 }
 
-/* 117.5i — the failure plate (src/ui/FailurePlate.ts): the modal shell,
+/* The failure plate (src/ui/FailurePlate.ts): the modal shell,
    over every surface the game has (the tooltip is 50) and under the
    scanlines (1000), since nothing else on the page may be reached once it
    is up. The error's text is whatever was thrown: it wraps anywhere, and
@@ -4696,32 +4694,31 @@ body {
   user-select: text;
 }
 
-/* ── §100 — THE FOCUS RING (100b) ─────────────────────────────────────────
-   The keyboard's hover. Two rules, one idiom (DESIGN §UI idioms "Focus"):
+/* ── The focus ring ────────────────────────────────────────────────────────
+   The keyboard's hover. Two rules, one idiom (DESIGN "Focus"):
    1. every `X:hover` rule above carries `X:focus-visible` in its selector
-      list — the focus state IS the hover state (tests/ui-focus.test.ts
+      list, so the focus state is the hover state (tests/ui-focus.test.ts
       fails a hover rule without its twin);
-   2. this ONE ring on every control — `button`, `select`, `input` (116c),
-      `[role=button]` (the cards, 100c2) and the `tabindex=0` text sites
-      (97d) — under `:focus-visible` only, so a mouse click or a tap never
-      paints it (both engines grant focus-visible to keyboard focus alone;
-      a text field is the exception, ringed on a click too, since typing
-      follows). `:where`
-      keeps it at zero specificity: a control's own outline (98c's frontier
-      double ring, the enemy card's hover outline) outranks it by design,
-      and the map node gets its ring on `box-shadow` below.
-   White, not a state hue: amber is hover, blue is frontier / selection,
-   green is active — the ring is its own channel, and a ring is a SHAPE,
-   so it survives the 98a grey read by construction. */
+   2. this one ring on every control (`button`, `select`, `input`,
+      `[role=button]` for the cards, and the `tabindex=0` text sites),
+      under `:focus-visible` only, so a mouse click or a tap never paints
+      it (both engines grant focus-visible to keyboard focus alone; a text
+      field is the exception, ringed on a click too, since typing follows).
+      `:where` keeps it at zero specificity: a control's own outline (the
+      map frontier's double ring, the enemy card's hover outline) outranks
+      it by design, and the map node gets its ring on `box-shadow` below.
+   White, not a state hue: amber is hover, blue is frontier and selection,
+   green is active. The ring is its own channel, and a ring is a shape, so
+   it survives in grey by construction. */
 :where(button, select, input, [role='button'], [tabindex='0']):focus-visible {
   outline: 2px solid var(--color-white);
   outline-offset: 2px;
 }
 
-/* The map node's frontier state OWNS `outline` (98c's double ring, 2px at
-   a 3px offset = 5px out), so its focus ring rides `box-shadow`: a black
-   gap to 6px, then the white ring to 8px — outside the 98c ring, never
-   over it. Placed after `.map-node.current` (which also paints a
+/* The map node's frontier state owns `outline` (the double ring, 2px at a
+   3px offset, so 5px out), so its focus ring rides `box-shadow`: a black
+   gap to 6px, then the white ring to 8px, outside the double ring and
+   never over it. Placed after `.map-node.current` (which also paints a
    box-shadow) so the ring wins by order if a current node is ever focused. */
 .map-node:focus-visible {
   box-shadow:
@@ -4729,25 +4726,25 @@ body {
     0 0 0 8px var(--color-white);
 }
 
-/* ── §99 — REDUCED MOTION (99b) ──────────────────────────────────────────
-   ONE gate: `html[data-motion='reduced']`, stamped by src/render/motion.ts
-   from the OS `prefers-reduced-motion` query or the (Round 8) override —
-   deliberately NOT a `@media` block, which a setting could never flip.
-   EVERY `animation:` in this sheet has its reduced form HERE, and
+/* ── Reduced motion ────────────────────────────────────────────────────────
+   One gate: `html[data-motion='reduced']`, stamped by src/render/motion.ts
+   from the OS's `prefers-reduced-motion` query or the Motion setting, and
+   on purpose not a `@media` block, which a setting could never flip. Every
+   `animation:` in this sheet has its reduced form here, and
    tests/ui-motion.test.ts pins it (a new keyframe fails until it picks
    one; a `-still` keyframe may not carry a transform; no `infinite`; a
-   reduced form that is not `none` keeps the ORIGINAL duration). The
-   shapes: an animation something WAITS on (the hitsplat's `animationend`
-   self-removal, the pre-turn exit ghost's) keeps its duration and loses
-   its motion — a `-still` keyframe that only fades (a bare `none` would
-   leave every number on screen forever); a pure-motion one-shot goes
-   `none`; the two infinite pulses go `none` (the armed / at-risk states
-   keep their static colour + glow); the chip pulses keep their COLOUR
-   flash (the cue that a card moved) without the scale / rotate; the
-   tooltip keeps its fade and drops its 2 px rise. Vestibular triggers
-   only — the opacity / colour / width transitions elsewhere are not
-   motion. The camera shake, the bursts and the sparkles are the JS
-   half (99c, fxDescriptor); the orb + the view shake are lossFx's. */
+   reduced form that is not `none` keeps the original duration). The
+   shapes: an animation something waits on (the hitsplat's `animationend`
+   removal, the pre-turn exit ghost's) keeps its duration and loses its
+   motion, as a `-still` keyframe that only fades (a bare `none` would
+   leave every number on screen for good); a one-shot of pure motion goes
+   `none`; the two infinite pulses go `none` (the armed and at-risk states
+   keep their static colour and glow); the pile buttons' pulses keep their
+   colour flash (the cue that a card moved) without the scale or rotation;
+   the tooltip keeps its fade and drops its 2px rise. Vestibular triggers
+   only: the opacity, colour and width transitions elsewhere are not
+   motion. The camera shake, the bursts and the sparkles are the JS half
+   (`fxDescriptor`); the orb and the view's shake are lossFx's. */
 :root[data-motion='reduced'] .hitsplat {
   transform: translate(-50%, -150%);
   animation: hitsplat-still 0.6s ease-out forwards;

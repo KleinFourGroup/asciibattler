@@ -13361,3 +13361,106 @@ the chrome column passes clicks through its gaps; a chip's width is the
 column's whatever its siblings; the cache modal opens at the top; the
 countdown lets board clicks through but for Fight now; a dead enemy card
 drops its pointer.
+
+### 124.5h, batch 12 — `ui.css`'s last third: the pre-turn screen, the gauges, the modals and the idioms (2026-10-20, session f1005abf)
+
+Started at 433,782, batch 11's commit: at the pass's typical rate (about
+85 a line, the median of batches 5 to 11 and §124's average) its 1,578
+lines forecast an end near 570k, about 585k with the hand-off.
+
+The batch: `src/ui/ui.css` from the turn screen's header (line 3,235 at
+`105cba9e`) to the end: the pre-turn screen (its lines, the hand and its
+skin, the fire strip, the packet row, the badge), the primary button and
+its two modifiers, the pinned Fight button, the pool gauges with the
+ghost, the notch and the orb, the card-list buttons and modal with the
+deck motion, the roster skin and the picker, the tooltip, the compact
+card's hints, the settings and credits modals, the failure plate, the
+focus ring and the reduced-motion block. Out: the step codes, the `§`
+marks and the decision letter, the capitals (five banner headers among
+them), and the history: the post-turn screen, the per-grant control rows
+the fire strip replaced, the merged badge the chips replaced, the red
+ceiling tick the notch replaced, the nine button rules the factory
+replaced and the cascade oracle, a card measured at 186px, a gauge at
+220px, a hand wrapped 4+4+2, the brief's corner layout, and the user calls
+behind sizes. Each reason stays: the hand's card is border-box so the var
+is the width the balanced wrap computes with; the gauge's head never wraps
+so the card row never moves; the notch is a cut in the fill so it blends on
+either gauge.
+
+**Statements found false and corrected (rule 7):**
+
+- The drawn hand is "a small label over a row of compact unit cards". The
+  hand is full cards, the pre-turn skin (`PreTurnScreen.ts`, `mode:
+  'full'`).
+- A hand card turns selectable "with the Redraw + Empower controls in a row
+  underneath". The grants are the fire strip; a card is selectable while
+  the active grant or an armed packet takes one.
+- The pre-turn screen scrolls so a hand never "pushes the Fight button
+  off-screen". The Fight button is pinned to the page (`.preturn-continue`,
+  further down the same file).
+- The badge's chips each have "its own hover title". Each has a tooltip
+  (`attachTooltip`, the long-press on touch); the sheet's pin allows no
+  native `title`.
+- The badge chip's cyan is "the no-map fallback shade". The inline colour
+  always lands: `empowerColor` gives a key missing from the map the table's
+  own fallback, so the cyan shows only if no inline colour does.
+- The modal overlay sits "above the .roster-button"; no such class exists.
+  It is above the card-list buttons (20).
+- `btn--exit` is "game over's two"; the end screen has one or two (batch
+  11's correction).
+
+Re-pointed, not false: the armed banner as "hype's" pick-a-card state is
+any unit-target packet's (Hype, Shield and Cull); the reduced-motion gate's
+"(Round 8) override" is the Motion setting; the primary button's list of
+users, which named the sites it replaced, now names the walk-on buttons
+that wear it; "the 96f panel" is the modal shell's.
+
+**Kept, checked at the code they name:** the pre-turn screen's lines in
+build order, the risk line under the gauges and its tooltip, the
+last-turn strip from the second turn, `.fallen-side`; the hand's
+`--hand-card-w` and `--hand-gap` in `refreshHand`'s balanced wrap, the
+fire chips' four states and the active redraw chip as the confirm, the
+specificity of the hover's `:not` (0,3,0 against 0,2,0); `maxHandSize` 10;
+the roster button on the map, recruit and pre-turn screens, the piles'
+corners, "Draw: N" and its folded count, Surge and Cull; the modal shell's
+z 30, the picker's exact count; `ui-focus.test.ts`'s three containers and
+`Screen.present`; `TOOLTIP_FADE_MS` (120); "Lv" and "POW" as the compact
+hints; Overclocked as the longest buff label; `keyLabel`'s spaced names;
+Chosen file, Apply palette and Reload now; the credits body's tab stop;
+the failure plate at z 100; the ring's selector, DESIGN "Focus", the map
+node's ring order; the motion gate (`motion.ts`), `fxDescriptor`, the
+reduced block's shapes against its rules; "The Ronin and the Mages", 23
+glyphs, as the longest encounter name. Nothing was dropped unchecked.
+
+Left for the tests' pass: `tests/ui-focus.test.ts` points at the ring rule
+as "ui.css §100", and the block is headed "The focus ring" now.
+
+Nothing for the user from this batch.
+
+Measured (`comment-length` on copies of the batch's lines under
+`output/cl-1245h-b12`): comment lines 273 → 270, words 3,040 → 3,022, code
+lines 1,176 unchanged. The step-code ceiling 1,168 → 1,084, the 84 these
+lines held; `ui.css` holds none now.
+
+Proof: `comment-strip HEAD src`, comments only, exit 0; its control made
+one code edit in memory in `ui.css` and the compare named it. The lines
+before 3,235 are byte-identical to `HEAD`'s.
+
+Cost: 433,782 at 14:21 UTC (batch 11's commit) to 507,510 at 14:28 after
+the proof, about 74k for 1,578 lines, about 47 a line.
+
+**Read** (`batch`): `git show <this commit> -- src/ui/ui.css` against the
+seven rules. Wrong looks like a step code, a banner's capitals or history
+left (the post-turn screen, the per-grant rows, the merged badge, the
+red tick, the nine button rules), or a reason cut: the hover's `:not`
+keeps the selected border; the hand's cards are border-box for the
+balanced wrap; the gauge's value reserves its widest form; the notch is a
+cut, not a hue; the reduced form of an awaited animation keeps its
+duration.
+
+**124.5h, built.** The pass took the screens' 19,639 lines in twelve
+batches over six sessions (`ff99ffb0`, `ebe41cd8`, `bcd08e32`,
+`d8214ecc`, `138dbbac`, and this one, `f1005abf`, for batches 10 to 12).
+`ui.css` whole, `66300d2e` against now (`comment-length` on copies under
+`output/cl-1245h-css`): comment lines 967 → 934, words 10,824 → 10,655,
+code lines 3,401 unchanged, its 260 step codes to none.

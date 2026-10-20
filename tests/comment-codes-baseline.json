@@ -161,6 +161,5 @@
  "src/ui/rarityDisplay.test.ts": 1,
  "src/ui/rosterOrder.test.ts": 1,
  "src/ui/textScale.test.ts": 1,
- "src/ui/tooltip.test.ts": 1,
- "src/ui/ui.css": 84
+ "src/ui/tooltip.test.ts": 1
 }

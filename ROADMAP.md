@@ -272,7 +272,32 @@ B-14's leads, the five run walkers' battle wiring among them (restored
 at §120's close, the user's call); `src/bot`'s comment pass. Proof:
 instrument, and the corpus for the walkers. Decision point: whether the
 comment pass takes `tests` and `tools` (the user's call of 2026-10-12,
-once its outcome on `src` is seen).
+once its outcome on `src` is seen). The cut was signed 2026-10-20 with
+its six calls; the audit, the calls and the trials' bars are in WORKLOG
+§125, "The kickoff".
+
+- ☐ **125a — A-30 and A-31** (`none`). `verifyArbitratedRuns.ts` and the
+  fifteen vectors; GOTCHAS #128's sentence corrected.
+- ☐ **125b — A-20's `--bits-multiplier` and `--grant-epsilon`** (`none`),
+  with `grantEpsilon`'s field and override, which only the flag set.
+- ☐ **125c — A-20's `--flip-telemetry`** (`none`). The shadow tier, its
+  sidecar, aggregate and merge entry; the parity test keeps two files.
+- ☐ **125d — A-20's `--arena`** (`none`). Its three files and flag; the
+  coverage bot's test on the harness's coverage run; `objectiveMenu`,
+  `MenuEntry` and `serializeProclivity` with it (call 1).
+- ☐ **125e — the arena's wave builder** (`none`). `buildEnemyTeam` and its
+  helpers, the seven difficulty keys that size it, the spawn-overflow test
+  on a fixed team, the sweep's examples on a live knob (call 2).
+- ☐ **125f — A-25's `hazardCells`, A-26's 16 words in `src/bot`** (`none`).
+- ☐ **125g — trial: the battle start and the turn cap** (`none`, on its
+  bar). The five walkers, `BattleScene` and `replayTrace` (call 4).
+- ☐ **125h — trial: the harness and walker's grant walk and port loop**
+  (`none`, on its bar).
+- ☐ **125i — trial: the two scripts' rally search** (`none`, on its bar).
+  `sensors.ts`'s mask goes into the census for a later round (call 3).
+- ☐ **125j — the re-skim** (`stop`).
+- ☐ **125k — the comment pass over `src/bot`** (`batch`, per batch).
+- ☐ **125l — the close** (`stop`), with the decision point.
 
 ## Phase 126 — tests
 

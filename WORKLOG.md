@@ -13840,3 +13840,49 @@ its calls; the user's answer and the cut as signed follow here.
 Readings by the tool's clock (UTC): 94,213 at 17:47 after the
 orientation, 260,787 at 17:57 at the audit's end, 275,103 at 17:58 before
 this entry.
+
+**Signed** (the user, 2026-10-20): "Signing all of your leans and the
+cut, Claude! 😁 This looks great!" So:
+
+1. 125d takes the arena's menu and writer (`objectiveMenu`, `MenuEntry`,
+   `serializeProclivity`) with their tests.
+2. 125e deletes the wave builder and its seven keys: the spawn-overflow
+   test fills its queue with a fixed team, and the sweep's examples move
+   to a knob a run reads (`difficulty.levelBudgetMultiplier`). Proof: the
+   config dump with the seven keys the only difference, the corpus, the
+   fuzz diff, `reach-diff --from`.
+3. The trials are B-14's battle start and turn cap, the grant walk and
+   port loop, and the rally search; `sensors.ts`'s passability mask goes
+   into the census for a later round.
+4. 125g takes in `BattleScene.ts` and `src/dev/replayTrace.ts`, proven by
+   the page drive.
+5. The bars below, each written before its trial's code.
+6. The hand-off forecast was asked and is not among the leans signed, so
+   the session keeps planning.md's rule (a step starts under 550k) and
+   says so at its next stop.
+
+The bars (the spec's D2), all four for each:
+
+- **125g, the battle start and the turn cap.** (1) The corpus 30 of 30,
+  the fuzz diff, the chaos driver's tests and the page drive's hashes at a
+  seed all unchanged, and a break planted in the shared code caught by the
+  corpus; (2) lines under `src` and `tests` do not grow; (3) no parameter
+  that only tells the callers apart; (4) the cap rule and the battle's
+  build order each written at one site, from the seven counted here (a
+  search for `resolveAsDraw()` beside `maxTurnTicks`, and for
+  `installBattleRules` beside `spawnEncounter`, before and after).
+- **125h, the grant walk and the port loop.** (1) The fuzz diff, both
+  shapes, the smoke and the parity test unchanged, and a break planted in
+  the shared code caught by the fuzz diff's arbitrated shape (which runs
+  the walker) and its scored shape (which runs the harness); (2) and (3)
+  as above; (4) one copy of each loop, from two.
+- **125i, the rally search.** (1) The fuzz diff and the scripts' tests
+  unchanged, a break planted in the shared filter caught by them; (2) and
+  (3) as above, each script's radius and scoring staying its own; (4) the
+  rally filter, with the artillery-only under-fire test, written once,
+  from twice.
+
+The exit's counts for §125, with these as the baseline: `comment-length
+src/bot` 1,108 code lines, 877 comment lines, 7,314 comment words; step
+codes 217 in `src/bot`, 180 of them in the pass's files; the ceiling
+1,084. The cut as signed is in ROADMAP §125.

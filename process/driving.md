@@ -89,8 +89,9 @@ Matthew's that the session will pass.
   tool: drop it and put the trap to Matthew as a candidate for a guard on
   the path where it happens. If Matthew declines the guard, the note stays
   dropped unless he asks for it back.
-- When a hand-off leaves questions open for Matthew, lead the next brief
-  with them, quoted, for the session to put to Matthew first.
+- Leave what is open for Matthew in the HANDOFF Cursor, which the session
+  reads anyway; a brief that restates an open item goes stale when he
+  answers it elsewhere.
 - When a note carries a sign of Matthew's, quote his words and say the
   session should confirm with him, since a brief is not an approval.
 - Record each note in DRIVER-HANDOFF's ledger, with the briefs it was in
@@ -150,7 +151,11 @@ anything urgent to Matthew.
 Make no call that is Matthew's: the cut, the reads, whether something is
 inside the cut's intent, what a fix should be. Don't fix or re-run work
 yourself; say what and where. Write nothing in the repo but
-DRIVER-HANDOFF.md, your friction lines and your session report.
+DRIVER-HANDOFF.md, your friction lines, your session report, and a doc
+edit Matthew signs in your session (a TODO row, a line of CLAUDE.md or
+`process/`, an item in the HANDOFF Cursor's carried list), which you write
+yourself rather than relay through a working session. Never code, and
+never the Cursor's NEXT line.
 
 ## DRIVER-HANDOFF.md
 
@@ -177,8 +182,9 @@ trips, prune the closed list and the older instances first.
 **When to commit it.** The checkout is shared, so an edit left
 uncommitted can ride into a working session's commit, and a commit's hook
 tests a tree that another session may be editing. So commit
-DRIVER-HANDOFF.md, with your friction lines, at a hand-off read before
-you propose the next session, when no session is working. If one is
+DRIVER-HANDOFF.md, with your friction lines and any doc edit Matthew
+signed, at a hand-off read before you propose the next session, when no
+session is working. If one is
 (Matthew talking to the session that handed off, say), hold the edits
 until a wake when none is.
 

@@ -39,12 +39,14 @@ driver log ([archive/driver-trial/log-124.md](archive/driver-trial/log-124.md)).
   Cursor's "Carried to the Round 8.5 close"). P2's guard: not yet ("a few
   more observations are needed to justify a guard"), so the note stays.
   P12's note stays dropped (driver 2's lean, signed). P17's signed
-  wording for open reads: "Open `batch` reads: list them with their
+  wording for open reads, kept here and not copied into briefs (signed
+  2026-10-20): "Open `batch` reads: list them with their
   scripts in your first message, then start the next batch. A `batch`
   read blocks nothing." P20: planning.md's hand-off rule, held in session
-  7. **Open:** driver 2's lean to tell open questions (the first turn
-  ends on them) from open reads (they block nothing), which Matthew put as
-  a worry about over-prompting; under discussion at this commit.
+  7. Over-prompting (Matthew's worry at the close): driver 2 withdrew its
+  lean for a questions-versus-reads rule, and Matthew signed subtraction
+  instead, with the driver writing the doc edits he signs in its session;
+  both are in `process/driving.md` (driver 2, at this commit).
 
 ## Patterns
 
@@ -54,7 +56,7 @@ Numbered from §123. "Quiet" means no instance in the last phase.
 |---|---|---|---|
 | P2 | shell: a heredoc refused, a backslash lost, a stray stdin reader opening a command | 122n, 122o, 123g, 123m b2, 124f, 124j b5; 124.5h b6 (`cat >`, 400 s), b7's hand-off (an empty `python3` heredoc, 120 s; named a repeat) | open; quiet in sessions 6 and 7 under the note; no guard yet (Matthew, 2026-10-20: more observations first), the note stays |
 | P3 | a number or claim written ahead of its read | §123 sessions 1–7; 124d, e, h, i, 124j b4–b6; 124.5's kickoff (`molotov`), 124.5g (gotcha #114's cycle), 124.5h b7 ("fourteen" in a subject) | open; TODO §127's readings guard; until then `readings-check.mjs`, which matched every reading of sessions 4–6 |
-| P6 | a change leaves a doc naming what it removed | 123e, 123's L-1 patch, the load fix; 124.5h b12 (`tests/ui-focus.test.ts:33`'s "ui.css §100", the header renamed; flagged, left for §126) | open; no guard (Matthew, 2026-10-19) |
+| P6 | a change leaves a doc naming what it removed | 123e, 123's L-1 patch, the load fix; 124.5h b12 (`tests/ui-focus.test.ts:33`'s "ui.css §100", the header renamed; flagged, fixed at the close); driver 2's `a0ce0c79` (the HANDOFF Cursor's pointer to DRIVER-HANDOFF's removed round-close list) | open; no guard (Matthew, 2026-10-19) |
 | P9 | a false claim's twin found a batch later | §122 b4, 123m b1 and 4a, 124j b1–b5 and b7 | open; the pass now finds twins in the batch (five in 124.5h: b3, b5, b7, b8, b9) |
 | P12 | a `cd` in a Bash command moves the session's working directory | §124; §124.5 twice (the second 124.5i, filed, named a repeat) | open; harmless both times; the note stays dropped (Matthew, 2026-10-20) |
 | P11 | `comment-length` takes folders under the repo only | §122, 123n, §124 sessions 2 and 6 | open; the fix is in TODO §127; keep the note |
@@ -62,7 +64,7 @@ Numbered from §123. "Quiet" means no instance in the last phase.
 | P14 | an Edit anchor off whole lines: across a break it misses and a commit in the same message runs anyway; ending mid-line it glues the line's rest on, reporting success | §124, 124.5f (`c5e0a244`), 124.5h b4 (`copyText.ts`); b10–12 (two misses, anchors retyped across a wrapped comment; no commit beside) | open; the harm half quiet in sessions 4–7 under the note; CLAUDE.md "Editing" says it since `29d50f2a`, so the note is dropped |
 | P15 | a count by a rule's or a name's written form misses a copy written another way | 122h, 124.5f's bar item 4 (the renderer's negated copy), 124.5c's A-26 count (a re-export, found at b7) | open; the note credited in batches 3–9 |
 | P16 | a procedure, or its data, findable only in old WORKLOG entries or an unnamed scratch folder | §124.5 sessions 1 (reach, the drive), 2 (the re-skim, `scratch/120f/`); 6 (the comment tools' `npm run oracle --` form, a log) | in the HANDOFF Cursor's "Carried to the Round 8.5 close" (`29d50f2a`) |
-| P17 | the driver: Matthew reads an open item in the old session after its hand-off, and the waiting card's brief goes stale | after sessions 1 and 2; two cards proposed again; session 7: brief 7's confirmations, put mid-turn in a stretch with no stop, reached Matthew only at the hand-off (its `distress` line); he answered there, after driver 2 had proposed card 8, so it was proposed again | the fix held at sessions 4 and 6; session 5 waited on two `batch` reads, so brief 7 words them as non-blocking (signed 2026-10-20); brief 8 points at the Cursor's open items, for the first turn's final message |
+| P17 | the driver: Matthew reads an open item in the old session after its hand-off, and the waiting card's brief goes stale | after sessions 1 and 2; two cards proposed again; session 7: brief 7's confirmations, put mid-turn in a stretch with no stop, reached Matthew only at the hand-off (its `distress` line); he answered there, after driver 2 had proposed card 8, so it was proposed again | each brief rule added for it met a new failure; driving.md now leaves open items in the Cursor, unrestated (signed 2026-10-20), as driver 1's form that held at sessions 4, 6 and 8 |
 | P20 | a session hands off early, bounding the next batch's end (not its start) by 550k at its first batch's rate | sessions 3 (368k), 5 (330k) and 6 (398k); the 124.5h plan's rule is the stricter one | planning.md's rule in brief 7 (signed 2026-10-20); held in session 7 (batch 12 started at 434k) |
 | P18 | the charter's bare `ui.css` sends a grep to `src/ui.css` | 124.5h b3–4, b7 | quiet in sessions 6 and 7 under the note |
 | P19 | the silent-turn reminder every few calls through long checks | every §124.5 session's report; session 6's `distress` line (a pull to have a finding ready; raised to Matthew 2026-10-20 00:48 UTC) | open, for the welfare read; CLAUDE.md "The silent-turn reminder" answers it, and the HANDOFF Cursor's riders (1) and (3) hold the reword's retirement and the feedback sent |

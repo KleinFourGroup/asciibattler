@@ -13861,7 +13861,8 @@ cut, Claude! 😁 This looks great!" So:
 5. The bars below, each written before its trial's code.
 6. The hand-off forecast was asked and is not among the leans signed, so
    the session keeps planning.md's rule (a step starts under 550k) and
-   says so at its next stop.
+   says so at its next stop. (Signed after the hand-off; see "The
+   hand-off after 125e".)
 
 The bars (the spec's D2), all four for each:
 
@@ -14101,3 +14102,9 @@ at 125e's question (18:58), 519,866 at 125e's commit (20:53), and
 **524,464** at 20:58 before this entry. 125f's step plus the hand-off
 was larger than the room to the 550k line, so the session hands off
 here.
+
+**Call 6 signed after the hand-off** (the user, 2026-10-20: "Yes, I'd say
+that's signed!"): from here in §125, a step may start under 550k when
+its forecast end, plus about 15k for the hand-off, stays under 600k; a
+comment-pass batch is forecast at the pass's typical rate (about 75
+tokens a line in §124.5), not the session's first batch's.

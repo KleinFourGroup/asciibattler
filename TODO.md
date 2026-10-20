@@ -65,6 +65,12 @@ the screens', for its kickoff (WORKLOG §124, "The close of §124").
 
 - ✅ **The probe runner's edges.** `--arg-file`, `--build` with `--dist`, the report's shape in `probe-cli.mjs`'s header, and `until: 'turn-outcome'` stopping as the battle ends (WORKLOG §124, 124b).
 
+- [ ] **`UnitCard.ts` re-exports `UnitRarity` with no reader.** Every
+  importer reads `config/units`. It is a re-export, so A-26's count of
+  exports only their own file reads missed it. A deletion, types only.
+  Found at 124.5h's batch 7 (WORKLOG §124.5); placed with the round's
+  deletions by the user, 2026-10-19.
+
 ### §126 tests
 
 - [ ] **A guard against an import cycle through `config/units`.** The
@@ -279,6 +285,18 @@ META-ROADMAP §"Round 9 — Extensions" names each group.
   `src/core/events.ts`, ARCHITECTURE's table and the sound registry) would
   let this screen do the same, and could carry the pickup sound, so a clip
   replayed from a journal would have it.
+
+- [ ] **The rarity stars take the tap inside a card that is a control.**
+  `buildUnitCard` gives the star run's tooltip the long-press only when the
+  card is built `clickable`, which only the recruit skin is by default; the
+  pre-turn hand and the port's crew picker (the card-list modal's) make
+  their cards controls after the build. On a touch screen a tap on the
+  stars there opens the tier's tooltip and picks the card as well, since
+  the tap route doesn't swallow the click; the hand card's own `▲` chips
+  take the long-press for that reason. So since 98b, whose entry says the
+  pre-turn's run takes the long-press. Touch only; desktop is untouched. A
+  behaviour change, so out of Round 8.5. Found at 124.5h's batch 7
+  (WORKLOG §124.5); placed here by the user, 2026-10-19.
 
 - [ ] **A battle's snapshot drops a queued unit's seeded effects.**
   `World.toJSON` leaves `effects` out of each queued spawn template and

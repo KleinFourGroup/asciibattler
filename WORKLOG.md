@@ -12740,3 +12740,9 @@ preview server is left.
 **Readings** (the meter, UTC, 2026-10-19): 120,151 at 23:08 (the
 orientation), 298,237 (batch 7's proof), 313,696 (batch 7's commit),
 325,100 (the amend), 329,694 at 23:37 at the hand-off.
+
+**Batch 7, read** (the user, 2026-10-19, after the hand-off): "I'm
+signing that read!" No read is open. The two findings went to TODO as
+proposed: the stars' touch route under Round 9 ("With a seam the round
+builds"), since it changes behaviour, and `UnitRarity`'s re-export under
+Round 8.5's §124 and §124.5 items, with the round's deletions.

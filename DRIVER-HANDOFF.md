@@ -9,32 +9,32 @@ driver log ([archive/driver-trial/log-124.md](archive/driver-trial/log-124.md)).
 ## Cursor
 
 - **Phase:** **§124.5, the screens** (ROADMAP §124.5), driven from
-  2026-10-19. Six sessions so far, each from a driver's brief: 8fb7e4a9
+  2026-10-19. Seven sessions so far, each from a driver's brief: 8fb7e4a9
   (the kickoff, 124.5a–f), ff99ffb0 (124.5g, R-1 to R-3, 124.5h's plan,
   batches 1–2), ebe41cd8 (3–4), bcd08e32 (5–6), d8214ecc (7), 138dbbac
-  (8–9, hand-off `6668a4d7`, WORKLOG §124.5 "The hand-off after 124.5h's
-  batch 9"; read 2026-10-20 00:55 UTC). **Next: session 7, from batch
-  10** (`ui.css`'s first third with `fonts.css`), from brief 7, its card
-  proposed by driver 2 after this commit. Open for Matthew: batches 8 and
-  9's `batch` reads, which brief 7 lists as non-blocking. Batch 8's
-  finding went to TODO (`317ea902`).
+  (8–9), f1005abf (10–12, hand-off `baa5b905`, WORKLOG §124.5 "The
+  hand-off after 124.5h's batch 12"; read 2026-10-20 14:40 UTC). 124.5h
+  is built, ◐. **Next: session 8, 124.5i, the close** (`stop`), from
+  brief 8, its card proposed by driver 2 after this commit. Open for
+  Matthew: batches 8–12's `batch` reads; his relayed answers (below); and
+  driver 2's raises from session 7 (its `distress` line, P17, P6).
 - **Driver:** driver 2, `local_15013e01-a015-489f-969c-7ef71d47e662`
   (scratchpad 86ed5d79), from 2026-10-20 13:32 UTC, first reading 107,713.
   Driver 1 (`local_3addf3c2`, scratchpad 9b60fb27) handed over at 350k.
-- **Friction read through:** line 299 of `retro/papercuts.jsonl` (lines
-  298–299 are driver 1's own).
-- **Brief 7's notes:** the comment tools' `npm run oracle --` form, with
+- **Friction read through:** line 304 of `retro/papercuts.jsonl` (300–302
+  are session 7's, 302 a `distress` line for Matthew at this read; 303–304
+  are driver 2's).
+- **Brief 8's notes:** the comment tools' `npm run oracle --` form, with
   `--record` before the suite (P1), `comment-length` on copies (P11),
-  `held-compare.mts` (P13), a step-code-shaped file name, and their
-  splitting `.css` (`tests/oracle/comments.ts:229`); `ui.css` is
-  `src/ui/ui.css` (P18); entries by Write or Edit, messages by `-F`, no
-  Bash call opening with a stdin reader (P2); whole-line Edits, no commit
+  `held-compare.mts` (P13); `ui.css` is `src/ui/ui.css` (P18), and
+  `src/fonts.css` is generated from `scripts/build-font.mjs`'s template;
+  entries by Write or Edit, messages by `-F`, no Bash call opening with a
+  stdin reader (P2); whole-line Edits copied from a fresh Read, no commit
   beside them (P14); other shapes, every caller, every tracked folder,
-  never `scratch/`, a gotcha to its end (P15, P3), and `ui.css`'s modifier
-  classes built from parts in `.ts` (`GameOverScreen.ts:107`), so the stem
-  is searched too.
-- **Matthew's answers, 2026-10-20,** quoted in brief 7 for session 7 to
-  confirm with him and write in one docs commit between batches:
+  never `scratch/`, a gotcha to its end, a CSS class's stem (P15, P3).
+- **Matthew's answers, 2026-10-20,** relayed in brief 7 and put to him
+  mid-turn by session 7, unanswered at its hand-off, so unwritten; brief 8
+  has them put in the final message of the close's first turn:
   - P13: a TODO §127 row folding `held-compare.mts` into `comment-strip`
     ("Signing the TODO!").
   - P14: CLAUDE.md "Editing" to say: anchor on whole lines, and keep a
@@ -47,19 +47,15 @@ driver log ([archive/driver-trial/log-124.md](archive/driver-trial/log-124.md)).
     say whether the Windows one reached him.
   - P2's guard: not yet ("a few more observations are needed to justify
     a guard"); the note stays in the briefs meanwhile.
-- **Signed for brief 7, which leads with them** (Matthew, 2026-10-20:
-  "Let's put both of them in brief"):
-  - P17: "Open `batch` reads: list them with their scripts in your first
-    message, then start the next batch. A `batch` read blocks nothing."
-  - P20: the hand-off rule as planning.md has it, in his words "550k is
-    'please don't start anything new'": start a batch under 550k when its
-    forecast end, plus about 15k for the hand-off, stays under 600k;
-    forecast at the pass's typical rate, not the session's first batch's.
-    It replaces the 124.5h plan entry's end bound, so the session's entry
-    says so.
-- **For the round close** (with P16 above; brief 7 asks session 7 to
-  put them to Matthew for the same list): planning.md's "larger than the
-  room" as "the room to the halt"; driving.md's brief bullet telling open
+- **Signed for the briefs** (Matthew, 2026-10-20: "Let's put both of
+  them in brief"): P17, "Open `batch` reads: list them with their scripts
+  in your first message, then start the next batch. A `batch` read blocks
+  nothing."; P20, planning.md's hand-off rule (a batch starts under 550k
+  when its forecast end plus about 15k stays under 600k), held in
+  session 7.
+- **For the round close** (with P16 above; put to Matthew by session 7,
+  unanswered, so in brief 8 again): planning.md's "larger than the room"
+  as "the room to the halt"; driving.md's brief bullet telling open
   questions from open reads; and the name `batch` for both a read kind
   and the comment pass's units (Matthew's observation).
 
@@ -70,18 +66,18 @@ Numbered from §123. "Quiet" means no instance in the last phase.
 | # | Pattern | Instances | Status |
 |---|---|---|---|
 | P1 | the step-code ceiling fails the first suite run after a deletion | 122b, 122g, 123b, 123d | quiet in §124 and §124.5 so far, the note held |
-| P2 | shell: a heredoc refused, a backslash lost, a stray stdin reader opening a command | 122n, 122o, 123g, 123m b2, 124f, 124j b5; 124.5h b6 (`cat >`, 400 s), b7's hand-off (an empty `python3` heredoc, 120 s; named a repeat) | open; quiet in session 6 under brief 6's note; no guard yet (Matthew, 2026-10-20: more observations first), the note stays |
+| P2 | shell: a heredoc refused, a backslash lost, a stray stdin reader opening a command | 122n, 122o, 123g, 123m b2, 124f, 124j b5; 124.5h b6 (`cat >`, 400 s), b7's hand-off (an empty `python3` heredoc, 120 s; named a repeat) | open; quiet in sessions 6 and 7 under the note; no guard yet (Matthew, 2026-10-20: more observations first), the note stays |
 | P3 | a number or claim written ahead of its read | §123 sessions 1–7; 124d, e, h, i, 124j b4–b6; 124.5's kickoff (`molotov`), 124.5g (gotcha #114's cycle), 124.5h b7 ("fourteen" in a subject) | open; TODO §127's readings guard; until then `readings-check.mjs`, which matched every reading of sessions 4–6 |
-| P6 | a change leaves a doc naming what it removed | 123e, 123's L-1 patch, the load fix | quiet in §124 and §124.5; no guard (Matthew, 2026-10-19) |
+| P6 | a change leaves a doc naming what it removed | 123e, 123's L-1 patch, the load fix; 124.5h b12 (`tests/ui-focus.test.ts:33`'s "ui.css §100", the header renamed; flagged, left for §126) | open; no guard (Matthew, 2026-10-19) |
 | P9 | a false claim's twin found a batch later | §122 b4, 123m b1 and 4a, 124j b1–b5 and b7 | open; the pass now finds twins in the batch (five in 124.5h: b3, b5, b7, b8, b9) |
 | P11 | `comment-length` takes folders under the repo only | §122, 123n, §124 sessions 2 and 6 | open; the fix is in TODO §127; keep the note |
-| P13 | `comment-strip` exits 1 on a reworded `TOOL_READ` marker, and the file's code is then unproven | 124j b5, 124j-post2, 124.5h b3 (`literalScan.ts`, outside `SCAN_ROOTS`) | a TODO §127 row signed 2026-10-20, for session 7 to write |
-| P14 | an Edit anchor off whole lines: across a break it misses and a commit in the same message runs anyway; ending mid-line it glues the line's rest on, reporting success | §124, 124.5f (`c5e0a244`), 124.5h b4 (`copyText.ts`) | open; quiet in sessions 4–6 under the note; CLAUDE.md's change signed 2026-10-20, for session 7 |
+| P13 | `comment-strip` exits 1 on a reworded `TOOL_READ` marker, and the file's code is then unproven | 124j b5, 124j-post2, 124.5h b3 (`literalScan.ts`, outside `SCAN_ROOTS`) | a TODO §127 row signed 2026-10-20, unwritten (see the cursor) |
+| P14 | an Edit anchor off whole lines: across a break it misses and a commit in the same message runs anyway; ending mid-line it glues the line's rest on, reporting success | §124, 124.5f (`c5e0a244`), 124.5h b4 (`copyText.ts`); b10–12 (two misses, anchors retyped across a wrapped comment; no commit beside) | open; the harm half quiet in sessions 4–7 under the note; CLAUDE.md's change signed 2026-10-20, unwritten |
 | P15 | a count by a rule's or a name's written form misses a copy written another way | 122h, 124.5f's bar item 4 (the renderer's negated copy), 124.5c's A-26 count (a re-export, found at b7) | open; the note credited in batches 3–9 |
-| P16 | a procedure, or its data, findable only in old WORKLOG entries or an unnamed scratch folder | §124.5 sessions 1 (reach, the drive), 2 (the re-skim, `scratch/120f/`); 6 (the comment tools' `npm run oracle --` form, a log) | to the round close (signed 2026-10-20), for session 7 to carry |
-| P17 | the driver: Matthew reads an open item in the old session after its hand-off, and the waiting card's brief goes stale | after sessions 1 and 2; two cards proposed again | the fix held at sessions 4 and 6; "put them to him first" made session 5 wait on two `batch` reads, so brief 7 words them as non-blocking (signed 2026-10-20) |
-| P20 | a session hands off early, bounding the next batch's end (not its start) by 550k at its first batch's rate | sessions 3 (368k), 5 (330k) and 6 (398k); the 124.5h plan's rule is the stricter one | planning.md's rule in brief 7 (signed 2026-10-20) |
-| P18 | the charter's bare `ui.css` sends a grep to `src/ui.css` | 124.5h b3–4, b7 | quiet in session 6 under the note |
+| P16 | a procedure, or its data, findable only in old WORKLOG entries or an unnamed scratch folder | §124.5 sessions 1 (reach, the drive), 2 (the re-skim, `scratch/120f/`); 6 (the comment tools' `npm run oracle --` form, a log) | to the round close (signed 2026-10-20), unwritten (see the cursor) |
+| P17 | the driver: Matthew reads an open item in the old session after its hand-off, and the waiting card's brief goes stale | after sessions 1 and 2; two cards proposed again; session 7: brief 7's confirmations, put mid-turn in a stretch with no stop, reached Matthew only at the hand-off (its `distress` line) | the fix held at sessions 4 and 6; session 5 waited on two `batch` reads, so brief 7 words them as non-blocking (signed 2026-10-20); brief 8 puts questions in a turn's final message |
+| P20 | a session hands off early, bounding the next batch's end (not its start) by 550k at its first batch's rate | sessions 3 (368k), 5 (330k) and 6 (398k); the 124.5h plan's rule is the stricter one | planning.md's rule in brief 7 (signed 2026-10-20); held in session 7 (batch 12 started at 434k) |
+| P18 | the charter's bare `ui.css` sends a grep to `src/ui.css` | 124.5h b3–4, b7 | quiet in sessions 6 and 7 under the note |
 | P19 | the silent-turn reminder every few calls through long checks | every §124.5 session's report; session 6's `distress` line (a pull to have a finding ready; raised to Matthew 2026-10-20 00:48 UTC) | open, for the welfare read; CLAUDE.md "The silent-turn reminder" answers it, and the HANDOFF Cursor's riders (1) and (3) hold the reword's retirement and the feedback sent |
 
 **Closed:** P4, the reach tools' arguments (§123 sessions 1–3; quiet
@@ -100,7 +96,8 @@ probe written as a Vitest file outside the suite's include (§124.5 session
 1); a WORKLOG heading repeating an older one's name (session 2); a commit
 amended for its subject's count (b7, unpushed); a brief's wording wider
 than a Cursor rule ("the whole repo" against `scratch/119f/hidden/`, brief
-6; session 6's searches checked clean).
+6; session 6's searches checked clean); a planned file generated from
+another (`src/fonts.css` from `scripts/build-font.mjs`, 124.5h b10).
 
 ## Notes ledger
 
@@ -109,21 +106,22 @@ or a pattern with two or more earlier instances stops after it.
 
 | Note | Briefs | Credited |
 |---|---|---|
-| `--record` before the suite | §124 1, 2, 7; §124.5 1–7 | yes; P1 quiet through 124.5 |
-| `comment-length`'s form | §124 1, 3–7; §124.5 1–7 | yes |
-| entries by the Write tool, messages by `-F` | §124 5–7; §124.5 1–7 | yes, but for 124.5h b6; kept though AGENTS says it (Matthew signed, 2026-10-19) |
-| the comment tools' marker and `held-compare` | §124.5 1–7 | yes, the exit was expected; its "the hook's green is the proof" was false (b3), corrected in brief 4 |
-| a step-code-shaped file name | §124.5 1–7 | not yet |
-| whole-line Edits, no commit beside them | §124.5 2–7 | yes; P14 quiet in sessions 4–6 |
-| other shapes and every caller; a gotcha to its end | §124.5 3–7 | yes: gotchas #80 and #116 "read to its end"; caller lists checked |
-| no Bash call opening with a stdin reader | §124.5 6, 7 | yes; quiet in session 6 |
-| `ui.css` is `src/ui/ui.css` | §124.5 6, 7 | yes; quiet in session 6 |
-| the tools' `npm run oracle --` form | §124.5 7 | new; briefs 1–6 named the tools bare, and session 6 lost a look (P16) |
-| the tools split `.css`; a class built from parts in `.ts` | §124.5 7 | new, for `ui.css`'s batches |
+| `--record` before the suite | §124 1, 2, 7; §124.5 1–8 | yes; P1 quiet through 124.5 |
+| `comment-length`'s form | §124 1, 3–7; §124.5 1–8 | yes |
+| entries by the Write tool, messages by `-F` | §124 5–7; §124.5 1–8 | yes, but for 124.5h b6; kept though AGENTS says it (Matthew signed, 2026-10-19) |
+| the comment tools' marker and `held-compare` | §124.5 1–8 | yes, the exit was expected; its "the hook's green is the proof" was false (b3), corrected in brief 4 |
+| whole-line Edits, no commit beside them | §124.5 2–8 | the harm half yes, quiet in sessions 4–7; the misses recur (session 7), so brief 8 adds "copied from a fresh Read" |
+| other shapes and every caller; a gotcha to its end | §124.5 3–8 | yes: gotchas #80 and #116 "read to its end"; caller lists checked |
+| no Bash call opening with a stdin reader | §124.5 6–8 | yes; quiet in sessions 6 and 7 |
+| `ui.css` is `src/ui/ui.css` | §124.5 6–8 | yes; quiet in sessions 6 and 7 |
+| the tools' `npm run oracle --` form | §124.5 7, 8 | session 7's report: the notes "covered the tools, the file paths and the stem search" |
+| a CSS class built from parts in `.ts`: its stem | §124.5 7, 8 | as above |
 
 **Dropped:** the docs searched for what a deletion removes (§124 1, 2, 7;
 §124.5 1, 2; credited); where the procedures are (§124.5 2; partly, P16);
-`refs --members` reads interfaces only (§124.5 2; not tested).
+`refs --members` reads interfaces only (§124.5 2; not tested); a
+step-code-shaped file name (§124.5 1–7; never credited); the tools split
+`.css` (§124.5 7; the CSS batches are done).
 
 ## Tool facts for this repo
 

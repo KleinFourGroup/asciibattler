@@ -1527,8 +1527,8 @@ body {
   border: 1px solid transparent;
 }
 
-/* 74f — the event screen (the port-screen shape). Chrome keyed to
-   TERMINAL_BLUE, the ?-node's map accent, so the scene visually answers
+/* The event screen (EventScreen.ts), in the port screen's shape. Its chrome
+   is TERMINAL_BLUE, the `?` node's accent on the map, so the screen answers
    the glyph the player just clicked. */
 
 .event-screen {
@@ -1540,7 +1540,7 @@ body {
   justify-content: center;
   padding: 40px 24px 60px;
   overflow-y: auto;
-  background: var(--color-black); /* opaque — DOM scenes fully mask the battle canvas (G2) */
+  background: var(--color-black); /* opaque: the screen masks the battle canvas whole */
 }
 
 /* As the port's body: never wider than the room between the two columns. */
@@ -1560,10 +1560,10 @@ body {
   text-transform: uppercase;
 }
 
-/* 101e — every page of the event shares ONE grid cell (the text stack and
-   the choice stack, EventScreen.ts); the pages that are not current are
+/* Every page of the event shares one grid cell (the text stack and the
+   choice stack, EventScreen.ts), and the pages that are not current are
    `.is-reserved`. The tallest page sizes the cell, so a page turn moves
-   nothing on this centered column. */
+   nothing on this centred column. */
 .event-stack {
   display: grid;
 }
@@ -1607,9 +1607,9 @@ body {
 }
 
 .event-choice:disabled {
-  /* The shape-lock: failing choices are SHOWN-disabled, requirement
-     visible — dim the row but keep it fully legible (the locked-node
-     lesson: hue conveys state, brightness stays readable). */
+  /* A choice whose condition fails is shown disabled, its requirement in
+     view: the row dims but stays legible, as a locked map node does (the
+     hue says the state, and the text stays bright enough to read). */
   border-color: var(--color-gray-40);
   color: var(--color-gray-80);
   cursor: default;
@@ -1664,9 +1664,9 @@ body {
   padding: 6px;
 }
 
-/* 49c — the live cache line above the rows (shown only while a packet
-   portion is pending) + the full-cache swap picker (select over held
-   packets + the Swap button, an Accept variant). */
+/* The reward screen's live cache line above the rows, shown only while a
+   packet portion is pending, and the full cache's swap picker: a select
+   over the held packets and the Swap button, which wears Accept's look. */
 .reward-cache-line {
   color: var(--color-flourescent-blue); /* the relic/system layer */
   font-family: var(--font-mono);
@@ -1690,10 +1690,9 @@ body {
   padding: 6px 8px;
 }
 
-/* GameOverScreen (Step 4.5). Full-overlay defeat modal with a single button
-   to start a fresh run. NEON_RED heading sets the "you died" tone; the
-   button uses the same amber-on-hover affordance as other interactive
-   elements. */
+/* The end screen (GameOverScreen.ts), full-viewport on the scene mount, in
+   two variants: a defeat's NEON_RED heading sets the "you died" tone, a
+   completed run's is TERMINAL_GREEN. */
 
 .gameover-screen {
   position: absolute;
@@ -1703,7 +1702,7 @@ body {
   align-items: center;
   justify-content: center;
   gap: 16px;
-  background: var(--color-black); /* opaque — DOM scenes fully mask the battle canvas (G2) */
+  background: var(--color-black); /* opaque: the screen masks the battle canvas whole */
   font-family: var(--font-mono);
 }
 
@@ -1736,9 +1735,9 @@ body {
   filter: brightness(2);
 }
 
-/* 117e — the level the run was played at, in the picker's own words and
-   look (its tooltip lists the levels in effect), and under it the level a
-   win opened: green, the end screen's hue for what was won. */
+/* The Escalation level the run was played at, in the picker's own words
+   and look (its tooltip lists the levels in effect), and under it the
+   level a win opened: green, the end screen's hue for what was won. */
 .gameover-escalation {
   font-size: var(--text-13);
   letter-spacing: 0.08em;
@@ -1751,9 +1750,10 @@ body {
   color: var(--color-terminal-green);
 }
 
-/* The game-over buttons are `.btn--primary.btn--exit` (96d). 114e — two of
-   them, side by side: a new run, and the run's journal as a file. They wrap
-   onto two rows where the screen is too narrow for both. */
+/* The end screen's buttons are `.btn--primary.btn--exit`, side by side: the
+   way out (a new run, or the menu), and Export run, the journal as a file,
+   when the page holds a journal. They wrap onto two rows where the screen
+   is too narrow for both. */
 .gameover-actions {
   display: flex;
   flex-wrap: wrap;
@@ -1761,12 +1761,12 @@ body {
   gap: 0 16px;
 }
 
-/* 102d — the run-end stats body ("the fallen"): the run's totals, then one
-   row per encounter somebody fell in. The side cells are `.fallen-side`
+/* The run-end stats ("the fallen"): the run's totals, then one row per
+   encounter somebody fell in. The side cells are `.fallen-side`
    (fallenSide.ts, shared with the pre-turn strip). Static after mount. The
-   TABLE scrolls, never the screen: the New Run button sits below it at a
-   fixed place however long the run was (§101 — a list grows inside its own
-   box). */
+   table scrolls, never the screen, so the buttons below it sit at one
+   place however long the run was (DESIGN "Layout stability": a list grows
+   inside its own box). */
 .gameover-stats {
   display: flex;
   flex-direction: column;
@@ -1837,8 +1837,8 @@ body {
   white-space: nowrap;
 }
 
-/* 116c-post2 — the run's seed, under the actions and as quiet as the menu's
-   seed row: the word in its grey, the number in the colour and size the
+/* The run's seed, under the actions and as quiet as the menu's seed row:
+   the word in its grey, the number in the colour and size the
    menu's field gives a typed seed. The number is selectable, since it is
    there to be copied. The word's underline is `.menu-seed__name`'s rule. */
 .gameover-seed {
@@ -1861,10 +1861,10 @@ body {
   user-select: text;
 }
 
-/* 67b — the sector-cleared screen: the gameover-screen chrome vocabulary
-   (opaque black, mono, amber button), but its own accent story — an amber
-   heading (a milestone, not the run's end: green stays reserved for Run
-   Complete) with a green "Next:" line pointing forward. */
+/* The sector-cleared screen: the end screen's chrome (opaque black, mono,
+   the exit button), with its own accents: an amber heading, since it is a
+   milestone and not the run's end (green is the completed run's), and a
+   green "Next:" line pointing forward. */
 
 .sectorcleared-screen {
   position: absolute;
@@ -1874,7 +1874,7 @@ body {
   align-items: center;
   justify-content: center;
   gap: 16px;
-  background: var(--color-black); /* opaque — DOM scenes fully mask the battle canvas (G2) */
+  background: var(--color-black); /* opaque: the screen masks the battle canvas whole */
   font-family: var(--font-mono);
 }
 
@@ -1894,8 +1894,8 @@ body {
 }
 
 .sectorcleared-pool {
-  /* §90 — the seam floor's heal line. Amber like the heading's family (it's
-     the run's own pool, not the road ahead), one step brighter than the
+  /* The seam floor's morale line. Amber, the heading's family (it is the
+     run's own pool, not the road ahead), one step brighter than the
      subtext so the number reads. */
   font-size: var(--text-14);
   color: var(--color-terminal-amber);
@@ -1907,13 +1907,13 @@ body {
   color: var(--color-terminal-green); /* the road ahead */
 }
 
-/* The sector-cleared button is `.btn--primary.btn--exit` (96d), the
-   game-over clone it always was. */
+/* The sector-cleared button is `.btn--primary.btn--exit`, as the end
+   screen's are. */
 
-/* Character select (63e). Where a new run starts when no ?character= pins
-   the choice. Functional, not art-directed (the §63 scope guard) — the
-   gameover-screen chrome vocabulary: opaque black, mono, amber borders.
-   116c — Back, under the cards, is a bare `.btn--primary.btn--dim`. */
+/* Character select: where a new run starts when no `?character=` pins the
+   choice. Functional, not art-directed: the end screen's chrome (opaque
+   black, mono, amber borders). Back, under the cards, is a bare
+   `.btn--primary.btn--dim`. */
 
 .charselect-screen {
   position: absolute;
@@ -1922,15 +1922,15 @@ body {
   flex-direction: column;
   align-items: center;
   gap: 32px;
-  background: var(--color-black); /* opaque — DOM scenes fully mask the battle canvas (G2) */
+  background: var(--color-black); /* opaque: the screen masks the battle canvas whole */
   font-family: var(--font-mono);
-  /* 117e — the column is centred by the auto margins below, not by
+  /* The column is centred by the auto margins below, not by
      `justify-content`: where it is taller than the window (the cards wrap to
      two rows at the largest text size on a 720p window, each with its picker
      under it) a centred column would put its heading and Back off both ends
      of the page, out of reach. Auto margins never go negative, so the
      column then starts at the top and the screen scrolls. Where it fits,
-     the two centre it as before. The padding keeps a scrolled column off
+     the two centre it. The padding keeps a scrolled column off
      the window's edges, and moves nothing that is centred. */
   padding: 16px 0;
   overflow-y: auto;
@@ -1961,7 +1961,7 @@ body {
   max-width: 68.75rem;
 }
 
-/* 117e — a character's column: the card, and under it the Escalation picker
+/* A character's column: the card, and under it the Escalation picker
    (`.charselect-level`). The card takes the height the column has left, so
    the cards of a row stay as tall as each other and the pickers line up
    under them. */
@@ -2022,14 +2022,14 @@ body {
   color: var(--color-neon-purple);
 }
 
-/* 117e — the Escalation picker under a card: − · the level's name · +, and
-   under them what the level adds. The slot is under every card, reserved
+/* The Escalation picker under a card: −, the level's name and +, and under
+   them what the level adds. The slot is under every card, reserved
    (`.is-reserved`) until the character has a level to pick, so a card is
-   where it was before the picker showed. Nothing here moves across a click:
-   every level's name is as wide (one digit, one face), and every level's
-   line lies in ONE grid cell (the event pages' idiom), the lines that are
-   not the level's reserved, so the tallest sizes the cell. The steps' look
-   is `.settings-step`'s rule, below with the settings. */
+   where it was before the picker showed. Nothing here moves across a
+   click: every level's name is as wide (one digit, one face), and every
+   level's line lies in one grid cell (the event pages' idiom), the lines
+   that are not the level's reserved, so the tallest sizes the cell. The
+   steps' look is `.settings-step`'s rule, below with the settings. */
 .charselect-level {
   display: flex;
   flex-direction: column;
@@ -2076,7 +2076,7 @@ body {
   color: var(--color-terminal-amber);
 }
 
-/* The menu (116c), the boot screen: the game's name, what the boot has to
+/* The menu, the boot screen: the game's name, what the boot has to
    say about saving, then the rows. The same chrome vocabulary as the other
    opaque screens. Everything is drawn with the screen and never comes or
    goes while it is up. The boxes that hold text are sized in rem, so they
@@ -2090,7 +2090,7 @@ body {
   align-items: center;
   justify-content: center;
   gap: 32px;
-  background: var(--color-black); /* opaque — DOM scenes fully mask the battle canvas (G2) */
+  background: var(--color-black); /* opaque: the screen masks the battle canvas whole */
   font-family: var(--font-mono);
 }
 
@@ -2132,11 +2132,10 @@ body {
   max-width: 92vw;
 }
 
-/* The seed field, the first text field (DESIGN §UI idioms, "Fields"): the
-   name and the field on one line, the field taking what the name leaves.
-   Quieter than the rows above it, since most runs never touch it. The word
-   carries the explanation as its tooltip (116c-post), and a dotted
-   underline says it has one. */
+/* The seed field, the first text field (DESIGN "Fields"): the name and the
+   field on one line, the field taking what the name leaves. Quieter than
+   the rows above it, since most runs never touch it. The word carries the
+   explanation as its tooltip, and a dotted underline says it has one. */
 .menu-seed {
   display: flex;
   align-items: center;
@@ -2181,9 +2180,9 @@ body {
   text-underline-offset: 4px;
 }
 
-/* The build's ID, pinned to the screen's bottom-right corner: the top-left is
-   the chrome column's and the top-right a corner button's on other screens.
-   Selectable, since it is there to be copied into a bug report. */
+/* The build's ID, pinned to the screen's bottom-right corner: the top left
+   is the chrome column's and the top right the control column's. Selectable,
+   since it is there to be copied into a bug report. */
 .menu-build {
   position: absolute;
   right: 16px;
@@ -2194,7 +2193,7 @@ body {
   user-select: text;
 }
 
-/* THE BATTLE'S TOP ROW (HUD.ts): the hop chip and the banner, in the room
+/* The battle's top row (HUD.ts): the hop chip and the banner, in the room
    between the two columns. Three grid columns: the hop chip's, the banner's
    and a spacer. While the hop chip fits its half of what the banner leaves,
    the outer two are equal and the banner is centred on the page. When it
@@ -2216,11 +2215,10 @@ body {
   pointer-events: none;
 }
 
-/* Battle banner (C1d follow-up). The top row's middle: a label naming the
-   encounter's hand-authored layout ("Corridor" / "Diamond" / etc.) or
-   "Uncharted Ground" for procedural battles. Shares the HUD's amber chrome
-   and screen-fade lifecycle so it appears with the panel and fades out
-   together. */
+/* The battle banner, the top row's middle: the name of the encounter's
+   hand-authored layout ("Labyrinth", "River" and the rest) or "Uncharted
+   Ground" for a procedural board. It shares the HUD's amber chrome and its
+   screen fade, so it comes and goes with the rest of the HUD. */
 
 .battle-banner {
   grid-column: 2;
@@ -2238,21 +2236,22 @@ body {
   white-space: nowrap;
 }
 
-/* Q2 — pre-battle countdown readout. Centered + prominent: a label, a big
-   second-count (TERMINAL_GREEN, the live tick), and a Fight-now button. Shown
-   only while the sim is held at turn start (screen-fade lifecycle; HUD toggles
-   is-visible). The panel is CLICK-THROUGH so the player can still set board
-   objectives under it during the hold — only the Fight-now button is
-   interactive. */
+/* The countdown before a turn's fight: centred and prominent, a label, a
+   big count of the seconds (TERMINAL_GREEN, the live tick) and a Fight now
+   button. Shown only while the sim is held at the turn's start (the HUD
+   toggles `is-visible`). The panel lets clicks through, so the player can
+   still set board objectives under it during the hold; only Fight now
+   takes them. */
 .battle-countdown {
   position: absolute;
-  /* Q5 playtest fix: keep the readout clear of the top enemy pane. This is the
-     STATIC default for the common ONE-row pane (bottom ~189px, fixed): the bare
-     `18%` drops below it on shorter viewports (194px at 1080p, 144px at 800px),
-     so `max(18%, 230px)` floors it. When the enemy cards WRAP to 2–3 rows on a
-     narrow/short screen the pane grows past any static value, so
-     HUD.positionCountdown() measures the pane on countdown entry and pushes this
-     further DOWN as needed (it only overrides downward). */
+  /* Keeps the readout clear of the enemy pane at the top. This is the
+     static default for the common one-row pane (its bottom about 189px): a
+     bare `18%` comes above that on a shorter window (194px at 1080p, 144px
+     at 800px), so `max(18%, 230px)` floors it. When the enemy cards wrap to
+     two or three rows on a narrow or short screen, the pane grows past any
+     static value, so HUD.positionCountdown() measures the pane at the
+     countdown's entry and for as long as it counts, and moves this further
+     down as needed (never up). */
   top: max(18%, 230px);
   left: 50%;
   transform: translateX(-50%);
@@ -2268,10 +2267,10 @@ body {
   text-align: center;
 }
 
-/* Keep the panel click-through so board objectives can be set under it. Scoped
-   to `#ui >` to win on specificity against the `#ui > *` rule that makes UI
-   children interactive (an ID selector — a plain class can't beat it); only the
-   Fight-now button (below, gated on is-visible) re-enables clicks. */
+/* The panel lets clicks through, so board objectives can be set under it.
+   Scoped to `#ui >` to win on specificity against the `#ui > *` rule that
+   makes the UI's children take clicks (an ID selector, which a plain class
+   can't beat); only Fight now (below, while `is-visible`) takes them. */
 #ui > .battle-countdown {
   pointer-events: none;
 }
@@ -2306,8 +2305,8 @@ body {
     box-shadow 0.12s ease;
 }
 
-/* The one interactive bit of the click-through panel — and only while the
-   countdown is actually shown, so an invisible button can't eat a board click. */
+/* The one part of the panel that takes clicks, and only while the countdown
+   shows, so an invisible button can't eat a board click. */
 .battle-countdown.is-visible .battle-countdown__fight {
   pointer-events: auto;
 }
@@ -2319,41 +2318,29 @@ body {
   box-shadow: 0 0 6px rgb(from var(--color-terminal-green) r g b / 0.5);
 }
 
-/* Q6 — the in-battle hop/turn chip. The monolithic left HUD side panel was
-   dismantled in Q6 (rosters + per-unit stat lines → the Q4/Q5 card panes; the
-   inline You/Foe pools → the panes' gauges); this label is the one survivor,
-   relocated to a standalone top-left chip, with the location banner centered
-   between it and the control column. Amber terminal chrome.
-   48d — the persistent bits chip now OWNS the top-left corner (the shape-lock
-   call: persistent chrome outranks scene chrome), so this chip sits to its
-   RIGHT. The fixed offset clears a 4-digit balance; if the two ever crowd,
-   §51's cohesion review owns the refinement (the user's noted expectation). */
-/* 101b — the hop chip wears the `.chip` plate (HUD.ts adds the class; the
-   duplicated plate block that sat here is gone). It is the first cell of
-   the battle's top row (`.hud-top`, above), which starts a gutter past the
-   chrome column, so a wider column can't slide under it and the banner
-   can't either. */
+/* The battle's hop chip, the hop and the turn, in the `.chip` plate (HUD.ts
+   adds the class). It is the first cell of the battle's top row
+   (`.hud-top`, above), which starts a gutter past the chrome column, so
+   neither a wider column nor the banner can slide under it. */
 .hud-hop {
   grid-column: 1;
   justify-self: start;
 }
 
-/* 96e — THE CHROME COLUMN + THE CHIP PLATE (src/ui/chip.ts). The four
-   page-lifetime chips (bits 48d · cache 49f · sector map 78e · pool 94e)
-   mount into ONE Game-owned flex column in the top-left corner instead of
-   each pinning itself at a top: N measured from the chip above (20 · 76 ·
-   132 · 188 px — a 5-digit balance or a font change desynchronized them).
-   Fixed (ignores host-screen scroll, like the corner card-list buttons);
-   z-index 15 = above the plain screens (no z-index), below the corner
-   buttons (20) / modals (30), under the #scanlines rake (1000) like all
-   chrome. The column takes NO pointer events (its gaps and its width past
-   a narrow chip must not swallow a map click); the chips do. The order is
-   fixed by `order` on each chip class (bits · cache · map · pool ·
-   can't-save; the can't-save chip is 116i's), and a hidden chip COLLAPSES —
-   the ones below move up (the §96 decision D; the map chip hides on
-   MapScene). The column holds the run's state and the map; the controls are
-   the control column's, below.
-   The .hud-hop battle chip still sits to the bits chip's right (HUD-owned). */
+/* The chrome column and the chip plate (src/ui/chip.ts). The page-lifetime
+   chips (bits, cache, the sector map's, the pool's, can't-save) mount into
+   one Game-owned flex column in the top-left corner, so no chip is placed
+   at a measured offset from the one above, which a longer balance or
+   another font would throw out. Fixed, so it ignores a screen's scroll, as
+   the corner card-list buttons do; z-index 15, above the plain screens (no
+   z-index) and below the corner buttons (20) and the modals (30), under
+   the #scanlines rake (1000) like all chrome. The column takes no pointer
+   events (its gaps, and its width past a narrow chip, must not swallow a
+   map click); the chips do. Each chip's class fixes its place by `order`
+   (bits, cache, map, pool, can't-save), and a hidden chip collapses, the
+   ones below moving up. The column holds the run's state and the map; the
+   controls are the control column's, below. The battle's hop chip is not
+   the column's: it is the top row's first cell. */
 .chrome-column {
   position: fixed;
   top: 20px;
@@ -2361,14 +2348,13 @@ body {
   z-index: 15;
   display: flex;
   flex-direction: column;
-  /* 101b — ONE column width (user-signed at the §101 kickoff): the column
-     owns `--chip-w` and every chip stretches to it, so a chip's width
-     depends on neither its own text nor which siblings are showing (plain
-     `stretch` with no width would re-size the column every time the pool
-     chip — the widest — hides for a battle). */
+  /* One column width: the column owns `--chip-w` and every chip stretches to
+     it, so a chip's width depends on neither its own text nor which
+     siblings are showing (a plain `stretch` with no width would resize the
+     column each time the pool chip, the widest, hides for a battle). */
   width: var(--chip-w);
   align-items: stretch;
-  gap: 10px; /* the old measured offsets implied 11 / 10 / 10 — one gap now */
+  gap: 10px;
 }
 
 /* The id-qualified form is what beats `#ui > * { pointer-events: auto }`
@@ -2387,7 +2373,7 @@ body {
   display: none;
 }
 
-/* THE CONTROL COLUMN (src/ui/chip.ts): the chrome column mirrored in the
+/* The control column (src/ui/chip.ts): the chrome column mirrored in the
    top-right corner, with the same top, inset, width, gap, plate and
    z-index. Row one is the settings chip, at one place on every screen of a
    run. Row two is `.control-slot`, which holds the one control the screen
@@ -2431,9 +2417,9 @@ body {
   grid-area: 1 / 1;
 }
 
-/* The plate every chip shares: the 51e card-list-button scale (the R1 1.5×
-   user call), amber terminal chrome on a translucent black. A chip's own
-   class adds its layout (flex row / column), accent, cursor and transition. */
+/* The plate every chip shares: the card-list buttons' text size, amber
+   terminal chrome on a translucent black. A chip's own class adds its
+   layout (a flex row or column), accent, cursor and transition. */
 .chip {
   font-family: var(--font-mono);
   font-size: var(--text-18);
@@ -2443,11 +2429,11 @@ body {
   background: rgba(0, 0, 0, 0.7);
   border: 1px solid var(--color-terminal-amber);
   padding: 10px 18px;
-  /* 101b — the plate's box is explicit: two chips are <button>s (UA
-     border-box) and two are <div>s (content-box), so the old `min-width:
-     128px` meant 128 vs 166 px outer in one column; the width now comes from
-     the column. One line, always: a chip is furniture of a fixed height, and
-     a narrow viewport once wrapped the pool value under its label. */
+  /* The plate's box is explicit, since some chips are `<button>`s
+     (border-box in the UA sheet) and some `<div>`s (content-box); the width
+     comes from the column. One line, always: a chip is furniture of a
+     fixed height, and a narrow window would wrap the pool's value under its
+     label. */
   box-sizing: border-box;
   white-space: nowrap;
   transition:
@@ -2455,18 +2441,18 @@ body {
     box-shadow 0.15s;
 }
 
-/* 48d — the persistent bits chip: the game's first PAGE-LIFETIME UI element
-   (Game-owned, survives every scene swap), first in the column in and out
-   of battle. The value is TERMINAL_GREEN (the gain color); .is-pulsing
-   flashes the border green for CHIP_PULSE_MS on any balance change so
-   mid-run earns register. */
+/* The bits chip, page-lifetime (Game owns it, and it survives every scene
+   swap), first in the column in and out of battle. The value is
+   TERMINAL_GREEN, the gain's colour; `.is-pulsing` flashes the border green
+   for CHIP_PULSE_MS (chip.ts) on any change of balance, so an earn in the
+   middle of a run registers. */
 .bits-overlay {
   order: 1;
   display: flex;
   align-items: baseline;
-  /* 101c — the label is PINNED to the chip's far edge (the pool chip's
-     shape, mirrored): the value grows toward it through the chip's fixed
-     width (101b) and the label never slides — it moved 50px on 0 → 12345. */
+  /* The label is pinned to the chip's far edge (the pool chip's shape,
+     mirrored): the value grows toward it through the chip's fixed width,
+     and the label never slides. */
   justify-content: space-between;
   gap: 8px;
 }
@@ -2476,7 +2462,7 @@ body {
 }
 
 .bits-overlay__label {
-  font-size: var(--text-13); /* 51e — scaled with the chip */
+  font-size: var(--text-13); /* scaled with the chip */
   opacity: 0.85;
 }
 
@@ -2485,13 +2471,13 @@ body {
   box-shadow: 0 0 8px rgb(from var(--color-terminal-green) r g b / 0.55);
 }
 
-/* 94e — the persistent run-pool chip (src/ui/PoolOverlay.ts): the LAST
-   chip of the column, on every screen — the map, an event, the port, a
-   reward, a recruit, the seam (96e: when the map chip hides on MapScene it
-   moves up into its slot). The battle HUD + the turn screens keep
-   their full gauges; this is the always-on one (§96.5 hides it there).
-   Pulses on every pool move (run:poolChanged); .is-losing flags a loss
-   (chip / damage), .is-low the last quarter. */
+/* The run's pool chip (src/ui/PoolOverlay.ts), page-lifetime, under the map
+   chip and above can't-save, on every screen of a run but the pre-turn
+   screen and the battle, whose own gauges read the pools there (Game
+   hides it at the swap); where the map chip hides, it moves up into that
+   slot. It pulses on every move of the pool (`run:poolChanged`);
+   `.is-losing` marks a loss (a chip or damage), `.is-low` the last
+   quarter. */
 .pool-overlay {
   order: 5;
   display: flex;
@@ -2538,18 +2524,16 @@ body {
   box-shadow: 0 0 8px rgb(from var(--color-neon-red) r g b / 0.55);
 }
 
-/* 49f — the persistent cache chip: the bits chip's page-lifetime sibling
-   (src/ui/CacheOverlay.ts), second in the column — the in-battle .hud-hop
-   chip owns the slot to the bits chip's right, so persistent chrome grows
-   as a left COLUMN. Clickable: it opens the cache modal on any screen.
-   Fluorescent blue value (the relic/packet accent, vs the bits chip's
-   gain-green); .is-over flags the forced-keep shrink state (held > derived
-   capacity). */
+/* The cache chip (src/ui/CacheOverlay.ts), page-lifetime like the bits
+   chip, second in the column. A `<button>`: it opens the cache modal on
+   any screen. The value is FLOURESCENT_BLUE, the packet accent, against
+   the bits chip's gain green; `.is-over` marks the forced keep, the cache
+   holding more than its size. */
 .cache-overlay {
   order: 2;
   display: flex;
   align-items: baseline;
-  justify-content: space-between; /* 101c — the label pinned, as the bits chip */
+  justify-content: space-between; /* the label pinned, as the bits chip's */
   gap: 8px;
   cursor: pointer;
   transition:
@@ -2569,7 +2553,7 @@ body {
 }
 
 .cache-overlay__label {
-  font-size: var(--text-13); /* 51e — scaled with the chip */
+  font-size: var(--text-13); /* scaled with the chip */
   opacity: 0.85;
 }
 
@@ -2584,8 +2568,8 @@ body {
   color: var(--color-neon-red);
 }
 
-/* 116d — the settings chip: the control column's first row, at one place on
-   every screen of a run. It opens the settings modal. */
+/* The settings chip: the control column's first row, at one place on every
+   screen of a run. It opens the settings modal. */
 .settings-chip {
   text-align: left;
   cursor: pointer;
@@ -2621,7 +2605,7 @@ body {
   color: var(--color-amber-hover);
 }
 
-/* 116i — the can't-save chip (src/ui/CantSaveChip.ts): the LAST chip of the
+/* The can't-save chip (src/ui/CantSaveChip.ts): the last chip of the
    column, on every screen, shown only while the store can't save. Last, so
    its coming and going moves no chip; a read with a tooltip, so its own move
    when a chip above hides shifts no click target. The red is the destructive
@@ -2634,11 +2618,11 @@ body {
   cursor: help;
 }
 
-/* 78e — the sector-map chip: the third chrome-column chip (bits → cache →
-   map), same terminal plate as its siblings. Clicking it (or
-   `M`) opens the read-only sector-map overlay from any screen it's shown
-   on; Game hides it on MapScene (redundant), pre-run, and game-over — and
-   the pool chip below moves up into its slot (96e). */
+/* The sector map's chip, under the cache chip, in its siblings' plate. A
+   click (or `M`) opens the read-only sector-map overlay from any screen it
+   shows on. Game hides it with no run, on the map itself, at character
+   select and at a run's end, and the pool chip below moves up into its
+   slot. */
 .sector-map-chip {
   order: 4;
   text-align: left;
@@ -2655,20 +2639,20 @@ body {
   color: var(--color-amber-hover);
 }
 
-/* 78e — the overlay the chip/keybind opens: a fixed full-viewport host the
-   read-only MapScreen renders into (.map-screen is absolute inset:0 + opaque,
-   so it fills this host and no backdrop shows). Above the scene UI + the
-   chrome chips, below #scanlines (1000). */
+/* The overlay the chip or its key opens: a fixed full-viewport host the
+   read-only MapScreen renders into (.map-screen is absolute, inset 0 and
+   opaque, so it fills this host and no backdrop shows). Above the screens
+   and the chips, under #scanlines (1000). */
 .sector-map-overlay {
   position: fixed;
   inset: 0;
   z-index: 40;
 }
 
-/* 78e fix — the clickable close (top-right, above the opaque map screen):
-   the overlay must be escapable with a pure mouse / touch (user call — the
-   map screen buries both the backdrop and the chip, so without this the
-   keyboard was the only way out). Terminal-plate chrome, chip-scaled. */
+/* The close button, top right, above the opaque map screen: a mouse or a
+   touch must be able to leave the overlay, and the map screen covers both
+   the backdrop and the chip, so without it the keyboard would be the only
+   way out. Terminal-plate chrome at the chips' scale. */
 .sector-map-overlay__close {
   position: fixed;
   top: 20px;
@@ -2708,29 +2692,30 @@ body {
   opacity: 0.75;
 }
 
-/* 78e — readOnly map view: frontier nodes keep their styling (the plan-ahead
-   read) but don't click. */
+/* The read-only map: the frontier nodes keep their look (a read for planning
+   ahead) but take no click. */
 .map-screen--readonly .map-node.frontier {
   cursor: default;
 }
 
-/* The cache modal (the R1 roster-modal shell + packet rows). One row per
-   held slot: name + description on the left, Fire/Discard on the right;
-   the inline roster picker (a unit-target out-of-battle fire) expands
-   under its row. The shrink banner tops the list while over capacity. */
-/* 101e — TOP-ANCHORED, this modal only (the roster pickers stay centered):
-   its body is a list the player deletes from, and a centered content-sized
-   panel re-centered on every Discard under the 86vh cap — the first Discard
-   button measured 180.0 → 215.5 px across one click. The top sits where a
-   FULL (capped) panel's top sits — (100 − 86) / 2 vh — less the overlay's
-   32px padding, so a full cache opens exactly where it always did. */
+/* The cache modal: the modal shell (modal.ts, the roster's too) with packet
+   rows. One row per held packet: the name and description on the left,
+   Fire and Discard on the right; the inline roster picker (a unit-target
+   packet fired out of battle) opens under its row. The shrink banner tops
+   the list while the cache is over its size. */
+/* Anchored at the top, this modal only (the roster pickers stay centred):
+   its body is a list the player deletes from, and a centred panel the size
+   of its content would re-centre under the 86vh cap on every Discard,
+   moving the next Discard under the pointer. The top sits where a full
+   (capped) panel's top sits, (100 − 86) / 2 vh, less the overlay's 32px
+   padding, so a full cache opens where a centred one would. */
 .cache-modal {
   max-width: 45rem;
   align-self: flex-start;
   margin-top: calc(7vh - 32px);
 }
 
-/* 101e — the reservation idiom (src/ui/reserveSlot.ts): hidden, slot kept. */
+/* The reservation idiom (src/ui/reserveSlot.ts): hidden, its slot kept. */
 .is-reserved {
   visibility: hidden;
 }
@@ -2867,17 +2852,17 @@ body {
   background: rgb(from var(--color-flourescent-blue) r g b / 0.08);
 }
 
-/* Q1 — the speed strip: a pause/play toggle, then one cell per enabled speed
-   (ascending, 0.5×/1×/2×/3×). It is the control column's second row in a
+/* The speed strip: a pause/play toggle, then one cell per enabled speed,
+   ascending (0.5×, 1×, 2×, 3×). It is the control column's second row in a
    battle (HUD.ts mounts it into `.control-slot`), so its width is the
-   column's and its height the row's, a chip's; same screen-fade lifecycle as
-   the banner. The cells are equal and share their borders: each after the
+   column's and its height the row's, a chip's; it fades with the banner.
+   The cells are equal and share their borders: each after the
    first is drawn 1px over the one before, and the cell that is hovered,
    focused or active comes to the front so its own border is whole. At the
    column's 12.5rem a cell has 39px inside for the widest label, 0.5×, which
    is 31.2px, so the labels carry no letter-spacing. Amber terminal chrome;
-   the SELECTED running speed (or the pause toggle while paused) brightens to
-   TERMINAL_GREEN with a glow via .is-active so the live pacing reads at a
+   the running speed (or the pause toggle while paused) brightens to
+   TERMINAL_GREEN with a glow by `.is-active`, so the live pace reads at a
    glance. */
 .hud-speed-pane {
   display: flex;
@@ -2934,18 +2919,17 @@ body {
   z-index: 2;
 }
 
-/* Q3 — objective-command pane (bottom-right): Engage / Focus / Hold / Stop on
-   O's typed objective model. Engage + Focus ARM a target pick (next left-click;
-   78a fast paths: left-click → engage, right-click → focus); Hold + Stop apply
-   immediately. Lives
-   outside the left side-panel so it anchors bottom-right; same screen-fade
-   lifecycle + amber terminal chrome as the speed pane. A VERTICAL stack (the
-   labels are far wider than tall, so a row sprawled across the bottom) — it
-   grows up from the corner and stays clear of Q4's bottom-center cards;
-   `align-items: stretch` makes every button the width of the widest so the
-   column + its left-aligned icons line up. The team's ACTIVE mode brightens to
-   green (.is-active); an armed target-pick adds a soft pulse (.is-armed) so
-   "click a target" reads as live. */
+/* The objective pane, bottom right: Engage, Focus, Hold and Stop, the team's
+   objectives. Engage and Focus arm a target pick (the next left click; the
+   board's fast paths skip the arming, a left click engaging and a right
+   click focusing); Hold and Stop apply at once. The speed strip's fade and
+   amber chrome. A vertical stack, since the labels are far wider than
+   tall and a row would sprawl across the bottom: it grows up from the
+   corner, clear of the player's cards at the bottom centre, and
+   `align-items: stretch` makes every button as wide as the widest so the
+   column and its left-aligned icons line up. The team's active objective
+   brightens to green (`.is-active`); an armed pick adds a soft pulse
+   (`.is-armed`), so "click a target" reads as live. */
 .hud-objective-pane {
   position: absolute;
   bottom: 20px;
@@ -2958,9 +2942,8 @@ body {
 
 .hud-objective-btn {
   font-family: var(--font-mono);
-  /* 78a — enlarged from 13px/4px 10px (a long-standing user nit): the pane is
-     the primary in-battle command surface, so it reads at a glance and gives a
-     fatter click target. */
+  /* The pane is the battle's main command surface, so it reads at a glance
+     and gives a large click target. */
   font-size: var(--text-16);
   letter-spacing: 0.08em;
   text-align: left;
@@ -2994,11 +2977,10 @@ body {
   animation: hud-status-pulse 1.4s ease-in-out infinite;
 }
 
-/* Q4 — player unit pane (bottom-center): a wrapping grid of compact UnitCards
-   for the fielded player units, with the run health-pool gauge beneath. Lives
-   outside the left side-panel so it centers on the viewport; same screen-fade
-   lifecycle. A capped width + wrap keeps a full 6-card hand tidy and the column
-   clear of the bottom-right objective pane. */
+/* The player's pane, bottom centre: a wrapping row of compact unit cards
+   for the fielded units, with the run's pool gauge beneath, centred on the
+   page and fading with the HUD. A capped width and the wrap keep a full
+   hand of six tidy and clear of the objective pane at the bottom right. */
 .hud-player-pane {
   position: absolute;
   bottom: 20px;
@@ -3018,18 +3000,19 @@ body {
   gap: 8px;
 }
 
-/* Q4 — the compact in-battle card (UnitCard `compact` variant): a glyph-led
-   tile with the level top-left + power top-right (small), and a glyph-width HP
-   bar below. Dim amber chrome so each tile reads as discrete; grays out on
-   death (.is-dead). Q5 reuses it for the enemy team (overriding the team
-   colors), so the glyph/HP greens here are the player defaults. */
+/* The compact battle card (UnitCard's `compact` mode): a tile led by the
+   glyph, with the level small at the top left and the power at the top
+   right, and a glyph-wide HP bar below. Dim amber chrome so each tile reads
+   as its own; it greys out on death (`.is-dead`). The enemy's pane uses it
+   too, with its team's colours, so the glyph's and the HP bar's greens here
+   are the player's defaults. */
 .unit-card--compact {
   width: 4rem;
   padding: 5px 6px 7px;
   gap: 5px;
   border: 1px solid var(--color-dark-terminal-amber); /* DARK_TERMINAL_AMBER chrome */
-  /* background-COLOR, not the shorthand — the shorthand implicitly resets
-     background-image and would eat the §61e rarity tint layer. */
+  /* background-color, not the shorthand: the shorthand resets
+     background-image too, and would eat the rarity tint's layer. */
   background-color: rgba(0, 0, 0, 0.7);
 }
 
@@ -3065,7 +3048,7 @@ body {
 
 .unit-card__compact-hp-fill {
   height: 100%;
-  background: var(--color-terminal-green); /* player default; Q5 overrides enemy */
+  background: var(--color-terminal-green); /* the player's; the enemy's below */
   transition: width 0.2s ease;
 }
 
@@ -3073,19 +3056,19 @@ body {
   filter: grayscale(1);
   opacity: 0.4;
 }
-/* 96.5b2-post (the user's playtest note): the death readout FADES to gray
-   over the orb's launch rather than flipping — the card and the glyph it
-   sends to the gauge leave together. Only the dead card animates: a live
-   card's filter/opacity never change, so the transition is inert there. */
+/* A death greys the card out by a fade over the orb's launch rather than a
+   flip, so the card and the orb it sends to the gauge leave together. Only
+   the dead card animates: a live card's filter and opacity never change,
+   so the transition is inert there. */
 .unit-card--compact {
   transition:
     filter 0.45s ease-out,
     opacity 0.45s ease-out;
 }
 
-/* Q5 — enemy team coloring for the compact card. The player greens are the
-   defaults (above); this overrides glyph + HP fill to NEON_RED. The level/power
-   corners stay team-neutral chrome (amber/blue). */
+/* The enemy's colours on the compact card. The player's greens are the
+   defaults (above); this turns the glyph and the HP fill NEON_RED. The
+   level and power corners stay team-neutral chrome (amber and blue). */
 .unit-card--compact.unit-card--enemy .unit-card__glyph {
   color: var(--color-neon-red);
 }
@@ -3094,11 +3077,11 @@ body {
   background: var(--color-neon-red);
 }
 
-/* §32c — the compact card's status row (below the HP bar). One two-line chip per
-   active status: its symbol in its hue (the board pip's; a plain square of the
-   hue until 116g) + name, then the numeric tail (×stacks · ±N/s · remaining) —
-   where the §31-scaled potency reads as a literal. Hidden (no row) when the
-   unit carries no statuses. */
+/* The compact card's status row, under the HP bar. One two-line chip per
+   active status: its symbol in its hue (the board pip's) and its name,
+   then the numbers (the stacks, the potency a second, a heal's with a +,
+   and the seconds left), where the scaled potency reads as a number.
+   Hidden, no row, while the unit carries no status. */
 .unit-card__statuses {
   align-self: stretch;
   display: flex;
@@ -3145,15 +3128,15 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
-/* 78d — the compact card's empower-marker row (below the status row): one ▲
-   chip per badge-eligible buff key, colored inline off EMPOWER_DISPLAY (the
-   same hue the pre-turn badge uses, so the vocabulary carries into battle).
-   A horizontal row — markers are glanceable ticks, not the status row's
-   two-line readouts (hover carries the mods). Hidden when unbuffed.
-   The row WRAPS, and a chip wider than the card wraps its label under its
-   triangles: since 97e each chip carries its label, so two kinds (or one
-   long one, "3 OVERCLOCKED") were wider than the card and spilled out both
-   sides (measured 2026-09-23). */
+/* The compact card's empower row, under the status row: one ▲ chip per
+   badge-eligible buff key, coloured inline from EMPOWER_DISPLAY (the hue
+   the pre-turn badge uses, so the vocabulary carries into battle). A
+   horizontal row, since the markers are ticks read at a glance and not the
+   status row's two-line readouts (the hover carries the mods). Hidden
+   while the unit has no such buff. The row wraps, and a chip wider than
+   the card wraps its label under its triangles: each chip carries its
+   label, so two kinds, or one long one ("3 OVERCLOCKED"), are wider than
+   the card and would spill out on both sides. */
 .unit-card__empowers {
   align-self: stretch;
   display: flex;
@@ -3180,13 +3163,13 @@ body {
   letter-spacing: 0.08em;
 }
 
-/* Q5 — enemy unit pane (top-center, below the banner): the enemy encounter pool
-   gauge above an analogous wrapping grid of compact cards. The vertical mirror
-   of the player pane (anchored top, pool above cards). The max-width is wide
-   (min(94vw, 1800px)) so a realistic swarm (~up to 20 cards) stays on ONE row —
-   a one-row pane clears the countdown readout below it, whereas a tight cap
-   wrapped the swarm into the countdown box (the Q5 playtest fix). The card-row
-   max-height + scroll is the vertical fallback for a pathologically huge swarm. */
+/* The enemy's pane, top centre under the banner: the encounter's pool gauge
+   over a wrapping row of compact cards, the player pane's vertical mirror
+   (anchored at the top, the pool above the cards). The max-width is wide,
+   min(94vw, 1800px), so a realistic swarm (up to about 20 cards) stays on
+   one row on a wide screen, and a one-row pane clears the countdown below
+   it, where a tight cap would wrap the swarm into the countdown. The card
+   row's max-height and scroll are the fallback for a far larger swarm. */
 .hud-enemy-pane {
   position: absolute;
   /* 62px at the default text size, which clears the 20px-top banner; lower
@@ -3197,7 +3180,7 @@ body {
      and a 6px gap (20px of top, a line of --text-18 at about 1.32, 22px of
      padding and border), and the first is a line through 62px at the
      default size, where the chip is not yet in the way, that meets the
-     second just past 110 %. In Chromium at 110, 125 and 150 % the chip
+     second between 110 and 125 %. In Chromium at 110, 125 and 150 % the chip
      ends at 68, 72 and 78px (measured), and this comes to 70, 78 and
      84px. */
   top: min(calc(5.0625rem - 19px), calc(1.485rem + 48px));
@@ -3217,18 +3200,18 @@ body {
   gap: 8px;
   max-height: 30vh;
   overflow-y: auto;
-  /* 78b fix — the row is a scroll container, so it CLIPS at its box edge:
-     the hover glow (1px outline + 6px shadow) was cut off on the outer
-     cards (user screenshot). Interior padding gives the glow room to paint
-     inside the clip boundary. */
+  /* The row is a scroll container, so it clips at its box's edge, which
+     would cut off the hover glow (a 1px outline and a 6px shadow) on the
+     outer cards. The padding gives the glow room to paint inside the
+     clip. */
   padding: 8px;
 }
 
-/* 78b — enemy HUD cards are objective click targets (left=engage /
-   right=focus, the board fast paths extended to the cards). Pointer + a
-   hover glow so the affordance is discoverable; a dead card's gray state
-   goes inert (the HUD click handler gates on a living unit) so it drops
-   the invitation too. */
+/* The enemy's HUD cards are objective targets (a left click engages, a
+   right click focuses: the board's fast paths on the cards). The pointer
+   and a hover glow make that discoverable; a dead card goes inert (the
+   HUD's click handler checks for a living unit), so it drops the
+   invitation too. */
 .hud-card-targetable:not(.is-dead) {
   cursor: pointer;
 }
@@ -3238,9 +3221,7 @@ body {
   box-shadow: 0 0 6px rgb(from var(--color-amber-hover) r g b / 0.5);
 }
 
-/* The pulse the objective pane's armed-target prompt rides (`.is-armed`). It
-   was introduced for the old `.hud-status` "Battle resolving…" line (removed in
-   Q6 with the rest of the monolithic panel); the keyframe lives on. */
+/* The pulse the objective pane's armed target pick rides (`.is-armed`). */
 @keyframes hud-status-pulse {
   0%,
   100% {

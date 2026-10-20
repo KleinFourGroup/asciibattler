@@ -13244,3 +13244,120 @@ node comes after the kind accents; the rarity tint is a
 `background-image` so no skin's colour is fought; the derived block gates
 by `visibility`. In the guide, wrong looks like a recipe that would fail
 `npm test`, or token prose a reader new to CSS can't follow.
+
+### 124.5h, batch 11 — `ui.css`'s middle third: the run's screens and the battle HUD (2026-10-20, session f1005abf)
+
+Started at 332,785, batch 10's commit: at the pass's typical rate (about 90
+a line) its 1,724 lines forecast an end near 500k, and at batch 10's 130
+near 565k with the hand-off, both under the halt.
+
+The batch: `src/ui/ui.css` lines 1,530 to 3,253 at `d5bfab0b`, from the
+event screen's header to the turn screen's banner header, so the battle
+HUD and its compact cards stay in one batch: the event and rest pages, the
+reward's swap picker, the end screen, the sector-cleared screen, character
+select and its Escalation picker, the menu, the battle's top row, the
+countdown, the chrome and control columns with their chips, the sector-map
+overlay, the cache modal, the speed strip, the objective pane, and the
+player and enemy panes with the compact card. Out: the step codes, the `§`
+marks, the capitals (two banner headers among them), and the history: the
+left side panel the HUD's panes replaced and the status line the pulse was
+made for, the chips' measured offsets (20, 76, 132, 188 px) and the old
+`min-width`, a label that slid 50px, a Discard button that moved 35px,
+the measured date of the empower row's spill, a "4-digit balance" offset
+and the cohesion review it deferred to, and the user calls and screenshots
+behind sizes and fixes. Each reason stays: the column takes no pointer
+events so its gaps pass map clicks; the cache modal is anchored at the
+top so a Discard can't move the next under the pointer; the enemy row's
+padding lets the hover glow paint inside its scroll clip.
+
+**Statements found false and corrected (rule 7):**
+
+- The end screen's header: a "Full-overlay defeat modal with a single
+  button to start a fresh run". It is a full-viewport screen with a
+  defeat and a completed variant (batch 8 corrected its `.ts`), and its
+  buttons are below.
+- The end screen's buttons: "two of them ... a new run, and the run's
+  journal as a file". The way out is "Begin a new run" or "Main menu", and
+  Export shows only when the page holds a journal (`GameOverScreen.ts`).
+- The battle banner names a layout like "Corridor" or "Diamond"; no layout
+  has either name (`config/layouts.json`: Labyrinth, River, Endless
+  Corridors and the rest).
+- The countdown's readout is measured "on countdown entry"; it is measured
+  at the entry and as long as it counts (`watchCountdownAnchor`; batch 5's
+  item).
+- The hop chip sits beside the bits chip at "a fixed offset [that] clears
+  a 4-digit balance". It is the battle's top row's first cell, which
+  starts a gutter past the column whatever the balance.
+- The chrome column holds "the four page-lifetime chips", in a comment that
+  then lists five; the can't-save chip is the fifth. And the map chip
+  hides "on MapScene": also with no run, at character select and at a
+  run's end (`Game.swap`; batch 8's item).
+- The pool chip is "the LAST chip of the column, on every screen — the
+  map, an event, the port, a reward, a recruit, the seam". The can't-save
+  chip comes after it (`order` 6 against 5), and the pool chip shows on
+  every screen of a run but the pre-turn screen and the battle (batch 6's
+  item).
+- The sector-map chip hides "on MapScene (redundant), pre-run, and
+  game-over"; character select too (batch 8's item).
+- The chip plate: "two chips are <button>s ... and two are <div>s". In the
+  column the cache and map chips are buttons, and the bits, pool and
+  can't-save chips divs; the control column's are buttons.
+- The menu's build ID: "the top-right [is] a corner button's on other
+  screens". It is the control column's.
+- The enemy pane's `top` formula: its first term "meets the second just
+  past 110 %". The two meet at about 117 % (81s − 19 = 23.76s + 48 at
+  s ≈ 1.17), between the offered 110 and 125 %; the Chromium figures it
+  quotes are unchanged.
+
+Re-pointed, not false: the swap picker's Swap button as "an Accept
+variant" wears Accept's class; the cache modal's "R1 roster-modal shell" is
+the modal shell, `modal.ts`, the roster's too; the status chip's
+"±N/s" reads `N/s` for damage and `+N/s` for a heal (`statusChipMeta`);
+the stats table's "New Run button" is the way out; the cache chip's "to
+the bits chip's right" for the hop chip moved to the column's comment,
+which names the top row; the chip plate's "51e card-list-button scale" is
+the card-list buttons' text size.
+
+**Kept, checked at the code they name:** the event stack's `reserveSlot`
+and one cell; the rest page's classes and its effect line in the
+requirement style (`RestScreen.ts`); the cache line's pending-packet text;
+the end screen's two variants and their hues, the Escalation line and its
+tooltip, the unlocked line, the stats (`renderStats`), `.fallen-side`'s
+nowrap, the seed's shared underline rule; the sector-cleared screen's
+exit button and "Next:" line; `?character=` (`menuRules.ts`), Back's
+`btn--dim`, `.settings-step` below, five Escalation levels so one digit;
+DESIGN "Fields" and "Layout stability"; `map.uncharted`; the countdown's
+Fight now button and its `is-visible` gate; the control column's rows and
+grid; `CHIP_PULSE_MS` (450) in `chip.ts`; the pool chip's `is-low` at a
+quarter and `is-losing` on a chip or damage; the cache chip's click on
+every screen and `is-over` on overflow; the overlay's z 40 and the
+close's 42; the modal shell's z 30, 32px padding and 86vh cap; Overclock's
+roster pick (`CacheOverlay.ts`); the speeds 0.5, 1, 2 and 3
+(`config/playback.json`) and the hand of six (`config/deck.json`); the
+objective labels and the cards' fast paths (`HUD.ts`); the panes' order
+of gauge and cards; the loss orb (`lossFx.ts`); `EMPOWER_DISPLAY` and its
+users. Nothing was dropped unchecked.
+
+Nothing for the user from this batch.
+
+Measured (`comment-length` on copies of the batch's lines under
+`output/cl-1245h-b11`): comment lines 350 → 331, words 3,970 → 3,853, code
+lines 1,193 unchanged. The step-code ceiling 1,257 → 1,168, the 89 these
+lines held.
+
+Proof: `comment-strip HEAD src`, comments only, exit 0; its control made
+one code edit in memory in `ui.css` and the compare named it. The lines
+before 1,530 and from the turn screen's header on are byte-identical to
+`HEAD`'s.
+
+Cost: 332,785 at 14:08 UTC (batch 10's commit) to 427,362 at 14:18 after
+the proof, about 95k for 1,724 lines, about 55 a line: the screens' claims
+were close to the code read for batches 5 to 9.
+
+**Read** (`batch`): `git show <this commit> -- src/ui/ui.css` against the
+seven rules. Wrong looks like a step code, capitals or history left (the
+side panel, the chips' old offsets, the old status line), or a reason cut:
+the chrome column passes clicks through its gaps; a chip's width is the
+column's whatever its siblings; the cache modal opens at the top; the
+countdown lets board clicks through but for Fight now; a dead enemy card
+drops its pointer.

@@ -102,6 +102,16 @@ every item below is done (WORKLOG §124, "The close of §124"; WORKLOG
   failed on that file twice running with nothing beside the suite (the
   file takes 2 s alone); the chaos test's seeds are as they were.
 
+- [ ] **Ten sites spawn an encounter on a World of their own, with no
+  battle rules installed:** `tests/pathing/capture.ts` and nine tests
+  (`src/dev/boardPanel/fixtures.test.ts`, the five `*-battle` tests,
+  `corridor-flow`, `layout-deadlock`, `variable-size` under
+  `tests/integration`). `battleWorld` (`src/sim/battleSetup.ts`) builds
+  the turn's World as every driver does; each site needs its seed
+  checked against the encounter's first, since one built on another
+  seed is not a copy (WORKLOG §125, 125g and 125j's R-4). Signed for here
+  2026-10-20.
+
 - [ ] **Nothing notices the rollout walker buying nothing at a port.** A
   plant that made `buyAtPort` (`tests/fuzz/gateWalks.ts`) never buy was
   caught by `harnessEconomy.test.ts`, which reads the harness's count,

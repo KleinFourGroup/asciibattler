@@ -1867,6 +1867,21 @@ it comment.
 - Fate: **trial**, in the sim phase.
 - Signed: **trial** (the user, 2026-10-13: "Signing all, Claude! 😁").
 
+**B-18 · The bot's passability mask, built twice** (from §125's kickoff,
+call 3; written at 125j)
+- In play: Nothing. Both of the bot's choke reads decide which cells an
+  army can cross the same way.
+- Evidence: `chokeCells` and `armyMinCut` (`src/bot/sensors.ts:341`,
+  `:444`) each build the same mask, about twelve lines, from the inert
+  neutrals' footprints and the tiles' passability, and the second's
+  comment says it "mirrors chokeCells' passability mask".
+- Expects to remove: one copy, about ten lines, for a function both call.
+- Proof: the fuzz diff, with `sensors.test.ts`'s choke tests.
+- Fate: **trial**, in a later round, unnamed: §125's three trials went to
+  B-14's other leads (WORKLOG §125, the kickoff's call 3).
+- Signed: call 3 (the user, 2026-10-20, with §125's cut); this row at
+  125j (the user, 2026-10-20: "Absolutely, Claude! 😁 Signed!").
+
 **Leads left to each phase's kickoff, unread.** Near-duplicate runs the
 finder lists, by subsystem; none was opened beyond its first line.
 

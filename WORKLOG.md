@@ -14400,3 +14400,9 @@ at the kickoff, from `rallyCells`' doc). At §124.5's 75 tokens a line
 the pass is about 157k.
 
 Reading by the tool's clock (UTC): 421,377 at 22:58, before this entry.
+
+**Signed** (the user, 2026-10-20: "Absolutely, Claude! 😁 Signed!"), all
+four as leaned: R-1 is 125j-post, a deletion; R-2 is 125j-post2, 125e's
+finish and not a trial; R-3 is the census's B-18, and R-4 a TODO "§126
+tests" line, both written with the sign. Reading: 429,465 at 23:00, on
+the re-skim's commit.

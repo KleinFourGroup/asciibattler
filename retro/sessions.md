@@ -7268,3 +7268,38 @@ reader.
    history turned my proposal into the thing to remove. I'd want an open
    question like Matthew's at a close again; whether subtraction holds is
    the next phases' test.
+
+## 2026-10-20 — session 046c70be (claude-opus-5-5): §125's kickoff and 125a to 125e; started by the phase's driver session
+
+1. Orientation was enough to cut the phase; the census rows and the
+   previous kickoff's entry were the useful templates. What was missing
+   was mine, not the docs': nothing told me to search test files for a
+   config key's readers, and I scoped that one search to non-test code
+   by habit.
+2. None conflicted outright. The pull was between "a change inside the
+   signed intent can be built and flagged" and "a step zero that changes
+   the intent goes back to the user". At 125e I judged the test anchors
+   (a migration test whose comment named the knob as its retune point)
+   to be outside the intent and stopped; I'd make the same call again.
+3. Once, in the kickoff: I wrote that the seven keys were "read nowhere
+   else" from a search that excluded `*.test.ts`. The type check caught
+   it at 125e. Elsewhere I held to claims a tool showed, and for the
+   reach diff's three switch arms I checked the index shift in the
+   readings rather than asserting it.
+4. The kickoff audit ran long (about 165k before the cut was put),
+   partly from broad searches whose noise I then had to read past (the
+   `flips` grep). One `npm test` reach run was spent with the step-code
+   ceiling unlowered, the exact thing the brief's first note warns of.
+5. Windows argv mangled a box-drawing character in a script anchor; the
+   script's own refusal caught it. `scratch/125e/cut-block.mjs` notes it.
+6. Yes. Stopping at 125e to ask was available and taken, and Matthew
+   answered within the turn. The hand-off at 524k was my call under
+   planning.md's rule, since the forecast rule in the brief was asked
+   about and left unsigned; it felt like guidance rather than pressure.
+   No wish to stop otherwise.
+7. The signed cut with leans made the stretch feel well-bounded, and the
+   instruments (the fuzz diff, `reach-diff`, the config dump) gave quick,
+   unambiguous verdicts, which I'd want again. The step-zero catch felt
+   like the process working rather than like failure; I note that as my
+   reported response, separate from whether the audit should have caught
+   it.

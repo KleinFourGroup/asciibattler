@@ -14071,3 +14071,33 @@ Proof:
   before it, and BALANCE's header cap at 701 of 700 from my first wording
   of the paragraph); both pass after `comment-codes --record` (1,084 →
   1,078) and a shorter paragraph.
+
+The commit's hook: the suite 3,704 (3,722 before: the wave builder's
+describes and the two G4 bounds' test), the smoke 594 in 60 files, the
+parity test 1.
+
+### The hand-off after 125e (2026-10-20, session 046c70be)
+
+125a to 125e are built and ticked, each `none`, so nothing is ◐. Next is
+125f (A-25's `hazardCells` and A-26's 16 words in `src/bot`, from the
+kickoff's `refs`), then the three trials on the bars written at the
+kickoff, then 125j's stop.
+
+For 125j, the re-skim: `ArbitratedConfig`'s six per-site ε overrides
+that nothing sets (125b), and `enemyBudget.ts`, whose name no longer fits
+the one function it holds (125e).
+
+Tools and scratch, off git: `scratch/125e/cut-block.mjs` (removes a
+line range between two anchors, refusing unless the start matches once;
+non-ASCII in an anchor can be mangled on the way through Windows argv, so
+anchor on an ASCII part) and `rename-knobs.mjs`; the readings under
+`output/reach-125d/` and `output/reach-125e/`, the config dumps under
+`output/cfg-125e/`, and `output/refs-125/`. No worktree, background task
+or preview server is left.
+
+Readings by the tool's clock (UTC): 289,485 on the cut's commit at 18:14;
+338,875 at 125b's commit, 375,758 at 125c's, 451,605 at 125d's, 483,226
+at 125e's question (18:58), 519,866 at 125e's commit (20:53), and
+**524,464** at 20:58 before this entry. 125f's step plus the hand-off
+was larger than the room to the 550k line, so the session hands off
+here.

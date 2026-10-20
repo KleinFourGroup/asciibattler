@@ -13670,3 +13670,173 @@ entry.
 
 The close: **232,298** at 15:40 on 2026-10-20 by the tool's clock,
 before the close's commit.
+
+## Phase 125 — the bot and the fuzz instruments
+
+### The kickoff: the audit, and the cut put to the user (2026-10-20, session 046c70be)
+
+At `8c094cf9`, the tree clean. The session was started by the phase's
+driver session (driver 3) and works with the user as usual. Nothing was
+built. Nothing was run but the instruments named below; each finding is
+from a search (`git grep` over the tracked tree, which never walks
+`scratch/`), an instrument, or a read of the named lines, and no file was
+read whole.
+
+**The size.** `src/bot`'s 11 non-test files are 2,116 lines by `wc -l`
+(`sensors.ts` 615, `RolloutSearchDriver.ts` 244, `TrafficScriptDriver.ts`
+212, the five scripts 818, `evaluator.ts` 98, `runRollout.ts` 66,
+`rollout.ts` 63). `comment-length src/bot`: 1,108 code lines, 877 comment
+lines, 7,314 comment words, 6.60 words a code line (the board's 5.5 and
+the screens' 4.3 at their kickoffs); its 12 tests 1,665 and 303.
+`comment-codes`: 217 of the ceiling's 1,084 step codes are in `src/bot`,
+37 of them in tests, which wait for §126; the pass's files hold 180
+(`sensors.ts` 36, `attritionStall.ts` 26, `TrafficScriptDriver.ts` 26,
+`terrainEdgeHold.ts` 19, `RolloutSearchDriver.ts` 18, `unjam.ts` 12,
+`runRollout.ts` 12, `chokeHold.ts` 11, `rollout.ts` 8, `cohesionFocus.ts`
+7, `evaluator.ts` 5). `tests/fuzz` holds 118 `.ts` files, 17,259 lines in
+those that are not tests, outside the pass unless the decision point takes
+`tests`.
+
+**A-20's four flags at HEAD.**
+
+- `--bits-multiplier`: `commands/args.ts` (the field, the case, the
+  refusal list at :654), `commands/run.ts` (:110, :197, :223-229),
+  `bitsMultiplierArg.test.ts` whole, and one case of `shadowArgs.test.ts`
+  (:47). `RunConfig.bitsMultiplier` keeps its two test setters
+  (`Run.test.ts`, `resume-gates.test.ts`), as the census said.
+  `drawAddArg.test.ts:3` names the deleted test as its pattern.
+- `--grant-epsilon`: `args.ts` (the field, the case, two guards),
+  `run.ts:120` and `:365`, `grantEpsilonArg.test.ts` whole, and one case of
+  `arbitrateSearchCompat.test.ts` (:45). Behind it,
+  `ArbitratedConfig.grantEpsilon` (`rollout/arbitratedStrategy.ts:263`) and
+  the override it hands `arbitrateGrant` (:385, :732) have no other setter,
+  in code or tests, so they go with the flag; `GRANT_EPSILON` stays.
+  `priorLambdaArg.test.ts:6` names the deleted test as its pattern.
+- `--flip-telemetry`: the census's seven files are, at HEAD, `args.ts`
+  (the field, the case, the guards at :549-591), `run.ts` (:119,
+  :362-363, the sidecar at :469 and :634-640, the aggregate at :606),
+  `reporters.ts` (the tier-flip rows, `renderTierFlipsCsv` and the
+  aggregate, :685-769), `rollout/driver.ts` (`shadowChosenIndex`, the
+  `shadowTier` field and the shadow pass, :68-74, :164, :182, :195,
+  :287-317), `rollout/arbitratedStrategy.ts` (`shadowTier`, :255-258,
+  :342), `mergeStages.ts:69` (`tier-flips.csv` in the merge list), and
+  comments in `parallel.ts`, `cli.ts` and `walker.ts`. Tests: the describe
+  at `driver.test.ts:124`, `harness.test.ts:837-841`,
+  `arbitrateSearchCompat.test.ts:39`, and the `--jobs` parity test
+  (`parallelRunDecisions.test.ts:41-57`), which passes
+  `--flip-telemetry=traffic` so that `tier-flips.csv` is not vacuous and
+  compares it with the other two files; without the flag it compares
+  `summary.csv` and `decisions.csv`. `kFlipTelemetry` is `--k-telemetry`'s,
+  one of the five tuning flags kept. `shadowChosenIndex` is written only
+  when the shadow ran (`driver.ts:317`), so a batch without the flag
+  writes the same decision log.
+- `--arena`: `tests/fuzz/arena.ts` (301 lines), `commands/arena.ts` (169),
+  `arena.test.ts` (108), `args.ts` (the field, the case, four refusals that
+  list it), `cli.ts` (the dispatch at :221, the header's examples at
+  :89-102), and `objectiveCoverage.test.ts`, which the signature keeps and
+  which drives `runArena` at three places (:103, :111, :123). BALANCE "The
+  instrument registry" (:231) names the arena.
+
+**Two cascades the arena's row did not see.** `refs --all` over
+`tests/fuzz`, `tests/chaos` and `src/journal`
+(`output/refs-125/fuzz.json`), with the arena's three files set aside:
+
+1. In `tests/fuzz/objectiveStrategy.ts`, `objectiveMenu` (:154) and
+   `serializeProclivity` (:117) are left with tests as their only
+   readers, and `MenuEntry` (:140) with its own file: the proclivity menu
+   the arena enumerated and the writer of its `best-objective.json`.
+   `--objective=<file>` still reads such a file (`loadProclivityFile`,
+   `parseObjectiveFlag`).
+2. `buildEnemyTeam` (`src/run/enemyBudget.ts:59`) has one reader that is
+   not a test, the arena (`refs`: instrument 1, test 11, game 0), and
+   with it go `playerTeamLevel`, `chooseSwarmCount`, `distributeBudget` and
+   the private `enemyBudgetFor` and `rollEnemyWave`; `avgTeamLevel` has two
+   game reads and stays. The seven `config/difficulty.json` keys that size
+   that wave (`budgetFactor`, `budgetOffset`, `unitLevelDelta`,
+   `minBudget`, `swarmBias`, `swarmMaxMultiplier`, `enemyArcherRatio`) are
+   read nowhere else (each searched outside its loader), and
+   `difficulty.ts`'s header says so: they size "the random enemy wave ...
+   that the fuzz arena and the spawn-overflow test fight; an authored
+   encounter sizes its own waves". With the arena gone their readers are
+   `enemyBudget.test.ts` and `tests/integration/spawn-overflow.test.ts`,
+   which draws a large wave to fill the spawn queue (:163-166). The
+   balance sweep's documented example knob is `difficulty.budgetFactor`
+   (`tests/fuzz/cli.ts:64-106`, `commands/sweep.ts:7`,
+   `sweepCommand.ts:37`); since no run fields that wave, a sweep over it
+   moves nothing a run fights.
+
+**A-30 and A-31.** `rollout/verifyArbitratedRuns.ts` (92 lines): nothing
+imports it, and GOTCHAS #128 (:245) and `rollout/sites.ts:8` name it as
+the stale private list's example. The fifteen vectors: of the 21 files in
+`tests/fuzz/fixtures/`, a search for each stem over the tracked tree (not
+the archive, the WORKLOG or the census) is empty for exactly the census's
+fifteen (nine `60-…`, `85g5-finalist-72`, `-73` and `85g5-winner`,
+`92c2-finalist-27`, `-54` and `-80`). Every fixture path in code is written
+whole (`board.ts`, `perf-oracle.sh`, `priorTableArg.test.ts`).
+
+**A-25 and A-26 in `src/bot`.** `refs --all src/bot`
+(`output/refs-125/all.json`): 70 exports, none unread, 16 that only their
+own file reads (A-26: six constants in `RolloutSearchDriver.ts`, one in
+`TrafficScriptDriver.ts`, `RolloutSpec` in `evaluator.ts`,
+`STALL_RALLY_RADIUS`, `cutCenter` and `ChokeRead`, `UNJAM_RALLY_RADIUS`,
+and two constants and two interfaces in `sensors.ts`), 18 that tests read
+(A-27 keeps those), 36 used. A-25's `hazardCells` (`sensors.ts:216`) has
+one test (`sensors.test.ts:130`), which can hold `hazardCellList` instead.
+No build holds the bot, so the build compare has nothing to say; the fuzz
+diff does.
+
+**B-14's leads, measured at HEAD.**
+
+- The five walkers' battle start. Each builds the battle in a
+  `battle:started` handler, `new World(bus, new RNG(worldSeed), gridW,
+  gridH)` then `installBattleRules` then `spawnEncounter`: `harness.ts`
+  (:515-553), `rollout/walker.ts` (:183-201), `tests/chaos/chaos.ts`
+  (:154-157), `tests/journalDrive.ts` (:103-106),
+  `src/journal/replayJournal.ts` (:196-199), and outside the walkers the
+  game's `BattleScene.ts` (:88) and `src/dev/replayTrace.ts` (:91-93). The
+  harness and the walker set their drivers and `currentWorld` between the
+  World and the spawn, since their `unit:spawned` handlers read
+  `currentWorld`. The turn cap, `if (!w.ended && w.currentTick >=
+  maxTurnTicks) w.resolveAsDraw()` with `maxTurnTicks` from
+  `HEALTH.maxTurnSeconds`, is written at chaos (:201, :217), the journal
+  drive (:135, :148), the replay (:220, :223), `BattleScene` (:42, :98) and
+  `replayTrace` (:108, :118); the harness and the walker count their own
+  ticks and resolve after the loop (`harness.ts:1005-1011`, `walker.ts:325`).
+- The harness and the walker's three shared runs (163 to 191 tokens): the
+  turn gate's grant walk, its redraw and empower arms (`harness.ts:892-935`,
+  `walker.ts:256-300`, whose comment calls it "verbatim from runOne"), and
+  the port's purchase loop (`harness.ts:1101-1126`, `walker.ts:344-363`).
+  The harness walks one arm more, first (`strategy.pickGrantAction`), and
+  the two gate the redraw arm differently (`redraw && redrawRng` against
+  `redraw.kind !== 'none'`).
+- The two bot scripts' rally search: `standOffCell` (`attritionStall.ts:101`)
+  and `regroupCell` (`unjam.ts:79`) take the same centroid, nearest-enemy
+  distance, artillery-only under-fire test and candidate filter (passable,
+  no hazard, free, not nearer the enemy, not under fire) in the same
+  row-major order, and score apart (centroid distance, then enemy
+  distance; against open neighbours, then centroid distance). Each radius
+  is its own constant.
+- `sensors.ts`'s two grid scans: `chokeCells` (:283) and `armyMinCut`
+  (:386) build the same passability mask from the inert neutrals and the
+  tiles, about twelve lines each, and the second's comment says it
+  "mirrors chokeCells' passability mask".
+
+Four leads for the trials' budget of three a phase (ROADMAP "The phases
+after the census"); a fourth goes into the census for a later round.
+
+**Proofs, by TESTING "The oracle map".** `src/bot`: the fuzz diff alone
+(86 %), with the suite. `tests/fuzz`: the fuzz diff for what its two
+shapes run, the smoke's own tests for more; `npm test` does not load the
+folder. Every step below but a docs one stages a path the smoke runs on,
+and a `tests/fuzz` path runs the `--jobs` parity test too (AGENTS
+"Pre-commit").
+
+**The comment pass's cost.** 2,116 lines at §124.5's 75 tokens a line is
+about 160k, at §123's 112 about 240k: two or three batches.
+
+**The cut, as put.** In the session's final message of this turn, with
+its calls; the user's answer and the cut as signed follow here.
+
+Readings by the tool's clock (UTC): 94,213 at 17:47 after the
+orientation, 260,787 at 17:57 at the audit's end, 275,103 at 17:58 before
+this entry.

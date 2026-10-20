@@ -13600,7 +13600,7 @@ ref) and the instruments:
   kickoff's baseline exactly): code lines 12,502 → 12,443, comment lines
   5,595 → 5,359, comment words 53,754 → 51,383. The comments fell less
   than the board's at §124 (10 %, here 4 %): they started shorter (4.3
-  words a code line against 5.5), and, by inference, the 121 corrections
+  words a code line against 5.5), and, by inference, the 128 corrections
   wrote words back in.
 - The step-code ceiling 2,122 → 1,084: 6 out before the pass (2,122 →
   2,116), 1,032 in its batches. The pass's non-test files hold 0 of
@@ -13622,7 +13622,9 @@ ref) and the instruments:
   every read signed, about 1.48M tokens by the batches' own readings
   (five of the twelve spans start at a session's first reading, so they
   hold its orientation), about 75 a line, from 36 (batch 2) to 130 (batch
-  10). 121 false claims corrected, by the batches' commit subjects, with
+  10). 128 false claims corrected, by the batches' commit subjects
+  (batch 10's "fourteen … seven in the hitsplat guide" is 14 in `ui.css`
+  and 7 in the guide, as its entry lists them), with
   five twins outside their batch (`layouts.ts`, `BattleScene.ts`,
   `abilities.ts`, `EventScene.ts`, `i18n/credits.ts`). Every batch checked
   its own drops in place, so the close took no sweep.

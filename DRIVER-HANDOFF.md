@@ -8,45 +8,31 @@ driver log ([archive/driver-trial/log-124.md](archive/driver-trial/log-124.md)).
 
 ## Cursor
 
-- **Phase:** **§124.5, the screens: closed 2026-10-20** on Matthew's
-  signs of 124.5i's three calls (`0e3f646c`; WORKLOG §124.5, "The close of
-  §124.5"; its false-claim total corrected to 128 at `f902bcff`, on
-  driver 2's finding). Eight working sessions, each from a driver's brief:
-  8fb7e4a9 (the kickoff, 124.5a–f), ff99ffb0 (124.5g, R-1 to R-3, 124.5h's
-  plan, batches 1–2), ebe41cd8 (3–4), bcd08e32 (5–6), d8214ecc (7),
-  138dbbac (8–9), f1005abf (10–12), 34a2ba54 (124.5h-post, the test
-  pointer, the close). **Next: §125, the bot and the fuzz instruments**
-  (ROADMAP §125), from its kickoff, with a fresh driver that Matthew
-  starts as a top-level session (signed 2026-10-20). No card waits.
-- **Driver:** none working. Driver 2 was
-  `local_15013e01-a015-489f-969c-7ef71d47e662` (scratchpad 86ed5d79),
-  2026-10-20 13:32 UTC to the close; driver 1 was `local_3addf3c2`
-  (9b60fb27). A new driver writes its app id here.
-- **Friction read through:** line 306 of `retro/papercuts.jsonl` (305 is
-  session 8's, a `cd`, P12; 306 is driver 2's).
-- **Brief 8's notes**, the last brief's (for the comment pass; §125's
-  deletions need the oracle proofs): anything the Cursor lists open for Matthew goes in
-  the first turn's final message (P17), pointed at, not restated; the
-  comment tools' `npm run oracle --` form, with `--record` before the
-  suite (P1), `comment-length` on copies (P11), `held-compare.mts` (P13);
-  `ui.css` is `src/ui/ui.css` (P18), and `src/fonts.css` is generated from
-  `scripts/build-font.mjs`'s template; entries by Write or Edit, messages
-  by `-F`, no Bash call opening with a stdin reader (P2); other shapes,
+- **Phase:** **§125, the bot and the fuzz instruments** (ROADMAP §125),
+  driven from its kickoff. **Card 1** (the kickoff) is proposed after
+  this commit; no session is working. §124.5 closed 2026-10-20
+  (`0e3f646c`; WORKLOG §124.5, "The close of §124.5"); its eight
+  sessions and drivers' state are this file at `9c886b50`.
+- **Driver:** driver 3, `local_4c64446d-501b-4b13-ad75-2bacf7514e5f`
+  (scratchpad 33d012d0), from 2026-10-20 17:31 UTC, first reading
+  107,337. §124.5's were `local_15013e01…` (86ed5d79) and
+  `local_3addf3c2` (9b60fb27).
+- **Friction read through:** line 306 of `retro/papercuts.jsonl`; none
+  was filed between §124.5's close and this kickoff.
+- **Brief 1's notes:** the oracle tools' forms (`tests/oracle/cli.ts`'s
+  header), `--record` before the suite (P1), `comment-length` on copies
+  (P11), `held-compare.mts` (P13); entries by Write or Edit, messages by
+  `-F`, no Bash call opening with a stdin reader (P2); other shapes,
   every caller, every tracked folder, never `scratch/`, a gotcha to its
-  end, a CSS class's stem (P15, P3).
-- **Matthew's calls, 2026-10-20:** his answers to driver 1 are written
-  (`29d50f2a`: TODO §127, CLAUDE.md "Editing", five items in the HANDOFF
-  Cursor's "Carried to the Round 8.5 close"). P2's guard: not yet ("a few
-  more observations are needed to justify a guard"), so the note stays.
-  P12's note stays dropped (driver 2's lean, signed). P17's signed
-  wording for open reads, kept here and not copied into briefs (signed
-  2026-10-20): "Open `batch` reads: list them with their
-  scripts in your first message, then start the next batch. A `batch`
-  read blocks nothing." P20: planning.md's hand-off rule, held in session
-  7. Over-prompting (Matthew's worry at the close): driver 2 withdrew its
-  lean for a questions-versus-reads rule, and Matthew signed subtraction
-  instead, with the driver writing the doc edits he signs in its session;
-  both are in `process/driving.md` (driver 2, at this commit).
+  end (P15, P3); the hand-off forecast in Matthew's words, for the
+  session to confirm (P20).
+- **Matthew's calls standing:** P2's guard: not yet ("a few more
+  observations are needed to justify a guard"), so its note stays. P6's
+  and P12's notes stay dropped. P17's wording for open reads, kept here
+  and not copied into briefs (signed 2026-10-20): "Open `batch` reads:
+  list them with their scripts in your first message, then start the
+  next batch. A `batch` read blocks nothing." Over-prompting:
+  subtraction, in `process/driving.md` (`0a9e89ea`).
 
 ## Patterns
 
@@ -97,23 +83,24 @@ or a pattern with two or more earlier instances stops after it.
 
 | Note | Briefs | Credited |
 |---|---|---|
-| `--record` before the suite | §124 1, 2, 7; §124.5 1–8 | yes; P1 quiet through 124.5 |
-| `comment-length`'s form | §124 1, 3–7; §124.5 1–8 | yes |
-| entries by the Write tool, messages by `-F` | §124 5–7; §124.5 1–8 | yes, but for 124.5h b6; kept though AGENTS says it (Matthew signed, 2026-10-19) |
-| the comment tools' marker and `held-compare` | §124.5 1–8 | yes, the exit was expected; its "the hook's green is the proof" was false (b3), corrected in brief 4 |
-| the Cursor's open items, in the first turn's final message | §124.5 8 (driver 1's form, briefs 4–6) | followed: session 8's stop opened "Nothing was open for you at the start" |
-| other shapes and every caller; a gotcha to its end | §124.5 3–8 | yes: gotchas #80 and #116 "read to its end"; caller lists checked |
-| no Bash call opening with a stdin reader | §124.5 6–8 | yes; quiet in sessions 6 and 7 |
-| `ui.css` is `src/ui/ui.css` | §124.5 6–8 | yes; quiet in sessions 6 and 7 |
-| the tools' `npm run oracle --` form | §124.5 7, 8 | session 7's report: the notes "covered the tools, the file paths and the stem search" |
-| a CSS class built from parts in `.ts`: its stem | §124.5 7, 8 | as above |
+| `--record` before the suite | §124 1, 2, 7; §124.5 1–8; §125 1 | yes; P1 quiet through 124.5 |
+| `comment-length`'s form | §124 1, 3–7; §124.5 1–8; §125 1 | yes |
+| entries by the Write tool, messages by `-F` | §124 5–7; §124.5 1–8; §125 1 | yes, but for 124.5h b6; kept though AGENTS says it (Matthew signed, 2026-10-19) |
+| the comment tools' marker and `held-compare` | §124.5 1–8; §125 1 | yes, the exit was expected; its "the hook's green is the proof" was false (b3), corrected in brief 4 |
+| other shapes and every caller; a gotcha to its end | §124.5 3–8; §125 1 | yes: gotchas #80 and #116 "read to its end"; caller lists checked |
+| no Bash call opening with a stdin reader | §124.5 6–8; §125 1 | yes; quiet in sessions 6 and 7 |
+| the tools' `npm run oracle --` form | §124.5 7, 8; §125 1 (as `cli.ts`'s header) | session 7's report: the notes "covered the tools, the file paths and the stem search" |
+| the hand-off forecast (P20) | §124.5 7; §125 1 | held in session 7 |
 
 **Dropped:** the docs searched for what a deletion removes (§124 1, 2, 7;
 §124.5 1, 2; credited); where the procedures are (§124.5 2; partly, P16);
 `refs --members` reads interfaces only (§124.5 2; not tested); a
 step-code-shaped file name (§124.5 1–7; never credited); the tools split
-`.css` (§124.5 7; the CSS batches are done); whole-line Edits, no commit
-beside them (§124.5 2–7; credited; CLAUDE.md "Editing" since `29d50f2a`).
+`.css` (§124.5 7); whole-line Edits, no commit beside them (§124.5 2–7;
+credited; CLAUDE.md "Editing" since `29d50f2a`); at §125, with no CSS in
+it: `ui.css`'s path and a class's stem (§124.5 6–8, 7–8; credited); the
+Cursor's open items in the first turn's final message (§124.5 4–6, 8;
+followed), since nothing is open at a kickoff.
 
 ## Tool facts for this repo
 

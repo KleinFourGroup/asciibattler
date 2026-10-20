@@ -36,14 +36,13 @@ import { FORCE_PROCEDURAL, sectorAdvanceConfig, type RunConfig } from './RunConf
 import { getSector, eventPoolAtHop, type SectorDef } from '../config/sectors';
 import { SECTOR_MAP, type SectorMap } from '../config/sectorMap';
 import { pickStartSector, pickNextSector, isSectorSink, remainingSectorHops } from './sectorWalk';
-import { rollOffer, recruitLevelBonus, draftPoolsFor } from './Recruitment';
+import { avgTeamLevel, rollOffer, recruitLevelBonus, draftPoolsFor } from './Recruitment';
 import {
   characterById,
   DEFAULT_CHARACTER_ID,
   type CharacterConfig,
 } from '../config/characters';
 import type { UnitRarity } from '../config/units';
-import { avgTeamLevel } from './enemyBudget';
 import { fatigueEffect } from './fatigue';
 import {
   turnCharges,

@@ -158,6 +158,15 @@ function pickWeighted(rng: RNG, pool: readonly Archetype[], weights: ArchetypeWe
 }
 
 /**
+ * The roster's mean level, the basis of a recruit's level (`Run`). An empty
+ * roster is 1, so a recruit onto an empty team arrives at level 1 plus its
+ * bonus.
+ */
+export function avgTeamLevel(team: readonly UnitTemplate[]): number {
+  return team.length === 0 ? 1 : team.reduce((sum, u) => sum + u.level, 0) / team.length;
+}
+
+/**
  * A recruit's geometric level bonus over `round(avgTeamLevel)`:
  * `P(+k) = (1 − chance) × chance^k`, each successful coin adding a level and
  * the first miss stopping. At the shipped 0.5 that is 50% +0, 25% +1,

@@ -28,7 +28,7 @@ import { rewardTableById } from '../config/rewards';
 import { daemonRedrawHook, daemonEmpowerHook } from './daemon';
 import { RUN_STAT_BASES } from './runStats';
 import { PRICES, unitPrice, packetPrice, daemonPrice, sellPrice } from '../config/prices';
-import { avgTeamLevel } from './enemyBudget';
+import { avgTeamLevel } from './Recruitment';
 import { FORCE_PROCEDURAL, type RunConfig } from './RunConfig';
 import type { EventDef, EventEffectOp } from '../config/events';
 import { RNG } from '../core/RNG';

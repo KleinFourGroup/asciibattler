@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { RNG } from '../core/RNG';
-import { rollOffer, rollArchetypeByRarity, recruitLevelBonus } from './Recruitment';
+import { avgTeamLevel, rollOffer, rollArchetypeByRarity, recruitLevelBonus } from './Recruitment';
 import {
   ALL_ARCHETYPES,
   DRAFTABLE_ARCHETYPES,
@@ -9,6 +9,7 @@ import {
 } from '../sim/archetypes';
 import { RECRUITMENT } from '../config/recruitment';
 import { RARITY_TIERS, type UnitRarity } from '../config/units';
+import type { UnitTemplate } from '../sim/Unit';
 
 describe('rollOffer', () => {
   it('defaults to 3 units', () => {
@@ -560,5 +561,27 @@ describe('recruitLevelBonus (G4 geometric bonus)', () => {
 
   it('chance 0 always yields +0', () => {
     for (let s = 0; s < 20; s++) expect(recruitLevelBonus(new RNG(s), 0)).toBe(0);
+  });
+});
+
+/** Build a fake roster at the given per-unit levels (stats = baseStats; only
+ *  `level` matters to the mean). */
+function roster(levels: number[], archetype: 'mercenary' | 'archer' = 'mercenary'): UnitTemplate[] {
+  return levels.map((level) => ({
+    archetype,
+    level,
+    stats: { ...ARCHETYPE_CONFIG[archetype].baseStats },
+    xp: 0,
+  }));
+}
+
+describe('avgTeamLevel (recruit basis)', () => {
+  it('is the MEAN of roster unit levels', () => {
+    expect(avgTeamLevel(roster([2, 4]))).toBe(3);
+    expect(avgTeamLevel(roster([1, 1, 1, 1, 6]))).toBe(2);
+  });
+
+  it('is 1 for an empty roster (a recruit onto nothing comes in at 1 + bonus)', () => {
+    expect(avgTeamLevel([])).toBe(1);
   });
 });

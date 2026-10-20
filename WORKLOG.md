@@ -14423,3 +14423,19 @@ third case) is a different option and stays.
 Proof: the type check is clean; the fuzz diff against `866ba251` PASS on
 both shapes, `decisions.csv` at `fde861a0dacc`. The commit's hook runs
 the smoke and the parity test.
+
+### 125j-post2 — R-2, `avgTeamLevel` into `Recruitment.ts` (2026-10-20, session e216d681)
+
+125e's finish, as signed. `avgTeamLevel` is in `Recruitment.ts` beside
+`recruitLevelBonus`, whose doc already named it, with the one-line
+helper it called inlined; its describe and the roster helper are at the
+end of `Recruitment.test.ts`. `Run.ts` and `Run.test.ts` import it from
+there. `enemyBudget.ts` and `enemyBudget.test.ts` are deleted, and
+ARCHITECTURE's row with them; the recruitment row names the function.
+TESTING.md's `reach-diff` example that deletes `enemyBudget.test.ts`
+stays, as a measurement of its day. 7 files, 36 lines in and 53 out.
+
+Proof: the type check is clean; the moved describe passes with
+`Recruitment.test.ts`'s other tests (46); `npm run corpus` 0 of 30; the
+fuzz diff against `430c190e` PASS on both shapes. `comment-codes
+--record`: 1,076, no change.

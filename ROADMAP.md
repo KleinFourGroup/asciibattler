@@ -304,8 +304,8 @@ its six calls; the audit, the calls and the trials' bars are in WORKLOG
   census's B-18, R-4 a TODO "§126" line.
 - ☑ **125j-post — R-1, `ArbitratedConfig`'s six unset ε overrides**
   (`none`). Each site reads its floor; the fuzz diff PASS.
-- ☐ **125j-post2 — R-2, `avgTeamLevel` into `Recruitment.ts`** (`none`),
-  125e's finish.
+- ☑ **125j-post2 — R-2, `avgTeamLevel` into `Recruitment.ts`** (`none`),
+  125e's finish. `enemyBudget.ts` gone; the corpus 0 of 30.
 - ☐ **125k — the comment pass over `src/bot`** (`batch`, per batch).
 - ☐ **125l — the close** (`stop`), with the decision point.
 

@@ -296,7 +296,6 @@ src/
     chipRule.ts              # §91a2: THE CHIP RULE's arithmetic, pure + injectable — rulesForTurn(reason) (casualties, + survivors on 'cap') · turnCharges (each pool pays its OWN fallen; a cap turn adds the OPPOSING standing power; uncapped × chipMultiplier) · 91d playerExposure (the pre-turn risk bound: the hand) · 96.5c2 enemyExposure (its mirror, the wave — the two partition the fielded power; the live bar's notch on each gauge, via Run.previewPoolsAtRisk); 96.5b1: THE LOSS-EVENT MODEL the live bar consumes — lossEventsForDeath (casualties: one immediate event at the death, the dead unit's side pays, cause = the unit) · lossEventsAtEnd (the cap surcharge: one 'end' event per standing unit to the OPPOSING pool) · bookedImmediateLoss (the mid-battle restore's opening ghost) · sumLossEvents; pinned: Σ stream = turnCharges on every reason (chipLabels.ts owns the words)
     fallenStats.ts           # 102c: the run-end stats fold — summarizeFallen(ledger), PURE over FallenRecord[] (no Run, no bus, no config): the run totals, then one entry per encounter INSTANCE (sector + node, fought order), each per side / per archetype (first-death order) / per turn (ascending); every `rows` is a filtered view in death order (the GameOverScreen's glyph runs read it). The ledger is DEATHS only: a bloodless fight or turn left no row and has no entry
     RunConfig.ts             # G1: RunConfig + parseRunConfigFromURL (shared by browser/CLI/GUI); L1: daemon override (?daemon=<id|none>); 47e: starting-bits override (?bits=N); 48f: bitsMultiplier (programmatic-only, the X1 siblings' third axis); 117a: enemyMoraleMultiplier (programmatic-only, the fourth); 117b: `escalation` (?escalation=1..5; level 0 is spelled by no dial; the one difficulty input that is also in the snapshot); 68e/74b: ?firstNode=elite|event (the root stamp dial); 74b: forcedEventId + eventCatalog (programmatic-only — a bespoke catalog is in-memory, saves hard-reject); 74e: eventChance (the scatter dial, #121 slice)
-    enemyBudget.ts           # avgTeamLevel, a recruit's level basis (the random enemy wave that named the file went at §125)
     encounters/
       wave.ts                # U1: pure resolveWave(spec, ctx, rng) → UnitTemplate[] — budget/count/weight;
                              # optional per-wave levelCap (X: roster+Δ | fixed | absent=uncapped, resolved vs roster);
@@ -313,7 +312,7 @@ src/
     Recruitment.ts           # rollOffer (61c: per-slot tier-roll + weighted within-tier pick, 2 draws/slot,
                              # dupes legal; 63b/c: character pools + weight overrides; 64b: folded tier
                              # weights param; 64c: per-slot forcedTiers, empty-pool degrade) + per-card
-                             # level (post-G5) + draftPoolsFor + recruitLevelBonus
+                             # level (post-G5) + draftPoolsFor + recruitLevelBonus + avgTeamLevel (a recruit's level basis)
     rewards.ts               # 48b: rollRewards — the pure reward roller (chance tests + weighted sampling w/ owned-daemon
                              # exclusion; bits {min,max} on the separate bits stream) + RewardPortion (49c: + the packet
                              # member — packets sample with NO exclusion, duplicates legal; a full cache resolves at ACCEPT;

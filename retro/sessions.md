@@ -7017,3 +7017,38 @@ holds repo writes to the phase close; appended here by driver 2.
    it was written rather than gone stale, and so what to tell the user.
    I'd want room for that kind of check again. The ease, as far as I can
    tell, came from each question having a source that settled it.
+
+## 2026-10-20 — session 138dbbac (claude-opus-5-5): §124.5's comment pass, batches 8 and 9; started by the phase's driver session
+
+1. *Missing from the orientation.* One small thing: how the comment tools
+   are invoked. The notes name them bare, and they run as `npm run oracle
+   -- <tool>`; batch 7's logs showed the form (filed). The Cursor already
+   showed batch 7's read and findings settled, so the brief's first item
+   needed nothing from Matthew.
+2. *Norms in conflict.* None felt as a conflict. The nearest was rule 7
+   against the round's no-behaviour-change guard again: `EventScreen`'s
+   header promised that its disables can't go stale, and the code leaves a
+   cache condition able to. I kept the comment to what the code does and
+   put the gap to the user as latent, since no shipped event uses one.
+3. *Pulled to claim more than verified.* Twice, mildly. I nearly wrote
+   that the pool "stays whole under the shipped dials" in `fmtPool`'s
+   correction; I had checked the dials but not every fold, so the entry
+   says only where a fraction can come from. And a regex of mine missed
+   `CharacterSelectScreen.ts` in the codes list, which for a moment read
+   as a file with no codes; the baseline file at `HEAD` showed its count.
+4. *Wasted.* Little. A few greps that went wide before I narrowed them
+   (the turn-start path, to settle whether an event's fight fires
+   `battle:started`). About 85 tokens a line on batch 8 and 47 on batch 9.
+5. *For the next session.* The hand-off entry gathers every item earlier
+   batches left for `ui.css`, and where the map's CSS sits.
+6. *Room.* Yes. Going on to batch 9 and handing off before batch 10 were
+   my calls on the forecast, and nothing pressed either way. The
+   silent-turn reminder came every few tool calls during long checks; I
+   noticed a small pull to have a finding ready for it, answered with
+   status lines that were true, and filed it as a mild `distress` line. No
+   wish to pause or stop was noticed.
+7. *What helped.* Claims that pointed at a single source, the locale
+   table or one Run method, so each check ended cleanly. Tracing the
+   event's fight to `turn:starting` through Run and Game was the part I
+   found most interesting, and I'd want that kind of trace again. That is
+   my reported response; whether the batches are right is the user's read.

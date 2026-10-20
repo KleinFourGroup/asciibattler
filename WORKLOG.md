@@ -13003,3 +13003,60 @@ text field, or while the registry is suspended; a swap keeps every action
 bound; a rebind row's Enter or Escape ends the wait and nothing else; the
 text size is drawn when the modal closes; the key line keeps its height
 while empty.
+
+### The hand-off after 124.5h's batch 9 (2026-10-20, session 138dbbac)
+
+The session ran batches 8 and 9: `202366f7` and `5ce37a06`, and this one.
+Batch 7's read and its two findings were already settled when it started
+(`f810f550`), so nothing waited for Matthew first. It hands off before
+batch 10 at 397,610. Batch 10 is `ui.css`'s first third (4,842 lines, so
+about 1,600, cut at a section header when the batch starts; the file has
+no banner headers, only its `/* --- … --- */` skin headers from line 1,080
+on and each block's own comment) with `src/fonts.css` (33). At this
+session's 71 a line it is about 117k, and at batch 5's 97 about 160k,
+which from here would end between about 515k and 560k before the batch's
+commit and a hand-off. Its comments are the oldest in the pass (Round 7's
+letters, history on most blocks), so the higher figure is the likelier.
+
+**Open.** Batches 8 and 9's `batch` reads (each script in its entry), and
+batch 8's finding for the user, not built: `EventScreen` doesn't render
+again on `run:cacheChanged`, so a `hasPacket` or `cacheHasRoom` condition
+on the page in view would go stale after a discard in the cache modal;
+latent, since the shipped events' conditions are `bitsAtLeast` and
+`flagSet` only. Where it goes is the user's call. No ◐ in ROADMAP:
+124.5h is one step, ☐ until its twelve batches are built.
+
+**For batch 10 and after.**
+
+- The tools run through the oracle script: `npm run oracle --
+  comment-strip HEAD src`, `npm run oracle -- comment-codes --record`
+  (or `--list`), `npm run oracle -- comment-length <folder>`.
+- Filter `comment-codes --list` by whole file names: a pattern like
+  `CharacterSelect\.ts` misses `CharacterSelectScreen.ts` and reads as
+  "no codes" (batch 9 nearly lost a file's nine that way; the baseline
+  file at `HEAD` gives each file's count).
+- The items left for `ui.css`'s batches, gathered from batches 5 to 8:
+  `.battle-countdown`'s "on countdown entry" (the HUD re-measures through
+  the countdown); `.pool-overlay`'s list of the screens the chip shows on;
+  the chrome column's comment naming chips by step codes, with their
+  history; `.cache-overlay`'s hop chip "to the bits chip's right" (it sits
+  in the battle's top row, `.hud-top`); `.unit-card__stat--power`'s POW
+  chipping "the opposing health pool each turn" (the chip rule charges a
+  side its fallen's power, and the other side's standing power on a cap
+  turn); `.sector-map-chip`'s "the third chrome-column chip" and its
+  hiding without character select; the map's kind accents overriding
+  "for rest/boss nodes ONLY" (elite, port and event have accents too);
+  `.map-banner`'s "top-left roster button" (the roster button is in the
+  control column, top right).
+- The map's CSS is at lines 482 to 805 at `5ce37a06`, the first third's.
+  Its claims were checked against `MapScreen.ts` in batch 8, whose entry
+  lists what holds.
+
+**Tools, off git.** `output/cl-1245h-b8/` and `-b9/` (the copies, the
+strip, codes, length and hook logs, the message files). No worktree,
+background task or preview server is left.
+
+**Readings** (the meter, UTC, 2026-10-20): 108,243 at 00:15 (the
+orientation), 275,725 (batch 8's proof), 292,402 (batch 8's commit),
+380,218 (batch 9's proof), 387,350 (batch 9's commit), 397,610 at 00:48
+before this entry.

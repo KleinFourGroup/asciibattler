@@ -1,20 +1,18 @@
 /**
- * 100e — the event-condition requirement PHRASES ("10+ bits", "the daemon
- * Idol of Mars", "not the \"whispering-terminal:answered\" mark"), moved
- * out of src/config/events.ts (where 74f put them) so the config module
- * carries no player-facing prose: the §95 division is config prose in
- * `prose()` sidecars, UI copy in `locales/en/ui.json` through `t()` — and
- * this is UI copy (the Round 7 kickoff audit called it out; the literal
- * scan had to reach into `src/config/` for this one file).
+ * The event conditions' requirement phrases ("10+ bits", "the daemon Idol
+ * of Mars", "not the \"whispering-terminal:answered\" mark"). They are UI
+ * copy, so they live here and not in src/config/events.ts: config prose
+ * goes in `prose()` sidecars, and UI copy in `locales/en/ui.json` through
+ * `t()`, so the config modules carry no player-facing prose.
  *
- * Deliberately phrases, not sentences: `event.requires` prefixes them and
- * the `not` combinator composes through `event.cond.not` without grammar
- * surgery. The 74h event editor (tools/event-editor) reuses them — the same
- * copy in both places. Names resolve through the sibling catalogs with an
- * id fallback — the boot-time `assertEventRefs` means a shipped def never
- * falls back. Flag phrases show the raw namespaced flag (dev-grade copy,
- * as before). Numbers ride `t()`'s Intl formatting (a 1000-bit threshold
- * would now read "1,000+ bits" — none is authored).
+ * Phrases, not sentences: `event.requires` prefixes them, and the `not`
+ * combinator composes through `event.cond.not` with no grammar to repair.
+ * The event editor (tools/event-editor) shows the same phrases. Names
+ * resolve through the sibling catalogs with an id fallback; the boot's
+ * `assertEventRefs` means a shipped def never falls back. A flag's phrase
+ * shows the raw namespaced flag (developer-grade copy). Numbers go through
+ * `t()`'s Intl formatting, so a 1000-bit threshold would read "1,000+
+ * bits" (none is authored).
  */
 
 import type { EventCondition } from '../config/events';

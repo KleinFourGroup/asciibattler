@@ -12746,3 +12746,158 @@ signing that read!" No read is open. The two findings went to TODO as
 proposed: the stars' touch route under Round 9 ("With a seam the round
 builds"), since it changes behaviour, and `UnitRarity`'s re-export under
 Round 8.5's §124 and §124.5 items, with the round's deletions.
+
+### 124.5h, batch 8 — the map and the run's screens (2026-10-20, session 138dbbac)
+
+The 10 files: `MapScreen.ts`, `SectorMapOverlay.ts`, `PortScreen.ts`,
+`RewardScreen.ts`, `EventScreen.ts`, `eventConditionText.ts`,
+`RestScreen.ts`, `SectorClearedScreen.ts`, `GameOverScreen.ts`,
+`escalationText.ts`; nine changed, and `src/scenes/EventScene.ts` for a
+twin. `RestScreen.ts` held no step code, and every claim in it held, so it
+is unchanged. Out: the step codes and the `§` marks, the capitals, and the
+history: the root's `@` origin marker, the nodes as clickable `<div>`s, the
+map's grey read that lost two kinds, the port's per-unit removal rows, the
+reward screen's per-row Decline, a measured 38 px jump and a 195 → 275 px
+heading, the condition phrases' move out of `config/events.ts`, the
+`PROCEDURAL_MAP_NAME` constant, the audits and the user calls behind each.
+Each reason those stories carried stays as the reason: a node is a
+`<button>` so the map has a keyboard route; the legend's names let the key
+read without colour; the removal picker shows full cards because a name
+and level can't tell two units apart; an accepted reward row stays so the
+column can't re-center under the pointer; an event's pages stack in one
+cell so a page turn moves nothing.
+
+**Statements found false and corrected (rule 7):**
+
+- `MapScreen.ts`, the header: "Three node states", current, frontier and
+  locked. The board stamps four; `visited` was missing (the legend's own
+  `STATE_ORDER` lists it).
+- `MapScreen.ts`, `KIND_GLYPH`: the root "is rendered as `@` separately
+  (the run's origin marker), so it's not keyed here". The root is a node
+  of its own kind (`battle`, or the first-node stamp) and shows that
+  kind's glyph; the node loop's own comment said the root had lost its
+  `@`.
+- `MapScreen.ts`: the `.{kind}` class rides along "so CSS can color
+  rest/boss distinctly". ui.css colours every kind but battle: elite, port
+  and event too.
+- `SectorMapOverlay.ts`, the header: "Escape, the backdrop, or a re-toggle
+  closes it". The opaque map screen covers the backdrop, as the file's
+  own toggle comment says; the third route is the ✕ close.
+- `SectorMapOverlay.ts`, the header: the chip hides "on MapScene, pre-run,
+  and game-over". `Game.swap` hides it at character select too.
+- `RewardScreen.ts`, the header: the event after the last portion is
+  "promotion:pending / recruit:offered / turn:starting / run:victory".
+  A won terminal with the sector map going on emits `sector:cleared`
+  (`advancePastBattle`, `advanceSector`).
+- `RewardScreen.ts`: "▤ is the cache mark (the coming 49f chip
+  vocabulary)". The cache chip shipped and reads `▤ held/size`.
+- `EventScreen.ts`, the header: "start-encounter fires `battle:started`,
+  which self-swaps". Under the game's turn gates the fight's first turn
+  emits `turn:starting`, which swaps in the pre-turn screen;
+  `battle:started` fires when that turn begins (`beginTurn`).
+- `SectorClearedScreen.ts`, `fmtPool`: "The pool carries fractional chips
+  (power × 1.1/level)". Power is an integer stat (base plus rounded
+  growth), with no 1.1 a level; a fraction comes where a dial gives one
+  (`chipMultiplier`, `restHealFraction`, `seamHealFloor`).
+- `SectorClearedScreen.ts`, the seam line: a heal "reads as 'Pool restored
+  14 → 20'"; `sectorcleared.poolRestored` reads "Morale restored". And a
+  pool the floor didn't touch was "already full, or a floor of 0"; any
+  pool at or above the floor is untouched (at the shipped floor of 1, only
+  a full one).
+- `GameOverScreen.ts`, the header: a "Game Over modal". It is a
+  full-viewport screen on the scene mount, not the modal shell.
+- `GameOverScreen.ts`: `'defeat'` was "enemy wiped the player team". A run
+  is lost when the player's pool empties, when an encounter is lost at the
+  turn cap (`turnResult`), or when an event's damage ends it.
+- `GameOverScreen.ts`: `'complete'` was "player won the terminal battle".
+  Every sector has a terminal; the run completes at a sink of the sector
+  map, or at a one-sector run's terminal.
+- `GameOverScreen.ts`: "the two actions side by side (the way out and
+  'Export run')". Export shows only when the page holds a journal, as the
+  render's own comment says, and the list left out the Escalation lines.
+- `escalationText.ts`: `escalationTooltip` was "the picker's tooltip"; the
+  end screen's level line shows it too.
+- Its twin outside the batch: `src/scenes/EventScene.ts` said a
+  start-encounter "emits `battle:started`, whose subscription swaps in the
+  BattleScene", false as above. Corrected here and flagged.
+
+Re-pointed, not false: `LANE_PX`'s `maxWidth * LANE_PX` names the code's
+`maxLanes`; "the order is the route-planning read", which sat on
+`KIND_LABEL`, is `KIND_ORDER`'s; the end screen's "per-turn breakdown in
+the run's tooltip" meant the glyph run's, and now says it is an encounter
+row's; the port's "fixed Leave button" is in the control column; the
+sector-cleared titles arrive at the scene's construction and reach the
+screen through `show`. Dropped as a count that rots: the sector map as
+"the THIRD page-lifetime UI element".
+
+**Kept, checked at the code they name:** `map.uncharted`'s three users
+(the map, the pre-turn map line, the battle banner) and its string;
+`Run.bossForewarning`'s shape; the legend's shared selectors, its fixed
+bottom-left place and `pointer-events: none`; `.map-board`'s
+`min-height` and auto margins; `.map-screen--readonly`'s default cursor;
+MapScene and the overlay as MapScreen's two builders; RestScreen as
+`KIND_GLYPH`'s one importer; nodemap-viz centering a narrow hop; the
+pre-root start; the roster face's ` · N`; `CardListButton.dispose`
+closing the modal; the control column's second row; the `M` default and
+Game's keybind subscription; the overlay's z 40 and its ✕ face; every
+engine no-op the port surfaces as a disable (the last unit, the removal's
+price, the full cache's swap, a sold slot flagged); the refund's helpers;
+the cache modal's view and discard while docked and no Fire there; the
+modal's source index; the gate chain's order and `gainBits` on accept;
+the splice; RewardScene calling `follow` each frame; the taken badge
+wearing Accept's box; Moneta's 1.2 `bitsGain`; Laverna as a tally
+earner, and no shipped packet injecting `gainBits`; the boot's packet id
+check; the unit portion's template rolled with the offer; the heal's cap;
+`eventChoiceEnabled` as the engine's check; `event:pageChanged` on every
+page id; `return-to-map` caught by Game's dispatch case; `art` parsed and
+unread; the requirement line's two colours; the condition phrases against
+`locales/en/ui.json`, the event editor's import, `assertEventRefs` at
+load and `t()`'s Intl numbers; `restPreview` and `resolveRest` sharing
+`restedPool`; `fmtPool`'s one other user; the end screen's strings, its
+journal read again at the click, the seed's text site, and the `M×5 a×2`
+form; `escalationSteps` and the two importers. Nothing was dropped
+unchecked.
+
+**For the user, not built** (code, outside the pass):
+
+- `EventScreen` renders again on `event:pageChanged` and
+  `run:bitsChanged`, not on `run:cacheChanged`. A `hasPacket` or
+  `cacheHasRoom` condition on the page in view would show a stale state
+  after a discard in the cache modal on that page, and the forced keep
+  after an event's packet overflows a full cache is such a discard. A
+  choice shown disabled that the engine would take can't be clicked until
+  the page changes; one shown enabled that it wouldn't take is a silent
+  no-op. Latent: the shipped events' conditions are `bitsAtLeast` and
+  `flagSet` only.
+
+Left for `ui.css`'s batches: `.sector-map-chip`'s comment calls it the
+third chrome-column chip and lists its hiding without character select;
+the kind accents' comment says they override the glyph "for rest/boss
+nodes ONLY", while elite, port and event have accents too; `.map-banner`'s
+says it sits beside "the top-left roster button", which is in the control
+column at the top right.
+
+Measured (`comment-length` on copies under `output/cl-1245h-b8`): comment
+lines 501 → 493, words 4,672 → 4,678, code lines 1,320 unchanged. The
+words held level: the codes and the history out about balance the
+corrections (the fourth node state, the follow-on events, the defeat's
+three routes) and the shorthand (`+`, `/`, `·`) written out as prose. The
+step-code ceiling 1,508 → 1,402, the 106 these files held, 35 of them in
+`MapScreen.ts`.
+
+Proof: `comment-strip HEAD src`, comments only, exit 0; its control made
+one code edit in memory in each of the 10 changed files and the compare
+named all 10 (`EventScene.ts` among them).
+
+Cost: 108,243 at 00:15 UTC (the session's first reading, after its
+orientation) to 275,725 at 00:32 after the proof, about 167k for 1,975
+lines, about 85 a line.
+
+**Read** (`batch`): `git show <this commit> -- src/ui/MapScreen.ts
+src/ui/RewardScreen.ts src/ui/EventScreen.ts` against the seven rules.
+Wrong looks like a step code or capitals left, history kept (the nodes
+before they were buttons, the per-row Decline, a measured jump), or a
+reason or rule cut: a node with nothing to do is inert by `aria-disabled`
+and never `disabled`, so the locked boss keeps its tooltip; an accepted
+reward row stays in place; an event's pages stack in one cell; Continue
+declines what remains in one click.

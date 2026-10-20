@@ -1,27 +1,28 @@
 /**
- * Game Over modal. Two variants:
- *   - 'defeat'  — enemy wiped the player team.
- *   - 'complete' — player won the terminal battle.
+ * The run's end screen. Two variants:
+ *   - 'defeat' — the run lost: the player's morale pool emptied, an
+ *     encounter was lost at the turn cap, or an event's damage ended it.
+ *   - 'complete' — the run won: its last terminal fight, a sink of the
+ *     sector map or a one-sector run's terminal.
  *
- * Same structure for both: heading, subtext, the run-end stats body (102d),
- * the two actions side by side (the way out and "Export run"), and the run's
- * seed (116c-post2).
- * Variant only changes the copy and accent color, so reusing one component
- * keeps the reset/button flow uniform. The first button dispatches a
- * `resetRun` command, and Game decides where that leads (116c): the menu on
- * a page that booted to it, where the button reads "Main menu", and a fresh
- * run on a page booted by a run dial, where it reads "Begin a new run" as it
- * always did. The second downloads the run's journal as a `.json` file
- * (114e).
+ * The same structure for both: heading, subtext, the Escalation lines where
+ * they apply, the run-end stats body, the actions side by side (the way out,
+ * and "Export run" when the page holds a journal), and the run's seed. The
+ * variant changes only the copy and the accent color, so one component
+ * keeps the reset and button flow uniform. The first button dispatches a
+ * `resetRun` command, and Game decides where that leads: the menu on a page
+ * that booted to it, where the button reads "Main menu", and a fresh run on
+ * a page booted by a run dial, where it reads "Begin a new run". The second
+ * downloads the run's journal as a `.json` file.
  *
- * 102d — THE STATS BODY ("the fallen"): `summarizeFallen(Run.fallenLedger)`
- * drawn as the run's totals and one row per encounter somebody fell in
- * (where · name · yours · theirs) — every side cell an archetype run
- * (`M×5 a×2`) + the morale it cost, the per-turn breakdown in the run's
+ * The stats body, "the fallen": `summarizeFallen(Run.fallenLedger)` drawn as
+ * the run's totals and one row per encounter somebody fell in (where, name,
+ * yours, theirs). Every side cell is an archetype run (`M×5 a×2`) and the
+ * morale it cost; an encounter row's side cell breaks it down by turn in its
  * tooltip. Grouped everywhere: a fight is many waves, and one glyph per
- * fallen does not fit a row. The
- * ledger records DEATHS only, so the table is worded as the fallen — a
- * bloodless fight has no row and the screen never claims to list the fights.
+ * fallen does not fit a row. The ledger records deaths only, so the table is
+ * worded as the fallen: a bloodless fight has no row, and the screen never
+ * claims to list the fights.
  */
 
 import type { RunDispatcher } from '../run/Command';
@@ -45,9 +46,9 @@ import { attachTooltip } from './tooltip';
 
 export type GameOverVariant = 'defeat' | 'complete';
 
-/** 117e — what the end screen says of Escalation: the level the run was
- *  played at, the level its win opened for its character (null when it
- *  opened none), and the character's name for that line. */
+/** What the end screen says of Escalation: the level the run was played at,
+ *  the level its win opened for its character (null when it opened none),
+ *  and the character's name for that line. */
 interface RunEscalation {
   readonly level: number;
   readonly unlocked: number | null;
@@ -117,9 +118,9 @@ export class GameOverScreen extends Screen {
     subtext.textContent = copy.subtext;
     panel.appendChild(subtext);
 
-    // 117e — the level the run was played at, when it was above 0, and the
-    // level its win opened. Drawn with the screen and never after, so
-    // neither moves a button.
+    // The level the run was played at, when it was above 0, and the level
+    // its win opened. Drawn with the screen and never after, so neither
+    // moves a button.
     if (escalation !== null && escalation.level > 0) {
       const level = document.createElement('div');
       level.className = 'gameover-escalation';
@@ -148,10 +149,10 @@ export class GameOverScreen extends Screen {
         },
       }),
     );
-    // 114e — the run's journal as a file (telemetry tier 1, Round 8 spec D5).
-    // No button when the page holds no journal (its recorder failed). The
-    // journal is read again at the click: this screen mounts from inside the
-    // command that ended the run, before that journal has closed.
+    // The run's journal as a file. No button when the page holds no journal
+    // (its recorder failed). The journal is read again at the click: this
+    // screen mounts from inside the command that ended the run, before that
+    // journal has closed.
     if (this.journal() !== null) {
       actions.appendChild(
         button(t('gameover.export'), {
@@ -174,9 +175,9 @@ export class GameOverScreen extends Screen {
   }
 }
 
-/** 116c-post2 — the run's seed, last and quiet: what a player types into the
- *  menu's field to get this map again. The word is the text site the menu's
- *  is, its tooltip saying what the number is for; the number is plain text,
+/** The run's seed, last and quiet: what a player types into the menu's
+ *  field to get this map again. The word is a text site, as the menu's is,
+ *  its tooltip saying what the number is for; the number is plain text,
  *  selectable, so it can be copied as well as read. */
 function renderSeed(seed: string): HTMLDivElement {
   const line = document.createElement('div');
@@ -235,7 +236,7 @@ function renderStats(stats: RunFallenStats): HTMLDivElement {
   return body;
 }
 
-/** One table row = four grid cells: where · the encounter's name · yours ·
+/** One table row is four grid cells: where, the encounter's name, yours,
  *  theirs. Each side's tooltip breaks its run down by turn. */
 function encounterRow(encounter: EncounterFallen): HTMLElement[] {
   const where = document.createElement('span');
@@ -247,9 +248,9 @@ function encounterRow(encounter: EncounterFallen): HTMLElement[] {
   name.textContent = getEncounter(encounter.encounterId)?.name ?? encounter.encounterId;
 
   // The archetype form here too, never one glyph per fallen: an encounter is
-  // many waves (the first pane read drew 27 brigands in one no-wrap run and
-  // pushed the table past the viewport) — grouped, a cell is bounded by the
-  // archetype count, and so is each turn's block in the tooltip.
+  // many waves, and one glyph each in a no-wrap run can push the table past
+  // the viewport. Grouped, a cell is bounded by the archetype count, and so
+  // is each turn's block in the tooltip.
   const sides = SIDES.map(({ side, label }) =>
     fallenSide({
       side,

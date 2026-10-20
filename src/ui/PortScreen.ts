@@ -1,24 +1,23 @@
 /**
- * 50e — the port screen (spec §Ports; the §50 kickoff shape-lock: ONE
- * sectioned scrolling screen). Shown while the run is docked (`phase ===
- * 'port'`): the STOCK sections (units on recruit-skin UnitCards, packets,
- * daemons — all rolled at dock, §50d) then the YOUR-CARGO sections (sell
- * held packets; the pay-to-remove crew service), with a fixed Leave button.
+ * The port screen: one sectioned, scrolling screen, shown while the run is
+ * docked (`phase === 'port'`). The stock's sections first (units on
+ * recruit-skin unit cards, packets, daemons, all rolled on docking), then
+ * the cargo's (sell held packets; the pay-to-remove crew service), with
+ * Leave in the control column.
  *
- * The RewardScreen discipline throughout: the screen holds the LIVE Run
- * (scene-scoped, disposed on swap) and fully re-renders the body after
- * every command it dispatches, so slot indices, sold badges, affordability
- * disables, and the cache list are always true. It ALSO re-renders off
- * `run:bitsChanged` + `run:cacheChanged` — the cache modal stays usable
- * while docked (view/discard), and a modal discard would otherwise leave
- * this screen's sell indices stale (selling the wrong packet, a real bug).
+ * As RewardScreen does, the screen holds the live Run (scene-scoped,
+ * disposed on swap) and renders the body again after every command it
+ * dispatches, so slot indices, sold badges, affordability disables and the
+ * cache list are always true. It also renders again on `run:bitsChanged`
+ * and `run:cacheChanged`: the cache modal stays usable while docked (view
+ * and discard), and a discard there would otherwise leave this screen's
+ * sell indices stale, selling the wrong packet.
  *
- * Display honesty: prices render exactly what the engine charges (the
- * slot's serialized price / the shared price-book helpers) — never a
- * re-derivation that could drift. Unaffordable buys render DISABLED, not
- * hidden (the shape-lock: seeing what you can't afford is the point of a
- * shop); sold slots keep their row with a SOLD badge (§50d's flag-not-splice
- * makes that free).
+ * Prices show exactly what the engine charges (the slot's saved price, or
+ * the shared price-book helpers), never a re-derivation that could drift.
+ * An unaffordable buy shows disabled, not hidden, since seeing what you
+ * can't afford is the point of a shop; a sold slot keeps its row with a
+ * SOLD badge (the stock flags a sale rather than splicing the slot out).
  */
 
 import { daemonById } from '../config/daemons';
@@ -42,8 +41,8 @@ export class PortScreen extends Screen {
   private unsubscribes: Array<() => void> = [];
   /** Leave port, while the screen is up (a row of the control column). */
   private leaveEl: HTMLButtonElement | null = null;
-  // 51d — the crew-removal picker (the 51c selectable roster view). One
-  // instance per screen, disposed on hide (closes a lingering overlay).
+  // The crew-removal picker (the card-list modal's selectable roster view).
+  // One instance per screen, disposed on hide (which closes an open modal).
   private readonly removalPicker: CardListModal;
 
   constructor(
@@ -74,8 +73,8 @@ export class PortScreen extends Screen {
     subtitle.textContent = t('port.subtitle');
     panel.appendChild(subtitle);
 
-    // In the control column (src/ui/chip.ts), so it survives the scroll —
-    // leaving must never require finding the bottom of a long stock list.
+    // In the control column (src/ui/chip.ts), so it survives the scroll:
+    // leaving must never take finding the bottom of a long stock list.
     this.leaveEl = button(`${t('port.leave')} ▸`, {
       className: 'chip control-chip',
       onClick: () => {
@@ -90,9 +89,9 @@ export class PortScreen extends Screen {
     panel.appendChild(this.bodyEl);
     this.renderBody();
 
-    // Re-render on bits/cache movement from ANY source (own buys re-render
-    // via the dispatch path too — a second renderBody on the same state is
-    // idempotent and cheap at this scale).
+    // Render again when bits or the cache move, from any source (this
+    // screen's own buys render through the dispatch path too; a second
+    // renderBody on the same state is idempotent and cheap at this scale).
     this.unsubscribes.push(
       this.bus.on('run:bitsChanged', () => this.renderBody()),
       this.bus.on('run:cacheChanged', () => this.renderBody()),
@@ -114,13 +113,13 @@ export class PortScreen extends Screen {
     this.bodyEl = null;
   }
 
-  /** Full re-render from live state (the RewardScreen renderPortions
-   *  discipline — indices in every button are true after each command). */
+  /** A full render from live state, as RewardScreen's renderPortions is, so
+   *  the indices in every button are true after each command. */
   private renderBody(): void {
     if (this.bodyEl === null) return;
     this.bodyEl.replaceChildren();
     const stock = this.run.portStock;
-    if (stock === null) return; // undocking — the fading DOM needs nothing
+    if (stock === null) return; // undocking: the fading DOM needs nothing
 
     this.bodyEl.appendChild(this.sectionHeading(t('port.section.units')));
     const unitGrid = document.createElement('div');
@@ -153,8 +152,8 @@ export class PortScreen extends Screen {
           packet?.description,
           slot.price,
           slot.sold,
-          // A full cache takes the 49c swap control — the engine enforces the
-          // same contract, so a swap-less buy would silently no-op anyway.
+          // A full cache takes the swap control: the engine holds the same
+          // contract, so a buy with no swap would be a silent no-op anyway.
           !this.run.cacheHasRoom && !slot.sold
             ? this.swapBuyControl(index, slot.price)
             : undefined,
@@ -205,9 +204,9 @@ export class PortScreen extends Screen {
     });
 
     this.bodyEl.appendChild(this.sectionHeading(t('port.section.removal')));
-    // 51d — the signature-thin per-unit rows ("rogue · Lv 5" × N identical)
-    // retire for the 51c roster PICKER: one launch row; the modal shows the
-    // full cards (stats/abilities/XP), select one, confirm strikes it.
+    // One row opens the roster picker: the modal shows the full cards
+    // (stats, abilities, XP), since a unit's name and level alone can't
+    // tell two units apart; select one, and confirm removes it.
     const removalNote = this.emptyLine(t('port.removalNote', { price: PRICES.unitRemovalPrice }));
     this.bodyEl.appendChild(removalNote);
     const row = document.createElement('div');
@@ -232,10 +231,11 @@ export class PortScreen extends Screen {
     this.bodyEl.appendChild(row);
   }
 
-  /** 51d — the removal picker: the 51c selectable roster view over the live
-   *  crew (select 1 → confirm = `payToRemoveUnit`). The modal reports the
-   *  SOURCE index, which IS the rosterIndex (`run.team` passed unsorted —
-   *  and the mapping would hold even under a sorted display order). */
+  /** The removal picker: the selectable roster view over the live crew
+   *  (select one, and confirm dispatches `payToRemoveUnit`). The modal
+   *  reports the source index, which is the rosterIndex (`run.team` is
+   *  passed unsorted, and the mapping would hold under a sorted display
+   *  order too). */
   private openRemovalPicker(): void {
     this.removalPicker.open(t('port.removalTitle'), this.run.team, {
       selection: {
@@ -285,8 +285,9 @@ export class PortScreen extends Screen {
     return body;
   }
 
-  /** A packet/daemon stock row: title + desc left; SOLD badge, or price +
-   *  Buy (or the full-cache swap control) right. */
+  /** A packet or daemon stock row: the title and description on the left;
+   *  on the right a SOLD badge, or the price and Buy (or the full cache's
+   *  swap control). */
   private stockRow(
     title: string,
     desc: string | undefined,
@@ -315,7 +316,8 @@ export class PortScreen extends Screen {
     return row;
   }
 
-  /** The unit slot's footer: SOLD badge, or price + Buy (disabled broke). */
+  /** The unit slot's footer: a SOLD badge, or the price and Buy (disabled
+   *  when the bits fall short). */
   private priceFooter(price: number, sold: boolean, onBuy: () => void): HTMLDivElement {
     const footer = document.createElement('div');
     footer.className = 'port-unit-slot__footer';
@@ -330,16 +332,16 @@ export class PortScreen extends Screen {
     return footer;
   }
 
-  /** The 49c/RewardScreen swap idiom: pick a held packet to drop, then the
-   *  buy carries `swapCacheIndex`. Rebuilt every re-render — always live. */
+  /** RewardScreen's swap: pick a held packet to drop, and the buy carries
+   *  `swapCacheIndex`. Rebuilt on every render, so it is always live. */
   private swapBuyControl(stockIndex: number, price: number): HTMLSpanElement {
     const wrap = document.createElement('span');
     wrap.className = 'port-swap';
     const select = document.createElement('select');
     select.className = 'port-swap__select';
-    // 100d — the select's accessible name (the kickoff audit: both `<select>`s
-    // were unlabelled). `aria-label`, not a visible `<label>`: a label element
-    // would shift the row, and the button beside it already names the action.
+    // The select's accessible name. `aria-label`, not a visible `<label>`: a
+    // label element would shift the row, and the button beside it already
+    // names the action.
     select.setAttribute('aria-label', t('common.swapSelectLabel'));
     this.run.cache.forEach((packetId, slot) => {
       const option = document.createElement('option');

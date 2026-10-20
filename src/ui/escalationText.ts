@@ -1,12 +1,11 @@
 /**
- * 117e — THE ESCALATION LEVELS IN WORDS (Round 8 spec D8). A level is told
- * to the player by what it adds to the level under it, in a sentence and
- * with no number: the ladder adds a lever that comes again and multiplies
- * different levers, and a percentage would invite the player to do sums that
- * come out wrong. The sentences follow the ladder (`escalationSteps`,
- * config/escalation.ts), so a retuned file needs no new words: a lever a
- * level moves for the first time has its sentence, and one that moves again
- * has its "still" form.
+ * The Escalation levels in words. A level is told to the player by what it
+ * adds to the level under it, in a sentence and with no number: the ladder
+ * adds a lever that comes again and multiplies different levers, and a
+ * percentage would invite the player to do sums that come out wrong. The
+ * sentences follow the ladder (`escalationSteps`, config/escalation.ts), so
+ * a retuned file needs no new words: a lever a level moves for the first
+ * time has its sentence, and one that moves again has its "still" form.
  *
  * Shared by character select's picker and the end screen.
  */
@@ -37,9 +36,10 @@ export function escalationAdds(level: number): string {
 }
 
 /**
- * The picker's tooltip at `level`: every level in effect, one to a line,
- * under the sentence that says a level keeps the ones under it, then how a
- * level is opened. At 0 no level is in effect and only the last part shows.
+ * The tooltip at `level`, the picker's and the end screen's: every level in
+ * effect, one to a line, under the sentence that says a level keeps the ones
+ * under it, then how a level is opened. At 0 no level is in effect and only
+ * the last part shows.
  */
 export function escalationTooltip(level: number): string {
   const lines: string[] = [];

@@ -4,8 +4,8 @@
  * (`currentEventPage`, `eventChoiceEnabled`) and re-renders on
  * `event:pageChanged`. It never dismisses itself: a return to the map lands
  * the run on 'map' with no event, and Game's dispatch swaps the map in; a
- * start-encounter emits `battle:started`, whose subscription swaps in the
- * BattleScene.
+ * start-encounter starts the fight's first turn, whose `turn:starting`
+ * swaps in the PreTurnScene.
  */
 
 import { EventScreen } from '../ui/EventScreen';

@@ -1,11 +1,11 @@
 /**
- * 67b — the sector-cleared screen (the between-sector beat). A GameOverScreen
- * clone by design (the §67 shape-lock): same opaque-black full-viewport
- * chrome, heading + subtext + one button — but the run continues, so the
- * button dispatches `dismissSectorCleared` (releasing the 67a gate back to
- * the NEW sector's map) rather than `resetRun`. The titles arrive from the
- * `sector:cleared` payload at construction (the cleared sector is gone from
- * the Run by the time this screen exists — the getter can't name it).
+ * The sector-cleared screen, the beat between two sectors. It copies
+ * GameOverScreen by design: the same opaque black full-viewport chrome, a
+ * heading, subtext and one button. But the run goes on, so the button
+ * dispatches `dismissSectorCleared` (releasing the gate onto the new
+ * sector's map) rather than `resetRun`. The titles and pools come from the
+ * `sector:cleared` payload, through SectorClearedScene (by the time this
+ * screen exists the run's getters name the new sector).
  */
 
 import type { RunDispatcher } from '../run/Command';
@@ -15,17 +15,18 @@ import { Screen } from './Screen';
 import { button } from './button';
 import { t } from '../i18n/ui';
 
-/** The pool carries fractional chips (power × 1.1/level); print integers bare
- *  and anything else to one decimal — the between-acts beat isn't a ledger.
- *  Exported for the rest page's effect line (RestScreen.ts). */
+/** The pool can hold a fraction where a dial gives one (`chipMultiplier`,
+ *  or the rest's and the seam's shares of the maximum); print integers bare
+ *  and anything else to one decimal, since the beat between acts isn't a
+ *  ledger. Exported for the rest page's effect line (RestScreen.ts). */
 export function fmtPool(n: number): string {
   return Number.isInteger(n) ? String(n) : n.toFixed(1);
 }
 
 /**
- * §90 — the seam-floor line. A heal reads as "Pool restored 14 → 20"; a pool
- * the floor didn't touch (already full, or a floor of 0) reads as the plain
- * carried value so the screen never implies a heal that didn't happen.
+ * The seam floor's line. A heal reads as "Morale restored 14 → 40"; a pool
+ * the floor didn't touch (already at or above it) reads as the plain carried
+ * value, so the screen never implies a heal that didn't happen.
  */
 function sectorClearedPoolLine(poolBefore: number, poolAfter: number): string {
   if (poolAfter > poolBefore) {
@@ -76,8 +77,8 @@ export class SectorClearedScreen extends Screen {
     subtext.textContent = t('sectorcleared.behind', { sector: clearedSectorTitle });
     panel.appendChild(subtext);
 
-    // §90 — the seam floor's heal, named (a hidden heal is the one thing the
-    // independent-acts frame must not be: the player adds their own numbers).
+    // The seam floor's heal, named: the acts read as independent only if no
+    // heal is hidden, since the player adds up their own numbers.
     const pool = document.createElement('div');
     pool.className = 'sectorcleared-pool';
     pool.textContent = sectorClearedPoolLine(poolBefore, poolAfter);

@@ -1,16 +1,17 @@
 /**
- * Run-level map screen. Renders a NodeMap as positioned `<div>`s wired up
- * with an SVG edge layer behind them. The screen is a *pure view* — it
- * doesn't track which node is current or advance the run.
+ * The run's map screen. Renders a NodeMap as positioned node buttons over an
+ * SVG edge layer. The screen is a pure view: it doesn't track which node is
+ * current or advance the run.
  *
- * Three node states:
- *   - **current** — the player's position. Amber, non-clickable.
- *   - **frontier** — one edge hop from current. Cyan, clickable; click
+ * Four node states:
+ *   - current — the player's position. A filled amber disc, not clickable.
+ *   - frontier — one edge hop from current. Cyan, clickable; a click
  *     dispatches an `enterNode` command on the run dispatcher.
- *   - **locked** — everything else. Dimmed, non-clickable.
+ *   - visited — a node the run has entered. Not clickable.
+ *   - locked — everything else. Dimmed, not clickable.
  *
- * 78e — `{readOnly: true}` renders the same view with no dispatch and no
- * roster button: the sector-map overlay's glance mode (SectorMapOverlay).
+ * `{readOnly: true}` renders the same view with no dispatch and no roster
+ * button: the sector-map overlay's glance mode (SectorMapOverlay).
  */
 
 import { PRE_ROOT_NODE_ID, type NodeMap, type NodeKind } from '../run/NodeMap';
@@ -24,27 +25,27 @@ import { mountControl } from './chip';
 import { attachTooltip } from './tooltip';
 
 /**
- * G3 — node-kind glyphs. The icon IS the route-planning affordance, so it
- * replaces the old numeric label. DOM text only (no FontAtlas). Root is
- * rendered as `@` separately (the run's origin marker), so it's not keyed
- * here. `Record<NodeKind, …>` keeps this exhaustive if the union grows.
- * Exported with KIND_LABEL for the rest page's heading (RestScreen.ts),
- * which names its node as the map does.
+ * The node kinds' glyphs: the glyph is the route-planning read. DOM text
+ * only (no FontAtlas). The root is a node of its own kind and shows that
+ * kind's glyph. `Record<NodeKind, …>` keeps this exhaustive if the union
+ * grows. Exported with KIND_LABEL for the rest page's heading
+ * (RestScreen.ts), which names its node as the map does.
  */
 export const KIND_GLYPH: Record<NodeKind, string> = {
   battle: 'X',
   rest: 'Z',
   boss: '!',
   elite: '*',
-  port: '$', // 50c — the shop dock (money lay-reading; shell-prompt tech-reading)
-  event: '?', // 74b — the event node (the StS ?-node lineage); EventScene lands 74f
+  port: '$', // the shop dock (money to a lay reader, a shell prompt to a technical one)
+  event: '?', // the event node, after Slay the Spire's ? node
 };
 
 /**
- * 98c — the legend's KIND names, one literal key per kind (the key-scan pin
+ * The legend's kind names, one literal key per kind (the key-scan pin
  * cannot see a computed key). `Record<NodeKind, …>` keeps it exhaustive with
- * KIND_GLYPH: a new kind fails tsc here until it is named. The order is the
- * route-planning read (the common node first, the destination last).
+ * KIND_GLYPH: a new kind fails tsc here until it is named. KIND_ORDER is the
+ * legend's order, the route-planning read: the common node first, the
+ * destination last.
  */
 export const KIND_LABEL: Record<NodeKind, string> = {
   battle: t('map.legend.kind.battle'),
@@ -56,9 +57,9 @@ export const KIND_LABEL: Record<NodeKind, string> = {
 };
 const KIND_ORDER: readonly NodeKind[] = ['battle', 'rest', 'elite', 'port', 'event', 'boss'];
 
-/** 98c — the four node STATES the board stamps (`.current` / `.frontier` /
- *  `.visited` / `.locked`, the classes the loop below adds) and their legend
- *  names — "which nodes can I click" answered in words beside the shape. */
+/** The four node states the board stamps (`.current`, `.frontier`,
+ *  `.visited`, `.locked`, the classes the loop below adds) and their legend
+ *  names: which nodes can be clicked, said in words beside the shape. */
 type NodeState = 'current' | 'frontier' | 'visited' | 'locked';
 const STATE_LABEL: Record<NodeState, string> = {
   current: t('map.legend.state.current'),
@@ -69,14 +70,13 @@ const STATE_LABEL: Record<NodeState, string> = {
 const STATE_ORDER: readonly NodeState[] = ['current', 'frontier', 'visited', 'locked'];
 
 /**
- * 98c — THE MAP LEGEND (bottom-left, fixed; the user's corner call). Two
- * columns: the six kinds (the glyph in its kind hue — the `.map-legend__swatch
- * .<kind>` selectors share the board's `.map-node.<kind>` color rules) and the
- * four states (a ring swatch in the state's SHAPE — the shared `.<state>`
- * selectors, so the key and the board can never drift). The names are the
- * "never color alone" second channel: the 98a grey read lost the `*` / `?`
- * kinds and could not tell a reachable ring from a locked one. A pure DOM
- * read — pointer-events none, no tooltip (the words are already here).
+ * The map legend, fixed at the bottom left. Two columns: the six kinds (the
+ * glyph in its kind hue; the `.map-legend__swatch.<kind>` selectors share the
+ * board's `.map-node.<kind>` color rules) and the four states (a ring swatch
+ * in the state's shape, through the shared `.<state>` selectors, so the key
+ * and the board can't drift apart). The names are a channel beside color, so
+ * the key reads without it. A read only: pointer-events none, no tooltip
+ * (the words are already here).
  */
 function buildMapLegend(): HTMLDivElement {
   const legend = document.createElement('div');
@@ -132,42 +132,41 @@ function buildMapLegend(): HTMLDivElement {
 const HOP_PX = 90;
 
 /**
- * 77e3 — horizontal pixels allotted per LANE. The board's width is capped at
- * `maxWidth * LANE_PX` (centered by the CSS `margin: 0 auto`) instead of
- * stretching to the viewport: the braid generator gives lanes a persistent
- * identity, and full-width stretching read as "too separate" on wide
- * screens (user call, worklog §77e3). Positions are computed on a FIXED
- * per-lane pitch against the map's widest hop — narrow hops cluster
- * centered (the nodemap-viz model) rather than spreading to fill.
+ * Horizontal pixels allotted per lane. The board's width is capped at
+ * `maxLanes * LANE_PX` (centered by the CSS `margin: 0 auto`) instead of
+ * stretching to the viewport: the braid gives lanes a persistent identity,
+ * and stretched to full width on a wide screen they read as too separate.
+ * Positions sit on a fixed per-lane pitch against the map's widest hop, so
+ * narrow hops cluster centered (as nodemap-viz draws them) rather than
+ * spreading to fill.
  */
 const LANE_PX = 110;
 
 /**
- * 66b — the boss forewarning pair as the map displays it: the pre-rolled
- * boss's display name + its board's layout name (`null` = procedural, which
- * THIS layer renders as "Uncharted Ground" — the flavor label is view voice,
- * the run reports only identity). Shape matches `Run.bossForewarning`.
+ * The boss forewarning as the map shows it: the pre-rolled boss's display
+ * name and its board's layout name (`null` for a procedural board, which this
+ * layer shows as `map.uncharted`: the label is the view's voice, and the run
+ * reports only identity). Its shape matches `Run.bossForewarning`.
  */
 export interface BossForewarning {
   readonly name: string;
   readonly layoutName: string | null;
 }
 
-/** 66b — the display label for a procedural boss board (user-named). */
-// §95c — one key for every "procedural map" label (this, the pre-turn map
-// line, the battle banner); the sim's PROCEDURAL_MAP_NAME constant is gone.
+/** The label for a procedural board: one key for every procedural map's
+ *  label (this screen's, the pre-turn map line's, the battle banner's). */
 const UNCHARTED_LABEL = t('map.uncharted');
 
 export class MapScreen extends Screen {
   private readonly dispatcher: RunDispatcher;
   private readonly audio: AudioPlayer;
-  /** 78e — a read-only view never dispatches (frontier nodes render but don't
-   *  click) and skips the R1 roster button (the overlay is a pure glance
-   *  surface; nesting a second modal under it would fight the overlay's own
+  /** A read-only view never dispatches (frontier nodes render but don't
+   *  click) and skips the roster button (the overlay is a glance surface,
+   *  and a second modal nested under it would fight the overlay's own
    *  chrome). The sector-map overlay's mode; MapScene uses the default. */
   private readonly readOnly: boolean;
-  // R1 — the shared "view roster" affordance: the control column's second
-  // row (src/ui/chip.ts), disposed on hide.
+  // The shared view-roster control: the control column's second row
+  // (src/ui/chip.ts), disposed on hide.
   private rosterButton: CardListButton | null = null;
   /** Where the roster button mounts; the read-only view has neither. */
   private readonly controlSlot: HTMLElement | null;
@@ -224,8 +223,8 @@ export class MapScreen extends Screen {
   ): HTMLDivElement {
     const frontier = new Set<number>();
     if (currentNodeId === PRE_ROOT_NODE_ID) {
-      // S2 — pre-root start: the root is the sole selectable frontier (no node
-      // is "current" yet, so nothing gets the current-highlight either).
+      // The pre-root start: the root is the one selectable frontier (no node
+      // is current yet, so none takes the current highlight either).
       frontier.add(map.rootId);
     } else {
       for (const e of map.edges) {
@@ -235,10 +234,10 @@ export class MapScreen extends Screen {
 
     // Fractional [0, 1] positions within the BOARD. The CSS does the actual
     // pixel sizing — keeping coordinates dimensionless means the same layout
-    // logic feeds both the absolute-positioned divs and the SVG viewBox.
-    // 77e3 — x rides a fixed per-lane pitch against the widest hop (see
-    // LANE_PX): a width-2 hop on a width-6 map occupies the two center
-    // lanes, not the whole panel.
+    // logic feeds both the absolutely positioned nodes and the SVG viewBox.
+    // x rides a fixed per-lane pitch against the widest hop (see LANE_PX): a
+    // width-2 hop on a width-6 map takes the two center lanes, not the whole
+    // panel.
     const positions = new Map<number, { x: number; y: number }>();
     const hopCount = map.hops.length;
     const maxLanes = Math.max(...map.hops.map((h) => h.length));
@@ -255,28 +254,26 @@ export class MapScreen extends Screen {
     container.className = 'map-screen';
     if (this.readOnly) container.classList.add('map-screen--readonly');
 
-    // R1 — the roster view, in the control column (so it ignores the board's
-    // vertical scroll); hide() disposes it, which also closes the overlay if
-    // it's still open.
-    // 78e — skipped in readOnly (see the field doc).
+    // The roster view, in the control column (so it ignores the board's
+    // vertical scroll), and skipped by a read-only view (see the field's
+    // note); hide() disposes it, which also closes the modal if it's open.
     if (!this.readOnly && this.controlSlot !== null) {
       this.rosterButton = new CardListButton(this.mount, this.audio, {
         text: t('roster.button'),
         title: t('roster.title'),
         position: 'roster',
         getUnits: () => roster,
-        // 51e — the count badge ("Roster · 10"); the screen re-renders on
-        // every show, so no refresh wiring is needed here.
+        // The count on the face ("Roster · 10"); the screen renders again on
+        // every show, so it needs no refresh wiring.
         getCount: () => roster.length,
         emptyText: t('roster.empty'),
       });
       mountControl(this.controlSlot, this.rosterButton.el);
     }
 
-    // T2 — the sector-name banner (top-center, position: fixed so it ignores the
-    // board's vertical scroll, like the roster button). Names the sector the run
-    // is currently traversing; mirrors the in-battle .battle-banner chrome. An
-    // empty title (a bare show()) renders no banner.
+    // The banner naming the sector the run is in, at the top center
+    // (position: fixed, so it stays put while the board scrolls), in the
+    // battle banner's chrome. An empty title (a bare show()) renders none.
     if (sectorTitle) {
       const banner = document.createElement('div');
       banner.className = 'map-banner';
@@ -284,9 +281,9 @@ export class MapScreen extends Screen {
       title.className = 'map-banner-title';
       title.textContent = sectorTitle;
       banner.appendChild(title);
-      // 66b — the boss forewarning sub-line: the sector-start pre-roll,
-      // surfaced from the moment the map first shows (the StS-style plan-ahead
-      // read). Rides inside the banner so the two lines share one chrome.
+      // The boss forewarning's line: the boss rolled at the sector's start,
+      // shown from the map's first show so a route can be planned toward it.
+      // It rides inside the banner so the two lines share one chrome.
       if (forewarning) {
         const boss = document.createElement('div');
         boss.className = 'map-banner-boss';
@@ -299,8 +296,8 @@ export class MapScreen extends Screen {
       container.appendChild(banner);
     }
 
-    // 98c — the legend (bottom-left, fixed). Inside the container so it fades
-    // and disposes with the screen, and so the read-only overlay carries it.
+    // The legend (bottom left, fixed). Inside the container so it fades and
+    // disposes with the screen, and so the read-only overlay carries it.
     container.appendChild(buildMapLegend());
 
     // The board carries the hop-scaled height; the scroll container
@@ -309,7 +306,7 @@ export class MapScreen extends Screen {
     const board = document.createElement('div');
     board.className = 'map-board';
     board.style.height = `${hopCount * HOP_PX}px`;
-    // 77e3 — the width cap (see LANE_PX): the board stops stretching to the
+    // The width cap (see LANE_PX): the board stops stretching to the
     // viewport; `.map-board`'s `margin: 0 auto` centers the capped column.
     board.style.maxWidth = `${maxLanes * LANE_PX}px`;
     container.appendChild(board);
@@ -337,30 +334,27 @@ export class MapScreen extends Screen {
 
     for (const node of map.nodes) {
       const pos = positions.get(node.id)!;
-      // 100c1 — a node is a real `<button>` (the run's primary navigation was
-      // a clickable `<div>` with no keyboard route — the Round 7 kickoff audit
-      // §C). A node with nothing to do (current / visited / locked, or every
-      // node under readOnly) is INERT by `aria-disabled` + no tab stop, never
-      // `disabled`: a disabled button swallows pointer events in both
-      // engines, and the boss node's 97f forewarning tooltip must keep its
-      // hover while the boss is still locked (the usual case).
+      // A node is a `<button>`, so the run's main navigation has a keyboard
+      // route. A node with nothing to do (current, visited or locked, or
+      // every node of a read-only view) is inert by `aria-disabled` and no
+      // tab stop, never `disabled`: a disabled button swallows pointer events
+      // in both engines, and the boss node's forewarning tooltip must keep
+      // its hover while the boss is still locked (the usual case).
       const el = document.createElement('button');
       el.type = 'button';
       el.className = 'map-node';
       el.style.left = `${pos.x * 100}%`;
       el.style.top = `${pos.y * 100}%`;
-      // Every node shows its kind glyph (G3): X battle, Z rest, ! boss — the
-      // route-planning affordance. (S2: the root lost its `@` origin marker —
-      // it's a normal selectable node now, so it reads like any other.) A
-      // `.{kind}` class rides alongside the state classes (.current/.frontier/…)
-      // so CSS can color rest/boss distinctly without touching this dispatch.
+      // Every node shows its kind's glyph, the root included. A `.{kind}`
+      // class rides beside the state classes so the CSS colors each kind's
+      // glyph but battle's, which takes the state's color.
       el.textContent = KIND_GLYPH[node.kind];
       el.dataset.nodeId = String(node.id);
       el.classList.add(node.kind);
-      // 66b — the boss node names its forewarned fight on hover (the banner
-      // sub-line carries the always-visible copy; this is the spatial anchor).
-      // 97f — the §97 tooltip; the node is a control (a frontier click enters
-      // it), so the touch route is the long-press.
+      // The boss node names its forewarned fight on hover (the banner's line
+      // is the copy always in view; this is the spatial anchor). The node is
+      // a control (a frontier click enters it), so the touch route is the
+      // long-press.
       if (node.kind === 'boss' && forewarning) {
         attachTooltip(el, `${forewarning.name} — ${forewarning.layoutName ?? UNCHARTED_LABEL}`, {
           touch: 'press',
@@ -372,9 +366,9 @@ export class MapScreen extends Screen {
         el.classList.add('current');
       } else if (frontier.has(node.id)) {
         el.classList.add('frontier');
-        // 78e — readOnly keeps the frontier STYLING (the plan-ahead read is
-        // the overlay's whole point) but never dispatches; the CSS drops the
-        // pointer cursor via .map-screen--readonly.
+        // A read-only view keeps the frontier styling (the plan-ahead read is
+        // the overlay's point) but never dispatches; the CSS drops the
+        // pointer cursor under .map-screen--readonly.
         if (!this.readOnly) {
           live = true;
           el.addEventListener('click', () => {

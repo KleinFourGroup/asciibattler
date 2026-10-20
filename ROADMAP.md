@@ -12,7 +12,7 @@ with its worklog and spec beside it; before it
 [archive/post-104-roadmap.md](archive/post-104-roadmap.md) (Round 7.5).
 
 **Status: §124.5 closed 2026-10-20; §125, the bot and the fuzz
-instruments, is next, from its kickoff.**
+instruments, is in progress, at 125k.**
 The spec holds the user's intent and four signed
 decisions ([round-8.5-spec.md](round-8.5-spec.md)). The round opened with
 the oracle map, ahead of the census, as the user signed at the Round 8

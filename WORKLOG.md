@@ -14439,3 +14439,54 @@ Proof: the type check is clean; the moved describe passes with
 `Recruitment.test.ts`'s other tests (46); `npm run corpus` 0 of 30; the
 fuzz diff against `430c190e` PASS on both shapes. `comment-codes
 --record`: 1,076, no change.
+
+### The hand-off after 125j-post2 (2026-10-20, session e216d681)
+
+125f to 125j are built and ticked, with 125j-post and 125j-post2, so
+nothing is ◐. The three trials were all kept (125g, 125h, 125i), and
+the trials' budget is spent. Next is 125k, the comment pass over
+`src/bot`, then 125l, the close, with its decision point (whether the
+pass takes `tests` and `tools`).
+
+For 125k: `src/bot`'s eleven files are 2,094 lines, `comment-length`
+1,082 code and 882 comment lines, 7,336 comment words; `comment-codes`
+215 step codes in `src/bot`, 37 of them in tests, so 178 in the pass's
+files. The kickoff's baseline for the exit was 1,108, 877, 7,314 and 180;
+125f and 125i moved it. The ceiling is 1,076. At §124.5's 75 tokens a
+line the pass is about 157k, two or three batches. `sensors.ts` (now
+about 670 lines, with `rallyCells`) is the largest file.
+
+For the close: the census has its first row since §120 (B-18, the
+passability mask), and TODO "§126 tests" two lines from this stretch
+(the ten rule-less World sites; the walker's port path nothing
+observes).
+
+**A way to plant on an uncommitted trial.** `plant` takes a ref, and a
+trial is uncommitted until its bar holds. A commit object that no branch
+points at serves: set `GIT_INDEX_FILE` to a scratch file, `git
+read-tree HEAD`, `git add -u` (and `git add` any new file), `git
+write-tree`, then `git commit-tree <tree> -p HEAD -m …`, and pass that
+hash as `--ref`. The real index, the branch and the tree are untouched.
+A ref made before `comment-codes --record` makes the clean suite fail
+the ceiling test, which `plant` sets aside; record first if the suite is
+the proof.
+
+**What the fuzz diff's shapes reach** (125h): no strategy port buy on
+either shape, and no grant spend on the scored one. A bar that wants a
+plant there caught needs the smoke's `harnessEconomy` and the
+harness's redraw and empower tests instead.
+
+Tools and scratch, off git: the page drive's builds and reports under
+`output/build-125g-before/` and `output/build-125g-after/`. No worktree,
+background task or preview server is left.
+
+Readings by the tool's clock (UTC): 92,870 at 21:17 after the
+orientation; 151,176 at 125f's commit (21:26); 177,859 at 125g's step
+zero question (21:29); 275,237 at 125g's commit (22:01); 353,572 at
+125h's question (22:22); 359,553 at 125h's commit (22:40); 389,484 at
+125i's commit (22:54); 421,377 at the re-skim (22:58); 436,133 at its
+sign (23:07); 445,258 at 125j-post's commit (23:14); 455,161 at
+125j-post2's (23:21); and **463,351** at 23:23 before this entry. 125k
+needs its rules loaded and about 157k for its batches, more than the
+room to the 550k line, so the session hands off here, under the line, to
+keep the pass's plan and its batches in one session.

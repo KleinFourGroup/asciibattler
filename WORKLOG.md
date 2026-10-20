@@ -13067,3 +13067,180 @@ its own step after the pass; it leaned TODO): "I don't intend to start
 adding any events yet, so yes, fully signing a TODO!" The finding is in
 TODO under Round 9, "With a seam the round builds", beside the stars'
 touch route. Batches 8 and 9's `batch` reads are still open.
+
+### 124.5h, batch 10 — `ui.css`'s first third, with `fonts.css` (2026-10-20, session f1005abf)
+
+**The hand-off rule.** From this session on, a batch starts under the
+hand-off line when its forecast end, plus about 15k for the hand-off,
+stays under the halt, forecast at the pass's typical rate and not the
+session's first batch's (signed by Matthew on 2026-10-20, through the
+driver's brief: "550k is 'please don't start anything new'"; planning.md,
+"Context: the halt and the hand-off line"). It replaces the end bound in
+"124.5h — the comment pass: the batches, planned", which had a session
+take the next batch only while its reading plus the batch's lines at the
+measured rate stayed under the hand-off line.
+
+The batch: `src/ui/ui.css` lines 1 to 1,540 at `66300d2e`, cut before the
+event screen's header, so the event and rest pages, which share a layout,
+go to batch 11 together; with `src/fonts.css`; and the hitsplat guide,
+`src/ui/HITSPLATS.md`, whose rules sit in this third. Out of `ui.css`: the
+step codes, the `§` marks and the decision letter, the capitals, and the
+history: the canvas bar renderer and the shader pass the DOM layers
+replaced, the overlay's `-260%` translate and its "cramped up close" split,
+the `--fp-lift` that was removed, the `--burn` class that once carried
+three DoTs, the grey read behind the map's shapes and names, the
+`<div>` nodes, the class names the skins replaced, the per-row Decline,
+two measured jumps (46 → 30 px, a 16 px pull), and the user calls behind
+sizes. Each reason those carried stays as the reason: the stack is
+anchored by its bottom so the HP bar never moves; the scanlines are a DOM
+layer so the bands cross the canvas-to-DOM seam; a node's state has a
+shape so it never rests on colour; a sold or taken badge wears its
+button's box so the row keeps its height.
+
+`fonts.css` is generated: its header is the template string in
+`scripts/build-font.mjs`, so a hand edit would be undone by the next
+`npm run gen:font`. The header's three codes and its capitals came out of
+both, the template's eight lines and nothing else in the generator; the
+generator's own comments are outside the phase's folders and untouched.
+
+**Statements found false and corrected (rule 7):**
+
+- `html, body`'s tabular numbers: form controls reset `font` and don't
+  inherit them, and "none of them prints a live number beside a sibling".
+  The cache chip is a `<button>` (`CacheOverlay.ts`) that prints its
+  `▤ held/size` beside its label, and its value's rule sets no tabular
+  numbers (the pool chip's and the speed strip's do). Harmless while both
+  faces are monospace, as the comment says.
+- The hitsplats' sizes "are fixed CSS px". They are text tokens, in rem,
+  so they follow the Text size setting (not the camera's zoom).
+- The DoT classes "exist for a shared shape tweak only". The one rule on
+  them is the amber fallback colour.
+- The miss's colour apart from "amber burn": a DoT number wears its
+  status's hue, and burn's is EMBER_ORANGE.
+- The scanlines' near-black: "the map / recruit / HUD panel backgrounds
+  (rgba(0,0,0,0.7-0.8))". The map and recruit screens are opaque black.
+- `.map-banner`: it "sits between the top-left roster button and...
+  nothing on the right". The chrome column is at the top left and the
+  roster button is in the control column at the top right (batch 8's
+  item).
+- The kind accents override the glyph "for rest/boss nodes ONLY". Every
+  kind but battle has one: elite, port and event too (batch 8's item).
+- The legend's state swatch "is a 14px ring". It is 1.25rem across inside
+  a 2px border.
+- The recruit screen is a "full-overlay modal" whose card click "emits
+  recruit:chosen". It is a screen on RecruitScene's mount, a click
+  dispatches `chooseRecruit`, and no `recruit:chosen` event exists.
+- POW "chips the opposing health pool each turn" (batch 7's and 8's
+  item). A unit that falls costs its own side's pool its power, and one
+  standing at a capped turn's end charges the other side's
+  (`chipRule.ts`).
+- The XP bar is "shown on the pre-turn skin"; it is the pre-turn and
+  roster skins' default. And its green "matches the level-up glyph": the
+  game draws no level-up glyph.
+- The promotion screen's cards are the skin "defined above"; it is defined
+  below. And the screen shows "at turn boundaries"; it shows at a turn's
+  end or a rest.
+- The promotion card's landing ease "overshoots ~5% past scale(1)". Its
+  `cubic-bezier(0.34, 1.56, 0.64, 1)` peaks at 1.098 of the move (a probe
+  sampling the curve, its control an ease-out that peaks at exactly 1),
+  so the scale peaks near 1.015.
+- The reward screen's header: shown "on a won encounter" with rows that
+  resolve "(Accept / Decline)". It shows at any turn boundary that didn't
+  lose the run and yields an offer (`RewardScreen.ts`), and a row has
+  Accept alone; Continue declines the rest.
+- `HITSPLATS.md`, the guide:
+  - its annotated "Miss rule" had hex colours and px sizes; the rule uses
+    tokens. Its recipes wrote a raw hex, a px `font-size` and a palette
+    triplet's `rgba()`, each of which now fails `tests/ui-tokens.test.ts`.
+    The anatomy is the rule as it is, a paragraph says what a token is and
+    what the test holds, the colour table names tokens, and the recipes
+    use them;
+  - the DoT rule "is a shared fallback + shape tweak only", as in the CSS;
+  - a DoT's hue is changed "there", in `statusDisplay.ts`; the table picks
+    the palette key, and the hex is in `palette.ts`, with the colourblind
+    palette's own;
+  - the heal shows on "an ability heal"; a rejuvenate tick shows it too;
+  - the stacking gap is `HITSPLAT_STACK_PX`; it is `HITSPLAT_STACK_REM`;
+  - the "Miss" word is in `BattleRenderer.ts`; it is `hitsplat.miss` in
+    `locales/en/ui.json`;
+  - reduced motion follows the OS; the Motion setting overrides it.
+  Its `§` marks went with the sentences they sat in. The rest of the guide
+  is unshortened, as planned.
+
+Re-pointed, not false: `--chip-w`'s hop chip at "20px + this + a gutter"
+is the battle's top row at `--column-side`, which now says so, and the
+"centred body" that keeps to the room is the port's and the event's; the
+legend sits "under the chrome column (15) and the corner buttons (20)",
+and the corner buttons are the pre-turn piles, so it now says under the
+two columns; the overlays' "z-index sits below #scanlines" is the layer
+set before `#ui` with no z-index (`UnitOverlayLayer.ts`); the HP fill
+"mirrors the HUD's hp-fill" is the compact cards' HP bars; the abilities'
+"mechanics dimmer beneath" is the cadence, the detail line undimmed; the
+scanlines' z 1000 "for any future overlay layer" is above every layer the
+sheet sets (the failure plate's 100 the highest). The glyph's "these are
+player units" now names the enemy compact card's red; the unit card's
+header lists the five skins where it named two.
+
+**Kept, checked at the code they name:** the two faces, FONT_STACK and
+`--font-mono`, FontAtlas's `document.fonts.load` before rasterizing, the
+licences file and the faces' READMEs; the colour tokens' mirror and its
+three pins, `boot.ts` setting another palette's tokens, the status hues
+unreferenced in the sheet; the text tokens' pins and `textScale.ts`; the
+pool chip's `MORALE 40 / 40` against the 40 pool and the chips' 18px;
+`--column-side`'s three users; the boot line's removal in `main.ts` and
+`index.html`'s watch; the overlay stack's order, `applyFootprintScale`,
+`inkTopLiftFor` scaling by the footprint, the re-aim drain on
+`unit:actionHeld` and the action bar hidden for moves and cooldowns;
+`spawnHitsplat`'s one placement and `animationend` removal, the inline DoT
+hue, `HITSPLAT_PREFIX`'s symbols, a miss on `unit:missed`; `FADE_MS`
+(180); the map's claims as batch 8 checked them, `KIND_GLYPH`'s `!`, `*`,
+`$` and `?`, the legend inside the container and its six kinds; the
+rarity tint against the compact card's `background-color` and the recruit
+hover's shorthand, the pre-turn and roster selections' box-shadow
+outranking legendary's, the stars on full cards only; the ten combat
+stats and POW's row; the recruit skin's defaults (`UnitCard.ts`) and
+Pass's classes; the promotion's reveal beats, `.is-revealing`, the gain
+class and the derived block's `visibility` (`PromotionScreen.ts`,
+`promotionDelta.ts`); `run.effectiveBits`; the port's control chip, its
+removal button still built, the recruit-skin slots; the pre-turn
+screen's `safe center` and the 1280×720 floor. `HITSPLATS.md`'s other
+claims hold: the base rule, the kinds that set their own size, the
+`0.6s` shared with the reduced form and `tests/ui-motion.test.ts`'s pin.
+Not re-measured: the sector banner's "about 74px tall", kept as measured;
+whether hop 0 clears it while the boss line shows is the pane's or the
+user's eye's.
+
+Nothing for the user from this batch.
+
+Measured (`comment-length` on copies of the batch's lines under
+`output/cl-1245h-b10`): comment lines 361 → 350, words 3,953 → 3,919, code
+lines 1,046 unchanged. The words held nearly level: the codes and the
+history out, the corrections in, and the `·` and `+` shorthand written out
+as prose. The step-code ceiling 1,347 → 1,257, the 90 these held (87 in
+`ui.css`'s first third, 3 in `fonts.css`).
+
+Proof: `comment-strip HEAD src` exits 1 on `HITSPLATS.md` alone, which it
+holds byte for byte as a doc; its control made one code edit in memory in
+each of the two CSS files and the compare named both. `ui.css` from the
+cut on is byte-identical to `HEAD`'s from line 1,541. A probe of the font
+header reads the template's pieces out of `build-font.mjs` and compares
+them with `fonts.css`'s text before its first `@font-face`: equal at
+`HEAD` (the known answer) and in the tree, different for a planted
+`NOT swap` and for `HEAD`'s template against the new file; the
+`@font-face` blocks are byte-identical.
+
+Cost: 115,956 at 13:43 UTC (the session's first reading, after its
+orientation) to 321,047 at 14:05 after the proof, about 205k for 1,573
+lines, about 130 a line: the guide's rewrite, the generator's template,
+and checks reaching into the renderer.
+
+**Read** (`batch`): `git show <this commit> -- src/ui/ui.css
+src/ui/HITSPLATS.md` against the seven rules. Wrong looks like a step
+code, a decision letter or capitals left, history kept (the shader the
+scanlines replaced, the measured jumps, the grey read, the old class
+names), or a reason cut: the overlay stack is anchored by its bottom so
+the HP bar never moves; a locked node dims without `opacity`; the current
+node comes after the kind accents; the rarity tint is a
+`background-image` so no skin's colour is fought; the derived block gates
+by `visibility`. In the guide, wrong looks like a recipe that would fail
+`npm test`, or token prose a reader new to CSS can't follow.

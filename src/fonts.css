@@ -2,11 +2,11 @@
  *
  * Self-hosted subsets of the shipped faces (src/render/fontSubset.ts FACES):
  * JetBrains Mono, the primary, and DejaVu Sans Mono, the one fallback, which
- * keeps only what the primary lacks — so no glyph the UI or the atlas draws
- * ever comes from an unspecified OS face (§79f/§79g on the canvas, §101a in
- * the DOM). Consumers name both through FONT_STACK / the sheet's --font-mono.
+ * keeps only what the primary lacks, so no glyph the UI or the atlas draws
+ * ever comes from an unspecified OS face, on the canvas or in the DOM.
+ * Consumers name both through FONT_STACK or the sheet's --font-mono.
  *
- * font-display: block, NOT swap — FontAtlas rasterizes the glyph cells once
+ * font-display: block, not swap: FontAtlas rasterizes the glyph cells once
  * at boot, so a swap-in after the atlas is built would leave the whole game
  * showing fallback shapes for the rest of the session. FontAtlas also awaits
  * document.fonts.load() before rasterizing; this is the second belt.

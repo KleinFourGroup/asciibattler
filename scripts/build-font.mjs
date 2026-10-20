@@ -143,11 +143,11 @@ writeFileSync(
     ` *\n` +
     ` * Self-hosted subsets of the shipped faces (src/render/fontSubset.ts FACES):\n` +
     ` * JetBrains Mono, the primary, and DejaVu Sans Mono, the one fallback, which\n` +
-    ` * keeps only what the primary lacks — so no glyph the UI or the atlas draws\n` +
-    ` * ever comes from an unspecified OS face (§79f/§79g on the canvas, §101a in\n` +
-    ` * the DOM). Consumers name both through FONT_STACK / the sheet's --font-mono.\n` +
+    ` * keeps only what the primary lacks, so no glyph the UI or the atlas draws\n` +
+    ` * ever comes from an unspecified OS face, on the canvas or in the DOM.\n` +
+    ` * Consumers name both through FONT_STACK or the sheet's --font-mono.\n` +
     ` *\n` +
-    ` * font-display: block, NOT swap — FontAtlas rasterizes the glyph cells once\n` +
+    ` * font-display: block, not swap: FontAtlas rasterizes the glyph cells once\n` +
     ` * at boot, so a swap-in after the atlas is built would leave the whole game\n` +
     ` * showing fallback shapes for the rest of the session. FontAtlas also awaits\n` +
     ` * document.fonts.load() before rasterizing; this is the second belt.\n` +

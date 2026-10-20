@@ -46,7 +46,6 @@
  "src/dev/replayTrace.test.ts": 1,
  "src/diagnostics/report.test.ts": 1,
  "src/failure/rules.test.ts": 2,
- "src/fonts.css": 3,
  "src/i18n/ui.test.ts": 2,
  "src/render/FontAtlas.test.ts": 3,
  "src/render/SpriteRenderer.test.ts": 1,
@@ -163,5 +162,5 @@
  "src/ui/rosterOrder.test.ts": 1,
  "src/ui/textScale.test.ts": 1,
  "src/ui/tooltip.test.ts": 1,
- "src/ui/ui.css": 260
+ "src/ui/ui.css": 173
 }

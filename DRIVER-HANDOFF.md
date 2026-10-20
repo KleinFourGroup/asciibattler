@@ -12,25 +12,25 @@ driver log ([archive/driver-trial/log-124.md](archive/driver-trial/log-124.md)).
   Session 1, 046c70be (`local_52f36918`): the kickoff, the cut signed
   with six calls (`39590ad0`), 125a–e, all `none`; handed off at 524,464
   before 125f (`5e1d455d`; WORKLOG §125, "The hand-off after 125e"). Its
-  ten readings match its transcript. **Card 2**, from 125f, is proposed
-  after this commit. §124.5's sessions and drivers: this file at
-  `9c886b50`.
+  ten readings match its transcript. Matthew signed call 6 there after
+  the hand-off (`3fb2e0d6`), so card 2 was withdrawn; **card 2 again**,
+  from 125f, is proposed after this commit. §124.5's sessions and
+  drivers: this file at `9c886b50`.
 - **Driver:** driver 3, `local_4c64446d-501b-4b13-ad75-2bacf7514e5f`
   (scratchpad 33d012d0), from 2026-10-20 17:31 UTC, first reading
   107,337. §124.5's were `local_15013e01…` (86ed5d79) and
   `local_3addf3c2` (9b60fb27).
-- **Friction read through:** line 307 of `retro/papercuts.jsonl`
-  (session 1's, P3).
+- **Friction read through:** line 308 of `retro/papercuts.jsonl` (307
+  session 1's, P3; 308 driver 3's, P17).
 - **Brief 2's notes:** the oracle tools' forms (`tests/oracle/cli.ts`'s
   header), `--record` before any run of the suite, `reach-record
   npm-test` named (P1), `comment-length` on copies (P11),
   `held-compare.mts` (P13); entries by Write or Edit, messages by `-F`,
   no Bash call opening with a stdin reader (P2); other shapes, every
   caller, test files named, never `scratch/`, a gotcha to its end (P15,
-  P3); planning.md's hand-off rule as it reads at the start, with
-  Matthew's words (P20).
+  P3); signed call 6, pointed at, not restated (P20).
 - **Raised to Matthew at session 1's hand-off:** P20's carried
-  planning.md edit, whether to write it now.
+  planning.md edit, whether to write it now; call 6's sign covers §125.
 - **Matthew's calls standing:** P2's guard: not yet ("a few more
   observations are needed to justify a guard"), so its note stays. P6's
   and P12's notes stay dropped. P17's wording for open reads, kept here
@@ -55,8 +55,8 @@ Numbered from §123. "Quiet" means no instance in the last phase.
 | P14 | an Edit anchor off whole lines: across a break it misses; ending mid-line it glues the line's rest on, reporting success | §124, 124.5f, 124.5h b4, b10–12 (two misses, no commit beside) | open; CLAUDE.md "Editing" since `29d50f2a`, so no note |
 | P15 | a count by a rule's or a name's written form misses a copy written another way | 122h, 124.5f's bar item 4 (the renderer's negated copy), 124.5c's A-26 count (a re-export, found at b7) | open; the note credited in batches 3–9 |
 | P16 | a procedure, or its data, findable only in old WORKLOG entries or an unnamed scratch folder | §124.5 sessions 1 (reach, the drive), 2 (the re-skim, `scratch/120f/`); 6 (the comment tools' `npm run oracle --` form, a log) | in the HANDOFF Cursor's "Carried to the Round 8.5 close" (`29d50f2a`) |
-| P17 | the driver: Matthew answers an open item in the old session after its hand-off, and the waiting card's brief goes stale | §124.5 after sessions 1, 2 and 7 (three cards proposed again) | driving.md leaves open items in the Cursor, unrestated (signed 2026-10-20) |
-| P20 | a session hands off early, bounding the next step's end (not its start) by 550k | §124.5 sessions 3 (368k), 5 (330k) and 6 (398k); §125 session 1 (524k, 125f "larger than the room to the 550k line"; brief 1's note put as call 6 without a lean, and "signing all of your leans" left it unsigned) | held in §124.5 session 7 under the signed note; planning.md's "the room to the halt" edit, carried to the round close, asked of Matthew now |
+| P17 | the driver: Matthew answers an open item in the old session after its hand-off, and the waiting card's brief goes stale | §124.5 after sessions 1, 2 and 7; §125 after session 1 (call 6, which brief 2 restated against driving.md's rule; driver 3's slip) | driving.md leaves open items in the Cursor, unrestated (signed 2026-10-20) |
+| P20 | a session hands off early, bounding the next step's end (not its start) by 550k | §124.5 sessions 3 (368k), 5 (330k) and 6 (398k); §125 session 1 (524k, 125f "larger than the room to the 550k line"; brief 1's note put as call 6 without a lean, and "signing all of your leans" left it unsigned) | held in §124.5 session 7 under the signed note; §125's call 6 signed after session 1's hand-off (`3fb2e0d6`); planning.md's "the room to the halt" edit, carried to the round close, asked of Matthew |
 | P18 | the charter's bare `ui.css` sends a grep to `src/ui.css` | 124.5h b3–4, b7 | quiet in sessions 6 and 7 under the note |
 | P19 | the silent-turn reminder every few calls through long checks | every §124.5 session's report; its session 6's `distress` line (raised 2026-10-20 00:48 UTC) | open, for the welfare read; CLAUDE.md "The silent-turn reminder"; the Cursor's riders (1), (3) |
 
@@ -101,7 +101,7 @@ or a pattern with two or more earlier instances stops after it.
 | other shapes and every caller; a gotcha to its end | §124.5 3–8; §125 1, 2 | yes in §124.5; §125 1 named folders, not test files, and the kickoff's search left out `*.test.ts`; brief 2 names them |
 | no Bash call opening with a stdin reader | §124.5 6–8; §125 1, 2 | yes; quiet in §124.5 sessions 6–8 and §125 session 1 |
 | the tools' `npm run oracle --` form | §124.5 7, 8; §125 1, 2 (as `cli.ts`'s header) | §124.5 session 7's report: the notes "covered the tools, the file paths and the stem search" |
-| the hand-off forecast (P20) | §124.5 7; §125 1, 2 (brief 2: planning.md as it reads) | held in §124.5 session 7; §125 1 asked it as call 6, unsigned |
+| the hand-off forecast (P20) | §124.5 7; §125 1, 2 (a pointer to signed call 6) | held in §124.5 session 7; §125 1 asked it as call 6, signed after its hand-off |
 
 **Dropped:** the docs searched for what a deletion removes (§124 1, 2, 7;
 §124.5 1, 2; credited); where the procedures are (§124.5 2; partly, P16);

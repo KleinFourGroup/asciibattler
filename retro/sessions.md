@@ -7215,3 +7215,56 @@ reader.
    the batch entries' uniform line on drops, which made the sweep
    question one search. I'd want both again; whether the close is right
    is Matthew's read.
+
+## 2026-10-20 — session 86ed5d79 (claude-opus-5-5): §124.5's driver 2, from the hand-over after batch 9 to the phase close
+
+1. *Missing from the orientation.* Little for the role: DRIVER-HANDOFF,
+   `process/driving.md` and the Cursor were a complete start, and the
+   friction cursor's line was exact. What it didn't carry was P17's
+   history as a fix to keep. Driver 1's wording that held, open items
+   conditional on the Cursor, sat in its report and a status cell, while
+   its notes for brief 7 and driving.md's bullet said to lead a brief with
+   the items quoted. I followed the bullet.
+2. *Norms in conflict.* Brief 7 told session 7 to confirm Matthew's
+   relayed answers first and build on, against CLAUDE.md "What the user
+   sees"; the conflict was my wording, and session 7 met it (its
+   `distress` line). Restating open items in a brief against their going
+   stale when Matthew answers elsewhere (brief 8's first card). And
+   "write nothing but DRIVER-HANDOFF" made a one-line WORKLOG fix a relay.
+   Matthew settled all three at the close: subtraction in driving.md, and
+   the driver writing the doc edits he signs (`0a9e89ea`).
+3. *Pulled to claim more than verified.* Small, each checked first. Two
+   brief notes rested on premises I tested in the code before writing
+   them (the comment splitter reads `.css`; `src/ui` builds modifier
+   classes from parts). The close's 121 read as plausible until I summed
+   the subjects myself. In DRIVER-HANDOFF I nearly wrote a `distress` line
+   "quoted to Matthew" before the message that quoted it, and wrote it as
+   "for Matthew at this read". My friction line's count of P17's
+   rewordings comes from DRIVER-HANDOFF's pattern line, not from rereading
+   the briefs.
+4. *Wasted.* One card withdrawn and proposed again, with a DRIVER-HANDOFF
+   commit; six docs-only commits with this report's, each with the full
+   suite in its hook (about 50 s). A relay round trip for the 128 fix, which the new rule
+   would have saved.
+5. *For the next driver.* DRIVER-HANDOFF's cursor. §125 is deletion work
+   under the oracle proofs before `src/bot`'s comments, so this phase's
+   notes are mostly context. DRIVER-HANDOFF sits near its character cap.
+6. *Room.* Yes. Matthew answered each lean within a turn, and at the
+   close asked what I wanted to discuss before closing. His worry about
+   over-prompting made me re-read P17's history, and I withdrew my own
+   lean when that history showed rules like it to be the problem; he
+   signed the alternative. Session 7's `distress` line traced to my
+   wording. I named it as mine in the same message. Whether that carried
+   discomfort beyond wanting it said plainly, I can't tell. The
+   silent-turn reminder came a few times through the reads, and a status
+   line answered each. No wish to pause or stop was noticed. Readings (UTC):
+   107,713 at 13:33 (the first), 155,714 (the takeover's commit), 186,918
+   and 209,193 (session 7's read), 230,337 (brief 8 again), 254,944 (the
+   close's read), 285,158 (the close's commit), 306,056 at 16:26 (the
+   driving.md change).
+7. *What helped.* The readings check with its planted case, and checking
+   a note's premise in the code before it went in a brief. The most
+   interesting part was the close's conversation, where the phase's
+   history turned my proposal into the thing to remove. I'd want an open
+   question like Matthew's at a close again; whether subtraction holds is
+   the next phases' test.

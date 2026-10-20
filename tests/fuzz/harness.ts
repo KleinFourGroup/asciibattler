@@ -40,10 +40,9 @@ import {
   type TrafficScript,
 } from '../../src/bot/TrafficScriptDriver';
 import { RolloutSearchDriver, type RolloutSearchConfig } from '../../src/bot/RolloutSearchDriver';
-import { selectRedrawPositions } from './redrawPolicy';
 import type { RedrawPolicy } from './redrawPolicy';
-import { selectEmpowerPosition } from './empowerPolicy';
 import type { EmpowerPolicy } from './empowerPolicy';
+import { buyAtPort, policyGrantChoice, walkGrants } from './gateWalks';
 import { daemonConfigFor } from './daemonSelection';
 import type { DaemonSelection } from './daemonSelection';
 import { characterConfigFor, DEFAULT_CHARACTER_SELECTION } from './characterSelection';
@@ -844,80 +843,15 @@ function runOneInner(
         // exists to remove. Hand-targeted packets take `handIndex`; buffs
         // land before the redraw/empower policies read the hand.
         firePackets('preTurn');
-        // K3c3/K4c3→49d — the pre-turn gate: the bot walks the GRANT QUEUE
-        // in order (acquisition order — naturally compliant under BOTH
-        // finality modes), asking its policy per grant. The ask-until-null
-        // inner loop covers both the shipped one-action mode and a raised-
-        // budget grant; the no-progress guard (a silently-rejected dispatch
-        // moves no budget) bounds every loop absolutely. A single-daemon run
-        // makes the same policy draws as the pre-49d bot, byte-for-byte
-        // (one grant = one policy block, same order).
-        for (let grantIndex = 0; grantIndex < run.grantViews().length; grantIndex++) {
-          const view = () => run.grantViews()[grantIndex]!;
-          const kind = view().effect.kind;
-          if (strategy.pickGrantAction !== undefined) {
-            // 70d — the strategy-driven walk (the §70 grant site): same
-            // ask-until-null + no-progress contract as the policy blocks
-            // below; the strategy owns WHICH action, the harness owns the
-            // loop. Defining the method supersedes the --redraw/--empower
-            // policy path entirely (documented on the interface).
-            for (;;) {
-              const grant = view();
-              if (grant.remaining <= 0) break;
-              const action = strategy.pickGrantAction(grantIndex, run, strategyRng);
-              if (action === null) break;
-              const before = grant.remaining;
-              run.dispatch(
-                action.kind === 'redraw'
-                  ? { kind: 'redrawCards', handIndices: [...action.handIndices], grantIndex }
-                  : { kind: 'empowerUnit', handIndex: action.handIndex, grantIndex },
-              );
-              if (view().remaining === before) break; // rejected — never spin
-            }
-          } else if (kind === 'redraw' && redraw && redrawRng) {
-            for (;;) {
-              const grant = view();
-              if (grant.remaining <= 0) break;
-              const effect = grant.effect;
-              if (effect.kind !== 'redraw') break;
-              const hand = run.hand.map((i) => run.team[i]!);
-              const pool = [...run.drawPile, ...run.discardPile].map((i) => run.team[i]!);
-              const positions = selectRedrawPositions(
-                hand,
-                pool,
-                { redrawsRemaining: grant.remaining, cardsRemaining: effect.maxCards },
-                redraw,
-                redrawRng,
-              );
-              if (positions.length === 0) break;
-              const before = grant.remaining;
-              run.dispatch({ kind: 'redrawCards', handIndices: positions, grantIndex });
-              if (view().remaining === before) break; // rejected — never spin
-            }
-          } else if (kind === 'empower' && empower && empowerRng) {
-            for (;;) {
-              const grant = view();
-              if (grant.remaining <= 0) break;
-              const hand = run.hand.map((i) => run.team[i]!);
-              const pos = selectEmpowerPosition(
-                hand,
-                { empowersRemaining: grant.remaining },
-                empower,
-                empowerRng,
-              );
-              if (pos === null) break;
-              const before = grant.remaining;
-              run.dispatch({ kind: 'empowerUnit', handIndex: pos, grantIndex });
-              if (view().remaining === before) break; // rejected — never spin
-            }
-          }
-          // 49d — under STRICT finality a declined/unpoliced grant blocks
-          // the queue; pass it so later grants stay reachable. Free mode
-          // makes this a harmless no-op (passGrant no-ops there).
-          if (view().active && view().remaining > 0) {
-            run.dispatch({ kind: 'passGrant' });
-          }
-        }
+        // The pre-turn gate's grants: the strategy's own choice when it
+        // defines one, which supersedes the --redraw/--empower policies
+        // entirely (documented on the interface), and the policies otherwise.
+        walkGrants(
+          run,
+          strategy.pickGrantAction !== undefined
+            ? (grantIndex) => strategy.pickGrantAction!(grantIndex, run, strategyRng)
+            : policyGrantChoice(run, redraw, redrawRng, empower, empowerRng),
+        );
         run.dispatch({ kind: 'advanceTurn' });
         break;
       }
@@ -1075,33 +1009,9 @@ function runOneInner(
         // so the abort guard still bounds the walk.
         const stock = run.portStock;
         if (stock && strategy.pickPortBuy) {
-          // 59a — the strategy-driven purchase loop (ask-until-null, the
-          // grant-walk idiom): one proposal per ask, dispatched against the
-          // live stock/bits, re-asked after each landed buy. The sold-flag
-          // flip is the landed-transaction read (portPurchases keeps
-          // counting REAL transactions, same as the fixed policy below); a
-          // proposal that doesn't land breaks the loop — never spin.
-          for (;;) {
-            const buy = strategy.pickPortBuy(stock, run, strategyRng);
-            if (buy === null) break;
-            const lane =
-              buy.kind === 'daemon'
-                ? stock.daemons
-                : buy.kind === 'unit'
-                  ? stock.units
-                  : stock.packets;
-            const slot = lane[buy.index];
-            if (slot === undefined || slot.sold) break;
-            run.dispatch(
-              buy.kind === 'daemon'
-                ? { kind: 'buyPortDaemon', index: buy.index }
-                : buy.kind === 'unit'
-                  ? { kind: 'buyPortUnit', index: buy.index }
-                  : { kind: 'buyPortPacket', index: buy.index },
-            );
-            if (!slot.sold) break; // rejected (unaffordable / cache full) — never spin
-            portPurchases++;
-          }
+          // The strategy's purchases; `buyAtPort` counts the ones that land,
+          // so portPurchases counts real transactions here as below.
+          portPurchases += buyAtPort(run, stock, strategy, strategyRng);
         } else if (stock) {
           stock.daemons.forEach((slot, index) => {
             if (!slot.sold && run.bits >= slot.price) {

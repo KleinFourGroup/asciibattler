@@ -68,8 +68,9 @@ import type { FuzzStrategy } from '../Strategy';
 import { orderCampRaid } from '../campRaid';
 import { scoredStrategy } from '../strategies/scored';
 import { DEFAULT_SCORED_WEIGHTS } from '../strategies/scoredWeights';
-import { selectRedrawPositions, type RedrawPolicy } from '../redrawPolicy';
-import { selectEmpowerPosition, type EmpowerPolicy } from '../empowerPolicy';
+import type { RedrawPolicy } from '../redrawPolicy';
+import type { EmpowerPolicy } from '../empowerPolicy';
+import { buyAtPort, policyGrantChoice, walkGrants } from '../gateWalks';
 
 /** Resolution 3's dial: what plays battles inside a rollout. Cheap by
  *  default; recursion ('searcher') is opt-in (`--arbitrate-tier`). */
@@ -241,52 +242,8 @@ export function walkToHorizon(clone: RunRolloutClone, options: WalkOptions): Wal
         // The preTurn fire site BEFORE the grant walk (a fired
         // grantRedraws packet inserts its grant at the cursor — 49e).
         firePackets('preTurn');
-        // The grant walk, verbatim from runOne (49d — acquisition order,
-        // ask-until-null per grant, no-progress guards bound every loop).
-        for (let grantIndex = 0; grantIndex < run.grantViews().length; grantIndex++) {
-          const view = () => run.grantViews()[grantIndex]!;
-          const kind = view().effect.kind;
-          if (kind === 'redraw' && redraw.kind !== 'none') {
-            for (;;) {
-              const grant = view();
-              if (grant.remaining <= 0) break;
-              const effect = grant.effect;
-              if (effect.kind !== 'redraw') break;
-              const hand = run.hand.map((i) => run.team[i]!);
-              const pool = [...run.drawPile, ...run.discardPile].map((i) => run.team[i]!);
-              const positions = selectRedrawPositions(
-                hand,
-                pool,
-                { redrawsRemaining: grant.remaining, cardsRemaining: effect.maxCards },
-                redraw,
-                redrawRng,
-              );
-              if (positions.length === 0) break;
-              const before = grant.remaining;
-              run.dispatch({ kind: 'redrawCards', handIndices: positions, grantIndex });
-              if (view().remaining === before) break;
-            }
-          } else if (kind === 'empower' && empower.kind !== 'none') {
-            for (;;) {
-              const grant = view();
-              if (grant.remaining <= 0) break;
-              const hand = run.hand.map((i) => run.team[i]!);
-              const pos = selectEmpowerPosition(
-                hand,
-                { empowersRemaining: grant.remaining },
-                empower,
-                empowerRng,
-              );
-              if (pos === null) break;
-              const before = grant.remaining;
-              run.dispatch({ kind: 'empowerUnit', handIndex: pos, grantIndex });
-              if (view().remaining === before) break;
-            }
-          }
-          if (view().active && view().remaining > 0) {
-            run.dispatch({ kind: 'passGrant' });
-          }
-        }
+        // The grant walk runOne makes, on the policies alone.
+        walkGrants(run, policyGrantChoice(run, redraw, redrawRng, empower, empowerRng));
         run.dispatch({ kind: 'advanceTurn' });
         break;
       }
@@ -328,31 +285,9 @@ export function walkToHorizon(clone: RunRolloutClone, options: WalkOptions): Wal
         break;
       }
       case 'port': {
-        // The 59a strategy-driven purchase loop (ask-until-null; a
-        // proposal that doesn't land breaks — never spin), then undock.
+        // The strategy's purchases, then undock.
         const stock = run.portStock;
-        if (stock && strategy.pickPortBuy) {
-          for (;;) {
-            const buy = strategy.pickPortBuy(stock, run, strategyRng);
-            if (buy === null) break;
-            const lane =
-              buy.kind === 'daemon'
-                ? stock.daemons
-                : buy.kind === 'unit'
-                  ? stock.units
-                  : stock.packets;
-            const slot = lane[buy.index];
-            if (slot === undefined || slot.sold) break;
-            run.dispatch(
-              buy.kind === 'daemon'
-                ? { kind: 'buyPortDaemon', index: buy.index }
-                : buy.kind === 'unit'
-                  ? { kind: 'buyPortUnit', index: buy.index }
-                  : { kind: 'buyPortPacket', index: buy.index },
-            );
-            if (!slot.sold) break;
-          }
-        }
+        if (stock) buyAtPort(run, stock, strategy, strategyRng);
         run.dispatch({ kind: 'leavePort' });
         break;
       }

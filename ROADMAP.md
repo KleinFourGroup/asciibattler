@@ -294,8 +294,9 @@ its six calls; the audit, the calls and the trials' bars are in WORKLOG
   bar). The five walkers, `BattleScene` and `replayTrace` (call 4), and
   the test copies (signed at step zero). Kept: `battleWorld` and
   `tickTurn`, one site each from 13 and 14; `src` and `tests` −87.
-- ☐ **125h — trial: the harness and walker's grant walk and port loop**
-  (`none`, on its bar).
+- ☑ **125h — trial: the harness and walker's grant walk and port loop**
+  (`none`, on its bar). Kept: `tests/fuzz/gateWalks.ts`, one copy each;
+  the smoke stands in for the fuzz diff's plants (signed; TODO "§126").
 - ☐ **125i — trial: the two scripts' rally search** (`none`, on its bar).
   `sensors.ts`'s mask goes into the census for a later round (call 3).
 - ☐ **125j — the re-skim** (`stop`).

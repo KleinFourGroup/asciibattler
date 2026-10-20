@@ -14204,3 +14204,73 @@ build themselves, with no rules installed (`tests/pathing/capture.ts` and nine
 tests: the five `*-battle` tests, `corridor-flow`, `layout-deadlock`,
 `variable-size`, `boardPanel/fixtures.test.ts`). They were not copies of
 the build the cut named, so they stay; `battleWorld` would serve each.
+
+### 125h — trial: the harness and walker's grant walk and port loop (2026-10-20, session e216d681)
+
+Step zero: a search with test files in (`grantViews().length` loops,
+`passGrant` dispatches, `pickPortBuy` asks, the buy-to-command mapping)
+finds the kickoff's two copies of each loop, and one more copy of the
+mapping alone, in `rollout/arbitratedStrategy.test.ts` (one dispatch, no
+loop). The walker's walk has two of the harness's three arms: it never
+consults `strategy.pickGrantAction`, and no walk strategy defines one
+(`harness.test.ts` pins the default walk strategy without it, and the
+overlay adds none), so the shared walk takes its choice as an argument
+rather than reading the strategy, which keeps the walker's semantics as
+they were.
+
+What was built, in a new `tests/fuzz/gateWalks.ts` (117 lines):
+`walkGrants(run, choose)`, the grant queue's walk with its
+ask-until-null and no-progress guards and the strict-finality pass;
+`policyGrantChoice(run, redraw, redrawRng, empower, empowerRng)`, the two
+policies as a choice; `buyAtPort(run, stock, strategy, rng)`, the
+strategy's purchase loop, returning how many landed; and
+`portBuyCommand(buy)`. The harness passes the strategy's own choice when
+it defines one and the policies otherwise; the walker passes the
+policies; the harness adds `buyAtPort`'s count to `portPurchases`, and
+the walker ignores it. The test's mapping reads `portBuyCommand`. Three
+gates move, each inert: the walker's redraw and empower arms gated on
+`kind !== 'none'`, and now a `none` policy is asked and answers `null`
+(both selectors return before drawing on `none`); the redraw arm
+re-checked the grant's kind inside its loop and the empower arm did not,
+and now the choice reads the kind on every ask (a grant's kind at its
+index does not change under a redraw or an empower); and the walker's
+port loop no longer checks `pickPortBuy` before calling, since
+`buyAtPort` buys nothing without it.
+
+The bars:
+1. The fuzz diff against `429e1f13`: PASS on both shapes, `decisions.csv`
+   at `fde861a0dacc`. The smoke and the parity test: at the commit's
+   hook.
+2. Lines under `src` and `tests`: 446,714 → 446,671 (−43; 139 in with
+   the new file, 182 out).
+3. No caller tag: `walkGrants` takes the choice, which is the policy the
+   caller plays; `buyAtPort` takes the strategy and its stream.
+4. One copy each, from two: after, a search finds the grant walk's loop,
+   its `passGrant`, the port's ask and the mapping only in
+   `gateWalks.ts`.
+
+**The plants, and where the first bar falls short.** Six plants in
+`gateWalks.ts`, on a commit object of the trial made from a scratch
+index (`76b8aeb7`):
+
+| Plant | Fuzz diff | Smoke |
+|---|---|---|
+| `passGrant`'s dispatch dropped | not caught | not run |
+| the landed-buy check negated (stop after one buy) | not caught | not run |
+| `remaining <= 0` negated (never spend a grant) | CAUGHT, arm only | CAUGHT: `harnessDaemon`, `harnessEmpower`, `harnessRedraw`, `arbitratedStrategy` |
+| the slot check negated (never buy at a port) | not caught | CAUGHT: `harnessEconomy` |
+
+So the bar's plant clause, a break caught by the fuzz diff's arm shape
+and its scored shape, holds only for the grant walk on the arm shape.
+The scored shape spends no grant (the scored strategy has no
+`pickGrantAction` and the shape passes no `--redraw` or `--empower`), and
+neither shape lands a strategy's port buy, so the fuzz diff cannot see
+the port loop at all. The smoke catches a break in each loop. No
+instrument noticed the walker buying nothing at a port: neither shape
+nor the smoke's rollout tests failed on it. The walker's copy had the
+same blind spot before the trial. The keep went to the user.
+
+**Kept, signed** (the user, 2026-10-20: "Signing your lean: keep 125h on
+the smoke, plus the TODO line!"): the smoke's catches stand in for the
+fuzz diff's plant clause where the shapes do not reach, and TODO "§126
+tests" carries the walker's port path.

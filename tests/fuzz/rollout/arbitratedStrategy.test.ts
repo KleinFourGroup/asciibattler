@@ -61,6 +61,7 @@ import {
   eventPriorItemKeys,
 } from './arbitratedStrategy';
 import { campRaidEligible } from '../campRaid';
+import { portBuyCommand } from '../gateWalks';
 
 const SEED = 20260730;
 
@@ -181,13 +182,7 @@ describe('arbitrated port buys — mechanism pins (injected evaluator)', () => {
       ]),
     });
     const buy = arm.pickPortBuy!(run.portStock!, run, null as never) as PortBuy;
-    run.dispatch(
-      buy.kind === 'daemon'
-        ? { kind: 'buyPortDaemon', index: buy.index }
-        : buy.kind === 'unit'
-          ? { kind: 'buyPortUnit', index: buy.index }
-          : { kind: 'buyPortPacket', index: buy.index },
-    );
+    run.dispatch(portBuyCommand(buy));
     expect(arm.pickPortBuy!(run.portStock!, run, null as never)).toBeNull();
     const remaining = expectedLabels(run);
     // The bought slot is sold (and bits only shrank), so the set strictly

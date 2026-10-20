@@ -102,6 +102,15 @@ every item below is done (WORKLOG §124, "The close of §124"; WORKLOG
   failed on that file twice running with nothing beside the suite (the
   file takes 2 s alone); the chaos test's seeds are as they were.
 
+- [ ] **Nothing notices the rollout walker buying nothing at a port.** A
+  plant that made `buyAtPort` (`tests/fuzz/gateWalks.ts`) never buy was
+  caught by `harnessEconomy.test.ts`, which reads the harness's count,
+  and by nothing on the walker's side: neither fuzz-diff shape lands a
+  strategy's port buy, and the rollout tests passed (WORKLOG §125, 125h).
+  The walker's own copy of the loop had the same blind spot. A test that
+  walks a clone through a dock under the walk overlay and reads that a
+  purchase landed would close it. Signed for here 2026-10-20.
+
 - [ ] **Pin ARCHITECTURE's event catalog against `events.ts`** (§104f) — the coverage pin guards the code's event set; nothing guards the prose table, which sat one short (`unit:chained`) from §29c to §104. A key-set diff off the source text, the `eventSounds.test.ts` parser re-used.
 
 - [ ] **Pin `ui.css`'s `--font-mono` against `FONT_STACK`** (the C1 sweep) — `src/ui/ui.css:9` hand-mirrors `fontSubset.ts`'s chain under a "mirror this" comment and no test.

@@ -35,7 +35,7 @@
 
 import type { RNG } from '../../src/core/RNG';
 import { secondsToTicks } from '../../src/config';
-import { HEALTH } from '../../src/config/health';
+import { MAX_TURN_TICKS } from '../../src/sim/battleSetup';
 import type { World } from '../../src/sim/World';
 import type { WorldCommand } from '../../src/sim/Command';
 import type { ObjectiveTeam, TeamObjective } from '../../src/sim/objective';
@@ -59,7 +59,7 @@ export const COVERAGE_LIFETIME_MAX_TICKS = secondsToTicks(20);
 
 /**
  * Coverage runs get a GENEROUS per-battle tick cap — a multiple of the live
- * per-turn cap (`HEALTH.maxTurnSeconds`). The constant re-targeting means units
+ * per-turn cap (`MAX_TURN_TICKS`). The constant re-targeting means units
  * spend excess time pathing and rarely land a decisive kill inside the normal
  * cap (they'd just cap-draw), so the bigger window lets combat actually resolve
  * across the churn — richer coverage of the decisive paths (kills, focus-target
@@ -68,7 +68,7 @@ export const COVERAGE_LIFETIME_MAX_TICKS = secondsToTicks(20);
  * not a `config/*.json` balance knob.
  */
 export const COVERAGE_TURN_MULTIPLIER = 6;
-export const COVERAGE_MAX_TICKS = secondsToTicks(HEALTH.maxTurnSeconds) * COVERAGE_TURN_MULTIPLIER;
+export const COVERAGE_MAX_TICKS = MAX_TURN_TICKS * COVERAGE_TURN_MULTIPLIER;
 
 /**
  * A per-battle, stateful churn bot. Each tick, for each team whose current

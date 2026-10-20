@@ -4,9 +4,9 @@
  * Run.test.ts pins the loop's pool arithmetic with faked `battle:ended`
  * survivor-power chips. This suite proves the loop actually composes with the
  * tactical layer: each turn builds a real `World` from `run.currentEncounter`
- * (exactly as `BattleScene` does — `new World(worldSeed, gridW, gridH)` +
- * `spawnEncounter`), ticks it to a real decisive end (or the per-turn tick cap
- * → `resolveAsDraw`), and lets the World's real `survivorPower` chip the pools.
+ * (as every driver does: `battleWorld`, then `spawnEncounter`), ticks it with
+ * `tickTurn` to a real decisive end (or the per-turn cap's draw), and lets the
+ * World's real `survivorPower` chip the pools.
  *
  * The driver POLLS `run.currentEncounter` between turns rather than subscribing
  * to `battle:started` — that avoids the synchronous `battle:ended → battle:started`
@@ -15,19 +15,15 @@
 
 import { describe, it, expect } from 'vitest';
 import { EventBus } from '../../src/core/EventBus';
-import { World } from '../../src/sim/World';
-import { RNG } from '../../src/core/RNG';
-import { spawnEncounter } from '../../src/sim/battleSetup';
-import { secondsToTicks } from '../../src/config';
+import type { World } from '../../src/sim/World';
+import { MAX_TURN_TICKS, battleWorld, spawnEncounter, tickTurn } from '../../src/sim/battleSetup';
 import { HEALTH } from '../../src/config/health';
 import type { GameEvents } from '../../src/core/events';
 import { Run, type BattleEncounter } from '../../src/run/Run';
 
-const DEFAULT_TURN_TICKS = secondsToTicks(HEALTH.maxTurnSeconds);
-
-/** Build a World for one turn exactly as BattleScene.mount does. */
+/** Build a World for one turn as every driver does. */
 function buildWorld(enc: BattleEncounter, bus: EventBus<GameEvents>): World {
-  const world = new World(bus, new RNG(enc.worldSeed), enc.gridW, enc.gridH);
+  const world = battleWorld(bus, enc);
   spawnEncounter(world, enc);
   return world;
 }
@@ -46,7 +42,7 @@ interface TurnRecord {
 function driveEncounter(
   run: Run,
   bus: EventBus<GameEvents>,
-  maxTurnTicks: number = DEFAULT_TURN_TICKS,
+  maxTurnTicks: number = MAX_TURN_TICKS,
 ): TurnRecord[] {
   const turns: TurnRecord[] = [];
   let guard = 0;
@@ -63,15 +59,9 @@ function driveEncounter(
     }
     const enc = run.currentEncounter;
     const world = buildWorld(enc, bus);
-    let t = 0;
-    while (!world.ended && t < maxTurnTicks) {
-      world.tick();
-      t++;
-    }
-    // Per-turn tick cap → resolve as a draw (both sides chip). On a decisive
-    // end this is a no-op (the World already emitted battle:ended). Either
-    // way the emit advances `run` synchronously to the next turn / encounter.
-    if (!world.ended) world.resolveAsDraw();
+    // At the cap the turn resolves as a draw (both sides chip). Either end's
+    // emit advances `run` synchronously to the next turn / encounter.
+    while (!world.ended) tickTurn(world, maxTurnTicks);
     turns.push({ enc, pool: { player: run.playerHealth, enemy: run.enemyHealth } });
   }
   return turns;

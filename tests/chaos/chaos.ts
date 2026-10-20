@@ -21,9 +21,7 @@
 
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { secondsToTicks } from '../../src/config';
 import { configHash } from '../../src/config/configHash';
-import { HEALTH } from '../../src/config/health';
 import { EventBus } from '../../src/core/EventBus';
 import type { GameEvents } from '../../src/core/events';
 import { RNG } from '../../src/core/RNG';
@@ -34,8 +32,8 @@ import { replayJournal } from '../../src/journal/replayJournal';
 import { Run, type RunPhase, type RunSnapshot } from '../../src/run/Run';
 import { parseRunConfig } from '../../src/run/RunConfig';
 import type { WorldCommand } from '../../src/sim/Command';
-import { World } from '../../src/sim/World';
-import { spawnEncounter } from '../../src/sim/battleSetup';
+import type { World } from '../../src/sim/World';
+import { battleWorld, spawnEncounter, tickTurn } from '../../src/sim/battleSetup';
 import { GROUND, findOverlappingCells, planeOf } from '../../src/sim/occupancy';
 
 export const CHAOS_BUILD = '0.0.0+chaos';
@@ -151,9 +149,8 @@ export function chaosRun(options: ChaosOptions): ChaosResult {
     },
   );
   let world: World | null = null;
-  bus.on('battle:started', ({ worldSeed, encounter }) => {
-    world = new World(bus, new RNG(worldSeed), encounter.gridW, encounter.gridH);
-    world.installBattleRules(encounter.battleRules ?? []);
+  bus.on('battle:started', ({ encounter }) => {
+    world = battleWorld(bus, encounter);
     spawnEncounter(world, encounter);
   });
 
@@ -198,7 +195,6 @@ export function chaosRun(options: ChaosOptions): ChaosResult {
     if (again !== saved) throw new Error(`the round trip changed the run at the '${run.phase}' phase`);
   };
 
-  const maxTurnTicks = secondsToTicks(HEALTH.maxTurnSeconds);
   const fight = (battle: number): void => {
     const w = world as World | null;
     if (w === null) throw new Error('a fight with no World');
@@ -212,9 +208,8 @@ export function chaosRun(options: ChaosOptions): ChaosResult {
         const { command, illegal } = randomCommand(run, rng, BATTLE_ILLEGAL_SHARE);
         send(command, illegal);
       }
-      w.tick();
+      tickTurn(w);
       ticks++;
-      if (!w.ended && w.currentTick >= maxTurnTicks) w.resolveAsDraw();
       if (plant.overlap?.battle === battle && plant.overlap.tick === w.currentTick) plantOverlap(w);
       const overlaps = findOverlappingCells(w);
       if (overlaps.length > 0) {

@@ -1,15 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { secondsToTicks } from '../../src/config';
-import { HEALTH } from '../../src/config/health';
 import { EventBus } from '../../src/core/EventBus';
 import type { GameEvents } from '../../src/core/events';
-import { RNG } from '../../src/core/RNG';
 import { PHASE_ROWS, pickerFor } from '../../src/dev/probe/drive';
 import { Run, type RunPhase, type RunSnapshot } from '../../src/run/Run';
 import type { RunCommand } from '../../src/run/Command';
 import { parseRunConfig, type RunConfig } from '../../src/run/RunConfig';
-import { World } from '../../src/sim/World';
-import { spawnEncounter } from '../../src/sim/battleSetup';
+import type { World } from '../../src/sim/World';
+import { battleWorld, spawnEncounter, tickTurn } from '../../src/sim/battleSetup';
 
 // 115b — THE CONTINUATION CHECK (Round 8 spec D3; WORKLOG §115, call 5). A
 // run is saved at every gate, so a player who closes the tab anywhere comes
@@ -25,24 +22,18 @@ const isGate = (phase: RunPhase): boolean => phase !== 'battle' && phase !== 'tu
 
 type Step = { readonly command: RunCommand } | 'fight';
 
-const maxTurnTicks = secondsToTicks(HEALTH.maxTurnSeconds);
-
 /** A fresh bus with the battle table the game's BattleScene stands for. */
 function table(): { bus: EventBus<GameEvents>; fight: () => void } {
   const bus = new EventBus<GameEvents>();
   let world: World | null = null;
-  bus.on('battle:started', ({ worldSeed, encounter }) => {
-    world = new World(bus, new RNG(worldSeed), encounter.gridW, encounter.gridH);
-    world.installBattleRules(encounter.battleRules ?? []);
+  bus.on('battle:started', ({ encounter }) => {
+    world = battleWorld(bus, encounter);
     spawnEncounter(world, encounter);
   });
   const fight = (): void => {
     const w = world as World | null;
     if (w === null) throw new Error('continuation: a fight with no World');
-    while (!w.ended) {
-      w.tick();
-      if (!w.ended && w.currentTick >= maxTurnTicks) w.resolveAsDraw();
-    }
+    while (!w.ended) tickTurn(w);
   };
   return { bus, fight };
 }

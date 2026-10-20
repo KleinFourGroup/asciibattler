@@ -1,17 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import replayDriver, { type ReplayDriver, type ReplayReport } from '../../shell/electron/probes/replay-page.js';
-import { secondsToTicks } from '../../src/config';
 import { configHash } from '../../src/config/configHash';
-import { HEALTH } from '../../src/config/health';
 import { EventBus } from '../../src/core/EventBus';
 import type { GameEvents } from '../../src/core/events';
-import { RNG } from '../../src/core/RNG';
 import { JournalRecorder } from '../../src/journal/JournalRecorder';
 import type { JournalEntry, JournalSegment, JournalStart, RunJournal } from '../../src/journal/journal';
 import type { RunCommand } from '../../src/run/Command';
 import type { Run } from '../../src/run/Run';
-import { World } from '../../src/sim/World';
-import { spawnEncounter } from '../../src/sim/battleSetup';
+import type { World } from '../../src/sim/World';
+import { battleWorld, spawnEncounter, tickTurn } from '../../src/sim/battleSetup';
 import { asFile, bytes, driveRun, replayPlants, runFromStart, TEST_BUILD } from '../journalDrive';
 
 // The recorder's replay driver (shell/electron/probes/replay-page.js) feeds a
@@ -21,8 +18,6 @@ import { asFile, bytes, driveRun, replayPlants, runFromStart, TEST_BUILD } from 
 // (tests/journalDrive.ts, with planted battle orders and mid-battle discards)
 // must replay through the driver to the same bytes, and a changed journal
 // must be refused or fail by name.
-
-const MAX_TURN_TICKS = secondsToTicks(HEALTH.maxTurnSeconds);
 
 /**
  * What the driver reaches on the live Game, behaving as Game and BattleScene
@@ -60,9 +55,8 @@ class StandInGame {
       () => (clock += 10),
       (journal) => (this.finished = journal),
     );
-    this.bus.on('battle:started', ({ worldSeed, encounter }) => {
-      const world = new World(this.bus, new RNG(worldSeed), encounter.gridW, encounter.gridH);
-      world.installBattleRules(encounter.battleRules ?? []);
+    this.bus.on('battle:started', ({ encounter }) => {
+      const world = battleWorld(this.bus, encounter);
       spawnEncounter(world, encounter);
       const countdown = { active: true };
       this.parkedFrames = 2;
@@ -92,10 +86,7 @@ class StandInGame {
         if (--this.parkedFrames <= 0) scene.countdown.active = false;
         return;
       }
-      for (let k = 0; k < ticks && !scene.world.ended; k++) {
-        scene.world.tick();
-        if (!scene.world.ended && scene.world.currentTick >= MAX_TURN_TICKS) scene.world.resolveAsDraw();
-      }
+      for (let k = 0; k < ticks && !scene.world.ended; k++) tickTurn(scene.world);
       return;
     }
     if (this.run.phase === 'turn-outcome' && ++this.outroFrames >= 2) {

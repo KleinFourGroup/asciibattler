@@ -14134,3 +14134,73 @@ allow; `src/bot`'s 12 test files pass, 128 tests; the fuzz diff against
 `5a5c9086` PASS on both shapes, the arm shape's `decisions.csv` at
 `fde861a0dacc` as at 125b and 125c. `comment-codes --record`: 1,078, no
 change.
+
+### 125g — trial: the battle start and the turn cap (2026-10-20, session e216d681)
+
+**Step zero changed the cut, and it went back to the user.** The bar's
+fourth part counted seven sites. A search with test files in found six
+more copies of the build (World, rules, spawn) in four test files
+(`replayTrace.test.ts` twice, `continuation`, `journal-replay-page`,
+`resume-gates` twice) and seven more of the cap (those six and
+`encounter-loop.test.ts`, which counts its own ticks as the harness
+does): 13 builds and 14 caps. The second finding was the shape. The
+harness's `unit:spawned` handler reads `currentWorld`, so the harness
+sets it between the World and the spawn, and one function that built and
+spawned would need a hook only the harness used, which the third part
+forbids. The walker's comment claimed the same need; it has no such
+handler. The session stopped with two leans; **signed** (the user,
+2026-10-20: "signing both a and b!"): (a) the test copies are in the
+trial, and (b) two functions in `src/sim/battleSetup.ts`, `battleWorld`
+and `tickTurn` with `MAX_TURN_TICKS`. A friction line is filed for the
+short count, the same miss as 125e's.
+
+What was built. `battleWorld(bus, encounter)` builds the World on
+`encounter.worldSeed` (the event's `worldSeed` is the same value, pinned
+by `Run.test.ts`) and installs the turn's rules; every site calls it, then
+`spawnEncounter`, and `BattleScene` spawns by hand as before.
+`tickTurn(world, cap = MAX_TURN_TICKS)` ticks, then resolves a draw at
+the cap; `MAX_TURN_TICKS` is `maxTurnSeconds`'s one conversion, which the
+harness, the walker and the coverage cap now read (their
+`DEFAULT_MAX_TICKS` copies are gone). The harness, the walker and
+`encounter-loop` pass the per-run cap they already took and keep their
+own tick count; the harness keeps its hang guard. Two orders move, both
+inert: the harness's capped draw now comes before that tick's occupancy
+check rather than after (`resolveAsDraw` moves no unit), and the first
+`replayTrace.test.ts` copy draws before its parked drain at tick 25 (the
+cap is far past 25). `encounter-loop`'s build had never installed rules;
+a throw planted in its build for any non-empty rule list passed all 7 of
+its tests, and its control (throw always) failed all 7 with `rules 0`, so
+installing `[]` there changes nothing. The walker's stale ordering
+comment and the harness's two N2 notes went with the code they described;
+gotcha #106's names, ARCHITECTURE's two rows, `health.ts`'s note and the
+two replays' headers say what the code does now.
+
+The bars, all four:
+1. The corpus: 0 of 30 journals differ. The fuzz diff against `55b2a7a4`:
+   PASS on both shapes. The chaos driver's tests and the six touched test
+   files: 7 files, 56 tests, pass. The page drive (a `--build` of the tree
+   before and after, seed 7, four hops): complete, 9 battles, `d6012bc8`
+   and `064ce09d` both times (§124.5's known answer). Two plants in the
+   shared code, on a commit object of the trial made from a scratch
+   index (`56741e59`): `>=` → `>` in `tickTurn`'s cap, CAUGHT by the
+   corpus (1 of 30, `player-1`); `installBattleRules` dropped from
+   `battleWorld`, CAUGHT (4 of 30).
+2. Lines under `src` and `tests`: 446,801 → 446,714 (−87); 15 files,
+   128 in and 215 out.
+3. No parameter tells the callers apart: `battleWorld` takes the bus and
+   the encounter, and `tickTurn`'s `cap` is the run's own cap, which the
+   harness's options and the coverage bot already set.
+4. One site each. After: `installBattleRules(` outside `World` and its
+   tests only at `battleSetup.ts:324`; the cap's `resolveAsDraw()` only at
+   `:339`; `maxTurnSeconds` converted only at `:329`. The other
+   `resolveAsDraw()` calls are `World`'s own tests.
+
+**Kept.** `comment-strip HEAD src`: `health.ts` differs in comments only
+(its control named), and the five with code are the ones edited.
+`comment-codes --record`: 1,078, no change.
+
+**A lead for 125j.** Ten more sites call `spawnEncounter` on a World they
+build themselves, with no rules installed (`tests/pathing/capture.ts` and nine
+tests: the five `*-battle` tests, `corridor-flow`, `layout-deadlock`,
+`variable-size`, `boardPanel/fixtures.test.ts`). They were not copies of
+the build the cut named, so they stay; `battleWorld` would serve each.

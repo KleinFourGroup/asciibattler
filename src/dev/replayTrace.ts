@@ -1,14 +1,12 @@
 /**
  * Replay a recorded `BattleTrace` headlessly, byte-identically.
  *
- * The reconstruction is the battle's own: `new World(bus, new
- * RNG(worldSeed), gridW, gridH)`, `installBattleRules`, then
+ * The reconstruction is the battle's own: `battleWorld`, then
  * `spawnEncounter` (sim/battleSetup.ts), which runs the sequence BattleScene
  * runs (`applyTerrain`, `setupRngFor`, `pickSpawnRegions`, `spawnTeam`
  * twice) on the same setup stream; BattleScene's interleaved render calls
- * touch no RNG. The drive loop is BattleScene's clock body: tick while
- * alive, `resolveAsDraw` once `currentTick` reaches the turn cap, so a
- * draw-at-cap trace replays as a draw at the same tick.
+ * touch no RNG. The drive loop is BattleScene's clock body, `tickTurn` while
+ * alive, so a draw-at-cap trace replays as a draw at the same tick.
  *
  * Command injection is one uniform rule: every recorded command is stamped
  * with its effective tick E (the first tick whose unit actions can observe
@@ -29,14 +27,11 @@
  * test pins.
  */
 
-import { World } from '../sim/World';
-import { RNG } from '../core/RNG';
+import type { World } from '../sim/World';
 import { EventBus } from '../core/EventBus';
 import type { GameEvents } from '../core/events';
 import type { WorldCommand } from '../sim/Command';
-import { spawnEncounter } from '../sim/battleSetup';
-import { secondsToTicks } from '../config';
-import { HEALTH } from '../config/health';
+import { battleWorld, spawnEncounter, tickTurn } from '../sim/battleSetup';
 import { configHash } from '../config/configHash';
 import type { BattleTrace } from './TraceRecorder';
 
@@ -88,8 +83,7 @@ export function replayTrace(
   }
 
   const { encounter } = trace;
-  const world = new World(bus, new RNG(encounter.worldSeed), encounter.gridW, encounter.gridH);
-  world.installBattleRules(encounter.battleRules ?? []);
+  const world = battleWorld(bus, encounter);
   spawnEncounter(world, encounter);
 
   const byTick = new Map<number, WorldCommand[]>();
@@ -105,7 +99,6 @@ export function replayTrace(
   });
 
   // BattleScene's clock body, the same in effect.
-  const maxTurnTicks = secondsToTicks(HEALTH.maxTurnSeconds);
   while (!world.ended) {
     const next = world.currentTick + 1;
     const stamped = byTick.get(next) ?? [];
@@ -114,8 +107,7 @@ export function replayTrace(
     hooks.beforeTick?.(world, next, stamped);
     for (const command of stamped) world.enqueueCommand(command);
     byTick.delete(next);
-    world.tick();
-    if (!world.ended && world.currentTick >= maxTurnTicks) world.resolveAsDraw();
+    tickTurn(world);
   }
   unsubscribe();
 

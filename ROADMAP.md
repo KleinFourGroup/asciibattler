@@ -290,8 +290,10 @@ its six calls; the audit, the calls and the trials' bars are in WORKLOG
   on a fixed team, the sweep's examples on a live knob (call 2).
 - ☑ **125f — A-25's `hazardCells`, A-26's 16 words in `src/bot`** (`none`).
   Its test onto `hazardCellList`; the fuzz diff PASS.
-- ☐ **125g — trial: the battle start and the turn cap** (`none`, on its
-  bar). The five walkers, `BattleScene` and `replayTrace` (call 4).
+- ☑ **125g — trial: the battle start and the turn cap** (`none`, on its
+  bar). The five walkers, `BattleScene` and `replayTrace` (call 4), and
+  the test copies (signed at step zero). Kept: `battleWorld` and
+  `tickTurn`, one site each from 13 and 14; `src` and `tests` −87.
 - ☐ **125h — trial: the harness and walker's grant walk and port loop**
   (`none`, on its bar).
 - ☐ **125i — trial: the two scripts' rally search** (`none`, on its bar).

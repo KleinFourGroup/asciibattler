@@ -39,8 +39,9 @@
  *   the larger remaining pool fraction; a tie is a loss.
  * - `maxTurnSeconds` — a turn's time budget, and its one source: a battle
  *   not over by then is resolved as a draw (`World.resolveAsDraw`) by every
- *   driver, the game and the fuzz harness. Authored in seconds;
- *   readers convert with `secondsToTicks` (gotcha #6).
+ *   driver, the game and the fuzz harness, through `tickTurn`. Authored in
+ *   seconds; `MAX_TURN_TICKS` in sim/battleSetup.ts is its one conversion
+ *   (gotcha #6).
  */
 
 import { z } from 'zod';

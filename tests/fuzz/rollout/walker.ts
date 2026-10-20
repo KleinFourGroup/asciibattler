@@ -56,10 +56,8 @@
  */
 
 import { RNG } from '../../../src/core/RNG';
-import { secondsToTicks } from '../../../src/config';
-import { HEALTH } from '../../../src/config/health';
-import { World } from '../../../src/sim/World';
-import { spawnEncounter } from '../../../src/sim/battleSetup';
+import type { World } from '../../../src/sim/World';
+import { MAX_TURN_TICKS, battleWorld, spawnEncounter, tickTurn } from '../../../src/sim/battleSetup';
 import type { Run } from '../../../src/run/Run';
 import { PRE_ROOT_NODE_ID } from '../../../src/run/NodeMap';
 import { TrafficScriptDriver, TRAFFIC_SCRIPTS } from '../../../src/bot/TrafficScriptDriver';
@@ -82,7 +80,6 @@ export const DEFAULT_INNER_TIER: InnerTier = 'traffic';
 export const DEFAULT_ROLLOUT_REDRAW: RedrawPolicy = { kind: 'level', cards: 2 };
 export const DEFAULT_ROLLOUT_EMPOWER: EmpowerPolicy = { kind: 'level', dir: 'hi' };
 
-const DEFAULT_MAX_TICKS = secondsToTicks(HEALTH.maxTurnSeconds);
 const DEFAULT_MAX_HOPS = 50;
 // 74b — the event-phase loop guard (the harness's MAX_EVENT_STEPS, per-walk:
 // a horizon walk is a few hops, so a whole-walk cap is ample). Loud failure,
@@ -161,7 +158,7 @@ export function walkToHorizon(clone: RunRolloutClone, options: WalkOptions): Wal
   const strategy = options.strategy ?? defaultWalkStrategy();
   const redraw = options.redraw ?? DEFAULT_ROLLOUT_REDRAW;
   const empower = options.empower ?? DEFAULT_ROLLOUT_EMPOWER;
-  const maxTicksPerBattle = options.maxTicksPerBattle ?? DEFAULT_MAX_TICKS;
+  const maxTicksPerBattle = options.maxTicksPerBattle ?? MAX_TURN_TICKS;
   const maxHops = options.maxHops ?? DEFAULT_MAX_HOPS;
 
   // Three forks of one policy stream (strategy / redraw / empower) — the
@@ -181,8 +178,7 @@ export function walkToHorizon(clone: RunRolloutClone, options: WalkOptions): Wal
 
   bus.on('battle:started', ({ worldSeed }) => {
     const encounter = run.currentEncounter!;
-    const world = new World(bus, new RNG(worldSeed), encounter.gridW, encounter.gridH);
-    world.installBattleRules(encounter.battleRules ?? []);
+    const world = battleWorld(bus, encounter);
     currentWorld = world;
     // Fresh driver per battle (the harness contract — bookkeeping never
     // leaks across battles); the searcher's CRN stream forks off the
@@ -195,8 +191,6 @@ export function walkToHorizon(clone: RunRolloutClone, options: WalkOptions): Wal
             // stream forks off the worldSeed exactly as runOne wires it.
             new RolloutSearchDriver('player', new RNG(worldSeed).fork(), options.rolloutSearch ?? {})
           : null;
-    // spawnEncounter emits unit:spawned synchronously; currentWorld is
-    // already set above (the runOne ordering note).
     spawnEncounter(world, encounter);
     // 85d — the campRaid candidate's order (clone.raidNextBattle, set by
     // the raid apply): identical to the live harness's via the shared
@@ -315,13 +309,10 @@ export function walkToHorizon(clone: RunRolloutClone, options: WalkOptions): Wal
           if (driver) {
             for (const cmd of driver.decide(w)) w.enqueueCommand(cmd);
           }
-          w.tick();
+          tickTurn(w, maxTicksPerBattle);
           battleTicks++;
         }
         totalTicks += battleTicks;
-        // Cap reached without a decisive end → force-resolve as a draw,
-        // exactly like runOne/the live driver.
-        if (!w.ended) w.resolveAsDraw();
         if (!w.ended) return { outcome: 'stuck', battlesEnded, totalTicks };
         break;
       }

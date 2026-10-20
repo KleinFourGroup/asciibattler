@@ -13,12 +13,9 @@
  */
 
 import { expect } from 'vitest';
-import { secondsToTicks } from '../src/config';
 import { configHash } from '../src/config/configHash';
-import { HEALTH } from '../src/config/health';
 import { EventBus } from '../src/core/EventBus';
 import type { GameEvents } from '../src/core/events';
-import { RNG } from '../src/core/RNG';
 import { PHASE_ROWS, pickerFor } from '../src/dev/probe/drive';
 import { JournalRecorder } from '../src/journal/JournalRecorder';
 import type { JournalStart, JournaledCommand, RunJournal } from '../src/journal/journal';
@@ -26,8 +23,8 @@ import { replayJournal, runFromStart as replayRunFromStart } from '../src/journa
 import { Run, type RunSnapshot } from '../src/run/Run';
 import { parseRunConfig } from '../src/run/RunConfig';
 import type { WorldCommand } from '../src/sim/Command';
-import { World } from '../src/sim/World';
-import { spawnEncounter } from '../src/sim/battleSetup';
+import type { World } from '../src/sim/World';
+import { battleWorld, spawnEncounter, tickTurn } from '../src/sim/battleSetup';
 
 export const TEST_BUILD = '0.0.0+test';
 
@@ -100,9 +97,8 @@ export function driveRun(options: DriveOptions): DriveResult {
             journal = closed;
             closes++;
           });
-    bus.on('battle:started', ({ worldSeed, encounter }) => {
-      world = new World(bus, new RNG(worldSeed), encounter.gridW, encounter.gridH);
-      world.installBattleRules(encounter.battleRules ?? []);
+    bus.on('battle:started', ({ encounter }) => {
+      world = battleWorld(bus, encounter);
       spawnEncounter(world, encounter);
     });
     return { bus, recorder };
@@ -132,7 +128,6 @@ export function driveRun(options: DriveOptions): DriveResult {
     recorder?.settle();
   };
 
-  const maxTurnTicks = secondsToTicks(HEALTH.maxTurnSeconds);
   /** Fight the open battle to its end; false when the plants abandoned it. */
   const fight = (battle: number): boolean => {
     const w = world as World | null;
@@ -144,8 +139,7 @@ export function driveRun(options: DriveOptions): DriveResult {
       const next = ran + 1;
       for (const order of plants.orders?.(battle, next, w) ?? []) w.enqueueCommand(order);
       if (plants.parked?.(battle, next)) w.drainCommands();
-      w.tick();
-      if (!w.ended && w.currentTick >= maxTurnTicks) w.resolveAsDraw();
+      tickTurn(w);
     }
     return true;
   };

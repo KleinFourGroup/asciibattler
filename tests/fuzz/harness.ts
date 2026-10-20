@@ -19,9 +19,7 @@
 
 import { EventBus } from '../../src/core/EventBus';
 import { RNG } from '../../src/core/RNG';
-import { secondsToTicks } from '../../src/config';
-import { HEALTH } from '../../src/config/health';
-import { World } from '../../src/sim/World';
+import type { World } from '../../src/sim/World';
 import { findOverlappingCells } from '../../src/sim/occupancy';
 import type { GameEvents } from '../../src/core/events';
 import type { Team } from '../../src/sim/Unit';
@@ -29,7 +27,7 @@ import type { Archetype } from '../../src/sim/archetypes';
 import { Run } from '../../src/run/Run';
 import { PRE_ROOT_NODE_ID } from '../../src/run/NodeMap';
 import type { RunConfig } from '../../src/run/RunConfig';
-import { spawnEncounter } from '../../src/sim/battleSetup';
+import { MAX_TURN_TICKS, battleWorld, spawnEncounter, tickTurn } from '../../src/sim/battleSetup';
 import { orderCampRaid } from './campRaid';
 import type { FuzzStrategy } from './Strategy';
 import type { UseContext } from '../../src/config/packets';
@@ -349,16 +347,6 @@ export interface HarnessOptions {
   readonly wrapStrategy?: (seed: number, base: FuzzStrategy) => FuzzStrategy;
 }
 
-// The per-turn tick cap — the SINGLE source is `config/health.json`'s
-// `maxTurnSeconds`, converted via the TICK_RATE contract (so the E3.5 10 → 20 Hz
-// doubling didn't silently halve it — what once made grown-team battles on the
-// 32-long endlessCorridors board read as false "hangs"). N2 UNIFIED this: the
-// live game (BattleScene) and this harness both read the same config
-// value and both force-resolve a battle that reaches it as a DRAW (resolveAsDraw —
-// chips both pools, the run continues), instead of the old divergence where the
-// harness alone labeled a cap-hit a run-ending 'hang'. 'hang' now means genuine
-// non-termination only (a World invariant violation).
-const DEFAULT_MAX_TICKS = secondsToTicks(HEALTH.maxTurnSeconds);
 const DEFAULT_MAX_HOPS = 50;
 // 74b — the event-phase loop guard: `hops` freezes while a run sits in the
 // 'event' phase (it increments only on 'map'), so neither run guard bounds a
@@ -397,7 +385,7 @@ function runOneInner(
   // an explicit `maxTicksPerBattle` still wins.
   const coverageActive = options.coverageObjectives === true;
   const maxTicksPerBattle =
-    options.maxTicksPerBattle ?? (coverageActive ? COVERAGE_MAX_TICKS : DEFAULT_MAX_TICKS);
+    options.maxTicksPerBattle ?? (coverageActive ? COVERAGE_MAX_TICKS : MAX_TURN_TICKS);
   const maxNodeHops = options.maxNodeHops ?? DEFAULT_MAX_HOPS;
   // §35d — opt-in per-tick occupancy assertion (off by default; test-only).
   const assertOccupancy = options.assertOccupancy === true;
@@ -514,10 +502,7 @@ function runOneInner(
 
   bus.on('battle:started', ({ worldSeed }) => {
     const encounter = run.currentEncounter!;
-    currentWorld = new World(bus, new RNG(worldSeed), encounter.gridW, encounter.gridH);
-    // 47f — the run's compiled daemon battle-hooks (BattleScene mirrors this
-    // at the live construction site).
-    currentWorld.installBattleRules(encounter.battleRules ?? []);
+    currentWorld = battleWorld(bus, encounter);
     currentObjRng = objectiveActive ? new RNG(worldSeed).fork() : null;
     currentCoverage = coverageActive
       ? new CoverageObjectiveDriver(new RNG(worldSeed).fork())
@@ -984,7 +969,7 @@ function runOneInner(
           if (searcher) {
             for (const cmd of searcher.decide(w)) w.enqueueCommand(cmd);
           }
-          w.tick();
+          tickTurn(w, maxTicksPerBattle);
           battleTicks++;
           // §35d — assert the one-unit-per-cell-per-plane invariant after every
           // tick (opt-in). Throws on the first breach with the seed + tick +
@@ -1002,17 +987,8 @@ function runOneInner(
         }
         totalTicks += battleTicks;
         if (!w.ended) {
-          // N2 — the per-turn cap (`config/health.json` maxTurnSeconds) was reached
-          // without a decisive end. Force-resolve as a DRAW exactly like the live
-          // driver: resolveAsDraw chips BOTH pools and emits battle:ended('draw')
-          // (the handler records the battle with winner 'draw' + nulls currentBattle/
-          // World), and the RUN CONTINUES. A long/indecisive turn is no longer a
-          // run-ending 'hang'; capped draws read downstream as winner === 'draw'.
-          w.resolveAsDraw();
-        }
-        if (!w.ended) {
-          // Unreachable in practice — resolveAsDraw is the single idempotent
-          // end-emit, so the battle is always ended above. Kept ONLY as the genuine
+          // Unreachable in practice — `tickTurn` resolves a battle at the cap as
+          // a draw, so the battle is always ended above. Kept ONLY as the genuine
           // non-termination guard (a World invariant violation): synthesize a battle
           // record + bail with outcome 'hang', which now means EXACTLY that, never
           // just a slow turn.

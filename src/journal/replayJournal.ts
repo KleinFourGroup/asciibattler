@@ -5,11 +5,10 @@
  * Each segment is replayed on its own: the Run from the segment's start (a
  * seed or a snapshot, with its dials; for a `resume`, the Run the segment
  * before left, through its text, as the page loaded the save), the turn
- * gates on as the game plays, and a World per battle, built as the fuzz
- * harness and `replayTrace` build it (`new World` on the encounter's seed,
- * `installBattleRules`, `spawnEncounter`, which draws the setup stream the
- * battle scene's own steps draw) and ticked with the live clock's body (a
- * draw once the turn cap is reached).
+ * gates on as the game plays, and a World per battle, built as every driver
+ * builds it (`battleWorld`, then `spawnEncounter`, which draws the setup
+ * stream the battle scene's own steps draw) and ticked as the live clock
+ * ticks it (`tickTurn`: a draw once the turn cap is reached).
  *
  * The entries are applied in order, each at its place:
  *  - a `run` command outside a battle is dispatched as it comes; one sent
@@ -35,16 +34,13 @@
  * tests/replay-guard.test.ts keeps its entry from reaching this module.
  */
 
-import { secondsToTicks } from '../config';
 import { configHash } from '../config/configHash';
-import { HEALTH } from '../config/health';
 import { EventBus } from '../core/EventBus';
 import type { GameEvents } from '../core/events';
-import { RNG } from '../core/RNG';
 import { Run, type RunPhase, type RunSnapshot } from '../run/Run';
 import { parseRunConfig } from '../run/RunConfig';
-import { World } from '../sim/World';
-import { spawnEncounter } from '../sim/battleSetup';
+import type { World } from '../sim/World';
+import { battleWorld, spawnEncounter, tickTurn } from '../sim/battleSetup';
 import {
   JOURNAL_FORMAT,
   snapshotHash,
@@ -193,9 +189,8 @@ function replaySegment(
       : new TappedBus((name, payload) => onEvent(index, name, payload));
   let world: World | null = null;
   let winner: GameEvents['battle:ended']['winner'] | null = null;
-  bus.on('battle:started', ({ worldSeed, encounter }) => {
-    world = new World(bus, new RNG(worldSeed), encounter.gridW, encounter.gridH);
-    world.installBattleRules(encounter.battleRules ?? []);
+  bus.on('battle:started', ({ encounter }) => {
+    world = battleWorld(bus, encounter);
     spawnEncounter(world, encounter);
     winner = null;
   });
@@ -217,14 +212,9 @@ function replaySegment(
     return w;
   };
 
-  const maxTurnTicks = secondsToTicks(HEALTH.maxTurnSeconds);
-  const step = (w: World): void => {
-    w.tick();
-    if (!w.ended && w.currentTick >= maxTurnTicks) w.resolveAsDraw();
-  };
   /** Run the battle until `tick` ticks have run. It must still be going then. */
   const runTo = (w: World, tick: number, wanted: string): void => {
-    while (!w.ended && w.currentTick < tick) step(w);
+    while (!w.ended && w.currentTick < tick) tickTurn(w);
     if (w.ended) {
       throw diverged(
         `the journal has ${wanted}, and the replayed battle ended at tick ${w.currentTick} (${String(winner)})`,
@@ -261,7 +251,7 @@ function replaySegment(
       w.enqueueCommand(entry.command);
     } else {
       const w = openBattle(`a battle's end`);
-      while (!w.ended) step(w);
+      while (!w.ended) tickTurn(w);
       if (winner !== entry.winner || w.currentTick !== entry.ticks) {
         throw diverged(
           `the journal's battle ended ${entry.winner} after ${entry.ticks} ticks, ` +

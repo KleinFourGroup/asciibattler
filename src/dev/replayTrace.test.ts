@@ -2,14 +2,12 @@ import { describe, it, expect } from 'vitest';
 import { EventBus } from '../core/EventBus';
 import type { GameEvents } from '../core/events';
 import { RNG } from '../core/RNG';
-import { World } from '../sim/World';
-import { spawnEncounter } from '../sim/battleSetup';
+import type { World } from '../sim/World';
+import { battleWorld, spawnEncounter, tickTurn } from '../sim/battleSetup';
 import { rollUnit } from '../sim/archetypes';
 import type { BattleEncounter } from '../run/Run';
 import { TraceRecorder, type BattleTrace } from './TraceRecorder';
 import { replayTrace } from './replayTrace';
-import { secondsToTicks } from '../config';
-import { HEALTH } from '../config/health';
 
 /**
  * 53c — THE fidelity keystone: a battle recorded live (including commands
@@ -86,8 +84,7 @@ function driveLive(encounter: BattleEncounter): {
   new TraceRecorder(bus, (t) => traces.push(t));
 
   bus.emit('battle:started', { worldSeed: encounter.worldSeed, encounter });
-  const world = new World(bus, new RNG(encounter.worldSeed), encounter.gridW, encounter.gridH);
-  world.installBattleRules(encounter.battleRules ?? []);
+  const world = battleWorld(bus, encounter);
   spawnEncounter(world, encounter);
 
   const enemyId = world.units.find((u) => u.team === 'enemy')?.id;
@@ -97,7 +94,6 @@ function driveLive(encounter: BattleEncounter): {
   world.enqueueCommand({ kind: 'setObjective', team: 'player', objective: { mode: 'hold' } });
   world.drainCommands(); // stamps effective tick 1
 
-  const maxTurnTicks = secondsToTicks(HEALTH.maxTurnSeconds);
   while (!world.ended) {
     // 2. A normal between-ticks enqueue — applies at tick 10's in-tick drain.
     if (world.currentTick === 9) {
@@ -107,13 +103,12 @@ function driveLive(encounter: BattleEncounter): {
         objective: { mode: 'engage', target: { kind: 'enemy', unitId: enemyId } },
       });
     }
-    world.tick();
+    tickTurn(world);
     // 3. A mid-battle PAUSE — parked drain after tick 25 ran; stamps 26.
     if (world.currentTick === 25 && !world.ended) {
       world.enqueueCommand({ kind: 'clearObjective', team: 'player' });
       world.drainCommands();
     }
-    if (!world.ended && world.currentTick >= maxTurnTicks) world.resolveAsDraw();
   }
 
   expect(world.currentTick).toBeGreaterThan(26); // all three injections landed pre-end
@@ -148,14 +143,9 @@ describe('replayTrace (53c — the fidelity keystone)', () => {
     const traces: BattleTrace[] = [];
     new TraceRecorder(bus, (t) => traces.push(t));
     bus.emit('battle:started', { worldSeed: encounter.worldSeed, encounter });
-    const world = new World(bus, new RNG(encounter.worldSeed), encounter.gridW, encounter.gridH);
-    world.installBattleRules([]);
+    const world = battleWorld(bus, encounter);
     spawnEncounter(world, encounter);
-    const maxTurnTicks = secondsToTicks(HEALTH.maxTurnSeconds);
-    while (!world.ended) {
-      world.tick();
-      if (!world.ended && world.currentTick >= maxTurnTicks) world.resolveAsDraw();
-    }
+    while (!world.ended) tickTurn(world);
 
     const replayBus = new EventBus<GameEvents>();
     const replayEvents = captureEvents(replayBus);

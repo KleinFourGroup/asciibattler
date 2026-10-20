@@ -11,9 +11,15 @@
  */
 
 import { Clock } from '../core/Clock';
-import { RNG } from '../core/RNG';
-import { World } from '../sim/World';
-import { applyTerrain, pickSpawnRegions, setupRngFor, spawnTeam } from '../sim/battleSetup';
+import type { World } from '../sim/World';
+import {
+  applyTerrain,
+  battleWorld,
+  pickSpawnRegions,
+  setupRngFor,
+  spawnTeam,
+  tickTurn,
+} from '../sim/battleSetup';
 import { BattleRenderer, gridToWorld } from '../render/BattleRenderer';
 import type { TerrainRenderer } from '../render/TerrainRenderer';
 import type { ApronRenderer } from '../render/ApronRenderer';
@@ -21,7 +27,7 @@ import type { BackdropRenderer } from '../render/BackdropRenderer';
 import { HUD } from '../ui/HUD';
 import { ObjectiveController } from '../ui/ObjectiveController';
 import type { PlaybackSpeed } from '../ui/PlaybackSpeed';
-import { TICK_RATE, secondsToTicks } from '../config';
+import { TICK_RATE } from '../config';
 import { HEALTH } from '../config/health';
 import { PLAYBACK } from '../config/playback';
 import { getLayout, type Theme } from '../sim/layouts';
@@ -35,11 +41,6 @@ import { reducedMotion } from '../render/motion';
 function titleCaseTheme(theme: Theme): string {
   return theme.charAt(0).toUpperCase() + theme.slice(1);
 }
-
-// The turn's cap, `maxTurnSeconds` in ticks, as the fuzz harness has it: a
-// turn that reaches it undecided is resolved as a draw (the clock's callback
-// below).
-const MAX_TURN_TICKS = secondsToTicks(HEALTH.maxTurnSeconds);
 
 export class BattleScene implements Scene {
   private clock: Clock | null = null;
@@ -85,17 +86,10 @@ export class BattleScene implements Scene {
       throw new Error('BattleScene.mount: no Run encounter');
     }
 
-    this.world = new World(ctx.bus, new RNG(encounter.worldSeed), encounter.gridW, encounter.gridH);
-    // The turn's battle rules, as `Run.beginTurn` compiled them; the fuzz
-    // harness installs them the same way.
-    this.world.installBattleRules(encounter.battleRules ?? []);
+    this.world = battleWorld(ctx.bus, encounter);
     this.clock = new Clock(TICK_RATE, () => {
       const w = this.world;
-      if (!w || w.ended) return;
-      w.tick();
-      // The turn's cap. `resolveAsDraw` does nothing once the battle has
-      // ended, so a tick that ends it naturally cannot resolve it twice.
-      if (!w.ended && w.currentTick >= MAX_TURN_TICKS) w.resolveAsDraw();
+      if (w && !w.ended) tickTurn(w);
     });
     this.battleRenderer = new BattleRenderer(
       ctx.sprites,

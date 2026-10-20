@@ -1,18 +1,15 @@
 import { describe, expect, it } from 'vitest';
-import { secondsToTicks } from '../../src/config';
 import { DECK } from '../../src/config/deck';
 import { ENCOUNTER_IDS } from '../../src/config/encounters';
 import { EVENTS } from '../../src/config/events';
-import { HEALTH } from '../../src/config/health';
 import { SectorMapSchema } from '../../src/config/sectorMap';
 import { EventBus } from '../../src/core/EventBus';
 import type { GameEvents } from '../../src/core/events';
-import { RNG } from '../../src/core/RNG';
 import { PHASE_ROWS, pickerFor } from '../../src/dev/probe/drive';
 import { Run, type RunPhase, type RunSnapshot } from '../../src/run/Run';
 import { parseRunConfig, type RunConfig } from '../../src/run/RunConfig';
-import { World } from '../../src/sim/World';
-import { spawnEncounter } from '../../src/sim/battleSetup';
+import type { World } from '../../src/sim/World';
+import { battleWorld, spawnEncounter, tickTurn } from '../../src/sim/battleSetup';
 
 // 115a — `Run.resume()`: a run loaded from a save re-emits the gate event of
 // the phase it was saved in, with the payload the live run emitted on
@@ -64,8 +61,6 @@ interface Arrival {
   readonly live: Emitted | null;
 }
 
-const maxTurnTicks = secondsToTicks(HEALTH.maxTurnSeconds);
-
 /** Play a gated run by the pane kit's rows, as `tests/journalDrive.ts` does,
  *  and keep a save at every arrival at a gate: a step that ended in a gate
  *  phase and emitted that phase's event (the map: emitted none). A step
@@ -74,9 +69,8 @@ const maxTurnTicks = secondsToTicks(HEALTH.maxTurnSeconds);
 function arrivals(seed: number, dials: string): Arrival[] {
   const bus = new EventBus<GameEvents>();
   let world: World | null = null;
-  bus.on('battle:started', ({ worldSeed, encounter }) => {
-    world = new World(bus, new RNG(worldSeed), encounter.gridW, encounter.gridH);
-    world.installBattleRules(encounter.battleRules ?? []);
+  bus.on('battle:started', ({ encounter }) => {
+    world = battleWorld(bus, encounter);
     spawnEncounter(world, encounter);
   });
   const emitted = listen(bus);
@@ -92,10 +86,7 @@ function arrivals(seed: number, dials: string): Arrival[] {
     if (step === 'fight') {
       const w = world as World | null;
       if (w === null) throw new Error('arrivals: the battle phase with no World');
-      while (!w.ended) {
-        w.tick();
-        if (!w.ended && w.currentTick >= maxTurnTicks) w.resolveAsDraw();
-      }
+      while (!w.ended) tickTurn(w);
     } else {
       run.dispatch(step.command);
     }
@@ -207,9 +198,8 @@ describe("115e — the strip's input is the turn:resolved before it", () => {
   it('on every pre-turn screen of a seeded drive', () => {
     const bus = new EventBus<GameEvents>();
     let world: World | null = null;
-    bus.on('battle:started', ({ worldSeed, encounter }) => {
-      world = new World(bus, new RNG(worldSeed), encounter.gridW, encounter.gridH);
-      world.installBattleRules(encounter.battleRules ?? []);
+    bus.on('battle:started', ({ encounter }) => {
+      world = battleWorld(bus, encounter);
       spawnEncounter(world, encounter);
     });
     const resolved: GameEvents['turn:resolved'][] = [];
@@ -238,10 +228,7 @@ describe("115e — the strip's input is the turn:resolved before it", () => {
         continue;
       }
       const w = world as World | null;
-      while (w !== null && !w.ended) {
-        w.tick();
-        if (!w.ended && w.currentTick >= maxTurnTicks) w.resolveAsDraw();
-      }
+      while (w !== null && !w.ended) tickTurn(w);
     }
     expect(firsts).toBeGreaterThan(2);
     expect(compared).toBeGreaterThan(10);

@@ -1,8 +1,9 @@
 /**
- * Battle setup: takes a Run's `BattleEncounter`, applies its terrain, picks
- * the spawn regions and places both teams into a fresh `World`. BattleScene,
- * the replays and the fuzz harness all set up through here, so the game and
- * the harness can't drift apart.
+ * Battle setup: takes a Run's `BattleEncounter`, builds the turn's `World`,
+ * applies its terrain, picks the spawn regions and places both teams; and
+ * the turn's cap, which every driver ticks a battle under. BattleScene, the
+ * replays and the fuzz harness all set up through here, so the game and the
+ * harness can't drift apart.
  *
  * A layout declares its own spawn regions; the procedural generator emits
  * two `'both'` bands on the top and bottom edges. Setup picks one region
@@ -16,10 +17,14 @@
  * changing the wall density can't shift a spawn pick.
  */
 
+import type { EventBus } from '../core/EventBus';
+import type { GameEvents } from '../core/events';
 import { RNG, deriveRng } from '../core/RNG';
 import type { GridCoord } from '../core/types';
-import type { World, CampInstance, CampPendingUnit } from './World';
+import { World, type CampInstance, type CampPendingUnit } from './World';
+import { secondsToTicks } from '../config';
 import { getCamp } from '../config/camps';
+import { HEALTH } from '../config/health';
 import { createMovementBehavior } from './behaviors/registry';
 import type { Team, UnitTemplate } from './Unit';
 import type { BattleEncounter } from '../run/Run';
@@ -306,6 +311,32 @@ export function spawnEncounter(world: World, encounter: BattleEncounter): void {
   const { player, enemy } = pickSpawnRegions(spawnRegions, setupRng);
   spawnTeam(world, 'player', encounter.playerTeam, player, setupRng);
   spawnTeam(world, 'enemy', encounter.enemyTeam, enemy, setupRng);
+}
+
+/**
+ * A turn's World, as every driver of a run builds it on `battle:started`:
+ * on the encounter's seed and grid, with the turn's battle rules installed.
+ * The caller spawns the teams next (`spawnEncounter`, or BattleScene by
+ * hand), once anything its `unit:spawned` handlers read is set.
+ */
+export function battleWorld(bus: EventBus<GameEvents>, encounter: BattleEncounter): World {
+  const world = new World(bus, new RNG(encounter.worldSeed), encounter.gridW, encounter.gridH);
+  world.installBattleRules(encounter.battleRules ?? []);
+  return world;
+}
+
+/** The turn's cap: `maxTurnSeconds` in ticks. */
+export const MAX_TURN_TICKS = secondsToTicks(HEALTH.maxTurnSeconds);
+
+/**
+ * One tick of a turn's battle, then the turn's cap: a battle not over once
+ * `currentTick` reaches `cap` is resolved as a draw, which chips both pools,
+ * and the run goes on. `resolveAsDraw` does nothing once the battle has
+ * ended, so a tick that ends it cannot resolve it twice.
+ */
+export function tickTurn(world: World, cap = MAX_TURN_TICKS): void {
+  world.tick();
+  if (!world.ended && world.currentTick >= cap) world.resolveAsDraw();
 }
 
 /**

@@ -131,6 +131,17 @@ the screens', for its kickoff (WORKLOG §124, "The close of §124").
   §124's batch entries). Taking a file, or any path, would save the copy.
   Signed for here 2026-10-18 (WORKLOG §124, "The signs after batch 7").
 
+- [ ] **`comment-strip` proves a file with a held comment.** A comment the
+  oracle holds as code (`TOOL_READ`: an `i18n-ok` marker line, or a block
+  that mentions the marker) makes `comment-strip` exit 1 when it is
+  edited, and the rest of that file's code is then unproven. The comment
+  pass proved such files by hand with `scratch/1245h-b3/held-compare.mts
+  <before> <after> [--plant]`, off git: the file compared with every
+  comment out, held ones included, and the held comments listed on each
+  side, with a planted code edit as its control. Folded into
+  `comment-strip`, that proof runs on the path. Signed for here
+  2026-10-20 (WORKLOG §124.5, "The hand-off after 124.5h's batch 12").
+
 ### §128 the close
 
 - [ ] **DESIGN's "Out of scope" list names as backlog what has since been

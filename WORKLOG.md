@@ -13514,3 +13514,12 @@ orientation), 321,047 (batch 10's proof), 332,785 (batch 10's commit),
 427,362 (batch 11's proof), 433,782 (batch 11's commit), 507,510 (batch
 12's proof), 517,649 (batch 12's commit), 522,677 at 14:32 before this
 entry. The batches cost about 130, 55 and 47 tokens a line.
+
+**Batches 8 to 12, read, and the four answers confirmed** (the user,
+2026-10-20, after the hand-off): "Confirming all four answers, and all of
+those reads, Claude!" No read is open, and ROADMAP ticks 124.5h. The
+answers are written: the TODO §127 row for `held-compare.mts`; CLAUDE.md
+"Editing" on whole-line anchors and no commit beside Edits; and in the
+Cursor's "Carried to the Round 8.5 close", the procedures' home, the
+driver's audio notification and the driver's three round-close items,
+since the user confirmed that they join the list.

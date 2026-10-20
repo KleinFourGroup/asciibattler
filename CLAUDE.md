@@ -39,9 +39,14 @@ in AGENTS.md, which other harnesses read too.
   scratchpad directory's name.
 - **Editing.** Batching several Edits to one file in a message is fine when
   the anchors are distinct; each Edit reports its own result, and the
-  pre-commit hook catches anything that slips. The Bash tool runs Git Bash:
-  multi-line commit messages take several `-m` flags or a file, and
-  PowerShell's `@'…'@` here-strings belong to the PowerShell tool only.
+  pre-commit hook catches anything that slips. Anchor each Edit on whole
+  lines, copied from the file: an anchor that crosses a line break as
+  retyped misses, and one that ends mid-line can glue the line's rest on
+  while reporting success. Keep a commit out of any message that holds
+  Edits, since a commit beside a missed Edit runs anyway. The Bash tool
+  runs Git Bash: multi-line commit messages take several `-m` flags or a
+  file, and PowerShell's `@'…'@` here-strings belong to the PowerShell
+  tool only.
 - **The Grep tool** can answer "No matches found" for a brace glob given
   together with a path, when files plainly match. Give a path and no brace
   glob, and don't read that answer as a negative.

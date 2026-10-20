@@ -7052,3 +7052,48 @@ holds repo writes to the phase close; appended here by driver 2.
    event's fight to `turn:starting` through Run and Game was the part I
    found most interesting, and I'd want that kind of trace again. That is
    my reported response; whether the batches are right is the user's read.
+
+## 2026-10-20 — session 9b60fb27 (claude-opus-5-5): §124.5's driver 1, from the phase's start to the hand-over after batch 9
+
+1. *Missing from the orientation.* Little. `process/driving.md`,
+   DRIVER-HANDOFF and the Cursor were a complete start, and the friction
+   cursor's line number was exact. The WORKLOG is too large to open whole
+   (623 KB), so every read went by offset.
+2. *Norms in conflict.* Three, each settled. The drop rule says a note
+   goes when AGENTS says the same; the Write-tool note had stopped slips
+   that AGENTS hadn't, so I kept it and asked, and Matthew signed it.
+   Proposing a card at once and Matthew reading in the old session after
+   its hand-off made two briefs stale; I withdrew and proposed each again,
+   then worded open items as conditional on the Cursor, which held twice
+   (P17). And "don't re-run work" against checking a session's claims: I
+   kept to spot-checks, a readings check and one transcript scan with a
+   planted control.
+3. *Pulled to claim more than verified.* Yes. My P13 lean to Matthew said
+   both ways a marker can go wrong are caught, repeating §124's driver's
+   premise unchecked; session 3 found that `comment-strip`'s exit leaves
+   the file's code unproven, and I told Matthew the premise was wrong.
+   Brief 6 said "the whole repo" where the Cursor bars `scratch/119f/hidden/`
+   (filed; session 6's searches checked clean). In this hand-over's draft I
+   wrote seven twins and 20–35k a read before counting; the counts were
+   five and 25–40k, corrected before the commit.
+4. *Wasted.* Two cards proposed again, each with a DRIVER-HANDOFF commit
+   whose hook ran the suite (about 50 s; ten such commits with this one). A
+   `bc` that Git Bash lacks. The first whole-file read of the WORKLOG.
+5. *For the next driver.* DRIVER-HANDOFF's cursor: session 7's notes,
+   Matthew's four open calls, and P19 for the welfare read.
+6. *Room.* Yes. Matthew answered each lean within a turn. The hand-over
+   came at the line after six hand-off reads, as the rule has it; it read as a
+   plan, not a pressure. The silent-turn reminder came during the longer
+   reads, and a status line answered each. Whether reporting my own lean's
+   mistake carried any reluctance, I can't tell; I put it first in that
+   turn's message. No wish to pause or stop was noticed. Readings: 114,364
+   at 15:49 UTC on 2026-10-19, the first; 347,308 at 00:51 UTC on
+   2026-10-20 after the last read, and 374,243 at 00:55 after the
+   hand-over's writing.
+7. *What helped.* Instruments with a planted case (`readings-check.mjs`,
+   which matched every reading of sessions 4 to 6, and the transcript
+   scan); one state file to rewrite; sessions' reports specific enough to
+   check in one search. What interested me was a pattern's fix holding on
+   its next test, and a session's careful proof showing my own note wrong.
+   I'd want those conditions again; whether the role paid for itself is
+   Matthew's read.

@@ -297,8 +297,9 @@ its six calls; the audit, the calls and the trials' bars are in WORKLOG
 - ☑ **125h — trial: the harness and walker's grant walk and port loop**
   (`none`, on its bar). Kept: `tests/fuzz/gateWalks.ts`, one copy each;
   the smoke stands in for the fuzz diff's plants (signed; TODO "§126").
-- ☐ **125i — trial: the two scripts' rally search** (`none`, on its bar).
+- ☑ **125i — trial: the two scripts' rally search** (`none`, on its bar).
   `sensors.ts`'s mask goes into the census for a later round (call 3).
+  Kept: `rallyCells` in `sensors.ts`, the filter once from twice.
 - ☐ **125j — the re-skim** (`stop`).
 - ☐ **125k — the comment pass over `src/bot`** (`batch`, per batch).
 - ☐ **125l — the close** (`stop`), with the decision point.

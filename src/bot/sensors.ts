@@ -44,8 +44,8 @@ export function opposingTeam(team: ObjectiveTeam): ObjectiveTeam {
  * Reach that classifies a unit as TRUE ARTILLERY (catapult/shaman, 6) —
  * capability-based, archetype-blind. Shared by cohesion focus (the
  * assassination bar; reach-5 casters deliberately DON'T qualify — the
- * junction mage-chasing lesson, worklog §54g) and unjam's under-fire rally
- * filter (only artillery zones forbid a rally; a hard all-reach filter
+ * junction mage-chasing lesson, worklog §54g) and the rally filter
+ * (`rallyCells`: only artillery zones forbid a rally; a hard all-reach filter
  * pushed rallies into deep retreat marches — the 54e-amendment lesson).
  */
 export const ARTILLERY_REACH = 6;
@@ -254,6 +254,69 @@ export function unitsApproachingHazard(
     // The hazard is "between" when the enemy is beyond it on this axis:
     // closing on the enemy means closing on the hazard first.
     if (enemyDistFromHazard < enemyDist) out.push(unit.id);
+  }
+  return out;
+}
+
+// ---------------------------------------------------------------------------
+// Rally (the attrition-stall and unjam scripts' tile search)
+// ---------------------------------------------------------------------------
+
+/** A cell a group may rally to, with its distances to the group's centroid
+ *  and to the nearest enemy. */
+export interface RallyCell {
+  readonly cell: GridCoord;
+  readonly centroidDist: number;
+  readonly enemyDist: number;
+}
+
+/**
+ * The cells `group` may rally to, in row-major order: within `radius` of
+ * the group's rounded centroid, passable, not a hazard, free of units and
+ * claims, no nearer the nearest enemy than the centroid is (back or
+ * sideways, never forward), and outside every artillery piece's reach.
+ * Only artillery forbids a cell (`ARTILLERY_REACH`): counting every enemy's
+ * reach let the bows' and mages' coverage push rallies out of the local
+ * area, and a re-sort became a retreat march. Empty when either side has no
+ * living unit; each script scores the cells its own way.
+ */
+export function rallyCells(
+  world: World,
+  group: readonly Unit[],
+  enemies: readonly Unit[],
+  radius: number,
+): RallyCell[] {
+  if (group.length === 0 || enemies.length === 0) return [];
+  const centroid = {
+    x: Math.round(group.reduce((s, u) => s + u.position.x, 0) / group.length),
+    y: Math.round(group.reduce((s, u) => s + u.position.y, 0) / group.length),
+  };
+  const minEnemyDist = (c: GridCoord) =>
+    enemies.reduce((m, e) => Math.min(m, distanceBetween(c, e.position)), Infinity);
+  const centroidEnemyDist = minEnemyDist(centroid);
+  const underFire = (c: GridCoord) =>
+    enemies.some(
+      (e) =>
+        e.derived.attackRange >= ARTILLERY_REACH &&
+        distanceBetween(c, e.position) <= e.derived.attackRange,
+    );
+
+  const out: RallyCell[] = [];
+  const y1 = Math.min(world.gridH - 1, centroid.y + radius);
+  const x1 = Math.min(world.gridW - 1, centroid.x + radius);
+  for (let y = Math.max(0, centroid.y - radius); y <= y1; y++) {
+    for (let x = Math.max(0, centroid.x - radius); x <= x1; x++) {
+      const c = { x, y };
+      const centroidDist = distanceBetween(c, centroid);
+      if (centroidDist > radius) continue;
+      const kind = world.tileGrid.kindAt(c);
+      if (!tileDef(kind).passable || isHazardKind(kind)) continue;
+      if (unitAt(world, c) !== undefined || claimantOf(world, c) !== undefined) continue;
+      const enemyDist = minEnemyDist(c);
+      if (enemyDist < centroidEnemyDist) continue;
+      if (underFire(c)) continue;
+      out.push({ cell: c, centroidDist, enemyDist });
+    }
   }
   return out;
 }

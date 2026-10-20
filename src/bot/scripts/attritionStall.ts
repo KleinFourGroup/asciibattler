@@ -67,18 +67,15 @@
 import type { World } from '../../sim/World';
 import type { GridCoord } from '../../core/types';
 import type { ObjectiveTeam, TeamObjective } from '../../sim/objective';
-import { distanceBetween } from '../../core/grid';
-import { claimantOf, unitAt } from '../../sim/occupancy';
-import { tileDef } from '../../sim/TileGrid';
 import type { TrafficScript } from '../TrafficScriptDriver';
 import {
-  ARTILLERY_REACH,
   armiesInContact,
   attritionRead,
   hazardCellList,
-  isHazardKind,
   livingUnits,
   opposingTeam,
+  rallyCells,
+  type RallyCell,
 } from '../sensors';
 
 /** Trigger: enemies carrying damaging DoTs (54c — stall-spiral bg 2.0;
@@ -101,58 +98,19 @@ const STALL_RALLY_RADIUS = 4;
 export function standOffCell(world: World, team: ObjectiveTeam): GridCoord | null {
   const own = livingUnits(world, team);
   const enemies = livingUnits(world, opposingTeam(team));
-  if (own.length === 0 || enemies.length === 0) return null;
-
-  const centroid = {
-    x: Math.round(own.reduce((s, u) => s + u.position.x, 0) / own.length),
-    y: Math.round(own.reduce((s, u) => s + u.position.y, 0) / own.length),
-  };
-  const minEnemyDist = (c: GridCoord) =>
-    enemies.reduce((m, e) => Math.min(m, distanceBetween(c, e.position)), Infinity);
-  const centroidEnemyDist = minEnemyDist(centroid);
-  // Artillery-only under-fire filter (the 54e-amendment contract, shared
-  // classification via ARTILLERY_REACH): a stand-off inside the siege line's
-  // firing zone is a refusal that still eats shots.
-  const underFire = (c: GridCoord) =>
-    enemies.some(
-      (e) =>
-        e.derived.attackRange >= ARTILLERY_REACH &&
-        distanceBetween(c, e.position) <= e.derived.attackRange,
-    );
-
-  let best: GridCoord | null = null;
-  let bestCentroidDist = Infinity;
-  let bestEnemyDist = -1;
-  const y0 = Math.max(0, centroid.y - STALL_RALLY_RADIUS);
-  const y1 = Math.min(world.gridH - 1, centroid.y + STALL_RALLY_RADIUS);
-  const x0 = Math.max(0, centroid.x - STALL_RALLY_RADIUS);
-  const x1 = Math.min(world.gridW - 1, centroid.x + STALL_RALLY_RADIUS);
-  for (let y = y0; y <= y1; y++) {
-    for (let x = x0; x <= x1; x++) {
-      const c = { x, y };
-      if (distanceBetween(c, centroid) > STALL_RALLY_RADIUS) continue;
-      const kind = world.tileGrid.kindAt(c);
-      if (!tileDef(kind).passable || isHazardKind(kind)) continue;
-      if (unitAt(world, c) !== undefined || claimantOf(world, c) !== undefined) continue;
-      const enemyDist = minEnemyDist(c);
-      if (enemyDist < centroidEnemyDist) continue; // refuse, never advance
-      if (underFire(c)) continue; // never stand off inside the siege zone
-      const centroidDist = distanceBetween(c, centroid);
-      const better =
-        centroidDist < bestCentroidDist ||
-        (centroidDist === bestCentroidDist &&
-          (enemyDist > bestEnemyDist ||
-            (enemyDist === bestEnemyDist &&
-              best !== null &&
-              (c.y < best.y || (c.y === best.y && c.x < best.x)))));
-      if (best === null || better) {
-        bestCentroidDist = centroidDist;
-        bestEnemyDist = enemyDist;
-        best = c;
-      }
+  // Nearest the centroid, then farthest from the enemy; the cells come
+  // row-major, so the first of a tie is the row-major one.
+  let best: RallyCell | null = null;
+  for (const r of rallyCells(world, own, enemies, STALL_RALLY_RADIUS)) {
+    if (
+      best === null ||
+      r.centroidDist < best.centroidDist ||
+      (r.centroidDist === best.centroidDist && r.enemyDist > best.enemyDist)
+    ) {
+      best = r;
     }
   }
-  return best;
+  return best?.cell ?? null;
 }
 
 /**

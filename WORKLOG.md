@@ -14274,3 +14274,52 @@ same blind spot before the trial. The keep went to the user.
 the smoke, plus the TODO line!"): the smoke's catches stand in for the
 fuzz diff's plant clause where the shapes do not reach, and TODO "§126
 tests" carries the walker's port path.
+
+### 125i — trial: the two scripts' rally search (2026-10-20, session e216d681)
+
+Step zero: a search for the filter's parts with test files in
+(`attackRange >= ARTILLERY_REACH`, the never-forward comparison, the
+claim check beside the hazard check) finds the kickoff's two copies,
+`standOffCell` (`attritionStall.ts`) and `regroupCell` (`unjam.ts`), and
+no third. `terrainEdgeHold`'s `edgeHoldCell` scores cells too, but it
+walks the barrier frontier with no free-cell or under-fire test, so it is
+not a copy. In both copies the row-major tie-break clause can never fire,
+since the scan itself is row-major and a later cell is never row-major
+before the best so far.
+
+What was built. `sensors.ts` gains a rally section: `rallyCells(world,
+group, enemies, radius)` returns the cells a group may rally to, in
+row-major order, with each cell's centroid and enemy distances. It holds
+the centroid, the nearest-enemy distance, the artillery-only under-fire
+test and the candidate filter (passable, no hazard, free, not nearer the
+enemy, not under fire). Each script keeps its radius and its scoring:
+`standOffCell` takes the cell nearest the centroid, then farthest from
+the enemy, and `regroupCell` the one with the most open neighbours, then
+nearest the centroid. Both drop the tie-break clause that could not
+fire. `regroupCell`'s doc said "OUTSIDE every enemy's attack range",
+which the code never did; it now names `rallyCells` and its artillery
+reach. The artillery-only reason, from `unjam.ts`'s inner comment, is in
+`rallyCells`' doc, and `ARTILLERY_REACH`'s doc names the rally filter as
+its reader.
+
+The bars:
+1. The fuzz diff against `b54bce8a`: PASS on both shapes. `src/bot`'s
+   tests: 12 files, 128 tests, pass. Two plants in `rallyCells`, on a
+   commit object of the trial made from a scratch index (`6523f0d0`),
+   against the suite and the fuzz diff: the artillery test's `>=` → `>`,
+   CAUGHT by the suite (`attritionStall.test.ts`, `unjam.test.ts`) and
+   not by the fuzz diff; the under-fire check negated, CAUGHT by the
+   suite (those two and `auditionNominate.test.ts`) and by the fuzz
+   diff's arm shape. The clean suite set aside two files: the step-code
+   test, since the ref was made before the ceiling was recorded, and
+   `licences.test.ts`, which reads a `node_modules` a worktree lacks.
+2. Lines under `src` and `tests`: 446,671 → 446,654 (−17; `src` 99 in,
+   116 out).
+3. Each script's radius and scoring stay its own; `rallyCells` takes the
+   radius as a value.
+4. The filter once, from twice: after, `attackRange >= ARTILLERY_REACH`
+   and the never-forward comparison are only in `sensors.ts`.
+
+**Kept.** `comment-strip HEAD src`: the three edited files alone differ
+in code. `comment-codes --record`: 1,078 → 1,076 (two codes in the
+comments that moved).

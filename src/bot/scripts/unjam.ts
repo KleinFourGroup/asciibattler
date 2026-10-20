@@ -26,11 +26,10 @@
 import type { World } from '../../sim/World';
 import type { GridCoord } from '../../core/types';
 import type { ObjectiveTeam, TeamObjective } from '../../sim/objective';
-import { distanceBetween } from '../../core/grid';
 import { claimantOf, unitAt } from '../../sim/occupancy';
 import { tileDef } from '../../sim/TileGrid';
 import type { TrafficScript } from '../TrafficScriptDriver';
-import { ARTILLERY_REACH, isHazardKind, jamRead, livingUnits, opposingTeam } from '../sensors';
+import { jamRead, livingUnits, opposingTeam, rallyCells } from '../sensors';
 
 /** Trigger: the team's jammed fraction (54c — fires at the human's ~0.25–0.29
  *  command levels, silent on labyrinth's 0.03 background).
@@ -67,16 +66,15 @@ function openNeighbors(world: World, cell: GridCoord): number {
 }
 
 /**
- * The regroup tile: passable, non-hazard, unoccupied/unclaimed, within
- * `UNJAM_RALLY_RADIUS` of the jammed centroid, NO CLOSER to the nearest
- * enemy than the centroid is (fall back or lateral, never advance), and
- * OUTSIDE every enemy's attack range (the post-54g amendment, user-approved:
- * the attribution A/B put the whole artillery-funnel +1.7 / junction +1.7
- * residual on regrouping under ranged fire — a retreat that eats
- * catapult/champion shots the passive bot never takes; worklog §54g/§54e-
- * amendment). Scored by open neighbors DESC → centroid distance ASC →
- * row-major. Null when nothing qualifies — under total fire coverage the
- * null action stands (wait it out; never fall back through the barrage).
+ * The regroup tile: a `rallyCells` cell of the jammed units within
+ * `UNJAM_RALLY_RADIUS`, which keeps a rally out of artillery reach (the
+ * post-54g amendment, user-approved: the attribution A/B put the whole
+ * artillery-funnel +1.7 / junction +1.7 residual on regrouping under ranged
+ * fire — a retreat that eats catapult/champion shots the passive bot never
+ * takes; worklog §54g/§54e-amendment). Scored by open neighbors DESC →
+ * centroid distance ASC → row-major. Null when nothing qualifies — under
+ * total fire coverage the null action stands (wait it out; never fall back
+ * through the barrage).
  */
 export function regroupCell(
   world: World,
@@ -85,56 +83,20 @@ export function regroupCell(
 ): GridCoord | null {
   const jammed = livingUnits(world, team).filter((u) => jammedIds.includes(u.id));
   const enemies = livingUnits(world, opposingTeam(team));
-  if (jammed.length === 0 || enemies.length === 0) return null;
-
-  const centroid = {
-    x: Math.round(jammed.reduce((s, u) => s + u.position.x, 0) / jammed.length),
-    y: Math.round(jammed.reduce((s, u) => s + u.position.y, 0) / jammed.length),
-  };
-  const minEnemyDist = (c: GridCoord) =>
-    enemies.reduce((m, e) => Math.min(m, distanceBetween(c, e.position)), Infinity);
-  const centroidEnemyDist = minEnemyDist(centroid);
-  // The under-fire filter (post-54g amendment): a rally inside ARTILLERY
-  // reach is a retreat that eats shots. Deliberately artillery-only
-  // (`ARTILLERY_REACH`): the first cut counted EVERY enemy's reach, and
-  // reach-3/5 coverage (bows, mages) pushed rallies out of the local area
-  // entirely — corridors 3.0→4.3 (worse than passive), alpha-spiral
-  // 7.3→10.7, +60% ticks: a local re-sort became a deep retreat march.
-  // Melee/caster zones stay rally-able; only the siege line forbids its
-  // firing zone.
-  const underFire = (c: GridCoord) =>
-    enemies.some(
-      (e) =>
-        e.derived.attackRange >= ARTILLERY_REACH &&
-        distanceBetween(c, e.position) <= e.derived.attackRange,
-    );
-
+  // The cells come row-major, so the first of a tie is the row-major one.
   let best: GridCoord | null = null;
   let bestOpen = -1;
   let bestCentroidDist = Infinity;
-  for (let y = Math.max(0, centroid.y - UNJAM_RALLY_RADIUS); y <= Math.min(world.gridH - 1, centroid.y + UNJAM_RALLY_RADIUS); y++) {
-    for (let x = Math.max(0, centroid.x - UNJAM_RALLY_RADIUS); x <= Math.min(world.gridW - 1, centroid.x + UNJAM_RALLY_RADIUS); x++) {
-      const c = { x, y };
-      if (distanceBetween(c, centroid) > UNJAM_RALLY_RADIUS) continue;
-      const kind = world.tileGrid.kindAt(c);
-      if (!tileDef(kind).passable || isHazardKind(kind)) continue;
-      if (unitAt(world, c) !== undefined || claimantOf(world, c) !== undefined) continue;
-      if (minEnemyDist(c) < centroidEnemyDist) continue; // never rally FORWARD
-      if (underFire(c)) continue; // never rally under the barrage
-      const open = openNeighbors(world, c);
-      const centroidDist = distanceBetween(c, centroid);
-      const better =
-        open > bestOpen ||
-        (open === bestOpen &&
-          (centroidDist < bestCentroidDist ||
-            (centroidDist === bestCentroidDist &&
-              best !== null &&
-              (c.y < best.y || (c.y === best.y && c.x < best.x)))));
-      if (best === null || better) {
-        bestOpen = open;
-        bestCentroidDist = centroidDist;
-        best = c;
-      }
+  for (const { cell, centroidDist } of rallyCells(world, jammed, enemies, UNJAM_RALLY_RADIUS)) {
+    const open = openNeighbors(world, cell);
+    if (
+      best === null ||
+      open > bestOpen ||
+      (open === bestOpen && centroidDist < bestCentroidDist)
+    ) {
+      bestOpen = open;
+      bestCentroidDist = centroidDist;
+      best = cell;
     }
   }
   return best;

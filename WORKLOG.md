@@ -14490,3 +14490,33 @@ sign (23:07); 445,258 at 125j-post's commit (23:14); 455,161 at
 needs its rules loaded and about 157k for its batches, more than the
 room to the 550k line, so the session hands off here, under the line, to
 keep the pass's plan and its batches in one session.
+
+### 125k — the comment pass: the batches, planned (2026-10-20, session cdb73148)
+
+The session was started by the phase's driver session and works with
+the user as usual. The pass takes `src/bot`'s eleven non-test files as
+they are after 125j-post2: 2,094 lines by `wc -l`, 178 step codes. Three
+batches by file, grouped so the facts a batch checks sit together:
+
+1. The drivers and the rollout: `RolloutSearchDriver.ts`,
+   `TrafficScriptDriver.ts`, `evaluator.ts`, `rollout.ts`,
+   `runRollout.ts`; 683 lines, 69 codes.
+2. The scripts: `attritionStall.ts`, `chokeHold.ts`, `cohesionFocus.ts`,
+   `terrainEdgeHold.ts`, `unjam.ts`; 738 lines, 73 codes.
+3. The sensors: `sensors.ts`; 673 lines, 36 codes.
+
+At §124.5's 75 tokens a line the three are about 157k, so the pass fits
+this session under call 6's forecast; a batch starts only while its
+forecast end, plus about 15k for the hand-off, stays under 600k.
+
+Proof per batch, as §124.5 ran it: `comment-strip HEAD src`, comments
+only, exit 0, its built-in control naming every changed file; then
+`comment-codes --record` before any suite run. The suite, the smoke and
+the parity test by the hook, since `src/bot` stages the smoke. The counts
+by `comment-length` on copies of the batch's files under
+`output/cl-125k-b<n>/before` and `after`. No file in `src/bot` holds a
+`TOOL_READ` or `i18n-ok` marker, so `comment-strip` sees every comment.
+Each batch checks its drops while its files are in context. The read is
+`batch`, per batch, with its script in the batch's entry.
+
+Reading: 143,411 at 23:52 UTC, before this entry.

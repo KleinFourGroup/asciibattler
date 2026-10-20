@@ -298,6 +298,20 @@ META-ROADMAP §"Round 9 — Extensions" names each group.
   behaviour change, so out of Round 8.5. Found at 124.5h's batch 7
   (WORKLOG §124.5); placed here by the user, 2026-10-19.
 
+- [ ] **The event screen doesn't render again on `run:cacheChanged`.**
+  `EventScreen` listens for `event:pageChanged` and `run:bitsChanged`
+  only, so a `hasPacket` or `cacheHasRoom` condition on the page in view
+  goes stale after a discard in the cache modal on that page (the forced
+  keep after an event's packet overflows a full cache is one). A choice
+  shown disabled that the engine would take can't be clicked until the
+  page changes; one shown enabled that it wouldn't take is a silent
+  no-op. Latent: the shipped events' conditions are `bitsAtLeast` and
+  `flagSet` only. Fix before an event with a cache condition ships: one
+  subscription beside the other two, and a pane check of where keyboard
+  focus lands after the redraw, which rebuilds the choice buttons. A
+  behaviour change, so out of Round 8.5. Found at 124.5h's batch 8
+  (WORKLOG §124.5); placed here by the user, 2026-10-20.
+
 - [ ] **A battle's snapshot drops a queued unit's seeded effects.**
   `World.toJSON` leaves `effects` out of each queued spawn template and
   `spawnFromQueue` reads it; only the bot's look-ahead copies a battle

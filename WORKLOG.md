@@ -13060,3 +13060,10 @@ background task or preview server is left.
 orientation), 275,725 (batch 8's proof), 292,402 (batch 8's commit),
 380,218 (batch 9's proof), 387,350 (batch 9's commit), 397,610 at 00:48
 before this entry.
+
+**Batch 8's finding, placed** (the user, 2026-10-20, after the hand-off,
+asked which way the session leaned: TODO, with its trigger, or a fix as
+its own step after the pass; it leaned TODO): "I don't intend to start
+adding any events yet, so yes, fully signing a TODO!" The finding is in
+TODO under Round 9, "With a seam the round builds", beside the stars'
+touch route. Batches 8 and 9's `batch` reads are still open.

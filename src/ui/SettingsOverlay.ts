@@ -1,42 +1,41 @@
 /**
- * 116d — THE SETTINGS (Round 8 spec D7): one modal, the 96f shell
- * (src/ui/modal.ts), with two openers. On the menu it is the Settings row.
- * During a run it is a chip, the first row of the control column in the
- * top-right corner (src/ui/chip.ts), at one place on every screen. Opened
- * from a run, the modal also holds Quit to menu.
+ * The settings: one modal, on the modal shell (src/ui/modal.ts), with two
+ * openers. On the menu it is the Settings row. During a run it is a chip,
+ * the first row of the control column in the top-right corner
+ * (src/ui/chip.ts), at one place on every screen. Opened from a run, the
+ * modal also holds Quit to menu.
  *
- * WHILE IT IS OPEN the battle behind it stands still and no hotkey fires:
+ * While it is open the battle behind it stands still and no hotkey fires:
  * the modal takes a hold on the playback (`PlaybackSpeed.hold`, which stops
  * the pre-battle countdown too and leaves the player's own pause alone) and
  * suspends the key registry (`Keybindings.suspend`), and gives both back
  * when it closes, by whichever route. A key pressed in the modal is the
  * modal's: Tab walks it, Esc closes it, Enter and Space press its buttons.
  *
- * THE ROWS (DESIGN §UI idioms, "Fields"): a name on the left, with a line
+ * The rows (DESIGN, UI idioms, "Fields"): a name on the left, with a line
  * under it where the name alone doesn't say what the row does, and the
- * control on the right. A CHOICE is a group of toggle buttons, the chosen
+ * control on the right. A choice is a group of toggle buttons, the chosen
  * one filled (a fill survives the grey read; a hue alone would not) and
- * mirrored as `aria-pressed`. A LEVEL is a native range input with a − and
+ * mirrored as `aria-pressed`. A level is a native range input with a − and
  * a + beside it, so every value is a click away, and its value in a readout
  * of fixed width. Each control writes its setting as it changes, and the
  * setting reaches its consumer through `connectSettings`
  * (src/settings/apply.ts): nothing here touches the audio player's levels,
  * the motion gate or the renderer.
  *
- * A KEY (116e) is a button that shows an action's key. A click on it waits
- * for a key, and the next one pressed is the action's; `keySection` has the
- * rest.
+ * A key is a button that shows an action's key. A click on it waits for a
+ * key, and the next one pressed is the action's; `keySection` has the rest.
  *
  * The body is built once per open, from the settings as they are then, and
  * each control repaints itself. Nothing in it comes or goes while it is up.
  *
- * THE PALETTE (116g) is the one choice that does not apply as it is made:
+ * The palette is the one choice that does not apply as it is made:
  * `paletteRows` has why, and the reload it offers.
  *
- * THE DATA ROWS (116h) are actions, not settings: `dataSection` has them.
+ * The data rows are actions, not settings: `dataSection` has them.
  *
- * THE TEXT SIZE (116k) is stored as it is chosen and drawn when the modal
- * closes: `open` takes a hold on it, and src/ui/textScale.ts has why.
+ * The text size is stored as it is chosen and drawn when the modal closes:
+ * `open` takes a hold on it, and src/ui/textScale.ts has why.
  */
 
 import type { AudioPlayer } from '../audio/AudioPlayer';
@@ -72,7 +71,7 @@ interface SettingsOverlayDeps {
   runSaved(): boolean;
   /** Leave the live run for the menu (`Game.quitToMenu`). */
   quitToMenu(): void;
-  /** 116h — what the data rows read and write; `Game` holds the store. */
+  /** What the data rows read and write; `Game` holds the store. */
   data: SettingsData;
 }
 
@@ -84,10 +83,10 @@ interface SettingsData {
   importBlocked(): 'elsewhere' | 'unavailable' | null;
   /** Put `backup` in the store's place (`Store.restore`). */
   restore(backup: Backup): Promise<RestoreResult>;
-  /** The journal Export run hands over (`lastRunJournal`); null when no run
-   *  has ended here. */
+  /** The journal Export run hands over (`lastRunJournal`): the newest
+   *  finished run's, or a rejected save's; null when there is neither. */
   lastRun(): RunJournal | null;
-  /** 118f — the player's diagnostics as of now (src/diagnostics/report.ts):
+  /** The player's diagnostics as of now (src/diagnostics/report.ts):
    *  the text to copy, and the name of the file it is saved as where the
    *  browser refuses the clipboard. */
   diagnostics(): { readonly text: string; readonly fileName: string };
@@ -121,7 +120,8 @@ const SHAKE_LABEL: Readonly<Record<ShakeChoice, string>> = {
 // The key rows' names, in the order they are drawn: the time controls and the
 // map down the first column, the orders and the tooltip key down the second.
 // One literal key per action, so a new action fails to compile until it has
-// its row. The names are the words the HUD and the map chip use.
+// its row. Pause, the orders and the map take the words the HUD and the map
+// chip use; the speeds and the tooltip key have their own.
 const KEY_NAME: Readonly<Record<KeybindAction, string>> = {
   togglePause: t('hud.pause.pause'),
   speedHalf: t('settings.key.speed', { speed: 0.5 }),
@@ -149,10 +149,10 @@ export class SettingsOverlay {
   private readonly closers: Array<() => void> = [];
 
   constructor(
-    /** The page mount: the MODAL's host (it must not sit inside the chrome
+    /** The page mount: the modal's host (it must not sit inside the chrome
      *  column's stacking context). */
     private readonly mount: HTMLElement,
-    /** The control column the CHIP mounts into (src/ui/chip.ts). */
+    /** The control column the chip mounts into (src/ui/chip.ts). */
     column: HTMLElement,
     private readonly audio: AudioPlayer,
     private readonly settings: SettingsModel,
@@ -160,7 +160,7 @@ export class SettingsOverlay {
     private readonly keybindings: Keybindings,
     private readonly deps: SettingsOverlayDeps,
   ) {
-    // The glyph stays outside the locale value (DESIGN §UI idioms, Strings).
+    // The glyph stays outside the locale value (DESIGN, UI idioms, Strings).
     this.chip = button(`⚙ ${t('settings.chip')}`, {
       className: 'chip settings-chip is-hidden',
       tooltip: t('settings.chipTooltip'),
@@ -204,7 +204,7 @@ export class SettingsOverlay {
   }
 
   close(): void {
-    this.modal?.close(); // the shell's onClose releases the hold and the keys
+    this.modal?.close(); // the shell's onClose releases the holds and the keys
   }
 
   private body(): HTMLDivElement {
@@ -263,9 +263,9 @@ export class SettingsOverlay {
   }
 
   /**
-   * 116h — THE DATA ROWS (Round 8 spec D1, D5): five rows, each an action.
+   * The data rows: five rows, each an action.
    *
-   * BACKUP hands the player the whole store as a file. IMPORT A BACKUP puts
+   * Backup hands the player the whole store as a file. Import a backup puts
    * such a file in the store's place, in two steps, as the palette is
    * applied in two: the first row picks the file, and the second, Chosen
    * file, says what was picked and what importing it costs, and holds the
@@ -279,10 +279,10 @@ export class SettingsOverlay {
    * restores (src/store/store.ts) and the page reloads at once. A second
    * tab can't import: the saved run is the first tab's (runSlot.ts).
    *
-   * LAST RUN downloads the journal the end screen's Export run did, for a
-   * player who has left that screen; it is the menu's copy of that export.
+   * Last run downloads the journal the end screen's Export run did, for a
+   * player who has left that screen.
    *
-   * DIAGNOSTICS (118f) copies a short report to paste beside a bug report
+   * Diagnostics copies a short report to paste beside a bug report
    * (src/diagnostics/report.ts has what is in it, and what is not). The
    * line under its name says what the report holds, then what became of
    * the copy: where the browser refuses the clipboard both ways
@@ -449,7 +449,7 @@ export class SettingsOverlay {
   }
 
   /**
-   * 116e — THE KEY ROWS: each action's name and a button that shows its key,
+   * The key rows: each action's name and a button that shows its key,
    * in two columns where the modal is wide enough, so a swap shows both of
    * its rows at once.
    *
@@ -597,7 +597,7 @@ export class SettingsOverlay {
   }
 
   /**
-   * 116g — THE PALETTE. A palette is chosen once, as the page boots, since
+   * The palette. A palette is chosen once, as the page boots, since
    * the render modules read their colours as they load
    * (src/render/palette.ts). So the first row stores the choice, and the
    * second offers the reload that draws it and says what a reload costs a
@@ -678,7 +678,7 @@ export class SettingsOverlay {
     return row(name, hint, group);
   }
 
-  /** A level, 0 to 1 stored and 0 to 100 % shown: − · the slider · + · the
+  /** A level, 0 to 1 stored and 0 to 100 % shown: −, the slider, +, the
    *  value. The setting follows the slider as it moves; the click that lets
    *  the player hear the new level plays when the move ends, and on each
    *  press of − or +. */

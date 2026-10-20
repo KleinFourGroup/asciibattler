@@ -12901,3 +12901,105 @@ reason or rule cut: a node with nothing to do is inert by `aria-disabled`
 and never `disabled`, so the locked boss keeps its tooltip; an accepted
 reward row stays in place; an event's pages stack in one cell; Continue
 declines what remains in one click.
+
+### 124.5h, batch 9 — the menu, the settings and the plates (2026-10-20, session 138dbbac)
+
+The 9 files: `MenuScreen.ts`, `CharacterSelectScreen.ts`,
+`SettingsOverlay.ts`, `CreditsOverlay.ts`, `Keybindings.ts`,
+`CantSaveChip.ts`, `cantSave.ts`, `FailurePlate.ts`, `textScale.ts`; all
+changed, and `src/i18n/credits.ts` for a twin. These were written in the
+signed voice at Round 8, so most of the change is the step codes and the
+spec's decision letters, the `§` marks, the capitals that headed each
+paragraph, and a little history: the registry's behaviour before it
+existed, the notices that once stood on character select, the user calls
+behind the seed's tooltip and the second tab's chip. Each reason stays:
+the seed's explanation is a tooltip because a line of it on the menu
+reads as clutter; the offered text sizes are the ones laid out on every
+screen of a driven run. The three `// i18n-ok` marker lines in
+`Keybindings.ts` and the one in `SettingsOverlay.ts` are untouched.
+
+**Statements found false and corrected (rule 7):**
+
+- `SettingsOverlay.ts`, `SettingsData.lastRun`: "null when no run has
+  ended here". `lastRunJournal` also gives a rejected save's journal, so
+  it is null only with neither.
+- `SettingsOverlay.ts`, `KEY_NAME`: "The names are the words the HUD and
+  the map chip use". Pause, the orders and the map's are; the speed rows
+  ("Speed 0.5×") and the tooltip key ("Show tooltip") have the settings'
+  own strings.
+- `Keybindings.ts`, the header: the `on(...)` handlers "are battle-scoped
+  (the HUD subscribes on mount, unsubscribes on dispose), so a hotkey does
+  nothing outside a battle". Game subscribes the sector map's key and the
+  tooltip key for the page's life (`Game.ts`), and both work on every
+  screen; only the HUD's pause, speeds and orders are battle-scoped.
+- `Keybindings.ts`, `handleKeyDown`: "unbound keys and out-of-battle
+  presses fall through"; the map and tooltip keys out of a battle have a
+  live subscriber and don't. It now says a battle key pressed outside a
+  battle falls through.
+- Its twin outside the batch: `src/i18n/credits.ts` said "the credits
+  screen (src/ui/CreditsOverlay.ts) reads it in the browser". The screen
+  never calls `localeCredits`; only its test does, and `npm run
+  i18n:review` runs `creditsOf` over the files. Corrected here and flagged.
+
+Re-pointed, not false: `rebind`'s "false for a reserved key" is false for
+any key `isBindable` refuses, modifiers and locks too; `on`'s "each
+battle-scoped consumer" became "a battle-scoped consumer"; the Last run
+row as "the menu's copy of that export" lost the clause, since the
+settings open from a run too. The credits' "landing note", that the
+translators' group "arrives with the first second locale", was a plan; it
+now says the screen draws no translators' group and where the names
+would come from. The plan lives in TODO ("A second language", whose
+census line names the translators' credits).
+
+**Kept, checked at the code they name:** the menu's rows in order, its
+three notices, Continue drawing the screen again, the seed field cleaned
+by `menuRules.ts`, Back finding the text (`Game.seedText`), and DESIGN's
+"Fields", "Layout stability" and "Strings" entries; MenuScene and
+CharacterSelectScene as the two scenes that mount with no run, Game
+building the Run on `chooseCharacter`, the reset landing on the menu or
+character select by `menuBoot`, the ceiling (0 with no win, the best win
+plus one, capped at the ladder's top) and the picker reserved at 0, the
+starting daemon checked at load and again by the Run; the settings chip
+first in the control column, the playback hold stopping the countdown and
+leaving the player's pause, `suspend`, `connectSettings` and `keys` →
+`setKeys`, the key rows down one column and then the next (`columns`),
+`captureVerdict`'s five verdicts, the readout's `4ch`, the palette line's
+two lines, `Game.quitToMenu`, `copyText`'s two ways, the five data rows;
+`creditsOnTheWay` (a win, a menu page, not shown before), the licences
+file and its test, the three libraries and the two sound tools;
+`RESERVED_CODES`, DESIGN's "Input accessibility" and its Space rule, the
+dev keys on Ctrl+Alt, the tooltip key's `Slash` default; the can't-save
+chip last by the column's CSS order, Game's two calls (`onStatus` and
+every swap), the sealed store refusing writes with its status unchanged,
+`runLock.ts`; the plate on `#ui` at z 100, the boot line taken down, the
+capture-phase key sink and Tab held on Reload; DESIGN "Tokens" on rem
+text, the stored size's 0.5 to 3 and the settings hint on window size.
+Nothing was dropped unchecked.
+
+Nothing for the user from this batch.
+
+Measured (`comment-length` on copies under `output/cl-1245h-b9`): comment
+lines 475 → 478, words 4,675 → 4,627, code lines 1,250 unchanged. The
+lines rose by three: the registry's lifetimes now name Game's two
+handlers beside the HUD's, and the key names' sentence says which words
+are the settings' own. The step-code ceiling 1,402 → 1,347, the 55 these
+files held, 15 of them in `SettingsOverlay.ts` and 12 in `Keybindings.ts`.
+
+Proof: `comment-strip HEAD src`, comments only, exit 0; its control made
+one code edit in memory in each of the 10 changed files and the compare
+named all 10 (`credits.ts` among them). The marker lines are unchanged,
+and the literal pin runs in the suite.
+
+Cost: 292,402 at 00:36 UTC (batch 8's commit) to 380,218 at 00:44 after
+the proof, about 88k for 1,867 lines, about 47 a line: the files were
+written in this voice, and their claims named code close at hand.
+
+**Read** (`batch`): `git show <this commit> -- src/ui/Keybindings.ts
+src/ui/SettingsOverlay.ts` against the seven rules. Wrong looks like a
+step code, a decision letter or a paragraph's capitals left, history kept
+(what the registry did before it existed, the notices once on character
+select), or a rule cut: no hotkey fires with Ctrl, Alt or Meta held, in a
+text field, or while the registry is suspended; a swap keeps every action
+bound; a rebind row's Enter or Escape ends the wait and nothing else; the
+text size is drawn when the modal closes; the key line keeps its height
+while empty.

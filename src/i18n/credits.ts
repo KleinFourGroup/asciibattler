@@ -1,8 +1,9 @@
 /**
  * The translators' credit: every name stamped into the registered locale
  * tables (the config sidecars from locale.ts and the UI tables from ui.ts),
- * per language. Pure over what is registered, so the credits screen
- * (src/ui/CreditsOverlay.ts) reads it in the browser with no file access.
+ * per language. Pure over what is registered, so it runs in the browser
+ * with no file access; the credits screen (src/ui/CreditsOverlay.ts) does
+ * not call it, and draws no translators' group.
  * `en` carries no stamps (English authorship is git's) and is skipped. The
  * same `creditsOf` runs over the files on disk in `npm run i18n:review`.
  */

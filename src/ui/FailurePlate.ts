@@ -1,6 +1,6 @@
 /**
- * 117.5i — THE FAILURE PLATE: what the page says when it has failed
- * (src/failure). The modal shell, not dismissable, over every other surface:
+ * The failure plate: what the page says when it has failed (src/failure).
+ * The modal shell, not dismissable, over every other surface:
  * a title and a sentence for the kind of failure, the error's own text, the
  * build's ID, and Reload, the one way on. The error's text and the ID can be
  * selected, so a player can copy them into a report.

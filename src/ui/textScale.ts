@@ -1,6 +1,5 @@
 /**
- * 116k — THE TEXT SCALE: the settings' multiplier on the UI's text (Round 8
- * spec D7).
+ * The text scale: the settings' multiplier on the UI's text.
  *
  * Every font-size in ui.css is a `--text-*` token in rem, and the boxes that
  * hold text are sized in rem too (DESIGN "Tokens"), so the DOM layer follows
@@ -9,13 +8,13 @@
  * text keeps its size at every scale: the canvas, the map's node grid, the
  * bars over a unit, and gaps, borders and paddings, which are in px.
  *
- * THE OFFERED SIZES are measured ones (WORKLOG §116k): each was laid out on
- * every screen of a driven run. A larger size needs a larger window; the
+ * The offered sizes are measured ones: each was laid out on every screen of
+ * a driven run. A larger size needs a larger window; the
  * settings row says so. The stored field takes any number from 0.5 to 3
  * (src/settings/settings.ts), and the page draws the nearest offered size,
  * so a hand-edited store can't put the settings modal out of reach.
  *
- * THE HOLD: while the settings modal is up, a new size is stored at once
+ * The hold: while the settings modal is up, a new size is stored at once
  * and drawn when the modal closes. Drawn at once it would re-lay the modal
  * under the pointer that chose it, and a control must not move across its
  * own click (DESIGN "Layout stability").

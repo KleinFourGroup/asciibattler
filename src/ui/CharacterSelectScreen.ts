@@ -1,24 +1,24 @@
 /**
- * 63e — the character-select screen: where a new run starts when no
- * `?character=` pins the choice. The menu's New run opens it (116c); on a
- * page booted by a run dial it is the first screen, and the landing screen
- * after a reset. Functional, not art-directed (the §63 scope guard): one
- * card per catalog character — name, description, roster summary, starting
- * daemon — click to confirm.
+ * The character-select screen: where a new run starts when no
+ * `?character=` pins the choice. The menu's New run opens it; on a page
+ * booted by a run dial it is the first screen, and the landing screen after
+ * a reset. Functional, not art-directed: one card per catalog character
+ * (name, description, roster summary, starting daemon), and a click
+ * confirms.
  *
- * The confirm dispatches `chooseCharacter`, which GAME handles by
- * CONSTRUCTING the Run (the choice precedes Run construction — the §63
- * seam). With the menu, this is one of the two UI surfaces that legally
- * exist with `ctx.run === null`.
+ * The confirm dispatches `chooseCharacter`, which Game handles by
+ * constructing the Run, since the choice comes before the Run exists. With
+ * the menu, this is one of the two UI surfaces that exist by design with
+ * `ctx.run === null`.
  *
- * 116c — Back, under the cards, returns to the menu with nothing started: a
- * pass, so it wears the pass's look (`btn--dim`). It is always there, so
- * nothing on the screen comes or goes. Continue, the three notices about
- * saving and the build's ID, which stood here from 115g, are the menu's.
+ * Back, under the cards, returns to the menu with nothing started: a pass,
+ * so it wears the pass's look (`btn--dim`). It is always there, so nothing
+ * on the screen comes or goes. Continue, the notices about saving and the
+ * build's ID are the menu's.
  *
- * 117e — THE ESCALATION PICKER (Round 8 spec D8): under each card, a
- * stepper for the level that card starts its run at, from 0 to the
- * character's ceiling (`EscalationContext.ceiling`), opening at the ceiling
+ * The Escalation picker: under each card, a stepper for the level that card
+ * starts its run at, from 0 to the character's ceiling
+ * (`EscalationContext.ceiling`), opening at the ceiling
  * and remembering nothing. It shows once the character has won a run. Its
  * slot is under every card from the first visit, hidden but kept
  * (`reserveSlot`), and holds a line for every level of the ladder in one
@@ -40,7 +40,7 @@ import { reserveSlot } from './reserveSlot';
 import { attachTooltip, refreshTooltip } from './tooltip';
 import { t } from '../i18n/ui';
 
-/** "6× Mercenary · 4× Archer" — counts in roster order, display names. */
+/** "6× Mercenary · 4× Archer": counts in roster order, display names. */
 function rosterSummary(character: CharacterConfig): string {
   const counts = new Map<string, number>();
   for (const a of character.roster) counts.set(a, (counts.get(a) ?? 0) + 1);
@@ -106,8 +106,9 @@ export class CharacterSelectScreen extends Screen {
   }
 
   private renderCard(character: CharacterConfig, level: () => number): HTMLButtonElement {
-    // A card-shaped button: the factory mints it (type · class · click), the
-    // card chrome stays its own class — it is not the primary-action idiom.
+    // A card-shaped button: the factory mints it (type, class, click), and
+    // the card's chrome stays its own class, since it is not the
+    // primary-action idiom.
     const card = button('', {
       className: 'charselect-card',
       onClick: () => {
@@ -133,8 +134,9 @@ export class CharacterSelectScreen extends Screen {
 
     const daemon = document.createElement('div');
     daemon.className = 'charselect-card__daemon';
-    // Parse-validated ref; the id is an acceptable fallback if the catalogs
-    // ever drift (display-only — Run construction still fails loud).
+    // The load checks the ref; the id is an acceptable fallback if the
+    // catalogs ever drift (display only: the Run's construction still
+    // throws).
     daemon.textContent = daemonById(character.daemon)?.name ?? character.daemon;
     card.appendChild(daemon);
 
@@ -142,7 +144,7 @@ export class CharacterSelectScreen extends Screen {
   }
 
   /**
-   * The picker under a card: − · the level's name · +, and under them what
+   * The picker under a card: −, the level's name, +, and under them what
    * that level adds. The name is the tooltip's text site (every level in
    * effect, and how the next is opened). A step changes text and classes in
    * place: the buttons keep their boxes and the keyboard's focus.

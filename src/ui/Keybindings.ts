@@ -1,26 +1,27 @@
 /**
- * J3 — the runtime keybinding registry (the rebindable-hotkey plumbing).
+ * The runtime keybinding registry, the plumbing behind the rebindable
+ * hotkeys.
  *
  * A page-lifetime holder for the action → `KeyboardEvent.code` map, seeded from
  * `config/keybindings.json` defaults. Owned by `Game`, threaded through
- * `SceneContext`, so a rebind PERSISTS across scene swaps the way `playback`
- * does. Since 116b the player's rebinds are a setting (`keys`, src/settings):
- * the game hands the stored overrides to `setOverrides` at boot and on every
- * change, and the rebind surface is a caller of the rules below.
+ * `SceneContext`, so a rebind persists across scene swaps the way `playback`
+ * does. The player's rebinds are a setting (`keys`, src/settings): the game
+ * hands the stored overrides to `setOverrides` at boot and on every change,
+ * and the rebind surface is a caller of the rules below.
  *
  * Dispatch is DOM-free: `handleKeyDown` takes a minimal event so it's
  * node-testable (the suite runs without a DOM); `Game` attaches it to the real
- * `window` once. Because dispatch resolves the bound code LIVE on each keydown,
+ * `window` once. Because dispatch resolves the bound code live on each keydown,
  * a rebind re-routes every subscriber with no re-subscription.
  *
- * THE RULES (116b), pure functions so the rebind surface and the stored
- * overrides go through the same ones:
- *  - One key, one action. Binding a key another action holds SWAPS the two:
+ * The rules, pure functions so the rebind surface and the stored overrides
+ * go through the same ones:
+ *  - One key, one action. Binding a key another action holds swaps the two:
  *    the other action takes this one's old key, so every action stays bound
  *    and no key fires two (`withRebind`).
  *  - Enter, Tab and Escape can't be bound (`RESERVED_CODES`): they are every
- *    control's own keys (activate, walk, close; DESIGN §Input accessibility).
- *    Neither can a modifier or a lock key on its own (`isBindable`, 116e):
+ *    control's own keys (activate, walk, close; DESIGN, Input accessibility).
+ *    Neither can a modifier or a lock key on its own (`isBindable`):
  *    Ctrl, Alt or Meta would never fire under the modifier rule below, and
  *    Shift is half of Shift+Tab and of `?`.
  *  - What is stored is the difference from the defaults (`overridesOf`), and
@@ -32,22 +33,23 @@
  *    browser's find, not Focus. Shift passes, since `?` is Shift+Slash.
  *  - A keydown in a text field fires no hotkey (`isTextEntry`): the key is
  *    the field's, and a hotkey that took it would also swallow the character.
- *  - While the registry is suspended (`suspend`, 116d) no key fires a hotkey:
- *    the settings modal holds the battle behind it, so a key pressed there
- *    must not pause, speed up or order that battle.
+ *  - While the registry is suspended (`suspend`) no key fires a hotkey: the
+ *    settings modal holds the battle behind it, so a key pressed there must
+ *    not pause, speed up or order that battle.
  *  - A rebind row waiting for its key reads each keydown through
- *    `captureVerdict` (116e), which keeps the rules above: a chord is still
- *    the browser's, and a key no action can take is never bound.
+ *    `captureVerdict`, which keeps the rules above: a chord is still the
+ *    browser's, and a key no action can take is never bound.
  *
- * Lifetimes split cleanly: the registry (codes + the window listener) is
- * page-lifetime; the `on(...)` HANDLERS are battle-scoped (the HUD subscribes on
- * mount, unsubscribes on dispose), so a hotkey does nothing outside a battle —
- * exactly the pre-J3 behavior where the listener only existed during a battle.
+ * The registry (the codes and the window listener) is page-lifetime, and so
+ * are Game's two handlers, the sector map's and the tooltip key's, which
+ * work on every screen. The battle's handlers (pause, the speeds, the
+ * orders) are the HUD's, subscribed on mount and dropped on dispose, so
+ * those keys do nothing outside a battle.
  */
 
 import { KEYBINDING_DEFAULTS, KEYBIND_ACTIONS, type KeybindAction } from '../config/keybindings';
 
-/** The slice of `KeyboardEvent` dispatch needs — kept minimal so tests can pass
+/** The slice of `KeyboardEvent` dispatch needs, kept minimal so tests can pass
  *  a plain object (no DOM). A real `KeyboardEvent` satisfies it. */
 export interface KeyLike {
   readonly code: string;
@@ -93,7 +95,7 @@ export function isBindable(code: string): boolean {
 }
 
 /**
- * What a keydown is to a rebind row that is waiting for its key (116e):
+ * What a keydown is to a rebind row that is waiting for its key:
  *  - `pass`: a chord (Ctrl, Alt or Meta held, which is also how each of
  *    those reads on its own keydown). It is the browser's, as it is for a
  *    hotkey, and the row goes on waiting.
@@ -132,7 +134,7 @@ const NON_TEXT_INPUT_TYPES: readonly string[] = [
  * Whether a keydown's target takes typed text: a text `<input>`, a
  * `<textarea>`, or editable content. Read by shape, with no DOM class, so it
  * runs where there is no DOM. A slider or a checkbox is not text entry, and a
- * hotkey still wins over it (the Space rule, DESIGN §Input accessibility).
+ * hotkey still wins over it (the Space rule, DESIGN, Input accessibility).
  */
 export function isTextEntry(target: unknown): boolean {
   if (typeof target !== 'object' || target === null) return false;
@@ -180,7 +182,7 @@ export class Keybindings {
   private codes: Map<KeybindAction, string>;
   private readonly handlers = new Map<KeybindAction, Set<Handler>>();
   private readonly changeListeners = new Set<Handler>();
-  /** 116d — how many suspensions are live (`suspend`). */
+  /** How many suspensions are live (`suspend`). */
   private suspensions = 0;
 
   constructor(defaults: Bindings = KEYBINDING_DEFAULTS) {
@@ -229,9 +231,10 @@ export class Keybindings {
   }
 
   /**
-   * Rebind an action at runtime, by the swap rule. False for a reserved key,
-   * with nothing changed. Subscribers re-route automatically (dispatch
-   * resolves the code live per keydown), so nothing re-subscribes.
+   * Rebind an action at runtime, by the swap rule. False for a key no action
+   * can take (`isBindable`), with nothing changed. Subscribers re-route
+   * automatically (dispatch resolves the code live per keydown), so nothing
+   * re-subscribes.
    */
   rebind(action: KeybindAction, code: string): boolean {
     const next = withRebind(this.bindings(), action, code);
@@ -260,7 +263,7 @@ export class Keybindings {
     for (const listener of [...this.changeListeners]) listener();
   }
 
-  /** 116d — fire no hotkey until the returned release is called.
+  /** Fire no hotkey until the returned release is called.
    *  Suspensions count, and a release called twice releases once. */
   suspend(): () => void {
     this.suspensions++;
@@ -272,9 +275,9 @@ export class Keybindings {
     };
   }
 
-  /** Subscribe a handler to an action; returns an unsubscribe. Multiple
-   *  handlers per action are allowed (each battle-scoped consumer adds its
-   *  own + tears it down on dispose). */
+  /** Subscribe a handler to an action; returns an unsubscribe. Several
+   *  handlers per action are allowed (a battle-scoped consumer adds its own
+   *  and tears it down on dispose). */
   on(action: KeybindAction, handler: Handler): () => void {
     let set = this.handlers.get(action);
     if (!set) {
@@ -288,13 +291,13 @@ export class Keybindings {
   }
 
   /** The single keydown sink (Game binds it to `window`). Skips auto-repeat so
-   *  one press = one fire, a press with Ctrl, Alt or Meta held, which is the
+   *  one press is one fire, a press with Ctrl, Alt or Meta held, which is the
    *  browser's or the dev keys', a press in a text field, which is the
    *  field's, and every press while suspended; `preventDefault`s only when a
-   *  bound action
-   *  actually has a live subscriber, so unbound keys and out-of-battle presses
-   *  fall through to the browser / other listeners untouched. Bound (arrow) so
-   *  it survives being passed to `addEventListener` / `removeEventListener`. */
+   *  bound action has a live subscriber, so unbound keys and a battle key
+   *  pressed outside a battle fall through to the browser and other
+   *  listeners untouched. Bound (an arrow) so it survives being passed to
+   *  `addEventListener` and `removeEventListener`. */
   readonly handleKeyDown = (e: KeyLike): void => {
     if (e.repeat) return;
     if (this.suspensions > 0) return;
@@ -313,10 +316,10 @@ export class Keybindings {
 /** `KeyboardEvent.code` → a compact display label: `"KeyF"` → `"F"`,
  *  `"Digit2"` → `"2"`; any other code is its own name with its words apart
  *  (`"Space"`, `"ArrowUp"` → `"Arrow Up"`, `"Numpad1"` → `"Numpad 1"`), since
- *  a rebind (116e) can show any key. */
+ *  a rebind can show any key. */
 export function keyLabel(code: string): string {
   if (code.startsWith('Key')) return code.slice(3); // i18n-ok: a KeyboardEvent.code prefix
   if (code.startsWith('Digit')) return code.slice(5); // i18n-ok: a KeyboardEvent.code prefix
-  if (code === 'Slash') return '/'; // 97b — the tooltip key's default: the `?` key reads as its face
+  if (code === 'Slash') return '/'; // the tooltip key's default: the `?` key reads as its face
   return code.replace(/([a-z])([A-Z0-9])/g, '$1 $2');
 }

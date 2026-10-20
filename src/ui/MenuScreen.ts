@@ -1,8 +1,8 @@
 /**
- * 116c — THE MENU, the boot screen (Round 8 spec D6): the game's name, then
- * the rows. Continue is first, and is there only when the run slot holds a
- * run this tab can load; New run goes on to character select; the seed field
- * is last, since most runs never touch it. Above the rows is what a boot has
+ * The menu, the boot screen: the game's name, then the rows. Continue is
+ * first, and is there only when the run slot holds a run this tab can load;
+ * New run goes on to character select; the seed field is last, since most
+ * runs never touch it. Above the rows is what a boot has
  * to tell the player about saving: a notice for a rejected save, for a run
  * open in another tab, and for a store that can't save. The build's ID sits
  * in a corner, for a bug report.
@@ -11,21 +11,20 @@
  * while the player aims at one (DESIGN "Layout stability"). A Continue that
  * no longer loads draws the screen again, which then says why.
  *
- * THE SEED FIELD is the first text field in the game (DESIGN §UI idioms,
+ * The seed field is the first text field in the game (DESIGN, UI idioms,
  * "Fields"): a native `<input>`, cleaned to digits as it is typed
  * (src/scenes/menuRules.ts), so it has no refused state. Enter in it is New
  * run. Its text is the page's while character select is up, so Back finds it
- * as it was left. What a seed is, is the word's tooltip (116c-post, the
- * user's read): a line of explanation on the menu itself read as clutter.
- * So the word is a §97 text site (hover, keyboard focus, a tap) and not a
- * `<label>`, whose click would also move focus into the field; the field
- * takes its name from the word by `aria-labelledby`. The placeholder says
- * what an empty field does, so the tooltip is never the only place that is
- * said.
+ * as it was left. What a seed is, is the word's tooltip, since a line of
+ * explanation on the menu itself reads as clutter. So the word is a text
+ * site (hover, keyboard focus, a tap) and not a `<label>`, whose click would
+ * also move focus into the field; the field takes its name from the word by
+ * `aria-labelledby`. The placeholder says what an empty field does, so the
+ * tooltip is never the only place that is said.
  *
- * The Settings row (116d) opens the settings modal and the Credits row
- * (116j) the credits panel; focus comes back to the row when either closes.
- * Credits sits between Settings and the seed field (spec D6's order).
+ * The Settings row opens the settings modal and the Credits row the credits
+ * panel; focus comes back to the row when either closes. Credits sits
+ * between Settings and the seed field.
  */
 
 import type { AudioPlayer } from '../audio/AudioPlayer';

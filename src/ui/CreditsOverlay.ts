@@ -1,13 +1,13 @@
 /**
- * 116j — THE CREDITS (Round 8 spec D6): a static panel, the 96f shell
- * (src/ui/modal.ts). The menu's Credits row opens it, and so does the end of
- * the first won run, over the menu it leads to (`creditsOnTheWay`,
- * src/scenes/menuRules.ts). Nothing in it moves or scrolls by itself, so
- * reduced motion needs no second form.
+ * The credits: a static panel, on the modal shell (src/ui/modal.ts). The
+ * menu's Credits row opens it, and so does the end of the first won run,
+ * over the menu it leads to (`creditsOnTheWay`, src/scenes/menuRules.ts).
+ * Nothing in it moves or scrolls by itself, so reduced motion needs no
+ * second form.
  *
- * WHO IS IN IT (the §116 shape-lock, call 10): the developer; Claude; the
- * two fonts and the three bundled libraries, each with its licence's name;
- * the tools the game is built with; the two tools its sounds were made in;
+ * Who is in it: the developer; Claude; the two fonts and the three bundled
+ * libraries, each with its licence's name; the tools the game is built
+ * with; the two tools its sounds were made in;
  * and the playtesters, thanked without names. Every line is a locale value,
  * the names too, so the screen is one table to a translator. The licences'
  * full texts are not here: they ship beside the build
@@ -18,9 +18,8 @@
  * The body is a scroll box with a tab stop, so on a window too short for
  * the list the keyboard can scroll it; its only control is the shell's ✕.
  *
- * Landing note: the translators' group arrives with the first second
- * locale, from `localeCredits()` (src/i18n/credits.ts), which gives nothing
- * for `en`.
+ * It draws no translators' group: `localeCredits()` (src/i18n/credits.ts)
+ * gives the translators' names, nothing for `en`, the one locale.
  */
 
 import type { AudioPlayer } from '../audio/AudioPlayer';

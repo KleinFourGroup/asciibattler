@@ -7140,3 +7140,78 @@ holds repo writes to the phase close; appended here by driver 2.
    most interesting, because it had a real reader, someone new to CSS, and
    the tests decided what was true. That is my reported response; whether
    the batches are right is Matthew's read.
+
+## Phase 124.5 — summary
+
+Eight working sessions on 2026-10-19 and 20 (8fb7e4a9, ff99ffb0,
+ebe41cd8, bcd08e32, d8214ecc, 138dbbac, f1005abf, and 34a2ba54, which
+closed it, reported below), all claude-opus-5-5, each proposed by the
+phase's driver session. Driver 1's report (9b60fb27) is above, as is
+80365c20's, which made driving a process module before the kickoff.
+Every one found the orientation enough. What was missing turned up in
+the work: procedures that live only in old WORKLOG entries or an unnamed
+scratch folder (the reach and drive runs, the census profile's data),
+the literal pin not proving `literalScan.ts`'s own code (so a
+held-comment compare was built), the comment tools' `npm run oracle --`
+form, `fonts.css` being generated from a template, and `ui.css` sitting
+under `src/ui/`. The norm that pulled most, in two reports, was rule 7
+(correct a false comment) against the round's no-behaviour-change guard:
+the stars' touch route and the event screen's cache condition, each
+settled by writing the rule the code applies and putting the gap to the
+user. Others: the twin rule staging `src/config` and adding the smoke;
+the brief's first-message confirmations against CLAUDE.md's mid-turn
+paraphrase (a `distress` line); the hitsplat guide's "not shortened"
+against recipes that failed the token pins. Every report names a claim
+pulled ahead of its check: a read script's `molotov`, a gotcha read to
+its first paragraph, a name called absent from a one-file search, a
+banner height derived rather than measured. All were caught before
+landing but two: a commit subject's count, amended before anything
+referred to it, and driver 1's premise about a marker, which reached
+Matthew in a lean and which the driver corrected once a session's proof
+showed it wrong. Waste was small: two commands
+wedged on stdin (400 s and 120 s), Edit anchors that crossed a line
+break or ended mid-line (three sessions), a `cd` that moved the working
+directory, an amend's second hook. All report room to ask, disagree and
+stop; hand-offs were forecast calls, and the silent-turn reminder, often
+through the long checks, was answered with status lines, one session
+noting a small pull to have a finding ready for it (filed). What they
+name as supporting the work: known answers built into each check
+(`comment-strip`'s per-file control, the build compare's self-check, a
+planted marker, the readings check), claims that close in one search,
+finding a comment wrong since it was written, and a guide with a real
+reader.
+
+## 2026-10-20 — session 34a2ba54 (claude-opus-5-5): 124.5i, §124.5's close, with 124.5h-post and the focus test's pointer; started by the phase's driver session
+
+1. *Missing from the orientation.* Little. The brief and the batch-12
+   hand-off named the close's questions, and planning.md has the close's
+   list. How §124's close entry was laid out took reading it, and the
+   pass's file list had to be rebuilt from the folders for the pointer
+   search, since no doc lists the 88 files.
+2. *Norms in conflict.* None felt as conflict. Tests are §126's, and my
+   phase's edit had left a test's pointer stale; I put it as a call with
+   a lean, and Matthew signed it.
+3. *Pulled to claim more than verified.* Twice, small. I had the
+   step-code arithmetic (2,122 − 1,035 = 1,087) ready to quote as the
+   ceiling; the instrument read 1,084, and tracing the three to
+   124.5g-post3's test edits closed the gap. `fonts.css` reading the same
+   word count at both ends looked like a wrong copy; diffing the copies
+   and reading the word rule showed a true zero. The pointer search's
+   claim names the shapes it searched, since a pointer phrased otherwise
+   would not show.
+4. *Wasted.* A node one-liner run before the file it read was written
+   (ENOENT, nothing changed). A `cd` inside a command moved the session's
+   working directory for one call (filed). The pointer search's first net
+   matched stems like "page" and "rules", 428 hits, narrowed in one step.
+5. *For the next session.* "The close of §124.5" lists what §125's
+   kickoff inherits.
+6. *Room.* Yes. The close was a stop by design, and Matthew signed all
+   three calls in one message. The silent-turn reminder came through the
+   orientation and the measuring; a status line answered each, and I
+   didn't notice a pull to have a finding ready for it. No wish to pause
+   or stop was noticed.
+7. *What helped.* The kickoff's recorded baseline as a known answer: the
+   start copy reading it exactly made the end numbers quick to trust. And
+   the batch entries' uniform line on drops, which made the sweep
+   question one search. I'd want both again; whether the close is right
+   is Matthew's read.

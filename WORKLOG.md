@@ -13565,4 +13565,106 @@ The build: `export type { UnitRarity };` out of `UnitCard.ts`, its
 import kept for the card's own `rarity` field.
 
 Proof: typecheck clean; `build-hash HEAD`: the same bytes, 32 files. No
-comment changed, so the step-code ceiling stays 1,084.
+comment changed, so the step-code ceiling stays 1,084. The hook read
+3,722. Reading: 195,209 at 15:33, on the commit `5ca87b4b`.
+
+The third call landed as `b0b6d6d1`: the pointer reads `(ui.css, "The
+focus ring")`; `comment-strip HEAD tests`, comments only, its control
+naming the one changed file. `comment-codes` counts under `src` only, so
+the ceiling is untouched. The hook read 3,722. Reading: 197,847 at
+15:35, on the commit.
+
+### The close of §124.5 (2026-10-20, session 34a2ba54)
+
+**Read** (the user, 2026-10-20): the three calls at 124.5i's stop, signed
+(above). 124.5a to 124.5i are ticked, each read as its step was cut
+(124.5e by the user's `batch` read, 124.5g and this close at their stops,
+124.5h's twelve batches by `batch` reads, every one signed, the rest
+`none`); nothing is ◐. The section is demoted in ROADMAP. The phase ran
+from the driver's first commit `954784ac` to `b0b6d6d1`, 56 commits, and
+this one, in eight working sessions (8fb7e4a9, ff99ffb0, ebe41cd8,
+bcd08e32, d8214ecc, 138dbbac, f1005abf, 34a2ba54), each started by the
+phase's driver session: driver 1 (9b60fb27) to the hand-over after batch
+9, then driver 2. Before the kickoff, 80365c20 made driving a process
+module.
+
+What the phase changed, from `git diff 38d40e5a b0b6d6d1` (the kickoff's
+ref) and the instruments:
+
+- `src`: 3,758 lines out and 3,460 in over 102 files, comments included;
+  `tests`: the step-code record and the focus test's pointer. No file
+  added or deleted in `src`, `tests`, `tools`, `scripts` or `config`.
+- The pass's 88 files (the eight folders' non-test `.ts`, `ui.css` and
+  `fonts.css`; `comment-length` on copies at both ends under
+  `output/cl-1245-close/`, one folder a call, whose start read the
+  kickoff's baseline exactly): code lines 12,502 → 12,443, comment lines
+  5,595 → 5,359, comment words 53,754 → 51,383. The comments fell less
+  than the board's at §124 (10 %, here 4 %): they started shorter (4.3
+  words a code line against 5.5), and, by inference, the 121 corrections
+  wrote words back in.
+- The step-code ceiling 2,122 → 1,084: 6 out before the pass (2,122 →
+  2,116), 1,032 in its batches. The pass's non-test files hold 0 of
+  their 1,035; the other three came out of two tests that 124.5g-post3's
+  deletion edited (`units.test.ts` two, `archetypes.test.ts` one). The
+  49 left in the eight folders are all in their tests, which wait for
+  §126.
+- The suite 3,725 → 3,722 (124.5a −1, 124.5e's pin +1, 124.5g-post3
+  −3), the smoke 613; no snapshot bump (World v36, Run v49).
+- The signed rows: A-22's `proseFamily`, A-25's `rarityStars` and
+  `orderRoster`, A-26's 91 exports, A-28's mute, the three `isOpen` and
+  `HUD.hide()`, with `ModalHandle.isOpen` and `PoolGaugeHandle.set`
+  beside them; the dev load key's lines and `force`; R-2 (`poolGauge`'s
+  `mx`), R-3 (`damageStatFor` and the catalog's `damageStat`), and
+  `UnitRarity`'s re-export. One trial, 124.5f's neutral-target lead, kept
+  on its truth table and finished by R-1 at the renderer's copy. The
+  ability line, a display change signed at §124's kickoff.
+- The comment pass: twelve batches over 19,639 lines in six sessions,
+  every read signed, about 1.48M tokens by the batches' own readings
+  (five of the twelve spans start at a session's first reading, so they
+  hold its orientation), about 75 a line, from 36 (batch 2) to 130 (batch
+  10). 121 false claims corrected, by the batches' commit subjects, with
+  five twins outside their batch (`layouts.ts`, `BattleScene.ts`,
+  `abilities.ts`, `EventScene.ts`, `i18n/credits.ts`). Every batch checked
+  its own drops in place, so the close took no sweep.
+- The census rows in these files are dispositioned: deleted as above,
+  `closeTooltip` and `openTooltipTrigger` kept for their TODO row (Round
+  11, "The feel sweep"), the screens' near-duplicate leads and
+  `Settings.volumeMusic` left at the kickoff with a reason each.
+
+What it hands on:
+
+- **To §125's kickoff:** its charter (ROADMAP §125), with the decision
+  point whether the comment pass takes `tests` and `tools` once `src`'s
+  outcome is seen, which `src/bot`'s batches complete. The pass as
+  §124.5 ran it: the seven rules, `comment-strip HEAD src` with its
+  control, `comment-codes --record` before a suite run after a comment
+  change, and each batch checking its drops while its files are in
+  context. A changed held comment still leaves its file's code unproven
+  by `comment-strip`; `scratch/1245h-b3/held-compare.mts` is the proof
+  until TODO §127's row lands.
+- **To §126:** the 49 step codes in these folders' tests, beside the
+  board's 55.
+- **Unchanged, already placed:** the batches' code findings, in TODO
+  under Round 9 ("With a seam the round builds": the stars' touch route,
+  `EventScreen` and `run:cacheChanged`); `Settings.volumeMusic` with
+  Round 11's music (`plans/music.md`).
+- **Tools and scratch:** `scratch/1245-kickoff/`, `1245c/`, `1245e/`,
+  `1245f/`, `1245g-post/` to `1245g-post3/` and `1245h-b3/`, the copies
+  under `output/cl-1245-kickoff/`, `cl-1245h-b1/` to `-b12/`, `-css/` and
+  `cl-1245-close/`, and this session's pointer search (its scratchpad)
+  stay off git. No worktree, background task or preview server is left.
+
+Readings by the tool's clock (UTC). The phase's working sessions, first
+to last: 8fb7e4a9 105,520 → 402,518 (the kickoff, 124.5a to 124.5f),
+ff99ffb0 97,605 → 433,934 (124.5g and its three posts, the pass's plan,
+batches 1 and 2), ebe41cd8 103,686 → 367,779 (batches 3 and 4), bcd08e32
+115,509 → 468,377 (batches 5 and 6), d8214ecc 120,151 → 329,694 (batches
+5 and 6's reads, batch 7), 138dbbac 108,243 → 397,610 (batches 8 and 9),
+f1005abf 115,956 → 522,677 (batches 10 to 12), 34a2ba54 90,991 → the
+reading below (the stop, 124.5h-post, the pointer and this close). This
+session: 90,991 at 15:15 (the orientation), 181,611 at 15:27 (the stop),
+195,209 and 197,847 on its two commits, 215,212 at 15:37 before this
+entry.
+
+The close: **232,298** at 15:40 on 2026-10-20 by the tool's clock,
+before the close's commit.

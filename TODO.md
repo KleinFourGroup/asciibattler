@@ -48,8 +48,9 @@ TODO items (list A's deletions, list B's trials) are in
 
 ### §124 and §124.5 render and UI
 
-§124, the board, closed 2026-10-18; the open items below are §124.5's,
-the screens', for its kickoff (WORKLOG §124, "The close of §124").
+§124, the board, closed 2026-10-18, and §124.5, the screens, 2026-10-20;
+every item below is done (WORKLOG §124, "The close of §124"; WORKLOG
+§124.5, "The close of §124.5").
 
 - ✅ **A third copy of the neutral-target rule, a lead for the kickoff.** `ObjectiveController` calls `validNeutralObjectiveTarget`, kept as a trial on a truth table (WORKLOG §124.5, 124.5f).
 

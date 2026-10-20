@@ -11,8 +11,8 @@ plan: [archive/post-109-roadmap.md](archive/post-109-roadmap.md) (Round 8)
 with its worklog and spec beside it; before it
 [archive/post-104-roadmap.md](archive/post-104-roadmap.md) (Round 7.5).
 
-**Status: §124.5, render and UI's second half, in progress: the
-screens' cut signed 2026-10-19.**
+**Status: §124.5 closed 2026-10-20; §125, the bot and the fuzz
+instruments, is next, from its kickoff.**
 The spec holds the user's intent and four signed
 decisions ([round-8.5-spec.md](round-8.5-spec.md)). The round opened with
 the oracle map, ahead of the census, as the user signed at the Round 8
@@ -219,17 +219,18 @@ record and what it hands on are in WORKLOG §124.
   claims restored, four kept ones corrected.
 - ☑ **124k — the close** (`stop`). Read 2026-10-18; three calls signed.
 
-## Phase 124.5 — render and UI: the screens
+## Phase 124.5 — render and UI: the screens ✅ (closed 2026-10-20)
 
 `ui` with `ui.css` and `fonts.css`, `store`, `i18n`, `settings`,
-`journal`, `audio`, `failure` and `diagnostics`: 86 files and two
-stylesheets, 19,712 lines. Cut at its own kickoff, after §124's close:
-the signed rows (A-22's `proseFamily`, A-25's two, A-26's other 91,
-A-28's mute, the three overlays' `isOpen` and `HUD.hide()`); the ability
-line, a display change signed at §124's kickoff; the neutral-target lead
-and the screens' other leads; the re-skim; the comment pass, with
-`CacheOverlay.ts`'s header. Proof: as §124's, with the UI gates. Risk:
-medium. The cut, signed 2026-10-19 (WORKLOG §124.5, "The kickoff"):
+`journal`, `audio`, `failure` and `diagnostics`. The signed rows (A-22,
+A-25, A-26, A-28 and two members), the dev load key's lines, the ability
+line (a display change signed at §124's kickoff), one trial kept
+(124.5f) and finished by R-1, R-2 and R-3; the comment pass in twelve
+batches, every one signed; `UnitRarity`'s re-export. Over the 88 files:
+comment lines 5,595 → 5,359, code lines 12,502 → 12,443, the step-code
+ceiling 2,122 → 1,084 (these files' 1,035 → 0). The cut was signed
+2026-10-19; each step's record and what it hands on are in WORKLOG
+§124.5 and "The close of §124.5".
 
 - ☑ **124.5a — A-22's `proseFamily` and A-25's two** (`none`).
   `rarityStars` and `orderRoster` out, their tests onto the kept pair;
@@ -262,7 +263,7 @@ medium. The cut, signed 2026-10-19 (WORKLOG §124.5, "The kickoff"):
   2026-10-20; WORKLOG §124.5).
 - ☑ **124.5h-post — `UnitRarity`'s re-export** (`none`). Signed at
   124.5i's stop; `build-hash HEAD`: the same bytes.
-- ☐ **124.5i — the close** (`stop`).
+- ☑ **124.5i — the close** (`stop`). Read 2026-10-20; three calls signed.
 
 ## Phase 125 — the bot and the fuzz instruments
 

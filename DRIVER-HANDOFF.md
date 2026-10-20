@@ -14,37 +14,27 @@ driver log ([archive/driver-trial/log-124.md](archive/driver-trial/log-124.md)).
   batches 1–2), ebe41cd8 (3–4), bcd08e32 (5–6), d8214ecc (7), 138dbbac
   (8–9, hand-off `6668a4d7`, WORKLOG §124.5 "The hand-off after 124.5h's
   batch 9"; read 2026-10-20 00:55 UTC). **Next: session 7, from batch
-  10** (`ui.css`'s first third with `fonts.css`). No card waits: driver 1
-  handed over at the 350k line, so the next driver proposes it. Open for
-  Matthew: batches 8 and 9's `batch` reads (he has them ready for session
-  7). Batch 8's finding went to TODO (`317ea902`).
-- **Driver:** none working. Driver 1 was
-  `local_3addf3c2-a6af-469e-a40b-932696f5bc61` (scratchpad 9b60fb27).
-  A new driver writes its app id here.
+  10** (`ui.css`'s first third with `fonts.css`), from brief 7, its card
+  proposed by driver 2 after this commit. Open for Matthew: batches 8 and
+  9's `batch` reads, which brief 7 lists as non-blocking. Batch 8's
+  finding went to TODO (`317ea902`).
+- **Driver:** driver 2, `local_15013e01-a015-489f-969c-7ef71d47e662`
+  (scratchpad 86ed5d79), from 2026-10-20 13:32 UTC, first reading 107,713.
+  Driver 1 (`local_3addf3c2`, scratchpad 9b60fb27) handed over at 350k.
 - **Friction read through:** line 299 of `retro/papercuts.jsonl` (lines
   298–299 are driver 1's own).
-- **Notes for session 7's brief** (driver 1's recommendation; the next
-  driver decides):
-  - the comment tools run as `npm run oracle -- comment-strip HEAD src`,
-    `... -- comment-codes --record`, `... -- comment-length <folder>`;
-    `--record` before each batch's suite run (P1); `comment-length` on
-    copies under `output/`, one folder a call (P11); a file whose held
-    (`TOOL_READ`) comment changed is unproven by `comment-strip`'s exit 1,
-    so `scratch/1245h-b3/held-compare.mts` is its proof (P13); a
-    step-code-shaped file name in a comment reads as a code;
-  - entries by the Write or Edit tool, each commit message to a file by
-    the Write tool for `git commit -F`; no Bash call opens with a line
-    that reads stdin (P2);
-  - Edits anchored on whole lines, read back, and no commit in the same
-    message (P14);
-  - a claim checked by search searches the rule's other shapes, every
-    caller, and every tracked folder (`src`, `tools`, `tests`, `scripts`,
-    `config`, `locales`, the docs), never `scratch/`; a gotcha read for a
-    claim is read to its end (P15, P3);
-  - `ui.css` is `src/ui/ui.css` (P18).
-- **Matthew's answers, 2026-10-20, for session 7 to write** (quote them
-  in the brief; the session confirms with him, since a brief is not an
-  approval):
+- **Brief 7's notes:** the comment tools' `npm run oracle --` form, with
+  `--record` before the suite (P1), `comment-length` on copies (P11),
+  `held-compare.mts` (P13), a step-code-shaped file name, and their
+  splitting `.css` (`tests/oracle/comments.ts:229`); `ui.css` is
+  `src/ui/ui.css` (P18); entries by Write or Edit, messages by `-F`, no
+  Bash call opening with a stdin reader (P2); whole-line Edits, no commit
+  beside them (P14); other shapes, every caller, every tracked folder,
+  never `scratch/`, a gotcha to its end (P15, P3), and `ui.css`'s modifier
+  classes built from parts in `.ts` (`GameOverScreen.ts:107`), so the stem
+  is searched too.
+- **Matthew's answers, 2026-10-20,** quoted in brief 7 for session 7 to
+  confirm with him and write in one docs commit between batches:
   - P13: a TODO §127 row folding `held-compare.mts` into `comment-strip`
     ("Signing the TODO!").
   - P14: CLAUDE.md "Editing" to say: anchor on whole lines, and keep a
@@ -57,8 +47,8 @@ driver log ([archive/driver-trial/log-124.md](archive/driver-trial/log-124.md)).
     say whether the Windows one reached him.
   - P2's guard: not yet ("a few more observations are needed to justify
     a guard"); the note stays in the briefs meanwhile.
-- **Signed for session 7's brief** (Matthew, 2026-10-20: "Let's put both
-  of them in brief"):
+- **Signed for brief 7, which leads with them** (Matthew, 2026-10-20:
+  "Let's put both of them in brief"):
   - P17: "Open `batch` reads: list them with their scripts in your first
     message, then start the next batch. A `batch` read blocks nothing."
   - P20: the hand-off rule as planning.md has it, in his words "550k is
@@ -67,10 +57,11 @@ driver log ([archive/driver-trial/log-124.md](archive/driver-trial/log-124.md)).
     forecast at the pass's typical rate, not the session's first batch's.
     It replaces the 124.5h plan entry's end bound, so the session's entry
     says so.
-- **For the round close** (with P16 above): planning.md's "larger than
-  the room" as "the room to the halt"; driving.md's brief bullet telling
-  open questions from open reads; and the name `batch` for both a read
-  kind and the comment pass's units (Matthew's observation).
+- **For the round close** (with P16 above; brief 7 asks session 7 to
+  put them to Matthew for the same list): planning.md's "larger than the
+  room" as "the room to the halt"; driving.md's brief bullet telling open
+  questions from open reads; and the name `batch` for both a read kind
+  and the comment pass's units (Matthew's observation).
 
 ## Patterns
 
@@ -118,19 +109,21 @@ or a pattern with two or more earlier instances stops after it.
 
 | Note | Briefs | Credited |
 |---|---|---|
-| `--record` before the suite | §124 1, 2, 7; §124.5 1–6 | yes; P1 quiet through 124.5 |
-| search the docs for what a deletion removes | §124 1, 2, 7; §124.5 1, 2 | yes; out of the pass's briefs |
-| `comment-length`'s form | §124 1, 3–7; §124.5 1–6 | yes |
-| entries by the Write tool, messages by `-F` | §124 5–7; §124.5 1–6 | yes, but for 124.5h b6; kept though AGENTS says it (Matthew signed, 2026-10-19) |
-| the comment tools' marker and `held-compare` | §124.5 1–6 | yes, the exit was expected; its "the hook's green is the proof" was false (b3), corrected in brief 4 |
-| a step-code-shaped file name | §124.5 1–6 | not yet |
-| whole-line Edits, no commit beside them | §124.5 2–6 | yes; P14 quiet in sessions 4–6 |
-| where the procedures are | §124.5 2 | partly (P16) |
-| `refs --members` reads interfaces only | §124.5 2 | not tested |
-| other shapes and every caller; a gotcha to its end | §124.5 3–6 | yes: gotchas #80 and #116 "read to its end"; caller lists checked |
-| no Bash call opening with a stdin reader | §124.5 6 | yes; quiet in session 6 |
-| `ui.css` is `src/ui/ui.css` | §124.5 6 | yes; quiet in session 6 |
-| the tools bare, without `npm run oracle --` | §124.5 1–6 | a fault in the note: session 6 lost a look (P16); session 7's names the form |
+| `--record` before the suite | §124 1, 2, 7; §124.5 1–7 | yes; P1 quiet through 124.5 |
+| `comment-length`'s form | §124 1, 3–7; §124.5 1–7 | yes |
+| entries by the Write tool, messages by `-F` | §124 5–7; §124.5 1–7 | yes, but for 124.5h b6; kept though AGENTS says it (Matthew signed, 2026-10-19) |
+| the comment tools' marker and `held-compare` | §124.5 1–7 | yes, the exit was expected; its "the hook's green is the proof" was false (b3), corrected in brief 4 |
+| a step-code-shaped file name | §124.5 1–7 | not yet |
+| whole-line Edits, no commit beside them | §124.5 2–7 | yes; P14 quiet in sessions 4–6 |
+| other shapes and every caller; a gotcha to its end | §124.5 3–7 | yes: gotchas #80 and #116 "read to its end"; caller lists checked |
+| no Bash call opening with a stdin reader | §124.5 6, 7 | yes; quiet in session 6 |
+| `ui.css` is `src/ui/ui.css` | §124.5 6, 7 | yes; quiet in session 6 |
+| the tools' `npm run oracle --` form | §124.5 7 | new; briefs 1–6 named the tools bare, and session 6 lost a look (P16) |
+| the tools split `.css`; a class built from parts in `.ts` | §124.5 7 | new, for `ui.css`'s batches |
+
+**Dropped:** the docs searched for what a deletion removes (§124 1, 2, 7;
+§124.5 1, 2; credited); where the procedures are (§124.5 2; partly, P16);
+`refs --members` reads interfaces only (§124.5 2; not tested).
 
 ## Tool facts for this repo
 

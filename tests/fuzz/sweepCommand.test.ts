@@ -25,8 +25,8 @@ describe('sweepCommand — knob enumeration', () => {
 
   it('exposes representative pool / difficulty / leveling knobs', () => {
     const paths = SWEEP_KNOBS.map((k) => k.path);
-    expect(paths).toContain('difficulty.budgetFactor');
-    expect(paths).toContain('difficulty.swarmMaxMultiplier');
+    expect(paths).toContain('difficulty.levelBudgetMultiplier');
+    expect(paths).toContain('difficulty.waveSizeMultiplier');
     expect(paths).toContain('health.playerHealthMax');
     expect(paths).toContain('health.enemyHealthMax');
     expect(paths).toContain('leveling.xpPerHealing');
@@ -34,7 +34,7 @@ describe('sweepCommand — knob enumeration', () => {
 
   it('reports each knob’s live configured value (derived, never hardcoded)', () => {
     const byPath = new Map(SWEEP_KNOBS.map((k) => [k.path, k.value]));
-    expect(byPath.get('difficulty.budgetFactor')).toBe(DIFFICULTY.budgetFactor);
+    expect(byPath.get('difficulty.levelBudgetMultiplier')).toBe(DIFFICULTY.levelBudgetMultiplier);
     expect(byPath.get('health.playerHealthMax')).toBe(HEALTH.playerHealthMax);
     expect(byPath.get('leveling.restXp')).toBe(LEVELING.restXp);
   });
@@ -50,12 +50,12 @@ describe('sweepCommand — balance-sweep args', () => {
   it('builds a one-knob sweep', () => {
     const args = buildFuzzArgs({
       mode: 'balance-sweep',
-      knob: 'difficulty.budgetFactor',
+      knob: 'difficulty.levelBudgetMultiplier',
       range: '0.25:1.5:6',
       tier: 'quick',
     });
     expect(args[0]).toBe('--balance-sweep');
-    expect(args).toContain('--knob=difficulty.budgetFactor');
+    expect(args).toContain('--knob=difficulty.levelBudgetMultiplier');
     expect(args).toContain('--range=0.25:1.5:6');
     expect(args).toContain('--tier=quick');
   });
@@ -63,20 +63,20 @@ describe('sweepCommand — balance-sweep args', () => {
   it('emits knob2 + range2 only as a pair', () => {
     const both = buildFuzzArgs({
       mode: 'balance-sweep',
-      knob: 'difficulty.budgetFactor',
+      knob: 'difficulty.levelBudgetMultiplier',
       range: '0.5:0.75:3',
-      knob2: 'difficulty.swarmMaxMultiplier',
+      knob2: 'difficulty.waveSizeMultiplier',
       range2: '1.5:2.0:3',
     });
-    expect(both).toContain('--knob2=difficulty.swarmMaxMultiplier');
+    expect(both).toContain('--knob2=difficulty.waveSizeMultiplier');
     expect(both).toContain('--range2=1.5:2.0:3');
 
     // A second knob with no second range is dropped (the CLI rejects the pair).
     const lone = buildFuzzArgs({
       mode: 'balance-sweep',
-      knob: 'difficulty.budgetFactor',
+      knob: 'difficulty.levelBudgetMultiplier',
       range: '0.5:0.75:3',
-      knob2: 'difficulty.swarmMaxMultiplier',
+      knob2: 'difficulty.waveSizeMultiplier',
     });
     expect(lone.some((a) => a.startsWith('--knob2'))).toBe(false);
     expect(lone.some((a) => a.startsWith('--range2'))).toBe(false);
@@ -103,7 +103,7 @@ describe('sweepCommand — balance-sweep args', () => {
   it('omits --jobs at the single-process default (1)', () => {
     const args = buildFuzzArgs({
       mode: 'balance-sweep',
-      knob: 'difficulty.budgetFactor',
+      knob: 'difficulty.levelBudgetMultiplier',
       range: '0.625:0.625:1',
       jobs: 1,
     });
@@ -113,7 +113,7 @@ describe('sweepCommand — balance-sweep args', () => {
   it('drops whitespace-only string fields', () => {
     const args = buildFuzzArgs({
       mode: 'balance-sweep',
-      knob: 'difficulty.budgetFactor',
+      knob: 'difficulty.levelBudgetMultiplier',
       range: '0.5:1.0:3',
       roster: '   ',
     });

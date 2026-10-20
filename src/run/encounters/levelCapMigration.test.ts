@@ -3,7 +3,6 @@ import { RNG } from '../../core/RNG';
 import { resolveWave, type WaveSpec, type WaveContext } from './wave';
 import type { WaveEntry } from './sequencer';
 import { ENCOUNTERS } from '../../config/encounters';
-import { DIFFICULTY } from '../../config/difficulty';
 import { DECK } from '../../config/deck';
 import { scaledUnit } from '../../sim/archetypes';
 import type { UnitTemplate } from '../../sim/Unit';
@@ -13,7 +12,7 @@ import type { UnitTemplate } from '../../sim/Unit';
  * global cap.
  *
  * Pre-X every wave was resolved with a single global ceiling
- * (`highestRosterLevel + DIFFICULTY.unitLevelDelta`). X moved the cap onto the
+ * (`highestRosterLevel + 2`). X moved the cap onto the
  * wave spec (`levelCap?`, absent = uncapped) and stamped `{ roster, delta }` only
  * on the waves where that cap actually BINDS — leaving the rest absent. This is
  * exact because a cap that never binds is byte-for-byte identical to no cap (same
@@ -24,10 +23,9 @@ import type { UnitTemplate } from '../../sim/Unit';
  * (a binding-but-unstamped wave would fail it → it doubles as a COMPLETENESS check
  * on the stamping set). The second proves no GRATUITOUS stamps — every stamped cap
  * changes the output for some roster/seed. Together they pin the stamping set as
- * exactly the biting set. The cap delta derives from `DIFFICULTY.unitLevelDelta`
- * (balance-proof — never hardcoded), so this flags the day the global knob and the
- * frozen authored caps diverge (the conscious retune point, like the Brigands
- * faithfulness test).
+ * exactly the biting set. The cap delta is the retired global cap's, 2: the
+ * difficulty key that held it was deleted with the random enemy wave, its last
+ * reader.
  */
 
 /** Collect every leaf `WaveSpec` in a wave-list entry (recurses the grammar). */
@@ -93,7 +91,7 @@ function ctxFor(roster: UnitTemplate[]): WaveContext {
 }
 
 /** The pre-migration global cap, forced onto ANY wave regardless of authoring. */
-const GLOBAL_CAP: WaveSpec['levelCap'] = { kind: 'roster', delta: DIFFICULTY.unitLevelDelta };
+const GLOBAL_CAP: WaveSpec['levelCap'] = { kind: 'roster', delta: 2 };
 
 describe('levelCap migration — byte-identical to the retired global cap', () => {
   it('every catalog wave resolves identically with its authored cap and with the forced global cap', () => {

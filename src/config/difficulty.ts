@@ -1,29 +1,7 @@
 /**
- * The enemy's strength, and the per-run difficulty multipliers. Source of
- * truth at `config/difficulty.json`.
- *
- * The first seven keys size the random enemy wave (`rollEnemyWave`,
- * `src/run/enemyBudget.ts`) that the fuzz arena and the spawn-overflow test
- * fight; an authored encounter sizes its own waves. The enemy's total level
- * is a budget drawn from the player's team and spread over more, weaker
- * units, so a late battle is outnumbered rather than outclassed. The budget
- * is affine in the player's team level, since a flat subtraction is swamped
- * as the team's summed level grows, while a factor holds the ratio at every
- * depth.
- * - `budgetFactor`, `budgetOffset` — the budget is `budgetOffset +
- *   budgetFactor × playerTeamLevel`. Below 1 the player's edge grows with
- *   progression, above 1 the enemy's. The offset may be negative.
- * - `unitLevelDelta` — one enemy's level cap is the player's highest unit
- *   level plus this.
- * - `minBudget` — the floor under the budget.
- * - `swarmBias` — 0 to 1, how far the enemy count skews toward its
- *   maximum: 0 uniform, 1 always the maximum.
- * - `swarmMaxMultiplier` — the enemy count is at most this times the
- *   player's fielded count; units past the spawn region stream in through
- *   the spawn queue.
- * - `enemyArcherRatio` — 0 to 1, the share of a wave that fields archers,
- *   the rest melee bandits. Shipped 0.3, a feel call: archers still read as
- *   the threat, less densely than at 0.4.
+ * The per-run difficulty multipliers, and a fresh run's bits. Source of
+ * truth at `config/difficulty.json`. An authored encounter sizes its own
+ * waves; these scale them.
  *
  * The per-run multipliers, each 1 as shipped, are the fallback for
  * `RunConfig`'s own (`resolveDifficultyMultipliers`), and Escalation
@@ -50,13 +28,6 @@ import { z } from 'zod';
 import difficultyJson from '../../config/difficulty.json';
 
 const DifficultySchema = z.object({
-  budgetFactor: z.number().nonnegative(),
-  budgetOffset: z.number(),
-  unitLevelDelta: z.number().int().nonnegative(),
-  minBudget: z.number().int().positive(),
-  swarmBias: z.number().min(0).max(1),
-  swarmMaxMultiplier: z.number().positive(),
-  enemyArcherRatio: z.number().min(0).max(1),
   // The multipliers are positive, so none zeroes a wave or an earn;
   // `scaledEnemyPool` also floors a pool at 1.
   waveSizeMultiplier: z.number().positive(),

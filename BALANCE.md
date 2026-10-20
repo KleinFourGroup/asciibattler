@@ -449,10 +449,11 @@ per-wave `levelCap`, absent = uncapped). This is exactly why "uncap the spikes"
 
 ### Global `difficulty.json` still exists
 
-`budgetFactor` / `swarmMaxMultiplier` / `enemyArcherRatio` still feed `rollEnemyWave`
-(the fuzz arena + spawn-overflow paths). But for authored encounters the
+It holds the four per-run multipliers and `startingBits`; the random wave's seven
+keys (`budgetFactor`, `swarmMaxMultiplier`, `enemyArcherRatio`, …) went with
+`rollEnemyWave` at §125e, as no run fielded it. For authored encounters the
 per-encounter multipliers are the **finer, primary** instrument; fold the global
-knobs in only if the pool-ratio confound (below) demands it.
+multipliers in only if the pool-ratio confound (below) demands it.
 
 ## Per-kind target bands — SET at X3, stable since
 

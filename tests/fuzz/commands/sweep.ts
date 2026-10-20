@@ -4,8 +4,8 @@
  * grid point. Times the FIRST point and projects the total before committing
  * (BALANCE.md) — `--dry-run` stops after that estimate.
  *
- *   npm run fuzz -- --balance-sweep --knob=difficulty.budgetFactor --range=0.25:1.5:6 \
- *     --knob2=difficulty.swarmMaxMultiplier --range2=1.0:3.0:5 --tier=quick [--dry-run]
+ *   npm run fuzz -- --balance-sweep --knob=difficulty.levelBudgetMultiplier --range=0.25:1.5:6 \
+ *     --knob2=difficulty.waveSizeMultiplier --range2=1.0:3.0:5 --tier=quick [--dry-run]
  *
  * Writes output/balance-sweep.csv (the full per-archetype breakdown) + a compact
  * stdout table.

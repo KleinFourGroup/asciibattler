@@ -6,8 +6,8 @@
  * point mechanism telemetry (the OP-unit read).
  *
  * Mechanic (per BALANCE.md "Config override"): the balance configs are plain
- * mutable objects read *live* per encounter (`enemyBudget` destructures
- * `DIFFICULTY` inside each call, etc.), so the sweep mutates them in-process
+ * mutable objects read *live* (`Run` resolves `DIFFICULTY`'s multipliers as
+ * each run starts, etc.), so the sweep mutates them in-process
  * between grid points — no JSON-edit-and-respawn — and **restores the originals
  * in a `finally`** so a sweep leaves the loaded config exactly as it found it.
  *
@@ -56,8 +56,8 @@ import { SIM } from '../../src/config/sim';
 
 /**
  * The config groups a sweep can address by `group.key`. Each value is the SAME
- * live object the production code reads, so writing `DIFFICULTY.budgetFactor`
- * here is what `enemyBudget` sees on the next encounter. The original three
+ * live object the production code reads, so writing `DIFFICULTY.levelBudgetMultiplier`
+ * here is what the next run starts with. The original three
  * BALANCE.md names (`difficulty`/`health`/`leveling`) are the knobs that move
  * the foregone-conclusion needle; `sim` joined at 75l for the `--set` probe
  * overrides (first consumer: `sim.enemyPullChance`, the pull-ablation arm) —
@@ -78,14 +78,14 @@ export interface ResolvedKnob {
 }
 
 /**
- * Resolve a `group.key` path (e.g. `difficulty.budgetFactor`) to the live object
+ * Resolve a `group.key` path (e.g. `difficulty.levelBudgetMultiplier`) to the live object
  * + key. Throws loudly on an unknown group, an unknown key, or a non-numeric
  * target — a typo'd knob should fail the sweep, not silently no-op.
  */
 export function resolveKnob(path: string): ResolvedKnob {
   const dot = path.indexOf('.');
   if (dot < 0) {
-    throw new Error(`balance-sweep: knob "${path}" must be "group.key" (e.g. difficulty.budgetFactor)`);
+    throw new Error(`balance-sweep: knob "${path}" must be "group.key" (e.g. difficulty.levelBudgetMultiplier)`);
   }
   const group = path.slice(0, dot);
   const key = path.slice(dot + 1);

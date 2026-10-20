@@ -94,7 +94,7 @@ src/
     units.ts                 #   §38 UnitDef catalog (was archetypes.ts): glyph + baseStats + growthRates + abilities/targeting (E1/E3) + inert §38 fields (footprint/layer/susceptibility); attackRange moved to abilities (E5); 29d: assertSummonRefsResolve boot-checks every summon op's archetype id
     abilities.ts             #   Loads config/abilities.json into the AbilityDef catalog (src/sim/effects schema); abilityDef(id) + the damageOpOf/healOpOf op accessors. Y5e consolidated this (was abilityDefs.ts) atop the retired legacy AbilityConfig
     statuses.ts              #   27a: loads config/statuses.json into the StatusDef catalog; statusDef(id) + assertStatusRefsResolve (boot-checks every applyStatus statusId, wired into abilities/registry.ts)
-    difficulty.ts            #   G4: enemy level-budget knobs (budgetFactor/offset, swarm, K2 enemyArcherRatio) + A/B/C presets; X1: per-run waveSize/levelBudget multipliers; 48f: bitsMultiplier (the economy lever — applies in Run.effectiveBits, never WaveContext); 117a: enemyMoraleMultiplier, the fourth, on the encounter's enemy pool (`scaledEnemyPool`: to the nearest whole, never under 1; `Run.enemyPoolOf` is the Run's one read of `healthPool`); `startingBits`, a fresh run's bits balance
+    difficulty.ts            #   X1: per-run waveSize/levelBudget multipliers; 48f: bitsMultiplier (the economy lever — applies in Run.effectiveBits, never WaveContext); 117a: enemyMoraleMultiplier, the fourth, on the encounter's enemy pool (`scaledEnemyPool`: to the nearest whole, never under 1; `Run.enemyPoolOf` is the Run's one read of `healthPool`); `startingBits`, a fresh run's bits balance
     escalation.ts            #   117e: `escalationSteps(level)` = each lever a level moves against the one under it, with how many levels under it moved the same lever (what the level's words are built from). 117b: the Escalation ladder (Round 8 spec D8). `ESCALATION_LEVELS` holds where the three levers (levelBudget, wave, bits) stand at each level, 1 up; the parse refuses a ladder where a lever eases. `leverFactors` is how they combine (the wave lever goes to the count, the budget and the enemy pool; the budget lever multiplies with it on the budget); `withEscalation(base, level)` gives a run's four multipliers, and at level 0 returns `base` itself. escalation.test.ts holds the shipped ladder to the signed table by hand
     recruitment.ts           #   offer size + startingLevel + recruitBonusChance (G4); §61c rarityWeights (63c: roster composition moved to characters.json)
     characters.ts            #   §63a: loads config/characters.json — starting characters (roster/daemon/blacklist additions/weight overrides); characterById + DEFAULT_CHARACTER_ID ('soldier') + assertDefaultCharacter boot check
@@ -253,7 +253,7 @@ src/
                              # turnGates re-resolved each startNextTurn = THE redraw/empower availability (daemon-only gates, v16)
                              # U3: beginEncounter SELECTS an Encounter (selectedEncounter, U3=reproductionEncounter) +
                              # seeds enemyHealth from its healthPool + resets waveCursor; beginTurn resolves the per-turn
-                             # enemy team from the encounter's wave grammar (waveForTurn→resolveWave) NOT rollEnemyWave;
+                             # enemy team from the encounter's wave grammar (waveForTurn→resolveWave);
                              # encounterBudget retired; encounter.name → HUD enemy pane. RUN_SCHEMA_VERSION 21
                              # 47c–f: daemons re-authored to rules + multi-daemon by id + the bits substrate —
                              # bits (floor-at-zero via the addBits chokepoint → run:bitsChanged) + gainBits (the
@@ -296,12 +296,11 @@ src/
     chipRule.ts              # §91a2: THE CHIP RULE's arithmetic, pure + injectable — rulesForTurn(reason) (casualties, + survivors on 'cap') · turnCharges (each pool pays its OWN fallen; a cap turn adds the OPPOSING standing power; uncapped × chipMultiplier) · 91d playerExposure (the pre-turn risk bound: the hand) · 96.5c2 enemyExposure (its mirror, the wave — the two partition the fielded power; the live bar's notch on each gauge, via Run.previewPoolsAtRisk); 96.5b1: THE LOSS-EVENT MODEL the live bar consumes — lossEventsForDeath (casualties: one immediate event at the death, the dead unit's side pays, cause = the unit) · lossEventsAtEnd (the cap surcharge: one 'end' event per standing unit to the OPPOSING pool) · bookedImmediateLoss (the mid-battle restore's opening ghost) · sumLossEvents; pinned: Σ stream = turnCharges on every reason (chipLabels.ts owns the words)
     fallenStats.ts           # 102c: the run-end stats fold — summarizeFallen(ledger), PURE over FallenRecord[] (no Run, no bus, no config): the run totals, then one entry per encounter INSTANCE (sector + node, fought order), each per side / per archetype (first-death order) / per turn (ascending); every `rows` is a filtered view in death order (the GameOverScreen's glyph runs read it). The ledger is DEATHS only: a bloodless fight or turn left no row and has no entry
     RunConfig.ts             # G1: RunConfig + parseRunConfigFromURL (shared by browser/CLI/GUI); L1: daemon override (?daemon=<id|none>); 47e: starting-bits override (?bits=N); 48f: bitsMultiplier (programmatic-only, the X1 siblings' third axis); 117a: enemyMoraleMultiplier (programmatic-only, the fourth); 117b: `escalation` (?escalation=1..5; level 0 is spelled by no dial; the one difficulty input that is also in the snapshot); 68e/74b: ?firstNode=elite|event (the root stamp dial); 74b: forcedEventId + eventCatalog (programmatic-only — a bespoke catalog is in-memory, saves hard-reject); 74e: eventChance (the scatter dial, #121 slice)
-    enemyBudget.ts           # G4 SEAM playerTeamLevel — H5 swapped it to avgLevel × min(roster, handSize)
-                             # + affine budget + swarm count (K2: count basis ALSO min(roster, handSize))
+    enemyBudget.ts           # avgTeamLevel, a recruit's level basis (the random enemy wave that named the file went at §125)
     encounters/
       wave.ts                # U1: pure resolveWave(spec, ctx, rng) → UnitTemplate[] — budget/count/weight;
                              # optional per-wave levelCap (X: roster+Δ | fixed | absent=uncapped, resolved vs roster);
-                             # distributeWeightedLevels generalizes distributeBudget (uniform weights → even split)
+                             # distributeWeightedLevels (uniform weights → even split)
       sequencer.ts           # U2: pure waveForTurn(list, cursor, state, rng) — the wave-list GRAMMAR
                              # (wave | pick | loop{N|forever} | stages{until: enemyPoolAtOrBelow}) + a
                              # recursive plain-JSON cursor (resumable); terminal policy = last-wave-repeats
@@ -488,7 +487,7 @@ config/                      # A4: balance JSON source of truth (paired with src
   recruitment.json           # starting team + offer size + startingLevel + recruitBonusChance
   leveling.json              # E4: xp curve + restXp (G3) + xpPerHealing (F6)
   health.json                # H4: player/enemy health pools + maxTurns/maxTurnSeconds + chipMultiplier
-  deck.json                  # H5: handSize (card-drawn hand; also the 2nd half of the playerTeamLevel seam)
+  deck.json                  # H5: handSize (card-drawn hand; also an authored wave's hand basis)
                              # 49d/f: grantQueue { passIsFinal } — the strict acquisition-order dial (ships TRUE, the locked default; RunConfig.passIsFinal overrides for tests/fuzz)
   daemons.json               # L1→47c: the idol catalog, authored in the rule vocabulary — `rules: Rule[]`
                              # (modifier | hook; the shared daemon/packet effect pool; trigger×op×filter

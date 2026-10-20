@@ -238,9 +238,9 @@ describe('§38c-4 — open catalog (relaxed Archetype id)', () => {
   });
 
   it('carries the ids the game hard-references by literal (boot-assert contract)', () => {
-    // Mirrors REQUIRED_UNIT_IDS — start team + default enemy comp. If the module
-    // imported at all, the boot-assert already passed; this documents the set.
-    for (const id of ['mercenary', 'bandit', 'archer']) {
+    // Mirrors REQUIRED_UNIT_IDS. If the module imported at all, the
+    // boot-assert already passed; this documents the set.
+    for (const id of ['mercenary', 'archer']) {
       expect(UNIT_DEFS[id], id).toBeDefined();
     }
   });

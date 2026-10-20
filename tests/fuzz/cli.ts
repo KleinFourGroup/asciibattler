@@ -61,8 +61,8 @@
  *
  *   # H7c — balance-sweep a config knob (or a 2-knob grid): best-achievable win
  *   # rate + skill gradient + per-archetype telemetry at each grid point:
- *   npm run fuzz -- --balance-sweep --knob=difficulty.budgetFactor --range=0.25:1.5:6 \
- *     --knob2=difficulty.swarmMaxMultiplier --range2=1.0:3.0:5 --tier=quick
+ *   npm run fuzz -- --balance-sweep --knob=difficulty.levelBudgetMultiplier --range=0.25:1.5:6 \
+ *     --knob2=difficulty.waveSizeMultiplier --range2=1.0:3.0:5 --tier=quick
  *   npm run fuzz -- --balance-sweep --knob=health.enemyHealthMax --range=8:16:5 --dry-run
  *   # → writes output/balance-sweep.csv (+ .report.txt); --dry-run times point 1, no write
  *   # X2 — the per-encounter difficulty-multiplier sweep: drive the GLOBAL lever
@@ -71,16 +71,16 @@
  *     --knob=difficulty.waveSizeMultiplier --range=0.5:2.0:4 \
  *     --knob2=difficulty.levelBudgetMultiplier --range2=0.5:2.0:4 --tier=medium
  *   # --hops=N overrides the tier's run length (cheap FULL-length reads):
- *   npm run fuzz -- --balance-sweep --knob=difficulty.budgetFactor --range=0.625:0.625:1 \
+ *   npm run fuzz -- --balance-sweep --knob=difficulty.levelBudgetMultiplier --range=0.625:0.625:1 \
  *     --tier=quick --hops=11
  *   # --roster forces the starting roster (evaluate an archetype the search won't
  *   # recruit — read its per-deployment telemetry):
- *   npm run fuzz -- --balance-sweep --knob=difficulty.budgetFactor --range=0.625:0.625:1 \
+ *   npm run fuzz -- --balance-sweep --knob=difficulty.levelBudgetMultiplier --range=0.625:0.625:1 \
  *     --tier=quick --hops=11 --roster=mercenary,mercenary,ranged,mage,mage
  *   # --jobs=N fans each grid point's vector search across N child processes
  *   # (results are byte-identical to single-process — only wall-clock changes):
- *   npm run fuzz -- --balance-sweep --knob=difficulty.budgetFactor --range=0.625:0.75:2 \
- *     --knob2=difficulty.swarmMaxMultiplier --range2=1.75:2.0:2 --tier=heavy --jobs=8
+ *   npm run fuzz -- --balance-sweep --knob=difficulty.levelBudgetMultiplier --range=0.625:0.75:2 \
+ *     --knob2=difficulty.waveSizeMultiplier --range2=1.75:2.0:2 --tier=heavy --jobs=8
  *
  *   # H7c — re-render a past sweep's CSV as a readable per-point report:
  *   npm run fuzz -- --report                          # output/balance-sweep.csv
@@ -91,7 +91,7 @@
  *   # JSON file | an inline form | random | none):
  *   npm run fuzz -- --count=50 --objective=output/best-objective.json
  *   npm run fuzz -- --search --objective=random --jobs=8
- *   npm run fuzz -- --balance-sweep --knob=difficulty.budgetFactor --range=0.5:0.75:2 \
+ *   npm run fuzz -- --balance-sweep --knob=difficulty.levelBudgetMultiplier --range=0.5:0.75:2 \
  *     --objective=output/best-objective.json --tier=medium --jobs=8
  *
  *   # §55 pre-gate — drive the §54 traffic-script bot in a plain run (the

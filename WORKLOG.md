@@ -13754,7 +13754,9 @@ those that are not tests, outside the pass unless the decision point takes
    game reads and stays. The seven `config/difficulty.json` keys that size
    that wave (`budgetFactor`, `budgetOffset`, `unitLevelDelta`,
    `minBudget`, `swarmBias`, `swarmMaxMultiplier`, `enemyArcherRatio`) are
-   read nowhere else (each searched outside its loader), and
+   read by no other code (each searched outside its loader; *corrected at
+   125e*: that search left out test files, where two tests in `src/run`
+   and the balance sweep's tests read them), and
    `difficulty.ts`'s header says so: they size "the random enemy wave ...
    that the fuzz arena and the spawn-overflow test fight; an authored
    encounter sizes its own waves". With the arena gone their readers are
@@ -13999,3 +14001,73 @@ Proof:
   reader in the smoke; `npm test` reaches it (`reach-record npm-test`,
   the arm counted once), so the suite still holds it.
 - Nothing of `objectiveCoverage.ts` or `objectiveStrategy.ts` is lost.
+
+The commit's hook: the suite 3,722, the smoke 594 in 60 files, the parity
+test 1.
+
+### 125e — the arena's wave builder (2026-10-20, session 046c70be)
+
+**Step zero changed the call, and it went back to the user.** The type
+check after the first deletions named readers of the seven keys that the
+kickoff's search had missed, because that search left out test files:
+`levelCapMigration.test.ts` took `unitLevelDelta` as the delta of the
+retired global cap; two G4 tests in `Run.test.ts` bounded the first
+encounter's enemy count by `swarmMaxMultiplier` and its levels by
+`unitLevelDelta`, knobs the run does not read; and the balance sweep's
+tests used `difficulty.budgetFactor` as their sample knob. The session
+stopped and put a lean; **signed** (the user, 2026-10-20: "I am fully on
+board with your lean to remove them, Claude! 😁 Signed!"). The kickoff
+entry's claim is corrected in place, and a friction line is filed.
+
+What went:
+- `src/run/enemyBudget.ts` keeps `avgTeamLevel` alone (two game reads,
+  the recruit's level basis); `playerTeamLevel`, `buildEnemyTeam`,
+  `chooseSwarmCount`, `distributeBudget` and the private `enemyBudgetFor`
+  and `rollEnemyWave` are deleted, with their describes in
+  `enemyBudget.test.ts`. The file's name stays; its header says what it
+  holds.
+- The seven keys out of `config/difficulty.json` and its schema; the
+  loader's header says what is left.
+- `spawn-overflow.test.ts` fills the queue with nine level-3 bandits over
+  a region of six, where it searched seeds of the wave builder for a
+  swarm larger than the region.
+- `levelCapMigration.test.ts`: the global cap's delta is the literal 2 the
+  key held, so the test still shows each authored cap reproduces the
+  retired global cap; its "retune point" sentence goes, with no knob left
+  to retune. `Run.test.ts`: the two config-derived bounds go; the hand
+  check and the `scaleStats` check stay, the second test retitled.
+- The sweep's tests (`balanceSweep`, `sweepCommand`, `setArg`) and its
+  docs (`cli.ts`'s examples, `commands/sweep.ts`, `sweepCommand.ts`,
+  `balanceSweep.ts`, and `tools/sweep-gui`'s default knob) move from
+  `budgetFactor` and `swarmMaxMultiplier` to `levelBudgetMultiplier` and
+  `waveSizeMultiplier`; `sweepReport.test.ts` keeps the old name inside
+  its CSV fixtures, as data. `balanceSweep.ts`'s two notes on what reads
+  the live config now name `Run`'s multipliers.
+- `units.ts`'s boot check drops `bandit`, which no code names by literal
+  once the wave builder is gone (a change inside call 2, flagged at the
+  question); `archer` and `mercenary` stay for the dev board's fixtures,
+  and `units.test.ts`'s mirror of the list with it.
+- Comments that named the wave builder: `deck.ts`, `units.ts`, `wave.ts`,
+  `Unit.ts`, `archetypes.ts`, `dev/boardPanel/fixtures.ts`; five entries
+  in ARCHITECTURE; BALANCE's "Global `difficulty.json` still exists". History
+  lines that name the old wave as what authored encounters replaced
+  (`brigands.test.ts`, the encounter editor's README, BALANCE's "What
+  changed") stay, and so do `wave.test.ts`'s titles that compare with
+  `distributeBudget`, for §126.
+
+Proof:
+- The config dump before and after (`output/cfg-125e/`): 14 differences,
+  the seven keys removed from `DIFFICULTY` and from its source, nothing
+  else.
+- `npm run corpus`: 0 of 30 journals differ (past the config stamp, as at
+  §121); the fuzz diff against `66ae8ba4` PASS on both shapes.
+- `comment-strip HEAD src`: 12 files differ; the five changed in comments
+  only had the control's edit named in each, and the seven with code are
+  the seven above (`difficulty.ts`, `units.ts`, `enemyBudget.ts` and four
+  tests).
+- `npm test`'s reach before (125d's reading, of the tree `66ae8ba4`
+  holds) and after, `reach-diff --from=HEAD`: nothing lost. The after
+  run failed two tests (the step-code ceiling, which I had not lowered
+  before it, and BALANCE's header cap at 701 of 700 from my first wording
+  of the paragraph); both pass after `comment-codes --record` (1,084 →
+  1,078) and a shorter paragraph.

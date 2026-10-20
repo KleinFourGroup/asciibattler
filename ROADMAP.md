@@ -285,7 +285,7 @@ its six calls; the audit, the calls and the trials' bars are in WORKLOG
 - ☑ **125d — A-20's `--arena`** (`none`). Its three files and flag; the
   coverage bot's test on the harness's coverage run; `objectiveMenu`,
   `MenuEntry` and `serializeProclivity` with it (call 1).
-- ☐ **125e — the arena's wave builder** (`none`). `buildEnemyTeam` and its
+- ☑ **125e — the arena's wave builder** (`none`). `buildEnemyTeam` and its
   helpers, the seven difficulty keys that size it, the spawn-overflow test
   on a fixed team, the sweep's examples on a live knob (call 2).
 - ☐ **125f — A-25's `hazardCells`, A-26's 16 words in `src/bot`** (`none`).

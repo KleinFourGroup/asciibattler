@@ -267,12 +267,12 @@ export function isAutoTargetNeutral(archetype: string): boolean {
 
 /**
  * Boot check: the ids code names by literal exist, since with an open string
- * id a typo, rename or removal would otherwise surface only at spawn. `bandit`
- * and `archer` make up the random enemy wave (`enemyBudget.ts`); `mercenary`
- * is named by the dev board's fixtures and by two editors under `tools/`
- * (characters, encounters). Summon targets have their own check below.
+ * id a typo, rename or removal would otherwise surface only at spawn.
+ * `mercenary` and `archer` are named by the dev board's fixtures, and
+ * `mercenary` by two editors under `tools/` (characters, encounters).
+ * Summon targets have their own check below.
  */
-const REQUIRED_UNIT_IDS = ['mercenary', 'bandit', 'archer'] as const;
+const REQUIRED_UNIT_IDS = ['mercenary', 'archer'] as const;
 (function assertRequiredUnitsPresent(): void {
   for (const id of REQUIRED_UNIT_IDS) {
     if (!(id in UNIT_DEFS)) {

@@ -22,9 +22,6 @@ import { World } from '../../src/sim/World';
 import { RNG } from '../../src/core/RNG';
 import { spawnTeam } from '../../src/sim/battleSetup';
 import { rollUnit } from '../../src/sim/archetypes';
-import { buildEnemyTeam } from '../../src/run/enemyBudget';
-import { DIFFICULTY } from '../../src/config/difficulty';
-import { DECK } from '../../src/config/deck';
 import { SIM } from '../../src/config/sim';
 import { SPAWN_ACTION_ID } from '../../src/sim/actions/SpawnAction';
 import type { GameEvents } from '../../src/core/events';
@@ -143,28 +140,13 @@ describe('D5.C spawn overflow queue', () => {
     expect(world.units.filter((u) => u.team === 'player')).toHaveLength(1);
   });
 
-  it('G4: a budget swarm larger than the spawn region overflows + fully drains', () => {
-    // The G4 brief's "transition enemies onto the spawn queue." Enemy count is
-    // `min(round(swarmMax × min(roster, handSize)), budget)` — the count basis is
-    // the FIELDED hand (the K2 wave-size fix), so the realistic max swarm is
-    // `round(swarmMax × handSize)` no matter how big the roster grows. Size the
-    // region just BELOW that ceiling so an overflow is guaranteed independent of
-    // the difficulty tuning. A high level makes the budget large enough to afford
-    // the full count (so `maxCount` is the swarm cap, not the budget).
-    const maxSwarm = Math.round(DIFFICULTY.swarmMaxMultiplier * DECK.handSize);
-    const REGION = Math.max(2, maxSwarm - 2);
+  it('a swarm larger than the spawn region overflows + fully drains', () => {
+    // Enemies past the region's tiles go onto the spawn queue, and each tile
+    // that frees pulls one back in.
+    const REGION = 6;
     const bus = new EventBus<GameEvents>();
     const world = new World(bus, new RNG(1));
-    // Roster ≥ handSize so the swarm basis is the hand (min(roster, handSize)).
-    const player = Array.from({ length: DECK.handSize }, () => rollUnit('mercenary', new RNG(1), 12));
-
-    // Find a seed whose swarm exceeds the region (most do at the default
-    // swarmBias; the loop makes the test independent of the knob).
-    let enemyTeam = buildEnemyTeam(new RNG(0), player);
-    for (let s = 1; enemyTeam.length <= REGION && s < 200; s++) {
-      enemyTeam = buildEnemyTeam(new RNG(s), player);
-    }
-    expect(enemyTeam.length).toBeGreaterThan(REGION);
+    const enemyTeam = Array.from({ length: REGION + 3 }, (_, i) => rollUnit('bandit', new RNG(10 + i), 3));
     const queued = enemyTeam.length - REGION;
 
     // A lone, far-away player unit keeps the battle from ending while we drain.

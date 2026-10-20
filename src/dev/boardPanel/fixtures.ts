@@ -12,7 +12,7 @@
  *   before Game reads them (boot.ts). A fixture that opens a different board
  *   on reload is wrong, and a hand-edited `seed=` next to a `board-` cannot
  *   cause it. Every fixture pins `roster=` as well, since the enemy budget
- *   scales with the roster (`enemyBudget.ts`; 8 enemies against 5 on the
+ *   scales with the roster (`encounters/wave.ts`; 8 enemies against 5 on the
  *   same seed, measured).
  * - Poses, render-only posed sprites on whatever board is up: the three
  *   clumps and the flyer are the board geometry tests' cell for cell

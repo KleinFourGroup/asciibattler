@@ -16,8 +16,8 @@ describe('--set (75l)', () => {
   it('parses one or many specs and stays unset when absent', () => {
     expect(parseArgs(['--set=sim.enemyPullChance=0']).set).toEqual(['sim.enemyPullChance=0']);
     expect(
-      parseArgs(['--set=sim.enemyPullChance=0', '--set=difficulty.budgetFactor=1.5']).set,
-    ).toEqual(['sim.enemyPullChance=0', 'difficulty.budgetFactor=1.5']);
+      parseArgs(['--set=sim.enemyPullChance=0', '--set=difficulty.levelBudgetMultiplier=1.5']).set,
+    ).toEqual(['sim.enemyPullChance=0', 'difficulty.levelBudgetMultiplier=1.5']);
     expect(parseArgs(['--count=5']).set).toBeUndefined();
     // Bare flag (no value) stays unset — run.ts's applySetOverrides owns
     // bailing on malformed specs at dispatch.

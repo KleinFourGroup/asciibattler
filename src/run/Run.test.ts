@@ -529,27 +529,17 @@ describe('Run', () => {
         const { rosterIndex, ...rest } = t;
         expect(rest).toEqual(run.team[rosterIndex!]);
       }
-      // G4: enemy team is a budget-distributed swarm of up to
-      // `swarmMaxMultiplier × playerSize` units (no longer a fixed size).
-      const maxCount = Math.round(DIFFICULTY.swarmMaxMultiplier * run.team.length);
       expect(run.currentEncounter!.enemyTeam.length).toBeGreaterThanOrEqual(1);
-      expect(run.currentEncounter!.enemyTeam.length).toBeLessThanOrEqual(maxCount);
     });
 
-    it('G4: enemy levels stay within cap; stats built via the deterministic scaleStats path', () => {
-      // The hop-linear ramp is gone — enemies now share a level budget
-      // derived from the player roster. The integration assertion here is
-      // that every enemy is ≤ the per-unit cap and its stats come from the
-      // canonical `scaleStats` build (the budget math itself is unit-tested
-      // in enemyBudget.test.ts). Cap + stats derive from live config.
+    it('enemy stats are built via the deterministic scaleStats path', () => {
+      // Every enemy's stats come from the canonical `scaleStats` build, which
+      // derives from live config.
       const { run } = freshRunWithBus(1);
       const first = frontierOf(run);
       run.dispatch({ kind: 'enterNode', nodeId: first });
-      const highest = Math.max(1, ...run.team.map((t) => t.level));
-      const cap = highest + DIFFICULTY.unitLevelDelta;
       for (const u of run.currentEncounter!.enemyTeam) {
         expect(u.level).toBeGreaterThanOrEqual(1);
-        expect(u.level).toBeLessThanOrEqual(cap);
         const cfg = ARCHETYPE_CONFIG[u.archetype];
         expect(u.stats).toEqual(scaleStats(cfg.baseStats, cfg.growthRates, u.level - 1));
       }

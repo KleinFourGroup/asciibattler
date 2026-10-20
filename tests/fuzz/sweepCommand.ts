@@ -34,7 +34,7 @@ export const TIER_NAMES = ['quick', 'medium', 'heavy', 'overnight'] as const;
 export type TierName = (typeof TIER_NAMES)[number];
 
 export interface KnobInfo {
-  /** `group.key`, e.g. `difficulty.budgetFactor` — the `--knob` value. */
+  /** `group.key`, e.g. `difficulty.levelBudgetMultiplier` — the `--knob` value. */
   readonly path: string;
   readonly group: string;
   readonly key: string;

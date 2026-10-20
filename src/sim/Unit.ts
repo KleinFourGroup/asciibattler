@@ -129,7 +129,7 @@ export interface UnitTemplate {
   /**
    * XP banked toward the next level, kept on the roster across battles
    * (`Run.team`). An enemy carries 0: it levels by `scaleStats`
-   * (`buildEnemyTeam`), never by XP. A recruit and the starting team begin
+   * (`scaledUnit`), never by XP. A recruit and the starting team begin
    * at 0.
    */
   readonly xp: number;

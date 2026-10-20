@@ -270,8 +270,7 @@ function resolveLevels(
  *
  * Equal weights give every share the same fraction, so the shuffle picks a
  * uniformly random subset for the `+1`: an even split with a spread of at
- * most 1, as `distributeBudget` (`../enemyBudget.ts`) gives the random wave
- * by other draws. A total weight of 0 falls back to equal weights.
+ * most 1. A total weight of 0 falls back to equal weights.
  */
 export function distributeWeightedLevels(
   rng: RNG,

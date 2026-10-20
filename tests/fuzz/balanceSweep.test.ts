@@ -62,11 +62,11 @@ describe('linspace', () => {
 
 describe('buildGrid', () => {
   it('builds a 1-knob axis', () => {
-    const grid = buildGrid([{ path: 'difficulty.budgetFactor', range: { min: 0, max: 1, steps: 3 } }]);
+    const grid = buildGrid([{ path: 'difficulty.levelBudgetMultiplier', range: { min: 0, max: 1, steps: 3 } }]);
     expect(grid).toEqual([
-      { 'difficulty.budgetFactor': 0 },
-      { 'difficulty.budgetFactor': 0.5 },
-      { 'difficulty.budgetFactor': 1 },
+      { 'difficulty.levelBudgetMultiplier': 0 },
+      { 'difficulty.levelBudgetMultiplier': 0.5 },
+      { 'difficulty.levelBudgetMultiplier': 1 },
     ]);
   });
   it('builds the cartesian product of two knobs, last varying fastest', () => {
@@ -85,12 +85,12 @@ describe('buildGrid', () => {
 
 describe('resolveKnob', () => {
   it('resolves a live config object + key for each group', () => {
-    expect(resolveKnob('difficulty.budgetFactor').obj).toBe(DIFFICULTY);
+    expect(resolveKnob('difficulty.levelBudgetMultiplier').obj).toBe(DIFFICULTY);
     expect(resolveKnob('health.enemyHealthMax').key).toBe('enemyHealthMax');
     expect(resolveKnob('leveling.xpPerHealing').group).toBe('leveling');
   });
   it('throws on a malformed or unknown knob', () => {
-    expect(() => resolveKnob('budgetFactor')).toThrow(/group.key/);
+    expect(() => resolveKnob('levelBudgetMultiplier')).toThrow(/group.key/);
     expect(() => resolveKnob('nope.x')).toThrow(/unknown knob group/);
     expect(() => resolveKnob('difficulty.nope')).toThrow(/unknown knob/);
   });
@@ -98,15 +98,15 @@ describe('resolveKnob', () => {
 
 describe('runBalanceSweep orchestration (injected measurePoint)', () => {
   it('applies each grid point to the live config, then restores the original', async () => {
-    const original = DIFFICULTY.budgetFactor;
+    const original = DIFFICULTY.levelBudgetMultiplier;
     const seen: number[] = [];
     const result = await runBalanceSweep({
-      knobs: [{ path: 'difficulty.budgetFactor', range: { min: 0.2, max: 0.6, steps: 3 } }],
+      knobs: [{ path: 'difficulty.levelBudgetMultiplier', range: { min: 0.2, max: 0.6, steps: 3 } }],
       preset: PRESETS.quick,
       samplerSeed: 1,
       // Capture the LIVE config value at measure time — proves the apply landed.
       measurePoint: (coord) => {
-        seen.push(DIFFICULTY.budgetFactor);
+        seen.push(DIFFICULTY.levelBudgetMultiplier);
         return fakePoint(coord);
       },
     });
@@ -114,14 +114,14 @@ describe('runBalanceSweep orchestration (injected measurePoint)', () => {
     expect(result.points).toHaveLength(3);
     expect(result.gridSize).toBe(3);
     // Restored after the sweep.
-    expect(DIFFICULTY.budgetFactor).toBe(original);
+    expect(DIFFICULTY.levelBudgetMultiplier).toBe(original);
   });
 
   it('restores the original even when measurePoint throws', async () => {
-    const original = DIFFICULTY.budgetFactor;
+    const original = DIFFICULTY.levelBudgetMultiplier;
     await expect(
       runBalanceSweep({
-        knobs: [{ path: 'difficulty.budgetFactor', range: { min: 0.9, max: 0.9, steps: 1 } }],
+        knobs: [{ path: 'difficulty.levelBudgetMultiplier', range: { min: 0.9, max: 0.9, steps: 1 } }],
         preset: PRESETS.quick,
         samplerSeed: 1,
         measurePoint: () => {
@@ -129,13 +129,13 @@ describe('runBalanceSweep orchestration (injected measurePoint)', () => {
         },
       }),
     ).rejects.toThrow('boom');
-    expect(DIFFICULTY.budgetFactor).toBe(original);
+    expect(DIFFICULTY.levelBudgetMultiplier).toBe(original);
   });
 
   it('passes hopOverride through to the measured config', async () => {
     let seenHops: number | undefined = -1;
     await runBalanceSweep({
-      knobs: [{ path: 'difficulty.budgetFactor', range: { min: 0.5, max: 0.5, steps: 1 } }],
+      knobs: [{ path: 'difficulty.levelBudgetMultiplier', range: { min: 0.5, max: 0.5, steps: 1 } }],
       preset: PRESETS.quick, // its own hopCount is 4
       samplerSeed: 1,
       hopOverride: 11,
@@ -150,7 +150,7 @@ describe('runBalanceSweep orchestration (injected measurePoint)', () => {
   it('68b: passes sectorHopsOverride through to the measured config (the two-act dial)', async () => {
     let seen: number | undefined;
     await runBalanceSweep({
-      knobs: [{ path: 'difficulty.budgetFactor', range: { min: 0.5, max: 0.5, steps: 1 } }],
+      knobs: [{ path: 'difficulty.levelBudgetMultiplier', range: { min: 0.5, max: 0.5, steps: 1 } }],
       preset: PRESETS.quick,
       samplerSeed: 1,
       sectorHopsOverride: 4,
@@ -165,7 +165,7 @@ describe('runBalanceSweep orchestration (injected measurePoint)', () => {
   it('passes forcedLayoutId through to the measured config (the N2 procedural isolate)', async () => {
     let seen: string | undefined = 'unset';
     await runBalanceSweep({
-      knobs: [{ path: 'difficulty.budgetFactor', range: { min: 0.5, max: 0.5, steps: 1 } }],
+      knobs: [{ path: 'difficulty.levelBudgetMultiplier', range: { min: 0.5, max: 0.5, steps: 1 } }],
       preset: PRESETS.quick,
       samplerSeed: 1,
       forcedLayoutId: 'procedural',
@@ -180,7 +180,7 @@ describe('runBalanceSweep orchestration (injected measurePoint)', () => {
   it('passes rosterOverride through to the measured config', async () => {
     let seen: readonly { archetype: string; level: number }[] | undefined;
     await runBalanceSweep({
-      knobs: [{ path: 'difficulty.budgetFactor', range: { min: 0.5, max: 0.5, steps: 1 } }],
+      knobs: [{ path: 'difficulty.levelBudgetMultiplier', range: { min: 0.5, max: 0.5, steps: 1 } }],
       preset: PRESETS.quick,
       samplerSeed: 1,
       rosterOverride: [
@@ -200,7 +200,7 @@ describe('runBalanceSweep orchestration (injected measurePoint)', () => {
 
   it('honors maxPoints (the dry-run estimate) while reporting the full grid size', async () => {
     const result = await runBalanceSweep({
-      knobs: [{ path: 'difficulty.budgetFactor', range: { min: 0, max: 1, steps: 5 } }],
+      knobs: [{ path: 'difficulty.levelBudgetMultiplier', range: { min: 0, max: 1, steps: 5 } }],
       preset: PRESETS.quick,
       samplerSeed: 1,
       maxPoints: 1,

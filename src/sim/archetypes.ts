@@ -142,8 +142,7 @@ export function rollUnit(archetype: Archetype, rng: RNG, level: number = 1): Uni
 /**
  * An enemy's template at `level`, by the deterministic `scaleStats`: no
  * draw, so an `(archetype, level)` pair always gives the same stats.
- * `buildEnemyTeam`, a wave's units, a camp's members and a summon come
- * through here.
+ * A wave's units, a camp's members and a summon come through here.
  */
 export function scaledUnit(archetype: Archetype, level: number): UnitTemplate {
   const cfg = CONFIGS[archetype];

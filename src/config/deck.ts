@@ -7,9 +7,10 @@
  * - `handSize` — the cards a turn draws, the base of the `drawAmount` run
  *   stat. A roster no larger fields everyone, so the deck matters, and a
  *   redraw means anything, only once the roster outgrows the hand. Through
- *   `drawAmount` it is also the enemy budget's basis, the player's level
- *   being `avgLevel × min(rosterSize, hand)` (`src/run/enemyBudget.ts`),
- *   so the budget follows the hand that fights, not the roster. A change
+ *   `drawAmount` it is also an authored wave's basis, its count and level
+ *   budget scaling with the fielded hand (`WaveContext.handSize`,
+ *   `src/run/encounters/wave.ts`), so the budget follows the hand that
+ *   fights, not the roster. A change
  *   to it moves the difficulty band.
  * - `maxHandSize` — the most cards a hand holds. Larger hands favour the
  *   player, and a stack of draw grants has no other brake. It clamps inside

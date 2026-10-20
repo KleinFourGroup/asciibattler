@@ -96,7 +96,7 @@ for (const t of TIER_NAMES) tierSelect.append(option(t, t));
 for (const t of TIER_NAMES) presetSelect.append(option(t, t));
 
 // Sensible defaults: the band knob the H7c sweeps centred on, quick tier.
-knobSelect.value = 'difficulty.budgetFactor';
+knobSelect.value = 'difficulty.levelBudgetMultiplier';
 tierSelect.value = 'quick';
 presetSelect.value = 'quick';
 

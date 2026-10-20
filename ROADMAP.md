@@ -260,6 +260,8 @@ medium. The cut, signed 2026-10-19 (WORKLOG §124.5, "The kickoff"):
 - ☑ **124.5h — the comment pass** (`batch`, per batch), as 124j ran.
   Twelve batches built, every read signed (batches 8 to 12 on
   2026-10-20; WORKLOG §124.5).
+- ☑ **124.5h-post — `UnitRarity`'s re-export** (`none`). Signed at
+  124.5i's stop; `build-hash HEAD`: the same bytes.
 - ☐ **124.5i — the close** (`stop`).
 
 ## Phase 125 — the bot and the fuzz instruments

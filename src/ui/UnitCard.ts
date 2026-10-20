@@ -39,7 +39,6 @@ import type { EmpowerStackView } from '../run/empower';
 
 /** A card's tier is the config's (`rarityForArchetype`). */
 import type { UnitRarity } from '../config/units';
-export type { UnitRarity };
 
 /** The layout: `full` is the detailed card (the stats, the abilities, the
  *  XP bar); `compact` is the battle HUD's card. */

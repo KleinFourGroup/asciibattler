@@ -65,11 +65,7 @@ the screens', for its kickoff (WORKLOG §124, "The close of §124").
 
 - ✅ **The probe runner's edges.** `--arg-file`, `--build` with `--dist`, the report's shape in `probe-cli.mjs`'s header, and `until: 'turn-outcome'` stopping as the battle ends (WORKLOG §124, 124b).
 
-- [ ] **`UnitCard.ts` re-exports `UnitRarity` with no reader.** Every
-  importer reads `config/units`. It is a re-export, so A-26's count of
-  exports only their own file reads missed it. A deletion, types only.
-  Found at 124.5h's batch 7 (WORKLOG §124.5); placed with the round's
-  deletions by the user, 2026-10-19.
+- ✅ **`UnitCard.ts` re-exports `UnitRarity` with no reader.** The re-export is out; every importer reads `config/units`, and the build's bytes are unchanged (WORKLOG §124.5, 124.5h-post).
 
 ### §126 tests
 

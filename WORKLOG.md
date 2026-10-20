@@ -13523,3 +13523,46 @@ answers are written: the TODO §127 row for `held-compare.mts`; CLAUDE.md
 Cursor's "Carried to the Round 8.5 close", the procedures' home, the
 driver's audio notification and the driver's three round-close items,
 since the user confirmed that they join the list.
+
+### 124.5i's stop: the close's three calls (2026-10-20, session 34a2ba54)
+
+The session was started by the phase's driver session and works with the
+user as usual. Nothing was open for the user at its start. Before the
+calls it measured what the phase changed (in "The close of §124.5"
+below) and ran a pointer search: a script over every tracked file outside
+the pass's own files and the records, for a line naming one of the
+pass's files (or `ui.css`, `HITSPLATS.md`, `fonts.css`) beside a step
+code, narrowed to the shapes "see / note / comment / block … §N" and
+"file §N". It found one, `tests/ui-focus.test.ts:33`. A pointer written
+without a file name and a step code on one line would not show.
+
+The three calls, put with their leans in the session's final message:
+
+1. No drops sweep before the close. §124's sweep took claims its batches
+   had dropped unchecked; §124.5's batches ran under the drops rule from
+   the start, eleven of twelve entries saying nothing was dropped
+   unchecked, and batch 10's naming no drop and listing its kept claims
+   as checked. The one claim kept unmeasured, batch 10's sector banner
+   "about 74px tall", stays as measured.
+2. `UnitRarity`'s re-export (TODO §124 and §124.5) built here as
+   124.5h-post, read `none`.
+3. `tests/ui-focus.test.ts:33`'s "ui.css §100" corrected now, comments
+   only: batch 12 renamed the block "The focus ring", and whether the
+   comment pass takes tests is §125's decision point, so the pointer
+   might otherwise never be reached.
+
+**Signed** (the user, 2026-10-20): "Signing all three of your leans,
+Claude! 😁"
+
+### 124.5h-post — `UnitRarity`'s re-export (2026-10-20, session 34a2ba54)
+
+Step zero: a search of every tracked file (the Grep tool, the whole
+repo) finds each reader of `UnitRarity` importing it from `config/units`
+(`recruitment.ts`, `archetypes.ts`, `Recruitment.ts` and its test,
+`Run.ts`, `rarityDisplay.ts` and its test, the blacklist editor's
+`draftable.ts`) and none from `UnitCard.ts`; no doc names the re-export.
+The build: `export type { UnitRarity };` out of `UnitCard.ts`, its
+import kept for the card's own `rarity` field.
+
+Proof: typecheck clean; `build-hash HEAD`: the same bytes, 32 files. No
+comment changed, so the step-code ceiling stays 1,084.

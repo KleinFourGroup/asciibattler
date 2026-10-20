@@ -14323,3 +14323,80 @@ The bars:
 **Kept.** `comment-strip HEAD src`: the three edited files alone differ
 in code. `comment-codes --record`: 1,078 → 1,076 (two codes in the
 comments that moved).
+
+### 125j — the re-skim (2026-10-20, session e216d681)
+
+Nothing was built. Read: the phase's diff outside the test files,
+`8c094cf9..HEAD` (59 files, 429 lines added, 2,862 deleted). This
+session's part (125f to 125i) was written here; session 1's additions
+(125a to 125e) were read as added lines, and are comment rewrites that
+read true. Then a word search (`git grep -w`) of every tracked file
+outside the records, `archive/` and `scratch/` for each name the phase
+deleted or stopped calling: the flags and their fields, the tier-flip
+rows, the arena's names, the wave builder's six functions and seven keys,
+`hazardCells`, `DEFAULT_MAX_TICKS` and `DEFAULT_TURN_TICKS`. It found
+only what 125e kept on purpose (`wave.test.ts`'s titles, two history
+lines) and an unrelated local named `budgetFactor` in `Run.test.ts`.
+Then the census's special-case sites under `src/bot` and `tests/fuzz`
+(`scratch/120f/special.json`, filtered): 24, all in `src/bot`.
+
+**The rows for the user's sign:**
+
+- **R-1 · `ArbitratedConfig`'s six per-site ε overrides** (125b's
+  finding). `portBuyEpsilon`, `packetFireEpsilon`, `rewardDaemonEpsilon`,
+  `nodeChoiceEpsilon`, `eventChoiceEpsilon` and `campRaidEpsilon` are
+  declared and read in `rollout/arbitratedStrategy.ts` and set nowhere,
+  in code or tests, so every `?? floor` takes the floor. A deletion
+  takes the six fields and their doc line, the `epsilonOverride`
+  parameter of the four private `arbitrate*` functions that pass one
+  through, and the two `config.… ??` reads, so each site reads its floor
+  as `grantEpsilon`'s did after 125b. Proof: the type check and the fuzz
+  diff, both shapes. Lean: delete, read `none`.
+- **R-2 · `avgTeamLevel` into `Recruitment.ts`** (125e's finding).
+  `enemyBudget.ts` holds one function, a recruit's level basis, and a
+  private helper it calls once; its readers are `Run.ts` (twice) and
+  `Run.test.ts`, and `Recruitment.ts`'s header already names
+  `round(avgTeamLevel)`. The move: the function into `Recruitment.ts`
+  with the helper inlined, its describe into `Recruitment.test.ts`, the
+  two imports re-pointed, `enemyBudget.ts` and its test file deleted,
+  ARCHITECTURE's row with them. It is a move, which the round's rules
+  make a trial unless it is counted as 125e's finish, as 124.5g-post was
+  124.5f's; the phase's three trials are spent. Proof: the type check,
+  the suite, the corpus and the fuzz diff. Lean: 125e's finish, read
+  `none`. Otherwise it goes to the census with R-3, or stays as it is,
+  since the file's header and ARCHITECTURE already say why the name no
+  longer fits.
+- **R-3 · call 3's passability mask, written into the census.**
+  `chokeCells` and `armyMinCut` (`sensors.ts`) each build the same mask
+  from the inert neutrals and the tiles, about twelve lines, and the
+  second's comment says it mirrors the first. Call 3 sent it to the
+  census for a later round; no phase has written a row there since
+  §120, so this is its first. As list B's B-18, with this text and
+  "Fate: a later round, unnamed (§125 call 3; the trials' budget was
+  spent)". Lean: write it.
+- **R-4 · ten sites that spawn an encounter on a World of their own,
+  with no rules installed** (125g's lead): `tests/pathing/capture.ts`
+  and nine tests (`boardPanel/fixtures.test.ts`, the five `*-battle`
+  tests, `corridor-flow`, `layout-deadlock`, `variable-size`). Each
+  needs its seed checked against the encounter's before `battleWorld`
+  can serve it. Lean: a TODO "§126 tests" line, nothing now.
+
+**Seen and not over the bar:**
+
+- Six `current.mode !== 'atWill'` (or `===`) compares across the two
+  drivers (`RolloutSearchDriver.ts:121-147`,
+  `TrafficScriptDriver.ts:157-205`): one condition each, and a helper
+  for one condition would be a new abstraction.
+- `terrainEdgeHold`'s `edgeHoldCell` scores cells on the barrier
+  frontier: not the rally filter (125i).
+- `sensors.ts`'s `isHazardKind` and `isBarrierHazard` both test `fire`,
+  under a "keep in lockstep" comment: two rules that agree today.
+
+The trials' budget: three of three used (125g, 125h, 125i).
+
+The comment pass's room: `src/bot`'s eleven files are 2,094 lines
+(1,082 code, 882 comment by `comment-length`, 5 comment lines more than
+at the kickoff, from `rallyCells`' doc). At §124.5's 75 tokens a line
+the pass is about 157k.
+
+Reading by the tool's clock (UTC): 421,377 at 22:58, before this entry.

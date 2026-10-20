@@ -300,7 +300,7 @@ its six calls; the audit, the calls and the trials' bars are in WORKLOG
 - ☑ **125i — trial: the two scripts' rally search** (`none`, on its bar).
   `sensors.ts`'s mask goes into the census for a later round (call 3).
   Kept: `rallyCells` in `sensors.ts`, the filter once from twice.
-- ☐ **125j — the re-skim** (`stop`).
+- ◐ **125j — the re-skim** (`stop`). R-1 to R-4 put to the user.
 - ☐ **125k — the comment pass over `src/bot`** (`batch`, per batch).
 - ☐ **125l — the close** (`stop`), with the decision point.
 

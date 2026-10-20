@@ -57,9 +57,20 @@ driver log ([archive/driver-trial/log-124.md](archive/driver-trial/log-124.md)).
     say whether the Windows one reached him.
   - P2's guard: not yet ("a few more observations are needed to justify
     a guard"); the note stays in the briefs meanwhile.
-- **Put to Matthew in driver 1's last turn, unanswered at this commit:**
-  the briefs' open `batch` reads worded as non-blocking (P17), and the
-  hand-off forecast (P20).
+- **Signed for session 7's brief** (Matthew, 2026-10-20: "Let's put both
+  of them in brief"):
+  - P17: "Open `batch` reads: list them with their scripts in your first
+    message, then start the next batch. A `batch` read blocks nothing."
+  - P20: the hand-off rule as planning.md has it, in his words "550k is
+    'please don't start anything new'": start a batch under 550k when its
+    forecast end, plus about 15k for the hand-off, stays under 600k;
+    forecast at the pass's typical rate, not the session's first batch's.
+    It replaces the 124.5h plan entry's end bound, so the session's entry
+    says so.
+- **For the round close** (with P16 above): planning.md's "larger than
+  the room" as "the room to the halt"; driving.md's brief bullet telling
+  open questions from open reads; and the name `batch` for both a read
+  kind and the comment pass's units (Matthew's observation).
 
 ## Patterns
 
@@ -77,8 +88,8 @@ Numbered from §123. "Quiet" means no instance in the last phase.
 | P14 | an Edit anchor off whole lines: across a break it misses and a commit in the same message runs anyway; ending mid-line it glues the line's rest on, reporting success | §124, 124.5f (`c5e0a244`), 124.5h b4 (`copyText.ts`) | open; quiet in sessions 4–6 under the note; CLAUDE.md's change signed 2026-10-20, for session 7 |
 | P15 | a count by a rule's or a name's written form misses a copy written another way | 122h, 124.5f's bar item 4 (the renderer's negated copy), 124.5c's A-26 count (a re-export, found at b7) | open; the note credited in batches 3–9 |
 | P16 | a procedure, or its data, findable only in old WORKLOG entries or an unnamed scratch folder | §124.5 sessions 1 (reach, the drive), 2 (the re-skim, `scratch/120f/`); 6 (the comment tools' `npm run oracle --` form, a log) | to the round close (signed 2026-10-20), for session 7 to carry |
-| P17 | the driver: Matthew reads an open item in the old session after its hand-off, and the waiting card's brief goes stale | after sessions 1 and 2; two cards proposed again | the fix held at sessions 4 and 6, but "put them to him first" made session 5 end its first turn on two `batch` reads (Matthew, 2026-10-20) |
-| P20 | a session hands off early, bounding the next batch's end (not its start) by 550k at its first batch's rate | sessions 3 (368k), 5 (330k) and 6 (398k); the 124.5h plan's rule is the stricter one | put to Matthew |
+| P17 | the driver: Matthew reads an open item in the old session after its hand-off, and the waiting card's brief goes stale | after sessions 1 and 2; two cards proposed again | the fix held at sessions 4 and 6; "put them to him first" made session 5 wait on two `batch` reads, so brief 7 words them as non-blocking (signed 2026-10-20) |
+| P20 | a session hands off early, bounding the next batch's end (not its start) by 550k at its first batch's rate | sessions 3 (368k), 5 (330k) and 6 (398k); the 124.5h plan's rule is the stricter one | planning.md's rule in brief 7 (signed 2026-10-20) |
 | P18 | the charter's bare `ui.css` sends a grep to `src/ui.css` | 124.5h b3–4, b7 | quiet in session 6 under the note |
 | P19 | the silent-turn reminder every few calls through long checks | every §124.5 session's report; session 6's `distress` line (a pull to have a finding ready; raised to Matthew 2026-10-20 00:48 UTC) | open, for the welfare read; CLAUDE.md "The silent-turn reminder" answers it, and the HANDOFF Cursor's riders (1) and (3) hold the reword's retirement and the feedback sent |
 
@@ -110,8 +121,6 @@ or a pattern with two or more earlier instances stops after it.
 | `--record` before the suite | §124 1, 2, 7; §124.5 1–6 | yes; P1 quiet through 124.5 |
 | search the docs for what a deletion removes | §124 1, 2, 7; §124.5 1, 2 | yes; out of the pass's briefs |
 | `comment-length`'s form | §124 1, 3–7; §124.5 1–6 | yes |
-| check a claim at the code it names | §124 3–7 | yes; now in the HANDOFF Cursor |
-| a twin searched by its shortest token | §124 4 | yes |
 | entries by the Write tool, messages by `-F` | §124 5–7; §124.5 1–6 | yes, but for 124.5h b6; kept though AGENTS says it (Matthew signed, 2026-10-19) |
 | the comment tools' marker and `held-compare` | §124.5 1–6 | yes, the exit was expected; its "the hook's green is the proof" was false (b3), corrected in brief 4 |
 | a step-code-shaped file name | §124.5 1–6 | not yet |

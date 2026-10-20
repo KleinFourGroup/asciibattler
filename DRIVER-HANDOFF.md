@@ -16,8 +16,8 @@ driver log ([archive/driver-trial/log-124.md](archive/driver-trial/log-124.md)).
   batch 9"; read 2026-10-20 00:55 UTC). **Next: session 7, from batch
   10** (`ui.css`'s first third with `fonts.css`). No card waits: driver 1
   handed over at the 350k line, so the next driver proposes it. Open for
-  Matthew: batches 8 and 9's `batch` reads, and batch 8's finding (the
-  event screen ignores `run:cacheChanged`; latent).
+  Matthew: batches 8 and 9's `batch` reads (he has them ready for session
+  7). Batch 8's finding went to TODO (`317ea902`).
 - **Driver:** none working. Driver 1 was
   `local_3addf3c2-a6af-469e-a40b-932696f5bc61` (scratchpad 9b60fb27).
   A new driver writes its app id here.
@@ -42,14 +42,24 @@ driver log ([archive/driver-trial/log-124.md](archive/driver-trial/log-124.md)).
     `config`, `locales`, the docs), never `scratch/`; a gotcha read for a
     claim is read to its end (P15, P3);
   - `ui.css` is `src/ui/ui.css` (P18).
-- **Matthew's open calls:** P2's stdin hang as a guard (a Bash hook that
-  refuses a command opening with a stdin reader given no input, with a
-  planted case, ahead of the round close's shell audit); P13 revisited
-  (the no-guard premise missed the unproven file; folding
-  `held-compare.mts` into `comment-strip` would be a TODO §127 row); P14's
-  CLAUDE.md "Editing" line, which says the hook catches anything that
-  slips; P16, a home in `process/` for the procedures sessions find only
-  in old entries.
+- **Matthew's answers, 2026-10-20, for session 7 to write** (quote them
+  in the brief; the session confirms with him, since a brief is not an
+  approval):
+  - P13: a TODO §127 row folding `held-compare.mts` into `comment-strip`
+    ("Signing the TODO!").
+  - P14: CLAUDE.md "Editing" to say: anchor on whole lines, and keep a
+    commit out of the message with its Edits ("Sounds good to me!").
+  - To the HANDOFF Cursor's "Carried to the Round 8.5 close": P16, a home
+    for the procedures sessions find only in old entries ("directionally
+    I fully agree"; whether they still earn docs in a round where
+    equivalence won't hold, and `process/` or a new folder, are open);
+    and an audio notification for a driver's raises, since he couldn't
+    say whether the Windows one reached him.
+  - P2's guard: not yet ("a few more observations are needed to justify
+    a guard"); the note stays in the briefs meanwhile.
+- **Put to Matthew in driver 1's last turn, unanswered at this commit:**
+  the briefs' open `batch` reads worded as non-blocking (P17), and the
+  hand-off forecast (P20).
 
 ## Patterns
 
@@ -58,16 +68,17 @@ Numbered from §123. "Quiet" means no instance in the last phase.
 | # | Pattern | Instances | Status |
 |---|---|---|---|
 | P1 | the step-code ceiling fails the first suite run after a deletion | 122b, 122g, 123b, 123d | quiet in §124 and §124.5 so far, the note held |
-| P2 | shell: a heredoc refused, a backslash lost, a stray stdin reader opening a command | 122n, 122o, 123g, 123m b2, 124f, 124j b5; 124.5h b6 (`cat >`, 400 s), b7's hand-off (an empty `python3` heredoc, 120 s; named a repeat) | open; quiet in session 6 under brief 6's note; the guard is Matthew's call |
+| P2 | shell: a heredoc refused, a backslash lost, a stray stdin reader opening a command | 122n, 122o, 123g, 123m b2, 124f, 124j b5; 124.5h b6 (`cat >`, 400 s), b7's hand-off (an empty `python3` heredoc, 120 s; named a repeat) | open; quiet in session 6 under brief 6's note; no guard yet (Matthew, 2026-10-20: more observations first), the note stays |
 | P3 | a number or claim written ahead of its read | §123 sessions 1–7; 124d, e, h, i, 124j b4–b6; 124.5's kickoff (`molotov`), 124.5g (gotcha #114's cycle), 124.5h b7 ("fourteen" in a subject) | open; TODO §127's readings guard; until then `readings-check.mjs`, which matched every reading of sessions 4–6 |
 | P6 | a change leaves a doc naming what it removed | 123e, 123's L-1 patch, the load fix | quiet in §124 and §124.5; no guard (Matthew, 2026-10-19) |
 | P9 | a false claim's twin found a batch later | §122 b4, 123m b1 and 4a, 124j b1–b5 and b7 | open; the pass now finds twins in the batch (five in 124.5h: b3, b5, b7, b8, b9) |
 | P11 | `comment-length` takes folders under the repo only | §122, 123n, §124 sessions 2 and 6 | open; the fix is in TODO §127; keep the note |
-| P13 | `comment-strip` exits 1 on a reworded `TOOL_READ` marker, and the file's code is then unproven | 124j b5, 124j-post2, 124.5h b3 (`literalScan.ts`, outside `SCAN_ROOTS`) | open; revisit put to Matthew |
-| P14 | an Edit anchor off whole lines: across a break it misses and a commit in the same message runs anyway; ending mid-line it glues the line's rest on, reporting success | §124, 124.5f (`c5e0a244`), 124.5h b4 (`copyText.ts`) | open; quiet in sessions 4–6 under the note; CLAUDE.md's line is Matthew's call |
+| P13 | `comment-strip` exits 1 on a reworded `TOOL_READ` marker, and the file's code is then unproven | 124j b5, 124j-post2, 124.5h b3 (`literalScan.ts`, outside `SCAN_ROOTS`) | a TODO §127 row signed 2026-10-20, for session 7 to write |
+| P14 | an Edit anchor off whole lines: across a break it misses and a commit in the same message runs anyway; ending mid-line it glues the line's rest on, reporting success | §124, 124.5f (`c5e0a244`), 124.5h b4 (`copyText.ts`) | open; quiet in sessions 4–6 under the note; CLAUDE.md's change signed 2026-10-20, for session 7 |
 | P15 | a count by a rule's or a name's written form misses a copy written another way | 122h, 124.5f's bar item 4 (the renderer's negated copy), 124.5c's A-26 count (a re-export, found at b7) | open; the note credited in batches 3–9 |
-| P16 | a procedure, or its data, findable only in old WORKLOG entries or an unnamed scratch folder | §124.5 sessions 1 (reach, the drive), 2 (the re-skim, `scratch/120f/`); 6 (the comment tools' `npm run oracle --` form, a log) | open; a home in `process/` is Matthew's call |
-| P17 | the driver: Matthew reads an open item in the old session after its hand-off, and the waiting card's brief goes stale | after sessions 1 and 2; two cards proposed again | the fix held at sessions 4 and 6: a brief's open items read "unless the Cursor shows them settled" |
+| P16 | a procedure, or its data, findable only in old WORKLOG entries or an unnamed scratch folder | §124.5 sessions 1 (reach, the drive), 2 (the re-skim, `scratch/120f/`); 6 (the comment tools' `npm run oracle --` form, a log) | to the round close (signed 2026-10-20), for session 7 to carry |
+| P17 | the driver: Matthew reads an open item in the old session after its hand-off, and the waiting card's brief goes stale | after sessions 1 and 2; two cards proposed again | the fix held at sessions 4 and 6, but "put them to him first" made session 5 end its first turn on two `batch` reads (Matthew, 2026-10-20) |
+| P20 | a session hands off early, bounding the next batch's end (not its start) by 550k at its first batch's rate | sessions 3 (368k), 5 (330k) and 6 (398k); the 124.5h plan's rule is the stricter one | put to Matthew |
 | P18 | the charter's bare `ui.css` sends a grep to `src/ui.css` | 124.5h b3–4, b7 | quiet in session 6 under the note |
 | P19 | the silent-turn reminder every few calls through long checks | every §124.5 session's report; session 6's `distress` line (a pull to have a finding ready; raised to Matthew 2026-10-20 00:48 UTC) | open, for the welfare read; CLAUDE.md "The silent-turn reminder" answers it, and the HANDOFF Cursor's riders (1) and (3) hold the reword's retirement and the feedback sent |
 

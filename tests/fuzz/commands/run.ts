@@ -12,7 +12,6 @@ import { writeBatchManifest } from '../manifest';
 import { parseScriptsSpec } from '../scriptSubset';
 import type { FuzzStrategy } from '../Strategy';
 import type { RunResult, HarnessOptions } from '../harness';
-import type { InnerTier } from '../rollout/walker';
 import { parseRunConfig, type RosterEntry } from '../../../src/run/RunConfig';
 import { ESCALATION_MAX, isEscalationLevel } from '../../../src/config/escalation';
 import {
@@ -30,9 +29,6 @@ import {
   decisionRowsOf,
   renderDecisionAnalysis,
   renderInertClassTripwire,
-  renderTierFlipsCsv,
-  renderTierFlipAnalysis,
-  tierFlipRows,
   renderFailureTrace,
   failureFilename,
   renderPerHopAnalysis,
@@ -115,7 +111,6 @@ export type RunModeArgs = Pick<
   | 'grant'
   | 'arbitrate'
   | 'arbitrateTier'
-  | 'flipTelemetry'
   | 'priorLambda'
   | 'campRaid'
   | 'shadowHorizon'
@@ -348,8 +343,6 @@ export function runRunCli(args: RunModeArgs): void {
   // resolver, same timing. The effective name stays deterministic
   // (`arbitrated:<base>`), so the per-strategy summary keys on `nameFor`.
   const wrapStrategy = arbitratedWrapFromArgs(args, {
-    // 71c — the shadow tier (validated in args.ts: a real tier ≠ primary).
-    ...(args.flipTelemetry !== undefined ? { shadowTier: args.flipTelemetry as InnerTier } : {}),
     // 85g6a — the campRaid causal-arm dial (validated in args.ts: on|off).
     ...(args.campRaid === 'off' ? { campRaid: false } : {}),
     // 84c — the long-horizon shadow instrument (validated in args.ts:
@@ -453,8 +446,6 @@ export function runRunCli(args: RunModeArgs): void {
   // 71a — the decision-grade sidecar (additive: summary.csv columns are
   // untouched). Shared with the --jobs parent — parity by code path, 68e.
   writeDecisionsSidecar(args.outDir, allResults);
-  // 71c — the tier-flip sidecar, same discipline (written iff shadow ran).
-  writeTierFlips(args.outDir, allResults);
 
   // 86a — the per-seed wall-clock sidecar. Wall time is NONDETERMINISTIC by
   // nature, so it must NEVER ride summary.csv or any byte-identity surface
@@ -590,10 +581,6 @@ export function runRunCli(args: RunModeArgs): void {
     // shown on the first §69e batch had this existed).
     process.stdout.write(renderInertClassTripwire(rows) + '\n');
   }
-  // 71c — the flip-rate aggregate, printed whenever the shadow ran.
-  if (tierFlipRows(allResults).length > 0) {
-    process.stdout.write(renderTierFlipAnalysis(allResults) + '\n');
-  }
   // 72b-pre — the seam-hazard read, printed whenever any run reached a sector
   // seam (walk shapes). Serial-console-only like the reads above — the file
   // contract is the summary.csv poolAtSectorEnd/finalPool columns, which a
@@ -615,16 +602,6 @@ export function runRunCli(args: RunModeArgs): void {
 export function writeDecisionsSidecar(outDir: string, results: readonly RunResult[]): void {
   if (!results.some((r) => r.decisions !== undefined)) return;
   writeFileSync(join(outDir, 'decisions.csv'), renderDecisionsCsv(results));
-}
-
-/**
- * 71c — write tier-flips.csv iff any decision was shadow-judged (the
- * `--flip-telemetry` arm). Same shared-code-path contract as the decisions
- * sidecar: the --jobs parent calls this over its merged results.
- */
-export function writeTierFlips(outDir: string, results: readonly RunResult[]): void {
-  if (tierFlipRows(results).length === 0) return;
-  writeFileSync(join(outDir, 'tier-flips.csv'), renderTierFlipsCsv(results));
 }
 
 /**

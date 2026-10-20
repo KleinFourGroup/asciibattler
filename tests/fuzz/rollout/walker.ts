@@ -74,8 +74,7 @@ import { selectRedrawPositions, type RedrawPolicy } from '../redrawPolicy';
 import { selectEmpowerPosition, type EmpowerPolicy } from '../empowerPolicy';
 
 /** Resolution 3's dial: what plays battles inside a rollout. Cheap by
- *  default; recursion ('searcher') is paid only where the §71 flip-rate
- *  instrument says flips concentrate. */
+ *  default; recursion ('searcher') is opt-in (`--arbitrate-tier`). */
 export type InnerTier = 'bare' | 'traffic' | 'searcher';
 export const DEFAULT_INNER_TIER: InnerTier = 'traffic';
 

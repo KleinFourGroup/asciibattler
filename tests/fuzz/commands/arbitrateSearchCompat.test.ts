@@ -36,9 +36,6 @@ describe('the 85g3 arg matrix (mode-by-mode, the 70a discipline relaxed)', () =>
   });
 
   it('the run-mode instruments never ride a search', () => {
-    expect(() => parseArgs(['--search', '--arbitrate', '--flip-telemetry=bare'])).toThrow(
-      /run-mode instrument/,
-    );
     expect(() => parseArgs(['--search', '--arbitrate', '--shadow-horizon=run'])).toThrow(
       /run-mode instrument/,
     );

@@ -9,7 +9,7 @@
  * would have written: the same strategy-major regroup the `--jobs` shard
  * merge uses (mergeSummaries — stages ordered by their seed windows are
  * shards in all but name), applied to every per-run-row csv present
- * (summary / timings / decisions / tier-flips / k-flips — all share the
+ * (summary / timings / decisions / k-flips — all share the
  * `seed,strategy,…` leading columns), plus failures/ adoption (COPIED, not
  * moved — stages are source archives, unlike the --jobs scratch shards).
  *
@@ -66,7 +66,7 @@ export type MergeStagesArgs = Pick<CliArgs, 'mergeStages' | 'outDir' | 'outDirEx
 /** The per-run-row csvs the shard regroup reproduces byte-for-byte.
  *  87a: rosters.csv joins (per-battle rows, same seed,strategy leading
  *  columns — the decisions.csv multi-row shape). */
-const MERGEABLE = ['summary.csv', 'timings.csv', 'decisions.csv', 'tier-flips.csv', 'k-flips.csv', 'rosters.csv'];
+const MERGEABLE = ['summary.csv', 'timings.csv', 'decisions.csv', 'k-flips.csv', 'rosters.csv'];
 
 interface Stage {
   readonly dir: string;

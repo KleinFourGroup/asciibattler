@@ -13930,3 +13930,31 @@ overrides (`portBuyEpsilon`, `packetFireEpsilon`, `rewardDaemonEpsilon`,
 nothing in code, tests or config: a search for each name finds only its
 declaration and its read in `rollout/arbitratedStrategy.ts`. They were not
 the flag's, so they stay for 125j.
+
+The commit's hook: the suite 3,722, the smoke 610 in 61 files (613 in 63
+before: the two arg files' tests), the parity test 1.
+
+### 125c — A-20's `--flip-telemetry` (2026-10-20, session 046c70be)
+
+The flag and its guards are out of `args.ts`; `run.ts` no longer passes a
+shadow tier, writes `tier-flips.csv` or prints its aggregate, and the
+`--jobs` parent no longer writes it either (`parallel.ts`).
+`reporters.ts` loses the tier-flip block (`TierFlipRow`, `tierFlipRows`,
+`renderTierFlipsCsv`, `renderTierFlipAnalysis`, 90 lines);
+`RunArbitrationDriver` loses `shadowTier`, the shadow pass and
+`RunDecisionRecord.shadowChosenIndex`; `ArbitratedConfig.shadowTier` goes.
+Tests: `driver.test.ts`'s shadow-tier describe (93 lines), the tier-flip
+case in `harness.test.ts`, and one refusal in
+`arbitrateSearchCompat.test.ts`. The `--jobs` parity test runs without the
+flag and compares `summary.csv` and `decisions.csv`. `--merge-stages`
+drops `tier-flips.csv` from the files it merges, so a stage archive from
+before that holds one merges without it. Three comments that pointed a
+reader at the flip-rate read (`cli.ts`, `walker.ts`, `walker.test.ts`)
+now say what the tier dial does. 14 files, 15 lines in and 359 out.
+`kFlipTelemetry` is `--k-telemetry`'s and stays; the search for the
+names afterwards finds only it and a history line in META-ROADMAP.
+
+Proof: the type check is clean; the fuzz diff against `c84a6d16` PASS on
+both shapes, the arm shape's `decisions.csv` among them (`fde861a0dacc`,
+the same as 125b's run), which the shadow fields never reached without
+the flag.

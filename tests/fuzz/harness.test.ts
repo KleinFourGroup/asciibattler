@@ -28,9 +28,6 @@ import {
   inertClassStats,
   inertClasses,
   renderInertClassTripwire,
-  tierFlipRows,
-  renderTierFlipsCsv,
-  renderTierFlipAnalysis,
   renderFailureTrace,
   failureFilename,
   perHopStats,
@@ -800,50 +797,6 @@ describe('fuzz reporters', () => {
     const overlay = walkPolicyOverlay(scoredStrategy('x', DEFAULT_SCORED_WEIGHTS));
     expect(overlay.pickPacketFire).toBeUndefined();
     expect(overlay.pickPortBuy).toBeDefined();
-  });
-
-  // ── 71c — the tier-flip instrument ─────────────────────────────────────────
-
-  it('71c — tierFlipRows counts shadow-judged decisions per site; csv + aggregate render', () => {
-    const shadowRecord = (
-      site: string,
-      chosenIndex: number,
-      shadowChosenIndex?: number,
-    ): RunDecisionRecord => ({
-      site,
-      sectorId: 'the-start',
-      hop: 1,
-      labels: ['null', 'x'],
-      results: [
-        { score: 0, perSeed: [breakdown(0), breakdown(0)] },
-        { score: 5, perSeed: [breakdown(5), breakdown(5)] },
-      ],
-      chosenIndex,
-      marginVsNull: 5,
-      epsilon: 1,
-      ...(shadowChosenIndex !== undefined ? { shadowChosenIndex } : {}),
-    });
-    const results = [
-      bareResult(1, [
-        shadowRecord('portBuy', 1, 0), // flip
-        shadowRecord('portBuy', 1, 1), // agree
-        shadowRecord('nodeChoice', 0, 0), // agree
-        shadowRecord('grant:redraw', 1), // NOT shadow-judged — excluded
-      ]),
-      bareResult(2), // no log at all — excluded
-    ];
-    const rows = tierFlipRows(results);
-    expect(rows).toEqual([
-      { seed: 1, strategy: 'arbitrated:scored', site: 'nodeChoice', decisions: 1, flips: 0 },
-      { seed: 1, strategy: 'arbitrated:scored', site: 'portBuy', decisions: 2, flips: 1 },
-    ]);
-    const csv = renderTierFlipsCsv(results);
-    expect(csv.split('\n')[0]).toBe('seed,strategy,site,decisions,flips');
-    expect(csv).toContain('1,arbitrated:scored,portBuy,2,1');
-    const analysis = renderTierFlipAnalysis(results);
-    // Most-flippy-first: portBuy (50%) before nodeChoice (0%).
-    expect(analysis.indexOf('portBuy')).toBeLessThan(analysis.indexOf('nodeChoice'));
-    expect(analysis).toContain('overall: 1/3 (33.3%)');
   });
 
   it('aggregates win rate and hop stats', () => {

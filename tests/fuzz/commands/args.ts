@@ -197,13 +197,6 @@ export interface CliArgs {
   // dial (default traffic); requires --arbitrate.
   arbitrate: boolean;
   arbitrateTier?: string;
-  // 71c — the flip-rate instrument (`--flip-telemetry[=<tier>]`): shadow-
-  // judge every arbitrated decision under a second inner tier with the same
-  // CRN pairs and count disagreements (tier-flips.csv + a stdout aggregate).
-  // Bare flag = 'searcher' (the resolution-3 cheap-vs-recursive read); the
-  // value form exists for cheap cross-tier reads and test sizing. Requires
-  // --arbitrate; must differ from the primary tier.
-  flipTelemetry?: string;
   // 85c — λ_prior (`--prior-lambda=<f>`): the fold's board arm ({0, 0.5,
   // 1} at the §85 cohort; any finite ≥ 0 accepted — a dial, not a doctrine
   // constant). 0 = the fold path never engages (byte-identical, the board
@@ -439,9 +432,6 @@ export function parseArgs(argv: readonly string[]): CliArgs {
       case '--arbitrate':
         args.arbitrate = true;
         break;
-      case '--flip-telemetry':
-        args.flipTelemetry = v ?? 'searcher';
-        break;
       case '--prior-lambda':
         if (v !== undefined) args.priorLambda = Number(v);
         break;
@@ -530,11 +520,8 @@ export function parseArgs(argv: readonly string[]): CliArgs {
   }
   // 85g3 — the run-mode INSTRUMENTS never ride a search: a search silently
   // ignoring them would label the batch wrong (the same 70a discipline),
-  // and none of them belong in a training loop (--flip-telemetry /
-  // --shadow-horizon are telemetry, --camp-raid is an ablation dial).
-  if (args.search && args.flipTelemetry !== undefined) {
-    throw new Error('--flip-telemetry is a run-mode instrument (not supported with --search)');
-  }
+  // and none of them belong in a training loop (--shadow-horizon is
+  // telemetry, --camp-raid is an ablation dial).
   if (args.search && args.shadowHorizon !== undefined) {
     throw new Error('--shadow-horizon is a run-mode instrument (not supported with --search)');
   }
@@ -551,25 +538,6 @@ export function parseArgs(argv: readonly string[]): CliArgs {
     if (!['bare', 'traffic', 'searcher'].includes(args.arbitrateTier)) {
       throw new Error(
         `--arbitrate-tier must be bare|traffic|searcher (got '${args.arbitrateTier}')`,
-      );
-    }
-  }
-  // 71c — the flip-rate instrument's guards: arbitrate-only, a real tier,
-  // and a shadow that actually differs from the primary (an equal pair
-  // would measure zero flips by construction and label the batch wrong).
-  if (args.flipTelemetry !== undefined) {
-    if (!args.arbitrate) {
-      throw new Error('--flip-telemetry requires --arbitrate (it shadows the arbitrated arm)');
-    }
-    if (!['bare', 'traffic', 'searcher'].includes(args.flipTelemetry)) {
-      throw new Error(
-        `--flip-telemetry must be bare|traffic|searcher (got '${args.flipTelemetry}')`,
-      );
-    }
-    const primary = args.arbitrateTier ?? 'traffic';
-    if (args.flipTelemetry === primary) {
-      throw new Error(
-        `--flip-telemetry=${args.flipTelemetry} equals the primary tier (${primary}) — the read would be vacuously flip-free`,
       );
     }
   }
@@ -880,8 +848,8 @@ export function normalizeArbRolloutSearch(
  * search drives the identical arm byte-for-byte). Core = tier + the fold
  * (λ + both table views, loaded ONCE at resolve time — a missing table
  * throws before any seed runs, the 85c contract) + the searcher config
- * for searcher-tier rollouts. The run-mode INSTRUMENTS (`--flip-telemetry`
- * / `--shadow-horizon` / `--camp-raid`) are run.ts compositions passed
+ * for searcher-tier rollouts. The run-mode INSTRUMENTS (`--shadow-horizon`
+ * / `--camp-raid`) are run.ts compositions passed
  * through `extras` and are REFUSED with `--search` (validateArgs above).
  */
 export function arbitratedWrapFromArgs(

@@ -280,7 +280,7 @@ its six calls; the audit, the calls and the trials' bars are in WORKLOG
   fifteen vectors; GOTCHAS #128's sentence corrected.
 - ☑ **125b — A-20's `--bits-multiplier` and `--grant-epsilon`** (`none`),
   with `grantEpsilon`'s field and override, which only the flag set.
-- ☐ **125c — A-20's `--flip-telemetry`** (`none`). The shadow tier, its
+- ☑ **125c — A-20's `--flip-telemetry`** (`none`). The shadow tier, its
   sidecar, aggregate and merge entry; the parity test keeps two files.
 - ☐ **125d — A-20's `--arena`** (`none`). Its three files and flag; the
   coverage bot's test on the harness's coverage run; `objectiveMenu`,

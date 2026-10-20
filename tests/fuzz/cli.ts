@@ -172,7 +172,7 @@
  *   # enumerate candidates and truncated rollouts arbitrate vs the null arm
  *   # (69e driver; per-site ε floors); un-landed sites delegate to the base.
  *   # --arbitrate-tier dials the rollout inner tier (default traffic;
- *   # 'searcher' = resolution 3's recursion, priced for §71's flip-rate read).
+ *   # 'searcher' = resolution 3's recursion).
  *   # Composes with --jobs (per-seed construction is shard-safe):
  *   npm run fuzz -- --count=40 --searcher --audition --redraw=level:2 --empower=level:hi --arbitrate
  *   npm run fuzz -- --count=40 --arbitrate --arbitrate-tier=searcher --jobs=8

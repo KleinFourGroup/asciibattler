@@ -71,7 +71,7 @@ import {
   isTransientShardError,
 } from '../searchShard';
 import { bail, range, type CliArgs } from './args';
-import { writeAggregateAnalyses, writeDecisionsSidecar, writeTierFlips } from './run';
+import { writeAggregateAnalyses, writeDecisionsSidecar } from './run';
 import { PARTITION_FLAG_PREFIXES, writeBatchManifest } from '../manifest';
 import type { RunResult } from '../harness';
 
@@ -200,7 +200,6 @@ export async function runParallelRunCli(args: ParallelRunArgs): Promise<void> {
     }
     writeAggregateAnalyses(args, mergedResults);
     writeDecisionsSidecar(args.outDir, mergedResults);
-    writeTierFlips(args.outDir, mergedResults);
   }
 
   // Mirror run.ts's failures/ semantics: wipe, then adopt every shard's traces
@@ -290,7 +289,7 @@ function spawnShardOnce(
  *  86d2 — exported: the staged-n merge (mergeStages.ts) is the same regroup
  *  over STAGE dirs (adjacent seed windows), and every per-run-row csv this
  *  harness writes shares the `seed,strategy,…` leading columns, so one
- *  regroup serves summary/timings/decisions/tier-flips/k-flips alike. */
+ *  regroup serves summary/timings/decisions/k-flips alike. */
 export function mergeSummaries(shardDirs: readonly string[], file = 'summary.csv'): string {
   const perShard = shardDirs.map((d) => {
     const lines = readFileSync(join(d, file), 'utf8').split('\n');

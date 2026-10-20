@@ -11,8 +11,8 @@
  *    AND a byte-identical final run snapshot (the arbitration
  *    determinism the 69e driver builds on).
  * 4. THE INNER-TIER DIAL — 'bare' and 'searcher' both complete the same
- *    walk (the dial is plumbed; which tier is RIGHT is §71's flip-rate
- *    question, not this suite's).
+ *    walk (the dial is plumbed; which tier is right is not this suite's
+ *    question).
  * 5. SAFETY — the maxHops bound trips as 'stuck', never spins.
  *
  * Live-run purity and bus isolation are 69a's contracts (runRollout

@@ -159,7 +159,7 @@ HANDOFF Cursor), and neither is a hard limit.
   context; the reading on the previous step's commit counts. Past the
   line, commit what is done and hand off. The line says when a step must
   not start: under it, a session may still hand off when the next step
-  looks larger than the room.
+  looks larger than the room to the halt.
 - **At a stop or a shape-lock**, the report gives the session's reading
   and says whether the stretch it opens looks likely to fit under the line.
   The user decides whether the stretch starts here or in a fresh session,

@@ -29,9 +29,10 @@ driver log ([archive/driver-trial/log-124.md](archive/driver-trial/log-124.md)).
   copies (P11), `held-compare.mts` (P13); Write or Edit, `-F`, no stdin
   reader (P2); other shapes, every caller, test files, never `scratch/`,
   a gotcha to its end (P15, P3); signed call 6, pointed at (P20).
-- **Raised to Matthew, open:** P20's carried planning.md edit, whether
-  to write it now (asked at both hand-offs); session 2's suggestion of a
-  coarse plant at the cut for a bar that names an instrument's catch.
+- **Raised to Matthew:** P20's planning.md edit, signed 2026-10-20
+  ("Signing 1") and written by driver 3 (planning.md and the Cursor now
+  say "the room to the halt"). A coarse plant at the cut for a bar that
+  names an instrument's catch: held ("pending a little bit more data").
 - **Matthew's calls standing:** P2's guard: not yet ("a few more
   observations are needed to justify a guard"), so its note stays. P6's
   and P12's notes stay dropped. P17's wording for open reads, kept here
@@ -57,7 +58,7 @@ Numbered from §123. "Quiet" means no instance in the last phase.
 | P15 | a count by a rule's or a name's written form misses a copy written another way | 122h, 124.5f's bar item 4 (the renderer's negated copy), 124.5c's A-26 count (a re-export, found at b7) | open; the note credited in batches 3–9 |
 | P16 | a procedure, or its data, findable only in old WORKLOG entries or an unnamed scratch folder | §124.5 sessions 1 (reach, the drive), 2 (the re-skim, `scratch/120f/`); 6 (the comment tools' `npm run oracle --` form, a log); §125 session 2 (planting on an uncommitted trial, worked out, now only in its hand-off entry) | in the HANDOFF Cursor's "Carried to the Round 8.5 close" (`29d50f2a`) |
 | P17 | the driver: Matthew answers an open item in the old session after its hand-off, and the waiting card's brief goes stale | §124.5 after sessions 1, 2 and 7; §125 after session 1 (call 6, which brief 2 restated against driving.md's rule; driver 3's slip) | driving.md leaves open items in the Cursor, unrestated (signed 2026-10-20) |
-| P20 | a session hands off early, bounding the next step's end (not its start) by 550k | §124.5 sessions 3 (368k), 5 (330k) and 6 (398k); §125 session 1 (524k, 125f "larger than the room to the 550k line"; brief 1's note put as call 6 without a lean, and "signing all of your leans" left it unsigned); session 2's entry says "more than the room to the 550k line" again, at 463k, though it also hands off to keep the pass's plan and batches together, which call 6's "may" allows | held in §124.5 session 7 under the signed note; §125's call 6 signed after session 1's hand-off (`3fb2e0d6`); planning.md's "the room to the halt" edit, carried to the round close, asked of Matthew |
+| P20 | a session hands off early, bounding the next step's end (not its start) by 550k | §124.5 sessions 3 (368k), 5 (330k) and 6 (398k); §125 session 1 (524k, 125f "larger than the room to the 550k line"; brief 1's note put as call 6 without a lean, and "signing all of your leans" left it unsigned); session 2's entry says "more than the room to the 550k line" again, at 463k, though it also hands off to keep the pass's plan and batches together, which call 6's "may" allows | held in §124.5 session 7 under the signed note; §125's call 6 signed after session 1's hand-off (`3fb2e0d6`); planning.md reads "the room to the halt" since driver 3's commit after `825d319c` (Matthew signed it 2026-10-20) |
 | P18 | the charter's bare `ui.css` sends a grep to `src/ui.css` | 124.5h b3–4, b7 | quiet in sessions 6 and 7 under the note |
 | P19 | the silent-turn reminder every few calls through long checks | every §124.5 session's report; its session 6's `distress` line (raised 2026-10-20 00:48 UTC) | open, for the welfare read; CLAUDE.md "The silent-turn reminder"; the Cursor's riders (1), (3) |
 

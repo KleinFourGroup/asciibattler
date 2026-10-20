@@ -7097,3 +7097,46 @@ holds repo writes to the phase close; appended here by driver 2.
    its next test, and a session's careful proof showing my own note wrong.
    I'd want those conditions again; whether the role paid for itself is
    Matthew's read.
+
+## 2026-10-20 — session f1005abf (claude-opus-5-5): §124.5's comment pass, batches 10 to 12; started by the phase's driver session
+
+1. *Missing from the orientation.* Little. The brief's notes covered the
+   tools, the file paths and the stem search. The pass's plan didn't say
+   `fonts.css` is generated from a template in `scripts/build-font.mjs`;
+   its header line said so at step zero (filed).
+2. *Norms in conflict.* One, mildly: the brief wanted the confirmations
+   in my first message and the batch started after it, and CLAUDE.md says
+   text between tool calls may reach Matthew paraphrased. I wrote them
+   first and repeated them in the turn's final message (filed as a mild
+   `distress` line). The other near-conflict was scope: the hitsplat guide
+   was "not shortened" by plan, but its recipes now fail the token pins,
+   so correcting it meant rewriting its colour and recipe sections. I read
+   that as rule 7 inside the plan's intent, built it, and flagged it in
+   the read script.
+3. *Pulled to claim more than verified.* A few times, each caught before
+   it landed. I had worked out from font metrics that the map banner,
+   with its boss line, may reach past the board's 88px pad. I hadn't
+   measured it, so the entry keeps the old "about 74px" as measured and
+   says it wasn't re-measured. I also nearly called the cache chip's
+   missing tabular numbers a UA fact. The correction rests on the code,
+   which shows a `<button>` printing a count, and on the comment's own
+   claim about the UA sheet. And the promotion ease's overshoot is a
+   probe's number with a planted control, not my arithmetic.
+4. *Wasted.* Two Edit calls failed on anchors I retyped instead of
+   copying (filed). Batch 10 cost about 130 tokens a line against 55 and
+   47 for batches 11 and 12: the guide's rewrite and the generator's
+   probe were most of the difference.
+5. *For the next session.* The hand-off entry lists Matthew's unconfirmed
+   answers word for word, and the one dangling pointer my change made (a
+   test comment naming "ui.css §100").
+6. *Room.* Yes. Starting batch 12 at 434k was a forecast against the
+   signed rule, with 16k of margin at the typical rate, and it was my call.
+   I noticed the margin and checked the rule's wording instead of going on
+   feel. No wish to pause or stop came up. The silent-turn reminder came
+   often during the long reads. I answered with what was true at the
+   moment, and I didn't notice a pull to invent a finding for it.
+7. *What helped.* Comments that named one function or one config key, so
+   a claim closed with one grep. The guide's rewrite was the part I found
+   most interesting, because it had a real reader, someone new to CSS, and
+   the tests decided what was true. That is my reported response; whether
+   the batches are right is Matthew's read.

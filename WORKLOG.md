@@ -13464,3 +13464,53 @@ batches over six sessions (`ff99ffb0`, `ebe41cd8`, `bcd08e32`,
 `ui.css` whole, `66300d2e` against now (`comment-length` on copies under
 `output/cl-1245h-css`): comment lines 967 → 934, words 10,824 → 10,655,
 code lines 3,401 unchanged, its 260 step codes to none.
+
+### The hand-off after 124.5h's batch 12 (2026-10-20, session f1005abf)
+
+The session ran batches 10 to 12 (`d5bfab0b`, `105cba9e`, `08fcd214`), so
+124.5h is built and ◐ in ROADMAP, and this one. It hands off at 522,677,
+since the next step is 124.5i, the close, a `stop` that starts a fresh
+stretch; the phase's driver proposes the session.
+
+**Open.**
+
+- Batches 8 to 12's `batch` reads, each script in its entry. None blocks
+  the close's start.
+- Matthew's answers of 2026-10-20, relayed by the driver's brief for this
+  session to confirm and write in one docs commit. They were put to him in
+  this session's first message; no reply came before the hand-off, so
+  none is written:
+  - a TODO §127 row folding `scratch/1245h-b3/held-compare.mts` into
+    `comment-strip` ("Signing the TODO!");
+  - CLAUDE.md "Editing": anchor Edits on whole lines, and keep a commit
+    out of any message that holds Edits ("Sounds good to me!");
+  - to the Cursor's "Carried to the Round 8.5 close": a home for the
+    procedures found only in old WORKLOG entries or unnamed scratch
+    folders ("directionally I fully agree"; open: whether they earn docs
+    in a round where equivalence won't hold, and `process/` or a new
+    folder), and an audio notification for a driver's raises;
+  - asked, not answered: whether three more join that list: planning.md's
+    "larger than the room" to read "the room to the halt"; driving.md's
+    brief bullet telling open questions from open reads; and the name
+    `batch` serving both a read kind and the comment pass's units.
+
+**For the close.**
+
+- `tests/ui-focus.test.ts` points at the ring rule as "ui.css §100"; the
+  block is headed "The focus ring" now. Left for the tests' pass, since
+  tests are §126's.
+- §124's close was preceded by two steps the user signed there (124j-post,
+  step zero, the signs and the proof; 124j-post2, the drops sweep; WORKLOG
+  §124). Whether §124.5's close takes the same is the close's question.
+- Step zero for anything that reads the batches: `output/cl-1245h-b10/`,
+  `-b11/`, `-b12/` and `-css/` hold the copies, logs and message files.
+
+**Off git.** Those folders, and two probes in this session's scratchpad
+(the landing ease's peak, the font header's template). No worktree,
+background task or preview server is left.
+
+**Readings** (the meter, UTC, 2026-10-20): 115,956 at 13:43 (the
+orientation), 321,047 (batch 10's proof), 332,785 (batch 10's commit),
+427,362 (batch 11's proof), 433,782 (batch 11's commit), 507,510 (batch
+12's proof), 517,649 (batch 12's commit), 522,677 at 14:32 before this
+entry. The batches cost about 130, 55 and 47 tokens a line.

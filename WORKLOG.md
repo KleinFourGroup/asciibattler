@@ -15380,3 +15380,34 @@ worktree of `7f83484a` (the scratchpad's `plant-126g.sh`):
 - `ui.css:9`, `'DejaVu Sans Mono'` dropped from `--font-mono`: the pin
   failed with both chains in its message.
 - The clean worktree: 21 of 21 in the two files.
+
+### 126h — the import-cycle guard (2026-10-21, session e6ab25e8)
+
+Step zero at `449444ad`: gotcha #114's last paragraph says `config/units`
+sits in no import cycle since §123, and that one import from it into the
+sim brings the cycle back. `tests/importGraph.ts`, the walker the boot
+pins and guards share, follows what the scratch walker
+(`scratch/123l-loadcycle/importPaths.mts`) follows, plus dynamic
+imports; `src` has two, both in `main.ts`, which the catalog's imports
+never reach. So the guard uses the shared walker and the scratch one is
+not ported.
+
+Built at `0aaefff8`: `tests/units-cycle.test.ts` resolves the catalog's
+run-time imports, walks the graph from them, and fails with the chain
+when it reaches `config/units` again; a self-check plants an edge from
+`core/grid.ts` through a doctored read and reads the chain's last two
+files. Named in ARCHITECTURE's tests tree, gotcha #114 and
+`targetingStrategies.ts`' warning. `importGraph.ts`' header named two of
+its seven users; it now says which kinds (flagged: a stale list beside
+the change, corrected with it). `comment-strip HEAD src` and `tests`:
+comments only, the new file apart. The hook: 3,703 main, 594 smoke.
+
+Checked:
+
+- A known answer: the test file run in a worktree of `d7e3247d~1`, the
+  tree before §123 broke the cycle, fails naming
+  `targetingStrategies.ts` → `movement.ts` → `occupancy.ts` →
+  `config/units.ts`, the path gotcha #114 records.
+- The plant, in a worktree of `0aaefff8`: `import '../config/units';`
+  added to `src/core/grid.ts`; the guard failed, 1 of 2 (the self-check
+  plants on top of it and passes); the clean worktree 2 of 2.

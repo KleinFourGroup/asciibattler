@@ -344,7 +344,8 @@ kickoff"). A-25's tests have no step: none is left.
 - ☑ **126g — T-49 and T-50, the two pins** (`none`). Each fails on a
   planted mismatch: a renamed catalog row, the fallback dropped from
   `--font-mono`.
-- ☐ **126h — the import-cycle guard** (`none`). Fails on a planted edge.
+- ☑ **126h — the import-cycle guard** (`none`). Fails on a planted edge,
+  and on the tree before §123's fix with gotcha #114's path.
 - ☐ **126i — the walker's port purchase** (`none`). Fails with
   `buyAtPort` planted to buy nothing.
 - ☐ **126j — B-11, a trial** (`none`, on its bar). The scan and five

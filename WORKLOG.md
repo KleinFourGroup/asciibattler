@@ -15014,3 +15014,22 @@ unchanged and the pathing tables byte for byte; (2) and (3) as above;
 The exit's counts, with these as the baseline: the suite 3,704 (by the
 hook at `d25909b7`) and the smoke 594 (at `d103afa5`); the step codes 898
 in comments (the ceiling) and 667 in 630 titles (the kickoff's probe).
+
+### 126a — A-33's three test files (2026-10-21, session 314e1038)
+
+Step zero at `4d76896c`: the three as the census had them.
+`tests/smoke.test.ts` checks `1 + 1` and one palette hex;
+`tests/gauntlet/humanFixture.test.ts` checks the human traces' shape, and
+`traceMine.ts` still reads the fixture; `levelCapMigration.test.ts`
+holds nine encounters to the retired global cap. Deleted, the fixture
+kept. Named elsewhere: ARCHITECTURE's tree (`smoke.test.ts`, its line
+dropped) and BALANCE's instrument registry (the row now says the
+fixture stays and who reads it); BALANCE's dated 2026-07-13 entry names
+the fixture's test as history and is left.
+
+Proof: `reach-record suite` before (`output/reach-126a/before`, 3,704
+tests in 258 files) and after (3,699 in 255), then `reach-diff
+output/reach-126a/before output/reach-126a/after --from=HEAD`: "nothing
+lost". `comment-codes --record` first: 898 → 895, the three codes
+`levelCapMigration.test.ts` held. The smoke runs on this commit (a
+`src/run` path is staged).

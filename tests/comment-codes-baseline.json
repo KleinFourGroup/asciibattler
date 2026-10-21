@@ -59,7 +59,6 @@
  "src/run/empower.test.ts": 3,
  "src/run/encounters/boss.test.ts": 1,
  "src/run/encounters/brigands.test.ts": 3,
- "src/run/encounters/levelCapMigration.test.ts": 3,
  "src/run/encounters/selection.test.ts": 1,
  "src/run/encounters/sequencer.test.ts": 1,
  "src/run/fatigue.test.ts": 4,

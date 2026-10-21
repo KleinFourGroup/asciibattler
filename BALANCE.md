@@ -230,7 +230,7 @@ valid for its stated purpose, opt-in, NEVER a default balance anchor;
 | `--k-telemetry` (§57 per-seed K evaluation) | **niche** | re-open only if the locked K=2 is ever re-tuned |
 | `--objective` strategies (one proclivity, inline or a JSON file) | **niche** | a fixed objective proclivity on a run; never a run-layer balance input (the arena that tuned them was deleted in Round 8.5, §125d) |
 | coverage bot (`--objective=coverage`) | **niche** | crash/churn coverage; kept separate from measurement (the O5 separation) |
-| 53g human fixtures | **niche** (replay test RETIRED at 68h) | the fixture + shape test stay ([tests/gauntlet/humanFixture.test.ts](tests/gauntlet/humanFixture.test.ts)); the ~80% human ceiling stays citable (§53g); a future human gauntlet re-records on the then-current engine and re-opens replay regression |
+| 53g human fixtures | **niche** (replay test RETIRED at 68h; shape test deleted at 126a) | the fixture stays (`tests/gauntlet/fixtures/53g-human-traces.json`, read by [tests/gauntlet/traceMine.ts](tests/gauntlet/traceMine.ts)); the ~80% human ceiling stays citable (§53g); a future human gauntlet re-records on the then-current engine and re-opens replay regression |
 
 ## The board integrity protocol (86e, 2026-08-29, USER-SIGNED)
 

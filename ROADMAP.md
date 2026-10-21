@@ -327,8 +327,8 @@ the codes. Decision point: each test's fate is the user's.
 The cut, signed 2026-10-21 with five calls (WORKLOG §126, "The
 kickoff"). A-25's tests have no step: none is left.
 
-- ☐ **126a — A-33's three test files** (`none`). `reach-diff` on the
-  suite: nothing lost.
+- ☑ **126a — A-33's three test files** (`none`). `reach-diff` on the
+  suite: nothing lost; 3,704 → 3,699 tests.
 - ☐ **126b — the list by test** (`none`). A reader under
   `scratch/126b/`, its known answer the coverage tool's reading of each
   file and the list by file at the same commit; both tiers.

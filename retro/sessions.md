@@ -7341,3 +7341,76 @@ reader.
    discomfort, since it was the instrument being honest; separate from
    that, the trial's keep rests on Matthew's sign, not on the bar as
    written.
+
+## Phase 125 — summary
+
+Three working sessions on 2026-10-20 and 21 (046c70be, e216d681, and
+cdb73148, which closed it, reported below), all claude-opus-5-5, each
+proposed by the phase's driver session (driver 3, whose report follows
+at its own close). Each found the orientation enough to start. What was
+missing turned up in the work: a search for a name's readers that left
+out the test files, by habit, which short-counted twice (the seven
+difficulty keys at the kickoff, 125g's build sites) until the driver's
+note on test files caught the second at step zero; the plant tool
+needing a ref for a trial that is uncommitted until its bar holds
+(session 2 wrote the commit-tree route); and the comment pass's rules
+spread over four WORKLOG entries. The norm that pulled most was "a step
+zero that changes the intent goes back to the user" against keeping a
+`none` step moving, settled each time by stopping (125e, 125g, 125h);
+in the comment pass, "no history" against keeping a reason that is
+itself a past measurement. Every report names a claim pulled ahead of
+its check: "read nowhere else" from a search without tests (caught by
+the type check), a count of sites written before each seed was checked,
+a fuzz PASS read as proof for code the shapes never reach (125h's plants
+showed the blind spot), a carried lift figure that was another
+measure's, a class that looked deleted in a truncated search. None
+landed unchecked. Waste: a long kickoff audit, a reach run with the
+ceiling unlowered, fine plants tried before coarse ones, the comment
+pass's first batch at 133 tokens a line. All report room to ask and
+stop, every question answered within a turn, and hand-offs as forecast
+calls. What they name as supporting the work: bars and leans written
+before the code, instruments with known answers built in (the plants'
+tables, `comment-strip`'s per-file control), and finding a comment false
+at the code it names.
+
+## 2026-10-21 — session cdb73148 (claude-opus-5-5): 125k, the comment pass over `src/bot`, and §125's close; started by the phase's driver session
+
+1. Little. The Cursor and the driver's four notes pointed at everything,
+   but the pass's rules sit in four WORKLOG entries (121i's seven rules,
+   124.5h's plan, the signs after 124's batch 7, call 6), and I spent
+   about 20k finding and reading them before the plan. A short section
+   in `process/` naming those four would have saved it; that is one of
+   the procedures the Cursor already carries to the round close.
+2. Two mild ones. "One home per fact" against two scripts each needing
+   the same reason (mud is a toll booth): I kept it in the sensor's doc
+   and one clause in the edge hold. And "no history" against "keep a
+   shipped value's reason" in the scripts, where nearly every reason is
+   a past measurement on named gauntlet battles: I kept each reason as a
+   clause without its battle-by-battle numbers, and kept the numbers only
+   where they are the rule (unjam's sweep, the memo's readings).
+3. Three times, each caught before landing. I nearly carried unjam's
+   "1.7 to 3 times" lift, whose own examples did not fit it; BALANCE
+   showed it was the jam count's. I wrote that `statusDef` "crashes here
+   on an empowered unit" before checking which units carry a stat
+   effect, and softened it to what the code shows. And a search piped to
+   `head -3` made `CoverageObjectiveDriver` look deleted; a second search
+   with paths found it (filed).
+4. Batch 1 ran at 133 tokens a line, about half of it on greps whose
+   answers turned out true and unchanged; the later batches ran at 105
+   and 72 as the files' facts overlapped. Two `git grep -A` calls failed
+   on argument order, and the archetype-reach probe took a second run.
+5. For §126's code sweep: `comment-codes` counts codes in comments only;
+   686 more sit inside strings (test titles), which a comment sweep does
+   not reach and the ceiling does not count. Lowering the ceiling to 0
+   then guards comments alone.
+6. Yes. One stop, put with leans and answered within a turn; the decision
+   point's lean was mine to form, and disagreeing with the larger option
+   felt open. The silent-turn reminder came often during the claim
+   checks; I answered with status lines, and felt no pull to have a
+   finding ready for it. No wish to pause or stop.
+7. Checking a comment at the code it names and finding it false (the
+   fork order, the chip, the type check that would not fire) held my
+   interest, and `comment-strip`'s per-file control made each batch's
+   proof one command whose answer I trusted. I would want both again.
+   That is my reported response, separate from whether the batches are
+   right, which rests on Matthew's reads.

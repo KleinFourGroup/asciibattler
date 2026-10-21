@@ -14822,3 +14822,66 @@ pass's rates (75 a line in §124.5, 104 here) the whole of `tests` and
 `tools`, about 115k lines, is about 8.6M to 12M tokens.
 
 Reading: 394,505 at 00:35 UTC, before this entry.
+
+The proposal, as put in the session's final message: (a) the pass ends
+at `src`; (b) the step codes alone in `src`'s co-located tests, inside
+§126 after its deletions, each replaced by its reason where it stood for
+one, and the ceiling then at 0, so a new step code under `src` fails
+`npm test`; (c) the seven rules over `tests` and `tools`. Lean: (b) for
+`src`'s tests and (a) for `tests` and `tools`, since the codes are D4's
+countable part and all 898 are in `src`'s tests, (b) after §126's
+deletions rewrites nothing a deletion then takes, and (c) costs more
+than every pass over `src` for code no player and no cold reader sees.
+Two calls: no drops sweep before the close, since each batch checked its
+drops in place; ARCHITECTURE's other step codes, in its bot rows as in
+the rest of the file, stay for §128's docs pass.
+
+**Signed** (the user, 2026-10-21): "Signing all three reads, your leans,
+and both calls! 😁" So the three batch reads are signed and 125k is
+ticked; the decision point is (b) for `src`'s co-located tests, written
+into §126's charter, and (a) for `tests` and `tools`; there is no drops
+sweep; ARCHITECTURE's codes wait for §128.
+
+### The close of §125 (2026-10-21, session cdb73148)
+
+**Read** (the user, 2026-10-21): the three batch reads, the decision
+point and the two calls at 125l's stop, all signed (above). 125a to 125l
+are ticked, each read as it was cut (125j and this close at their stops,
+125k's three batches by `batch` reads, the rest `none`, with 125g and
+125h's step-zero and keep questions signed at their stops); nothing is
+◐. The section is demoted in ROADMAP. The phase ran from the kickoff's
+ref `8c094cf9` to `9386101a`, 27 commits, and this one, in three working
+sessions (046c70be, e216d681, cdb73148), each started by the phase's
+driver session (driver 3).
+
+What the phase changed is in "125l's stop" above, measured at
+`d103afa5`; this close adds no code.
+
+What it hands on:
+
+- **To §126:** its charter as it was, plus the decision point's (b):
+  after its deletions, the step codes in `src`'s co-located tests (898
+  at this close, 37 of them `src/bot`'s), each replaced by its reason
+  where it stood for one, proven by `comment-strip HEAD src` with its
+  control, and the ceiling recorded down to 0. TODO "§126 tests" holds
+  125g's ten rule-less World sites and 125h's walker port path that no
+  instrument observes.
+- **To §128:** ARCHITECTURE's step codes, the bot rows' among them, for
+  the docs pass.
+- **To a later round:** the census's B-18, the passability mask
+  `chokeCells` and `armyMinCut` build twice.
+- **Unchanged, by the decision:** `tests` and `tools` keep their
+  comments, `tests/fuzz`'s pointers to the bot ("the §57c v2 default
+  dials" in `harness.ts`) with them.
+- **Tools and scratch:** `scratch/125e/`, the copies under
+  `output/cl-125k-b1/` to `-b3/`, and this session's archetype-reach
+  probe (its scratchpad) stay off git. No worktree, background task or
+  preview server is left.
+
+Readings by the tool's clock (UTC). The phase's working sessions:
+046c70be 94,213 → 524,464 (the kickoff, 125a to 125e); e216d681 92,870
+→ 463,351 (125f to 125j-post2); cdb73148 95,710 → the reading below
+(125k and the close). This session: 95,710 at 23:52 on 2026-10-20 (the
+orientation), 147,978 on the plan's commit, 243,315, 321,218 and
+373,480 on the batches' commits, 399,064 on the stop's, 410,772 at
+00:51 on 2026-10-21 before this entry.

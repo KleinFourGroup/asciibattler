@@ -265,16 +265,18 @@ ceiling 2,122 → 1,084 (these files' 1,035 → 0). The cut was signed
   124.5i's stop; `build-hash HEAD`: the same bytes.
 - ☑ **124.5i — the close** (`stop`). Read 2026-10-20; three calls signed.
 
-## Phase 125 — the bot and the fuzz instruments
+## Phase 125 — the bot and the fuzz instruments ✅ (closed 2026-10-21)
 
-`src/bot` and `tests/fuzz`'s instruments: A-20's flags, A-30, A-31;
-B-14's leads, the five run walkers' battle wiring among them (restored
-at §120's close, the user's call); `src/bot`'s comment pass. Proof:
-instrument, and the corpus for the walkers. Decision point: whether the
-comment pass takes `tests` and `tools` (the user's call of 2026-10-12,
-once its outcome on `src` is seen). The cut was signed 2026-10-20 with
-its six calls; the audit, the calls and the trials' bars are in WORKLOG
-§125, "The kickoff".
+`src/bot` and `tests/fuzz`'s instruments. A-20's four flags, A-30,
+A-31, A-25's `hazardCells` and A-26's 16 exports deleted, with the
+arena's wave builder and its seven keys; B-14's three trials kept and
+the fourth lead to the census as B-18; R-1 and R-2; the comment pass in
+three batches, every read signed. `src/bot`: comment lines 877 → 753,
+code lines 1,108 → 1,082; the step-code ceiling 1,084 → 898, every code
+left under `src` in its tests. The decision point, signed: the pass
+takes `src`'s co-located tests for their step codes alone, in §126, and
+not `tests` or `tools`. The cut was signed 2026-10-20; each step's record
+and what it hands on are in WORKLOG §125 and "The close of §125".
 
 - ☑ **125a — A-30 and A-31** (`none`). `verifyArbitratedRuns.ts` and the
   fifteen vectors; GOTCHAS #128's sentence corrected.
@@ -306,17 +308,21 @@ its six calls; the audit, the calls and the trials' bars are in WORKLOG
   (`none`). Each site reads its floor; the fuzz diff PASS.
 - ☑ **125j-post2 — R-2, `avgTeamLevel` into `Recruitment.ts`** (`none`),
   125e's finish. `enemyBudget.ts` gone; the corpus 0 of 30.
-- ◐ **125k — the comment pass over `src/bot`** (`batch`, per batch).
-  Three batches built (the drivers and the rollout, the scripts, the
-  sensors), their reads open; WORKLOG §125.
-- ☐ **125l — the close** (`stop`), with the decision point.
+- ☑ **125k — the comment pass over `src/bot`** (`batch`, per batch).
+  Three batches (the drivers and the rollout, the scripts, the sensors),
+  every read signed 2026-10-21; ten false claims corrected.
+- ☑ **125l — the close** (`stop`). Read 2026-10-21; the decision point
+  and two calls signed.
 
 ## Phase 126 — tests
 
 A list by test first, with 120e's list by file as its known answer;
 then A-33 and A-25's tests, B-11, and TODO's loops, timeouts and two
-pins. Proof: `reach-diff` for each deleted test, and the suite. Decision
-point: each test's fate is the user's.
+pins. After the deletions, the step codes in `src`'s co-located tests,
+each replaced by its reason, and the ceiling to 0 (§125's decision
+point, signed 2026-10-21; WORKLOG §125, "125l's stop"). Proof:
+`reach-diff` for each deleted test, and the suite; `comment-strip` for
+the codes. Decision point: each test's fate is the user's.
 
 ## Phase 127 — tools
 

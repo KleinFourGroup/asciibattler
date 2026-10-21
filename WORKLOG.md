@@ -15591,4 +15591,14 @@ The bar:
 4. The scan is gone, and every fixture's units are in the index as the
    World's are. The five marks stay, signed at step zero.
 
-The plants, at this commit, follow.
+Built at `fcc0cb8c`; the hook: 3,703 main, 595 smoke. The plants, each in
+a worktree of `fcc0cb8c`:
+
+- `npm run oracle -- plant --at=src/sim/World.ts:2145 --op=drop
+  --proofs=corpus,suite`, `placeUnits`' index write removed: the corpus
+  returned in 10 s with 30 of 30 journals differing, the suite in 77 s
+  with 48 of 256 files failing (the clean worktree fails
+  `licences.test.ts` alone, set aside).
+- The guard's known answer: `Targeting.test.ts:606` put back to
+  `world.units.push(u)`, and `tsc --noEmit` fails with one error, at that
+  line, "Property 'push' does not exist on type 'readonly Unit[]'".

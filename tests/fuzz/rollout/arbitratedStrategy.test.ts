@@ -38,7 +38,7 @@ import type { RewardPortion } from '../../../src/run/rewards';
 import type { EventDef } from '../../../src/config/events';
 import { cloneRunForRollout } from '../../../src/bot/runRollout';
 import { runOne } from '../harness';
-import { walkToHorizon } from './walker';
+import { defaultWalkStrategy, walkToHorizon } from './walker';
 import type { CandidateApply, RunCandidateResult, RunRolloutSpec } from './evaluator';
 import type { FuzzStrategy, GrantAction, PortBuy } from '../Strategy';
 import { maxPowerIndex, minPowerIndex, scoredStrategy } from '../strategies/scored';
@@ -1110,6 +1110,28 @@ describe('85b — walkPolicyOverlay (the all-rollouts walk-policy overlay, super
     expect(walkPortBuy(packetsOnly, runWith(10, true))).toEqual({ kind: 'packet', index: 0 });
     // Nothing affordable → null (the ask-until-null stop).
     expect(walkPortBuy(stock({ daemons: [{ price: 99, sold: false }] }), runWith(10))).toBeNull();
+  });
+
+  it('the walker buys at a dock under the overlay, and the purchase lands', () => {
+    // No other rollout test notices a walk that buys nothing at a dock: the
+    // walker drops buyAtPort's count, and neither fuzz-diff shape buys.
+    const clone = cloneRunForRollout(docked(), SEED + 5);
+    const stock = clone.run.portStock!;
+    const slots = [...stock.daemons, ...stock.units, ...stock.packets];
+    const soldBefore = slots.filter((s) => s.sold).length;
+    const bitsBefore = clone.run.bits;
+    expect(expectedLabels(clone.run).length).toBeGreaterThan(0);
+    // Composed as the evaluator composes a spec's walkPolicies.
+    const walk = defaultWalkStrategy();
+    walkToHorizon(clone, {
+      horizonBattles: 1,
+      policySeed: 91,
+      strategy: { ...walk, ...walkPolicyOverlay(walk) },
+      stopAtPhase: 'map',
+    });
+    expect(clone.run.phase).toBe('map');
+    expect(slots.filter((s) => s.sold).length).toBeGreaterThan(soldBefore);
+    expect(clone.run.bits).toBeLessThan(bitsBefore);
   });
 });
 

@@ -1,5 +1,5 @@
 /**
- * 77d1 — the keyed-derivation contract: the frozen-hash pin vectors (the
+ * The keyed-derivation contract: the frozen-hash pin vectors (the
  * configHash precedent — these failing means a GLOBAL stream break, which
  * must be deliberate and re-baselined, never incidental) plus the
  * independence properties that ARE the point of the architecture.
@@ -12,8 +12,7 @@ import { RNG_STREAM_KEYS } from './rngStreams';
 describe('deriveSeed — the frozen hash (pin vectors)', () => {
   // ⚠️ Do NOT update these numbers casually: they pin the derivation hash
   // itself. A legitimate change here is a deliberate global stream break
-  // (worklog + fuzz/board re-baseline in the same change, the 63c/66a
-  // precedent).
+  // (worklog + fuzz/board re-baseline in the same change).
   it('matches the pinned vectors', () => {
     expect(deriveSeed(0, 'test')).toBe(264626234);
     expect(deriveSeed(1, 'battle', 0)).toBe(1760759270);

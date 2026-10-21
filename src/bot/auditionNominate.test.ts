@@ -1,5 +1,5 @@
 /**
- * 57g.4 — the audition-everyone arm's pins, in one home (the arm is one
+ * The audition-everyone arm's pins, in one home (the arm is one
  * feature; its per-script rationale lives in each script file). Each
  * nominate pin sits exactly at its script's evaluate-null boundary: the
  * crafted world makes `evaluate` return null (a go/no-go threshold holds
@@ -7,7 +7,7 @@
  * well-formed) — the semantic core of propose-regardless. Premises are
  * read back through the sensors (balance-proof style), never hardcoded.
  *
- * The registry pins carry the §57g.1 baseline-parity guard: the searcher's
+ * The registry pins carry the baseline-parity guard: the searcher's
  * nomination channel is `nominate ?? evaluate` keyed off the script OBJECT,
  * so TRAFFIC_SCRIPTS must stay nominate-free — if a nominate ever lands on
  * the standard objects, the default `--searcher` arm silently becomes the
@@ -51,9 +51,10 @@ function spawn(world: World, team: Team, cell: GridCoord, archetype: Archetype =
   return world.spawnUnit(scaledUnit(archetype, 1), team, cell, null);
 }
 
-/** The 54f canonical isthmus, at enemy strength BELOW the funnel trade:
- *  deep water splits the map, a 2-wide bridge at x∈{5,6}, 3 enemies north
- *  (3 < 2-cut × CHOKE_OUTNUMBER_FACTOR), players south near the bridge. */
+/** The choke-hold tests' canonical isthmus, at enemy strength BELOW the
+ *  funnel trade: deep water splits the map, a 2-wide bridge at x∈{5,6},
+ *  3 enemies north (3 < 2-cut × CHOKE_OUTNUMBER_FACTOR), players south
+ *  near the bridge. */
 function underTradeIsthmus(): World {
   const world = makeWorld();
   for (const y of [5, 6]) {
@@ -177,8 +178,8 @@ describe('the A/B seam end-to-end', () => {
     // The under-trade isthmus: every standard evaluate is null (no hazard,
     // no jam, no trade, no artillery, no DoTs) — the standard searcher has
     // nothing to roll. The audition searcher gets choke-hold's nomination
-    // and, with the null floor forced open (ε=-1000, the 57f liveness
-    // pattern), must commit it.
+    // and, with the null floor forced open (ε=-1000, the liveness pattern
+    // of tests/fuzz/harnessSearcher.test.ts), must commit it.
     const standard = new RolloutSearchDriver('player', new RNG(7).fork());
     expect(standard.decide(underTradeIsthmus())).toHaveLength(0);
 

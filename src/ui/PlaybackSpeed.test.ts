@@ -62,7 +62,7 @@ describe('PlaybackSpeed', () => {
     expect(p.isPaused).toBe(true);
     expect(p.current).toBe(0); // sim parks
     expect(p.selectedSpeed).toBe(3); // selection survives
-    expect(p.label).toBe(t('playback.paused')); // 100e — the table's word, not restated
+    expect(p.label).toBe(t('playback.paused')); // the table's word, not restated
   });
 
   it('resumes at the prior speed on unpause', () => {

@@ -16,8 +16,8 @@ describe('t() — the UI string table', () => {
   });
 
   it('substitutes {placeholders} and formats numbers through Intl', () => {
-    // 100c2 — derived from the table, not restated: the entry's WORDING is the
-    // content's to change (it did at 100c2); what this pins is that every
+    // Derived from the table, not restated: the entry's WORDING is the
+    // content's to change; what this pins is that every
     // `{placeholder}` is substituted and nothing else moves.
     const hint = UI_EN['hud.card.targetHint'] as string;
     expect(hint).toContain('{engage}');

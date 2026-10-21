@@ -1,6 +1,6 @@
 /**
- * 54e — unjam on crafted jam worlds. The jam geometry reuses the 54b
- * sensor-test shape: a rear unit boxed at the map edge by three idle
+ * Unjam on crafted jam worlds. The jam geometry reuses the sensor tests'
+ * shape: a rear unit boxed at the map edge by three idle
  * teammates, enemy across the map (jamFraction 1/4 = 0.25 ≥ the 0.2
  * trigger). The regroup tile must never rally FORWARD (closer to the
  * enemy than the jammed centroid) and never onto a hazard.
@@ -28,7 +28,7 @@ function spawn(world: World, team: Team, cell: GridCoord) {
   return world.spawnUnit(scaledUnit('mercenary', 1), team, cell, null);
 }
 
-/** The 54b jam shape: `stuck` boxed at (0,5) by three idle teammates. */
+/** The sensor tests' jam shape: `stuck` boxed at (0,5) by three idle teammates. */
 function jamWorld(): { world: World; stuckId: number } {
   const world = makeWorld();
   const stuck = spawn(world, 'player', { x: 0, y: 5 });

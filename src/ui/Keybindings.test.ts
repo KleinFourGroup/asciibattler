@@ -165,7 +165,7 @@ describe('keyLabel', () => {
   });
 });
 
-// 116b — the key rules. Every expected binding below is written out by hand
+// The key rules. Every expected binding below is written out by hand
 // from the rule's words, not computed through the functions under test.
 describe('116b — the key rules', () => {
   const codes = (b: Record<KeybindAction, string>): string[] => KEYBIND_ACTIONS.map((a) => b[a]);
@@ -348,7 +348,7 @@ describe('116b — the key rules', () => {
   });
 });
 
-// 116e — the rules the rebind rows add. The expected values are written out
+// The rules the rebind rows add. The expected values are written out
 // by hand from the rules' words.
 describe('116e — the rebind rows', () => {
   const key = (code: string, flags: Partial<KeyLike> = {}): KeyLike => ({

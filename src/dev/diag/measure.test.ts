@@ -10,7 +10,7 @@ import {
   type StorageLike,
 } from './measure';
 
-// 116l — the diagnostics' measurements, each held to an answer planted here:
+// The diagnostics' measurements, each held to an answer planted here:
 // a storage with a quota this file sets, a clock that steps as this file says.
 
 /** A storage that refuses a write once keys and values together would pass

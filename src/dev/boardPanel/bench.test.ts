@@ -10,7 +10,7 @@ import {
 } from './bench';
 
 /**
- * 108d — the bench's arithmetic against a fake clock whose costs are known:
+ * The bench's arithmetic against a fake clock whose costs are known:
  * a base frame, a marks cost, a stress cost, the planted spin, and a drift
  * that grows every frame. The bench must read each cost back exactly.
  */

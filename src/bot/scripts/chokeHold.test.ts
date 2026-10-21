@@ -1,8 +1,8 @@
 /**
- * 54f — armyMinCut + choke hold on crafted isthmus worlds. The canonical
+ * armyMinCut + choke hold on crafted isthmus worlds. The canonical
  * geometry: deep water splits the 12×12 map into north/south halves with a
  * 2-wide land bridge at x∈{5,6} — the shape the articulation scan is blind
- * to (no single cell disconnects a 2-wide bridge; the 54c sensor gap).
+ * to (no single cell disconnects a 2-wide bridge).
  */
 
 import { describe, it, expect } from 'vitest';
@@ -51,7 +51,7 @@ function isthmusWorld(enemyCount = 6): World {
 describe('armyMinCut', () => {
   it('finds the 2-wide bridge the articulation scan is blind to', () => {
     const world = isthmusWorld();
-    expect(chokeCells(world)).toEqual([]); // the 54c gap, pinned
+    expect(chokeCells(world)).toEqual([]); // the articulation scan's blind spot, pinned
     const cut = armyMinCut(world, 'player', CHOKE_MAX_CUT);
     expect(cut).not.toBeNull();
     expect(cut!.length).toBe(2);
@@ -147,10 +147,10 @@ describe('chokeHold', () => {
   });
 });
 
-// 86c-L3 — the memo's recompute-and-compare verifier (the §79e principle:
-// the memoized production path is checked against the exported pure compute,
-// a surface production no longer consults) + the two invalidation pins the
-// key must catch: a unit moving, a tile mutating.
+// The memo's recompute-and-compare verifier (the memoized production path
+// is checked against the exported pure compute, a surface production no
+// longer consults) + the two invalidation pins the key must catch: a unit
+// moving, a tile mutating.
 describe('the choke-read memo (86c-L3)', () => {
   it('stays compute-identical across a real driven battle, and actually hits', () => {
     const world = isthmusWorld(6);

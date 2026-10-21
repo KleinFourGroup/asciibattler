@@ -1,5 +1,5 @@
 /**
- * 96.5b2 — the loss fx's PURE parts, pinned headless (the orb's flight and
+ * The loss fx's PURE parts, pinned headless (the orb's flight and
  * the shake's motion are eyeball-only per TESTING; the thresholds, the
  * sizing and the policy seam are arithmetic). Every expectation derives
  * from the exported constants, never from re-typed numbers, so a retune

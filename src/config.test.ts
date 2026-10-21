@@ -8,7 +8,7 @@ describe('config: seconds <-> ticks conversion', () => {
 
   it('rounds to nearest tick', () => {
     // Boundaries derived from TICK_RATE so this test survives future
-    // TICK_RATE bumps (E3.5 lesson — gotcha #6 says don't hardcode ticks).
+    // TICK_RATE bumps (gotcha #99; gotcha #6 says don't hardcode ticks).
     const halfTickSeconds = 0.5 / TICK_RATE;
     expect(secondsToTicks(halfTickSeconds + 0.001)).toBe(1); // just above 0.5 ticks → 1
     expect(secondsToTicks(halfTickSeconds - 0.001)).toBe(0); // just below 0.5 ticks → 0

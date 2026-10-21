@@ -14,7 +14,7 @@ import type { UnitStats } from '../sim/Unit';
 import { t } from '../i18n/ui';
 
 /**
- * §76g — the promotion derived-delta lines. Balance-proof by construction:
+ * The promotion derived-delta lines. Balance-proof by construction:
  * every expected number runs THROUGH the same sim helpers the builder uses
  * (deriveStats / hitChanceFor / critChanceFor / attackCooldownTicksFor), so
  * config re-tunes can't strand a hand-computed literal. Structure (labels,
@@ -37,7 +37,7 @@ describe('promotionDeltaParts (§76g — derived deltas, only-if-changed)', () =
   it('a constitution gain shows the Max HP delta (via deriveStats)', () => {
     const grown = bump({ constitution: base.constitution + 3 });
     const lines = promotionDeltaParts(base, grown, 'mercenary');
-    // 100e — the row labels come from the table (t()), never restated here.
+    // The row labels come from the table (t()), never restated here.
     expect(lines).toContain(
       `${t('promotion.delta.maxHp')} ${deriveStats(base, 0).maxHp} → ${deriveStats(grown, 0).maxHp}`,
     );

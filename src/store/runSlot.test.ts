@@ -9,7 +9,7 @@ import type { RunLock } from './runLock';
 import { lastRunJournal, openRunSlot, runRejectedMessage, runSlotSection, type RunSlotWire } from './runSlot';
 import { createStore, type LenientSection } from './store';
 
-// 113e — the save-rejection rule, on a real snapshot. The slot has no writer
+// The save-rejection rule, on a real snapshot. The slot has no writer
 // until save/load, so each case plants its text in the adapter's map.
 
 const RUN_KEY = 'asciibattler:run';
@@ -46,7 +46,7 @@ describe('113e — the run slot', () => {
     // The loaded run saves to the same snapshot it was loaded from.
     expect(read.value.run.toJSON()).toEqual(snapshot);
     expect(read.value.wire).toEqual({ snapshot, dials: 'hops=3', journal: null });
-    // 115e — the dials reach the loaded run (`hops` makes it a one-sector run).
+    // The dials reach the loaded run (`hops` makes it a one-sector run).
     expect((read.value.run as unknown as { singleSectorRun: boolean }).singleSectorRun).toBe(true);
   });
 
@@ -93,7 +93,7 @@ describe('113e — the run slot', () => {
   });
 });
 
-// 115f — the slot through the two-tab lock. Two stores over one adapter stand
+// The slot through the two-tab lock. Two stores over one adapter stand
 // for two tabs over one `localStorage`.
 describe('115f — the run slot through the two-tab lock', () => {
   /** The adapter, counting the reads of the run slot's key. */
@@ -169,7 +169,7 @@ describe('115f — the run slot through the two-tab lock', () => {
     expect(shared.entries.has(RUN_KEY)).toBe(false);
   });
 
-  // 115g — `peek`, what the boot screen asks before it offers Continue.
+  // `peek`, what the boot screen asks before it offers Continue.
   /** A bus that counts what subscribes to it. */
   const counted = (): { bus: EventBus<GameEvents>; subscriptions(): number } => {
     const b = bus();
@@ -213,7 +213,7 @@ describe('115f — the run slot through the two-tab lock', () => {
   });
 });
 
-// 116h — a rejected save's journal is kept when the slot is reused. What the
+// A rejected save's journal is kept when the slot is reused. What the
 // finished journals hold is read from the adapter's map.
 describe("116h — a rejected save's journal", () => {
   const JOURNALS_KEY = 'asciibattler:journals';

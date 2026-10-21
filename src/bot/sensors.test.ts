@@ -1,10 +1,10 @@
 /**
- * 54b — per-sensor tests on crafted worlds. Expectations derive from the
+ * Per-sensor tests on crafted worlds. Expectations derive from the
  * spawned units' own stats / the config modules (never hardcoded balance
  * arithmetic) and from hand-built tile layouts. The jam sensor's
- * vacancy-ETA drain branch (a blocker mid-move flipping soon) rides §45a's
- * own `vacancyEtaOf` tests — crafting a live in-flight move here would
- * re-test the sim, not the sensor.
+ * vacancy-ETA drain branch (a blocker mid-move flipping soon) rides
+ * `vacancyEtaOf`'s own tests in occupancy.test.ts — crafting a live
+ * in-flight move here would re-test the sim, not the sensor.
  */
 
 import { describe, it, expect } from 'vitest';
@@ -228,9 +228,9 @@ describe('attritionRead', () => {
 
   it('tolerates a def-less plain fold effect (empowered/warded — the K1 class) — the 69b latent-crash regression', () => {
     // Plain stat-fold buffs deliberately have no STATUS_DEFS entry
-    // (statusBehavior.ts); the Mars empower puts one on a battle unit, and
-    // the old throwing statusDef() lookup crashed any non-audition sensor
-    // read over it (worklog §69). A def-less effect is never a DoT.
+    // (statusBehavior.ts); the Mars empower puts one on a battle unit, and a
+    // lookup that threw on a missing def would crash any sensor read over
+    // it. A def-less effect is never a DoT.
     const world = makeWorld();
     const empowered = spawn(world, 'player', { x: 1, y: 1 });
     empowered.addEffect({

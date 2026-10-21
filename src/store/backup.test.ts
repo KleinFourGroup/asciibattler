@@ -3,7 +3,7 @@ import { memoryAdapter } from './adapter';
 import { BACKUP_FORMAT, BACKUP_MARK, backupFileName, backupOf, readBackup } from './backup';
 import { SECTION_NAMES, STORE_VERSION, createStore, storageKey, type StoreDump } from './store';
 
-// 116h — the backup file. Stored text is planted in and read back from the
+// The backup file. Stored text is planted in and read back from the
 // adapters' maps, never through the module under test.
 
 const BUILD = '0.1.0+abc1234';

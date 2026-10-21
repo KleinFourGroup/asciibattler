@@ -3,7 +3,7 @@ import { ESCALATION_MAX } from '../config/escalation';
 import { UI_EN } from '../i18n/ui';
 import { escalationAdds, escalationName, escalationTooltip } from './escalationText';
 
-// 117e — the Escalation levels in words, on the shipped ladder and the
+// The Escalation levels in words, on the shipped ladder and the
 // English table.
 
 describe('117e — a level in words', () => {

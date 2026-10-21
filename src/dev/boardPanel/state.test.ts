@@ -57,7 +57,7 @@ describe('105d — the projection dials', () => {
   });
 
   it('a projection bookmark round-trips, negative yaw included', () => {
-    // `persp`: since 107d the shipped default is ortho, so ortho is never written.
+    // `persp`: the shipped default is ortho, so ortho is never written.
     const state = parseDials('proj-persp_fov-20_pitch-60_yaw--45');
     expect(cameraViewOf(state)).toEqual({
       projection: 'perspective',
@@ -71,7 +71,7 @@ describe('105d — the projection dials', () => {
   it('the §106 bookmark still means the shipped view: its proj and yaw are now the defaults', () => {
     const state = parseDials('proj-ortho_yaw-45_slab-centre');
     expect(cameraViewOf(state)).toEqual(DEFAULT_CAMERA_VIEW);
-    // `slab` left the table at 107b; an unknown key is dropped, never thrown on.
+    // `slab` is not in the table; an unknown key is dropped, never thrown on.
     expect(encodeDials(state)).toBe('');
   });
 

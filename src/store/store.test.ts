@@ -11,7 +11,7 @@ import {
   type StrictSection,
 } from './store';
 
-// 113b — the store's core, over the memory adapter. The sections here are
+// The store's core, over the memory adapter. The sections here are
 // fixtures: the real ones arrive with their consumers. Stored text is planted
 // and read back through `adapter.entries`, not through the store, so a pin
 // never compares the store with itself.
@@ -314,7 +314,7 @@ describe('113b — a store that fails', () => {
   });
 });
 
-// 117d-post — `update`: a change built on what is stored now. Two stores over
+// `update`: a change built on what is stored now. Two stores over
 // ONE adapter stand for two tabs of one browser.
 describe('117d-post — a change built on what is stored now', () => {
   const twoTabs = () => {
@@ -437,7 +437,7 @@ describe('117d-post — a change built on what is stored now', () => {
   });
 });
 
-// 116h — the whole store as text. Two stores over two adapters stand for two
+// The whole store as text. Two stores over two adapters stand for two
 // browsers; what a restore wrote is read from the adapter's map.
 describe('116h — the whole store as text', () => {
   const JOURNALS_KEY = 'asciibattler:journals';

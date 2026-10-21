@@ -6,7 +6,7 @@ import { applyAtBoot } from './atBoot';
 import { createSettings, type SettingKey } from './model';
 import { SETTINGS_SECTION, type Settings } from './settings';
 
-// 116a — the settings over the memory adapter. Stored text is planted and
+// The settings over the memory adapter. Stored text is planted and
 // read back through `adapter.entries`, not through the model, so a pin never
 // compares the settings with themselves. A second store over the same
 // adapter stands for a reload.

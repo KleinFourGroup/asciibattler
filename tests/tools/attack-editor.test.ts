@@ -82,8 +82,9 @@ describe('formatAbilitiesJson', () => {
   });
 
   it('§76a — round-trips the aura field byte-faithfully (no silent drop on Save)', () => {
-    // No shipped def carries an aura until the §76 design round, so this pins
-    // the formatter arm on synthetic defs: the audit flagged a hand-written
+    // One shipped def carries an aura (`inspire`, a pure one) and no shipped
+    // weapon radiates one, so this pins the formatter arm on synthetic defs,
+    // both shapes: the audit flagged a hand-written
     // emitter silently DROPPING a new field as the failure mode.
     const catalog: Record<string, AbilityDef> = {
       pure_aura: parseAbilityDef({

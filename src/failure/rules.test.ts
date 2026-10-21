@@ -9,9 +9,9 @@ import {
   type FailureReport,
 } from './rules';
 
-// 117.5i — what counts as a failure, the watch, and the wait on a lost
+// What counts as a failure, the watch, and the wait on a lost
 // context. The shapes the two filters are held to were read off a real page
-// first (WORKLOG §117.5i, step zero): a ResizeObserver loop arrives as an
+// first: a ResizeObserver loop arrives as an
 // `error` event with no thrown value and the page's own URL as its file; a
 // missing font file rejects with a DOMException named NetworkError.
 

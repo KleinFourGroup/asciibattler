@@ -1,13 +1,13 @@
 /**
- * 69a — the run-clone seam's load-bearing contracts, foresee-the-rolls
+ * The run-clone seam's load-bearing contracts, foresee-the-rolls
  * FIRST (the rollout.test.ts shape, one layer up):
  *
  * 1. THE CLAIRVOYANCE GUARD — a rollout clone must NOT share the live
  *    run's future rolls. The control documents the hazard the seam
  *    exists for: a plain toJSON→fromJSON clone DOES share the live
- *    `streamRoot` verbatim (77d2 — every stream derives from it, so a
- *    plain clone re-derives the identical future; H5 in
- *    snapshot-roundtrip.test.ts is the behavioral proof).
+ *    `streamRoot` verbatim (every stream derives from it, so a plain
+ *    clone re-derives the identical future; snapshot-roundtrip.test.ts's
+ *    "a restored Run draws the same NEXT hand" is the behavioral proof).
  * 2. PRE-ROLLED FACTS PRESERVED — everything BUT `streamRoot` rides
  *    the wire untouched (map DAG, boss forewarning, offer/stock/prices,
  *    the occurrence counters — a clone continues from the same position).
@@ -20,8 +20,8 @@
  * Fixture note: the live run is advanced one `enterNode` into its first
  * encounter (phase 'battle', deck dealt, encounter selected) so clones
  * carry non-trivial mid-run state; a clone is then advanced past the
- * battle by emitting a draw-chip `battle:ended` on ITS bus (the H5
- * idiom) — headless straight-through resolves the turn and deals the
+ * battle by emitting a draw-chip `battle:ended` on ITS bus (the Run
+ * tests' idiom) — headless straight-through resolves the turn and deals the
  * next hand off the re-seeded streams.
  */
 
@@ -39,7 +39,7 @@ function liveRun(seed: number): Run {
   return run;
 }
 
-/** The sub-lethal turn resolution chip (the H5 idiom). */
+/** The sub-lethal turn resolution chip (the Run tests' idiom). */
 const DRAW_CHIP = {
   winner: 'draw' as const,
   xpAwards: [],
@@ -59,7 +59,7 @@ describe('cloneRunForRollout (69a — the clairvoyance guard, one layer up)', ()
 
     // The control documents the hazard: an undiverged round-trip clone
     // carries the live streamRoot verbatim — every future occurrence
-    // re-derives identically (77d2).
+    // re-derives identically.
     const plain = Run.fromJSON(
       JSON.parse(JSON.stringify(liveWire)) as RunSnapshot,
       new EventBus<GameEvents>(),
@@ -72,7 +72,7 @@ describe('cloneRunForRollout (69a — the clairvoyance guard, one layer up)', ()
   });
 
   it('pre-rolled facts ride the wire untouched: everything but streamRoot is byte-equal', () => {
-    // The spec's clairvoyance inventory — map DAG + node kinds, the §66
+    // The spec's clairvoyance inventory — map DAG + node kinds, the
     // boss forewarning pair, offer/stock/prices, hand + pile contents,
     // the occurrence counters — is LEGITIMATE rollout knowledge and must
     // survive the clone exactly.

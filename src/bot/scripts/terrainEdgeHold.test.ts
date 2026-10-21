@@ -1,5 +1,5 @@
 /**
- * 54d — terrain-edge hold on crafted fire worlds. Geometry used throughout:
+ * Terrain-edge hold on crafted fire worlds. Geometry used throughout:
  * a vertical fire strip at x=5 between the player (west) and the enemy
  * (east); candidates on the east side fail the our-side test, candidates on
  * the west tie on enemy distance and resolve row-major (deterministic).
@@ -28,7 +28,7 @@ function spawn(world: World, team: Team, cell: GridCoord) {
  *  cell is a legitimate closer pick, which is exactly what an early draft
  *  of these tests learned the hard way); two approaching mercs west; one
  *  TWO enemies east at CROSSING distance — within the approach window and
- *  at the 55c1 prey-count floor (EDGE_HOLD_MIN_UNITS; strays and campers
+ *  at the prey-count floor (EDGE_HOLD_MIN_UNITS; strays and campers
  *  are not prey in force — see the prey tests). Candidates exist only at
  *  x=4 (x=6 fails our-side). */
 function fireWorld(): World {

@@ -5,7 +5,7 @@ import { AudioPlayer, DEFAULT_MASTER_VOLUME, SOUND_SOURCES, soundVolume } from '
 import { SETTINGS_SECTION } from '../settings/settings';
 
 /**
- * §104c — THE ASSET PIN. `AudioPlayer.play` swallows a failed playback (the
+ * THE ASSET PIN. `AudioPlayer.play` swallows a failed playback (the
  * autoplay policy makes that necessary), so a key whose file is missing, or
  * misnamed, ships SILENT with no error anywhere. The check is against the
  * directory listing, never a path the player itself resolved.
@@ -28,7 +28,7 @@ describe('the sound assets', () => {
 });
 
 /**
- * §111a — THE RECORDER'S SEAM. The recorder records any development-mode build
+ * THE RECORDER'S SEAM. The recorder records any development-mode build
  * by reaching into the live AudioPlayer from outside
  * (shell/electron/probes/record-page.js): it routes every element of `pools`
  * into its recording and wraps `play` to log each cue. Nothing typechecks that
@@ -58,7 +58,7 @@ describe("the recorder's seam", () => {
 });
 
 /**
- * 116b — THE VOLUME AXES (Round 8 spec D7): a sound plays at master × SFX ×
+ * THE VOLUME AXES: a sound plays at master × SFX ×
  * its own level. The expected numbers are worked by hand from that sentence
  * and the levels in the table (melee 1.0, click 0.7).
  */

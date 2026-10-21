@@ -1,5 +1,5 @@
 /**
- * 57e — the evaluator's load-bearing contracts:
+ * The evaluator's load-bearing contracts:
  *
  * 1. DETERMINISM — same live world + same spec ⇒ the same exact number
  *    (the whole harness's reproducibility flows through this).

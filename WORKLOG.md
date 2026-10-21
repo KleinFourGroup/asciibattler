@@ -15835,3 +15835,134 @@ Readings by the tool's clock (UTC): 121,140 at 17:47 (the first),
 322,621 on `178961d8`, 357,625 on `7003e410`, 414,074 on `8491a21e`,
 427,720 on `ea2b0eed`, 445,345 on `f5ac0992`, 455,701 at 22:50 before
 this entry.
+
+### 126m — the step codes in comments: the batches, planned (2026-10-21, session 3d57d006)
+
+The session was started by the phase's driver session and works with the
+user as usual. Step zero, at `de968bd1`: `comment-codes` reads 895 codes
+in the comments of 150 files, every one in a test, as the hand-off has
+it; they stand on 818 lines (`--list`, distinct lines). The cut's 898 is
+the kickoff's count, before 126a to 126l-post2's deletions.
+
+Eight batches by folder, so the facts a batch checks sit together:
+
+1. The small folders and `src/bot`: `src/audio`, `src/bot`, `src/core`,
+   `src/dev`, `src/diagnostics`, `src/failure`, `src/i18n`,
+   `src/settings`, `src/store`, `src/ui` and `src/config.test.ts`; 97
+   codes in 46 files.
+2. `src/config` and `src/render`: 138 in 27.
+3. `src/sim`'s three subfolders, `behaviors`, `actions` and `effects`:
+   125 in 21.
+4. `src/sim`'s movement tests: `movement`, `occupancy`, `Pathfinding`,
+   `moveAbort`, `moveAbortInflight`, `moveDecision`, `moveDeferred`,
+   `shove`, `actingPosition`; 90 in 9.
+5. `src/sim`'s other 29 top-level tests: 144.
+6. `src/run` but `Run.test.ts`: 87 in 17.
+7. and 8. `Run.test.ts`, 214 codes on 198 of its lines, in two halves
+   cut at a `describe` near the middle when batch 7 starts.
+
+The method: an extractor prints each comment that holds a code with the
+lines after it (`scratch/126m/extract.mts`), so a batch reads the codes'
+context and not whole files. A code that stood for a reason is replaced
+by it; a code beside words that already say what the test does is
+dropped. A reason written is checked at the code it names, and its twin
+looked for in `src`, `tests`, `tools`, `scripts` and `config`. The
+code's own clause goes with it ("since 107d", "the 54a hang", "worklog
+§69"), and a history sentence a code sits in is put in the present; the
+rest of a comment stays as written, since the decision point took the
+codes alone. A test's title is 126n's, so a stale claim in one is
+flagged for it and not changed here (`comment-strip` would read the
+change as code).
+
+The edits: a patch file per batch, written with the Write tool
+(`scratch/126m/b<n>.patch`) and applied by `scratch/126m/apply-patch.mjs`,
+which finds every OLD block as whole lines exactly once in its file, and
+no two overlapping, before it writes any file. Its control: a planted
+patch with one missing anchor and one found 18 times, refused with both
+named and nothing written.
+
+Proof per batch: `comment-strip HEAD src`, comments only, exit 0, its
+control naming every changed file; `comment-codes --record` before any
+suite run; the suite, and the smoke where the batch stages a folder that
+runs it, by the hook. The counts by `comment-length` on copies under
+`output/cl-126m-b<n>/before` and `after`. The read is `batch`, per
+batch, with its script in the batch's entry.
+
+### 126m, batch 1 — the small folders and `src/bot` (2026-10-21, session 3d57d006)
+
+97 codes in 46 files, in 85 hunks, to none. Most were a step's header
+("116b — the key rules"), where the code dropped and the words stayed.
+Those that stood for a reason, with where each reason was checked:
+
+- `config.test.ts`: "E3.5 lesson" is gotcha #99, which is that lesson.
+- `dev/boardPanel/fixtures.test.ts`: "105a", twice, is the board
+  geometry tests (`tests/board/geometry.ts`: `clumpAt` at the centre,
+  (1, 1) and (cx, h − 2) in that order at lines 372 to 374, and
+  `FLYER_LIFT` its default lift).
+- `dev/boardPanel/state.test.ts`: "since 107d" dropped (the dial's `def`
+  is `ortho`, `state.ts:69`); "`slab` left the table at 107b" is now "is
+  not in the table" (no `slab` in `state.ts`).
+- `bot/RolloutSearchDriver.test.ts`: "the §54 ownership rule" is that it
+  never searches against an order someone else issued (the driver's own
+  comment above its check, in `decide`).
+- `bot/TrafficScriptDriver.test.ts`: "Pre-85d only the null action
+  respected ownership" is now that a triggered script holds under a
+  foreign order too (`TrafficScriptDriver.ts:151`); "the 54a hang" is
+  now what an unbounded loop would do.
+- `bot/auditionNominate.test.ts`: "the 54f canonical isthmus" is the
+  choke-hold tests' (`chokeHold.test.ts`'s header: the same bridge at
+  x∈{5,6}); "the 57f liveness pattern" is
+  `tests/fuzz/harnessSearcher.test.ts`'s, where ε = −1000 is (it is not
+  in `RolloutSearchDriver.test.ts`, the file 57f named).
+- `bot/runRollout.test.ts`: "H5 in snapshot-roundtrip.test.ts" is that
+  file's "a restored Run draws the same NEXT hand", named by its words
+  since its title's code goes at 126n; "the H5 idiom", twice, is the Run
+  tests' idiom (eight `battle:ended` emits in `Run.test.ts`).
+- `bot/scripts/chokeHold.test.ts`: "the 54c gap" is the articulation
+  scan's blind spot (`chokeCells`, `sensors.ts:322`).
+- `bot/scripts/unjam.test.ts`: "the 54b" jam shape, twice, is the sensor
+  tests' (`sensors.test.ts:49`, `stuck` at (0, 5)).
+- `bot/sensors.test.ts`: "§45a's own `vacancyEtaOf` tests" are its own
+  tests in `occupancy.test.ts` (nine mentions there).
+- `attritionStall.test.ts`, `sensors.test.ts`, `chokeHold.test.ts`:
+  three history sentences put in the present, their pointers ("worklog
+  §54h", "worklog §69", "the §79e principle") dropped.
+
+Corrected (rule 7):
+
+- `ui/abilityDetail.test.ts:100`: "No shipped def carries an aura until
+  the §76 design round" was false: `inspire` ships a pure aura
+  (`config/abilities.json:697`). It now says one shipped def carries an
+  aura and no shipped weapon radiates one, which is why the tests author
+  synthetic defs. **Its twin, outside the change and flagged:**
+  `tests/tools/attack-editor.test.ts:85` held the same sentence and is
+  corrected the same way, though `tests` otherwise keeps its comments.
+  **For 126n:** the `describe` title on line 100 of `abilityDetail.test.ts`
+  says "the aura branch, ahead of shipped content", false for the same
+  reason.
+- `bot/rollout.test.ts`: "v35 serializes its streams" was stale (the
+  World snapshot is v36); it now says the World's snapshot serializes
+  its streams, with no version.
+
+**Proof.** `comment-strip HEAD src`: 46 files differ, in comments only,
+exit 0; the control named 46 of 46. `comment-strip HEAD tests`:
+`attack-editor.test.ts` in comments only, its control named it; that
+run exits 1 on one file, `tests/comment-codes-baseline.json`, the
+ceiling recorded below, held byte for byte as it is not TypeScript.
+`comment-codes`: 895 → 798, the batch's folders at 0, and `--record`
+wrote 798 in 104 files; one "round named in a comment" went with "Round
+8 spec D7" (5 → 4). `comment-length` on the 46 files: comment lines 744
+→ 747, words 7,373 → 7,315, code lines 6,695 both.
+
+**Read** (`batch`): `git show <this commit> -- src tests/tools`. What
+changed: the step codes in the comments of `src`'s small folders' and
+`src/bot`'s tests, each dropped or replaced by its reason, and the false
+aura sentence in two files. Where to look: the reasons listed above.
+Wrong looks like a reason that the code it names contradicts, history
+left beside a dropped code, or a sentence whose meaning went with its
+code.
+
+Readings by the tool's clock (UTC): 100,299 at 23:23 after the
+orientation, 190,606 at 23:32 before the patch, 209,434 at 23:36. The
+batch's cost is not yet a rate: the pass's rules, step zero and the two
+tools are in it. Batch 2 measures one.

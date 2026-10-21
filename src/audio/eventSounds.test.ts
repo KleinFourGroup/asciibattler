@@ -14,7 +14,7 @@ import {
 } from './eventSounds';
 
 /**
- * THE COVERAGE PIN (§104 — a permanent gate, never relax): every event in
+ * THE COVERAGE PIN (a permanent gate, never relax): every event in
  * the catalog is either cued or on the silent list with a reason. The
  * catalog is a type (an interface with an index signature — no runtime
  * keys), so the key set is parsed from the `events.ts` SOURCE TEXT: a

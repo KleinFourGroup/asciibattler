@@ -16,7 +16,7 @@ import {
 } from './progress';
 import { createStore } from './store';
 
-// 116j, 117d — the progress section over the memory adapter, and the
+// The progress section over the memory adapter, and the
 // Escalation unlock rules. Stored text is planted in and read back from
 // `adapter.entries`.
 

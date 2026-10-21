@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { copyBy } from './copyText';
 
-// 118f — the two ways a copy is tried, in order, on planted steps.
+// The two ways a copy is tried, in order, on planted steps.
 
 function steps(clipboard: 'grants' | 'refuses' | 'absent', command: 'grants' | 'refuses' | 'throws') {
   const calls: string[] = [];

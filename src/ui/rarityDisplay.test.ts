@@ -1,5 +1,5 @@
 /**
- * 98b — the rarity star run, pinned against the tier ORDER (derived from
+ * The rarity star run, pinned against the tier ORDER (derived from
  * `RARITY_TIERS`, never hardcoded — a fifth tier re-derives every expectation
  * here and fails `RARITY_LABEL`'s `Record<UnitRarity, …>` at compile time
  * until it picks a label).

@@ -9,7 +9,7 @@ import {
   type GlLike,
 } from './report';
 
-// 118f — the player's diagnostics, each part held to an answer planted here.
+// The player's diagnostics, each part held to an answer planted here.
 
 const SOURCES: DiagnosticsSources = {
   at: '2026-10-10T17:00:00.000Z',

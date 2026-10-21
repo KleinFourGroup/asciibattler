@@ -10,7 +10,7 @@ import { applySetting, connectSettings, type SettingsConsumers } from './apply';
 import { createSettings, type SettingKey } from './model';
 import { SETTINGS_SECTION, type Settings } from './settings';
 
-// 116b — the settings reach what they set. Two kinds of consumer are
+// The settings reach what they set. Two kinds of consumer are
 // connected: recording stand-ins, to see exactly which call each setting
 // makes, and the real modules (the key registry, the playback controller,
 // the motion gate, the shake policy, the aura mode), whose state is then

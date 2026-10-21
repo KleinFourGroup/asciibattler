@@ -1,12 +1,12 @@
 /**
- * 54h — attrition stall on crafted DoT worlds. The positive-path worlds
+ * Attrition stall on crafted DoT worlds. The positive-path worlds
  * poison an enemy DIRECTLY (`applyStatusEffect`) — a non-terrain DoT is the
  * script's actual domain: a burn from a fire TILE reads as hazard-between
  * and correctly DEFERS to terrain-edge hold (the option-A lock, pinned
  * below). Premises are read back through `attritionRead` (balance-proof
  * style — never hardcoded stat arithmetic). The stand-off tile must never
  * advance on the enemy, never land on a hazard, and respect the
- * artillery-only under-fire filter (the 54e-amendment contract).
+ * artillery-only under-fire filter.
  */
 
 import { describe, it, expect } from 'vitest';
@@ -85,11 +85,11 @@ describe('attritionStall', () => {
   });
 
   it('DEFERS to terrain-edge hold whenever ANY hazard exists on the map (option A)', () => {
-    // The old fire-crafted shape: a burning enemy on a fire map. Terrain in
-    // play is edge-hold's domain WHOLESALE — a narrower "hazard between the
-    // armies" deferral still leaked in the post-crossing windows, where
-    // standing pat while the crossers' burns expire wastes the finish
-    // (worklog §54h). The stall must stand down on the whole map.
+    // A burning enemy on a fire map. Terrain in play is edge-hold's domain
+    // WHOLESALE: a narrower "hazard between the armies" deferral would leak
+    // in the post-crossing windows, where standing pat while the crossers'
+    // burns expire wastes the finish. The stall must stand down on the
+    // whole map.
     const world = makeWorld();
     spawn(world, 'player', { x: 1, y: 4 });
     spawn(world, 'player', { x: 1, y: 6 });

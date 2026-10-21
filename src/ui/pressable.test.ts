@@ -1,5 +1,5 @@
 /**
- * 100c1 — the pressable helper's key rule, pinned pure (vitest runs node,
+ * The pressable helper's key rule, pinned pure (vitest runs node,
  * no DOM: the wiring is the user's Firefox read). The one derived pin is
  * the rule's premise: Enter is bound to NO registry action (so the 'now'
  * path can never co-fire a hotkey) while Space IS bound (so its activation

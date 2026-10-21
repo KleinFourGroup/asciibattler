@@ -10,9 +10,10 @@ import { UNIT_DEFS } from '../config/units';
 import abilitiesJson from '../../config/abilities.json';
 
 /**
- * 34b — the §29 archetypes (afflicters / summoner / chain caster) used to render
- * a blank UnitCard ability-detail row because the builder only handled heal/damage
- * ops. These pin a NON-blank, op-appropriate readout for every new op kind. They
+ * The afflicters', the summoner's and the chain caster's abilities have ops
+ * besides heal and damage, and a builder that read only those two would leave
+ * their UnitCard ability-detail row blank. These pin a NON-blank,
+ * op-appropriate readout for every op kind. They
  * read the shipped `config/abilities.json` (the wording is config-derived), and
  * assert STRUCTURE (labels, op routing, riders) rather than balance arithmetic —
  * damage magnitudes are matched as `/\d+ dmg/`, never a hand-computed number.
@@ -97,8 +98,9 @@ describe('abilityDetailParts (34b — every §29 op kind renders a non-blank det
 });
 
 describe('abilityDetailPartsForDef (§76b — the aura branch, ahead of shipped content)', () => {
-  // No shipped def carries an aura until the §76 design round, so these author
-  // synthetic parsed defs via the def-taking core (the reason it was split out).
+  // One shipped def carries an aura (`inspire`, a pure one) and no shipped
+  // weapon radiates one, so these author synthetic parsed defs via the
+  // def-taking core (the reason it was split out).
   const stats = rollUnit('mercenary', new RNG(1)).stats;
 
   const PURE_AURA = parseAbilityDef({
@@ -113,7 +115,7 @@ describe('abilityDetailPartsForDef (§76b — the aura branch, ahead of shipped 
     const text = abilityDetailPartsForDef(PURE_AURA, stats).join(' · ');
     expect(text).toContain('aura emboldened');
     expect(text).toContain('reach 3'); // aura.radius, NOT the def's inert rangeCells (0)
-    expect(text).not.toContain('dash'); // the §29d mislabel class, closed for auras
+    expect(text).not.toContain('dash'); // a self-target with no ops would reach the dash branch
   });
 
   it('a weapon that also radiates keeps its profile and gains the aura rider', () => {

@@ -133,7 +133,7 @@ describe('105c — the poses', () => {
   it("the clumps are 105a's, cell for cell and glyph for glyph", () => {
     expect(CLUMP.map((s) => s.glyph)).toEqual([...CLUMP_GLYPHS]);
     const { placements, notes } = placePose('clump', open(15, 15));
-    // 105a: clumpAt(centre) · clumpAt(1, 1) · clumpAt(cx, h - 2), in that order.
+    // The board geometry tests' order: clumpAt(centre) · clumpAt(1, 1) · clumpAt(cx, h - 2).
     const want = [...clumpAt(B15, 7, 7), ...clumpAt(B15, 1, 1), ...clumpAt(B15, 7, 13)];
     expect(placements).toHaveLength(want.length);
     placements.forEach((p, i) => {
@@ -151,7 +151,7 @@ describe('105c — the poses', () => {
       ['M', 7, 8, false],
       ['M', 8, 8, false],
     ]);
-    // the lift dial opens on the lift 105a measured
+    // the lift dial opens on the lift the board geometry tests measure
     expect(DIALS.lift.def).toBe(FLYER_LIFT);
   });
 

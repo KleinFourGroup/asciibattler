@@ -1,5 +1,5 @@
 /**
- * 54g — cohesion focus on crafted worlds. The artillery premise (catapult
+ * Cohesion focus on crafted worlds. The artillery premise (catapult
  * reach ≥ FOCUS_MIN_RANGE) is asserted from the spawned unit's own derived
  * stats, not hardcoded — if a rebalance drops catapult reach below the
  * threshold, the premise check fails loudly instead of the suite silently

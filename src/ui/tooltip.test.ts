@@ -1,5 +1,5 @@
 /**
- * 97a — the tooltip's PURE part, pinned headless: `placeTooltip` (the
+ * The tooltip's PURE part, pinned headless: `placeTooltip` (the
  * flip / clamp / caret arithmetic). The gestures, the fade and the host are
  * eyeball-only per TESTING. Every expectation derives from the exported
  * constants and the inputs, never from re-typed pixel numbers.

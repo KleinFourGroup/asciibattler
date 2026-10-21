@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { SETTINGS_SECTION } from '../settings/settings';
 import { TEXT_SCALE_CHOICES, holdTextScale, nearestTextScale, rootFontSize, setTextScale } from './textScale';
 
-// 116k — the text scale's rule: which size a stored value draws, what that
+// The text scale's rule: which size a stored value draws, what that
 // puts on the root element, and the hold the settings modal takes.
 
 const root = (): { style: { fontSize: string } } => ({ style: { fontSize: 'unset' } });

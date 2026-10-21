@@ -1,11 +1,12 @@
 /**
- * 57d — the clone seam's load-bearing contracts, foresee-the-rolls FIRST:
+ * The clone seam's load-bearing contracts, foresee-the-rolls FIRST:
  *
  * 1. THE CLAIRVOYANCE GUARD — a rollout clone must NOT share the live
  *    battle's future rolls. The control case documents the hazard the
  *    seam exists for: a plain toJSON→fromJSON clone DOES share them
- *    (v35 serializes its streams by design — the A2 contract; the nullable
- *    campRng joins conditionally, §75b).
+ *    (the World's snapshot serializes its streams by design, so a restore
+ *    continues the same rolls; the nullable campRng joins when the world
+ *    has camps).
  * 2. LIVE-WORLD PURITY — cloning and ticking a clone never perturbs the
  *    live world (byte-identical snapshot before/after).
  * 3. DETERMINISM / CRN — same rolloutSeed ⇒ byte-identical rollout

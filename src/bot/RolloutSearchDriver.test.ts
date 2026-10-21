@@ -1,5 +1,5 @@
 /**
- * 57f — the searcher's arbitration contracts on crafted worlds:
+ * The searcher's arbitration contracts on crafted worlds:
  *
  * 1. COMMIT — a proposal that objectively beats the null arm lands (1
  *    merc vs 3 CLOSE holding enemies: charging dies well inside the
@@ -10,7 +10,8 @@
  * 4. DEATH / CONTACT TRIGGERS — either edge re-searches immediately,
  *    inside the cadence window.
  * 5. FOREIGN-ORDER CONSERVATISM — an externally-set objective silences
- *    the searcher entirely (the §54 ownership rule).
+ *    the searcher entirely (it never searches against an order someone
+ *    else issued).
  * 6. DETERMINISM — same seeds + same config ⇒ the same command
  *    sequence over a driven battle.
  *

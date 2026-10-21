@@ -1,5 +1,5 @@
 /**
- * §91d — the chip rule's player-facing words, pinned by rule set. The
+ * The chip rule's player-facing words, pinned by rule set. The
  * wording is free to change; what is pinned is that each rule set names the
  * RIGHT quantity (fallen, and survivors on a cap turn) on each pool, that a
  * two-rule cap turn names both, and that the live labels come from

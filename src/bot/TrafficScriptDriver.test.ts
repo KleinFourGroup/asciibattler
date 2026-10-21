@@ -1,5 +1,5 @@
 /**
- * 54a — the traffic-script driver's arbitration contract: fixed priority ·
+ * The traffic-script driver's arbitration contract: fixed priority ·
  * the null action as the arm to beat · min-dwell no-thrash · release-own-
  * orders-only. Stub scripts + a real (tiny) World so emitted commands go
  * through the genuine drain/apply/auto-revert path — the driver compares
@@ -45,8 +45,8 @@ function stub(id: string, initial: TeamObjective | null): TrafficScript & {
  *  ticks exist only to drain the driver's commands and advance `currentTick`.
  *  TWO enemies, so a test can kill one (the auto-revert path) without ending
  *  the battle — `World.tick()` NO-OPS once `ended` is set (World.ts), so an
- *  ended world freezes `currentTick` (the 54a hang: an unbounded
- *  `while (currentTick < …)` loop spun forever on exactly that). */
+ *  ended world freezes `currentTick`, and an unbounded
+ *  `while (currentTick < …)` loop would spin forever on it. */
 function makeWorld(): World {
   const world = new World(new EventBus<GameEvents>(), new RNG(1), 20, 20);
   world.spawnUnit(scaledUnit('mercenary', 1), 'player', { x: 1, y: 1 }, null);
@@ -216,8 +216,8 @@ describe('TrafficScriptDriver', () => {
     });
     world.tick();
     expect(world.objectiveFor('player').mode).toBe('engage');
-    // Pre-85d only the null action respected ownership — a triggered script
-    // emitted over a foreign order after dwell. Now: quiet, well past dwell.
+    // A triggered script holds under a foreign order too, not only the null
+    // action: quiet, well past dwell.
     expectQuietSteps(world, driver, MIN_DWELL_TICKS + 2);
     expect(world.objectiveFor('player')).toEqual({
       mode: 'engage',

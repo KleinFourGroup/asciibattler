@@ -5,10 +5,9 @@ import { electronAdapter, type ShellStore } from './electron';
 import { createStore } from './store';
 import { WEB_PROBE_KEY, readableStorage, webAdapter } from './web';
 
-// 113c — the adapters and the choice between them, over fakes of the two
+// The adapters and the choice between them, over fakes of the two
 // hosts: a `Storage` (a Map behind the three methods) and the preload's
-// `shellStore`. The real hosts are read in the pane and under Electron
-// (WORKLOG §113c).
+// `shellStore`. The real hosts are read in the pane and under Electron.
 
 function fakeStorage(initial: Record<string, string> = {}): Storage & { items: Map<string, string> } {
   const items = new Map(Object.entries(initial));
@@ -213,7 +212,7 @@ describe('113c — the choice', () => {
     expect(store.readStrict({ policy: 'strict', name: 'run', version: 1, load: (w: unknown) => w })).toEqual({ status: 'empty' });
   });
 
-  // 116i — the second plant: the page's own storage, full from mid-game on.
+  // The second plant: the page's own storage, full from mid-game on.
   it('plants a full store on ?store=full: it boots able to save, and every write after it is armed fails', () => {
     expect(FULL_QUERY).toBe('store=full');
     const slot = { policy: 'strict' as const, name: 'run' as const, version: 1, load: (w: unknown) => w };

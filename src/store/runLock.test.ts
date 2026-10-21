@@ -8,18 +8,18 @@ import {
   type LockManagerLike,
 } from './runLock';
 
-// 115f — the two-tab lock, over a stand-in for the browser's lock manager.
+// The two-tab lock, over a stand-in for the browser's lock manager.
 //
 // The stand-in keeps the rules of the real one that the lock rests on: a name
 // has one holder, held until the promise its callback returned settles or its
 // page goes, and a request made with `ifAvailable` is answered with null when
 // the name is taken, in a later task, never inside `request`. What it can't
-// say is whether a real browser keeps them (the pane and Electron are
-// measured in the WORKLOG, §115f; itch's frame in Firefox at §116l).
+// say is whether a real browser keeps them (the pane, Electron and itch's
+// frame in Firefox are measured in the WORKLOG).
 //
 // Every page also has a `query()` that is refused with a SecurityError and
 // counted. Firefox refuses it so in a partitioned third-party frame, and the
-// lock must never ask (116l; gotcha #140).
+// lock must never ask (gotcha #140).
 
 interface Page {
   readonly locks: LockManagerLike;

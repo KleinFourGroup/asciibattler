@@ -1,5 +1,5 @@
 /**
- * 102d — the fallen cells' TEXT, pinned headless (the DOM half is the
+ * The fallen cells' TEXT, pinned headless (the DOM half is the
  * render / ui eyeball policy). What is pinned is the shape — one token per
  * fallen vs one per archetype, the counts and the costs carried into the
  * lines — with every glyph and name read from the unit catalog, never

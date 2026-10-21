@@ -10,7 +10,7 @@ import { TraceRecorder, type BattleTrace } from './TraceRecorder';
 import { replayTrace } from './replayTrace';
 
 /**
- * 53c — THE fidelity keystone: a battle recorded live (including commands
+ * THE fidelity keystone: a battle recorded live (including commands
  * issued at a pre-battle parked drain, a normal between-ticks enqueue, and a
  * mid-battle parked drain) must replay byte-identically from its trace alone.
  */

@@ -14772,3 +14772,53 @@ baseline: comment lines 882 → 753, words 7,336 → 6,482, code lines 1,082
 unchanged; the pass's 178 step codes to none, and `src/bot`'s 37 left
 are in its tests. Ten false claims corrected, with one twin in
 `rollout.test.ts`. About 217k for the three batches, about 104 a line.
+
+### 125l's stop: the decision point, the reads and the close's calls (2026-10-21, session cdb73148)
+
+Nothing was built but two lines of ARCHITECTURE (below). The stop puts
+the phase's decision point, the three batch reads and two calls; the
+proposal and its leans are in the session's final message of this turn,
+and the user's answer follows here.
+
+**What the phase changed**, from `git diff 8c094cf9 HEAD` (the kickoff's
+ref, 26 commits before this one) and the instruments:
+
+- `src`: 34 files, 843 lines in and 1,367 out; `tests`: 62 files, 345
+  in and 3,029 out; `config`: `difficulty.json`'s seven keys; `tools`:
+  the sweep page's example knob. Deleted: `enemyBudget.ts` and its test,
+  the arena's three files, two flag tests, fifteen fixtures and
+  `verifyArbitratedRuns.ts`; added: `tests/fuzz/gateWalks.ts`.
+- `src/bot`'s eleven files, from the kickoff's baseline: code lines
+  1,108 → 1,082, comment lines 877 → 753, comment words 7,314 → 6,482.
+- The step-code ceiling 1,084 → 898: the pass's files' 180 to none (178
+  in the pass, 2 with 125i's move), 6 out with 125a to 125e's deletions.
+  `comment-codes`: all 898 left under `src` are in tests; `src`'s
+  non-test files hold none.
+- The suite 3,722 → 3,704 and the smoke 613 → 594, by the hook at
+  `d103afa5`; no snapshot bump (World v36, Run v49).
+- The signed rows: A-20's four flags with what only they read, A-30,
+  A-31, A-25's `hazardCells`, A-26's 16 exports in `src/bot`; the
+  arena's wave builder and its seven keys (call 2). B-14's leads: three
+  trials kept (125g, 125h, 125i), the fourth to the census as B-18. R-1
+  and R-2 as posts. TODO "§126 tests" holds two lines from 125g and 125h.
+
+**The pointer search**, as §124.5's close ran it: lines outside the
+pass's files and the records that name a `src/bot` file beside a step
+code. ARCHITECTURE's `src/bot` rows held a twin of batch 1's fork-order
+claim: `rollout.ts` re-seeded "both RNG streams", where the camp stream
+is a third when present; the row says each stream, by key, and
+`runRollout.ts`, missing from the tree, has a row. The rows' step codes
+are the docs pass's (§128), as the whole file's are. `tests/fuzz`'s
+pointers to the bot (`harness.ts`'s "the §57c v2 default dials" and its
+kin) follow the decision point.
+
+**The decision point's numbers.** By `wc -l` over the tracked `.ts`,
+`.mts`, `.mjs`, `.js`, `.css` and `.html`: `src`'s co-located tests
+45,962 lines in 178 files (the 898 codes); `tests`' other files 23,027
+in 85; `tests`' tests 23,245 in 141; `tools` 23,214 in 66. No instrument
+counts the codes outside `src` (`comment-codes` reads `src` only); a
+grep for `§` before a digit finds 506, 263, 237 and 204, a floor. At the
+pass's rates (75 a line in §124.5, 104 here) the whole of `tests` and
+`tools`, about 115k lines, is about 8.6M to 12M tokens.
+
+Reading: 394,505 at 00:35 UTC, before this entry.

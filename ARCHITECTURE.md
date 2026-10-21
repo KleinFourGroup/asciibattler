@@ -86,7 +86,8 @@ src/
     TrafficScriptDriver.ts   #   54a: TrafficScript {id, evaluate, 57e nominate?} + TRAFFIC_SCRIPTS (registry order = arbitration priority) + the fixed-priority per-battle driver (min-dwell, standing-order ownership) + sameObjective
     sensors.ts               #   54b: pure derived-state reads (jamRead / hazard+barrier / chokeCells / armyMinCut / armiesInContact / attritionRead / focusTargetFeatures) — no event history; rollout-compatible by construction
     scripts/                 #   54d–54h: the five traffic scripts (terrainEdgeHold / unjam / chokeHold / cohesionFocus / attritionStall), one file each, co-located tests; 57a: --scripts=<spec> subsets select from the registry
-    rollout.ts               #   57d: cloneForRollout — the CLAIRVOYANCE GUARD (both RNG streams re-seeded at the wire level pre-fromJSON; fresh bus; live world untouched); the foresee-the-rolls test keeps the plain-clone control case
+    rollout.ts               #   57d: cloneForRollout — the CLAIRVOYANCE GUARD (each RNG stream re-seeded by key on the snapshot before fromJSON, the camp stream when there is one; fresh bus; live world untouched); the foresee-the-rolls test keeps the plain-clone control case
+    runRollout.ts            #   cloneRunForRollout, the run's clairvoyance guard: the snapshot's `streamRoot` replaced by a derivation of the rollout seed, and the clone on a fresh bus, which the rollout walker drives
     evaluator.ts             #   57e: evaluateCandidate — K CRN rollouts × H ticks → terminal material differential (HP fractions) + dominant WIN_BONUS; winner inferred from terminal state (derived reads only)
     RolloutSearchDriver.ts   #   57f: the portfolio greedy searcher — nominate (evaluate()/nominate?) → CRN-evaluate → commit only past the null arm + ε; cadence + death/contact re-search; dials as ctor options (§57c v2 defaults — the 57g sensitivity seam)
 

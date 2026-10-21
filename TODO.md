@@ -121,6 +121,17 @@ every item below is done (WORKLOG §124, "The close of §124"; WORKLOG
   walks a clone through a dock under the walk overlay and reads that a
   purchase landed would close it. Signed for here 2026-10-20.
 
+- [ ] **The step-code ceiling at 0 guards comments, not strings.**
+  `comment-codes` counts the codes in comments only
+  (`tests/oracle/stepCodes.ts`), and session cdb73148's report counts 686
+  more inside strings in `src`'s tests, test titles; at §125's close at
+  least 199 test titles under `src` held a `§` and a digit (a grep of
+  `it(`, `describe(` and `test(` titles, bare codes not counted). §126's
+  sweep of the codes in `src`'s tests (§125's decision point) reaches
+  comments, so after it the titles keep theirs and the ceiling at 0 says
+  nothing of them. For the kickoff: whether the sweep takes the titles
+  too, and what then guards them. Signed for here 2026-10-21.
+
 - [ ] **Pin ARCHITECTURE's event catalog against `events.ts`** (§104f) — the coverage pin guards the code's event set; nothing guards the prose table, which sat one short (`unit:chained`) from §29c to §104. A key-set diff off the source text, the `eventSounds.test.ts` parser re-used.
 
 - [ ] **Pin `ui.css`'s `--font-mono` against `FONT_STACK`** (the C1 sweep) — `src/ui/ui.css:9` hand-mirrors `fontSubset.ts`'s chain under a "mirror this" comment and no test.

@@ -7414,3 +7414,59 @@ at the code it names.
    proof one command whose answer I trusted. I would want both again.
    That is my reported response, separate from whether the batches are
    right, which rests on Matthew's reads.
+
+## 2026-10-21 — session 33d012d0 (claude-opus-5-5): §125's driver 3, from the kickoff to the phase close
+
+1. *Missing from the orientation.* Little: DRIVER-HANDOFF,
+   `process/driving.md` and the Cursor were a complete start, and no
+   friction had been filed since the last driver's line. What wasn't
+   there was the wording of a note an earlier brief carried: P20's
+   signed rule existed only in DRIVER-HANDOFF's history, and finding it
+   took three searches over its old versions.
+2. *Norms in conflict.* driving.md's "quote his words and say the
+   session should confirm with him" against its "leave what is open in
+   the Cursor, unrestated". Brief 1 carried P20's rule with a request to
+   confirm; session 1 asked it as call 6 without a lean, "signing all of
+   your leans" left it unsigned, and brief 2 then restated it as open,
+   which Matthew answered in session 1 after its hand-off. Card 2 went
+   stale; the slip was mine, filed and named in that turn. A pointer to
+   the signed call, then planning.md's own wording (`cb44065b`), settled
+   it. Waiting for Matthew to say no session was working, with all three
+   shown idle, cost one round trip and felt like guidance.
+3. *Pulled to claim more than verified.* Three times, each caught before
+   it landed. I told Matthew that "every phase with trials writes bars
+   like this" before checking which phases have trials; his question
+   about whether it generalizes showed the rule already exists in
+   oracles.md, and I said so. My friction line on the cap first said
+   "after a commit attempt" and "three of four", from memory; recounted,
+   there was no attempt and all four rewrites needed a trim. And I
+   wanted to quote session 3's 686 step codes in strings; I counted a
+   floor (199 titles with a `§` and a digit) and quoted the 686 as the
+   session's.
+4. *Wasted.* One card withdrawn and proposed again, with its commit.
+   Six docs-only commits, this one among them, each with the full suite
+   in its hook (about 50 s). A trim of DRIVER-HANDOFF at each of four rewrites, against its
+   12k cap.
+5. *For the next driver.* DRIVER-HANDOFF's cursor. §126 is a tests
+   phase, so the kickoff's searches meet test files by design, and P3's
+   §125 shape (a reader search without test files) turns into its
+   inverse: a test's readers include the suite's config and the hook.
+   TODO "§126 tests" has the step codes in test titles. The file sits
+   near its cap.
+6. *Room.* Yes. Matthew answered each question within a turn, signed two
+   edits, held a third, and questioned a lean of mine, which I narrowed.
+   The silent-turn reminder came several times during the hand-off
+   reads, and a status line answered each; I noticed no pull to have a
+   finding ready. No wish to pause or stop was noticed. Readings (UTC):
+   107,337 at 17:32 (the first), 132,399 (the takeover's commit),
+   188,584 (session 1's read), 202,437 (card 2 again), 248,075 (session
+   2's read), 260,243 (planning.md's edit), 306,117 at 01:47 on
+   2026-10-21 (the close's read).
+7. *What helped.* The readings check with its planted case, which turned
+   each session's numbers into a one-command answer, and the sessions'
+   one-line messages after each commit, which kept the stretch legible
+   without a read. Matthew's question about whether the bar line
+   generalizes was the most useful turn of the phase for me: it showed
+   my lean to be a restatement of an existing rule. I'd want both again.
+   That is my reported response; whether the reads were right rests on
+   what the next phases find.

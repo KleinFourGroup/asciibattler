@@ -14885,3 +14885,104 @@ Readings by the tool's clock (UTC). The phase's working sessions:
 orientation), 147,978 on the plan's commit, 243,315, 321,218 and
 373,480 on the batches' commits, 399,064 on the stop's, 410,772 at
 00:51 on 2026-10-21 before this entry.
+
+## Phase 126 — tests
+
+### The kickoff: the audit, and the cut put to the user (2026-10-21, session 314e1038)
+
+At `2c7df136`, the tree clean. The session was started by the phase's
+driver session (driver 4) and works with the user as usual. Nothing was
+built. Each finding is from a search (`git grep` over the tracked tree),
+an instrument, or a read of the named lines; no file was read whole.
+
+**The charter's rows at HEAD.**
+
+- A-33: `tests/smoke.test.ts` (13 lines), `tests/gauntlet/humanFixture.test.ts`
+  (33) and `src/run/encounters/levelCapMigration.test.ts` (132) are
+  present; `src/config/selection.test.ts` went with A-09 at 121d.
+- A-25's tests: none is left. The eleven names signed for deletion are
+  gone from `src`, `tests`, `tools`, `scripts` and `config`, each with its
+  tests (122b, 123e, 124.5a, 125f). `isActiveNeutral` is read by its own
+  test alone (`camps.test.ts`; `spriteColor.ts:48` names it in a
+  comment) and is held for Round 9's B-02 (META-ROADMAP:810).
+- B-11: the `findUnit` scan (`World.ts:2141`), `battle:ended`'s optional
+  `reason`, `survivorPower` and `fallenPower` (`events.ts:64-87`) with
+  `handleTurnEnded`'s fill-ins (`Run.ts:2512`), and `BattleEncounter`'s
+  optional `battleRules` and `kind` (`Run.ts:264`, `:271`) are as the
+  row has them; 74 pushes onto `units` in 24 files, 32 `battle:ended`
+  emits in 7 test files against 1 in the game. One clause is stale: the
+  constructor's `combatRng ?? rng.fork()` is the game's own path, since
+  `battleWorld` passes no combat stream (`battleSetup.ts:323`), so it
+  stays. `BattleEncounter` is in the save (`RunSnapshot.currentEncounter`,
+  `Run.ts:501`), so making its two marks required predicts Run v49 → v50
+  if the fingerprint reads optionality.
+- TODO "§126 tests", seven items, all open at HEAD: the import-cycle
+  guard (its walker, 70 lines, at `scratch/123l-loadcycle/importPaths.mts`);
+  the loops; the timeouts; the ten sites with no battle rules (125j's
+  R-4); the walker's port purchase; the step codes in titles; and the two
+  pins (T-49, T-50).
+- The loops: 54 `while (` lines in 25 test files (the item's 55 in 24,
+  after 119g-post's three). By the line alone, about 30 wait on state a
+  command or a tick is meant to change with no bound: `World.test.ts`'s
+  eight `currentTick` polls (the shape TESTING's "Bounded steps, never
+  poll `currentTick`" forbids), `Run.test.ts`'s command loops
+  (`cacheHasRoom` with `addPacket` six times, `payToRemoveUnit`,
+  `removeRosterUnit`, `chipTurn`), the reward loops in
+  `determinism.test.ts` and `encounter-loop.test.ts`, and seven
+  `while (!w.ended) tickTurn(w)` loops, which end only by the turn cap's
+  own rule. The rest are bounded (`TICK_CAP`, `MAX_TICKS`, a count) or
+  walk a finite structure (the node map's stacks, a BFS).
+- The timeouts: `store-guard.test.ts`'s two walks have 30 s since
+  2026-10-12; the chaos test's seeds (`chaos.test.ts:40`, an `it.each`)
+  have the default 5 s.
+- The two pins: ARCHITECTURE's "Event catalog (outputs)" (`:689`) and
+  `ui.css:9`'s `--font-mono`, which `fonts.css:7` says mirrors
+  `FONT_STACK`; no test names either pair.
+- The ten sites: none installs rules (`tests/pathing/capture.ts`,
+  `boardPanel/fixtures.test.ts`, the five `*-battle` tests,
+  `corridor-flow`, `layout-deadlock`, `variable-size`). `battleWorld`
+  takes the encounter's `worldSeed` and installs `battleRules ?? []`, so
+  a site moves onto it unchanged where its World's seed is the
+  encounter's and its rules are none.
+
+**The step codes in `src`'s tests.** `comment-codes`: 898 in comments,
+in 151 files, every one in a test: `src/sim` 359 (59 files), `src/run`
+304 (19), `src/config` 91 (13), `src/render` 47 (14), `src/bot` 37 (12),
+`src/ui` 19, `src/store` 18, the other seven folders 23. Its "inside
+strings" figure is 686. A probe (the session's scratchpad,
+`titleCodes.mts`, the first argument of `it`, `test` and `describe` with
+`.each`, `.skip`, `.only` and `.todo`, string and template literals,
+counted by `stepCodes`) splits them: 667 codes in 630 titles in 132
+files, 30 in other strings, and 2 outside tests. Of the 30, about a
+dozen are real (seven layout fixtures' descriptions such as "§40d
+fixture — …", an `events.test.ts` case, `adapters.test.ts`'s stored
+"110a round trip"); the rest are false positives, key names such as
+`F5` and `E1`. Nothing keys on a title: no snapshot files, no
+`toMatchSnapshot`, no `-t` filter in a script or the hook, no
+`currentTestName`.
+
+**The reader for the list by test** (census 3.5, the second way: each
+file run once, the coverage read out after every test). The coverage
+tool's worker (`@vitest/coverage-v8` 4.1.6, `dist/index.js`) starts V8's
+precise coverage once and takes it after each file, and a take resets
+V8's counters; its provider converts each take with
+`ast-v8-to-istanbul`, the module's wrapper length as `startOffset`. So
+a setup file on the command line should be able to take the coverage
+after every test on its own inspector session, with the tool's coverage
+off, and convert the takes as the provider does (a prediction, which
+the known answer below settles). The suite runs `isolate: false`
+(`vite.config.ts:197`), so the reader runs one file a process, as
+`scratch/120e/perfile.ts` did (613 s for the main suite four at a time,
+539 s for the smoke three at a time, under the coverage tool). The
+known answer: each file's union of its tests' readings, with what loads
+before the first test, equals the coverage tool's own reading of that
+file alone at the same commit; and the list by file re-derived from the
+tests' readings equals perfile.ts's list at that commit. The readings
+under `scratch/120e/readings/` are of the census's commit, so both are
+recorded again.
+
+**The cut, as put.** In the session's final message of this turn, with
+its calls; the user's answer and the cut as signed follow here.
+
+Readings by the tool's clock (UTC): 101,090 at 12:36 after the
+orientation, 206,994 at 12:47 at the audit's end.

@@ -637,7 +637,9 @@ function scene(specs: SceneUnit[]): {
   const moves: GameEvents['unit:moved'][] = [];
   bus.on('unit:moved', (p) => moves.push(p));
 
-  let nextId = 1;
+  // Clear of the World's own ids, which count up from 1 with each spawn
+  // (`spawnWall`, `spawnHalfCover`), so a scene's unit never shares one.
+  let nextId = 101;
   const units = specs.map((s) => {
     const isNeutral = s.team === 'neutral';
     // E1: build stats from the melee archetype baseline (con=20 → maxHp=50,

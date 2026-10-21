@@ -204,8 +204,8 @@ describe('Targeting / target stickiness (E5)', () => {
     const { world, units } = scene([
       // chebyshev 4, behind a wall — the slightly-nearer rival (3) is NOT
       // 1.5x closer (3*1.5=4.5 > 4) so rule (b) never fires; only the LOS
-      // timeout breaks the lock.
-      { id: 1, team: 'player', x: 0, y: 0, archetype: 'archer' },
+      // timeout breaks the lock. The player's id is clear of the wall's, 1.
+      { id: 101, team: 'player', x: 0, y: 0, archetype: 'archer' },
       { id: 2, team: 'enemy', x: 4, y: 0 }, // committed, will be occluded
       { id: 3, team: 'enemy', x: 3, y: 3 }, // visible alternative, chebyshev 3
     ]);
@@ -223,7 +223,7 @@ describe('Targeting / target stickiness (E5)', () => {
 
   it('(c) is melee-exempt: a melee unit keeps a hidden, non-much-closer target', () => {
     const { world, units } = scene([
-      { id: 1, team: 'player', x: 0, y: 0 }, // melee (default)
+      { id: 101, team: 'player', x: 0, y: 0 }, // melee (default); clear of the wall's id, 1
       { id: 2, team: 'enemy', x: 4, y: 0 },
       { id: 3, team: 'enemy', x: 3, y: 3 },
     ]);

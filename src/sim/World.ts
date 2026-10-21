@@ -2139,10 +2139,18 @@ export class World {
     return unit;
   }
 
-  /** Puts built units in `units` and the index as they are, with no event or trigger. */
+  /**
+   * Puts built units in `units` and the index as they are, with no event or
+   * trigger. A repeated id throws, since the index would keep only the last.
+   */
   placeUnits(...units: Unit[]): void {
+    for (const u of units) {
+      if (this.unitsById.has(u.id)) {
+        throw new Error(`World.placeUnits: unit id ${u.id} is already placed`);
+      }
+      this.unitsById.set(u.id, u);
+    }
     this.unitList.push(...units);
-    for (const u of units) this.unitsById.set(u.id, u);
   }
 
   findUnit(id: number): Unit | undefined {

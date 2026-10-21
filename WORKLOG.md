@@ -15696,3 +15696,50 @@ position checks hold whatever the pathing does.
 The trials' budget: one of three used (R-4).
 
 Reading by the tool's clock (UTC): 354,247 at 18:44, before this entry.
+
+**Signed** (the user, 2026-10-21): "Absolutely signing that one, Claude!
+😁 Great catch!" So R-1 is 126l-post, as leaned, read `none`.
+
+### 126l-post — R-1, the repeated id (2026-10-21, session 9d8a93c2)
+
+Built as signed. `placeUnits` throws on an id already in the index. The
+seven tests' ids: the `scene()` helpers in `MovementBehavior.test.ts` and
+`World.test.ts` count from 101, with a line saying why (both files pass
+whole with the start moved, 110 of 110, so no test there names a scene
+id); the player in `environment.test.ts`' test and in `Targeting.test.ts`'
+two (c) tests, and the carrier in `aura.test.ts`' test, are 101. Gotcha
+#105 rewritten: it said the World counts from 0 and that a single wall
+dodges the collision, both false, and it named one self-skip of the three
+that take a shared-id wall for the unit itself.
+
+The re-read, as a plant per test (the session's scratchpad,
+`idplants.mjs`): the rule each title names broken at its line, and the
+one file run under HEAD's ids and then under the fixed ids, in a worktree
+of `7003e410`. With no plant, all seven pass under both.
+
+| Test | Plant | HEAD's ids | Fixed ids |
+|---|---|---|---|
+| environment: a wall is never a target | a neutral always hostile (`hostileCandidate`) | passes | fails |
+| MovementBehavior D6: half-cover on the sight line, the ranged unit holds | every neutral blocks sight (`positioning.ts`' engagement list) | passes | fails |
+| Targeting (c): the ranged unit drops a hidden target | the LOS timeout never fires | fails | fails |
+| Targeting (c): melee keeps a hidden target | melee drops one too | fails | fails |
+| World 27d: neutrals on fire tiles untouched | tile statuses reach scenery | fails | fails |
+| MovementBehavior D6: paths around a half-cover | no neutral blocks a path (`movement.ts`) | passes | passes |
+| aura: inert scenery is never a recipient | the aura pass reaches scenery | passes | passes |
+
+So two tests passed only on the collision and now catch their plants. Two
+are findings for the user, unfixed, as signed: the half-cover detour test
+asserts that the first step from (0,0) is not (3,0), which no step can
+reach, so it passes whatever the pathing does; and the aura test's wall
+refuses `emboldened` by its own def (`config/units.json`'s `wall` accepts
+only `burn` and `frozen`), so it passes whatever the aura pass's scenery
+skip does. A plant on `collectLosBlockers` was not caught either: the
+D6 sight test reads the engagement's own list, which the second row's
+plant hits.
+
+Proof: the suite 3,703 of 3,703 with the refusal, typecheck clean;
+`npm run corpus` 0 of 30 journals differ; `bash scripts/perf-oracle.sh
+HEAD` PASS, byte-identical to `7003e410` on both shapes. The refusal's
+known answer: in the worktree, with this `World.ts`, `environment.test.ts`'
+player put back to id 1 fails with "World.placeUnits: unit id 1 is
+already placed".

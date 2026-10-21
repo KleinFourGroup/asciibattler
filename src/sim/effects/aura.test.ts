@@ -161,7 +161,7 @@ describe('§76a — the aura pass', () => {
 
   it("affects 'enemies' reaches the enemy team and skips allies; inert scenery is never a recipient", () => {
     const world = freshWorld();
-    const carrier = makeUnit(world, 1, 'player', { x: 5, y: 5 });
+    const carrier = makeUnit(world, 101, 'player', { x: 5, y: 5 }); // clear of the wall's id, 1
     const ally = makeUnit(world, 2, 'player', { x: 6, y: 5 });
     const enemy = makeUnit(world, 3, 'enemy', { x: 5, y: 6 });
     const wall = spawnWall(world, { x: 4, y: 5 }); // team 'neutral' ≠ carrier's → matches 'enemies'…

@@ -1320,7 +1320,9 @@ function scene(specs: DeathSceneUnit[]): {
   bus.on('unit:died', (p) => deaths.push(p));
   bus.on('unit:attacked', (p) => attacks.push(p));
 
-  let nextId = 1;
+  // Clear of the World's own ids, which count up from 1 with each spawn
+  // (`spawnWall`), so a scene's unit never shares one.
+  let nextId = 101;
   const units = specs.map((s) => {
     // E1: melee archetype, with `strength` set to the legacy
     // `attackDamage` knob so tests that one-shot via 999-damage attacks

@@ -78,7 +78,7 @@ describe('environment / spawnWall', () => {
     const stats = { ...ARCHETYPE_CONFIG.mercenary.baseStats };
     const derived = deriveStats(stats, 1);
     const player = new Unit({
-      id: 1,
+      id: 101, // clear of the wall's id, 1, the World's first
       team: 'player',
       archetype: 'mercenary',
       glyph: 'M',

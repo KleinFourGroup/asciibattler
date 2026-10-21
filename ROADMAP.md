@@ -354,7 +354,11 @@ kickoff"). A-25's tests have no step: none is left.
 - ☑ **126k — R-4, a trial** (`none`, on its bar). All ten sites onto
   `battleWorld`; the stormcaller fixture's grid corrected to 12 (signed
   at step zero).
-- ☐ **126l — the re-skim** (`stop`).
+- ☑ **126l — the re-skim** (`stop`). R-1 signed: 126l-post.
+- ☑ **126l-post — R-1, the repeated id** (`none`). `placeUnits` refuses
+  an id already placed; the seven tests that collided at id 1 got their
+  own; two had passed only on the collision, two more name a rule they
+  cannot see (findings for the user).
 - ☐ **126m — the step codes in comments** (`batch`, per batch). 898, by
   folder, through an anchor-checked patch file.
 - ☐ **126n — the step codes in titles** (`batch`). `comment-strip`

@@ -11,8 +11,8 @@ plan: [archive/post-109-roadmap.md](archive/post-109-roadmap.md) (Round 8)
 with its worklog and spec beside it; before it
 [archive/post-104-roadmap.md](archive/post-104-roadmap.md) (Round 7.5).
 
-**Status: §125 closed 2026-10-21; §126, tests, is at its kickoff, the
-cut put to the user and not yet signed.**
+**Status: §125 closed 2026-10-21; §126, tests, is in progress, its cut
+signed 2026-10-21.**
 The spec holds the user's intent and four signed
 decisions ([round-8.5-spec.md](round-8.5-spec.md)). The round opened with
 the oracle map, ahead of the census, as the user signed at the Round 8
@@ -323,6 +323,37 @@ each replaced by its reason, and the ceiling to 0 (§125's decision
 point, signed 2026-10-21; WORKLOG §125, "125l's stop"). Proof:
 `reach-diff` for each deleted test, and the suite; `comment-strip` for
 the codes. Decision point: each test's fate is the user's.
+
+The cut, signed 2026-10-21 with five calls (WORKLOG §126, "The
+kickoff"). A-25's tests have no step: none is left.
+
+- ☐ **126a — A-33's three test files** (`none`). `reach-diff` on the
+  suite: nothing lost.
+- ☐ **126b — the list by test** (`none`). A reader under
+  `scratch/126b/`, its known answer the coverage tool's reading of each
+  file and the list by file at the same commit; both tiers.
+- ☐ **126c — the list's stop** (`stop`; the decision point). The tests
+  by class with a lean each, the candidates item by item.
+- ☐ **126d — the tests signed at 126c** (`none`). `reach-diff`, and a
+  plant where a row names the test that must catch it.
+- ☐ **126e — T-90, the loops** (`none`). Each that waits on a command
+  or a tick bounded, a planted no-op failing one of each shape.
+- ☐ **126f — T-86, the chaos seeds' timeout** (`none`).
+- ☐ **126g — T-49 and T-50, the two pins** (`none`). Each fails on a
+  planted mismatch.
+- ☐ **126h — the import-cycle guard** (`none`). Fails on a planted edge.
+- ☐ **126i — the walker's port purchase** (`none`). Fails with
+  `buyAtPort` planted to buy nothing.
+- ☐ **126j — B-11, a trial** (`none`, on its bar). The scan and five
+  optional marks; Run v50 if the fingerprint reads optionality.
+- ☐ **126k — R-4, a trial** (`none`, on its bar). The ten sites onto
+  `battleWorld` where the seeds agree.
+- ☐ **126l — the re-skim** (`stop`).
+- ☐ **126m — the step codes in comments** (`batch`, per batch). 898, by
+  folder, through an anchor-checked patch file.
+- ☐ **126n — the step codes in titles** (`batch`). `comment-strip`
+  masks titles, the ceiling counts them; 667.
+- ☐ **126o — the close** (`stop`).
 
 ## Phase 127 — tools
 

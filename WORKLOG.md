@@ -14986,3 +14986,31 @@ its calls; the user's answer and the cut as signed follow here.
 
 Readings by the tool's clock (UTC): 101,090 at 12:36 after the
 orientation, 206,994 at 12:47 at the audit's end.
+
+**Signed** (the user, 2026-10-21): "Fully signing your cut and the
+leans, Claude! 😁" So the cut is 126a to 126o as put, in ROADMAP §126,
+with its reads, and the five calls as leaned:
+
+1. 126n sweeps the codes in test titles too: `comment-strip` learns to
+   mask a test's title on both sides, with its control kept, and
+   `comment-codes` counts the titles into the ceiling, so 0 guards both.
+   The other strings stay outside the count.
+2. The per-test reader lives in `scratch/126b/`, off git.
+3. R-4 is a trial in this phase's budget, one of the three more.
+4. The sweep's edits go through a patch file written with the Write tool
+   and applied by a script that checks every anchor before it writes
+   any; the first batch measures the rate a code.
+5. 126c gives the classes with counts and a lean each; each test's fate
+   is the user's, by class or by item.
+
+The bars for the two trials, as put: **126j, B-11:** (1) the corpus 0
+of 30, the fuzz diff PASS, the suite green; (2) lines under `src` and
+`tests` do not grow; (3) no parameter that only tells the callers apart;
+(4) the `findUnit` scan and the five optional marks gone, every fake
+setting what the World sets. **126k, R-4:** (1) each site's tests
+unchanged and the pathing tables byte for byte; (2) and (3) as above;
+(4) the battle's build order at one site, from eleven.
+
+The exit's counts, with these as the baseline: the suite 3,704 (by the
+hook at `d25909b7`) and the smoke 594 (at `d103afa5`); the step codes 898
+in comments (the ceiling) and 667 in 630 titles (the kickoff's probe).

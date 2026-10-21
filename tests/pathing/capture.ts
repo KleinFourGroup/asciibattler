@@ -13,8 +13,8 @@
 
 import { EventBus } from '../../src/core/EventBus';
 import { RNG } from '../../src/core/RNG';
-import { World } from '../../src/sim/World';
-import { spawnEncounter } from '../../src/sim/battleSetup';
+import { GRID_SIZE } from '../../src/config';
+import { battleWorld, spawnEncounter } from '../../src/sim/battleSetup';
 import { rollUnit } from '../../src/sim/archetypes';
 import { getLayout } from '../../src/sim/layouts';
 import type { GameEvents } from '../../src/core/events';
@@ -32,9 +32,6 @@ export function measureLayout(layoutId: string | null, seed: number): MovementMe
   const layout = layoutId === null ? null : (getLayout(layoutId) ?? null);
   if (layoutId !== null && layout === null) throw new Error(`unknown layout: ${layoutId}`);
   const bus = new EventBus<GameEvents>();
-  const world =
-    layout === null ? new World(bus, new RNG(seed)) : new World(bus, new RNG(seed), layout.gridW, layout.gridH);
-
   const teamRng = new RNG(seed * 31 + 7);
   const team = () => [
     rollUnit('mercenary', teamRng),
@@ -47,12 +44,13 @@ export function measureLayout(layoutId: string | null, seed: number): MovementMe
     worldSeed: seed,
     terrainSeed: seed,
     layoutId,
-    gridW: world.gridW,
-    gridH: world.gridH,
+    gridW: layout?.gridW ?? GRID_SIZE,
+    gridH: layout?.gridH ?? GRID_SIZE,
     theme: 'grassland', // cosmetic only — no sim effect
     playerTeam: team(),
     enemyTeam: team(),
   };
+  const world = battleWorld(bus, encounter);
   spawnEncounter(world, encounter);
 
   const collector = new MovementMetricsCollector(world, bus);

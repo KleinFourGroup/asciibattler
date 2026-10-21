@@ -351,8 +351,9 @@ kickoff"). A-25's tests have no step: none is left.
 - ☑ **126j — B-11, a trial** (`none`, on its bar). The scan's half kept
   (`placeUnits`; `units` read-only outside the World); the five marks'
   half rejected on bar (2), signed at step zero.
-- ☐ **126k — R-4, a trial** (`none`, on its bar). The ten sites onto
-  `battleWorld` where the seeds agree.
+- ☑ **126k — R-4, a trial** (`none`, on its bar). All ten sites onto
+  `battleWorld`; the stormcaller fixture's grid corrected to 12 (signed
+  at step zero).
 - ☐ **126l — the re-skim** (`stop`).
 - ☐ **126m — the step codes in comments** (`batch`, per batch). 898, by
   folder, through an anchor-checked patch file.

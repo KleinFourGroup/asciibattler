@@ -1,10 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { EventBus } from '../../core/EventBus';
 import type { GameEvents } from '../../core/events';
-import { RNG } from '../../core/RNG';
 import { Run } from '../../run/Run';
-import { World } from '../../sim/World';
-import { spawnEncounter } from '../../sim/battleSetup';
+import { battleWorld, spawnEncounter } from '../../sim/battleSetup';
 import { footprintOf } from '../../sim/occupancy';
 import { RUN_CONFIG_PARAMS, parseRunConfigFromURL } from '../../run/RunConfig';
 import {
@@ -211,7 +209,7 @@ describe('105c — the poses', () => {
     r.dispatch({ kind: 'enterNode', nodeId: r.nodeMap.rootId });
     r.dispatch({ kind: 'advanceTurn' });
     const e = r.currentEncounter!;
-    const world = new World(new EventBus<GameEvents>(), new RNG(e.worldSeed), e.gridW, e.gridH);
+    const world = battleWorld(new EventBus<GameEvents>(), e);
     spawnEncounter(world, e);
     const taken = new Set<string>();
     for (const unit of world.units) {

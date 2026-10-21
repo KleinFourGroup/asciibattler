@@ -15602,3 +15602,29 @@ a worktree of `fcc0cb8c`:
 - The guard's known answer: `Targeting.test.ts:606` put back to
   `world.units.push(u)`, and `tsc --noEmit` fails with one error, at that
   line, "Property 'push' does not exist on type 'readonly Unit[]'".
+
+### 126k — R-4, the ten sites onto `battleWorld` (2026-10-21, session 9d8a93c2)
+
+Built as signed, through one patch script that checked every anchor in
+the ten files before writing any (the session's scratchpad,
+`patch-126k.mjs`). Each site builds its World with `battleWorld(bus,
+encounter)` after its encounter, where it used `new World(bus, new
+RNG(seed), …)`; `World` and `RNG` imports left unused went, and
+`layout-deadlock` and `variable-size` keep `World` as a type import.
+`capture.ts` took its grid from the World it built, so its encounter now
+gives the layout's grid or `GRID_SIZE`, which is what the World's default
+was. The stormcaller fixture's `gridW` and `gridH` are 12, the board its
+battles have run on.
+
+The bar:
+
+1. The ten files and `tests/pathing`: 12 files, 90 of 90, no test line
+   changed (the diff is imports, the World lines and the stormcaller
+   grid). `npm run pathing`: byte for byte with the baseline taken before
+   126j. Typecheck clean.
+2. Under `src` and `tests`: 27 lines added, 38 removed.
+3. No parameter added; `battleWorld` is as it was.
+4. All 23 `spawnEncounter` calls build their World with `battleWorld`,
+   and no file that calls it builds a World by hand.
+
+TODO's item is ✅. The pathing tables' control follows, at this commit.

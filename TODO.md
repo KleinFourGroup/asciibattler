@@ -83,15 +83,9 @@ every item below is done (WORKLOG §124, "The close of §124"; WORKLOG
   The chaos seeds and four slower default-limit tests carry 15 s, each
   with its reason; `store-guard` keeps 30 s (WORKLOG §126, 126f).
 
-- [ ] **Ten sites spawn an encounter on a World of their own, with no
-  battle rules installed:** `tests/pathing/capture.ts` and nine tests
-  (`src/dev/boardPanel/fixtures.test.ts`, the five `*-battle` tests,
-  `corridor-flow`, `layout-deadlock`, `variable-size` under
-  `tests/integration`). `battleWorld` (`src/sim/battleSetup.ts`) builds
-  the turn's World as every driver does; each site needs its seed
-  checked against the encounter's first, since one built on another
-  seed is not a copy (WORKLOG §125, 125g and 125j's R-4). Signed for here
-  2026-10-20.
+- ✅ **Ten sites spawn an encounter on a World of their own.** All ten
+  build it with `battleWorld` now, the stormcaller fixture's grid
+  corrected to the 12×12 it ran on (WORKLOG §126, 126k).
 
 - ✅ **Nothing notices the rollout walker buying nothing at a port.**
   `arbitratedStrategy.test.ts` walks a clone of its funded dock under the

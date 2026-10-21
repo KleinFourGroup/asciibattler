@@ -24,9 +24,8 @@
 
 import { describe, it, expect } from 'vitest';
 import { EventBus } from '../../src/core/EventBus';
-import { World } from '../../src/sim/World';
 import { RNG } from '../../src/core/RNG';
-import { spawnEncounter } from '../../src/sim/battleSetup';
+import { battleWorld, spawnEncounter } from '../../src/sim/battleSetup';
 import { rollUnit } from '../../src/sim/archetypes';
 import { getLayout } from '../../src/sim/layouts';
 import type { GameEvents } from '../../src/core/events';
@@ -47,8 +46,6 @@ describe('E5: corridor flow (target stickiness, no thrash)', () => {
       it(`${layoutId} seed=${seed}: resolves and no player unit re-targets > ${MAX_TARGET_CHANGES}x`, () => {
         const layout = getLayout(layoutId)!;
         const bus = new EventBus<GameEvents>();
-        const world = new World(bus, new RNG(seed), layout.gridW, layout.gridH);
-
         const teamRng = new RNG(seed * 31 + 7);
         const team = () => [
           rollUnit('mercenary', teamRng),
@@ -67,6 +64,7 @@ describe('E5: corridor flow (target stickiness, no thrash)', () => {
           playerTeam: team(),
           enemyTeam: team(),
         };
+        const world = battleWorld(bus, encounter);
         spawnEncounter(world, encounter);
 
         // Count committed-target changes per player unit across the battle.

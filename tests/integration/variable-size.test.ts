@@ -12,9 +12,9 @@
 
 import { describe, it, expect } from 'vitest';
 import { EventBus } from '../../src/core/EventBus';
-import { World } from '../../src/sim/World';
+import type { World } from '../../src/sim/World';
 import { RNG } from '../../src/core/RNG';
-import { spawnEncounter } from '../../src/sim/battleSetup';
+import { battleWorld, spawnEncounter } from '../../src/sim/battleSetup';
 import { rollUnit } from '../../src/sim/archetypes';
 import type { GameEvents } from '../../src/core/events';
 import type { BattleEncounter } from '../../src/run/Run';
@@ -40,7 +40,6 @@ describe('D3 variable-size battles', () => {
 
 function runBattle(seed: number, side: number): { world: World; ticks: number } {
   const bus = new EventBus<GameEvents>();
-  const world = new World(bus, new RNG(seed), side, side);
   const teamRng = new RNG(seed * 31 + 7);
   const playerTeam = [
     rollUnit('mercenary', teamRng),
@@ -66,6 +65,7 @@ function runBattle(seed: number, side: number): { world: World; ticks: number } 
     playerTeam,
     enemyTeam,
   };
+  const world = battleWorld(bus, encounter);
   spawnEncounter(world, encounter);
 
   let ticks = 0;

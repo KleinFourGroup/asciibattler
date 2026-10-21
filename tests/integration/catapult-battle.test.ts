@@ -1,9 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import { World } from '../../src/sim/World';
 import { EventBus } from '../../src/core/EventBus';
 import { RNG } from '../../src/core/RNG';
 import type { GameEvents } from '../../src/core/events';
-import { spawnEncounter } from '../../src/sim/battleSetup';
+import { battleWorld, spawnEncounter } from '../../src/sim/battleSetup';
 import { rollUnit } from '../../src/sim/archetypes';
 import type { BattleEncounter } from '../../src/run/Run';
 
@@ -51,7 +50,7 @@ function runCatapultBattle(seed: number): {
     ],
   };
 
-  const world = new World(bus, new RNG(seed));
+  const world = battleWorld(bus, encounter);
   spawnEncounter(world, encounter);
 
   const cat = world.units.find((u) => u.team === 'player' && u.archetype === 'catapult');

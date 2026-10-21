@@ -26,9 +26,9 @@
 
 import { describe, it, expect } from 'vitest';
 import { EventBus } from '../../src/core/EventBus';
-import { World } from '../../src/sim/World';
+import type { World } from '../../src/sim/World';
 import { RNG } from '../../src/core/RNG';
-import { spawnEncounter } from '../../src/sim/battleSetup';
+import { battleWorld, spawnEncounter } from '../../src/sim/battleSetup';
 import { rollUnit } from '../../src/sim/archetypes';
 import { GRID_SIZE } from '../../src/config';
 import { LAYOUT_IDS, getLayout } from '../../src/sim/layouts';
@@ -78,7 +78,6 @@ describe('Layout deadlock regression (C1d follow-up)', () => {
 
 function runHeadlessBattle(seed: number, scenario: Scenario): { world: World; ticks: number } {
   const bus = new EventBus<GameEvents>();
-  const world = new World(bus, new RNG(seed), scenario.gridW, scenario.gridH);
   // Separate RNG for unit rolls so changing tick logic doesn't perturb
   // the team composition for the same seed.
   const teamRng = new RNG(seed * 31 + 7);
@@ -106,6 +105,7 @@ function runHeadlessBattle(seed: number, scenario: Scenario): { world: World; ti
     playerTeam,
     enemyTeam,
   };
+  const world = battleWorld(bus, encounter);
   spawnEncounter(world, encounter);
 
   let ticks = 0;

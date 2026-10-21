@@ -15743,3 +15743,20 @@ HEAD` PASS, byte-identical to `7003e410` on both shapes. The refusal's
 known answer: in the worktree, with this `World.ts`, `environment.test.ts`'
 player put back to id 1 fails with "World.placeUnits: unit id 1 is
 already placed".
+
+Built at `8491a21e`; the hook: 3,703 main, 595 smoke. The two findings'
+rules, each planted against the whole suite in a worktree of `8491a21e`
+(the scratchpad's `suiteplants.mjs`):
+
+- Half-cover made passable alone (`movement.ts`' blockers skip a neutral
+  that does not block sight): 55 of 3,703 fail, the corpus's quick rows,
+  chaos, `continuation`, `corridor-flow` and the journal tests among
+  them. Every neutral made passable: 123 fail. So the detour test's rule
+  is guarded elsewhere, and the test guards nothing.
+- The aura pass's scenery skip removed: 0 of 3,703 fail. No test guards
+  it, and in the game it changes nothing today: the one shipped aura
+  (`config/abilities.json`, `inspired`) affects allies, which a wall
+  never is, and a wall refuses `inspired` anyway.
+
+The calls on the two are in the session's final message of this turn;
+the user's answer follows here.

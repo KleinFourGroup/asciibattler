@@ -15240,3 +15240,67 @@ and runs three plants: (A) `checkBattleEnd`'s both-alive test negated,
 each caught when the suite returns red where it hung. TESTING's
 "Bounded steps" widens from `currentTick` to every loop that waits on a
 tick or a command.
+
+### 126e — T-90, the loops (2026-10-21, session e6ab25e8)
+
+Built at `a1f20a8d`, each loop bounded at its site:
+
+- `World.test.ts`'s eight polls go through `tickTo`, local to their
+  describe: a counted run of ticks, then a check that `currentTick`
+  reached the target. The check is "at least", not `ended === false`
+  as TESTING had it, since one of the eight expects the battle to end on
+  its target tick. `snapshot-roundtrip`'s two count down to the finish
+  tick and keep their `ended` guard.
+- The six `tickTurn` loops tick at most `MAX_TURN_TICKS` (the
+  encounter-loop's `maxTurnTicks`), then assert the battle ended.
+- `Run.test.ts`: `fillCache` (a count from `effectiveCacheSize`, then a
+  check) for the six cache fills; the roster removals and the cap chips
+  counted, each followed by an assert that fails on a no-op; the gate
+  loop bounded by `MAX_COMMAND_STEPS`, which is `MAX_REWARD_STEPS`
+  renamed; the surge loop fails on a surge that draws nothing.
+  `determinism`: `acceptRewards`, bounded, and the `battle:ended` loop
+  by `HEALTH.maxTurns`. `encounter-loop`: its reward loop bounded, and
+  the `promotion` branch checks that one dismissal leaves the phase,
+  which `handleDismissPromotion` always does.
+- `chaos.ts` and `journalDrive.ts` throw past `MAX_TURN_TICKS` in a
+  fight; `harness.ts` and `walker.ts` throw past `MAX_STEPS_PER_HOP`
+  (twice the event cap) steps between two map hops, the counter reset
+  at each hop.
+- `replayTrace.ts` and `replayJournal.ts`'s two loops throw past
+  `MAX_TURN_TICKS`; the journal's is a plain error, not a divergence.
+
+Proof of no change: the eight edited test files 534 of 534;
+`npm run corpus` 0 of 30 journals differ; `bash scripts/perf-oracle.sh
+HEAD` PASS, byte-identical on both shapes to `0809ccd6`; the hook at
+`a1f20a8d`: 3,697 main, 594 smoke, 1 parity, typecheck clean. The step
+codes stay 895.
+
+The plants (`npm run oracle -- plant`, each in a worktree of
+`a1f20a8d`; the clean suite fails `licences.test.ts` alone, set aside).
+The tool counts a run stopped at its limit as caught, so each verdict's
+time is what shows a return:
+
+- (A) `World.ts:1644`, `u.team === 'enemy'` negated: no enemy counts as
+  alive, so the battle ends at once. Not the both-alive test as signed:
+  negating that one returns before any end, so battles would end only
+  at the cap. The suite returned in 52 s, 45 of 255 files failing,
+  `World.test.ts` among them.
+- (B) `World.ts:884`, `this._ended` negated: a live tick does nothing.
+  The suite returned in 42 s, 62 of 255 failing; the smoke in 67 s, 21
+  of 60, the corpus and the harness among them.
+- (C) `Run.ts:1093`, `handleAcceptReward` dropped. The suite returned in
+  39 s, 15 of 255 failing, `determinism` and `encounter-loop` among
+  them; the smoke in 57 s, 29 of 60.
+
+The control (the session's scratchpad, `ctrl.mjs` and `ctrl-run.sh`, a
+worktree under `output/` removed after): each plant on one target file,
+`World.test.ts`, `continuation.test.ts` and `determinism.test.ts`, with
+a 120 s limit. At `0809ccd6` all three did not return and were stopped;
+at `a1f20a8d` each returned in 4 s, failing by its bound's message
+("the battle ended before the target tick" in all five status-tile
+tests, "the turn ran past its cap", "acceptReward left the run in the
+reward phase").
+
+Readings by the tool's clock (UTC): 109,636 at 15:09 (the first),
+166,032 at 15:17 before the questions, 246,043 on `a1f20a8d`, 272,872
+at 16:05 with the plants read.

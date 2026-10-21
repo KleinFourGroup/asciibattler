@@ -335,8 +335,10 @@ kickoff"). A-25's tests have no step: none is left.
   2026-10-21: every class kept, A-43 and A-44 deleted.
 - ☑ **126d — the tests signed at 126c** (`none`). A-43 and A-44 out;
   `reach-diff`: nothing lost; each plant caught by `layouts.test.ts`.
-- ☐ **126e — T-90, the loops** (`none`). Each that waits on a command
-  or a tick bounded, a planted no-op failing one of each shape.
+- ☑ **126e — T-90, the loops** (`none`). Each that waits on a command
+  or a tick bounded, a planted no-op failing one of each shape. Scope
+  widened at step zero to `tests`' instruments and `src`'s replay loops
+  (signed); 32 + 4 + 3 bounded, three plants returned red.
 - ☐ **126f — T-86, the chaos seeds' timeout** (`none`).
 - ☐ **126g — T-49 and T-50, the two pins** (`none`). Each fails on a
   planted mismatch.

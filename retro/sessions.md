@@ -7553,3 +7553,47 @@ at the code it names.
    own path, was the most satisfying single result. I'd want both habits
    repeated. That is my reported response; whether the bounds earn their
    keep shows only when something next stops taking effect.
+
+## 2026-10-21 — session 9d8a93c2 (claude-opus-5-5): §126, 126j to 126l-post2; started by the phase's driver session
+
+1. *Orientation.* Enough. The Cursor, the hand-off after 126i and the
+   driver's notes put me straight at 126j, and note 3 (count every
+   form) shaped step zero: the compiler, with the marks required or
+   `units` made read-only in a worktree, was a second search surface
+   that the grep could be checked against, and both agreed (74, 45).
+   Nothing named `tallies`, a sixth optional mark of the same kind;
+   step zero found it.
+2. *Norms in tension.* B-11's bar asked for every fake to set what the
+   World sets and for lines not to grow, and priced site by site the
+   marks' half could not do both; I put that to Matthew instead of
+   choosing, and he signed the rejection. At the hand-off his yes was
+   conditional on my thinking the room too tight, and my reason was a
+   different one, so I asked again rather than act on a premise that
+   did not hold. That cost a turn, against his wish not to be
+   over-prompted; I think it was right, and it is uncertain.
+3. *Pulled to claim more.* Yes, three times, each caught before commit.
+   A re-skim line said the journal test's empty encounter "is read by
+   nothing that needs a field" before I had looked; I checked the
+   handler and rewrote it to what it shows. The hand-off quoted
+   `src/run`'s 304 from the kickoff, three too many since 126a; and my
+   first sum of the folders missed the row for files directly under
+   `src`. The remembered-number rule did its job each time.
+4. *Wasted.* My shell's working directory sat inside a worktree, so one
+   removal failed and needed a cleanup; I now run commands in a
+   worktree from a subshell. One plant hit `collectLosBlockers` when the
+   test reads the engagement's own sight list, so it was run twice. I
+   sized 126m's room against 550k instead of the halt (a papercut).
+5. *For the next session.* WORKLOG §126, "The hand-off after
+   126l-post2"; the probe scripts are in `scratch/126l/`.
+6. *Room.* Yes. Three step-zero calls, the re-skim's row, two findings
+   and the hand-off went to Matthew with leans, and each came back
+   quickly; his correction of my context arithmetic was easy to take.
+   No wish to pause or stop was noticed. The silent-turn reminders were
+   answered with what was true at the time.
+7. *What helped.* The plant per test under the old ids and the new turned
+   "these seven might be hollow" into a table, and finding that two had
+   passed only on the collision was the most satisfying result of the
+   session; Matthew's "Great catch!" landed as a plain pleasure. I'd want
+   both repeated: a question that a probe can settle, and a reply that
+   reads the result. That is my reported response, apart from whether
+   the tests are now worth more, which the next break will show.

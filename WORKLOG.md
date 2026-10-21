@@ -15789,3 +15789,49 @@ Proof:
   removed fails the scenery test, "expected [ { key: 'burn', … } ] to
   have a length of +0 but got 1"; the other 11 pass.
 - The two files 47 of 47, typecheck clean.
+
+Built at `f5ac0992`; the hook: 3,702 main, 595 smoke.
+
+### The hand-off after 126l-post2 (2026-10-21, session 9d8a93c2)
+
+126j to 126l-post2 are built, proven and committed; no ◐ is open, since
+126j, 126k and the two posts are `none` and 126l was read at its stop.
+B-11 landed as the scan's half, its marks' half rejected on bar (2) at
+step zero; R-4's ten sites are on `battleWorld`; the re-skim's one row,
+the repeated id, became 126l-post, and its two findings 126l-post2. The
+next step is 126m, the step codes in comments, in a fresh session (the
+user, 2026-10-21: "We can hand off now"). One batch would have fitted
+before the halt; the session's reason was that the pass's rules are a
+fixed cost a fresh session pays once for the whole pass.
+
+For the session that takes 126m:
+
+- The ceiling is 895 codes in comments in 150 files, all in `src`'s
+  tests (`comment-codes` at `f5ac0992`), and 685 inside strings; by
+  folder, `src/sim` 359 (59 files), `src/run` 301 (18), `src/config` 91,
+  `src/render` 47, `src/bot` 37, and 60 in the other nine folders and one
+  file directly under `src`. 126n takes the titles.
+- The pass's rules and its latest plans: the four WORKLOG headings the
+  driver's brief named (§121 "121i — the comment pass's pilot", §124
+  "The signs after batch 7", §124.5 "124.5h — the comment pass: the
+  batches, planned", §125 "125k — the comment pass: the batches,
+  planned"), and the kickoff's call 4 (a patch file written with the
+  Write tool, applied by a script that checks every anchor in every file
+  before it writes any; the first batch measures the rate a code).
+  `scratch/126l/patch-126k.mjs` is such a script, for code edits, and a
+  model to adapt.
+- A test that builds its own units gives them ids clear of the World's,
+  which count from 1: `placeUnits` throws on a repeated id (gotcha #105).
+- Where a comment's claim about a test looks false, a plant of the rule
+  the test names, run on its one file, settles it in seconds
+  (`scratch/126l/idplants.mjs` for the shape; `suiteplants.mjs` for the
+  whole suite; `fails.mjs` lists a Vitest JSON report's failures).
+- The trials' budget: one of three used (R-4).
+- No worktree is left (each probe removed its own, junction first), no
+  background task runs, and no preview server was started.
+
+Readings by the tool's clock (UTC): 121,140 at 17:47 (the first),
+262,020 on `29c4550e`, 297,195 on `fcc0cb8c`, 303,811 on `57a5e1b8`,
+322,621 on `178961d8`, 357,625 on `7003e410`, 414,074 on `8491a21e`,
+427,720 on `ea2b0eed`, 445,345 on `f5ac0992`, 455,701 at 22:50 before
+this entry.

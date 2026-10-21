@@ -242,8 +242,8 @@ to the first instead.
   tests). A new event goes in [src/core/events.ts](src/core/events.ts)
   (named `subject:verbed`), in ARCHITECTURE's event table, and in
   [src/audio/eventSounds.ts](src/audio/eventSounds.ts) as a cue or as
-  silent with a reason; typecheck and `npm test` fail until it's in one of
-  the two tables. A gotcha that bit you goes in GOTCHAS.md with its commit.
+  silent with a reason; typecheck or `npm test` fails until it's in all
+  three. A gotcha that bit you goes in GOTCHAS.md with its commit.
 - **Keep DESIGN.md and ARCHITECTURE.md honest** in the same commit as the
   code change. Reference docs rot by contradiction: a later change makes an
   earlier paragraph false. When you add or change a rule, grep its section

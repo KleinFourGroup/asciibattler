@@ -3,7 +3,7 @@ import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, dirname, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { GLYPHS } from '../src/render/glyphs';
-import { subsetCovers, FACES, PRIMARY_EXCLUDES } from '../src/render/fontSubset';
+import { subsetCovers, FACES, FONT_STACK, PRIMARY_EXCLUDES } from '../src/render/fontSubset';
 import { ttfCmapLookup } from '../tools/font/ttfCmap';
 import { ttfVerticalMetrics } from '../tools/font/ttfMetrics';
 
@@ -209,5 +209,22 @@ describe('the UI glyph inventory (§101a)', () => {
       inv.offenders,
       'a glyph would paint from an unknown OS face — widen SUBSET_RANGES / add it to a shipped face + `npm run gen:font`, or pick a shipped glyph',
     ).toEqual([]);
+  });
+});
+
+// The stylesheet's chain is a hand copy of FONT_STACK, the chain the tests
+// above check: if the two part, the page paints from faces nobody checked.
+const fontMono = (css: string): string | undefined => /--font-mono:\s*([^;]+);/.exec(css)?.[1];
+
+describe("the sheet's font chain", () => {
+  it("ui.css's --font-mono is FONT_STACK, then the generic tail", () => {
+    const value = fontMono(readFileSync(join(repoRoot, 'src', 'ui', 'ui.css'), 'utf8'));
+    expect(value?.startsWith(`${FONT_STACK}, `), `--font-mono (${value}) must begin with FONT_STACK (${FONT_STACK})`).toBe(true);
+  });
+
+  it('self-check: a chain with its faces swapped fails the pin', () => {
+    const swapped = fontMono(":root { --font-mono: 'DejaVu Sans Mono', 'JetBrains Mono', monospace; }");
+    expect(swapped).toBeDefined();
+    expect(swapped!.startsWith(`${FONT_STACK}, `)).toBe(false);
   });
 });

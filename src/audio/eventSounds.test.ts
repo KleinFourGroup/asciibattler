@@ -90,6 +90,52 @@ describe('the event-sound coverage pin', () => {
   });
 });
 
+const architectureSource = readFileSync(
+  fileURLToPath(new URL('../../ARCHITECTURE.md', import.meta.url)),
+  'utf8',
+);
+
+/** The first word of each row in ARCHITECTURE's "Event catalog (outputs)"
+ *  block, between its fences. */
+function catalogRows(architecture: string): string[] {
+  const lines = architecture.split(/\r?\n/);
+  const heading = lines.indexOf('## Event catalog (outputs)');
+  const open = lines.indexOf('```', heading);
+  const close = lines.indexOf('```', open + 1);
+  if (heading < 0 || open < 0 || close < 0) throw new Error("ARCHITECTURE's event catalog block not found");
+  return lines
+    .slice(open + 1, close)
+    .filter((l) => l.trim() !== '')
+    .map((l) => l.split(/\s+/)[0]!);
+}
+
+/** The catalog's rows against the interface's keys. */
+function catalogDrift(rows: readonly string[], keys: readonly string[]): { missing: string[]; stale: string[]; repeated: string[] } {
+  return {
+    missing: keys.filter((k) => !rows.includes(k)),
+    stale: rows.filter((r) => !keys.includes(r)),
+    repeated: rows.filter((r, i) => rows.indexOf(r) !== i),
+  };
+}
+
+describe("ARCHITECTURE's event catalog", () => {
+  it('has one row for each event in events.ts, and no other', () => {
+    expect(
+      catalogDrift(catalogRows(architectureSource), parseEventKeys(eventsSource)),
+      'a bus event takes one row in ARCHITECTURE.md\'s "Event catalog (outputs)"; a retired one loses its row',
+    ).toEqual({ missing: [], stale: [], repeated: [] });
+  });
+
+  it('self-check: a renamed row fails the pin both ways', () => {
+    const doctored = architectureSource.replace(/^deck:reshuffled /m, 'deck:shuffled ');
+    expect(catalogDrift(catalogRows(doctored), parseEventKeys(eventsSource))).toEqual({
+      missing: ['deck:reshuffled'],
+      stale: ['deck:shuffled'],
+      repeated: [],
+    });
+  });
+});
+
 describe('the predicates', () => {
   const death = (team: GameEvents['unit:died']['team'], campId: number | null) =>
     ({ team, campId }) as GameEvents['unit:died'];

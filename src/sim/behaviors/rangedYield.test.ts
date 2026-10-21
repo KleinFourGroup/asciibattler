@@ -15,8 +15,8 @@ import { deriveStats } from '../stats';
 import type { GameEvents } from '../../core/events';
 
 /**
- * 56c2 — the blocker-initiated RANGED YIELD (the GP5 healer pattern
- * generalized; the "swap request" design made stateless): a ranged unit that
+ * The blocker-initiated RANGED YIELD (the healer's yield rule generalized;
+ * the "swap request" design made stateless): a ranged unit that
  * is strictly blocking a boxed melee teammate proposes the yield-swap at its
  * own action-selection poll, scored ABOVE its attack — a fill-phase attacker
  * is busy for its entire cadence by design, so this is the ONLY window where
@@ -167,7 +167,7 @@ describe('56c2/56e-pre — the swap-partner reserve (World.tick skip, full windo
   it('a reserved partner starts NOTHING for the WHOLE swap window', () => {
     // The partner would otherwise attack every poll (adjacent enemy). While
     // the actor's swap is in flight the partner must not start an action —
-    // pre-flip it would invalidate the exchange; post-flip (56e-pre) the
+    // pre-flip it would invalidate the exchange; post-flip the
     // swap is still the partner's action too (renderer dual-lerp mid-slide).
     const b = bus();
     const attacks: GameEvents['unit:attacked'][] = [];
@@ -199,7 +199,7 @@ describe('56c2/56e-pre — the swap-partner reserve (World.tick skip, full windo
     expect(actor.position).toEqual({ x: 4, y: 5 }); // the flip DID land
     expect(partner.position).toEqual({ x: 5, y: 5 });
     expect(actor.activeAction).not.toBeNull(); // window still open
-    expect(partner.activeAction).toBeNull(); // 56e-pre: still reserved
+    expect(partner.activeAction).toBeNull(); // still reserved
     expect(attacks.filter((a) => a.attackerId === partner.id)).toEqual([]);
   });
 });

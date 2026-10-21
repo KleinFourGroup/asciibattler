@@ -8,7 +8,7 @@ import {
 } from './schema';
 
 /**
- * Phase Y1 — the vocabulary's parse/reject/round-trip contract. These pin the
+ * The vocabulary's parse/reject/round-trip contract. These pin the
  * SHAPE of the closed discriminated unions with explicit literals (never the
  * shipped `config/abilities.json` catalog): a valid def parses, malformed
  * ops/selectors are rejected, defaults fill, and a def round-trips through JSON
@@ -125,7 +125,7 @@ describe('AbilityDef schema — valid shapes', () => {
       ],
     });
     expect(chain.kind).toBe('chain');
-    // §29c follow-up — hopDelaySeconds defaults to 0.1s (the per-hop stagger).
+    // hopDelaySeconds defaults to 0.1s (the per-hop stagger).
     if (chain.kind === 'chain') expect(chain.hopDelaySeconds).toBe(0.1);
   });
 

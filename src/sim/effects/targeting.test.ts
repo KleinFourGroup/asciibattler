@@ -16,9 +16,9 @@ import {
 } from './targeting';
 
 /**
- * Phase Y2 — the area/targeting resolution primitives. Explicit-input mechanic
- * tests (no shipped config): `unitsInCells` (the Cluster-2 footprint seam) and
- * the `aoe` victim resolution reproduce MagicBolt's blast set, order, and the
+ * The area/targeting resolution primitives. Explicit-input mechanic
+ * tests (no shipped config): `unitsInCells` (the footprint seam) and
+ * the `aoe` victim resolution: the blast set, its order, and the
  * friendly-fire / neutral / dead filters.
  */
 
@@ -128,11 +128,11 @@ describe('resolveAreaVictims — reproduces the MagicBolt blast set', () => {
 });
 
 /**
- * 44-pre-b — the AoE/chain footprint seam FILLED: `unitsInCells` intersects
+ * The AoE/chain footprint seam: `unitsInCells` intersects
  * footprints (`cellsOccupiedBy`), the area `mult` is the BEST covered cell, and
  * the chain hop range measures to the nearest body cell (`cellUnitDistance`).
- * Corner-only, a 2×2 rubble whose §39 corner sat outside the blast/hop range
- * was invisible to the whole effects layer. rubble_2x2 at corner (5,5) occupies
+ * Corner-only, a 2×2 rubble whose corner sits outside the blast/hop range
+ * is invisible to the whole effects layer. rubble_2x2 at corner (5,5) occupies
  * (5,5) (6,5) (5,6) (6,6) throughout.
  */
 describe('effects targeting — multi-tile footprints (44-pre-b)', () => {

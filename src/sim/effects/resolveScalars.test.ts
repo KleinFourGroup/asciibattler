@@ -1,5 +1,5 @@
 /**
- * §30c — the shared cast-time scalar kernel (`resolveScalars`). Mechanic test:
+ * The shared cast-time scalar kernel (`resolveScalars`). Mechanic test:
  * explicit-literal stat blocks, never the shipped config. Crit DEFERS to
  * `critChanceFor` (the one balance-owning helper), so the critable assertion
  * checks the wiring against it rather than re-deriving the capped probability.
@@ -91,7 +91,7 @@ describe('resolveHealAmount', () => {
 });
 
 /* -------------------------------------------------------------------------- */
-/* §31 — the ScaledValue union + the cast-time evaluator.                       */
+/* The ScaledValue union + the cast-time evaluator.                             */
 /* -------------------------------------------------------------------------- */
 
 function source(overrides: { level?: number } & Partial<UnitStats>): ScalingSource {

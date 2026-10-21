@@ -13,7 +13,7 @@ import type { ActionProposal } from '../Action';
 import type { GameEvents } from '../../core/events';
 
 /**
- * E7.B — SupportMovementBehavior decision-ladder tests. The heal-range and
+ * SupportMovementBehavior decision-ladder tests. The heal-range and
  * panic-range expectations derive from the unit's `derived.attackRange` and
  * `SIM.healerPanicRangeCells` (wiring convention) so a config tweak can't
  * silently break the geometry.
@@ -61,7 +61,7 @@ function world(units: Unit[]): World {
   return w;
 }
 
-/** A neutral wall unit at `pos` (the GP5 swap tests need real chokepoints —
+/** A neutral wall unit at `pos` (the yield-swap tests need real chokepoints —
  *  the bare test worlds have none). Only its team + position matter to the
  *  movement code. */
 function makeWall(id: number, pos: { x: number; y: number }): Unit {
@@ -92,7 +92,7 @@ function cheb(a: { x: number; y: number }, b: { x: number; y: number }): number 
 
 describe('SupportMovementBehavior', () => {
   it('waits when a wounded ally is already in heal range (lets heal_ally fire)', () => {
-    // §44b — the in-heal-range hold is a first-class wait proposal (score 1);
+    // The in-heal-range hold is a first-class wait proposal (score 1);
     // a ready heal_ally at 10 still pre-empts it in the selector.
     const healer = makeHealer({ x: 5, y: 5 });
     const wounded = makeUnit(2, 'player', { x: 5, y: 5 + HEAL_RANGE }, { hp: 5 });
@@ -175,11 +175,11 @@ describe('SupportMovementBehavior', () => {
 });
 
 /**
- * GP5 #5 — the yield rule. When the healer sits on the only cell a boxed ally
+ * The yield rule. When the healer sits on the only cell a boxed ally
  * can advance through (a 1-wide corridor, no lateral escape), it SWAPS places
  * with that ally so the column drains instead of deadlocking. The swap is the
  * only thing that can resolve a single-file jam where the support can't pass
- * its own fighters; see the GP4 HANDOFF entry for the live repro it clears.
+ * its own fighters.
  */
 describe('SupportMovementBehavior — GP5 chokepoint yield (swap)', () => {
   function swapData(p: ActionProposal): { from: { x: number; y: number }; to: { x: number; y: number }; otherId: number } {
@@ -220,9 +220,9 @@ describe('SupportMovementBehavior — GP5 chokepoint yield (swap)', () => {
 
   it('does NOT offer a swap to a mid-move ally (56a — the in-flight partner gate)', () => {
     // The corridor-swap shape, but the ally has an IN-FLIGHT move (logical
-    // position holds at (4,5) until the §36b flip, so pre-56a it read as
-    // adjacent-and-blocked and the healer proposed a doomed swap — the latent
-    // GP5 hazard). With the gate the healer abstains instead.
+    // position holds at (4,5) until the move's flip, so without the gate it
+    // reads as adjacent-and-blocked and the healer proposes a doomed swap).
+    // With the gate the healer abstains instead.
     const healer = makeHealer({ x: 5, y: 5 });
     const ally = makeUnit(2, 'player', { x: 4, y: 5 });
     const enemy = makeUnit(3, 'enemy', { x: 8, y: 5 });
@@ -251,7 +251,7 @@ describe('SupportMovementBehavior — GP5 chokepoint yield (swap)', () => {
 });
 
 /**
- * GP5.2 #4 — navigable-snap. The allies' rounded centroid can land on an
+ * Navigable-snap. The allies' rounded centroid can land on an
  * impassable cell between them; the healer must snap the anchor to the nearest
  * navigable tile and keep trailing rather than findPath()→[] and stall.
  */
@@ -275,7 +275,7 @@ describe('SupportMovementBehavior — GP5.2 centroid navigable-snap', () => {
 
   it('is a no-op when the centroid is already navigable (unchanged trail)', () => {
     // Bare world, centroid on open floor → snap returns it unchanged, healer
-    // steps east toward it exactly as before GP5.2.
+    // steps east toward it, as with no snap.
     const healer = makeHealer({ x: 5, y: 5 });
     const allyW = makeUnit(2, 'player', { x: 7, y: 5 });
     const allyE = makeUnit(3, 'player', { x: 9, y: 5 });
@@ -289,10 +289,10 @@ describe('SupportMovementBehavior — GP5.2 centroid navigable-snap', () => {
 });
 
 /**
- * 43-pre — the healer's blocker sets must cover a multi-tile neutral's WHOLE
+ * The healer's blocker sets must cover a multi-tile neutral's WHOLE
  * footprint (`cellsOccupiedBy`), not just its canonical corner. Corner-only
  * sets let `stepToward` route (and step!) onto rubble BODY cells, and let the
- * GP5.2 navigable-snap accept an in-rubble centroid as a valid trail anchor.
+ * navigable-snap accept an in-rubble centroid as a valid trail anchor.
  * Unit ids here start at 50 — `spawnRubble` draws from the world's own id
  * counter (from 1), and a collision makes `stepToward` skip the rubble as
  * "itself".
@@ -318,9 +318,9 @@ describe('SupportMovementBehavior — multi-tile neutral footprints (43-pre)', (
 
   it('the trail anchor snaps OFF a rubble BODY cell (GP5.2 snap, footprint-aware)', () => {
     // Allies astride the rubble → centroid (4,4) is a BODY cell (the corner
-    // (3,3) was already handled by GP5.2). Corner-only navigability accepted
-    // (4,4) as the anchor; the healer at (3,5) sat "in formation" against a
-    // phantom anchor inside the rubble and idled. Footprint-aware, the anchor
+    // (3,3) the snap handles on its own). Corner-only navigability accepts
+    // (4,4) as the anchor; the healer at (3,5) sits "in formation" against a
+    // phantom anchor inside the rubble and idles. Footprint-aware, the anchor
     // snaps to real ground and the healer keeps trailing.
     const healer = makeUnit(50, 'player', { x: 3, y: 5 }, { archetype: 'healer', range: HEAL_RANGE });
     const allyW = makeUnit(51, 'player', { x: 1, y: 4 });
@@ -335,12 +335,12 @@ describe('SupportMovementBehavior — multi-tile neutral footprints (43-pre)', (
 });
 
 /**
- * 44-pre-a — the panic retreat's occupied set must cover a multi-tile
- * neutral's WHOLE footprint (the §35 `occupiedCells` builder), not just its
- * §39 corner. Corner-only, a rubble's body cells read as free retreat cells:
- * the panicking healer's step onto one was a doomed proposal §35b's
- * destination gate then aborted (`unit:moveAborted`, no overlap), wasting the
- * tick it should have spent yielding/holding.
+ * The panic retreat's occupied set must cover a multi-tile neutral's WHOLE
+ * footprint (the `occupiedCells` builder), not just its corner. Corner-only,
+ * a rubble's body cells read as free retreat cells: the panicking healer's
+ * step onto one is a doomed proposal the destination gate then aborts
+ * (`unit:moveAborted`, no overlap), wasting the tick it should spend
+ * yielding/holding.
  */
 describe('SupportMovementBehavior — panic retreat vs multi-tile footprints (44-pre-a)', () => {
   it('stepAwayFrom never retreats onto a rubble BODY cell (abstains when boxed by the body)', () => {

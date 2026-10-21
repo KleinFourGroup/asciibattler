@@ -1,13 +1,13 @@
 /**
- * §75f — CampWanderBehavior: the spawn-path slot-0 swap, the 'camp' registry
- * arm, and THE TWO PHASE EXIT INVARIANTS as standing tests:
+ * CampWanderBehavior: the spawn-path slot-0 swap, the 'camp' registry
+ * arm, and TWO INVARIANTS as standing tests:
  *
  *   1. LEASH BOUND — a passive camp member never idles outside its def's
  *      `leashRadius` of the camp anchor (config-derived, never hardcoded).
  *   2. SPAWN VACATED ≤N — a dripped member steps off the anchor fast enough
  *      that the whole pending queue materializes within a bound derived from
- *      the spawn lockout + move cadence (the 75c "drip cadence IS the tile
- *      vacating" fact).
+ *      the spawn lockout + move cadence (the drip cadence is what vacates
+ *      the tile).
  *
  * Plus the RNG discipline pins: wander rides `campRng` exclusively (the
  * primary + combat streams stay untouched — the presence-gate half the fuzz

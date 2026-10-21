@@ -5,8 +5,8 @@ import { SupportMovementBehavior } from './SupportMovementBehavior';
 import { ALL_ARCHETYPES, ARCHETYPE_CONFIG } from '../archetypes';
 
 /**
- * §38c-2 — the movement-behavior selector moved OUT of `createMovementBehavior`'s
- * `=== 'healer'` special-case into the `UnitDef.movementBehavior` catalog field.
+ * The movement-behavior selector is the `UnitDef.movementBehavior` catalog
+ * field, not a special case in `createMovementBehavior`.
  * Balance-proof: derive the expected behavior from the SAME catalog the factory
  * reads, so this pins the wiring (factory ⇄ config), not a hand-listed archetype.
  */

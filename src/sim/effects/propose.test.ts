@@ -15,16 +15,11 @@ import type { GameEvents } from '../../core/events';
 import type { GridCoord } from '../../core/types';
 
 /**
- * Phase Y5 — the propose-bridge gate tests, pinned DIRECTLY on the production
- * `EffectAbility`.
- *
- * Through Y4 the propose bridge ([propose.ts](src/sim/effects/propose.ts)) — the
- * range / minRange band, the LOS gate + the catapult's LOS skip, the half-cover
- * capture, the aoe blast-centre, the fizzle cast-cell, the heal pick, and the
- * dash aggressive-close gate — was covered only end-to-end by the determinism
- * oracle (effectMigration.test.ts), which compared each migrated verb to its
- * legacy class. Y5 deletes the legacy classes (and so the oracle), so these tests
- * harvest the oracle's propose coverage onto the data-driven path. Op / firing /
+ * The propose-bridge gate tests, pinned DIRECTLY on the production
+ * `EffectAbility`: the bridge's ([propose.ts](src/sim/effects/propose.ts))
+ * range / minRange band, the LOS gate + the catapult's LOS skip, the
+ * half-cover capture, the aoe blast-centre, the fizzle cast-cell, the heal
+ * pick, and the dash aggressive-close gate. Op / firing /
  * timeline / targeting coverage lives in the sibling `effects/*.test.ts`; the
  * per-archetype battles in `tests/integration/*-battle.test.ts` drive the whole
  * loop through `createAbility` → `EffectAbility`.
@@ -343,10 +338,10 @@ describe('proposeEffectAbility — applyStatus scaling capture (§31)', () => {
 });
 
 /**
- * 43-pre-b — the LOS occluder pool (`collectLosBlockers`) must cover a
- * multi-tile neutral's WHOLE footprint (`cellsOccupiedBy`), not just its §39
- * canonical corner. Corner-only, a 2×2 rubble's body cells were invisible to
- * the shot gate — archers fired straight through them. The rubble is built
+ * The LOS occluder pool (`collectLosBlockers`) must cover a
+ * multi-tile neutral's WHOLE footprint (`cellsOccupiedBy`), not just its
+ * canonical corner. Corner-only, a 2×2 rubble's body cells are invisible to
+ * the shot gate, and archers fire straight through them. The rubble is built
  * directly (id 900, clear of both id counters); `blocksLineOfSight` defaults
  * true, and `footprintOf` resolves the 2×2 off the `rubble_2x2` def.
  */
@@ -380,14 +375,13 @@ describe('proposeEffectAbility — multi-tile neutral footprints (43-pre-b)', ()
 });
 
 /**
- * 44-pre-c — the strike gates measure the firing band against the target's
+ * The strike gates measure the firing band against the target's
  * BODY (`firingBandCell` — in band of, and with LOS to, ANY body cell), not its
- * §39 corner. Corner-only, a melee unit flush against a big rubble's far side
- * read "out of range" (§40's "fires the moment body-adjacent" comment was
- * FALSE); a bow in body-range abstained because the ray to the CORNER threaded
- * the body; a mage/catapult whose corner sat past max range couldn't fire at
- * the body under its nose. The movement hold routes through the SAME predicate
- * — the sweep at the bottom pins the pair's agreement (the GP4/Qb#3
+ * corner. Corner-only, a melee unit flush against a big rubble's far side
+ * reads "out of range"; a bow in body-range abstains because the ray to the
+ * CORNER threads the body; a mage/catapult whose corner sits past max range
+ * can't fire at the body under its nose. The movement hold routes through the
+ * SAME predicate — the sweep at the bottom pins the pair's agreement (the
  * freeze-class gate).
  */
 describe('proposeEffectAbility — footprint firing band (44-pre-c)', () => {
@@ -460,8 +454,8 @@ describe('proposeEffectAbility — footprint firing band (44-pre-c)', () => {
   });
 
   it('the hold/strike pair NEVER disagrees around a 3×3 rubble (the freeze-class gate)', () => {
-    // The GP4/Qb#3 deadlock IS the movement hold and the strike gate answering
-    // "in range?" differently: a hold (§44b's `wait`, §42a's `hold_band`) with
+    // The freeze-class deadlock IS the movement hold and the strike gate
+    // answering "in range?" differently: a hold (a `wait`) with
     // no fireable strike = a frozen unit. Sweep every free cell around a 3×3
     // rubble for the three gate shapes (melee / LOS-gated ranged /
     // LOS-ignoring lob): wherever movement holds, the strike MUST fire.
@@ -504,8 +498,8 @@ describe('proposeEffectAbility — footprint firing band (44-pre-c)', () => {
 });
 
 describe('§76c — the caster-anchored blast propose arm (aoe anchor:caster)', () => {
-  // No shipped def authors `anchor:'caster'` (content lands at the §76 design
-  // round), so these run on synthetic parsed defs — the aura.test.ts pattern.
+  // No shipped def authors `anchor:'caster'`, so these run on synthetic
+  // parsed defs — the aura.test.ts pattern.
   function novaDef(over: Record<string, unknown> = {}): AbilityDef {
     return parseAbilityDef({
       id: 'test_nova', name: 'Test Nova', cooldownSeconds: 2, rangeCells: 0,
@@ -572,12 +566,12 @@ describe('§76c — engagementReach (the attackRange contribution per ability)',
       target: { kind: 'aoe', shape: 'square', radius: 2, anchor: 'caster', affects: 'allies' },
     });
     expect(engagementReach(shout)).toBeNull();
-    expect(engagementReach(abilityDef('dash'))).toBeNull(); // the N1 exclusion, unchanged
+    expect(engagementReach(abilityDef('dash'))).toBeNull(); // a leap's range is not reach
   });
 
   it('shipped catalog invariance: reach == rangeCells for every engaging verb (byte-identity)', () => {
     // Derived from live config: every shipped non-self def is targetCell/single —
-    // the 76c rework must not move a single archetype's attackRange or band floor.
+    // the reach rule must not move a single archetype's attackRange or band floor.
     expect(rangeForArchetype('mercenary')).toBe(abilityDef('sword').rangeCells);
     expect(rangeForArchetype('rogue')).toBe(abilityDef('gambit_strike').rangeCells);
     expect(rangeForArchetype('catapult')).toBe(abilityDef('catapult_shot').rangeCells);

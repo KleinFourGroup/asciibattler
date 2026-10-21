@@ -8,12 +8,12 @@ import { RNG } from '../../core/RNG';
 import type { GameEvents } from '../../core/events';
 
 /**
- * §44b — the first-class wait + the instantaneous-action rule. The load-
+ * The first-class wait + the instantaneous-action rule. The load-
  * bearing contract: a wait is a REAL proposal the selector weighs (score 1,
  * losable to any ability), but when it wins it resolves entirely within the
  * tick — no `activeAction`, no `actionCooldowns` entry, no serialized trace.
- * The byte-identity test at the bottom IS the §44 exit criterion: a waiting
- * unit's world bytes match the old bare-null abstainer's exactly.
+ * The byte-identity test at the bottom is the rule's proof: a waiting
+ * unit's world bytes match a bare-null abstainer's exactly.
  */
 
 const STATS: UnitStats = {
@@ -65,7 +65,7 @@ describe('WaitAction', () => {
     w.tick();
 
     expect(waits).toEqual([{ unitId: u.id }]);
-    // The §44b contract: nothing enters the in-flight machinery. A lingering
+    // The contract: nothing enters the in-flight machinery. A lingering
     // `activeAction` or a serialized `['wait', 0]` cooldown entry is exactly
     // the state that would force a WorldSnapshot bump.
     expect(u.activeAction).toBeNull();
@@ -115,8 +115,8 @@ describe('WaitAction', () => {
   });
 
   it('EXIT TEST: a waiting unit\'s world bytes match the old abstaining unit\'s', () => {
-    // Two identical worlds, same seed; the only difference is the §44b
-    // conversion itself — one unit proposes a wait, its twin returns the old
+    // Two identical worlds, same seed; the only difference is the wait
+    // itself — one unit proposes a wait, its twin returns a
     // bare null. After ticking both, the serialized worlds must be
     // byte-identical: the wait is observable ONLY in the event stream.
     const wWait = makeWorld();

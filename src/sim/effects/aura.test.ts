@@ -1,8 +1,8 @@
 /**
- * §76a — the aura engine core: the `aura` def field + `World.applyAuraStatuses`
- * (the second sustain source beside the 27d tiles).
+ * The aura engine core: the `aura` def field + `World.applyAuraStatuses`
+ * (the second sustain source beside the status tiles).
  *
- * Headless-first (the C1d rule): every behavior here is pinned without the
+ * Headless-first: every behavior here is pinned without the
  * browser. Content uses the REAL `emboldened` status (config/statuses.json —
  * refresh / 5s / statMods) so expectations derive from config, never hardcoded
  * balance arithmetic; the mobility round-trip authors a SYNTHETIC parsed
@@ -179,7 +179,7 @@ describe('§76a — the aura pass', () => {
     expect(hasStatus(enemy, 'burn')).toBe(true);
     expect(hasStatus(ally, 'burn')).toBe(false);
     expect(hasStatus(carrier, 'burn')).toBe(false);
-    expect(wall.effects).toHaveLength(0); // …but the inert-neutral skip holds (the 27d rule)
+    expect(wall.effects).toHaveLength(0); // …but the inert-neutral skip holds (the aura pass skips scenery)
   });
 
   it('a dead carrier radiates nothing', () => {

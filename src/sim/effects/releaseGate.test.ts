@@ -14,7 +14,7 @@ import { resolveCadenceTicks, resolvePhases } from './timeline';
 import { EffectAction } from './EffectAction';
 
 /**
- * 82e — the release gate (the catapult's hold-fire). The moveAbortInflight
+ * The release gate (the catapult's hold-fire). The moveAbortInflight
  * drive pattern: a stub behavior proposes the lob once, ticks advance the
  * wind-up, and the test mutates the target's position mid-flight. At the
  * `release` boundary the gate re-runs the propose-time band predicate

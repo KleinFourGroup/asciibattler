@@ -16064,3 +16064,80 @@ this entry: about 69k for 138 codes, 500 tokens a code. At that rate the
 660 left are about 330k; this session, at about 300k after this commit,
 takes batches 3 to 6 (446 codes, about 225k) if each still fits before
 the halt with the hand-off's room, and `Run.test.ts` goes to the next.
+
+The suite by the hook at `b953ef69`: 3,702 passed, and the smoke 595.
+
+### 126m, batch 3 — `src/sim`'s `behaviors`, `actions` and `effects` (2026-10-21, session 3d57d006)
+
+125 codes in 21 files, in 99 hunks, to none. These tests carried the
+most "pre-fix … post-fix" history (C1d, D6, GP4, J3, E5, the footprint
+fixes); each such sentence now states the rule and what breaks without
+it, in the present. Reasons that replace a code, with where each was
+checked:
+
+- `behaviors/MovementBehavior.test.ts`: "J1" is the test "an adjacent
+  enemy interrupts tile pursuit" in the same file (its title has no
+  code); "§42a's `hold_band`, §44b's `wait`" is the `wait` decision
+  (`moveDecision.test.ts`'s titles: "was hold_band"); the O4 note's "a
+  `ranged` unit" is an `archer` (the scene's specs use `archetype:
+  'archer'`).
+- `behaviors/AbilityBehavior.test.ts`: "Pre-E5 this read
+  `derived.attackRange`" is that a strike which read it would fire (the
+  bow's `rangeCells` is 3, `config/abilities.json:122`).
+- `actions/SwapAction.test.ts`: "the movement.test.ts §45a helper" is
+  that file's `seatMove` (`movement.test.ts:396`); "the §79e principle"
+  dropped beside the words that state it.
+- `actions/phaseTimeline.test.ts`: the pointer to
+  `EffectAction.test.ts`'s "EffectAction.phaseTarget — per-verb renderer
+  info" holds (its `describe` at line 157).
+- `effects/aura.test.ts`: "the 27d rule" is that the aura pass skips
+  scenery (`World.ts:1279`).
+- `effects/interpreter.test.ts`: "§Z: the FX-cue … is retired" is that
+  the sim emits no FX cue for the shot or the blast (neither event is in
+  `events.ts`).
+- `effects/propose.test.ts`: "No shipped def authors `anchor:'caster'`
+  (content lands at the §76 design round)" keeps its first half, which
+  holds (all six `anchor`s in `abilities.json` are `targetCell`); "the
+  N1 exclusion" is that a leap's range is not reach (`archetypes.ts`,
+  `engagementReach`); "GP4/Qb#3" is the freeze class the sweep pins.
+- `behaviors/registry.test.ts`, `rangedYield.test.ts`,
+  `SupportMovementBehavior.test.ts`: the GP5 yield rule named by its
+  words, "the healer's yield rule".
+
+Corrected (rule 7):
+
+- `behaviors/MovementBehavior.test.ts:626`: "con=20 → maxHp=50" was
+  stale (the mercenary's constitution is 22, `config/units.json:8`); the
+  numbers are dropped, since the test reads the baseline from the config.
+  **Its twin**, `World.test.ts:1329` ("Constitution=20 → maxHp=50"), is
+  in batch 5's files and is checked there.
+- `effects/timeline.test.ts`: the conversion "reproduces every existing
+  proposal builder's phase array (`strikes.ts` / `magic.ts` /
+  `catapult.ts` / `dash.ts`)" named four files that no longer exist; it
+  now says what the expectations derive from. **Its twin, in the same
+  batch:** `MovementBehavior.test.ts:499`, "the band gates firing too,
+  strikes.ts", now says the propose bridge (`propose.ts`'s range /
+  minRange band, as `propose.test.ts`'s header has it).
+- `MovementBehavior.test.ts`: the D6 note named `AttackBehavior`, which
+  no longer exists (no mention left in `src` or `tests`); the rewrite
+  says the unit is free to fire.
+- `effects/propose.test.ts`: "(§40's "fires the moment body-adjacent"
+  comment was FALSE)" was history about a comment, dropped.
+
+**Proof.** `comment-strip HEAD src`: 21 files differ, in comments only,
+exit 0; the control named 21 of 21. `comment-codes`: 660 → 535, and
+`--record` wrote 535 in 56 files; "Cluster-2" went from
+`targeting.test.ts` (rounds and clusters named: 3 → 2).
+`comment-length` on the 21 files: comment lines 835 → 821, words 8,756
+→ 8,497, code lines 4,979 both.
+
+**Read** (`batch`): `git show <this commit> -- src`. What changed: the
+step codes in `src/sim`'s `behaviors`, `actions` and `effects` tests,
+and the fix histories they sat in, now in the present. Where to look:
+`MovementBehavior.test.ts`'s Labyrinth, D6, GP4, J3 and footprint
+comments, `propose.test.ts`'s header, `timeline.test.ts`'s header.
+Wrong looks like a present-tense rule the code does not follow, or a
+"without it" clause describing a failure the test cannot show.
+
+Readings: 290,560 at 23:51 on `b953ef69`, 358,080 at 23:58 before this
+entry: about 68k for 125 codes, 540 a code.

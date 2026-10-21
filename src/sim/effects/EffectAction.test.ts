@@ -12,7 +12,7 @@ import { resolvePhases } from './timeline';
 import { EffectAction } from './EffectAction';
 
 /**
- * Phase Y2 — the EffectAction firing model: ops fire at their authored phase
+ * The EffectAction firing model: ops fire at their authored phase
  * boundary (start handles offset 0; applyEffect handles the impact boundary,
  * skipping offset 0 so it never double-fires), phaseTarget surfaces the right
  * renderer info per verb shape, and the cast-time context round-trips.
@@ -67,7 +67,7 @@ const catapultDef: AbilityDef = parseAbilityDef({
 });
 
 const chainDef: AbilityDef = parseAbilityDef({
-  // §29c — a charged chain: the impact-phase op arcs to `maxJumps` targets, each
+  // A charged chain: the impact-phase op arcs to `maxJumps` targets, each
   // inner op's cast-time scalars captured into `OpResolution.chainOps`.
   id: 'chain_lightning', name: 'Chain', cooldownSeconds: 2.5, rangeCells: 5, minRangeCells: 2, target: { kind: 'enemyInRange' },
   timeline: [{ phase: 'windup', seconds: 1 }, { phase: 'impact', seconds: 0 }, { phase: 'recovery', seconds: 'fill' }],
@@ -86,7 +86,7 @@ const dashDef: AbilityDef = parseAbilityDef({
 });
 
 const afflictDef: AbilityDef = parseAbilityDef({
-  // §31 — a bleed-on-hit (damage THEN applyStatus on impact), the shape whose
+  // A bleed-on-hit (damage THEN applyStatus on impact), the shape whose
   // applyStatus resolution carries the cast-time-captured status magnitude/duration.
   id: 'cleaver', name: 'Cleaver', cooldownSeconds: 1.5, rangeCells: 1, target: { kind: 'enemyInRange' },
   timeline: [{ phase: 'impact', seconds: 0 }, { phase: 'recovery', seconds: 'fill' }],

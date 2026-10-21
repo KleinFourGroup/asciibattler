@@ -12,7 +12,7 @@ import type { Action, ActionProposal } from '../Action';
 import type { GameEvents } from '../../core/events';
 import { damageOpOf } from '../../config/abilities';
 
-// I6 — a strike deals the weapon's `might` plus the wielder's scaling stat;
+// A strike deals the weapon's `might` plus the wielder's scaling stat;
 // `scene()` sets that stat to the spec's `attackDamage`, so a fired strike lands
 // `might + attackDamage`. Derive the weapon might from the verb's damage op (the
 // production path reads it) so re-tuning a weapon can't break these wiring
@@ -98,7 +98,7 @@ describe('AbilityBehavior', () => {
   });
 
   it('abstains when a wall is on the line to a ranged target', () => {
-    // E5: the bow's config range is 3, so the target sits at chebyshev
+    // The bow's config range is 3, so the target sits at chebyshev
     // 3 (in range) with the wall strictly between attacker and target.
     const { world, units, attacks } = scene([
       { team: 'player', x: 0, y: 0, attackRange: 3, attackDamage: 5 },
@@ -124,8 +124,8 @@ describe('AbilityBehavior', () => {
   it('E5: a strike gates on its ability config range, not the unit engagement range', () => {
     // `derived.attackRange` is force-set to 5 here, but the bow's
     // config range is 3 — the strike must consult the ability's OWN range
-    // and abstain at chebyshev 4. Pre-E5 this read `derived.attackRange`
-    // and would have fired. Pins the per-ability range migration.
+    // and abstain at chebyshev 4; a strike that read `derived.attackRange`
+    // would fire. Pins the per-ability range.
     const { world, units, attacks } = scene([
       { team: 'player', x: 0, y: 0, attackRange: 5, attackDamage: 5 },
       { team: 'enemy', x: 4, y: 0, hp: 30, inert: true },
@@ -203,7 +203,7 @@ describe('AbilityBehavior', () => {
     expect(units[1]!.currentHp).toBeLessThan(30);
   });
 
-  // ─── E2 — multi-ability scoring + per-ability cooldown ───────────────────
+  // ─── Multi-ability scoring + per-ability cooldown ────────────────────────
 
   it('E2: picks the higher-scoring ability when both fire on the same tick', () => {
     // Synthetic unit with two abilities: a low-score one and a high-score
@@ -294,12 +294,12 @@ function buildStats(s: SceneUnit, archetype: 'mercenary' | 'archer'): UnitStats 
   return {
     ...baseStats,
     luck: 0,
-    // GP2 — these are cadence/scoring/LOS mechanic tests; keep the target
-    // defense-free so the new subtractive mitigation doesn't perturb the
+    // These are cadence/scoring/LOS mechanic tests; keep the target
+    // defense-free so the subtractive mitigation doesn't perturb the
     // explicit `attackDamage` assertions (the spread would otherwise carry the
     // archetype's defense: melee 4 / ranged 2).
     defense: 0,
-    // I2 — likewise isolate from the dodge to-hit roll: max precision pins the
+    // Likewise isolate from the dodge to-hit roll: max precision pins the
     // strike's hit chance at the cap (always lands), so a whiff can't perturb
     // the exact attack-count / cadence assertions. To-hit is exercised in its
     // own World.applyDamage + stats tests, not here.
@@ -339,7 +339,7 @@ function scene(specs: SceneUnit[]): {
 }
 
 /**
- * E2 multi-ability scene: place units exactly as `scene` would, but
+ * The multi-ability scene: place units exactly as `scene` would, but
  * attach the caller-provided ability list onto the first unit. The
  * second unit is always the target. Used to pin AbilityBehavior's
  * scoring + per-ability cooldown contracts without relying on the
@@ -362,8 +362,8 @@ function sceneWithAbilities(
 }
 
 /**
- * A minimal damage-dealing action standing in for the deleted AttackAction
- * (Y5c). The synthetic abilities below only need an observable hit to verify
+ * A minimal damage-dealing action. The synthetic abilities below only need
+ * an observable hit to verify
  * which ability fired, so this applies fixed, unmissable damage (no crit/evade
  * draw) through the World.applyDamage chokepoint. The scene's defense-0 target
  * means the `unit:attacked` event carries exactly `damage`.
@@ -414,7 +414,7 @@ class ConfigurableStrike implements Ability {
       action: new TestStrike(target, this.damage),
       score: this.score,
       cooldown: this.cooldown,
-      // F2 — single-tick strike: impact at offset 0, recovery fills the
+      // Single-tick strike: impact at offset 0, recovery fills the
       // duration lockout.
       phases: [
         { phase: 'impact', ticks: 0 },

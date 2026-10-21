@@ -14,7 +14,7 @@ import { RNG } from '../../core/RNG';
 import type { GameEvents } from '../../core/events';
 
 /**
- * GP5 #5 / 56c2 — SwapAction, the DEFERRED atomic position exchange (§36b
+ * SwapAction, the DEFERRED atomic position exchange (the deferred move's
  * twin): `start` emits the render event only; the logical exchange lands in
  * `applyEffect` at the impact boundary, where all validation now lives (a
  * live-tick propose→start is synchronous behind the proposers' own gates, and
@@ -37,7 +37,7 @@ function makeWorld(bus: EventBus<GameEvents> = new EventBus<GameEvents>()): Worl
 }
 
 /** Seat `unit` mid-move to `to` the way World.executeActions does — active
- *  action + destination claim, pre-flip (the movement.test.ts §45a helper). */
+ *  action + destination claim, pre-flip (as movement.test.ts's helper does). */
 function seatMove(world: World, unit: Unit, to: { x: number; y: number }, travel: number) {
   const durationTicks = travel * 2;
   world.seatAction(unit, new MoveAction(unit.position, to, durationTicks), [
@@ -48,7 +48,7 @@ function seatMove(world: World, unit: Unit, to: { x: number; y: number }, travel
   world.claimCell(to, unit.id);
 }
 
-/** Seat an in-flight PRE-FLIP swap on `actor` (the 56c2 deferred timeline). */
+/** Seat an in-flight PRE-FLIP swap on `actor` (the deferred timeline). */
 function seatSwap(world: World, actor: Unit, action: SwapAction, durationTicks: number) {
   const travel = Math.floor(durationTicks / 2);
   world.seatAction(actor, action, [
@@ -59,10 +59,10 @@ function seatSwap(world: World, actor: Unit, action: SwapAction, durationTicks: 
 }
 
 /**
- * 86c-L2b — the recompute-and-compare VERIFIER: the reserved-partner index
+ * The recompute-and-compare VERIFIER: the reserved-partner index
  * must equal what the retired derived scan re-derives from live
- * `activeAction`s (the §79e principle — the check consults a surface
- * production no longer reads).
+ * `activeAction`s (the check consults a surface production no longer
+ * reads).
  */
 function expectIndexConsistent(world: World) {
   expect(world.swapReservedPartnerIndex).toEqual(scanReservedSwapPartners(world));
@@ -140,7 +140,7 @@ describe('SwapAction (deferred, 56c2)', () => {
 
     expect(mover.position).toEqual({ x: 5, y: 5 }); // stayed home
     expect(third.position).toEqual({ x: 4, y: 5 }); // untouched
-    // 56e-pre2 — the TWO-body abort: both parties' true cells, so the
+    // The TWO-body abort: both parties' true cells, so the
     // renderer settles both sprites (the partner began the dual lerp too).
     expect(aborts).toEqual([
       { unitA: mover.id, unitB: 999, cellA: { x: 5, y: 5 }, cellB: { x: 4, y: 5 } },
@@ -171,7 +171,7 @@ describe('SwapAction (deferred, 56c2)', () => {
   });
 
   it('56e-pre2: removing the actor PRE-FLIP emits the two-body abort (death mid-window)', () => {
-    // The 56e labyrinth desync's likeliest trigger: the actor is killed
+    // The labyrinth desync's likeliest trigger: the actor is killed
     // inside the swap's first half. The flip will never fire, but BOTH
     // sprites began the dual lerp at start — removeUnit must tell the
     // renderer (and the pathing metrics) to settle the partner back.
@@ -235,7 +235,7 @@ describe('the swap-partner reserve (56c2; full-window since 56e-pre)', () => {
 
     // Post-flip, window still open (travel boundary in the past, finishTick
     // ahead): STILL reserved — the swap is the partner's action too, and the
-    // renderer's dual lerp is mid-slide (the 56e mid-window re-grab).
+    // renderer's dual lerp is mid-slide, so the partner must not be re-grabbed.
     w.seatActiveAction(actor, { ...actor.activeAction!, startTick: w.currentTick - 5 });
     expect(isReservedSwapPartner(partner.id, w)).toBe(true);
     expect(isSwappablePartner(partner, w)).toBe(false);
@@ -248,7 +248,7 @@ describe('the swap-partner reserve (56c2; full-window since 56e-pre)', () => {
     expectIndexConsistent(w);
   });
 
-  // 86c-L2b — the index's own lifecycle pins: recompute-and-compare across
+  // The index's own lifecycle pins: recompute-and-compare across
   // every transition the chokepoint owns, plus the two invariants the design
   // called out (one-reservation-per-partner asserted; a removed ACTOR frees
   // its partner while a removed PARTNER's entry stands until the flip).

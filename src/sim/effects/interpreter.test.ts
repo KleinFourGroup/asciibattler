@@ -14,9 +14,8 @@ import { parseStatusDef } from './statusSchema';
 import { secondsToTicks } from '../../config';
 
 /**
- * Phase Y2 — the op interpreter in isolation. Explicit-input mechanic tests: each
- * op reproduces its legacy action's mutation / events / draw ordering (the Y3/Y4
- * oracle then proves the end-to-end migration).
+ * The op interpreter in isolation. Explicit-input mechanic tests: each op's
+ * mutation / events / draw ordering, pinned.
  */
 
 const BASE_STATS: UnitStats = {
@@ -128,7 +127,7 @@ describe('executeOp — damage (fizzle / catapult)', () => {
       dmgOp(),
       ctx({ caster, world, target, orphanPolicy: 'fizzle', targetCell: { x: 3, y: 0 }, resolution: { baseDamage: 10, critChance: 1 } }),
     );
-    // §Z: the FX-cue `catapult:fired` is retired, so an aborted shot is silent at
+    // The sim emits no FX cue for the shot, so an aborted shot is silent at
     // the sim layer (the renderer drives the dud off `action:phase{impact}`).
     expect(events).toHaveLength(0);
     expect(target.currentHp).toBe(0);
@@ -161,8 +160,8 @@ describe('executeOp — damage (aoe / magic)', () => {
       dmgOp({ evadable: false }),
       ctx({ caster, world, selector: aoe, orphanPolicy: 'ground-target', targetCell: { x: 5, y: 5 }, resolution: { baseDamage: 10, critChance: 0 } }),
     );
-    // §Z: the FX-cue `magic:detonated` is retired; only the per-victim damage
-    // remains (the renderer drives the explosion off `action:phase{impact}`).
+    // The sim emits no FX cue for the blast, only the per-victim damage
+    // (the renderer drives the explosion off `action:phase{impact}`).
     expect(events.map((e) => e.name)).toEqual(['unit:attacked', 'unit:attacked']);
     expect(center.currentHp).toBe(center.derived.maxHp - 10);
     expect(ring.currentHp).toBe(ring.derived.maxHp - 5); // round(10 × 0.5)
@@ -176,7 +175,7 @@ describe('executeOp — damage (aoe / magic)', () => {
       dmgOp(),
       ctx({ caster, world, selector: aoe, orphanPolicy: 'ground-target', targetCell: { x: 5, y: 5 }, resolution: { baseDamage: 10, critChance: 0 } }),
     );
-    // §Z: with `magic:detonated` retired, a whiff is silent at the sim layer.
+    // With no FX cue for the blast, a whiff is silent at the sim layer.
     expect(events).toHaveLength(0);
   });
 });
@@ -381,7 +380,7 @@ describe('executeOp — applyStatus (status-on-hit, §29)', () => {
     const caster = makeUnit('player', { x: 0, y: 0 });
     const target = makeUnit('enemy', { x: 1, y: 0 });
     world.placeUnits(caster, target);
-    // §31: the interpreter consumes the captured scalars, NOT the op fields (which
+    // The interpreter consumes the captured scalars, NOT the op fields (which
     // are frozen at propose). magnitude 3, a 2s duration override on the resolution.
     executeOp(
       statusOp(),

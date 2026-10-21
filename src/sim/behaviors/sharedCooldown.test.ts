@@ -36,7 +36,7 @@ describe('shared actionCooldown', () => {
     ]);
 
     world.tick(); // tick 1: move STARTS (heading adjacent), attack blocked by shared CD
-    // §36b — the move commits + emits at tick 1 but the logical step is deferred
+    // The move commits + emits at tick 1 but the logical step is deferred
     // to the 50% flip; the unit is still on `from` here. It flips to (1,0) by the
     // time the shared cooldown elapses, so the attack below still lands in range.
     expect(units[0]!.position).toEqual({ x: 0, y: 0 });
@@ -52,7 +52,7 @@ describe('shared actionCooldown', () => {
     // Tick moveCD + 1: cooldown is 0, in range — attack fires.
     world.tick();
     expect(attacks).toHaveLength(1);
-    // I6 — the sword adds its `might` on top of the scaling stat (set to
+    // The sword adds its `might` on top of the scaling stat (set to
     // attackDamage), so the strike lands `might + 5`. Derive from config so a
     // weapon re-tune can't break this cooldown-timing wiring test.
     expect(units[1]!.currentHp).toBe(50 - (damageOpOf('sword')!.might + 5));
@@ -145,15 +145,15 @@ function scene(specs: SceneUnit[]): {
 
   let nextId = 1;
   const units = specs.map((s) => {
-    // E1: melee baseline + luck=0 (deterministic crit roll = always
+    // Melee baseline + luck=0 (deterministic crit roll = always
     // false) + `strength` = test-knob attackDamage so the existing
     // exact-damage assertions hold.
     const baseStats = ARCHETYPE_CONFIG.mercenary.baseStats;
     const stats: UnitStats = {
       ...baseStats,
       luck: 0,
-      // GP2 — cadence/shared-cooldown mechanic test; keep the target
-      // defense-free so the new subtractive mitigation doesn't perturb the
+      // Cadence/shared-cooldown mechanic test; keep the target
+      // defense-free so the subtractive mitigation doesn't perturb the
       // explicit `attackDamage` assertions (baseStats now carries defense 4).
       defense: 0,
       strength: s.attackDamage ?? baseStats.strength,

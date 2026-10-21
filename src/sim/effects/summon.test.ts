@@ -13,11 +13,11 @@ import { proposeEffectAbility } from './propose';
 import { nearestFreeCells } from '../actingPosition';
 
 /**
- * §29d — the `summon` op, its placement BFS (`nearestFreeCells`), and the
+ * The `summon` op, its placement BFS (`nearestFreeCells`), and the
  * per-caster `maxLive` cap, in isolation. Mechanic tests on explicit inputs: the
  * SUMMONED archetype is a stable existing one (`bandit`) — these assert WHERE /
  * HOW MANY / the cap / round-trip, never the shipped Ghoul's stats (the
- * balance-proof discipline; the §29d Ghoul/Shaman content is separate).
+ * balance-proof discipline; the Ghoul/Shaman content is separate).
  *
  * Every unit is created through the World API (`spawnUnit` / `spawnEnvironment` /
  * `spawnSummon`) so the private id allocator stays consistent — the summon path's

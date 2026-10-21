@@ -44,7 +44,7 @@ describe('MovementBehavior', () => {
 
     world.tick();
 
-    // §36b — `unit:moved` fires at start (the renderer lerp spans the window),
+    // `unit:moved` fires at start (the renderer lerp spans the window),
     // but the logical step is deferred to the 50% flip (floor(4*0.5)=2 ticks in).
     expect(moves).toHaveLength(1);
     expect(moves[0]).toEqual({
@@ -96,13 +96,12 @@ describe('MovementBehavior', () => {
   });
 
   it('moves toward a target whose attack-range neighbors are all walls + allies (C1d Labyrinth regression)', () => {
-    // C1d Labyrinth softlock: pre-fix MovementBehavior picked a goal cell
-    // within attackRange of target, then pathed there. When every in-range
-    // cell was a wall (e.g. row 8 of the Labyrinth) or an ally (rest of
-    // the team packed on the spawn row), the goal-picker returned null
-    // and the unit froze — even though target was reachable through a
-    // diagonal squeeze. The fix paths to target's cell directly, with
-    // target excluded from blockers.
+    // The Labyrinth softlock: a goal picker that chose a cell within
+    // attackRange of the target, then pathed there, returns null when every
+    // in-range cell is a wall (e.g. row 8 of the Labyrinth) or an ally (the
+    // team packed on the spawn row), and the unit freezes, though the target
+    // is reachable through a diagonal squeeze. MovementBehavior paths to the
+    // target's cell directly, with the target excluded from blockers.
     //
     // Setup on a 5x5 grid:
     //   row 0: P . . . .       <- player at (0,0)
@@ -111,8 +110,8 @@ describe('MovementBehavior', () => {
     //   row 3: # # . # #       <- walls at x=0,1,3,4 ; gap at (2,3)
     //   row 4: . . A T A       <- allies at (2,4),(4,4) ; target T at (3,4)
     // Target T's 5 in-bounds neighbors are: (2,3) wall, (3,3) wall,
-    // (4,3) wall, (2,4) ally, (4,4) ally. All blocked → pre-fix freezes.
-    // Post-fix steps from (0,0) toward (3,4) via (2,3).
+    // (4,3) wall, (2,4) ally, (4,4) ally. All blocked → a goal picker freezes.
+    // MovementBehavior steps from (0,0) toward (3,4) via (2,3).
     const { world, units, moves } = scene([
       { team: 'player', x: 0, y: 0, attackRange: 1, moveCooldownTicks: 1 },
       // Target first so it gets the lowest enemy id and wins the
@@ -137,11 +136,10 @@ describe('MovementBehavior', () => {
   });
 
   it('D6: ranged unit with half-cover on the LOS line still abstains in-range (lets AttackBehavior fire)', () => {
-    // The pre-D6 MovementBehavior treated half-cover as an LOS blocker,
-    // so a ranged unit in range with a half-cover between it and target
-    // would keep stepping forward (LOS-gated in-range abstain failed).
-    // Post-D6 the LOS check ignores half-cover, so movement abstains and
-    // AttackBehavior is free to fire.
+    // The LOS check ignores half-cover, so a ranged unit in range with a
+    // half-cover between it and the target abstains from moving and is free
+    // to fire; one that read half-cover as an LOS blocker would keep
+    // stepping forward.
     const { world, units, moves } = scene([
       { team: 'player', x: 0, y: 0, attackRange: 5, moveCooldownTicks: 1 },
       { team: 'enemy', x: 4, y: 0, inert: true },
@@ -240,7 +238,7 @@ describe('MovementBehavior', () => {
   it('E5.B: abstains (queues) when the forward step is occupied and no sidestep is free', () => {
     // Same chokepoint, but row 1 is fully walled (x=0..5) so neither
     // perpendicular cell is free. The unit falls back to abstaining —
-    // corridor queueing, the pre-E5.B behavior, still emerges.
+    // corridor queueing still emerges.
     const { world, units, moves } = scene([
       { team: 'player', x: 0, y: 0, attackRange: 1, moveCooldownTicks: 1 },
       { team: 'enemy', x: 5, y: 0, inert: true },
@@ -255,9 +253,9 @@ describe('MovementBehavior', () => {
 
   it('GP4: a ranged unit in range but LOS-blocked repositions for a clear shot (does not charge)', () => {
     // Player ranged (range 6) is already in chebyshev range of the target, but
-    // a wall on the straight line breaks LOS. Pre-GP4 it pathed toward the
-    // target's cell (creeping at the wall); post-GP4 it paths to the nearest
-    // cell with a clear shot and holds there.
+    // a wall on the straight line breaks LOS. It paths to the nearest cell
+    // with a clear shot and holds there, rather than toward the target's cell
+    // (creeping at the wall).
     const wall = { x: 2, y: 0 };
     const { world, units, moves } = scene([
       { team: 'player', x: 0, y: 0, attackRange: 6, moveCooldownTicks: 1 },
@@ -340,10 +338,11 @@ describe('MovementBehavior / tile objective (J1)', () => {
   });
 
   it('a wall ON the rally cell does NOT freeze the unit (best-effort: paths as close as it can)', () => {
-    // J3 playtest fix: right-clicking an unpathable tile set a tile objective on
-    // an unreachable cell. A single unreachable goal → findPath [] → no step,
-    // and the objective suppresses the nearest-enemy fallback, so the whole team
-    // idled at spawn. Best-effort routing approaches the wall instead.
+    // A playtest find: right-clicking an unpathable tile sets a tile objective
+    // on an unreachable cell. A single unreachable goal → findPath [] → no
+    // step, and the objective suppresses the nearest-enemy fallback, so the
+    // whole team would idle at spawn. Best-effort routing approaches the wall
+    // instead.
     const { world, units, moves } = scene([
       { team: 'player', x: 8, y: 0, attackRange: 1, moveCooldownTicks: 1 },
       { team: 'neutral', x: 0, y: 0, inert: true }, // a wall ON the rally cell
@@ -417,7 +416,7 @@ describe('MovementBehavior / focus tile (O3, leashAtNearest default)', () => {
   }
 
   it('far from the tile: an adjacent enemy is IGNORED — the unit keeps marching (the full-preempt vs engage)', () => {
-    // The mirror of the J1 "an adjacent enemy interrupts tile pursuit" test:
+    // The mirror of the "an adjacent enemy interrupts tile pursuit" test:
     // there engage stops to fight the cheby-1 enemy. Under FOCUS while still far
     // from the tile (cheby 6 > leash) the unit eats the hit and marches on.
     const { world, units, moves } = scene([
@@ -496,7 +495,7 @@ describe('MovementBehavior / corridor kite-pin (Qb #3)', () => {
     // The reported Qb #3 repro. Corridor along y=5 (rows 4 and 6 walled). The
     // archer is sandwiched: a friendly behind sits on the ONLY retreat cell, the
     // hostile ahead sits one cell in — INSIDE minRange, so the archer can neither
-    // fire (the band gates firing too, strikes.ts) nor hold; it wants to kite OUT
+    // fire (the band gates firing too, in the propose bridge) nor hold; it wants to kite OUT
     // but the walls kill the perpendicular sidestep and the friendly blocks the
     // back-step. Pre-fix, the target-cell anti-freeze fallback (the target is
     // soft-EXCLUDED from the step-collision set so findPath always has a goal)
@@ -529,11 +528,11 @@ describe('MovementBehavior / corridor kite-pin (Qb #3)', () => {
 describe('MovementBehavior / §36b: a pursuer holds for a target arriving into its band', () => {
   it('a melee unit waits when its target CLAIMS a cell in its firing band (no kite-pin sidestep)', () => {
     // M targets E. E is mid-move toward M: logically still out of melee range, but
-    // its destination CLAIM sits on the cell ADJACENT to M. Pre-fix M read itself
-    // out of range and tried to advance — the forward step (E's claimed cell) was
-    // blocked, firing the sidestep/detour. Now M reads the claim as "my target is
-    // arriving adjacent" and holds; it strikes when E lands (the §36b locomotion
-    // dual of the claim's pathing-block). Driven at the behavior level: inject the
+    // its destination CLAIM sits on the cell ADJACENT to M. M reads the claim as
+    // "my target is arriving adjacent" and holds; it strikes when E lands (the
+    // locomotion dual of the claim's pathing-block). Reading itself out of range
+    // instead, M would advance into E's claimed cell, be blocked, and fire the
+    // sidestep/detour. Driven at the behavior level: inject the
     // claim directly, so the abstain is pinned independent of E's move timing.
     const { world, units } = scene([
       { team: 'player', x: 5, y: 5, attackRange: 1, moveCooldownTicks: 1 },
@@ -547,7 +546,7 @@ describe('MovementBehavior / §36b: a pursuer holds for a target arriving into i
     expect(mover.proposeAction(m, world)?.action).toBeInstanceOf(MoveAction);
 
     // E claims the cell ADJACENT to M (its in-flight destination) → M HOLDS
-    // (§44b: the hold is a wait proposal, not a null).
+    // (the hold is a wait proposal, not a null).
     world.claimCell({ x: 6, y: 5 }, e.id);
     expect(mover.proposeAction(m, world)?.action.id).toBe(WAIT_ACTION_ID);
 
@@ -586,14 +585,14 @@ interface SceneUnit {
   attackRange?: number;
   moveCooldownTicks?: number;
   /**
-   * O4 — override the archetype (default `mercenary`). `minRangeForArchetype`
-   * reads it, so a `ranged` unit picks up the bow's firing floor and kites.
+   * Override the archetype (default `mercenary`). `minRangeForArchetype`
+   * reads it, so an `archer` picks up the bow's firing floor and kites.
    */
   archetype?: UnitArchetype;
   /** Skip attaching MovementBehavior — for static targets and walls. */
   inert?: boolean;
   /**
-   * E7.D — give the unit an ability that ignores line of sight (a catapult
+   * Give the unit an ability that ignores line of sight (a catapult
    * stand-in). Only the `ignoresLineOfSight` flag matters to MovementBehavior;
    * the stub never proposes, so the test isolates the movement abstain.
    */
@@ -601,7 +600,7 @@ interface SceneUnit {
 }
 
 /**
- * E5.B — `team: 'neutral'` specs become walls (hard pathfinding blockers).
+ * `team: 'neutral'` specs become walls (hard pathfinding blockers).
  * Routing them through `scene()`'s shared id counter avoids the id
  * collision that `spawnWall` (which pulls ids from World's own counter)
  * would cause against the hand-assigned combatant ids.
@@ -623,8 +622,7 @@ function scene(specs: SceneUnit[]): {
   let nextId = 101;
   const units = specs.map((s) => {
     const isNeutral = s.team === 'neutral';
-    // E1: build stats from the melee archetype baseline (con=20 → maxHp=50,
-    // matching the pre-E1 default) with luck=0 so the AttackAction crit
+    // Build stats from the melee archetype baseline with luck=0 so the crit
     // roll never fires — keeps exact-value assertions deterministic.
     const stats: UnitStats = { ...ARCHETYPE_CONFIG.mercenary.baseStats, luck: 0 };
     const range = s.attackRange ?? 1;
@@ -652,13 +650,12 @@ function scene(specs: SceneUnit[]): {
 }
 
 /**
- * 43-pre-b — the movement layer's LOS occluder list must cover a multi-tile
- * neutral's WHOLE footprint (`cellsOccupiedBy`), not just its §39 canonical
- * corner. Corner-only, a 2×2 rubble's body cells were LOS-transparent to the
- * in-band hold: a ranged unit sat holding behind them (§42a's `hold_band`,
- * §44b's `wait`) with a shot the (consistently corner-blind) gate then fired
- * through. Footprint-aware, "behind rubble" reads as no-LOS and the unit
- * repositions for a real shot.
+ * The movement layer's LOS occluder list must cover a multi-tile neutral's
+ * WHOLE footprint (`cellsOccupiedBy`), not just its canonical corner.
+ * Corner-only, a 2×2 rubble's body cells are LOS-transparent to the in-band
+ * hold: a ranged unit sits holding behind them (a `wait`) with a shot a
+ * corner-blind gate would fire through. Footprint-aware, "behind rubble"
+ * reads as no-LOS and the unit repositions for a real shot.
  */
 describe('MovementBehavior — multi-tile neutral footprints (43-pre-b)', () => {
   it('a rubble BODY cell on the sight line breaks the in-band hold (repositions)', () => {
@@ -683,19 +680,19 @@ describe('MovementBehavior — multi-tile neutral footprints (43-pre-b)', () => 
     ]);
     const [m, , e] = units as [Unit, Unit, Unit];
     m.targetId = e.id;
-    // E7.D — it lobs over the body exactly as it lobbed over the corner
-    // (§44b: the in-band hold is a wait proposal).
+    // It lobs over the body exactly as over the corner (the in-band hold is
+    // a wait proposal).
     expect(new MovementBehavior().proposeAction(m, world)?.action.id).toBe(WAIT_ACTION_ID);
   });
 });
 
 /**
- * 44-pre-c — the movement hold measures the firing band against the target's
- * BODY (the shared `firingBandCell` predicate), not its §39 corner. Corner-only,
- * a unit flush against a big rubble's far side read "out of range" and WALKED
- * AROUND the body to its corner; a bow crept for corner-LOS it didn't need; a
- * catapult marched inside its own lob arc. All three now hold — §44b: a `wait`
- * proposal — where the strike gate (the SAME predicate) fires. Open field + a
+ * The movement hold measures the firing band against the target's BODY (the
+ * shared `firingBandCell` predicate), not its corner. Corner-only, a unit
+ * flush against a big rubble's far side reads "out of range" and WALKS AROUND
+ * the body to its corner; a bow creeps for corner-LOS it doesn't need; a
+ * catapult marches inside its own lob arc. All three hold (a `wait`
+ * proposal) where the strike gate (the SAME predicate) fires. Open field + a
  * committed target, so a wait here can only be the in-band hold (the
  * boxed/pinned/no_goal abstains stay null and are unreachable in this scene).
  */
@@ -710,7 +707,7 @@ describe('MovementBehavior — footprint firing band vs multi-tile targets (44-p
     ]);
     const [m, rubble] = units as [Unit, Unit];
     m.targetId = rubble.id;
-    // Corner-only: corner (4,4) read dist 3 > 1 → the §40b advance walked the
+    // Corner-only: corner (4,4) reads dist 3 > 1 → the advance walks the
     // unit around the body toward the corner. Body cell (6,5) is adjacent.
     expect(new MovementBehavior().proposeAction(m, world)?.action.id).toBe(WAIT_ACTION_ID);
   });
@@ -742,11 +739,11 @@ describe('MovementBehavior — footprint firing band vs multi-tile targets (44-p
 });
 
 /**
- * 44-pre-a — the blind wander's occupied set must cover a multi-tile neutral's
- * WHOLE footprint (the §35 `occupiedCells` builder), not just its §39 corner.
- * Corner-only, a rubble's body cells read as free wander candidates: the roll
- * onto one was a doomed proposal §35b's destination gate then aborted
- * (`unit:moveAborted`, no overlap), wasting the wanderer's tick.
+ * The blind wander's occupied set must cover a multi-tile neutral's WHOLE
+ * footprint (the `occupiedCells` builder), not just its corner. Corner-only,
+ * a rubble's body cells read as free wander candidates: the roll onto one is
+ * a doomed proposal the destination gate then aborts (`unit:moveAborted`, no
+ * overlap), wasting the wanderer's tick.
  */
 describe('MovementBehavior — blind wander vs multi-tile footprints (44-pre-a)', () => {
   /** A held blind status (movement: wander) — the shipped def, key-resolved. */
@@ -803,13 +800,13 @@ describe('MovementBehavior — blind wander vs multi-tile footprints (44-pre-a)'
 });
 
 /**
- * §45a — the ticking nose-to-tail column: a sealed 1-wide corridor, two movers
+ * The ticking nose-to-tail column: a sealed 1-wide corridor, two movers
  * marching on an inert enemy at the far end. The route is forced (walls both
  * sides), so this doesn't discriminate the cost tiers (movement.test.ts's
  * corridor A/B does that) — it pins what must NOT change under them: the
  * column drains single-file, nobody leaves the lane, nobody overtakes, and
- * the §35d one-unit-per-cell invariant holds on EVERY tick (the charter's
- * "same-cell convergence must stay impossible" — the §45a discounts touch
+ * the one-unit-per-cell invariant holds on EVERY tick ("same-cell
+ * convergence must stay impossible": the vacancy-aware discounts touch
  * route selection only, never the commit/execution gates).
  */
 describe('§45a — corridor column (nose-to-tail under vacancy-aware costs)', () => {
@@ -825,7 +822,7 @@ describe('§45a — corridor column (nose-to-tail under vacancy-aware costs)', (
     }
     const { world, units, bus } = scene(specs);
     const [rear, front] = units as [Unit, Unit];
-    // §45b — the rear's queueing is now DELIBERATE where the drain is
+    // The rear's queueing is DELIBERATE where the drain is
     // derivable: behind a mid-move front it proposes the first-class wait
     // (decision `wait`); it never crabs (walls preclude the sidestep anyway,
     // but the decision record proves it queued by CHOICE, not helplessness).
@@ -844,7 +841,7 @@ describe('§45a — corridor column (nose-to-tail under vacancy-aware costs)', (
     // The column drained: front holds at attack range 1, rear queues behind it.
     expect(front.position).toEqual({ x: 6, y: 5 });
     expect(rear.position).toEqual({ x: 5, y: 5 });
-    // §45b: the drain-derivable polls queued as waits; no sidesteps ever.
+    // The drain-derivable polls queue as waits; no sidesteps ever.
     expect(rearKinds.filter((k) => k === 'wait').length).toBeGreaterThan(0);
     expect(rearKinds).not.toContain('sidestep');
   });

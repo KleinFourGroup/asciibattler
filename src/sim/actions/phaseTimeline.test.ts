@@ -9,8 +9,7 @@ import { ARCHETYPE_CONFIG } from '../archetypes';
 import type { GameEvents } from '../../core/events';
 
 /**
- * F2 — the action phase-timeline machinery (the NEW behavior the
- * effectTicks → phases generalization adds): `World.tick` emits one
+ * The action phase-timeline machinery: `World.tick` emits one
  * `action:phase` event at every phase that BEGINS on a tick, in declared
  * order, and fires `applyEffect` at the `impact` boundary. Zero-length
  * phases share a boundary tick (fire-and-advance). Per-action regression of
@@ -245,8 +244,7 @@ describe('F2 action phase timeline', () => {
   });
 });
 
-// Y5c — the per-verb `orphanPolicy` + `phaseTarget` declarations moved off the
-// deleted legacy action classes: orphanPolicy now lives on each AbilityDef
-// (config) and is surfaced by EffectAction; phaseTarget per verb-shape is pinned
+// The per-verb `orphanPolicy` lives on each AbilityDef (config) and is
+// surfaced by EffectAction; phaseTarget per verb-shape is pinned
 // in effects/EffectAction.test.ts ("EffectAction.phaseTarget — per-verb renderer
 // info"). The class-agnostic phase-SCHEDULE machinery above is what this file owns.

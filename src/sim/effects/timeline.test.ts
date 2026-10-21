@@ -6,12 +6,10 @@ import { AbilityDefSchema, type AbilityDef } from './schema';
 import { totalTicks, type ActionPhase } from '../Action';
 
 /**
- * Phase Y1 — the seconds→ticks timeline conversion reproduces every existing
- * proposal builder's phase array (`strikes.ts` / `magic.ts` / `catapult.ts` /
- * `dash.ts`), for arbitrary caster speed. Expectations are DERIVED from the same
- * primitives the builders use (`attackCooldownTicksFor`, `secondsToTicks`) — not
- * hardcoded tick counts — so this proves the conversion matches the FORMULA, the
- * way the Y3/Y4 determinism oracle then proves it end-to-end. The defs are
+ * The seconds→ticks timeline conversion, for arbitrary caster speed.
+ * Expectations are DERIVED from the primitives (`attackCooldownTicksFor`,
+ * `secondsToTicks`) — not hardcoded tick counts — so this proves the
+ * conversion matches the FORMULA. The defs are
  * explicit literals mirroring `config/abilities.json`'s values.
  */
 

@@ -7,12 +7,11 @@ import { ABILITY_DEFS, abilityDef, damageOpOf, healOpOf } from './abilities';
  * Loader contract: the shipped `config/abilities.json` parses, every entry is
  * keyed by its own id, and the accessor throws loudly on an unknown id.
  *
- * Structural pins (ported from the retired legacy `abilities.ts` test at Y5e,
- * re-expressed on the `AbilityDef` shape): WHICH verbs roll to-hit, WHICH can
- * crit, that the heal carries no combat profile, and that the I6 weapon
- * split/rename landed. They pin STRUCTURE — not the by-feel might/accuracy/
- * critBase VALUES (tuned in the editor + re-swept in Phase N; per BALANCE.md
- * deliberately not pinned). The numeric formulas are mechanic-pinned with
+ * Structural pins, on the `AbilityDef` shape: WHICH verbs roll to-hit, WHICH
+ * can crit, that the heal carries no combat profile, and the weapons' ids
+ * (below). They pin STRUCTURE — not the by-feel might/accuracy/critBase
+ * VALUES (tuned in the editor and, per BALANCE.md, deliberately not
+ * pinned). The numeric formulas are mechanic-pinned with
  * explicit literals in `src/sim/stats.test.ts`.
  */
 
@@ -21,7 +20,7 @@ import { ABILITY_DEFS, abilityDef, damageOpOf, healOpOf } from './abilities';
 // the `bow` (renamed `ranged_shot`), and the rogue's `gambit_strike`.
 const BASIC_STRIKES = ['sword', 'club', 'katana', 'whip', 'bow', 'gambit_strike'];
 // Damage verbs that are unmissable (dodged positionally or not at all): the AoE
-// blast + the artillery shot. §76e decoupled critable from this list — evadable
+// blast + the artillery shot. Critable is not tied to this list — evadable
 // stays the per-identity choice (the unmissable-magic scope guard); crit is
 // universal (the flip below).
 const UNMISSABLE_ATTACKS = ['magic_bolt', 'catapult_shot'];
@@ -118,7 +117,7 @@ describe('abilities catalog — combat profile + verb shapes', () => {
   });
 });
 
-// §29 — the status-on-hit afflicter roster (the demo consumers). Structural pins
+// The status-on-hit afflicter roster (the demo consumers). Structural pins
 // (not balance): each authors an `applyStatus` op for its status on the `impact`
 // phase (the gate requires it to share the damage op's phase); the single-target
 // afflicters gate on a LANDED hit (evadable damage), the AoE appliers are
@@ -172,9 +171,9 @@ describe('§29 — status-on-hit afflicters', () => {
   });
 });
 
-// §76d — the stat-identity weapons. Structural identity pins only (never the
-// by-feel might/accuracy/cooldown VALUES — those are provisional until the 76h
-// board signing); each weapon's IDENTITY is expressed as a RELATION to its
+// The stat-identity weapons. Structural identity pins only (never the
+// by-feel might/accuracy/cooldown VALUES, which are design numbers); each
+// weapon's IDENTITY is expressed as a RELATION to its
 // reference def, derived from live config, so a design-round retune that keeps
 // the identity keeps the test green.
 describe('§76d — the stat-identity weapons', () => {
@@ -186,7 +185,7 @@ describe('§76d — the stat-identity weapons', () => {
     expect(status.kind === 'applyStatus' && status.statusId).toBe('burn');
     const dmg = damageOpOf('molotov')!;
     expect(dmg.evadable).toBe(false); // the shipped-AoE unmissable identity holds
-    expect(dmg.critable).toBe(true); // authored at the 76e decoupled convention
+    expect(dmg.critable).toBe(true); // crit is universal, unmissable or not
   });
 
   it("pistol owns the miss-heavy identity: faster, weaker, and wilder than the bow", () => {

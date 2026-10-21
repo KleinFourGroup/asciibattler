@@ -16,7 +16,7 @@ import { ABILITY_DEFS } from '../config/abilities';
 import { STATUS_DEFS } from '../config/statuses';
 
 /**
- * Phase Z — the FX registry is pure data (no three.js), so its resolution + the
+ * The FX registry is pure data (no three.js), so its resolution + the
  * boot assert are headless-testable; only the on-screen pixels are eyeballed.
  */
 
@@ -131,7 +131,7 @@ describe('fxRegistry — 102b a launched projectile has a flight (config-derived
    *  timeline gives it no `travel` time. The renderer times the flight off the
    *  caster's live `travel` ticks and falls back to a fixed 0.18 s when there
    *  are none — so a 0-length travel lands the glyph AFTER the burst it
-   *  announces (the §102 kickoff finding). Walks the catalog, never an id list:
+   *  announces. Walks the catalog, never an id list:
    *  a new projectile ability joins the pin the moment it ships. */
   function projectilesWithoutFlight(defs: typeof ABILITY_DEFS): string[] {
     const out: string[] = [];
@@ -256,8 +256,8 @@ describe('fxRegistry — 98d the hitsplat kinds (config-derived)', () => {
 });
 
 /**
- * 99c — the reduced-motion filter, walked over EVERY registry key under both
- * readings. The strip set is pinned by value (the §99 exit criterion: no
+ * The reduced-motion filter, walked over EVERY registry key under both
+ * readings. The strip set is pinned by value (the reduced-motion rule: no
  * shake, burst or sparkle) and the kept channels byte-equal, so a channel
  * added to the descriptor later is kept until someone decides otherwise here.
  */

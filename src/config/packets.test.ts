@@ -102,8 +102,8 @@ describe('the packet schema (49a)', () => {
   });
 
   it('enforces the op → context matrix', () => {
-    // 49e grew healPool to BOTH launch contexts (patch's between-turns
-    // heal); grantRedraws / injectRule stay pre-turn only.
+    // healPool takes BOTH launch contexts (patch's between-turns heal);
+    // grantRedraws / injectRule stay pre-turn only.
     expect(parses({ usableIn: ['preTurn'] })).toBe(true);
     expect(
       parses({
@@ -276,7 +276,7 @@ describe('assertPacketStatusRefs (the boot check)', () => {
 });
 
 describe('the 88c horizon guard', () => {
-  // §88c — a run-duration packet is STRUCTURALLY INVISIBLE at its fire
+  // A run-duration packet is STRUCTURALLY INVISIBLE at its fire
   // site: the rollout judges within-horizon, so a rest-of-run payoff reads
   // ≈0 and the bot never fires it (miner: 3,312 considerations, 0 fires —
   // BALANCE 2026-08-31). Miner shipped as the dis-pater daemon instead

@@ -14,7 +14,7 @@ import { LAYOUT_IDS } from './layouts';
 import { FORCE_PROCEDURAL } from '../run/RunConfig';
 
 /**
- * T1 — the Sector schema. The structural block pins facts about the shipped
+ * The Sector schema. The structural block pins facts about the shipped
  * catalog ("The Start" exists + reproduces the uniform pool); the mechanic
  * block exercises the zod schema + the two custom guards with hand-built
  * fixtures (never the shipped JSON, per the balance-proof-test policy).
@@ -51,11 +51,10 @@ describe('sectors config — the shipped catalog', () => {
     expect(start!.layouts.every((e) => e.minHop === undefined)).toBe(true);
     // length feeds NodeMap.generate's hopCount — positive, matching today's map.
     expect(start!.length).toBeGreaterThan(0);
-    // V1 pooled the launch catalog into The Start's fight pool; V2 commit C added
-    // the grammar-demo encounters; W1 pooled the boss, W2 the two elites. Wb4 split
-    // the pool by kind — each list ungated/uniform (filtered by node kind, not hop).
-    // 67c — the minHop-4 back-half entries (elementalTrio/plagueDoctors/
-    // darkMagicPosse) MIGRATED to The Deep End: act 1 is brigand country now.
+    // The Start's fight pool, split by kind — each list ungated/uniform
+    // (filtered by node kind, not hop). The back-half entries
+    // (elementalTrio/plagueDoctors/darkMagicPosse) are The Deep End's: act 1
+    // is brigand country.
     expect(start!.encounters.normal.map((e) => e.encounterId)).toEqual([
       'brigands',
       'highwaymen',
@@ -77,11 +76,11 @@ describe('sectors config — the shipped catalog', () => {
     expect(deep!.theme).toBe('swamp');
     // Same act length as The Start (the shape-lock call: equal acts).
     expect(deep!.length).toBe(getSector('the-start')!.length);
-    // The full layout pool, same as act 1 (re-weighting is a §68 lever).
+    // The full layout pool, same as act 1 (re-weighting is a tuning lever).
     const ids = deep!.layouts.map((e) => e.layoutId);
     expect(ids).toContain(PROCEDURAL_LAYOUT_ID);
     for (const layoutId of LAYOUT_IDS) expect(ids).toContain(layoutId);
-    // The 67-kickoff pools: the four user-authored entries + the migrated
+    // The pools: the four user-authored entries + the migrated
     // minHop-4 trio (front-loaded — hops reset per sector, so no gates) +
     // the two shared mid-tier normals + both bosses by reference.
     expect(deep!.encounters.normal.map((e) => e.encounterId)).toEqual([
@@ -97,15 +96,13 @@ describe('sectors config — the shipped catalog', () => {
       'plagueSpreaders',
       'darkMagicPosse',
     ]);
-    // 72f split the boss pool; 83d replaced the provisional -deep stat-clones
-    // with the real sector-2 bosses (user-authored, same budget skeleton).
+    // The Deep End's own boss pool: the sector-2 bosses (user-authored).
     expect(deep!.encounters.boss.map((e) => e.encounterId)).toEqual([
       'generalissimo',
       'witch-hunt',
     ]);
-    // 68e (user-signed): the uniform-from-hop-0 shape ended at the tune —
-    // the two isolation-pinned defects carry gates; everything else stays
-    // ungated. (67c shipped the pool fully ungated; the §68e read is why.)
+    // The gates, signed by the user: the two isolation-pinned defects carry
+    // hop gates; everything else stays ungated.
     const gates = new Map(deep!.encounters.normal.map((e) => [e.encounterId, e.minHop]));
     expect(gates.get('infernalColumn')).toBe(6);
     expect(gates.get('miscreants')).toBe(3);
@@ -125,7 +122,7 @@ describe('sectors config — the shipped catalog', () => {
 describe('sectors config — the procedural sentinel', () => {
   it('matches RunConfig.FORCE_PROCEDURAL (drift guard)', () => {
     // The pool sentinel and the CLI force-flag intentionally share a literal so
-    // T2 can resolve one through the other. If either moves, this fails loudly.
+    // `Run` can resolve one through the other. If either moves, this fails loudly.
     expect(PROCEDURAL_LAYOUT_ID).toBe(FORCE_PROCEDURAL);
   });
 });

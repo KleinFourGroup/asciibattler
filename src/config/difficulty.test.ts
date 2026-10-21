@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { DIFFICULTY, resolveDifficultyMultipliers, scaledEnemyPool } from './difficulty';
 
 /**
- * X1 + 48f — the per-run difficulty-multiplier resolution seam. Expectations
+ * The per-run difficulty-multiplier resolution seam. Expectations
  * derive from the config module (never a hardcoded balance number), per the
  * balance-proof discipline; the one literal assertion is the *no-op contract*
  * (the shipped default IS 1.0), on which the byte-identical guarantee rests.

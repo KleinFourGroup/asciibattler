@@ -15966,3 +15966,101 @@ Readings by the tool's clock (UTC): 100,299 at 23:23 after the
 orientation, 190,606 at 23:32 before the patch, 209,434 at 23:36. The
 batch's cost is not yet a rate: the pass's rules, step zero and the two
 tools are in it. Batch 2 measures one.
+
+The suite by the hook at `37c5bfc8`: 3,702 passed, and the smoke 595.
+
+### 126m, batch 2 — `src/config` and `src/render` (2026-10-21, session 3d57d006)
+
+138 codes in 27 files, in 91 hunks, to none. Here more codes sat in
+history: `units.test.ts` and `sectors.test.ts` told which step wired
+which field or pooled which encounter, and those sentences now say what
+the catalog is. The reasons that replace a code, with where each was
+checked:
+
+- `config/units.test.ts`: the scaffold header now says the schema
+  carries the spatial/flight block and the two branch-killers, and every
+  combatant omits the block (the test's first `it`; the neutrals carry
+  `footprint` and `statusSusceptibility` in `config/units.json`);
+  "38c-3 … `true` for `ranged` alone" is the archer alone (the one
+  `retargetOnLosLoss` in `units.json` is the archer's, and the test
+  anchors `UNIT_DEFS.archer`); "38d reads it" is the World
+  (`World.ts:1134`); "§40b" is the HP-PRESENCE test below it; "the
+  keystone relax" is the open catalog (`UnitDefsSchema` is a `z.record`,
+  `units.ts:204`; `Archetype` is `string`, `Unit.ts:32`;
+  `REQUIRED_UNIT_IDS`, `units.ts:275`).
+- `config/sectors.test.ts`: the pool histories (V1, V2, W1, W2, Wb4,
+  67c, 72f, 83d, 68e) are now what each pool holds, read against the
+  arrays the test pins; "so T2 can resolve one through the other" is
+  `Run` (`Run.ts:1868` and `:3919` compare a layout id with
+  `FORCE_PROCEDURAL`). Wb4 and "the 67-kickoff", which the count misses,
+  went with them.
+- `config/encounters.test.ts`: the id list's group labels (V1 anchors, V2
+  grammar demos, W1 boss, W2 elites, §33, §67, 83d) are the groups'
+  names alone.
+- `config/abilities.test.ts`: "§76e decoupled critable from this list"
+  is that critable is not tied to it, and "the 76e decoupled convention"
+  that crit is universal (the molotov is unmissable and critable, which
+  the test asserts).
+- `config/packets.test.ts`: "49e grew healPool to BOTH launch contexts"
+  is that it takes both (`packets.ts:132`).
+- `config/statuses.test.ts`: "§76a widened the message" is that the
+  message names the ability and the status, not the op
+  (`statuses.ts:57`).
+- `config/daemons.test.ts`: "consumer lands §49" dropped (`foldRunStats`
+  is read in `Run.ts`).
+- `render/TerrainRenderer.test.ts`: "each carried a private ternary
+  before 98e" is that the terrain and the apron both call `animTypeFor`
+  (`ApronRenderer.ts:182`, `TerrainRenderer.ts:521`).
+- `render/UnitOverlayLayer.test.ts`: the HP stops "were numbers … and
+  are palette names now" is that they are palette names whose numbers
+  are those three (`palette.ts:27`, `:29`, `:38`).
+- `render/FontAtlas.test.ts`: "§38e made the UNIT glyphs
+  CATALOG-DERIVED" is that they are (`glyphs.ts:45`, every
+  `ALL_UNIT_DEFS` glyph).
+- `render/cameraFit.test.ts`: "the 105a instrument" is the board
+  geometry tests, as in batch 1.
+- `render/motion.test.ts`: "99b's stylesheet pin" is
+  `tests/ui-motion.test.ts` (it imports `MOTION_ATTR`).
+- `render/statusDisplay.test.ts`: "events grant no buffs as of §74"
+  holds (no `applyBuff` or `empower` in `config/events.json`).
+- `render/groundMarks.test.ts` and `TerrainRenderer.test.ts`: "the §106
+  mock" is the design mock, a file off git.
+
+Corrected (rule 7):
+
+- `config/units.test.ts`, the power table: "REVERTS under a §93 rollback
+  (it sits above the `casualty-seams` tag)" was stale: §93 kept the
+  casualty rule and the tag is history (HANDOFF, "Branch / tree"). The
+  sentence is gone.
+- `config/units.test.ts`, the rarity block: "planted INERT (every entry
+  omits it until 61d's assignment round …)" was false: twelve entries in
+  `config/units.json` carry `rarity`. It now says what an absent one
+  resolves to.
+- `config/abilities.test.ts`: the weapons' values "are provisional until
+  the 76h board signing", and `units.test.ts`'s "signed at the 76h
+  board", now say design numbers and signed design numbers.
+
+No twin of the three outside the change: searches for "rollback", "§93",
+"planted INERT", "omits it until", "provisional until" and "`ranged`
+alone" over `src`, `tests`, `tools`, `scripts` and `config` found only
+these lines and one unrelated line in `tools/blacklist-editor/editor.css`.
+
+**Proof.** `comment-strip HEAD src`: 27 files differ, in comments only,
+exit 0; the control named 27 of 27. `comment-codes`: 798 → 660, and
+`--record` wrote 660 in 77 files; one more "round named" went with
+"Round 8 spec D8" (4 → 3). `comment-length` on the 27 files: comment
+lines 613 → 596, words 6,121 → 5,796, code lines 4,245 both.
+
+**Read** (`batch`): `git show <this commit> -- src`. What changed: the
+step codes in `src/config`'s and `src/render`'s tests, dropped or
+replaced by their reasons, and the history sentences they sat in put in
+the present. Where to look: `units.test.ts`'s scaffold header and
+rarity block, `sectors.test.ts`'s pool comments, the power table.
+Wrong looks like a sentence that says the catalog holds what it does
+not, or a pool comment that disagrees with the array under it.
+
+**The rate.** 221,632 at 23:41 on `37c5bfc8`, 290,336 at 23:48 before
+this entry: about 69k for 138 codes, 500 tokens a code. At that rate the
+660 left are about 330k; this session, at about 300k after this commit,
+takes batches 3 to 6 (446 codes, about 225k) if each still fits before
+the halt with the hand-off's room, and `Run.test.ts` goes to the next.

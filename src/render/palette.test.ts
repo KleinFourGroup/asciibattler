@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { Palette } from './palette';
 
-// 116f — the palette is chosen by name, once, before the modules that read
+// The palette is chosen by name, once, before the modules that read
 // `COLORS` load. Each test takes fresh modules (`vi.resetModules`), since the
 // choice and the tables built from it are module state. The planted hexes are
 // colours no palette holds, so a match can only be the planted one.

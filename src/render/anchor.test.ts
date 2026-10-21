@@ -2,11 +2,10 @@ import { describe, expect, it } from 'vitest';
 import * as THREE from 'three';
 import { aboveAnchor } from './anchor';
 
-// §79d — the shared above-the-anchor helper is pure camera math, so the pin
+// The shared above-the-anchor helper is pure camera math, so the pin
 // that kills the off-axis class lives here headlessly: a camera-up lift NEVER
-// moves the projected screen X, at any board position (the property the §79b
-// probe measured live as exactly 0 across every cell — vs ±9px for the world-Y
-// lift this replaces).
+// moves the projected screen X, at any board position (measured live as
+// exactly 0 across every cell, against ±9px for a world-Y lift).
 
 function makeCamera(): THREE.PerspectiveCamera {
   // The battle framing: pitched 45°-ish overhead perspective.

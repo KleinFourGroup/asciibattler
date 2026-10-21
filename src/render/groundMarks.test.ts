@@ -15,7 +15,7 @@ import {
 // The known answers are re-derived here, not read from the binner:
 //  - a tile is the unit square about its `gridToWorld` centre,
 //    (gx + 0.5 − W/2, H/2 − gy − 0.5);
-//  - a contact shape is the §106 mock's: three's CircleGeometry (n segments
+//  - a contact shape is the design mock's: three's CircleGeometry (n segments
 //    from θ0) laid flat by rotateX(−π/2), which sends (x, y) to world (x, −y);
 //    the circle is a true circle (the mock's 40-gon, less its facets);
 //  - a plate is the axis-aligned square of its half-side.
@@ -256,7 +256,7 @@ describe('the mark each body gets', () => {
   });
 
   it('sizes a contact mark by its footprint and a plate by its footprint less the inset', () => {
-    // The signed bookmark's numbers (WORKLOG §108 Kickoff, finding 8).
+    // The signed bookmark's numbers.
     expect(DEFAULT_MARK_STYLE).toEqual({
       contactSize: 0.55,
       contactFill: 0.45,
@@ -267,7 +267,7 @@ describe('the mark each body gets', () => {
       plateFill: 0.6,
       plateOutline: 0.3,
       plateCorner: 0,
-      plateDashGap: 0.1, // 108b's proposal, not the bookmark's: read at stop 1
+      plateDashGap: 0.1, // not the bookmark's: a later proposal, read by the user
     });
     expect(markExtent('circle', 1, DEFAULT_MARK_STYLE)).toBeCloseTo(0.275, 12);
     expect(markExtent('plate', 1, DEFAULT_MARK_STYLE)).toBeCloseTo(0.44, 12);

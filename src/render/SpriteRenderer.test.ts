@@ -144,7 +144,7 @@ describe('SpriteRenderer.sortByDepth', () => {
   });
 });
 
-// §79c — the per-instance anchor attribute: set by the mode alone, the same for
+// The per-instance anchor attribute: set by the mode alone, the same for
 // every glyph, and carried through the removeSprite swap-compaction AND the
 // depth-sort repack with its instance (a scrambled anchor would silently float
 // or sink a standing glyph).

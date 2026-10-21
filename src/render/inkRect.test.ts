@@ -8,13 +8,13 @@ import {
 } from './glyphs';
 
 /**
- * §79a/§79d2 — headless coverage for the pure ink chain: raw bbox derivation
- * (`inkRectFromRgba`) and the clickbox padding (`padInk` — the 79a rider,
+ * Headless coverage for the pure ink chain: raw bbox derivation
+ * (`inkRectFromRgba`) and the clickbox padding (`padInk`,
  * applied at pick-candidate build). Buffers are synthetic RGBA byte arrays in
  * CANVAS convention (row-major, row 0 = top); the derivation contract is the
  * normalized Y-UP `GlyphInk` (`pick.ts` convention), so these tests pin the y
  * flip explicitly. The live half (FontAtlas measuring real rasterized cells)
- * is browser-only and gets the browser probe + the 79g native eyeball. What
+ * is browser-only and gets the browser probe + a native eyeball. What
  * the lifts do with the ink is pinned in `tests/board/geometry.test.ts`.
  */
 

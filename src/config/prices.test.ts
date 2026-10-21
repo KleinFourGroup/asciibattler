@@ -64,7 +64,7 @@ describe('50a — the price book (config/prices.json)', () => {
   });
 
   it('unitPrice scales the config base by the growth curve × the tier multiplier, rounding once', () => {
-    // §61f — the whole expectation derives from config: base, curve, and the
+    // The whole expectation derives from config: base, curve, and the
     // per-tier multiplier resolved through the archetype's own rarity.
     for (const archetype of DRAFTABLE_ARCHETYPES) {
       const base = PRICES.units.baseByArchetype[archetype]!;
@@ -83,7 +83,7 @@ describe('50a — the price book (config/prices.json)', () => {
       expect(PRICES.units.rarityMultiplier[tier], tier).toBeGreaterThan(0);
     }
     // Non-vacuous: at least one draftable archetype resolves a non-1 multiplier
-    // (all-1 would make the seam indistinguishable from no seam — the 47b lesson).
+    // (all-1 would make the seam indistinguishable from no seam).
     const activeTiers = new Set(DRAFTABLE_ARCHETYPES.map((a) => rarityForArchetype(a)));
     const multipliers = [...activeTiers].map((t) => PRICES.units.rarityMultiplier[t]);
     expect(multipliers.some((m) => m !== 1)).toBe(true);

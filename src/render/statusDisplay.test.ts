@@ -1,13 +1,11 @@
 /**
- * §76b — the STATUS_DISPLAY coverage pin. The map had no guard, so a shipped
- * status without an entry silently rendered the magenta fallback (`emboldened`
- * did exactly that from 47f until §76b). Headless-safe despite living in
+ * The STATUS_DISPLAY coverage pin. Without it, a shipped status with no entry
+ * silently renders the magenta fallback. Headless-safe despite living in
  * `src/render/` — `statusDisplay.ts` is pure data (the FontAtlas.test.ts
  * precedent for testing the render layer's DOM-free modules).
  *
  * Derived from the live catalog (never a hardcoded status list): a new status
- * (`inspired` at the §76 design round, and everything after) fails here until
- * it picks a color — the new-status checklist, enforced.
+ * fails here until it picks a color — the new-status checklist, enforced.
  */
 
 import { describe, it, expect } from 'vitest';
@@ -45,7 +43,7 @@ describe('STATUS_DISPLAY coverage', () => {
   });
 });
 
-/** 116g — the symbol pin. A status's symbol is its read where its hue fails
+/** The symbol pin. A status's symbol is its read where its hue fails
  *  (a camp unit's pip has no card beside it), so a status that shares one, or
  *  ships without one, is the hue-only pip again. Derived from the catalog
  *  like the colour pin: a new status fails here until it picks a symbol no
@@ -82,10 +80,10 @@ describe('the status symbols', () => {
   });
 });
 
-/** 78d — the same three-guard pin for the empower-buff table, derived from
+/** The same three-guard pin for the empower-buff table, derived from
  *  the LIVE key sources (daemon empower hooks + packet applyBuff — the
- *  badge-eligibility union Run.empowerStacks uses; events grant no buffs as
- *  of §74). A new buff key fails here until it picks a color; a retired one
+ *  badge-eligibility union Run.empowerStacks uses; events grant no
+ *  buffs). A new buff key fails here until it picks a color; a retired one
  *  fails the orphan guard until its entry goes. */
 describe('EMPOWER_DISPLAY coverage', () => {
   const shippedBuffKeys = (): Set<string> => {
@@ -117,10 +115,10 @@ describe('EMPOWER_DISPLAY coverage', () => {
     expect(orphans).toEqual([]);
   });
 
-  // 95f — the label rides the same row (from the UI string table), so the
+  // The label rides the same row (from the UI string table), so the
   // coverage above is also label coverage; and the retired `empowered` key
-  // (the Mars buff until 95f — it collided with the EMPOWER mechanic that
-  // grants it) must never come back into the catalogs.
+  // (it collided with the EMPOWER mechanic that grants the Mars buff) must
+  // never come back into the catalogs.
   it('every shipped buff key has a table label (not the capitalized-key fallback), and `empowered` is retired', () => {
     for (const key of shippedBuffKeys()) {
       expect(EMPOWER_DISPLAY[key]!.label, key).toBeTypeOf('string');

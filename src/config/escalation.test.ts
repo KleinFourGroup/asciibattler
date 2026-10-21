@@ -14,7 +14,7 @@ import {
 const IDENTITY: DifficultyMultipliers = { waveSize: 1, levelBudget: 1, bits: 1, enemyMorale: 1 };
 
 /**
- * THE SIGNED TABLE (Round 8 spec D8), written here by hand and not read from
+ * THE SIGNED TABLE, written here by hand and not read from
  * `config/escalation.json`: what each level does to the four multipliers.
  *
  *   level 1  enemy level budget +10%

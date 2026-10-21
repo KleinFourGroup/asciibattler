@@ -11,7 +11,7 @@ import {
   type DaemonConfig,
 } from './daemons';
 
-/** Minimal legal daemon carrying the given rules (47b fixtures). */
+/** Minimal legal daemon carrying the given rules. */
 const withRules = (rules: unknown[]): unknown => ({
   daemons: [{ id: 'test', name: 'Test', description: 'A test daemon.', rules }],
 });
@@ -146,13 +146,13 @@ describe('the Rule schema (47b — the rule vocabulary)', () => {
       on: 'encounterEnd',
       filter: { won: true },
       effect: { op: 'healPool', amount: 3 },
-    }; // run lifecycle → run (the machinery: resolveInstantHooks, 47e)
+    }; // run lifecycle → run (the machinery: resolveInstantHooks)
     const example5 = {
       kind: 'modifier',
       stat: 'cacheSize',
       op: 'add',
       value: 3,
-    }; // passive modifier → run (the fold: foldRunStats; consumer lands §49)
+    }; // passive modifier → run (the fold: foldRunStats)
     expect(parses([example4])).toBe(true);
     expect(parses([example5])).toBe(true);
     expect(daemonById('laverna')).toBeDefined(); // #1 battle sim → run tally

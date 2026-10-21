@@ -10,8 +10,8 @@ import {
 } from './cameraFit';
 
 /**
- * 105d — THE FIT ORACLE. `fitCameraToBox` replaced `Renderer`'s
- * `computeCameraDistance` inside the phase's one production seam, under the
+ * THE FIT ORACLE. `fitCameraToBox` replaced `Renderer`'s
+ * `computeCameraDistance`, under the
  * scope guard "pinned unchanged at the default". Three instruments, none of
  * which consults the code under test for its expectation:
  *
@@ -26,8 +26,8 @@ import {
  *     ways; yaw). This is the half of the fit no frozen function can vouch for.
  *
  * (The live half — the Renderer's camera matrices before / after the seam, in
- * the browser — and the cross-check against the 105a instrument's independent
- * fit are in WORKLOG §105d and `tests/board/cameraFit.test.ts`.)
+ * the browser — is in the WORKLOG, and the cross-check against the board
+ * geometry tests' independent fit is `tests/board/cameraFit.test.ts`.)
  */
 
 /** VERBATIM from src/render/Renderer.ts @ fa4f51b (`this.camera.fov` /
@@ -70,7 +70,7 @@ function computeCameraDistanceAtHead(
 
 const MARGIN = 1.05;
 
-/** The frozen function's view: the default until 107d. */
+/** The frozen function's view: the perspective default it was written for. */
 const PRE_75_VIEW: CameraView = { projection: 'perspective', fovDeg: 50, pitchDeg: 45, yawDeg: 0 };
 
 /** (hx, hy, hz): every authored board size + the procedural extremes, padded
@@ -306,7 +306,7 @@ describe('fitCameraToBox — the box fills the frame under every view of the cro
 });
 
 /**
- * 107c — the dev scroll pan moves the picture along the SCREEN's axes at any
+ * The dev scroll pan moves the picture along the SCREEN's axes at any
  * yaw. Read through three's own projection, which `panToWorld` does not
  * consult: pan the look-at point by `panToWorld(view, 0, 1)` (W) and the point
  * that was at the centre of the screen must now sit straight below it (NDC

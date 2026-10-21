@@ -3,13 +3,12 @@ import { GLYPHS, ATLAS_CELL_BUDGET } from './glyphs';
 import { ALL_UNIT_DEFS } from '../config/units';
 
 /**
- * §38e — the render layer isn't unit-tested (canvas/WebGL needs a browser), so
+ * The render layer isn't unit-tested (canvas/WebGL needs a browser), so
  * the one piece of the FontAtlas contract that IS checkable headlessly is that
- * every glyph the renderer will ask for is registered. Pre-38e a new archetype
- * whose glyph wasn't hand-added to `GLYPHS` sailed through the whole suite and
- * only blew up live (`FontAtlas: no UV for glyph "x"` — how the rogue's `r` got
- * shipped missing). §38e made the UNIT glyphs CATALOG-DERIVED, so per-unit
- * coverage is now STRUCTURAL — a `config/units.json` entry's glyph is in the set
+ * every glyph the renderer will ask for is registered. A glyph missing from
+ * `GLYPHS` passes the rest of the suite and fails only live (`FontAtlas: no
+ * UV for glyph "x"`). The UNIT glyphs are CATALOG-DERIVED, so per-unit
+ * coverage is STRUCTURAL — a `config/units.json` entry's glyph is in the set
  * by construction and can't drift. What still needs guarding: the derived set
  * must fit the atlas grid, and the static non-unit glyphs must survive.
  */

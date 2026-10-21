@@ -61,8 +61,8 @@ describe('pickInstanceAtNdc (billboard hit-test)', () => {
   });
 });
 
-// §40e-follow-up — the per-glyph INK rect trims the hit-box to the visible glyph
-// (a half-height `▄` rubble slab was clickable a full cell above its ink). An
+// The per-glyph INK rect trims the hit-box to the visible glyph (without it, a
+// half-height `▄` rubble slab is clickable a full cell above its ink). An
 // ORTHOGRAPHIC camera looking straight down -Z aligns view space with world XY
 // (x right, y up), so "top/bottom of the quad" is just world ±y — no perspective
 // skew to reason around.
@@ -113,7 +113,7 @@ describe('pickInstanceAtNdc — per-glyph ink rect', () => {
     }
   });
 
-  // §79c — the anchor offset must mirror the shader: a base-anchored quad rises
+  // The anchor offset must mirror the shader: a base-anchored quad rises
   // half its height above its (ground) anchor, and the clickbox rises with it.
   describe('per-instance anchor', () => {
     const BASE_ANCHORED: PickCandidate = { ...base, anchor: { x: 0, y: -0.5 } };

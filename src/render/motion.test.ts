@@ -12,7 +12,7 @@ import {
 } from './motion';
 
 /**
- * 99a — the motion gate's PURE half. The resolution is a pure function; the
+ * The motion gate's PURE half. The resolution is a pure function; the
  * module-level override round-trips without a document (the `node` test
  * environment has no `matchMedia`, so the OS half reads `false` here and the
  * root stamp is a no-op — the stamp and the `change` listener are
@@ -64,7 +64,7 @@ describe('99a — the module gate', () => {
   });
 
   it('the CSS contract constants are the ones the sheet keys off', () => {
-    // 99b's stylesheet pin derives its selector from these — a rename here
+    // The stylesheet pin (tests/ui-motion.test.ts) derives its selector from these — a rename here
     // that forgets the sheet fails there, on the forgetful path.
     expect(MOTION_ATTR).toBe('data-motion');
     expect(MOTION_REDUCED).toBe('reduced');

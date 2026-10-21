@@ -1,7 +1,7 @@
 /**
- * 98e — the tile kind → `aAnim.x` mapping, pinned. `animTypeFor` is the ONE
+ * The tile kind → `aAnim.x` mapping, pinned. `animTypeFor` is the ONE
  * place a kind picks its fragment-shader branch (the terrain and the apron
- * each carried a private ternary before 98e); the expected table is a
+ * both call it); the expected table is a
  * `Record<TileKind, number>` so a new kind fails tsc here until it is
  * placed. The shader side is eyeball-only (TESTING.md's render policy).
  */
@@ -27,7 +27,7 @@ import {
 import { BIN_DEPTH, DEFAULT_MARK_STYLE, MARKS_PER_ROW, type Mark } from './groundMarks';
 
 /**
- * 107b — the mound envelope bounds every drawn mound. The N×N slab rule
+ * The mound envelope bounds every drawn mound. The N×N slab rule
  * (`slabAnchor.ts`) clears the hill mounds through `HILL_MOUND_ENVELOPE`
  * without reading the mesh, so a mound that outgrew the envelope would bite a
  * slab again. Read from the bump geometry itself: 12 vertices per mound, four
@@ -87,9 +87,8 @@ describe('107b — HILL_MOUND_ENVELOPE bounds the drawn mounds', () => {
 
 /**
  * Hills take the board's theme (the cluster-two spec: a hills tile
- * "otherwise visually conforms to the layout's palette"). They shipped a fixed
- * green on every theme from §37b until 2026-09-23. The look is eyeball-only;
- * these pin that the colour follows the theme at all.
+ * "otherwise visually conforms to the layout's palette"). The look is
+ * eyeball-only; these pin that the colour follows the theme at all.
  */
 describe('hills follow the board theme', () => {
   it('a hills tile top is its theme’s floor colour, on every theme', () => {
@@ -120,7 +119,7 @@ describe('hills follow the board theme', () => {
 });
 
 /**
- * 99d — deep water's band drift is ONE constant in two shaders (the board
+ * Deep water's band drift is ONE constant in two shaders (the board
  * and the apron share the world-space formula so the pattern is continuous
  * across the board edge); a retune that forgets the second file would slide
  * the two halves of a band apart at the edge. Read from the sources, so the
@@ -146,7 +145,7 @@ const EXPECTED: Record<TileKind, number> = {
   chasm: ANIM_NONE,
   fire: ANIM_FIRE,
   healing: ANIM_HEALING,
-  deep_water: ANIM_DEEP_WATER, // 98e — the static bands, the passability tell
+  deep_water: ANIM_DEEP_WATER, // the static bands, the passability tell
   hills: ANIM_NONE,
   ice: ANIM_NONE,
   sand: ANIM_NONE,
@@ -176,8 +175,8 @@ describe('98e — animTypeFor', () => {
 });
 
 /**
- * 108b — the ground marks' seam into the terrain shader. The shader's look is
- * read by eye and by the pane's pixel comparison with the §106 mock; pinned
+ * The ground marks' seam into the terrain shader. The shader's look is
+ * read by eye and by the pane's pixel comparison with the design mock; pinned
  * here is what a headless test can see: marks off IS today's terrain shader,
  * read straight from the files (the frame-cost bench's before leg); marks on
  * only inserts; the mounds share the marks' uniform objects (their material is

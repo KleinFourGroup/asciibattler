@@ -15,7 +15,7 @@ import {
 import { abilityDef, ABILITY_DEFS } from './abilities';
 import { STATUS_DEFS } from './statuses';
 
-// §38d — the catalog is SPLIT by kind at runtime: `UNIT_DEFS` = the combatant
+// The catalog is SPLIT by kind at runtime: `UNIT_DEFS` = the combatant
 // archetypes (their combatant-field assertions below), `NEUTRAL_DEFS` = the
 // neutral fold (walls / half-cover — their own describe block). `ALL_UNIT_DEFS`
 // is the full parsed record (the whole-catalog / record-schema checks).
@@ -23,17 +23,12 @@ const COMBATANT_ENTRIES = Object.entries(UNIT_DEFS);
 const NEUTRAL_ENTRIES = Object.entries(NEUTRAL_DEFS);
 
 /**
- * §38b — the UnitDef catalog scaffold guards. The keystone renamed
- * `archetypes.json` → `units.json` and planted the §38 optional fields
- * (footprint / layer / statusSusceptibility) + the three 38a
- * branch-killers (damageStat / movementBehavior / retargetOnLosLoss) on the
- * schema. 38b wired NONE of them — every existing entry omitted them, so each
- * resolved to a behavior-identical default. §38c then wired the three
- * branch-killers field-by-field (damageStat / movementBehavior /
- * retargetOnLosLoss); the spatial/flight block (footprint / layer /
- * statusSusceptibility) stays inert until §39/§38d/flight. These
- * tests pin that — a default drift on the still-inert fields fails loudly.
- * `damageStat` has since been deleted, with `damageStatFor`, its one reader.
+ * The UnitDef catalog scaffold guards. The schema carries optional fields:
+ * the spatial/flight block (footprint / layer / statusSusceptibility) and the
+ * two branch-killers (movementBehavior / retargetOnLosLoss). An entry that
+ * omits one resolves to a behavior-identical default. Every combatant omits
+ * the spatial/flight block (the neutrals use it), and these tests pin that:
+ * a default drift on those fields fails loudly.
  *
  * Mechanic tests — explicit literals (not derived from config), since the point
  * is to assert the schema's fixed defaults, not balance numbers.
@@ -50,22 +45,22 @@ describe('§38b — UnitDef catalog scaffold', () => {
     for (const [id, def] of COMBATANT_ENTRIES) {
       expect(def.footprint, `${id}.footprint`).toBe(1); // single-cell
       expect(def.layer, `${id}.layer`).toBe('ground');
-      // Absent in JSON ⇒ undefined ⇒ "susceptible to all" (38d reads it).
+      // Absent in JSON ⇒ undefined ⇒ "susceptible to all" (the World reads it).
       expect(def.statusSusceptibility, `${id}.statusSusceptibility`).toBeUndefined();
     }
   });
 
-  // §38c wired the branch-killers field-by-field: 38c-2 `movementBehavior`
-  // (`support` for the healer alone), 38c-3 `retargetOnLosLoss` (`true` for
-  // `ranged` alone). The field↔behavior contracts are balance-proofed in
+  // The branch-killers: `movementBehavior` (`support` for the healer alone)
+  // and `retargetOnLosLoss` (`true` for the archer alone). The
+  // field↔behavior contracts are balance-proofed in
   // registry.test / Targeting.test — here we only pin the wiring cadence (a
   // value is present, of the right shape).
   it('wires the two branch-killers (38c-2/3), each of the right shape', () => {
     const combatants = COMBATANT_ENTRIES.map(([, d]) => d);
     const withMove = combatants.filter((d) => d.movementBehavior !== undefined);
     const withRetarget = combatants.filter((d) => d.retargetOnLosLoss !== undefined);
-    expect(withMove.length).toBeGreaterThan(0); // 38c-2 populated the healer
-    expect(withRetarget.length).toBeGreaterThan(0); // 38c-3 populated ranged
+    expect(withMove.length).toBeGreaterThan(0); // the healer
+    expect(withRetarget.length).toBeGreaterThan(0); // the archer
     for (const [id, def] of COMBATANT_ENTRIES) {
       if (def.movementBehavior !== undefined) {
         expect(['standard', 'support'], `${id}.movementBehavior`).toContain(def.movementBehavior);
@@ -104,9 +99,9 @@ describe('§38b — UnitDef catalog scaffold', () => {
 });
 
 /**
- * §38d — the neutral fold. Walls + half-cover became NEUTRAL `UnitDef` entries in
+ * The neutral fold. Walls + half-cover are NEUTRAL `UnitDef` entries in
  * the one unified catalog (no abilities / stat blocks — a glyph + an OPTIONAL `hp`
- * pool; §40b made `hp` the HP-presence destructibility signal). These pin the
+ * pool, whose presence is the destructibility signal). These pin the
  * neutral schema arm + the two shipped entries; the spawn fold (`spawnEnvironment`
  * → catalog) + the susceptibility filter are proven in the sim tests
  * (environment.test / World.test).
@@ -114,21 +109,21 @@ describe('§38b — UnitDef catalog scaffold', () => {
 describe('§38d — neutral catalog entries', () => {
   it('ships the neutral defs (wall / half_cover / §40 rubble): optional hp, no abilities/stats', () => {
     const ids = NEUTRAL_ENTRIES.map(([id]) => id);
-    expect(ids).toContain('wall'); // the §38d fold entries
+    expect(ids).toContain('wall'); // the fold's entries
     expect(ids).toContain('half_cover');
     for (const [id, def] of NEUTRAL_ENTRIES) {
       expect(isNeutralUnitDef(def), `${id} is neutral`).toBe(true);
       expect(def.glyph.length, `${id}.glyph`).toBe(1);
-      // §40b — `hp` is OPTIONAL (HP-presence = destructibility); when present it's a
-      // real pool. Its presence/absence per entry is pinned in the §40b test below.
+      // `hp` is OPTIONAL (HP-presence = destructibility); when present it's a
+      // real pool. Its presence/absence per entry is pinned in the HP-PRESENCE test below.
       if (def.hp !== undefined) expect(def.hp, `${id}.hp`).toBeGreaterThan(0);
       expect(def.footprint, `${id}.footprint in 1..4`).toBeGreaterThanOrEqual(1);
       expect(def.footprint, `${id}.footprint in 1..4`).toBeLessThanOrEqual(4);
       expect('abilities' in def, `${id} has no abilities`).toBe(false);
       expect('baseStats' in def, `${id} has no baseStats`).toBe(false);
     }
-    // The §38d fold entries stay single-cell (the §39 seam is inert for them);
-    // §40's rubble is the multi-tile consumer (proven in environment.test).
+    // The fold's wall and half-cover stay single-cell (the footprint seam is
+    // inert for them); rubble is the multi-tile consumer (proven in environment.test).
     expect(NEUTRAL_DEFS.wall!.footprint).toBe(1);
     expect(NEUTRAL_DEFS.half_cover!.footprint).toBe(1);
   });
@@ -176,9 +171,9 @@ describe('§38d — neutral catalog entries', () => {
   });
 
   it('§40c — the destructible wall/cover defs: hp-present (destructible) but NOT auto-targeted', () => {
-    // §40c gives walls/cover OPTIONAL destructibility via a SEPARATE hp-bearing neutral
+    // Walls/cover take OPTIONAL destructibility via a SEPARATE hp-bearing neutral
     // def; a layout's per-instance `hp` routes a placement to it. HP-presence ⇒ combat-
-    // targetable (AoE / manual / focused fire), matching §40b; the ABSENT `autoTarget`
+    // targetable (AoE / manual / focused fire), by the HP-PRESENCE rule above; the ABSENT `autoTarget`
     // ⇒ never auto-chipped like rubble (the "walls stay manual/AoE-only" rule). Both
     // derived from the catalog — never hardcoded.
     for (const id of ['wall_destructible', 'half_cover_destructible']) {
@@ -196,7 +191,7 @@ describe('§38d — neutral catalog entries', () => {
   it('the union routes each entry to the right arm', () => {
     // A neutral (no abilities/baseStats) must FAIL the combatant arm and a combatant
     // (extra baseStats/abilities keys) must FAIL the STRICT neutral arm — the
-    // structural discriminant the union relies on. §40b: `hp` is now OPTIONAL, so a
+    // structural discriminant the union relies on. `hp` is OPTIONAL, so a
     // bare glyph is a VALID (indestructible) neutral, not "matches neither" — the
     // strict arm is what keeps a combatant from leaking through it.
     expect(CombatantUnitDefSchema.safeParse(NEUTRAL_DEFS.wall).success).toBe(false);
@@ -208,12 +203,12 @@ describe('§38d — neutral catalog entries', () => {
 });
 
 /**
- * §38c-4 — the keystone relax. `UnitDefsSchema` became an OPEN `z.record`
- * (string → UnitDef) and the closed `Archetype` union became `string`, so the
- * catalog is now the single source of which unit kinds exist — validated
- * structurally, not by an enumerated key list. This is the §38e enabler (author
- * a unit as pure data). The compile-time key guarantee is replaced by the
- * `REQUIRED_UNIT_IDS` boot-assert for the ids code constructs by literal.
+ * The open catalog. `UnitDefsSchema` is an OPEN `z.record` (string →
+ * UnitDef) and `Archetype` is `string`, so the catalog is the single source
+ * of which unit kinds exist — validated structurally, not by an enumerated
+ * key list, so a unit is authored as pure data. In place of a compile-time
+ * key guarantee, the `REQUIRED_UNIT_IDS` boot-assert covers the ids code
+ * constructs by literal.
  */
 describe('§38c-4 — open catalog (relaxed Archetype id)', () => {
   it('validates a brand-new unit id with no code edit (the §38e enabler)', () => {
@@ -224,7 +219,7 @@ describe('§38c-4 — open catalog (relaxed Archetype id)', () => {
   });
 
   it('still validates every entry structurally (a malformed unit is rejected)', () => {
-    // §40b — a BARE glyph is now a valid (indestructible) neutral, so "malformed"
+    // A BARE glyph is a valid (indestructible) neutral, so "malformed"
     // must genuinely fail both arms: a 2-char glyph breaks `glyph.length(1)` on the
     // combatant AND neutral arm.
     const bad = { ...structuredClone(ALL_UNIT_DEFS), broken: { glyph: 'XY' } };
@@ -246,7 +241,7 @@ describe('§38c-4 — open catalog (relaxed Archetype id)', () => {
   });
 });
 
-// §61g — the display-name layer (the AbilityDef.name precedent).
+// The display-name layer (the AbilityDef.name precedent).
 describe('§61g — display names', () => {
   it('every combatant carries a non-empty display name', () => {
     for (const [id, def] of COMBATANT_ENTRIES) {
@@ -263,10 +258,9 @@ describe('§61g — display names', () => {
   });
 });
 
-// §61b — the rarity field, planted INERT (every entry omits it until 61d's
-// assignment round; the sampler consumes it at 61c). Derived-from-config where
+// The rarity field (absent ⇒ the common default). Derived-from-config where
 // the claim is about the catalog; explicit literals where it's about the
-// schema's fixed defaults (the §38b split).
+// schema's fixed defaults (the scaffold block's split, above).
 describe('§61b — rarity tier field', () => {
   it('every combatant resolves a valid tier (absent ⇒ the common default)', () => {
     for (const [id, def] of COMBATANT_ENTRIES) {
@@ -290,9 +284,9 @@ describe('§61b — rarity tier field', () => {
   });
 });
 
-// §76f — the stat-identity roster wiring pins. STRUCTURE only (kits, draft
-// flags, the aura chain) — the stat/price VALUES are design numbers signed at
-// the 76h board, deliberately unpinned (the §38b mechanic-pin convention does
+// The stat-identity roster wiring pins. STRUCTURE only (kits, draft
+// flags, the aura chain) — the stat/price VALUES are signed design numbers,
+// deliberately unpinned (the scaffold block's mechanic-pin convention does
 // not apply to balance content).
 describe('§76f — the stat-identity roster', () => {
   it('the four new archetypes exist, draftable, wielding their §76d weapons', () => {
@@ -321,15 +315,14 @@ describe('§76f — the stat-identity roster', () => {
 });
 
 /**
- * §91b → §91e2 — THE POWER TABLE (the casualty experiment, encounter-feel-spec
- * §The casualty chip rule): `power` is a HEADCOUNT WEIGHT fixed per archetype
+ * THE POWER TABLE (encounter-feel-spec §The casualty chip rule): `power` is a
+ * HEADCOUNT WEIGHT fixed per archetype
  * — 1 everywhere, legendary 2 — and it never grows. Config-derived: the
  * legendary set comes from `rarity`, so a new legendary fails here until its
- * weight is set on purpose. Summons are NOT a table row (91e2): a conjured
+ * weight is set on purpose. Summons are NOT a table row: a conjured
  * unit is zeroed in the fallen LEDGER by its `summonedBy` stamp
  * (`World.recordFallen`), so the summoned archetype (the ghoul) prices like
- * any body when an encounter FIELDS it. REVERTS under a §93 rollback (it sits
- * above the `casualty-seams` tag).
+ * any body when an encounter FIELDS it.
  */
 describe('§91b — the power table (headcount weights)', () => {
   const summoned = new Set(

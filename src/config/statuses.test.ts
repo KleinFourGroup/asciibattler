@@ -4,7 +4,7 @@ import { parseAbilityDef, type AbilityDef } from '../sim/effects/schema';
 import { parseStatusDef, type StatusDef } from '../sim/effects/statusSchema';
 
 /**
- * Phase 27c — the four periodic statuses (burn / bleed / poison / rejuvenate)
+ * The four periodic statuses (burn / bleed / poison / rejuvenate)
  * authored in `config/statuses.json`. These tests read the SHIPPED catalog (the
  * content is now real). The `assertStatusRefsResolve` boot-check tests below
  * still build literal fixtures (they probe the check, not the catalog).
@@ -118,7 +118,7 @@ describe('28 — behavior-status content shape', () => {
   });
 });
 
-/** A melee strike that applies a status on impact (the §29 status-on-hit shape). */
+/** A melee strike that applies a status on impact (the status-on-hit shape). */
 function applyStatusAbility(statusId: string): AbilityDef {
   return parseAbilityDef({
     id: 'flame_sword',
@@ -207,8 +207,8 @@ describe('assertStatusRefsResolve', () => {
   });
 
   it('throws when an applyStatus op references a status absent from the registry', () => {
-    // §76a widened the message to cover all three ref kinds (applyStatus /
-    // chain-inner / aura), so it no longer names the op.
+    // The message covers all three ref kinds (applyStatus / chain-inner /
+    // aura), so it does not name the op.
     expect(() =>
       assertStatusRefsResolve({ flame_sword: applyStatusAbility('burn') }, {}),
     ).toThrow(/ability 'flame_sword': references unknown status id 'burn'/);

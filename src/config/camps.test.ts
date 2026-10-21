@@ -1,5 +1,5 @@
 /**
- * §75a — the camp catalog loader. Balance-proof discipline: expectations
+ * The camp catalog loader. Balance-proof discipline: expectations
  * derive from the config modules (the raw JSON import, the live catalogs),
  * never hardcoded counts or balance arithmetic.
  */

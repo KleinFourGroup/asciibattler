@@ -9,8 +9,8 @@ import {
   type Encounter,
 } from './encounters';
 
-/** The authored unit archetypes of an encounter's single looped wave (the V1
- *  catalog shape: loop → wave). */
+/** The authored unit archetypes of an encounter's single looped wave (the
+ *  anchors' shape: loop → wave). */
 function waveArchetypes(e: Encounter): string[] {
   const loop = e.waves[0]!;
   if (loop.kind !== 'loop') throw new Error('expected a loop');
@@ -81,31 +81,30 @@ const base = {
 describe('encounters schema', () => {
   it('ships the catalog: the V1 anchors, the V2 grammar demos, the W1 boss, the W2 elites', () => {
     expect(ENCOUNTER_IDS).toEqual([
-      // V1 anchors (loop → wave).
+      // The anchors (loop → wave).
       'brigands',
       'highwaymen',
       'deserters',
-      // V2 commit-C grammar demos.
+      // The grammar demos.
       'artillery',
       'ronin-vs-mages',
       'adventurer-with-guards',
-      // W1 — the boss (the stages grammar).
+      // The boss (the stages grammar).
       'bandit-king',
-      // W2 — the elite detours (harder optional fights).
+      // The elite detours (harder optional fights).
       'brigand-champions',
       'warband-vanguard',
-      // §33 — the §29-archetype showcase content (afflicters / summoners / chain).
+      // The afflicter / summoner / chain-caster showcase content.
       'darkMagicPosse',
       'elementalTrio',
       'banditQueen',
       'plagueDoctors',
-      // §67 — "The Deep End" content (user-authored at the kickoff; pooled at 67c).
+      // "The Deep End" content (user-authored).
       'infernalColumn',
       'plagueVictims',
       'miscreants',
       'plagueSpreaders',
-      // 83d — the real sector-2 bosses (user-authored 2026-08-17), replacing
-      // the 72f provisional -deep stat-clones at the same budget skeleton.
+      // The sector-2 bosses (user-authored 2026-08-17).
       'generalissimo',
       'witch-hunt',
     ]);
@@ -151,7 +150,7 @@ describe('encounters schema', () => {
     // adventurer-with-guards — a top-level FLAT sequence: a finite `loop` of
     // guards, then a lone boss wave that the last-wave-repeats policy holds. The
     // grammar feature is the FINITE repeat (a number, not 'forever'); the exact
-    // count is a Phase-X tuning value, so assert the feature, not the number.
+    // count is a tuning value, so assert the feature, not the number.
     const advWaves = getEncounter('adventurer-with-guards')!.waves;
     expect(advWaves.map((w) => w.kind)).toEqual(['loop', 'wave']);
     if (advWaves[0]!.kind === 'loop') expect(typeof advWaves[0]!.repeat).toBe('number');
@@ -215,7 +214,7 @@ describe('encounters schema', () => {
     ])[0]!;
     expect(good.rewards![0]!.table).toBe('bits-small');
     expect(good.rewards![0]!.trigger.chance).toBe(1);
-    // The pre-48a `unknown` seam is gone — a shapeless blob no longer parses.
+    // The seam is typed, so a shapeless blob does not parse.
     expect(EncountersSchema.safeParse([{ ...base, rewards: 'loot!' }]).success).toBe(false);
     expect(
       EncountersSchema.safeParse([
@@ -238,8 +237,8 @@ describe('encounters schema', () => {
       /unknown reward table "no-such-table"/,
     );
     expect(() => assertEncounterRewardRefs([withRef('bits-small')], ['bits-small'])).not.toThrow();
-    // The check has a real shipped subject (the 47f "no longer vacuous"
-    // discipline): strip the registry and brigands' ref must fail loudly.
+    // The check has a real shipped subject, so it is not vacuous: strip the
+    // registry and brigands' ref must fail loudly.
     expect(() => assertEncounterRewardRefs(ENCOUNTERS, [])).toThrow(/brigands/);
   });
 

@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { hpFillColor } from './UnitOverlayLayer';
 
-// 116f — the HP gradient's three stops were numbers in the layer's source
-// (0x33ff00, 0xffb000, 0xff3131) and are palette names now. The expected
+// The HP gradient's three stops are palette names whose numbers are 0x33ff00,
+// 0xffb000 and 0xff3131. The expected
 // fills below are worked from those three numbers alone, with the sRGB
 // transfer function written out here, and never through the palette or
 // three.js: the layer lerps in three's working space and prints the working

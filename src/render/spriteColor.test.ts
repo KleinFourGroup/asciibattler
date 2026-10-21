@@ -3,7 +3,7 @@ import { colorForTeam, isDestructibleObstacle, spriteColorForUnit } from './spri
 import { COLORS } from './palette';
 
 /**
- * §40c — the destructible-wall/cover VISUAL TELL. A breakable wall/cover shares
+ * The destructible-wall/cover VISUAL TELL. A breakable wall/cover shares
  * its glyph (`#` / `╥`) with an indestructible one, so it's colored CRACKED_STONE
  * to tell them apart. The color LOGIC lives in a THREE-free module precisely so
  * it's proven here (the actual render is browser-verified). Balance-proof: keyed
@@ -57,7 +57,7 @@ describe('spriteColorForUnit — the §40c destructible tell', () => {
     expect(spriteColorForUnit({ team: 'neutral', archetype: 'bandit', campId: 1 })).toBe(
       COLORS.TERMINAL_AMBER,
     );
-    // The camp tint wins over the §40c cracked tell (structurally impossible
+    // The camp tint wins over the cracked tell (structurally impossible
     // today — camp defs are combatants — but the precedence is deliberate).
     expect(
       spriteColorForUnit({ team: 'neutral', archetype: 'wall_destructible', campId: 2 }),

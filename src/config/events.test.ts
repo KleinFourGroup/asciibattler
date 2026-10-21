@@ -1,5 +1,5 @@
 /**
- * §74a — the event catalog loader. Structural guards (entry/page refs,
+ * The event catalog loader. Structural guards (entry/page refs,
  * exact-optional runtime shape), the termination fixpoint, and the
  * cross-catalog ref asserts — all against synthetic defs; the shipped
  * catalog's own validity is proven by the module-load self-wire (importing

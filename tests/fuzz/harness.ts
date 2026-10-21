@@ -354,6 +354,13 @@ const DEFAULT_MAX_HOPS = 50;
 // a loud failure instead of a silent wedge (the §74 kickoff hazard).
 const MAX_EVENT_STEPS = 500;
 
+// The gate guard: a gate whose command stops taking effect (an `advanceTurn`
+// that does nothing, an `acceptReward` that keeps the offer) leaves the run
+// in its phase, and `hops` freezes with it. A hop's steps are its event's
+// choices, capped above, and a few for each turn of its encounter, so twice
+// the event cap is far past a working hop.
+const MAX_STEPS_PER_HOP = 2 * MAX_EVENT_STEPS;
+
 /**
  * Drive one full run with `strategy`, return a `RunResult`. Throws only
  * for harness bugs (missing encounter, etc.) — every game-side outcome
@@ -742,9 +749,13 @@ function runOneInner(
   let eventsVisited = 0; // 74e — opened event pages (the non-vacuous counter)
   let totalTicks = 0;
   let portPurchases = 0; // 50g — the buy policy's transaction count
+  let stepsThisHop = 0;
 
   while (true) {
     if (run.phase === 'defeat' || run.phase === 'complete') break;
+    if (++stepsThisHop > MAX_STEPS_PER_HOP) {
+      throw new Error(`harness: ${MAX_STEPS_PER_HOP} steps in one hop, in phase ${run.phase} (seed ${seed})`);
+    }
 
     if (hops > maxNodeHops) {
       return aborted(
@@ -791,6 +802,7 @@ function runOneInner(
         const nodeId = strategy.pickNextNode(frontier, run, strategyRng);
         run.dispatch({ kind: 'enterNode', nodeId });
         hops++;
+        stepsThisHop = 0;
         eventSteps = 0; // 74b — the cap is per event visit, not per run
         break;
       }

@@ -33,7 +33,7 @@ import { Run, type RunPhase, type RunSnapshot } from '../../src/run/Run';
 import { parseRunConfig } from '../../src/run/RunConfig';
 import type { WorldCommand } from '../../src/sim/Command';
 import type { World } from '../../src/sim/World';
-import { battleWorld, spawnEncounter, tickTurn } from '../../src/sim/battleSetup';
+import { MAX_TURN_TICKS, battleWorld, spawnEncounter, tickTurn } from '../../src/sim/battleSetup';
 import { GROUND, findOverlappingCells, planeOf } from '../../src/sim/occupancy';
 
 export const CHAOS_BUILD = '0.0.0+chaos';
@@ -198,7 +198,8 @@ export function chaosRun(options: ChaosOptions): ChaosResult {
   const fight = (battle: number): void => {
     const w = world as World | null;
     if (w === null) throw new Error('a fight with no World');
-    while (!w.ended) {
+    for (let n = 0; !w.ended; n++) {
+      if (n >= MAX_TURN_TICKS) throw new Error(`battle ${battle}: the turn ran past its cap of ${MAX_TURN_TICKS} ticks`);
       if (rng.next() < ORDER_CHANCE) {
         const order = randomOrder(w, rng);
         orders[orderName(order)] = (orders[orderName(order)] ?? 0) + 1;

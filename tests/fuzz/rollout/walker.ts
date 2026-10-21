@@ -87,6 +87,9 @@ const DEFAULT_MAX_HOPS = 50;
 // never a normal outcome — the 74a termination assert guarantees a random
 // walk exits with probability 1.
 const MAX_EVENT_STEPS = 500;
+// The gate guard (the harness's MAX_STEPS_PER_HOP): a gate whose command
+// stops taking effect leaves the walk in its phase with `hops` frozen.
+const MAX_STEPS_PER_HOP = 2 * MAX_EVENT_STEPS;
 
 export interface WalkOptions {
   /** Stop after this many `battle:ended` events. 1 = the spec's v1
@@ -220,7 +223,9 @@ export function walkToHorizon(clone: RunRolloutClone, options: WalkOptions): Wal
 
   let hops = 0;
   let eventSteps = 0; // 74b — event choices this walk (see MAX_EVENT_STEPS)
+  let stepsThisHop = 0;
   while (battlesEnded < options.horizonBattles) {
+    if (++stepsThisHop > MAX_STEPS_PER_HOP) throw new Error(`walker: ${MAX_STEPS_PER_HOP} steps in one hop, in phase ${run.phase}`);
     if (run.phase === 'defeat') return { outcome: 'defeat', battlesEnded, totalTicks };
     if (run.phase === 'complete') return { outcome: 'complete', battlesEnded, totalTicks };
     if (options.stopAtPhase !== undefined && run.phase === options.stopAtPhase) {
@@ -236,6 +241,7 @@ export function walkToHorizon(clone: RunRolloutClone, options: WalkOptions): Wal
         const nodeId = strategy.pickNextNode(frontier, run, strategyRng);
         run.dispatch({ kind: 'enterNode', nodeId });
         hops++;
+        stepsThisHop = 0;
         break;
       }
       case 'turn-intro': {

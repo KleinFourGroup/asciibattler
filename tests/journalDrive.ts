@@ -24,7 +24,7 @@ import { Run, type RunSnapshot } from '../src/run/Run';
 import { parseRunConfig } from '../src/run/RunConfig';
 import type { WorldCommand } from '../src/sim/Command';
 import type { World } from '../src/sim/World';
-import { battleWorld, spawnEncounter, tickTurn } from '../src/sim/battleSetup';
+import { MAX_TURN_TICKS, battleWorld, spawnEncounter, tickTurn } from '../src/sim/battleSetup';
 
 export const TEST_BUILD = '0.0.0+test';
 
@@ -132,7 +132,8 @@ export function driveRun(options: DriveOptions): DriveResult {
   const fight = (battle: number): boolean => {
     const w = world as World | null;
     if (w === null) throw new Error('driveRun: the battle phase with no World');
-    while (!w.ended) {
+    for (let n = 0; !w.ended; n++) {
+      if (n >= MAX_TURN_TICKS) throw new Error(`driveRun: battle ${battle} ran past its cap of ${MAX_TURN_TICKS} ticks`);
       const ran = w.currentTick;
       if (plants.abandonAt?.battle === battle && plants.abandonAt.tick === ran) return false;
       for (const command of plants.commands?.(battle, ran, run) ?? []) send(command);

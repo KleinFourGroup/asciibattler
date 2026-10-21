@@ -1071,7 +1071,7 @@ describe('Run', () => {
       // Knock the enemy pool down (but not out), then stalemate to the cap.
       chipTurn(bus, { player: HEALTH.enemyHealthMax - 1, enemy: 0 });
       expect(run.phase).toBe('battle');
-      while (run.turnIndex < HEALTH.maxTurns) chipTurn(bus, { player: 0, enemy: 0 });
+      for (let n = HEALTH.maxTurns - run.turnIndex; n > 0; n--) chipTurn(bus, { player: 0, enemy: 0 });
       // playerFrac (1.0) > enemyFrac (1/max) → encounter won.
       acceptAllRewards(run); // 48f — the full catalog carries reward refs
       expect(run.phase).toBe('recruit');
@@ -1436,7 +1436,8 @@ describe('Run', () => {
         bounds.add(fielded);
         turns++;
         chipTurn(bus, { player: 1, enemy: 0 });
-        while (phase() === 'turn-outcome' || phase() === 'reward' || phase() === 'promotion') {
+        for (let step = 0; phase() === 'turn-outcome' || phase() === 'reward' || phase() === 'promotion'; step++) {
+          expect(step, `turn ${turn}, a gate's command stopped taking effect`).toBeLessThan(MAX_COMMAND_STEPS);
           if (phase() === 'turn-outcome') run.dispatch({ kind: 'advanceTurn' });
           else if (phase() === 'reward') run.dispatch({ kind: 'declineReward', index: 0 });
           else run.dispatch({ kind: 'dismissPromotion' });
@@ -2846,7 +2847,7 @@ describe('Run', () => {
 
     it('a full-cache accept WITHOUT a swap slot is a silent no-op — the offer stays intact', () => {
       const { run } = forgedOffer();
-      while (run.cacheHasRoom) run.addPacket(PACKET_ID);
+      fillCache(run, PACKET_ID);
       const held = run.cache.length;
       run.dispatch({ kind: 'acceptReward', index: 0 });
       expect(run.cache).toHaveLength(held);
@@ -2855,7 +2856,7 @@ describe('Run', () => {
 
     it('a full-cache accept WITH a valid swapCacheIndex discards that slot, then accepts', () => {
       const { run, bus } = forgedOffer();
-      while (run.cacheHasRoom) run.addPacket(PACKET_ID);
+      fillCache(run, PACKET_ID);
       const size = run.effectiveCacheSize;
       const events: Array<{ packetIds: string[]; size: number }> = [];
       bus.on('run:cacheChanged', (e) => events.push(e));
@@ -2868,7 +2869,7 @@ describe('Run', () => {
 
     it('a full-cache accept with an invalid swap slot (fractional / out-of-range) is a no-op', () => {
       const { run } = forgedOffer();
-      while (run.cacheHasRoom) run.addPacket(PACKET_ID);
+      fillCache(run, PACKET_ID);
       run.dispatch({ kind: 'acceptReward', index: 0, swapCacheIndex: 0.5 });
       run.dispatch({ kind: 'acceptReward', index: 0, swapCacheIndex: -1 });
       run.dispatch({ kind: 'acceptReward', index: 0, swapCacheIndex: 99 });
@@ -3215,7 +3216,7 @@ describe('Run', () => {
       expect(() => run.removeRosterUnit(run.team.length)).toThrow(/out of range/);
       expect(() => run.removeRosterUnit(-1)).toThrow(/out of range/);
       expect(() => run.removeRosterUnit(1.5)).toThrow(/out of range/);
-      while (run.team.length > 1) run.removeRosterUnit(0);
+      for (let n = run.team.length; n > 1; n--) run.removeRosterUnit(0);
       expect(() => run.removeRosterUnit(0)).toThrow(/last roster unit/);
       const fighting = freshRunWithBus(2, { daemon: null }).run;
       fighting.dispatch({ kind: 'enterNode', nodeId: frontierOf(fighting) });
@@ -3378,7 +3379,7 @@ describe('Run', () => {
       expect(run.bits).toBe(RICH - slot.price);
       expect(slot.sold).toBe(true);
       // Fill the cache to the derived size, then a swap-less buy no-ops…
-      while (run.cacheHasRoom) run.addPacket('patch');
+      fillCache(run, 'patch');
       const full = [...run.cache];
       const slot1 = run.portStock!.packets[1]!;
       run.dispatch({ kind: 'buyPortPacket', index: 1 });
@@ -3392,7 +3393,7 @@ describe('Run', () => {
       // Validate-first: a broke buyer's swap discards NOTHING.
       const broke = freshRunWithBus(1, { daemon: null, startingBits: 0 });
       dockAtPort(broke.run, broke.bus);
-      while (broke.run.cacheHasRoom) broke.run.addPacket('patch');
+      fillCache(broke.run, 'patch');
       const held = [...broke.run.cache];
       broke.run.dispatch({ kind: 'buyPortPacket', index: 0, swapCacheIndex: 0 });
       expect(broke.run.cache).toEqual(held);
@@ -3438,7 +3439,7 @@ describe('Run', () => {
       expect(run.team[0]!.archetype).toBe(survivor);
       expect(run.bits).toBe(RICH - PRICES.unitRemovalPrice);
       expect(run.pendingEncounterEffects).toHaveLength(run.team.length);
-      while (run.team.length > 1) run.dispatch({ kind: 'payToRemoveUnit', rosterIndex: 0 });
+      for (let n = run.team.length; n > 1; n--) run.dispatch({ kind: 'payToRemoveUnit', rosterIndex: 0 });
       const bitsAtOne = run.bits;
       run.dispatch({ kind: 'payToRemoveUnit', rosterIndex: 0 }); // last unit — no-op, no charge
       expect(run.team).toHaveLength(1);
@@ -4594,7 +4595,7 @@ describe('48b — the reward phase', () => {
     // §82 — the offer can carry a packets-small portion behind the bits;
     // decline them all (each decline compacts the list, so index 0 drains it).
     for (let step = 0; run.pendingRewards !== null; step++) {
-      expect(step, 'declineReward stopped draining the offer').toBeLessThan(MAX_REWARD_STEPS);
+      expect(step, 'declineReward stopped draining the offer').toBeLessThan(MAX_COMMAND_STEPS);
       run.dispatch({ kind: 'declineReward', index: 0 });
     }
     expect(run.bits).toBe(0);
@@ -5247,8 +5248,10 @@ describe('65f — the deck cue stream (deck:cardDrawn / cardDiscarded / reshuffl
     for (let i = 0; i < 4; i++) run.addPacket('discard-one');
     for (let i = 0; i < 4; i++) run.dispatch({ kind: 'usePacket', cacheIndex: 0, handIndex: 0 });
     while (run.drawPile.length >= surgeCount) {
+      const before = run.drawPile.length;
       run.addPacket('surge');
       run.dispatch({ kind: 'usePacket', cacheIndex: 0 });
+      expect(run.drawPile.length, 'a surge stopped drawing').toBeLessThan(before);
     }
     const pile = run.drawPile.length;
     const discard = run.discardPile.length;
@@ -5517,17 +5520,25 @@ function declineAllRewards(run: Run): void {
   settleRewards(run, 'declineReward');
 }
 
-/** Far more tries than any offer has portions. */
-const MAX_REWARD_STEPS = 64;
+/** Far more tries than any offer has portions, or than the gates after a
+ *  turn take. */
+const MAX_COMMAND_STEPS = 64;
 
 /** Send `kind` until the run leaves the reward phase. Bounded, so that a
  *  reward command which stops taking effect fails the test that waits on it;
  *  an unbounded loop here spins forever and `npm test` never returns. */
 function settleRewards(run: Run, kind: 'acceptReward' | 'declineReward'): void {
   for (let step = 0; run.phase === 'reward'; step++) {
-    expect(step, `${kind} left the run in the reward phase`).toBeLessThan(MAX_REWARD_STEPS);
+    expect(step, `${kind} left the run in the reward phase`).toBeLessThan(MAX_COMMAND_STEPS);
     run.dispatch({ kind, index: 0 });
   }
+}
+
+/** Add `packetId` until the cache is full: a counted run, then a check, so
+ *  an `addPacket` that stops taking effect fails here rather than spinning. */
+function fillCache(run: Run, packetId: string): void {
+  for (let n = run.effectiveCacheSize - run.cache.length; n > 0; n--) run.addPacket(packetId);
+  expect(run.cacheHasRoom, 'addPacket stopped filling the cache').toBe(false);
 }
 
 interface RunHandle {
@@ -6340,7 +6351,7 @@ describe('74c — event effect ops (the full union executes)', () => {
 
   it('addPacket on a FULL cache honors the grant into 49f overflow (user-signed)', () => {
     const { run } = opRun(121, [{ op: 'addPacket', packetId: 'shield' }]);
-    while (run.cacheHasRoom) run.addPacket('patch');
+    fillCache(run, 'patch');
     expect(run.cacheOverflow).toBe(0);
     fireOps(run);
     expect(run.cache).toContain('shield');

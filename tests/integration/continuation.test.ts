@@ -6,7 +6,7 @@ import { Run, type RunPhase, type RunSnapshot } from '../../src/run/Run';
 import type { RunCommand } from '../../src/run/Command';
 import { parseRunConfig, type RunConfig } from '../../src/run/RunConfig';
 import type { World } from '../../src/sim/World';
-import { battleWorld, spawnEncounter, tickTurn } from '../../src/sim/battleSetup';
+import { MAX_TURN_TICKS, battleWorld, spawnEncounter, tickTurn } from '../../src/sim/battleSetup';
 
 // 115b — THE CONTINUATION CHECK (Round 8 spec D3; WORKLOG §115, call 5). A
 // run is saved at every gate, so a player who closes the tab anywhere comes
@@ -33,7 +33,8 @@ function table(): { bus: EventBus<GameEvents>; fight: () => void } {
   const fight = (): void => {
     const w = world as World | null;
     if (w === null) throw new Error('continuation: a fight with no World');
-    while (!w.ended) tickTurn(w);
+    for (let n = 0; n < MAX_TURN_TICKS && !w.ended; n++) tickTurn(w);
+    expect(w.ended, 'the turn ran past its cap').toBe(true);
   };
   return { bus, fight };
 }

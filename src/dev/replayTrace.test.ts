@@ -3,7 +3,7 @@ import { EventBus } from '../core/EventBus';
 import type { GameEvents } from '../core/events';
 import { RNG } from '../core/RNG';
 import type { World } from '../sim/World';
-import { battleWorld, spawnEncounter, tickTurn } from '../sim/battleSetup';
+import { MAX_TURN_TICKS, battleWorld, spawnEncounter, tickTurn } from '../sim/battleSetup';
 import { rollUnit } from '../sim/archetypes';
 import type { BattleEncounter } from '../run/Run';
 import { TraceRecorder, type BattleTrace } from './TraceRecorder';
@@ -94,7 +94,7 @@ function driveLive(encounter: BattleEncounter): {
   world.enqueueCommand({ kind: 'setObjective', team: 'player', objective: { mode: 'hold' } });
   world.drainCommands(); // stamps effective tick 1
 
-  while (!world.ended) {
+  for (let n = 0; n < MAX_TURN_TICKS && !world.ended; n++) {
     // 2. A normal between-ticks enqueue — applies at tick 10's in-tick drain.
     if (world.currentTick === 9) {
       world.enqueueCommand({
@@ -110,6 +110,7 @@ function driveLive(encounter: BattleEncounter): {
       world.drainCommands();
     }
   }
+  expect(world.ended, 'the turn ran past its cap').toBe(true);
 
   expect(world.currentTick).toBeGreaterThan(26); // all three injections landed pre-end
   expect(traces).toHaveLength(1);
@@ -145,7 +146,8 @@ describe('replayTrace (53c — the fidelity keystone)', () => {
     bus.emit('battle:started', { worldSeed: encounter.worldSeed, encounter });
     const world = battleWorld(bus, encounter);
     spawnEncounter(world, encounter);
-    while (!world.ended) tickTurn(world);
+    for (let n = 0; n < MAX_TURN_TICKS && !world.ended; n++) tickTurn(world);
+    expect(world.ended, 'the turn ran past its cap').toBe(true);
 
     const replayBus = new EventBus<GameEvents>();
     const replayEvents = captureEvents(replayBus);

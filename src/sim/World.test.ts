@@ -375,6 +375,13 @@ describe('World 27d tile statuses (fire→burn, healing→rejuvenate)', () => {
   const burnMight = BURN.periodic!.op.might; // flat `might` (scaling:'none')
   const rejuvMight = REJUV.periodic!.op.might;
   const busOf = (world: World) => (world as unknown as { bus: EventBus<GameEvents> }).bus;
+  // A counted run of ticks, then a check that they reached the target: a
+  // battle that ends early freezes `currentTick`, so this fails where a
+  // `while (currentTick < target)` loop spins (TESTING "Bounded steps").
+  const tickTo = (world: World, target: number): void => {
+    for (let n = target - world.currentTick; n > 0; n--) world.tick();
+    expect(world.currentTick, 'the battle ended before the target tick').toBeGreaterThanOrEqual(target);
+  };
 
   it('applies burn ONCE on entering fire, then chips via the DoT one interval later', () => {
     const { world, units } = scene([
@@ -399,14 +406,14 @@ describe('World 27d tile statuses (fire→burn, healing→rejuvenate)', () => {
     expect(applied).toHaveLength(1);
 
     // One interval after apply → the first DoT tick (burnMight HP, defense-bypass).
-    while (world.currentTick < 1 + E) world.tick();
+    tickTo(world, 1 + E);
     expect(ticked).toEqual([
       { unitId: units[0]!.id, statusId: 'burn', sourceUnitId: null, amount: burnMight },
     ]);
     expect(units[0]!.currentHp).toBe(50 - burnMight);
 
     // Next interval → second tick (a steady DoT cadence).
-    while (world.currentTick < 1 + 2 * E) world.tick();
+    tickTo(world, 1 + 2 * E);
     expect(ticked).toHaveLength(2);
     expect(units[0]!.currentHp).toBe(50 - 2 * burnMight);
   });
@@ -420,7 +427,7 @@ describe('World 27d tile statuses (fire→burn, healing→rejuvenate)', () => {
     ]);
     expect(units[0]!.stats.defense).toBeGreaterThan(0);
     world.tileGrid.setKind({ x: 3, y: 3 }, 'fire');
-    while (world.currentTick < 1 + E) world.tick(); // through the first DoT tick
+    tickTo(world, 1 + E); // through the first DoT tick
     expect(units[0]!.currentHp).toBe(50 - burnMight); // full might, defense ignored
   });
 
@@ -433,7 +440,7 @@ describe('World 27d tile statuses (fire→burn, healing→rejuvenate)', () => {
     const ticked: GameEvents['status:ticked'][] = [];
     busOf(world).on('status:ticked', (p) => ticked.push(p));
 
-    while (world.currentTick < 1 + E) world.tick(); // first HoT tick
+    tickTo(world, 1 + E); // first HoT tick
     expect(units[0]!.currentHp).toBe(10 + rejuvMight);
     expect(ticked[0]).toEqual({
       unitId: units[0]!.id,
@@ -445,7 +452,7 @@ describe('World 27d tile statuses (fire→burn, healing→rejuvenate)', () => {
     // Clamp at maxHp: fill up, the next tick heals 0 but still emits (amount 0,
     // the gotcha #80 no-op the renderer drops as "no +0 spam").
     units[0]!.currentHp = units[0]!.derived.maxHp;
-    while (world.currentTick < 1 + 2 * E) world.tick();
+    tickTo(world, 1 + 2 * E);
     expect(units[0]!.currentHp).toBe(units[0]!.derived.maxHp);
     expect(ticked[ticked.length - 1]!.amount).toBe(0);
 
@@ -469,13 +476,13 @@ describe('World 27d tile statuses (fire→burn, healing→rejuvenate)', () => {
     units[0]!.position = { x: 0, y: 0 }; // step off the fire tile (an inert unit)
 
     // Burn keeps ticking after stepping off — it lingers for its `durationSeconds`.
-    while (world.currentTick < 1 + E) world.tick();
+    tickTo(world, 1 + E);
     expect(ticked.length).toBeGreaterThanOrEqual(1); // a tick landed AFTER leaving
     expect(units[0]!.currentHp).toBeLessThan(50);
 
     // Past the duration → it expires and stops ticking.
     const durationTicks = secondsToTicks(BURN.durationSeconds);
-    while (world.currentTick < 1 + durationTicks + 1) world.tick();
+    tickTo(world, 1 + durationTicks + 1);
     expect(expired).toEqual([{ unitId: units[0]!.id, statusId: 'burn', sourceUnitId: null }]);
     const finalCount = ticked.length;
     for (let t = 0; t < 2 * E; t++) world.tick();
@@ -510,7 +517,7 @@ describe('World 27d tile statuses (fire→burn, healing→rejuvenate)', () => {
     busOf(world).on('unit:died', (p) => deaths.push(p));
     busOf(world).on('battle:ended', (p) => ends.push(p));
 
-    while (world.currentTick < 1 + E) world.tick(); // through the first burn tick
+    tickTo(world, 1 + E); // through the first burn tick
     expect(deaths.some((d) => d.unitId === units[1]!.id)).toBe(true);
     expect(ends).toHaveLength(1);
     expect(ends[0]!.winner).toBe('player');

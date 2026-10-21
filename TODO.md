@@ -80,19 +80,10 @@ every item below is done (WORKLOG §124, "The close of §124"; WORKLOG
   every `npm test`. The walker, about 70 lines, is
   `scratch/123l-loadcycle/importPaths.mts`. Signed for here 2026-10-16.
 
-- [ ] **A test that loops until a command takes effect never returns once
-  the command stops taking effect: the loops not yet read.** With a declined reward made a no-op in
-  `Run.ts`, `npm test` did not fail: one worker spun (391 CPU-seconds
-  before it was stopped by hand) and 253 tests of `src/run/Run.test.ts`
-  never ran, so the pre-commit hook would hang where it should go red. The
-  loop is `while (run.phase === 'reward') run.dispatch({ kind:
-  'declineReward', index: 0 })` at `Run.test.ts:5575`, with the same shape
-  one line up for `acceptReward` and at 4652. TESTING.md already has the
-  rule ("Bounded steps, never poll `currentTick`"), from a `World` loop; this
-  is its second bite, on a `Run` loop. There were 55 `while (` lines in 24
-  test files (16 in `Run.test.ts`, 8 in `World.test.ts`); three are fixed
-  and the other 52 are unread. For the tests phase: bound the ones that
-  wait on state a command or a tick is meant to change.
+- ✅ **A test that loops until a command takes effect never returns once
+  the command stops taking effect.** Every loop that waits on a tick or a
+  command counts its tries, in tests, `tests`' instruments and `src`'s
+  replay loops; TESTING's "Bounded steps" (WORKLOG §126, 126e).
 
 - [ ] **Three tests time out at 5 s when anything runs beside the suite:**
   `tests/store-guard.test.ts`, and the chaos test's seeds whenever a

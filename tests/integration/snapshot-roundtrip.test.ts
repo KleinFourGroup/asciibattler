@@ -613,7 +613,7 @@ describe('A2 round-trip: World', () => {
     // The enemy is inert (no behaviors → never moves), so the captured
     // center stays dead-on it and the detonation deals damage.
     const finishTick = restoredMage.activeAction!.finishTick;
-    while (restored.currentTick < finishTick && !restored.ended) restored.tick();
+    for (let n = finishTick - restored.currentTick; n > 0 && !restored.ended; n--) restored.tick();
     expect(restored.findUnit(enemy.id)!.currentHp).toBeLessThan(enemyHpAtSnapshot);
   });
 
@@ -661,7 +661,7 @@ describe('A2 round-trip: World', () => {
     // Tick the restored world past the wind-up: the shot must still land on
     // the locked enemy (inert → never moves, so the homing reference holds).
     const finishTick = restoredCat.activeAction!.finishTick;
-    while (restored.currentTick < finishTick && !restored.ended) restored.tick();
+    for (let n = finishTick - restored.currentTick; n > 0 && !restored.ended; n--) restored.tick();
     expect(restored.findUnit(enemy.id)!.currentHp).toBeLessThan(enemyHpAtSnapshot);
   });
 

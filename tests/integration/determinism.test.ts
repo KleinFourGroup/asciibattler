@@ -173,7 +173,8 @@ function driveTwoBattles(seed: number): BattleEncounter[] {
   // (Read the phase through a call so TS doesn't narrow it across the
   // bus-emit mutations.)
   const phase = (): Run['phase'] => run.phase;
-  while (phase() === 'battle') {
+  for (let turn = 0; phase() === 'battle'; turn++) {
+    expect(turn, 'battle:ended stopped ending turns').toBeLessThan(HEALTH.maxTurns);
     bus.emit('battle:ended', {
       winner: 'player',
       xpAwards: [],
@@ -182,7 +183,7 @@ function driveTwoBattles(seed: number): BattleEncounter[] {
       survivorPower: { player: HEALTH.enemyHealthMax, enemy: 0 },
       fallenPower: { player: 0, enemy: HEALTH.enemyHealthMax },
     });
-    while (phase() === 'reward') run.dispatch({ kind: 'acceptReward', index: 0 });
+    acceptRewards(run);
     if (phase() === 'promotion') run.dispatch({ kind: 'dismissPromotion' });
   }
   run.dispatch({ kind: 'chooseRecruit', unitTemplate: run.currentOffer![0]! });
@@ -230,8 +231,20 @@ function driveForcedRun(
   });
   // 48f — boss rewards fire before run:victory; accept through the pause so
   // the drive lands at its terminal phase.
-  while (run.phase === 'reward') run.dispatch({ kind: 'acceptReward', index: 0 });
+  acceptRewards(run);
   return { phase: run.phase, encounter };
+}
+
+/** Far more tries than any offer has portions. */
+const MAX_REWARD_STEPS = 64;
+
+/** Accept every portion of a pending offer, a counted run, so that an
+ *  `acceptReward` which stops taking effect fails here rather than spinning. */
+function acceptRewards(run: Run): void {
+  for (let step = 0; run.phase === 'reward'; step++) {
+    expect(step, 'acceptReward left the run in the reward phase').toBeLessThan(MAX_REWARD_STEPS);
+    run.dispatch({ kind: 'acceptReward', index: 0 });
+  }
 }
 
 /**

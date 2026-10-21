@@ -9,7 +9,7 @@ import { PHASE_ROWS, pickerFor } from '../../src/dev/probe/drive';
 import { Run, type RunPhase, type RunSnapshot } from '../../src/run/Run';
 import { parseRunConfig, type RunConfig } from '../../src/run/RunConfig';
 import type { World } from '../../src/sim/World';
-import { battleWorld, spawnEncounter, tickTurn } from '../../src/sim/battleSetup';
+import { MAX_TURN_TICKS, battleWorld, spawnEncounter, tickTurn } from '../../src/sim/battleSetup';
 
 // 115a — `Run.resume()`: a run loaded from a save re-emits the gate event of
 // the phase it was saved in, with the payload the live run emitted on
@@ -86,7 +86,8 @@ function arrivals(seed: number, dials: string): Arrival[] {
     if (step === 'fight') {
       const w = world as World | null;
       if (w === null) throw new Error('arrivals: the battle phase with no World');
-      while (!w.ended) tickTurn(w);
+      for (let n = 0; n < MAX_TURN_TICKS && !w.ended; n++) tickTurn(w);
+      expect(w.ended, 'the turn ran past its cap').toBe(true);
     } else {
       run.dispatch(step.command);
     }
@@ -228,7 +229,8 @@ describe("115e — the strip's input is the turn:resolved before it", () => {
         continue;
       }
       const w = world as World | null;
-      while (w !== null && !w.ended) tickTurn(w);
+      for (let n = 0; w !== null && n < MAX_TURN_TICKS && !w.ended; n++) tickTurn(w);
+      expect(w === null || w.ended, 'the turn ran past its cap').toBe(true);
     }
     expect(firsts).toBeGreaterThan(2);
     expect(compared).toBeGreaterThan(10);

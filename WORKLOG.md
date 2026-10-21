@@ -15155,3 +15155,88 @@ Readings by the tool's clock (UTC): 101,090 at 12:36 (the first),
 217,295 on the kickoff's commit, 225,828 on the sign's, 250,784 on
 126a's, 400,949 on 126b's, 414,355 on 126d's, 425,583 at 14:48 before
 this entry's commit.
+
+### 126e's step zero: the loops, read (2026-10-21, session e6ab25e8)
+
+At `0809ccd6`, the tree clean. The session was started by the phase's
+driver (driver 4), whose brief named nine `for (;;)` loops the kickoff's
+`while (` count missed. Searched with `git grep` over `src`, `tests`,
+`tools`, `scripts` and `config`, test files and helpers both, for
+`while (`, `while(`, `for (;`, `do {` and a `for (let …)` whose condition
+is not on its own counter (a PCRE back-reference); each hit was read.
+`git grep`'s pathspec `tests/**/*.test.ts` without `:(glob)` skips the
+files directly under `tests` (`docs.test.ts`), so the counts below use
+`:(glob)`.
+
+**In test files: 61 lines, 60 loops** (`TrafficScriptDriver.test.ts:49`
+is a comment). 54 `while (` (the kickoff's count), 2 `for (;;)`, 1
+`for (;`, and 4 `for (let …)` on state. 32 wait on a tick or a command
+with no bound:
+
+- Poll `currentTick` (8): `World.test.ts:402`, `409`, `423`, `436`,
+  `448`, `472`, `478`, `513`. They spin once the battle ends before the
+  target, the hang TESTING's "Bounded steps" names.
+- Poll `currentTick` with an `ended` guard (2):
+  `snapshot-roundtrip.test.ts:616`, `664`. They spin only if a live tick
+  stops advancing.
+- `while (!w.ended) tickTurn(w)` (6): `replayTrace.test.ts:97`, `148`;
+  `continuation.test.ts:36`; `encounter-loop.test.ts:64`;
+  `resume-gates.test.ts:89`, `231`. They end by the turn cap's rule, and
+  spin if a live tick stops advancing or the cap ends nothing.
+- A command, a method or a bus emit (16): `Run.test.ts:1074` (`chipTurn`
+  to `turnIndex`), `1439` (`advanceTurn`, `declineReward`,
+  `dismissPromotion`), `2849`, `2858`, `2871`, `3381`, `3395`, `6343`
+  (`addPacket` until the cache is full), `3218` (`removeRosterUnit`),
+  `3441` (`payToRemoveUnit`), `5249` (`usePacket`);
+  `determinism.test.ts:176` (the `battle:ended` emit), `185`, `233`
+  (`acceptReward`); `encounter-loop.test.ts:49` (its `promotion` branch
+  `continue`s before the turn guard counts), `106` (`acceptReward`).
+
+Bounded already (20): `RolloutSearchDriver.test.ts:112`,
+`Run.test.ts:4596` and `5527` (119g-post's), `sectorWalk.test.ts:153`,
+`camps.economy.test.ts:259`, `rubbleAutoTarget.test.ts:193`,
+`harness.test.ts:274`, `scored.test.ts:289` (throws past 50 buys), the
+five `*-battle` tests (`TICK_CAP`), `corridor-flow`, `layout-deadlock`,
+`variable-size` (`MAX_TICKS`), `journal-replay-page.test.ts:111`,
+`blacklist-editor.test.ts:44`, `docs.test.ts:117`, `119`. A finite walk
+(8): `NodeMap.test.ts:684`, `731`, `750`, `Run.test.ts:5576`, `5692`,
+`5719`, `terrainGen.test.ts:294`, `dev-guard.test.ts:49`.
+
+**In `tests`' instruments, which the hook runs** (chaos in the suite,
+the journal tests in the suite and the corpus in the smoke, the harness
+and walker in the smoke): four wait with no bound.
+`chaos.ts:201` and `journalDrive.ts:135` are `while (!w.ended) {…
+tickTurn(w) }` (their outer loops are bounded by steps, not ticks).
+`harness.ts:746` and `rollout/walker.ts:223` dispatch each gate's
+command (`advanceTurn`, rest, reward, port, promotion, sector cleared)
+with no check that the phase moved; their hop caps count map hops only,
+so a gate command made a no-op spins them. The other 22 loops there are
+bounded (`maxTicksPerBattle`, `MAX_STEPS`, `MAX_COMMANDS`), stop on no
+progress (`gateWalks.ts:29` and `106`, both fire loops), or walk a
+finite structure (`parallel.ts`, `roster/cli.ts`, `refs.ts`,
+`importGraph.ts`, `comments.ts`, `metrics.ts`, `pathing/fixtures.ts`).
+
+**In `src`, reached by tests:** `src/dev/replayTrace.ts:102` and
+`src/journal/replayJournal.ts:217` and `254`, each `tickTurn` until the
+battle ends (the journal and replay tests, chaos, the corpus). Under any
+plant that stops a live tick, the suite hangs in them however the test
+files are bounded. No other loop under `src` outside its tests ticks a
+World or dispatches a command (`evaluator.ts:79` is bounded).
+
+**Three shapes, so three plants:** the battle ending before a
+`currentTick` poll's target; a live tick that does nothing (the
+`tickTurn` loops and both polls); a command made a no-op. The scope
+questions are in the session's final message of this turn; the user's
+answer follows here.
+
+Reading: 166,032 at 15:17, before the questions.
+
+**Signed** (the user, 2026-10-21): "That looks good to me; signing all
+three of your leans, Claude! 😁" So 126e bounds the 32 in test files,
+the instruments' four and `src`'s three replay loops, each at its site
+(the three by the turn cap, with a throw; no guard inside `tickTurn`),
+and runs three plants: (A) `checkBattleEnd`'s both-alive test negated,
+(B) `tick()`'s early return negated, (C) `acceptReward` made a no-op,
+each caught when the suite returns red where it hung. TESTING's
+"Bounded steps" widens from `currentTick` to every loop that waits on a
+tick or a command.

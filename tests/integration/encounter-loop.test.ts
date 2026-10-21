@@ -51,6 +51,9 @@ function driveEncounter(
     // on the final turn); dismiss and re-enter, like the fuzz harness does.
     if (run.phase === 'promotion') {
       run.dispatch({ kind: 'dismissPromotion' });
+      // One dismissal always leaves the phase; checked, since this branch
+      // continues before the turn guard counts.
+      if (run.phase === 'promotion') throw new Error('dismissPromotion left the run in the promotion phase');
       continue;
     }
     if (run.phase !== 'battle' || !run.currentEncounter) break;
@@ -61,7 +64,8 @@ function driveEncounter(
     const world = buildWorld(enc, bus);
     // At the cap the turn resolves as a draw (both sides chip). Either end's
     // emit advances `run` synchronously to the next turn / encounter.
-    while (!world.ended) tickTurn(world, maxTurnTicks);
+    for (let n = 0; n < maxTurnTicks && !world.ended; n++) tickTurn(world, maxTurnTicks);
+    if (!world.ended) throw new Error(`the turn ran past its cap of ${maxTurnTicks} ticks`);
     turns.push({ enc, pool: { player: run.playerHealth, enemy: run.enemyHealth } });
   }
   return turns;
@@ -103,7 +107,10 @@ describe('H4: encounter loop over real battles', () => {
       expect(run.phase).not.toBe('battle');
       // 48f — every catalog encounter carries reward refs, so a win pauses in
       // the reward phase (ahead of finishEncounter); resolve it first.
-      while (run.phase === 'reward') run.dispatch({ kind: 'acceptReward', index: 0 });
+      for (let step = 0; run.phase === 'reward'; step++) {
+        expect(step, 'acceptReward left the run in the reward phase').toBeLessThan(64);
+        run.dispatch({ kind: 'acceptReward', index: 0 });
+      }
       expect(['recruit', 'promotion', 'defeat']).toContain(run.phase);
       expect(run.currentEncounter).toBeNull();
       // The outcome was driven by a pool emptying (decisive) or the turn cap.

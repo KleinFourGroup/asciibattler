@@ -40,7 +40,7 @@ import type { GameEvents } from '../core/events';
 import { Run, type RunPhase, type RunSnapshot } from '../run/Run';
 import { parseRunConfig } from '../run/RunConfig';
 import type { World } from '../sim/World';
-import { battleWorld, spawnEncounter, tickTurn } from '../sim/battleSetup';
+import { MAX_TURN_TICKS, battleWorld, spawnEncounter, tickTurn } from '../sim/battleSetup';
 import {
   JOURNAL_FORMAT,
   snapshotHash,
@@ -212,9 +212,15 @@ function replaySegment(
     return w;
   };
 
+  /** The turn's cap ends every battle within MAX_TURN_TICKS ticks, so a
+   *  battle still going after that many is a tick that stopped advancing. */
+  const stalled = (w: World): Error =>
+    new Error(`replayJournal: segment ${index}, battle ${battles + 1}, ${at}: the battle ran past its cap at tick ${w.currentTick}`);
+
   /** Run the battle until `tick` ticks have run. It must still be going then. */
   const runTo = (w: World, tick: number, wanted: string): void => {
-    while (!w.ended && w.currentTick < tick) tickTurn(w);
+    for (let n = 0; n < MAX_TURN_TICKS && !w.ended && w.currentTick < tick; n++) tickTurn(w);
+    if (!w.ended && w.currentTick < tick) throw stalled(w);
     if (w.ended) {
       throw diverged(
         `the journal has ${wanted}, and the replayed battle ended at tick ${w.currentTick} (${String(winner)})`,
@@ -251,7 +257,8 @@ function replaySegment(
       w.enqueueCommand(entry.command);
     } else {
       const w = openBattle(`a battle's end`);
-      while (!w.ended) tickTurn(w);
+      for (let n = 0; n < MAX_TURN_TICKS && !w.ended; n++) tickTurn(w);
+      if (!w.ended) throw stalled(w);
       if (winner !== entry.winner || w.currentTick !== entry.ticks) {
         throw diverged(
           `the journal's battle ended ${entry.winner} after ${entry.ticks} ticks, ` +

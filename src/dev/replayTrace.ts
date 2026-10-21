@@ -31,7 +31,7 @@ import type { World } from '../sim/World';
 import { EventBus } from '../core/EventBus';
 import type { GameEvents } from '../core/events';
 import type { WorldCommand } from '../sim/Command';
-import { battleWorld, spawnEncounter, tickTurn } from '../sim/battleSetup';
+import { MAX_TURN_TICKS, battleWorld, spawnEncounter, tickTurn } from '../sim/battleSetup';
 import { configHash } from '../config/configHash';
 import type { BattleTrace } from './TraceRecorder';
 
@@ -98,8 +98,11 @@ export function replayTrace(
     winner = payload.winner;
   });
 
-  // BattleScene's clock body, the same in effect.
-  while (!world.ended) {
+  // BattleScene's clock body, the same in effect. The turn's cap ends every
+  // battle within MAX_TURN_TICKS ticks, so a count past it is a tick that
+  // stopped advancing, and fails rather than spins.
+  for (let n = 0; !world.ended; n++) {
+    if (n >= MAX_TURN_TICKS) throw new Error(`replayTrace: the battle ran past its cap of ${MAX_TURN_TICKS} ticks`);
     const next = world.currentTick + 1;
     const stamped = byTick.get(next) ?? [];
     // The observation hook fires on the pre-tick state (what the live player

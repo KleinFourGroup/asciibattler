@@ -15465,3 +15465,90 @@ Readings by the tool's clock (UTC): 109,636 at 15:09 (the first),
 325,526 on `976c09e5`, 336,938 on `21e00369`, 344,036 on `449444ad`,
 366,251 on `0aaefff8`, 369,623 on `75aafde4`, 395,709 on `48d8595d`,
 403,285 at 17:04 before this entry.
+
+### 126j's and 126k's step zero: B-11 and R-4, measured (2026-10-21, session 9d8a93c2)
+
+At `2b82fce9`, the tree clean. The session was started by the phase's
+driver (driver 4) and works with the user as usual. Both trials' step
+zeros were run before either is built, so their calls go to the user at
+one stop. Searched with `git grep` over `src`, `tests`, `tools`,
+`scripts` and `config`; the probes ran in a worktree of `2b82fce9` under
+`output/`, removed after (junction first). Nothing was built.
+
+**B-11, the scan.** `units.push(` is written on 74 lines in 23 test
+files (the kickoff's 74), besides `World.ts`'s two and the two editors'
+`units`, which are not a World's. No test writes a World's `units`
+another way (`unshift`, `splice`, an index, `length`). With `units` typed
+`readonly Unit[]` in the worktree, the compiler named the same 74 lines in
+the same 23 files and nothing else outside `World.ts`, whose three writes
+are `addUnit`'s push, `removeUnit`'s splice and `fromJSON`'s push; no
+reader under `src` needs the array mutable. With the scan removed, 54
+tests fail in 14 of those files: `World.test.ts` 10, `Targeting.test.ts`
+8, `movement.test.ts` 7, `triggers.test.ts` 5, `propose.test.ts` 5,
+`MovementBehavior.test.ts` 4, `sharedCooldown.test.ts` 3, `stats`,
+`EffectAction`, `interpreter` 2 each, `rubbleAutoTarget` and
+`statusPeriodic` 1 each, and `tests/pathing`'s `baseline` and `drift` 2
+each, through `tests/pathing/fixtures.ts`. The other nine files' pushed
+units are never looked up. In the game the scan finds nothing: every unit
+enters through `addUnit` or `fromJSON`, which index it, and `removeUnit`
+takes it out of both, so the scan runs only for a unit that has left and
+walks the whole list to return nothing.
+
+**B-11, the five marks.** Required in the worktree, the compiler names 45
+sites, every one in a test. `battle:ended`'s three: the 32 emits in 7
+files (the kickoff's count; `runRollout.test.ts` 6 through one constant,
+`TraceRecorder.test.ts` 6, `JournalRecorder.test.ts` 5, `Run.test.ts` 8,
+three of them helpers, `determinism.test.ts` 3, `snapshot-roundtrip` 3,
+`EventBus.test.ts` 1). The other emits pass a payload through
+(`eventSounds.test.ts`' every-key loop, `replayJournal.ts`' re-emit,
+`World.emit`). `BattleEncounter`'s two: 13 literals (12 lack both,
+`replayTrace.test.ts` lacks `kind`), nine of them R-4's sites, and one
+cast the compiler cannot see, `JournalRecorder.test.ts`' `{} as
+BattleEncounter`. No game site: `beginTurn` is the one writer of a
+non-null `currentEncounter`, and sets both.
+
+- A sixth mark of the row's kind: `tallies`. The World always sets it
+  (`emitBattleEnded`), only fakes leave it out, and the Run reads an
+  absent one as zero. `campKills` is not one: the World leaves it out
+  when no camp fell.
+- The save: the fingerprint reads optionality (`save-fingerprint.test.ts`
+  failed with the two encounter marks required). A save holds the
+  `currentEncounter` `beginTurn` wrote, so every v49 save that holds one
+  carries both marks, and the fingerprint's own re-pin without a bump
+  (`npm run save:fingerprint -- --compatible="<reason>"`) is for a shape
+  a save from before still loads under. A bump to v50 would reject every
+  `0.1.0` save at the next upload.
+- The lines, priced by site and not built: the encounters +25 (twelve
+  literals two lines each, one a line); the fakes about +34 (the one-line
+  emits in `TraceRecorder`, `JournalRecorder` and `EventBus` tests need a
+  local constant or wrap past 100 columns; `Run.test.ts` +9;
+  `determinism` +3; `snapshot-roundtrip` +7; `runRollout`'s constant +2);
+  `src` about −10 (`handleTurnEnded`'s comment and three fill-ins, the two
+  "Optional so a test's hand-built encounter" sentences). About +49 in
+  all, against bar (2); `tallies` would add about 11.
+- The scan's half, priced the same way: `findUnit` 6 lines to 1, one
+  method of about five lines that pushes and indexes, `addUnit`'s and
+  `fromJSON`'s push-and-index pairs one line each, about +2 for the
+  read-only guard; the 74 test lines stay 74. About 0 in all, or −2
+  without the guard.
+
+**R-4.** `spawnEncounter` has 23 callers; 13 build their World with
+`battleWorld` already, and the other ten are TODO's ten. The partial
+builds (`spawnCamps`, `spawnTeam` or `applyTerrain` alone, in about 30
+unit tests of one piece and `snapshot-roundtrip`'s terrain case) are not
+encounter builds. Every one of the ten builds its World on the
+encounter's `worldSeed`, none installs rules or passes a combat stream,
+and nine build it on the encounter's grid. The tenth,
+`stormcaller-battle.test.ts`, has an encounter of 14×14 and a World built
+at the default 12 (`GRID_SIZE`); `applyTerrain` reads the World's grid, so
+its battles have always been 12×12. On `battleWorld` in the worktree they
+ran at 14×14 and the file's five tests passed. The board panel's
+`realBoard` builds a real encounter from a Run and leaves its rules out;
+the two runs it opens (seeds 91 and 6, the soldier, an elite first node)
+carry none, and its 23 tests passed on `battleWorld`.
+
+The calls are in the session's final message of this turn; the user's
+answer follows here.
+
+Reading by the tool's clock (UTC): 121,140 at 17:47 (the first), 254,558
+at 18:02 before this entry.

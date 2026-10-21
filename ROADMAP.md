@@ -333,8 +333,8 @@ kickoff"). A-25's tests have no step: none is left.
   to the coverage tool's reading key for key; the census's section 6.
 - ☑ **126c — the list's stop** (`stop`; the decision point). Signed
   2026-10-21: every class kept, A-43 and A-44 deleted.
-- ☐ **126d — the tests signed at 126c** (`none`). `reach-diff`, and a
-  plant where a row names the test that must catch it.
+- ☑ **126d — the tests signed at 126c** (`none`). A-43 and A-44 out;
+  `reach-diff`: nothing lost; each plant caught by `layouts.test.ts`.
 - ☐ **126e — T-90, the loops** (`none`). Each that waits on a command
   or a tick bounded, a planted no-op failing one of each shape.
 - ☐ **126f — T-86, the chaos seeds' timeout** (`none`).

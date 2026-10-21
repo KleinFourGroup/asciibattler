@@ -15099,3 +15099,59 @@ Reading: 400,681 at 14:15, before this entry.
 early!" So A-41 and A-42 are kept as classes, A-43 and A-44 are
 deleted in 126d, and 126d is built in this session, which hands off
 before 126e (about 200k for 126e to 126i from about 401k).
+
+### 126d — A-43 and A-44 (2026-10-21, session 314e1038)
+
+Deleted at `c3293fe1`: `tests/tools/layout-editor.test.ts`'s "rejects
+campSpawns with an empty camps list" (5 lines) and
+`src/sim/terrainGen.test.ts`'s "dispatches to the hand-authored library
+when layoutId is set" (11). Neither held a step code; the ceiling stays
+895. Their imports have other readers (`LayoutsSchema`, `getLayout`).
+
+Proof:
+
+- `reach-diff output/reach-126a/after output/reach-126d/after
+  --from=HEAD`: "nothing lost". The before reading is 126a's after, at
+  `c9c9b8d6`, since nothing under `src`, `tests`, `tools`, `scripts` or
+  `config` changed between it and `290f8d81` (`git diff --stat`, empty).
+  3,699 → 3,697 tests; the smoke 594, by the hook.
+- The plants, each in a worktree of `c3293fe1` against the suite (`npm
+  run oracle -- plant`; the clean worktree fails `tests/licences.test.ts`
+  alone, which the tool sets aside):
+  - `src/config/layouts.ts:404`, the camp-spawn refusal, its second
+    `bump` (`--op=bump --nth=1`, a zero to 1): caught, 1 of 255 files
+    failing, `src/sim/layouts.test.ts`. The edit is one of the line's
+    two zeros that only narrow the refusal (the other two would refuse
+    shipped layouts at load, and more files would fail); the tool's list
+    does not say which (a papercut).
+  - `src/sim/terrainGen.ts:95`, the library dispatch negated: caught, 20
+    of 255 files. The negation also sends a null id into the library;
+    `layouts.test.ts`, among the 20, passes only layout ids, so its
+    failure is the dispatch skipped.
+
+### The hand-off after 126d (2026-10-21, session 314e1038)
+
+126a to 126d are built and committed; no ◐ is open, since 126a, 126b
+and 126d are `none` and 126c was read at its stop. The next
+step is 126e, the loops, in a fresh session, as signed at 126c's stop.
+
+For the session that takes 126e:
+
+- The kickoff's audit lists the 54 `while (` lines and, by the line
+  alone, the about 30 that wait on a command or a tick (WORKLOG §126,
+  "The kickoff"); 119g-post bounded three the same way, and TESTING's
+  "Bounded steps, never poll `currentTick`" is the rule.
+- 126h's walker can reuse `tests/importGraph.ts`, the run-time import
+  walker the boot pins already share, before porting
+  `scratch/123l-loadcycle/importPaths.mts`.
+- The per-test reader under `scratch/126b/` stays for a later list
+  (`byTest.ts --tier=…`, then `known.ts` and `list.ts`); its readings
+  are of `c9c9b8d6`. `output/reach-126a/` and `output/reach-126d/` hold
+  the suite's readings at `c9c9b8d6` and `c3293fe1`.
+- No worktree is left (the plant tool removes its own), no background
+  task runs, and no preview server was started.
+
+Readings by the tool's clock (UTC): 101,090 at 12:36 (the first),
+217,295 on the kickoff's commit, 225,828 on the sign's, 250,784 on
+126a's, 400,949 on 126b's, 414,355 on 126d's, 425,583 at 14:48 before
+this entry's commit.

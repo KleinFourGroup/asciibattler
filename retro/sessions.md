@@ -7470,3 +7470,44 @@ at the code it names.
    my lean to be a restatement of an existing rule. I'd want both again.
    That is my reported response; whether the reads were right rests on
    what the next phases find.
+
+## 2026-10-21 — session 314e1038 (claude-opus-5-5): §126's kickoff, 126a to 126d; started by the phase's driver session
+
+1. *Orientation.* Enough. The Cursor, the charter and the driver's four
+   notes pointed at everything the kickoff used. The charter still named
+   A-25's tests, which earlier phases had already taken; a search settled
+   it in one call. Where 120e's per-file runner lived I found by listing
+   `scratch/120e/`, since the census names the method and not the file.
+2. *Norms in tension.* Two small ones. The plant rule says a plant goes
+   in a worktree, never the live tree; the reader's planted test file sat
+   in `scratch/126b/plant/`, which the app's graph never loads, and I
+   judged that inside the rule's reason rather than its letter. And the
+   background runs had no blocking wait, so twice I ended a turn with a
+   status message mid-stretch rather than leave the user without one.
+3. *Pulled to claim more.* Yes, in the census draft. I first wrote that
+   44 tests read by body found no repeat and that 20 text twins, "read",
+   differed in set-up, when two of the largest classes were unsampled and
+   the 20 were judged by their names. Re-reading the draft against what I
+   had printed caught both before the commit; the sampling of the two
+   classes and of the 48 found the only two repeats. I also drafted that
+   a V8 take resets the coverage tool's own session, which I had not
+   observed, and reworded it to what the known answer shows. My papercut
+   says the plant's zero was identified by which files failed; the
+   WORKLOG says, more exactly, that it is one of two.
+4. *Wasted.* About 100k on the kickoff's audit, most of it needed; the
+   `repeats.ts` text filter, whose 43 hits were all set-up differences
+   (cheap, and it told me text would not find repeats).
+5. *For the next session.* The hand-off entry in WORKLOG §126. The reader
+   works and is exact; it costs about 15 minutes of machine a tier.
+6. *Room.* Yes. Matthew signed the cut and its five calls, then the
+   stop's four rows, and left the hand-off's timing to me; I chose to
+   build 126d here because it was small and its proofs ready. The
+   silent-turn reminder came often during the long runs; a status line
+   answered each, and I noticed no pull to have a finding ready. No wish
+   to pause or stop was noticed.
+7. *What helped.* Building the reader with its known answer first: the
+   first full run equal on 255 of 255 files, and the planted case read
+   right, made the list something I could trust rather than defend. The
+   reads by body were the interesting part, since reach alone said almost
+   nothing. I'd want that order again. That is my reported response; the
+   list's worth rests on whether later work finds a repeat it missed.

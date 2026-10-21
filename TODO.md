@@ -70,15 +70,9 @@ every item below is done (WORKLOG §124, "The close of §124"; WORKLOG
 
 ### §126 tests
 
-- [ ] **A guard against an import cycle through `config/units`.** The
-  unit catalog calls `knownTargetingIds()` while it loads, so a module on
-  a path back to it fails at load when a test file reaches it first, and
-  the suite's `isolate: false` hid two such paths until §123 broke them
-  (gotcha #114; WORKLOG §123, "The load cycle"). A test that walks the
-  static imports that are not type-only, and fails on any path from a
-  module `config/units` imports back to it, would catch a new edge on
-  every `npm test`. The walker, about 70 lines, is
-  `scratch/123l-loadcycle/importPaths.mts`. Signed for here 2026-10-16.
+- ✅ **A guard against an import cycle through `config/units`.**
+  `tests/units-cycle.test.ts`, on the shared walker, fails on any path
+  back (WORKLOG §126, 126h).
 
 - ✅ **A test that loops until a command takes effect never returns once
   the command stops taking effect.** Every loop that waits on a tick or a

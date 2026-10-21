@@ -2,7 +2,8 @@ import type { Unit } from './Unit';
 import type { World } from './World';
 // `config/units` calls `knownTargetingIds()` while it loads, so nothing
 // imported here may reach `config/units`: a path back is an import cycle, and
-// a test file that loads this module first fails (gotcha #114).
+// a test file that loads this module first fails (gotcha #114;
+// tests/units-cycle.test.ts fails on any such path).
 import { SIM } from '../config/sim';
 import { distanceBetween } from '../core/grid';
 

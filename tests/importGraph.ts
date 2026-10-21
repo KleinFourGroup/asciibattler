@@ -4,8 +4,8 @@ import ts from 'typescript';
 
 // The run-time import graph of the source, read from its text with the
 // TypeScript parser: what a bundler follows, without building anything.
-// Shared by the pins that hold a module boundary (store-boot.test.ts,
-// store-guard.test.ts). Paths are repo-relative with forward slashes.
+// Shared by the pins that hold a module boundary (the boot pins, the guards
+// and units-cycle.test.ts). Paths are repo-relative with forward slashes.
 //
 // A type-only import is erased at build time and doesn't count: `import
 // type …`, `export type … from`, and an import whose every name is marked

@@ -34,7 +34,7 @@ function duel(combatSeed: number): { world: World; attacker: Unit; target: Unit 
   const world = new World(new EventBus<GameEvents>(), new RNG(1), 12, 12, undefined, new RNG(combatSeed));
   const attacker = mkUnit(1, 'player', { precision: 0, evasion: 0 }, 0);
   const target = mkUnit(2, 'enemy', { precision: 0, evasion: 0 }, 1);
-  world.units.push(attacker, target);
+  world.placeUnits(attacker, target);
   return { world, attacker, target };
 }
 
@@ -92,7 +92,7 @@ describe('World trigger dispatch', () => {
     );
     const attacker = mkUnit(1, 'player', { precision: 0, evasion: 0 }, 0);
     const target = mkUnit(2, 'enemy', { precision: 0, evasion: 99 }, 1);
-    world.units.push(attacker, target);
+    world.placeUnits(attacker, target);
     const dealMiss = vi.fn();
     const evade = vi.fn();
     const dealHit = vi.fn();
@@ -174,7 +174,7 @@ describe('World trigger dispatch', () => {
     );
     const attacker = mkUnit(1, 'player', { precision: 0, evasion: 0 }, 0);
     const target = mkUnit(2, 'enemy', { precision: 0, evasion: 99, speed: 5 }, 1);
-    world.units.push(attacker, target);
+    world.placeUnits(attacker, target);
     // The L dodge-buff, in miniature: on evade, the dodger gains +1 speed.
     world.registerTrigger('evade', (ctx) => {
       ctx.target.addEffect({

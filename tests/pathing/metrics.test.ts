@@ -37,7 +37,7 @@ function synthetic(specs: { id: number; team: Team; x: number; y: number }[]): {
   const world = new World(bus, new RNG(1));
   const stats: UnitStats = { ...ARCHETYPE_CONFIG.mercenary.baseStats, luck: 0 };
   for (const s of specs) {
-    world.units.push(
+    world.placeUnits(
       new Unit({
         id: s.id,
         team: s.team,

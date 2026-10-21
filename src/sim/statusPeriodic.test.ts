@@ -93,7 +93,7 @@ function setup(victimStats: Partial<UnitStats> = {}): Probe {
       derived: deriveStats(stats, 1),
       position: { x, y },
     });
-    world.units.push(u); // constructor seats currentHp at maxHp (full health)
+    world.placeUnits(u); // constructor seats currentHp at maxHp (full health)
     return u;
   };
   const victim = mk(1, 'player', 1, 1, victimStats);

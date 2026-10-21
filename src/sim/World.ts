@@ -256,10 +256,12 @@ export class World {
    * and stays apart from the spawn setup's stream (`setupRngFor`).
    */
   readonly combatRng: RNG;
-  readonly units: Unit[] = [];
+  private readonly unitList: Unit[] = [];
+  /** Read-only outside, so a unit enters only through `placeUnits`, which indexes it. */
+  readonly units: readonly Unit[] = this.unitList;
   /**
-   * The id → unit index over `units`, kept by `addUnit`, `removeUnit` and
-   * `fromJSON`, read by `findUnit`. Looked up by id and never iterated, so
+   * The id → unit index over `units`, kept by `placeUnits` and
+   * `removeUnit`, read by `findUnit`. Looked up by id and never iterated, so
    * its insertion order can't reach the sim.
    */
   private readonly unitsById: Map<number, Unit> = new Map();
@@ -1923,7 +1925,7 @@ export class World {
       // partner's entry stays: the actor's swap is still seated, and its flip
       // degrades or aborts on its own.
       this.unindexReservation(this.units[i]!);
-      this.units.splice(i, 1);
+      this.unitList.splice(i, 1);
     }
     this.unitsById.delete(id);
     // A unit that dies mid-move leaves no block on the destination it never
@@ -2124,8 +2126,7 @@ export class World {
       campId: init.campId ?? null,
       ...(init.effects && init.effects.length > 0 ? { effects: init.effects } : {}),
     });
-    this.units.push(unit);
-    this.unitsById.set(unit.id, unit);
+    this.placeUnits(unit);
     // Booked before any death can reap it. Only a player unit with a roster
     // slot earns XP, the filter `computeXpAwards` pays by.
     if (unit.team === 'player' && unit.rosterIndex !== null) {
@@ -2138,13 +2139,14 @@ export class World {
     return unit;
   }
 
+  /** Puts built units in `units` and the index as they are, with no event or trigger. */
+  placeUnits(...units: Unit[]): void {
+    this.unitList.push(...units);
+    for (const u of units) this.unitsById.set(u.id, u);
+  }
+
   findUnit(id: number): Unit | undefined {
-    const hit = this.unitsById.get(id);
-    if (hit !== undefined) return hit;
-    // A test fixture that pushes onto `units` directly skips the index, and
-    // the scan finds its units. `addUnit` and `fromJSON` always index, so the
-    // scan serves tests alone.
-    return this.units.find((u) => u.id === id);
+    return this.unitsById.get(id);
   }
 
   /**
@@ -2291,8 +2293,7 @@ export class World {
       }
       for (const kind of us.behaviors) unit.behaviors.push(createBehavior(kind));
       for (const id of us.abilities) unit.abilities.push(createAbility(id));
-      world.units.push(unit);
-      world.unitsById.set(unit.id, unit);
+      world.placeUnits(unit);
     }
 
     // Phase 2: in-flight actions, now that every unit exists for id lookup.
@@ -2324,7 +2325,7 @@ export class World {
     for (const [attackerId, total] of snap.damageDealt) {
       world.damageDealt.set(attackerId, total);
     }
-    // `addUnit` doesn't run on a rehydrate (phase 1 pushes onto `units`), so
+    // `addUnit` doesn't run on a rehydrate (phase 1 calls `placeUnits`), so
     // the roster ids come back from the snapshot alone.
     for (const [unitId, rosterIndex] of snap.playerRosterIds) {
       world.playerRosterIds.set(unitId, rosterIndex);

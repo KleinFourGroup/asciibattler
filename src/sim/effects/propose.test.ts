@@ -66,7 +66,7 @@ function makeUnit(team: Team, pos: GridCoord, opts: MakeOpts = {}): Unit {
 
 function world(units: Unit[]): World {
   const w = new World(new EventBus<GameEvents>(), new RNG(1), 16, 16);
-  w.units.push(...units);
+  w.placeUnits(...units);
   return w;
 }
 
@@ -485,7 +485,7 @@ describe('proposeEffectAbility — footprint firing band (44-pre-c)', () => {
           u.abilities.push(new EffectAbility(def)); // the hold reads ignoresLineOfSight
           const bus = new EventBus<GameEvents>();
           const w = new World(bus, new RNG(1), 16, 16);
-          w.units.push(u, r);
+          w.placeUnits(u, r);
           const kinds: string[] = [];
           bus.on('unit:moveDecision', (p) => kinds.push(p.kind));
           new MovementBehavior().proposeAction(u, w);

@@ -104,7 +104,7 @@ describe('EffectAction firing — ops land at their authored phase', () => {
     const w = world();
     const caster = makeUnit('player', { x: 0, y: 0 });
     const target = makeUnit('enemy', { x: 1, y: 0 });
-    w.units.push(caster, target);
+    w.placeUnits(caster, target);
     const action = new EffectAction(strikeDef, { targetId: target.id, ops: [{ baseDamage: 10, critChance: 0 }] });
     activate(w, caster, action, resolvePhases(strikeDef, 0));
     action.start(caster, w);
@@ -117,7 +117,7 @@ describe('EffectAction firing — ops land at their authored phase', () => {
     const w = world();
     const caster = makeUnit('player', { x: 0, y: 0 });
     const center = makeUnit('enemy', { x: 5, y: 5 });
-    w.units.push(caster, center);
+    w.placeUnits(caster, center);
     const phases = resolvePhases(magicDef, 0);
     const action = new EffectAction(magicDef, { targetId: -1, targetCell: { x: 5, y: 5 }, ops: [{ baseDamage: 10, critChance: 0 }] });
     activate(w, caster, action, phases);
@@ -131,7 +131,7 @@ describe('EffectAction firing — ops land at their authored phase', () => {
     const w = world();
     const caster = makeUnit('player', { x: 5, y: 5 });
     const target = makeUnit('enemy', { x: 4, y: 5 });
-    w.units.push(caster, target);
+    w.placeUnits(caster, target);
     const phases = resolvePhases(gambitDef, 0);
     const impactOffset = phases.find((p) => p.phase === 'windup')!.ticks; // impact begins after windup
     const action = new EffectAction(gambitDef, { targetId: target.id, ops: [{ baseDamage: 10, critChance: 0 }, { moveDest: { x: 4, y: 5 } }] });
@@ -146,7 +146,7 @@ describe('EffectAction firing — ops land at their authored phase', () => {
   it('dash: relocate fires in start() (impact at offset 0)', () => {
     const w = world();
     const caster = makeUnit('player', { x: 0, y: 0 });
-    w.units.push(caster);
+    w.placeUnits(caster);
     const action = new EffectAction(dashDef, { targetId: -1, ops: [{ moveDest: { x: 2, y: 0 } }] });
     activate(w, caster, action, resolvePhases(dashDef, 0));
     action.start(caster, w);
@@ -228,7 +228,7 @@ describe('EffectAction serialization', () => {
 describe('WorldSnapshot v30 — the §31 effect-scaling bump', () => {
   it('rejects a v29 in-flight save (no migration; a captured status scalar would be dropped)', () => {
     const w = world();
-    w.units.push(makeUnit('player', { x: 0, y: 0 }));
+    w.placeUnits(makeUnit('player', { x: 0, y: 0 }));
     const stale = { ...w.toJSON(), schemaVersion: 29 } as unknown as Parameters<typeof World.fromJSON>[0];
     expect(() => World.fromJSON(stale, new EventBus<GameEvents>())).toThrow(/schema version/);
   });

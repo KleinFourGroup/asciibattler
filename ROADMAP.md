@@ -348,8 +348,9 @@ kickoff"). A-25's tests have no step: none is left.
   and on the tree before §123's fix with gotcha #114's path.
 - ☑ **126i — the walker's port purchase** (`none`). Fails with
   `buyAtPort` planted to buy nothing.
-- ☐ **126j — B-11, a trial** (`none`, on its bar). The scan and five
-  optional marks; Run v50 if the fingerprint reads optionality.
+- ☑ **126j — B-11, a trial** (`none`, on its bar). The scan's half kept
+  (`placeUnits`; `units` read-only outside the World); the five marks'
+  half rejected on bar (2), signed at step zero.
 - ☐ **126k — R-4, a trial** (`none`, on its bar). The ten sites onto
   `battleWorld` where the seeds agree.
 - ☐ **126l — the re-skim** (`stop`).

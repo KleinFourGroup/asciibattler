@@ -63,7 +63,7 @@ function scene(
       derived: neutral ? inertDerived(1) : deriveStats(stats, range),
       position: { x: s.x, y: s.y },
     });
-    world.units.push(u);
+    world.placeUnits(u);
     return u;
   });
   return { world, units };

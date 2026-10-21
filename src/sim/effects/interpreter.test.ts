@@ -67,7 +67,7 @@ describe('executeOp — damage (single-target)', () => {
     const { world, events } = setup();
     const caster = makeUnit('player', { x: 0, y: 0 });
     const target = makeUnit('enemy', { x: 1, y: 0 }, { defense: 3 });
-    world.units.push(caster, target);
+    world.placeUnits(caster, target);
     executeOp(dmgOp(), ctx({ caster, world, target, resolution: { baseDamage: 10, critChance: 0 } }));
     expect(target.currentHp).toBe(target.derived.maxHp - 7); // max(minDamage, 10 - 3)
     expect(events.map((e) => e.name)).toEqual(['unit:attacked']);
@@ -77,7 +77,7 @@ describe('executeOp — damage (single-target)', () => {
     const { world } = setup();
     const caster = makeUnit('player', { x: 0, y: 0 });
     const target = makeUnit('enemy', { x: 1, y: 0 });
-    world.units.push(caster, target);
+    world.placeUnits(caster, target);
     executeOp(dmgOp(), ctx({ caster, world, target, resolution: { baseDamage: 10, critChance: 1 } }));
     expect(target.currentHp).toBe(target.derived.maxHp - Math.round(10 * STATS.critMult));
   });
@@ -87,7 +87,7 @@ describe('executeOp — damage (single-target)', () => {
     const caster = makeUnit('player', { x: 0, y: 0 });
     const target = makeUnit('enemy', { x: 1, y: 0 });
     target.currentHp = 0;
-    world.units.push(caster, target);
+    world.placeUnits(caster, target);
     const before = world.combatRng.next.bind(world.combatRng);
     void before;
     executeOp(dmgOp(), ctx({ caster, world, target, resolution: { baseDamage: 10, critChance: 1 } }));
@@ -100,7 +100,7 @@ describe('executeOp — damage (single-target)', () => {
     // Huge evasion floors the hit chance; with critChance 1 the crit is rolled
     // first (draw #1) and then DISCARDED by the miss (draw #2) — the ordering.
     const target = makeUnit('enemy', { x: 1, y: 0 }, { evasion: 1000 });
-    world.units.push(caster, target);
+    world.placeUnits(caster, target);
     executeOp(
       dmgOp({ evadable: true, accuracy: 0 }),
       ctx({ caster, world, target, resolution: { baseDamage: 10, critChance: 1 } }),
@@ -123,7 +123,7 @@ describe('executeOp — damage (fizzle / catapult)', () => {
     const caster = makeUnit('player', { x: 0, y: 0 });
     const target = makeUnit('enemy', { x: 3, y: 0 });
     target.currentHp = 0;
-    world.units.push(caster, target);
+    world.placeUnits(caster, target);
     executeOp(
       dmgOp(),
       ctx({ caster, world, target, orphanPolicy: 'fizzle', targetCell: { x: 3, y: 0 }, resolution: { baseDamage: 10, critChance: 1 } }),
@@ -138,7 +138,7 @@ describe('executeOp — damage (fizzle / catapult)', () => {
     const { world, events } = setup();
     const caster = makeUnit('player', { x: 0, y: 0 });
     const target = makeUnit('enemy', { x: 3, y: 0 });
-    world.units.push(caster, target);
+    world.placeUnits(caster, target);
     executeOp(
       dmgOp(),
       ctx({ caster, world, target, orphanPolicy: 'fizzle', resolution: { baseDamage: 10, critChance: 0 } }),
@@ -156,7 +156,7 @@ describe('executeOp — damage (aoe / magic)', () => {
     const caster = makeUnit('player', { x: 0, y: 0 });
     const center = makeUnit('enemy', { x: 5, y: 5 });
     const ring = makeUnit('enemy', { x: 6, y: 5 });
-    world.units.push(caster, center, ring);
+    world.placeUnits(caster, center, ring);
     executeOp(
       dmgOp({ evadable: false }),
       ctx({ caster, world, selector: aoe, orphanPolicy: 'ground-target', targetCell: { x: 5, y: 5 }, resolution: { baseDamage: 10, critChance: 0 } }),
@@ -171,7 +171,7 @@ describe('executeOp — damage (aoe / magic)', () => {
   it('a whiff (no victims) deals no damage and emits nothing', () => {
     const { world, events } = setup();
     const caster = makeUnit('player', { x: 0, y: 0 });
-    world.units.push(caster);
+    world.placeUnits(caster);
     executeOp(
       dmgOp(),
       ctx({ caster, world, selector: aoe, orphanPolicy: 'ground-target', targetCell: { x: 5, y: 5 }, resolution: { baseDamage: 10, critChance: 0 } }),
@@ -189,7 +189,7 @@ describe('executeOp — aoe anchor:caster (§76c — the declared anchor, honour
     const caster = makeUnit('player', { x: 5, y: 5 });
     const adjacent = makeUnit('enemy', { x: 6, y: 5 });
     const far = makeUnit('enemy', { x: 9, y: 9 });
-    world.units.push(caster, adjacent, far);
+    world.placeUnits(caster, adjacent, far);
     executeOp(
       dmgOp(),
       ctx({ caster, world, selector: nova, resolution: { baseDamage: 10, critChance: 0 } }),
@@ -204,7 +204,7 @@ describe('executeOp — aoe anchor:caster (§76c — the declared anchor, honour
     const caster = makeUnit('player', { x: 5, y: 5 });
     const atStaleCell = makeUnit('enemy', { x: 0, y: 0 });
     const atCaster = makeUnit('enemy', { x: 4, y: 5 });
-    world.units.push(caster, atStaleCell, atCaster);
+    world.placeUnits(caster, atStaleCell, atCaster);
     // A caster-anchored blast never captures a centre; even if one leaked in,
     // the anchor wins — the blast rides the body, not the cast-time cell.
     executeOp(
@@ -220,7 +220,7 @@ describe('executeOp — aoe anchor:caster (§76c — the declared anchor, honour
     const caster = makeUnit('player', { x: 5, y: 5 });
     const ally = makeUnit('player', { x: 6, y: 5 });
     const enemy = makeUnit('enemy', { x: 4, y: 5 });
-    world.units.push(caster, ally, enemy);
+    world.placeUnits(caster, ally, enemy);
     const shout: TargetSelector = { ...nova, affects: 'allies' };
     const has = (u: Unit): boolean => u.effects.some((e) => e.key === 'emboldened');
     executeOp({ kind: 'applyStatus', statusId: 'emboldened' }, ctx({ caster, world, selector: shout }));
@@ -236,7 +236,7 @@ describe('executeOp — heal', () => {
     const caster = makeUnit('player', { x: 0, y: 0 });
     const ally = makeUnit('player', { x: 1, y: 0 });
     ally.currentHp = ally.derived.maxHp - 3; // only 3 to heal
-    world.units.push(caster, ally);
+    world.placeUnits(caster, ally);
     executeOp({ kind: 'heal', scaling: 'magic', might: 0 }, ctx({ caster, world, target: ally, resolution: { healAmount: 10 } }));
     expect(ally.currentHp).toBe(ally.derived.maxHp); // clamped
     expect(events).toEqual([{ name: 'unit:healed', payload: { unitId: ally.id, amount: 3, healerId: caster.id } }]);
@@ -248,7 +248,7 @@ describe('executeOp — heal', () => {
     const caster = makeUnit('player', { x: 0, y: 0 });
     const ally = makeUnit('player', { x: 1, y: 0 });
     ally.currentHp = 0;
-    world.units.push(caster, ally);
+    world.placeUnits(caster, ally);
     executeOp({ kind: 'heal', scaling: 'magic', might: 0 }, ctx({ caster, world, target: ally, resolution: { healAmount: 10 } }));
     expect(events).toHaveLength(0);
   });
@@ -258,7 +258,7 @@ describe('executeOp — move', () => {
   it('advance: relocates to the captured landing + emits moved & dashed', () => {
     const { world, events } = setup();
     const caster = makeUnit('player', { x: 0, y: 0 });
-    world.units.push(caster);
+    world.placeUnits(caster);
     executeOp(
       { kind: 'move', mode: 'advance' },
       ctx({ caster, world, resolution: { moveDest: { x: 2, y: 0 } }, phaseTicks: 5 }),
@@ -274,7 +274,7 @@ describe('executeOp — move', () => {
     const { world, events } = setup();
     const caster = makeUnit('player', { x: 5, y: 5 });
     const anchor = { x: 4, y: 5 }; // caster retreats away from (4,5) → toward +x
-    world.units.push(caster);
+    world.placeUnits(caster);
     executeOp(
       { kind: 'move', mode: 'retreat' },
       ctx({ caster, world, resolution: { moveDest: anchor }, remainingTicks: 4 }),
@@ -287,12 +287,12 @@ describe('executeOp — move', () => {
     const { world, events } = setup();
     const caster = makeUnit('player', { x: 0, y: 0 }); // corner; anchor adjacent
     // Surround so no neighbor increases distance from the anchor and is free.
-    world.units.push(caster);
+    world.placeUnits(caster);
     // Anchor at (0,0) itself → every neighbor is equidistant-or-closer? Use the
     // caster's own cell as anchor: no neighbor strictly increases distance from a
     // zero-distance anchor beyond what a step gives, but corner walls block most.
     const blockers = [{ x: 1, y: 0 }, { x: 0, y: 1 }, { x: 1, y: 1 }];
-    for (const b of blockers) world.units.push(makeUnit('enemy', b));
+    for (const b of blockers) world.placeUnits(makeUnit('enemy', b));
     executeOp(
       { kind: 'move', mode: 'retreat' },
       ctx({ caster, world, resolution: { moveDest: { x: 0, y: 0 } }, remainingTicks: 4 }),
@@ -322,7 +322,7 @@ describe('executeOp — applyStatus (status-on-hit, §29)', () => {
     const { world } = setup();
     const caster = makeUnit('player', { x: 0, y: 0 });
     const target = makeUnit('enemy', { x: 1, y: 0 });
-    world.units.push(caster, target);
+    world.placeUnits(caster, target);
     executeOp(statusOp(), ctx({ caster, world, target }));
     expect(has(target)).toBe(true);
   });
@@ -332,7 +332,7 @@ describe('executeOp — applyStatus (status-on-hit, §29)', () => {
     const caster = makeUnit('player', { x: 0, y: 0 });
     const target = makeUnit('enemy', { x: 1, y: 0 });
     target.currentHp = 0;
-    world.units.push(caster, target);
+    world.placeUnits(caster, target);
     executeOp(statusOp(), ctx({ caster, world, target }));
     expect(has(target)).toBe(false);
   });
@@ -341,7 +341,7 @@ describe('executeOp — applyStatus (status-on-hit, §29)', () => {
     const { world } = setup();
     const caster = makeUnit('player', { x: 0, y: 0 });
     const target = makeUnit('enemy', { x: 1, y: 0 }, { evasion: 1000 });
-    world.units.push(caster, target);
+    world.placeUnits(caster, target);
     world.combatRng.next = () => 0.99; // crit roll fails, then the miss roll whiffs
     const shared = ctx({ caster, world, target, resolution: { baseDamage: 10, critChance: 0 } });
     executeOp(dmgOp({ evadable: true, accuracy: 0.6 }), shared);
@@ -355,7 +355,7 @@ describe('executeOp — applyStatus (status-on-hit, §29)', () => {
     const { world } = setup();
     const caster = makeUnit('player', { x: 0, y: 0 });
     const target = makeUnit('enemy', { x: 1, y: 0 });
-    world.units.push(caster, target);
+    world.placeUnits(caster, target);
     world.combatRng.next = () => 0; // no crit; the hit lands
     const shared = ctx({ caster, world, target, resolution: { baseDamage: 5, critChance: 0 } });
     executeOp(dmgOp({ evadable: true, accuracy: 0.6 }), shared);
@@ -370,7 +370,7 @@ describe('executeOp — applyStatus (status-on-hit, §29)', () => {
     const caster = makeUnit('player', { x: 0, y: 0 });
     const a = makeUnit('enemy', { x: 5, y: 5 });
     const b = makeUnit('enemy', { x: 6, y: 5 });
-    world.units.push(caster, a, b);
+    world.placeUnits(caster, a, b);
     executeOp(statusOp(), ctx({ caster, world, selector: aoe, orphanPolicy: 'ground-target', targetCell: { x: 5, y: 5 } }));
     expect(has(a)).toBe(true);
     expect(has(b)).toBe(true);
@@ -380,7 +380,7 @@ describe('executeOp — applyStatus (status-on-hit, §29)', () => {
     const { world } = setup();
     const caster = makeUnit('player', { x: 0, y: 0 });
     const target = makeUnit('enemy', { x: 1, y: 0 });
-    world.units.push(caster, target);
+    world.placeUnits(caster, target);
     // §31: the interpreter consumes the captured scalars, NOT the op fields (which
     // are frozen at propose). magnitude 3, a 2s duration override on the resolution.
     executeOp(
@@ -415,7 +415,7 @@ describe('executeOp — chain (§29c)', () => {
     const primary = makeUnit('enemy', { x: 5, y: 5 });
     const near = makeUnit('enemy', { x: 6, y: 5 }); // dist 1 from primary
     const far = makeUnit('enemy', { x: 7, y: 5 }); // dist 1 from `near`, 2 from primary
-    world.units.push(caster, primary, near, far);
+    world.placeUnits(caster, primary, near, far);
     executeOp(
       chainOp(),
       ctx({ caster, world, target: primary, resolution: { chainOps: [{ baseDamage: 20, critChance: 0 }] } }),
@@ -434,7 +434,7 @@ describe('executeOp — chain (§29c)', () => {
     // Two candidates for jump 1: `b` is closer to the primary than `a`.
     const a = makeUnit('enemy', { x: 7, y: 5 }); // dist 2 from primary
     const b = makeUnit('enemy', { x: 6, y: 5 }); // dist 1 from primary
-    world.units.push(caster, primary, a, b);
+    world.placeUnits(caster, primary, a, b);
     executeOp(
       chainOp({ maxJumps: 2 }),
       ctx({ caster, world, target: primary, resolution: { chainOps: [{ baseDamage: 20, critChance: 0 }] } }),
@@ -449,7 +449,7 @@ describe('executeOp — chain (§29c)', () => {
     const caster = makeUnit('player', { x: 0, y: 0 });
     const primary = makeUnit('enemy', { x: 5, y: 5 });
     const other = makeUnit('enemy', { x: 6, y: 5 });
-    world.units.push(caster, primary, other);
+    world.placeUnits(caster, primary, other);
     // maxJumps 5 but only 2 enemies → 2 distinct hits, no re-hit of either.
     executeOp(
       chainOp({ maxJumps: 5 }),
@@ -465,7 +465,7 @@ describe('executeOp — chain (§29c)', () => {
     const caster = makeUnit('player', { x: 0, y: 0 });
     const primary = makeUnit('enemy', { x: 5, y: 5 });
     const island = makeUnit('enemy', { x: 5, y: 12 }); // 7 cells away — beyond rangeCells 2
-    world.units.push(caster, primary, island);
+    world.placeUnits(caster, primary, island);
     executeOp(
       chainOp(),
       ctx({ caster, world, target: primary, resolution: { chainOps: [{ baseDamage: 20, critChance: 0 }] } }),
@@ -479,7 +479,7 @@ describe('executeOp — chain (§29c)', () => {
     const caster = makeUnit('player', { x: 0, y: 0 });
     const primary = makeUnit('enemy', { x: 5, y: 5 });
     const ally = makeUnit('player', { x: 6, y: 5 }); // adjacent friendly — must be skipped
-    world.units.push(caster, primary, ally);
+    world.placeUnits(caster, primary, ally);
     executeOp(
       chainOp(),
       ctx({ caster, world, target: primary, resolution: { chainOps: [{ baseDamage: 20, critChance: 0 }] } }),
@@ -494,7 +494,7 @@ describe('executeOp — chain (§29c)', () => {
     const primary = makeUnit('enemy', { x: 5, y: 5 });
     primary.currentHp = 0;
     const other = makeUnit('enemy', { x: 6, y: 5 });
-    world.units.push(caster, primary, other);
+    world.placeUnits(caster, primary, other);
     executeOp(
       chainOp(),
       ctx({ caster, world, target: primary, resolution: { chainOps: [{ baseDamage: 20, critChance: 0 }] } }),
@@ -511,7 +511,7 @@ describe('executeOp — chain (§29c)', () => {
       const caster = makeUnit('player', { x: 0, y: 0 });
       const primary = makeUnit('enemy', { x: 5, y: 5 });
       const near = makeUnit('enemy', { x: 6, y: 5 });
-      world.units.push(caster, primary, near);
+      world.placeUnits(caster, primary, near);
       const statusInner: EffectOp = { kind: 'applyStatus', statusId: 't_chain' };
       executeOp(
         chainOp({ maxJumps: 2, ops: [innerDmg, statusInner] }),
@@ -535,7 +535,7 @@ describe('executeOp — chain (§29c)', () => {
       const caster = makeUnit('player', { x: 0, y: 0 });
       const primary = makeUnit('enemy', { x: 5, y: 5 });
       const near = makeUnit('enemy', { x: 6, y: 5 });
-      world.units.push(caster, primary, near);
+      world.placeUnits(caster, primary, near);
       const statusInner: EffectOp = { kind: 'applyStatus', statusId: 't_chain' };
       executeOp(
         chainOp({ maxJumps: 2, ops: [innerDmg, statusInner] }),
@@ -574,7 +574,7 @@ describe('executeOp — chain (deferred per-hop timing, §29c follow-up)', () =>
     const primary = makeUnit('enemy', { x: 5, y: 5 });
     const near = makeUnit('enemy', { x: 6, y: 5 }); // dist 1 from primary
     const far = makeUnit('enemy', { x: 7, y: 5 }); // dist 1 from `near`
-    world.units.push(caster, primary, near, far);
+    world.placeUnits(caster, primary, near, far);
     return { world, events, caster, primary, near, far };
   }
 
@@ -617,7 +617,7 @@ describe('executeOp — chain (deferred per-hop timing, §29c follow-up)', () =>
     const { world, caster, primary, near } = lineOfThree();
     // A surviving teammate keeps the battle (and the tick loop) alive after the
     // caster falls, so the deferred hop actually comes due to a dead caster.
-    world.units.push(makeUnit('player', { x: 0, y: 2 }));
+    world.placeUnits(makeUnit('player', { x: 0, y: 2 }));
     executeOp(stagChain, ctx({ caster, world, target: primary, resolution: { chainOps: [{ baseDamage: 20, critChance: 0 }] } }));
     caster.currentHp = 0; // the stormcaller is slain before hop 1 lands
     for (let i = 0; i < DELAY_TICKS + 1; i++) world.tick();

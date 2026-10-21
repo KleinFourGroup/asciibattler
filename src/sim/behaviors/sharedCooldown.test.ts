@@ -177,7 +177,7 @@ function scene(specs: SceneUnit[]): {
       u.behaviors.push(new MovementBehavior(), new AbilityBehavior());
       u.abilities.push(createAbility('sword'));
     }
-    world.units.push(u);
+    world.placeUnits(u);
     return u;
   });
   return { world, units, moves, attacks };

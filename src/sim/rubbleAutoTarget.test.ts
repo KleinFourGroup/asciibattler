@@ -58,7 +58,7 @@ function place(
   } else {
     u.behaviors.push(new MovementBehavior());
   }
-  w.units.push(u);
+  w.placeUnits(u);
   return u;
 }
 

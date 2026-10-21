@@ -71,10 +71,10 @@ describe('pathing perf: bounded per-tick recompute under objective thrash', () =
     // ranged (range 4, which exercises the firing-cell + fallback two-search
     // path). All on the player/enemy split so both teams pathfind every tick.
     for (let i = 0; i < 6; i++) {
-      world.units.push(combatant(id++, 'player', 2 + i, 2, i % 2 === 0 ? 1 : 4));
+      world.placeUnits(combatant(id++, 'player', 2 + i, 2, i % 2 === 0 ? 1 : 4));
     }
     for (let i = 0; i < 6; i++) {
-      world.units.push(combatant(id++, 'enemy', 2 + i, 21, i % 2 === 0 ? 1 : 4));
+      world.placeUnits(combatant(id++, 'enemy', 2 + i, 21, i % 2 === 0 ? 1 : 4));
     }
 
     const mobileUnits = world.units.length; // no deaths → constant
@@ -116,8 +116,8 @@ describe('pathing perf: bounded per-tick recompute under objective thrash', () =
     function run(thrash: boolean): number {
       const world = new World(new EventBus<GameEvents>(), new RNG(7), 24, 24);
       let id = 1;
-      for (let i = 0; i < 6; i++) world.units.push(combatant(id++, 'player', 2 + i, 2, 1));
-      for (let i = 0; i < 6; i++) world.units.push(combatant(id++, 'enemy', 2 + i, 21, 1));
+      for (let i = 0; i < 6; i++) world.placeUnits(combatant(id++, 'player', 2 + i, 2, 1));
+      for (let i = 0; i < 6; i++) world.placeUnits(combatant(id++, 'enemy', 2 + i, 21, 1));
       const cell = { x: 0, y: 0 };
       const objective = { mode: 'engage', target: { kind: 'tile', cell } } as const;
       world.enqueueCommand({ kind: 'setObjective', team: 'player', objective });

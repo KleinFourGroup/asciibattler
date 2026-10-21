@@ -18,7 +18,7 @@ function mkWorld(w: number, h: number, walls: GridCoord[] = []): World {
   const world = new World(bus, new RNG(1), w, h);
   let id = 1;
   for (const p of walls) {
-    world.units.push(
+    world.placeUnits(
       new Unit({
         id: id++,
         team: 'neutral',

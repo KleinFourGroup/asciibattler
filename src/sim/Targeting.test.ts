@@ -603,7 +603,7 @@ function scene(specs: UnitSpec[]): { world: World; units: Unit[] } {
     });
     if (s.currentHp !== undefined) u.currentHp = s.currentHp;
     if (s.targetId !== undefined) u.targetId = s.targetId;
-    world.units.push(u);
+    world.placeUnits(u);
     return u;
   });
   return { world, units };

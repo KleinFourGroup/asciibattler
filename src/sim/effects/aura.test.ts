@@ -62,7 +62,7 @@ function makeUnit(world: World, id: number, team: Team, position: GridCoord): Un
     derived: deriveStats(stats, 1),
     position,
   });
-  world.units.push(unit);
+  world.placeUnits(unit);
   return unit;
 }
 

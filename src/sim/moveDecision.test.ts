@@ -80,7 +80,7 @@ function scene(specs: SceneUnit[]): {
       position: { x: s.x, y: s.y },
     });
     if (!s.inert && !isNeutral) u.behaviors.push(new MovementBehavior());
-    world.units.push(u);
+    world.placeUnits(u);
     return u;
   });
   return {

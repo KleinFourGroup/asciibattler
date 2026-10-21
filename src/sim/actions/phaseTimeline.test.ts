@@ -94,7 +94,7 @@ function scene(action: Action, phases: readonly ActionPhase[], cooldown = 9999):
     position: { x: 0, y: 0 },
   });
   actor.behaviors.push(new PhasedBehavior(action, phases, cooldown));
-  world.units.push(actor);
+  world.placeUnits(actor);
 
   // Inert enemy so neither team is wiped — keeps the battle (and ticks)
   // running across the whole observation window.
@@ -107,7 +107,7 @@ function scene(action: Action, phases: readonly ActionPhase[], cooldown = 9999):
     derived: { ...deriveStats(stats, 1), moveCooldownTicks: 1 },
     position: { x: 11, y: 11 },
   });
-  world.units.push(enemy);
+  world.placeUnits(enemy);
 
   return { world, phases: log };
 }

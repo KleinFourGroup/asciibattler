@@ -540,9 +540,8 @@ describe('World 27d tile statuses (fire→burn, healing→rejuvenate)', () => {
 
 describe('World.applyDamage — GP2 defense mitigation', () => {
   // Build a 2-unit duel directly so the target's `defense` is explicit (the
-  // shared `scene` helper bakes in the melee archetype's defense). Units are
-  // pushed onto `world.units`; `recordDamage`/`findUnit` resolve the attacker
-  // via the linear fallback, so the XP-ledger path is exercised end to end.
+  // shared `scene` helper bakes in the melee archetype's defense), placed so
+  // `findUnit` resolves the attacker and the XP-ledger path runs end to end.
   function duel(targetDefense: number): {
     world: World;
     attacker: Unit;
@@ -572,7 +571,7 @@ describe('World.applyDamage — GP2 defense mitigation', () => {
     };
     const attacker = mk(1, 'player', 0, 0);
     const target = mk(2, 'enemy', targetDefense, 1);
-    world.units.push(attacker, target);
+    world.placeUnits(attacker, target);
     return { world, attacker, target, attacks };
   }
 
@@ -673,7 +672,7 @@ describe('World.applyDamage — I2 dodge hit/miss roll', () => {
     };
     const attacker = mk(1, 'player', opts.attackerPrecision, 0, 0);
     const target = mk(2, 'enemy', 0, opts.targetEvasion, 1);
-    world.units.push(attacker, target);
+    world.placeUnits(attacker, target);
     return { world, attacker, target, attacks, misses };
   }
 
@@ -870,7 +869,7 @@ describe('World.applyDamage — §37c tile to-hit fold (generalizes M6 water bog
     const target = mk(2, 'enemy', 0, 1);
     if (opts.attackerOnWater) world.tileGrid.setKind({ x: 0, y: 0 }, 'shallow_water');
     if (opts.targetOnWater) world.tileGrid.setKind({ x: 1, y: 0 }, 'shallow_water');
-    world.units.push(attacker, target);
+    world.placeUnits(attacker, target);
     return { world, attacker, target, attacks, misses };
   }
 
@@ -970,7 +969,7 @@ describe('World.applyDamage — §37c tile to-hit fold (generalizes M6 water bog
     const target = mk(2, 'enemy', 0, opts.targetEvasion, 1);
     if (opts.attackerTile) world.tileGrid.setKind({ x: 0, y: 0 }, opts.attackerTile);
     if (opts.targetTile) world.tileGrid.setKind({ x: 1, y: 0 }, opts.targetTile);
-    world.units.push(attacker, target);
+    world.placeUnits(attacker, target);
     return { world, attacker, target, attacks, misses };
   }
 
@@ -1354,7 +1353,7 @@ function scene(specs: DeathSceneUnit[]): {
         u.abilities.push(createAbility('sword'));
       }
     }
-    world.units.push(u);
+    world.placeUnits(u);
     return u;
   });
   return { world, units, deaths, attacks };

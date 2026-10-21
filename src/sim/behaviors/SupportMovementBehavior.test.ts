@@ -57,7 +57,7 @@ function makeHealer(pos: { x: number; y: number }, hp?: number): Unit {
 
 function world(units: Unit[]): World {
   const w = new World(new EventBus<GameEvents>(), new RNG(1));
-  w.units.push(...units);
+  w.placeUnits(...units);
   return w;
 }
 

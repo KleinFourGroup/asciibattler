@@ -86,7 +86,7 @@ describe('environment / spawnWall', () => {
       derived,
       position: { x: 0, y: 0 },
     });
-    w.units.push(player);
+    w.placeUnits(player);
     spawnWall(w, { x: 1, y: 1 }); // closer than any enemy
     const enemy = new Unit({
       id: 3,
@@ -97,7 +97,7 @@ describe('environment / spawnWall', () => {
       derived,
       position: { x: 5, y: 5 },
     });
-    w.units.push(enemy);
+    w.placeUnits(enemy);
 
     expect(findTarget(player, w)?.id).toBe(enemy.id);
   });
@@ -249,7 +249,7 @@ describe('§38d-3 — statusSusceptibility gate', () => {
       derived: deriveStats(stats, 1),
       position: { x: 0, y: 0 },
     });
-    w.units.push(merc);
+    w.placeUnits(merc);
 
     // The same id a wall filters out — a combatant (list absent) accepts it.
     const anyId = ['poison', 'bleed'].find((s) => !wallAllows.includes(s))!;
@@ -278,7 +278,7 @@ describe('§83b — statusImmunities gate', () => {
       derived: deriveStats(stats, 1),
       position: { x: id, y: 0 },
     });
-    w.units.push(u);
+    w.placeUnits(u);
     return u;
   };
 

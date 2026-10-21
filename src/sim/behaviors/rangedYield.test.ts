@@ -62,7 +62,7 @@ const WALL_STATS: UnitStats = {
 let nextWallId = 9000;
 function addWalls(world: World, cells: Array<{ x: number; y: number }>) {
   for (const pos of cells) {
-    world.units.push(
+    world.placeUnits(
       new Unit({
         id: nextWallId++,
         team: 'neutral',

@@ -307,7 +307,7 @@ describe('combatRng determinism', () => {
         derived: deriveStats(targetStats, 1),
         position: { x: 1, y: 0 },
       });
-      world.units.push(attacker, target);
+      world.placeUnits(attacker, target);
 
       for (let i = 0; i < 200; i++) world.tick();
       return out;
@@ -339,7 +339,7 @@ describe('combatRng determinism', () => {
         id: 2, team: 'enemy', archetype: 'mercenary', glyph: 'M',
         stats, derived, position: { x: 1, y: 0 },
       });
-      world.units.push(a, t);
+      world.placeUnits(a, t);
       for (let i = 0; i < 200; i++) world.tick();
       return out;
     }

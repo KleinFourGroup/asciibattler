@@ -42,7 +42,7 @@ function makeUnit(team: Team, pos: GridCoord, archetype: UnitArchetype = 'mercen
 
 function world(units: Unit[]): World {
   const w = new World(new EventBus<GameEvents>(), new RNG(1));
-  w.units.push(...units);
+  w.placeUnits(...units);
   return w;
 }
 

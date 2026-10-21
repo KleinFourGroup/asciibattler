@@ -15552,3 +15552,43 @@ answer follows here.
 
 Reading by the tool's clock (UTC): 121,140 at 17:47 (the first), 254,558
 at 18:02 before this entry.
+
+**Signed** (the user, 2026-10-21): "Signing them all, Claude! 😁" So, as
+leaned: (1) `World.placeUnits(...units)` puts built units in `units` and
+the index with no event or trigger, `addUnit` and `fromJSON` call it, the
+74 fixture lines move onto it, and `units` is read-only outside the World;
+(2) the five marks' half is rejected on bar (2) and the marks stay, so
+B-11 lands as the scan's half; (3) the stormcaller fixture's grid is
+corrected to the 12×12 it has always run, and all ten of R-4's sites move
+onto `battleWorld`.
+
+### 126j — B-11, the scan's half (2026-10-21, session 9d8a93c2)
+
+Built as signed. `World.placeUnits(...units)` puts built units in `units`
+and the index with no event or trigger; `addUnit` and `fromJSON` call it.
+`units` is `readonly Unit[]` outside the World, over a private `unitList`
+that `placeUnits` appends to and `removeUnit` splices, so a test that
+pushes onto it fails typecheck. `findUnit` is the index alone. The 74
+fixture lines are `world.placeUnits(…)` (one `sed` over the 23 files the
+search listed; 75 calls in 24 files after, `fromJSON`'s the 75th). Two
+comments the change made false were corrected with it:
+`World.test.ts`' duel said its attacker was found "via the linear
+fallback", and gotcha #105 said the `scene()` helpers push onto `units`;
+it now says they place units, and that the index keeps whichever unit was
+placed last under an id, a second effect of the id collision it records.
+
+The bar:
+
+1. `npm run corpus`: 0 of 30 journals differ. `bash
+   scripts/perf-oracle.sh HEAD`: PASS, byte-identical to `29c4550e` on
+   both shapes. The suite: 3,703 of 3,703, typecheck clean. `npm run
+   pathing`: the tables byte for byte with HEAD's (76 lines), which read
+   `tests/pathing/fixtures.ts`, one of the 14 files whose tests failed at
+   step zero with the scan gone and the pushes left.
+2. Under `src` and `tests`: 92 lines added, 92 removed, in 24 files
+   (`World.ts` +16 −15; the duel's comment one line shorter).
+3. `placeUnits` takes the units and nothing else.
+4. The scan is gone, and every fixture's units are in the index as the
+   World's are. The five marks stay, signed at step zero.
+
+The plants, at this commit, follow.

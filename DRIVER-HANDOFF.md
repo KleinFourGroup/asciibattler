@@ -8,29 +8,25 @@ driver log ([archive/driver-trial/log-124.md](archive/driver-trial/log-124.md)).
 
 ## Cursor
 
-- **Phase:** **§125, the bot and the fuzz instruments: closed
-  2026-10-21** on Matthew's signs at 125l's stop (`ce6f90bf`; WORKLOG
-  §125, "The close of §125"). Three working sessions, each from a
-  driver's brief: 046c70be (the kickoff, 125a–e; to 524,464), e216d681
-  (125f, the three trials, 125j and two posts; to 463,351), cdb73148
-  (125k's three batches, the close; to 410,772). Every reading of all
-  three matches its transcript. **Next: §126, tests** (ROADMAP §126),
-  from its kickoff, with a driver Matthew starts as a top-level session,
-  or none. No card waits.
-- **Driver:** none working. Driver 3 was
-  `local_4c64446d-501b-4b13-ad75-2bacf7514e5f` (scratchpad 33d012d0),
-  2026-10-20 17:31 UTC to the close; §124.5's were `local_15013e01…`
-  (86ed5d79) and `local_3addf3c2` (9b60fb27). A new driver writes its app
-  id here.
+- **Phase:** **§126, tests: its kickoff** (ROADMAP §126). Brief 1, for
+  the kickoff, proposed as a card at this file's commit on 2026-10-21; no
+  session has worked in §126 yet. §125 closed 2026-10-21 on Matthew's
+  signs at 125l's stop (`ce6f90bf`); its three sessions and their
+  readings are in WORKLOG §125 and in this file at `f599778c`.
+- **Driver:** driver 4,
+  `local_e1ae5cfd-6e02-4822-8e2b-241eca97267e` (scratchpad 70e12103), a
+  top-level session Matthew started 2026-10-21 12:28 UTC; first reading
+  115,477. Driver 3, §125's, was `local_4c64446d…` (33d012d0).
 - **Friction read through:** line 312 of `retro/papercuts.jsonl` (311 is
-  session 3's, P21; 312 is driver 3's).
-- **Brief 3's notes**, the last brief's: the oracle tools' forms
-  (`tests/oracle/cli.ts`'s header), `--record` before any run of the
-  suite (P1), `comment-length` on copies (P11), `held-compare.mts` (P13);
-  Write or Edit, `-F`, no stdin reader (P2); other shapes, every caller,
-  test files, never `scratch/`, a gotcha to its end (P15, P3); call 6,
-  pointed at (P20; planning.md says it since `cb44065b`, so §126 needs no
-  note).
+  §125 session 3's, P21; 312 is driver 3's; none filed since).
+- **Brief 1's notes:** the oracle tools' forms (`tests/oracle/cli.ts`'s
+  header), `--record` before any run of the suite (P1), `comment-length`
+  on copies (P11), `held-compare.mts` not needed, since `src`'s tests
+  hold no `TOOL_READ` comment (P13); Write or Edit, `-F`, no stdin reader
+  (P2); other shapes, every caller, test files and shared test helpers,
+  never `scratch/`, a gotcha to its end (P15, P3); the comment pass's
+  rules in four WORKLOG headings (P16). Not noted: P20 (planning.md
+  says it) and P21 (AGENTS "A filtered result is not the result").
 - **Matthew's calls standing:** P2's guard: not yet ("a few more
   observations are needed to justify a guard"), so its note stays. P6's
   and P12's notes stay dropped. P17's wording for open reads, kept here
@@ -94,20 +90,22 @@ or a pattern with two or more earlier instances stops after it.
 
 | Note | Briefs | Credited |
 |---|---|---|
-| `--record` before the suite | §124 1, 2, 7; §124.5 1–8; §125 1–3 | yes; missed once at 125e (a reach run), named in briefs 2–3; quiet since |
-| `comment-length`'s form | §124 1, 3–7; §124.5 1–8; §125 1–3 | yes; 125k measured copies under `output/` |
-| entries by the Write tool, messages by `-F` | §124 5–7; §124.5 1–8; §125 1–3 | yes, but for 124.5h b6; kept though AGENTS says it (Matthew signed, 2026-10-19) |
-| the comment tools' marker and `held-compare` | §124.5 1–8; §125 1–3 | yes in §124.5; 125k's plan checked `src/bot` holds no marker |
-| other shapes and every caller; test files; a gotcha to its end | §124.5 3–8; §125 1–3 | yes; brief 1 named folders, not test files; from brief 2, session 2 credits it with 125g's catch |
-| no Bash call opening with a stdin reader | §124.5 6–8; §125 1–3 | yes; quiet through §125 |
-| the tools' `npm run oracle --` form | §124.5 7, 8; §125 1–3 | yes; session 3: the notes "pointed at everything" |
-| the hand-off forecast (P20) | §124.5 7; §125 1–3 | held in §124.5 session 7; §125 1 asked it as call 6, signed after; session 3's plan forecast by it |
+| `--record` before the suite | §124 1, 2, 7; §124.5 1–8; §125 1–3; §126 1 | yes; missed once at 125e (a reach run), named in briefs 2–3; quiet since |
+| `comment-length`'s form | §124 1, 3–7; §124.5 1–8; §125 1–3; §126 1 | yes; 125k measured copies under `output/` |
+| entries by the Write tool, messages by `-F` | §124 5–7; §124.5 1–8; §125 1–3; §126 1 | yes, but for 124.5h b6; kept though AGENTS says it (Matthew signed, 2026-10-19) |
+| the comment tools' marker and `held-compare` | §124.5 1–8; §125 1–3; §126 1 (as not needed) | yes in §124.5; 125k's plan checked `src/bot` holds no marker |
+| other shapes and every caller; test files; a gotcha to its end | §124.5 3–8; §125 1–3; §126 1 (with shared test helpers) | yes; brief 1 named folders, not test files; from brief 2, session 2 credits it with 125g's catch |
+| no Bash call opening with a stdin reader | §124.5 6–8; §125 1–3; §126 1 | yes; quiet through §125 |
+| the tools' `npm run oracle --` form | §124.5 7, 8; §125 1–3; §126 1 | yes; session 3: the notes "pointed at everything" |
+| the comment pass's rules in four WORKLOG headings (P16) | §126 1 | |
 
 **Dropped** (briefs and credit at `9c886b50`): the docs searched for what
 a deletion removes; where the procedures are; `refs --members`; a
 step-code-shaped file name; the tools split `.css`; whole-line Edits
 (CLAUDE.md "Editing"); at §125, with no CSS in it, `ui.css`'s path and a
-class's stem, and the first turn's open items, none open at a kickoff.
+class's stem, and the first turn's open items, none open at a kickoff;
+at §126, the hand-off forecast (P20; briefs §124.5 7, §125 1–3; credited:
+call 6, then planning.md since `cb44065b`).
 
 ## Tool facts for this repo
 

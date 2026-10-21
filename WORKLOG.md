@@ -14613,3 +14613,83 @@ searcher never clears an order it did not issue; ties and the ε margin
 are one rule; the re-seed is the clairvoyance guard and diverges the
 snapshot, not the World; a clone carries no driver state only while a
 rollout runs no script.
+
+### 125k, batch 2 — the scripts (2026-10-21, session cdb73148)
+
+`attritionStall.ts`, `chokeHold.ts`, `cohesionFocus.ts`,
+`terrainEdgeHold.ts`, `unjam.ts`, all changed. Out: the step codes, the
+`§` marks and the capitals (`THE HAZARD DEFERRAL`, `CONFIRMED`, the
+priority banners), the "provisional" and "54i tunes" plans, the plan for
+a water's-edge variant of the edge hold, and the history: the first
+drafts and what each was measured to cost, cell by cell (pool damage,
+deaths, win rates, the gauntlet cells' names), the articulation scan the
+min cut replaced, the probe that sized the choke memo. Each reason stays,
+in a clause: the contact gate (refusing an engagement is coherent only
+before it exists); the hazard deferral, its two measured losses and its
+known cost; refusal stands still rather than walks away; `engage`, not
+`focus`, since the focus walks the team through the fire; a lower reach
+bar chases casters; mud is a toll booth, not a wall; the prey gate; 0.2
+is not re-tuned off a few battles; a rally stays out of artillery reach.
+The memo keeps its three readings (16.1 %, 76.5 %, 88.8 %) as its reason,
+and unjam its 29.2 % → 15.8 %.
+
+**Statements found false and corrected (rule 7):**
+
+- `chokeHold.ts`, `cloneRead`: the narrow "keeps the clone honest if that
+  ever changes (tsc flags a new shape here)". `ChokeRead.proposal` is any
+  `TeamObjective`, so a proposal of another shape passes the narrow and
+  is handed out uncloned, the object the memo holds, with no type error.
+  The comment says so.
+- `terrainEdgeHold.ts`: the header's "neighbor of the hazard frontier"
+  and `edgeHoldCell`'s "8-neighbors of hazard cells". The scan is
+  `barrierCellList`, fire alone, and a mud cell is no frontier (the
+  function's own inner comment); both name the barrier.
+
+Re-pointed, not false: unjam's header gave a lift of "1.7–3×" beside the
+jammed fraction's numbers; in BALANCE's trace-mining table that lift is
+the jam count's (0.77 → 1.67 and its kin), and the fraction read 0.25 to
+0.29 at the human's commands. The header gives the fraction's reading,
+and the constant points to it rather than repeating it. The edge hold's
+"min-dwell paces any re-issue" is the trigger driver's dwell, since the
+searcher has none. "Lexicographic tie-breaks" is "row-major ties", the
+scan's order.
+
+**Kept, checked at the code they name:** `rallyCells`' filter, row-major,
+an equal enemy distance allowed, artillery alone forbidding a cell;
+engage's three steps (`Targeting.updateObjectiveTarget`) and focus's
+whole preemption (`objective.ts`); `ARTILLERY_REACH` 6 as the catapult
+and the shaman, the five casters at 5 (a scratch probe spawning each of
+the 23 archetypes); fire at the floor cost (`TileGrid`'s `fire: { cost:
+1 }`); `isBarrierHazard` fire alone and mud's poison on enter
+(`isHazardKind`); `unitsApproachingHazard` on barriers;
+`armyMinCut` stopping once the flow passes `maxCut`, by augmenting paths;
+`computeChokeRead` and `chokeMemoStats` read by `chokeHold.test.ts`
+alone, and `armyMinCut` called by the script and its test alone;
+`TileGrid.mutations`; the memo key's seven fields; the fire wall in
+`terrainEdgeHold.test.ts`; `attritionStall.test.ts`'s deferral, mud,
+contact, power, artillery and total-coverage cases; the registry order;
+BALANCE's trace-mining rows (`hold` three times in 197, the fire maps'
+3.9 in the background, the fractions, the labyrinth's 0.03). Kept as
+measured, not run again: the memo's three readings and unjam's sweep.
+Dropped and not checked: the numbers of the drafts' battles, cell by
+cell; each now stands as the reason it gave.
+
+Measured (`comment-length` on copies under `output/cl-125k-b2`): comment
+lines 350 → 279, words 3,112 → 2,509, code lines 345 unchanged. The
+step-code ceiling 1,007 → 934, the 73 these files held.
+
+Proof: `comment-strip HEAD src`, comments only, exit 0; its control made
+one code edit in memory in each of the 5 changed files and the compare
+named all 5.
+
+Cost: 243,315 at 00:09 UTC on batch 1's commit to 320,903 at 00:18
+after the proof, about 78k for 738 lines, about 105 a line.
+
+**Read** (`batch`): `git show <this commit> --
+src/bot/scripts/attritionStall.ts src/bot/scripts/unjam.ts` against the
+seven rules. Wrong looks like a step code, capitals or a battle's
+numbers kept as history, or a reason cut: the contact gate holds before
+an engagement exists; the hazard deferral and its known cost; the
+stand-off takes the cell nearest the centroid first; 0.2 is not re-tuned
+off a few battles' reads; a rally stays out of artillery reach; the
+nominators keep their geometry and drop their thresholds.

@@ -1,67 +1,37 @@
 /**
- * 54h — ATTRITION STALL: priority #5, the LAST script (opportunism last —
- * the §54 straw order). The introspected human move on stall-spiral is the
- * opposite-spawn burn cheese: refuse the engagement while the fire does the
- * work (10 rally tiles + 3 clears in the 53g session; never `hold` — the
- * human "holds" by rallying short, BALANCE §54c). 54c quantified the
- * signature: enemyDot bg ≈ 2.0 with powerΔ ≈ +2 — the enemy burning while
- * we hold a power advantage. Trigger = enemyDot ≥ 1 ∧ powerΔ ≥ 0, the
- * on-record shape — PLUS the contact gate (the 54h amendment, user-approved):
- * the armies must be genuinely disengaged (`armiesInContact` false).
- * "Refusing an engagement" is only coherent before the engagement exists —
- * the first cut fired mid-brawl on alpha-spiral (where the 54c table shows
- * the dot+powerΔ signature standing-true in BACKGROUND) and pulled the
- * unengaged rear out of an active fight: 7.3 → 9.3 pool, worse than the
- * passive 8.7 (worklog §54h). Once contact is made, the human fights;
- * so does the bot.
+ * Attrition stall, the last script in priority: opportunism last. A
+ * human's move on a burning enemy is to refuse the engagement and let the
+ * fire do the work, and they hold by rallying short, never by `hold`. The
+ * trigger is enemies carrying damaging DoTs (`STALL_MIN_ENEMY_DOTS`)
+ * while we hold the power (`STALL_MIN_POWER_DELTA`), with the armies not
+ * yet in contact (`armiesInContact` false): refusing an engagement is only
+ * coherent before it exists. Without the contact gate the stall fired
+ * mid-brawl, where the signature reads true in the background, and pulled
+ * the unengaged rear out of a live fight, worse than passive play. Once
+ * contact is made, the bot fights.
  *
- * Honest scope, on record: terrain-edge hold already captures most of the
- * stall value on this script's own showcase (stall-spiral reads 0.0 pool
- * since 54d — the edge rally IS the refusal), so the v1 goal is the generic
- * remainder — "never walk into a rotting army you already out-power" — and
- * the exit bar is prove-it-triggers + hurts-nowhere (54i arbitrates).
+ * The hazard deferral: the stall returns null whenever any hazard cell is
+ * on the map, since terrain in play is terrain-edge hold's, one behavior
+ * to one owner. Stalling on a hazard map was measured to lose twice: held
+ * at a distance, the team froze at spawn while the enemies' burns ran out
+ * on their approach; deferring only to a hazard between the armies still
+ * let the crossers' burns run out after the crossing. So the stall acts on
+ * damage over time with no terrain in play (poison, statuses on hit),
+ * which its tests pin, and a patch of mud in a corner of an otherwise open
+ * map turns it off, the known cost.
  *
- * THE HAZARD DEFERRAL (the 54h option-A lock, user-approved): the stall
- * returns null whenever ANY hazard cell exists on the map — terrain in
- * play is terrain-edge hold's domain wholesale, one behavior one owner.
- * The spot-check attribution earned this twice: (1) pre-contact stalling
- * AT DISTANCE on a hazard map froze the team at spawn, the enemies' burns
- * expired mid-approach, and stall-spiral leaked 2.0 pool the edge-hold
- * flow clears at 0.0 — while the same accidental overlap produced
- * fire-edge's 7.0→5.3 as a wider-radius edge-hold backstop; that −1.7 is
- * deliberately given back and banked as a 54i candidate with a clean home
- * (widening `EDGE_HOLD_APPROACH_STEPS`, 3 → ~5). (2) A first, narrower
- * "hazard BETWEEN the armies" deferral still leaked on fire-edge
- * (7.0→7.3, +9 deaths): in the post-crossing windows nothing reads
- * "between" anymore, but standing pat while the crossers' burns EXPIRE
- * wastes the finish — on a hazard map even the stall-positive-looking
- * windows act stall-negative (worklog §54h probes). What remains is the
- * script's actual premise — DoTs with NO terrain in play (poison, on-hit
- * statuses; content this board doesn't exercise, so the 11-cell spot-check
- * reads quartet-identical BY DESIGN and the trigger is pinned by tests).
- * On-record v1 cost: a corner mud patch on an otherwise-open map disables
- * the stall entirely — §55's scorer is the principled arbiter for that.
+ * Proposal: `engage` on a stand-off tile, a `rallyCells` cell of our own
+ * army within `STALL_RALLY_RADIUS`: back or sideways, never forward, and
+ * out of artillery reach. Scored nearest the centroid first, then farthest
+ * from the nearest enemy: refusal is standing still, not walking away.
+ * Taking the cell farthest from the enemy first made every re-issue back
+ * the team off again, a retreat under pursuit that strung the units out to
+ * be picked off. Engage's targeting keeps the front already fighting in
+ * its fight, so the stall stops only the unengaged from feeding themselves
+ * in. The release is the driver's null action, once the DoTs expire or the
+ * power advantage flips.
  *
- * Proposal: `engage` on a STAND-OFF tile — unjam's regroup shape, anchored
- * on the OWN-army centroid instead of a jam cluster: within
- * `STALL_RALLY_RADIUS` of the centroid, passable, non-hazard,
- * unoccupied/unclaimed, never closer to the nearest enemy than the centroid
- * already is (refuse, don't advance), and outside ARTILLERY reach (the
- * 54e-amendment lesson: only the siege line forbids its firing zone — an
- * all-reach filter turns a local refusal into a deep retreat march).
- * Scored: NEAREST the centroid first (stand pat — the second 54h lesson:
- * the first cut preferred the cell farthest from the enemy, and every
- * re-issue backed the team off again — continuous retreat under ronin
- * pursuit, units strung out and picked off in detail, alpha-spiral
- * 7.3 → 9.3/10.0 and stall-spiral deaths 11 → 19 regardless of the contact
- * gate; the human "holds by rallying SHORT", BALANCE §54c — refusal is
- * standing still, not walking away), then farthest from the nearest enemy,
- * then row-major. Engage's 3-step targeting keeps the already-engaged
- * front fighting — the stall only stops the unengaged from feeding
- * themselves in. Release = the driver's null action once the dots expire
- * or the power advantage flips.
- *
- * Deterministic + state-only: pure reads, lexicographic tie-breaks, no RNG.
+ * Deterministic and state-only: pure reads, row-major ties, no RNG.
  */
 
 import type { World } from '../../sim/World';
@@ -78,22 +48,23 @@ import {
   type RallyCell,
 } from '../sensors';
 
-/** Trigger: enemies carrying damaging DoTs (54c — stall-spiral bg 2.0;
- *  the ≥1 floor is the on-record shape). PROVISIONAL; 54i tunes. */
+/** Trigger: the fewest enemies carrying a damaging DoT (the human's stall
+ *  battles read about two in the background). */
 export const STALL_MIN_ENEMY_DOTS = 1;
 
-/** Trigger: ownPower − enemyPower floor — stall only from strength (the
- *  human's stall sat at powerΔ ≈ +2; the boss cell's −5 bg must stay out). */
+/** Trigger: the floor on our power minus the enemy's, so the stall acts
+ *  only from strength (the human stalled at about +2; a boss battle's
+ *  background of about −5 must stay out). */
 export const STALL_MIN_POWER_DELTA = 0;
 
-/** Stand-off search radius around the own-army centroid — a bounded local
- *  back-off, never a march (the radius IS the anti-retreat structural cap). */
+/** The stand-off search radius around our centroid: a bounded local
+ *  back-off, never a march. The radius is the cap on retreat. */
 const STALL_RALLY_RADIUS = 4;
 
 /**
- * The stand-off tile (see the header for the full contract). Null when
- * nothing qualifies — under total artillery coverage or with no legal
- * fall-back the null action stands (wait it out where we are).
+ * The stand-off tile (the header gives its rules), or null when nothing
+ * qualifies: under total artillery coverage, or with no legal fall-back,
+ * the null action stands and the team waits where it is.
  */
 export function standOffCell(world: World, team: ObjectiveTeam): GridCoord | null {
   const own = livingUnits(world, team);
@@ -114,17 +85,15 @@ export function standOffCell(world: World, team: ObjectiveTeam): GridCoord | nul
 }
 
 /**
- * 57g.4 — the propose-regardless nominator. Dropped (the rollout's job
- * now): the DoT-count and power-delta triggers, AND the hazard deferral —
- * that rule was ownership discipline for blind triggers (one behavior one
- * owner); under audition, overlap with terrain-edge hold is arbitrated by
- * the rollout (dedup collapses identical proposals), and the burn-expiry
- * cost that motivated the deferral ticks INSIDE an 8s horizon, so the
- * search can see it. KEPT: the contact gate — "refuse the engagement"
- * mid-brawl means disengage under fire (the 54h conviction), and its
- * strung-out-and-picked-off cost materializes partly PAST the horizon
- * (the 57c horizon-edge trap), so it stays structurally off the menu.
- * User-approved calls, worklog §57g.4. Same purity contract as `evaluate`.
+ * The audition nominator. It drops the DoT and power triggers and the
+ * hazard deferral, which kept one owner per behavior for triggers that
+ * cannot see each other: under the searcher the rollouts decide between
+ * this and terrain-edge hold (identical proposals collapse into one), and
+ * the burns running out, the deferral's reason, happen inside the
+ * searcher's horizon, where the search sees them. It keeps the contact
+ * gate: a stand-off mid-brawl means disengaging under fire, and its cost,
+ * units strung out and picked off, falls partly past the horizon, where
+ * the search cannot see it. The same purity as `evaluate`.
  */
 export function nominateAttritionStall(world: World, team: ObjectiveTeam): TeamObjective | null {
   if (armiesInContact(world, team)) return null;
@@ -139,12 +108,12 @@ export const attritionStall: TrafficScript = {
     const read = attritionRead(world, team);
     if (read.enemyDotCount < STALL_MIN_ENEMY_DOTS) return null;
     if (read.ownPower - read.enemyPower < STALL_MIN_POWER_DELTA) return null;
-    if (armiesInContact(world, team)) return null; // the fight is joined — fight
-    // The hazard deferral (see the header): ANY terrain in play defers —
-    // deliberately the BROAD `hazardCellList` (all hazard kinds), not 55a's
-    // barrier read: mud IS terrain, and a stall keyed on mud-poisoned
-    // enemies standing off across a pond is exactly the §55-pre pathology
-    // from the other direction. The stall owns only hazard-FREE maps.
+    if (armiesInContact(world, team)) return null; // the fight is joined: fight
+    // The hazard deferral (the header): any terrain in play defers, by the
+    // broad `hazardCellList` (every hazard kind), not the barrier read. Mud
+    // is terrain, and a stall keyed on mud-poisoned enemies standing off
+    // across a pond is the edge hold's puddle-edge failure from the other
+    // side. The stall owns only the maps with no hazard.
     if (hazardCellList(world).length > 0) return null;
     const cell = standOffCell(world, team);
     if (cell === null) return null;

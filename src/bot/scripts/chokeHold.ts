@@ -1,26 +1,17 @@
 /**
- * 54f — CHOKE HOLD: priority #3. Trigger + proposal both read
+ * Choke hold, third in priority. The trigger and the proposal both read
  * `armyMinCut` (sensors): the smallest set of free cells the enemy must
- * cross to reach us — the width-tolerant replacement for the articulation
- * scan that read ZERO on the ≥2-wide isthmus bridge (BALANCE §54c).
+ * cross to reach us. A cut rather than an articulation point, so a bridge
+ * two or more cells wide still reads.
  *
- * Fires when the funnel trade is on: a small cut exists (≤ `CHOKE_MAX_CUT`),
- * the enemy group OUTNUMBERS it by `CHOKE_OUTNUMBER_FACTOR`× (many of them,
- * few tiles — the isthmus signature: the session's highest enemy counts,
- * 8–12 all-melee, and the only cell where the human used `hold` at all),
- * and the cut sits STRICTLY on our side (if they already hold the bridge,
- * walking into it is an assault, not a choke hold). Proposal: `engage` on
- * the cut's central cell — the team plugs the gap and engage's targeting
- * fights whatever steps through. Release = the driver's null action when
- * the conditions break (they crossed, thinned, or took the choke first).
- *
- * On record (54f design conversation): the HUMAN's isthmus play was
- * actually a terrain-advantage hold — engaging with the enemy still in
- * accuracy-penalized shallow water — not a geometric plug. The geometric
- * funnel stands on its own; the water's-edge variant is a documented
- * candidate EXTENSION of terrain-edge hold (generalize hazard → combat-
- * penalty tiles), deliberately unbuilt while choke-isthmus shows no damage
- * gap (0.0 across human and both bot arms). Worklog §54f.
+ * It fires when the funnel trade is on: a cut of at most `CHOKE_MAX_CUT`
+ * cells exists, the enemy outnumbers it `CHOKE_OUTNUMBER_FACTOR` times
+ * over (many of them, few tiles), and the cut sits strictly on our side
+ * (if they already hold the bridge, walking into it is an assault, not a
+ * hold). Proposal: `engage` on the cut's central cell, so the team plugs
+ * the gap and engage's targeting fights whatever steps through. The
+ * release is the driver's null action when a condition breaks: they
+ * crossed, thinned, or took the choke first.
  */
 
 import type { World } from '../../sim/World';
@@ -32,7 +23,8 @@ import { isInertNeutral } from '../../sim/Unit';
 import type { TrafficScript } from '../TrafficScriptDriver';
 import { armyMinCut, livingUnits, opposingTeam } from '../sensors';
 
-/** Largest cut worth plugging (also the sensor's early-bail bound). */
+/** The largest cut worth plugging, and the flow past which the sensor
+ *  stops. */
 export const CHOKE_MAX_CUT = 3;
 
 /** The funnel trade: enemies must outnumber the cut by this factor. */
@@ -60,15 +52,14 @@ interface ChokeRead {
 }
 
 /**
- * The geometric core shared by `evaluate` and `nominate`: a cut ≤
- * `CHOKE_MAX_CUT` exists and its center sits STRICTLY on our side (the 54d
- * diagonal-tie lesson applies here too) — without both there is no coherent
- * "plug OUR choke" proposal at all. One `armyMinCut` computation serves
- * both callers.
+ * The geometric core `evaluate` and `nominate` share: a cut of at most
+ * `CHOKE_MAX_CUT` exists, and its center sits strictly on our side, since
+ * a Chebyshev tie leaks through a diagonal corner. Without both there is
+ * no coherent proposal to plug our choke. One `armyMinCut` serves both.
  *
- * 86c-L3 — this is the PURE compute (exported as the verifier surface, the
- * §79e principle: the memo below is checked against a recompute production
- * doesn't consult). Production callers go through the memoized `chokeRead`.
+ * The pure compute, exported so the tests can check the memo below
+ * against a recompute it does not consult; the scripts go through the
+ * memoized `chokeRead`.
  */
 export function computeChokeRead(world: World, team: ObjectiveTeam): ChokeRead | null {
   const enemies = livingUnits(world, opposingTeam(team));
@@ -84,30 +75,28 @@ export function computeChokeRead(world: World, team: ObjectiveTeam): ChokeRead |
 }
 
 /**
- * 86c-L3 — the EXACT-INPUT memo over `computeChokeRead`. The choke read was
- * 16.1% of the full-ARM run post-L2b (armyMinCut + its closures + this
- * file's reduces, recomputed every tick of every walker-rollout battle),
- * while its exact input vector repeats across 76.5% of consecutive battle
- * ticks (the L3 probe; 88.8% on isthmus, where choke actually fires) —
- * positions only flip at move-impact boundaries, walls never move.
+ * The exact-input memo over `computeChokeRead`. The choke read was 16.1 %
+ * of a full run of the arbitrated arm (`armyMinCut`, its closures and this
+ * file's reduces, recomputed every tick of every rollout battle), while
+ * its exact input repeats across 76.5 % of consecutive battle ticks
+ * (88.8 % on the isthmus, where the choke fires): positions change only
+ * when a move lands, and walls never move.
  *
- * NOT a same-tick memo and NOT a hash: the key is an element-wise-compared
- * Int32Array of EVERY input the compute reads — the tile-mutation epoch
- * (`TileGrid.mutations`) plus, per unit in `world.units` order (order is an
- * input: it fixes `livingUnits`/edge insertion order, which fixes the
- * augmenting-path order the cut extraction depends on): id, team, position,
- * alive flag, footprint, inert-neutral flag. A hit therefore means the pure
- * function would return the identical value — semantic transparency by
- * construction, no staleness class to reason about. On a hit the PROPOSAL
- * is re-cloned (callers historically got a fresh object per call, and a
- * proposal flows into `world.objectives`); the cut array is shared
- * read-only (consumers only measure it).
+ * Not a same-tick memo and not a hash: the key is an Int32Array, compared
+ * element by element, of every input the compute reads: the tile grid's
+ * mutation count (`TileGrid.mutations`) and, per unit in `world.units`
+ * order, its id, team, position, alive flag, footprint and inert-neutral
+ * flag. The order is an input too: it fixes `livingUnits`' order and so the
+ * order of the edges, which fixes the augmenting paths the cut is read
+ * from. A hit means the pure function would return the same value, so the
+ * memo cannot go stale. On a hit the proposal is cloned again, since a
+ * proposal flows into `world.objectives`; the cut array is shared
+ * read-only (callers only measure it).
  *
- * The memo is bot-layer state keyed per World INSTANCE (WeakMap — rollout
- * clones never share entries, worlds GC freely) and per team. sensors.ts'
- * "no internal caches" doctrine stands: `armyMinCut` itself is untouched —
- * the cache lives here at its one production consumer, with the pure
- * compute exported for the recompute-and-compare tests.
+ * The memo is the bot's state, keyed per World instance (a WeakMap, so
+ * rollout clones never share an entry and worlds are collected freely) and
+ * per team. The sensors keep no cache: `armyMinCut` is untouched, and the
+ * cache lives here at its one caller outside the tests.
  */
 interface ChokeMemoEntry {
   key: Int32Array;
@@ -115,7 +104,7 @@ interface ChokeMemoEntry {
 }
 const chokeMemo = new WeakMap<World, Partial<Record<ObjectiveTeam, ChokeMemoEntry>>>();
 
-/** Test-only counters — hit-rate visibility for the verifier suite. */
+/** Counters for the tests' hit-rate check. */
 export const chokeMemoStats = { calls: 0, hits: 0 };
 
 const TEAM_CODE = { player: 0, enemy: 1, neutral: 2 } as const;
@@ -143,14 +132,15 @@ function sameKey(a: Int32Array, b: Int32Array): boolean {
   return true;
 }
 
-/** A fresh result object per call — exactly what the pure compute returned
- *  historically (the proposal may be stored in `world.objectives`; never
- *  hand out an object the memo also retains). */
+/** A fresh result object per call, as the pure compute returns: the
+ *  proposal may be stored in `world.objectives`, so never hand out an
+ *  object the memo also holds. */
 function cloneRead(r: ChokeRead | null): ChokeRead | null {
   if (r === null) return null;
   const p = r.proposal;
-  // By construction the compute only ever proposes engage:tile; the narrow
-  // keeps the clone honest if that ever changes (tsc flags a new shape here).
+  // The compute proposes only engage on a tile, and the narrow lets the
+  // clone name the cell. A proposal of another shape would be handed out
+  // uncloned, with no type error to say so.
   if (p.mode !== 'engage' || p.target.kind !== 'tile') return r;
   return {
     cut: r.cut,
@@ -177,10 +167,10 @@ function chokeRead(world: World, team: ObjectiveTeam): ChokeRead | null {
 }
 
 /**
- * 57g.4 — the propose-regardless nominator: the 2× outnumber "funnel trade"
- * is the go/no-go judgment the rollout arbitrates under audition; the
- * geometric core (cut exists, our side) is all that must hold. Same purity
- * contract as `evaluate`.
+ * The audition nominator: the outnumbering, the funnel trade, is the
+ * go/no-go call the rollouts make under the searcher, and only the
+ * geometric core (a cut, on our side) must hold. The same purity as
+ * `evaluate`.
  */
 export function nominateChokeHold(world: World, team: ObjectiveTeam): TeamObjective | null {
   return chokeRead(world, team)?.proposal ?? null;

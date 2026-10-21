@@ -1,27 +1,21 @@
 /**
- * 54d — TERRAIN-EDGE HOLD: the first traffic script (priority #1 — safety
- * first), targeting the round's cleanest number (fire-edge: human 0.0 pool
- * damage vs bot 10.7, BALANCE §53g).
+ * Terrain-edge hold, first in priority: safety first. Pathfinding prices
+ * `fire` at the floor cost (a surface effect, not an obstacle), so default
+ * pursuit walks the team straight through the burn. A human rallies short
+ * of the hazard instead and lets the enemy do the crossing: they arrive
+ * burning and are shot at the edge. On a fire map the trigger stands true
+ * all battle, so the script's value is its proposal, the tile short of the
+ * fire, not the trigger's timing.
  *
- * What kills the bot on fire maps: pathfinding prices `fire` at cost 1
- * (D7.B — surface effect, not obstacle), so default pursuit walks the team
- * straight through the burn. What the human does instead (54c: 15 of 18
- * fire-edge commands are `engage:tile`): RALLY SHORT of the hazard and let
- * the enemy do the crossing — they arrive burning, you shoot them at the
- * edge. The 54c table also shows the trigger is a STANDING condition on
- * fire maps (`hazardApproach` bg ≈ 3.9 all battle), so this script's value
- * is the PROPOSAL — the computed pre-hazard edge tile — not trigger timing.
+ * Proposal: `engage` on the best edge tile, a passable non-hazard neighbor
+ * of the barrier frontier (`isBarrierHazard`), on our side of it (nearer
+ * our approaching units than their enemies), closest to the enemy.
+ * `engage`, not `hold` or `focus`: its targeting keeps the units fighting
+ * anything that crosses to them while they wait, as the human played it.
  *
- * Proposal: `engage` on the best edge tile — a passable, non-hazard
- * neighbor of the hazard frontier, on OUR side of it (nearer our
- * approaching units than their enemies), closest to the enemy. `engage`
- * (not `hold`/`focus`) is deliberate: its 3-step targeting keeps units
- * fighting anything that crosses to us while they wait (the human's shape;
- * they used `hold` 3 times in 197 commands).
- *
- * Deterministic + state-only (the §54 locks): pure reads, lexicographic
- * tie-breaks, no RNG. The edge tile can drift as the enemy moves — the
- * driver's min-dwell paces any re-issue (the accepted churn model, 54a).
+ * Deterministic and state-only: pure reads, row-major ties, no RNG. The
+ * edge tile can drift as the enemy moves; the trigger driver's dwell paces
+ * a re-issue.
  */
 
 import type { World } from '../../sim/World';
@@ -39,29 +33,30 @@ import {
   unitsApproachingHazard,
 } from '../sensors';
 
-/** The sensor's approach window (Chebyshev steps) — the 54c mining window. */
+/** The sensor's approach window, in Chebyshev steps: the window the
+ *  human's commands were mined in. */
 export const EDGE_HOLD_APPROACH_STEPS = 3;
 
-/** Trigger threshold: this many units must be walking into the hazard before
- *  a team-wide rally earns its slot over the null action (54c: at-command
- *  mean ≈ 3.9 on the fire cells; 2 keeps the trigger comfortably below the
- *  human's level without firing on a lone stray). PROVISIONAL — 54i is the
- *  arbiter. */
+/** Trigger: this many units must be walking into the hazard before a
+ *  team-wide rally earns its place over the null action. The human's
+ *  commands came at about 3.9 on the fire maps; 2 stays below that without
+ *  firing on a lone stray. */
 export const EDGE_HOLD_MIN_UNITS = 2;
 
 /**
- * The best edge-hold tile, or null when no candidate exists: among passable
- * non-hazard 8-neighbors of hazard cells, STRICTLY on our side (Chebyshev-
- * nearer to an approaching unit than to any enemy; ties rejected — they
- * leak through diagonal corners), the one closest to the enemy — the human's "as far forward as the fire allows" — then
- * nearest our own approaching units (rally amid the team, not at a distant
- * corner of the frontier), then row-major for determinism.
+ * The best edge-hold tile, or null when there is none: among the passable
+ * non-hazard 8-neighbors of the barrier cells, strictly on our side
+ * (Chebyshev-nearer an approaching unit than any enemy; a tie is refused,
+ * since ties leak through diagonal corners), the one closest to the enemy,
+ * as far forward as the fire allows; then the one nearest our approaching
+ * units, a rally amid the team rather than at a far corner of the
+ * frontier; then row-major.
  *
- * Known limits, on record (v1; 54i measures): the side test is Chebyshev,
- * not path-based, and A* prices fire at cost 1 — a route TO a safe rally
- * can still cross fire in convoluted geometry (a strip's end-around is
- * fine; a spiral's interior may not be). Deliberately not fixed by
- * touching pathing costs — sim behavior is out of §54's scope.
+ * Known limits: the side test is Chebyshev, not path-based, and the pather
+ * prices fire at the floor cost, so a route to a safe rally can still cross
+ * fire in a convoluted layout (a strip's end-around is fine; a spiral's
+ * interior may not be). The fix would be the sim's pathing, which the bot
+ * does not change.
  */
 export function edgeHoldCell(
   world: World,
@@ -79,11 +74,11 @@ export function edgeHoldCell(
   let bestEnemyDist = Infinity;
   let bestOwnDist = Infinity;
   const seen = new Set<string>();
-  // 55a — the frontier is the BARRIER frontier (fire-class, sustained
-  // per-tick damage); an on-enter hazard (mud) is a toll booth, not a wall
-  // (the §55-pre fetidPond finding: hazard-shaped rallies at puddle edges
-  // cost −16.7% on that layout). The STANDING check below keeps the broad
-  // `isHazardKind` — holding the line while soaking poison is still bad.
+  // The frontier is the barrier frontier (fire, damage every tick). An
+  // on-enter hazard (mud) is a toll booth, not a wall: rallies at puddle
+  // edges lost runs that passive play, walking through, won. The standing
+  // check below keeps the broad `isHazardKind`, since holding the line
+  // while soaking poison is still bad.
   for (const h of barrierCellList(world)) {
     for (let dx = -1; dx <= 1; dx++) {
       for (let dy = -1; dy <= 1; dy++) {
@@ -97,9 +92,9 @@ export function edgeHoldCell(
         if (isHazardKind(kind) || !tileDef(kind).passable) continue;
         const ownDist = minDist(c, approaching);
         const enemyDist = minDist(c, enemies);
-        // STRICTLY our side: Chebyshev ties leak through diagonal corners
-        // (a far-side corner cell can tie our units' distance and then win
-        // on enemy proximity — caught by the 54d wall-geometry test).
+        // Strictly our side: a Chebyshev tie leaks through a diagonal
+        // corner, where a far-side cell ties our units' distance and then
+        // wins on enemy proximity (`terrainEdgeHold.test.ts`'s fire wall).
         if (ownDist >= enemyDist) continue;
         const better =
           enemyDist < bestEnemyDist ||
@@ -120,11 +115,10 @@ export function edgeHoldCell(
 }
 
 /**
- * 57g.4 — the propose-regardless nominator (the audition-everyone arm):
- * the go/no-go thresholds — the ≥2-approaching floor and the 55c1 prey
- * gate — are the rollout null-floor's job under audition; what remains is
- * geometric well-formedness (≥1 approaching unit to anchor the side test,
- * and an edge cell that exists). Same purity contract as `evaluate`.
+ * The audition nominator: the go/no-go thresholds, the two-unit floor and
+ * the prey gate, are the null arm's under the searcher. What remains is
+ * the geometry: an approaching unit to anchor the side test, and an edge
+ * cell that exists. The same purity as `evaluate`.
  */
 export function nominateTerrainEdgeHold(
   world: World,
@@ -142,21 +136,17 @@ export const terrainEdgeHold: TrafficScript = {
   evaluate(world: World, team: ObjectiveTeam): TeamObjective | null {
     const approaching = unitsApproachingHazard(world, team, EDGE_HOLD_APPROACH_STEPS);
     if (approaching.length < EDGE_HOLD_MIN_UNITS) return null;
-    // 55c1 — the PREY condition (the §55b attribution): holding an edge
-    // nobody is crossing IN FORCE is a stall, not a defense. The forced-
-    // spiral isolate read 25.0% win / 4× cap-draws vs 52.5% passive; a
-    // first ≥1-prey cut recovered only 27.5% because the true breaker is
-    // NON-COMMITTAL enemies — the deserters encounter (fleers) lost 51%
-    // vs passive's 21% and owned 10 of 13 cap-draws: strays flitting near
-    // the fire kept a ≥1 read alive while the army held an edge nobody
-    // honored. Prey = enemies approaching the barrier from their side
-    // (same sensor, opposing team, same window) PLUS enemies already
-    // standing ON it (a mid-crosser's own cell is its nearest hazard, so
-    // the between-test misses it), and the count must reach
-    // EDGE_HOLD_MIN_UNITS — symmetric with our own trigger: rally 2+
-    // units only when 2+ of them are actually coming. Below that → null
-    // → default pursuit (what the passive bot does, and wins with, on
-    // camper/fleer maps).
+    // The prey condition: holding an edge nobody is crossing in force is a
+    // stall, not a defense. Against enemies that flee, strays flitting near
+    // the fire kept a one-unit read alive while the army held an edge
+    // nobody honored, and lost where passive play won. Prey is the enemies
+    // approaching the barrier from their side (the same sensor and window,
+    // for their team) plus those already standing on it (a crosser's own
+    // cell is its nearest hazard, so the between test misses it), and the
+    // count must reach EDGE_HOLD_MIN_UNITS, as our own trigger does: rally
+    // two or more only when two or more are coming. Below that the script
+    // returns null and default pursuit goes on, which is what wins against
+    // enemies that camp or flee.
     const enemies = livingUnits(world, opposingTeam(team));
     const preyCount =
       unitsApproachingHazard(world, opposingTeam(team), EDGE_HOLD_APPROACH_STEPS).length +

@@ -1,26 +1,22 @@
 /**
- * 54e — UNJAM: priority #2. The introspected human move on the jam cells is
- * "fall back → re-sort → re-engage" (spec §Rung 1); 54c quantified it:
- * jamFraction lifts 1.7–3× at the human's commands on the cells where jams
- * FORM (alpha-spiral 0.13→0.28, stall 0.16→0.29, fire-edge 0.17→0.25),
- * while labyrinth BACKGROUND sits at 0.03 — so a 0.2 trigger fires at the
- * human's intervention level and stays silent walking the slow maze (the
- * null-discipline read; random orders bleed 4.3 pool there, BALANCE
- * §53e.2). Known v1 under-fire, accepted on record: the corridors human
- * plays PREVENTIVELY (no jam lift, 0.13→0.13) — a reactive trigger can't
- * see a jam that's never allowed to form; revisit only if 54i demands.
+ * Unjam, second in priority. A human on a jam falls back, re-sorts and
+ * re-engages. In the battles where jams form, the jammed fraction read
+ * 0.25 to 0.29 at the human's commands, against 0.03 in the background of
+ * the labyrinth, so a trigger at 0.2 fires at the human's level and stays
+ * silent walking the slow maze, where random orders bleed. The known
+ * limit: where a human prevents a jam, a reactive trigger cannot see a jam
+ * that is never allowed to form.
  *
- * Proposal: `engage` on a REGROUP TILE — an open cell near the jammed
- * cluster, no closer to the enemy (the fall-back direction; ≥ not >, so a
- * map-edge jam can still rally laterally), maximizing elbow room. The
- * `engage` mode's 3-step targeting does the surgical part for free: units
- * already fighting HOLD their fight (the engaged front never abandons the
- * line); only the unengaged — exactly the jammed rear — walk to the rally
- * and re-sort. Re-engage = the driver's null-action release once the jam
- * reads clear (the trigger drops below threshold → clearObjective after
- * dwell → default pursuit resumes).
+ * Proposal: `engage` on a regroup tile (`regroupCell`): an open cell near
+ * the jammed cluster, no nearer the enemy (equal is allowed, so a jam at
+ * the map's edge can still rally sideways), with the most elbow room.
+ * Engage's targeting does the surgical part: units already fighting keep
+ * their fight, so the front never leaves the line, and only the
+ * unengaged, the jammed rear, walk to the rally and re-sort. The re-engage
+ * is the driver's null action once the jam reads clear: the trigger drops,
+ * the order is cleared after the dwell, and default pursuit resumes.
  *
- * Deterministic + state-only: pure reads, lexicographic tie-breaks, no RNG.
+ * Deterministic and state-only: pure reads, row-major ties, no RNG.
  */
 
 import type { World } from '../../sim/World';
@@ -31,25 +27,22 @@ import { tileDef } from '../../sim/TileGrid';
 import type { TrafficScript } from '../TrafficScriptDriver';
 import { jamRead, livingUnits, opposingTeam, rallyCells } from '../sensors';
 
-/** Trigger: the team's jammed fraction (54c — fires at the human's ~0.25–0.29
- *  command levels, silent on labyrinth's 0.03 background).
- *  ⚠ 0.2 is CONFIRMED, not provisional — do not re-tune it off cell reads
- *  (the 55c2 sweep, worklog §55c2): 0.25/0.30 fixed the four WATCHED cells
- *  (boss to the unjam-silent 17.3, junction 16.3, labyrinth deaths 14→10)
- *  and the natural-run probe then exposed a distribution-wide collapse
- *  (29.2% → 15.8% at 0.30; icebergs −13 / quarry −11 / corridors −11 /
- *  isthmus −10 per-wave) — unjam at 0.2 quietly carries most layouts, and
- *  the gauntlet's corridors cell was merely the only witness. A contact
- *  gate was also tried and falsified (corridors' win is partly mid-fight
- *  re-sorting; alpha-funnel regressed). The boss/junction mid-fight-rally
- *  cost stays as a MEASURED ACCEPTED residual — a trigger-shaped fix
- *  cannot separate it from the global value (both directions measured). */
+/** Trigger: the team's jammed fraction (the header gives the reading).
+ *  0.2 is confirmed: do not re-tune it off a few battles' reads. 0.25 and
+ *  0.30 mended the four battles watched, and the natural runs then
+ *  collapsed (29.2 % to 15.8 % at 0.30, the losses spread across the
+ *  layouts): unjam at 0.2 quietly carries most of them. A contact gate was
+ *  tried and made it worse, since part of its value is re-sorting
+ *  mid-fight. Its cost mid-fight in the boss and junction battles is
+ *  measured and accepted: no trigger-shaped fix separates it from the
+ *  gain, measured both ways. */
 export const UNJAM_MIN_FRACTION = 0.2;
 
-/** Regroup-tile search radius around the jammed cluster's centroid. */
+/** The regroup tile's search radius around the jammed cluster's centroid. */
 const UNJAM_RALLY_RADIUS = 6;
 
-/** Free passable 8-neighbors — the "room to re-sort" score of a rally cell. */
+/** The free, passable 8-neighbors of a cell: a rally cell's room to
+ *  re-sort. */
 function openNeighbors(world: World, cell: GridCoord): number {
   let open = 0;
   for (let dx = -1; dx <= 1; dx++) {
@@ -67,14 +60,12 @@ function openNeighbors(world: World, cell: GridCoord): number {
 
 /**
  * The regroup tile: a `rallyCells` cell of the jammed units within
- * `UNJAM_RALLY_RADIUS`, which keeps a rally out of artillery reach (the
- * post-54g amendment, user-approved: the attribution A/B put the whole
- * artillery-funnel +1.7 / junction +1.7 residual on regrouping under ranged
- * fire — a retreat that eats catapult/champion shots the passive bot never
- * takes; worklog §54g/§54e-amendment). Scored by open neighbors DESC →
- * centroid distance ASC → row-major. Null when nothing qualifies — under
- * total fire coverage the null action stands (wait it out; never fall back
- * through the barrage).
+ * `UNJAM_RALLY_RADIUS`, which keeps a rally out of artillery reach, since
+ * a regroup under ranged fire took shots the passive bot never takes.
+ * Scored by the most open neighbors, then the nearest the centroid, then
+ * row-major. Null when nothing qualifies: under total fire coverage the
+ * null action stands, and the team waits rather than falls back through
+ * the barrage.
  */
 export function regroupCell(
   world: World,
@@ -103,10 +94,9 @@ export function regroupCell(
 }
 
 /**
- * 57g.4 — the propose-regardless nominator: the CONFIRMED 0.2 trigger
- * threshold (which stays untouched on the `evaluate` path) is a go/no-go
- * call the rollout arbitrates under audition; any jammed unit at all makes
- * a regroup geometrically meaningful. Same purity contract as `evaluate`.
+ * The audition nominator: the 0.2 threshold, which `evaluate` keeps as it
+ * is, is a go/no-go call the rollouts make under the searcher, and any
+ * jammed unit makes a regroup meaningful. The same purity as `evaluate`.
  */
 export function nominateUnjam(world: World, team: ObjectiveTeam): TeamObjective | null {
   const jam = jamRead(world, team);

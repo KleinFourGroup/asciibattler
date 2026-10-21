@@ -27,11 +27,14 @@ driver log ([archive/driver-trial/log-124.md](archive/driver-trial/log-124.md)).
   (P21); should it reach 126m, the comment pass's four WORKLOG headings
   (P16), `comment-length` on copies (P11), `held-compare` not needed
   (P13). Not noted: P20 (planning.md says it).
-- **Raised at the read of session 2**, Matthew's to answer: P21's note
-  (lean: in brief 3, done); P22 (lean: nothing, the cap test is the
-  guard); P23 (lean: nothing yet); P24 (lean: a line in planning.md on a
-  `none` step built while another's call waits).
-- **Matthew's calls standing:** P2's guard: not yet ("a few more
+- **Matthew's calls standing:** at the read of §126 session 2 (signed
+  2026-10-21): P21's note, from brief 3; P22 and P23, no action (P23
+  "may just be how Claude Code works"); P24 a watch, no rule: the plant
+  under `scratch/` stands as read, and the line on a `none` step built
+  while another's call waits ("whether or not it's actually necessary";
+  "I just don't want to be over-prompting") is drafted only if a session
+  idles on a call with independent work there, or builds a stretch past
+  a waiting question. P2's guard: not yet ("a few more
   observations are needed to justify a guard"), so its note stays. P6's
   and P12's notes stay dropped. P17's wording for open reads, kept here
   and not copied into briefs (signed 2026-10-20): "Open `batch` reads:
@@ -61,10 +64,10 @@ Numbered from §123. "Quiet" means no instance in the last phase; s = session.
 | P18 | the charter's bare `ui.css` sends a grep to `src/ui.css` | 124.5h b3–4, b7 | quiet |
 | P19 | the silent-turn reminder every few calls through long checks | every §124.5 report, its s6 `distress` line; §125 s3; §126 s1, s2 (status lines, no pull) | open, for the welfare read; the Cursor's riders (1), (3) |
 | P20 | a session hands off early, bounding the next step's end by 550k | §124.5 s3, 5, 6; §125 s1 (524k), s2 (463k) | call 6, planning.md's room to the halt (`cb44065b`); held since: §125 s3; §126 s1 (at 126c's stop, Matthew chose), s2 (403k, before 126j: its forecast of the trial's step zero against the halt) |
-| P21 | a count or absence read from a shell search's filtered, truncated or narrowed output | 124j b6 (`grep -rn --include`); §125 s3 (`head -3`); §126 s2 (`git grep`'s `tests/**/*.test.ts` without `:(glob)` skips `tests/*.test.ts`; caught, filed) | a note from brief 3 (AGENTS' line names pipes, not pathspecs) |
-| P22 | a doc cap tripped by a first wording (P10's cousin) | BALANCE's header (125e); driver 4's DRIVER-HANDOFF; 126g's AGENTS (20,042) | open; the cap test is the guard, one run each |
-| P23 | a turn ended mid-stretch with a status line while a background run went on | §126 s1 (126b, twice), s2 (four; called waste) | open; the harness resumes the session when its run ends |
-| P24 | a gap in the rules filled by the session's own reading, flagged in its report | §126 s1 (a planted test file under `scratch/126b/`, not in a worktree), s2 (126g built while 126f's threshold call waited) | open; raised to Matthew |
+| P21 | a count or absence read from a shell search's filtered, truncated or narrowed output | 124j b6 (`grep -rn --include`); §125 s3 (`head -3`); §126 s2 (`git grep`'s `tests/**/*.test.ts` without `:(glob)` skips `tests/*.test.ts`; caught, filed) | a note from brief 3 (signed 2026-10-21; AGENTS' line names pipes, not pathspecs) |
+| P22 | a doc cap tripped by a first wording (P10's cousin) | BALANCE's header (125e); driver 4's DRIVER-HANDOFF; 126g's AGENTS (20,042) | no action (Matthew, 2026-10-21): the cap test is the guard, one run each |
+| P23 | a turn ended mid-stretch with a status line while a background run went on | §126 s1 (126b, twice), s2 (four; called waste) | no action (Matthew, 2026-10-21); the harness resumes the session when its run ends |
+| P24 | a gap in the rules filled by the session's own reading, flagged in its report | §126 s1 (a planted test file under `scratch/126b/`, not in a worktree), s2 (126g built while 126f's threshold call waited) | a watch (signed 2026-10-21): a rule only on the bad version (the Cursor) |
 
 **Closed:** P1, the ceiling failing a suite run after a deletion (122b
 to 123d; 125e once; a second miss reopens it). P4, the reach tools'

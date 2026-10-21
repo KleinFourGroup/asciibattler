@@ -15304,3 +15304,56 @@ reward phase").
 Readings by the tool's clock (UTC): 109,636 at 15:09 (the first),
 166,032 at 15:17 before the questions, 246,043 on `a1f20a8d`, 272,872
 at 16:05 with the plants read.
+
+### 126f's step zero: the chaos seeds' timeout (2026-10-21, session e6ab25e8)
+
+At `10022411`. `store-guard`'s two walks carry 30 s, the chaos test's
+four seeds (`chaos.test.ts:40`) the default 5 s, as the census has
+them. Timed with Vitest's reporters, nothing else running:
+
+- Alone, the seeds take 309 to 657 ms.
+- Beside the whole suite (one run, `--reporter=json`, 3,697 green), the
+  seeds take 1,446 to 2,674 ms. Four other tests on the default limit
+  run longer: `board/slab.test.ts`'s two (3,731 and 3,418 ms),
+  `journal.test.ts`'s "recording changes nothing" (3,440) and
+  `gauntlet/cells.test.ts`'s live drive (3,302); `replay-guard` (2,550)
+  and `dev-guard` (2,202) are near. Those with their own limits:
+  `journal-replay-full` 11,825 ms (120 s), `refs.test.ts` 7,830 (120
+  s), `store-guard` 4,748 and 3,893 (30 s), the journal replay tests up
+  to 4,073 (30 s).
+- The chaos test's own comment makes the limit a tripwire too: a change
+  that moves a run's streams makes each seed another walk, and a long
+  walk timing out is how one was found and re-picked (seed 2, 0.7 s to
+  4 s alone, §118d).
+
+The limit's value and whether the four others take one are put to the
+user in the session's final message of this turn; nothing was built.
+
+### 126g — T-49 and T-50, the two pins (2026-10-21, session e6ab25e8)
+
+Step zero at `10022411` (the session's scratchpad, `catalog-probe.mjs`):
+both pairs agree. `events.ts`' `GameEvents` has 49 keys and
+ARCHITECTURE's "Event catalog (outputs)" block 49 rows, none apart;
+`--font-mono` is `FONT_STACK` and the generic tail. No test names either
+pair, as the census has it.
+
+Built at `7f83484a`. T-49 in `src/audio/eventSounds.test.ts`, which
+already parses the interface from source (TODO's item named that
+parser): the first word of each row between the block's fences, held
+equal to the keys, no row repeated; a self-check renames a row in a copy
+and reads one missing and one stale. T-50 in `tests/font-coverage.test.ts`:
+the sheet's value starts with `FONT_STACK` and a comma; a self-check
+swaps the faces. AGENTS' new-event sentence, reworded to stay inside its
+20,000-character cap (it was 42 over with the first wording), and
+ARCHITECTURE's note under the block say the pin is there; `ui.css`'s
+mirror comment names its test.
+
+Proof: the hook at `7f83484a`, 3,701 main (four new). The plants, in a
+worktree of `7f83484a` (the scratchpad's `plant-126g.sh`):
+
+- `ARCHITECTURE.md:696`, `unit:dashed` renamed `unit:dash`: the pin
+  failed naming `unit:dashed` missing, and the self-check failed as
+  well, since its copy is of the live file.
+- `ui.css:9`, `'DejaVu Sans Mono'` dropped from `--font-mono`: the pin
+  failed with both chains in its message.
+- The clean worktree: 21 of 21 in the two files.

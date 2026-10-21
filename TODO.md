@@ -123,9 +123,9 @@ every item below is done (WORKLOG §124, "The close of §124"; WORKLOG
   nothing of them. For the kickoff: whether the sweep takes the titles
   too, and what then guards them. Signed for here 2026-10-21.
 
-- [ ] **Pin ARCHITECTURE's event catalog against `events.ts`** (§104f) — the coverage pin guards the code's event set; nothing guards the prose table, which sat one short (`unit:chained`) from §29c to §104. A key-set diff off the source text, the `eventSounds.test.ts` parser re-used.
+- ✅ **Pin ARCHITECTURE's event catalog against `events.ts`.** `eventSounds.test.ts` holds the catalog's rows to the interface's keys, with a self-check (WORKLOG §126, 126g).
 
-- [ ] **Pin `ui.css`'s `--font-mono` against `FONT_STACK`** (the C1 sweep) — `src/ui/ui.css:9` hand-mirrors `fontSubset.ts`'s chain under a "mirror this" comment and no test.
+- ✅ **Pin `ui.css`'s `--font-mono` against `FONT_STACK`.** `font-coverage.test.ts` holds the sheet's chain to `FONT_STACK` and a generic tail (WORKLOG §126, 126g).
 
 ### §127 tools
 

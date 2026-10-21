@@ -5,7 +5,8 @@
      lacks. So every glyph a screen prints paints from a face we ship, the
      same letterform on every machine, inside the primary's line box. The
      generic tail catches the brief moment before the fonts parse. Mirror
-     FONT_STACK here when FACES changes. */
+     FONT_STACK here when FACES changes; tests/font-coverage.test.ts fails
+     until it does. */
   --font-mono: 'JetBrains Mono', 'DejaVu Sans Mono', ui-monospace, 'Courier New', monospace;
 
   /* The chrome column's one width (outer, border-box), which the control

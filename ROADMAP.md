@@ -340,8 +340,9 @@ kickoff"). A-25's tests have no step: none is left.
   widened at step zero to `tests`' instruments and `src`'s replay loops
   (signed); 32 + 4 + 3 bounded, three plants returned red.
 - ☐ **126f — T-86, the chaos seeds' timeout** (`none`).
-- ☐ **126g — T-49 and T-50, the two pins** (`none`). Each fails on a
-  planted mismatch.
+- ☑ **126g — T-49 and T-50, the two pins** (`none`). Each fails on a
+  planted mismatch: a renamed catalog row, the fallback dropped from
+  `--font-mono`.
 - ☐ **126h — the import-cycle guard** (`none`). Fails on a planted edge.
 - ☐ **126i — the walker's port purchase** (`none`). Fails with
   `buyAtPort` planted to buy nothing.

@@ -18,7 +18,7 @@ read closed on 2026-10-13. The later steps add their sections in this
 format.
 How each number was counted, and what was checked and what was not, is in
 [WORKLOG.md](WORKLOG.md) §120. **Section 6, the tests by test, was
-written at 126b on 2026-10-21 and waits for 126c's read** (WORKLOG §126).
+written at 126b and signed at 126c's stop, 2026-10-21** (WORKLOG §126).
 
 ## The format
 
@@ -2980,7 +2980,7 @@ A-44, 378 smoke)
   tokens a test (about 190k, a session); or read all 3,178 (about 800k).
 - Proof, for any deleted: test (section 3's proof), `reach-diff` and a
   plant at what the test was written for.
-- Signed:
+- Signed: **keep** every class (the user, 2026-10-21: "Signing all of your leans, Claude! 😁").
 
 **A-43 · `tests/tools/layout-editor.test.ts`, "rejects campSpawns with
 an empty camps list (the loud-authoring-error pin)"** (line 126, 4
@@ -2993,7 +2993,7 @@ lines)
 - Fate: **delete**.
 - Proof: test; the plant, the schema's camp-spawn refinement removed,
   caught by `layouts.test.ts`.
-- Signed:
+- Signed: **delete**, in 126d (the user, 2026-10-21, in the same words).
 
 **A-44 · `src/sim/terrainGen.test.ts`, "dispatches to the hand-authored
 library when layoutId is set"** (line 136, 10 lines)
@@ -3005,11 +3005,11 @@ library when layoutId is set"** (line 136, 10 lines)
 - Fate: **delete**.
 - Proof: test; the plant, the library dispatch skipped, caught by
   `layouts.test.ts`.
-- Signed:
+- Signed: **delete**, in 126d (the user, 2026-10-21, in the same words).
 
 **A-42 · the tests that alone run something** (521 main, 217 smoke)
 - Fate: **keep**, as a class, as 3.7's sixth call kept their files.
-- Signed:
+- Signed: **keep** (the user, 2026-10-21, in the same words).
 
 ### 6.4 What this section's instruments cannot see
 

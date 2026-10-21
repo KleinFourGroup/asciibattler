@@ -133,17 +133,6 @@ describe('generateTerrain (procedural)', () => {
     }
   });
 
-  it('dispatches to the hand-authored library when layoutId is set', () => {
-    // The test cares about the dispatch PATH, not labyrinth's specific size — read
-    // the layout's OWN dimensions (never a hardcoded G) so resizing the shipped
-    // layout doesn't break this (generateTerrain hard-requires the layout's dims).
-    // Assert the emitted wall count matches the layout's declared walls — a tight
-    // fingerprint distinguishing library dispatch from the procedural path.
-    const layout = getLayout('labyrinth')!;
-    const { walls } = generateTerrain(new RNG(1), layout.gridW, layout.gridH, BASE, 'labyrinth');
-    expect(walls.length).toBe(layout.walls.length);
-  });
-
   it('layout dispatch returns the layout-declared spawn regions verbatim', () => {
     const layout = getLayout('labyrinth')!;
     const { spawnRegions } = generateTerrain(new RNG(1), layout.gridW, layout.gridH, BASE, 'labyrinth');

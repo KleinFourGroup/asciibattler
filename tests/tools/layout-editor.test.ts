@@ -122,11 +122,6 @@ describe('§75i — camp spawns + the weighted camps list', () => {
     expect(json).toContain('{ "campId": "bandit-squatters" }'); // bare — no weight field
     expect(json).toContain('{ "campId": "ghoul-nest", "weight": 2 }');
   });
-
-  it('rejects campSpawns with an empty camps list (the loud-authoring-error pin)', () => {
-    const { camps: _dropped, ...orphaned } = withCamps;
-    expect(LayoutsSchema.safeParse([orphaned]).success).toBe(false);
-  });
 });
 
 describe('§40g-3 — wall/half-cover destructibility hp', () => {

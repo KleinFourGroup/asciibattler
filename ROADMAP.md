@@ -331,8 +331,8 @@ kickoff"). A-25's tests have no step: none is left.
   suite: nothing lost; 3,704 → 3,699 tests.
 - ☑ **126b — the list by test** (`none`). Both tiers, every file equal
   to the coverage tool's reading key for key; the census's section 6.
-- ☐ **126c — the list's stop** (`stop`; the decision point). The tests
-  by class with a lean each, the candidates item by item.
+- ☑ **126c — the list's stop** (`stop`; the decision point). Signed
+  2026-10-21: every class kept, A-43 and A-44 deleted.
 - ☐ **126d — the tests signed at 126c** (`none`). `reach-diff`, and a
   plant where a row names the test that must catch it.
 - ☐ **126e — T-90, the loops** (`none`). Each that waits on a command

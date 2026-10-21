@@ -13,7 +13,6 @@
  "src/bot/scripts/terrainEdgeHold.test.ts": 2,
  "src/bot/scripts/unjam.test.ts": 3,
  "src/bot/sensors.test.ts": 3,
- "src/bot/sensors.ts": 36,
  "src/config.test.ts": 1,
  "src/config/abilities.test.ts": 8,
  "src/config/camps.test.ts": 1,

@@ -1,26 +1,20 @@
 /**
- * 54b — the traffic-script SENSORS: every read a script's trigger consumes,
- * as pure functions of world STATE (the §54 fork-3 lock). No event-history
- * aggregation, no internal caches, no RNG — each sensor answers identically
- * on a cloned snapshot (§55 rollout-compatibility) and on a resumed run
- * (derive-don't-cache). Thresholds baked here are PROVISIONAL until 54c's
- * trace mining calibrates them against the 53g human commands.
+ * The traffic scripts' sensors: every read a script's trigger takes, as a
+ * pure function of the World's state. No history gathered from events, no
+ * cache, no RNG, so each sensor answers the same on a cloned snapshot (a
+ * rollout's) and on a resumed run.
  *
- * 86c-L3 — the doctrine stands here: every sensor in this file is still
- * cache-free. The one caching layer lives at chokeHold.ts' consumer seam
- * (an exact-input-keyed memo over `armyMinCut`'s read, verified by
- * recompute-and-compare against the pure `computeChokeRead`) — see the
- * design note there before adding a second one.
+ * Every sensor here is cache-free. The one cache is `chokeHold.ts`'s memo
+ * over its read of `armyMinCut`, keyed on the exact input and checked
+ * against the pure `computeChokeRead`; read its doc before adding a second.
  *
- * The jam sensor is the phase's flagged unknown (worklog §54): the sim's
- * `queue`/`pinned`/`boxed` classifications live inside MovementBehavior's
- * poll and surface only as `unit:moveDecision` EVENTS — deliberately not
- * re-derived here (that would mean re-running the movement proposal). The
- * sensor reads a coarser, local signal instead: "idle, out of acting range,
- * and every progress cell toward my nearest enemy is held by a teammate who
- * isn't vacating soon" — built from the §45 claim/vacancy-ETA machinery.
- * Whether this local read fires where the human actually intervened is
- * exactly what 54c measures.
+ * The jam sensor reads a local signal. The sim's `queue`, `pinned` and
+ * `boxed` classes live inside the movement behaviors' polls and surface
+ * only as `unit:moveDecision` events (`moveDecision.ts`), and deriving them
+ * here would mean running the movement proposal again. So the sensor reads
+ * something coarser: idle, out of acting range, and every progress cell
+ * toward the nearest enemy held by a teammate who is not vacating soon,
+ * from the occupancy's claims and vacancy ETAs.
  */
 
 import type { World } from '../sim/World';
@@ -41,16 +35,16 @@ export function opposingTeam(team: ObjectiveTeam): ObjectiveTeam {
 }
 
 /**
- * Reach that classifies a unit as TRUE ARTILLERY (catapult/shaman, 6) —
- * capability-based, archetype-blind. Shared by cohesion focus (the
- * assassination bar; reach-5 casters deliberately DON'T qualify — the
- * junction mage-chasing lesson, worklog §54g) and the rally filter
- * (`rallyCells`: only artillery zones forbid a rally; a hard all-reach filter
- * pushed rallies into deep retreat marches — the 54e-amendment lesson).
+ * The reach that classes a unit as true artillery (the catapult and the
+ * shaman, 6), by capability rather than archetype. Read by cohesion focus,
+ * as its assassination bar, which the reach-5 casters stay under, and by
+ * `rallyCells`, where only artillery forbids a rally; each gives its
+ * reason.
  */
 export const ARTILLERY_REACH = 6;
 
-/** Living, on-grid units of `team` (world.units never holds the spawn queue). */
+/** The living units of `team` on the grid (`world.units` never holds the
+ *  spawn queue). */
 export function livingUnits(world: World, team: ObjectiveTeam): Unit[] {
   return world.units.filter((u) => u.team === team && u.currentHp > 0);
 }
@@ -60,34 +54,35 @@ export function livingUnits(world: World, team: ObjectiveTeam): Unit[] {
 // ---------------------------------------------------------------------------
 
 /**
- * A teammate blocker counts as "draining soon" when its move flips it off the
- * contested cell within this window — the unit behind it is QUEUED (§45b's
- * productive wait), not jammed. PROVISIONAL; 54c calibrates.
+ * A teammate blocker counts as draining soon when its move takes it off the
+ * contested cell within this window: the unit behind it is queued, a
+ * productive wait, not jammed.
  */
 const JAM_VACANCY_WINDOW_SECONDS = 0.5;
 const JAM_VACANCY_WINDOW_TICKS = secondsToTicks(JAM_VACANCY_WINDOW_SECONDS);
 
 interface JamRead {
-  /** Units judged traffic-jammed this tick (insertion order — deterministic). */
+  /** The units judged jammed this tick, in `world.units` order. */
   readonly jammedUnitIds: readonly number[];
-  /** jammed / living team units; 0 when the team is empty. */
+  /** Jammed over the team's living units; 0 when either team is empty. */
   readonly jamFraction: number;
 }
 
 /**
- * A unit is JAMMED when it (1) has a living enemy but stands OUT of its own
- * acting range, (2) is idle (`activeAction === null` — a mid-move/attack unit
- * is making progress), (3) has at least one passable PROGRESS cell (an 8-way
- * neighbor strictly Chebyshev-closer to its nearest enemy — terrain-boxed
- * units are `no_route`'s problem, not traffic), and (4) every progress cell
- * is occupied or claimed with NO free cell and no teammate blocker vacating
- * inside `JAM_VACANCY_WINDOW_TICKS` — and at least one blocker IS a teammate
- * (an enemy wall of bodies is a fight, not a jam).
+ * A unit is jammed when it (1) has a living enemy but stands out of its own
+ * acting range, (2) is idle (`activeAction === null`; a unit mid-move or
+ * mid-attack is making progress), (3) has at least one passable progress
+ * cell (an 8-way neighbor strictly Chebyshev-closer to its nearest enemy; a
+ * unit boxed in by terrain is `no_route`'s problem, not traffic), and (4)
+ * finds every progress cell occupied or claimed, with no free cell and no
+ * teammate blocker vacating inside `JAM_VACANCY_WINDOW_TICKS`, and at
+ * least one blocker a teammate (an enemy wall of bodies is a fight, not a
+ * jam).
  *
- * Approximations, on record: positions are the canonical corner (an N×N
- * enemy's true nearest edge may differ by a cell); the read is local (one
- * step), so a jam around a corner registers only once the column actually
- * stalls. Both acceptable for a TRIGGER — 54c's table is the arbiter.
+ * Approximations, acceptable for a trigger: positions are the canonical
+ * corner (an N×N enemy's true nearest edge may differ by a cell), and the
+ * read is local, one step, so a jam around a corner registers only once
+ * the column stalls.
  */
 export function jamRead(world: World, team: ObjectiveTeam): JamRead {
   const own = livingUnits(world, team);
@@ -98,7 +93,7 @@ export function jamRead(world: World, team: ObjectiveTeam): JamRead {
   }
   for (const unit of own) {
     if (unit.activeAction !== null) continue;
-    // Nearest enemy — first-wins on ties (insertion order, deterministic).
+    // The nearest enemy; the first wins a tie, in `world.units` order.
     let nearest = enemies[0]!;
     let best = distanceBetween(unit.position, nearest.position);
     for (const e of enemies) {
@@ -146,21 +141,22 @@ export function jamRead(world: World, team: ObjectiveTeam): JamRead {
 // Hazard (the terrain-edge-hold script's read)
 // ---------------------------------------------------------------------------
 
-/** A status HARMS when its periodic op deals damage (burn/bleed/poison; the
- *  `heal` kind — rejuvenate — is the beneficial sibling). */
+/** A status harms when its periodic op deals damage (burn, bleed, poison;
+ *  rejuvenate's `heal` is the beneficial sibling). */
 function statusHarms(def: StatusDef): boolean {
   return def.periodic?.op.kind === 'damage';
 }
 
 /**
- * Whether standing on / stepping onto `kind` afflicts a unit. MIRRORS the two
- * sim apply sites — keep in lockstep if they change:
- *   - `World.applyTileStatuses`: `fire` sustains `burn` per-tick, HARDCODED by
- *     kind and NOT config-gated (`healing` sustains rejuvenate — beneficial,
- *     not a hazard).
- *   - `World.applyTileEnterEffects`: `TileDef.statusOnEnter` (mud → poison).
- * Impassable tiles (chasm, deep_water) are not hazards: nothing can stand
- * there, and pathing already prices them as walls.
+ * Whether standing on or stepping onto `kind` afflicts a unit. It mirrors
+ * the sim's two apply sites; keep it in lockstep if they change:
+ * - `World.applyTileStatuses` — `fire` sustains `burn` every tick, set by
+ *   kind in code, not by the config (`healing` sustains rejuvenate, which
+ *   helps and is no hazard).
+ * - `World.applyTileEnterEffects` — `TileDef.statusOnEnter` (mud, poison).
+ *
+ * An impassable tile (chasm, deep water) is no hazard: nothing can stand
+ * there, and pathing already treats it as a wall.
  */
 export function isHazardKind(kind: TileKind): boolean {
   if (kind === 'fire') return true;
@@ -173,24 +169,22 @@ export function isHazardKind(kind: TileKind): boolean {
 }
 
 /**
- * 55a — the hazard SEVERITY split (the §55-pre fetidPond finding, −16.7%
- * full-run win rate on that layout, BALANCE §55-pre): a BARRIER hazard
- * keeps damaging a unit for every tick it stands there — crossing cost
- * scales with time-in-hazard, so rallying SHORT of it is the play. An
- * on-enter hazard (mud → one poison application) is a toll booth, not a
- * wall — treating it as a barrier made terrain-edge hold rally armies at
- * puddle edges while the passive bot just walked through and won. The
- * split is STRUCTURAL, not a tuned number: it mirrors the two sim apply
- * sites exactly (`World.applyTileStatuses` = the per-tick sustain, fire →
- * burn, HARDCODED by kind; `World.applyTileEnterEffects` = once on enter)
- * — keep in lockstep if a new sustained kind lands there.
+ * The hazards' severity split. A barrier hazard keeps damaging a unit for
+ * every tick it stands there, so a crossing costs more the longer it takes
+ * and rallying short of it is the play. An on-enter hazard (mud, one
+ * application of poison) is a toll booth, not a wall: treated as a barrier,
+ * it made terrain-edge hold rally armies at puddle edges while the passive
+ * bot walked through and won. The split is the sim's, not a tuned number:
+ * `World.applyTileStatuses` sustains a status every tick (fire's burn, set
+ * by kind in code) and `World.applyTileEnterEffects` applies one once on
+ * entry. Keep it in lockstep if a new sustained kind lands there.
  */
 export function isBarrierHazard(kind: TileKind): boolean {
   return kind === 'fire';
 }
 
-/** Every hazard cell on the grid, row-major. Pure grid scan — recomputed
- *  per call (tile kinds can change; derive-don't-cache). */
+/** Every hazard cell on the grid, row-major: a scan of the grid on every
+ *  call, since tile kinds can change. */
 export function hazardCellList(world: World): GridCoord[] {
   const out: GridCoord[] = [];
   for (let y = 0; y < world.gridH; y++) {
@@ -201,7 +195,7 @@ export function hazardCellList(world: World): GridCoord[] {
   return out;
 }
 
-/** Every BARRIER-hazard cell (see `isBarrierHazard`), row-major. */
+/** Every barrier-hazard cell (`isBarrierHazard`), row-major. */
 export function barrierCellList(world: World): GridCoord[] {
   const out: GridCoord[] = [];
   for (let y = 0; y < world.gridH; y++) {
@@ -213,13 +207,12 @@ export function barrierCellList(world: World): GridCoord[] {
 }
 
 /**
- * Units of `team` within `withinSteps` Chebyshev of a BARRIER-hazard cell
- * AND whose nearest enemy lies on the far side (the hazard sits between:
- * stepping toward the enemy shrinks hazard distance). The terrain-edge-hold
- * trigger's core read: "my advance is about to walk into the fire".
- * 55a: barriers only — an on-enter hazard (mud) is not worth a team rally
- * (the fetidPond finding); the 54c calibration numbers are unchanged (every
- * mined cell's hazard was fire, which IS a barrier).
+ * The units of `team` within `withinSteps` Chebyshev steps of a
+ * barrier-hazard cell whose nearest enemy lies on the far side (the hazard
+ * sits between, so stepping toward the enemy closes on the hazard first).
+ * Terrain-edge hold's core read: "my advance is about to walk into the
+ * fire". Barriers only, since mud is not worth a team rally; the trace
+ * mining's numbers hold, since every mined battle's hazard was fire.
  */
 export function unitsApproachingHazard(
   world: World,
@@ -326,24 +319,23 @@ export function rallyCells(
 // ---------------------------------------------------------------------------
 
 /**
- * The passable grid's ARTICULATION CELLS (cut vertices of the 8-way
+ * The passable grid's articulation cells (the cut vertices of the 8-way
  * passability graph): cells whose loss disconnects some pair of passable
- * cells — corridors, isthmuses, doorways. Passability = tile passability
- * MINUS cells held by living NEUTRAL units: this game's walls / half-cover
- * / §40 rubble are neutral-team Units, not tiles (battleSetup spawns them),
- * so a terrain-only read would see every walled corridor map as an open
- * field. Mobile combatants deliberately DON'T count — bodies move; choke is
- * the arena's shape. Rubble death re-opens cells on the next call
- * (derive-don't-cache — recomputed per call, no setup-time freeze). Pure
- * function of state, deterministic row-major ordering; O(cells) iterative
- * DFS (Hopcroft–Tarjan).
+ * cells, such as corridors, isthmuses and doorways. Passable means a
+ * passable tile not held by a living inert neutral: walls, half-cover and
+ * rubble are neutral units, not tiles (`battleSetup` spawns them), so a
+ * read of the tiles alone would see every walled corridor as an open
+ * field. Mobile units do not count, combatants or a camp's members: bodies
+ * move, and a choke is the arena's shape. Rubble's death opens its cells
+ * on the next call, since the scan runs on every call. Row-major, an
+ * iterative DFS (Hopcroft–Tarjan) in O(cells).
  */
 export function chokeCells(world: World): GridCoord[] {
   const w = world.gridW;
   const h = world.gridH;
   const idx = (x: number, y: number) => y * w + x;
-  // §75d — inert neutrals only: an active neutral (camp member) is a mobile
-  // body, and bodies move; choke is the arena's shape (the doc above).
+  // Inert neutrals only: an active neutral (a camp member) is a mobile
+  // body, and bodies move.
   const neutralBlocked = new Set<string>();
   for (const u of world.units) {
     if (!isInertNeutral(u) || u.currentHp <= 0) continue;
@@ -378,9 +370,10 @@ export function chokeCells(world: World): GridCoord[] {
     return out;
   };
 
-  // Iterative DFS with an explicit frame stack (recursion would blow on long
-  // corridor maps). Standard articulation rule: non-root v is a cut vertex
-  // when some child's low >= v's disc; the root when it has 2+ DFS children.
+  // An iterative DFS with an explicit frame stack, since recursion would
+  // overflow on a long corridor map. The articulation rule: a non-root v is
+  // a cut vertex when some child's low >= v's disc, and the root when it has
+  // two or more DFS children.
   for (let root = 0; root < w * h; root++) {
     if (!passable[root] || disc[root] !== -1) continue;
     let rootChildren = 0;
@@ -423,23 +416,22 @@ export function chokeCells(world: World): GridCoord[] {
 }
 
 /**
- * 54f — the MIN VERTEX CUT between the armies: the smallest set of free
- * passable cells the enemy must cross to reach us, or null when no cut of
- * size ≤ `maxCut` exists (open ground — bail early, cheap) or the armies
- * aren't connected at all (nothing to hold). Generalizes `chokeCells` to
- * ANY passage width — the articulation scan reads zero on the ≥2-wide
- * isthmus bridge (the 54c sensor gap, BALANCE §54c); a cut of size 1 IS an
- * articulation door.
+ * The min vertex cut between the armies: the smallest set of free passable
+ * cells the enemy must cross to reach us, or null when no cut of at most
+ * `maxCut` cells exists (open ground, found early and cheaply) or the
+ * armies are not connected at all (nothing to hold). It takes `chokeCells`
+ * to any passage width: the articulation scan reads nothing on a bridge
+ * two or more cells wide, and a cut of one cell is an articulation door.
  *
- * Standard node-split max-flow (Even–Tarjan): each free passable cell
- * splits in→out with capacity 1; 8-way adjacency carries ∞; unit-occupied
- * cells (either army — bodies, not geometry) carry ∞ so the cut lands on
- * FREE cells only (the cells a holder could actually stand on); neutral
- * bodies (walls/rubble) are impassable exactly as in `chokeCells`. Flow
- * augments via BFS from the enemy cells toward ours and bails once flow
- * exceeds `maxCut`; the cut is read from source-side residual
- * reachability. Deterministic (row-major adjacency, no RNG), state-only,
- * O(maxCut × cells) — fine per tick.
+ * A node-split max-flow (Even–Tarjan): each free passable cell splits into
+ * an in and an out with capacity 1, and the 8-way adjacency carries ∞. A
+ * cell any living unit holds carries ∞ too (a body, not geometry), so the
+ * cut lands only on free cells, the ones a holder could stand on; the
+ * inert neutrals are impassable, as in `chokeCells`. The flow augments by
+ * BFS from the enemy's cells toward ours and stops once it passes
+ * `maxCut`; the cut is read from what the source still reaches in the
+ * residual. Deterministic (the cells in row-major order, no RNG),
+ * state-only, O(maxCut × cells), cheap enough for every tick.
  */
 export function armyMinCut(
   world: World,
@@ -451,8 +443,8 @@ export function armyMinCut(
   const n = w * h;
   const idx = (x: number, y: number) => y * w + x;
 
-  // Cell classification (mirrors chokeCells' passability mask — §75d
-  // inert-only, same rationale).
+  // The passability mask, as `chokeCells` builds it: inert neutrals only,
+  // for the same reason.
   const neutralBlocked = new Set<string>();
   for (const u of world.units) {
     if (!isInertNeutral(u) || u.currentHp <= 0) continue;
@@ -470,20 +462,19 @@ export function armyMinCut(
   if (own.length === 0 || enemies.length === 0) return null;
   const sourceCells = new Set(enemies.map((u) => idx(u.position.x, u.position.y)));
   const sinkCells = new Set(own.map((u) => idx(u.position.x, u.position.y)));
-  // Any unit's cell is a body, not geometry — un-cuttable (∞ vertex capacity).
+  // Any unit's cell is a body, not geometry, and cannot be cut (∞ capacity).
   const uncuttable = new Set<number>();
   for (const u of world.units) {
     if (u.currentHp <= 0) continue;
     for (const c of cellsOccupiedBy(u)) uncuttable.add(idx(c.x, c.y));
   }
 
-  // Explicit edge-list max-flow (Edmonds–Karp) over the node-split graph —
-  // a true residual (with reverse arcs) is required for the reachability
-  // cut extraction to be valid; a forward-only path search finds a maximal
-  // (not maximum) path set and reads a bogus frontier. Nodes: 2v = v's IN,
-  // 2v+1 = v's OUT, plus S and T. Arcs: IN(v)→OUT(v) cap 1 (∞ when
-  // uncuttable); OUT(u)→IN(v) ∞ per 8-adjacency; S→IN(enemy) ∞;
-  // OUT(own)→T ∞.
+  // An edge-list max-flow (Edmonds–Karp) over the node-split graph. Reading
+  // the cut from reachability needs a true residual, with reverse arcs: a
+  // search along forward arcs alone finds a maximal path set, not a maximum
+  // one, and reads a wrong frontier. Nodes: 2v is v's in, 2v+1 its out,
+  // then S and T. Arcs: in(v)→out(v) cap 1 (∞ when it cannot be cut);
+  // out(u)→in(v) ∞ per 8-adjacency; S→in(enemy) ∞; out(own)→T ∞.
   const S = 2 * n;
   const T = 2 * n + 1;
   const INF = 1 << 29;
@@ -520,7 +511,7 @@ export function armyMinCut(
   for (const s of sourceCells) if (passable[s]) addEdge(S, 2 * s, INF);
   for (const t of sinkCells) if (passable[t]) addEdge(2 * t + 1, T, INF);
 
-  // BFS residual reachability from S; fills prevEdge for path recovery.
+  // What S reaches in the residual, by BFS; fills prevEdge to recover a path.
   const bfs = (prevEdge: number[] | null): boolean[] => {
     const seen = new Array<boolean>(2 * n + 2).fill(false);
     seen[S] = true;
@@ -544,8 +535,8 @@ export function armyMinCut(
     const seen = bfs(prevEdge);
     if (!seen[T]) break;
     flow++;
-    if (flow > maxCut) return null; // open ground — no holdable choke
-    // Unit augmentation (every S→T path carries exactly 1 through a split).
+    if (flow > maxCut) return null; // open ground: no choke to hold
+    // Augment by one: every S→T path carries exactly 1 through a split.
     for (let v = T; v !== S; ) {
       const e = prevEdge[v]!;
       cap[e] = cap[e]! - 1;
@@ -553,10 +544,10 @@ export function armyMinCut(
       v = to[e ^ 1]!;
     }
   }
-  if (flow === 0) return null; // armies not connected — nothing to hold
+  if (flow === 0) return null; // the armies are not connected: nothing to hold
 
-  // Min cut = cells whose IN is S-reachable in the final residual but whose
-  // OUT is not (the saturated splits on the frontier).
+  // The min cut: the cells whose in S reaches in the final residual and
+  // whose out it does not, the saturated splits on the frontier.
   const reach = bfs(null);
   const cut: GridCoord[] = [];
   for (let y = 0; y < h; y++) {
@@ -573,26 +564,24 @@ export function armyMinCut(
 // ---------------------------------------------------------------------------
 
 interface AttritionRead {
-  /** Σ `effectiveStats.power` over each side's living units — the same
-   *  formula as `World.survivorPower` (private there; re-derived here in
-   *  lockstep — it IS the pool chip each side deals at the turn boundary). */
+  /** Σ `effectiveStats.power` over each side's living units, the sum
+   *  `World.survivorPower` takes (private there, so derived again here in
+   *  lockstep): the standing power a capped turn charges the other side's
+   *  pool, on top of each pool's own fallen (`run/chipRule.ts`). */
   readonly ownPower: number;
   readonly enemyPower: number;
-  /** Units currently carrying a DAMAGING periodic status (burn/bleed/poison
-   *  — def-resolved by key), per side: attrition already in motion. */
+  /** The units carrying a damaging periodic status (burn, bleed, poison,
+   *  resolved by key), per side: attrition already in motion. */
   readonly ownDotCount: number;
   readonly enemyDotCount: number;
 }
 
 /**
- * Whether the fight is JOINED: any unit on either side stands within its OWN
- * attack range of an opposing unit (each side judged by its own reach — a
- * bow shooting us from 3 is contact even when our melee can't answer yet).
- * The attrition-stall contact gate (the 54h amendment): "refuse the
- * engagement" is only coherent while no engagement exists — the 54c table
- * shows the stall signature (enemyDot ≥ 1 ∧ powerΔ ≥ 0) standing-true in
- * alpha-spiral's BACKGROUND, where the adjacent-spawn brawl is already
- * joined and backing the rear out mid-fight bleeds deaths (worklog §54h).
+ * Whether the fight is joined: any unit on either side stands within its
+ * own attack range of an opposing unit, each side judged by its own reach
+ * (a bow shooting us from 3 is contact even when our melee cannot answer
+ * yet). The attrition stall's contact gate (its header gives the reason)
+ * and the searcher's contact trigger read it.
  */
 export function armiesInContact(world: World, team: ObjectiveTeam): boolean {
   const own = livingUnits(world, team);
@@ -608,14 +597,10 @@ export function armiesInContact(world: World, team: ObjectiveTeam): boolean {
 
 export function attritionRead(world: World, team: ObjectiveTeam): AttritionRead {
   const sum = (units: Unit[]) => units.reduce((acc, u) => acc + u.effectiveStats.power, 0);
-  // Unit effects are NOT all catalog statuses: plain stat-fold buffs (the
-  // K1 class — fatigued/honed/warded, statusBehavior.ts) deliberately
-  // have no STATUS_DEFS entry, so the lookup must tolerate a def-less key
-  // (a fold buff is never a DoT). The throwing statusDef() here was a
-  // latent §54×K4 crash: it only fired when a sensor-driven battle tier
-  // met an empowered unit — the doctrine arm's audition nominators skip
-  // evaluate(), so the 69b walker's cheap tier was the first to cross the
-  // two (worklog §69).
+  // Not every unit effect is a catalog status: the plain stat effects
+  // (fatigued, honed, warded; `statusBehavior.ts`) have no `STATUS_DEFS`
+  // entry, so the lookup must take a key with no def (a stat effect is
+  // never a DoT), where the throwing `statusDef()` would crash on one.
   const dots = (units: Unit[]) =>
     units.filter(
       (u) =>
@@ -639,20 +624,20 @@ export function attritionRead(world: World, team: ObjectiveTeam): AttritionRead 
 // ---------------------------------------------------------------------------
 
 /**
- * Raw per-enemy features for 54g's cohesion-focus trigger to weight. The
- * WEIGHTS deliberately don't live here: the frozen `scored` proclivity
- * (tests/fuzz — an anchor arm, unimportable from src by direction anyway)
- * keeps its own model, and 54g sets fresh weights from 54c's table.
+ * The raw features of each enemy, for cohesion focus, which filters and
+ * ranks them (its header). No weights live here: the `scored` objective
+ * proclivity under `tests/fuzz` keeps its own model, which `src` cannot
+ * import.
  */
 export interface FocusTargetFeature {
   readonly unitId: number;
   readonly archetype: Archetype;
-  /** currentHp / derived.maxHp — kill proximity. */
+  /** currentHp / derived.maxHp: how near the kill is. */
   readonly hpFraction: number;
-  /** `effectiveStats.power` — the pool chip this unit threatens. */
+  /** `effectiveStats.power`. */
   readonly power: number;
   readonly attackRange: number;
-  /** Chebyshev to the closest living unit of `team` — reachability. */
+  /** Chebyshev steps to the closest living unit of `team`: its reach. */
   readonly distToNearestOwn: number;
 }
 

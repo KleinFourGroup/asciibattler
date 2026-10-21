@@ -14693,3 +14693,82 @@ an engagement exists; the hazard deferral and its known cost; the
 stand-off takes the cell nearest the centroid first; 0.2 is not re-tuned
 off a few battles' reads; a rally stays out of artillery reach; the
 nominators keep their geometry and drop their thresholds.
+
+### 125k, batch 3 — the sensors (2026-10-21, session cdb73148)
+
+`sensors.ts`, changed. Out: the step codes, the `§` marks and the
+capitals (`JAMMED`, `BARRIER`, `TRUE ARTILLERY` and their kin), the
+"provisional until trace mining calibrates" plans on the header and the
+vacancy window, the jam sensor as "the phase's flagged unknown" and what
+trace mining would measure, and the history of the status lookup's crash
+and of the severity split's layout. The reasons stay: no cache and no
+event history, so a sensor answers the same on a clone and a resumed
+run; the jam sensor reads a local signal since the movement classes
+surface only as events; mud is a toll booth, not a wall; the stat
+effects have no catalog entry; the max-flow needs a true residual.
+`ARTILLERY_REACH` and `armiesInContact` point to the reasons their
+readers give rather than repeating them, one home each.
+
+**Statements found false and corrected (rule 7):**
+
+- `AttritionRead.ownPower`: the sum "IS the pool chip each side deals at
+  the turn boundary". Under the shipped casualty rule each pool loses its
+  own fallen's power, and the standing power is charged to the other
+  side's pool only on a capped turn, as a surcharge
+  (`run/chipRule.ts`). The field says so, with `World.survivorPower` as
+  the sum it mirrors.
+- `FocusTargetFeature`: the features are "for 54g's cohesion-focus
+  trigger to weight", and "54g sets fresh weights". Cohesion focus weights
+  nothing: it filters by reach and distance and ranks by reach, distance,
+  health and id (`bestTarget`). The doc says it filters and ranks.
+- `chokeCells`: passability was the tiles "MINUS cells held by living
+  NEUTRAL units". The mask takes inert neutrals only, a camp's members
+  being bodies that move (the function's inner comment); the doc says
+  inert.
+
+Re-pointed, not false: `JamRead.jamFraction` is 0 when either team is
+empty, not only ours; the movement classes live in the movement
+behaviors' polls (`MovementBehavior` and `SupportMovementBehavior`), not
+`MovementBehavior`'s alone, and `moveDecision.ts` lists them.
+
+**Kept, checked at the code they name:** the spawn queues apart from
+`world.units` (`World.spawnQueues`); `queue`, `no_route`, `pinned` and
+`boxed` as move-decision kinds and `unit:moveDecision` as observational
+(`events.ts`); burn, bleed and poison as the damaging periodic statuses
+and rejuvenate's heal (`config/statuses.json`); fatigued, honed and
+warded with no catalog entry (`statusBehavior.ts`'s header) and
+`statusDef` throwing on such a key; `World.applyTileStatuses` and
+`applyTileEnterEffects`; chasm and deep water impassable (`TileGrid`);
+walls, half-cover and rubble spawned as units by `battleSetup`;
+`chokeCells` read by tests alone (`sensors.test.ts`,
+`chokeHold.test.ts`, `camps.spatial.test.ts`); the max-flow's
+construction against its code; `survivorPower` summing
+`effectiveStats.power` over living combatants; the `scored` proclivity's
+weights (`tests/fuzz/objectiveStrategy.ts`). Nothing was dropped
+unchecked.
+
+Measured (`comment-length` on copies under `output/cl-125k-b3`): comment
+lines 209 → 194, words 1,674 → 1,616, code lines 427 unchanged. The
+step-code ceiling 934 → 898, the 36 the file held.
+
+Proof: `comment-strip HEAD src`, comments only, exit 0; its control made
+one code edit in memory in `sensors.ts` and the compare named it.
+
+Cost: 321,218 at 00:22 UTC on batch 2's commit to 369,304 at 00:27 after
+the proof, about 48k for 673 lines, about 72 a line.
+
+**Read** (`batch`): `git show <this commit> -- src/bot/sensors.ts`
+against the seven rules. Wrong looks like a step code or capitals left,
+history kept (the crash, the layout's win rate, "provisional"), or a
+reason cut: no cache and no event history; the jam sensor's four
+conditions and its two approximations; `isHazardKind` and
+`isBarrierHazard` in lockstep with the sim's two apply sites; the
+max-flow's true residual; a stat effect has no catalog entry.
+
+**125k, built.** The pass took `src/bot`'s eleven files, 2,094 lines, in
+three batches in one session (`007afc9a`, `fa927a5c` and this one).
+`comment-length src/bot`, the non-test files, from the hand-off's
+baseline: comment lines 882 → 753, words 7,336 → 6,482, code lines 1,082
+unchanged; the pass's 178 step codes to none, and `src/bot`'s 37 left
+are in its tests. Ten false claims corrected, with one twin in
+`rollout.test.ts`. About 217k for the three batches, about 104 a line.

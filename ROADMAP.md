@@ -306,7 +306,9 @@ its six calls; the audit, the calls and the trials' bars are in WORKLOG
   (`none`). Each site reads its floor; the fuzz diff PASS.
 - ☑ **125j-post2 — R-2, `avgTeamLevel` into `Recruitment.ts`** (`none`),
   125e's finish. `enemyBudget.ts` gone; the corpus 0 of 30.
-- ☐ **125k — the comment pass over `src/bot`** (`batch`, per batch).
+- ◐ **125k — the comment pass over `src/bot`** (`batch`, per batch).
+  Three batches built (the drivers and the rollout, the scripts, the
+  sensors), their reads open; WORKLOG §125.
 - ☐ **125l — the close** (`stop`), with the decision point.
 
 ## Phase 126 — tests

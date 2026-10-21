@@ -1,33 +1,31 @@
 /**
- * §54 (Rung 1) — the traffic-script driver: the bot-side layer ABOVE the
- * typed objective model. Scripts read world STATE and propose objectives in
- * the existing four-mode vocabulary (`atWill`/`engage`/`hold`/`focus`) through
- * the existing command channel — the same vocabulary the 53g human baseline
- * was played with (the expressiveness proof, worklog §54). No new objective
- * kinds, no sim change, no snapshot field: no WorldSnapshot bump (then-v34).
+ * The traffic-script driver, a bot layer above the typed objective model.
+ * Scripts read the World's state and propose objectives in the four modes
+ * a player has (`atWill`, `engage`, `hold`, `focus`), through the command
+ * channel a player's orders take, so the bot needs no objective kind, sim
+ * code or snapshot field of its own.
  *
- * Arbitration is DUMB-DETERMINISTIC by design (the §54 lock; scoring is
- * §55's gated domain):
- *   - **Fixed priority** — `TRAFFIC_SCRIPTS` registry order IS the priority;
- *     the first script whose `evaluate` returns a proposal wins the tick.
- *   - **The null action is the arm to beat** — a script returning `null`
- *     means "my trigger didn't clear its threshold"; if NO script triggers,
- *     the driver releases its own standing order (back to `atWill`) rather
- *     than steering. The 53g finding demands this: the passive bot BEATS the
- *     human on labyrinth/river — intervention must earn its slot.
- *   - **Min-dwell no-thrash** — after any command, the driver goes quiet for
- *     `MIN_DWELL_TICKS` (the J4 no-thrash precedent, generalized): orders get
- *     time to play out, and a boundary-flickering trigger can't spam.
+ * Arbitration is fixed and deterministic:
+ * - Fixed priority: `TRAFFIC_SCRIPTS`' order is the priority, and the
+ *   first script whose `evaluate` returns a proposal wins the tick.
+ * - The null action is the arm to beat: a script returns `null` when its
+ *   trigger stays under its threshold, and when no script triggers, the
+ *   driver releases its own standing order (back to `atWill`) rather than
+ *   steer. A passive bot outplayed a human player on some layouts, so an
+ *   intervention has to earn its place.
+ * - No thrash: after any command the driver stays quiet for
+ *   `MIN_DWELL_TICKS`, so an order has time to play out and a trigger
+ *   flickering at its threshold cannot spam.
  *
- * Determinism: the driver holds NO RNG at all — decisions are pure functions
- * of world state + two internal counters (per-battle, never serialized; the
- * derive-don't-cache doctrine). Same seed → byte-identical command stream,
- * and every sensor a script reads must be computable from a cloned snapshot
- * (the §55 rollout-compatibility lock — no event-history aggregation).
+ * Determinism: the driver holds no RNG. Its decisions are pure functions
+ * of the World's state and two per-battle fields, never serialized, so a
+ * seed gives a byte-identical command stream. Every sensor a script reads
+ * must be computable from a cloned snapshot, with no history gathered from
+ * events, so that the searcher's rollouts can run it.
  *
- * Lives in `src/bot/` (the §54 fork-4 lock): sim-pure imports only, nothing
- * shipped calls it — the harness (and later §55 rollouts / a possible enemy
- * driver) are the consumers. `src` never imports from `tests`.
+ * Nothing the game ships calls `src/bot`; the instruments under `tests` do
+ * (the fuzz harness and its rollouts, the gauntlet). It imports from the
+ * sim, the run, the config and the core only, and never from `tests`.
  */
 
 import type { World } from '../sim/World';
@@ -41,36 +39,33 @@ import { cohesionFocus, nominateCohesionFocus } from './scripts/cohesionFocus';
 import { attritionStall, nominateAttritionStall } from './scripts/attritionStall';
 
 /**
- * One traffic script: a trigger predicate + a proposed objective, fused —
- * `evaluate` returns the proposal ONLY when the script's trigger clears its
- * own threshold (thresholds are per-script internals, set from the 54c
- * trace-mining table), else `null`. Must be a pure, RNG-free read of world
- * state (rollout-compatible; `Math.random` is ESLint-banned in `src/bot/`).
+ * One traffic script, a trigger and a proposal in one: `evaluate` returns
+ * the proposal only when the script's trigger clears its own threshold
+ * (each script's internals), and `null` otherwise. It must be a pure read
+ * of the World's state with no RNG, so a rollout clone can run it; ESLint
+ * bans `Math.random` in `src/bot`.
  */
 export interface TrafficScript {
   readonly id: string;
   evaluate(world: World, team: ObjectiveTeam): TeamObjective | null;
   /**
-   * 57e — the propose-regardless variant for the audition-everyone arm
-   * (a 57g box A/B): propose whenever geometrically meaningful, IGNORING
-   * the go/no-go threshold — under rollout arbitration the threshold's
-   * job (deciding) belongs to the search, so a looser nominator only
-   * costs an audition, never a wrong action. OPTIONAL — absent, the
-   * searcher nominates via `evaluate()` (the §57c v1 lock). No script
-   * implements it yet; the seam lands with the evaluator so the 57g arm
-   * needs no interface surgery. Same purity contract as `evaluate`.
+   * Proposes whenever the proposal is well formed, ignoring the trigger's
+   * threshold: under the searcher the rollouts decide, so a looser
+   * nominator costs only an audition, never a wrong action. Optional; the
+   * searcher asks `evaluate` when it is absent. No script object defines
+   * it: `AUDITION_SCRIPTS` attaches each script's own (`nominateUnjam` and
+   * its kin).
+   * The same purity as `evaluate`.
    */
   nominate?(world: World, team: ObjectiveTeam): TeamObjective | null;
 }
 
 /**
- * The priority-ordered script registry — registry order IS the arbitration
- * order (safety first, opportunism last; the §54 straw order): terrain-edge
- * hold › unjam › choke hold › cohesion focus › attrition stall. Scripts
- * land one commit each (54d–54h); imports stay type-only script-side so
- * the runtime dependency is one-directional. The EXPLICIT-empty registry
- * (`trafficScripts: []`) remains the byte-identical no-op arm (the 54a
- * parity contract, re-pinned at 54d when this list stopped being empty).
+ * The script registry, in priority order, safety first and opportunism
+ * last: terrain-edge hold, unjam, choke hold, cohesion focus, attrition
+ * stall. The scripts import this file's types only, so the runtime
+ * dependency runs one way. An empty registry (`trafficScripts: []`) issues
+ * nothing and is byte-identical to no driver (`harnessTraffic.test.ts`).
  */
 export const TRAFFIC_SCRIPTS: readonly TrafficScript[] = [
   terrainEdgeHold,
@@ -81,16 +76,14 @@ export const TRAFFIC_SCRIPTS: readonly TrafficScript[] = [
 ];
 
 /**
- * 57g.4 — the AUDITION registry: the same five scripts, each wrapped with
- * its propose-regardless `nominate` (go/no-go thresholds stripped; only
- * geometric well-formedness remains — the per-script rationale lives in
- * each script file). A SEPARATE registry, deliberately: the searcher's
- * nomination channel is `nominate ?? evaluate` keyed off the script
- * OBJECT, so leaving `TRAFFIC_SCRIPTS` nominate-free keeps the default
- * `--searcher` arm byte-identical to the §57g.1 baseline by construction —
- * the audition-everyone A/B flips registries (`--audition`), never code
- * paths. Trigger-mode drivers ignore `nominate` entirely, so this registry
- * is also legal (if pointless) under `trafficScripts:`.
+ * The audition registry: the same five scripts, each with its `nominate`,
+ * which drops the trigger's threshold and keeps only the proposal's
+ * geometric checks (each script's file gives its reasons). A registry of
+ * its own, since the searcher asks `nominate ?? evaluate` of the script
+ * object: with `TRAFFIC_SCRIPTS` free of `nominate`, the plain searcher arm
+ * cannot change, and `--audition` swaps the registry, never a code path.
+ * The trigger-mode driver never asks `nominate`, so the registry also runs
+ * there, to no purpose.
  */
 export const AUDITION_SCRIPTS: readonly TrafficScript[] = [
   { ...terrainEdgeHold, nominate: nominateTerrainEdgeHold },
@@ -100,17 +93,14 @@ export const AUDITION_SCRIPTS: readonly TrafficScript[] = [
   { ...attritionStall, nominate: nominateAttritionStall },
 ];
 
-/**
- * The no-thrash dwell: minimum ticks between driver commands. Authored in
- * seconds per the TICK_RATE contract. PROVISIONAL at 54a — 54c's trace
- * mining (human command cadence per cell) is the calibration input.
- */
+/** The no-thrash dwell: the fewest ticks between two of the driver's
+ *  commands. */
 const MIN_DWELL_SECONDS = 2;
 export const MIN_DWELL_TICKS = secondsToTicks(MIN_DWELL_SECONDS);
 
-/** Structural equality over the objective union (no helper exists sim-side;
- *  `setObjectiveAtWill`'s idempotence guard is mode-only). Target identity is
- *  by unit id / cell value — exactly what `setObjective` serializes. */
+/** Structural equality over the objective union; the sim has none, and
+ *  `setObjectiveAtWill`'s guard compares modes only. A target is the same
+ *  by unit id or by cell, what a `setObjective` command carries. */
 export function sameObjective(a: TeamObjective, b: TeamObjective): boolean {
   if (a.mode !== b.mode) return false;
   if (a.mode === 'atWill' || a.mode === 'hold') return true;
@@ -125,23 +115,23 @@ export function sameObjective(a: TeamObjective, b: TeamObjective): boolean {
 }
 
 /**
- * The per-battle driver. Construct fresh each battle (mirrors
- * `CoverageObjectiveDriver`'s lifecycle); call `decide` once per tick BEFORE
- * `world.tick()` and enqueue whatever it returns (0 or 1 commands).
+ * The per-battle driver. Build one each battle, as the harness builds its
+ * `CoverageObjectiveDriver`; call `decide` once a tick before
+ * `world.tick()` and enqueue what it returns (no command or one).
  *
- * Ownership rule: the driver only ever CLEARS an order it itself issued
- * (`standingScriptId` bookkeeping) — a foreign `setObjective` (UI, another
- * driver) is never clobbered by the null action. Auto-reverts land back on
- * `atWill` sim-side; the driver just drops its bookkeeping when it sees one.
+ * The driver only clears an order it issued (`standingScriptId`), so the
+ * null action never clobbers an order someone else gave (the UI, another
+ * driver). The sim's reverts land on `atWill`, and the driver drops its
+ * bookkeeping when it sees one.
  */
 export class TrafficScriptDriver {
   private readonly team: ObjectiveTeam;
   private readonly scripts: readonly TrafficScript[];
-  /** Tick of the driver's last emitted command; null = none yet (the first
-   *  command is never dwell-gated — tick-0 action is legitimate). */
+  /** The tick of the driver's last command, or null before the first,
+   *  which the dwell never gates: acting at tick 0 is legitimate. */
   private lastCommandTick: number | null = null;
-  /** Id of the script whose order is currently standing; null = no driver
-   *  order (either never issued, released, or auto-reverted sim-side). */
+  /** The script whose order stands, or null when no driver order does
+   *  (never issued, released, or reverted by the sim). */
   private standingScriptId: string | null = null;
 
   constructor(team: ObjectiveTeam = 'player', scripts: readonly TrafficScript[] = TRAFFIC_SCRIPTS) {
@@ -152,22 +142,19 @@ export class TrafficScriptDriver {
   decide(world: World): WorldCommand[] {
     const current = world.objectiveFor(this.team);
 
-    // Sim-side auto-revert (dead target → atWill) invalidates the standing
-    // bookkeeping regardless of what this tick decides.
+    // The sim's revert to atWill (a resolved order) clears the bookkeeping,
+    // whatever this tick decides.
     if (this.standingScriptId !== null && current.mode === 'atWill') {
       this.standingScriptId = null;
     }
 
-    // 85d — foreign-order conservatism, the RolloutSearchDriver rule
-    // imported: while an order someone else issued stands, hold — a
-    // triggered script must not clobber it (pre-85d only the null action
-    // respected ownership; the campRaid standing order is the first
-    // foreign player-team order in bot-driven battles — "raid first,
-    // then fight"). The sim's dead-target auto-revert lands the mode
-    // back on atWill and releases the hold.
+    // While an order someone else issued stands, hold, as the searcher
+    // does: a triggered script must not clobber it. The camp raid
+    // (`orderCampRaid`) is such an order: raid first, then fight. The
+    // sim's revert to atWill releases the hold.
     if (current.mode !== 'atWill' && this.standingScriptId === null) return [];
 
-    // Fixed-priority arbitration: first triggered script wins the tick.
+    // Fixed priority: the first script that triggers wins the tick.
     let winner: TrafficScript | null = null;
     let proposal: TeamObjective | null = null;
     for (const script of this.scripts) {
@@ -179,17 +166,17 @@ export class TrafficScriptDriver {
       }
     }
 
-    // The winner's proposal already stands — adopt/refresh the bookkeeping
-    // without re-issuing (idempotence outranks the dwell gate: nothing is
-    // emitted, so nothing thrashes).
+    // The winner's proposal already stands: adopt the bookkeeping without
+    // issuing it again. This comes before the dwell, since nothing is
+    // emitted and so nothing thrashes.
     if (winner && proposal && sameObjective(current, proposal)) {
       this.standingScriptId = winner.id;
       return [];
     }
 
-    // Min-dwell no-thrash: after any command, go quiet — even a would-be
-    // release waits out the dwell (a stale order may persist up to
-    // MIN_DWELL_TICKS past its trigger clearing; the accepted cost).
+    // The dwell: after any command, stay quiet, even for a release. A stale
+    // order may outlive its trigger by up to MIN_DWELL_TICKS, the accepted
+    // cost.
     if (this.lastCommandTick !== null && world.currentTick - this.lastCommandTick < MIN_DWELL_TICKS) {
       return [];
     }
@@ -200,8 +187,8 @@ export class TrafficScriptDriver {
       return [{ kind: 'setObjective', team: this.team, objective: proposal }];
     }
 
-    // The null action won. Release ONLY the driver's own standing order;
-    // foreign orders (standingScriptId === null) are never touched.
+    // The null action won: release only the driver's own order. An order
+    // someone else gave (standingScriptId === null) is never touched.
     if (this.standingScriptId !== null && current.mode !== 'atWill') {
       this.lastCommandTick = world.currentTick;
       this.standingScriptId = null;

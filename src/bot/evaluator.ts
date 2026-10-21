@@ -1,32 +1,29 @@
 /**
- * 57e — the rollout evaluator: score ONE candidate command by cloning the
- * live battle once per CRN seed, rolling each clone forward H ticks under
- * that command, and averaging the terminal scores.
+ * The rollout evaluator: scores one candidate command by cloning the live
+ * battle once per rollout seed, rolling each clone forward the horizon's
+ * ticks under that command, and averaging the scores at the end.
  *
- * The score is the §57c v2 lock — TERMINAL MATERIAL DIFFERENTIAL in
- * HP-fraction units, plus a dominant battle-end bonus:
+ * The score is the material differential in HP fractions, plus a bonus
+ * for a battle's end:
  *
  *     score = (enemy material lost) − (own material lost) + endBonus
  *
- * Material = Σ currentHp/maxHp over a team's living units, so a unit at
- * half HP counts half and "score +2.0" reads "two full units ahead on
- * the exchange". A rollout whose battle ENDS inside the horizon gets
- * ±WIN_BONUS — deliberately dominant over any achievable material swing,
- * so a win is never out-scored by a fat differential that leaves the
- * battle open; draws add 0. The winner is INFERRED from terminal state
- * (derived reads only — no bus subscription): living units standing
- * over an emptied opponent won; any other ended state is a draw (the
- * turn-cap `resolveAsDraw` shape, and the double-KO edge).
+ * Material is Σ currentHp/maxHp over a team's living units, so a unit at
+ * half HP counts half, and a score of +2.0 reads "two full units ahead on
+ * the exchange". A rollout whose battle ends inside the horizon gets
+ * ±`WIN_BONUS`, larger than any material swing, so a win always outscores
+ * a fat differential that leaves the battle open. The winner is read from
+ * the end state, with no bus subscription: a team with living units over
+ * an emptied opponent won, and any other end is a draw and adds 0. That
+ * is a mutual wipe, the only other end a rollout reaches, since it ticks
+ * its clone with no turn cap.
  *
- * CRN contract (the §57c lock): the searcher passes the SAME
- * `rolloutSeeds` array for every candidate in one search, so candidates
- * are compared under identical luck and seed noise cancels out of the
- * comparison (the round's paired same-seed methodology, applied inside
- * the search).
+ * The searcher passes the same `rolloutSeeds` for every candidate in one
+ * search, so the candidates face the same luck and the seeds' noise
+ * cancels out of the comparison.
  *
- * Deliberately NOT here (57f's domain): candidate generation, the
- * ties→NULL tie-break, hysteresis, and cadence. The evaluator returns
- * exact averaged numbers, nothing else.
+ * Candidate generation, ties, the hysteresis and the cadence are the
+ * searcher's; the evaluator returns the averaged scores and nothing else.
  */
 
 import type { WorldCommand } from '../sim/Command';
@@ -36,9 +33,9 @@ import { livingUnits, opposingTeam } from './sensors';
 import { cloneForRollout } from './rollout';
 
 /**
- * Dominant over any material differential a rollout can produce (team
- * sizes cap out far below this in HP-fraction units) — the ordinal that
- * makes "won the battle" outrank "won the exchange".
+ * Larger than any material differential a rollout produces (a team's
+ * material is at most its count of living units), so winning the battle
+ * outranks winning the exchange.
  */
 export const WIN_BONUS = 100;
 
@@ -52,15 +49,15 @@ export function materialOf(world: World, team: ObjectiveTeam): number {
 }
 
 interface RolloutSpec {
-  /** H — how far each clone rolls forward (the §57c v2 local dial: 8s). */
+  /** How far each clone rolls forward: the searcher's horizon. */
   readonly horizonTicks: number;
-  /** The K CRN seeds. SAME array for every candidate in one search. */
+  /** The K rollout seeds; the same array for every candidate in one search. */
   readonly rolloutSeeds: readonly number[];
 }
 
 /**
- * Average terminal score of `command` (null = the null arm: no command,
- * current trajectory) over the spec's rollouts, from `team`'s viewpoint.
+ * The mean score of `command` (null for the null arm: no command, the
+ * current trajectory) over the spec's rollouts, from `team`'s side.
  */
 export function evaluateCandidate(
   live: World,

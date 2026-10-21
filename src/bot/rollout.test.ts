@@ -116,9 +116,8 @@ describe('cloneForRollout (57d — the clairvoyance guard)', () => {
     const clone = cloneForRollout(live, 777);
     expect(clone.campRng).not.toBeNull();
     expect(clone.campRng!.toJSON()).not.toEqual(live.campRng!.toJSON());
-    // And the primary streams' re-seeds are unchanged by the third fork
-    // (fork order rng → combatRng → campRng; the first two draws are the
-    // same ones the camp-free path takes).
+    // And the two primary streams are the camp-free clone's: each stream
+    // is derived by its own key, so the camp stream moves neither.
     expect(clone.rng.toJSON()).toEqual(freeClone.rng.toJSON());
     expect(clone.combatRng.toJSON()).toEqual(freeClone.combatRng.toJSON());
   });

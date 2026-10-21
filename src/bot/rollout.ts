@@ -1,39 +1,24 @@
 /**
- * 57d — the rollout clone seam (the portfolio searcher's foundation).
+ * The rollout clone: `cloneForRollout(world, rolloutSeed)` returns an
+ * independent World on a fresh EventBus with each of its RNG streams
+ * re-seeded from `rolloutSeed`.
  *
- * `cloneForRollout(world, rolloutSeed)` returns an independent World on a
- * fresh EventBus with BOTH RNG streams re-seeded from `rolloutSeed`.
+ * The re-seed is the clairvoyance guard and must stay. A WorldSnapshot
+ * holds its RNG streams verbatim, so that a save and a trace replay resume
+ * the exact stream (`snapshot-roundtrip.test.ts` pins the identical
+ * futures). A plain toJSON → fromJSON clone would then replay the live
+ * battle's future rolls, and a rollout scored on it would foresee the real
+ * dice. The clone diverges in the data, on the snapshot before it is read
+ * back: `World` itself is untouched, and the live world is never mutated.
  *
- * Why the re-seed is load-bearing (the CLAIRVOYANCE GUARD, non-negotiable
- * per the round scope guards): WorldSnapshot v35 serializes its RNG
- * streams verbatim — BY DESIGN, so save/load and trace replay resume the
- * exact stream (the A2 contract; snapshot-roundtrip.test.ts asserts
- * byte-identical futures BECAUSE of it). A plain toJSON→fromJSON clone
- * therefore replays the live battle's exact future rolls, and a rollout
- * scored on one would foresee the real dice. The seam diverges at the
- * DATA level (the wire snapshot, before deserialization) — World itself
- * is untouched, and the live world is never mutated.
+ * The searcher derives the rollout seeds from its own stream and passes
+ * the same seed for rollout k of every candidate, so the candidates face
+ * the same luck. The same seed gives a byte-identical rollout.
  *
- * §75b: the nullable `campRng` (camp wander/drip dice) joins the re-seed
- * list CONDITIONALLY — re-seeded when present, left null when null. Fork
- * order is part of the contract: rng, combatRng, then campRng. The
- * camp-free path draws exactly the two forks it always did, so existing
- * rollouts stay byte-identical.
- *
- * Common-random-numbers contract (the §57c lock): the searcher derives
- * per-k rollout seeds from its OWN forked stream and passes the SAME
- * seed for rollout k of EVERY candidate, so candidates are compared
- * under identical luck — the round's paired same-seed methodology,
- * applied inside the search. Same seed ⇒ byte-identical rollout (the
- * determinism contract extends into the clones).
- *
- * Driver-state carry (the 57d cut card) resolved to a NO-OP for v1:
- * rollouts apply ONE candidate command and tick — no re-searching and no
- * script evaluation happens inside a horizon, so the live driver's
- * counters never matter to a clone. (H2-rule receipt: the predicted
- * side effect's absence means the work isn't needed, not that it was
- * missed. If a later design runs scripts mid-rollout, this comment is
- * the landing note: carry `lastCommandTick`/`standingScriptId` then.)
+ * A clone carries no driver state: a rollout applies one candidate command
+ * and ticks, with no search and no script inside the horizon, so the live
+ * driver's fields never matter to it. A rollout that ran scripts would
+ * need the driver's `lastCommandTick` and `standingScriptId` carried.
  */
 
 import { EventBus } from '../core/EventBus';
@@ -42,22 +27,20 @@ import { deriveSeed } from '../core/RNG';
 import { World, type WorldSnapshot } from '../sim/World';
 
 export function cloneForRollout(world: World, rolloutSeed: number): World {
-  // Deep copy via the wire format — the same JSON round-trip the A2
-  // save/load contract proves faithful for every mid-battle shape
-  // (in-flight actions, claims, cooldowns, pending commands).
+  // A deep copy through the wire format, the JSON round trip the save's
+  // tests hold faithful for every mid-battle shape (actions in flight,
+  // claims, cooldowns, pending commands).
   const wire = JSON.parse(JSON.stringify(world.toJSON())) as WorldSnapshot;
 
-  // The divergence (77d3): each stream re-seeded by KEY off the rollout
-  // seed — independent of each other and of the live world by
-  // construction. The old conditional-third-fork alignment hack (the
-  // camp-free path had to keep its historical two-fork order) is dead:
-  // derivation has no order to preserve. `campRng: null` stays null —
-  // camp-free worlds carry no camp stream (v35).
+  // The divergence: each stream re-seeded by key off the rollout seed, so
+  // the streams are independent of each other and of the live world by
+  // construction, with no order between them to keep. A world with no
+  // camps has `campRng: null` and keeps it.
   wire.rng = { state: deriveSeed(rolloutSeed, 'rolloutRoot') };
   wire.combatRng = { state: deriveSeed(rolloutSeed, 'combat') };
   if (wire.campRng !== null) wire.campRng = { state: deriveSeed(rolloutSeed, 'campSetup') };
 
-  // Fresh bus: rollout events must never reach the live subscribers
-  // (renderer, metrics collectors, the trace recorder).
+  // A fresh bus: a rollout's events must never reach the live world's
+  // subscribers.
   return World.fromJSON(wire, new EventBus<GameEvents>());
 }

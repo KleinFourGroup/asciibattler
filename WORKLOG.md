@@ -14520,3 +14520,96 @@ Each batch checks its drops while its files are in context. The read is
 `batch`, per batch, with its script in the batch's entry.
 
 Reading: 143,411 at 23:52 UTC, before this entry.
+
+### 125k, batch 1 — the drivers and the rollout (2026-10-21, session cdb73148)
+
+`RolloutSearchDriver.ts`, `TrafficScriptDriver.ts`, `evaluator.ts`,
+`rollout.ts`, `runRollout.ts`, all changed. Out: the step codes and the
+`§` marks (the searcher's design locks, the rungs, the "fork-4 lock" and
+its kin), the capitals, and the history: what the searcher replaced, the
+retired dwell timer, the human baseline the vocabulary was played with,
+the snapshot bump the bot avoided, the scripts landing one commit each,
+the parity pin re-pinned when the registry stopped being empty, the
+hand-mirrored re-seed list one field replaced, and the alignment hack
+keyed derivation retired. The reasons stay: the null arm is the floor and
+a passive bot has to be beaten; the dwell and the ε margin keep a driver
+from thrashing; a script reads only what a clone holds; the re-seeds are
+the clairvoyance guard; the camp stream is null on a campless world.
+
+**Statements found false and corrected (rule 7):**
+
+- `rollout.ts`: the camp stream joined a fork order, "rng, combatRng,
+  then campRng", that was "part of the contract", and the campless path
+  drew "exactly the two forks it always did". The streams are derived by
+  key (`deriveSeed(rolloutSeed, key)`), with no order between them, as
+  the function's own comment said.
+- `rollout.ts`: "WorldSnapshot v35"; it is v36 (`WORLD_SCHEMA_VERSION`).
+  The version is out, since the guard does not depend on it.
+- `TrafficScriptDriver.ts`: of `nominate`, "No script implements it
+  yet". Each script has its `nominate…` function, and `AUDITION_SCRIPTS`
+  attaches them; the doc says so.
+- `TrafficScriptDriver.ts`: the bot holds "sim-pure imports only", with
+  the harness its consumer. `runRollout.ts` imports `src/run/Run`, and
+  the gauntlet's tools and the rollout instruments read the bot too; the
+  header names the sim, the run, the config and the core, and the
+  instruments under `tests`.
+- `RolloutSearchDriver.ts`: all four default dials "PROVISIONAL pending
+  57g calibration". That run measured K: at K = 8 the winner differed on
+  9.5 % of searches and on no outcome, and the user locked K = 2 (BALANCE,
+  2026-07-18). The dials' doc gives that reason; "provisional" is out.
+  `TrafficScriptDriver.ts`'s dwell lost its "provisional" as a plan.
+
+Re-pointed, not false: the evaluator's draws, which named the cap's
+`resolveAsDraw` beside the mutual wipe; a rollout ticks its clone with no
+turn cap (`tickTurn` is the cap's one site), so the doc names the mutual
+wipe as the only other end a rollout reaches. "Two internal counters" is
+"two per-battle fields", since one is a script id.
+
+**A twin outside the batch:** `src/bot/rollout.test.ts` explained its
+camp assertion by the same fork order; the assertion holds because each
+stream has its own key, and the comment says so now. Tests are §126's,
+but the twin is the batch's claim.
+
+**Kept, checked at the code they name:** the searcher's four triggers
+and its foreign-order rule (`decide`); the harness forking the searcher's
+RNG off the world seed (`harness.ts`, and the walker likewise) and its
+`rolloutSearch` option; `searchCount` and `kFlipStats` read by the
+harness's telemetry; the K-prefix pin on two crafted worlds
+(`RolloutSearchDriver.test.ts`); ESLint's ban on `Math.random` in
+`src/bot` (`eslint.config.js`), now said once, on `TrafficScript`; the
+sim's revert of a resolved order to `atWill`
+(`World.clearResolvedObjectives`) and `setObjectiveAtWill`'s mode-only
+guard; no objective equality in `src/sim`; the scripts importing the
+driver's types only; the empty registry's byte-identity
+(`harnessTraffic.test.ts`); `--audition`, `--searcher` and `--k`
+(`args.ts`); `CoverageObjectiveDriver` built per battle
+(`tests/fuzz/objectiveCoverage.ts`, `harness.ts`); the camp raid as a
+foreign order (`orderCampRaid`, `tests/fuzz/campRaid.ts`) and
+`raidNextBattle` cleared at the walk's first battle (`walker.ts`); the
+three stream keys (`rngStreams.ts`); the run's occurrence counters on the
+snapshot (`RunSnapshot`); `snapshot-roundtrip.test.ts`. Dropped and not
+checked: the list of the live world's subscribers a rollout's events
+must not reach (renderer, collectors, trace recorder), now said without
+the list, and the thresholds' source in trace mining, which each script
+may still give (batch 2).
+
+Measured (`comment-length` on copies under `output/cl-125k-b1`): comment
+lines 323 → 280, words 2,550 → 2,357, code lines 310 unchanged. The
+step-code ceiling 1,076 → 1,007, the 69 these files held.
+
+Proof: `comment-strip HEAD src`, comments only, exit 0; its control made
+one code edit in memory in each of the 6 changed files (the test among
+them) and the compare named all 6.
+
+Cost: 147,978 at 23:54 UTC on the plan's commit to 238,630 at 00:05
+after the proof, about 91k for 683 lines, about 133 a line, the checks
+above most of it.
+
+**Read** (`batch`): `git show <this commit> -- src/bot/RolloutSearchDriver.ts
+src/bot/rollout.ts` against the seven rules. Wrong looks like a step
+code, a `§` mark or capitals left, history kept (the retired dwell, the
+re-seed list, the fork order), or a rule a change must respect cut: the
+searcher never clears an order it did not issue; ties and the ε margin
+are one rule; the re-seed is the clairvoyance guard and diverges the
+snapshot, not the World; a clone carries no driver state only while a
+rollout runs no script.

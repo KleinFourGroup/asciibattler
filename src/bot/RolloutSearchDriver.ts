@@ -1,34 +1,30 @@
 /**
- * 57f — the portfolio rollout searcher (Rung 2 proper). Replaces the
- * TrafficScriptDriver's fixed-priority arbitration with MEASUREMENT: at
- * each search point, nominate candidate orders, roll each forward on a
- * diverged clone (57d) under identical luck (CRN — one seed set per
- * search, shared by every candidate), score terminally (57e), and commit
- * the winner ONLY if it beats the null arm by the hysteresis margin.
- * Triggers nominate; rollouts arbitrate; the null arm is the structural
- * floor (§57c v2 locks — worklog §57c is the design record).
+ * The rollout searcher. Where `TrafficScriptDriver` takes the first script
+ * that triggers, this driver measures: at each search point it takes the
+ * scripts' proposals as candidates, rolls each forward on a diverged clone
+ * (`cloneForRollout`) under the same luck, one seed set per search shared
+ * by every candidate, scores each at the horizon (`evaluateCandidate`),
+ * and commits the winner only if it beats the null arm, issuing nothing,
+ * by the hysteresis margin. The scripts nominate, the rollouts decide, and
+ * the null arm is the floor.
  *
- * Search points (all edge-triggered off DERIVED state — no event
- * subscriptions, same doctrine as the sensors): the first decide of a
- * battle, cadence expiry, any death (living count on either side drops),
- * or a contact transition (`armiesInContact` flips). The old min-dwell
- * timer is retired here — "commit until the next search" + the ε margin
- * are the anti-thrash machinery.
+ * A search runs at the battle's first decide, when the cadence expires,
+ * on any death (the living count on either side drops), and when
+ * `armiesInContact` flips. Each trigger is read from the World's state
+ * with no event subscription, as the sensors are. There is no dwell: an
+ * order stands until the next search, and the ε margin keeps the search
+ * from thrashing.
  *
- * Ownership rule carried over from the §54 driver verbatim: the searcher
- * only ever clears or replaces an order IT issued; a foreign
- * `setObjective` (UI, another driver) silences it entirely.
+ * The searcher only clears or replaces an order it issued; while an order
+ * someone else issued stands (the UI, another driver), it does nothing.
  *
- * The dials are ctor options DEFAULTING to the §57c v2 locks — the 57g
- * sensitivity arms (K / horizon / ε / audition-everyone) drive them
- * through `HarnessOptions.rolloutSearch` without code surgery. All four
- * defaults are PROVISIONAL pending 57g calibration.
+ * The dials are the constructor's options, defaulting to the constants
+ * below; the harness's `rolloutSearch` option sets them.
  *
- * Determinism: the searcher owns a dedicated RNG (the harness forks one
- * per battle off the worldSeed) consumed ONLY for CRN seed derivation at
- * search points; nominations and triggers are pure state reads, so the
- * whole decide sequence is a deterministic function of (worldSeed,
- * config). `Math.random` stays ESLint-banned in src/bot/.
+ * Determinism: the searcher owns an RNG (the harness forks one per battle
+ * off the world seed) and draws from it only for a search's rollout seeds.
+ * The nominations and the triggers are pure reads of state, so the whole
+ * decide sequence is a function of the world seed and the config.
  */
 
 import { secondsToTicks } from '../config';
@@ -40,36 +36,36 @@ import { evaluateCandidate } from './evaluator';
 import { armiesInContact, livingUnits, opposingTeam } from './sensors';
 import { sameObjective, TRAFFIC_SCRIPTS, type TrafficScript } from './TrafficScriptDriver';
 
-/** §57c v2 local dials — PROVISIONAL until the 57g calibration arms. */
+/** The default dials. Two rollouts a candidate: measured against eight,
+ *  the winner differed on about one search in ten, mostly near-ties, and
+ *  on no battle's outcome. */
 const SEARCH_CADENCE_SECONDS = 4;
 const SEARCH_CADENCE_TICKS = secondsToTicks(SEARCH_CADENCE_SECONDS);
 const ROLLOUT_HORIZON_SECONDS = 8;
 const ROLLOUT_HORIZON_TICKS = secondsToTicks(ROLLOUT_HORIZON_SECONDS);
 const ROLLOUTS_PER_CANDIDATE = 2;
 /** In score units (HP fractions): a challenger must beat the null arm by
- *  more than a quarter-unit of material or nothing is issued (ties→NULL
- *  and hysteresis are this one rule). */
+ *  more than a quarter of one unit's health, or nothing is issued. Ties
+ *  going to the null arm and the hysteresis are this one rule. */
 const HYSTERESIS_EPSILON = 0.25;
 
 export interface RolloutSearchConfig {
-  /** Nominator registry; defaults to the standard TRAFFIC_SCRIPTS. */
+  /** The nominators; `TRAFFIC_SCRIPTS` when absent. */
   readonly scripts?: readonly TrafficScript[];
   readonly cadenceTicks?: number;
   readonly horizonTicks?: number;
   readonly rolloutsPerCandidate?: number;
   readonly epsilon?: number;
   /**
-   * 57g.5 — the K-sensitivity PREFIX instrument: evaluate per CRN seed
-   * (same total rollouts — the evaluator clones per seed either way),
-   * decide from the full-K means, and re-derive the decision under the
-   * seed-prefixes {2, 4} (those below K), counting searches where a prefix
-   * decision DISAGREES with the full-K one — the §57c "knife-edge
-   * coverage" question measured directly: one K=8 batch yields exact
-   * winner-flip counts for K=2 and K=4, no cross-batch inference. Read
-   * via `kFlipStats`. ⚠ The telemetry arm is its OWN arm: its decisions
-   * come from per-seed means (the 57e mean-aggregation contract makes
-   * them equal to the batch path — pinned on a crafted world), but
-   * cross-batch byte-parity vs a plain K=8 arm is not a protocol claim.
+   * The K-prefix instrument: each candidate is evaluated seed by seed (the
+   * same rollouts, since the evaluator clones per seed either way), the
+   * decision is taken from the full-K means, and the prefixes of 2 and 4
+   * seeds that are shorter than K decide again, counting the searches
+   * where a prefix disagrees with the full K. So one batch at K = 8 gives
+   * the flip counts for 2 and 4 directly. Read through `kFlipStats`. Its
+   * decisions equal the plain path's (`RolloutSearchDriver.test.ts` pins it
+   * on two crafted worlds), but a batch with it on is its own arm and is
+   * not claimed byte-equal to one without.
    */
   readonly kFlipTelemetry?: boolean;
 }
@@ -84,22 +80,23 @@ export class RolloutSearchDriver {
   private readonly epsilon: number;
 
   private lastSearchTick: number | null = null;
-  /** True while OUR setObjective stands (the §54 ownership rule). */
+  /** True while an order this searcher issued stands. */
   private ownStanding = false;
-  /** Edge-trigger trackers — previous decide's derived reads. */
+  /** The previous decide's reads, for the edge triggers. */
   private lastLivingCount: number | null = null;
   private lastInContact: boolean | null = null;
 
   private searches = 0;
-  /** Searches that actually evaluated candidates (cost telemetry + tests). */
+  /** Searches that evaluated candidates, for the harness's telemetry and
+   *  the tests. */
   get searchCount(): number {
     return this.searches;
   }
 
   private readonly kFlipTelemetry: boolean;
   private kFlipsByPrefix = new Map<number, number>();
-  /** 57g.5 — prefix-instrument counters: evaluated searches (== searchCount)
-   *  and, per prefix length, how many DISAGREED with the full-K decision. */
+  /** The prefix instrument's counts: the searches evaluated (`searchCount`)
+   *  and, by prefix length, how many disagreed with the full-K decision. */
   get kFlipStats(): { searches: number; byPrefix: ReadonlyMap<number, number> } {
     return { searches: this.searches, byPrefix: this.kFlipsByPrefix };
   }
@@ -117,11 +114,11 @@ export class RolloutSearchDriver {
 
   decide(world: World): WorldCommand[] {
     const current = world.objectiveFor(this.team);
-    // Sim-side auto-revert (dead target → atWill) drops our bookkeeping.
+    // The sim reverts a resolved order to atWill; the bookkeeping follows.
     if (this.ownStanding && current.mode === 'atWill') this.ownStanding = false;
 
-    // Edge-triggered re-search signals, computed BEFORE the trackers roll
-    // forward so a death inside a gated window still fires on this call.
+    // The edge triggers, read before the trackers roll forward, so a death
+    // since the last call fires on this one.
     const living =
       livingUnits(world, this.team).length + livingUnits(world, opposingTeam(this.team)).length;
     const inContact = armiesInContact(world, this.team);
@@ -135,14 +132,13 @@ export class RolloutSearchDriver {
       world.currentTick - this.lastSearchTick >= this.cadenceTicks;
     if (!cadenceDue && !deathSeen && !contactFlip) return [];
 
-    // Foreign-order conservatism: never search against — or clobber — an
-    // order someone else issued.
+    // Never search against, or clobber, an order someone else issued.
     if (current.mode !== 'atWill' && !this.ownStanding) return [];
 
-    // Nomination. The null arm (no command — continue the current
-    // trajectory) is implicit; RELEASE challenges only when our own order
-    // stands; script proposals dedupe against the standing objective (that
-    // IS the null arm) and against each other.
+    // The null arm (no command, the current trajectory) is implicit; a
+    // release challenges only while our own order stands; a proposal equal
+    // to the standing objective (that is the null arm) or to an earlier
+    // proposal is dropped.
     const challengers: { readonly command: WorldCommand; readonly sets: boolean }[] = [];
     if (this.ownStanding && current.mode !== 'atWill') {
       challengers.push({ command: { kind: 'clearObjective', team: this.team }, sets: false });
@@ -160,14 +156,14 @@ export class RolloutSearchDriver {
         sets: true,
       });
     }
-    // The situation was assessed either way — cadence restarts here, so a
-    // nomination-free stretch doesn't degenerate into per-tick re-checks.
+    // The situation was assessed either way, so the cadence restarts here
+    // and a stretch with no nomination does not re-check every tick.
     this.lastSearchTick = world.currentTick;
     if (challengers.length === 0) return [];
 
-    // CRN: ONE seed set per search, shared by every candidate — the same
-    // paired-luck methodology the round's gate tables use. fork() draws
-    // one u32 off the searcher stream per seed.
+    // One seed set per search, shared by every candidate, so they are
+    // compared under the same luck. `fork()` draws one u32 off the
+    // searcher's stream per seed.
     this.searches++;
     const seeds: number[] = [];
     for (let k = 0; k < this.rolloutsPerCandidate; k++) {
@@ -175,10 +171,9 @@ export class RolloutSearchDriver {
     }
     const spec = { horizonTicks: this.horizonTicks, rolloutSeeds: seeds };
 
-    // 57g.5 — the prefix instrument evaluates per seed (same rollouts, the
-    // evaluator clones per seed either way) so prefix decisions can be
-    // re-derived; the REAL decision uses the full-K means (equal to the
-    // batch path by the 57e mean-aggregation contract — pinned).
+    // The prefix instrument (`kFlipTelemetry`): seed by seed, so each
+    // prefix can decide again; the decision itself is the full-K means',
+    // equal to the plain path's below.
     if (this.kFlipTelemetry) {
       const perSeed = (cmd: WorldCommand | null): number[] =>
         seeds.map((s) =>
@@ -194,9 +189,9 @@ export class RolloutSearchDriver {
         for (let i = 0; i < n; i++) sum += scores[i]!;
         return sum / n;
       };
-      // The decision under the first n seeds: challenger index, -1 = null.
-      // Argmax is strictly-greater first-wins — the same tie rule as the
-      // batch path below, so the comparison is like-for-like.
+      // The decision under the first n seeds: a challenger's index, or -1
+      // for the null arm. Strictly greater, first wins: the plain path's
+      // tie rule, so the two compare like for like.
       const decideAt = (n: number): number => {
         let bestIdx = -1;
         let bestMean = -Infinity;
@@ -235,8 +230,8 @@ export class RolloutSearchDriver {
       }
     }
 
-    // Ties→NULL + hysteresis in one rule: a challenger must STRICTLY beat
-    // the null arm by ε or nothing is issued.
+    // A challenger must beat the null arm by more than ε, or nothing is
+    // issued: ties to the null arm and the hysteresis in one rule.
     if (best === null || bestScore <= nullScore + this.epsilon) return [];
     this.ownStanding = best.sets;
     return [best.command];

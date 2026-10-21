@@ -15337,6 +15337,21 @@ slower tests carry 15 s each, with the reason beside it; the seeds'
 comment keeps the tripwire (a walk about 4 s alone runs 13 s or more
 beside the suite, the seeds running 3 to 7 times slower there).
 
+### 126f — T-86, the chaos seeds' timeout (2026-10-21, session e6ab25e8)
+
+Built at `21e00369`, built after 126g: `chaos.test.ts`'s `it.each` takes
+`{ timeout: SEED_TIMEOUT_MS }` (15 s) beside its reason and the
+tripwire; `slab.test.ts`'s two sweeps share `SWEEP_TIMEOUT_MS`;
+`journal.test.ts`'s three-run test and `cells.test.ts`'s live drive
+take `{ timeout: 15_000 }` inline, each with a line saying why.
+
+Proof: the four files 23 of 23, typecheck clean, the hook 3,701. The
+option form on `it.each` was the one not used elsewhere, so it was
+checked in a worktree of `21e00369` (the scratchpad's
+`limit-126f.mjs`): a 7 s wait planted in each seed passes under the 15 s
+limit, and with the limit set back to 5 s all four seeds fail "Test
+timed out in 5000ms".
+
 ### 126g — T-49 and T-50, the two pins (2026-10-21, session e6ab25e8)
 
 Step zero at `10022411` (the session's scratchpad, `catalog-probe.mjs`):

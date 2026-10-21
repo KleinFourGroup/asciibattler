@@ -339,7 +339,8 @@ kickoff"). A-25's tests have no step: none is left.
   or a tick bounded, a planted no-op failing one of each shape. Scope
   widened at step zero to `tests`' instruments and `src`'s replay loops
   (signed); 32 + 4 + 3 bounded, three plants returned red.
-- ☐ **126f — T-86, the chaos seeds' timeout** (`none`).
+- ☑ **126f — T-86, the chaos seeds' timeout** (`none`). 15 s, and on
+  the four slower default-limit tests (signed at step zero).
 - ☑ **126g — T-49 and T-50, the two pins** (`none`). Each fails on a
   planted mismatch: a renamed catalog row, the fallback dropped from
   `--font-mono`.

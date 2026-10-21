@@ -85,13 +85,9 @@ every item below is done (WORKLOG §124, "The close of §124"; WORKLOG
   command counts its tries, in tests, `tests`' instruments and `src`'s
   replay loops; TESTING's "Bounded steps" (WORKLOG §126, 126e).
 
-- [ ] **Three tests time out at 5 s when anything runs beside the suite:**
-  `tests/store-guard.test.ts`, and the chaos test's seeds whenever a
-  stream moves their walk (118d). Neither failure names load. A longer
-  timeout on the three, or a line in the failure. `store-guard`'s two
-  whole-repo walks have a 30 s limit since 2026-10-12, when the hook
-  failed on that file twice running with nothing beside the suite (the
-  file takes 2 s alone); the chaos test's seeds are as they were.
+- ✅ **Three tests time out at 5 s when anything runs beside the suite.**
+  The chaos seeds and four slower default-limit tests carry 15 s, each
+  with its reason; `store-guard` keeps 30 s (WORKLOG §126, 126f).
 
 - [ ] **Ten sites spawn an encounter on a World of their own, with no
   battle rules installed:** `tests/pathing/capture.ts` and nine tests

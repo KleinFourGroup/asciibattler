@@ -329,9 +329,8 @@ kickoff"). A-25's tests have no step: none is left.
 
 - ☑ **126a — A-33's three test files** (`none`). `reach-diff` on the
   suite: nothing lost; 3,704 → 3,699 tests.
-- ☐ **126b — the list by test** (`none`). A reader under
-  `scratch/126b/`, its known answer the coverage tool's reading of each
-  file and the list by file at the same commit; both tiers.
+- ☑ **126b — the list by test** (`none`). Both tiers, every file equal
+  to the coverage tool's reading key for key; the census's section 6.
 - ☐ **126c — the list's stop** (`stop`; the decision point). The tests
   by class with a lean each, the candidates item by item.
 - ☐ **126d — the tests signed at 126c** (`none`). `reach-diff`, and a

@@ -17,7 +17,8 @@ deleted. Section 1, the dials, was written at 120c on 2026-10-12 and its
 read closed on 2026-10-13. The later steps add their sections in this
 format.
 How each number was counted, and what was checked and what was not, is in
-[WORKLOG.md](WORKLOG.md) §120.
+[WORKLOG.md](WORKLOG.md) §120. **Section 6, the tests by test, was
+written at 126b on 2026-10-21 and waits for 126c's read** (WORKLOG §126).
 
 ## The format
 
@@ -2837,3 +2838,192 @@ the tenth at the last tranche, as leaned (2026-10-14).
    META-ROADMAP's Rounds 9 to 12 each gaining a line per added group.
 10. **5.7's first two,** the user's one-minute check and the font's
     upstream.
+
+## 6. The tests, by test (126b)
+
+Written 2026-10-21 at 126b for 126c's stop, the phase's decision point:
+each test's fate is the user's (ROADMAP §126). Section 3's list by file
+is its known answer; 3.5's second way is its method, signed at 120e.
+
+### 6.1 What was counted, and how the reader is checked
+
+| | main | smoke | how |
+|---|---|---|---|
+| tests | 3,699 in 255 files | 595 in 61 (the smoke's 594 and the `--jobs` parity test) | as run by the reader at `c9c9b8d6` |
+| keys | 337,341 | 271,089 | a line, a function or a branch arm, per file, summed over files |
+
+The reader, `scratch/126b/` (off git): each test file runs alone under
+Vitest's node API with the coverage tool on and a setup file
+(`takeSetup.ts`) that takes V8's coverage on its own inspector session
+before the first test (the file's load), at each `beforeEach` and the
+`afterAll` (describe-level hooks), and after each test, its own hooks
+in it; a take resets V8's counters, so each holds what ran since the
+last. Each take is converted by the coverage tool's own provider
+(`convertCoverage`) and read with `tests/oracle/reach.ts`'s
+`fromIstanbul`. "Alone" is against every other test of the tier and
+every file's load and hook takes.
+
+- **The known answer:** each file's takes together equal, key for key,
+  the coverage tool's reading of that file run alone at the same commit
+  (`scratch/120e/perfile.ts`, recorded again): main 255 of 255, smoke
+  61 of 61. Its control: a copy with one key dropped from one file is
+  named, and the check exits 1.
+- **The planted case:** a test file under `scratch/126b/plant/`, read as
+  part of the main tier. Its first test calls `knownAbilityIds`, which no
+  main test calls; the list says it alone runs one line and one
+  function, both in `registry.ts`. Its second runs only RNG's constructor
+  and `next`; the list says it alone runs nothing, held by
+  `RNG.test.ts`'s first test.
+- **Section 3's list by file, from the same readings:** 167 files alone
+  run a line, 25 an arm or a function, 63 nothing (3.2: 173, 24, 64 of
+  261). Seven files are gone (`selection`, `multiTick`, `focusTile`,
+  `enemyBudget` and 126a's three) and one is new (`src/core/grid.test.ts`,
+  `d7e3247d`); seven changed class, which this step did not trace one by
+  one. The smoke's: 49, 4 and 8 of 61 (3.2: 51, 6 and 8 of 65, before
+  §125's deletions); not traced.
+
+### 6.2 The list
+
+| class | main | smoke |
+|---|---|---|
+| **alone runs a line** | 285 | 127 |
+| **alone takes an arm or calls a function, and no line** | 236 | 90 |
+| **alone runs nothing** | 3,178 | 378 |
+| · the same reading as a test in its own file | 751 | 72 |
+| · the same reading as one only in another file | 48 | 3 |
+| · inside a larger test's reading in its own file | 690 | 84 |
+| · inside one only in another file | 266 | 16 |
+| · inside no one test's reading | 1,002 | 171 |
+| · runs nothing under `src`, `tests`, `tools` or `scripts` | 421 | 32 |
+
+The 285 tests alone run 821 lines between them; by folder the keys they
+alone run are most in `tests/fuzz` (290), `src/run` (261),
+`tests/oracle` (223), `src/dev` (153), `src/sim` (151), `src/config`
+(145) and `src/ui` (140). 163 files hold a test that alone runs
+something.
+
+By the words in their names (3.5's classes; a name can be in two): "a
+no-op or an empty case" 332, of which 256 alone run nothing; "a shipped
+or default value" 173 and 157; "a rejection" 332 and 186; "a round trip"
+143 and 117; "determinism" 151 and 144.
+
+### 6.3 The bottom, read
+
+Reach cannot see what a test asserts (3.6), so the classes of the 3,178
+were read by body, each test against its twin or holder: a seeded draw
+from each class (`sample.ts`, seeds 126 to 128) and the 48 with a twin
+only in another file whole (`pairs.ts`), 96 tests in all.
+
+- **The same reading as one only in another file,** all 48: two are
+  repeats, A-43 and A-44, each asserting part of what a test in the
+  game's own file asserts and running nothing else. Of the rest, the
+  pathing drift gates (`tests/pathing/drift.test.ts`, three) are implied
+  today by the baseline's exact pins (`baseline.test.ts`), and are kept
+  by PATHING's standing rule, since the baseline is re-pinned on purpose
+  and the gate is the floor; `determinism.test.ts`'s `rollUnit` case is
+  implied while `rollUnit` rolls nothing, and is the determinism
+  contract's. The other 42 assert another property of shared code (a
+  shipped layout is not severed against open ground's tier, the store's
+  progress section against its preferences).
+- **The same reading in its own file,** 12 drawn: all 12 assert
+  something their twin does not. The pairs take one code path with
+  another input or ask another property of it (a chasm tile against fire
+  and healing tiles through the snapshot, a growth of 0 at a high level
+  against a level of 0, a node map's inbound edges against its node
+  kinds, the cooldown past the window against zero-length phases).
+- **Inside a larger test's reading in its own file,** 6 drawn, and
+  **inside no one test's,** 6 drawn: each asserts its own case (a
+  display name against its fallback, a hold of the playback speed while
+  paused, a loaded run's own properties, a byte-identity pin of the
+  draft's weights over 500 seeds).
+- **Inside a test only in another file,** 8 drawn: each states one rule
+  (a pick is deterministic per seed, a stale snapshot is refused, a
+  target switches at the ratio, a neutral-only board ends nothing, the
+  line of sight is symmetric) that a broad driver elsewhere runs and
+  asserts nothing about.
+- **Runs nothing under the counted folders,** 8 drawn: gates over data
+  and text (the layouts' walls inside their grids, the stylesheet's
+  tokens, the licence file, the escalation sentences, a doc cap, the
+  reduced-motion strip list).
+- **Named for a shipped or default value,** 8 drawn: seven derive the
+  expectation from the config (`xpToNext` from `LEVELING`, the starting
+  roster from `characters.json`); one pins the daemons' shape on
+  purpose ("design-shape pins").
+- **Twins by text** (`repeats.ts`): of the 751, 43 hold no `expect` line
+  their twin does not; by their names, the first 20 differ from the twin
+  in set-up, not in their `expect` lines (a schema rejecting another
+  malformed shape, one `it.each` row at speed 0 against speed 4). Their
+  bodies were not read.
+- **A literal pinned to a shipped value:** 18 `expect(CONST.key).toBe(n)`
+  lines in 12 tests (a search over `*.test.ts`); each names the value as
+  signed or locked ("the spec-locked bases", "the byte-identical no-op
+  contract", "the locked 50%").
+
+- **The smoke,** 9 read by body: its 3 with a twin only in another file,
+  whole (each resolves another knob group, two writing the live object
+  and putting it back), and 6 of its 72 twins in their own file; none a
+  repeat.
+
+Not read: the other 3,082 of the main suite's 3,178, and 369 of the
+smoke's 378.
+
+**A-41 · the tests that alone run nothing** (3,178 main less A-43 and
+A-44, 378 smoke)
+- In play: nothing a player meets; a test runs only under `npm test` or
+  the smoke.
+- Evidence: 6.2 and 6.3. Of the main suite's 96 read by body, two
+  assert only part of what another test asserts, and both are in the
+  class of 48 read whole; of the 48 drawn from the five other classes,
+  none; of the smoke's 9, none.
+- Fate: **ask**, by class. Lean: **keep** every class. The other arms:
+  read the 751 twins in their own file whole, in tranches, at about 250
+  tokens a test (about 190k, a session); or read all 3,178 (about 800k).
+- Proof, for any deleted: test (section 3's proof), `reach-diff` and a
+  plant at what the test was written for.
+- Signed:
+
+**A-43 · `tests/tools/layout-editor.test.ts`, "rejects campSpawns with
+an empty camps list (the loud-authoring-error pin)"** (line 126, 4
+lines)
+- In play: nothing.
+- Evidence: it drops `camps` from a layout and checks that the game's
+  `LayoutsSchema` refuses it; it calls no editor code (its reading is
+  `src/sim/layouts.test.ts:299`'s). That test asserts the same refusal
+  with `camps` absent, and again with it empty.
+- Fate: **delete**.
+- Proof: test; the plant, the schema's camp-spawn refinement removed,
+  caught by `layouts.test.ts`.
+- Signed:
+
+**A-44 · `src/sim/terrainGen.test.ts`, "dispatches to the hand-authored
+library when layoutId is set"** (line 136, 10 lines)
+- In play: nothing.
+- Evidence: `generateTerrain(new RNG(1), …, 'labyrinth')` and the wall
+  count equal to the layout's. `src/sim/layouts.test.ts:128` makes the
+  same call for every shipped layout, labyrinth among them, and asserts
+  the count and each wall.
+- Fate: **delete**.
+- Proof: test; the plant, the library dispatch skipped, caught by
+  `layouts.test.ts`.
+- Signed:
+
+**A-42 · the tests that alone run something** (521 main, 217 smoke)
+- Fate: **keep**, as a class, as 3.7's sixth call kept their files.
+- Signed:
+
+### 6.4 What this section's instruments cannot see
+
+- What a test asserts, as in 3.6; the reads in 6.3 are a sample.
+- A child process, as in 3.6: the smoke's two files that start the fuzz
+  command line read as running nothing.
+- A test's share of its file's load and hook takes: a line a
+  `beforeAll` runs belongs to no test.
+- The order of tests: a test that leans on an earlier test's state reads
+  its own take only.
+
+### 6.5 Calls for the user at 126c
+
+1. **A-41,** the tests that alone run nothing, by class. Lean: keep.
+2. **A-42,** the tests that alone run something. Lean: keep.
+3. **A-43 and A-44,** the two repeats, item by item. Lean: delete each,
+   in 126d.

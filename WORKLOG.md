@@ -15033,3 +15033,63 @@ output/reach-126a/before output/reach-126a/after --from=HEAD`: "nothing
 lost". `comment-codes --record` first: 898 → 895, the three codes
 `levelCapMigration.test.ts` held. The smoke runs on this commit (a
 `src/run` path is staged).
+
+### 126b — the list by test (2026-10-21, session 314e1038)
+
+The reader is under `scratch/126b/`, off git, as signed:
+`takeSetup.ts` (the setup file), `runOne.ts` (one file through Vitest's
+node API), `byTest.ts` (every file of a tier, N at a time), `list.ts`
+(the list), `known.ts` (the known answer), and the reads' helpers
+`sample.ts`, `pairs.ts`, `repeats.ts` and `uncovered.ts`. The list and
+its counts are the census's section 6.
+
+How it works, as built: the coverage tool stays on, so its provider and
+the Vite server are there to convert with, and the setup file takes V8's
+precise coverage on a second inspector session. Each take resets V8's
+counters, which are the isolate's, so the takes add up to the file; the
+tool's own per-file take in a reader run is not read, and the known
+answer below compares against a separate run of the tool. Each take
+carries the module's wrapper length from Vitest's worker state
+(`__vitest_worker__.moduleExecutionInfo`) and the environment name, as
+the tool's worker sends them, and goes through the provider's own
+`convertCoverage`. A take of `RNG.test.ts`'s load converted to no
+statements: `RNG.ts` has none at its top level, by the converter's 32.
+The tool's per-file readings were recorded again at `c9c9b8d6` with
+`scratch/120e/perfile.ts` (main 255 files in 663 s, four at a time;
+smoke 61 in 397 s, three at a time) under `scratch/126b/perfile/`.
+
+Checked, each against a known answer:
+
+- `known.ts --tier=main`: 255 of 255 files equal key for key, 337,341
+  keys; `--tier=smoke`: 61 of 61, 271,089 keys (the reader's smoke run
+  took 536 s, three at a time). Its control: a copy of the main
+  readings with `RNG.ts:40` dropped from `RNG.test.ts`'s takes is named
+  ("1 only in the tool's reading") and the run exits 1.
+- The plant, `scratch/126b/plant/plant.test.ts`, read as part of the
+  main tier: `plant: alone` calls `knownAbilityIds`, which no main test
+  calls (`uncovered.ts`: four such functions under `src/sim`), and the
+  list gives it one line and one function alone, both in `registry.ts`;
+  `plant: nothing` alone runs nothing. `list.ts` refuses to print
+  unless both read so.
+- The list by file from the same readings against the census's 3.2: the
+  seven files gone and the one new are named in 6.1; the seven that
+  changed class were not traced.
+
+The reads of the bottom, 96 tests by body (6.3), found two repeats,
+A-43 and A-44, both in the class with a twin only in another file,
+which was read whole; the 48 drawn from the other five classes found
+none, nor did the smoke's 9. The literal pins (18 lines, 12 tests) each
+name a signed value.
+
+Readings by the tool's clock (UTC): 225,828 on the sign's commit,
+250,784 on 126a's, 290,870 at 13:42 with the reader built, 339,203 at
+14:03 with the main list read.
+
+### 126c's stop: the list by test (2026-10-21, session 314e1038)
+
+The phase's decision point. The census's section 6 holds the list, the
+reads and four rows (A-41 to A-44) with their calls (6.5); the proposal
+and its leans are in the session's final message of this turn, and the
+user's answer follows here. Nothing was built but the docs.
+
+Reading: 400,681 at 14:15, before this entry.

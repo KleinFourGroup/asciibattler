@@ -15627,4 +15627,72 @@ The bar:
 4. All 23 `spawnEncounter` calls build their World with `battleWorld`,
    and no file that calls it builds a World by hand.
 
-TODO's item is ✅. The pathing tables' control follows, at this commit.
+TODO's item is ✅. Built at `178961d8`; the hook: 3,703 main. The pathing
+tables' control, in a worktree of `178961d8`: `capture.ts`' encounter
+given `worldSeed: seed + 1`, which `battleWorld` now builds the World on,
+and 45 of the tables' 61 rows differ from the baseline.
+
+### 126l — the re-skim (2026-10-21, session 9d8a93c2)
+
+Nothing was built. Read: the phase's diff in code, `2c7df136..HEAD` over
+`src`, `tests`, `tools`, `scripts` and `config` (64 files, 396 lines
+added, 382 deleted). This session's part (126j, 126k) was written here;
+the files outside tests that sessions 1 and 2 changed (126e's bounds in
+`replayTrace.ts`, `replayJournal.ts`, `chaos.ts`, `journalDrive.ts`,
+`harness.ts` and `walker.ts`) were read as added lines and read true.
+Then a word search of every tracked file outside the records, `archive/`
+and `scratch/` for each name the phase deleted, renamed or stopped
+calling (the three A-33 files, A-43's and A-44's titles,
+`MAX_REWARD_STEPS`, "linear fallback", `units.push`): only history lines
+in BALANCE, `determinism.test.ts`' own `MAX_REWARD_STEPS`, and the two
+editors' `units`, which are not a World's. The census's special-case scan
+covered `src` alone, so it has no sites under `tests`.
+
+One lead, from 126j: a repeated id. A probe in a worktree of `178961d8`
+made `placeUnits` throw on an id already in the index: 7 tests in 6 files
+fail, each where a test-built unit holds id 1 and a World spawn
+(`spawnWall` or `spawnHalfCover`, through `addUnit`) is then given id 1,
+since the World's counter starts at 1 as the tests' do. That is gotcha
+#105's collision, live in tests its fix did not reach:
+`environment.test.ts`' wall-is-never-a-target test, `Targeting.test.ts`'
+two (c) tests, `World.test.ts`' neutrals-on-fire-tiles test,
+`MovementBehavior.test.ts`' two D6 half-cover tests and `aura.test.ts`'
+inert-scenery test. In all seven the World's unit is placed second, so
+the index holds it under id 1, which is what `findUnit(1)` returned
+before 126j as well. The half-cover detour test asserts that the first
+step from (0,0) is not (3,0), which no single step can reach, so its
+position checks hold whatever the pathing does.
+
+**The row for the user's sign:**
+
+- **R-1 · the repeated id.** `placeUnits` refuses an id already placed
+  (about three lines; the game never repeats one, which the corpus and
+  the fuzz diff would show), and the seven tests get ids clear of the
+  World's counter (the helpers' `nextId`, or the ids written in the
+  specs). Then each of the seven is read again for whether it still
+  shows what its title says, and one that passed only on the collision
+  goes to the user as a finding, unfixed. Proof: the suite with the
+  refusal, the corpus, the fuzz diff, and a plant (a fixture id put back
+  to 1) caught. Lean: build it as 126l-post, read `none`.
+
+**Seen and not over the bar:**
+
+- `Run.test.ts`' `chipTurn` works out the reason the Run's fill-in would
+  and then leaves it out of the fake; the marks stay (126j), so the
+  fill-in is the fakes' documented path.
+- The five `*-battle` tests share one shape (an encounter, `battleWorld`,
+  `spawnEncounter`, a capped loop); one helper for five files would be a
+  new abstraction.
+- `battleWorld` and `spawnEncounter` stand as a pair at 23 sites, apart
+  on purpose: a caller sets what its `unit:spawned` handlers read between
+  them.
+- The turn-cap bound is written at each loop's site, as 126e's call
+  signed (no guard inside `tickTurn`).
+- `removeUnit` finds its splice index with a walk of `units`: the game's
+  own path, once a death, over a board of a few dozen.
+- `JournalRecorder.test.ts`' `{} as BattleEncounter` sets nothing, and
+  the recorder's `battle:started` handler reads none of its payload.
+
+The trials' budget: one of three used (R-4).
+
+Reading by the tool's clock (UTC): 354,247 at 18:44, before this entry.

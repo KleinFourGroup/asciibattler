@@ -15411,3 +15411,57 @@ Checked:
 - The plant, in a worktree of `0aaefff8`: `import '../config/units';`
   added to `src/core/grid.ts`; the guard failed, 1 of 2 (the self-check
   plants on top of it and passes); the clean worktree 2 of 2.
+
+### 126i — the walker's port purchase (2026-10-21, session e6ab25e8)
+
+Step zero at `75aafde4`: as 125h left it. The walker's port case calls
+`buyAtPort` and drops its count, and its default strategy has no
+`pickPortBuy`; `walkPolicyOverlay` adds `walkPortBuy`, and the evaluator
+composes `{ ...strategy, ...walkPolicies }`. `arbitratedStrategy.test.ts`
+already builds a funded dock in its `beforeAll` (a seed scan of real
+walks to the first dock with an affordable slot), so the test went there
+rather than into `walker.test.ts`, where it would walk about six more
+battles in the smoke.
+
+Built at `48d8595d`: a clone of that dock, walked under the overlay
+composed as the evaluator composes it, stopping at `map` after the
+port's buys and `leavePort`, sells more slots than it held and spends
+bits. The hook: 3,703 main, 595 smoke, parity 1.
+
+The plant (`npm run oracle -- plant`, in a worktree of `48d8595d`):
+`gateWalks.ts:112`, the slot check negated, so `buyAtPort` buys nothing.
+The smoke returned in 86 s, 2 of 60 files failing, `harnessEconomy` and
+`arbitratedStrategy.test.ts` (at 125h the same plant failed
+`harnessEconomy` alone). Run alone under the plant, the second file's one
+failure is the new test: "expected 0 to be greater than 0", the sold
+count.
+
+### The hand-off after 126i (2026-10-21, session e6ab25e8)
+
+126e to 126i are built, proven and committed; no ◐ is open, since all
+five are `none`. 126e's and 126f's scopes widened at step zero, each
+signed (126e: `tests`' instruments and `src`'s replay loops; 126f: the
+four slower default-limit tests). The next step is 126j, B-11's trial,
+in a fresh session: its step zero alone (74 pushes onto `units` in 24
+files, 32 `battle:ended` fakes in 7 test files, the kickoff's count)
+looked larger than the room from about 403k to the halt.
+
+For the session that takes 126j:
+
+- The kickoff's B-11 paragraph and the trial's bar are in WORKLOG §126,
+  "The kickoff"; its constructor clause is stale (`combatRng ??
+  rng.fork()` is the game's own path and stays).
+- `src/run/Run.test.ts`'s `chipTurn` already fills `fallenPower` and
+  `reason` the way `handleTurnEnded` does for a reason-less fake;
+  `determinism.test.ts`'s fakes pass `survivorPower` and `fallenPower`
+  but no `reason`.
+- The plant tool counts a run stopped at its limit as caught; read each
+  verdict's time and file list, not its exit code (126e).
+- No worktree is left (each plant and control removed its own), no
+  background task runs, and no preview server was started.
+
+Readings by the tool's clock (UTC): 109,636 at 15:09 (the first),
+246,043 on `a1f20a8d`, 277,292 on `10022411`, 315,160 on `7f83484a`,
+325,526 on `976c09e5`, 336,938 on `21e00369`, 344,036 on `449444ad`,
+366,251 on `0aaefff8`, 369,623 on `75aafde4`, 395,709 on `48d8595d`,
+403,285 at 17:04 before this entry.

@@ -93,14 +93,9 @@ every item below is done (WORKLOG §124, "The close of §124"; WORKLOG
   seed is not a copy (WORKLOG §125, 125g and 125j's R-4). Signed for here
   2026-10-20.
 
-- [ ] **Nothing notices the rollout walker buying nothing at a port.** A
-  plant that made `buyAtPort` (`tests/fuzz/gateWalks.ts`) never buy was
-  caught by `harnessEconomy.test.ts`, which reads the harness's count,
-  and by nothing on the walker's side: neither fuzz-diff shape lands a
-  strategy's port buy, and the rollout tests passed (WORKLOG §125, 125h).
-  The walker's own copy of the loop had the same blind spot. A test that
-  walks a clone through a dock under the walk overlay and reads that a
-  purchase landed would close it. Signed for here 2026-10-20.
+- ✅ **Nothing notices the rollout walker buying nothing at a port.**
+  `arbitratedStrategy.test.ts` walks a clone of its funded dock under the
+  overlay and reads a purchase land (WORKLOG §126, 126i).
 
 - [ ] **The step-code ceiling at 0 guards comments, not strings.**
   `comment-codes` counts the codes in comments only

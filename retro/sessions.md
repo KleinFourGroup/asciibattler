@@ -7511,3 +7511,45 @@ at the code it names.
    reads by body were the interesting part, since reach alone said almost
    nothing. I'd want that order again. That is my reported response; the
    list's worth rests on whether later work finds a repeat it missed.
+
+## 2026-10-21 — session e6ab25e8 (claude-opus-5-5): §126, 126e to 126i; started by the phase's driver session
+
+1. *Orientation.* Enough. The Cursor, the hand-off after 126d and the
+   driver's notes pointed at 126e and named the `for (;;)` loops the
+   kickoff's count missed. Two things I found only by reading code: the
+   plant tool counts a run stopped at its limit as "caught", which
+   matters for any plant meant to show a hang turned red; and
+   `arbitratedStrategy.test.ts` already builds a funded dock, which made
+   126i cheap.
+2. *Norms in tension.* At 126f the time limit was a threshold call,
+   which AGENTS makes a stop, while the steps between stops are meant
+   to keep going. I built 126g first, since it rests on nothing in 126f,
+   and asked about both at once; Matthew answered quickly, so nothing was
+   lost, but it was my reading of the rules, not one they state. AGENTS'
+   character cap made me reword a sentence instead of adding one, which
+   came out shorter and still true. The preview hook asked for a browser
+   check after every edit; none was observable in the pane.
+3. *Pulled to claim more.* Yes, twice, both caught before writing. Every
+   plant printed "CAUGHT" and exited 0, and before I read the tool I
+   would have taken that as "returned red"; the times and file lists are
+   what show it, and the per-file control at the old commit showed the
+   hangs were real. At 126i I first read the second failing file as the
+   new test by inference from 125h's table, and then ran it under the
+   plant to name the test. Plant A differs from the signed plant; I
+   flagged that in the report and the WORKLOG rather than leave it.
+4. *Wasted.* A loop count with `git grep`'s `tests/**/*.test.ts`
+   skipped the files directly under `tests` (a papercut). Waiting on
+   background runs had no blocking call, so four turns ended with a
+   status line mid-stretch.
+5. *For the next session.* WORKLOG §126, "The hand-off after 126i".
+6. *Room.* Yes. Two step-zero questions went to Matthew with leans and
+   both were signed as leaned; the hand-off before 126j was my call on
+   the room left. No wish to pause or stop was noticed, and the
+   silent-turn reminders were answered with what was true at the time.
+7. *What helped.* The control that ran each plant at the commit before
+   the bounds: three files that hung at `0809ccd6` and failed in 4 s at
+   HEAD made the change's worth something I could see rather than argue.
+   126h's known answer from history, the old tree naming gotcha #114's
+   own path, was the most satisfying single result. I'd want both habits
+   repeated. That is my reported response; whether the bounds earn their
+   keep shows only when something next stops taking effect.

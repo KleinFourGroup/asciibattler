@@ -54,7 +54,9 @@ describe('gauntlet cells (53e)', () => {
     expect(parseRunConfig(new URLSearchParams(query))).toEqual(cellRunConfig(cell, seed));
   });
 
-  it('a live headless drive of cell #1 fights the forced encounter, on the forced layout, with the standard roster', () => {
+  // About 3.3 s beside the whole suite, near the default 5 s, which load
+  // beside the suite can pass with nothing wrong.
+  it('a live headless drive of cell #1 fights the forced encounter, on the forced layout, with the standard roster', { timeout: 15_000 }, () => {
     const cell = GAUNTLET_CELLS[0]!;
     // 74i-c — the cell protocol pins its fight at the ROOT, which the
     // shipped sector now stamps as the starting event; the headless drive

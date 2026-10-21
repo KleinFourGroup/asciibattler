@@ -124,7 +124,9 @@ describe('a gated headless run, recorded', () => {
     ]);
   });
 
-  it('recording changes nothing: the same run with no recorder ends in the same state', () => {
+  // Three whole runs: about 3.4 s beside the whole suite, near the default 5 s,
+  // which load beside the suite can pass with nothing wrong.
+  it('recording changes nothing: the same run with no recorder ends in the same state', { timeout: 15_000 }, () => {
     const plants = ordersAt1And6([]);
     const recorded = driveRun({ start: START, plants });
     const bare = driveRun({ start: START, plants, record: false });

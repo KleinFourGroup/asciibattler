@@ -15329,6 +15329,14 @@ them. Timed with Vitest's reporters, nothing else running:
 The limit's value and whether the four others take one are put to the
 user in the session's final message of this turn; nothing was built.
 
+Reading: 325,526 on `976c09e5`, before the questions.
+
+**Signed** (the user, 2026-10-21): "15s seems perfectly reasonable,
+Claude! 😁 Signed for both of them!" So the four seeds and the four
+slower tests carry 15 s each, with the reason beside it; the seeds'
+comment keeps the tripwire (a walk about 4 s alone runs 13 s or more
+beside the suite, the seeds running 3 to 7 times slower there).
+
 ### 126g — T-49 and T-50, the two pins (2026-10-21, session e6ab25e8)
 
 Step zero at `10022411` (the session's scratchpad, `catalog-probe.mjs`):

@@ -13,6 +13,12 @@ import { ChaosFailure, KINDS, chaosRun, type ChaosOptions, type ChaosResult } fr
 // under the whole suite: the slot with no dials was seed 2 until three events
 // gained pages and its walk went from 0.7 s to 4 s, and seed 31 is the
 // shortest of 40 that keeps the census below whole (WORKLOG §118d).
+//
+// A seed takes under 1 s alone and up to about 3 s beside the whole suite,
+// which failed the default 5 s under load with nothing wrong. 15 s leaves
+// room for that and still trips on a long walk: the seeds run 3 to 7 times
+// slower beside the suite, so a walk of 4 s alone takes 13 s or more there.
+const SEED_TIMEOUT_MS = 15_000;
 const EVERY_COMMIT: ReadonlyArray<readonly [number, string]> = [
   [3, 'hops=3&layout=procedural'],
   [31, ''],
@@ -39,6 +45,7 @@ describe('115c — the chaos driver', () => {
 
   it.each(EVERY_COMMIT.map(([seed, dials]) => [seed, dials || '(no dials)', dials] as const))(
     'seed %i, %s: green',
+    { timeout: SEED_TIMEOUT_MS },
     (seed, _name, dials) => {
       const result = chaosRun({ seed, dials, journalDir: dir });
       expect(result.battles).toBeGreaterThan(0);

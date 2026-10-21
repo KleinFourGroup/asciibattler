@@ -62,8 +62,12 @@ const sweep = (rule: SlabRule, mounds: boolean) =>
     );
   });
 
+// Each sweep takes about 3.5 s beside the whole suite, near the default
+// 5 s, which load beside the suite can pass with nothing wrong.
+const SWEEP_TIMEOUT_MS = 15_000;
+
 describe('the production slab rule passes the 106a measures', () => {
-  it('centred, on its plot, unbitten and sort-clean — every candidate yaw, ortho and the lens, with and without mounds', () => {
+  it('centred, on its plot, unbitten and sort-clean — every candidate yaw, ortho and the lens, with and without mounds', { timeout: SWEEP_TIMEOUT_MS }, () => {
     const rs = [...sweep(productionRule, false), ...sweep(productionRule, true)];
     expect(rs.length).toBe(2 * VIEWS.length * RUBBLE_QUARRY_SLABS.length * Object.keys(HEIGHT_PATTERNS).length);
     for (const r of rs) {
@@ -74,7 +78,7 @@ describe('the production slab rule passes the 106a measures', () => {
     }
   });
 
-  it('CONTROL — the same centre without the slide is bitten by the mounds (the sweep can see a missing slide)', () => {
+  it('CONTROL — the same centre without the slide is bitten by the mounds (the sweep can see a missing slide)', { timeout: SWEEP_TIMEOUT_MS }, () => {
     expect(Math.max(...sweep(unslid, true).map((r) => r.occluded))).toBeGreaterThan(0.1);
   });
 

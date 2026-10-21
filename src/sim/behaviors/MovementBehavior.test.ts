@@ -136,25 +136,6 @@ describe('MovementBehavior', () => {
     expect(distAfter).toBeLessThan(4);
   });
 
-  it('D6: paths AROUND a half-cover (pathfinding still treats it as a blocker)', () => {
-    // Straight line player→enemy passes through (3,0); half-cover sits there.
-    // Player should detour rather than walking through.
-    const { world, units, moves } = scene([
-      { team: 'player', x: 0, y: 0, attackRange: 1, moveCooldownTicks: 1 },
-      { team: 'enemy', x: 5, y: 0, inert: true },
-    ]);
-    spawnHalfCover(world, { x: 3, y: 0 });
-
-    world.tick();
-    expect(moves).toHaveLength(1);
-    // First step should be a valid neighbor of (0,0) other than (3,0).
-    const newPos = units[0]!.position;
-    expect(newPos).not.toEqual({ x: 3, y: 0 });
-    // Chebyshev distance to (3,0) should be > 0 after one step (didn't land on it).
-    const distToHC = Math.max(Math.abs(newPos.x - 3), Math.abs(newPos.y - 0));
-    expect(distToHC).toBeGreaterThan(0);
-  });
-
   it('D6: ranged unit with half-cover on the LOS line still abstains in-range (lets AttackBehavior fire)', () => {
     // The pre-D6 MovementBehavior treated half-cover as an LOS blocker,
     // so a ranged unit in range with a half-cover between it and target

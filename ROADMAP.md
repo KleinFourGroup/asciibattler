@@ -359,6 +359,8 @@ kickoff"). A-25's tests have no step: none is left.
   an id already placed; the seven tests that collided at id 1 got their
   own; two had passed only on the collision, two more name a rule they
   cannot see (findings for the user).
+- ☑ **126l-post2 — the two findings** (`none`). The half-cover detour
+  test deleted; the aura test's wall check on a status the wall takes.
 - ☐ **126m — the step codes in comments** (`batch`, per batch). 898, by
   folder, through an anchor-checked patch file.
 - ☐ **126n — the step codes in titles** (`batch`). `comment-strip`

@@ -15760,3 +15760,32 @@ rules, each planted against the whole suite in a worktree of `8491a21e`
 
 The calls on the two are in the session's final message of this turn;
 the user's answer follows here.
+
+**Signed** (the user, 2026-10-21): "Signing both leans, Claude". So the
+detour test is deleted and the aura test's wall check is given a status
+the wall accepts, as 126l-post2, read `none`. The same answer corrected
+the session's sizing: the session had put the room for 126m as what was
+left before 550k, but 550k is the line past which no step starts, and a
+step started under it may run to the halt at 600k.
+
+### 126l-post2 — the detour test out, the aura test's wall given a status it takes (2026-10-21, session 9d8a93c2)
+
+Built as signed. `MovementBehavior.test.ts`' "D6: paths AROUND a
+half-cover" is deleted (18 lines); `spawnHalfCover` keeps its other
+reader there. In `aura.test.ts`, `auraDef` takes an optional `statusId`
+(default `emboldened`), and the scenery test's aura carries `burn`, which
+a wall's def accepts, with a line saying so; its title and its four
+assertions are as they were, on `burn`. No step code moved: the ceiling
+stays 895, and the codes inside strings are 685, the deleted title's
+`D6` gone.
+
+Proof:
+
+- `reach-record suite` at `ea2b0eed` in a worktree
+  (`output/reach-126l/before`, 72 s) and on the change
+  (`output/reach-126l/after`, 68 s), then `reach-diff … --from=HEAD`:
+  "nothing lost".
+- The aura test's known answer, in the worktree: the pass's scenery skip
+  removed fails the scenery test, "expected [ { key: 'burn', … } ] to
+  have a length of +0 but got 1"; the other 11 pass.
+- The two files 47 of 47, typecheck clean.

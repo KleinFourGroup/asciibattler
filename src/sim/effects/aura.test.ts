@@ -36,7 +36,9 @@ const freshWorld = (bus: EventBus<GameEvents> = new EventBus<GameEvents>()): Wor
 const EMBOLDENED_TICKS = Math.max(1, secondsToTicks(EMBOLDENED.durationSeconds));
 
 /** A minimal PURE-aura def (no ops → target 'self', per the schema refine). */
-function auraDef(over: Partial<{ radius: number; affects: 'enemies' | 'allies' | 'all' }> = {}): AbilityDef {
+function auraDef(
+  over: Partial<{ radius: number; affects: 'enemies' | 'allies' | 'all'; statusId: string }> = {},
+): AbilityDef {
   return AbilityDefSchema.parse({
     id: 'test_aura',
     name: 'Test Aura',
@@ -47,7 +49,11 @@ function auraDef(over: Partial<{ radius: number; affects: 'enemies' | 'allies' |
     orphanPolicy: 'commit-at-cast',
     priority: 0,
     effects: [],
-    aura: { radius: over.radius ?? 3, statusId: 'emboldened', affects: over.affects ?? 'allies' },
+    aura: {
+      radius: over.radius ?? 3,
+      statusId: over.statusId ?? 'emboldened',
+      affects: over.affects ?? 'allies',
+    },
   });
 }
 
@@ -165,13 +171,14 @@ describe('§76a — the aura pass', () => {
     const ally = makeUnit(world, 2, 'player', { x: 6, y: 5 });
     const enemy = makeUnit(world, 3, 'enemy', { x: 5, y: 6 });
     const wall = spawnWall(world, { x: 4, y: 5 }); // team 'neutral' ≠ carrier's → matches 'enemies'…
-    carrier.abilities.push(new EffectAbility(auraDef({ affects: 'enemies' })));
+    // A burn aura: a wall's def accepts burn, so only the pass's skip keeps it off.
+    carrier.abilities.push(new EffectAbility(auraDef({ affects: 'enemies', statusId: 'burn' })));
 
     world.tick();
 
-    expect(hasStatus(enemy, 'emboldened')).toBe(true);
-    expect(hasStatus(ally, 'emboldened')).toBe(false);
-    expect(hasStatus(carrier, 'emboldened')).toBe(false);
+    expect(hasStatus(enemy, 'burn')).toBe(true);
+    expect(hasStatus(ally, 'burn')).toBe(false);
+    expect(hasStatus(carrier, 'burn')).toBe(false);
     expect(wall.effects).toHaveLength(0); // …but the inert-neutral skip holds (the 27d rule)
   });
 

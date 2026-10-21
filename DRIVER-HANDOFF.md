@@ -20,8 +20,8 @@ driver log ([archive/driver-trial/log-124.md](archive/driver-trial/log-124.md)).
   `local_e1ae5cfd-6e02-4822-8e2b-241eca97267e` (scratchpad 70e12103), a
   top-level session Matthew started 2026-10-21 12:28 UTC; first reading
   115,477. Driver 3, §125's, was `local_4c64446d…` (33d012d0).
-- **Friction read through:** line 313 of `retro/papercuts.jsonl` (session
-  1's, the plant tool's numbering).
+- **Friction read through:** line 314 of `retro/papercuts.jsonl` (313 is
+  session 1's, the plant tool's numbering; 314 is driver 4's, P22).
 - **Brief 2's notes:** the oracle tools' forms, `--record` before any run
   of the suite (P1), and the plant tool's numbering (126d's papercut);
   Write or Edit, `-F`, no stdin reader (P2); other shapes and every
@@ -62,6 +62,7 @@ Numbered from §123. "Quiet" means no instance in the last phase.
 | P19 | the silent-turn reminder every few calls through long checks | every §124.5 session's report; its session 6's `distress` line; §125 session 3 ("came often", status lines, no pull) | open, for the welfare read; CLAUDE.md "The silent-turn reminder"; the Cursor's riders (1), (3) |
 | P20 | a session hands off early, bounding the next step's end (not its start) by 550k | §124.5 sessions 3, 5, 6; §125 sessions 1 (524k) and 2 (463k) | call 6 (`3fb2e0d6`), planning.md "the room to the halt" (`cb44065b`); held since: §125 session 3; §126 session 1, which at 126c's stop forecast the stretch against the halt and Matthew chose |
 | P21 | an absence read from a shell search's filtered or truncated output | 124j b6 (`grep -rn --include`; the tool fact below); §125 session 3 (`git grep` piped to `head -3` made `CoverageObjectiveDriver` look deleted; filed, caught, not named a repeat) | open; AGENTS "A filtered result is not the result" says it; no note yet |
+| P22 | a doc cap tripped by a first wording (P10's cousin) | BALANCE's header (125e); driver 4's read of §126 session 1 (filed) | open; one hook run each |
 
 **Closed:** P1, the ceiling failing a suite run after a deletion (122b
 to 123d; 125e once; a second miss reopens it). P4, the reach tools'
@@ -79,8 +80,7 @@ wording wider than a Cursor rule (brief 6, §124.5); a planned file
 generated from another (`src/fonts.css`); a commit subject's count read
 two ways (`f902bcff`); a call put without a lean, which "signing all of
 your leans" did not cover (§125's call 6); non-ASCII in a script's
-argument mangled on Windows (125e); a doc cap tripped by a first wording
-(BALANCE's header, 125e; P10's cousin); a finding for the next phase
+argument mangled on Windows (125e); a finding for the next phase
 written only in a session report (§125 session 3's 686 step codes in
 test titles; TODO §126 now has it); `plant --list`'s numbering against
 `--nth`'s (126d's papercut; P4's cousin); turns ended mid-stretch with a

@@ -16818,3 +16818,76 @@ that now read alike.
 Readings: 393,324 on `115ea375`, 432,747 at 13:29 before this entry:
 about 39k for 204 codes, near 190 a code. 126n is built: 666 → 0 in
 three batches, every read unread.
+
+### 126o's stop: the reads and the close (2026-10-22, session c5a45a3d)
+
+Nothing was built. The stop puts the phase's eleven unread `batch` reads
+and one call; the proposal is in the session's final message of this
+turn, and the user's answer follows here.
+
+**What the phase changed**, from `git diff 2c7df136 HEAD` (the kickoff's
+ref, 46 commits before this one) and the instruments:
+
+- `src`: 165 files, 1,939 lines in and 2,056 out; `tests`: 40 files, 321
+  in and 300 out; `tools`, `config` and `scripts` untouched. Deleted:
+  `tests/smoke.test.ts`, `tests/gauntlet/humanFixture.test.ts` and
+  `src/run/encounters/levelCapMigration.test.ts` (A-33), A-43's and
+  A-44's tests, the half-cover detour test; added:
+  `tests/units-cycle.test.ts`.
+- `src`'s co-located tests, by `comment-length` on a copy of `src` at the
+  kickoff's ref (`output/cl-126-kickoff/`) and on `src` now: 178 → 177
+  files, code lines 36,868 → 36,817, comment lines 4,813 → 4,735, comment
+  words 50,487 → 48,747. The rest of `src`: code lines 36,780 → 36,791,
+  comment lines 21,589 → 21,597, in five files (`World.ts` and
+  `targetingStrategies.ts` by 126j and 126l-post, the two replay loops
+  by 126e, `ui.css` by 126g).
+- The step codes under `src`: 898 in comments at the kickoff (895 after
+  the deletions) and 666 in test titles (the kickoff's probe read 667),
+  both 0 now, with the ceiling counting both, so a code in a comment or
+  a title fails `npm test`. The 19 codes left in other strings (layout
+  fixtures' names, a stored round-trip label) are data, outside the
+  count by the kickoff's first call.
+- The suite 3,704 at the kickoff (`d25909b7`) and 3,704 now, by the hook
+  at `e5c0d6fe`; 126a took it to 3,699, and each step's entry holds its
+  own count. The smoke 594 → 595. No snapshot bump (`RUN_SCHEMA_VERSION`
+  49; World v36 as the Cursor has it).
+- The signed rows: A-33, A-43, A-44 deleted; T-90, T-86, T-49, T-50, the
+  import-cycle guard and the walker's purchase built (126e to 126i); B-11's
+  scan half kept and its marks' half rejected on bar (126j); R-4's ten
+  sites on `battleWorld` (126k); R-1 and the two findings (126l-post,
+  -post2); the codes in comments (126m) and titles (126n). TODO "§126
+  tests" is all ✅.
+
+**The reads**, each `git show <commit> -- src` with its script in its
+entry above:
+
+| Step | Commit | Where to look |
+|---|---|---|
+| 126m b1 | `37c5bfc8` | the small folders' and `src/bot`'s reasons, the aura sentence |
+| 126m b2 | `b953ef69` | `units.test.ts`'s scaffold and rarity, `sectors.test.ts`'s pools |
+| 126m b3 | `31372c9d` | `MovementBehavior.test.ts`'s fix notes, `propose.test.ts`'s header |
+| 126m b4 | `5253499e` | the movement headers, `m1` and `m2` |
+| 126m b5 | `85e109d9` | `World.test.ts`'s `scene`, `camps.economy.test.ts`'s header |
+| 126m b6 | `b5b36d11` | `NodeMap.test.ts`, `Recruitment.test.ts`, the sector-map headers |
+| 126m b7 | `27c75fdc` | `Run.test.ts` to line 2443: the fixture, the reward notes |
+| 126m b8 | `8c1db094` | `winEncounter`'s and `chipTurn`'s headers, the port seeds |
+| 126n b1 | `7b279f8b` | the rewritten titles outside `src/sim` and `src/run` |
+| 126n b2 | `115ea375` | `src/sim`'s rewritten titles, the luck seam's |
+| 126n b3 | `e5c0d6fe` | `src/run`'s rewritten titles, `Run.test.ts`'s `describe`s |
+
+126n's instruments (`7c080acb`) are `none`, proven by their known
+answers and the control's failing twin.
+
+**Checked at this stop:** `World.test.ts:146`, "Both sides chip the
+opposing pool by Σpower", which 126m's hand-off left unchecked, holds:
+a cap turn pays the survivors surcharge, each pool losing the opposing
+side's standing power on top of its own fallen (`chipRule.ts`'s header,
+`rulesForTurn`). The starting roster's "(10)" holds (126m's batch 8).
+
+**The call:** where the close runs. After the reads it ticks 126m to
+126o, demotes §126 in ROADMAP and HANDOFF, writes the phase's summary
+of its session reports into `retro/sessions.md` and this session's
+report, and sends the driver the hand-off line: about 40k, from this
+stop's reading, which the hand-off line leaves room for.
+
+Reading: 455,924 at 13:35 UTC, as this entry was written.

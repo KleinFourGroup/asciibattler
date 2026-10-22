@@ -23,7 +23,7 @@
 import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { splitSource, type CodePiece } from './comments';
+import { isHeldComment, splitSource, type CodePiece } from './comments';
 import { applyEdit, describeEdit, edits } from './plant';
 import { REPO_ROOT } from './stepCodes';
 
@@ -64,8 +64,10 @@ export function readWorkingTree(roots: readonly string[], repoRoot: string = REP
 
 export interface StrippedDifference {
   readonly file: string;
-  /** `code`: a piece differs. `unread`: a kind comments.ts does not read, and its bytes differ. */
-  readonly what: 'added' | 'removed' | 'code' | 'unread';
+  /** `code`: a piece differs. `held`: only comments a tool reads differ, and the
+   *  code with every comment out is the same. `unread`: a kind comments.ts does
+   *  not read, and its bytes differ. */
+  readonly what: 'added' | 'removed' | 'code' | 'held' | 'unread';
   readonly detail: string;
 }
 
@@ -118,10 +120,35 @@ export function compareStripped(before: Tree, after: Tree): StrippedCompare {
       differences.push({ file, what: 'unread', detail: 'not TypeScript, GLSL or CSS, so held byte for byte, and its bytes differ' });
       continue;
     }
-    const detail = firstCodeDifference(splitA.code, splitB.code);
+    if (firstCodeDifference(splitA.code, splitB.code) === null) continue;
+    // A comment a tool reads is held as code. With every comment out, held ones
+    // too, the rest of the file is still proven, and the held ones are named.
+    const [codeA, codeB] = [withoutHeld(splitA.code), withoutHeld(splitB.code)];
+    const detail = firstCodeDifference(codeA, codeB);
     if (detail !== null) differences.push({ file, what: 'code', detail });
+    else differences.push({ file, what: 'held', detail: heldChanges(splitA.code, splitB.code) });
   }
   return { compared: files.length, changed, differences };
+}
+
+/** The code pieces without the held comments. A piece's line break counts
+ *  every break since the code piece before it, held comments between them
+ *  included, so only the first piece, which a held header may have preceded,
+ *  is set again: no break is counted before the first piece. */
+function withoutHeld(pieces: readonly CodePiece[]): CodePiece[] {
+  const out: CodePiece[] = [];
+  for (const p of pieces) if (!isHeldComment(p)) out.push(out.length === 0 && p.newline ? { ...p, newline: false } : p);
+  return out;
+}
+
+/** The held comments one side has and the other does not, each with its line. */
+function heldChanges(before: readonly CodePiece[], after: readonly CodePiece[]): string {
+  const heldOf = (pieces: readonly CodePiece[]): CodePiece[] => pieces.filter(isHeldComment);
+  const [a, b] = [heldOf(before), heldOf(after)];
+  const gone = a.filter((p) => !b.some((q) => q.text === p.text)).map(show);
+  const come = b.filter((p) => !a.some((q) => q.text === p.text)).map(show);
+  if (gone.length === 0 && come.length === 0) return 'a held comment moved to another line, its text the same';
+  return `held comments before: ${gone.join(', ') || 'none'}; after: ${come.join(', ') || 'none'}`;
 }
 
 export interface StrippedControl {
@@ -147,16 +174,17 @@ export function plantedText(file: string, text: string): { readonly text: string
   return { text: applyEdit(text, edit), planted: `line ${edit.line}, ${describeEdit(edit)}` };
 }
 
-/** Each file `result` passed as a comment edit, compared again with one code
- *  edit made in its text. A file the compare does not name then is one whose
- *  code it cannot see, so its pass there shows nothing. */
+/** Each file `result` passed as a comment edit, or held equal but for its
+ *  held comments, compared again with one code edit made in its text. A file
+ *  the compare does not name as code then is one whose code it cannot see, so
+ *  its pass there shows nothing. */
 export function controlStripped(before: Tree, after: Tree, result: StrippedCompare): StrippedControl[] {
-  const named = new Set(result.differences.map((d) => d.file));
+  const named = new Set(result.differences.filter((d) => d.what !== 'held').map((d) => d.file));
   return result.changed
     .filter((file) => !named.has(file))
     .map((file) => {
       const planted = plantedText(file, after.get(file)!);
       const again = compareStripped(new Map([[file, before.get(file)!]]), new Map([[file, planted.text]]));
-      return { file, planted: planted.planted, caught: again.differences.length > 0 };
+      return { file, planted: planted.planted, caught: again.differences.some((d) => d.what === 'code') };
     });
 }

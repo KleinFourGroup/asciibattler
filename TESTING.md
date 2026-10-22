@@ -83,7 +83,10 @@ If the renderer ever grows pure-logic helpers (e.g. atlas UV computation), those
   TypeScript is split by the compiler's parser, GLSL and CSS by a small
   scanner, and a file of any other kind is held byte for byte. A comment a
   tool reads (`i18n-ok`, `@ts-expect-error`, an `eslint-disable`, a
-  coverage hint) counts as code. A test's title (the first argument of
+  coverage hint) counts as code: a file that changed one is named apart,
+  with those comments before and after, once its code with every comment
+  out, those too, is shown to be the same, and the run still exits 1,
+  since a tool reads the change. A test's title (the first argument of
   `it`, `test` or `describe`, a string or a template) is held with its
   words masked on both sides, so a reworded title passes, while its quotes,
   its substitutions and the call it names stay code. It proves the

@@ -385,7 +385,8 @@ the kickoff).
   equal on all 12 pages.
 - ☑ **127d — `comment-length` takes any path** (`none`). A copy outside the
   repo measures as the folder in it.
-- ☐ **127e — `comment-strip` proves a file with a held comment** (`none`).
+- ☑ **127e — `comment-strip` proves a file with a held comment** (`none`).
+  Named apart and controlled; the three real commits pass with it.
 - ☐ **127f — the re-skim of `tools/`** (`stop`), the `@fontsource` lead
   with it.
 - ☐ **127g — the close** (`stop`).

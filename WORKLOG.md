@@ -17290,3 +17290,46 @@ paths. DRIVER-HANDOFF's notes on `comment-length`'s form are the
 driver's to update.
 
 Reading: 451,364 at 16:24, before this entry.
+
+### 127e — `comment-strip` proves a file with a held comment (2026-10-22, session 9e9f60a2)
+
+A file whose pieces differ only where a held comment (`TOOL_READ`) sits
+is compared again with every comment out, held ones too
+(`withoutHeld`); when that is equal, the compare names the file as
+`held`, with the held comments one side has and the other does not,
+each with its line (or that one moved, its text the same), and the
+control (`controlStripped`) plants a code edit in it as in any
+comment-only file, which must be named as code. A file whose code
+differs is named as code at its first code difference, held comments
+aside. The CLI lists held files under their own line.
+
+**A call made here, for the stop:** a held file still makes the run
+exit 1. `TOOL_READ` includes the bundler's `__PURE__` marks,
+`@vite-ignore`, `/// <reference>` and `eslint-disable`, so a held
+change can move the build or a tool that the hook does not run (lint);
+what is new is that the rest of the file is proven on the path and the
+output says which comments to read. Exit 0 with the same list is the
+other arm.
+
+One detail found by its test: the line break before a piece counts
+every break since the code piece before it, so the first code piece
+after a held header kept the header's break once the header was
+filtered out, and a dropped header read as a code difference.
+`withoutHeld` clears the first piece's break, as `comments.ts` does for
+a file's first piece.
+
+Proof: a test in `tests/oracle/comments.test.ts` (a reworded marker
+header named `held` with both sides; its control named; a dropped
+marker beside a changed number named as code at the number; a marker
+moved to its own line), 29 tests; and the three commits whose held
+comments made `comment-strip` exit 1 in the comment pass, compared
+parent against commit in memory (`scratch/127e/held-real.mts`):
+`86513123` (17 files changed, `literalScan.ts` named `held` with its
+header both sides, the control 17 of 17), `82123a09` (12, `fontSubset.ts`
+held, 12 of 12) and `6f24010e` (10, `fontSubset.ts` held, 10 of 10),
+the held file's planted code edit named each time. TESTING's comment-only
+bullet, ARCHITECTURE's `strippedCompare.ts` entry, the CLI's header and
+TODO's row follow. `scratch/1245h-b3/held-compare.mts` is no longer the
+route; DRIVER-HANDOFF names it, the driver's to update.
+
+Reading: 484,852 at 16:30, before this entry.

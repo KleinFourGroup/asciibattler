@@ -26,7 +26,10 @@
  *
  * `comment-strip` exits 1 when any file's code differs from the ref's, and 0
  * when the files that changed did so in their comments, or a test title's
- * words, only. Each of those is
+ * words, only. A file that changed a comment a tool reads (`TOOL_READ`) is
+ * named apart, with those comments before and after, once its code with
+ * every comment out is shown to be the same; the run still exits 1, since a
+ * tool reads the change. Each of those is
  * compared again with one code edit made in memory, and the run exits 1 too
  * when the compare misses one, so every run carries its failing control.
  * Roots default to `src`.
@@ -132,8 +135,16 @@ function commentStrip(ref: string, roots: string[]): number {
     if (result.changed.length > 0 && missed.length === 0) console.log('oracle: comments only. The code of every changed file is piece for piece what it was.');
     return missed.length === 0 ? 0 : 1;
   }
-  console.log(`oracle: ${result.differences.length} of them differ in more than comments:`);
-  for (const d of result.differences) console.log(`  ${d.file}: ${d.what === 'code' ? '' : `${d.what}, `}${d.detail}`);
+  const held = result.differences.filter((d) => d.what === 'held');
+  const other = result.differences.filter((d) => d.what !== 'held');
+  if (held.length > 0) {
+    console.log(`oracle: ${held.length} changed a comment a tool reads; with every comment out, those too, the code is piece for piece what it was. A tool reads each one below, so it is a change to read:`);
+    for (const d of held) console.log(`  ${d.file}: ${d.detail}`);
+  }
+  if (other.length > 0) {
+    console.log(`oracle: ${other.length} of them differ in more than comments:`);
+    for (const d of other) console.log(`  ${d.file}: ${d.what === 'code' ? '' : `${d.what}, `}${d.detail}`);
+  }
   return 1;
 }
 

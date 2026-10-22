@@ -182,6 +182,28 @@ describe('the compare with the comments out', () => {
     expect(compareStripped(before, new Map(before).set('src/a.ts', 'const a = 1; // one\r\n')).changed).toEqual([]);
   });
 
+  it('names a changed comment a tool reads apart from the code, which it proves with every comment out', () => {
+    const before = new Map([['src/a.ts', "// i18n-ok-file: dev strings\nlabel('Deploy'); // i18n-ok: a dev string\nif (a > 0) b();\n"]]);
+    const reworded = new Map([['src/a.ts', "// i18n-ok-file: the dev panel's strings\nlabel('Deploy'); // i18n-ok: a dev string\nif (a > 0) b();\n"]]);
+    const result = compareStripped(before, reworded);
+    expect(result.differences).toEqual([
+      {
+        file: 'src/a.ts',
+        what: 'held',
+        detail: `held comments before: line 1 "// i18n-ok-file: dev strings"; after: line 1 "// i18n-ok-file: the dev panel's strings"`,
+      },
+    ]);
+    // Its control: a code edit made beside the held change is named as code.
+    expect(controlStripped(before, reworded, result).map((c) => `${c.file}: ${c.caught ? 'named' : 'missed'}`)).toEqual(['src/a.ts: named']);
+    // A held comment dropped and a number changed: the code is named, not the comment.
+    const both = new Map([['src/a.ts', "label('Deploy');\nif (a > 1) b();\n"]]);
+    expect(compareStripped(before, both).differences.map((d) => `${d.what}: ${d.detail}`)).toEqual(['code: line 3 "0" → line 2 "1"']);
+    const moved = new Map([['src/a.ts', "// i18n-ok-file: dev strings\nlabel('Deploy');\n// i18n-ok: a dev string\nif (a > 0) b();\n"]]);
+    expect(compareStripped(before, moved).differences.map((d) => `${d.what}: ${d.detail}`)).toEqual([
+      'held: a held comment moved to another line, its text the same',
+    ]);
+  });
+
   it('carries its own control: each comment-only file is compared again with a code edit made, and one whose code it cannot see is missed', () => {
     const before = new Map([
       ['src/a.ts', 'const a = 1; // one\nif (a > 0) b();\n'],

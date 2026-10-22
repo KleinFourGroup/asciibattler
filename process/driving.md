@@ -92,6 +92,10 @@ Matthew's that the session will pass.
 - Leave what is open for Matthew in the HANDOFF Cursor, which the session
   reads anyway; a brief that restates an open item goes stale when he
   answers it elsewhere.
+- An open item you raised that the hand-off entry doesn't record has no
+  home in the Cursor, which you don't write: name it in the brief as
+  yours, with the date you raised it, and say the session should confirm
+  with Matthew that it is still open before acting on it.
 - When a note carries a sign of Matthew's, quote his words and say the
   session should confirm with him, since a brief is not an approval.
 - Record each note in DRIVER-HANDOFF's ledger, with the briefs it was in

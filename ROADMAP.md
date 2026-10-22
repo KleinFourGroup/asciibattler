@@ -390,8 +390,8 @@ the kickoff).
 - ☑ **127f — the re-skim of `tools/`** (`stop`), the `@fontsource` lead
   with it. Read 2026-10-22: R-1 as 127f-post, R-2 the census's B-19, R-3
   no trial.
-- ◐ **127f-post — R-1, the two dead font imports** (`batch`). The layout
-  editor and the run launcher load their sheets again.
+- ☑ **127f-post — R-1, the two dead font imports** (`batch`). The layout
+  editor and the run launcher load their sheets again. Read 2026-10-22.
 - ☐ **127g — the close** (`stop`).
 
 ## Phase 128 — the close

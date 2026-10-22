@@ -17443,3 +17443,7 @@ answer), 264,100 at 15:50 (127a), 322,041 at 16:02 (127b), 424,879 at
 16:34 (127f), 516,164 at 17:01 (127f-post), 522,392 at 17:04 before this
 entry. The rates: the kickoff about 100k with the orientation; 127c
 about 100k, most of it the pane; the three oracle steps 25 to 35k each.
+
+**127f-post, read** (the user, 2026-10-22, after the hand-off, on both
+pages: "Just done that now, and both reads look to be good! 😁"). Ticked;
+nothing is ◐, and the close holds no read but its own.

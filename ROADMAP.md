@@ -364,8 +364,9 @@ kickoff"). A-25's tests have no step: none is left.
 - ◐ **126m — the step codes in comments** (`batch`, per batch). 898, by
   folder, through an anchor-checked patch file. Eight batches built,
   unread (895 → 0; WORKLOG §126).
-- ☐ **126n — the step codes in titles** (`batch`). `comment-strip`
-  masks titles, the ceiling counts them; 667.
+- ◐ **126n — the step codes in titles** (`batch`, per batch).
+  `comment-strip` masks titles, the ceiling counts them; three batches
+  built, unread (666 → 0; WORKLOG §126).
 - ☐ **126o — the close** (`stop`).
 
 ## Phase 127 — tools

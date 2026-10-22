@@ -97,7 +97,7 @@ describe('Run', () => {
       expect(run.currentNodeId).toBe(PRE_ROOT_NODE_ID);
     });
 
-    it("63c: rolls the DEFAULT CHARACTER's starting roster (derived from characters.json)", () => {
+    it("rolls the DEFAULT CHARACTER's starting roster (derived from characters.json)", () => {
       const run = new Run(1, new EventBus<GameEvents>(), NO_EVENTS);
       // Derived from the character def, not hardcoded — a roster edit in
       // characters.json must not silently break this.
@@ -115,7 +115,7 @@ describe('Run', () => {
     });
   });
 
-  describe('63c — starting characters', () => {
+  describe('starting characters', () => {
     const priest = characterById('priest')!;
     const gambler = characterById('gambler')!;
 
@@ -208,7 +208,7 @@ describe('Run', () => {
     });
   });
 
-  describe('S2 — selectable root node', () => {
+  describe('selectable root node', () => {
     it('the root is the sole initial frontier (a root child is not yet selectable)', () => {
       const { run } = freshRunWithBus(1);
       const rootChild = run.nodeMap.edges.find((e) => e.from === run.nodeMap.rootId)!.to;
@@ -223,7 +223,7 @@ describe('Run', () => {
       expect(run.currentEncounter).not.toBeNull();
     });
 
-    it('the root is the STAMPED starting event at hop 0 (74i-c — never a boss) on a multi-hop map', () => {
+    it('the root is the STAMPED starting event at hop 0 (never a boss) on a multi-hop map', () => {
       // The Start authors `startingEvents`, so every shipped run OPENS
       // on the sector-stamped event root (`stampRootKind`). The stamp is
       // sector-driven — catalog suppression
@@ -236,7 +236,7 @@ describe('Run', () => {
     });
   });
 
-  describe('68b — construction grants (the marginal-value seam)', () => {
+  describe('construction grants (the marginal-value seam)', () => {
     it('grants a daemon by id on top of the character daemon', () => {
       const run = new Run(1, new EventBus<GameEvents>(), { grants: ['portunus'] });
       expect(run.daemons.map((d) => d.id)).toContain('portunus');
@@ -296,7 +296,7 @@ describe('Run', () => {
     });
   });
 
-  describe('X1 — per-run difficulty multipliers (RunConfig seam → wave resolver)', () => {
+  describe('per-run difficulty multipliers (RunConfig seam → wave resolver)', () => {
     function firstEnemyTeam(seed: number, config?: RunConfig) {
       const { run } = freshRunWithBus(seed, config);
       run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
@@ -510,7 +510,7 @@ describe('Run', () => {
       expect(seeds[0]).toBe(run.currentEncounter!.worldSeed);
     });
 
-    it('builds an encounter snapshot whose hand is drawn from the roster (H5)', () => {
+    it('builds an encounter snapshot whose hand is drawn from the roster', () => {
       const { run } = freshRunWithBus(1);
       const frontier = frontierOf(run);
       run.dispatch({ kind: 'enterNode', nodeId: frontier });
@@ -567,7 +567,7 @@ describe('Run', () => {
       expect(run.currentEncounter).toBe(encounterBefore);
     });
 
-    it('D8: encounter.theme is always a registered theme', () => {
+    it('encounter.theme is always a registered theme', () => {
       // Sample many seeds — procedural boards inherit the sector theme,
       // hand-authored layouts pin to layout.theme. Both paths must produce
       // valid Theme values.
@@ -579,7 +579,7 @@ describe('Run', () => {
       }
     });
 
-    it('D8: hand-authored encounters use the layout-declared theme', () => {
+    it('hand-authored encounters use the layout-declared theme', () => {
       // For every seed that lands on a layout (rather than procedural),
       // run.currentEncounter.theme must equal the layout's declared theme
       // — a hand-authored board keeps its own theme regardless of the sector.
@@ -597,7 +597,7 @@ describe('Run', () => {
       expect(layoutHits).toBeGreaterThan(0);
     });
 
-    it('T2: procedural encounters inherit the current sector theme', () => {
+    it('procedural encounters inherit the current sector theme', () => {
       // The theme is the SECTOR's, not a per-battle roll: every
       // procedural board in "The Start" paints that sector's theme. Derive the
       // expected value from config (never hardcode the authored theme).
@@ -616,7 +616,7 @@ describe('Run', () => {
       expect(proceduralHits).toBeGreaterThan(0); // sanity: procedural branch fired
     });
 
-    it('encounter layoutId is null OR a sector-pool layout (T2 weighted pool)', () => {
+    it('encounter layoutId is null OR a sector-pool layout (the weighted pool)', () => {
       // The board is a WEIGHTED pick over the current sector's pool — the
       // procedural sentinel + every hand-authored layout, each `weight ?? 1`.
       // Confirm both the procedural and named branches fire and stay in LAYOUT_IDS.
@@ -722,7 +722,7 @@ describe('Run', () => {
       expect(run.phase).toBe('map');
     });
 
-    it('G4: recruit level tracks round(avgTeamLevel) + bonus, not the hop', () => {
+    it('recruit level tracks round(avgTeamLevel) + bonus, not the hop', () => {
       // A leveled starting roster (avg 6) lands at hop 1. The offer keys off
       // the team average, not `currentFloor` (which would give level 1), so
       // offered cards are ≥ round(avg) (= 6). Empty xpAwards
@@ -774,7 +774,7 @@ describe('Run', () => {
     });
   });
 
-  describe('E4 — XP banking + level-up loop', () => {
+  describe('XP banking + level-up loop', () => {
     it('starting roster begins at xp=0 and the configured startingLevel', () => {
       const { run } = freshRunWithBus(1);
       for (const t of run.team) {
@@ -876,7 +876,7 @@ describe('Run', () => {
     });
   });
 
-  describe('E4 — promotion phase', () => {
+  describe('promotion phase', () => {
     it('skips promotion when no unit leveled (sub-threshold awards)', () => {
       const { run, bus } = freshRunWithBus(1);
       const frontier = frontierOf(run);
@@ -954,7 +954,7 @@ describe('Run', () => {
     });
   });
 
-  describe('encounter loop (H4)', () => {
+  describe('encounter loop', () => {
     it('starts with a full run-wide player pool and no active encounter', () => {
       const run = new Run(1, new EventBus<GameEvents>(), NO_EVENTS);
       expect(run.playerHealth).toBe(HEALTH.playerHealthMax);
@@ -1077,7 +1077,7 @@ describe('Run', () => {
       expect(run.phase).toBe('recruit');
     });
 
-    it('M1 — banks each turn\'s XP at the turn boundary, not at encounter end', () => {
+    it('banks each turn\'s XP at the turn boundary, not at encounter end', () => {
       const { run, bus } = freshLvl1RunWithBus(1);
       const frontier = frontierOf(run);
       run.dispatch({ kind: 'enterNode', nodeId: frontier });
@@ -1149,7 +1149,7 @@ describe('Run', () => {
     });
   });
 
-  describe('M1 — per-turn promotion cadence', () => {
+  describe('per-turn promotion cadence', () => {
     /** One leveling turn's worth of awards for roster slot 0. */
     const levelSlot0 = (level: number) => [
       { unitId: 1, rosterIndex: 0, damageDealt: 0, xpGained: xpToNext(level) },
@@ -1270,7 +1270,7 @@ describe('Run', () => {
     });
   });
 
-  describe('turn gates (H4b, pauseAtTurnGates)', () => {
+  describe('turn gates (pauseAtTurnGates)', () => {
     it('entering a node pauses on turn-intro + emits turn:starting (no battle yet)', () => {
       const { run, bus } = freshRunWithBus(1);
       run.pauseAtTurnGates = true;
@@ -1319,7 +1319,7 @@ describe('Run', () => {
       expect(run.phase).toBe('turn-intro');
     });
 
-    it('89a — pools:chipped reports the APPLIED pools on the headless path (no gate)', () => {
+    it('pools:chipped reports the APPLIED pools on the headless path (no gate)', () => {
       const { run, bus } = freshRunWithBus(1);
       const chipped: GameEvents['pools:chipped'][] = [];
       bus.on('pools:chipped', (p) => chipped.push(p));
@@ -1349,7 +1349,7 @@ describe('Run', () => {
       expect(run.phase).toBe('defeat');
     });
 
-    it('91d — poolAtRisk previews the HAND (Σ its power × chip, capped at the pool), and turn:resolved carries the reason', () => {
+    it('poolAtRisk previews the HAND (Σ its power × chip, capped at the pool), and turn:resolved carries the reason', () => {
       const { run, bus } = freshRunWithBus(1);
       run.pauseAtTurnGates = true;
       const startings: GameEvents['turn:starting'][] = [];
@@ -1378,7 +1378,7 @@ describe('Run', () => {
       expect(startings[1]!.poolAtRisk).toBe(handBound(startings[1]!.hand, startings[1]!.playerHealth));
     });
 
-    it('89e — the preview derive perturbs nothing: the gated run fields the headless run\'s waves', () => {
+    it('the preview derive perturbs nothing: the gated run fields the headless run\'s waves', () => {
       // The RNG-alignment contract, pinned against the preview: the
       // gated path previews EVERY turn's wave before the gate (an extra
       // stream derive per turn); the headless path never previews. If the
@@ -1493,7 +1493,7 @@ describe('Run', () => {
     });
   });
 
-  describe('redraw at the pre-turn gate (K3)', () => {
+  describe('redraw at the pre-turn gate', () => {
     it('discards the selected positions and refills them in place from the draw pile', () => {
       const { run } = gatedToFirstTurnIntro(1);
       // By default the roster (10) > handSize (6), so the draw pile holds the rest.
@@ -1513,7 +1513,7 @@ describe('Run', () => {
       expect(run.discardPile).toEqual(expect.arrayContaining([before[1]!, before[3]!]));
     });
 
-    it('96.5c — the hand-swap payload re-derives poolAtRisk for the NEW hand (the pre-turn risk line re-paints from it)', () => {
+    it('the hand-swap payload re-derives poolAtRisk for the NEW hand (the pre-turn risk line re-paints from it)', () => {
       const { run, bus } = gatedToFirstTurnIntro(1);
       const swaps: GameEvents['turn:handRedrawn'][] = [];
       bus.on('turn:handRedrawn', (p) => swaps.push(p));
@@ -1526,7 +1526,7 @@ describe('Run', () => {
       expect(swaps[0]!.poolAtRisk).toBe(run.previewPoolAtRisk());
     });
 
-    it('consumes the grant budget; a request past it is a silent no-op (49d: per-source)', () => {
+    it('consumes the grant budget; a request past it is a silent no-op (per-source)', () => {
       const { run } = gatedToFirstTurnIntro(2);
       // Burn the redraw grant's action budget (derived from the config dial
       // the fixture daemon authors from).
@@ -1610,7 +1610,7 @@ describe('Run', () => {
       expect(redrawns[0]!.grants[0]!.remaining).toBe(K_REDRAW.redrawsPerTurn - 1);
     });
 
-    it('turn:starting + turn:handRedrawn carry the draw/discard piles in recruitment order (R2)', () => {
+    it('turn:starting + turn:handRedrawn carry the draw/discard piles in recruitment order', () => {
       const { run, bus } = freshRunWithBus(6, { daemon: K_DEFAULT_DAEMON });
       run.pauseAtTurnGates = true;
       const startings: GameEvents['turn:starting'][] = [];
@@ -1699,7 +1699,7 @@ describe('Run', () => {
     });
   });
 
-  describe('empower at the pre-turn gate (K4)', () => {
+  describe('empower at the pre-turn gate', () => {
     // This block pins the empower MECHANIC (store/budget/badges),
     // not queue ordering, and K_DEFAULT_DAEMON's queue is [redraw@0,
     // empower@1] — under the shipped strict default (`passIsFinal:
@@ -1891,8 +1891,8 @@ describe('Run', () => {
     });
   });
 
-  describe('daemons (L1 — daemon-only gates)', () => {
-    it("63c: seeds the CHARACTER's daemon at construction (the roll retired), seed-independent", () => {
+  describe('daemons (daemon-only gates)', () => {
+    it("seeds the CHARACTER's daemon at construction, seed-independent", () => {
       // Derived from the default character's config, not hardcoded to 'mars'.
       const expected = characterById(DEFAULT_CHARACTER_ID)!.daemon;
       for (const seed of [1, 21, 999]) {
@@ -2094,7 +2094,7 @@ describe('Run', () => {
       );
     });
 
-    it('two empower idols → two per-source grants, each applying ITS buff (47d→49d)', () => {
+    it('two empower idols → two per-source grants, each applying ITS buff', () => {
       const { run, bus } = gatedToFirstTurnIntro(31, daemonById('mars')!);
       run.addDaemon(daemonById('minerva')!);
       // Acquisition lands mid-turn: this turn's grants are unchanged; the
@@ -2120,7 +2120,7 @@ describe('Run', () => {
       expect(run.encounterEffects[run.hand[2]!]!).toHaveLength(0);
     });
 
-    it('strict finality (49d): only the ACTIVE grant fires; passGrant finalizes; free mode no-ops it', () => {
+    it('strict finality: only the ACTIVE grant fires; passGrant finalizes; free mode no-ops it', () => {
       // Mars-then-Janus ownership under passIsFinal: the empower grant holds
       // the cursor, so the redraw behind it is unreachable until it resolves.
       const strict = gatedToFirstTurnIntro(33, daemonById('mars')!, { passIsFinal: true });
@@ -2160,7 +2160,7 @@ describe('Run', () => {
       expect(free.run.encounterEffects.some((slot) => slot.length > 0)).toBe(true);
     });
 
-    it('the pass mark round-trips: a save mid-queue restores the exact cursor (49d)', () => {
+    it('the pass mark round-trips: a save mid-queue restores the exact cursor', () => {
       const { run } = gatedToFirstTurnIntro(34, daemonById('mars')!, { passIsFinal: true });
       run.dispatch({ kind: 'passGrant' }); // finalize the lone empower grant
       expect(run.grantViews()[0]!.passed).toBe(true);
@@ -2171,7 +2171,7 @@ describe('Run', () => {
     });
   });
 
-  describe('encounter map (K3.5 — one battlefield per encounter)', () => {
+  describe('encounter map (one battlefield per encounter)', () => {
     it('every turn of an encounter fights on the SAME map; the world seed stays per-turn', () => {
       const { run, bus } = freshRunWithBus(11);
       run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
@@ -2217,7 +2217,7 @@ describe('Run', () => {
       expect(differs).toBe(true);
     });
 
-    it('a forced layout (G1) pins every encounter map', () => {
+    it('a forced layout pins every encounter map', () => {
       const forced = LAYOUT_IDS[0]!;
       const bus = new EventBus<GameEvents>();
       const run = new Run(3, bus, { ...NO_EVENTS, forcedLayoutId: forced });
@@ -2229,7 +2229,7 @@ describe('Run', () => {
       expect(run.currentEncounter!.layoutId).toBe(forced);
     });
 
-    it('a forced encounter (X2 --encounter) pins the selected encounter at a battle node', () => {
+    it('a forced encounter (--encounter) pins the selected encounter at a battle node', () => {
       // Derive a real normal-kind id from the catalog (no hardcoded id to drift).
       const normalId = ENCOUNTERS.find((e) => e.kind === 'normal')!.id;
       const bus = new EventBus<GameEvents>();
@@ -2326,7 +2326,7 @@ describe('Run', () => {
       expect(run.team).toHaveLength(sizeBefore);
     });
 
-    it('ignores a template that is not in the offer, and takes a copy of one that is (115c)', () => {
+    it('ignores a template that is not in the offer, and takes a copy of one that is', () => {
       const { run, bus } = freshRunWithBus(1);
       driveToRecruitPhase(run, bus);
       const before = JSON.stringify(run.toJSON());
@@ -2341,7 +2341,7 @@ describe('Run', () => {
     });
   });
 
-  describe('passRecruit command (H6b)', () => {
+  describe('passRecruit command', () => {
     it('declines the offer: roster, deck, and deploymentCounts untouched; returns to map', () => {
       const { run, bus } = freshRunWithBus(1);
       driveToRecruitPhase(run, bus);
@@ -2368,7 +2368,7 @@ describe('Run', () => {
     });
   });
 
-  describe('spawn-time fatigue (H6c → K1: a Fatigued status effect)', () => {
+  describe('spawn-time fatigue (a Fatigued status effect)', () => {
     // The integration tests flip the shipped (inert) knob; restore it after
     // each so they can't pollute the rest of the suite.
     const originalRate = HEALTH.fatiguePerStack;
@@ -2403,7 +2403,7 @@ describe('Run', () => {
       }
     });
 
-    it('seeds a Fatigued effect that reduces CONSTITUTION (starting HP), not power, once the knob is positive (§91c)', () => {
+    it('seeds a Fatigued effect that reduces CONSTITUTION (starting HP), not power, once the knob is positive', () => {
       // rate > 0.5 so even a low-constitution unit rounds strictly down at 1 stack.
       HEALTH.fatiguePerStack = 0.6;
       const { run, bus } = freshShortRosterRun(1); // slot 0 must field every turn (the roster fits one hand)
@@ -2441,7 +2441,7 @@ describe('Run', () => {
     });
   });
 
-  describe('encounter-effect store + run triggers (K1)', () => {
+  describe('encounter-effect store + run triggers', () => {
     const empower = (mag = 1): StatusEffect => ({
       key: 'empowered',
       magnitude: mag,
@@ -2509,7 +2509,7 @@ describe('Run', () => {
       expect(run.encounterEffects[run.encounterEffects.length - 1]).toEqual([]);
     });
 
-    it('round-trips the encounter-effect store; a pre-K1 version is rejected', () => {
+    it('round-trips the encounter-effect store; a stale version is rejected', () => {
       const { run } = freshRunWithBus(1);
       run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
       run.addEncounterEffect(0, empower(2));
@@ -2524,7 +2524,7 @@ describe('Run', () => {
     });
   });
 
-  describe('bits (47e — the substrate)', () => {
+  describe('bits (the substrate)', () => {
     /** A bespoke daemon paying bits at every turn start (fire-site execution). */
     const TURN_BITS: DaemonConfig = {
       id: 'test-turn-bits',
@@ -2559,7 +2559,7 @@ describe('Run', () => {
       expect(freshRunWithBus(1, { startingBits: -10 }).run.bits).toBe(0);
     });
 
-    it('the bits override does not perturb any RNG stream (the G1 contract)', () => {
+    it('the bits override does not perturb any RNG stream', () => {
       const a = freshRunWithBus(9).run;
       const b = freshRunWithBus(9, { startingBits: 50 }).run;
       expect(b.nodeMap).toEqual(a.nodeMap);
@@ -2584,7 +2584,7 @@ describe('Run', () => {
       expect(run.bits).toBe(first + Math.round(3 * RUN_STAT_BASES.bitsGain * monetaMult()));
     });
 
-    it('the 48f bitsMultiplier scales gainBits (the economy difficulty lever)', () => {
+    it('the bitsMultiplier scales gainBits (the economy difficulty lever)', () => {
       const { run } = freshRunWithBus(1, { daemon: null, bitsMultiplier: 1.5 });
       run.gainBits(10);
       expect(run.bits).toBe(Math.round(10 * RUN_STAT_BASES.bitsGain * 1.5));
@@ -2613,7 +2613,7 @@ describe('Run', () => {
       expect(events).toEqual([{ bits: 10, delta: 10 }]);
     });
 
-    it('50a — spendBits deducts and reports true iff affordable; refusal is silent', () => {
+    it('spendBits deducts and reports true iff affordable; refusal is silent', () => {
       const { run, bus } = freshRunWithBus(1, { daemon: null, startingBits: 10 });
       const events: Array<{ bits: number; delta: number }> = [];
       bus.on('run:bitsChanged', (e) => events.push(e));
@@ -2631,13 +2631,13 @@ describe('Run', () => {
       ]);
     });
 
-    it('50a — spendBits takes no fold: moneta scales earns, never prices', () => {
+    it('spendBits takes no fold: moneta scales earns, never prices', () => {
       const { run } = freshRunWithBus(1, { daemon: daemonById('moneta')!, startingBits: 10 });
       expect(run.spendBits(10)).toBe(true); // a folded spend would under/over-charge
       expect(run.bits).toBe(0);
     });
 
-    it('50a — spendBits rejects non-integer and negative amounts loudly', () => {
+    it('spendBits rejects non-integer and negative amounts loudly', () => {
       const { run } = freshRunWithBus(1, { daemon: null, startingBits: 10 });
       expect(() => run.spendBits(2.5)).toThrow(/nonnegative integer/);
       expect(() => run.spendBits(-3)).toThrow(/nonnegative integer/);
@@ -2688,7 +2688,7 @@ describe('Run', () => {
     });
   });
 
-  describe('the cache (49b — the core)', () => {
+  describe('the cache (the core)', () => {
     /** A real catalog id (derived, never hardcoded, so a catalog edit keeps it). */
     const PACKET_ID = PACKETS[0]!.id;
     const BASE_SIZE = RUN_STAT_BASES.cacheSize;
@@ -2822,7 +2822,7 @@ describe('Run', () => {
     });
   });
 
-  describe('packet rewards (49c — the earn pipe activates)', () => {
+  describe('packet rewards (the earn pipe)', () => {
     const PACKET_ID = PACKETS[0]!.id;
 
     /** Forge a live offer holding a packet portion PLUS a tail portion, so
@@ -2903,7 +2903,7 @@ describe('Run', () => {
     });
   });
 
-  describe('the fire engine (49e — usePacket)', () => {
+  describe('the fire engine (usePacket)', () => {
     /** Catalog-derived effect readers (the balance-proof discipline — never
      *  hardcode what packets.json authors). */
     const packetEffect = (id: string) => {
@@ -2993,7 +2993,7 @@ describe('Run', () => {
       expect(run.playerHealth).toBe(HEALTH.playerHealthMax);
     });
 
-    it('patch heals BETWEEN TURNS too (the 49e healPool preTurn growth — the shape-lock)', () => {
+    it('patch heals BETWEEN TURNS too (the healPool preTurn growth)', () => {
       const { run } = gatedToFirstTurnIntro(1, null);
       run.addPacket('patch');
       run.playerHealth = HEALTH.playerHealthMax - healAmountOf('patch');
@@ -3102,7 +3102,7 @@ describe('Run', () => {
       expect(run.pendingEncounterEffects[2]).toEqual([]);
     });
 
-    it('the three 49e stores round-trip (v33); a packet-sourced grant keeps its name; stale rejects', () => {
+    it('the three packet stores round-trip; a packet-sourced grant keeps its name; stale rejects', () => {
       const { run } = gatedToFirstTurnIntro(1, null);
       run.addPacket('venom');
       run.addPacket('reroute');
@@ -3147,7 +3147,7 @@ describe('Run', () => {
     });
   });
 
-  describe('50b — removeRosterUnit (the roster-shrink chokepoint)', () => {
+  describe('removeRosterUnit (the roster-shrink chokepoint)', () => {
     /** Catalog-derived (never hardcoded): overclock's buff key marks a
      *  roster slot so the tests can watch it ride the splice. */
     const buffOf = (id: string) => {
@@ -3260,7 +3260,7 @@ describe('Run', () => {
     });
   });
 
-  describe('50c — the port phase (dock / undock)', () => {
+  describe('the port phase (dock / undock)', () => {
     it('docking consumes the hop, enters the serialized port phase, and emits port:entered', () => {
       const { run, bus } = freshRunWithBus(1, { daemon: null });
       const entered: Array<{ nodeId: number }> = [];
@@ -3312,7 +3312,7 @@ describe('Run', () => {
     });
   });
 
-  describe('50d — port stock + transactions', () => {
+  describe('port stock + transactions', () => {
     const RICH = 10_000; // affordability never the variable unless a test makes it one
 
     it('docking rolls stock at the config counts; packets/daemons distinct; owned daemons excluded', () => {
@@ -3488,7 +3488,7 @@ describe('Run', () => {
     });
   });
 
-  describe('battle tallies (47f — the settle seam)', () => {
+  describe('battle tallies (the settle seam)', () => {
     /** A bespoke battle-hook daemon (Laverna-shaped). */
     const BATTLE_BITS: DaemonConfig = {
       id: 'test-battle-bits',
@@ -3525,7 +3525,7 @@ describe('Run', () => {
       expect(run.bits).toBe(Math.round(10 * mult));
     });
 
-    it('an ongoing (draw) turn offers too — the reward gate interposes MID-ENCOUNTER (51a)', () => {
+    it('an ongoing (draw) turn offers too — the reward gate interposes MID-ENCOUNTER', () => {
       const { run, bus } = freshRunWithBus(1, { daemon: null });
       run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
       chipTurn(bus, { player: 0, enemy: 0 }, [], { bits: 3 });
@@ -3540,7 +3540,7 @@ describe('Run', () => {
       expect(run.bits).toBe(7);
     });
 
-    it('declining the tally forfeits it — the encounter continues, no bits (51a)', () => {
+    it('declining the tally forfeits it — the encounter continues, no bits', () => {
       const { run, bus } = freshRunWithBus(1, { daemon: null });
       run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
       chipTurn(bus, { player: 0, enemy: 0 }, [], { bits: 5 });
@@ -3550,7 +3550,7 @@ describe('Run', () => {
       expect(run.phase).toBe('battle');
     });
 
-    it('the tally portion is SOURCE-LABELED when exactly one owned daemon earns battle bits (51a)', () => {
+    it('the tally portion is SOURCE-LABELED when exactly one owned daemon earns battle bits', () => {
       const { run, bus } = freshRunWithBus(1, { daemon: BATTLE_BITS });
       run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
       chipTurn(bus, { player: 0, enemy: 0 }, [], { bits: 2 });
@@ -3559,7 +3559,7 @@ describe('Run', () => {
       ]);
     });
 
-    it('a winning turn MERGES the tally into the rolled offer — tally first (51a)', () => {
+    it('a winning turn MERGES the tally into the rolled offer — tally first', () => {
       // brigands carries `bits-small` at chance 1, so
       // the win roll is guaranteed at least one portion after the tally.
       const { run, bus } = freshRunWithBus(1, {
@@ -3585,7 +3585,7 @@ describe('Run', () => {
       expect(run.pendingRewards).toEqual([{ kind: 'bits', base: 2 }]);
     });
 
-    it('a dis-pater tithe labels its DAEMON source (88c — the catalog kill-earner)', () => {
+    it('a dis-pater tithe labels its DAEMON source (the catalog kill-earner)', () => {
       // The kill→bits earner is the dis-pater idol; a sole earner labels the
       // tally by id.
       const { run, bus } = gatedToFirstTurnIntro(1, daemonById('dis-pater')!);
@@ -3709,7 +3709,7 @@ describe('Run', () => {
       expect(run.visitedNodes.size).toBe(0);
     });
 
-    it('records the root once the player clears it and hops onward (S2)', () => {
+    it('records the root once the player clears it and hops onward', () => {
       const { run, bus } = freshRunWithBus(1);
       // The root is a normal battle node now — enter it from the pre-root start.
       run.dispatch({ kind: 'enterNode', nodeId: run.nodeMap.rootId });
@@ -3778,7 +3778,7 @@ describe('Run', () => {
     });
   });
 
-  describe('T2 — sectors', () => {
+  describe('sectors', () => {
     // A 2-node fixture DAG (a → b; a is the source, b the sink). Both nodes
     // hold the only shipped sector, so the walk's NODE advances a→b while the
     // sector id stays "the-start" — enough to exercise the advance mechanics.
@@ -3806,7 +3806,7 @@ describe('Run', () => {
       expect(run.currentSectorTitle).toBe(getSector('the-start')!.title);
     });
 
-    it('the shipped DAG (67c: start → deep-end) gates at the first terminal, completes at the second', () => {
+    it('the shipped DAG (start → deep-end) gates at the first terminal, completes at the second', () => {
       const { run, bus } = freshRunWithBus(1);
       run.currentNodeId = run.nodeMap.terminalId;
       run.phase = 'battle';
@@ -3873,7 +3873,7 @@ describe('Run', () => {
       expect(run.phase).toBe('map');
     });
 
-    describe('§90 — the seam floor (health.seamHealFloor)', () => {
+    describe('the seam floor (health.seamHealFloor)', () => {
       // The suite flips the shipped dial; restore after each so the floor
       // can't leak into the rest of the sector tests (the fatigue pattern).
       const originalFloor = HEALTH.seamHealFloor;
@@ -3904,7 +3904,7 @@ describe('Run', () => {
         expect(originalFloor).toBe(1);
       });
 
-      it('floor 0 = the pre-§90 carry: the wounded pool crosses untouched', () => {
+      it('floor 0 = a plain carry: the wounded pool crosses untouched', () => {
         const wounded = HEALTH.playerHealthMax / 4;
         const { run, payload } = crossSeamAt(wounded, 0);
         expect(run.playerHealth).toBe(wounded);
@@ -3980,14 +3980,14 @@ describe('Run', () => {
       expect(victories).toBe(1);
     });
 
-    it('dismissSectorCleared outside the gate is a silent no-op (67a)', () => {
+    it('dismissSectorCleared outside the gate is a silent no-op', () => {
       const { run } = freshRunWithBus(1);
       expect(run.phase).toBe('map');
       run.dispatch({ kind: 'dismissSectorCleared' });
       expect(run.phase).toBe('map');
     });
 
-    it('a mid-gate save/load restores the sectorCleared phase and dismisses cleanly (67a)', () => {
+    it('a mid-gate save/load restores the sectorCleared phase and dismisses cleanly', () => {
       const { run, bus } = freshRunWithBus(1, { sectorMap: TWO_SECTOR_MAP });
       run.currentNodeId = run.nodeMap.terminalId;
       run.phase = 'battle';
@@ -4004,7 +4004,7 @@ describe('Run', () => {
       expect(restored.currentNodeId).toBe(PRE_ROOT_NODE_ID);
     });
 
-    it('hopCount is the SINGLE-sector probe dial (67c): its terminal completes the run on the shipped DAG', () => {
+    it('hopCount is the SINGLE-sector probe dial: its terminal completes the run on the shipped DAG', () => {
       const { run, bus } = freshRunWithBus(1, { hopCount: 2 });
       expect(run.nodeMap.hops.length).toBe(2);
       run.currentNodeId = run.nodeMap.terminalId;
@@ -4018,7 +4018,7 @@ describe('Run', () => {
       expect(run.currentSectorNodeId).toBe('start');
     });
 
-    it('sectorHops is the shortened FULL-WALK dial (67c): every sector maps to N hops, the DAG still sinks', () => {
+    it('sectorHops is the shortened FULL-WALK dial: every sector maps to N hops, the DAG still sinks', () => {
       const { run, bus } = freshRunWithBus(1, { sectorHops: 3 });
       expect(run.nodeMap.hops.length).toBe(3); // overrides the authored 11
       run.currentNodeId = run.nodeMap.terminalId;
@@ -4039,13 +4039,13 @@ describe('Run', () => {
       expect(victories).toBe(1);
     });
 
-    it('hopCount + sectorHops together throw loud at construction (67c)', () => {
+    it('hopCount + sectorHops together throw loud at construction', () => {
       expect(() => new Run(1, new EventBus<GameEvents>(), { hopCount: 2, sectorHops: 3 })).toThrow(
         /mutually exclusive/,
       );
     });
 
-    it('rejects a pre-T2 (v19) snapshot', () => {
+    it('rejects a v19 snapshot', () => {
       const { run } = freshRunWithBus(1);
       const wire = JSON.parse(JSON.stringify(run.toJSON()));
       const stale = { ...wire, schemaVersion: 19 };
@@ -4055,7 +4055,7 @@ describe('Run', () => {
     });
   });
 
-  describe('deployment counter (H3)', () => {
+  describe('deployment counter', () => {
     it('initializes one zero count per roster slot', () => {
       const run = new Run(1, new EventBus<GameEvents>(), NO_EVENTS);
       expect(run.deploymentCounts).toHaveLength(run.team.length);
@@ -4105,7 +4105,7 @@ describe('Run', () => {
       expect(run.deploymentCounts[run.deploymentCounts.length - 1]).toBe(0);
     });
 
-    it('accumulates across turns within an encounter, then zeros on reset (the H4 seam)', () => {
+    it('accumulates across turns within an encounter, then zeros on reset (the encounter-loop seam)', () => {
       const run = new Run(1, new EventBus<GameEvents>(), NO_EVENTS);
       const all = run.team.map((_, i) => i);
       run.recordDeployment(all);
@@ -4133,7 +4133,7 @@ describe('Run', () => {
     });
   });
 
-  describe('card deck (H5)', () => {
+  describe('card deck', () => {
     // An oversized roster (> handSize) so draw variance + dilution are live.
     type RosterSpec = { archetype: 'mercenary' | 'archer'; level: number };
     const BIG_ROSTER: RosterSpec[] = Array.from({ length: 8 }, (_, i) => ({
@@ -4227,7 +4227,7 @@ describe('Run', () => {
       expect(handsFor(123)).toEqual(handsFor(123));
     });
 
-    it('surfaces the drawn hand on turn:starting before the battle (H5b, gated path)', () => {
+    it('surfaces the drawn hand on turn:starting before the battle (gated path)', () => {
       const bus = new EventBus<GameEvents>();
       const run = new Run(1, bus, { ...NO_EVENTS, startingRoster: BIG_ROSTER });
       run.pauseAtTurnGates = true; // the live/interactive path
@@ -4247,7 +4247,7 @@ describe('Run', () => {
     });
   });
 
-  describe('rest nodes (G3)', () => {
+  describe('rest nodes', () => {
     it('banks restXp into every roster slot and starts no battle', () => {
       // hopCount 5 → a hop-2 rest is the first reachable rest. (The quota
       // layer's floor priority port → elite → rest means a 4-hop map's 1–2
@@ -4369,7 +4369,7 @@ describe('Run', () => {
       expect(run.phase).toBe('complete');
     });
 
-    it('H6a — heals the run-wide player pool by restHealFraction × max when wounded (§90)', () => {
+    it('heals the run-wide player pool by restHealFraction × max when wounded', () => {
       const { run, restId } = driveToRestFrontier({ hopCount: 5 }, 2);
       const heal = HEALTH.restHealFraction * HEALTH.playerHealthMax;
       // Wound the pool deep enough that the heal can't hit the cap.
@@ -4382,7 +4382,7 @@ describe('Run', () => {
       expect(run.playerHealth).toBe(Math.min(HEALTH.playerHealthMax, before + heal));
     });
 
-    it('§90 — the rest heal is a FRACTION of max: it scales with playerHealthMax', () => {
+    it('the rest heal is a FRACTION of max: it scales with playerHealthMax', () => {
       // As a fraction, the heal moves with a pool-max move. Flip max in
       // place, derive, restore.
       const originalMax = HEALTH.playerHealthMax;
@@ -4399,7 +4399,7 @@ describe('Run', () => {
       }
     });
 
-    it('H6a — never heals the pool above playerHealthMax', () => {
+    it('never heals the pool above playerHealthMax', () => {
       const { run, restId } = driveToRestFrontier({ hopCount: 5 }, 2);
       // Already full: the heal must clamp, never overfill (robust for any knob).
       run.playerHealth = HEALTH.playerHealthMax;
@@ -4410,7 +4410,7 @@ describe('Run', () => {
     });
   });
 
-  describe('the rest gate (117.75a)', () => {
+  describe('the rest gate', () => {
     /** A run one hop short of a hop-2 rest, wounded so a heal would show. */
     function atRestFrontier(config: RunConfig = {}) {
       const handle = driveToRestFrontier({ hopCount: 5, ...config }, 2);
@@ -4525,7 +4525,7 @@ describe('Run', () => {
   });
 });
 
-describe('48b — the reward phase', () => {
+describe('the reward phase', () => {
   /** A daemon-less run forced onto brigands (which ships `bits-small` at
    *  chance 1), driven to a one-turn encounter win.
    *  Daemon-less so the bits fold starts at identity. */
@@ -4669,7 +4669,7 @@ describe('48b — the reward phase', () => {
     expect(handle.run.phase).toBe('reward');
   });
 
-  it('a mid-reward save reproduces the pending offer (the §48 exit-criterion contract)', () => {
+  it('a mid-reward save reproduces the pending offer', () => {
     const { run } = winWithRewards();
     // Pin the offer to a bits portion (the settle math below needs
     // one; the rolled draw may be a packet — same forge as above).
@@ -4695,7 +4695,7 @@ describe('48b — the reward phase', () => {
   });
 });
 
-describe('64a — The Cornucopia (recruitOfferSize)', () => {
+describe('The Cornucopia (recruitOfferSize)', () => {
   /** Drive one victory to the recruit offer, DECLINING rewards — an accepted
    *  daemon portion could be the Cornucopia itself (it ships in both reward
    *  tables), which would pollute an offer-size read. */
@@ -4737,7 +4737,7 @@ describe('64a — The Cornucopia (recruitOfferSize)', () => {
     expect(firstOfferDeclining(21, { daemon: null })).toHaveLength(RECRUITMENT.defaultOfferSize);
   });
 
-  it('holds × each character (the count is orthogonal to the 63c pools/weights seam)', () => {
+  it('holds × each character (the count is orthogonal to the character pools/weights seam)', () => {
     for (const id of [DEFAULT_CHARACTER_ID, 'priest', 'gambler']) {
       const character = characterById(id)!;
       const offer = firstOfferDeclining(31, { character, daemon: cornucopia });
@@ -4754,7 +4754,7 @@ describe('64a — The Cornucopia (recruitOfferSize)', () => {
   });
 });
 
-describe("64b — Patrician's Seal (no commons)", () => {
+describe("Patrician's Seal (no commons)", () => {
   const seal = daemonById('patricians-seal')!;
   const commons = new Set<string>(DRAFTABLE_BY_TIER.common);
 
@@ -4805,7 +4805,7 @@ describe("64b — Patrician's Seal (no commons)", () => {
   });
 });
 
-describe('64c — Idol of Portunus (guaranteed port legendary)', () => {
+describe('Idol of Portunus (guaranteed port legendary)', () => {
   const portunus = daemonById('portunus')!;
   const legendaries = new Set<string>(DRAFTABLE_BY_TIER.legendary);
 
@@ -4867,7 +4867,7 @@ describe('64c — Idol of Portunus (guaranteed port legendary)', () => {
   });
 });
 
-describe('64d — the drafting-daemon matrix (all three stacked × each character)', () => {
+describe('the drafting-daemon matrix (all three stacked × each character)', () => {
   const all = ['cornucopia', 'patricians-seal', 'portunus'].map((id) => daemonById(id)!);
   const commons = new Set<string>(DRAFTABLE_BY_TIER.common);
   const legendaries = new Set<string>(DRAFTABLE_BY_TIER.legendary);
@@ -4907,7 +4907,7 @@ describe('64d — the drafting-daemon matrix (all three stacked × each characte
   });
 });
 
-describe('65a — drawAmount (the variable draw fold)', () => {
+describe('drawAmount (the variable draw fold)', () => {
   // Base pinned config-derived in runStats.test.ts (= DECK.handSize); read
   // through the fold record here so a tuning edit keeps these honest.
   const BASE = RUN_STAT_BASES.drawAmount;
@@ -4946,14 +4946,14 @@ describe('65a — drawAmount (the variable draw fold)', () => {
     expect(base.hand).toBe(Math.min(base.roster, BASE));
   });
 
-  it('65d — an overdrawn fold saturates at the cap, not the roster', () => {
+  it('an overdrawn fold saturates at the cap, not the roster', () => {
     const { run } = freshRunWithBus(31, { daemon: drawIdol(100) });
     expect(run.effectiveDrawAmount).toBe(DECK.maxHandSize);
     run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
     expect(run.hand).toHaveLength(Math.min(run.team.length, DECK.maxHandSize));
   });
 
-  it('a draw amount past a SMALL roster simply fields everyone (the H5 exhaustion contract)', () => {
+  it('a draw amount past a SMALL roster simply fields everyone (the deck exhaustion contract)', () => {
     // A roster below the cap, so exhaustion (not the cap) is what stops
     // the deal: five mercenaries against an overdrawn fold.
     const roster = Array.from({ length: 5 }, () => ({
@@ -4991,7 +4991,7 @@ const HAND_RELATIVE_REF = ENCOUNTERS.flatMap((e) => {
     : [];
 })[0]!;
 
-describe('65b — the budget seam consumes the draw fold (Option B)', () => {
+describe('the budget seam consumes the draw fold', () => {
   const drawIdol = (value: number): DaemonConfig => ({
     id: 'test-draw',
     name: 'Test Draw',
@@ -5011,7 +5011,7 @@ describe('65b — the budget seam consumes the draw fold (Option B)', () => {
     return { run, enemies, basis, mean };
   };
 
-  it('count-basis and budget-basis BOTH track min(roster, effectiveDrawAmount) — the K2 desync pin', () => {
+  it('count-basis and budget-basis BOTH track min(roster, effectiveDrawAmount) — the desync pin', () => {
     const base = turn1(null);
     const plus = turn1(drawIdol(1));
     // Non-vacuous: the idol moved the basis (roster > base draw at start).
@@ -5028,14 +5028,14 @@ describe('65b — the budget seam consumes the draw fold (Option B)', () => {
     }
   });
 
-  it('the basis clamps under an overdrawn fold — 65d: at the cap, below the roster', () => {
+  it('the basis clamps under an overdrawn fold — at the cap, below the roster', () => {
     const { run, enemies, basis } = turn1(drawIdol(100));
     expect(basis).toBe(Math.min(run.team.length, DECK.maxHandSize));
     expect(enemies).toHaveLength(Math.round(ref.countFactor * basis));
   });
 });
 
-describe('65c — the hand-op packets (drawCards / discardCards)', () => {
+describe('the hand-op packets (drawCards / discardCards)', () => {
   // Catalog-derived count (the balance-proof discipline — never hardcode
   // what packets.json authors).
   const drawCount = (() => {
@@ -5119,7 +5119,7 @@ describe('65c — the hand-op packets (drawCards / discardCards)', () => {
     expect(run.cache).toEqual(['discard-one']); // nothing consumed on the reject
   });
 
-  it('65d — the forced-draw dial folds like a daemon modifier (deal + budget basis together)', () => {
+  it('the forced-draw dial folds like a daemon modifier (deal + budget basis together)', () => {
     const { run } = gatedToFirstTurnIntro(7, null, {
       drawAmountAdd: 2,
       forcedEncounterId: HAND_RELATIVE_REF.id,
@@ -5154,7 +5154,7 @@ describe('65c — the hand-op packets (drawCards / discardCards)', () => {
   });
 });
 
-describe('65d — the max hand size (user-signed cap, deck.json)', () => {
+describe('the max hand size (user-signed cap, deck.json)', () => {
   // Shipped-config sanity: a cap below the base draw would clamp every
   // deal — schema-legal, but the SHIPPED config must never do it.
   it('the shipped cap admits the base draw', () => {
@@ -5186,7 +5186,7 @@ describe('65d — the max hand size (user-signed cap, deck.json)', () => {
   });
 });
 
-describe('65f — the deck cue stream (deck:cardDrawn / cardDiscarded / reshuffled)', () => {
+describe('the deck cue stream (deck:cardDrawn / cardDiscarded / reshuffled)', () => {
   type Cue = { kind: 'drawn' | 'discarded' | 'reshuffled'; drawPile: number; discardPile: number };
   /** Subscribe a cue recorder to all three deck events. */
   const record = (bus: EventBus<GameEvents>): Cue[] => {
@@ -5226,7 +5226,7 @@ describe('65f — the deck cue stream (deck:cardDrawn / cardDiscarded / reshuffl
     expect(cues.map((c) => c.kind)).toEqual(Array.from({ length: surgeCount }, () => 'drawn'));
   });
 
-  it('a redraw cues all its discards, then all its refills (the K3 two-loop order)', () => {
+  it('a redraw cues all its discards, then all its refills (the two-loop order)', () => {
     const { run, bus } = gatedToFirstTurnIntro(9, null);
     run.addPacket('reroute'); // grants 1 redraw action, ≤2 cards
     run.dispatch({ kind: 'usePacket', cacheIndex: 0 });
@@ -5308,7 +5308,7 @@ describe('65f — the deck cue stream (deck:cardDrawn / cardDiscarded / reshuffl
  * the pair exists from construction, is seed-deterministic, the boss fight IS
  * the forewarned board, and a mid-sector save/load reproduces it exactly.
  */
-describe('boss forewarning (66a) — the sector-start pre-roll', () => {
+describe('boss forewarning — the sector-start pre-roll', () => {
   it('pre-rolls a boss-kind encounter + a fully-built board at construction', () => {
     const run = new Run(1, new EventBus<GameEvents>(), NO_EVENTS);
     const boss = getEncounter(run.bossEncounterId);
@@ -5367,7 +5367,7 @@ describe('boss forewarning (66a) — the sector-start pre-roll', () => {
     expect(restored.encounterMap).toEqual(run.bossEncounterMap);
   });
 
-  it('the X2 forced-encounter flag lands at pre-roll (a boss-kind force is honored)', () => {
+  it('the forced-encounter flag lands at pre-roll (a boss-kind force is honored)', () => {
     // Both shipped bosses force cleanly — proving the short-circuit runs at
     // sector start, not fight time (ids from the catalog, not hardcoded
     // composition: the loop derives nothing about their contents).
@@ -5377,7 +5377,7 @@ describe('boss forewarning (66a) — the sector-start pre-roll', () => {
     }
   });
 
-  it('a NORMAL-kind forced encounter leaves the boss pre-roll on the pool roll (X2 kind-mismatch)', () => {
+  it('a NORMAL-kind forced encounter leaves the boss pre-roll on the pool roll (a kind mismatch)', () => {
     const run = new Run(1, new EventBus<GameEvents>(), { forcedEncounterId: 'brigands' });
     expect(getEncounter(run.bossEncounterId)!.kind).toBe('boss');
   });
@@ -5390,7 +5390,7 @@ describe('boss forewarning (66a) — the sector-start pre-roll', () => {
     );
   });
 
-  it('bossForewarning reports the display pair (66b): catalog name, layout name, null = procedural', () => {
+  it('bossForewarning reports the display pair: catalog name, layout name, null = procedural', () => {
     const run = new Run(1, new EventBus<GameEvents>(), NO_EVENTS);
     const fw = run.bossForewarning;
     expect(fw.name).toBe(getEncounter(run.bossEncounterId)!.name);
@@ -5887,7 +5887,7 @@ function eventRun(seed: number, extra?: RunConfig): { run: Run; bus: EventBus<Ga
   return { run, bus };
 }
 
-describe('74b — the event phase', () => {
+describe('the event phase', () => {
   it('the combat-resolve chance is fold-routed: base from config, bendable, ceiling-clamped', () => {
     const base = new Run(1, new EventBus<GameEvents>(), { daemon: null });
     expect(base.effectiveEventCombatChance()).toBe(RUN_STAT_BASES.eventCombatChance);
@@ -6032,7 +6032,7 @@ describe('74b — the event phase', () => {
     expect(drive()).toBe(drive());
   });
 
-  it('a not condition evaluates against live state (74c-pre — the combinator)', () => {
+  it('a not condition evaluates against live state (the combinator)', () => {
     // eventRun's control daemon ('test-no-resolve') is OWNED — so a choice
     // gated on NOT owning it must read disabled, and one gated on not-owning
     // a stranger must read enabled. The double-not exercises recursion.
@@ -6098,12 +6098,12 @@ function poolEvent(id: string, eligibility?: EventDef['eligibility']): EventDef 
 
 const NEVER = [{ kind: 'bitsAtLeast', amount: 999999 } as const];
 
-describe('74e — the sector-owned event pool', () => {
+describe('the sector-owned event pool', () => {
   // Derived from the SHIPPED sector (never hardcoded), so a change to the
   // slate keeps it.
   const START_POOL_IDS = getSector('the-start')!.events.map((e) => e.eventId);
 
-  it('an opened event comes from the SECTOR pool, not a bare catalog scan (the 74b placeholder retired)', () => {
+  it('an opened event comes from the SECTOR pool, not a bare catalog scan', () => {
     // Shipped catalog, no forced id: root stamped event, resolve folded off →
     // the entry roll must land inside The Start's authored `events` pool.
     const run = new Run(201, new EventBus<GameEvents>(), {
@@ -6132,7 +6132,7 @@ describe('74e — the sector-owned event pool', () => {
     expect(run.activeEvent!.eventId).toBe('whispering-terminal-collects');
   });
 
-  it('an all-ineligible pool degrades to a normal fight (the 74b empty-pool rule)', () => {
+  it('an all-ineligible pool degrades to a normal fight (the empty-pool rule)', () => {
     const run = new Run(203, new EventBus<GameEvents>(), {
       firstNodeKind: 'event',
       daemon: NO_RESOLVE_DAEMON,
@@ -6162,7 +6162,7 @@ describe('74e — the sector-owned event pool', () => {
 
 // ── per-run event repeats (the no-repeat default, user-signed) ───────────────
 
-describe('74i — per-run event repeats', () => {
+describe('per-run event repeats', () => {
   /** Twin-catalog fixture: the pool's only OPEN def, repeatable or not (the
    *  catalog never touches map generation, so both arms share a seed's map).
    *  eventChance 1 makes the scatter attempt every hop; the hunt below finds
@@ -6267,7 +6267,7 @@ describe('74i — per-run event repeats', () => {
     expect(run.activeEvent!.eventId).toBe('whispering-terminal-collects');
   });
 
-  it('74i-c END-TO-END: a SHIPPED run (no dials) opens the authored starting event at the root', () => {
+  it('END-TO-END: a SHIPPED run (no dials) opens the authored starting event at the root', () => {
     // The positive pin: The Start authors `startingEvents`, the root is
     // sector-stamped, entry draws
     // from the starting pool and IGNORES the combat-resolve roll — so this
@@ -6332,7 +6332,7 @@ function fireOps(run: Run): void {
   run.dispatch({ kind: 'chooseEventOption', choiceIndex: 0 });
 }
 
-describe('74c — event effect ops (the full union executes)', () => {
+describe('event effect ops (the full union executes)', () => {
   it('addPacket adds slots (duplicates stack — one SLOT each, spec §Cache)', () => {
     const { run } = opRun(120, [
       { op: 'addPacket', packetId: 'patch' },
@@ -6344,7 +6344,7 @@ describe('74c — event effect ops (the full union executes)', () => {
     expect(run.phase).toBe('map');
   });
 
-  it('addPacket on a FULL cache honors the grant into 49f overflow (user-signed)', () => {
+  it('addPacket on a FULL cache honors the grant into the overflow (user-signed)', () => {
     const { run } = opRun(121, [{ op: 'addPacket', packetId: 'shield' }]);
     fillCache(run, 'patch');
     expect(run.cacheOverflow).toBe(0);
@@ -6487,7 +6487,7 @@ describe('74c — event effect ops (the full union executes)', () => {
 
 // ---- camp-kill loot ----------------------------------------------------------
 
-describe('75g — camp-kill loot rides the turn boundary as reward portions', () => {
+describe('camp-kill loot rides the turn boundary as reward portions', () => {
   const CAMP_KILL = [{ defId: 'bandit-squatters', killedBy: 'player' as const }];
 
   it('a player-killed camp pays WIN-OR-LOSE: an ongoing (drawn) turn still offers the loot', () => {
@@ -6557,7 +6557,7 @@ describe('75g — camp-kill loot rides the turn boundary as reward portions', ()
   });
 });
 
-describe('§91a2 — the chip rule through the Run', () => {
+describe('the chip rule through the Run', () => {
   /** A run straight into its first battle (headless), with the pools:chipped
    *  stream captured. */
   function inBattle(): { run: Run; bus: EventBus<GameEvents>; chipped: GameEvents['pools:chipped'][] } {
@@ -6607,7 +6607,7 @@ describe('§91a2 — the chip rule through the Run', () => {
     expect(chipped[1]!.playerCharge).toBe(1 * m);
   });
 
-  it('a pre-91a1 fake (no reason) maps a draw to the CAP and anything else to decisive', () => {
+  it('a fake with no reason maps a draw to the CAP and anything else to decisive', () => {
     const { run, bus } = inBattle();
     const pool = HEALTH.playerHealthMax;
     // winner 'draw', no reason → the cap → the surcharge applies (2 standing).
@@ -6641,7 +6641,7 @@ describe('§91a2 — the chip rule through the Run', () => {
   });
 });
 
-describe('94d — the fallen ledger (Run-owned, snapshot v45)', () => {
+describe('the fallen ledger (Run-owned, in the snapshot)', () => {
   const death = (over: Partial<GameEvents['unit:died']>): GameEvents['unit:died'] => ({
     unitId: 1,
     team: 'player',
@@ -6745,7 +6745,7 @@ describe('94d — the fallen ledger (Run-owned, snapshot v45)', () => {
     );
   });
 
-  it('102c — the LOSING turn\'s fallen are already in the ledger when run:defeated fires (the run-end stats read it there)', () => {
+  it('the LOSING turn\'s fallen are already in the ledger when run:defeated fires (the run-end stats read it there)', () => {
     const { run, bus } = gatedToFirstTurnIntro(1, null);
     run.dispatch({ kind: 'advanceTurn' });
     const pool = HEALTH.playerHealthMax;
@@ -6775,7 +6775,7 @@ describe('94d — the fallen ledger (Run-owned, snapshot v45)', () => {
   });
 });
 
-describe('94e — run:poolChanged from the ONE pool chokepoint (setPlayerHealth)', () => {
+describe('run:poolChanged from the ONE pool chokepoint (setPlayerHealth)', () => {
   it('a chip emits {before, after, max, reason: chip}; a no-op write (a heal on a full pool) emits nothing', () => {
     const { run, bus } = gatedToFirstTurnIntro(1, null);
     const moves: GameEvents['run:poolChanged'][] = [];

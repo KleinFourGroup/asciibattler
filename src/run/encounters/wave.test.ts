@@ -215,7 +215,7 @@ describe('resolveWave — level distribution', () => {
   });
 });
 
-describe('resolveWave — 92e the per-entry power override', () => {
+describe('resolveWave — the per-entry power override', () => {
   const unit = (archetype: Archetype, weight: number, power?: number): WaveUnitSpec => ({
     archetype,
     count: { kind: 'weight', weight },
@@ -253,7 +253,7 @@ describe('resolveWave — 92e the per-entry power override', () => {
     }
   });
 
-  it('absent → the pre-92e resolution, byte-identical (the catalog weight, no stamp)', () => {
+  it('absent → the catalog weight, byte-identical (no stamp)', () => {
     const plain: WaveSpec = {
       levelBudget: { kind: 'fixed', value: 20 },
       count: { kind: 'fixed', value: 5 },
@@ -312,7 +312,7 @@ describe('resolveWave — levelCap (the optional per-wave ceiling)', () => {
   });
 });
 
-describe('resolveWave — X1 difficulty multipliers (the per-run lever)', () => {
+describe('resolveWave — difficulty multipliers (the per-run lever)', () => {
   const oneWeighted: WaveUnitSpec = {
     archetype: 'bandit',
     count: { kind: 'weight', weight: 1 },

@@ -151,7 +151,7 @@ describe('computeMapMetrics — hand-built fixtures', () => {
   });
 });
 
-describe('edge shear + drift coherence (77e2b — the G2 de-bias instrument)', () => {
+describe('edge shear + drift coherence (the planarity de-bias instrument)', () => {
   it('the symmetric diamond measures zero shear and perfectly mixed drift', () => {
     // Pencil: xNorm edges −0.5, +0.5, +0.5, −0.5 → mean 0; centered
     // diagonals split 2/2 → majority share exactly 0.5.

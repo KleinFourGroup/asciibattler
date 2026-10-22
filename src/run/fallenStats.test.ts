@@ -56,7 +56,7 @@ function expectScopeMatchesRows(scope: FallenBothSides, rows: readonly FallenRec
   }
 }
 
-describe('102c — summarizeFallen (the run-end stats fold)', () => {
+describe('summarizeFallen (the run-end stats fold)', () => {
   it('an empty ledger is an empty run: zero totals, no encounters', () => {
     const stats = summarizeFallen([]);
     expect(stats.encounters).toEqual([]);

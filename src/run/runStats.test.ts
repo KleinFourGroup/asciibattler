@@ -10,7 +10,7 @@ const mod = (
   value: number,
 ): RunStatModifier => ({ stat, op, value });
 
-describe('foldRunStats (47a — the run-stat fold vocabulary)', () => {
+describe('foldRunStats (the run-stat fold vocabulary)', () => {
   it('returns the same base object when no modifiers are active (identity guarantee)', () => {
     expect(foldRunStats(RUN_STAT_BASES, [])).toBe(RUN_STAT_BASES);
   });
@@ -71,13 +71,13 @@ describe('foldRunStats (47a — the run-stat fold vocabulary)', () => {
   // CONFIG-DERIVED, not pinned to a literal (the balance-proof-tests
   // norm): the offer-size base must track recruitment.json, so a tuning edit
   // there can never silently desync the fold's baseline.
-  it('64a: recruitOfferSize base derives from recruitment.json', () => {
+  it('recruitOfferSize base derives from recruitment.json', () => {
     expect(RUN_STAT_BASES.recruitOfferSize).toBe(RECRUITMENT.defaultOfferSize);
   });
 
   // The same discipline for the promoted tier weights: one source of
   // truth in recruitment.json, the fold's bases can never desync from it.
-  it('64b: the four rarity-weight bases derive from recruitment.json', () => {
+  it('the four rarity-weight bases derive from recruitment.json', () => {
     expect(RUN_STAT_BASES.rarityWeightCommon).toBe(RECRUITMENT.rarityWeights.common);
     expect(RUN_STAT_BASES.rarityWeightUncommon).toBe(RECRUITMENT.rarityWeights.uncommon);
     expect(RUN_STAT_BASES.rarityWeightRare).toBe(RECRUITMENT.rarityWeights.rare);
@@ -86,7 +86,7 @@ describe('foldRunStats (47a — the run-stat fold vocabulary)', () => {
 
   // The Seal's exact fold shape: a mult-0 zeroes the weight (adds
   // apply first, then mults; the max(0,·) clamp keeps it sampler-legal).
-  it('64b: a mult-0 modifier zeroes a tier weight (the no-commons fold)', () => {
+  it('a mult-0 modifier zeroes a tier weight (the no-commons fold)', () => {
     const folded = foldRunStats(RUN_STAT_BASES, [mod('rarityWeightCommon', 'mult', 0)]);
     expect(folded.rarityWeightCommon).toBe(0);
     expect(folded.rarityWeightUncommon).toBe(RUN_STAT_BASES.rarityWeightUncommon);
@@ -94,13 +94,13 @@ describe('foldRunStats (47a — the run-stat fold vocabulary)', () => {
 
   // The deck.json discipline: the draw-amount base must track
   // DECK.handSize, so a hand-size tuning edit can never desync the fold.
-  it('65a: drawAmount base derives from deck.json handSize', () => {
+  it('drawAmount base derives from deck.json handSize', () => {
     expect(RUN_STAT_BASES.drawAmount).toBe(DECK.handSize);
   });
 
   // A design literal, not config-derived: zero forced slots is the
   // no-source baseline (Portunus adds; there is no config base to track).
-  it('64c: portLegendaryOffers bases at zero and stacks by add', () => {
+  it('portLegendaryOffers bases at zero and stacks by add', () => {
     expect(RUN_STAT_BASES.portLegendaryOffers).toBe(0);
     const folded = foldRunStats(RUN_STAT_BASES, [
       mod('portLegendaryOffers', 'add', 1),

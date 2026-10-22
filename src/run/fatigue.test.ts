@@ -23,7 +23,7 @@ function withConstitution(constitution: number, power = 10): UnitStats {
   };
 }
 
-describe('fatigueEffect (H6c → K1 → §91c: a constitution debuff)', () => {
+describe('fatigueEffect (a constitution debuff)', () => {
   it('ships INERT: the default rate seeds NO effect for any stack count', () => {
     // Config-derived inert proof — `fatigueEffect` (no rate arg) reads the
     // shipped HEALTH.fatiguePerStack. Passes iff the default is 0 → null; the
@@ -46,7 +46,7 @@ describe('fatigueEffect (H6c → K1 → §91c: a constitution debuff)', () => {
     expect(foldEffects(withConstitution(10), [e]).constitution).toBe(8);
   });
 
-  it('leaves power UNTOUCHED — a tired unit is not cheaper to lose (the §91c retarget)', () => {
+  it('leaves power UNTOUCHED — a tired unit is not cheaper to lose', () => {
     const e = fatigueEffect(3, 0.1)!;
     const folded = foldEffects(withConstitution(10, 7), [e]);
     expect(folded.power).toBe(7);

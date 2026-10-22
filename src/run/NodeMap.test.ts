@@ -62,7 +62,7 @@ describe('NodeMap.generate', () => {
     });
   });
 
-  describe('node kinds (G3)', () => {
+  describe('node kinds', () => {
     // Balance-proof: spacing bound comes from the config the generator reads.
     const { restMinSpacing } = NODE_MAP;
 
@@ -97,7 +97,7 @@ describe('NodeMap.generate', () => {
       }
     });
 
-    it('no route passes two rests within restMinSpacing hops (the 77e2 path window)', () => {
+    it('no route passes two rests within restMinSpacing hops (the path window)', () => {
       // The spacing contract is PATH-WISE, not per-hop map-global: two rests
       // on parallel lanes may share a hop, but no composed route may hit two
       // within the window.
@@ -141,7 +141,7 @@ describe('NodeMap.generate', () => {
     });
   });
 
-  describe('node kinds (W2 — elite)', () => {
+  describe('node kinds (elite)', () => {
     // Balance-proof: the spacing bound comes from the config the generator reads.
     const { eliteMinSpacing } = NODE_MAP;
 
@@ -213,7 +213,7 @@ describe('NodeMap.generate', () => {
     });
   });
 
-  describe('node kinds (50c — port)', () => {
+  describe('node kinds (port)', () => {
     // Balance-proof: the spacing bound comes from the config the generator reads.
     const { portMinSpacing } = NODE_MAP;
 
@@ -252,7 +252,7 @@ describe('NodeMap.generate', () => {
       }
     });
 
-    it('every first choice keeps port access by hop 5 (the 77c cone guarantee)', () => {
+    it('every first choice keeps port access by hop 5 (the cone guarantee)', () => {
       for (let s = 0; s < 100; s++) {
         const map = generate(new RNG(s));
         for (const first of map.hops[1]!) {
@@ -304,7 +304,7 @@ describe('NodeMap.generate', () => {
     });
   });
 
-  describe('node kinds (74e — event)', () => {
+  describe('node kinds (event)', () => {
     // Balance-proof: the spacing bound comes from the config the generator
     // reads. NB eventMinSpacing ships at 1 (back-to-back hops LEGAL — events
     // are a major run component, a signed feel call), so the spacing assert
@@ -369,7 +369,7 @@ describe('NodeMap.generate', () => {
       }
     });
 
-    it('every middle hop keeps at least one battle node (the 77c battle floor)', () => {
+    it('every middle hop keeps at least one battle node (the battle floor)', () => {
       // The cap that rules out the stacking artifact: specials per hop
       // are hard-capped at width − 1, so no hop in the band ever goes
       // battle-less.
@@ -382,7 +382,7 @@ describe('NodeMap.generate', () => {
       }
     });
 
-    it('EVERY default-length map places at least one of each special kind (the 77c presence floor)', () => {
+    it('EVERY default-length map places at least one of each special kind (the presence floor)', () => {
       for (let s = 0; s < 200; s++) {
         const map = generate(new RNG(s));
         for (const kind of ['rest', 'elite', 'port', 'event'] as const) {
@@ -418,7 +418,7 @@ describe('NodeMap.generate', () => {
     });
   });
 
-  describe('planarity (G2)', () => {
+  describe('planarity', () => {
     it('no two edges cross given the per-hop x-ordering', () => {
       // The headline planarity guard: with x = index within hops[f], no pair of
       // edges on the same adjacent hop pair geometrically inverts. This both
@@ -512,7 +512,7 @@ describe('NodeMap.generate', () => {
     });
   });
 
-  describe('RunConfig overrides (G1)', () => {
+  describe('RunConfig overrides', () => {
     it('honors hopCount and stays a valid planar DAG at 1 / 2 / 3 hops', () => {
       for (const fc of [1, 2, 3]) {
         for (let s = 0; s < 10; s++) {
@@ -581,7 +581,7 @@ describe('NodeMap.generate', () => {
     });
   });
 
-  describe('node kinds (68e — the first-node stamp)', () => {
+  describe('node kinds (the first-node stamp)', () => {
     it('stamps the root elite and changes NOTHING else (zero-draw, same seed)', () => {
       // The dial is a post-generation stamp: structure, edges, and every
       // other node's kind must be byte-identical to the dial being absent —
@@ -755,12 +755,12 @@ function coReachableTo(map: NodeMap, target: number): Set<number> {
   return visited;
 }
 
-describe('the 72e/74e scatter-chance probe dials (eliteChance / portChance / eventChance)', () => {
+describe('the scatter-chance probe dials (eliteChance / portChance / eventChance)', () => {
   const SEEDS = 20;
   const count = (map: NodeMap, kind: string): number =>
     map.nodes.filter((n) => n.kind === kind).length;
 
-  it('absent overrides are byte-identical to an empty config (the G1 contract)', () => {
+  it('absent overrides are byte-identical to an empty config', () => {
     for (let s = 1; s <= SEEDS; s++) {
       expect(JSON.stringify(generate(new RNG(s)))).toBe(JSON.stringify(generate(new RNG(s), {})));
     }
@@ -779,7 +779,7 @@ describe('the 72e/74e scatter-chance probe dials (eliteChance / portChance / eve
     expect(forced).toBeGreaterThan(authored);
   });
 
-  it('portChance=1 scatters strictly more ports than authored; portChance=0 kills ports ENTIRELY (probe-kill unified, 77e2)', () => {
+  it('portChance=1 scatters strictly more ports than authored; portChance=0 kills ports ENTIRELY', () => {
     // Dial 0 kills the kind INCLUDING its guarantees (user-flagged): a kill
     // dial that still places the fallback port is a probe-isolation trap.
     // All four kinds share
@@ -812,7 +812,7 @@ describe('the 72e/74e scatter-chance probe dials (eliteChance / portChance / eve
     expect(forced).toBeGreaterThan(authored);
   });
 
-  it('a kind dial never moves STRUCTURE, and the guarantees hold in the dialed twin (77e2)', () => {
+  it('a kind dial never moves STRUCTURE, and the guarantees hold in the dialed twin', () => {
     // The kinds share one slot pool by design, so killing events legitimately frees
     // slots the feel top-ups may claim — kind placement is NOT byte-stable
     // under a dial. What IS invariant: structure (its own sub-streams) and
@@ -835,7 +835,7 @@ describe('the 72e/74e scatter-chance probe dials (eliteChance / portChance / eve
   });
 });
 
-describe('stampRootKind (74e — the sector startingEvents root stamp)', () => {
+describe('stampRootKind (the sector startingEvents root stamp)', () => {
   it('re-kinds ONLY the root, zero-draw: structure and every other kind identical', () => {
     for (let s = 0; s < 30; s++) {
       const plain = generate(new RNG(s));

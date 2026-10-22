@@ -40,7 +40,7 @@ describe('redrawRejection — single-action grant', () => {
 });
 
 describe('redrawRejection — raised-budget grant (per-action card cap)', () => {
-  it('allows repeat actions, each capped at maxCards (49d: per ACTION, not per turn)', () => {
+  it('allows repeat actions, each capped at maxCards (per ACTION, not per turn)', () => {
     expect(redrawRejection([0, 4], HAND, N_ACTIONS)).toBeNull();
     // The second action gets a FRESH 3-card cap (the cap is per action, not
     // per turn).

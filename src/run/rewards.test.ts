@@ -35,7 +35,7 @@ const NONE = new Set<string>();
 /** The stream's serialized position — the draw-count probe. */
 const pos = (rng: RNG): number => rng.toJSON().state;
 
-describe('rollRewards (48b — the pure roller)', () => {
+describe('rollRewards (the pure roller)', () => {
   it('a chance-1 ref on a degenerate singleton costs ZERO draws on both streams', () => {
     const tableRng = new RNG(1);
     const bitsRng = new RNG(2);
@@ -138,7 +138,7 @@ describe('rollRewards (48b — the pure roller)', () => {
     expect(portions).toEqual([{ kind: 'daemon', daemonId: 'fortuna' }]);
   });
 
-  it('packet entries sample and carry their id (49c — the dormancy guard retired)', () => {
+  it('packet entries sample and carry their id', () => {
     const tableRng = new RNG(1);
     const t0 = pos(tableRng);
     const portions = rollRewards(
@@ -210,7 +210,7 @@ describe('rollRewards (48b — the pure roller)', () => {
     );
   });
 
-  describe('74c — the unit / poolHealth kinds', () => {
+  describe('the unit / poolHealth kinds', () => {
     it('a level-absent unit entry pre-rolls a level-1 template with ZERO draws on both streams', () => {
       const tableRng = new RNG(1);
       const bitsRng = new RNG(2);

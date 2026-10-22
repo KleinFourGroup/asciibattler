@@ -16765,3 +16765,56 @@ asserts, or a bracket left empty or naming nothing.
 
 Readings: 346,253 on `7b279f8b`, 392,318 at 13:22 before this entry:
 about 46k for 249 codes, near 185 a code.
+
+### 126n, batch 3 — `src/run` (2026-10-22, session c5a45a3d)
+
+204 codes in 193 titles of 14 files, in 192 hunks, to none. After it
+`comment-codes` reads 0 in the comments and the test titles under `src`,
+and `--record` wrote an empty ceiling, so a step code in either fails
+`npm test`.
+
+Titles that said something only the code stood for, now in words:
+
+- `NodeMap.test.ts`, "node kinds (G3)": the base kinds (the boss, the
+  rests), so "node kinds"; its siblings keep theirs ("(elite)",
+  "(port)", "(event)", "(the first-node stamp)").
+- `Recruitment.test.ts`, "byte-identical to the pre-63b signature": the
+  test holds `rollOffer` given `DRAFTABLE_BY_TIER` and no weights to the
+  bare call, which the title now says.
+- "the H4 seam", "the H5 exhaustion contract", "the K3 two-loop order",
+  "the G2 de-bias instrument", "the 63c pools/weights seam": the
+  encounter loop, the deck, the redraw, planarity and the characters, as
+  each file's own titles name them.
+- `daemon.test.ts`, "the four L idols + the three 47e/f economy idols +
+  the §64 drafting daemons + dis-pater (88c)": the test pins the sorted
+  catalog, eleven ids, so "ships the eleven daemons".
+
+**Statements found false or stale and corrected (rule 7):**
+
+- `Run.test.ts`, "the three 49e stores round-trip (v33)": the test pins
+  the format at 49 (126m's batch 8, the schema note); the version is
+  dropped. "the fallen ledger (Run-owned, snapshot v45)": now "in the
+  snapshot", the format being 49.
+- "a pre-K1 version is rejected": the test builds `schemaVersion − 1`, a
+  stale version, not one before the store; now "a stale version".
+- History dropped: "the 74b placeholder retired" (named for here at
+  126m's batch 8), "the dormancy guard retired", "the 47d summed budget
+  deliberately reversed" (now "not summed"), "the roll retired", "the
+  pre-§90 carry" (now "a plain carry"), "a pre-91a1 fake" (now "a fake
+  with no reason"), "(Option B)".
+
+**Proof.** `comment-strip HEAD src`: 14 files differ, comments and title
+words only, exit 0; the control named all 14. `comment-codes`: 204 → 0,
+`--record` wrote `{}`. `titles.mts --dupes src`: no full name repeated.
+`quoted.mjs`: no old title quoted whole; its 13 hits are phrases the new
+titles keep ("the reward phase", "the event phase").
+
+**Read** (`batch`): `git show <this commit> -- src`. What changed: the
+step codes in `src/run`'s test titles. Where to look: the titles listed
+above, and `Run.test.ts`'s `describe` headers. Wrong looks like a title
+that no longer says what its test asserts, or two `describe`s in a file
+that now read alike.
+
+Readings: 393,324 on `115ea375`, 432,747 at 13:29 before this entry:
+about 39k for 204 codes, near 190 a code. 126n is built: 666 → 0 in
+three batches, every read unread.

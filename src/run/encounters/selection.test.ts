@@ -73,14 +73,14 @@ const resolve: EncounterResolver = (id) => CATALOG[id];
 const battle = { hop: 0, nodeKind: 'battle' as const };
 
 describe('encounterKindFor', () => {
-  it('maps battle → normal, boss → boss (W1), elite → elite (W2)', () => {
+  it('maps battle → normal, boss → boss, elite → elite', () => {
     expect(encounterKindFor('battle')).toBe('normal');
     expect(encounterKindFor('boss')).toBe('boss');
     expect(encounterKindFor('elite')).toBe('elite');
   });
 });
 
-describe('selectEncounter — boss nodes (W1)', () => {
+describe('selectEncounter — boss nodes', () => {
   const pick = selectEncounter;
   const bossNode = { hop: 4, nodeKind: 'boss' as const };
 
@@ -97,7 +97,7 @@ describe('selectEncounter — boss nodes (W1)', () => {
   });
 });
 
-describe('selectEncounter — elite nodes (W2)', () => {
+describe('selectEncounter — elite nodes', () => {
   const pick = selectEncounter;
   const eliteNode = { hop: 4, nodeKind: 'elite' as const };
 
@@ -183,7 +183,7 @@ describe('selectEncounter — encounterFirst', () => {
   });
 });
 
-describe('selectEncounter — forced (--encounter, X2)', () => {
+describe('selectEncounter — forced (--encounter)', () => {
   const battleNode = { hop: 0, nodeKind: 'battle' as const };
   const bossNode = { hop: 4, nodeKind: 'boss' as const };
 

@@ -22,7 +22,7 @@ const fallen = { player: 2, enemy: 7 };
 const h = (chipMultiplier = 1) => ({ chipMultiplier });
 const REASONS: TurnEndReason[] = ['decisive', 'mutualWipe', 'cap'];
 
-describe('chipRule (§91a2)', () => {
+describe('chipRule', () => {
   it('each pool pays its OWN fallen; the survivors are ignored, on decisive + mutual-wipe turns', () => {
     for (const reason of ['decisive', 'mutualWipe'] as const) {
       expect(turnCharges(reason, survivors, fallen, h())).toEqual({
@@ -55,7 +55,7 @@ describe('chipRule (§91a2)', () => {
     expect(turnCharges('decisive', survivors, { player: 99, enemy: 0 }, h(3)).player).toBe(297);
   });
 
-  it('§91d playerExposure: the risk bound reads the HAND, × mult, uncapped', () => {
+  it('playerExposure: the risk bound reads the HAND, × mult, uncapped', () => {
     const fielded = { player: 4, enemy: 9 };
     expect(playerExposure(fielded, h(1))).toBe(4);
     expect(playerExposure(fielded, h(2.5))).toBe(10);
@@ -64,7 +64,7 @@ describe('chipRule (§91a2)', () => {
     expect(playerExposure(fielded)).toBe(playerExposure(fielded, HEALTH));
   });
 
-  it('96.5c2 enemyExposure: the mirror bound — the WAVE, × mult, uncapped', () => {
+  it('enemyExposure: the mirror bound — the WAVE, × mult, uncapped', () => {
     const fielded = { player: 4, enemy: 9 };
     expect(enemyExposure(fielded, h(1))).toBe(9);
     expect(enemyExposure(fielded, h(2))).toBe(18);
@@ -85,7 +85,7 @@ describe('chipRule (§91a2)', () => {
  * re-derive the same `survivors` / `fallen` totals the charge reads — the
  * expectation is `turnCharges` itself, never re-typed numbers.
  */
-describe('chipRule — the loss-event model (96.5b1)', () => {
+describe('chipRule — the loss-event model', () => {
   const dead = [
     { unitId: 1, team: 'player' as const, power: 2 },
     { unitId: 2, team: 'enemy' as const, power: 4 },

@@ -112,31 +112,31 @@ describe('RunConfig parsing', () => {
     expect(parseRunConfigFromURL('?hops=2&seed=9')).toEqual({ seed: 9, hopCount: 2 });
   });
 
-  it('63d: parses `character=` to the resolved catalog def, case/space tolerant', () => {
+  it('parses `character=` to the resolved catalog def, case/space tolerant', () => {
     expect(cfg('character=priest').character).toBe(characterById('priest'));
     expect(cfg('character=GAMBLER').character).toBe(characterById('gambler'));
   });
 
-  it('63d: drops an unknown / absent character id (undefined = no URL bypass)', () => {
+  it('drops an unknown / absent character id (undefined = no URL bypass)', () => {
     expect(cfg('character=warlord').character).toBeUndefined();
     expect(cfg('').character).toBeUndefined();
   });
 
-  it('63d: round-trips the character through the query string by id', () => {
+  it('round-trips the character through the query string by id', () => {
     const original = cfg('character=gambler&hops=3');
     const query = runConfigToQueryString(original);
     expect(query).toContain('character=gambler');
     expect(parseRunConfig(new URLSearchParams(query))).toEqual(original);
   });
 
-  it('68e: parses `firstNode=elite`, drops anything else (the layout= discipline)', () => {
+  it('parses `firstNode=elite`, drops anything else (the layout= discipline)', () => {
     expect(cfg('firstNode=elite').firstNodeKind).toBe('elite');
     expect(cfg('firstNode=boss').firstNodeKind).toBeUndefined();
     expect(cfg('firstNode=Elite').firstNodeKind).toBeUndefined();
     expect(cfg('').firstNodeKind).toBeUndefined();
   });
 
-  it('68e: round-trips firstNode through the query string', () => {
+  it('round-trips firstNode through the query string', () => {
     const original = cfg('firstNode=elite&hops=2');
     expect(parseRunConfig(new URLSearchParams(runConfigToQueryString(original)))).toEqual(original);
   });
@@ -155,19 +155,19 @@ describe('RunConfig parsing', () => {
     expect(parseRunConfig(new URLSearchParams(runConfigToQueryString(original)))).toEqual(original);
   });
 
-  it('parses `bits=` as a nonnegative integer, 0 included (47e)', () => {
+  it('parses `bits=` as a nonnegative integer, 0 included', () => {
     expect(cfg('bits=100').startingBits).toBe(100);
     expect(cfg('bits=0').startingBits).toBe(0);
   });
 
-  it('drops a negative / non-integer / absent bits override (47e)', () => {
+  it('drops a negative / non-integer / absent bits override', () => {
     expect(cfg('bits=-5').startingBits).toBeUndefined();
     expect(cfg('bits=2.5').startingBits).toBeUndefined();
     expect(cfg('bits=abc').startingBits).toBeUndefined();
     expect(cfg('').startingBits).toBeUndefined();
   });
 
-  it('round-trips the bits override through the query string (47e)', () => {
+  it('round-trips the bits override through the query string', () => {
     const original = cfg('bits=42&seed=7');
     expect(parseRunConfig(new URLSearchParams(runConfigToQueryString(original)))).toEqual(original);
   });
@@ -192,16 +192,16 @@ describe('RunConfig parsing', () => {
     expect(runConfigToQueryString({})).toBe('');
   });
 
-  it('parses `encounter=` against the live catalog (53d)', () => {
+  it('parses `encounter=` against the live catalog', () => {
     const id = ENCOUNTER_IDS[0]!;
     expect(cfg(`encounter=${id}`).forcedEncounterId).toBe(id);
   });
 
-  it('drops an unknown encounter id (53d)', () => {
+  it('drops an unknown encounter id', () => {
     expect(cfg('encounter=not_a_real_encounter').forcedEncounterId).toBeUndefined();
   });
 
-  it('encounter ids are case-sensitive — a case-mangled catalog id drops (53d)', () => {
+  it('encounter ids are case-sensitive — a case-mangled catalog id drops', () => {
     // The catalog mixes kebab and camelCase ids; find one with a case-mangled
     // variant that is NOT itself a catalog member. Skip-proof: every catalog
     // has at least one id whose uppercase form is foreign.
@@ -209,7 +209,7 @@ describe('RunConfig parsing', () => {
     expect(cfg(`encounter=${id.toUpperCase()}`).forcedEncounterId).toBeUndefined();
   });
 
-  it('round-trips the encounter override, alone and with a pinned layout (53d — the gauntlet-cell URL)', () => {
+  it('round-trips the encounter override, alone and with a pinned layout (the gauntlet-cell URL)', () => {
     const id = ENCOUNTER_IDS[0]!;
     const original = cfg(`hops=2&seed=9&encounter=${id}&layout=${LAYOUT}`);
     expect(original.forcedEncounterId).toBe(id);
@@ -217,7 +217,7 @@ describe('RunConfig parsing', () => {
   });
 });
 
-describe('sectorAdvanceConfig (72e — the scatter slice that survives a sector advance)', () => {
+describe('sectorAdvanceConfig (the scatter slice that survives a sector advance)', () => {
   it('returns undefined absent both dials — the config-less advance path stays byte-identical', () => {
     expect(sectorAdvanceConfig(undefined)).toBeUndefined();
     expect(sectorAdvanceConfig({})).toBeUndefined();

@@ -21,7 +21,7 @@ describe('rollOffer', () => {
     expect(rollOffer(new RNG(1), 5)).toHaveLength(5);
   });
 
-  it('§61c: no longer capped at the pool size — duplicates fill by design', () => {
+  it('not capped at the pool size — duplicates fill by design', () => {
     // Pigeonhole: more slots than draftable archetypes FORCES a duplicate.
     // (A signed call allows dupes — rolled levels/growth differentiate — so
     // no resample fallback is built.)
@@ -39,7 +39,7 @@ describe('rollOffer', () => {
     }
   });
 
-  it('F1: every draftable archetype is reachable in the draft pool', () => {
+  it('every draftable archetype is reachable in the draft pool', () => {
     // The point of the sampler — rogue/healer/mage/catapult (and the player
     // afflicters) must actually appear, not just melee/ranged. The union over
     // many fixed seeds is deterministic, so this is a hard assertion.
@@ -50,7 +50,7 @@ describe('rollOffer', () => {
     expect([...seen].sort()).toEqual([...DRAFTABLE_ARCHETYPES].sort());
   });
 
-  it('§29-close: never offers an enemy disruptor or the summon-only Ghoul', () => {
+  it('never offers an enemy disruptor or the summon-only Ghoul', () => {
     // The recruit pool's exclusions. These archetypes EXIST (cast by
     // enemies / raised by the Shaman / granted by an event) but are not the
     // player's to draft. Pinned explicitly — a future archetype added without
@@ -130,7 +130,7 @@ describe('rollOffer', () => {
  * probability arithmetic); synthetic catalogs pin the mechanics independent of
  * the live tier assignment.
  */
-describe('§61c — rollArchetypeByRarity (pure core, synthetic catalogs)', () => {
+describe('rollArchetypeByRarity (pure core, synthetic catalogs)', () => {
   type Pools = Readonly<Record<UnitRarity, readonly string[]>>;
   type Weights = Readonly<Record<UnitRarity, number>>;
   const pools = (p: Partial<Record<UnitRarity, readonly string[]>>): Pools => ({
@@ -175,7 +175,7 @@ describe('§61c — rollArchetypeByRarity (pure core, synthetic catalogs)', () =
     }
   });
 
-  it('a zero-weight NON-EMPTY tier is never drawn (the §64 no-commons shape)', () => {
+  it('a zero-weight NON-EMPTY tier is never drawn (the no-commons shape)', () => {
     const P = pools({ common: ['c1'], uncommon: ['u1'] });
     const rng = new RNG(7);
     for (let i = 0; i < 2_000; i++) {
@@ -228,7 +228,7 @@ describe('§61c — rollArchetypeByRarity (pure core, synthetic catalogs)', () =
  * Same synthetic-catalog discipline as the sampler block above; the identity
  * pin is a byte-neutrality proof made executable.
  */
-describe('§63b — within-tier archetype weights', () => {
+describe('within-tier archetype weights', () => {
   type Pools = Readonly<Record<UnitRarity, readonly string[]>>;
   const pools = (p: Partial<Record<UnitRarity, readonly string[]>>): Pools => ({
     common: [],
@@ -355,7 +355,7 @@ describe('§63b — within-tier archetype weights', () => {
     expect(Math.abs(rogues / total - 3 / 4)).toBeLessThan(TOLERANCE);
   });
 
-  it('rollOffer defaults are byte-identical to the pre-63b signature (the regression pin)', () => {
+  it('rollOffer given the default pool and no weights is byte-identical to the bare call (the regression pin)', () => {
     for (let s = 0; s < 50; s++) {
       expect(rollOffer(new RNG(s), 3, 1, DRAFTABLE_BY_TIER, {})).toEqual(
         rollOffer(new RNG(s), 3, 1),
@@ -369,7 +369,7 @@ describe('§63b — within-tier archetype weights', () => {
  * Patrician's Seal's mult-0 lands through it). Same synthetic-catalog
  * discipline as the within-tier block above.
  */
-describe('§64b — folded tier weights through the sampler', () => {
+describe('folded tier weights through the sampler', () => {
   type Pools = Readonly<Record<UnitRarity, readonly string[]>>;
   const pools = (p: Partial<Record<UnitRarity, readonly string[]>>): Pools => ({
     common: [],
@@ -405,7 +405,7 @@ describe('§64b — folded tier weights through the sampler', () => {
     expect(rng.toJSON()).toEqual(ref.toJSON());
   });
 
-  it('the float-boundary fallback lands in a POSITIVE-weight tier (the 64b hardening)', () => {
+  it('the float-boundary fallback lands in a POSITIVE-weight tier', () => {
     // A stub rng returning 1 (out of the [0,1) contract, deliberately) makes
     // the walk's roll survive every subtraction — the exact shape of the
     // float-rounding edge the fallback exists for. The last NON-EMPTY tier
@@ -453,7 +453,7 @@ describe('§64b — folded tier weights through the sampler', () => {
  * keeps the 2-draws-per-slot shape (tier draw consumed-and-overridden) and
  * degrades gracefully when the forced pool is empty.
  */
-describe('§64c — forced-tier draws', () => {
+describe('forced-tier draws', () => {
   type Pools = Readonly<Record<UnitRarity, readonly string[]>>;
   const pools = (p: Partial<Record<UnitRarity, readonly string[]>>): Pools => ({
     common: [],
@@ -534,7 +534,7 @@ describe('§64c — forced-tier draws', () => {
   });
 });
 
-describe('recruitLevelBonus (G4 geometric bonus)', () => {
+describe('recruitLevelBonus (the geometric bonus)', () => {
   it('matches P(+k) = (1−c)·c^k over a wide sample (derives c from config)', () => {
     const c = RECRUITMENT.recruitBonusChance;
     const N = 40000;

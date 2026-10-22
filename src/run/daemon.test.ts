@@ -151,7 +151,7 @@ describe('resolveTurnGrants', () => {
     expect(outcomes).toEqual(new Set([true, false]));
   });
 
-  it('draws in authored rule order (the L1 redraw-then-empower contract, generalized)', () => {
+  it('draws in authored rule order (the redraw-then-empower contract, generalized)', () => {
     const both: DaemonConfig = {
       ...SURE_BOTH,
       rules: [redrawHook(0.5, 6), empowerHook(0.5)],
@@ -166,7 +166,7 @@ describe('resolveTurnGrants', () => {
     }
   });
 
-  it('daemons evaluate in OWNERSHIP order — the queue order strict mode enforces (49d)', () => {
+  it('daemons evaluate in OWNERSHIP order — the queue order strict mode enforces', () => {
     const coinA: DaemonConfig = { ...COIN_REDRAW, id: 'coin-a' };
     const coinB: DaemonConfig = {
       id: 'coin-b',
@@ -186,7 +186,7 @@ describe('resolveTurnGrants', () => {
     }
   });
 
-  it('multiple granted redraw hooks stay PER SOURCE (49d — the 47d summed budget deliberately reversed)', () => {
+  it('multiple granted redraw hooks stay PER SOURCE (not summed)', () => {
     const stacked: DaemonConfig = {
       id: 'test-stack',
       name: 'Test Stack',
@@ -200,7 +200,7 @@ describe('resolveTurnGrants', () => {
     ]);
   });
 
-  it('granted empower hooks stay PER SOURCE (the 47d per-idol model)', () => {
+  it('granted empower hooks stay PER SOURCE (the per-idol model)', () => {
     const marsLike: DaemonConfig = {
       id: 'idol-a',
       name: 'Idol A',
@@ -218,7 +218,7 @@ describe('resolveTurnGrants', () => {
     expect(grants.map((g) => g.effect.budget)).toEqual([1, 1]);
   });
 
-  it('granted instant ops collect into `instants` in walk order, still costing no draw (47e)', () => {
+  it('granted instant ops collect into `instants` in walk order, still costing no draw', () => {
     const withInstant: DaemonConfig = {
       id: 'test-instant',
       name: 'Test Instant',
@@ -242,7 +242,7 @@ describe('resolveTurnGrants', () => {
     expect(rng.toJSON()).toEqual(before);
   });
 
-  it('a denied coin-flip instant op stays OUT of `instants` (47e)', () => {
+  it('a denied coin-flip instant op stays OUT of `instants`', () => {
     const coinBits: DaemonConfig = {
       id: 'test-coin-bits',
       name: 'Test Coin Bits',
@@ -257,7 +257,7 @@ describe('resolveTurnGrants', () => {
   });
 });
 
-describe('activeGrantIndex / grantViews (49d — the queue cursor)', () => {
+describe('activeGrantIndex / grantViews (the queue cursor)', () => {
   const entry = (daemonId: string, used = 0, passed = false): TurnGrants[number] => ({
     daemonId,
     effect: { kind: 'redraw', budget: 1, maxCards: 2 },
@@ -298,7 +298,7 @@ describe('activeGrantIndex / grantViews (49d — the queue cursor)', () => {
   });
 });
 
-describe('resolveInstantHooks (47e — the encounterStart/encounterEnd fire sites)', () => {
+describe('resolveInstantHooks (the encounterStart/encounterEnd fire sites)', () => {
   const endBits = (
     filter?: { won: boolean },
     chance?: number,
@@ -377,7 +377,7 @@ describe('daemonRedrawHook / daemonEmpowerHook (the authored-hook lookups)', () 
   });
 });
 
-describe('battleRulesFor (47f — the battle-domain compile)', () => {
+describe('battleRulesFor (the battle-domain compile)', () => {
   it('compiles ONLY battle-domain hooks, preserving ownership × authored order', () => {
     const mixed: DaemonConfig = {
       id: 'test-mixed',
@@ -420,7 +420,7 @@ describe('battleRulesFor (47f — the battle-domain compile)', () => {
 });
 
 describe('the shipped catalog (config/daemons.json) — design-shape pins', () => {
-  it('ships the four L idols + the three 47e/f economy idols + the §64 drafting daemons + dis-pater (88c)', () => {
+  it('ships the eleven daemons', () => {
     expect(DAEMONS.map((d) => d.id).sort()).toEqual([
       'cornucopia',
       'dis-pater',
@@ -445,7 +445,7 @@ describe('the shipped catalog (config/daemons.json) — design-shape pins', () =
     });
   });
 
-  it('battleBitsDaemonIds names the battle-bits earners, ownership order (51a — the tally label)', () => {
+  it('battleBitsDaemonIds names the battle-bits earners, ownership order (the tally label)', () => {
     // Laverna + dis-pater are the catalog's battle-bits earners;
     // grant/passive/status idols never qualify.
     expect(battleBitsDaemonIds([daemonById('laverna')!])).toEqual(['laverna']);

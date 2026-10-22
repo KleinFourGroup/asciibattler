@@ -314,18 +314,17 @@ and what it hands on are in WORKLOG §125 and "The close of §125".
 - ☑ **125l — the close** (`stop`). Read 2026-10-21; the decision point
   and two calls signed.
 
-## Phase 126 — tests
+## Phase 126 — tests ✅ (closed 2026-10-22)
 
-A list by test first, with 120e's list by file as its known answer;
-then A-33 and A-25's tests, B-11, and TODO's loops, timeouts and two
-pins. After the deletions, the step codes in `src`'s co-located tests,
-each replaced by its reason, and the ceiling to 0 (§125's decision
-point, signed 2026-10-21; WORKLOG §125, "125l's stop"). Proof:
-`reach-diff` for each deleted test, and the suite; `comment-strip` for
-the codes. Decision point: each test's fate is the user's.
-
-The cut, signed 2026-10-21 with five calls (WORKLOG §126, "The
-kickoff"). A-25's tests have no step: none is left.
+`src`'s and `tests`' tests. The list by test, every class kept and A-33,
+A-43 and A-44 deleted; TODO's loops bounded, timeouts, two pins, the
+import-cycle guard and the walker's port purchase; B-11's scan half and
+R-4 kept on their bars; R-1's repeated id refused. The step codes in
+`src`'s test comments (898) and test titles (666) to 0, the ceiling now
+counting titles, every read signed. The suite 3,704 at the kickoff and
+at the close; no snapshot bump. The cut was signed 2026-10-21; each
+step's record and what it hands on are in WORKLOG §126 and "The close
+of §126".
 
 - ☑ **126a — A-33's three test files** (`none`). `reach-diff` on the
   suite: nothing lost; 3,704 → 3,699 tests.
@@ -361,13 +360,12 @@ kickoff"). A-25's tests have no step: none is left.
   cannot see (findings for the user).
 - ☑ **126l-post2 — the two findings** (`none`). The half-cover detour
   test deleted; the aura test's wall check on a status the wall takes.
-- ◐ **126m — the step codes in comments** (`batch`, per batch). 898, by
-  folder, through an anchor-checked patch file. Eight batches built,
-  unread (895 → 0; WORKLOG §126).
-- ◐ **126n — the step codes in titles** (`batch`, per batch).
-  `comment-strip` masks titles, the ceiling counts them; three batches
-  built, unread (666 → 0; WORKLOG §126).
-- ☐ **126o — the close** (`stop`).
+- ☑ **126m — the step codes in comments** (`batch`, per batch). Eight
+  batches, 895 → 0, every read signed 2026-10-22.
+- ☑ **126n — the step codes in titles** (`batch`, per batch).
+  `comment-strip` masks titles, the ceiling counts them; three batches,
+  666 → 0, every read signed 2026-10-22.
+- ☑ **126o — the close** (`stop`). Read 2026-10-22.
 
 ## Phase 127 — tools
 

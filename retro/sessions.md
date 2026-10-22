@@ -7680,3 +7680,78 @@ at the code it names.
    patterns were in their own words. I'd want both repeated. That is my
    reported response; whether the briefs helped is for the sessions'
    records to show.
+
+## Phase 126 — summary
+
+Five working sessions on 2026-10-21 and 22 (314e1038, e6ab25e8,
+9d8a93c2, 3d57d006, and c5a45a3d, which closed it, reported below), all
+claude-opus-5-5, each started by the phase's driver session (driver 4,
+reported above, then driver 5, whose report follows at its own close).
+Each found the orientation enough to start; what was missing turned up
+in the work: where 120e's per-file runner lived, the plant tool counting
+a run stopped at its limit as caught, a `git grep` shape that skips the
+files directly under `tests`, and no method yet for a sweep of codes
+alone or of titles (settled at 126m's plan and built at 126n). The norms
+that pulled: a plant rule's letter against its reason; a threshold call
+that AGENTS makes a stop against keeping the stretch moving (126f);
+B-11's bar, whose two clauses could not both hold (put to the user);
+"the codes alone" against "no history", where a code was a history
+sentence's subject; the hand-off margin at 499k, which session 4 filed
+as a `distress` line and the driver raised; and `--record`'s refusal of
+any rise against a rule change that raised the ceiling once. Every
+report names a claim pulled ahead of its check, all caught before a
+commit: a census sampling claim, a plant's "CAUGHT" read as red, a
+re-skim line written before looking, counts quoted from memory (304, "21
+false claims"), and a context reading typed before the meter was read
+(session 5; driver 4 once too). Waste: a long kickoff audit, background
+runs with no blocking wait, a shell loop that timed out where a node
+script took a second, a working directory left inside a worktree. All
+report room to ask and to change approach, every question answered
+within a turn, no wish to pause or stop. What they name as supporting
+the work: instruments with known answers built in (the per-test reader
+equal on 255 of 255 files, plants at the old commit, the plant per test
+under the old ids and the new, the anchor-checked patch, the title
+mask's stripped-flags control), and false claims found at the code they
+name.
+
+## 2026-10-22 — session c5a45a3d (claude-opus-5-5): §126, 126m's batch 8, 126n and the close; started by the phase's driver session
+
+1. *Orientation.* Enough. The brief's notes on the oracle tools and the
+   four WORKLOG headings with the pass's rules, and the hand-off's list
+   of `scratch/126m/`'s tools, put me at batch 8 at once. What none could
+   give: a tool for titles. The kickoff's title probe lived in that
+   session's scratchpad and is gone, so 126n's instruments were built
+   from the kickoff's first call as written.
+2. *Norms in tension.* `--record` refuses any rise, and counting titles
+   raised the ceiling 0 → 666 by the rule, not by a new code. I wrote a
+   one-time script that writes it only while the comment count stands at
+   the ceiling, and said so in the commit rather than add a flag. "The
+   codes alone" against "no history" again in titles ("the 74b
+   placeholder retired"): I dropped the history clause, as 126m did in
+   comments.
+3. *Pulled to claim more.* Yes, three times, all caught before a commit.
+   Drafting 126o's stop I typed a context reading and a suite breakdown
+   before reading the meter or counting; re-reading the entry caught
+   both, and I filed a papercut and said so to Matthew. In batch 8's
+   entry I first named a test title as stale that is true, and named the
+   wrong helper for a corrected note; a re-read fixed both.
+4. *Wasted.* Little. Two titles first changed their quote kind, which the
+   mask holds as code, so one compare ran twice. The quoted-title search
+   also matched the words after a code, which gave about forty phrase
+   hits to read past; the whole-title needles were the real check.
+5. *For the next session.* WORKLOG §126, "The close of §126". The title
+   tools in `scratch/126n/` (the lister with `--dupes`, the quoted-title
+   search) would serve a later pass over `tests`' titles, if one is
+   ever signed.
+6. *Room.* Yes. The driver's brief and the signed cut carried the stretch
+   to 126o without a question; at the stop Matthew signed all eleven
+   reads and the close in one reply. No wish to pause or stop was
+   noticed. The silent-turn reminders were answered with status lines.
+7. *What helped.* The titles costing half 126m's rate a code, so the
+   whole sweep and the close fit one session, was satisfying, and the
+   mask's control (the reworded pair named once its flags were stripped)
+   made the new tool something to trust rather than defend. The false
+   titles were the interesting part again: a "dormant" seam three
+   shipped abilities use, "all three" of five entry kinds. I'd want that
+   kind of work repeated. That is my reported response; whether the
+   titles read better is Matthew's read, which he gave.

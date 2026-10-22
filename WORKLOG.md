@@ -16891,3 +16891,55 @@ report, and sends the driver the hand-off line: about 40k, from this
 stop's reading, which the hand-off line leaves room for.
 
 Reading: 455,924 at 13:35 UTC, as this entry was written.
+
+**Signed** (the user, 2026-10-22): "Signing all of the outstanding reads,
+Claude! 😁 It all looks great! You're clear to run the close". So the
+eleven batch reads are signed, 126m and 126n are ticked, and the close
+runs in this session.
+
+### The close of §126 (2026-10-22, session c5a45a3d)
+
+**Read** (the user, 2026-10-22): the eleven batch reads at 126o's stop,
+all signed, and the close here (above). 126a to 126o are ticked, each
+read as it was cut (126c, 126l and this close at their stops, 126m's
+eight batches and 126n's three by `batch` reads, the rest `none`, with
+126j's and 126k's bars and 126e's and 126f's scopes signed at step
+zero); nothing is ◐. The section is demoted in ROADMAP. The phase ran
+from the kickoff's ref `2c7df136` to `c7e92587`, 47 commits, and this
+one, in five working sessions (314e1038, e6ab25e8, 9d8a93c2, 3d57d006,
+c5a45a3d), each started by the phase's driver session (driver 4, then
+driver 5 from `02edb066`).
+
+What the phase changed is in "126o's stop" above, measured at
+`c7e92587`; this close adds no code.
+
+What it hands on:
+
+- **To §127:** its charter as it stands (the sweep page, A-32; B-05 with
+  its compare built first), and TODO "§127 tools"'s rows. The step-code
+  ceiling now reads `src`'s comments and test titles at 0; `tools` and
+  `tests` keep their comments and their tests' titles by §125's decision
+  point, so §127 changes no ceiling.
+- **To §128:** ARCHITECTURE's step codes for the docs pass, as §125
+  handed them on.
+- **Unchanged:** the 19 step codes in `src`'s strings that are not a
+  title (layout fixtures' names, a stored round-trip label), data outside
+  the count by the kickoff's first call.
+- **Tools and scratch:** `scratch/126b/` (the per-test reader),
+  `scratch/126l/`, `scratch/126m/` (the extractor and the patch applier)
+  and `scratch/126n/` (the title lister with `--dupes`, the quoted-title
+  search, the one-time ceiling writer, the mask's control), and the
+  copies under `output/cl-126m-b1/` to `-b8/` and `output/cl-126-kickoff/`
+  stay off git. No worktree, background task or preview server is left.
+
+Readings by the tool's clock (UTC). The phase's working sessions:
+314e1038 101,090 → 425,583 (the kickoff, 126a to 126d); e6ab25e8 109,636
+→ 403,285 (126e to 126i); 9d8a93c2 121,140 → 455,701 (126j to
+126l-post2); 3d57d006 100,299 → 544,923 (126m's batches 1 to 7);
+c5a45a3d 89,143 → the reading below (126m's batch 8, 126n and the
+close). This session: 89,143 at 12:46 (the orientation), 211,716 on
+`8c1db094`, 290,889 on `7c080acb`, 346,253 on `7b279f8b`, 393,324 on
+`115ea375`, 439,507 on `e5c0d6fe`, 458,379 on `c7e92587`, 481,333 at
+14:03 before this entry. The rate a code: 126m's batch 8 about 860 with
+the orientation in it; 126n's batches 245, 185 and 190, since a title is
+one line and most of its codes a header that drops.

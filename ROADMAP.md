@@ -379,8 +379,10 @@ the kickoff).
   its test (call 1); the smoke 595 → 583 in 60 → 59 files.
 - ☑ **127b — the compare, `css-compare`** (`none`). HEAD against HEAD
   passes; four plants fail by name, a reorder across specificities passes.
-- ☐ **127c — B-05, a trial** (`none`, on its bar). `tools/editor-base.css`
+- ☑ **127c — B-05, a trial** (`none`, on its bar). `tools/editor-base.css`
   by `@import`, whole and base blocks, the layout editor's sheet out.
+  Kept: 17 rules, the tools' sheets −1,087 lines; the compare and the pane
+  equal on all 12 pages.
 - ☐ **127d — `comment-length` takes any path** (`none`).
 - ☐ **127e — `comment-strip` proves a file with a held comment** (`none`).
 - ☐ **127f — the re-skim of `tools/`** (`stop`), the `@fontsource` lead

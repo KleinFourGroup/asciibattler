@@ -17189,3 +17189,79 @@ No second-model review (call 4).
 
 Reading: 322,041 at 16:02, before this entry. 127a and 127b took about
 58k between them (264,100 at 127a's commit).
+
+### 127c — B-05, the trial: one shared editor sheet (2026-10-22, session 9e9f60a2)
+
+**Kept, on its bar.** `tools/editor-base.css` (132 lines, 17 rules): the
+palette (`:root`'s eleven colours and font), `*`, `body`,
+`#editor-root`'s margin and padding, the bar's four rules, `.subtitle`,
+`code`, `.card`, `.card h2`, `button`, `button:hover`, `button.primary`,
+`button.danger-outline` and `textarea`. Each of the eleven editors'
+sheets opens with `@import '../editor-base.css';` after its header
+comment and keeps what is its own, the shared rules that stayed, and
+the declarations it adds to a shared selector (`#editor-root`'s width,
+the blacklist and character editors' four tier colours, three editors'
+`textarea` extras). The layout editor's sheet is untouched.
+
+Step zero (`scratch/127c/plan.mts`, from HEAD's sheets): 28 rules sit at
+the top level of all eleven sheets once each; 24 are the same in every
+copy, and `:root`, `#editor-root`, `.hint` and `textarea` share some of
+their declarations. The base takes the declarations every copy holds
+(call 2's base blocks). The generator (`scratch/127c/hoist.mts`) writes
+the base and takes those declarations out of each sheet, a moved rule's
+attached comment with it, and parses every rewritten rule again.
+
+The compare on all 28: every page's declarations in effect equal to
+HEAD's, and 1,090 order pairs, since a shared rule now loads above page
+rules that came before it. Many could never meet on one box
+(`input[type='text']` against `button.primary`), so the compare gained a
+narrowing: two selectors whose last compound names different element
+types, ids or pseudo-elements never style one box (`subjectOf`,
+`canMeet`; two more known answers, 20 tests). That is a change to 127b's
+instrument inside 127c's intent, flagged here. With it, 526 pairs, all
+on `.validation` and its items, `.hint` and its two, `.row`,
+`.workspace` and `button.primary:disabled`, each against page rules at
+one specificity (`.tabs button.tab` against the disabled primary, both
+buttons). Those rules stay in the pages, and so do `.edit-pane,
+.side-pane`, which kept `.workspace` would otherwise follow: the cut
+the compare passes outright, with no pair read by hand. The three cuts
+measured: all 28, −1,725 lines and failing; the button family kept
+whole as well, −905; this one, −1,092 before the base's comments.
+
+The bar (D2):
+
+1. **The same behaviour.** `css-compare HEAD`: 12 pages, 0 differ; the
+   control named 12 of 12; exit 0. The pane (`scratch/127c/pane-dump.js`,
+   every element's computed style with `::before` and `::after`, matched
+   by path): on each of the twelve editor pages, the reading after
+   equals HEAD's on every element (309, 251, 229, 153, 428, 477, 518,
+   198, 119, 445, 126 and 578), none on one side only; the layout editor
+   is the control that did not change. Its known answers: two loads at
+   HEAD read the same on all twelve pages, and a rule inserted through
+   the CSSOM on the camp editor was named at its one element (`.bar
+   h1`'s font size and the widths that follow).
+2. **Lines.** The tools' sheets, 6,600 in 15 files → 5,513 in 16
+   (−1,087); the twelve editor sheets with the base, 5,815 → 4,728.
+3. **No telling parameter.** No class, variable or selector added.
+4. **What a reader had to know.** The palette, the page frame, the bar,
+   the cards, the buttons and the text area were eleven copies kept in
+   step by hand; each is one rule now.
+
+Removed with their rules: two copies of the home link's comment
+(archetype, sector); the base holds one line for it. The base's header
+names what stayed in the pages and why. The census expected about 3,400
+lines; whole blocks held about 1,500 to 2,600 at the kickoff, and the
+order rule takes it to 1,087.
+
+**Found.** The generator wrote the eleven sheets before the base, the
+preview server looked for the base in between, and every page then
+failed its `@import` (the error overlay, `ENOENT` for
+`C:\Users\mkilg\projects\editor-base.css`) on every reload with the
+file in place, until the server restarted; a line in
+`process/browser-pane.md`. The user's server on 5173 was not running.
+**For the re-skim:** the rules that stayed (633 lines between this cut
+and all 28) move only with a proof that their pairs never meet on one
+element, which needs the editors' markup read.
+
+Reading: 424,879 at 16:18, before this entry; 127c took about 100k,
+most of it the pane's twelve pages read three times.

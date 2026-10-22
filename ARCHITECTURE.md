@@ -516,6 +516,7 @@ public/
   audio/                     # B6: preloaded .wav files (click, melee, shoot, death, win, magicboom, ...)
 
 tools/                       # Dev-only; not bundled into dist/ (index page at /tools/)
+  editor-base.css            # the config editors' shared styles (the palette, the page frame, the bar, the cards, the buttons), which each editor's editor.css imports first; the layout editor's sheet does not
   layout-editor/             # C1d.B → D8: layout painter at /tools/layout-editor/ (75i: the camps layer — camp-spawn paint + per-layout weighted camp list)
   run-config/                # G1/G5: short-run CLI + GUI launcher at /tools/run-config/
   archetype-editor/          # I4: schema-driven units.json editor (live preview + save) at /tools/archetype-editor/

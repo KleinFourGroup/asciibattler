@@ -107,6 +107,10 @@ C2 and C4).
   state (the kit's driver, anything on `window`). `ready()`'s `page` tells
   you it happened; don't write a source file in the middle of a pane
   sequence.
+- A stylesheet that `@import`s a file the dev server first looked for
+  before it existed kept failing (the error overlay, `ENOENT` for a path
+  outside the repo) after the file was written, on every reload, until the
+  server restarted (seen once, 2026-10-22). Write the imported sheet first.
 - The dev server stamps the build's ID into each page it serves, so
   `ready()`'s `build` names the commit and the tree's state as of that
   load (`-dirty` while anything is uncommitted), not as of the server's

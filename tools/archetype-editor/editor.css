@@ -1,74 +1,8 @@
-:root {
-  --bg: #0e1116;
-  --panel: #161b22;
-  --panel-2: #1c2330;
-  --border: #2a3140;
-  --text: #d6deeb;
-  --muted: #8b97ab;
-  --accent: #33ff00;
-  --accent-dim: #1f7a12;
-  --danger: #ff5470;
-  --ok: #46d369;
-  --err: #ff6b81;
-  font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
-}
 
-* {
-  box-sizing: border-box;
-}
 
-body {
-  margin: 0;
-  background: var(--bg);
-  color: var(--text);
-  font-size: 13px;
-}
-
+@import '../editor-base.css';
 #editor-root {
   max-width: 1200px;
-  margin: 0 auto;
-  padding: 16px;
-}
-
-.bar {
-  display: flex;
-  align-items: baseline;
-  gap: 14px;
-  flex-wrap: wrap;
-  padding-bottom: 12px;
-  border-bottom: 1px solid var(--border);
-}
-
-.bar h1 {
-  font-size: 18px;
-  margin: 0;
-  color: var(--accent);
-}
-
-/* Wb3 — "← Tools" home link back to the dev-tools index (mirrors the encounter
-   editor), pushed to the right of the row bar. */
-.bar a.home {
-  margin-left: auto;
-  color: var(--muted);
-  text-decoration: none;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 5px 11px;
-}
-.bar a.home:hover {
-  border-color: var(--accent-dim);
-  color: var(--text);
-}
-
-.subtitle {
-  color: var(--muted);
-}
-
-code {
-  background: var(--panel-2);
-  padding: 1px 5px;
-  border-radius: 4px;
-  color: #aaccff;
 }
 
 .workspace {
@@ -84,21 +18,6 @@ code {
   flex-direction: column;
   gap: 14px;
   min-width: 0;
-}
-
-.card {
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 12px 14px;
-}
-
-.card h2 {
-  font-size: 13px;
-  margin: 0 0 10px;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--muted);
 }
 
 .card h2 .sub {
@@ -325,30 +244,9 @@ input:focus {
   flex-wrap: wrap;
 }
 
-button {
-  font-family: inherit;
-  font-size: 13px;
-  cursor: pointer;
-  border-radius: 6px;
-  padding: 6px 12px;
-  background: var(--panel-2);
-  color: var(--text);
-  border: 1px solid var(--border);
-}
-
-button:hover {
-  border-color: var(--accent-dim);
-}
-
 button:disabled {
   opacity: 0.45;
   cursor: not-allowed;
-}
-
-button.primary {
-  background: var(--accent-dim);
-  border-color: var(--accent);
-  color: #eaffea;
 }
 
 button.primary:disabled {
@@ -358,14 +256,7 @@ button.primary:disabled {
   cursor: not-allowed;
 }
 
-button.danger-outline {
-  border-color: var(--danger);
-  color: var(--danger);
-  background: transparent;
-}
-
 textarea {
-  width: 100%;
   background: var(--panel-2);
   border: 1px solid var(--border);
   border-radius: 6px;
@@ -373,7 +264,6 @@ textarea {
   font-family: inherit;
   font-size: 12px;
   padding: 8px;
-  resize: vertical;
 }
 
 @media (max-width: 880px) {

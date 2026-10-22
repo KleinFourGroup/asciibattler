@@ -54,6 +54,22 @@ describe('css-compare: what it must pass', () => {
     expect(run(before, after)).toEqual([]);
   });
 
+  it('passes a reorder of two rules that cannot style one box: other element types, ids or pseudo-elements', () => {
+    const pass = (x: string, y: string): readonly CssDifference[] => run({ [PAGE]: `${x}\n${y}` }, { [PAGE]: `${y}\n${x}` });
+    expect(pass("input[type='text'] { color: red; }", 'button.primary { color: blue; }')).toEqual([]);
+    expect(pass('.preview dt { color: red; }', '.row dd { color: blue; }')).toEqual([]);
+    expect(pass('.a::before { color: red; }', '.b { color: blue; }')).toEqual([]);
+    expect(pass('.a::before { color: red; }', '.b::after { color: blue; }')).toEqual([]);
+    expect(pass('#x .a { color: red; }', '#y.b { color: blue; }').length).toBe(1);
+    expect(pass('.a #x { color: red; }', '.b #y { color: blue; }')).toEqual([]);
+  });
+
+  it('names a reorder of two rules that can style one box though one names a type', () => {
+    expect(kinds(run({ [PAGE]: 'button.a { color: red; }\ndiv .b { color: blue; }' }, { [PAGE]: 'div .b { color: blue; }\nbutton.a { color: red; }' }))).toEqual(['order']);
+    expect(kinds(run({ [PAGE]: 'li.a { color: red; }\nLI.b { color: blue; }' }, { [PAGE]: 'LI.b { color: blue; }\nli.a { color: red; }' }))).toEqual(['order']);
+    expect(kinds(run({ [PAGE]: '.a:before { color: red; }\n.b::before { color: blue; }' }, { [PAGE]: '.b::before { color: blue; }\n.a:before { color: red; }' }))).toEqual(['order']);
+  });
+
   it('passes a reorder of two rules whose properties do not overlap, and of two equal declarations', () => {
     expect(run({ [PAGE]: '.a { color: red; }\n.b { padding: 0; }' }, { [PAGE]: '.b { padding: 0; }\n.a { color: red; }' })).toEqual([]);
     expect(run({ [PAGE]: '.a { color: red; }\n.b { color: red; }' }, { [PAGE]: '.b { color: red; }\n.a { color: red; }' })).toEqual([]);

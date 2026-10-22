@@ -22,8 +22,10 @@
  *    winner by importance, then specificity, then order, so two
  *    declarations whose order flipped can change a winner only when they set
  *    overlapping properties (a shorthand overlaps its longhands) with the
- *    same importance and specificity. Whether their selectors meet on one
- *    element cannot be read from the sheets, so every such pair is named.
+ *    same importance and specificity, on selectors that can style one box.
+ *    Two that name different element types, ids or pseudo-elements cannot;
+ *    whether any other two meet cannot be read from the sheets, so every
+ *    such pair is named.
  *
  * It reads no document, so it proves the cascade and not that a page loads
  * its sheets in the order assumed here; the browser shows that. An at-rule
@@ -375,11 +377,42 @@ export function overlaps(a: string, b: string): boolean {
   return fa.some((f) => fb.includes(f));
 }
 
+/** The last compound of a complex selector: its element type, its id and its pseudo-element, where it names them. */
+export function subjectOf(selector: string): { type: string | null; id: string | null; pseudoElement: string | null } {
+  let start = 0;
+  let depth = 0;
+  for (let i = 0; i < selector.length; i++) {
+    const ch = selector[i]!;
+    if (ch === '(' || ch === '[') depth++;
+    else if (ch === ')' || ch === ']') depth--;
+    else if (depth === 0 && /[\s>+~]/.test(ch)) start = i + 1;
+  }
+  const compound = selector.slice(start);
+  const type = /^[a-zA-Z][\w-]*/.exec(compound)?.[0].toLowerCase() ?? null;
+  const id = /#([\w-]+)/.exec(compound.replace(/\([^)]*\)|\[[^\]]*\]/g, ''))?.[1] ?? null;
+  const element = /::([\w-]+)/.exec(compound)?.[1] ?? /:(before|after|first-line|first-letter)\b/i.exec(compound)?.[1] ?? null;
+  return { type, id, pseudoElement: element?.toLowerCase() ?? null };
+}
+
+/**
+ * Whether two selectors can style one box. Two that name different element
+ * types, different ids or different pseudo-elements (or a pseudo-element
+ * against the element itself) never do; any other two are taken to.
+ */
+export function canMeet(a: string, b: string): boolean {
+  const [x, y] = [subjectOf(a), subjectOf(b)];
+  if (x.pseudoElement !== y.pseudoElement) return false;
+  if (x.type !== null && y.type !== null && x.type !== y.type) return false;
+  if (x.id !== null && y.id !== null && x.id !== y.id) return false;
+  return true;
+}
+
 /** Two declarations whose order decides between them wherever their selectors meet. */
 function orderDecides(a: Declaration, b: Declaration): boolean {
   if (a.important !== b.important || !overlaps(a.property, b.property)) return false;
   if (a.property === b.property && a.value === b.value) return false;
-  return compareSpecificity(specificity(a.selector), specificity(b.selector)) === 0;
+  if (compareSpecificity(specificity(a.selector), specificity(b.selector)) !== 0) return false;
+  return canMeet(a.selector, b.selector);
 }
 
 /** One page's two readings held equal by the two checks. */

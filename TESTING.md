@@ -102,9 +102,12 @@ If the renderer ever grows pure-logic helpers (e.g. atlas UV computation), those
   effect differ (the last of each property for one selector in one
   `@media`) or when two of them changed order where order decides: they
   set overlapping properties, a shorthand overlapping its longhands, at
-  one importance and one specificity. It reads no document, so a pair it
-  names may never meet on one element, and the order the browser loads
-  the sheets in is checked in the browser. Values are compared as
+  one importance and one specificity, on selectors that can style one box
+  (two that name different element types, ids or pseudo-elements cannot).
+  It reads no document, so a pair it names may never meet on one element,
+  and the order the browser loads the sheets in is checked in the
+  browser: every element's computed style on each page, before and after,
+  read in the pane. Values are compared as
   written, and an at-rule other than `@media` and `@import` is refused.
   Every run appends one rule to each page that passed, in memory, and
   fails if the compare does not name it.

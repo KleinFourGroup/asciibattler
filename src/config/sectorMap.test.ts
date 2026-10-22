@@ -11,7 +11,7 @@ import { SECTOR_IDS } from './sectors';
 const REAL_SECTOR = SECTOR_IDS[0]!; // a definitionally-valid sector id
 
 describe('sector-map config — the shipped DAG', () => {
-  it('parses to the 67c two-node chain: start → deep-end', () => {
+  it('parses to the two-node chain: start → deep-end', () => {
     expect(SECTOR_MAP.nodes.map((n) => n.id)).toEqual(['start', 'deep-end']);
     expect(SECTOR_MAP.edges).toEqual([{ from: 'start', to: 'deep-end' }]);
     expect(SECTOR_MAP.sources).toEqual(['start']);

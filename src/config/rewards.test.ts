@@ -22,15 +22,15 @@ const withEntries = (entries: unknown[]): unknown => ({
 const parses = (entries: unknown[]): boolean =>
   RewardTablesSchema.safeParse(withEntries(entries)).success;
 
-describe('the reward-table schema (48a)', () => {
-  it('the shipped registry parses and carries the 48a skeleton table', () => {
+describe('the reward-table schema', () => {
+  it('the shipped registry parses and carries bits-small, a bits table', () => {
     expect(REWARD_TABLES.length).toBeGreaterThanOrEqual(1);
     expect(REWARD_TABLE_IDS).toContain('bits-small');
     const skeleton = rewardTableById('bits-small')!;
     expect(skeleton.entries[0]!.kind).toBe('bits');
   });
 
-  it('accepts all three entry kinds (packet = the dormant §49 seam, schema-complete)', () => {
+  it('accepts the bits, packet and daemon entry kinds', () => {
     expect(
       parses([
         { kind: 'bits', weight: 1, min: 5, max: 10 },
@@ -75,7 +75,7 @@ describe('the reward-table schema (48a)', () => {
   });
 });
 
-describe('the encounter-side reward ref schema (48a)', () => {
+describe('the encounter-side reward ref schema', () => {
   it('accepts a chance-triggered ref and enforces the [0,1] range', () => {
     expect(
       EncounterRewardRefSchema.safeParse({ table: 'bits-small', trigger: { chance: 0.5 } })
@@ -115,7 +115,7 @@ describe('assertRewardDaemonRefs (the boot check)', () => {
   });
 });
 
-describe('assertRewardPacketRefs (the 49a sibling boot check)', () => {
+describe('assertRewardPacketRefs (a sibling boot check)', () => {
   const tableWith = (entries: RewardTable['entries']): RewardTable => ({
     id: 'synthetic',
     entries,

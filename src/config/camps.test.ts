@@ -29,7 +29,7 @@ const validCamp = (patch: Record<string, unknown> = {}): Record<string, unknown>
   ...patch,
 });
 
-describe('§75a — the camp catalog', () => {
+describe('the camp catalog', () => {
   it('parses the shipped catalog 1:1 with the raw file', () => {
     expect(CAMPS.length).toBe(campsJson.length);
     expect(CAMP_IDS).toEqual(campsJson.map((c) => c.id));
@@ -84,7 +84,7 @@ describe('§75a — the camp catalog', () => {
   });
 });
 
-describe('§75a — referential boot asserts (args-injected)', () => {
+describe('referential boot asserts (args-injected)', () => {
   const campWithReward = (table: string): CampDef =>
     CampsSchema.parse([
       validCamp({ rewards: [{ table, trigger: { chance: 1 } }] }),

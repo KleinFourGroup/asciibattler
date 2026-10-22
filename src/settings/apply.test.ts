@@ -73,7 +73,7 @@ afterEach(() => {
   setAuraFxMode('track');
 });
 
-describe('116b — the settings reach their consumers', () => {
+describe('the settings reach their consumers', () => {
   it('a fresh page: each real consumer already holds what the fallbacks say', () => {
     // The fallbacks are "the game as it was", so they must equal what each
     // consumer starts at on its own. Read before anything is connected.

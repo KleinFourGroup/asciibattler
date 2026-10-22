@@ -83,7 +83,7 @@ describe('events config', () => {
     expect(() => EventsSchema.parse([bad])).toThrow();
   });
 
-  it('accepts a nested not condition (74c-pre — the recursive combinator)', () => {
+  it('accepts a nested not condition (the recursive combinator)', () => {
     const negated = makeEvent({
       eligibility: [{ kind: 'not', condition: { kind: 'hasDaemon', daemonId: 'known-daemon' } }],
       pages: {
@@ -145,7 +145,7 @@ describe('events config', () => {
       );
     });
 
-    it('throws when a page can only exit through CONDITIONED choices (74b tightening)', () => {
+    it('throws when a page can only exit through CONDITIONED choices', () => {
       // Conditions evaluate against mutable run state, so a conditioned exit
       // can vanish mid-event — only an unconditioned exit is a guarantee.
       const gatedExit = makeEvent({
@@ -342,7 +342,7 @@ describe('events config', () => {
     });
   });
 
-  describe('74i — assertEventPagesReachable', () => {
+  describe('assertEventPagesReachable', () => {
     it('passes a fully-connected page map (multi-hop, cycles included)', () => {
       const ok = makeEvent({
         pages: {
@@ -365,7 +365,7 @@ describe('events config', () => {
       expect(() => assertEventPagesReachable([ok])).not.toThrow();
     });
 
-    it('throws on an orphaned page — the §74i content-review bug class (a mis-wired next)', () => {
+    it('throws on an orphaned page — a content-review bug class (a mis-wired next)', () => {
       // Both start choices exit; the authored reward page can never play.
       const orphaned = makeEvent({
         pages: {
@@ -385,7 +385,7 @@ describe('events config', () => {
     });
   });
 
-  describe('74i — the reserved visited: namespace', () => {
+  describe('the reserved visited: namespace', () => {
     it('visitedFlagFor composes the prefix', () => {
       expect(visitedFlagFor('corrupted-shrine')).toBe(`${VISITED_FLAG_PREFIX}corrupted-shrine`);
     });
@@ -418,7 +418,7 @@ describe('events config', () => {
     });
   });
 
-  describe('74i — the repeatable field', () => {
+  describe('the repeatable field', () => {
     it('parses optionally and round-trips; absent stays absent (the no-repeat default)', () => {
       const on = EventsSchema.parse([makeEvent({ repeatable: true })]);
       expect(on[0]!.repeatable).toBe(true);

@@ -79,7 +79,7 @@ const base = {
 };
 
 describe('encounters schema', () => {
-  it('ships the catalog: the V1 anchors, the V2 grammar demos, the W1 boss, the W2 elites', () => {
+  it('ships the catalog, in its authored order', () => {
     expect(ENCOUNTER_IDS).toEqual([
       // The anchors (loop → wave).
       'brigands',
@@ -126,7 +126,7 @@ describe('encounters schema', () => {
     }
   });
 
-  it('the V1 variants differ as authored: highwaymen pure-bandit, deserters add a healer', () => {
+  it('the two variants differ as authored: highwaymen pure-bandit, deserters add a healer', () => {
     expect(waveArchetypes(getEncounter('highwaymen')!)).toEqual(['bandit']);
     const deserters = waveArchetypes(getEncounter('deserters')!);
     expect(deserters).toContain('bandit');
@@ -208,7 +208,7 @@ describe('encounters schema', () => {
     expect(EncountersSchema.safeParse([emptyUnits]).success).toBe(false);
   });
 
-  it('the rewards seam is typed (48a): accepts {table, trigger} refs, rejects malformed ones', () => {
+  it('the rewards seam is typed: accepts {table, trigger} refs, rejects malformed ones', () => {
     const good = EncountersSchema.parse([
       { ...base, rewards: [{ table: 'bits-small', trigger: { chance: 1 } }] },
     ])[0]!;
@@ -223,7 +223,7 @@ describe('encounters schema', () => {
     ).toBe(false);
   });
 
-  it('the shipped skeleton ref: brigands carries bits-small at chance 1 (48a; §82 pairs it with the packets-small chance ref)', () => {
+  it('brigands carries bits-small at chance 1, paired with the packets-small chance ref', () => {
     expect(getEncounter('brigands')!.rewards).toEqual([
       { table: 'bits-small', trigger: { chance: 1 } },
       { table: 'packets-small', trigger: { chance: 0.3 } },

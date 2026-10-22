@@ -23,7 +23,7 @@ function partsFor(archetype: Archetype, id: string): string[] {
   return abilityDetailParts(id, u.stats);
 }
 
-describe('abilityDetailParts (34b — every §29 op kind renders a non-blank detail)', () => {
+describe('abilityDetailParts (every op kind renders a non-blank detail)', () => {
   it('a summoner shows what it raises, not a "dash" (raise_dead is self-anchored)', () => {
     const text = partsFor('shaman', 'raise_dead').join(' · ');
     expect(text).toContain('summons ghoul');
@@ -54,7 +54,7 @@ describe('abilityDetailParts (34b — every §29 op kind renders a non-blank det
     expect(partsFor('rogue', 'dash').join(' · ')).toContain('dash');
   });
 
-  it('hit/crit derive from the UNIT (51f — precision/luck fold in, the damage-number convention)', () => {
+  it('hit/crit derive from the UNIT (precision/luck fold in, the damage-number convention)', () => {
     // Expectations run THROUGH the same sim helpers the readout uses
     // (balance-proof: no hand-computed arithmetic; floors/caps inherited).
     const op = damageOpOf('sword')!;
@@ -71,7 +71,7 @@ describe('abilityDetailParts (34b — every §29 op kind renders a non-blank det
     }
   });
 
-  it('no §29 archetype ability renders a blank detail', () => {
+  it('no archetype ability renders a blank detail', () => {
     const cases: [Archetype, string][] = [
       ['reaver', 'cleaver'],
       ['corrupter', 'vial'],
@@ -87,7 +87,7 @@ describe('abilityDetailParts (34b — every §29 op kind renders a non-blank det
     }
   });
 
-  it('§76d — the four unwielded weapons render non-blank, op-appropriate details', () => {
+  it('the four unwielded weapons render non-blank, op-appropriate details', () => {
     expect(partsFor('mercenary', 'halberd').join(' · ')).toMatch(/\d+ dmg/);
     expect(partsFor('mercenary', 'cane').join(' · ')).toMatch(/\d+ dmg/);
     expect(partsFor('archer', 'pistol').join(' · ')).toMatch(/\d+ dmg/);
@@ -97,7 +97,7 @@ describe('abilityDetailParts (34b — every §29 op kind renders a non-blank det
   });
 });
 
-describe('abilityDetailPartsForDef (§76b — the aura branch, ahead of shipped content)', () => {
+describe('abilityDetailPartsForDef (the aura branch)', () => {
   // One shipped def carries an aura (`inspire`, a pure one) and no shipped
   // weapon radiates one, so these author synthetic parsed defs via the
   // def-taking core (the reason it was split out).

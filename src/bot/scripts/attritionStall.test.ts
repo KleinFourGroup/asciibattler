@@ -112,7 +112,7 @@ describe('attritionStall', () => {
     );
   });
 
-  it('55a: mud terrain still defers — the deferral keys on ALL hazard kinds, not just barriers', () => {
+  it('mud terrain still defers — the deferral keys on ALL hazard kinds, not just barriers', () => {
     const { world } = stallWorld(); // poisoned enemy, open field — would fire…
     world.tileGrid.setKind({ x: 5, y: 5 }, 'mud'); // …but mud IS terrain
     expect(hazardCellList(world).length).toBeGreaterThan(0); // premise
@@ -129,7 +129,7 @@ describe('attritionStall', () => {
     expect(attritionStall.evaluate(world, 'player')).toBeNull();
   });
 
-  it('stays silent once the fight is joined (the contact gate — the 54h amendment)', () => {
+  it('stays silent once the fight is joined (the contact gate)', () => {
     const world = makeWorld();
     const merc = spawn(world, 'player', { x: 1, y: 4 });
     spawn(world, 'player', { x: 1, y: 6 });
@@ -159,7 +159,7 @@ describe('attritionStall', () => {
     expect(attritionStall.evaluate(world, 'player')).toBeNull();
   });
 
-  it('stands off OUTSIDE artillery reach (the 54e-amendment filter)', () => {
+  it('stands off OUTSIDE artillery reach', () => {
     const world = makeWorld();
     spawn(world, 'player', { x: 1, y: 4 });
     spawn(world, 'player', { x: 1, y: 6 });

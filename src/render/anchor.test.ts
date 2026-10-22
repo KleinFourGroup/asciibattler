@@ -19,7 +19,7 @@ function makeCamera(): THREE.PerspectiveCamera {
 
 const ndc = (p: THREE.Vector3, cam: THREE.Camera): THREE.Vector3 => p.clone().project(cam);
 
-describe('aboveAnchor (§79d camera-up stacking)', () => {
+describe('aboveAnchor (camera-up stacking)', () => {
   const cam = makeCamera();
   const out = new THREE.Vector3();
 

@@ -75,7 +75,7 @@ describe('the audition registry', () => {
     for (const s of AUDITION_SCRIPTS) expect(s.nominate).toBeDefined();
   });
 
-  it('PARITY GUARD: the standard registry stays nominate-free (the §57g.1 baseline contract)', () => {
+  it('PARITY GUARD: the standard registry stays nominate-free', () => {
     for (const s of TRAFFIC_SCRIPTS) expect(s.nominate).toBeUndefined();
   });
 });
@@ -152,7 +152,7 @@ describe('nominate at the evaluate-null boundary', () => {
     expect(nominateAttritionStall(world, 'player')).not.toBeNull();
   });
 
-  it('attrition-stall: the hazard deferral is DROPPED under audition (user call, worklog §57g.4)', () => {
+  it('attrition-stall: the hazard deferral is DROPPED under audition (a user call)', () => {
     const world = makeWorld();
     spawn(world, 'player', { x: 1, y: 4 });
     spawn(world, 'player', { x: 1, y: 6 });
@@ -164,7 +164,7 @@ describe('nominate at the evaluate-null boundary', () => {
     expect(nominateAttritionStall(world, 'player')).not.toBeNull(); // audition doesn't
   });
 
-  it('attrition-stall: the contact gate is KEPT under audition (the 54h conviction)', () => {
+  it('attrition-stall: the contact gate is KEPT under audition', () => {
     const world = makeWorld();
     spawn(world, 'player', { x: 5, y: 5 });
     spawn(world, 'enemy', { x: 6, y: 5 });

@@ -30,7 +30,7 @@ describe('fxRegistry — resolution', () => {
   });
 });
 
-describe('fxRegistry — Z3 strike cues', () => {
+describe('fxRegistry — strike cues', () => {
   it('the melee swing key carries a shove + the melee whoosh', () => {
     expect(fxDescriptor('melee_swing')).toMatchObject({ shove: {}, sound: 'melee' });
   });
@@ -40,7 +40,7 @@ describe('fxRegistry — Z3 strike cues', () => {
   });
 });
 
-describe('fxRegistry — §29c chain arc', () => {
+describe('fxRegistry — chain arc', () => {
   // The chain arc is EVENT-driven (`unit:chained`, per hop), not def-driven — so
   // `chain_lightning` carries no `fx` block and the ability boot-assert never sees
   // this key. Pin it directly: a tracer + the `chain` zap + a subtle per-hop jolt.
@@ -57,7 +57,7 @@ describe('fxRegistry — §29c chain arc', () => {
   });
 });
 
-describe('fxRegistry — Z2 camera shake', () => {
+describe('fxRegistry — camera shake', () => {
   it('the impact burst keys carry an authored shake, catapult heavier than the bolt', () => {
     const mage = fxDescriptor('magic_bolt_burst');
     const cat = fxDescriptor('catapult_burst');
@@ -110,7 +110,7 @@ describe('fxRegistry — boot assert', () => {
   });
 });
 
-describe('fxRegistry — the Z1 re-home (config-derived)', () => {
+describe('fxRegistry — the mage and catapult fx keys (config-derived)', () => {
   it('the mage + catapult defs carry release+impact fx keys that resolve', () => {
     expect(ABILITY_DEFS.magic_bolt!.fx).toEqual({
       release: 'magic_bolt_launch',
@@ -126,7 +126,7 @@ describe('fxRegistry — the Z1 re-home (config-derived)', () => {
   });
 });
 
-describe('fxRegistry — 102b a launched projectile has a flight (config-derived)', () => {
+describe('fxRegistry — a launched projectile has a flight (config-derived)', () => {
   /** Every ability whose `release` key launches a projectile but whose
    *  timeline gives it no `travel` time. The renderer times the flight off the
    *  caster's live `travel` ticks and falls back to a fixed 0.18 s when there
@@ -170,7 +170,7 @@ describe('fxRegistry — 102b a launched projectile has a flight (config-derived
   });
 });
 
-describe('fxRegistry — the Z3 re-home (config-derived)', () => {
+describe('fxRegistry — the melee swing keys (config-derived)', () => {
   // The four melee weapons + the rogue gambit all swing; the gambit authors it
   // on `windup` (where it deals damage) instead of `impact`. Deriving the
   // expectations from the def keeps the test honest if a weapon is retuned.
@@ -197,7 +197,7 @@ describe('fxRegistry — the Z3 re-home (config-derived)', () => {
   });
 });
 
-describe('fxRegistry — 98d the hitsplat kinds (config-derived)', () => {
+describe('fxRegistry — the hitsplat kinds (config-derived)', () => {
   /** Every periodic status's `ticked` descriptor, keyed by status id, with the
    *  op kind the sim will apply — derived from the status catalog, so a new
    *  DoT/HoT joins the pin the moment it ships. */
@@ -261,7 +261,7 @@ describe('fxRegistry — 98d the hitsplat kinds (config-derived)', () => {
  * shake, burst or sparkle) and the kept channels byte-equal, so a channel
  * added to the descriptor later is kept until someone decides otherwise here.
  */
-describe('99c — fxDescriptor under reduced motion', () => {
+describe('fxDescriptor under reduced motion', () => {
   const keys = Object.keys(FX_REGISTRY);
   const stripped = new Set<keyof FxDescriptor>(REDUCED_MOTION_STRIPS);
 

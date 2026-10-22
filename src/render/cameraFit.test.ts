@@ -103,8 +103,8 @@ const ASPECTS: readonly number[] = [
   1919 / 947,
 ];
 
-describe('fitCameraToBox — the pre-7.5 view is the pre-105d fit, bit for bit', () => {
-  it('the shipped default is the signed view (spec D1): ortho · pitch 45 · yaw 45', () => {
+describe('fitCameraToBox — PRE_75_VIEW is the frozen computeCameraDistance fit, bit for bit', () => {
+  it('the shipped default is the signed view: ortho · pitch 45 · yaw 45', () => {
     // A tripwire, not a probe: changing the shipped camera is a design call.
     expect(DEFAULT_CAMERA_VIEW).toEqual({ projection: 'orthographic', fovDeg: 50, pitchDeg: 45, yawDeg: 45 });
   });
@@ -345,7 +345,7 @@ describe('panToWorld — a screen pan moves the picture along the screen axes', 
     expect(cases).toBe(12);
   });
 
-  it('at yaw 0 it is the pre-107c world-axis pan: W → −Z, D → +X', () => {
+  it('at yaw 0 it is the world-axis pan: W → −Z, D → +X', () => {
     const view: CameraView = { projection: 'perspective', fovDeg: 50, pitchDeg: 45, yawDeg: 0 };
     const w = panToWorld(view, 0, 1);
     const d = panToWorld(view, 1, 0);

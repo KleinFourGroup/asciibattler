@@ -58,7 +58,7 @@ const opensItsBoard = (fixture: BoardFixture): boolean => {
   );
 };
 
-describe('105c — the board fixtures', () => {
+describe('the board fixtures', () => {
   it('the table, the id list and the dial agree', () => {
     expect(Object.keys(BOARDS)).toEqual([...BOARD_IDS]);
     expect(DIALS.board.options).toEqual(['off', ...BOARD_IDS]);
@@ -102,7 +102,7 @@ describe('105c — the board fixtures', () => {
   });
 });
 
-describe('105c — fixtureSearch', () => {
+describe('fixtureSearch', () => {
   it('replaces the run pairs and leaves every other pair byte-for-byte', () => {
     const typed = '?seed=99&foo=a,b&layout=river&bp=board-quarry_yaw-30&roster=mage';
     const out = fixtureSearch(typed, 'quarry');
@@ -122,7 +122,7 @@ describe('105c — fixtureSearch', () => {
   });
 });
 
-describe('105c — the poses', () => {
+describe('the poses', () => {
   const open = (gridW: number, gridH: number, blocked: readonly string[] = []): PoseBoard => ({
     gridW,
     gridH,
@@ -130,7 +130,7 @@ describe('105c — the poses', () => {
   });
   const B15: Board = { name: 't', w: 15, h: 15 };
 
-  it("the clumps are 105a's, cell for cell and glyph for glyph", () => {
+  it("the clumps are the geometry tests', cell for cell and glyph for glyph", () => {
     expect(CLUMP.map((s) => s.glyph)).toEqual([...CLUMP_GLYPHS]);
     const { placements, notes } = placePose('clump', open(15, 15));
     // The board geometry tests' order: clumpAt(centre) · clumpAt(1, 1) · clumpAt(cx, h - 2).
@@ -155,7 +155,7 @@ describe('105c — the poses', () => {
     expect(DIALS.lift.def).toBe(FLYER_LIFT);
   });
 
-  it("the row is 105b's: six glyphs, the middle row, centred", () => {
+  it("the row: six glyphs, the middle row, centred", () => {
     const { placements, notes } = placePose('row', open(15, 15));
     expect(placements.map((p) => p.spec.glyph)).toEqual(POSED_ROW.map((s) => s.glyph));
     expect(placements.map((p) => [p.cell.x, p.cell.y])).toEqual(

@@ -87,7 +87,7 @@ describe('the display order', () => {
   });
 });
 
-describe('orderRosterWithIndices (51c — the selection mapping)', () => {
+describe('orderRosterWithIndices (the selection mapping)', () => {
   it("'recruited' maps each unit to its own position", () => {
     const roster = sampleRoster();
     const out = orderRosterWithIndices(roster);

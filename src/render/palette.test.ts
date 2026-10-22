@@ -19,7 +19,7 @@ function planted(base: Palette): ReadonlyMap<string, Palette> {
   return new Map([['planted', { ...base, TERMINAL_GREEN: GREEN, EMBER_ORANGE: EMBER, TERMINAL_AMBER: AMBER }]]);
 }
 
-describe('116f — the palette, chosen by name', () => {
+describe('the palette, chosen by name', () => {
   afterEach(() => vi.resetModules());
 
   it('with no choice made, and for the default name, COLORS is the default palette', async () => {
@@ -31,7 +31,7 @@ describe('116f — the palette, chosen by name', () => {
     expect(palette.chosenPalette()).toBe('default');
   });
 
-  it('116g — the page knows the name it is drawn in: the chosen one, or the default for a name it has no palette for', async () => {
+  it('the page knows the name it is drawn in: the chosen one, or the default for a name it has no palette for', async () => {
     const palette = await freshPalette();
     expect(palette.chosenPalette()).toBe('default');
     palette.choosePalette('planted', planted(palette.COLORS));
@@ -79,7 +79,7 @@ describe('116f — the palette, chosen by name', () => {
   });
 });
 
-describe("116f — the stylesheet's tokens from a palette", () => {
+describe("the stylesheet's tokens from a palette", () => {
   afterEach(() => vi.resetModules());
 
   it("a name's token is the kebab of the name", async () => {

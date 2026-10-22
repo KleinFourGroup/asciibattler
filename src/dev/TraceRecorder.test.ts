@@ -27,7 +27,7 @@ function setup(): { bus: EventBus<GameEvents>; traces: BattleTrace[]; recorder: 
 
 const HOLD = { kind: 'setObjective', team: 'player', objective: { mode: 'hold' } } as const;
 
-describe('TraceRecorder (53b)', () => {
+describe('TraceRecorder', () => {
   it('assembles a full trace: encounter + stamped commands + outcome', () => {
     const { bus, traces } = setup();
     const encounter = makeEncounter(42);

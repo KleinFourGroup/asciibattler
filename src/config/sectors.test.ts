@@ -70,7 +70,7 @@ describe('sectors config — the shipped catalog', () => {
     expect(start!.encounters.boss.map((e) => e.encounterId)).toEqual(['bandit-king', 'banditQueen']);
   });
 
-  it('ships "The Deep End" (67c, gates 68e): swamp act two — the occult pool, two signed hop gates', () => {
+  it('ships "The Deep End": swamp act two — the occult pool, two signed hop gates', () => {
     const deep = getSector('the-deep-end');
     expect(deep).toBeDefined();
     expect(deep!.theme).toBe('swamp');
@@ -214,13 +214,13 @@ describe('sectors schema — validation guards', () => {
     ).toThrow(/is kind 'normal', pooled under 'boss'/);
   });
 
-  it('defaults events + startingEvents to empty when absent (74e)', () => {
+  it('defaults events + startingEvents to empty when absent', () => {
     const parsed = SectorsSchema.parse([makeSector()])[0]!;
     expect(parsed.events).toEqual([]);
     expect(parsed.startingEvents).toEqual([]);
   });
 
-  it('accepts event entries referencing real catalog events, in both lists (74e)', () => {
+  it('accepts event entries referencing real catalog events, in both lists', () => {
     expect(() =>
       SectorsSchema.parse([
         makeSector({
@@ -231,7 +231,7 @@ describe('sectors schema — validation guards', () => {
     ).not.toThrow();
   });
 
-  it('rejects an event entry referencing an unknown event, in either list (guard 5, 74e)', () => {
+  it('rejects an event entry referencing an unknown event, in either list (guard 5)', () => {
     expect(() =>
       SectorsSchema.parse([makeSector({ events: [{ eventId: 'no-such-event' }] })]),
     ).toThrow(/unknown eventId/);
@@ -312,7 +312,7 @@ describe('encounterPoolAtHop — the hop-gated fight-pool query', () => {
   });
 });
 
-describe('eventPoolAtHop — the hop-gated event-pool query (74e)', () => {
+describe('eventPoolAtHop — the hop-gated event-pool query', () => {
   // The encounterPoolAtHop shape: a pure gate filter pinned with literal
   // entries (a cast, not a schema parse — ref resolution is guard 5's).
   const sector = {

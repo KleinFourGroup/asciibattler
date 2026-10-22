@@ -15,7 +15,7 @@ function starRun(tier: UnitRarity): string {
   return filled + hollow;
 }
 
-describe('98b — rarityStarParts', () => {
+describe('rarityStarParts', () => {
   it('every tier renders exactly RARITY_TIERS.length glyphs (fixed width)', () => {
     for (const tier of RARITY_TIERS) {
       expect([...starRun(tier)], tier).toHaveLength(RARITY_TIERS.length);

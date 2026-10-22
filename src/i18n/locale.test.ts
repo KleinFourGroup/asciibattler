@@ -61,7 +61,7 @@ describe('locale runtime', () => {
   });
 });
 
-describe('provenance at the runtime (95e)', () => {
+describe('provenance at the runtime', () => {
   it('a CURRENT provenance entry resolves to its text; a FUZZY one falls back to the English with the marker, and lands in the census', () => {
     registerLocale('xx', 'things', {
       'things.a.name': translatorStamp('Alfa', 'Alpha', { who: 'T', on: '2027-01-01' }),

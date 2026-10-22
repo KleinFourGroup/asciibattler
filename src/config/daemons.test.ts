@@ -20,8 +20,8 @@ const BUFF = { key: 'honed', mods: { strength: { add: 4 } }, merge: 'add' };
 
 const parses = (rules: unknown[]): boolean => DaemonsSchema.safeParse(withRules(rules)).success;
 
-describe('the Rule schema (47b — the rule vocabulary)', () => {
-  it('the shipped catalog parses and every idol authors rules (47c)', () => {
+describe('the Rule schema (the rule vocabulary)', () => {
+  it('the shipped catalog parses and every idol authors rules', () => {
     expect(DAEMONS.length).toBeGreaterThanOrEqual(4);
     for (const d of DAEMONS) expect(d.rules!.length).toBeGreaterThanOrEqual(1);
   });
@@ -135,7 +135,7 @@ describe('the Rule schema (47b — the rule vocabulary)', () => {
     });
   });
 
-  it("the spec's five motivating example daemons are ALL authorable (the §47 exit receipt)", () => {
+  it("the spec's five motivating example daemons are ALL authorable", () => {
     // The coverage target from cluster-3-spec §"The rule vocabulary": the
     // full (trigger domain × effect domain) matrix. #1–#3 ship in the
     // catalog (laverna / fortuna / moneta — pinned below); #4 and #5 are
@@ -188,7 +188,7 @@ describe('assertDaemonStatusRefs (the boot check)', () => {
     ...(rules !== undefined ? { rules } : {}),
   });
 
-  it('the shipped catalog resolves against the real registry — no longer vacuous (47f: fortuna refs emboldened)', () => {
+  it('the shipped catalog resolves against the real registry, not vacuously: fortuna refs emboldened', () => {
     expect(() => assertDaemonStatusRefs(DAEMONS, STATUS_DEFS)).not.toThrow();
     // The check has a real subject now: strip the registry and fortuna's
     // applyStatus ref must fail loudly at boot.
@@ -213,7 +213,7 @@ describe('assertDaemonStatusRefs (the boot check)', () => {
   });
 });
 
-describe('catalog lookup (pre-47b behavior holds)', () => {
+describe('catalog lookup', () => {
   it('daemonById still resolves the four idols', () => {
     for (const id of ['mars', 'minerva', 'mercury', 'janus']) {
       expect(daemonById(id)?.id).toBe(id);

@@ -151,7 +151,7 @@ describe('chokeHold', () => {
 // is checked against the exported pure compute, a surface production no
 // longer consults) + the two invalidation pins the key must catch: a unit
 // moving, a tile mutating.
-describe('the choke-read memo (86c-L3)', () => {
+describe('the choke-read memo', () => {
   it('stays compute-identical across a real driven battle, and actually hits', () => {
     const world = isthmusWorld(6);
     const driver = new TrafficScriptDriver('player');

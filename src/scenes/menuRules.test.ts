@@ -34,7 +34,7 @@ const A_VALUE_PER_DIAL: Record<string, string> = {
   escalation: '1',
 };
 
-describe('116c — when the menu boots', () => {
+describe('when the menu boots', () => {
   it('boots on a plain URL, and on a parameter that is no run dial', () => {
     expect(bootsToMenu('')).toBe(true);
     expect(bootsToMenu('?')).toBe(true);
@@ -69,7 +69,7 @@ describe('116c — when the menu boots', () => {
   });
 });
 
-describe('116c — the seed field', () => {
+describe('the seed field', () => {
   it('keeps the digits of what was typed or pasted, and no more than it holds', () => {
     expect(cleanSeedText('')).toBe('');
     expect(cleanSeedText('1234')).toBe('1234');
@@ -104,7 +104,7 @@ describe('116c — the seed field', () => {
   });
 });
 
-describe('116c-post2 — the seed a run shows', () => {
+describe('the seed a run shows', () => {
   const snapshotOf = (seed: number) => new Run(seed, new EventBus<GameEvents>()).toJSON();
 
   it('typed back into the field, names the same run', () => {
@@ -125,7 +125,7 @@ describe('116c-post2 — the seed a run shows', () => {
   });
 });
 
-describe('116j — the credits on the way to the menu', () => {
+describe('the credits on the way to the menu', () => {
   it('open after the first won run on a page that goes to the menu, and at no other end', () => {
     expect(creditsOnTheWay(true, true, false)).toBe(true);
     // Seen before, a defeat, and a page booted by a run dial.

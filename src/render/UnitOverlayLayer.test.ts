@@ -26,7 +26,7 @@ const HIGH = stop(0x33ff00);
 const MID = stop(0xffb000);
 const LOW = stop(0xff3131);
 
-describe('116f — the HP gradient keeps its three stops', () => {
+describe('the HP gradient keeps its three stops', () => {
   it('full, half and empty are the three stops', () => {
     expect(hpFillColor(1)).toBe(css(HIGH, HIGH, 0));
     expect(hpFillColor(0.5)).toBe(css(MID, MID, 0));

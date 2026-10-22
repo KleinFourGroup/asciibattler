@@ -98,7 +98,7 @@ describe('sameObjective', () => {
 });
 
 describe('TrafficScriptDriver', () => {
-  it('empty registry (the 54a state) never emits', () => {
+  it('an empty registry never emits', () => {
     const world = makeWorld();
     const driver = new TrafficScriptDriver('player', []);
     expectQuietSteps(world, driver, 5);
@@ -202,7 +202,7 @@ describe('TrafficScriptDriver', () => {
     expectQuietSteps(world, driver, MIN_DWELL_TICKS + 1);
   });
 
-  it('85d — foreign-order conservatism: a TRIGGERED script holds too; the auto-revert releases', () => {
+  it('foreign-order conservatism: a TRIGGERED script holds too; the auto-revert releases', () => {
     const world = makeWorld();
     const s = stub('s', RALLY); // an eager script proposing ≠ current every tick
     const driver = new TrafficScriptDriver('player', [s]);

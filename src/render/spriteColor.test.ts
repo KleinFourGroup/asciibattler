@@ -9,7 +9,7 @@ import { COLORS } from './palette';
  * it's proven here (the actual render is browser-verified). Balance-proof: keyed
  * off the catalog predicates, never a hardcoded id set.
  */
-describe('spriteColorForUnit — the §40c destructible tell', () => {
+describe('spriteColorForUnit — the destructible tell', () => {
   it('colorForTeam keeps the team/stone base colors', () => {
     expect(colorForTeam('player')).toBe(COLORS.TERMINAL_GREEN);
     expect(colorForTeam('enemy')).toBe(COLORS.NEON_RED);
@@ -52,7 +52,7 @@ describe('spriteColorForUnit — the §40c destructible tell', () => {
     );
   });
 
-  it('§75h — an ACTIVE neutral (camp member) is TERMINAL_AMBER, the third-faction tell', () => {
+  it('an ACTIVE neutral (camp member) is TERMINAL_AMBER, the third-faction tell', () => {
     // A camp bandit shares the enemy bandit's glyph — the color IS the tell.
     expect(spriteColorForUnit({ team: 'neutral', archetype: 'bandit', campId: 1 })).toBe(
       COLORS.TERMINAL_AMBER,

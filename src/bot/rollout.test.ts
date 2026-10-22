@@ -43,7 +43,7 @@ function liveBattle(seed: number): World {
   return world;
 }
 
-describe('cloneForRollout (57d — the clairvoyance guard)', () => {
+describe('cloneForRollout (the clairvoyance guard)', () => {
   it('foresee-the-rolls: the clone cannot see the live future; a plain clone CAN (the control)', () => {
     const live = liveBattle(4242);
 
@@ -92,7 +92,7 @@ describe('cloneForRollout (57d — the clairvoyance guard)', () => {
     expect(JSON.stringify(a.toJSON())).not.toBe(JSON.stringify(b.toJSON()));
   });
 
-  it('§75b: a present campRng is re-seeded (sampled, not foreseen); absent stays null', () => {
+  it('a present campRng is re-seeded (sampled, not foreseen); absent stays null', () => {
     // Camp-free: the historical two-fork alignment holds and campRng is null.
     const free = liveBattle(4242);
     const freeClone = cloneForRollout(free, 777);

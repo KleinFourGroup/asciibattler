@@ -81,13 +81,13 @@ describe('abilities catalog — combat profile + verb shapes', () => {
     }
   });
 
-  it('evadable gate = the single-target strikes (the I2 carve-out, in data)', () => {
+  it('evadable gate = the single-target strikes (in data)', () => {
     for (const id of BASIC_STRIKES) expect(damageOpOf(id)!.evadable, id).toBe(true);
     // The AoE blast / artillery shot are unmissable (dodged positionally or not at all).
     for (const id of UNMISSABLE_ATTACKS) expect(damageOpOf(id)!.evadable, id).toBe(false);
   });
 
-  it('§76e — critable is UNIVERSAL on ability damage ops (luck speaks everywhere)', () => {
+  it('critable is UNIVERSAL on ability damage ops (luck speaks everywhere)', () => {
     // The flip: every damage op in the catalog — top-level AND chain-inner —
     // can crit, waking luck for the caster archetypes whose kits were inert
     // (mage / catapult / corrupter / ice_mage / stormcaller). Periodic status
@@ -109,7 +109,7 @@ describe('abilities catalog — combat profile + verb shapes', () => {
     }
   });
 
-  it('I6 split/renamed the basic-strike ids', () => {
+  it('the basic-strike ids are registered, and melee_strike and ranged_shot are not', () => {
     const ids = Object.keys(ABILITY_DEFS);
     expect(ids).not.toContain('melee_strike');
     expect(ids).not.toContain('ranged_shot');
@@ -132,7 +132,7 @@ const AFFLICTERS = {
   wail: { status: 'panic', target: 'aoe', damage: 'none' },
 } as const;
 
-describe('§29 — status-on-hit afflicters', () => {
+describe('status-on-hit afflicters', () => {
   it('each afflicter applies its status on the impact phase', () => {
     for (const [id, spec] of Object.entries(AFFLICTERS)) {
       const def = abilityDef(id);
@@ -176,7 +176,7 @@ describe('§29 — status-on-hit afflicters', () => {
 // weapon's IDENTITY is expressed as a RELATION to its
 // reference def, derived from live config, so a design-round retune that keeps
 // the identity keeps the test green.
-describe('§76d — the stat-identity weapons', () => {
+describe('the stat-identity weapons', () => {
   it('molotov is the vial clone with the burn payload (unmissable AoE lob)', () => {
     const def = abilityDef('molotov');
     expect(def.target).toEqual(abilityDef('vial').target); // same 3×3 targetCell blast

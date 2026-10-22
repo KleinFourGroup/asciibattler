@@ -12,7 +12,7 @@ import { rulesForTurn, type ChipRule } from '../run/chipRule';
 
 const set = (...rules: ChipRule[]) => new Set<ChipRule>(rules);
 
-describe('chipLabels (§91d)', () => {
+describe('chipLabels', () => {
   it('casualties alone: each line names the pool\'s OWN fallen, never the survivors', () => {
     const l = chipLineLabels(set('casualties'));
     expect(l.toEnemyPool).toMatch(/enemy fallen/i);

@@ -160,14 +160,14 @@ describe('keyLabel', () => {
     expect(keyLabel('Escape')).toBe('Escape');
   });
 
-  it('97b — renders the tooltip key\'s Slash code as its face', () => {
+  it('renders the tooltip key\'s Slash code as its face', () => {
     expect(keyLabel('Slash')).toBe('/');
   });
 });
 
 // The key rules. Every expected binding below is written out by hand
 // from the rule's words, not computed through the functions under test.
-describe('116b — the key rules', () => {
+describe('the key rules', () => {
   const codes = (b: Record<KeybindAction, string>): string[] => KEYBIND_ACTIONS.map((a) => b[a]);
   const unique = (b: Record<KeybindAction, string>): boolean => new Set(codes(b)).size === KEYBIND_ACTIONS.length;
 
@@ -278,7 +278,7 @@ describe('116b — the key rules', () => {
     expect(shifted.preventDefault).toHaveBeenCalledTimes(1);
   });
 
-  it('116c — a key typed in a text field fires no hotkey and is left to the field', () => {
+  it('a key typed in a text field fires no hotkey and is left to the field', () => {
     const kb = new Keybindings(DEFAULTS);
     const map = vi.fn();
     kb.on('toggleSectorMap', map);
@@ -315,7 +315,7 @@ describe('116b — the key rules', () => {
     expect(map).toHaveBeenCalledTimes(elsewhere.length);
   });
 
-  it('116d — while suspended no key fires a hotkey, and every key is left alone', () => {
+  it('while suspended no key fires a hotkey, and every key is left alone', () => {
     const kb = new Keybindings(DEFAULTS);
     const pause = vi.fn();
     kb.on('togglePause', pause);
@@ -350,7 +350,7 @@ describe('116b — the key rules', () => {
 
 // The rules the rebind rows add. The expected values are written out
 // by hand from the rules' words.
-describe('116e — the rebind rows', () => {
+describe('the rebind rows', () => {
   const key = (code: string, flags: Partial<KeyLike> = {}): KeyLike => ({
     code,
     repeat: false,

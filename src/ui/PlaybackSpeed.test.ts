@@ -100,7 +100,7 @@ describe('PlaybackSpeed', () => {
     expect(p.current).toBe(1);
   });
 
-  it('116b — select takes a starting speed and leaves pause as it is', () => {
+  it('select takes a starting speed and leaves pause as it is', () => {
     const p = new PlaybackSpeed(STEPS);
     expect(p.select(2)).toBe(true);
     expect(p.selectedSpeed).toBe(2);
@@ -118,14 +118,14 @@ describe('PlaybackSpeed', () => {
     expect(p.isPaused).toBe(false);
   });
 
-  it('116b — select refuses a speed that is not an enabled step', () => {
+  it('select refuses a speed that is not an enabled step', () => {
     const p = new PlaybackSpeed([{ value: 1, enabled: true }, { value: 2, enabled: false }]);
     expect(p.select(2)).toBe(false);
     expect(p.select(7)).toBe(false);
     expect(p.selectedSpeed).toBe(1);
   });
 
-  it('116d — a hold stops the sim and leaves the pause as the player had it', () => {
+  it('a hold stops the sim and leaves the pause as the player had it', () => {
     const p = new PlaybackSpeed(STEPS);
     p.setSpeed(2);
     // Held while running: stopped, and not paused.
@@ -140,7 +140,7 @@ describe('PlaybackSpeed', () => {
     expect([p.current, p.isHeld, p.isPaused]).toEqual([0, false, true]);
   });
 
-  it('116d — a hold works where pause is disabled, since it is not the pause', () => {
+  it('a hold works where pause is disabled, since it is not the pause', () => {
     const p = new PlaybackSpeed(STEPS, false);
     p.pause();
     expect(p.current).toBe(1); // the control: pause is off
@@ -150,7 +150,7 @@ describe('PlaybackSpeed', () => {
     expect(p.current).toBe(1);
   });
 
-  it('116d — holds count, and a release called twice releases once', () => {
+  it('holds count, and a release called twice releases once', () => {
     const p = new PlaybackSpeed(STEPS);
     const first = p.hold();
     const second = p.hold();
@@ -162,7 +162,7 @@ describe('PlaybackSpeed', () => {
     expect(p.current).toBe(1);
   });
 
-  it('116d — a change of the selected speed tells its listeners, by either route', () => {
+  it('a change of the selected speed tells its listeners, by either route', () => {
     const p = new PlaybackSpeed(STEPS);
     let calls = 0;
     const off = p.onSelect(() => {

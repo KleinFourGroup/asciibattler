@@ -106,7 +106,7 @@ const settle = async (): Promise<void> => {
   for (let i = 0; i < 4; i++) await vi.advanceTimersByTimeAsync(1);
 };
 
-describe('115f — the two-tab lock', () => {
+describe('the two-tab lock', () => {
   afterEach(() => {
     vi.useRealTimers();
   });
@@ -137,7 +137,7 @@ describe('115f — the two-tab lock', () => {
     expect(tabs.holders()).toBe(1);
   });
 
-  it('116l — never asks query(), which Firefox refuses in a partitioned frame (itch)', async () => {
+  it('never asks query(), which Firefox refuses in a partitioned frame (itch)', async () => {
     // The failure at the itch sitting: the second tab's refusal was real, the
     // lock asked query() who held the name, the frame refused the question,
     // and the tab read `none` and saved over the first tab's run.

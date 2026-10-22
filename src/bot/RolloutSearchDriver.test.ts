@@ -84,7 +84,7 @@ function step(world: World, d: RolloutSearchDriver): WorldCommand[] {
   return cmds;
 }
 
-describe('RolloutSearchDriver (57f — rollout arbitration)', () => {
+describe('RolloutSearchDriver (rollout arbitration)', () => {
   it('commits a proposal that beats the null arm (outnumbered: hold > charge)', () => {
     const world = outnumbered(101);
     const d = driver(1);
@@ -146,7 +146,7 @@ describe('RolloutSearchDriver (57f — rollout arbitration)', () => {
     expect(d.searchCount).toBe(2);
   });
 
-  it('a foreign objective silences the searcher (the §54 ownership rule)', () => {
+  it('a foreign objective silences the searcher', () => {
     const world = overwhelming(101);
     world.enqueueCommand({
       kind: 'setObjective',
@@ -173,7 +173,7 @@ describe('RolloutSearchDriver (57f — rollout arbitration)', () => {
   });
 });
 
-describe('57g.5 — the K-prefix instrument', () => {
+describe('the K-prefix instrument', () => {
   it('telemetry mode does not change the decision (the mean-aggregation contract, end to end)', () => {
     // Both the commit case and the reject case, at K=8: the instrumented
     // driver's per-seed means must reproduce the batch path's decisions

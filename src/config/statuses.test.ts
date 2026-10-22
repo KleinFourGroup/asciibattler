@@ -10,8 +10,8 @@ import { parseStatusDef, type StatusDef } from '../sim/effects/statusSchema';
  * still build literal fixtures (they probe the check, not the catalog).
  */
 
-describe('STATUS_DEFS registry (27c periodic + 28 behavior + 47f statMods content)', () => {
-  it('ships the four periodic + four behavior statuses + the statMods buffs (47f emboldened, §76f inspired)', () => {
+describe('STATUS_DEFS registry (periodic, behavior and statMods content)', () => {
+  it('ships the four periodic + four behavior statuses + the statMods buffs (emboldened, inspired)', () => {
     expect(Object.keys(STATUS_DEFS).sort()).toEqual([
       'bleed',
       'blind',
@@ -26,7 +26,7 @@ describe('STATUS_DEFS registry (27c periodic + 28 behavior + 47f statMods conten
     ]);
   });
 
-  it('emboldened is a pure statMods buff (+offense triple, no periodic/behavior) — the axis first consumer (47f)', () => {
+  it('emboldened is a pure statMods buff (+offense triple, no periodic/behavior)', () => {
     const def = statusDef('emboldened');
     expect(def.periodic).toBeUndefined();
     expect(def.behavior).toBeUndefined();
@@ -59,7 +59,7 @@ function periodicDamageOf(id: string) {
   return { everySeconds: periodic!.everySeconds, op };
 }
 
-describe('27c — DoT / HoT content shape', () => {
+describe('DoT / HoT content shape', () => {
   it.each(['burn', 'bleed', 'poison'])(
     '%s is a defense-bypassing, non-evadable, flat-might DoT (the locked default)',
     (id) => {

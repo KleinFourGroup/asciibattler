@@ -17,7 +17,7 @@ import {
 
 const PAGE = 'https://game.example';
 
-describe('117.5i — which error events count', () => {
+describe('which error events count', () => {
   it('counts a thrown value from the page, or from a file with no name', () => {
     expect(errorEventCounts({ error: new Error('x'), filename: `${PAGE}/assets/index.js` }, PAGE)).toBe(true);
     expect(errorEventCounts({ error: new Error('x'), filename: '' }, PAGE)).toBe(true);
@@ -43,7 +43,7 @@ describe('117.5i — which error events count', () => {
   });
 });
 
-describe('117.5i — which unhandled rejections count', () => {
+describe('which unhandled rejections count', () => {
   it('counts an Error', () => {
     expect(rejectionCounts(new Error('x'))).toBe(true);
     expect(rejectionCounts(new TypeError('x'))).toBe(true);
@@ -63,7 +63,7 @@ describe('117.5i — which unhandled rejections count', () => {
   });
 });
 
-describe('117.5i — the text of a thrown value', () => {
+describe('the text of a thrown value', () => {
   it('is the name and the message', () => {
     expect(failureText(new Error('Error creating WebGL context.'))).toBe('Error: Error creating WebGL context.');
     expect(failureText(new TypeError('x is undefined'))).toBe('TypeError: x is undefined');
@@ -108,7 +108,7 @@ function watched(opts: { hasWebgl?: () => boolean; show?: (r: FailureReport) => 
   return { watch, shown, warned, log, halt };
 }
 
-describe('117.5i — the watch', () => {
+describe('the watch', () => {
   it('a failure before the game started is a boot failure', () => {
     const { watch, shown, log } = watched();
     watch.fail(new Error('no atlas'));
@@ -236,7 +236,7 @@ function contextOnAClock(graceMs = CONTEXT_LOST_GRACE_MS) {
   };
 }
 
-describe('117.5i — the wait on a lost context', () => {
+describe('the wait on a lost context', () => {
   it('waits a few seconds', () => {
     expect(CONTEXT_LOST_GRACE_MS).toBeGreaterThanOrEqual(2000);
     expect(CONTEXT_LOST_GRACE_MS).toBeLessThanOrEqual(10000);

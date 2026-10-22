@@ -7,7 +7,7 @@ import { DIFFICULTY, resolveDifficultyMultipliers, scaledEnemyPool } from './dif
  * balance-proof discipline; the one literal assertion is the *no-op contract*
  * (the shipped default IS 1.0), on which the byte-identical guarantee rests.
  */
-describe('resolveDifficultyMultipliers (X1/48f — the per-run difficulty seam)', () => {
+describe('resolveDifficultyMultipliers (the per-run difficulty seam)', () => {
   it('no overrides → the difficulty.json defaults', () => {
     expect(resolveDifficultyMultipliers()).toEqual({
       waveSize: DIFFICULTY.waveSizeMultiplier,

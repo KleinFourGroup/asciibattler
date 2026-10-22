@@ -24,7 +24,7 @@ import { t } from '../i18n/ui';
 const base = rollUnit('mercenary', new RNG(1)).stats;
 const bump = (over: Partial<UnitStats>): UnitStats => ({ ...base, ...over });
 
-describe('promotionDeltaParts (§76g — derived deltas, only-if-changed)', () => {
+describe('promotionDeltaParts (derived deltas, only-if-changed)', () => {
   it('identical stats produce no lines', () => {
     expect(promotionDeltaParts(base, base, 'mercenary')).toEqual([]);
   });

@@ -23,7 +23,7 @@ import {
   shakePx,
 } from './lossFx';
 
-describe('lossFx — the shake threshold + amplitude (96.5b2)', () => {
+describe('lossFx — the shake threshold + amplitude', () => {
   const MAX = 40;
 
   it('below SHAKE_MIN_FRACTION of the max nothing shakes (a one-point loss on a 40 pool)', () => {
@@ -48,7 +48,7 @@ describe('lossFx — the shake threshold + amplitude (96.5b2)', () => {
   });
 });
 
-describe('lossFx — the landing cue scale (96.5b2-post)', () => {
+describe('lossFx — the landing cue scale', () => {
   it('a zero loss is the floor (CUE_GAIN_MIN, rate 1); at SHAKE_MAX_FRACTION and above it saturates (gain 1, CUE_RATE_MIN)', () => {
     expect(lossCue(0, 40)).toEqual({ gain: CUE_GAIN_MIN, rate: 1 });
     expect(lossCue(SHAKE_MAX_FRACTION * 40, 40)).toEqual({ gain: 1, rate: CUE_RATE_MIN });

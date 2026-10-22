@@ -54,7 +54,7 @@ function setAll(model: ReturnType<typeof createSettings>, values: Settings): voi
   for (const key of FIELDS) expect(set(key), key).toBe(true);
 }
 
-describe('116a — the settings section', () => {
+describe('the settings section', () => {
   it("the field names are the stored keys, and they don't change", () => {
     // A name is a key in every player's browser. Renaming one orphans what
     // is stored under it, so a rename has to fail here first.
@@ -137,7 +137,7 @@ describe('116a — the settings section', () => {
   });
 });
 
-describe('116a — the settings at boot', () => {
+describe('the settings at boot', () => {
   afterEach(() => resetLocales());
 
   const PLANTED = { 'unit.name': 'planted' };
@@ -163,7 +163,7 @@ describe('116a — the settings at boot', () => {
     expect(resolveProse('fixture', 'unit.name', 'inline')).toBe('inline');
   });
 
-  it('116f — the stored palette is handed to the chooser by name, whatever the locale did', () => {
+  it('the stored palette is handed to the chooser by name, whatever the locale did', () => {
     const chosen: string[] = [];
     const seams = { shippedLocales: ['en'], setLocale: setActiveLocale, setPalette: (name: string) => chosen.push(name) };
     applyAtBoot({ locale: 'en', palette: 'colourblind' }, seams);

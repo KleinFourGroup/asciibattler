@@ -36,7 +36,7 @@ const SYNTHETIC_CATALOGS = {
   daemonIds: ['d1'],
 };
 
-describe('50a — the price book (config/prices.json)', () => {
+describe('the price book (config/prices.json)', () => {
   it('the committed catalog parses and passes the referential asserts', () => {
     // The module-load parse + self-wired assert already ran at import; this
     // re-runs them explicitly so a failure reports HERE, not as an
@@ -78,7 +78,7 @@ describe('50a — the price book (config/prices.json)', () => {
     }
   });
 
-  it('§61f — every tier multiplier is authored positive and the seam is non-vacuous', () => {
+  it('every tier multiplier is authored positive and the seam is non-vacuous', () => {
     for (const tier of RARITY_TIERS) {
       expect(PRICES.units.rarityMultiplier[tier], tier).toBeGreaterThan(0);
     }
@@ -89,7 +89,7 @@ describe('50a — the price book (config/prices.json)', () => {
     expect(multipliers.some((m) => m !== 1)).toBe(true);
   });
 
-  it('§61f — the schema rejects a missing tier in rarityMultiplier', () => {
+  it('the schema rejects a missing tier in rarityMultiplier', () => {
     const broken = structuredClone(SYNTHETIC) as Record<string, unknown>;
     delete (broken.units as { rarityMultiplier: Record<string, number> }).rarityMultiplier.rare;
     expect(PricesSchema.safeParse(broken).success).toBe(false);

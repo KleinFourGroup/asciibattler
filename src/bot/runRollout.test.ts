@@ -52,7 +52,7 @@ function stripRoot(wire: RunSnapshot): Record<string, unknown> {
   return copy;
 }
 
-describe('cloneRunForRollout (69a — the clairvoyance guard, one layer up)', () => {
+describe('cloneRunForRollout (the clairvoyance guard, one layer up)', () => {
   it('foresee-the-rolls: the clone cannot see the live future; a plain clone CAN (the control)', () => {
     const live = liveRun(20260730);
     const liveWire = live.toJSON();

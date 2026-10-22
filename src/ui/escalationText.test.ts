@@ -6,7 +6,7 @@ import { escalationAdds, escalationName, escalationTooltip } from './escalationT
 // The Escalation levels in words, on the shipped ladder and the
 // English table.
 
-describe('117e — a level in words', () => {
+describe('a level in words', () => {
   it('says what each level of the shipped ladder adds: these, by hand', () => {
     expect(ESCALATION_MAX).toBe(5);
     expect([0, 1, 2, 3, 4, 5].map(escalationAdds)).toEqual([
@@ -39,7 +39,7 @@ describe('117e — a level in words', () => {
   });
 });
 
-describe('117e — the picker’s tooltip', () => {
+describe('the picker’s tooltip', () => {
   it('lists every level in effect under the sentence that says they are kept', () => {
     expect(escalationTooltip(3).split('\n')).toEqual([
       'Each level keeps every level under it.',

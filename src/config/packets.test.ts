@@ -41,8 +41,8 @@ const legalFor = (op: keyof typeof PACKET_OP_TARGET) => ({
   usableIn: [PACKET_OP_CONTEXTS[op][0]],
 });
 
-describe('the packet schema (49a)', () => {
-  it('the shipped catalog parses and carries the 49a skeleton packet', () => {
+describe('the packet schema', () => {
+  it('the shipped catalog parses and carries the patch packet', () => {
     expect(PACKETS.length).toBeGreaterThanOrEqual(1);
     expect(PACKET_IDS).toContain('patch');
     const skeleton = packetById('patch')!;
@@ -125,7 +125,7 @@ describe('the packet schema (49a)', () => {
     ).toBe(false);
   });
 
-  it("restricts applyTo 'target' to dealHit rules (a kill's victim is already dead — 49e)", () => {
+  it("restricts applyTo 'target' to dealHit rules (a kill's victim is already dead)", () => {
     const venomish = (on: string) =>
       parses({
         ...legalFor('injectRule'),
@@ -189,7 +189,7 @@ describe('the packet schema (49a)', () => {
     ).toBe(false);
   });
 
-  it("pins the crit filter to 'dealHit' inside an injected rule (the 47b matrix)", () => {
+  it("pins the crit filter to 'dealHit' inside an injected rule", () => {
     const withTrigger = (on: string): Record<string, unknown> => ({
       ...legalFor('injectRule'),
       effect: {
@@ -275,7 +275,7 @@ describe('assertPacketStatusRefs (the boot check)', () => {
   });
 });
 
-describe('the 88c horizon guard', () => {
+describe('the horizon guard: no run-duration packet', () => {
   // A run-duration packet is STRUCTURALLY INVISIBLE at its fire
   // site: the rollout judges within-horizon, so a rest-of-run payoff reads
   // ≈0 and the bot never fires it (miner: 3,312 considerations, 0 fires —

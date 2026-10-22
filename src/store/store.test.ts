@@ -82,7 +82,7 @@ function failing(
 const quota = (): Error => Object.assign(new Error('the quota has been exceeded'), { name: 'QuotaExceededError' });
 const denied = (): Error => Object.assign(new Error('the operation is insecure'), { name: 'SecurityError' });
 
-describe('113b — the store: keys and the stamp', () => {
+describe('the store: keys and the stamp', () => {
   it('keeps one namespaced key per section, by these exact names', () => {
     // Permanent: each is a key in players' browsers.
     expect(SECTION_NAMES.map(storageKey)).toEqual([
@@ -118,7 +118,7 @@ describe('113b — the store: keys and the stamp', () => {
   });
 });
 
-describe('113b — the lenient policy', () => {
+describe('the lenient policy', () => {
   it('gives every field its fallback on an empty store', () => {
     const store = createStore({ adapter: memoryAdapter(), build: 'b' });
     expect(store.read(PREFS)).toEqual({ volume: 1, speed: 1, locale: 'en' });
@@ -189,7 +189,7 @@ describe('113b — the lenient policy', () => {
   });
 });
 
-describe('113b — the strict policy', () => {
+describe('the strict policy', () => {
   it('reads an absent section as empty and a current one through its loader', () => {
     const adapter = memoryAdapter();
     const store = createStore({ adapter, build: 'b' });
@@ -246,7 +246,7 @@ describe('113b — the strict policy', () => {
   });
 });
 
-describe('113b — a store that fails', () => {
+describe('a store that fails', () => {
   it('survives an adapter that throws on read, and then writes nothing', () => {
     const inner = memoryAdapter({ [SETTINGS_KEY]: envelope(3, { volume: 0.25, speed: 2, locale: 'fr' }) });
     const adapter = failing(inner, { read: denied() });
@@ -316,7 +316,7 @@ describe('113b — a store that fails', () => {
 
 // `update`: a change built on what is stored now. Two stores over
 // ONE adapter stand for two tabs of one browser.
-describe('117d-post — a change built on what is stored now', () => {
+describe('a change built on what is stored now', () => {
   const twoTabs = () => {
     const adapter = memoryAdapter({ [SETTINGS_KEY]: envelope(3, { volume: 0.5, speed: 1, locale: 'en' }) });
     const a = createStore({ adapter, build: 'b' });
@@ -439,7 +439,7 @@ describe('117d-post — a change built on what is stored now', () => {
 
 // The whole store as text. Two stores over two adapters stand for two
 // browsers; what a restore wrote is read from the adapter's map.
-describe('116h — the whole store as text', () => {
+describe('the whole store as text', () => {
   const JOURNALS_KEY = 'asciibattler:journals';
   const PROGRESS_KEY = 'asciibattler:progress';
   const KEYS = SECTION_NAMES.map(storageKey);

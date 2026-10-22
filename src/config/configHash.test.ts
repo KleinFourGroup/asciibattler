@@ -6,7 +6,7 @@ import { CONFIG_SOURCES, configHash, fnv1a } from './configHash';
 
 const configDir = join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'config');
 
-describe('configHash (53b)', () => {
+describe('configHash', () => {
   it('the registry stays 1:1 with the real config/ directory (the drift guard)', () => {
     const onDisk = readdirSync(configDir)
       .filter((f) => f.endsWith('.json'))

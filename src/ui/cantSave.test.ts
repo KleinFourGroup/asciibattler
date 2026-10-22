@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { RunLock } from '../store/runLock';
 import { cantSaveReason } from './cantSave';
 
-describe("116i — why a page can't save", () => {
+describe("why a page can't save", () => {
   const locks = ['held', 'none', 'elsewhere'] satisfies RunLock[];
 
   it('a store that cannot save is the reason on every screen, whatever the lock', () => {

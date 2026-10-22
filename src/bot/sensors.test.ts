@@ -108,14 +108,14 @@ describe('hazard sensors', () => {
     expect(isHazardKind('mud')).toBe(true); // poison on enter
   });
 
-  it('55a: the barrier split — sustained per-tick damage only (mud is a toll booth, not a wall)', () => {
+  it('the barrier split — sustained per-tick damage only (mud is a toll booth, not a wall)', () => {
     expect(isBarrierHazard('fire')).toBe(true); // the per-tick sustain
     expect(isBarrierHazard('mud')).toBe(false); // on-enter poison — never a barrier
     expect(isBarrierHazard('healing')).toBe(false); // beneficial sustain
     expect(isBarrierHazard('floor')).toBe(false);
   });
 
-  it('55a: a mud field between the armies does NOT read as an approach (fetidPond)', () => {
+  it('a mud field between the armies does NOT read as an approach (fetidPond)', () => {
     const world = makeWorld();
     for (const y of [4, 5, 6]) world.tileGrid.setKind({ x: 4, y }, 'mud');
     spawn(world, 'player', { x: 2, y: 5 });
@@ -226,7 +226,7 @@ describe('attritionRead', () => {
     expect(read.ownDotCount).toBe(0); // rejuvenate = heal periodic, not a DoT
   });
 
-  it('tolerates a def-less plain fold effect (empowered/warded — the K1 class) — the 69b latent-crash regression', () => {
+  it('tolerates a def-less plain fold effect (empowered/warded) without throwing', () => {
     // Plain stat-fold buffs deliberately have no STATUS_DEFS entry
     // (statusBehavior.ts); the Mars empower puts one on a battle unit, and a
     // lookup that threw on a missing def would crash any sensor read over

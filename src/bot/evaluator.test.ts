@@ -48,7 +48,7 @@ function standoffBattle(seed: number): World {
 
 const SPEC = { horizonTicks: 160, rolloutSeeds: [11, 22] };
 
-describe('evaluateCandidate (57e — the rollout evaluator)', () => {
+describe('evaluateCandidate (the rollout evaluator)', () => {
   it('is deterministic: same world + same spec ⇒ the same exact number', () => {
     const world = standoffBattle(1234);
     const a = evaluateCandidate(world, 'player', null, SPEC);

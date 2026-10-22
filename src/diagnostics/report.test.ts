@@ -35,7 +35,7 @@ const SOURCES: DiagnosticsSources = {
   run: () => ({ live: true, slot: 'saved' }),
 };
 
-describe('118f — the diagnostics report', () => {
+describe('the diagnostics report', () => {
   it('is the readings it was given, under a name and a version', () => {
     expect(diagnosticsReport(SOURCES)).toEqual({
       asciibattler: 'diagnostics',
@@ -92,7 +92,7 @@ describe('118f — the diagnostics report', () => {
   });
 });
 
-describe('118f — a stored section is told by its size alone', () => {
+describe('a stored section is told by its size alone', () => {
   const SECRET = 'seed-31337-and-every-choice';
   const dump = {
     meta: '{"v":1}',
@@ -146,7 +146,7 @@ function fakeGl(plain: { renderer: unknown; vendor: unknown }, unmasked: { rende
   return { gl, asked };
 }
 
-describe('118f — the graphics reading', () => {
+describe('the graphics reading', () => {
   it("takes RENDERER where it names the card, and doesn't ask for the extension", () => {
     const { gl, asked } = fakeGl({ renderer: 'ANGLE (Test, Test Card 9000)', vendor: 'Test' }, { renderer: 'other', vendor: 'other' });
     expect(graphicsOf(gl)).toEqual({ renderer: 'ANGLE (Test, Test Card 9000)', vendor: 'Test' });

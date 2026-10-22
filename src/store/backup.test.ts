@@ -25,7 +25,7 @@ const planted = (): Record<string, string> => ({
   'asciibattler:journals': envelope(1, [JOURNAL]),
 });
 
-describe('116h — the backup file', () => {
+describe('the backup file', () => {
   it('holds each section as it is stored, the build and the time, under the mark', () => {
     const adapter = memoryAdapter(planted());
     const dump = createStore({ adapter, build: BUILD }).dump()!;

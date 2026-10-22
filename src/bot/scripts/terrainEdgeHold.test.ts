@@ -42,7 +42,7 @@ function fireWorld(): World {
 }
 
 describe('terrainEdgeHold', () => {
-  it('55a: stays SILENT on a mud wall — an on-enter hazard is a toll booth, not a barrier (fetidPond)', () => {
+  it('stays SILENT on a mud wall — an on-enter hazard is a toll booth, not a barrier (fetidPond)', () => {
     const world = makeWorld();
     for (let y = 0; y < 12; y++) world.tileGrid.setKind({ x: 5, y }, 'mud');
     spawn(world, 'player', { x: 2, y: 4 });
@@ -81,7 +81,7 @@ describe('terrainEdgeHold', () => {
     expect(terrainEdgeHold.evaluate(world, 'player')).toBeNull();
   });
 
-  it('55c1: releases when nobody is crossing — a camping enemy is not prey', () => {
+  it('releases when nobody is crossing — a camping enemy is not prey', () => {
     const world = makeWorld();
     for (let y = 0; y < 12; y++) world.tileGrid.setKind({ x: 5, y }, 'fire');
     spawn(world, 'player', { x: 2, y: 4 });
@@ -90,7 +90,7 @@ describe('terrainEdgeHold', () => {
     expect(terrainEdgeHold.evaluate(world, 'player')).toBeNull();
   });
 
-  it('55c1: enemies already ON the fire are prey (mid-crossing)', () => {
+  it('enemies already ON the fire are prey (mid-crossing)', () => {
     const world = makeWorld();
     for (let x = 5; x <= 7; x++) {
       for (let y = 0; y < 12; y++) world.tileGrid.setKind({ x, y }, 'fire');
@@ -105,7 +105,7 @@ describe('terrainEdgeHold', () => {
     expect((proposal.target as Extract<typeof proposal.target, { kind: 'tile' }>).cell.x).toBe(4);
   });
 
-  it('55c1: one stray crosser among scattered fleers is NOT prey in force (deserters)', () => {
+  it('one stray crosser among scattered fleers is NOT prey in force (deserters)', () => {
     const world = makeWorld();
     for (let y = 0; y < 12; y++) world.tileGrid.setKind({ x: 5, y }, 'fire');
     spawn(world, 'player', { x: 2, y: 4 });

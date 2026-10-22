@@ -60,7 +60,7 @@ describe('t() — the UI string table', () => {
     expect(() => t('no.such.key')).toThrow(/not in locales\/en\/ui.json either/);
   });
 
-  it('provenance entries (95e): a current one resolves — plural text included; a FUZZY one falls back to the English with the marker', () => {
+  it('provenance entries: a current one resolves — plural text included; a FUZZY one falls back to the English with the marker', () => {
     const stamp = { who: 'T', on: '2027-01-01' };
     registerUiLocale('de', {
       'common.buy': translatorStamp('Kaufen', UI_EN['common.buy'], stamp),

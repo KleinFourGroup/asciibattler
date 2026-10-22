@@ -45,7 +45,7 @@ function fakeShell(initial: string | null): ShellStore & { written: string[]; fa
 const securityError = (): Error => Object.assign(new Error('The operation is insecure.'), { name: 'SecurityError' });
 const quotaError = (): Error => Object.assign(new Error('the quota has been exceeded'), { name: 'QuotaExceededError' });
 
-describe('113c — the web adapter', () => {
+describe('the web adapter', () => {
   it('keeps each key as one item', () => {
     const storage = fakeStorage({ 'asciibattler:settings': 'kept' });
     const adapter = webAdapter(storage);
@@ -95,7 +95,7 @@ describe('113c — the web adapter', () => {
   });
 });
 
-describe('113c — the Electron adapter', () => {
+describe('the Electron adapter', () => {
   it('reads the file as the keys to their text', () => {
     const adapter = electronAdapter(fakeShell(JSON.stringify({ 'asciibattler:settings': 'kept', other: 7 })));
     expect(adapter.kind).toBe('electron');
@@ -143,7 +143,7 @@ describe('113c — the Electron adapter', () => {
   });
 });
 
-describe('113c — the choice', () => {
+describe('the choice', () => {
   it('takes the Electron bridge when the preload put one on the window, over localStorage', () => {
     const choice = chooseAdapter({ shellStore: fakeShell(null), localStorage: fakeStorage() });
     expect(choice.adapter.kind).toBe('electron');

@@ -15,13 +15,13 @@ import {
 import { DEFAULT_CAMERA_VIEW } from '../../render/cameraFit';
 import { DEFAULT_MARK_STYLE } from '../../render/groundMarks';
 
-describe('108b — the terrain marks’ dials', () => {
+describe('the terrain marks’ dials', () => {
   it('their defaults ARE the shipped marks — an untouched panel dials nothing', () => {
     expect(DIALS.plateCorner.def).toBe(DEFAULT_MARK_STYLE.plateCorner);
     expect(DIALS.marks.def).toBe(true);
   });
 
-  it('the signed 106d bookmark now means the defaults: its mock dials left at 108f, its anchor dial at 109a', () => {
+  it('the signed marks bookmark means the defaults', () => {
     const signed = parseDials(
       'cue-outline_cueAlpha-0.3_ground-merged_plate-filled_plateScope-all_anchor-bottom_drape-1_cueDepth-world',
     );
@@ -32,7 +32,7 @@ describe('108b — the terrain marks’ dials', () => {
   });
 });
 
-describe('105e — the glyph scale + the artefact list', () => {
+describe('the glyph scale + the artefact list', () => {
   it('the scale defaults to 1 (the atlas default — an untouched panel writes no size)', () => {
     expect(DIALS.scale.def).toBe(1);
     expect(DIALS.scale.min).toBeGreaterThan(0);
@@ -48,7 +48,7 @@ describe('105e — the glyph scale + the artefact list', () => {
   });
 });
 
-describe('105d — the projection dials', () => {
+describe('the projection dials', () => {
   it('the four defaults ARE the Renderer’s default view — an untouched panel is the shipped camera', () => {
     expect(cameraViewOf(defaultDials())).toEqual(DEFAULT_CAMERA_VIEW);
     // …and the view is exactly those four dials: a fifth field on CameraView
@@ -68,7 +68,7 @@ describe('105d — the projection dials', () => {
     expect(encodeDials(state)).toBe('proj-persp_fov-20_pitch-60_yaw--45');
   });
 
-  it('the §106 bookmark still means the shipped view: its proj and yaw are now the defaults', () => {
+  it('the view bookmark means the shipped view: its proj and yaw are the defaults', () => {
     const state = parseDials('proj-ortho_yaw-45_slab-centre');
     expect(cameraViewOf(state)).toEqual(DEFAULT_CAMERA_VIEW);
     // `slab` is not in the table; an unknown key is dropped, never thrown on.
@@ -83,7 +83,7 @@ describe('105d — the projection dials', () => {
   });
 });
 
-describe('105b — the board explorer dial table', () => {
+describe('the board explorer dial table', () => {
   it('the default state is NO bookmark, and no bookmark is the default state', () => {
     expect(encodeDials(defaultDials())).toBe('');
     expect(parseDials(null)).toEqual(defaultDials());

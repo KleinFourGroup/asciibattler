@@ -26,7 +26,7 @@ const SETTINGS: LenientSection<{ volume: number }> = {
 };
 const settingsText = JSON.stringify({ v: 1, build: '0.0.0+aaaaaaa', data: { volume: 0.25 } });
 
-describe('113e — the run slot', () => {
+describe('the run slot', () => {
   it('is stamped with RUN_SCHEMA_VERSION, the save format', () => {
     expect(runSlotSection(bus()).version).toBe(RUN_SCHEMA_VERSION);
     expect(snapshotOf(1).schemaVersion).toBe(RUN_SCHEMA_VERSION);
@@ -95,7 +95,7 @@ describe('113e — the run slot', () => {
 
 // The slot through the two-tab lock. Two stores over one adapter stand
 // for two tabs over one `localStorage`.
-describe('115f — the run slot through the two-tab lock', () => {
+describe('the run slot through the two-tab lock', () => {
   /** The adapter, counting the reads of the run slot's key. */
   const counting = (inner: StorageAdapter): StorageAdapter & { slotReads(): number } => {
     let reads = 0;
@@ -215,7 +215,7 @@ describe('115f — the run slot through the two-tab lock', () => {
 
 // A rejected save's journal is kept when the slot is reused. What the
 // finished journals hold is read from the adapter's map.
-describe("116h — a rejected save's journal", () => {
+describe("a rejected save's journal", () => {
   const JOURNALS_KEY = 'asciibattler:journals';
   /** A journal as a save keeps it: its open segment ended `saved`. */
   const journalOf = (seed: number): RunJournal => ({

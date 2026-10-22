@@ -61,7 +61,7 @@ const OPTIONS: BenchOptions = { rounds: 3, chunks: 4, chunkFrames: 5, settle: 2,
 const LEG_FRAMES = 1 + OPTIONS.settle + OPTIONS.chunks * OPTIONS.chunkFrames;
 const block = (results: Awaited<ReturnType<typeof runBench>>, name: string) => results.find((r) => r.name === name)!;
 
-describe('108d — the frame-cost bench, against a fake clock', () => {
+describe('the frame-cost bench, against a fake clock', () => {
   it('reads every known cost back exactly, under a linear drift', async () => {
     const rig = fakeRig({ base: 4, marks: 0.3, stress: 1.2, plantReaches: true, drift: 0.001 });
     const results = await runBench(rig, OPTIONS);

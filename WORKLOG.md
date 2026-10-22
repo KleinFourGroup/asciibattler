@@ -16640,3 +16640,76 @@ hook. The read is `batch`, per batch, with its script in the entry.
 At 126m's 400 to 540 tokens a code the three come to about 270 to 360k,
 from 281,886 at 13:06 UTC, so this session builds batches 1 and 2 and
 hands off before batch 3, as the Cursor's rule has it.
+
+### 126n, batch 1 — every folder but `src/sim` and `src/run` (2026-10-22, session c5a45a3d)
+
+213 codes in 199 titles of 64 files, in 191 hunks, to none. Most were a
+`describe`'s header ("113b — the strict policy"), where the code dropped
+and the words stayed; a code in brackets at a title's end dropped with
+its brackets. Titles keep their quote kind, since the mask holds a quote
+as code: two that would have changed it were written again without the
+apostrophe that forced it.
+
+Titles that said something only the code stood for, now in words, with
+where each was read:
+
+- `abilities.test.ts`, "I6 split/renamed the basic-strike ids": the test
+  asserts the basic strikes registered and `melee_strike` and
+  `ranged_shot` absent, which the title now says.
+- `packets.test.ts` and `rewards.test.ts`, "the 49a skeleton packet" and
+  "the 48a skeleton table": the tests read `patch` and `bits-small`, now
+  named; "the 88c horizon guard" is the guard on a run-duration packet,
+  its header's subject.
+- `cameraFit.test.ts`, "the pre-7.5 view is the pre-105d fit": the
+  constants the test compares, `PRE_75_VIEW` and the frozen
+  `computeCameraDistance`.
+- `fxRegistry.test.ts`, "the Z1 re-home" and "the Z3 re-home": the mage
+  and catapult fx keys, and the melee swing keys, as the two blocks
+  assert; the two `describe`s stay apart.
+- `fixtures.test.ts`, "the clumps are 105a's": the geometry tests'
+  clumps, as batch 1 of 126m found in the file's comments.
+- `state.test.ts`, "the signed 106d bookmark now means the defaults: its
+  mock dials left at 108f, its anchor dial at 109a" and "the §106
+  bookmark still means the shipped view": the signed marks bookmark and
+  the view bookmark, the history dropped.
+- `encounters.test.ts`, "the V1 anchors, the V2 grammar demos, the W1
+  boss, the W2 elites": the test pins all 19 ids in order, the later
+  bosses and showcases included, so the title is now "ships the catalog,
+  in its authored order".
+
+**Statements found false or stale and corrected (rule 7):**
+
+- `abilityDetail.test.ts`: the aura branch "ahead of shipped content";
+  `inspire` ships a pure aura (`config/abilities.json:697`), as 126m's
+  hand-off found. The clause is gone.
+- `rewards.test.ts`: "accepts all three entry kinds (packet = the
+  dormant §49 seam …)". The schema has five kinds (`bits`, `packet`,
+  `daemon`, `unit`, `poolHealth`; `src/config/rewards.ts:103` to `:129`)
+  and the packet kind ships in four tables, so the title now names the
+  three kinds the test parses. The other two are parsed by the shipped
+  registry (`hostage-rescue`) and built in `src/run/rewards.test.ts`.
+- `encounters.test.ts`, the brigands ref title: "the shipped skeleton
+  ref" is now what it is, `bits-small` at chance 1 paired with
+  `packets-small` at 0.3 (`config/encounters.json`, read raw).
+- History in titles, put in the present or dropped: "catalog lookup
+  (pre-47b behavior holds)", "the four new archetypes", "no longer
+  vacuous", "an empty registry (the 54a state)", "the 69b latent-crash
+  regression".
+
+**Proof.** `comment-strip HEAD src`: 64 files differ, comments and title
+words only, exit 0; the control named all 64. `comment-codes`: 666 →
+453, `--record` wrote it. `titles.mts --dupes src`: no full name
+repeated. `quoted.mjs`: no doc, test, tool or script quotes an old title
+whole; its 24 hits are phrases the new titles keep ("the two-tab lock",
+"the seed field").
+
+**Read** (`batch`): `git show <this commit> -- src`. What changed: the
+step codes in the titles of every folder but `src/sim` and `src/run`.
+Where to look: the titles listed above that were rewritten rather than
+trimmed. Wrong looks like a title that no longer says what its test
+asserts, or two tests that now read alike.
+
+Readings: 290,889 on `7c080acb`, 343,259 at 13:15 before this entry:
+about 52k for 213 codes, near 245 a code. At that rate batches 2 and 3,
+453 codes, are about 110k, so the session takes both before its
+hand-off.

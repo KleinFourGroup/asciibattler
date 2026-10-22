@@ -27,7 +27,7 @@ const row = (archetype: string, power: number, level = 1): FallenRecord => ({
 
 const ROWS = [row('mercenary', 1), row('archer', 2, 4), row('mercenary', 3)];
 
-describe('fallenSide — the text helpers (102d)', () => {
+describe('fallenSide — the text helpers', () => {
   it('an empty side draws no run (the cell words it as nobody)', () => {
     expect(fallenGlyphRun([])).toBeNull();
     expect(archetypeGlyphRun([])).toBeNull();

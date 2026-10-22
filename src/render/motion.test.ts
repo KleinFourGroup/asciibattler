@@ -23,7 +23,7 @@ afterEach(() => {
   setReducedMotionOverride(null);
 });
 
-describe('99a — resolveReducedMotion', () => {
+describe('resolveReducedMotion', () => {
   it('follows the OS when no override is set', () => {
     expect(resolveReducedMotion(null, false)).toBe(false);
     expect(resolveReducedMotion(null, true)).toBe(true);
@@ -37,7 +37,7 @@ describe('99a — resolveReducedMotion', () => {
   });
 });
 
-describe('99a — the module gate', () => {
+describe('the module gate', () => {
   it('reads false with no matchMedia and no override', () => {
     expect(osPrefersReducedMotion()).toBe(false);
     expect(getReducedMotionOverride()).toBeNull();

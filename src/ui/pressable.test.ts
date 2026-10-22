@@ -11,7 +11,7 @@ import { describe, expect, it } from 'vitest';
 import { pressableActivation } from './pressable';
 import { KEYBINDING_DEFAULTS } from '../config/keybindings';
 
-describe('100c1 — pressableActivation', () => {
+describe('pressableActivation', () => {
   it('Enter activates now; Space defers; nothing else activates', () => {
     expect(pressableActivation('Enter', false)).toBe('now');
     expect(pressableActivation(' ', false)).toBe('deferred');

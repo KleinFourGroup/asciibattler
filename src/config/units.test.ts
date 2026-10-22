@@ -33,7 +33,7 @@ const NEUTRAL_ENTRIES = Object.entries(NEUTRAL_DEFS);
  * Mechanic tests — explicit literals (not derived from config), since the point
  * is to assert the schema's fixed defaults, not balance numbers.
  */
-describe('§38b — UnitDef catalog scaffold', () => {
+describe('UnitDef catalog scaffold', () => {
   it('loads + re-validates the whole catalog through the schema', () => {
     // The module already parses at import (boot-assert); re-parsing the parsed
     // value is the idempotence check every entry (combatant + neutral) resolves.
@@ -41,7 +41,7 @@ describe('§38b — UnitDef catalog scaffold', () => {
     expect(Object.keys(ALL_UNIT_DEFS).length).toBeGreaterThan(0);
   });
 
-  it('every combatant defaults the §38 spatial/flight fields behavior-identically', () => {
+  it('every combatant defaults the spatial/flight fields behavior-identically', () => {
     for (const [id, def] of COMBATANT_ENTRIES) {
       expect(def.footprint, `${id}.footprint`).toBe(1); // single-cell
       expect(def.layer, `${id}.layer`).toBe('ground');
@@ -55,7 +55,7 @@ describe('§38b — UnitDef catalog scaffold', () => {
   // field↔behavior contracts are balance-proofed in
   // registry.test / Targeting.test — here we only pin the wiring cadence (a
   // value is present, of the right shape).
-  it('wires the two branch-killers (38c-2/3), each of the right shape', () => {
+  it('wires the two branch-killers, each of the right shape', () => {
     const combatants = COMBATANT_ENTRIES.map(([, d]) => d);
     const withMove = combatants.filter((d) => d.movementBehavior !== undefined);
     const withRetarget = combatants.filter((d) => d.retargetOnLosLoss !== undefined);
@@ -73,7 +73,7 @@ describe('§38b — UnitDef catalog scaffold', () => {
     expect(CombatantUnitDefSchema.parse(UNIT_DEFS.archer).retargetOnLosLoss).toBe(true);
   });
 
-  it('accepts an entry that DOES populate the new fields (38c forward-compat)', () => {
+  it('accepts an entry that DOES populate the optional fields', () => {
     const seed = CombatantUnitDefSchema.parse(UNIT_DEFS.mercenary);
     const populated = {
       ...seed,
@@ -106,8 +106,8 @@ describe('§38b — UnitDef catalog scaffold', () => {
  * → catalog) + the susceptibility filter are proven in the sim tests
  * (environment.test / World.test).
  */
-describe('§38d — neutral catalog entries', () => {
-  it('ships the neutral defs (wall / half_cover / §40 rubble): optional hp, no abilities/stats', () => {
+describe('neutral catalog entries', () => {
+  it('ships the neutral defs (wall / half_cover / rubble): optional hp, no abilities/stats', () => {
     const ids = NEUTRAL_ENTRIES.map(([id]) => id);
     expect(ids).toContain('wall'); // the fold's entries
     expect(ids).toContain('half_cover');
@@ -128,18 +128,18 @@ describe('§38d — neutral catalog entries', () => {
     expect(NEUTRAL_DEFS.half_cover!.footprint).toBe(1);
   });
 
-  it('carries the D6 LOS contract on the def (wall opaque, half-cover transparent)', () => {
+  it('carries the LOS contract on the def (wall opaque, half-cover transparent)', () => {
     expect(NEUTRAL_DEFS.wall!.blocksLineOfSight).toBe(true); // schema default
     expect(NEUTRAL_DEFS.half_cover!.blocksLineOfSight).toBe(false);
   });
 
-  it('declares the burnable-not-poisonable susceptibility (38d-3 reads it)', () => {
+  it('declares the burnable-not-poisonable susceptibility', () => {
     for (const [id, def] of NEUTRAL_ENTRIES) {
       expect(def.statusSusceptibility, `${id}.statusSusceptibility`).toEqual(['burn', 'frozen']);
     }
   });
 
-  it('§40b — HP-PRESENCE = destructibility (rubble has hp; wall/half_cover do not)', () => {
+  it('HP-PRESENCE = destructibility (rubble has hp; wall/half_cover do not)', () => {
     // Walls / half-cover are indestructible (no hp pool); rubble carries one. This
     // is the signal `isCombatTargetable` keys off (proven end-to-end in the sim
     // targeting tests) — pinned here at the catalog layer.
@@ -155,7 +155,7 @@ describe('§38d — neutral catalog entries', () => {
     expect(isDestructibleNeutral('mercenary')).toBe(false);
   });
 
-  it('§40b — AUTO-TARGET eligibility is a separate data-driven axis (rubble opts in)', () => {
+  it('AUTO-TARGET eligibility is a separate data-driven axis (rubble opts in)', () => {
     // Rubble is auto-fired-at below hostiles; walls / half-cover are not (and a
     // future destructible wall — hp WITHOUT autoTarget — still wouldn't be). The
     // field is DATA (a new debris kind opts in with one JSON line, no code edit).
@@ -170,7 +170,7 @@ describe('§38d — neutral catalog entries', () => {
     expect(isAutoTargetNeutral('mercenary')).toBe(false); // not even a neutral
   });
 
-  it('§40c — the destructible wall/cover defs: hp-present (destructible) but NOT auto-targeted', () => {
+  it('the destructible wall/cover defs: hp-present (destructible) but NOT auto-targeted', () => {
     // Walls/cover take OPTIONAL destructibility via a SEPARATE hp-bearing neutral
     // def; a layout's per-instance `hp` routes a placement to it. HP-presence ⇒ combat-
     // targetable (AoE / manual / focused fire), by the HP-PRESENCE rule above; the ABSENT `autoTarget`
@@ -210,8 +210,8 @@ describe('§38d — neutral catalog entries', () => {
  * key guarantee, the `REQUIRED_UNIT_IDS` boot-assert covers the ids code
  * constructs by literal.
  */
-describe('§38c-4 — open catalog (relaxed Archetype id)', () => {
-  it('validates a brand-new unit id with no code edit (the §38e enabler)', () => {
+describe('open catalog (relaxed Archetype id)', () => {
+  it('validates a brand-new unit id with no code edit', () => {
     const catalog = { ...structuredClone(UNIT_DEFS), gremlin: structuredClone(UNIT_DEFS.mercenary) };
     const parsed = UnitDefsSchema.parse(catalog);
     expect(Object.keys(parsed)).toContain('gremlin');
@@ -242,7 +242,7 @@ describe('§38c-4 — open catalog (relaxed Archetype id)', () => {
 });
 
 // The display-name layer (the AbilityDef.name precedent).
-describe('§61g — display names', () => {
+describe('display names', () => {
   it('every combatant carries a non-empty display name', () => {
     for (const [id, def] of COMBATANT_ENTRIES) {
       expect(typeof def.name, id).toBe('string');
@@ -261,14 +261,14 @@ describe('§61g — display names', () => {
 // The rarity field (absent ⇒ the common default). Derived-from-config where
 // the claim is about the catalog; explicit literals where it's about the
 // schema's fixed defaults (the scaffold block's split, above).
-describe('§61b — rarity tier field', () => {
+describe('rarity tier field', () => {
   it('every combatant resolves a valid tier (absent ⇒ the common default)', () => {
     for (const [id, def] of COMBATANT_ENTRIES) {
       expect(RARITY_TIERS, `${id}.rarity`).toContain(def.rarity);
     }
   });
 
-  it('accepts an entry that populates a non-default tier (61d forward-compat)', () => {
+  it('accepts an entry that populates a non-default tier', () => {
     const seed = CombatantUnitDefSchema.parse(UNIT_DEFS.mercenary);
     expect(CombatantUnitDefSchema.parse({ ...seed, rarity: 'legendary' }).rarity).toBe('legendary');
   });
@@ -288,8 +288,8 @@ describe('§61b — rarity tier field', () => {
 // flags, the aura chain) — the stat/price VALUES are signed design numbers,
 // deliberately unpinned (the scaffold block's mechanic-pin convention does
 // not apply to balance content).
-describe('§76f — the stat-identity roster', () => {
-  it('the four new archetypes exist, draftable, wielding their §76d weapons', () => {
+describe('the stat-identity roster', () => {
+  it('the four stat-identity archetypes exist, draftable, wielding their weapons', () => {
     expect(UNIT_DEFS.rioter?.abilities).toEqual(['molotov']);
     expect(UNIT_DEFS.gunslinger?.abilities).toEqual(['pistol']);
     expect(UNIT_DEFS.halberdier?.abilities).toEqual(['halberd']);
@@ -324,14 +324,14 @@ describe('§76f — the stat-identity roster', () => {
  * (`World.recordFallen`), so the summoned archetype (the ghoul) prices like
  * any body when an encounter FIELDS it.
  */
-describe('§91b — the power table (headcount weights)', () => {
+describe('the power table (headcount weights)', () => {
   const summoned = new Set(
     Object.values(ABILITY_DEFS).flatMap((def) =>
       def.effects.flatMap((e) => (e.op.kind === 'summon' ? [e.op.summon.archetype] : [])),
     ),
   );
 
-  it('the catalog has at least one legendary; the summoned archetype is a table row like any other (91e2)', () => {
+  it('the catalog has at least one legendary; the summoned archetype is a table row like any other', () => {
     expect(COMBATANT_ENTRIES.some(([, d]) => d.rarity === 'legendary')).toBe(true);
     expect([...summoned]).toEqual(['ghoul']);
     // The ledger, not the table, zeroes summons — a fielded ghoul is a body.

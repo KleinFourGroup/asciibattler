@@ -57,7 +57,7 @@ describe('the progress section', () => {
   });
 });
 
-describe('117d — the record of wins, as stored', () => {
+describe('the record of wins, as stored', () => {
   it('keeps the wins across a reload, as this text', () => {
     const adapter = memoryAdapter();
     const store = createStore({ adapter, build: 'b' });
@@ -93,7 +93,7 @@ describe('117d — the record of wins, as stored', () => {
   });
 });
 
-describe('117d-post — two tabs, a run won in each', () => {
+describe('two tabs, a run won in each', () => {
   /** A won run's write as `Game.recordWin` makes it: the rules, inside
    *  `store.update`. */
   const win = (store: ReturnType<typeof createStore>, id: string, level: number): void => {
@@ -156,7 +156,7 @@ describe('117d-post — two tabs, a run won in each', () => {
   });
 });
 
-describe('117d — the ceiling', () => {
+describe('the ceiling', () => {
   it('is the level above the best win: these, by hand, on a ladder of five', () => {
     // The table below is written for the shipped ladder.
     expect(ESCALATION_MAX).toBe(5);
@@ -184,7 +184,7 @@ describe('117d — the ceiling', () => {
   });
 });
 
-describe('117d — the picked level, held to the ceiling', () => {
+describe('the picked level, held to the ceiling', () => {
   it('is the pick when the ceiling allows it, else the ceiling', () => {
     expect(levelWithinCeiling(0, 0)).toBe(0);
     expect(levelWithinCeiling(2, 3)).toBe(2);
@@ -200,7 +200,7 @@ describe('117d — the picked level, held to the ceiling', () => {
   });
 });
 
-describe('117d — whether a won run is recorded', () => {
+describe('whether a won run is recorded', () => {
   it('counts a run whose dials hold its character, at any level within the ceiling', () => {
     expect(runCounts('character=soldier', 0, 0)).toBe(true);
     expect(runCounts('character=soldier&escalation=2', 2, 2)).toBe(true);
@@ -258,7 +258,7 @@ describe('117d — whether a won run is recorded', () => {
   });
 });
 
-describe('117d — the record after a win', () => {
+describe('the record after a win', () => {
   it('holds the highest level won, per character', () => {
     let bestWin: BestWin = {};
     bestWin = bestWinAfter(bestWin, 'soldier', 0);
@@ -289,7 +289,7 @@ describe('117d — the record after a win', () => {
   });
 });
 
-describe('117d — the ladder, climbed', () => {
+describe('the ladder, climbed', () => {
   /** A run's end as `Game` handles it: the dials a run at `level` has, the
    *  rule, then the record. */
   const win = (bestWin: BestWin, id: string, level: number, extra = ''): BestWin => {

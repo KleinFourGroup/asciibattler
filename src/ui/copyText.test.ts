@@ -24,7 +24,7 @@ function steps(clipboard: 'grants' | 'refuses' | 'absent', command: 'grants' | '
   };
 }
 
-describe('118f — copyBy', () => {
+describe('copyBy', () => {
   it('stops at the clipboard where it grants', async () => {
     const s = steps('grants', 'grants');
     expect(await copyBy(s.steps, 'x')).toBe(true);

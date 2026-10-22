@@ -117,7 +117,7 @@ function driveLive(encounter: BattleEncounter): {
   return { trace: traces[0]!, events, world };
 }
 
-describe('replayTrace (53c — the fidelity keystone)', () => {
+describe('replayTrace (the fidelity keystone)', () => {
   it('a recorded battle replays byte-identically: outcome, event trace, final world state', () => {
     const encounter = makeEncounter();
     const live = driveLive(encounter);
@@ -180,7 +180,7 @@ describe('replayTrace (53c — the fidelity keystone)', () => {
     expect(() => replayTrace(doctored)).toThrow(/still holds commands stamped/);
   });
 
-  it('54c — beforeTick observes every tick + the stamped commands, changing nothing', () => {
+  it('beforeTick observes every tick + the stamped commands, changing nothing', () => {
     const live = driveLive(makeEncounter());
     const plain = replayTrace(live.trace);
 

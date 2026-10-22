@@ -34,7 +34,7 @@ import { BIN_DEPTH, DEFAULT_MARK_STYLE, MARKS_PER_ROW, type Mark } from './groun
  * side triangles of (base, base, apex), emitted cell by cell, row-major, four
  * mounds per `hills` cell.
  */
-describe('107b — HILL_MOUND_ENVELOPE bounds the drawn mounds', () => {
+describe('HILL_MOUND_ENVELOPE bounds the drawn mounds', () => {
   const W = 24;
   const H = 24;
   const grid = new TileGrid(W, H);
@@ -133,7 +133,7 @@ const deepDriftOf = (file: string): string => {
   return m[1]!;
 };
 
-describe('99d — the deep-water drift constant', () => {
+describe('the deep-water drift constant', () => {
   it('is the same number in terrain.frag and apron.frag', () => {
     expect(deepDriftOf('terrain.frag.glsl')).toBe(deepDriftOf('apron.frag.glsl'));
   });
@@ -152,7 +152,7 @@ const EXPECTED: Record<TileKind, number> = {
   mud: ANIM_NONE,
 };
 
-describe('98e — animTypeFor', () => {
+describe('animTypeFor', () => {
   it('maps every tile kind to its shader branch', () => {
     for (const [kind, expected] of Object.entries(EXPECTED) as [TileKind, number][]) {
       expect(animTypeFor(kind), kind).toBe(expected);
@@ -182,7 +182,7 @@ describe('98e — animTypeFor', () => {
  * only inserts; the mounds share the marks' uniform objects (their material is
  * a clone, and a clone copies uniforms); a frame uploads once.
  */
-describe('108b — the ground marks in the terrain shader', () => {
+describe('the ground marks in the terrain shader', () => {
   const read = (file: string): string => readFileSync(join(SHADERS, file), 'utf8');
   const parts = (t: TerrainRenderer) =>
     t as unknown as { material: THREE.ShaderMaterial; bumpsMaterial: THREE.ShaderMaterial; mesh: THREE.Mesh };

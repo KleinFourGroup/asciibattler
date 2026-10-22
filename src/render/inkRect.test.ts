@@ -35,7 +35,7 @@ function rgba(
   return data;
 }
 
-describe('inkRectFromRgba (§79a atlas-derived ink bboxes — RAW since §79d2)', () => {
+describe('inkRectFromRgba (atlas-derived ink bboxes, RAW)', () => {
   it('a fully-inked cell yields the full rect', () => {
     expect(inkRectFromRgba(rgba(8, 8, () => true), 8, 8)).toEqual({ x0: 0, y0: 0, x1: 1, y1: 1 });
   });
@@ -80,7 +80,7 @@ describe('inkRectFromRgba (§79a atlas-derived ink bboxes — RAW since §79d2)'
   });
 });
 
-describe('padInk (§79a rider via §79d2 — clickbox breathing room)', () => {
+describe('padInk (clickbox breathing room)', () => {
   it('widens every side by the pad, clamped to the cell', () => {
     const p = INK_PAD_PX / 16;
     expect(padInk({ x0: 7 / 16, y0: 7 / 16, x1: 9 / 16, y1: 9 / 16 }, p)).toEqual({

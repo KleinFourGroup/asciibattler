@@ -17113,3 +17113,27 @@ visibly and blocks nothing. The cut as signed, with its reads:
 No snapshot bump and no RNG stream; the smoke fires at 127a only; the
 step-code ceiling does not move. Reading: 235,180 at 15:34, at the
 question's answer.
+
+### 127a — A-32, the sweep page (2026-10-22, session 9e9f60a2)
+
+Step zero: the readers are as the audit has them; nothing has moved
+since `a310147f`.
+
+Deleted: `tools/sweep-gui/` (four files, 722 lines) and, by call 1,
+`tests/fuzz/sweepCommand.ts` and its test (288 lines, 12 tests). The
+tools index loses the page's card, and its group heading, "Run &
+balance harnesses", becomes "Run harness", since the run launcher is
+the one card left. ARCHITECTURE's source tree drops the page's line;
+TODO's `--sector-hops` row keeps its run-config half.
+
+Proof: the type check, clean; the fuzz smoke run by hand before the
+commit, 583 tests in 59 files (595 in 60 before, less the 12), green;
+and a search of `src`, `tests`, `tools`, `scripts`, `config`,
+`.githooks`, `vite.config.ts`, `package.json`, `eslint.config.js` and
+the docs (the archive, the WORKLOG, the census and `retro` aside) for
+the page's path, the module's name, its six exports and the page's
+title, which finds only this step's ROADMAP and TODO lines. "Balance
+sweep" still names the fuzz CLI's own sweep, which stays. The main
+suite and the parity test run in the hook.
+
+Reading: 264,100 at 15:50, before the commit.

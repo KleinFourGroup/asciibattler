@@ -375,7 +375,7 @@ else reaches `tools/` across a commit. The cut was signed 2026-10-22,
 less TODO's readings guard, closed unbuilt on the premise (WORKLOG §127,
 the kickoff).
 
-- ☐ **127a — A-32, the sweep page** (`none`), with `sweepCommand.ts` and
+- ☑ **127a — A-32, the sweep page** (`none`), with `sweepCommand.ts` and
   its test (call 1); the smoke 595 → 583 in 60 → 59 files.
 - ☐ **127b — the compare, `css-compare`** (`none`). HEAD against HEAD
   passes; four plants fail by name, a reorder across specificities passes.

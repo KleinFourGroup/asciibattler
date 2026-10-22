@@ -188,12 +188,12 @@ META-ROADMAP §"Round 9 — Extensions" names each group.
   grows. The three items below fold into it. Round 12 keeps one clause:
   which dials a shipped build answers.
 
-- [ ] **`--sector-hops` in the run-config tool + sweep GUI.** 68b plumbed
+- [ ] **`--sector-hops` in the run-config tool.** 68b plumbed
   the two-act dial through the fuzz CLI's run/search/sweep (+ shard
-  children); the two dev tools (`tools/run-config/cli.ts` `--hops`,
-  `tools/sweep-gui`) still speak `hopCount` only. Cheap adoption when
-  either tool is next touched; the fuzz CLI covers all measurement
-  needs meanwhile. Noted 2026-07-27.
+  children); the run-config tool (`tools/run-config/cli.ts` `--hops`)
+  still speaks `hopCount` only. Cheap adoption when the tool is next
+  touched; the fuzz CLI covers all measurement needs meanwhile. Noted
+  2026-07-27; its sweep-GUI half closed with the page at 127a.
 
 - [ ] **The encounter dial warns when a forced id matches ZERO nodes** (papercut #25, §102) — `--encounter` / `?encounter=` forces only nodes of a matching KIND and says nothing when that is none; ~8 pane round-trips and one mislabelled oracle shape. One warning line in the CLI + a console warn in the URL path.
 

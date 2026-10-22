@@ -527,7 +527,6 @@ tools/                       # Dev-only; not bundled into dist/ (index page at /
   camp-editor/               # 75i: camps.json editor (member rows + reward refs + leash radius; both boot asserts run live; byte-faithful formatCampsJson) at /tools/camp-editor/
   packet-editor/             # 49g: packets.json editor (matrix-driven per-op sub-forms, derived target, constrained contexts, fire summary + dropped-by pane; byte-faithful formatPacketsJson) at /tools/packet-editor/
   price-editor/              # 50f: prices.json editor (one document, no tabs — unit/packet/daemon books + economy knobs + stock counts; resolved-price preview through the *For price cores; byte-faithful formatPricesJson) at /tools/price-editor/
-  sweep-gui/                 # command-builder GUI for the fuzz balance harness at /tools/sweep-gui/
   mapgen-prototype/          # M6: procedural node-map generator sandbox at /tools/mapgen-prototype/
 
 shell/

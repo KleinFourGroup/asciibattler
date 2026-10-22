@@ -23,7 +23,7 @@ const bitsE = (min: number, max: number, weight = 1): RewardEntry => ({
 });
 const daemonE = (daemon: string, weight = 1): RewardEntry => ({ kind: 'daemon', weight, daemon });
 const packetE = (packet: string, weight = 1): RewardEntry => ({ kind: 'packet', weight, packet });
-// 74c — real archetype ids: rollUnit resolves against the live combatant
+// Real archetype ids: rollUnit resolves against the live combatant
 // catalog (a synthetic id would crash it, unlike the pure-id daemon/packet
 // fixtures above).
 const unitE = (archetype: string, level?: number, weight = 1): RewardEntry =>

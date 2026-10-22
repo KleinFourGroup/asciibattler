@@ -1,20 +1,3 @@
 {
- "src/run/NodeMap.test.ts": 17,
- "src/run/Recruitment.test.ts": 23,
- "src/run/Run.test.ts": 214,
- "src/run/RunConfig.test.ts": 1,
- "src/run/chipRule.test.ts": 3,
- "src/run/daemon.test.ts": 12,
- "src/run/empower.test.ts": 3,
- "src/run/encounters/boss.test.ts": 1,
- "src/run/encounters/brigands.test.ts": 3,
- "src/run/encounters/selection.test.ts": 1,
- "src/run/encounters/sequencer.test.ts": 1,
- "src/run/fatigue.test.ts": 4,
- "src/run/hopsRemaining.test.ts": 3,
- "src/run/mapMetrics.test.ts": 4,
- "src/run/redraw.test.ts": 4,
- "src/run/rewards.test.ts": 1,
- "src/run/runStats.test.ts": 5,
- "src/run/sectorWalk.test.ts": 1
+ "src/run/Run.test.ts": 214
 }

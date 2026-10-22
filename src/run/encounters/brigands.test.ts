@@ -8,14 +8,10 @@ import { ARCHETYPE_CONFIG } from '../../sim/archetypes';
 import type { Archetype, UnitTemplate } from '../../sim/Unit';
 
 /**
- * "Brigands" is the catalog's everyday-fight reference encounter. It WAS pinned
- * faithful to the pre-V random `rollEnemyWave` budget (U3/V1 built it to
- * reproduce the old single-wave swarm); **Phase X3 — the conscious retune point
- * the original test named** — re-derived the band against the multi-wave authored
- * model (the old per-wave budget × ~3 grind-down waves ran far over the 20-pool),
- * so brigands now carries its own tuned wave-spec, decoupled from `difficulty.json`.
+ * "Brigands" is the catalog's everyday-fight reference encounter. It carries
+ * its own tuned wave-spec, decoupled from `difficulty.json`.
  *
- * This test no longer holds brigands to the old generator; it pins the structural
+ * This test pins the structural
  * identity + that the resolver fields the encounter's OWN authored count /
  * composition / level budget (expectations read live from the spec, never
  * hardcoded — per the balance-proof-test discipline), so it flags a drift between

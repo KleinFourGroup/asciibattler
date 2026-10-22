@@ -5,8 +5,8 @@ import { getEncounter } from '../../config/encounters';
 import { HEALTH } from '../../config/health';
 
 /**
- * W — "The Bandit King" is the launch BOSS: the first `kind: 'boss'` encounter
- * and the first to exercise the deferred condition-gated `stages` grammar (U2).
+ * "The Bandit King" is the launch BOSS: the first `kind: 'boss'` encounter
+ * and the first to exercise the condition-gated `stages` grammar.
  * These pin its shape (a 3-phase escalation, the first two phases pool-gated, the
  * final open-ended) and that the REAL sequencer walks those phases in order as
  * the enemy pool drops — the "the boss gets angrier as you wear it down" feel,

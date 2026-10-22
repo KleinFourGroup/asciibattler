@@ -68,14 +68,14 @@ describe('foldRunStats (47a — the run-stat fold vocabulary)', () => {
     expect(RUN_STAT_BASES.cacheSize).toBe(6);
   });
 
-  // 64a — CONFIG-DERIVED, not pinned to a literal (the balance-proof-tests
+  // CONFIG-DERIVED, not pinned to a literal (the balance-proof-tests
   // norm): the offer-size base must track recruitment.json, so a tuning edit
   // there can never silently desync the fold's baseline.
   it('64a: recruitOfferSize base derives from recruitment.json', () => {
     expect(RUN_STAT_BASES.recruitOfferSize).toBe(RECRUITMENT.defaultOfferSize);
   });
 
-  // 64b — same discipline for the promoted tier weights: one source of
+  // The same discipline for the promoted tier weights: one source of
   // truth in recruitment.json, the fold's bases can never desync from it.
   it('64b: the four rarity-weight bases derive from recruitment.json', () => {
     expect(RUN_STAT_BASES.rarityWeightCommon).toBe(RECRUITMENT.rarityWeights.common);
@@ -84,7 +84,7 @@ describe('foldRunStats (47a — the run-stat fold vocabulary)', () => {
     expect(RUN_STAT_BASES.rarityWeightLegendary).toBe(RECRUITMENT.rarityWeights.legendary);
   });
 
-  // 64b — the Seal's exact fold shape: a mult-0 zeroes the weight (adds
+  // The Seal's exact fold shape: a mult-0 zeroes the weight (adds
   // apply first, then mults; the max(0,·) clamp keeps it sampler-legal).
   it('64b: a mult-0 modifier zeroes a tier weight (the no-commons fold)', () => {
     const folded = foldRunStats(RUN_STAT_BASES, [mod('rarityWeightCommon', 'mult', 0)]);
@@ -92,13 +92,13 @@ describe('foldRunStats (47a — the run-stat fold vocabulary)', () => {
     expect(folded.rarityWeightUncommon).toBe(RUN_STAT_BASES.rarityWeightUncommon);
   });
 
-  // 65a — the deck.json discipline: the draw-amount base must track
+  // The deck.json discipline: the draw-amount base must track
   // DECK.handSize, so a hand-size tuning edit can never desync the fold.
   it('65a: drawAmount base derives from deck.json handSize', () => {
     expect(RUN_STAT_BASES.drawAmount).toBe(DECK.handSize);
   });
 
-  // 64c — a design literal, not config-derived: zero forced slots is the
+  // A design literal, not config-derived: zero forced slots is the
   // no-source baseline (Portunus adds; there is no config base to track).
   it('64c: portLegendaryOffers bases at zero and stacks by add', () => {
     expect(RUN_STAT_BASES.portLegendaryOffers).toBe(0);

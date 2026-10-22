@@ -51,7 +51,7 @@ describe('NodeMap.generate', () => {
     it('root and the first battle hop are always battle nodes', () => {
       // Root (hop 0) is an inert battle (rendered @); hop 1 is the first
       // battle and never rest-eligible — so single-hop-from-root navigation
-      // always lands on a battle. Boss/rest land in the `node kinds (G3)`
+      // always lands on a battle. Boss/rest land in the node-kinds
       // block below.
       for (let s = 0; s < 50; s++) {
         const map = generate(new RNG(s));
@@ -98,9 +98,9 @@ describe('NodeMap.generate', () => {
     });
 
     it('no route passes two rests within restMinSpacing hops (the 77e2 path window)', () => {
-      // The spacing contract moved from per-hop map-global to PATH-WISE at
-      // 77e2 (worklog §77e): two rests on parallel lanes may share a hop,
-      // but no composed route may hit two within the window.
+      // The spacing contract is PATH-WISE, not per-hop map-global: two rests
+      // on parallel lanes may share a hop, but no composed route may hit two
+      // within the window.
       for (let s = 0; s < 100; s++) {
         const map = generate(new RNG(s));
         expect(pathWindowViolations(map, 'rest', restMinSpacing), `seed ${s}`).toEqual([]);
@@ -159,7 +159,7 @@ describe('NodeMap.generate', () => {
     });
 
     it('no route passes two elites within eliteMinSpacing hops (back-to-back discouraged, signed)', () => {
-      // The 77e design round's rule 2, as the path-window contract: spacing
+      // The signed elite-pacing rule, as the path-window contract: spacing
       // 2 ⇒ no route ever offers two elite fights on consecutive hops.
       for (let s = 0; s < 100; s++) {
         const map = generate(new RNG(s));
@@ -277,10 +277,9 @@ describe('NodeMap.generate', () => {
       }
     });
 
-    // NB the tail-pass contract (structure + rest + elite placement
-    // byte-identical to pre-50c) was proven by a one-shot 200-seed oracle
-    // against HEAD's generator at 50c build time (worklog §50) — the pass
-    // order in `generate` is what holds it going forward.
+    // NB the tail-pass contract (structure + rest + elite placement left as
+    // they were before the port pass) was proven once by a 200-seed oracle;
+    // the pass order in `generate` is what holds it going forward.
     it('port nodes stay root-reachable and co-reachable to the boss', () => {
       for (let s = 0; s < 50; s++) {
         const map = generate(new RNG(s));
@@ -308,7 +307,7 @@ describe('NodeMap.generate', () => {
   describe('node kinds (74e — event)', () => {
     // Balance-proof: the spacing bound comes from the config the generator
     // reads. NB eventMinSpacing ships at 1 (back-to-back hops LEGAL — events
-    // are a major run component, the §74e feel call), so the spacing assert
+    // are a major run component, a signed feel call), so the spacing assert
     // is a config-tracking bound, not a gap guarantee.
     const { eventMinSpacing } = NODE_MAP;
 
@@ -336,7 +335,7 @@ describe('NodeMap.generate', () => {
 
     it('events land in the signed ratio band (≈eventsPerRoute ± half-width; corridor outliers ≤2%, floor 2.2)', () => {
       // Balance-proof: band from the config the generator reads; the
-      // expected-count read recomputed INDEPENDENTLY by the 77b instrument
+      // expected-count read recomputed INDEPENDENTLY by the map-metrics instrument
       // (the cheap-independent-recompute lint, gotcha-#120 doctrine).
       // Minimum-width corridor maps can physically cap below the band —
       // see the corpus gate for the full statistical statement.
@@ -358,8 +357,8 @@ describe('NodeMap.generate', () => {
 
     it('an event always leaves a non-event sibling on its hop (route choice holds)', () => {
       // <= 1 event per hop + middle hops >= 2 wide. NB unlike elites the
-      // sibling can be ANOTHER special kind (rest/port) — a battle-less hop
-      // is a known artifact of the dense interim scatter (§77 owns ratio).
+      // sibling can be ANOTHER special kind (rest/port); the battle floor
+      // below keeps a battle on every middle hop.
       for (let s = 0; s < 100; s++) {
         const map = generate(new RNG(s));
         for (const n of map.nodes) {
@@ -371,7 +370,7 @@ describe('NodeMap.generate', () => {
     });
 
     it('every middle hop keeps at least one battle node (the 77c battle floor)', () => {
-      // The C row that killed the 74e stacking artifact: specials per hop
+      // The cap that rules out the stacking artifact: specials per hop
       // are hard-capped at width − 1, so no hop in the band ever goes
       // battle-less.
       for (let s = 0; s < 100; s++) {
@@ -421,7 +420,7 @@ describe('NodeMap.generate', () => {
 
   describe('planarity (G2)', () => {
     it('no two edges cross given the per-hop x-ordering', () => {
-      // The headline G2 guard: with x = index within hops[f], no pair of
+      // The headline planarity guard: with x = index within hops[f], no pair of
       // edges on the same adjacent hop pair geometrically inverts. This both
       // pins the property and documents what "planar" means here.
       for (let s = 0; s < 100; s++) {
@@ -690,7 +689,7 @@ function reachableFrom(map: NodeMap, start: number): Set<number> {
   return visited;
 }
 
-/** 77e2 — same-kind pairs within `spacing-1` hops along any route (the
+/** Same-kind pairs within `spacing-1` hops along any route (the
  *  path-window contract). Empty ⇒ the pacing rule holds on every route. */
 function pathWindowViolations(map: NodeMap, kind: string, spacing: number): string[] {
   const kindOf = new Map(map.nodes.map((n) => [n.id, n.kind]));
@@ -781,9 +780,9 @@ describe('the 72e/74e scatter-chance probe dials (eliteChance / portChance / eve
   });
 
   it('portChance=1 scatters strictly more ports than authored; portChance=0 kills ports ENTIRELY (probe-kill unified, 77e2)', () => {
-    // 77e2 semantics change (worklog §77e2, user-flagged): dial 0 kills the
-    // kind INCLUDING its guarantees — a kill dial that still places the
-    // fallback port is a probe-isolation trap. All four kinds now share
+    // Dial 0 kills the kind INCLUDING its guarantees (user-flagged): a kill
+    // dial that still places the fallback port is a probe-isolation trap.
+    // All four kinds share
     // "dial 0 = kind absent" (the --event-chance=0 control-arm precedent).
     let authored = 0;
     let forced = 0;
@@ -814,8 +813,7 @@ describe('the 72e/74e scatter-chance probe dials (eliteChance / portChance / eve
   });
 
   it('a kind dial never moves STRUCTURE, and the guarantees hold in the dialed twin (77e2)', () => {
-    // 77e2 NARROWS the old tail-append contract (worklog §77e2): the kinds
-    // share one slot pool by design, so killing events legitimately frees
+    // The kinds share one slot pool by design, so killing events legitimately frees
     // slots the feel top-ups may claim — kind placement is NOT byte-stable
     // under a dial. What IS invariant: structure (its own sub-streams) and
     // the signed guarantees, which must hold in any dialed twin too.

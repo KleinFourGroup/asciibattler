@@ -27,7 +27,7 @@ describe('fatigueEffect (H6c → K1 → §91c: a constitution debuff)', () => {
   it('ships INERT: the default rate seeds NO effect for any stack count', () => {
     // Config-derived inert proof — `fatigueEffect` (no rate arg) reads the
     // shipped HEALTH.fatiguePerStack. Passes iff the default is 0 → null; the
-    // canary if a balance pass ever turns fatigue on (the §92 switch-on flips
+    // canary if a balance pass ever turns fatigue on (that switch-on flips
     // this pin deliberately, as its own paired read).
     for (const stacks of [0, 1, 3, 10, 100]) {
       expect(fatigueEffect(stacks)).toBeNull();
@@ -68,7 +68,7 @@ describe('fatigueEffect (H6c → K1 → §91c: a constitution debuff)', () => {
     for (let s = 1; s <= cap; s++) expect(fatigueEffect(s, 0.1)!.magnitude).toBe(s);
     for (const s of [cap + 1, cap * 2, 100]) expect(fatigueEffect(s, 0.1)!.magnitude).toBe(cap);
     // The total debuff at the cap is rate × maxStacks; at the spec's designed
-    // −10%/stack (the §92 switch-on value) that is the documented −50%.
+    // −10%/stack (the switch-on value) that is the documented −50%.
     const atCap = foldEffects(withConstitution(100), [fatigueEffect(100, 0.1)!]).constitution;
     expect(atCap).toBe(Math.round(100 * (1 - 0.1 * cap)));
     expect(atCap).toBe(50);
@@ -94,8 +94,8 @@ describe('fatigueEffect (H6c → K1 → §91c: a constitution debuff)', () => {
   });
 
   it('a Unit seeded with the production effect spawns AT its reduced maxHp, never over it', () => {
-    // The clamp the K1 constructor comment deferred — landed at §91c. The
-    // expectation is re-derived from the fold + deriveStats, not from Unit.
+    // The constructor's clamp. The expectation is re-derived from the fold
+    // + deriveStats, not from Unit.
     const stats = withConstitution(20);
     const effect = fatigueEffect(2, 0.1)!;
     const unit = new Unit({

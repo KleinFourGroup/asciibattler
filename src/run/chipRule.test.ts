@@ -1,5 +1,5 @@
 /**
- * §91a2 — the chip rule by {reason}. Every expectation is arithmetic on the
+ * The chip rule by {reason}. Every expectation is arithmetic on the
  * injected `health`, never on the shipped config.
  */
 
@@ -50,8 +50,8 @@ describe('chipRule (§91a2)', () => {
       player: (fallen.player + survivors.enemy) * 0.5,
       enemy: (fallen.enemy + survivors.player) * 0.5,
     });
-    // A charge past any pool stays uncapped here (the 89d rider: the overkill
-    // read needs the pre-clamp number).
+    // A charge past any pool stays uncapped here (the overkill read needs the
+    // pre-clamp number).
     expect(turnCharges('decisive', survivors, { player: 99, enemy: 0 }, h(3)).player).toBe(297);
   });
 
@@ -79,7 +79,7 @@ describe('chipRule (§91a2)', () => {
 });
 
 /**
- * 96.5b1 — the loss-event model: the stream the live bar consumes must SUM
+ * The loss-event model: the stream the live bar consumes must SUM
  * to what the turn books, whatever the reason. Each side's fielded units are
  * fixed; the dead + the standing partition them, so the per-unit rows
  * re-derive the same `survivors` / `fallen` totals the charge reads — the

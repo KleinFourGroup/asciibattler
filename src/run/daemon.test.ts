@@ -16,9 +16,9 @@ import { DECK } from '../config/deck';
 import { RNG } from '../core/RNG';
 
 /**
- * L1→47c — the pure daemon rules: the per-turn grant resolution (`turnStart`
- * hooks → this turn's effective configs; the run-start roll retired at 63c —
- * characters seed the starting daemon now). Bespoke
+ * The pure daemon rules: the per-turn grant resolution (`turnStart`
+ * hooks → this turn's effective configs; characters seed the starting
+ * daemon). Bespoke
  * fixture daemons exercise the mechanics (the redraw.test.ts pattern —
  * explicit literals, not the `DAEMONS` singleton); a separate block pins the
  * SHIPPED catalog's design shape, with every expectation derived from the
@@ -43,9 +43,8 @@ const empowerHook = (chance: number | undefined): HookRule => ({
   },
 });
 
-/** A guaranteed full-package daemon (both grants, no coin) — the K3/K4 static
- *  defaults reborn as a daemon. Redraw hook FIRST (the L1 draw-order
- *  discipline, now the authored-rule-order contract). */
+/** A guaranteed full-package daemon (both grants, no coin). Redraw hook
+ *  FIRST (the authored-rule-order contract). */
 const SURE_BOTH: DaemonConfig = {
   id: 'test-sure',
   name: 'Test Sure',
@@ -69,10 +68,9 @@ const NEVER: DaemonConfig = {
   rules: [redrawHook(0, 6)],
 };
 
-// 63c — the rollDaemon describe left with the function (characters replaced
-// the run-start roll; Run.test.ts §63c covers character-seeded daemons).
+// Character-seeded daemons are covered in Run.test.ts.
 
-/** 47e — the all-disabled resolution (grants baseline, no instants). */
+/** The all-disabled resolution (grants baseline, no instants). */
 function disabledResolution(): { grants: TurnGrants; instants: never[] } {
   return { grants: disabledTurnGrants(), instants: [] };
 }
@@ -411,7 +409,7 @@ describe('battleRulesFor (47f — the battle-domain compile)', () => {
   });
 
   it('the shipped catalog compiles clean: laverna + fortuna + dis-pater are the only battle-hook idols', () => {
-    // dis-pater joined at 88c (the daemonized miner — an on-kill bits tithe).
+    // dis-pater is the daemonized miner — an on-kill bits tithe.
     for (const d of DAEMONS) {
       const compiled = battleRulesFor([d]);
       if (d.id === 'laverna' || d.id === 'fortuna' || d.id === 'dis-pater')
@@ -448,7 +446,7 @@ describe('the shipped catalog (config/daemons.json) — design-shape pins', () =
   });
 
   it('battleBitsDaemonIds names the battle-bits earners, ownership order (51a — the tally label)', () => {
-    // Laverna + dis-pater (88c) are the catalog's battle-bits earners;
+    // Laverna + dis-pater are the catalog's battle-bits earners;
     // grant/passive/status idols never qualify.
     expect(battleBitsDaemonIds([daemonById('laverna')!])).toEqual(['laverna']);
     expect(battleBitsDaemonIds([daemonById('dis-pater')!])).toEqual(['dis-pater']);
@@ -507,7 +505,7 @@ describe('the shipped catalog (config/daemons.json) — design-shape pins', () =
       expect(rule.value).toBeGreaterThan(1);
     }
     // A pure passive grants NO pre-turn tools — a moneta-only run has
-    // neither redraw nor empower (the catalog-inclusion call, 47e).
+    // neither redraw nor empower (the catalog-inclusion call).
     expect(daemonRedrawHook(moneta)).toBeUndefined();
     expect(daemonEmpowerHook(moneta)).toBeUndefined();
   });

@@ -3,8 +3,8 @@ import { empowerRejection, empowerEffect } from './empower';
 import type { EmpowerConfig } from '../config/empower';
 
 /**
- * K4→49d — the pure empower rules against ONE grant queue entry (the §49
- * per-source re-model), exercised in both budget modes. The grants here are
+ * The pure empower rules against ONE grant queue entry (the per-source
+ * model), exercised in both budget modes. The grants here are
  * deliberately explicit literals, NOT derived from the catalog — the mode
  * contract must hold whatever the shipped knobs say (the Run.test.ts
  * integration block covers the live config).

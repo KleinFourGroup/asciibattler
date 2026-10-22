@@ -16304,3 +16304,74 @@ Readings: 396,927 at 00:08 on `5253499e`, 463,271 at 00:15 before this
 entry: about 66k for 144 codes, 460 a code. Batch 6 (87 codes) starts
 under the hand-off line, at about 472k after this commit, and its
 forecast end, about 515k, leaves the hand-off its room before the halt.
+
+The suite by the hook at `85e109d9`: 3,702 passed, and the smoke 595.
+
+### 126m, batch 6 — `src/run` but `Run.test.ts` (2026-10-22, session 3d57d006)
+
+87 codes in 17 files, in 61 hunks, to none, and one twin in batch 2's
+`src/config/sectorMap.test.ts`. One code was the counter's other
+miscount: "N=40k" in `Recruitment.test.ts`, now "N=40,000". Reasons that
+replace a code, with where each was checked:
+
+- `NodeMap.test.ts`: "the 77b instrument" is the map-metrics instrument
+  (`mapMetrics.test.ts`'s header, "the metrics module's contract"); "the
+  §74e feel call" is a signed feel call (`eventMinSpacing` ships at 1,
+  `config/nodemap.json:13`); "the G2 guard" is the planarity guard (the
+  sentence after it defines planar); the 77e2 notes are put in the
+  present, the history of which contract replaced which dropped.
+- `RunConfig.test.ts`: "the #121 every-sector charter" is gotcha #121's
+  (`sectorAdvanceConfig`).
+- `daemon.test.ts`: "Run.test.ts §63c covers character-seeded daemons"
+  holds (`Run.test.ts:1895`, "seeds the CHARACTER's daemon at
+  construction").
+- `encounters/sequencer.test.ts`: "U1 is tested separately" is
+  `resolveWave`, in `wave.test.ts`.
+- `hopsRemaining.test.ts`: "the §84 instrument" and "the §85 prior" are
+  the fuzz instrument and the prior table (`tests/fuzz/prior/priorTable.ts`
+  and `tests/fuzz/commands/args.ts` read `hopsRemaining`).
+- `mapMetrics.test.ts`: "land at 77e (nodemap-metrics.test.ts), after the
+  77c signing" is that the gates are `tests/nodemap-metrics.test.ts`, the
+  signed sheet (a permanent gate).
+- `Recruitment.test.ts`: the sampler's provenance (F1, §61, §63, §64)
+  named by the blocks it points at ("the sampler block above").
+- `brigands.test.ts`: the header's retune history (U3, V1, Phase X3)
+  dropped; what the test pins is unchanged.
+
+Corrected (rule 7):
+
+- `NodeMap.test.ts:360`: "a battle-less hop is a known artifact of the
+  dense interim scatter (§77 owns ratio)" contradicted the test after
+  it, which pins a battle on every middle hop; it now points at that
+  floor.
+- `sectorWalk.test.ts`: "the shipped map is single-node" was false
+  (`config/sector-map.json` is the chain `start` → `deep-end`), and its
+  fixture's doc called the one-node DAG "the shipped-shape". **Its twin
+  in batch 2's file, flagged:** `sectorMap.test.ts:7`, "The structural
+  block pins the shipped one-node DAG", where the block pins the
+  two-node chain; corrected here.
+- `redraw.test.ts`, `empower.test.ts`: "the §49 per-source re-model" is
+  the per-source model, and "the 49d semantic shift — the old model
+  tracked cards-per-turn" is that the cap is per action.
+
+Twins: a search for "single-node", "one-node", "interim scatter" and
+"battle-less hop" over `src`, `tests`, `tools`, `scripts` and `config`
+found a node-map test's one-node map (`tests/fuzz/rollout/driver.test.ts:462`,
+accurate) and a viz label.
+
+**Proof.** `comment-strip HEAD src`: 18 files differ, in comments only,
+exit 0; the control named 18 of 18. `comment-codes`: 301 → 214, and
+`--record` wrote 214 in 1 file, `Run.test.ts`. `comment-length` on the 18
+files: comment lines 436 → 429, words 4,114 → 3,931, code lines 3,519
+both.
+
+**Read** (`batch`): `git show <this commit> -- src`. What changed: the
+step codes in `src/run`'s tests but `Run.test.ts`, and the stale
+sector-map and battle-less-hop claims. Where to look: `NodeMap.test.ts`'s
+spacing and planarity comments, `Recruitment.test.ts`'s sampler blocks,
+`brigands.test.ts`'s header, the two sector-map headers. Wrong looks
+like a comment that disagrees with the array or the config it sits
+over.
+
+Readings: 463,518 at 00:18 on `85e109d9`, 498,659 at 00:23 before this
+entry: about 35k for 87 codes, 400 a code.

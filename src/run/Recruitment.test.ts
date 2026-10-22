@@ -23,8 +23,8 @@ describe('rollOffer', () => {
 
   it('§61c: no longer capped at the pool size — duplicates fill by design', () => {
     // Pigeonhole: more slots than draftable archetypes FORCES a duplicate.
-    // (F1's distinct sampler capped here; the §61 kickoff lock allows dupes —
-    // rolled levels/growth differentiate, the resample fallback stays unbuilt.)
+    // (A signed call allows dupes — rolled levels/growth differentiate — so
+    // no resample fallback is built.)
     const size = DRAFTABLE_ARCHETYPES.length + 5;
     const offer = rollOffer(new RNG(1), size);
     expect(offer).toHaveLength(size);
@@ -40,7 +40,7 @@ describe('rollOffer', () => {
   });
 
   it('F1: every draftable archetype is reachable in the draft pool', () => {
-    // The whole point of F1 — rogue/healer/mage/catapult (and the §29 player
+    // The point of the sampler — rogue/healer/mage/catapult (and the player
     // afflicters) must actually appear, not just melee/ranged. The union over
     // many fixed seeds is deterministic, so this is a hard assertion.
     const seen = new Set<string>();
@@ -51,13 +51,13 @@ describe('rollOffer', () => {
   });
 
   it('§29-close: never offers an enemy disruptor or the summon-only Ghoul', () => {
-    // The §29-close recruit-pool cleanup. These archetypes EXIST (cast by
+    // The recruit pool's exclusions. These archetypes EXIST (cast by
     // enemies / raised by the Shaman / granted by an event) but are not the
     // player's to draft. Pinned explicitly — a future archetype added without
     // `draftable:false` that leaks into the offer trips this. Two complementary
     // checks: the flag derivation excludes exactly these, and a wide
     // deterministic seed scan never surfaces one in an actual offer.
-    // 74i — 'prodigy' joins: the event-grant-only legendary (§74i catalog).
+    // 'prodigy' is the event-grant-only legendary.
     const EXCLUDED = ['ice_mage', 'warlock', 'luminant', 'banshee', 'ghoul', 'prodigy'] as const;
     for (const a of EXCLUDED) expect(DRAFTABLE_ARCHETYPES).not.toContain(a);
     expect(DRAFTABLE_ARCHETYPES.length).toBe(ALL_ARCHETYPES.length - EXCLUDED.length);
@@ -69,7 +69,7 @@ describe('rollOffer', () => {
   });
 
   it('every offered unit has its archetype baseStats verbatim (level 1)', () => {
-    // Recruits default to level 1 → baseStats exactly (E3's per-stat
+    // Recruits default to level 1 → baseStats exactly (the per-stat
     // level-up rolls only kick in for level > 1, which Run threads via
     // currentFloor). An exhaustive equality check is the cleanest pin.
     const offer = rollOffer(new RNG(1), DRAFTABLE_ARCHETYPES.length);
@@ -98,7 +98,7 @@ describe('rollOffer', () => {
   });
 
   it('resolves a level FUNCTION once per card, in order', () => {
-    // Post-G5: a function `level` is drawn per card. A deterministic counter
+    // A function `level` is drawn per card. A deterministic counter
     // (config-free) proves each card gets its own value, in iteration order.
     const seq = [1, 3, 5];
     let i = 0;
@@ -125,10 +125,10 @@ describe('rollOffer', () => {
 });
 
 /**
- * §61c — the rarity-weighted sampler. Distribution expectations are DERIVED
+ * The rarity-weighted sampler. Distribution expectations are DERIVED
  * from the weights/pools passed in (the balance-proof rule — no hardcoded
  * probability arithmetic); synthetic catalogs pin the mechanics independent of
- * the live tier assignment (61d sets it, §68 tunes it).
+ * the live tier assignment.
  */
 describe('§61c — rollArchetypeByRarity (pure core, synthetic catalogs)', () => {
   type Pools = Readonly<Record<UnitRarity, readonly string[]>>;
@@ -192,7 +192,7 @@ describe('§61c — rollArchetypeByRarity (pure core, synthetic catalogs)', () =
 
   it('draws exactly 2 per call regardless of tier occupancy (the stream-shape pin)', () => {
     // One populated tier vs three: the stream must advance identically, so
-    // 61d's tier assignments shift WHICH archetypes appear, never draw counts.
+    // the tier assignments shift WHICH archetypes appear, never draw counts.
     const seed = 424242;
     const one = new RNG(seed);
     const many = new RNG(seed);
@@ -224,9 +224,9 @@ describe('§61c — rollArchetypeByRarity (pure core, synthetic catalogs)', () =
 });
 
 /**
- * §63b — the weighted within-tier pick (the character weight-override seam).
- * Same synthetic-catalog discipline as §61c above; the identity pin is the
- * kickoff audit's byte-neutrality proof made executable.
+ * The weighted within-tier pick (the character weight-override seam).
+ * Same synthetic-catalog discipline as the sampler block above; the identity
+ * pin is a byte-neutrality proof made executable.
  */
 describe('§63b — within-tier archetype weights', () => {
   type Pools = Readonly<Record<UnitRarity, readonly string[]>>;
@@ -251,7 +251,7 @@ describe('§63b — within-tier archetype weights', () => {
     // reference RNG replays draw 1 then applies RNG.pick's exact mapping
     // (`int(0, len−1)`). Any divergence — index mapping OR draw count —
     // fails across the seed scan. This is what keeps every no-override
-    // draft stream byte-identical across the §63 landing.
+    // draft stream byte-identical to an unweighted pick.
     const P = pools({ common: ['a', 'b', 'c', 'd', 'e'] });
     for (let seed = 0; seed < 500; seed++) {
       const rng = new RNG(seed);
@@ -333,7 +333,7 @@ describe('§63b — within-tier archetype weights', () => {
   });
 
   it('rollOffer threads custom pools — an excluded archetype never appears (the blacklist path)', () => {
-    // The §63c call shape: pools pre-filtered by the character blacklist.
+    // The character call shape: pools pre-filtered by the character blacklist.
     const P = pools({ common: ['mercenary'], uncommon: ['ronin'] });
     for (let s = 0; s < 100; s++) {
       for (const u of rollOffer(new RNG(s), 3, 1, P)) {
@@ -365,9 +365,9 @@ describe('§63b — within-tier archetype weights', () => {
 });
 
 /**
- * §64b — tier weights as a rollOffer param (the run-stat fold's seam;
+ * Tier weights as a rollOffer param (the run-stat fold's seam;
  * Patrician's Seal's mult-0 lands through it). Same synthetic-catalog
- * discipline as §63b above.
+ * discipline as the within-tier block above.
  */
 describe('§64b — folded tier weights through the sampler', () => {
   type Pools = Readonly<Record<UnitRarity, readonly string[]>>;
@@ -409,8 +409,8 @@ describe('§64b — folded tier weights through the sampler', () => {
     // A stub rng returning 1 (out of the [0,1) contract, deliberately) makes
     // the walk's roll survive every subtraction — the exact shape of the
     // float-rounding edge the fallback exists for. The last NON-EMPTY tier
-    // here is legendary at weight 0: the pre-64b init would hand back a tier
-    // holding no probability mass; the hardened init must pick uncommon (the
+    // here is legendary at weight 0: an init on the last non-empty tier would
+    // hand back a tier holding no probability mass; the init must pick uncommon (the
     // last positive-weight tier).
     const P = pools({ common: ['c1'], uncommon: ['u1'], legendary: ['l1'] });
     const edge = { next: () => 1 } as unknown as RNG;
@@ -449,7 +449,7 @@ describe('§64b — folded tier weights through the sampler', () => {
 });
 
 /**
- * §64c — per-slot tier forcing (Idol of Portunus's seam). The forced draw
+ * Per-slot tier forcing (Idol of Portunus's seam). The forced draw
  * keeps the 2-draws-per-slot shape (tier draw consumed-and-overridden) and
  * degrades gracefully when the forced pool is empty.
  */
@@ -522,7 +522,7 @@ describe('§64c — forced-tier draws', () => {
 
   it('rollOffer forces per SLOT: listed slots pinned, the rest roll free', () => {
     // Real archetype ids — rollOffer materializes units through the catalog
-    // (the §63b synthetic-pool discipline: tiers are the param, ids are real).
+    // (the synthetic-pool discipline: tiers are the param, ids are real).
     const P = pools({ common: ['mercenary'], legendary: ['ronin'] });
     let freeSlotCommons = 0;
     for (let s = 0; s < 300; s++) {
@@ -545,7 +545,7 @@ describe('recruitLevelBonus (G4 geometric bonus)', () => {
       counts.set(b, (counts.get(b) ?? 0) + 1);
     }
     const p = (k: number) => (counts.get(k) ?? 0) / N;
-    // toBeCloseTo(_, 1) → within 0.05; comfortably tighter than that at N=40k.
+    // toBeCloseTo(_, 1) → within 0.05; comfortably tighter than that at N=40,000.
     expect(p(0)).toBeCloseTo(1 - c, 1);
     expect(p(1)).toBeCloseTo((1 - c) * c, 1);
     expect(p(2)).toBeCloseTo((1 - c) * c * c, 1);

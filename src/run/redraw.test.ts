@@ -2,8 +2,8 @@ import { describe, it, expect } from 'vitest';
 import { redrawRejection, type RedrawGrantState } from './redraw';
 
 /**
- * K3→49d — the pure redraw rules against ONE grant queue entry (the §49
- * per-source re-model), exercised in both budget modes: the shipped
+ * The pure redraw rules against ONE grant queue entry (the per-source
+ * model), exercised in both budget modes: the shipped
  * single-action grant and a raised-budget alternative. The grants here are
  * deliberately explicit literals, NOT derived from the catalog — the mode
  * contract must hold whatever the shipped knobs say (the Run.test.ts
@@ -42,8 +42,8 @@ describe('redrawRejection — single-action grant', () => {
 describe('redrawRejection — raised-budget grant (per-action card cap)', () => {
   it('allows repeat actions, each capped at maxCards (49d: per ACTION, not per turn)', () => {
     expect(redrawRejection([0, 4], HAND, N_ACTIONS)).toBeNull();
-    // The second action gets a FRESH 3-card cap (the 49d semantic shift —
-    // the old model tracked cards-per-turn across actions).
+    // The second action gets a FRESH 3-card cap (the cap is per action, not
+    // per turn).
     expect(redrawRejection([0, 1, 2], HAND, { ...N_ACTIONS, used: 1 })).toBeNull();
   });
 

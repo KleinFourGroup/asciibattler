@@ -13,7 +13,7 @@ import type { WaveSpec } from './wave';
 // ---------------------------------------------------------------------------
 // Tiny taggable waves: a WaveSpec whose fixed count IS its identity tag, so a
 // driven sequence is readable as a list of tag numbers (the sequencer returns
-// specs, never resolves them — U1 is tested separately).
+// specs, never resolves them — `resolveWave` is tested in wave.test.ts).
 // ---------------------------------------------------------------------------
 
 const W = (tag: number): WaveEntry => ({

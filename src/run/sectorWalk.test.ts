@@ -5,13 +5,14 @@ import { SECTOR_IDS } from '../config/sectors';
 import { pickOne, pickWeighted, pickStartSector, pickNextSector, isSectorSink } from './sectorWalk';
 
 /**
- * T2 — the sector-DAG walk. Pure RNG-driven traversal over fixture DAGs (the
- * shipped map is single-node; the multi-node behavior is tested with fixtures).
+ * The sector-DAG walk. Pure RNG-driven traversal over fixture DAGs (the
+ * shipped map is a two-node chain; the branching behavior is tested with
+ * fixtures).
  */
 
 const S = SECTOR_IDS[0]!; // a real sector id for fixtures
 
-/** The shipped-shape one-node DAG (source == sink, one sector). */
+/** A one-node DAG (source == sink, one sector). */
 const SINGLE: SectorMap = SectorMapSchema.parse({
   nodes: [{ id: 'start', sectors: [S] }],
   edges: [],

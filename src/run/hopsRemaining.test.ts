@@ -1,7 +1,7 @@
 /**
- * 84b — `Run.hopsRemaining` (derived, never serialized) + the pure DAG
- * helper it leans on (`remainingSectorHops`). The §84 instrument's
- * per-remaining-hop normalization and the §85 prior's state scaling read
+ * `Run.hopsRemaining` (derived, never serialized) + the pure DAG
+ * helper it leans on (`remainingSectorHops`). The fuzz instrument's
+ * per-remaining-hop normalization and the prior table's state scaling read
  * this; the pins are config-derived (the balance-proof rule) — every
  * expectation is computed from the sector defs / the live node-map, never
  * a hardcoded 11 or 22.

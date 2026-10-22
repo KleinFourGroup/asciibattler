@@ -4,7 +4,7 @@ import { SECTOR_IDS } from './sectors';
 
 /**
  * The sector-selection meta-DAG schema. The structural block pins the
- * shipped one-node DAG; the guard block exercises the four custom validators
+ * shipped two-node chain; the guard block exercises the four custom validators
  * with hand-built fixtures (never the shipped JSON).
  */
 

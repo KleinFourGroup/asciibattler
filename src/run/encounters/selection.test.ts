@@ -10,7 +10,7 @@ import { SECTORS, PROCEDURAL_LAYOUT_ID, type SectorDef } from '../../config/sect
 import { getEncounter, type Encounter, type EncounterKind } from '../../config/encounters';
 
 /**
- * V1 — the encounter-selection resolver. Mechanic tests with hand-built fixtures
+ * The encounter-selection resolver. Mechanic tests with hand-built fixtures
  * (a fixture sector + a fixture catalog resolver) — never the shipped JSON, per
  * the balance-proof-test policy. Both keyed strategies are exercised against the
  * same fixtures; the resolver is pure, so determinism is per-seed.

@@ -1,9 +1,9 @@
 /**
- * 77b — the metrics module's contract, proven on hand-built maps with
+ * The metrics module's contract, proven on hand-built maps with
  * pencil-and-paper answers first (no generator in the loop), then sanity
  * bounds over the live generator. These are the metrics' OWN tests; the
- * threshold acceptance gates over the reworked generator land at 77e
- * (nodemap-metrics.test.ts), after the 77c signing.
+ * threshold acceptance gates over the generator are
+ * tests/nodemap-metrics.test.ts, the signed sheet.
  */
 
 import { describe, it, expect } from 'vitest';
@@ -210,7 +210,7 @@ describe('computeMapMetrics — generator sanity bounds', () => {
       // Default maps branch (the connectivity suite pins avg out-degree>1
       // corpus-wide; per-map, every default-length map has ≥1 wide hop).
       expect(m.rejoinPairs.length).toBeGreaterThan(0);
-      // 77e2b — shear is a bounded per-map statistic; coherence is a share.
+      // Shear is a bounded per-map statistic; coherence is a share.
       expect(Math.abs(m.meanEdgeShear)).toBeLessThanOrEqual(1);
       expect(m.diagonalMajorityShare).toBeGreaterThanOrEqual(0.5);
       expect(m.diagonalMajorityShare).toBeLessThanOrEqual(1);

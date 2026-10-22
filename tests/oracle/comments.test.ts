@@ -24,6 +24,19 @@ const TRICKY = [
   '// the last line',
 ].join('\n');
 
+/** Test titles in each form a call takes, beside strings that are not titles. */
+const TITLES = [
+  "describe('74b — the group', () => {",
+  "  it('a 53b test', () => {});",
+  '  it.skip(`a ${kind} test (K1)`, () => {});',
+  "  it.each([1, 2])('case %i of 95e', (n) => {});",
+  '  test.todo("later, 117b");',
+  "  expect(1, 'a message, 40b').toBe(1);",
+  "  check('a helper argument, 41c');",
+  "  it(name, () => label('a second argument'));",
+  '});',
+].join('\n');
+
 describe('splitTypeScript', () => {
   it('finds the comments and only them', () => {
     expect(texts(splitTypeScript('tricky.ts', TRICKY).comments)).toEqual([
@@ -59,6 +72,18 @@ describe('splitTypeScript', () => {
       code: [],
     });
     expect(splitTypeScript('a.ts', '')).toEqual({ comments: [], code: [] });
+  });
+
+  it("flags the literal pieces of a test's title, and no other string", () => {
+    const flagged = splitTypeScript('t.ts', TITLES).code.filter((p) => p.title === true);
+    expect(flagged.map((p) => `${p.text}@${p.line}`)).toEqual([
+      "'74b — the group'@1",
+      "'a 53b test'@2",
+      '`a ${@3',
+      '} test (K1)`@3',
+      "'case %i of 95e'@4",
+      '"later, 117b"@5',
+    ]);
   });
 });
 
@@ -116,6 +141,19 @@ describe('the compare with the comments out', () => {
 
   it('names code added or taken from the end', () => {
     expect(differs('a();', 'a();\nb();')).toBe('4 pieces more at the end, the first at line 2 "b"');
+  });
+
+  it("masks a test's title: a reworded one passes, and its substitution, its call and any other string are named", () => {
+    const reworded = TITLES.replace('74b — the group', 'the group')
+      .replace('a 53b test', 'a test that says why')
+      .replace(' test (K1)`', ' test`')
+      .replace('"later, 117b"', '"later"');
+    expect(differs(TITLES, reworded)).toBeNull();
+    expect(differs(TITLES, TITLES.replace('${kind}', '${other}'))).toBe('line 3 "kind" → line 3 "other"');
+    expect(differs(TITLES, TITLES.replace('it.skip(', 'it.only('))).toBe('line 3 "skip" → line 3 "only"');
+    expect(differs(TITLES, TITLES.replace('a message, 40b', 'a message'))).toContain('a message');
+    expect(differs(TITLES, TITLES.replace('a helper argument, 41c', 'a helper argument'))).toContain('a helper argument');
+    expect(differs(TITLES, TITLES.replace('a second argument', 'another argument'))).toContain('another argument');
   });
 
   it('over two trees: a comment edit passes, and a code edit, a new file and a file it cannot split are named', () => {
@@ -237,9 +275,10 @@ describe('stepCodes', () => {
     expect(codes('about 40k tokens; the L9 will be strongest')).toEqual(['40k', 'L9']);
   });
 
-  it('reads comments only, and gives each code its line', () => {
-    const source = ["// 53b — the stamp.", "const title = '74b — not a comment';", '/**', ' * Since 95e (and K1).', ' */', 'export {};'].join('\n');
-    expect(codesInSource('x.ts', source).map((c) => `${c.code}@${c.line}`)).toEqual(['53b@1', '95e@4', 'K1@4']);
+  it('reads comments and test titles, not other strings, and gives each code its line in order', () => {
+    const source = ["// 53b — the stamp.", "const title = '74b — not a comment';", '/**', ' * Since 95e (and K1).', ' */', "it('the 66a case', () => {});", '// 67b', 'export {};'].join('\n');
+    expect(codesInSource('x.ts', source).map((c) => `${c.code}@${c.line}`)).toEqual(['53b@1', '95e@4', 'K1@4', '66a@6', '67b@7']);
+    expect(codesInSource('t.ts', TITLES).map((c) => c.code)).toEqual(['74b', '53b', 'K1', '95e', '117b']);
     expect(codesInSource('x.md', '53b')).toEqual([]);
   });
 

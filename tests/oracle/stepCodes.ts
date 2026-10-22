@@ -1,12 +1,12 @@
 /**
- * The count of step codes in the comments under `src`, by file, and the
- * ceiling it is held to (tests/comment-codes.test.ts).
+ * The count of step codes in the comments and the test titles under `src`,
+ * by file, and the ceiling it is held to (tests/comment-codes.test.ts).
  *
  * A step code addresses the plan and not the code: "74b", "§40b", "K1". A
  * reader of the source cannot resolve one, which is why AGENTS "Voice" asks
  * for the reason in words instead. The rule below is what the count means.
- * It reads comments only (comments.ts); a code in a string, such as a test's
- * title, is not counted.
+ * It reads comments and test titles (comments.ts says what a title is); a
+ * code in any other string is data and is not counted.
  *
  * COUNTED, each match once:
  *
@@ -110,20 +110,20 @@ export function listSources(repoRoot: string, roots: readonly string[]): string[
   return out.sort();
 }
 
-/** The step codes in one file's comments, each with the line it stands on. */
+/** The step codes in one file's comments and test titles, each with the line it stands on, in line order. */
 export function codesInSource(file: string, text: string): FoundCode[] {
   const split = splitSource(file, text);
   if (split === null) return [];
   const found: FoundCode[] = [];
-  for (const comment of split.comments) {
-    comment.text.split('\n').forEach((lineText, k) => {
-      for (const code of stepCodes(lineText)) found.push({ ...code, file, line: comment.line + k });
+  for (const read of [...split.comments, ...split.code.filter((piece) => piece.title === true)]) {
+    read.text.split('\n').forEach((lineText, k) => {
+      for (const code of stepCodes(lineText)) found.push({ ...code, file, line: read.line + k });
     });
   }
-  return found;
+  return found.sort((a, b) => a.line - b.line);
 }
 
-/** Every step code in the comments under `roots`. */
+/** Every step code in the comments and test titles under `roots`. */
 export function scanStepCodes(repoRoot: string = REPO_ROOT, roots: readonly string[] = COUNTED_ROOTS): FoundCode[] {
   return listSources(repoRoot, roots).flatMap((file) => codesInSource(file, readFileSync(join(repoRoot, file), 'utf8')));
 }

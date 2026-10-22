@@ -91,16 +91,9 @@ every item below is done (WORKLOG §124, "The close of §124"; WORKLOG
   `arbitratedStrategy.test.ts` walks a clone of its funded dock under the
   overlay and reads a purchase land (WORKLOG §126, 126i).
 
-- [ ] **The step-code ceiling at 0 guards comments, not strings.**
-  `comment-codes` counts the codes in comments only
-  (`tests/oracle/stepCodes.ts`), and session cdb73148's report counts 686
-  more inside strings in `src`'s tests, test titles; at §125's close at
-  least 199 test titles under `src` held a `§` and a digit (a grep of
-  `it(`, `describe(` and `test(` titles, bare codes not counted). §126's
-  sweep of the codes in `src`'s tests (§125's decision point) reaches
-  comments, so after it the titles keep theirs and the ceiling at 0 says
-  nothing of them. For the kickoff: whether the sweep takes the titles
-  too, and what then guards them. Signed for here 2026-10-21.
+- ✅ **The step-code ceiling guards test titles too.** `comment-codes` counts
+  the codes in `it`, `test` and `describe` titles, and `comment-strip` masks
+  a title's words (WORKLOG §126, 126n).
 
 - ✅ **Pin ARCHITECTURE's event catalog against `events.ts`.** `eventSounds.test.ts` holds the catalog's rows to the interface's keys, with a self-check (WORKLOG §126, 126g).
 

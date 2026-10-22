@@ -16584,3 +16584,59 @@ entry: about 117k for the session's start and 136 codes, near 860 a
 code with the start's reading of the Cursor and the hand-off included.
 
 126m is built: 895 → 0 in eight batches, every read unread.
+
+### 126n — the step codes in titles: the instruments, and the batches planned (2026-10-22, session c5a45a3d)
+
+The kickoff's first call, as signed: `comment-strip` masks a test's title
+on both sides, with its control kept, and `comment-codes` counts the
+titles into the ceiling, so 0 guards both; other strings stay outside
+the count.
+
+**The instruments.** A title is the first argument of a call whose callee
+starts from `it`, `test` or `describe` (through `.skip`, `.each(table)`,
+`.skipIf(c)` and the rest), when that argument is a string or a template
+(`tests/oracle/comments.ts`, `titleStarts`). The splitter flags each of
+its literal pieces `title`: a string whole, a template's text around its
+substitutions. The compare holds a flagged piece with its words masked,
+keeping its opening and closing (a quote, a backtick, `}`, `${`), so a
+reworded title passes and a changed substitution, a changed call (`skip`
+to `only`) or a changed quote kind is named. The count reads the flagged
+pieces beside the comments, and the CLI's "inside strings" figure now
+leaves the titles out. `plant.ts` never edits a string's text, so the
+per-run control is unchanged by the mask.
+
+Known answers, in `tests/oracle/comments.test.ts`: a fixture with a title
+in each form a call takes, beside a message argument, a helper's argument
+and a second argument; the flagged pieces listed exactly; the reworded
+titles passing and each of the other three edits named; the count reading
+five codes in the titles and none in the other strings. Its control
+(`scratch/126n/control.mts`): the same reworded pair with the title flags
+stripped is named at line 1, so the pass comes from the mask.
+
+**Step zero, at `8c1db094`.** `comment-codes` now reads 666 codes, every
+one in a test title, in 132 files: `src/sim` 249 (54 files), `src/run`
+204 (14), `src/config` 75, `src/ui` 29, `src/render` 28, `src/bot` 24,
+`src/store` 22, `src/dev` 17, five folders 18. The kickoff's probe read
+667. The strings that are not a title hold 19, and 666 + 19 is the 685
+the CLI printed before. The ceiling rises once, 0 → 666, by the rule and
+not by a new code: `--record` refuses a rise, so
+`scratch/126n/record-rise.mts` writes it, and only when the codes in
+comments still stand at the ceiling (0). No two tests in a file share a
+full name (`scratch/126n/titles.mts --dupes`, which names its planted
+repeat in `scratch/126n/plant.test.ts`); a sweep that made two equal is
+checked by the same run after each batch.
+
+**The batches,** by folder, as in 126m: (1) every folder but `src/sim`
+and `src/run`, 213 codes in 64 files; (2) `src/sim`, 249 in 54; (3)
+`src/run`, 204 in 14. The method is 126m's: a patch per batch through
+`scratch/126m/apply-patch.mjs`, the code dropped where the words say what
+the test does and replaced by its reason where it stood for one, the
+reason checked at the code, history put in the present. A title that a
+doc quotes is looked for after each batch in the live docs, `tests`,
+`tools` and `scripts`. Proof per batch: `comment-strip HEAD src` with its
+control, `comment-codes --record`, the repeat check, the suite by the
+hook. The read is `batch`, per batch, with its script in the entry.
+
+At 126m's 400 to 540 tokens a code the three come to about 270 to 360k,
+from 281,886 at 13:06 UTC, so this session builds batches 1 and 2 and
+hands off before batch 3, as the Cursor's rule has it.

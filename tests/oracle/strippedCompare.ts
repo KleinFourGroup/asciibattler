@@ -5,7 +5,10 @@
  * Each file is split into comments and code pieces (comments.ts), and the
  * pieces are held equal, in order. A file whose text changed and whose
  * pieces did not has changed in its comments only. The first piece that
- * differs is reported with its line on each side.
+ * differs is reported with its line on each side. A test's title is held
+ * with its words masked on both sides, so a reworded title passes with the
+ * comments; its quotes, its substitutions and the call it names are held as
+ * code.
  *
  * The usual run holds the working tree against a ref, before the commit:
  * `npm run oracle -- comment-strip HEAD`. A file of a kind comments.ts does
@@ -75,12 +78,17 @@ export interface StrippedCompare {
 
 const show = (piece: CodePiece): string => `line ${piece.line} ${JSON.stringify(piece.text.length > 60 ? `${piece.text.slice(0, 57)}...` : piece.text)}`;
 
+// A title piece's opening (a quote, a backtick, or the `}` that closes a
+// substitution) and its close (a quote, a backtick, or `${`), around its words.
+const TITLE_WORDS = /^(['"`}])[^]*?(\$\{|['"`])$/;
+const held = (piece: CodePiece): string => (piece.title === true ? piece.text.replace(TITLE_WORDS, '$1…$2') : piece.text);
+
 /** The first place two files' code parts, or `null` when the pieces are the same. */
 export function firstCodeDifference(before: readonly CodePiece[], after: readonly CodePiece[]): string | null {
   const shared = Math.min(before.length, after.length);
   for (let i = 0; i < shared; i++) {
     const [a, b] = [before[i]!, after[i]!];
-    if (a.text !== b.text) return `${show(a)} → ${show(b)}`;
+    if (held(a) !== held(b)) return `${show(a)} → ${show(b)}`;
     if (a.newline !== b.newline) return `a line break before ${show(b)} ${b.newline ? 'came' : 'went'}`;
   }
   if (before.length > after.length) return `${before.length - shared} pieces gone from the end, the first at ${show(before[shared]!)}`;

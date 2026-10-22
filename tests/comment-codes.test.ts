@@ -1,12 +1,12 @@
 /**
- * The step-code ceiling: the count of step codes in the comments under
- * `src`, held by file to tests/comment-codes-baseline.json, so that it can
- * only fall.
+ * The step-code ceiling: the count of step codes in the comments and the
+ * test titles under `src`, held by file to tests/comment-codes-baseline.json,
+ * so that it can only fall.
  *
- *   - a file OVER its ceiling has a new step code in a comment. Say what the
- *     code stood for instead (AGENTS "Voice"): a reader of the source cannot
- *     resolve "74b". What counts as a code is the header of
- *     tests/oracle/stepCodes.ts.
+ *   - a file OVER its ceiling has a new step code in a comment or a title.
+ *     Say what the code stood for instead (AGENTS "Voice"): a reader of
+ *     the source cannot resolve "74b". What counts as a code is the header
+ *     of tests/oracle/stepCodes.ts.
  *   - a file UNDER its ceiling has had codes rewritten out, or is gone.
  *     Lower the ceiling in the same commit (`npm run oracle -- comment-codes
  *     --record`), so the count cannot creep back.
@@ -24,12 +24,12 @@ describe('the step-code ceiling (tests/comment-codes-baseline.json)', () => {
   const ceiling = readCeiling();
   const drift = ceilingDrift(live, ceiling);
 
-  it('no file holds more step codes in its comments than its ceiling', () => {
+  it('no file holds more step codes in its comments and titles than its ceiling', () => {
     const report = drift.over.map((f) => {
       const held = codes.filter((c) => c.file === f.file).map((c) => `    ${f.file}:${c.line}  ${c.code}`);
       return `  ${f.file}: ${f.now}, ceiling ${f.ceiling}. Its codes now:\n${held.join('\n')}`;
     });
-    expect(report, `a new step code in a comment; say what it stood for instead (AGENTS "Voice"):\n${report.join('\n')}`).toEqual([]);
+    expect(report, `a new step code in a comment or a title; say what it stood for instead (AGENTS "Voice"):\n${report.join('\n')}`).toEqual([]);
   });
 
   it('no file holds fewer without the ceiling coming down', () => {

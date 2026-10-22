@@ -21,6 +21,12 @@
  * A comment that a tool reads is code for this purpose and stays in the
  * pieces (`TOOL_READ`).
  *
+ * A test's title is code that a reader reads as prose: the first argument
+ * of `it`, `test` or `describe`, through `.each`, `.skip` and the rest, when
+ * it is a string or a template. Its literal pieces are flagged `title`, so
+ * the compare can mask their words and the step-code count can read them; a
+ * substitution inside a title is code like any other.
+ *
  * GLSL and CSS are split by a small scanner of their own: neither has
  * regular expressions or templates, and their pieces are the lines left,
  * trimmed, with runs of blanks outside a string made one.
@@ -41,6 +47,8 @@ export interface CodePiece {
   readonly text: string;
   /** Whether a line break stood between the piece before and this one. */
   readonly newline: boolean;
+  /** Set on a literal piece of a test's title: a string, or a template's text around its substitutions. */
+  readonly title?: true;
 }
 
 export interface SplitSource {
@@ -59,11 +67,42 @@ export const TOOL_READ =
 // The four characters JavaScript ends a line on; the last two are written by code so that no editor meets them raw.
 const LINE_BREAK = new RegExp(`[\\n\\r${String.fromCharCode(0x2028, 0x2029)}]`);
 
+/** The calls a test file names its tests and its groups with. */
+const TEST_CALLS = new Set(['it', 'test', 'describe']);
+
+/** The name a call's callee starts from: `it` for `it`, `it.skip`, `it.each(table)` and `describe.skipIf(c)`. */
+function calleeRoot(callee: ts.Expression): string | null {
+  let node = callee;
+  for (;;) {
+    if (ts.isPropertyAccessExpression(node) || ts.isCallExpression(node)) node = node.expression;
+    else return ts.isIdentifier(node) ? node.text : null;
+  }
+}
+
+/** Where each literal piece of a test's title starts. */
+function titleStarts(source: ts.SourceFile): Set<number> {
+  const starts = new Set<number>();
+  const visit = (node: ts.Node): void => {
+    if (ts.isCallExpression(node) && TEST_CALLS.has(calleeRoot(node.expression) ?? '')) {
+      const title = node.arguments[0];
+      if (title !== undefined && ts.isStringLiteralLike(title)) starts.add(title.getStart(source));
+      else if (title !== undefined && ts.isTemplateExpression(title)) {
+        starts.add(title.head.getStart(source));
+        for (const span of title.templateSpans) starts.add(span.literal.getStart(source));
+      }
+    }
+    ts.forEachChild(node, visit);
+  };
+  visit(source);
+  return starts;
+}
+
 export function splitTypeScript(fileName: string, text: string): SplitSource {
   const source = ts.createSourceFile(fileName, text, ts.ScriptTarget.Latest, false, ts.ScriptKind.TS);
   const comments: SourceComment[] = [];
   const code: CodePiece[] = [];
   const lineOf = (pos: number): number => source.getLineAndCharacterOfPosition(pos).line + 1;
+  const titles = titleStarts(source);
   let covered = 0;
 
   /** The comments in `text[from, to)`, which must hold nothing else but whitespace. */
@@ -113,7 +152,10 @@ export function splitTypeScript(fileName: string, text: string): SplitSource {
     const start = node.getStart(source);
     const newline = trivia(node.pos, start);
     // The first piece has none before it, so a header may come or go above it.
-    if (!end) code.push({ line: lineOf(start), text: text.slice(start, node.end), newline: newline && code.length > 0 });
+    if (!end) {
+      const piece = { line: lineOf(start), text: text.slice(start, node.end), newline: newline && code.length > 0 };
+      code.push(titles.has(start) ? { ...piece, title: true } : piece);
+    }
     covered = node.end;
   };
   visit(source);

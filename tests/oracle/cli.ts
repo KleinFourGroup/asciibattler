@@ -5,7 +5,7 @@
  *   npm run oracle -- config-dump <out.json>     every config loader's exports (configDump.ts)
  *   npm run oracle -- json-diff <before> <after>  two JSON files, or two folders of them, path by path (jsonDiff.ts)
  *   npm run oracle -- comment-strip <ref> [root…] the working tree against a ref with the comments out (strippedCompare.ts)
- *   npm run oracle -- comment-codes [--record|--list]  the step codes in comments, by folder (stepCodes.ts)
+ *   npm run oracle -- comment-codes [--record|--list]  the step codes in comments and test titles, by folder (stepCodes.ts)
  *   npm run oracle -- comment-length [root…]      how much of the code is comment, by folder (comments.ts)
  *   npm run oracle -- reach-record [proof…]       run the behaviour proofs under the coverage tool (reach.ts)
  *   npm run oracle -- reach [folder…]             the lines each proof reaches, by folder
@@ -24,7 +24,8 @@
  * the proof is that nothing else is in the list.
  *
  * `comment-strip` exits 1 when any file's code differs from the ref's, and 0
- * when the files that changed did so in their comments only. Each of those is
+ * when the files that changed did so in their comments, or a test title's
+ * words, only. Each of those is
  * compared again with one code edit made in memory, and the run exits 1 too
  * when the compare misses one, so every run carries its failing control.
  * Roots default to `src`.
@@ -141,7 +142,7 @@ function commentCodes(): number {
     ...STEP_CODE_KINDS.map((kind) => of.filter((c) => c.kind === kind).length),
     of.filter((c) => isTest(c.file)).length,
   ];
-  console.log(`oracle: ${codes.length} step codes in the comments of ${Object.keys(live).length} files under ${COUNTED_ROOTS.join(', ')}`);
+  console.log(`oracle: ${codes.length} step codes in the comments and test titles of ${Object.keys(live).length} files under ${COUNTED_ROOTS.join(', ')}`);
   table(
     ['folder', 'files', 'codes', ...STEP_CODE_KINDS, 'in tests'],
     [...folders.map((folder) => row(folder, codes.filter((c) => folderOf(c.file) === folder))), row('all', codes)],
@@ -159,11 +160,11 @@ function commentCodes(): number {
       sections += (comment.text.match(/§/g)?.length ?? 0) - stepCodes(comment.text).filter((c) => c.kind === 'mark').length;
     }
     for (const piece of split.code) {
-      if (!isHeldComment(piece) && /^['"`]|^\}[^]*(?:\$\{|`)$/.test(piece.text)) inStrings += stepCodes(piece.text).length;
+      if (!isHeldComment(piece) && piece.title !== true && /^['"`]|^\}[^]*(?:\$\{|`)$/.test(piece.text)) inStrings += stepCodes(piece.text).length;
     }
   }
   console.log(
-    `oracle: not counted: ${named} rounds and clusters named in comments; ${sections} "§" before a document's section; ${inStrings} codes inside strings (a test's title is one)`,
+    `oracle: not counted: ${named} rounds and clusters named in comments; ${sections} "§" before a document's section; ${inStrings} codes inside strings that are not a test's title`,
   );
 
   if (!existsSync(join(REPO_ROOT, CEILING_PATH))) {

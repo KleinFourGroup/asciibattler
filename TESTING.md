@@ -83,15 +83,19 @@ If the renderer ever grows pure-logic helpers (e.g. atlas UV computation), those
   TypeScript is split by the compiler's parser, GLSL and CSS by a small
   scanner, and a file of any other kind is held byte for byte. A comment a
   tool reads (`i18n-ok`, `@ts-expect-error`, an `eslint-disable`, a
-  coverage hint) counts as code. It proves the program's tokens are the
-  same; it does not read the comments, so whether a rewritten comment is
-  still true is a reader's question. Every run carries its failing
+  coverage hint) counts as code. A test's title (the first argument of
+  `it`, `test` or `describe`, a string or a template) is held with its
+  words masked on both sides, so a reworded title passes, while its quotes,
+  its substitutions and the call it names stay code. It proves the
+  program's tokens are the same; it does not read the comments or the
+  titles, so whether a rewritten one is still true is a reader's
+  question. Every run carries its failing
   control: each file that passed is compared again with one code edit
   made in memory (`plant.ts`'s middle edit, or a line appended to a file
   it finds none in), and a file the compare doesn't name then fails the
   run, so a comment pass needs no worktree.
 - **The step-code ceiling:** `tests/comment-codes.test.ts` holds the count
-  of step codes in the comments under `src` to
+  of step codes in the comments and test titles under `src` to
   `tests/comment-codes-baseline.json`, file by file, so it can only fall.
   The rule for what counts is the header of `tests/oracle/stepCodes.ts`.
   `npm run oracle -- comment-codes` prints the count by folder and

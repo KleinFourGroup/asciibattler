@@ -1,6 +1,3 @@
-@import '@fontsource/jetbrains-mono/400.css';
-@import '@fontsource/jetbrains-mono/700.css';
-
 /* Palette mirrors the layout editor (tools/layout-editor/editor.css) so the
    two dev tools read as one visual language. */
 :root {

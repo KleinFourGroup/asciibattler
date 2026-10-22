@@ -1883,6 +1883,28 @@ call 3; written at 125j)
 - Signed: call 3 (the user, 2026-10-20, with §125's cut); this row at
   125j (the user, 2026-10-20: "Absolutely, Claude! 😁 Signed!").
 
+**B-19 · The editors' rules B-05 left in each sheet** (from §127's
+re-skim, R-2; written at 127f)
+- In play: Nothing in the game. The eleven config editors would look as they do.
+- Evidence: the validation list (`.validation` and its three item
+  rules), the hints (`.hint`, `.hint.ok`, `.hint.err`), `.row`,
+  `.workspace`, `.edit-pane, .side-pane` and `button.primary:disabled`
+  are in all eleven editors' sheets, most of them the same in each,
+  about 633 lines between 127c's cut and a move of all 28 shared rules.
+  Each sits after a rule of the editor's own that it could meet at one
+  specificity on a property they both set (`.tabs button.tab` against the
+  disabled primary, `.tabs` against `.workspace`), as far as the sheets
+  show, so `css-compare` names the move (WORKLOG §127, 127c).
+- Expects to remove: about 630 lines, into `tools/editor-base.css`.
+- Proof: none today. `css-compare` passes the move only when no such
+  pair is left, and showing that two of them never meet on one element
+  takes the editors' markup and the classes their code sets, which no
+  named oracle reads.
+- Fate: **a lead for a later round** (Round 10 adds content through
+  these editors), not a trial in §127.
+- Signed: at 127f's stop (the user, 2026-10-22: "Signing all of your
+  leans, Claude! 😁").
+
 **Leads left to each phase's kickoff, unread.** Near-duplicate runs the
 finder lists, by subsystem; none was opened beyond its first line.
 

@@ -17374,3 +17374,33 @@ Found on the way: 127c's pane control on the layout editor was a page
 with no stylesheet at HEAD and after alike (corrected in its entry).
 
 Reading: 499,175 at 16:34, before this entry.
+
+**127f's stop, read** (the user, 2026-10-22: "Signing all of your
+leans, Claude! 😁"). So: R-1 as 127f-post with a `batch` read; R-2 into
+the census as B-19, a lead for a later round; R-3 no trial; 127e's run
+still exits 1 for a held-only file; 127f-post here, then a hand-off, and
+§127's close in the session the driver proposes.
+
+### 127f-post — R-1, the two dead font imports (2026-10-22, session 9e9f60a2)
+
+The four `@import '@fontsource/jetbrains-mono/…'` lines out of
+`tools/layout-editor/editor.css` and `tools/run-config/launcher.css`;
+nothing else in `tools`, `src`, `tests` or `scripts` imports the package
+(two comments name it as what the game once loaded).
+
+Proof: `css-compare HEAD` names on each sheet the two imports and
+nothing else, every declaration in effect the same (the other eleven
+pages pass, the control 11 of 11). In the pane, on a fresh server: the
+layout editor with no overlay, its sheet's font stack and body colour
+(`rgb(40, 40, 40)`) applied and 432 elements, where it had 198 and the
+overlay before, so the failed sheet had also stopped the page's script
+building its panels; the run launcher likewise, 95 elements, no
+overlay; no error in the server's log. The pane draws no screenshot
+while it is hidden, so the look is the user's read.
+
+**The read (`batch`):** open `/tools/layout-editor/` and
+`/tools/run-config/` on the dev server. Each opens dark, with its
+panels; the layout editor shows its grid and layer controls. Wrong
+looks like the red error overlay or a white, unstyled page.
+
+Reading: 516,164 at 17:01, before this entry.

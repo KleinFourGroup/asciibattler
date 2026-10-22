@@ -17043,3 +17043,73 @@ its calls; the user's answer and the cut as signed follow here.
 
 Readings by the tool's clock (UTC): 98,547 at 14:40 after the
 orientation, 196,742 at 14:49 at the audit's end.
+
+**The readings guard, questioned at the premise** (the user,
+2026-10-22): the cut and every lean were signed but the guard's step
+and its order call. The user's concerns: the guard treats a symptom
+rather than the cause; it guards a slip that has done no harm; it reads
+the doc text by pattern and the transcripts by their folder and fields,
+so it breaks when the writing, the transcript format or its location
+changes, the last two Claude Code internals that change often; it ties
+the gate to one harness, so a Codex review would break it; and how far
+did the slips get before they were caught? The session's reading of the
+record:
+
+- Every context reading typed rather than taken from the meter that the
+  session reports and the friction log record was caught by its own
+  session's read-back before a commit: one in §122 (a hand-off reading
+  a thousand above the last), three in §124 (124d, 124e, 124h) and one
+  in driver 1's header, none in §124.5 or §125, and two in §126
+  (session 5 at 126o's stop, and driver 4). The drivers' transcript
+  checks of every committed reading in §124's last two sessions, §125
+  and §126 found all of them matched; earlier readings were not checked
+  that way. So a pre-commit guard would have run on the corrected text
+  each time and caught nothing in the record (the user's point at the
+  next turn).
+- The brief's "all five of §126's sessions" is DRIVER-HANDOFF's P3 row,
+  which counts every claim written ahead of its check; only session 5
+  and driver 4 typed a reading (a friction line filed).
+- The slips of P3's shape that did reach a commit were other numbers
+  (the atlas's "48, full" for 47 at §124's batch 5, a commit subject's
+  count), none of which the guard reads. A reading that landed would
+  have been off by 2 to 3 % (124h's 291,744 for 284,042), and the
+  hand-off decisions are made on the live meter.
+- The cause, as the reports describe it: an entry asks for a reading of
+  a moment not yet reached ("before this entry", "on the commit"), and
+  the line is filled in the message that calls the meter or before it
+  (at 124h the call and the Edit went out together). Read-back and the
+  rule filed at 124h (a reading from a meter call made on its own) have
+  caught every recorded case.
+
+**Signed** (the user, 2026-10-22): the guard closed unbuilt, with no
+reading rule added in its place, and the cut without it, re-lettered.
+`archive/driver-trial/readings-check.mjs` stays as the drivers'
+after-the-fact check, where a format change breaks a spot-check
+visibly and blocks nothing. The cut as signed, with its reads:
+
+- 127a — A-32, the sweep page, with `tests/fuzz/sweepCommand.ts` and its
+  test (call 1) (`none`). The fuzz smoke and the parity test fire; the
+  smoke 595 → 583 tests in 60 → 59 files.
+- 127b — the compare, `npm run oracle -- css-compare <ref>`, built first
+  (`none`): HEAD against HEAD passes; a changed value, a dropped
+  declaration, an added rule and a same-specificity pair reordered each
+  fail by name; a reorder across specificities passes. No second-model
+  review (call 4).
+- 127c — B-05, the trial (`none`, on its bar): `tools/editor-base.css`
+  by an `@import` at the top of each page's sheet (call 3), whole blocks
+  and base blocks with a page keeping only the declarations it adds or
+  changes (call 2), the layout editor's sheet out. The bar: the compare
+  passes and the pane's computed styles match on every page; the sheets'
+  lines fall from 5,815; no class or variable tells pages apart; the
+  eleven copies of the palette and the shared rows are gone. Under it,
+  reverted and recorded.
+- 127d — `comment-length` takes any path (`none`).
+- 127e — `comment-strip` proves a file with a held comment, a planted
+  code edit its control (`none`).
+- 127f — the re-skim of `tools/`, the `@fontsource` lead with it
+  (`stop`).
+- 127g — the close (`stop`).
+
+No snapshot bump and no RNG stream; the smoke fires at 127a only; the
+step-code ceiling does not move. Reading: 235,180 at 15:34, at the
+question's answer.

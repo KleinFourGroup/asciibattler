@@ -371,7 +371,21 @@ of §126".
 
 The sweep page deleted (A-32); B-05, with its compare built first and
 shown to fail on a planted declaration. Proof: that compare; nothing
-else reaches `tools/` across a commit.
+else reaches `tools/` across a commit. The cut was signed 2026-10-22,
+less TODO's readings guard, closed unbuilt on the premise (WORKLOG §127,
+the kickoff).
+
+- ☐ **127a — A-32, the sweep page** (`none`), with `sweepCommand.ts` and
+  its test (call 1); the smoke 595 → 583 in 60 → 59 files.
+- ☐ **127b — the compare, `css-compare`** (`none`). HEAD against HEAD
+  passes; four plants fail by name, a reorder across specificities passes.
+- ☐ **127c — B-05, a trial** (`none`, on its bar). `tools/editor-base.css`
+  by `@import`, whole and base blocks, the layout editor's sheet out.
+- ☐ **127d — `comment-length` takes any path** (`none`).
+- ☐ **127e — `comment-strip` proves a file with a held comment** (`none`).
+- ☐ **127f — the re-skim of `tools/`** (`stop`), the `@fontsource` lead
+  with it.
+- ☐ **127g — the close** (`stop`).
 
 ## Phase 128 — the close
 

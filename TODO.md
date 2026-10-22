@@ -101,19 +101,7 @@ every item below is done (WORKLOG §124, "The close of §124"; WORKLOG
 
 ### §127 tools
 
-- [ ] **A guard on the context readings in WORKLOG and HANDOFF.** A
-  reading typed beside an entry instead of taken from the meter went in
-  larger than the meter's twice at 124d and 124e, caught by hand before
-  the commit. A pre-commit script in `scripts/`, run by
-  `.githooks/pre-commit`, checks that each added "N at HH:MM" reading
-  equals some response's total input (input + cache read + cache write)
-  in this project's transcripts, within a few minutes UTC, and skips when
-  the transcripts folder is absent. Its Vitest known answer is a planted
-  typed reading it must refuse. It lives in `scripts/` and `.githooks/`,
-  not `tools/`, so §127's kickoff takes it beside its charter. The premise
-  was checked: the meter's readings equal a transcript response's total
-  input exactly, and a typed guess matches none. Signed for here
-  2026-10-18 (WORKLOG §124, "The signs after batch 7").
+- ✅ **A guard on the context readings** — closed unbuilt: every recorded slip was caught by read-back before its commit, and the guard's inputs are harness internals (WORKLOG §127, the kickoff).
 
 - [ ] **`comment-length` takes only folders under the repo**
   (`tests/oracle/cli.ts`), so each comment-pass batch copies its files

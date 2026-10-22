@@ -387,8 +387,8 @@ the kickoff).
   repo measures as the folder in it.
 - ☑ **127e — `comment-strip` proves a file with a held comment** (`none`).
   Named apart and controlled; the three real commits pass with it.
-- ☐ **127f — the re-skim of `tools/`** (`stop`), the `@fontsource` lead
-  with it.
+- ◐ **127f — the re-skim of `tools/`** (`stop`), the `@fontsource` lead
+  with it. R-1 to R-3 at the stop.
 - ☐ **127g — the close** (`stop`).
 
 ## Phase 128 — the close

@@ -17236,7 +17236,9 @@ The bar (D2):
    by path): on each of the twelve editor pages, the reading after
    equals HEAD's on every element (309, 251, 229, 153, 428, 477, 518,
    198, 119, 445, 126 and 578), none on one side only; the layout editor
-   is the control that did not change. Its known answers: two loads at
+   is the control that did not change (*corrected at 127f*: its sheet
+   fails to load at HEAD, so this control is of a page with no
+   stylesheet; the other eleven loaded theirs). Its known answers: two loads at
    HEAD read the same on all twelve pages, and a rule inserted through
    the CSSOM on the camp editor was named at its one element (`.bar
    h1`'s font size and the widths that follow).
@@ -17333,3 +17335,42 @@ TODO's row follow. `scratch/1245h-b3/held-compare.mts` is no longer the
 route; DRIVER-HANDOFF names it, the driver's to update.
 
 Reading: 484,852 at 16:30, before this entry.
+
+### 127f — the re-skim of `tools/` (2026-10-22, session 9e9f60a2)
+
+For what 127a and 127c exposed, and the kickoff's lead. A search for the
+sweep page's and its module's names found nothing left (127a). The
+leads, each with the session's lean, for the stop:
+
+- **R-1. Two tool pages load no stylesheet.** The layout editor's sheet
+  and the run launcher's (`tools/run-config/launcher.css`) open with
+  `@import '@fontsource/jetbrains-mono/400.css'` and `700.css`; the
+  package went at 79g (2026-08-16) and `node_modules/@fontsource` is
+  empty here. Vite's CSS step then fails the whole sheet: in the pane
+  both pages show the error overlay (`ENOENT` for
+  `…/asciibattler/@fontsource/jetbrains-mono/400.css`) and render
+  unstyled (the root's font Times New Roman, the body's background
+  unset), on this server since its first load of them at 16:17. The
+  map-gen prototype and the node-map visualizer load theirs by `<link>`
+  and are styled. Lean: delete the four lines, as 127f-post (`batch`:
+  both pages open dark-themed with their panels and no overlay; wrong is
+  the overlay or a white page). The pages' font then falls to the
+  stack's next family, as on the eleven editors, which load no font
+  either. It is a deletion in `tools/` whose effect is a fix to two dev
+  pages, so it goes to the user rather than in as a deletion.
+- **R-2. The rules 127c left in the pages** (the validation list, the
+  hints, the row, the workspace and its panes, the disabled primary;
+  633 lines between 127c's cut and all 28). Each sits after a page rule
+  it could meet at one specificity, as far as the sheets show; a move
+  needs a proof from the editors' markup that no element carries both,
+  which no named oracle gives (D2's first clause). Lean: into the census
+  as a lead for a later round, not a trial here.
+- **R-3. The layout editor's and the launcher's sheets** share 13 whole
+  blocks, about 88 lines a copy (`scratch/127f/pair.mjs`). Lean: no
+  trial; one copy in two files, and the order rule would take some of
+  it.
+
+Found on the way: 127c's pane control on the layout editor was a page
+with no stylesheet at HEAD and after alike (corrected in its entry).
+
+Reading: 499,175 at 16:34, before this entry.

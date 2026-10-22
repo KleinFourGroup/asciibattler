@@ -103,11 +103,11 @@ describe('nearestActingCell', () => {
     expect(a).not.toBeNull();
   });
 
-  // O4 — the minRange band [minRange, range]. The 7th arg (default 0) makes a
+  // The minRange band [minRange, range]. The 7th arg (default 0) makes a
   // too-close unit search OUTWARD for a standoff cell rather than holding.
   describe('minRange band (O4)', () => {
     it('minRange 0 (the default) is range-only — an in-range unit holds (byte-identical)', () => {
-      // Passing minRange 0 explicitly must match the pre-O4 range-only behavior:
+      // Passing minRange 0 explicitly must match the range-only behavior:
       // `from` is already within range, so it qualifies and the unit holds.
       const world = mkWorld(12, 12);
       const from = { x: 4, y: 5 };

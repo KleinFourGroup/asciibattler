@@ -12,9 +12,9 @@ import { isClaimed, claimantOf } from './occupancy';
 import { SIM } from '../config/sim';
 
 /**
- * §36b — the non-instant logical position flip + the claim lifecycle.
+ * The non-instant logical position flip + the claim lifecycle.
  *
- * A single-step move no longer flips `unit.position` at `start`: the unit
+ * A single-step move does not flip `unit.position` at `start`: the unit
  * logically holds `from` (and reserves `to`) for the first half of the slide,
  * then flips to `to` (and releases the reservation) at the locked 50% mark.
  * These drive the mechanism directly with a stub behavior — the same pattern as

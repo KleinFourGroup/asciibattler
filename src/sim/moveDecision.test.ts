@@ -12,7 +12,7 @@ import type { GameEvents } from '../core/events';
 import type { MoveDecisionKind } from './moveDecision';
 
 /**
- * §42a — the `unit:moveDecision` record. Two properties under test:
+ * The `unit:moveDecision` record. Two properties under test:
  *
  *   1. **Kind correctness** — each movement-layer situation maps to the
  *      documented `MoveDecisionKind` (the taxonomy in moveDecision.ts).
@@ -20,8 +20,7 @@ import type { MoveDecisionKind } from './moveDecision';
  *      SupportMovementBehavior poll emits exactly one decision; a unit with an
  *      in-flight action (not polled) emits none that tick.
  *
- * Purely observational: none of these fixtures assert positions differently
- * from the pre-§42a suite — the record must not change what units do.
+ * Purely observational: the record must not change what units do.
  */
 
 interface SceneUnit {
@@ -138,7 +137,7 @@ describe('unit:moveDecision — kind correctness (MovementBehavior)', () => {
   it('sidestep: a blocked forward cell with an open perpendicular emits `sidestep`', () => {
     // The mover's perpendicular cells (0,4)/(0,6) are open but DEAD-END
     // pockets (rows 3 and 7 walled across, rows 4 and 6 walled from x=1) — so
-    // the only A* route runs through the ally directly ahead, and the E5.B
+    // the only A* route runs through the ally directly ahead, and the
     // sidestep is the only committable step.
     const walls: SceneUnit[] = [];
     for (let x = 1; x <= 5; x++) {

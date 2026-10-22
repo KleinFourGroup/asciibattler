@@ -22,12 +22,12 @@ import {
 import { cellIndex } from './occupancy';
 import { SIM } from '../config/sim';
 
-/** 86c-L2 — the context sets are packed-index keyed now; derive expected keys
+/** The context sets are packed-index keyed; derive expected keys
  *  from the world's own grid so the assertions stay grid-size-proof. */
 const idx = (world: World, x: number, y: number): number => cellIndex({ x, y }, world.gridW);
 
 /**
- * J2 — unit tests for the shared movement seam. The behaviour-level
+ * Unit tests for the shared movement seam. The behaviour-level
  * byte-identical contract (steps, sidestep, abstains, in-range) is pinned by
  * MovementBehavior.test.ts / SupportMovementBehavior.test.ts driving real
  * ticks; this file exercises the primitive directly.
@@ -201,7 +201,7 @@ describe('movement / advance (the byte-identical step)', () => {
     expect(landing(advance(units[0]!, world, intent))).toEqual({ x: 1, y: 0 });
   });
 
-  // The E5.B sidestep itself (forward cell occupied → perpendicular step, and
+  // The sidestep itself (forward cell occupied → perpendicular step, and
   // abstain when none free) is pinned by MovementBehavior.test.ts driving real
   // ticks; it can't be isolated cleanly here because at `occupiedCellPenalty`
   // 4 any one-cell detour is cheaper than stepping through a soft-blocked ally,
@@ -227,7 +227,7 @@ describe('movement / advance (the byte-identical step)', () => {
 describe('§43b — the sidestep tie balance (cell-parity alternation)', () => {
   // Direct sidestep() probes on an empty board: both perpendiculars in-bounds,
   // walkable, unoccupied — the pure tie geometry `advance` can't reach in open
-  // space (A* detours around soft blockers there; see the E5.B note above).
+  // space (A* detours around soft blockers there; see the sidestep note above).
   const empty = () => scene([{ team: 'player', x: 0, y: 11 }]); // parked out of the way
   const none = new Set<number>();
 
@@ -237,10 +237,10 @@ describe('§43b — the sidestep tie balance (cell-parity alternation)', () => {
     // east → south) wins the tie. From the ODD cell one row down, it flips.
     expect(sidestep({ x: 4, y: 4 }, { x: 9, y: 4 }, world, none)).toEqual({ x: 4, y: 5 });
     expect(sidestep({ x: 4, y: 5 }, { x: 9, y: 5 }, world, none)).toEqual({ x: 4, y: 4 });
-    // §45b — a pure-DIAGONAL approach no longer ties: both rotations are one
+    // A pure-DIAGONAL approach does not tie: both rotations are one
     // step FARTHER from the target (the backward shuttle the progress guard
     // culls), so the sidestep honestly abstains and the caller queues/waits.
-    // Cardinal ties — the ones corridor flow is made of — keep the §43b rule.
+    // Cardinal ties — the ones corridor flow is made of — keep the parity tie-break.
     expect(sidestep({ x: 4, y: 4 }, { x: 9, y: 9 }, world, none)).toBeNull();
     expect(sidestep({ x: 4, y: 5 }, { x: 9, y: 10 }, world, none)).toBeNull();
   });
@@ -298,7 +298,7 @@ describe('§43b — the sidestep tie balance (cell-parity alternation)', () => {
       expect(straight).not.toBeNull();
       expect(rotated).toEqual(rot(straight!));
     }
-    // §45b — the guard commutes with the rotation too: a diagonal approach
+    // The guard commutes with the rotation too: a diagonal approach
     // abstains identically in both frames (nullity is rotation-invariant).
     expect(sidestep({ x: 4, y: 4 }, { x: 9, y: 9 }, world, none)).toBeNull();
     expect(sidestep(rot({ x: 4, y: 4 }), rot({ x: 9, y: 9 }), world, none)).toBeNull();
@@ -308,8 +308,8 @@ describe('§43b — the sidestep tie balance (cell-parity alternation)', () => {
     // The moveDecision.test.ts forced-pocket geometry (the only A* route runs
     // through the ally ahead; both perpendiculars are open dead-ends) and its
     // 180°-rotated copy: the two committed sidesteps must land on point-mirrored
-    // cells. Under the old first-candidate rule both went the same BODY side —
-    // the shared-sign drift 43b kills.
+    // cells. A first-candidate rule would send both the same BODY side —
+    // the shared-sign drift the parity tie-break kills.
     const pocket = (r: (c: GridCoord) => GridCoord) => {
       const walls: Spec[] = [];
       for (let x = 1; x <= 5; x++) {
@@ -351,7 +351,7 @@ describe('movement / advance — M6 water bog-down (move duration)', () => {
   // A unit boxed so its ONLY forward cell is (1,0): the diagonals (0,1)/(1,1)
   // are walled, so A* can't route AROUND a water tile placed there — it must
   // wade in. (An isolated water tile on open ground is simply detoured, which
-  // is exactly why the cost-2 slow was invisible before M6.)
+  // is exactly why the cost-2 slow is invisible there.)
   function forcedStep(water: boolean): {
     land: GridCoord | null;
     ticks: number | null;
@@ -403,7 +403,7 @@ describe('§45a — vacancy-aware costs (the tiered costAt + route choice)', () 
     world.claimCell(to, unit.id);
   }
 
-  // The dial ordering every §45a expectation below leans on. If a retune
+  // The dial ordering every vacancy-aware expectation below leans on. If a retune
   // breaks one of these, the tier split has lost its meaning — fix the
   // config, or rethink the tiers; don't loosen these.
   it('preconditions: the three tiers are ordered (vacating < static < inbound premium)', () => {
@@ -500,13 +500,13 @@ describe('§45a — vacancy-aware costs (the tiered costAt + route choice)', () 
   });
 
   /**
-   * The corridor-aversion A/B — the §42c diagnosis this phase exists to fix.
+   * The corridor-aversion A/B.
    * A bottom-row lane walled off for four rows; a leader mid-move inside it.
    * Straight-through costs (7 free + vacating body + settled claim); the
    * around-the-wall detour costs ~17 plain cells. With the leader flipping
    * SOON, the lane prices cheap → stay in lane. Same geometry with a GLACIAL
    * leader (flip far beyond every window): body reads static, claim reads
-   * premium → the detour wins, exactly the pre-§45a read. The pair proves the
+   * premium → the detour wins, as a cost with no vacancy discount reads. The pair proves the
    * discount is ETA-gated, not a blanket "mid-move = cheap".
    */
   function corridorScene(travel: number) {
@@ -538,7 +538,7 @@ describe('§45a — vacancy-aware costs (the tiered costAt + route choice)', () 
 });
 
 describe('§45b — the ETA-gated wait-vs-sidestep', () => {
-  /** Same seat shape as the §45a block: active move + destination claim. */
+  /** Same seat shape as the vacancy-cost block above: active move + destination claim. */
   function seatMove(world: World, unit: Unit, to: GridCoord, travel: number) {
     const durationTicks = travel * 2;
     world.seatAction(unit, new MoveAction(unit.position, to, durationTicks), [
@@ -550,9 +550,9 @@ describe('§45b — the ETA-gated wait-vs-sidestep', () => {
   }
 
   /**
-   * The M6 forcedStep box: walls at (0,1)/(1,1) pin the mover's route to
+   * The water test's forcedStep box: walls at (0,1)/(1,1) pin the mover's route to
    * (1,0), and neither perpendicular sidestep cell exists ((0,1) walled,
-   * (0,-1) off-grid) — so the poll's outcome isolates the §45b gate: wait
+   * (0,-1) off-grid) — so the poll's outcome isolates the vacancy-ETA wait gate: wait
    * when it fires, bare-null queue when it doesn't.
    */
   function boxedAdvance(blockerTravel: number | 'static' | 'claim-only') {
@@ -583,7 +583,7 @@ describe('§45b — the ETA-gated wait-vs-sidestep', () => {
     const p = boxedAdvance(3); // flips 3 ticks out — well inside 1 own-step
     expect(p).not.toBeNull();
     expect(p!.action.id).toBe(WAIT_ACTION_ID);
-    // The §44b wait shape: move-tier score, no cooldown, empty timeline
+    // The wait shape: move-tier score, no cooldown, empty timeline
     // (instantaneous — resolves within the tick, never enters activeAction).
     expect(p!.score).toBe(1);
     expect(p!.cooldown).toBe(0);
@@ -625,8 +625,8 @@ describe('§45b — the ETA-gated wait-vs-sidestep', () => {
   it('the progress guard: a sidestep never loses ground (the standoff shuttle dies)', () => {
     // The riverFork shuttle engine, distilled: a diagonal approach whose
     // forward cell is blocked. Both perpendicular rotations sit one step
-    // FARTHER from the target — pre-§45b the viable one was taken anyway
-    // (286 backtracks/300t on the fixture), post-§45b the unit queues.
+    // FARTHER from the target; taking the viable one anyway gave 286
+    // backtracks in 300 ticks on the fixture, so the unit queues.
     const { world } = scene([{ team: 'player', x: 0, y: 11 }]);
     const none = new Set<number>();
     expect(sidestep({ x: 5, y: 5 }, { x: 8, y: 8 }, world, none)).toBeNull(); // even from-cell
@@ -637,10 +637,10 @@ describe('§45b — the ETA-gated wait-vs-sidestep', () => {
   });
 
   it('an in-gate wait preempts a VIABLE sidestep at a corridor mouth (the ford picture)', () => {
-    // The §45a A/B geometry: lane y=11 walled off for four rows (x=1..8,
+    // The corridor A/B geometry: lane y=11 walled off for four rows (x=1..8,
     // y=7..10) so the around-route costs more than the through-lane. The
     // mover stands at the MOUTH (0,11) where the sidestep cell (0,10) is
-    // open and viable — pre-§45b this is exactly the crab-walk trigger.
+    // open and viable — without the wait gate, exactly the crab-walk trigger.
     // The blocker one cell in, mid-move away: the draining lane wins.
     const specs: Spec[] = [
       { team: 'player', x: 0, y: 11 },
@@ -665,7 +665,7 @@ describe('§45b — the ETA-gated wait-vs-sidestep', () => {
 });
 
 describe('§45c — the stable-route margin (anti-flicker hysteresis)', () => {
-  /** Same seat shape as the §45a/§45b blocks: active move + destination claim. */
+  /** Same seat shape as the blocks above: active move + destination claim. */
   function seatMove(world: World, unit: Unit, to: GridCoord, travel: number) {
     const durationTicks = travel * 2;
     world.seatAction(unit, new MoveAction(unit.position, to, durationTicks), [
@@ -677,13 +677,13 @@ describe('§45c — the stable-route margin (anti-flicker hysteresis)', () => {
   }
 
   /**
-   * The junction geometry — where lane flicker actually lives (§45c-pre: on
+   * The junction geometry — where lane flicker actually lives (on
    * open ground A* dodges diagonally without changing its FIRST step, so
    * distant transients can't flip a poll; at a corridor branch the whole
    * lane is committed at step one). Two parallel 1-wide lanes off a mouth:
    * lane A (y=5) and lane B (y=7), a wall row between and around, goal at
    * the far merge. Equal lengths — the mover's baseline choice is lane A
-   * (the 43a numeric (y,x) tie fallback).
+   * (the numeric (y,x) tie fallback).
    */
   function junction(traffic: (world: World, laneUnits: Unit[]) => void) {
     const specs: Spec[] = [{ team: 'player', x: 0, y: 6 }];
@@ -719,7 +719,7 @@ describe('§45c — the stable-route margin (anti-flicker hysteresis)', () => {
   it('a single transient pulse on lane A does NOT flip the choice (the flicker dies)', () => {
     // One mid-move body on lane A: vacating discount (+1) + its claim's
     // static tier (+4) = a +5 live advantage for lane B — under the margin.
-    // Pre-§45c the live route switched lanes for it (and back, next poll).
+    // Without the margin the live route would switch lanes for it (and back, next poll).
     const { proposal } = junction((world, lane) => {
       lane[1]!.position = { x: 11, y: 0 }; // only one resident in play
       seatMove(world, lane[0]!, { x: 4, y: 5 }, 2);
@@ -738,7 +738,7 @@ describe('§45c — the stable-route margin (anti-flicker hysteresis)', () => {
 
   it('a STATIC blocker on lane A is priced in the stable route too (no stuck regression)', () => {
     // A body at rest is furniture: both routes prefer lane B — agreement, no
-    // margin in play. The §45a corridor-aversion math is untouched.
+    // margin in play. The corridor-aversion math is untouched.
     const { proposal } = junction((_world, lane) => {
       lane[1]!.position = { x: 11, y: 0 };
       // lane[0] stays parked at (3,5) with no active move — a static body.
@@ -765,17 +765,17 @@ describe('§45c — the stable-route margin (anti-flicker hysteresis)', () => {
 });
 
 /**
- * 56b/56c2 — the swap-through probe: a blocked MELEE mover passes a friendly
- * RANGED blocker via the GP5 atomic swap. Since 56c2 the probe PRECEDES the
- * E5.B sidestep for role-eligible blockers (§45b wait → swap-or-queue →
+ * The swap-through probe: a blocked MELEE mover passes a friendly
+ * RANGED blocker via the atomic swap. The probe PRECEDES the
+ * sidestep for role-eligible blockers (wait → swap-or-queue →
  * sidestep for everyone else): an equal-distance sidestep around a unit that
  * belongs behind you is a loop, not progress (the observed labyrinth
- * scenario 2). A role-eligible-but-BUSY blocker means queue — its own 56c2
+ * scenario 2). A role-eligible-but-BUSY blocker means queue — its own ranged
  * yield (MovementBehavior) covers that window from the other side. The role
  * order (melee through ranged, never the reverse) is the anti-oscillation:
- * antisymmetry means a pair can never swap twice. Shape-locked 2026-07-15
- * (worklog §56, amended §56c2); the in-band eligibility alternative was
- * REJECTED there (it excludes the canonical max-range corridor jam).
+ * antisymmetry means a pair can never swap twice. Signed by the user on
+ * 2026-07-15; the in-band eligibility alternative was
+ * REJECTED (it excludes the canonical max-range corridor jam).
  */
 describe('56b — swap-through (the mover-initiated pass)', () => {
   /** A 1-wide corridor at row `y`: walls on y±1 across the full grid width. */
@@ -818,7 +818,7 @@ describe('56b — swap-through (the mover-initiated pass)', () => {
     if (opts.blockerMidMove === true) {
       // Mid-move BACKWARD (the forward cell holds the mover) — pre-flip, so
       // the logical position still reads (4,5). ETA (4 ticks) is inside the
-      // §45b gate, so the WAIT branch resolves this shape before the probe.
+      // wait gate, so the WAIT branch resolves this shape before the probe.
       world.seatAction(blocker!, new MoveAction(blocker!.position, { x: 5, y: 5 }, 8), [
         { phase: 'travel', ticks: 4 },
         { phase: 'impact', ticks: 0 },
@@ -881,7 +881,7 @@ describe('56b — swap-through (the mover-initiated pass)', () => {
 
   /** The scenario-2 pocket: a 1-wide corridor with ONE open sidestep bay at
    *  (3,6) — the route must pass the blocker at (4,5), but an equal-distance
-   *  lateral exists, so pre-56c2 the mover crab-looped through it. */
+   *  lateral exists, through which a sidestep-first mover crab-loops. */
   function pocketSpecs(): Spec[] {
     const specs: Spec[] = [];
     for (let x = 0; x < 12; x++) {
@@ -892,8 +892,8 @@ describe('56b — swap-through (the mover-initiated pass)', () => {
   }
 
   it('a role-eligible blocker is never sidestepped around: BUSY → queue (the scenario-2 loop fix)', () => {
-    // Pre-56c2 the mover crabbed to the (3,6) bay — an equal-distance
-    // sidestep that locks it for a full move window and loops. Now:
+    // A sidestep-first mover would crab to the (3,6) bay — an equal-distance
+    // sidestep that locks it for a full move window and loops. Instead:
     // eligible-but-busy blocker → queue, staying poll-dense for the
     // blocker's own yield window.
     const bus = new EventBus<GameEvents>();
@@ -911,7 +911,7 @@ describe('56b — swap-through (the mover-initiated pass)', () => {
       bus,
     );
     const [mover, blocker, enemy] = units;
-    // Busy but going nowhere (no claim → no §45b vacancy ETA): a seated wait.
+    // Busy but going nowhere (no claim → no vacancy ETA): a seated wait.
     world.seatAction(blocker!, new WaitAction(), [{ phase: 'recovery', ticks: 6 }]);
     const proposal = advance(mover!, world, {
       goals: [enemy!.position],
@@ -952,7 +952,7 @@ describe('56b — swap-through (the mover-initiated pass)', () => {
 
   it('the swap never fires in the open (the router detours first)', () => {
     // Same units, NO corridor walls: the router detours around the soft-
-    // blocked cell (or the E5.B sidestep crabs past it) long before the
+    // blocked cell (or the sidestep crabs past it) long before the
     // cascade reaches the probe — a plain move, never a swap.
     const bus = new EventBus<GameEvents>();
     const decisions: GameEvents['unit:moveDecision'][] = [];
@@ -996,15 +996,15 @@ describe('56b — swap-through (the mover-initiated pass)', () => {
   });
 
   it('chain jam: ONE hop per swap window — the reserved partner refuses the second swap', () => {
-    // The observed 56c2 bug: instant flips + a free-idle partner let an aMM
-    // column double-swap to MMa within one tick. Now: while M1's swap is IN
-    // FLIGHT, the archer is reserved (isReservedSwapPartner) and M2 queues;
-    // only after the WINDOW closes (56e-pre — not merely the flip) does the
+    // Instant flips + a free-idle partner would let an aMM column
+    // double-swap to MMa within one tick. While m1's swap is IN
+    // FLIGHT, the archer is reserved (isReservedSwapPartner) and m2 queues;
+    // only after the WINDOW closes (not merely the flip) does the
     // next hop propose. This test drives the window-closed path; the
     // mid-window path is the regression test below.
     const { world, units } = scene([
-      { team: 'player', x: 2, y: 5 }, // M2 (rear)
-      { team: 'player', x: 3, y: 5 }, // M1
+      { team: 'player', x: 2, y: 5 }, // m2 (rear)
+      { team: 'player', x: 3, y: 5 }, // m1
       { team: 'player', x: 4, y: 5, range: 3 }, // R (front)
       { team: 'enemy', x: 8, y: 5 },
       ...corridorSpecs(5),
@@ -1015,12 +1015,12 @@ describe('56b — swap-through (the mover-initiated pass)', () => {
       approachToward: enemy!.position,
       excludeUnitId: enemy!.id,
     };
-    // Poll M1: proposes the swap; World would seat it in flight — mirror that.
+    // Poll m1: proposes the swap; World would seat it in flight — mirror that.
     const p1 = advance(m1!, world, intent);
     expect(p1!.action.id).toBe('swap');
     world.seatAction(m1!, p1!.action, p1!.phases);
     p1!.action.start(m1!, world);
-    // Mid-window: nobody has moved, and M2's probe refuses the reserved archer.
+    // Mid-window: nobody has moved, and m2's probe refuses the reserved archer.
     expect(m1!.position).toEqual({ x: 3, y: 5 });
     expect(r!.position).toEqual({ x: 4, y: 5 });
     expect(advance(m2!, world, intent)).toBeNull();
@@ -1039,15 +1039,15 @@ describe('56b — swap-through (the mover-initiated pass)', () => {
   });
 
   it('56e-pre: post-flip but MID-WINDOW, the partner stays reserved — no re-grab', () => {
-    // The 56e sighting, pinned: M1's activeAction stays SEATED through the
-    // flip (the real World.tick shape: the flip fires at the impact
-    // boundary; the action ends at finishTick). The 56c2 flip-anchored
-    // release made the half-displaced archer — renderer lerp mid-slide —
-    // grabbable for a SECOND swap here. The chain test above cleared
-    // activeAction at the flip, so this state was never visited.
+    // A labyrinth desync's shape, pinned: m1's activeAction stays SEATED
+    // through the flip (the real World.tick shape: the flip fires at the
+    // impact boundary; the action ends at finishTick). A release anchored on
+    // the flip would leave the half-displaced archer — renderer lerp
+    // mid-slide — grabbable for a SECOND swap here, a state the chain test
+    // above (which clears activeAction at the flip) never visits.
     const { world, units } = scene([
-      { team: 'player', x: 2, y: 5 }, // M2 (rear)
-      { team: 'player', x: 3, y: 5 }, // M1
+      { team: 'player', x: 2, y: 5 }, // m2 (rear)
+      { team: 'player', x: 3, y: 5 }, // m1
       { team: 'player', x: 4, y: 5, range: 3 }, // R (front)
       { team: 'enemy', x: 8, y: 5 },
       ...corridorSpecs(5),
@@ -1074,8 +1074,8 @@ describe('56b — swap-through (the mover-initiated pass)', () => {
     world.seatActiveAction(m1!, { ...m1!.activeAction!, startTick: world.currentTick - impactOffset });
     expect(m1!.position).toEqual({ x: 4, y: 5 });
     expect(r!.position).toEqual({ x: 3, y: 5 });
-    expect(m1!.activeAction).not.toBeNull(); // M1's swap window still running
-    // M2 polls mid-window: the archer stays reserved — M2 queues (blocked),
+    expect(m1!.activeAction).not.toBeNull(); // m1's swap window still running
+    // m2 polls mid-window: the archer stays reserved — m2 queues (blocked),
     // never overlapping two swap windows on one unit.
     expect(advance(m2!, world, intent)).toBeNull();
     // The window closes: the reserve drops and the next hop proposes.

@@ -31,12 +31,11 @@ import { moveProposal } from './movement';
 import { SIM } from '../config/sim';
 
 /**
- * §35a — the occupancy core, in isolation. Mechanic tests on explicit inputs:
+ * The occupancy core, in isolation. Mechanic tests on explicit inputs:
  * place a few units via the World API (real ids + `unitsById`) and assert the
  * point query, the set builder, the footprint/distance/plane seams. These pin
- * the single-cell / one-plane BEHAVIOR the scattered checks used to compute
- * inline — the byte-identical-refactor contract — so §39 (footprint fill) and
- * the flight build (the air plane) extend a proven seam.
+ * the single-cell / one-plane BEHAVIOR, so the footprint fill and the air
+ * plane extend a proven seam.
  */
 
 const BASE: UnitStats = {
@@ -202,10 +201,10 @@ describe('§36a — the claim registry queries', () => {
 });
 
 /**
- * §39a — the footprint geometry fill. `cellsOccupiedBy` returns the N×N block;
- * `unitDistance` is the body-to-body (min cell-to-cell) distance seam. §39 keeps
- * footprints INERT for the shipped roster (no multi-tile def ships until §40's
- * rubble), so the multi-tile path is exercised only here — via temp catalog ids
+ * The footprint geometry fill. `cellsOccupiedBy` returns the N×N block;
+ * `unitDistance` is the body-to-body (min cell-to-cell) distance seam. Every
+ * shipped combatant is single-cell (rubble is the shipped multi-tile body), so
+ * a multi-tile combatant is exercised only here — via temp catalog ids
  * registered/removed around the block, plus `Unit`-shaped stubs (the geometry
  * only reads `.archetype` + `.position`). The single-cell path is the shipped
  * roster's, and stays byte-identical.
@@ -277,7 +276,7 @@ describe('§39a — the footprint geometry seams', () => {
       const merc = spawnAt(world, 'player', { x: 3, y: 6 });
       const cells = cellsOccupiedBy(merc);
       expect(cells).toEqual([{ x: 3, y: 6 }]);
-      expect(cells[0]).toBe(merc.position); // same object — byte-identical to pre-§39
+      expect(cells[0]).toBe(merc.position); // same object: a single cell is the position itself
     });
   });
 
@@ -331,9 +330,10 @@ describe('§39a — the footprint geometry seams', () => {
 });
 
 /**
- * §39c — the spawn anchoring policy (`anchorFootprint`, the `corner` policy).
- * Pure + World-free: a grid-dims record + an `isFreeCell` predicate built from a
- * key set. Inert until §40 spawns the first multi-tile body.
+ * The spawn anchoring policies (`anchorFootprint`): the random-intersect one
+ * here, the camp drip's, and the corner one below, the layout editor's deploy
+ * check. Pure + World-free: a grid-dims record + an `isFreeCell` predicate
+ * built from a key set.
  */
 describe('§75c — anchorFootprint (the random-intersect policy)', () => {
   const grid = { gridW: 8, gridH: 8 };
@@ -519,7 +519,7 @@ describe('vacancyEtaOf — the §45a derived vacancy ETA', () => {
     const world = setup();
     const u = spawnAt(world, 'player', { x: 2, y: 2 });
     seatMove(world, u, { x: 3, y: 2 }, 5, 7);
-    // Simulate the §36b flip: position moves, the claim releases.
+    // Simulate the move's flip: position moves, the claim releases.
     u.position = { x: 3, y: 2 };
     world.releaseClaim({ x: 3, y: 2 });
     expect(vacancyEtaOf(u, world)).toBeUndefined();

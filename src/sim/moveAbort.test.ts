@@ -10,16 +10,14 @@ import { MoveAction } from './actions/MoveAction';
 import { moveProposal } from './movement';
 
 /**
- * §35b — the proactive destination check + abort primitive, in isolation.
+ * The proactive destination check + abort primitive, in isolation.
  *
- * On today's INSTANT model a unit's propose and execute are atomic (and behaviors
- * already route around occupied cells), so the abort never fires in a natural
- * battle — it's the primitive §36 makes load-bearing once the logical position
- * flips partway through a move. So these tests drive it directly: a stub behavior
+ * Behaviors route around occupied cells, so a natural battle rarely reaches
+ * the abort; these tests drive it directly: a stub behavior
  * proposes a `MoveAction` onto a cell that's occupied / untraversable AT
  * EXECUTION, and we assert the move is a clean no-op (the unit stays at `from`,
  * the cooldown is NOT consumed, no `unit:moved`) that announces itself via
- * `unit:moveAborted` — the contract the §36 settle-back will subscribe to.
+ * `unit:moveAborted` — the contract the renderer's settle-back subscribes to.
  */
 
 const BASE: UnitStats = {
@@ -101,7 +99,7 @@ describe('§35b — move abort at execution', () => {
 
     world.tick();
 
-    // §36b — the move COMMITS at start (locked for the busy window, cooldown
+    // The move COMMITS at start (locked for the busy window, cooldown
     // consumed, `unit:moved` fired for the lerp, no abort) but the logical
     // position is DEFERRED: the unit holds `from` until the 50% flip. The
     // deferred-flip timing itself is pinned in moveDeferred.test.ts.
@@ -148,7 +146,7 @@ describe('§35b — move abort at execution', () => {
     expect(mover.position).toEqual({ x: 2, y: 2 });
 
     world.removeUnit(blocker.id); // the cell frees
-    world.tick(); // the move now COMMITS (claim); §36b defers the logical flip
+    world.tick(); // the move now COMMITS (claim); the logical flip is deferred
     for (let i = 0; i < MOVE_TICKS; i++) world.tick(); // run it out past the 50% flip
 
     expect(mover.position).toEqual({ x: 3, y: 2 });

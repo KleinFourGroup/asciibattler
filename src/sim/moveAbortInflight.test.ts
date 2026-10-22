@@ -12,23 +12,20 @@ import { isClaimed, claimantOf } from './occupancy';
 import { SIM } from '../config/sim';
 
 /**
- * §36c — the smooth mid-flight abort.
+ * The smooth mid-flight abort.
  *
- * A deferred move (§36b) holds a claim on its destination until the logical flip
- * at the 50% mark. §36c adds a per-tick in-flight re-validation across that
+ * A deferred move holds a claim on its destination until the logical flip
+ * at the 50% mark. A per-tick in-flight re-validation runs across that
  * pre-flip window: if the destination became occupied / untraversable AFTER
  * move-start (dynamic terrain or a non-pathed knockback onto `to` — a peer
  * pather can NEVER cause it, the claim blocks convergence), the move aborts via
- * the §35b `unit:moveAborted` path. The unit settles back to `from` (it never
+ * the `unit:moveAborted` path. The unit settles back to `from` (it never
  * left logically), the claim releases, the move cooldown resets (retry next
  * tick), and the renderer's settle-back lerp subscribes to the event.
  *
- * The trigger is INERT in real play — the only natural cause (a converging peer)
- * is impossible under the claim, and the real triggers (dynamic terrain, a
- * non-pathed knockback) arrive with §37/§40. So these tests SYNTHESIZE the
- * invalidation: force `to` to chasm, or shove another unit's logical position
- * onto `to`, mid-flight. The mechanism is exercised the same way it will be once
- * a production trigger exists.
+ * A converging peer, the natural cause, is impossible under the claim, so
+ * these tests SYNTHESIZE the invalidation: force `to` to chasm, or shove
+ * another unit's logical position onto `to`, mid-flight.
  */
 
 const BASE: UnitStats = {
@@ -112,7 +109,7 @@ describe('§36c — in-flight move abort (the destination goes invalid mid-slide
     const to = { x: 5, y: 4 };
     const mover = spawnAt(world, 'player', from);
     // A second unit we will forcibly relocate onto `to` (a non-pathed knockback:
-    // it bypasses the claim-aware placement paths, exactly what §40 will do).
+    // it bypasses the claim-aware placement paths).
     const intruder = spawnAt(world, 'player', { x: 8, y: 8 });
     onlyBehavior(spawnAt(world, 'enemy', { x: 10, y: 10 }));
     onlyBehavior(mover, new StubMoveBehavior(from, to));
@@ -132,7 +129,7 @@ describe('§36c — in-flight move abort (the destination goes invalid mid-slide
     expect(mover.position).toEqual(from); // settled back; did NOT flip onto the occupied cell
     expect(isClaimed(world, to)).toBe(false);
     expect(aborts).toEqual([{ unitId: mover.id, from, to }]);
-    // The §35d-style invariant the abort protects: no two units share `to`.
+    // The one-unit-per-cell invariant the abort protects: no two units share `to`.
     expect(distanceBetween(mover.position, intruder.position)).toBeGreaterThan(0);
   });
 

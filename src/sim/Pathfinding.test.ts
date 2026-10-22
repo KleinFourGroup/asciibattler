@@ -153,7 +153,7 @@ describe('Pathfinding / findPath with per-cell costs', () => {
   it('D7.A: chasm tiles via TileGrid.costAt block paths and route around', () => {
     // Wall x=5 via chasm (Infinity cost in TileGrid) instead of the
     // blockers list. End-to-end check that TileGrid → CostFn → A* glues
-    // correctly for the D7.A chasm kind.
+    // correctly for the chasm kind.
     const grid = new TileGrid(G, G);
     for (let y = 3; y <= 7; y++) grid.setKind({ x: 5, y }, 'chasm');
     const costAt: CostFn = (x, y) => grid.costAtXY(x, y);
@@ -168,7 +168,7 @@ describe('Pathfinding / findPath with per-cell costs', () => {
   });
 
   it('§37b: deep_water tiles block paths and route around (like chasm)', () => {
-    // Same end-to-end glue check as chasm — deep_water is the §37b impassable
+    // Same end-to-end glue check as chasm — deep_water is impassable
     // (cost ∞), so a straight line through it must detour.
     const grid = new TileGrid(G, G);
     for (let y = 3; y <= 7; y++) grid.setKind({ x: 5, y }, 'deep_water');
@@ -299,20 +299,20 @@ function assertContiguous(path: GridCoord[]): void {
 }
 
 /**
- * 43a — the straightness tie-break. `popLowestF`'s FINAL tie among equal-f,
- * equal-h open nodes was a STRING compare of `"x,y"` keys (`"10,3" < "2,3"`,
- * `"5,1" < "6,1"`), which resolved every open-ground Chebyshev tie toward
- * low-x — the world-frame leftward drift PATHING.md measured on every map
- * (openField: literally every step, both teams). The fix prefers the node
- * with the smallest CROSS-TRACK distance to the start→goal line (an integer
- * cross-product magnitude — pure expansion ordering, f-values untouched, so
- * Chebyshev admissibility [gotcha #34] holds), with numeric (y,x) as the
- * final total-order fallback.
+ * The straightness tie-break. `popLowestF`'s FINAL tie among equal-f,
+ * equal-h open nodes goes to the node with the smallest CROSS-TRACK distance
+ * to the start→goal line (an integer cross-product magnitude — pure expansion
+ * ordering, f-values untouched, so Chebyshev admissibility [gotcha #34]
+ * holds), with numeric (y,x) as the final total-order fallback. A STRING
+ * compare of `"x,y"` keys (`"10,3" < "2,3"`, `"5,1" < "6,1"`) would resolve
+ * every open-ground Chebyshev tie toward low-x — the world-frame leftward
+ * drift PATHING.md measured on every map (openField: literally every step,
+ * both teams).
  */
 describe('Pathfinding / the 43a straightness tie-break', () => {
   it('a vertical route on open ground is the straight column (the string-compare repro)', () => {
-    // Pre-43a this returned (6,0)(5,1)(5,2)(6,3): "5,1" < "6,1" popped first
-    // and the min-cost path bent left. Same cost, wrong shape.
+    // A string tie-break returns (6,0)(5,1)(5,2)(6,3): "5,1" < "6,1" pops first
+    // and the min-cost path bends left. Same cost, wrong shape.
     expect(findPath({ x: 6, y: 0 }, { x: 6, y: 3 }, [], G, G)).toEqual([
       { x: 6, y: 0 },
       { x: 6, y: 1 },

@@ -7,12 +7,12 @@ import type { GridCoord } from '../core/types';
 import type { Team, UnitStats } from './Unit';
 
 /**
- * §35c — the de-overlap shove backstop (`World.shove`), in isolation.
+ * The de-overlap shove backstop (`World.shove`), in isolation.
  *
- * Nothing co-locates on today's instant model (35b's abort + the summon/spawn
- * occupancy checks see to that), so shove never fires in a natural battle — it's
- * the safety net for a future breach (a knockback / a dynamic-terrain push) and
- * the primitive a directional `knockback` op wraps. So these tests force a
+ * Nothing co-locates in a natural battle (the destination abort + the
+ * summon/spawn occupancy checks see to that), so shove is the safety net for
+ * a breach (a knockback / a dynamic-terrain push) and the primitive a
+ * directional knockback op would wrap. So these tests force a
  * co-location (two units spawned on one cell) and assert the relocation is to
  * the NEAREST free cell, DETERMINISTIC (the fixed `nearestFreeCells` BFS order),
  * and announced via `unit:shoved` (+ `unit:moved` for the slide).

@@ -16141,3 +16141,73 @@ Wrong looks like a present-tense rule the code does not follow, or a
 
 Readings: 290,560 at 23:51 on `b953ef69`, 358,080 at 23:58 before this
 entry: about 68k for 125 codes, 540 a code.
+
+The suite by the hook at `31372c9d`: 3,702 passed, and the smoke 595.
+
+### 126m, batch 4 — `src/sim`'s movement tests (2026-10-21, session 3d57d006)
+
+90 codes in 9 files, in 59 hunks, to none. Twelve of `movement.test.ts`'s
+56 were the miscount the counter's header names: "M1" and "M2" are the
+test's two melee units, read as lettered steps; the comments now call
+them `m1` and `m2`, the variables' own names. Reasons that replace a
+code, with where each was checked:
+
+- `movement.test.ts`: "the §43b rule" and "the shared-sign drift 43b
+  kills" are the parity tie-break (`movement.ts:565`, a tie goes to the
+  rotation the from-cell's checkerboard parity picks); "§45a" is the
+  vacancy-aware costs, "§45b" the vacancy-ETA wait gate, "§45c" the
+  margin (each named by the comment it sits in); "the M6 forcedStep box"
+  is the water test's; the swap-through header's "Shape-locked
+  2026-07-15 (worklog §56, amended §56c2)" is "signed by the user on
+  2026-07-15".
+- `Pathfinding.test.ts`: the 43a header now states the cross-track
+  tie-break first and what a string compare would do second.
+- `actingPosition.test.ts`, `moveDecision.test.ts`, `moveDeferred.test.ts`:
+  "pre-O4", "pre-§42a" and "no longer flips" put in the present.
+
+Corrected (rule 7):
+
+- `moveAbort.test.ts` and `shove.test.ts`: "On today's INSTANT model a
+  unit's propose and execute are atomic" and "Nothing co-locates on
+  today's instant model" were stale: a move commits at start and flips
+  at its midpoint (`moveDeferred.test.ts`, and `moveAbort.test.ts`'s own
+  second test). The headers now say behaviors route around occupied
+  cells, and the settle-back the abort's event feeds is the renderer's
+  (`BattleRenderer.ts:240`). `shove.test.ts`'s "the primitive a
+  directional `knockback` op wraps" named an op that does not exist (no
+  knockback in the effects schema or interpreter); it now says would
+  wrap.
+- `moveAbortInflight.test.ts`: "the real triggers … arrive with §37/§40"
+  and "the same way it will be once a production trigger exists" were
+  plans; dropped, with the claim that the trigger is inert in real play,
+  which the session did not check.
+- `occupancy.test.ts`: "§39 keeps footprints INERT for the shipped
+  roster (no multi-tile def ships until §40's rubble)" was false, rubble
+  ships at 2 and 3 (`config/units.json:623`, `:630`); it now says every
+  shipped combatant is single-cell. The doc above the random-intersect
+  block described the corner policy and said "Inert until §40"; it now
+  names both policies and their callers (`occupancy.ts:161`, the camp
+  drip and the layout editor's deploy check).
+
+Twins: a search for "instant model", "until §40", "no multi-tile def" and
+"knockback op" over `src`, `tests`, `tools` and `scripts` found
+`moveDeferred.test.ts:94`, a title that compares with the instant model
+and is accurate, and two lines in batch 5's files
+(`environment.test.ts:322`, `statusBehaviorConsumers.test.ts:127`),
+checked there.
+
+**Proof.** `comment-strip HEAD src`: 9 files differ, in comments only,
+exit 0; the control named 9 of 9. `comment-codes`: 535 → 445, and
+`--record` wrote 445 in 47 files. `comment-length` on the 9 files:
+comment lines 422 → 416, words 4,716 → 4,586, code lines 2,382 both.
+
+**Read** (`batch`): `git show <this commit> -- src`. What changed: the
+step codes in `src/sim`'s movement tests, the M1 and M2 labels as `m1`
+and `m2`, and the stale instant-model headers. Where to look:
+`moveAbort.test.ts`'s and `shove.test.ts`'s headers, `occupancy.test.ts`'s
+two block docs, `movement.test.ts`'s swap-through header. Wrong looks
+like a header that misstates when a move flips, or an `m1` that is not
+the variable it names.
+
+Readings: 358,283 at 00:00 on `31372c9d`, 396,634 at 00:05 before this
+entry: about 38k for 90 codes, 425 a code.

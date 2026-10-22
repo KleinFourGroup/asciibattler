@@ -17447,3 +17447,78 @@ about 100k, most of it the pane; the three oracle steps 25 to 35k each.
 **127f-post, read** (the user, 2026-10-22, after the hand-off, on both
 pages: "Just done that now, and both reads look to be good! 😁"). Ticked;
 nothing is ◐, and the close holds no read but its own.
+
+### 127g's stop: the close's summary and one call (2026-10-22, session 8a6e4b31)
+
+Nothing was built. The session was started by the phase's driver
+session (driver 6) and works with the user as usual. The stop puts what
+the phase changed, counted again at its sources, and one call left open
+since 127c; the proposal is in the session's final message of this turn,
+and the user's answer follows here.
+
+**What the phase changed**, from `git diff a310147f e9fb53d7` (the
+kickoff's ref, 12 commits before this entry) and the runs named:
+
+- `src`, `config`, `scripts`, `.githooks`, `package.json` and
+  `vite.config.ts` untouched. `tests`: 8 files, 887 lines in and 307 out;
+  `tools`: 19 files, 150 in and 1,970 out. Deleted: `tools/sweep-gui/`
+  (four files, 722 lines) and `tests/fuzz/sweepCommand.ts` with its test
+  (131 and 157). Added: `tools/editor-base.css` (132 lines) and
+  `tests/oracle/cssCompare.ts` (525) with its test (183 lines, 20 tests).
+- The tools' stylesheets, every `.css` under `tools` read from git by a
+  line-count script (`css-lines.mjs` in the session's scratchpad): 6,828
+  in 16 files at the kickoff, 6,600 in 15 after 127a, 5,507 in 16 now.
+  The eleven editors' sheets that import the base 4,733 → 3,514; the
+  layout editor's 1,082 → 1,079 and the run launcher's 265 → 262
+  (127f-post).
+- The suite 3,704 at the kickoff (by the hook at `e5c0d6fe`; nothing in
+  `src` or `tests` changed from there to `a310147f`) and 3,727 in 257
+  files now, by a run at `e9fb53d7`: 127b's 20 tests and the 3 that 127d
+  and 127e added to `comments.test.ts` (26 → 29). The smoke 595 in 60
+  files → 583 in 59, by a run at `e9fb53d7`; no file of its tier changed
+  after 127a. The parity test was not run here, and its file is unchanged
+  since `f5d29864`. No snapshot bump, since `src` is untouched;
+  `tests/comment-codes-baseline.json` is unchanged, so the step-code
+  ceiling did not move.
+- The signed rows: A-32 deleted (127a); `css-compare` built (127b); B-05
+  kept on its bar (127c); `comment-length` on any path (127d);
+  `comment-strip`'s held files (127e); R-1 fixed (127f-post); R-2 the
+  census's B-19; R-3 no trial; TODO's readings guard closed unbuilt. TODO
+  "§127 tools" is all ✅.
+
+Each read was signed as it was cut: 127f at its stop, 127f-post by its
+`batch` read, the rest `none`. Nothing is ◐.
+
+**The call: 127c's narrowing of the compare.** 127c changed 127b's
+instrument inside the trial it judged, built and flagged in 127c's entry
+as inside that step's intent; no answer was recorded. What it does:
+`canMeet` takes a reordered pair out of the order check when the two
+selectors' last compounds name different element types, different ids
+or different pseudo-elements (or a pseudo-element against the element
+itself), since the cascade puts declarations in contest only on one
+element. Any other pair is taken to meet, so on the selectors it parses
+it can over-report and not miss. The declarations-in-effect check is
+untouched.
+
+Measured at this stop (`narrowing.mts` in the session's scratchpad, from
+`3474e631^` and `3474e631`, two of the test file's answers checked
+first): the compare at that commit names nothing on the 12 pages, and the
+narrowing alone passed 443 pairs on the eleven editor pages (none on the
+layout editor's). Each is a `button` rule (`button`, `button:hover`,
+`button.primary`, `button.danger-outline`) against a rule whose subject
+is an `input` (220), a `select` (72), a `textarea` (72), an `li` (33), a
+`dt` (18), a `dd` (18) or an `a` (10). The lean: inside 127c's intent,
+kept as built. An element has one type, every pair passed rests on that
+alone, and the kickoff's design set aside pairs across specificities for
+the same reason (the cascade cannot put them in contest). The other arm:
+outside the intent, the code kept on this evidence, and a line in
+`process/oracles.md` that a change to the instrument a bar names goes to
+the user before the trial uses it.
+
+**The close, after the call:** 127g ticked; §127 demoted in ROADMAP and
+in HANDOFF, the Cursor's NEXT to §128; the phase's summary of its
+session reports and this session's report in `retro/sessions.md`; the
+close's entry here; the driver's line last. About 50k from this stop's
+reading, well under the hand-off line.
+
+Reading: 175,254 at 21:41 UTC, before this entry.

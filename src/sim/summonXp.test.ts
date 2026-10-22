@@ -7,7 +7,7 @@ import type { UnitStats } from './Unit';
 import { LEVELING } from '../config/leveling';
 
 /**
- * §33 — a summoned unit's damage credits its SUMMONER's XP ledger, scaled by
+ * A summoned unit's damage credits its SUMMONER's XP ledger, scaled by
  * `LEVELING.summonDamageXpShare` (a summon has no roster slot, so its own tally
  * is never banked). Expectations derive from the config knob (balance-proof —
  * never the literal 0.5).

@@ -1,5 +1,5 @@
 /**
- * E3 — `simulateLevelUps` and `scaleStats` correctness + boundary
+ * `simulateLevelUps` and `scaleStats` correctness + boundary
  * cases. The RNG-driven path is asserted on its determinism (same fork
  * → same outcome) and its expected-value tendency over many trials;
  * the deterministic path is pinned table-style against the closed-form
@@ -219,7 +219,7 @@ describe('H1 — `power` levels per growthRates (config-derived, balance-proof)'
 describe('I1 — `precision`/`evasion` level per growthRates (config-derived, balance-proof)', () => {
   // The two dodge stats are plumbed exactly like every other stat; this proves
   // they level off the shipped config, NOT a hardcoded base/growth — so the
-  // assertions stay correct when I4/I5 re-tunes the (currently uniform) values.
+  // assertions stay correct when a re-tune moves the values.
   const DODGE_STATS = ['precision', 'evasion'] as const;
 
   it('every archetype config defines a numeric precision + evasion base + growth', () => {

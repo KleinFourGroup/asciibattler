@@ -47,7 +47,7 @@ describe('foldEffects', () => {
   });
 
   it('recovers the exact fatigue curve (mul delta scales linearly with magnitude)', () => {
-    // Fatigued (§91c: on constitution): constitution × (1 − rate·stacks).
+    // Fatigued (on constitution): constitution × (1 − rate·stacks).
     // rate 0.1, stacks 2 → ×0.8.
     const rate = 0.1;
     const out = foldEffects(base({ constitution: 10 }), [

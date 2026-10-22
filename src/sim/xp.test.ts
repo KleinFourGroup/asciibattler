@@ -1,5 +1,5 @@
 /**
- * E4 — XP curve sanity. Pins the quadratic-per-level shape + cap
+ * XP curve sanity. Pins the quadratic-per-level shape + cap
  * behavior against the config defaults. If `config/leveling.json`
  * changes, these expectations move with it — the test exists to lock
  * the *formula contract* (cap → Infinity, level 1 → baseXp,
@@ -130,7 +130,7 @@ describe('computeXpAwards', () => {
     expect(award!.xpGained).toBe(Math.round(LEVELING.xpFlatPerFallen));
   });
 
-  // F6 — healing feeds XP symmetrically with damage, via the utilityDone
+  // Healing feeds XP symmetrically with damage, via the utilityDone
   // ledger. Expectations derive from LEVELING.* (balance-proof), never the
   // shipped arithmetic.
   it('heal-only healer (0 damage) → flat survivor + per-healing share', () => {

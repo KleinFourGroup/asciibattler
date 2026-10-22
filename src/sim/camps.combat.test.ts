@@ -1,5 +1,5 @@
 /**
- * §75e — the combat widening: hostility gates targeting in BOTH directions,
+ * The combat widening: hostility gates targeting in BOTH directions,
  * aggro + kill credit ride the damage chokepoint, and camp fights earn XP
  * (the shape-lock's signed XP-yes call). Pins the worksheet's combat rows:
  * the `hostileCandidate` admit rule (passive camps are scenery to targeting),
@@ -93,7 +93,7 @@ describe('§75e — hostility gates targeting (both directions)', () => {
     const { world } = freshWorld();
     const [camp] = dripBoth(world, { x: 4, y: 4 }, { x: 9, y: 9 });
     const player = spawnAt(world, 'player', { x: 3, y: 3 });
-    player.targetId = camp.id; // what a 75h click-to-engage order resolves to
+    player.targetId = camp.id; // what a click-to-engage order resolves to
     expect(currentTarget(player, world)?.id).toBe(camp.id);
   });
 
@@ -267,12 +267,12 @@ describe('§75e — a hostile camp member fights (the stats/archetype verify pin
 });
 
 describe('§91-pre — a camp member\'s summon JOINS the camp (the frost-coven ghoul bug, 2026-09-03 playtest)', () => {
-  // The repro: a neutral (camp) shaman's ghouls arrived as campId-null
-  // neutrals — the renderer's wall path (passive tint, no bar, the
-  // materialize never resolving), untargetable, and never acting. The fix
-  // stamps the summoner's camp on the minion; `spawnSummon` here is the
-  // interpreter's exact call (effects/interpreter.ts §29d: the caster's team,
-  // attributed to the caster).
+  // A neutral (camp) shaman's ghouls carry its camp: as campId-null
+  // neutrals they would take the renderer's wall path (passive tint, no bar,
+  // the materialize never resolving), be untargetable, and never act.
+  // `spawnSummon` stamps the summoner's camp on the minion; here it is the
+  // interpreter's exact call (effects/interpreter.ts's summon op: the
+  // caster's team, attributed to the caster).
   it('stamps the summoner campId, wires the camp wander behavior, is targetable once hostile, and counts toward the wipe', () => {
     const { world } = freshWorld();
     const [m1, m2] = dripBoth(world, { x: 4, y: 4 }, { x: 9, y: 9 });

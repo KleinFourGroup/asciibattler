@@ -16211,3 +16211,96 @@ the variable it names.
 
 Readings: 358,283 at 00:00 on `31372c9d`, 396,634 at 00:05 before this
 entry: about 38k for 90 codes, 425 a code.
+
+The suite by the hook at `5253499e`: 3,702 passed, and the smoke 595.
+
+### 126m, batch 5 — `src/sim`'s other 29 top-level tests (2026-10-22, session 3d57d006)
+
+144 codes in 29 files, in 122 hunks, to none; `src/sim` holds no code
+in a comment now. Reasons that replace a code, with where each was
+checked:
+
+- `World.test.ts`: "34a" is the `_combatBegan` latch, named beside it
+  (`World.ts`, six mentions); "the I2 duel shape" is the file's
+  `evadeDuel` (line 637), as is "the I2 `evadeDuel` harness" in
+  `triggers.test.ts`; "the §27c balance-proof" is the status catalog
+  tests'.
+- `environment.test.ts`: "the D6 LOS contract" is that half-cover is
+  LOS-transparent (the assertion beside it); "the §40c block below" is
+  the destructible walls block.
+- `Targeting.orderedRubble.test.ts`: "the §75j2 pull" is the camp pull
+  (`Targeting.ts:481`, "the enemy's camp pull"); "75k's nearest-pick
+  chipped this one" is what a nearest-pick would do.
+- `Targeting.test.ts`: "the old chain fell to lowest id (… 43a filed)"
+  is what a lowest-id fallback would do.
+- `stats.test.ts`: "GP1 dropped the per-archetype
+  baseMoveCooldownSeconds override" is that there is none (the key is
+  only in `config/stats.json`).
+- `archetypes.test.ts`: "E3's `simulateLevelUps` will restore the
+  'different seed → different stats' property" is that seeds diverge
+  through the level-ups (`leveling.ts:43` draws on its `rng`).
+- `battleRules.test.ts`: "the K1 behavior-registry pattern" is the
+  status behaviors' registry pattern.
+- `camps*.test.ts`, `layouts.test.ts`, `layoutConnectivity.test.ts`,
+  `proceduralMap.test.ts`: the §75, §40, §37 and §81 provenance dropped
+  beside words that already say what each pins.
+
+Corrected (rule 7):
+
+- `World.test.ts`: the `scene` helper's two comments said
+  "Constitution=20 → maxHp=50", once beside the code and once inside
+  the stats literal; the helper spreads the mercenary's baseline, whose
+  constitution is 22. Both now say the constitution is the mercenary's.
+  This is the twin batch 3 named.
+- `Unit.test.ts`: "No K1 effect ships a constitution mod" and "(currentHp
+  clamp on a maxHp DROP is the deferred policy …)" were stale: Fatigued
+  ships one, seeded at spawn and clamped by the constructor, and
+  `refreshDerived` does not clamp (`Unit.ts:400`, `fatigue.ts:12`). It
+  now says so.
+- `camps.economy.test.ts`: the header's "dormant `enemyPullChance` seam
+  (hostility pre-mark + the enemy engage{tile} order + the anchor-tile
+  objective auto-revert)" described the retired pull, and "the knob
+  shipped LIVE at 0.15" a value that is now 0.25 (`config/sim.json:17`).
+  The header names the pull as the file's own later tests pin it, and
+  the knob comment points at the config without the number.
+- `rubbleAutoTarget.test.ts`: "a rubble-free board (every shipped map +
+  all fuzz) is byte-identical" was false: three layouts in
+  `config/layouts.json` carry rubble. It now says a rubble-free board
+  plays as if the overlay did not exist.
+- `environment.test.ts`: "⚠️ Nothing DAMAGES rubble in play until §40b
+  lifts the `isCombatTargetable` neutral guard" was stale; it now points
+  at the tests that pin the damage paths. This is the line batch 4 named.
+- `leveling.test.ts` and `stats.test.ts`: "the (currently uniform)
+  values" and "I1's uniform prc==eva==5 default … until I5 spreads the
+  stats" were stale: base precision runs 3 to 7 and evasion 3 to 11
+  across the combatants, and the growth rates differ too. The stats
+  comment now says what the loop shows (with prc == eva the terms
+  cancel).
+- `statusPeriodic.test.ts`: "the shipped catalog (empty until 27c)"
+  dropped its parenthesis.
+
+Not checked: `World.test.ts:146`'s "Both sides chip the opposing pool by
+Σpower", beside the H4 code that went; it stays as written.
+
+Twins: searches for "Constitution=20", "con=20", "ships a constitution",
+"prc==eva", "currently uniform", "every shipped map", "rubble-free
+board", "at 0.15" and "dormant" with "pull" over `src`, `tests`, `tools`
+and `scripts` found only the lines corrected here.
+
+**Proof.** `comment-strip HEAD src`: 29 files differ, in comments only,
+exit 0; the control named 29 of 29. `comment-codes`: 445 → 301, and
+`--record` wrote 301 in 18 files, all under `src/run`. `comment-length`
+on the 29 files: comment lines 834 → 830, words 9,154 → 8,899, code
+lines 6,960 both.
+
+**Read** (`batch`): `git show <this commit> -- src`. What changed: the
+step codes in the rest of `src/sim`'s tests, and seven stale claims.
+Where to look: `World.test.ts`'s `scene` helper, `Unit.test.ts`'s second
+clamp test, `camps.economy.test.ts`'s header, `rubbleAutoTarget.test.ts`'s
+header. Wrong looks like a header that misdescribes the pull, or a
+constitution or uniformity claim the config contradicts.
+
+Readings: 396,927 at 00:08 on `5253499e`, 463,271 at 00:15 before this
+entry: about 66k for 144 codes, 460 a code. Batch 6 (87 codes) starts
+under the hand-off line, at about 472k after this commit, and its
+forecast end, about 515k, leaves the hand-off its room before the halt.

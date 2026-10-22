@@ -105,7 +105,7 @@ describe('World battle-end detection', () => {
     const bus = new EventBus<GameEvents>();
     const rng = new RNG(1);
     const w = new World(bus, rng);
-    // E4 follow-up: spawn WITH rosterIndex so the survivor lands in
+    // Spawn WITH rosterIndex so the survivor lands in
     // playerRosterIds and earns its flat-XP slice; otherwise the
     // bare-spawn path treats it as a non-roster fixture and emits
     // an empty awards list.
@@ -136,16 +136,16 @@ describe('World battle-end detection', () => {
 
     expect(ends).toHaveLength(1);
     expect(ends[0]!.winner).toBe('enemy');
-    // No player roster units here, so still no awards — but H4 carries the
+    // No player roster units here, so still no awards — but the event carries the
     // per-side survivor power so the encounter loop can chip the player pool.
     expect(ends[0]!.xpAwards).toEqual([]);
     expect(ends[0]!.survivorPower).toEqual({ player: 0, enemy: enemy.stats.power });
   });
 
   it('resolveAsDraw ends the turn as a draw, reports both survivor powers, and still awards player XP', () => {
-    // H4: the driver's per-turn tick cap force-resolves a turn that hasn't
+    // The driver's per-turn tick cap force-resolves a turn that hasn't
     // resolved decisively. Both sides chip the opposing pool by Σpower; XP is
-    // awarded regardless of winner (the old player-win-only gate is gone).
+    // awarded regardless of winner.
     const bus = new EventBus<GameEvents>();
     const rng = new RNG(1);
     const w = new World(bus, rng);
@@ -219,9 +219,10 @@ describe('World battle-end detection', () => {
 
   it('34a — a genuine mutual wipe (empty board, no walls) ends immediately as a draw', () => {
     // Both teams' last units die on the same tick with nothing left on the
-    // board. Pre-34a this fell through `checkBattleEnd`'s empty-board guard and
-    // soft-locked until the driver's tick cap. The `_combatBegan` latch (set
-    // the first tick both teams were alive) now resolves it as a DRAW at once.
+    // board. Without the `_combatBegan` latch (set the first tick both teams
+    // were alive) this would fall through `checkBattleEnd`'s empty-board guard
+    // and soft-lock until the driver's tick cap; the latch resolves it as a
+    // DRAW at once.
     const bus = new EventBus<GameEvents>();
     const rng = new RNG(1);
     const w = new World(bus, rng);
@@ -246,8 +247,8 @@ describe('World battle-end detection', () => {
 
   it('34a — a genuine mutual wipe with walls left standing ends immediately as a draw', () => {
     // The other wipe path: a neutral wall survives, so the board is non-empty
-    // and the empty-board guard is skipped. Pre-34a the `!playerAlive &&
-    // !enemyAlive` branch returned silently; the latch now draws at once.
+    // and the empty-board guard is skipped. Without the latch the `!playerAlive &&
+    // !enemyAlive` branch would return silently; the latch draws at once.
     const bus = new EventBus<GameEvents>();
     const rng = new RNG(1);
     const w = new World(bus, rng);
@@ -313,7 +314,7 @@ describe('World inline death handling', () => {
     world.tick();
     expect(world.findUnit(units[0]!.id)).toBeUndefined();
     expect(deaths).toMatchObject([{ unitId: units[0]!.id, team: 'player', campId: null, summoned: false }]);
-    // 94d — the BOOKED power rides the event (what the casualty rule charged).
+    // The BOOKED power rides the event (what the casualty rule charged).
     expect(deaths[0]!.power).toBe(units[0]!.effectiveStats.power);
   });
 
@@ -366,7 +367,7 @@ describe('World 27d tile statuses (fire→burn, healing→rejuvenate)', () => {
   const KEEP_BATTLE_ALIVE: DeathSceneUnit = { team: 'enemy', x: 11, y: 11, hp: 50 };
 
   // Drive the integration off the SHIPPED status defs (the per-second rate is
-  // the §27c balance-proof; here we read interval/might/duration so the timing
+  // the status catalog tests' balance-proof; here we read interval/might/duration so the timing
   // tracks config, never a hardcoded tick count). `op.might` is common to the
   // damage|heal union, so no narrowing needed.
   const BURN = statusDef('burn');
@@ -456,7 +457,7 @@ describe('World 27d tile statuses (fire→burn, healing→rejuvenate)', () => {
     expect(units[0]!.currentHp).toBe(units[0]!.derived.maxHp);
     expect(ticked[ticked.length - 1]!.amount).toBe(0);
 
-    // F6: an environmental (null-source) HoT does NOT feed the utility-XP
+    // An environmental (null-source) HoT does NOT feed the utility-XP
     // ledger — only ability heals do. The unit gained HP yet earns no heal-XP.
     expect(world.utilityDoneBy(units[0]!.id)).toBe(0);
   });
@@ -656,7 +657,7 @@ describe('World.applyDamage — I2 dodge hit/miss roll', () => {
     const mk = (id: number, team: Team, precision: number, evasion: number, x: number): Unit => {
       const stats: UnitStats = {
         ...ARCHETYPE_CONFIG.mercenary.baseStats,
-        defense: 0, // isolate the to-hit roll from GP2 mitigation
+        defense: 0, // isolate the to-hit roll from the defense mitigation
         precision,
         evasion,
       };
@@ -792,9 +793,9 @@ describe('World.applyDamage — I2 dodge hit/miss roll', () => {
       combatSeed: seed,
     });
     const before = world.combatRng.toJSON().state;
-    // Y5c — the migrated strike: a single-target damage op (evadable, accuracy
+    // A strike: a single-target damage op (evadable, accuracy
     // 0.6) fires in EffectAction.start → executeDamage, which draws crit then
-    // calls applyDamage (the miss roll) — the crit→miss order AttackAction had.
+    // calls applyDamage (the miss roll): crit, then miss.
     const strikeDef = parseAbilityDef({
       id: 'sword', name: 'Sword', cooldownSeconds: 1.5, rangeCells: 1, target: { kind: 'enemyInRange' },
       timeline: [{ phase: 'impact', seconds: 0 }, { phase: 'recovery', seconds: 'fill' }],
@@ -820,12 +821,12 @@ describe('World.applyDamage — I2 dodge hit/miss roll', () => {
 });
 
 describe('World.applyDamage — §37c tile to-hit fold (generalizes M6 water bog-down)', () => {
-  // §37c: the M6 water penalty now lives in the TileDef table as
+  // The water penalty lives in the TileDef table as
   // `shallow_water.accuracyMod`. WATER_PENALTY is its magnitude, derived from
   // the table (balance-proof — never hardcoded), so the assertions track the
   // shipped value automatically.
   const WATER_PENALTY = -(TILE_DEFS.shallow_water.accuracyMod ?? 0);
-  // The I2 duel shape, but the test can seat either unit on a water tile. The
+  // The `evadeDuel` shape, but the test can seat either unit on a water tile. The
   // attacker's precision is pinned to WATER_PENALTY, so its EFFECTIVE precision
   // while wading is exactly 0 — the assertions hold for any penalty value,
   // deriving the thresholds from the table (balance-proof).
@@ -850,7 +851,7 @@ describe('World.applyDamage — §37c tile to-hit fold (generalizes M6 water bog
     const mk = (id: number, team: Team, precision: number, x: number): Unit => {
       const stats: UnitStats = {
         ...ARCHETYPE_CONFIG.mercenary.baseStats,
-        defense: 0, // isolate the to-hit roll from GP2 mitigation
+        defense: 0, // isolate the to-hit roll from the defense mitigation
         precision,
         evasion: 0,
       };
@@ -935,7 +936,7 @@ describe('World.applyDamage — §37c tile to-hit fold (generalizes M6 water bog
     expect(d.attacks).toHaveLength(1);
   });
 
-  // §37c — the general fold: ATTACKER's tile `accuracyMod` + DEFENDER's tile
+  // The general fold: ATTACKER's tile `accuracyMod` + DEFENDER's tile
   // `evasionMod`, both read from the table. Each test pins the seed to the
   // window between the floor-ground and on-tile hit chances (derived from the
   // table mod), so it asserts the fold flips a HIT into a MISS (or vice-versa).
@@ -1324,14 +1325,13 @@ function scene(specs: DeathSceneUnit[]): {
   // (`spawnWall`), so a scene's unit never shares one.
   let nextId = 101;
   const units = specs.map((s) => {
-    // E1: melee archetype, with `strength` set to the legacy
+    // The melee archetype, with `strength` set to the
     // `attackDamage` knob so tests that one-shot via 999-damage attacks
-    // still work. Constitution=20 → maxHp=50 (matches the pre-E1
-    // hard-coded default).
+    // still work.
     const baseMelee = ARCHETYPE_CONFIG.mercenary.baseStats;
     const stats: UnitStats = {
       ...baseMelee,
-      // Default constitution=20 → derived.maxHp = 50 (round(20*2.5)).
+      // Constitution is the mercenary's.
       // No knob exposed for it here — tests use `s.hp` to override
       // currentHp post-construction.
       strength: s.attackDamage ?? baseMelee.strength,
@@ -1366,7 +1366,7 @@ void ZERO_STATS;
 
 describe('§91a1 — the fallen-power ledger + the battle:ended reason (the casualty rule\'s input)', () => {
   // Every expectation reads the unit's own `effectiveStats.power` (config-
-  // derived, never a hardcoded weight) — the pins survive the §91b power table.
+  // derived, never a hardcoded weight) — the pins survive a change to the power table.
   function pair(): {
     bus: EventBus<GameEvents>;
     w: World;
@@ -1381,7 +1381,7 @@ describe('§91a1 — the fallen-power ledger + the battle:ended reason (the casu
     const enemy = w.spawnUnit(rollUnit('mercenary', rng), 'enemy', { x: 9, y: 9 });
     const ends: GameEvents['battle:ended'][] = [];
     bus.on('battle:ended', (p) => ends.push(p));
-    w.tick(); // far apart — both alive, the 34a latch sets
+    w.tick(); // far apart — both alive, the combat latch sets
     expect(w.ended).toBe(false);
     return { bus, w, player, enemy, ends };
   }
@@ -1441,7 +1441,7 @@ describe('§91a1 — the fallen-power ledger + the battle:ended reason (the casu
     w.tick(); // the summon joins
     expect(minion.summonedBy).toBe(enemy.id);
     // The premise the pin rests on: the archetype itself is NOT free (the
-    // table prices a ghoul like any body since 91e2) — the zero is the stamp.
+    // table prices a ghoul like any body) — the zero is the stamp.
     expect(minion.effectiveStats.power).toBeGreaterThan(0);
     minion.currentHp = 0;
     w.tick(); // reaped; the summoner still stands → no end

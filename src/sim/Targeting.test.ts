@@ -41,9 +41,9 @@ describe('Targeting / findTarget', () => {
   });
 
   it('§43b2: breaks distance+HP ties by ALIGNMENT — the enemy nearest the own axis, not spawn order', () => {
-    // Both enemies at Chebyshev 3, equal HP. The old chain fell to lowest id
-    // (= spawn order = the leftmost-spawn funnel 43a filed); now the smaller
-    // minor-axis offset wins: (5,8) is straight ahead (minor 0), (2,8) is
+    // Both enemies at Chebyshev 3, equal HP. The smaller minor-axis offset
+    // wins (a lowest-id fallback would follow spawn order, the leftmost-spawn
+    // funnel): (5,8) is straight ahead (minor 0), (2,8) is
     // fully diagonal (minor 3) — the aligned enemy wins DESPITE its higher id.
     const { world, units } = scene([
       { id: 1, team: 'player', x: 5, y: 5 },
@@ -76,10 +76,10 @@ describe('Targeting / findTarget', () => {
   });
 
   it('§43b2: the openField funnel is dead — each unit picks its opposite number', () => {
-    // The 43a probe shape: a row of players facing a row of enemies, every
-    // cross-pair at Chebyshev 9 (distance ties for ALL of them). Old chain:
-    // all four commit to the leftmost enemy (lowest id). New chain: each
-    // commits to the enemy in its own column.
+    // A row of players facing a row of enemies, every cross-pair at
+    // Chebyshev 9 (distance ties for ALL of them). Each commits to the enemy
+    // in its own column; a lowest-id fallback would send all four to the
+    // leftmost enemy.
     const { world, units } = scene([
       { id: 1, team: 'player', x: 4, y: 1 },
       { id: 2, team: 'player', x: 5, y: 1 },
@@ -485,7 +485,7 @@ describe('Targeting / focus (O3)', () => {
   });
 });
 
-// §40e — a manual `focus`/`engage` objective can target a DESTRUCTIBLE neutral
+// A manual `focus`/`engage` objective can target a DESTRUCTIBLE neutral
 // (rubble / a destructible wall), the "demolish this obstacle" order. Command +
 // one tick = the faithful path (drain → clearResolvedObjectives → updateTarget
 // the same tick). `rubble_1x1` is a destructible neutral (has `hp`); `wall` is
@@ -574,17 +574,17 @@ interface UnitSpec {
   archetype?: UnitArchetype;
   /** Target-selection strategy; defaults to the Unit ctor default (nearest). */
   targeting?: string;
-  /** Override `derived.attackRange` — the J1 objective tests need long-range
+  /** Override `derived.attackRange` — the objective tests need long-range
    *  units to exercise the leash cap + retaliation gate (the default scene
    *  builds range-1 melee). */
   attackRange?: number;
-  /** Pre-set the unit's sticky target id (the E5 commitment). */
+  /** Pre-set the unit's sticky target id (the target commitment). */
   targetId?: number;
 }
 
 function scene(specs: UnitSpec[]): { world: World; units: Unit[] } {
   const world = new World(new EventBus<GameEvents>(), new RNG(1));
-  // E1: melee baseline. luck=0 keeps the crit roll deterministically
+  // Melee baseline. luck=0 keeps the crit roll deterministically
   // off, though Targeting never ticks the world so it can't matter here.
   const stats: UnitStats = { ...ARCHETYPE_CONFIG.mercenary.baseStats, luck: 0 };
   const derived = deriveStats(stats, 1);

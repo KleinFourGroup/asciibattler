@@ -14,7 +14,7 @@ import type { Unit, Archetype, Team } from './Unit';
 import type { GameEvents } from '../core/events';
 
 /**
- * §28 — the behavior-axis DECISION-HOOKS read by the existing consumers
+ * The behavior-axis DECISION-HOOKS read by the existing consumers
  * (`AbilityBehavior` / `MovementBehavior` / `Targeting`). These exercise the
  * REAL shipped status defs (frozen/panic/blind/confusion) end-to-end through
  * `World.tick` + the behaviors, proving each flag changes what its consumer
@@ -121,10 +121,10 @@ describe('28 — panic', () => {
     p.addEffect(status('panic'));
     const startDist = cheb(p.position, e.position); // 1
 
-    // §36b — `addEffect` recomputes `derived`, clobbering the `moveCd: 1`
+    // `addEffect` recomputes `derived`, clobbering the `moveCd: 1`
     // override, so the flee uses the unit's real (~14-tick) move duration whose
     // logical flip lands at the 50% mark. Tick well past one full move cycle so
-    // at least one flee step has flipped (the old instant model fled on tick 1).
+    // at least one flee step has flipped.
     for (let i = 0; i < 20; i++) world.tick();
 
     expect(attacks).toHaveLength(0); // preventsAttack
@@ -142,7 +142,7 @@ describe('28 — panic', () => {
 });
 
 /**
- * 56c — the flee-swap: a BOXED panicker (retreatCell null — every free cell
+ * The flee-swap: a BOXED panicker (retreatCell null — every free cell
  * fails to gain distance) bubbles backward by swapping with an adjacent idle,
  * non-fleeing, non-support ally standing strictly farther from the threat.
  * The rout geometry used throughout: fleer at (1,5), enemy at (2,5), the
@@ -173,7 +173,7 @@ describe('56c — the flee-swap (boxed panic bubble-back)', () => {
     const p = new MovementBehavior().proposeAction(fleer, world);
     expect(p).not.toBeNull();
     expect(p!.action.id).toBe('swap');
-    // Execute the full deferred swap (56c2): start (event) then the flip.
+    // Execute the full deferred swap: start (event) then the flip.
     p!.action.start(fleer, world);
     p!.action.applyEffect!(fleer, world, 0);
     expect(fleer.position).toEqual({ x: 0, y: 5 }); // bubbled back…

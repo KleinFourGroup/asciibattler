@@ -5,8 +5,8 @@ import { STATUS_DEFS } from '../config/statuses';
 import { parseStatusDef } from './effects/statusSchema';
 
 /**
- * §28 — the behavior-axis def-resolve fold. Behavior lives on the DEF and is
- * resolved by the effect's `key`, so (like the §27 periodic tests) these inject
+ * The behavior-axis def-resolve fold. Behavior lives on the DEF and is
+ * resolved by the effect's `key`, so (like the periodic tests) these inject
  * FIXTURE defs into the file-isolated `STATUS_DEFS` registry rather than reading
  * the shipped catalog. The fold itself is pure — given the effects + the defs it
  * resolves, the merged flags are deterministic.

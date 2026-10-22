@@ -12,10 +12,10 @@ import { parseStatusDef } from './effects/statusSchema';
 import type { GameEvents } from '../core/events';
 
 /**
- * Phase 27b — the periodic (DoT/HoT) engine. The op/interval/duration are
+ * The periodic (DoT/HoT) engine. The op/interval/duration are
  * def-resolved by `key` from STATUS_DEFS, so these tests register FIXTURE defs
  * into the (file-isolated) registry rather than reading the shipped catalog
- * (empty until 27c). Tick counts are derived from `secondsToTicks` (the existing
+ * Tick counts are derived from `secondsToTicks` (the existing
  * convention), never hardcoded — TICK_RATE-agnostic.
  */
 

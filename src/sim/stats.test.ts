@@ -1,5 +1,5 @@
 /**
- * E1 — coverage for `deriveStats`, `inertDerived`,
+ * Coverage for `deriveStats`, `inertDerived`,
  * and the `world.combatRng` crit-roll determinism contract.
  *
  * Formula-level tests are table-driven against the JSON-authored
@@ -8,8 +8,8 @@
  * luck=99 → critCap, high stat → the per-axis min-scale floor) are pinned
  * explicitly so a regression on the guards surfaces loudly.
  *
- * GP1: the move axis (`mobility`) and attack axis (`speed`; I1 reverted the
- * GP1 `agility` name) read SEPARATE cooldown knobs
+ * The move axis (`mobility`) and attack axis (`speed`) read SEPARATE cooldown
+ * knobs
  * (`mobilityCdPerStat`/`mobilityMinCdScale` vs the speed pair), so the formula
  * tests derive each expectation from its own axis's knobs and a divergence
  * guard pins that the two helpers don't share a knob.
@@ -90,15 +90,14 @@ describe('critChanceFor — I6 per-ability crit (balance-proof off config/stats.
 });
 
 describe('hitChanceFor — I2/I6 dodge to-hit (balance-proof off config/stats.json)', () => {
-  // I6 — accuracy is the firing weapon's per-ability base (no global
-  // hitChanceBase anymore). hitChanceFor is a primitive, so these mechanic
+  // Accuracy is the firing weapon's per-ability base (no global
+  // hitChanceBase). hitChanceFor is a primitive, so these mechanic
   // tests pass an explicit accuracy literal rather than reading the JSON.
   const ACC = 0.6;
 
   it('equal precision and evasion cancel to exactly the weapon accuracy', () => {
-    // The keystone of I1's uniform prc==eva==5 default: with the terms
-    // cancelling, every unit sits at the weapon's accuracy until I5 spreads the
-    // stats.
+    // With prc == eva the terms cancel: the unit sits at the weapon's
+    // accuracy.
     for (const s of [0, 5, 12, 40]) {
       expect(hitChanceFor(ACC, s, s)).toBeCloseTo(ACC, 10);
     }
@@ -195,9 +194,8 @@ describe('deriveStats — move cooldown', () => {
 });
 
 describe('attackCooldownTicksFor — per-ability attack cadence', () => {
-  // E5 pre-work: attack cadence left `deriveStats` for the Ability
-  // layer. These mirror the old deriveStats attack-CD tests but against
-  // the new helper, deriving the base seconds from `config/abilities.json`
+  // Attack cadence lives in the Ability layer, not `deriveStats`. These
+  // test its helper, deriving the base seconds from `config/abilities.json`
   // so a cadence re-tune doesn't churn the test.
   const base = abilityDef('sword').cooldownSeconds;
 
@@ -246,8 +244,8 @@ describe('catapult move cadence (universal base, no per-archetype override)', ()
     const scale = Math.max(STATS.mobilityMinCdScale, 1 - mob * STATS.mobilityCdPerStat);
     const expected = Math.max(1, secondsToTicks(STATS.baseMoveCooldownSeconds * scale));
     const d = deriveStats(ARCHETYPE_CONFIG.catapult.baseStats, 1);
-    // GP1 dropped the per-archetype baseMoveCooldownSeconds override; the slow
-    // walk now comes from mobility alone under the universal base.
+    // There is no per-archetype override of baseMoveCooldownSeconds; the slow
+    // walk comes from mobility alone under the universal base.
     expect(d.moveCooldownTicks).toBe(expected);
     expect(ticksToSeconds(d.moveCooldownTicks)).toBeGreaterThan(1.5);
     expect(ticksToSeconds(d.moveCooldownTicks)).toBeLessThan(2.5);

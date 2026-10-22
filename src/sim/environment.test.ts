@@ -30,8 +30,8 @@ describe('environment / spawnWall', () => {
     const wall = spawnWall(w, { x: 5, y: 5 });
 
     expect(wall.team).toBe('neutral');
-    // §38d — walls now carry the `wall` catalog id, not the retired `environment`
-    // sentinel; the fold resolves glyph / flat HP / LOS-blocking from NEUTRAL_DEFS.
+    // Walls carry the `wall` catalog id; the fold resolves glyph / flat HP /
+    // LOS-blocking from NEUTRAL_DEFS.
     expect(wall.archetype).toBe('wall');
     expect(wall.glyph).toBe(NEUTRAL_DEFS.wall!.glyph);
     expect(wall.blocksLineOfSight).toBe(true);
@@ -48,16 +48,16 @@ describe('environment / spawnWall', () => {
     expect(wall.archetype).toBe('wall');
     expect(wall.glyph).toBe(NEUTRAL_DEFS.wall!.glyph);
     expect(wall.blocksLineOfSight).toBe(true); // wall semantics (default)
-    // §40b — a wall is hp-LESS (indestructible); `spawnEnvironment` falls back to
-    // the nominal filler maxHp (1, `NOMINAL_NEUTRAL_MAXHP` — byte-identical to the
-    // pre-§40b `hp:1`), which is never a damage target.
+    // A wall is hp-LESS (indestructible); `spawnEnvironment` falls back to
+    // the nominal filler maxHp (1, `NOMINAL_NEUTRAL_MAXHP`), which is never a
+    // damage target.
     expect(NEUTRAL_DEFS.wall!.hp).toBeUndefined();
     expect(wall.derived.maxHp).toBe(1);
 
     const cover = spawnHalfCover(w, { x: 2, y: 2 });
     expect(cover.archetype).toBe('half_cover');
     expect(cover.glyph).toBe(NEUTRAL_DEFS.half_cover!.glyph);
-    expect(cover.blocksLineOfSight).toBe(false); // the D6 LOS contract, on the def
+    expect(cover.blocksLineOfSight).toBe(false); // half-cover is LOS-transparent, on the def
     expect(cover.behaviors).toEqual([]);
   });
 
@@ -120,10 +120,10 @@ describe('environment / spawnWall', () => {
   });
 
   it('spawns with the requested maxHp on derived, not stats (§40c: hp ⇒ destructible def)', () => {
-    // §40c — passing an `hp` now routes to the `wall_destructible` def (the maxHp still
-    // lives on `derived`, the E1 contract this test guards); it is the layout's per-
+    // Passing an `hp` routes to the `wall_destructible` def (the maxHp
+    // lives on `derived`, the contract this test guards); it is the layout's per-
     // instance HP knob. The destructible-vs-indestructible routing is pinned in the
-    // §40c block below.
+    // destructible walls block below.
     const bus = new EventBus<GameEvents>();
     const w = new World(bus, new RNG(1));
     const wall = spawnWall(w, { x: 1, y: 1 }, 5);
@@ -133,8 +133,8 @@ describe('environment / spawnWall', () => {
   });
 
   it('removes a wall when its HP drops to 0 and emits unit:died with team neutral', () => {
-    // §40c — a wall handed an `hp` is a real destructible; drop its HP from outside,
-    // advance a tick, expect the same crumble-reap §40a's rubble already exercises:
+    // A wall handed an `hp` is a real destructible; drop its HP from outside,
+    // advance a tick, expect the same crumble-reap the rubble tests exercise:
     // spliced from `world.units`, `unit:died{ team: 'neutral' }` emitted.
     const bus = new EventBus<GameEvents>();
     const w = new World(bus, new RNG(1));
@@ -147,14 +147,14 @@ describe('environment / spawnWall', () => {
     w.tick();
 
     expect(w.findUnit(wall.id)).toBeUndefined();
-    expect(deaths).toMatchObject([{ unitId: wall.id, team: 'neutral', campId: null, power: 0 }]); // 94d: scenery books nothing
+    expect(deaths).toMatchObject([{ unitId: wall.id, team: 'neutral', campId: null, power: 0 }]); // scenery books nothing
   });
 });
 
 /**
- * §40c — OPTIONAL wall/cover destructibility. A wall/cover placement carrying a
+ * OPTIONAL wall/cover destructibility. A wall/cover placement carrying a
  * per-instance `hp` (the layout-schema knob) spawns as a SEPARATE hp-bearing neutral
- * def (`wall_destructible` / `half_cover_destructible`); HP-presence is the §40b signal
+ * def (`wall_destructible` / `half_cover_destructible`); HP-presence is the signal
  * that makes it combat-targetable (AoE / manual / focused fire), while the absent
  * `autoTarget` keeps it off the rubble auto-chip path (proven in rubbleAutoTarget.test).
  * No `hp` ⇒ the indestructible default — the locked "wall-destructibility OFF by
@@ -169,7 +169,7 @@ describe('§40c — destructible walls / cover', () => {
     expect(wall.blocksLineOfSight).toBe(true); // the LOS contract is unchanged
     expect(wall.derived.maxHp).toBe(40); // the per-instance layout HP became maxHp
     expect(wall.currentHp).toBe(40);
-    expect(isCombatTargetable(wall)).toBe(true); // §40b HP-presence ⇒ AoE / focused fire hits it
+    expect(isCombatTargetable(wall)).toBe(true); // HP-presence ⇒ AoE / focused fire hits it
   });
 
   it('a wall with NO hp stays the indestructible default (OFF by default)', () => {
@@ -184,7 +184,7 @@ describe('§40c — destructible walls / cover', () => {
     const destructible = spawnHalfCover(w, { x: 1, y: 1 }, 25);
     expect(destructible.archetype).toBe(HALF_COVER_DESTRUCTIBLE_ARCHETYPE);
     expect(destructible.glyph).toBe(NEUTRAL_DEFS.half_cover!.glyph);
-    expect(destructible.blocksLineOfSight).toBe(false); // the D6 LOS contract holds
+    expect(destructible.blocksLineOfSight).toBe(false); // half-cover stays LOS-transparent
     expect(destructible.derived.maxHp).toBe(25);
     expect(isCombatTargetable(destructible)).toBe(true);
 
@@ -195,7 +195,7 @@ describe('§40c — destructible walls / cover', () => {
 });
 
 /**
- * §38d-3 — the statusSusceptibility gate at `World.applyStatusEffect` (the single
+ * The statusSusceptibility gate at `World.applyStatusEffect` (the single
  * status-apply chokepoint). A neutral's `UnitDef.statusSusceptibility` is an
  * allow-list: walls opt into burn/frozen, out of poison/bleed. Combatants omit
  * the field ⇒ susceptible to all (byte-identical). Balance-proof: the allow-list
@@ -259,7 +259,7 @@ describe('§38d-3 — statusSusceptibility gate', () => {
 });
 
 /**
- * §83b — the statusImmunities gate (susceptibility's blocklist complement) at
+ * The statusImmunities gate (susceptibility's blocklist complement) at
  * the same chokepoint. First consumer: the healer's panic immunity (the
  * wail-panic × sustain-hand parity repair). Balance-proof: the blocked id is
  * read from `ALL_UNIT_DEFS.healer`, never hardcoded; the same-status control
@@ -314,13 +314,13 @@ describe('§83b — statusImmunities gate', () => {
 });
 
 /**
- * §40a — rubble, the FIRST real multi-tile entity: a destructible neutral
+ * Rubble, the multi-tile neutral: a destructible neutral
  * `UnitDef` (flat HP + a footprint + the burnable-not-poisonable allow-list).
- * These prove the §39 footprint fill live (a rubble occupies its whole N×N
+ * These prove the footprint fill live (a rubble occupies its whole N×N
  * block), the flat-HP reap lifecycle on a neutral, and the susceptibility gate —
- * all balance-proof (derived from `NEUTRAL_DEFS`, never hardcoded). ⚠️ Nothing
- * DAMAGES rubble in play until §40b lifts the `isCombatTargetable` neutral guard
- * (AoE) + adds the auto-target hook; here we drive HP / status directly.
+ * all balance-proof (derived from `NEUTRAL_DEFS`, never hardcoded). Here we
+ * drive HP / status directly; the paths that damage rubble in play are
+ * pinned in rubbleAutoTarget.test.ts and Targeting.test.ts.
  */
 describe('§40a — rubble (the first real multi-tile neutral)', () => {
   it('spawns as a neutral with the rubble glyph, catalog HP, and blocks LOS', () => {
@@ -331,7 +331,7 @@ describe('§40a — rubble (the first real multi-tile neutral)', () => {
     expect(rubble.team).toBe('neutral');
     expect(rubble.archetype).toBe(RUBBLE_ARCHETYPE_BY_SIZE[2]);
     expect(rubble.glyph).toBe(def.glyph);
-    expect(rubble.blocksLineOfSight).toBe(true); // §40 decision — rubble blocks LOS
+    expect(rubble.blocksLineOfSight).toBe(true); // rubble blocks LOS, by design
     expect(rubble.derived.maxHp).toBe(def.hp); // flat HP from the def
     expect(rubble.behaviors).toEqual([]); // inert — no abilities
     expect(rubble.activeAction).toBeNull();
@@ -373,7 +373,7 @@ describe('§40a — rubble (the first real multi-tile neutral)', () => {
     w.tick();
 
     expect(w.findUnit(rubble.id)).toBeUndefined();
-    expect(deaths).toMatchObject([{ unitId: rubble.id, team: 'neutral', campId: null, power: 0 }]); // 94d: scenery books nothing
+    expect(deaths).toMatchObject([{ unitId: rubble.id, team: 'neutral', campId: null, power: 0 }]); // scenery books nothing
   });
 
   it('is burnable/freezable but not poisonable (statusSusceptibility, catalog-derived)', () => {

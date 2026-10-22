@@ -1,19 +1,19 @@
 /**
- * §75k — the ordered-engage destructible-gate FREEZE (caught live on the
- * revised rubbleQuarry placement, worklog §75j-close): a melee unit whose
- * `engage{neutral}` objective (the §75j2 pull / the 75h click-to-engage) sat
- * behind auto-target rubble FROZE instead of auto-breaking through. The
- * ordered pursue branch re-committed the unreachable mark every tick and
- * never consulted the §40b rubble overlay — that overlay rides only the
- * atWill acquisition path — so MovementBehavior's path came back empty and
- * the unit proposed nothing, forever.
+ * The ordered-engage destructible-gate FREEZE (caught live on the
+ * rubbleQuarry placement): a melee unit whose `engage{neutral}` objective
+ * (the camp pull / the click-to-engage) sits behind auto-target rubble
+ * freezes, rather than breaking through, when the ordered pursue branch
+ * re-commits the unreachable mark every tick without consulting the rubble
+ * overlay — that overlay rides only the atWill acquisition path — so
+ * MovementBehavior's path comes back empty and the unit proposes nothing,
+ * forever.
  *
- * These pin the fix (`applyOrderedRubbleFallback`): the pursue branches of
+ * These pin `applyOrderedRubbleFallback`: the pursue branches of
  * BOTH ordered modes (engage AND focus — the same latent class) fall back to
  * the nearest approachable auto-target rubble when the ordered target is
  * unreachable, the full loop (chip → breach → ordered first blow → camp-wide
  * aggro) completes under real ticks on both the player arm (click-to-engage)
- * and the enemy arm (the §75j2 pull rails), and a deliberate focus ON an
+ * and the enemy arm (the camp pull's rails), and a deliberate focus ON an
  * inert destructible is left alone (no re-rank onto a nearer rubble).
  */
 
@@ -72,7 +72,7 @@ function dripMembers(world: World): [Unit, Unit] {
 /**
  * The rubbleQuarry shape, distilled: camp member m1 walled into a pocket at
  * (6,6) whose ONLY breach is an auto-target rubble gate at (6,7) — or, with
- * `sealed`, an eighth WALL there instead (no breach at all, the §75k2
+ * `sealed`, an eighth WALL there instead (no breach at all, the
  * genuinely-unreachable case; `gate` is then the wall, never chippable).
  */
 function buildEnclosure(world: World, opts: { sealed?: boolean } = {}): { m1: Unit; gate: Unit } {
@@ -172,7 +172,7 @@ describe('§75k2 — the ROUTE-AWARE gate pick (the labyrinth two-camp catch)', 
     const world = freshWorld();
     const { m1, gate } = buildEnclosure(world);
     // The labyrinth shape distilled: an OFF-ROUTE rubble nearer to the
-    // attacker than the pocket's gate — 75k's nearest-pick chipped this one.
+    // attacker than the pocket's gate — a nearest-pick would chip this one.
     const decoy = spawnRubble(world, { x: 8, y: 10 }, 1, 15);
     const attacker = spawnAt(world, 'player', { x: 6, y: 10 });
     orderEngage(world, 'player', m1.id);
@@ -208,7 +208,7 @@ describe('§75k2 — the ROUTE-AWARE gate pick (the labyrinth two-camp catch)', 
     parkOpposingDummy(world, 'enemy');
     orderEngage(world, 'player', m1.id);
     updateTarget(attacker, world);
-    expect(attacker.targetId).toBe(m1.id); // held, not redirected — 75k chipped the decoy
+    expect(attacker.targetId).toBe(m1.id); // held, not redirected — a nearest-pick would chip the decoy
     for (let i = 0; i < 100; i++) world.tick();
     expect(attacker.targetId).toBe(m1.id);
     expect(decoy.currentHp).toBe(15); // never touched

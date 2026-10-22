@@ -12,7 +12,7 @@ import { statusDef } from '../config/statuses';
 import { SIM } from '../config/sim';
 
 /**
- * §37d — the tile→status ENTER hook (`World.applyTileEnterEffects`), fired by
+ * The tile→status ENTER hook (`World.applyTileEnterEffects`), fired by
  * `MoveAction`'s 50% logical flip. A tile may APPLY a status on enter (mud →
  * poison) and/or REMOVE one (water
  * / deep_water → strip `burn`, the always-on inverse of the fire→burn sustain).
@@ -125,7 +125,7 @@ describe('§37d — applyTileEnterEffects (the hook in isolation)', () => {
 
 /**
  * The integration proof: a REAL single-step move drives the hook through
- * `MoveAction.applyEffect`, so it fires at the §36b logical commit (the 50%
+ * `MoveAction.applyEffect`, so it fires at the logical commit (the 50%
  * flip) — not at move-start, and not before the unit logically arrives.
  */
 const MOVE_TICKS = 4;

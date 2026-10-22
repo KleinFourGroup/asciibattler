@@ -23,7 +23,7 @@ const allowedSymmetries = Object.entries(P.symmetry)
   .filter(([, weight]) => weight > 0)
   .map(([k]) => k);
 
-// §81a/§81b — draws = every base knob except the three non-per-knob keys (the
+// Draws = every base knob except the three non-per-knob keys (the
 // wallCapFraction guard rail + the themeTiles table + the camps block), plus
 // one draw per knob the chosen theme DECLARES, plus the camp plan's TWO
 // unconditional draws (count + mode). Derived from the config, never hardcoded.
@@ -55,8 +55,8 @@ describe('sampleProceduralParams', () => {
   });
 
   it('§81b — an empty theme pool forces camp count 0; a stocked pool can roll sites', () => {
-    // Derived from the shipped config: volcanic ships an EMPTY pool (81c
-    // decides its residents); swamp ships a stocked one.
+    // Derived from the shipped config: volcanic ships an EMPTY pool; swamp
+    // ships a stocked one.
     expect(P.camps.pools.volcanic).toEqual([]);
     expect(P.camps.pools.swamp.length).toBeGreaterThan(0);
     let stockedRolled = 0;
@@ -146,7 +146,7 @@ describe('sampleProceduralParams', () => {
 const W = 14;
 const H = 14;
 
-// §81a — an all-off tile layer keeps the pre-81 geometry tests meaningful;
+// An all-off tile layer keeps the geometry tests meaningful;
 // tile-specific tests override individual knobs.
 const noTiles = (over: Partial<ResolvedThemeTiles> = {}): ResolvedThemeTiles => ({
   deepWaterFraction: 0,
@@ -187,7 +187,7 @@ function kindCount(r: ProceduralMapResult, kind: string): number {
 }
 
 // BFS between the two spawn-region centroids over passable cells (floor +
-// shallow water + ground patches), blocking walls, half-cover AND §81a deep
+// shallow water + ground patches), blocking walls, half-cover AND deep
 // water — the generator's own passability.
 function connected(r: ProceduralMapResult, gridW: number, gridH: number): boolean {
   const blocked = new Set<string>();

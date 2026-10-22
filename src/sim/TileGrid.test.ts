@@ -2,8 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { TileGrid, TILE_DEFS, tileDef, type TileKind } from './TileGrid';
 
 describe('TileDef table (§37a — the seam)', () => {
-  // The byte-identical guarantee: the generalized table must reproduce the
-  // exact pre-37a costs. Listed literally (NOT read from the table under test)
+  // The original five kinds' costs, listed literally (NOT read from the table under test)
   // so a typo in TILE_DEFS is caught rather than tautologically passed.
   type ExistingKind = 'floor' | 'shallow_water' | 'chasm' | 'fire' | 'healing';
   const EXISTING_COSTS: Record<ExistingKind, number> = {
@@ -28,8 +27,8 @@ describe('TileDef table (§37a — the seam)', () => {
   });
 
   it('carries no spurious mods on the bare existing kinds (floor/chasm/fire/healing)', () => {
-    // shallow_water is excluded: §37c deliberately folded the M6 wading penalty
-    // into it as `accuracyMod` (asserted separately below).
+    // shallow_water is excluded: it carries the wading penalty as
+    // `accuracyMod` (asserted separately below).
     for (const kind of ['floor', 'chasm', 'fire', 'healing'] as ExistingKind[]) {
       const def = TILE_DEFS[kind];
       expect(def.evasionMod).toBeUndefined();
@@ -44,7 +43,7 @@ describe('TileDef table (§37a — the seam)', () => {
     expect(def.accuracyMod).toBe(-10); // -10 prec × 0.02 = -20% to hit while wading
     expect(def.evasionMod).toBeUndefined();
     expect(def.statusOnEnter).toBeUndefined(); // water afflicts nothing on enter
-    expect(def.statusRemovedOnEnter).toBe('burn'); // §37d — wading douses fire
+    expect(def.statusRemovedOnEnter).toBe('burn'); // wading douses fire
   });
 
   it('defAt resolves a cell to its TileDef and throws out of bounds', () => {

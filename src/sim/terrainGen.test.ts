@@ -266,7 +266,7 @@ function collectSpawnTiles(regions: readonly SpawnRegion[]): GridCoord[] {
   return out;
 }
 
-/** §81a — the impassable deep-water cells of a grid, in the blocked-set key
+/** The impassable deep-water cells of a grid, in the blocked-set key
  *  format `spawnRegionsConnected` consumes. */
 function deepWaterCells(tileGrid: TileGrid): Set<string> {
   const out = new Set<string>();
@@ -276,7 +276,7 @@ function deepWaterCells(tileGrid: TileGrid): Set<string> {
 
 /** BFS between the first two spawn-region centroids over passable cells (floor +
  *  water), blocking walls AND half-cover — the generator's own passability.
- *  §81a: pass `extraBlocked` (e.g. deep-water cells) to block tiles too. */
+ *  Pass `extraBlocked` (e.g. deep-water cells) to block tiles too. */
 function spawnRegionsConnected(
   terrain: { walls: readonly GridCoord[]; halfCovers: readonly GridCoord[]; spawnRegions: readonly SpawnRegion[] },
   gridW: number,

@@ -45,9 +45,9 @@ describe('archetypes / rollUnit (E1: returns baseStats verbatim, no rolls)', () 
   });
 
   it('different seeds produce IDENTICAL templates today (rolls land in E3)', () => {
-    // Documents the E1 contract: stats come straight from the archetype
-    // config, no per-stat randomization yet. E3's `simulateLevelUps`
-    // will restore the "different seed → different stats" property.
+    // A template's stats come straight from the archetype config, with no
+    // per-stat randomization; seeds diverge only through the level-ups
+    // (`simulateLevelUps`).
     const a = rollUnit('mercenary', new RNG(1));
     const b = rollUnit('mercenary', new RNG(2));
     expect(a).toEqual(b);
@@ -75,7 +75,7 @@ describe('archetypes / lookups', () => {
 
   it('minRangeForArchetype is the floor of the longest-range attack (O4, config-derived)', () => {
     // Balance-proof: the engagement floor IS the attack ability's minRangeCells,
-    // whether that's 0 (the O4a plumbing commit) or set (the O4b value commit).
+    // whether that's 0 or set.
     expect(minRangeForArchetype('archer')).toBe(abilityDef('bow').minRangeCells);
     expect(minRangeForArchetype('mage')).toBe(abilityDef('magic_bolt').minRangeCells);
     expect(minRangeForArchetype('catapult')).toBe(abilityDef('catapult_shot').minRangeCells);
@@ -102,9 +102,9 @@ describe('archetypes / targeting config', () => {
   });
 
   it('neutral / unknown archetypes fall back to nearest', () => {
-    // §38d — walls / half-cover (neutrals, absent from the COMBATANT catalog) get
-    // the harmless default, as does any id not in the catalog (the removed
-    // `=== 'environment'` sentinel guard's behavior, now via optional chaining).
+    // Walls / half-cover (neutrals, absent from the COMBATANT catalog) get
+    // the harmless default, as does any id not in the catalog (via optional
+    // chaining).
     expect(targetingForArchetype('wall')).toBe('nearest');
     expect(targetingForArchetype('half_cover')).toBe('nearest');
     expect(targetingForArchetype('environment')).toBe('nearest');
@@ -114,9 +114,9 @@ describe('archetypes / targeting config', () => {
 describe('archetypes / I5 melee family', () => {
   // The four melee subclasses share the melee IDENTITY — a basic strike at
   // range 1, damage off `strength` — and diverge in stat VALUES (tuned by feel,
-  // NOT pinned here, per BALANCE.md). I6 split the shared `melee_strike` into a
-  // per-subclass WEAPON (sword/club/katana/whip), so each now carries its own
-  // strike id; this locks that structural contract (which weapon → which class).
+  // NOT pinned here, per BALANCE.md). Each carries its own WEAPON
+  // (sword/club/katana/whip) and strike id; this locks that structural
+  // contract (which weapon → which class).
   const MELEE_WEAPON = {
     mercenary: 'sword',
     adventurer: 'whip',

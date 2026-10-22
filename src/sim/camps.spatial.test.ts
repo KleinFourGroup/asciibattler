@@ -1,6 +1,6 @@
 /**
- * §75d — the spatial widening: an ACTIVE neutral (camp member) is a mobile
- * body, not scenery. Pins each worksheet site's new split (worklog §75):
+ * The spatial widening: an ACTIVE neutral (camp member) is a mobile
+ * body, not scenery. Pins each site's split:
  * soft-cost in `buildMovementContext` (the moving-wall fix, `excludeUnitId`
  * included), out of the static topology sets (`neutralCells`,
  * `nearestActingCell`, the bot choke masks), gated out of half-cover,
@@ -38,7 +38,7 @@ function spawnAt(world: World, team: Team, pos: GridCoord): Unit {
   return world.spawnUnit({ archetype: 'mercenary', level: 1, stats: BASE, xp: 0 }, team, pos);
 }
 
-/** Materialize one camp member via the real 75c drip (the only production
+/** Materialize one camp member via the real drip (the only production
  *  spawn path), then park it at `pos`. bandit-squatters drips two members;
  *  one tick materializes exactly the head-of-queue unit. */
 function campMemberAt(world: World, pos: GridCoord): Unit {

@@ -14,11 +14,11 @@ import { spawnRubble, spawnWall } from './environment';
 import type { GameEvents } from '../core/events';
 
 /**
- * §40b-② — the rubble AUTO-TARGET hook. A unit WALLED OFF from every hostile by a
+ * The rubble AUTO-TARGET hook. A unit WALLED OFF from every hostile by a
  * destructible rubble chips the blocking rubble ("deny access until destroyed");
  * a reachable hostile always outranks rubble, and an indestructible wall is never
  * auto-targeted. The whole overlay is gated on the board holding a live auto-target
- * rubble, so a rubble-free board (every shipped map + all fuzz) is byte-identical.
+ * rubble, so a rubble-free board plays as if the overlay did not exist.
  *
  * Fixtures hand-place combatants (high ids) but spawn rubble/walls through the REAL
  * spawn path (low ids from World's counter — no collision), so the rubble carries
@@ -95,12 +95,12 @@ describe('§40b — rubble auto-target: selection', () => {
     updateTarget(player, w);
 
     // No rubble on the board → the overlay never runs; the classic pick (the
-    // now-unreachable enemy) stands exactly as pre-§40b. The wall is not chipped.
+    // unreachable enemy) stands. The wall is not chipped.
     expect(player.targetId).toBe(enemy.id);
   });
 
   it('§40c — a DESTRUCTIBLE wall sealing the corridor is still never auto-targeted', () => {
-    // A §40c destructible wall is combat-targetable (AoE / manual / focused fire) but
+    // A destructible wall is combat-targetable (AoE / manual / focused fire) but
     // carries NO `autoTarget`, so — unlike rubble — a walled-off unit does NOT auto-
     // commit to chipping it. It keeps the (now unreachable) hostile, exactly like the
     // indestructible-wall case above. `autoTarget` (not mere HP-presence) gates the hook.
@@ -158,8 +158,8 @@ describe('§40b — rubble auto-target: movement approach', () => {
     // Out of reach → proposes a step toward the rubble (the hard-blocker approach).
     expect(mover.proposeAction(player, w)?.action.id).toBe('move');
 
-    // Adjacent to the rubble → holds (§44b: a wait proposal, no longer a bare
-    // null; in range → a ready AbilityBehavior strike at 10 outranks it).
+    // Adjacent to the rubble → holds (a wait proposal; in range → a ready
+    // AbilityBehavior strike at 10 outranks it).
     player.position = { x: 2, y: 0 };
     expect(mover.proposeAction(player, w)?.action.id).toBe('wait');
   });

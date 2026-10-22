@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { objectiveAtCell, type EnemyAtCell, type NeutralAtCell } from './objective';
 
 // Mechanic test — explicit literal cells/units (the pure resolver has no config
-// dependency). Every input path (the 78a unarmed left=engage/right=focus fast
+// dependency). Every input path (the unarmed left=engage/right=focus fast
 // paths + the armed left-click) funnels through objectiveAtCell, so this pins
 // the enemy-vs-tile decision once.
 
@@ -42,13 +42,13 @@ describe('objectiveAtCell', () => {
   });
 });
 
-// §40e — a DESTRUCTIBLE neutral (rubble / a destructible wall) is manually
+// A DESTRUCTIBLE neutral (rubble / a destructible wall) is manually
 // clickable: the resolver admits a neutral target when the click lands on any of
 // its footprint cells, ranked after enemies and before the bare-tile fallback.
 describe('objectiveAtCell — destructible neutrals (§40e)', () => {
   const enemies: EnemyAtCell[] = [{ id: 7, cell: { x: 3, y: 4 } }];
   // A 1×1 rubble at (6,6) and a 2×2 rubble anchored at (10,10) (cells
-  // 10,10 / 11,10 / 10,11 / 11,11 — the §39 N×N block).
+  // 10,10 / 11,10 / 10,11 / 11,11 — the N×N block).
   const neutrals: NeutralAtCell[] = [
     { id: 20, cells: [{ x: 6, y: 6 }] },
     {

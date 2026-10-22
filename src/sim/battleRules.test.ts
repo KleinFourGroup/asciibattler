@@ -9,11 +9,11 @@ import type { GameEvents } from '../core/events';
 import type { Unit } from './Unit';
 
 /**
- * 47f — the battle-domain daemon rules: install → trigger evaluation →
+ * The battle-domain daemon rules: install → trigger evaluation →
  * tally/status execution → serialization round-trip. Bespoke rule literals
  * (the daemon.test.ts fixture pattern); the launch evaluation semantics
  * (player-team acting only, filter-before-chance, status-on-actor by
- * default + the 49e `applyTo: 'target'` axis) are each pinned here.
+ * default + the `applyTo: 'target'` axis) are each pinned here.
  */
 
 const BITS_ON_HIT: BattleRule = { on: 'dealHit', effect: { op: 'gainBits', amount: 1 } };
@@ -28,7 +28,7 @@ const CRIT_EMBOLDEN: BattleRule = {
   effect: { op: 'applyStatus', statusId: 'emboldened' },
 };
 const KILL_BOUNTY: BattleRule = { on: 'kill', effect: { op: 'gainBits', amount: 5 } };
-/** 49e — the target-side axis (venom's shape: your hits poison the struck unit). */
+/** The target-side axis (venom's shape: your hits poison the struck unit). */
 const VENOM_HITS: BattleRule = {
   on: 'dealHit',
   effect: { op: 'applyStatus', statusId: 'poison', applyTo: 'target' },
@@ -81,7 +81,7 @@ describe('registerBattleRules — evaluation semantics', () => {
     expect(player.effects).toHaveLength(0);
     world.applyDamage(player.id, enemy, 3, { crit: true });
     expect(player.effects.map((e) => e.key)).toEqual(['emboldened']);
-    // The def's statMods fold into effectiveStats (the 47f authoring axis).
+    // The def's statMods fold into effectiveStats.
     const mod = statusDef('emboldened').statMods!.strength!.add!;
     expect(player.effectiveStats.strength).toBe(baseStrength + mod);
     // The target is untouched.
@@ -195,14 +195,14 @@ describe('serialization (the 47f/49e battleRules snapshot fields)', () => {
     const wire = JSON.parse(JSON.stringify(world.toJSON()));
     expect(wire.tallies).toEqual({ bits: 1 });
     expect(wire.battleRules).toHaveLength(3);
-    // 49e — the applyTo axis serializes (the v34 widening).
+    // The applyTo axis serializes.
     expect(wire.battleRules[2].effect.applyTo).toBe('target');
 
     const restored = World.fromJSON(wire, new EventBus<GameEvents>());
     expect(restored.bitsTallied()).toBe(1);
-    // The handlers re-registered from the data (the K1 behavior-registry
-    // pattern) — a post-restore hit still tallies, still emboldens the
-    // actor, and still lands the target-side poison (49e).
+    // The handlers re-registered from the data (the status behaviors'
+    // registry pattern) — a post-restore hit still tallies, still emboldens
+    // the actor, and still lands the target-side poison.
     const rPlayer = restored.findUnit(player.id)!;
     const rEnemy = restored.findUnit(enemy.id)!;
     restored.applyDamage(rPlayer.id, rEnemy, 3, { crit: true });

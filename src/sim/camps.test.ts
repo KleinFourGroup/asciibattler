@@ -1,8 +1,8 @@
 /**
- * §75b — the World camp registry: install semantics (the presence gate that
+ * The World camp registry: install semantics (the presence gate that
  * carries the byte-identity exit gate), hostility reads/writes, and the
  * active-neutral predicate. Serialization round-trips live in
- * tests/integration/snapshot-roundtrip.test.ts (the A2 home).
+ * tests/integration/snapshot-roundtrip.test.ts (the round-trip home).
  */
 
 import { describe, it, expect } from 'vitest';
@@ -96,7 +96,7 @@ describe('§75c — spawnCamps (the setup-time roll)', () => {
     expect(camps[0]!.anchor).toEqual({ x: 3, y: 3 });
     expect(camps[1]!.anchor).toEqual({ x: 8, y: 8 });
     // Pending derives from the catalog def (balance-proof: computed, not
-    // hardcoded — count expands, absent level defaults to 1). §75h2 — the
+    // hardcoded — count expands, absent level defaults to 1). The
     // HEAD of each expansion is PRIMED onto the grid at setup, so pending
     // holds the tail; the primed member stands on the anchor.
     const def = getCamp('ghoul-nest')!;
@@ -121,7 +121,7 @@ describe('§75c — spawnCamps (the setup-time roll)', () => {
     const a = freshWorld();
     const b = freshWorld();
     // Different worldSeeds on purpose: camp IDENTITY rides terrainSeed only
-    // (the signed 75j per-encounter verdict) — worldSeed feeds only the pull.
+    // (a signed per-encounter call) — worldSeed feeds only the pull.
     spawnCamps(a, tiles, refs, 1234, 7);
     spawnCamps(b, tiles, refs, 1234, 8);
     expect(a.campsList().map((c) => c.defId)).toEqual(b.campsList().map((c) => c.defId));
@@ -151,7 +151,7 @@ describe('§75c — the portal-drip drain', () => {
   it('§75h2 — the FIRST member is PRIMED at setup: instant, no lockout, targetable pre-countdown', () => {
     const world = dripWorld();
     // Before any tick: the head-of-queue member already stands on the anchor
-    // (like the initial teams — the user's 75h eyeball feedback).
+    // (like the initial teams, at the user's call).
     const spawned = world.units.filter((u) => u.campId !== null);
     expect(spawned.length).toBe(1);
     const u = spawned[0]!;
@@ -188,7 +188,7 @@ describe('§75c — the portal-drip drain', () => {
     world.tick();
     expect(world.units.filter((u) => u.campId !== null).length).toBe(1);
     expect(world.campById(1)!.pending.length).toBe(1);
-    // Vacate (the wander's job from 75f; teleported here) → the drip resumes.
+    // Vacate (the wander's job; teleported here) → the drip resumes.
     first.position = { x: 1, y: 1 };
     world.tick();
     expect(world.units.filter((u) => u.campId !== null).length).toBe(2);

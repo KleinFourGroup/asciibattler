@@ -11,9 +11,9 @@ import type { GameEvents } from '../core/events';
 import type { TriggerContextMap } from './triggers';
 
 /**
- * K1 — the World fires combat/lifecycle triggers (`dealHit`/`takeHit`/
+ * The World fires combat/lifecycle triggers (`dealHit`/`takeHit`/
  * `dealMiss`/`evade`/`kill`/`death`/`spawn`) to registered handlers. These
- * mirror the I2 `evadeDuel` harness: a 2-unit duel with an explicitly-seeded
+ * mirror World.test.ts's `evadeDuel` harness: a 2-unit duel with an explicitly-seeded
  * `combatRng` so the to-hit roll is controllable.
  */
 

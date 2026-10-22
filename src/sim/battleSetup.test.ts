@@ -11,7 +11,7 @@ import type { GameEvents } from '../core/events';
 import type { LayoutDef } from './layouts';
 
 /**
- * §40d — the layout→board wiring for the first multi-tile neutral. The rubble
+ * The layout→board wiring for rubble, the multi-tile neutral. The rubble
  * ENTITY (footprint occupancy, HP override, crumble, susceptibility) is proven in
  * environment.test; this covers the glue that turns a `LayoutDef`'s `rubble` array
  * into spawned units — schema (`generateFromLayout`) through spawn (`spawnLayoutNeutrals`).

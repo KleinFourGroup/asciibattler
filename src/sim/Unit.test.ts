@@ -50,7 +50,7 @@ describe('Unit', () => {
   });
 
   it('clamps currentHp to the re-derived maxHp when seeded with a constitution debuff (§91c)', () => {
-    // The clamp the K1 constructor deferred: a spawn-time effect that lowers
+    // The constructor's clamp: a spawn-time effect that lowers
     // constitution lowers maxHp, and the unit must spawn AT that max, not over
     // it. Expected values re-derived from the fold + deriveStats, not from Unit.
     const fatigued = eff({ key: 'fatigued', magnitude: 2, merge: 'add', mods: { constitution: { mul: 0.9 } } });
@@ -133,9 +133,10 @@ describe('Unit status effects', () => {
   });
 
   it('refreshDerived recomputes maxHp when an effect modifies constitution (the deferred-consumer seam)', () => {
-    // No K1 effect ships a constitution mod, but the recompute path is wired:
-    // a +constitution effect must raise derived.maxHp. (currentHp clamp on a
-    // maxHp DROP is the deferred policy — only a +CON is exercised here.)
+    // Only Fatigued ships a constitution mod, seeded at spawn (the clamp test
+    // above); the recompute path for an effect added later is wired: a
+    // +constitution effect must raise derived.maxHp. (`refreshDerived` does
+    // not clamp currentHp, so only a +CON is exercised here.)
     const u = makeUnit();
     const baseMax = u.derived.maxHp;
     u.addEffect(eff({ magnitude: 5, mods: { constitution: { add: 1 } } }));

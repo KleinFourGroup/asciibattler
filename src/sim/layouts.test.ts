@@ -96,13 +96,13 @@ describe('layouts library', () => {
 
       it('is not severed by indestructible obstacles (auto-target-aware, §40 follow-up)', () => {
         // Hand-authored layouts that HARD-sever the board are bugs, not seeds to be
-        // rescued. §40 follow-up: connectivity is now auto-target-aware — rubble is
+        // rescued. Connectivity is auto-target-aware — rubble is
         // passable (the AI auto-breaks it) and a destructible wall/cover is only a
         // SOFT blocker (a player can manually break it), so a shipped map must merely
         // not be `severed` (a `destructible-dependent` map is a legit author choice,
         // caught behaviorally by layout-deadlock.test.ts if it stalemates). Only
         // INDESTRUCTIBLE walls/half-cover (no hp) + chasm + deep water hard-block; fire
-        // / healing / the passable §37 tiles are cost-bearing surface effects, not
+        // / healing / the passable terrain tiles are cost-bearing surface effects, not
         // obstacles.
         const hardBlockers = [
           ...layout.walls.filter((w) => w.hp == null),
@@ -133,14 +133,14 @@ describe('layouts library', () => {
         }
       });
 
-      // D5: explicit per-layout spawn regions.
+      // Explicit per-layout spawn regions.
       it('declares at least two spawn regions', () => {
         expect(layout.spawns.length).toBeGreaterThanOrEqual(2);
       });
 
       it('every spawn region holds an in-range count of in-bounds tiles', () => {
         for (const region of layout.spawns) {
-          // H2: regions may range MIN..MAX tiles (was a hard 8).
+          // Regions may range MIN..MAX tiles.
           expect(region.tiles.length).toBeGreaterThanOrEqual(SPAWN_REGION_MIN_TILES);
           expect(region.tiles.length).toBeLessThanOrEqual(SPAWN_REGION_MAX_TILES);
           for (const t of region.tiles) {
@@ -153,7 +153,7 @@ describe('layouts library', () => {
       });
 
       it('spawn tiles never sit on impassable or occupied cells (walls, half-covers, chasms, deep water)', () => {
-        // §37g — spawns ARE allowed on passable terrain (water / fire / healing
+        // Spawns ARE allowed on passable terrain (water / fire / healing
         // / hills / ice / sand / mud); only impassable cells (chasm, deep water)
         // and neutral-occupied cells (wall, half-cover) are off-limits. This
         // pins that the shipped layouts respect the relaxed rule.
@@ -342,7 +342,7 @@ describe('§75a — camp spawns + the weighted camps list', () => {
         }),
       ]).success,
     ).toBe(false);
-    // Passable terrain is fine — the §37g rule carries over.
+    // Passable terrain is fine — the spawn-on-passable rule carries over.
     expect(
       LayoutsSchema.safeParse([
         layoutWith({ sand: [{ x: 4, y: 4 }], campSpawns: [{ x: 4, y: 4 }], camps }),
@@ -599,6 +599,5 @@ describe('SpawnRegion schema tile-count range (H2)', () => {
   });
 });
 
-// §40 follow-up — the local king-move BFS + centroid helpers were retired: the
-// shipped-layout connectivity guard now imports the shared `classifyConnectivity`
+// The shipped-layout connectivity guard imports the shared `classifyConnectivity`
 // (src/sim/layoutConnectivity.ts), unit-tested in layoutConnectivity.test.ts.

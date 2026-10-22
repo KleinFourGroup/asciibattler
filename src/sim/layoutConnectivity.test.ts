@@ -1,7 +1,7 @@
 /**
- * §40 follow-up — the auto-target-aware connectivity classifier. These pin the
+ * The auto-target-aware connectivity classifier. These pin the
  * three tiers `classifyConnectivity` distinguishes, driving the editor's error/warn
- * and the shipped-layout test guard. The Phase-40 asymmetry under test: rubble is
+ * and the shipped-layout test guard. The asymmetry under test: rubble is
  * passable (auto-targeted → the AI breaks through), a destructible wall/cover is a
  * SOFT blocker (manual-break only), an indestructible obstacle is a HARD sever.
  */

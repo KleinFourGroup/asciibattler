@@ -1,9 +1,9 @@
 /**
- * §75g — the sim half of the run economy: the `campKills` payload on
+ * The sim half of the run economy: the `campKills` payload on
  * `battle:ended` (omitted when empty — camp-free byte-identity), the hold on a
  * decisive end while the winner has an uncleared hostile camp, and the
- * dormant `enemyPullChance` seam (hostility pre-mark +
- * the enemy engage{tile} order + the anchor-tile objective auto-revert).
+ * `enemyPullChance` seam (an ordered engage on the pulled camp's primed
+ * member, reverting when that member dies).
  *
  * SIM knobs are module-level config; the ON-paths mutate the parsed object
  * under try/finally (no shipped path sets them, so the mutation window is
@@ -175,7 +175,7 @@ describe('§75g — the hold on an uncleared hostile camp', () => {
 });
 
 describe('§75g — the enemyPullChance seam', () => {
-  // 75j — the knob shipped LIVE at 0.15 (the feel-pass trial), so the dormant
+  // The knob ships LIVE (`config/sim.json`), so the dormant
   // path is pinned by INJECTING 0 (mutate-then-restore), not by asserting the
   // shipped default. Restores capture the original value — a hardcoded
   // restore would leak the wrong knob under isolate:false.
@@ -194,7 +194,7 @@ describe('§75g — the enemyPullChance seam', () => {
     }
   });
 
-  // §75j2 — the pull re-authored to the user's design intent: an ordered
+  // The pull, to the user's design intent: an ordered
   // engage on the pulled camp's PRIMED member (the first consumer of the
   // enemy objective system), with NO pre-marked hostility — damage stays
   // hostility's single source, so a pulled camp reads passive until struck.
@@ -219,7 +219,7 @@ describe('§75g — the enemyPullChance seam', () => {
     }
   });
 
-  // 83d — the BOSS EXEMPTION (user-signed 2026-08-20): `pullEligible=false`
+  // The BOSS EXEMPTION (user-signed 2026-08-20): `pullEligible=false`
   // (what `applyTerrain` passes for a `kind:'boss'` encounter) suppresses the
   // pull even at chance 1 — the boss-side wave defends the pool. Camps still
   // spawn and prime normally; only the ordered engage is withheld.
@@ -270,10 +270,9 @@ describe('§75g — the enemyPullChance seam', () => {
     try {
       const { world } = freshWorld();
       spawnCamps(world, [ANCHOR], [{ campId: 'bandit-squatters' }], 42, 1);
-      // §75j2 — the order targets the PRIMED member (dripBoth's m1), so the
+      // The order targets the PRIMED member (dripBoth's m1), so the
       // STANDARD dead-target revert covers it: killing the ordered unit
-      // reverts even with m2 still alive (no camp-cleared wait — that was
-      // the retired anchor-tile order's rule).
+      // reverts even with m2 still alive (no camp-cleared wait).
       const [m1, m2] = dripBoth(world);
       const player = spawnAt(world, 'player', { x: 1, y: 1 });
       spawnAt(world, 'enemy', { x: 10, y: 10 });

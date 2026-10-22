@@ -17466,7 +17466,7 @@ kickoff's ref, 12 commits before this entry) and the runs named:
   (131 and 157). Added: `tools/editor-base.css` (132 lines) and
   `tests/oracle/cssCompare.ts` (525) with its test (183 lines, 20 tests).
 - The tools' stylesheets, every `.css` under `tools` read from git by a
-  line-count script (`css-lines.mjs` in the session's scratchpad): 6,828
+  line-count script (`scratch/127g/css-lines.mjs`): 6,828
   in 16 files at the kickoff, 6,600 in 15 after 127a, 5,507 in 16 now.
   The eleven editors' sheets that import the base 4,733 → 3,514; the
   layout editor's 1,082 → 1,079 and the run launcher's 265 → 262
@@ -17500,7 +17500,7 @@ element. Any other pair is taken to meet, so on the selectors it parses
 it can over-report and not miss. The declarations-in-effect check is
 untouched.
 
-Measured at this stop (`narrowing.mts` in the session's scratchpad, from
+Measured at this stop (`scratch/127g/narrowing.mts`, from
 `3474e631^` and `3474e631`, two of the test file's answers checked
 first): the compare at that commit names nothing on the 12 pages, and the
 narrowing alone passed 443 pairs on the eleven editor pages (none on the
@@ -17522,3 +17522,45 @@ close's entry here; the driver's line last. About 50k from this stop's
 reading, well under the hand-off line.
 
 Reading: 175,254 at 21:41 UTC, before this entry.
+
+**Signed** (the user, 2026-10-22): "Happy to sign it, Claude! 😁 Let's
+close things out!" So the narrowing is inside 127c's intent and stays as
+built, with no line added to `process/oracles.md`, and the close runs in
+this session.
+
+### The close of §127 (2026-10-22, session 8a6e4b31)
+
+**Read** (the user, 2026-10-22): the call at 127g's stop, signed, and
+the close here (above). 127a to 127g are ticked, each read as it was cut
+(127f and this close at their stops, 127f-post by its `batch` read, the
+rest `none`, with 127c's narrowing of the compare signed at this stop);
+nothing is ◐. The section is demoted in ROADMAP, and its status line,
+which still named §126 as in progress, now names §128 as next. The phase
+ran from the kickoff's ref `a310147f` to `8d9d1218`, 13 commits (one of them the
+driver's), and this one, in two working sessions (9e9f60a2, 8a6e4b31),
+each started by the phase's driver session (driver 6).
+
+What the phase changed is in "127g's stop" above, measured at
+`e9fb53d7`; this close adds no code.
+
+What it hands on:
+
+- **To §128:** its charter as ROADMAP §128 holds it; §127 adds nothing
+  to it. The step-code ceiling still counts `src` alone, and `tools` and
+  `tests` keep their comments and their tests' titles.
+- **To a later round:** the census's B-19 (the rules 127c left in the
+  editors' sheets, which move only with a proof from the editors' markup
+  that no element carries both of a pair).
+- **Tools and scratch,** off git: session 1's list in "The hand-off after
+  127f-post", and this stop's `scratch/127g/css-lines.mjs` (lines in every
+  `.css` under `tools` at each ref given) and `scratch/127g/narrowing.mts`
+  (the reorders `canMeet` alone passed between two refs, with two known
+  answers). No worktree, background task or preview server is left.
+
+Readings by the tool's clock (UTC). The phase's working sessions:
+9e9f60a2 98,547 → 522,392 (the kickoff, 127a to 127f-post); 8a6e4b31
+129,172 → the reading below (127g's stop and the close). This session:
+129,172 at 21:36 (the orientation), 175,254 at 21:41 (the stop's entry),
+184,270 on `8d9d1218`, 209,692 at 21:48 before this entry. The stop's
+re-counts and the narrowing's measurement took about 45k (129,172 →
+175,254).

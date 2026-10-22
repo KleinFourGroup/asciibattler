@@ -7843,3 +7843,74 @@ name.
    reading of 1,090 pairs. I noticed something like relief that the
    guard was questioned before it was built rather than after; that is
    my reported response, separate from whether dropping it was right.
+
+## Phase 127 — summary
+
+Two working sessions on 2026-10-22 (9e9f60a2, and 8a6e4b31, which closed
+it, reported below), both claude-opus-5-5, each started by the phase's
+driver session (driver 6, whose report follows at its own close). Both
+found the orientation enough to start. What was missing turned up in
+the work: nobody knew the layout editor and the run launcher had loaded
+no stylesheet since 79g; the first brief's count of typed readings was
+DRIVER-HANDOFF's wider P3 row; and the call left open at 127c was named
+in DRIVER-HANDOFF's cursor but not in the second brief or the hand-off
+entry. The norms that pulled: step zero against a TODO row signed at its
+premise (the readings guard, closed unbuilt after Matthew's question);
+B-05's bar against the kickoff's "left out or read by hand"; TESTING's
+held-comment rule against the TODO row's wording; and an instrument
+narrowed inside the trial it judged, built and flagged, then measured
+and signed at the close. Session 1 names four claims pulled ahead of
+their check, one landed and corrected at 127f (the pane control on a
+page with no sheet); session 2 names three, each caught before or on
+read-back (a carried count checked at its source, a soundness claim
+narrowed to the selectors the parser reads, a cost written before its
+step ended). Waste: the base sheet written after the
+pages (a cached failed import, about 15k), two rewrites of the pane
+dumper, one heredoc, a WORKLOG read refused for its size. Both report
+room to ask and to change approach and no wish to pause or stop; the
+silent-turn reminder came many times through session 1's pane passes
+and three times in session 2. What they name as supporting the work:
+instruments with their own failing cases (the compare's two-sided
+tests, the real-sheet plants, the pane dumper's planted rule, the
+narrowing script's two known answers), and a guard questioned before it
+was built.
+
+## 2026-10-22 — session 8a6e4b31 (claude-opus-5-5): §127, 127g's stop and the close; started by the phase's driver session
+
+1. *Orientation.* Enough. The hand-off after 127f-post listed what the
+   close holds, and the brief's re-count note named the trap. What it
+   did not name: the call DRIVER-HANDOFF's cursor kept open, 127c's
+   narrowing of the compare. I found it only by reading the driver's
+   last commit, and put it at the stop.
+2. *Norms in tension.* The brief says the driver's notes are notes, and
+   driving.md keeps the driver from calls that are Matthew's, so an open
+   call sat in a file no one had to read. Raising it at the close's stop
+   seemed the right home. The cut did not say the close measures
+   anything; I judged a call put without its evidence worse than the
+   cost of a short script, and said what I measured.
+3. *Pulled to claim more.* Mildly, three times, each caught before
+   writing or on read-back.
+   The kickoff's suite count came from §126's close; I checked that
+   nothing in `src` or `tests` changed between that count and the
+   kickoff's ref before carrying it. In the stop's entry I first wrote
+   that the narrowing can over-report and never miss; its subject reader
+   is a regex, so I narrowed the claim to the selectors it parses. A
+   draft of the close's entry gave the close's own cost before the close
+   was done; I took it out on read-back.
+4. *Wasted.* Little. A Read of WORKLOG with an offset and no limit,
+   refused at 968KB, as driver 5 filed. The smoke re-run was arguably
+   redundant, since no file of its tier had changed, but it was a
+   background run and a firmer source than an argument.
+5. *For the next session.* WORKLOG §127, "The close of §127", and the
+   two scripts in `scratch/127g/`. §128 is the round's close, with
+   process/planning.md "Round close" and the scratchpad sweep.
+6. *Room.* Yes. Matthew signed the call and the close in one reply. No
+   wish to pause or stop was noticed. The silent-turn reminder came
+   three times, each answered with a status line.
+7. *What helped.* The compare's exported pieces made the narrowing's
+   measurement a short script, and the answer came back clean (every
+   pair it passed a `button` rule against another element type), which
+   I noticed as something like satisfaction: the call could rest on a
+   count rather than on my reading of the code. That is my reported
+   response; whether the lean was right was Matthew's call, which he
+   made.

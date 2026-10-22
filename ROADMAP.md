@@ -11,8 +11,7 @@ plan: [archive/post-109-roadmap.md](archive/post-109-roadmap.md) (Round 8)
 with its worklog and spec beside it; before it
 [archive/post-104-roadmap.md](archive/post-104-roadmap.md) (Round 7.5).
 
-**Status: §125 closed 2026-10-21; §126, tests, is in progress, its cut
-signed 2026-10-21.**
+**Status: §127 closed 2026-10-22; §128, the round's close, is next.**
 The spec holds the user's intent and four signed
 decisions ([round-8.5-spec.md](round-8.5-spec.md)). The round opened with
 the oracle map, ahead of the census, as the user signed at the Round 8
@@ -367,13 +366,16 @@ of §126".
   666 → 0, every read signed 2026-10-22.
 - ☑ **126o — the close** (`stop`). Read 2026-10-22.
 
-## Phase 127 — tools
+## Phase 127 — tools ✅ (closed 2026-10-22)
 
-The sweep page deleted (A-32); B-05, with its compare built first and
-shown to fail on a planted declaration. Proof: that compare; nothing
-else reaches `tools/` across a commit. The cut was signed 2026-10-22,
-less TODO's readings guard, closed unbuilt on the premise (WORKLOG §127,
-the kickoff).
+The sweep page and its command builder deleted (A-32); `css-compare`
+built and shown to fail on planted declarations, and B-05 kept on it:
+one shared editor sheet, the tools' sheets 6,828 → 5,507 lines.
+`comment-length` on any path, `comment-strip` naming a held-comment file
+apart, two dev pages loading their sheets again; TODO's readings guard
+closed unbuilt on the premise. `src` untouched; the suite 3,704 → 3,727;
+no snapshot bump. The cut was signed 2026-10-22; each step's record is
+in WORKLOG §127 and "The close of §127".
 
 - ☑ **127a — A-32, the sweep page** (`none`), with `sweepCommand.ts` and
   its test (call 1); the smoke 595 → 583 in 60 → 59 files.
@@ -382,7 +384,8 @@ the kickoff).
 - ☑ **127c — B-05, a trial** (`none`, on its bar). `tools/editor-base.css`
   by `@import`, whole and base blocks, the layout editor's sheet out.
   Kept: 17 rules, the tools' sheets −1,087 lines; the compare and the pane
-  equal on all 12 pages.
+  equal on all 12 pages. The compare's narrowing signed inside its intent
+  at 127g.
 - ☑ **127d — `comment-length` takes any path** (`none`). A copy outside the
   repo measures as the folder in it.
 - ☑ **127e — `comment-strip` proves a file with a held comment** (`none`).
@@ -392,7 +395,8 @@ the kickoff).
   no trial.
 - ☑ **127f-post — R-1, the two dead font imports** (`batch`). The layout
   editor and the run launcher load their sheets again. Read 2026-10-22.
-- ☐ **127g — the close** (`stop`).
+- ☑ **127g — the close** (`stop`). Read 2026-10-22; 127c's narrowing
+  signed.
 
 ## Phase 128 — the close
 

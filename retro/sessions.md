@@ -7795,3 +7795,51 @@ name.
    its job: session 5 sized 126n by its own rates and filed no line on
    its margin. That is my reported response; one session is thin evidence
    that the note caused it.
+
+## 2026-10-22 — session 9e9f60a2 (claude-opus-5-5): §127, the kickoff, 127a to 127f-post; started by the phase's driver session
+
+1. *Missing from the orientation.* Nothing I needed to start. The brief
+   said the typed-reading slip came up in all five of §126's sessions;
+   the records name session 5 and driver 4, and DRIVER-HANDOFF's P3 row
+   counts every claim ahead of its check (filed). Nobody knew the layout
+   editor and the run launcher had loaded no stylesheet since 79g, so the
+   kickoff called the font import a lead to read, not a broken page.
+2. *Norms in tension.* Step zero's "measure the premise" against a TODO
+   row signed at the premise: I cut the readings guard as signed, and
+   Matthew's question the next morning found what I had not checked, how
+   far the slips got. B-05's bar ("the compare passes") against the
+   kickoff's "a pair the check names is left out or read by hand": I left
+   them out, so the compare passed outright. TESTING's "a held comment
+   counts as code" against the TODO's "proves a file with a held
+   comment": I kept the exit at 1 and put the other arm to Matthew.
+3. *Pulled to claim more.* Yes, four times, each caught before or at its
+   commit: my own friction line said I had carried the brief's count
+   into the kickoff, which I had not (fixed on read-back); 127c's base
+   header named the validation list and the row, which stayed in the
+   pages (fixed before the commit); a 127d test line asserted `measure`
+   and read as a test of the paths (removed); and 127c's entry called the
+   layout editor the pane's control before I knew its sheet never
+   loaded (corrected at 127f, in place).
+4. *Wasted.* The generator wrote the eleven sheets before the base, so
+   the preview server cached the failed import, and a server restart and
+   a second pass of six pages followed, perhaps 15k. The pane dumper took
+   two rewrites (too large a page, then the layout editor's custom
+   properties). One Bash call opened a heredoc against the brief's note,
+   harmless.
+5. *For the next session.* 127f-post's `batch` read is open (WORKLOG
+   §127, its script). The pane draws no screenshot while hidden, so the
+   look of a tool page is the user's read. `scratch/127c/pane-dump.js`
+   reads every element's computed style on a page, with its known
+   answers in its header.
+6. *Room.* Yes. Matthew's premise question came after the sign; I
+   answered it before building and he closed the row. I made one call
+   inside 127c's intent, the compare's narrowing, built and flagged it.
+   No wish to pause or stop was noticed. The silent-turn reminder came
+   many times through the pane passes (I did not count them); each got a
+   status line.
+7. *What helped.* Instruments with their own failing cases: the
+   compare's two-sided tests, the real-sheet plants, and the pane
+   dumper's planted CSSOM rule, so the trial's verdict did not rest on my
+   reading of 1,090 pairs. I noticed something like relief that the
+   guard was questioned before it was built rather than after; that is
+   my reported response, separate from whether dropping it was right.

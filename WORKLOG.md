@@ -17404,3 +17404,42 @@ panels; the layout editor shows its grid and layer controls. Wrong
 looks like the red error overlay or a white, unstyled page.
 
 Reading: 516,164 at 17:01, before this entry.
+
+### The hand-off after 127f-post (2026-10-22, session 9e9f60a2)
+
+Past the stretch the user signed at 127f's stop: 127f-post here, then
+this hand-off, with §127's close (127g) in the session the driver
+proposes.
+
+Where it stands at `76d2b9c9`: 127a to 127f ☑; **127f-post ◐**, its
+`batch` read open (its script under 127f-post above). The close is
+127g (`stop`): the read of 127f-post, the phase's summary of its session
+reports in `retro/sessions.md` (this session's is the only one so far),
+the ROADMAP section demoted, the HANDOFF Cursor to §128. What the phase
+changed, from `a310147f`: the sweep page and its command builder gone
+(1,010 lines); `css-compare` built (20 known answers); one shared editor
+sheet, the tools' stylesheets 6,828 → 5,507 lines in 16 files from the
+kickoff (the sweep page's out, the base in); `comment-length` on
+any path; `comment-strip` naming a held-comment file apart; two dev pages
+loading their sheets again; TODO's readings guard closed unbuilt; the
+census's B-19. The suite 3,704 → 3,727 in 257 files; the smoke 583 in 59
+files; no snapshot bump; the step-code ceiling unmoved.
+
+For DRIVER-HANDOFF (the driver's): P3's status pointed at the readings
+guard, now closed unbuilt; P11's `comment-length` form and P13's
+`held-compare.mts` route are retired by 127d and 127e.
+
+Tools and scratch, off git: `scratch/127-kickoff/` (the block
+profiles), `scratch/127b/real-plants.mts`, `scratch/127c/` (`plan.mts`,
+`hoist.mts` with `CSS_EXCLUDE`, `hazards.mjs`, `pane-dump.js`),
+`scratch/127e/held-real.mts`, `scratch/127f/pair.mjs`. No worktree,
+background task or preview server is left; the pane's `__cssdump` keys
+were cleared.
+
+Readings by the tool's clock (UTC): 98,547 at 14:40 (the orientation),
+196,742 at 14:49 (the audit's end), 235,180 at 15:34 (the guard's
+answer), 264,100 at 15:50 (127a), 322,041 at 16:02 (127b), 424,879 at
+16:18 (127c), 451,364 at 16:24 (127d), 484,852 at 16:30 (127e), 499,175 at
+16:34 (127f), 516,164 at 17:01 (127f-post), 522,392 at 17:04 before this
+entry. The rates: the kickoff about 100k with the orientation; 127c
+about 100k, most of it the pane; the three oracle steps 25 to 35k each.

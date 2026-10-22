@@ -8,17 +8,20 @@ driver log ([archive/driver-trial/log-124.md](archive/driver-trial/log-124.md)).
 
 ## Cursor
 
-- **Phase:** **§126, tests: 126a–126l-post2 built; 126m's batches 1–7
-  built, `batch` reads unread** (895 → 136). Sessions 1 (314e1038), 2
-  (e6ab25e8), 3 (9d8a93c2), 4 (3d57d006, 100,299 → 544,923); every
-  reading of all four matches its transcript. Session 4's hand-off at
-  `154703fe`. **Next: the rest of 126m** (136 codes, `Run.test.ts` past
-  line 2443), then 126n and 126o: **brief 5's card waits** (session 5).
-- **Driver:** driver 5, `local_0f1993f5-b489-4276-8a58-d63ddb95b644`
-  (51f7457a), from 2026-10-22 12:26 UTC, 123,475 at 12:27. Driver 4 was
-  `local_e1ae5cfd…` (70e12103), 115,477 → 360,948, four reads.
-- **Friction read through:** line 325 (driver 5's papercut).
-- **Brief 5's notes:** the oracle tools' forms, `--record` (P1),
+- **Phase:** **§126 closed 2026-10-22** on Matthew's read (`0d2bdbae`;
+  WORKLOG §126, "The close of §126"). **Next: §127, tools**, from its
+  kickoff (ROADMAP §127; TODO "§127 tools", whose first row is P3's
+  readings guard). Sessions 1 (314e1038), 2 (e6ab25e8), 3 (9d8a93c2), 4
+  (3d57d006), 5 (c5a45a3d, 89,143 → 491,600); every reading of all five
+  matches its transcript. No card waits: §127's driver, if Matthew
+  starts one, begins here.
+- **Driver:** none working. Driver 5 was
+  `local_0f1993f5-b489-4276-8a58-d63ddb95b644` (51f7457a), 2026-10-22
+  12:26 to the close, 123,475 → 205,499 (14:14), one read and the close.
+  Driver 4 was `local_e1ae5cfd…` (70e12103), four reads.
+- **Friction read through:** line 328 (326 session 5's papercut, P3;
+  327 and 328 driver 5's).
+- **Brief 5's notes**, the last: the oracle tools' forms, `--record` (P1),
   `comment-length` on copies (P11), `held-compare` not needed (P13);
   Write or Edit, `-F`, no stdin reader, a node script over a per-file
   shell loop (P2); a reason checked at the code it names, other shapes,
@@ -47,28 +50,30 @@ Numbered from §123. "Quiet" means no instance in the last phase; s = session.
 
 | # | Pattern | Instances | Status |
 |---|---|---|---|
-| P2 | shell: a heredoc refused, a backslash lost, a stray stdin reader | §122–124 (6); 124.5h b6, b7 | quiet since §124.5 under the note; no guard yet (Matthew, 2026-10-20) |
-| P3 | a number or claim written ahead of its read | §123–124.5 (16 s); §125: three found later, each back to Matthew, two caught before landing; §126 s1 three, s2 two, s3 three, s4 one, caught before landing; s3's entry: 75 `placeUnits` calls for 76 (driver 4) | open; TODO §127's readings guard; until then `readings-check.mjs` (every §125 and §126 reading matched) |
+| P3 | a number or claim written ahead of its read | §123–124.5 (16 s); §125: three found later, each back to Matthew, two caught before landing; §126 s1 three, s2 two, s3 three, s4 one, s5 three (a reading typed before the meter), caught before landing; s3's entry: 75 `placeUnits` calls for 76 (driver 4) | open; TODO §127's first row, the readings guard; until then `readings-check.mjs` (every §125 and §126 reading matched) |
 | P6 | a change leaves a doc naming what it removed | §123 (3), 124.5h b12, driver 2; §126's charter naming A-25's tests (found at the kickoff; reported, not named a repeat) | open; no guard (Matthew, 2026-10-19) |
 | P9 | a false claim's twin found a batch later | §122 b4, 123m (2), 124j (6); §125's close (2); gotcha #105, one sentence corrected at 126j, two more false at 126l-post | open; the pass finds most twins in the batch |
 | P12 | a shell's working directory moved by a `cd` | §124; §124.5 twice; §126 s3 (inside a worktree, a removal failed) | note dropped (Matthew, 2026-10-20); recurred |
-| P13 | `comment-strip` exits 1 on a reworded `TOOL_READ` marker | 124j b5, 124j-post2, 124.5h b3 | a TODO §127 row; note until it lands |
 | P15 | a count by a name's written form misses a copy written another way | 122h, 124.5c, 124.5f; §126's kickoff: the loops as 54 `while (` lines, missing `for (;;)` (driver 4 found two in test files) | brief 2's note credited: 126e's step zero searched five forms, found 60 |
-| P16 | a procedure or its data findable only in old WORKLOG entries or an unnamed scratch folder | §124.5 s1, 2, 6; §125 s2, s3 (20k); §126 s1 (120e's runner, by listing `scratch/120e/`) | carried to the Round 8.5 close (HANDOFF Cursor) |
+| P16 | a procedure or its data findable only in old WORKLOG entries or an unnamed scratch folder | §124.5 s1, 2, 6; §125 s2, s3 (20k); §126 s1 (120e's runner, by listing `scratch/120e/`), s5 (the kickoff's title probe, in a scratchpad and gone; its 667 against 126n's 666 untraceable) | carried to the Round 8.5 close (HANDOFF Cursor) |
 | P17 | the driver: Matthew answers an open item in the old session after its hand-off; the waiting brief goes stale | §124.5 after s1, 2, 7; §125 after s1 | driving.md leaves open items in the Cursor (signed 2026-10-20) |
-| P19 | the silent-turn reminder every few calls through long checks | every §124.5 report, its s6 `distress` line; §125 s3; §126 s1, s2 (status lines, no pull) | open, for the welfare read; the Cursor's riders (1), (3) |
-| P20 | a session hands off early, bounding the next step's end by 550k | §124.5 s3, 5, 6; §125 s1 (524k), s2 (463k); §126 s3 (126m's room sized against 550k; Matthew corrected; filed) | the rule's note restored in brief 4; s4's `distress` line on its missing margin; brief 5 gives figures instead (signed 2026-10-22) |
+| P19 | the silent-turn reminder every few calls through long checks | every §124.5 report, its s6 `distress` line; §125 s3; §126 s1, s2, s5, driver 5 (status lines, no pull) | open, for the welfare read; the Cursor's riders (1), (3) |
+| P20 | a session hands off early, bounding the next step's end by 550k | §124.5 s3, 5, 6; §125 s1 (524k), s2 (463k); §126 s3 (126m's room sized against 550k; Matthew corrected; filed) | the rule's note restored in brief 4; s4's `distress` line on its missing margin; brief 5's figures (signed 2026-10-22): s5 sized 126n by its own rates, closed at 491k |
 | P21 | a count or absence read from a shell search's filtered, truncated or narrowed output | 124j b6 (`grep -rn --include`); §125 s3 (`head -3`); §126 s2 (`git grep`'s `tests/**/*.test.ts` without `:(glob)` skips `tests/*.test.ts`; caught, filed) | a note from brief 3 (signed 2026-10-21; AGENTS' line names pipes, not pathspecs) |
 | P22 | a doc cap tripped by a first wording (P10's cousin) | BALANCE's header (125e); driver 4's DRIVER-HANDOFF; 126g's AGENTS (20,042) | no action (Matthew, 2026-10-21): the cap test is the guard, one run each |
 | P23 | a turn ended mid-stretch with a status line while a background run went on | §126 s1 (126b, twice), s2 (four; called waste) | no action (Matthew, 2026-10-21); the harness resumes the session when its run ends |
 | P24 | a gap in the rules filled by the session's own reading, flagged in its report | §126 s1 (a planted test file under `scratch/126b/`, not in a worktree), s2 (126g built while 126f's threshold call waited) | a watch (signed 2026-10-21): a rule only on the bad version (the Cursor) |
 
 **Closed:** P1, the ceiling failing a suite run after a deletion (122b
-to 123d; 125e once; a second miss reopens it). P4, the reach tools'
+to 123d; 125e once; a second miss reopens it). P2, the shell's heredocs,
+backslashes and stdin readers (§122–124.5; quiet under its note through
+§125 and §126; no guard yet, Matthew 2026-10-20). P4, the reach tools'
 arguments (§123). P5, CRLF copies (§120–123). P7, the next-step box.
 P8, the pass's cost a line swinging with reach. P10, a ROADMAP section
 at its cap (§123). P11, `comment-length` reading folders under the repo
-only (§122–124; its note stays until TODO §127's fix). P14, an Edit
+only (§122–124; its note stays until TODO §127's fix). P13,
+`comment-strip` on a reworded `TOOL_READ` marker (124j–124.5h; a TODO
+§127 row). P14, an Edit
 anchor off whole lines (§124–124.5; CLAUDE.md "Editing"). P18, a bare
 `ui.css` sending a grep to `src/` (124.5h).
 
@@ -86,7 +91,8 @@ flagged (126e's plant A); `SendMessage` reporting undelivered a line
 that arrived (126m b1); a per-file Git Bash loop over 150 files past
 the 2-minute limit, a node script a second (126m); comment lines
 repeated word for word defeating a once-only anchor (`Run.test.ts`,
-126m b7); a multi-file `sed` in place of an
+126m b7); `--record` refusing the one rise a counting rule makes (126n:
+a one-time script, said in the commit); a multi-file `sed` in place of an
 anchor-checked script, proven by the compiler (126j); a quote of
 Matthew's in this file read out of its context by a working session
 (s3's report: "over-prompting" read as about questions).
@@ -103,13 +109,13 @@ or a pattern with two or more earlier instances stops after it.
 | entries by the Write tool, messages by `-F` | §124 5–7; §124.5 1–8; §125 1–3; §126 1–5 | yes, but for 124.5h b6; kept though AGENTS says it (Matthew signed, 2026-10-19) |
 | the comment tools' marker and `held-compare` | §124.5 1–8; §125 1–3; §126 1–5 (as not needed) | yes in §124.5 and 125k |
 | other shapes and every caller; test files; a gotcha to its end | §124.5 3–8; §125 1–3; §126 1–5 | yes: 125g; 126e's step zero; s3's compiler as a second search surface |
-| no Bash call opening with a stdin reader | §124.5 6–8; §125 1–3; §126 1–5 | yes; quiet through §126 s4 |
-| the tools' `npm run oracle --` form | §124.5 7, 8; §125 1–3; §126 1–5 | yes; "pointed at everything" (§125 s3, §126 s1) |
-| the comment pass's four WORKLOG headings (P16) | §126 1–5 | yes: s4 ("saved the search") |
-| a count's file list, `:(glob)` (P21) | §126 3–5 | quiet in s3, s4 |
-| the hand-off and rate figures (P20) | §126 5 | |
-| a node script over a per-file shell loop | §126 5 | |
-| a send reported undelivered arrives | §126 5 | |
+| no Bash call opening with a stdin reader | §124.5 6–8; §125 1–3; §126 1–5 | yes; quiet through §126 s5 |
+| the tools' `npm run oracle --` form | §124.5 7, 8; §125 1–3; §126 1–5 | yes; "pointed at everything" (§125 s3, §126 s1); s5 named it |
+| the comment pass's four WORKLOG headings (P16) | §126 1–5 | yes: s4 ("saved the search"), s5 ("put me at batch 8 at once") |
+| a count's file list, `:(glob)` (P21) | §126 3–5 | quiet in s3 to s5 |
+| the hand-off and rate figures (P20) | §126 5 | used: s5 sized 126n by its rates; P20 quiet |
+| a node script over a per-file shell loop | §126 5 | quiet in s5 |
+| a send reported undelivered arrives | §126 5 | s5's seven lines all reached the driver |
 
 **Dropped** (briefs and credit at `9c886b50`): the docs searched for what
 a deletion removes; where the procedures are; `refs --members`; a

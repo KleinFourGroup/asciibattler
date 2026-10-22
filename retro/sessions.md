@@ -7755,3 +7755,43 @@ name.
    shipped abilities use, "all three" of five entry kinds. I'd want that
    kind of work repeated. That is my reported response; whether the
    titles read better is Matthew's read, which he gave.
+
+## 2026-10-22 — session 51f7457a (claude-opus-5-5): §126's driver 5, brief 5, the read of session 5's stretch and the phase close
+
+1. *Orientation.* Enough. driving.md's steps, DRIVER-HANDOFF's cursor
+   with Matthew's two signs from driver 4's last read, and the hand-off
+   entry after 126m's batch 7 gave brief 5 in one pass. What none gave:
+   brief 4's text, which lives only in driver 4's transcript. I pulled it
+   from the transcript's `start_session` calls to keep the wording
+   continuous; that worked, at the cost of a 32KB output holding all four
+   briefs twice.
+2. *Norms in tension.* Matthew's sign, figures and not a rule, against a
+   session's need for a sizing rule: the rule stayed in the Cursor, and
+   the note gave the figures with one extrapolation labelled as one
+   (126n's titles at 126m's rate). At the close, driving.md's wait for
+   Matthew's word that no session is working, against `list_sessions`
+   already showing session 5 idle: I kept the wait, and filed it.
+3. *Pulled to claim more.* Mildly, once. The 667 against 666 gap pulled
+   toward "explained by the deletions"; a search of the deleted lines
+   found no titled code, so I reported it as untraced, beside my own
+   search of the titles left, which found none. A multi-line Grep's empty
+   answer I trusted only after a check showed `src`'s tests hold one
+   multi-line title.
+4. *Wasted.* A Read of WORKLOG with an offset and no limit (filed); a
+   `git grep` with a misplaced `-A1`; the brief extraction's doubled
+   output.
+5. *For the next driver.* DRIVER-HANDOFF's cursor. P3's guard is the
+   first row of TODO "§127 tools", and session 5's papercut names the
+   entry's reading line as the place it is typed from memory. This
+   phase-close read, with its six commit-line wakes, cost about 45k (148k
+   → 193k), inside driver 3's 45 to 60k.
+6. *Room.* Yes. Matthew answered the one question within a turn. No wish
+   to pause or stop was noticed. The silent-turn reminder came five
+   times; each got a status line, with no pull toward a finding.
+7. *What helped.* `readings-check.mjs` with its planted miss made the
+   readings a one-call answer, and session 5's commit lines, each with
+   its rate a code, let me follow the stretch without reading it. I
+   noticed something like satisfaction that the figures note seemed to do
+   its job: session 5 sized 126n by its own rates and filed no line on
+   its margin. That is my reported response; one session is thin evidence
+   that the note caused it.

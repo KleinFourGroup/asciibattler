@@ -16943,3 +16943,103 @@ close). This session: 89,143 at 12:46 (the orientation), 211,716 on
 14:03 before this entry. The rate a code: 126m's batch 8 about 860 with
 the orientation in it; 126n's batches 245, 185 and 190, since a title is
 one line and most of its codes a header that drops.
+
+## Phase 127 — tools
+
+### The kickoff: the audit, and the cut put to the user (2026-10-22, session 9e9f60a2)
+
+At `a310147f`, the tree clean. The session was started by the phase's
+driver session (driver 6) and works with the user as usual. Nothing was
+built. Each finding is from a search (`git grep` over the tracked tree),
+a profile script, or a read of the named lines.
+
+**A-32, the sweep page.** `tools/sweep-gui/` is four files, 722 lines
+(`README.md` 87, `index.html` 154, `sweep.css` 228, `sweep.ts` 253; the
+census's 635 is the three without the README). What reaches it:
+`tools/index.html:194-198`, its card; ARCHITECTURE's source tree (:530);
+TODO's `--sector-hops` row (:203), whose sweep-GUI half the deletion
+closes and whose run-config half stays; and `tests/fuzz/sweepCommand.ts`
+(131 lines), which its header calls "the sweep GUI's command-builder".
+Nothing else imports that module but its test,
+`tests/fuzz/sweepCommand.test.ts` (157 lines, 12 tests, in the fuzz
+tier); the fuzz CLI parses its own flags. The census's leads named the
+module's `TierName` export as unread (WORKLOG §120, 120d), and §125 left
+it. Nothing in `vite.config.ts`, `package.json` or a script names the
+page.
+
+**B-05, the editors' stylesheets.** The twelve `editor.css` files hold
+5,815 lines (the census's figure), each loaded by its page's `editor.ts`
+as `import './editor.css'`. No gate reads a tool's sheet: `ui-focus` and
+`ui-motion` read `src/ui/ui.css` alone. `tests/cssBlocks.ts` (57 lines)
+walks `prelude { body }` blocks at one nesting level and descends into
+`@media`; it splits no declarations, computes no specificity and follows
+no `@import`. A profile of whole blocks, comments out and whitespace
+collapsed (`scratch/127-kickoff/`, three scripts, a sizing and not a
+proof):
+
+- The layout editor's sheet (156 blocks) shares 3 with any other sheet.
+  The other eleven share 24 blocks among all eleven, about 153 lines a
+  copy, and 79 among at least two.
+- Moved into one sheet, the 24 would take about 1,530 lines out net, and
+  every block held by two or more sheets about 2,630 (about 3,100 out of
+  the pages into a sheet of about 490). The census's "about 3,400" is
+  the token-run count of 2.5, which counts partial runs and the tools'
+  four other sheets too.
+- 41 selectors appear in two or more sheets with different bodies, so a
+  base block plus a page's differing declarations would take more. Two
+  of them are `:root`: nine sheets hold one palette, and the blacklist
+  and character editors hold it with four rarity-tier colours added.
+- The shared blocks are not a common prefix. After `:root`, only two
+  blocks open all eleven sheets in the same order; the event, packet
+  and reward sheets share a 59-block run (all of the reward sheet's).
+  A page's own blocks sit between shared ones, so a sheet loaded first
+  moves shared blocks above them. A crude count of the pairs that move
+  (an own block before a shared one setting one of its properties to
+  another value, specificity not read) is 126 to 370 a page. Most such
+  pairs differ in specificity (`#editor-root` against `.bar h1`), which
+  makes their order moot.
+
+So the compare cannot be a sequence identity, and it can be sound
+without a DOM: per page, the declarations in effect (the last of each
+property for one selector in one context) are the same before and
+after, and no two of them whose order changed share a property (a
+shorthand read as its longhands), importance and specificity with
+different values. A pair the second check names is left out of the move
+or read by hand. Only the browser shows that the page loads the sheets
+in the order the compare assumed, so the pane's computed styles of each
+page's elements, before and after, are the second reading.
+
+**TODO "§127 tools".**
+
+- The readings guard: the prototype
+  (`archive/driver-trial/readings-check.mjs`, 31 lines) matches readings
+  against every response's total input in one named transcript, with no
+  time window. The project's transcripts folder holds 194 transcripts,
+  686 MB. Across all of them, a typed number in the readings' range has
+  a fair chance of equalling some response's total, so the guard needs
+  the time window, and a filter by modified time to stay quick. The
+  readings are written in two shapes, "N at HH:MM" and "N on `<hash>`"
+  (§126's close holds both). The hook runs the type check and then the
+  suite; the guard would run before either.
+- `comment-length` lists files with `listSources(REPO_ROOT, roots)`
+  (`tests/oracle/cli.ts:204`), so it reads folders under the repo only.
+- `comment-strip`: `scratch/1245h-b3/held-compare.mts` (33 lines)
+  imports `splitTypeScript` and `isHeldComment` from
+  `tests/oracle/comments.ts`.
+
+**Found outside the charter.** Three tool sheets (the layout editor's,
+the run-config launcher's and the sweep page's) open with
+`@import '@fontsource/jetbrains-mono/400.css'` and `700.css`, a package
+removed at 79g (2026-08-16). `node_modules/@fontsource` is an empty
+folder on this machine and absent from `package.json` and the lock
+file. What Vite does with the import on those pages is unread. A lead
+for the re-skim.
+
+The step-code ceiling counts `src` alone (`COUNTED_ROOTS`), so no step
+here moves it.
+
+**The cut, as put.** In the session's final message of this turn, with
+its calls; the user's answer and the cut as signed follow here.
+
+Readings by the tool's clock (UTC): 98,547 at 14:40 after the
+orientation, 196,742 at 14:49 at the audit's end.

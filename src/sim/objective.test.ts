@@ -45,7 +45,7 @@ describe('objectiveAtCell', () => {
 // A DESTRUCTIBLE neutral (rubble / a destructible wall) is manually
 // clickable: the resolver admits a neutral target when the click lands on any of
 // its footprint cells, ranked after enemies and before the bare-tile fallback.
-describe('objectiveAtCell — destructible neutrals (§40e)', () => {
+describe('objectiveAtCell — destructible neutrals', () => {
   const enemies: EnemyAtCell[] = [{ id: 7, cell: { x: 3, y: 4 } }];
   // A 1×1 rubble at (6,6) and a 2×2 rubble anchored at (10,10) (cells
   // 10,10 / 11,10 / 10,11 / 11,11 — the N×N block).

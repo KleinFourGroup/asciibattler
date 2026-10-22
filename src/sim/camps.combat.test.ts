@@ -61,7 +61,7 @@ function kill(world: World, attacker: Unit, victim: Unit): void {
   world.applyDamage(attacker.id, victim, victim.currentHp, { crit: false, bypassDefense: true });
 }
 
-describe('§75e — hostility gates targeting (both directions)', () => {
+describe('hostility gates targeting (both directions)', () => {
   it('a passive camp member is scenery to findTarget; a hostile one is admitted per-faction', () => {
     const { world } = freshWorld();
     const [camp] = dripBoth(world, { x: 4, y: 4 }, { x: 9, y: 9 });
@@ -110,7 +110,7 @@ describe('§75e — hostility gates targeting (both directions)', () => {
   });
 });
 
-describe('§75e — aggro + XP ride the damage chokepoint', () => {
+describe('aggro + XP ride the damage chokepoint', () => {
   it('striking a camp member marks the WHOLE camp hostile to the attacker faction only, and records XP', () => {
     const { world } = freshWorld();
     const [camp] = dripBoth(world, { x: 4, y: 4 }, { x: 9, y: 9 });
@@ -140,7 +140,7 @@ describe('§75e — aggro + XP ride the damage chokepoint', () => {
   });
 });
 
-describe('§75e — the drip-aware camp-kill stamp', () => {
+describe('the drip-aware camp-kill stamp', () => {
   it('killedBy stays null while members are pending or alive; the wiping blow stamps the faction', () => {
     const { world } = freshWorld();
     spawnCamps(world, [{ x: 5, y: 5 }], [{ campId: 'bandit-squatters' }], 42, 1);
@@ -170,7 +170,7 @@ describe('§75e — the drip-aware camp-kill stamp', () => {
   });
 });
 
-describe('§75h (browser-caught) — the ordered camp objective SURVIVES the revert scan', () => {
+describe('the ordered camp objective SURVIVES the revert scan', () => {
   it('an engage{neutral} on a living camp member holds; it reverts when the member dies', () => {
     const { world } = freshWorld();
     const [camp, other] = dripBoth(world, { x: 4, y: 4 }, { x: 9, y: 9 });
@@ -192,7 +192,7 @@ describe('§75h (browser-caught) — the ordered camp objective SURVIVES the rev
   });
 });
 
-describe('§75e — checkBattleEnd invariants', () => {
+describe('checkBattleEnd invariants', () => {
   it('a neutral-only board stays silent (combat never began)', () => {
     const { world, bus } = freshWorld();
     dripBoth(world, { x: 4, y: 4 }, { x: 9, y: 9 });
@@ -203,7 +203,7 @@ describe('§75e — checkBattleEnd invariants', () => {
   });
 });
 
-describe('§83e — campsStartHostile (the forced-engagement probe dial)', () => {
+describe('campsStartHostile (the forced-engagement probe dial)', () => {
   it('at the shipped 0, installed camps stay passive (both factions unmarked)', () => {
     const { world } = freshWorld();
     dripBoth(world, { x: 4, y: 4 }, { x: 9, y: 9 });
@@ -234,7 +234,7 @@ describe('§83e — campsStartHostile (the forced-engagement probe dial)', () =>
   });
 });
 
-describe('§75e — the engagement protocol treats a hostile camp member as mobile', () => {
+describe('the engagement protocol treats a hostile camp member as mobile', () => {
   it('a ranged unit gets the real firing-cell path (not the rubble bestEffort corner-charge)', () => {
     const { world } = freshWorld();
     const [camp] = dripBoth(world, { x: 6, y: 6 }, { x: 9, y: 9 });
@@ -250,7 +250,7 @@ describe('§75e — the engagement protocol treats a hostile camp member as mobi
   });
 });
 
-describe('§75e — a hostile camp member fights (the stats/archetype verify pin)', () => {
+describe('a hostile camp member fights (the stats/archetype verify pin)', () => {
   it('an aggroed camp bandit closes and damages a player unit under real ticks', () => {
     const { world } = freshWorld();
     const [m1, m2] = dripBoth(world, { x: 5, y: 5 }, { x: 9, y: 9 });
@@ -266,7 +266,7 @@ describe('§75e — a hostile camp member fights (the stats/archetype verify pin
   });
 });
 
-describe('§91-pre — a camp member\'s summon JOINS the camp (the frost-coven ghoul bug, 2026-09-03 playtest)', () => {
+describe('a camp member\'s summon JOINS the camp (the frost-coven ghoul bug)', () => {
   // A neutral (camp) shaman's ghouls carry its camp: as campId-null
   // neutrals they would take the renderer's wall path (passive tint, no bar,
   // the materialize never resolving), be untargetable, and never act.

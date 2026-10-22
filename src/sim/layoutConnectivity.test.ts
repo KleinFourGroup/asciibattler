@@ -39,7 +39,7 @@ describe('reachableBetween (king-move BFS)', () => {
   });
 });
 
-describe('classifyConnectivity — the Phase-40 auto-target tiers', () => {
+describe('classifyConnectivity — the auto-target tiers', () => {
   it('open ground → connected', () => {
     expect(classifyConnectivity(query([]))).toBe('connected');
   });

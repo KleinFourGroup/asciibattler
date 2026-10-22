@@ -49,7 +49,7 @@ describe('behaviorFlags — the neutral cases', () => {
     expect(behaviorFlags([])).toBe(NEUTRAL_BEHAVIOR);
   });
 
-  it('a plain K1 effect (no STATUS_DEFS entry) contributes nothing', () => {
+  it('a plain effect (no STATUS_DEFS entry) contributes nothing', () => {
     expect(behaviorFlags([effect('fatigued'), effect('empowered')])).toBe(NEUTRAL_BEHAVIOR);
   });
 

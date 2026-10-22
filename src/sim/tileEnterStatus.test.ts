@@ -45,7 +45,7 @@ function spawnAt(world: World, team: Team, pos: GridCoord) {
 const carries = (u: { effects: { key: string }[] }, id: string) =>
   u.effects.some((e) => e.key === id);
 
-describe('§37d — applyTileEnterEffects (the hook in isolation)', () => {
+describe('applyTileEnterEffects (the hook in isolation)', () => {
   it('mud applies its status on enter', () => {
     expect(MUD_STATUS).toBe('poison'); // table sanity
     const { world, bus } = setup();
@@ -147,7 +147,7 @@ function onlyBehavior(unit: { behaviors: Behavior[] }, b?: Behavior) {
   if (b) unit.behaviors.push(b);
 }
 
-describe('§37d — the hook fires at the move commit (the 50% flip), not at start', () => {
+describe('the hook fires at the move commit (the 50% flip), not at start', () => {
   it('a unit moving onto mud is afflicted only AFTER it logically arrives', () => {
     const { world } = setup();
     const from = { x: 2, y: 2 };

@@ -104,7 +104,7 @@ function setup() {
   return { world, bus, caster, target, held };
 }
 
-describe('82e — the release gate holds fire on a band-escaped target', () => {
+describe('the release gate holds fire on a band-escaped target', () => {
   it('dash-out: target leaves max range mid-windup → held at release, nothing fired', () => {
     const { world, caster, target, held } = setup();
     world.tick(); // propose + start — wind-up begins
@@ -198,7 +198,7 @@ describe('82e — the release gate holds fire on a band-escaped target', () => {
   });
 });
 
-describe('82e — the re-aim window scales with speed when authored', () => {
+describe('the re-aim window scales with speed when authored', () => {
   const scaledDef: AbilityDef = parseAbilityDef({
     id: 'test_lob_scaled', name: 'Scaled Lob', cooldownSeconds: 3, rangeCells: 6,
     minRangeCells: 4, ignoresLineOfSight: true, target: { kind: 'enemyInRange' },

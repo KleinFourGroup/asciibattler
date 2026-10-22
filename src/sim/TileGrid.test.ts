@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { TileGrid, TILE_DEFS, tileDef, type TileKind } from './TileGrid';
 
-describe('TileDef table (§37a — the seam)', () => {
+describe('TileDef table (the seam)', () => {
   // The original five kinds' costs, listed literally (NOT read from the table under test)
   // so a typo in TILE_DEFS is caught rather than tautologically passed.
   type ExistingKind = 'floor' | 'shallow_water' | 'chasm' | 'fire' | 'healing';
@@ -13,7 +13,7 @@ describe('TileDef table (§37a — the seam)', () => {
     healing: 1,
   };
 
-  it('resolves every existing kind to its pre-37a cost', () => {
+  it('resolves every EXISTING_COSTS kind to its cost', () => {
     for (const kind of Object.keys(EXISTING_COSTS) as ExistingKind[]) {
       expect(tileDef(kind).cost).toBe(EXISTING_COSTS[kind]);
       expect(TILE_DEFS[kind].cost).toBe(EXISTING_COSTS[kind]);
@@ -38,7 +38,7 @@ describe('TileDef table (§37a — the seam)', () => {
     }
   });
 
-  it('shallow_water carries the M6 wading accuracy penalty + the §37d burn cleanse', () => {
+  it('shallow_water carries the wading accuracy penalty + the burn cleanse', () => {
     const def = TILE_DEFS.shallow_water;
     expect(def.accuracyMod).toBe(-10); // -10 prec × 0.02 = -20% to hit while wading
     expect(def.evasionMod).toBeUndefined();
@@ -62,7 +62,7 @@ describe('TileDef table (§37a — the seam)', () => {
   });
 });
 
-describe('§37b — the new terrain tiles', () => {
+describe('the terrain tiles beyond EXISTING_COSTS', () => {
   it('deep_water is impassable like chasm (cost ∞, not passable)', () => {
     expect(TILE_DEFS.deep_water.cost).toBe(Infinity);
     expect(TILE_DEFS.deep_water.passable).toBe(false);
@@ -111,7 +111,7 @@ describe('§37b — the new terrain tiles', () => {
   });
 });
 
-describe('§37c — tile combat mods (the to-hit fold values)', () => {
+describe('tile combat mods (the to-hit fold values)', () => {
   it('ice + mud dock the attacker (negative accuracyMod), and nothing else', () => {
     for (const kind of ['ice', 'mud'] as TileKind[]) {
       expect(TILE_DEFS[kind].accuracyMod).toBeLessThan(0);
@@ -133,7 +133,7 @@ describe('§37c — tile combat mods (the to-hit fold values)', () => {
   });
 });
 
-describe('§37d — tile→status enter hooks (the table fields)', () => {
+describe('tile→status enter hooks (the table fields)', () => {
   it('mud applies poison on enter; both water kinds strip burn', () => {
     expect(TILE_DEFS.mud.statusOnEnter).toBe('poison'); // the flag-gated trial
     expect(TILE_DEFS.shallow_water.statusRemovedOnEnter).toBe('burn');

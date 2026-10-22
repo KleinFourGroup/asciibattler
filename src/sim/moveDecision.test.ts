@@ -170,7 +170,7 @@ describe('unit:moveDecision — kind correctness (MovementBehavior)', () => {
     expect(kindsFor(units[0]!.id)).toEqual(['no_route', 'no_route']);
   });
 
-  it('wait: in attack range with LOS emits `wait` and no move (§44b, was hold_band)', () => {
+  it('wait: in attack range with LOS emits `wait` and no move', () => {
     const { world, units, kindsFor } = scene([
       { team: 'player', x: 5, y: 5, attackRange: 1 },
       { team: 'enemy', x: 6, y: 5, inert: true },
@@ -245,7 +245,7 @@ describe('unit:moveDecision — kind correctness (SupportMovementBehavior)', () 
     return built;
   }
 
-  it('wait: a wounded ally already in heal range emits `wait` (§44b, was hold_band)', () => {
+  it('wait: a wounded ally already in heal range emits `wait`', () => {
     const { world, units, kindsFor } = supportScene([
       { team: 'player', x: 5, y: 5, healer: true },
       { team: 'player', x: 5, y: 5 + HEAL_RANGE, hp: 5 },

@@ -126,7 +126,7 @@ describe('StatusDef schema — rejects malformed shapes', () => {
   });
 });
 
-describe('StatusDef schema — the §28 behavior axis', () => {
+describe('StatusDef schema — the behavior axis', () => {
   it('parses each of the four behavior shapes', () => {
     const frozen = parseStatusDef({
       id: 'frozen',

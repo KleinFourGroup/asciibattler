@@ -27,7 +27,7 @@ function setup() {
   return { world, summoner, enemy, ghoul };
 }
 
-describe('§33 summon damage → summoner XP ledger', () => {
+describe('summon damage → summoner XP ledger', () => {
   it("credits the summoner a config-scaled share of the summon's damage", () => {
     const { world, summoner, enemy, ghoul } = setup();
     const dmg = 10;

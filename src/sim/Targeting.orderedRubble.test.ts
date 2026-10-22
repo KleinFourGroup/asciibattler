@@ -103,7 +103,7 @@ function parkOpposingDummy(world: World, team: 'player' | 'enemy'): void {
   world.enqueueCommand({ kind: 'setObjective', team, objective: { mode: 'hold' } });
 }
 
-describe('§75k — the ordered-engage rubble auto-break (the destructible-gate freeze)', () => {
+describe('the ordered-engage rubble auto-break (the destructible-gate freeze)', () => {
   it('engage{neutral} on an unreachable camp member redirects the mark onto the gate rubble', () => {
     const world = freshWorld();
     const { m1, gate } = buildEnclosure(world);
@@ -155,7 +155,7 @@ describe('§75k — the ordered-engage rubble auto-break (the destructible-gate 
     expect(world.campHostileTo(1, 'player')).toBe(true);
   });
 
-  it('enemy arm (the §75j2 pull rails): the pulled team breaks through identically', () => {
+  it('enemy arm (the pull rails): the pulled team breaks through identically', () => {
     const world = freshWorld();
     const { m1, gate } = buildEnclosure(world);
     spawnAt(world, 'enemy', { x: 6, y: 10 });
@@ -167,7 +167,7 @@ describe('§75k — the ordered-engage rubble auto-break (the destructible-gate 
   });
 });
 
-describe('§75k2 — the ROUTE-AWARE gate pick (the labyrinth two-camp catch)', () => {
+describe('the ROUTE-AWARE gate pick (the labyrinth two-camp catch)', () => {
   it('chips the gate on the route to the ordered target, NOT the nearest rubble on the board', () => {
     const world = freshWorld();
     const { m1, gate } = buildEnclosure(world);

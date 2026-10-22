@@ -181,7 +181,7 @@ describe('SupportMovementBehavior', () => {
  * only thing that can resolve a single-file jam where the support can't pass
  * its own fighters.
  */
-describe('SupportMovementBehavior — GP5 chokepoint yield (swap)', () => {
+describe('SupportMovementBehavior — chokepoint yield (swap)', () => {
   function swapData(p: ActionProposal): { from: { x: number; y: number }; to: { x: number; y: number }; otherId: number } {
     return (p.action as SwapAction).toData();
   }
@@ -218,7 +218,7 @@ describe('SupportMovementBehavior — GP5 chokepoint yield (swap)', () => {
     expect(swapData(p!).otherId).toBe(ally.id);
   });
 
-  it('does NOT offer a swap to a mid-move ally (56a — the in-flight partner gate)', () => {
+  it('does NOT offer a swap to a mid-move ally (the in-flight partner gate)', () => {
     // The corridor-swap shape, but the ally has an IN-FLIGHT move (logical
     // position holds at (4,5) until the move's flip, so without the gate it
     // reads as adjacent-and-blocked and the healer proposes a doomed swap).
@@ -255,7 +255,7 @@ describe('SupportMovementBehavior — GP5 chokepoint yield (swap)', () => {
  * impassable cell between them; the healer must snap the anchor to the nearest
  * navigable tile and keep trailing rather than findPath()→[] and stall.
  */
-describe('SupportMovementBehavior — GP5.2 centroid navigable-snap', () => {
+describe('SupportMovementBehavior — centroid navigable-snap', () => {
   it('snaps the anchor off an impassable centroid cell and still trails', () => {
     // Two allies astride a wall → their centroid rounds onto the wall cell
     // (round((7+9)/2)=8, round(5)=5). Pre-snap the healer would path to the
@@ -316,7 +316,7 @@ describe('SupportMovementBehavior — multi-tile neutral footprints (43-pre)', (
     expect(RUBBLE_CELLS).not.toContainEqual(dest(p!));
   });
 
-  it('the trail anchor snaps OFF a rubble BODY cell (GP5.2 snap, footprint-aware)', () => {
+  it('the trail anchor snaps OFF a rubble BODY cell (footprint-aware)', () => {
     // Allies astride the rubble → centroid (4,4) is a BODY cell (the corner
     // (3,3) the snap handles on its own). Corner-only navigability accepts
     // (4,4) as the anchor; the healer at (3,5) sits "in formation" against a

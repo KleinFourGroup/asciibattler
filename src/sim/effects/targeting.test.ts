@@ -111,7 +111,7 @@ describe('resolveAreaVictims — reproduces the MagicBolt blast set', () => {
     expect(victims.map((v) => v.unit)).toEqual([enemy]); // only the live enemy in radius
   });
 
-  it('§40b — a DESTRUCTIBLE neutral (rubble) IS caught by an affects:enemies blast', () => {
+  it('a DESTRUCTIBLE neutral (rubble) IS caught by an affects:enemies blast', () => {
     const caster = makeUnit('player', { x: 0, y: 0 }, 'mage');
     const enemy = makeUnit('enemy', { x: 5, y: 5 }); // center
     const rubble = makeUnit('neutral', { x: 6, y: 5 }, 'rubble_1x1'); // ring, hp-present
@@ -189,7 +189,7 @@ describe('effects targeting — multi-tile footprints (44-pre-b)', () => {
   });
 });
 
-describe('isCombatTargetable — HP-presence (§40b)', () => {
+describe('isCombatTargetable — HP-presence', () => {
   it('a living combatant is targetable; a corpse is not', () => {
     const alive = makeUnit('enemy', { x: 0, y: 0 });
     const dead = makeUnit('enemy', { x: 1, y: 1 });

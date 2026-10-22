@@ -14,7 +14,7 @@ const BASE: TerrainConfig = {
   procedural: TERRAIN.procedural,
 };
 
-describe('§40d — rubble surfaces through generateFromLayout', () => {
+describe('rubble surfaces through generateFromLayout', () => {
   const fixture: LayoutDef = {
     id: 'rubble-fixture',
     name: 'Rubble Fixture',
@@ -114,7 +114,7 @@ describe('generateTerrain (procedural)', () => {
     expect(fingerprints.size).toBeGreaterThan(1);
   });
 
-  it('honors rectangular dimensions (D3): gridW != gridH paints in-bounds only', () => {
+  it('honors rectangular dimensions: gridW != gridH paints in-bounds only', () => {
     const gridW = 15;
     const gridH = 10;
     const { tileGrid, walls, halfCovers, spawnRegions } = generateTerrain(new RNG(7), gridW, gridH, BASE);
@@ -153,7 +153,7 @@ describe('generateTerrain (procedural)', () => {
   });
 });
 
-describe('§81a — per-theme procedural tiles (through generateTerrain)', () => {
+describe('per-theme procedural tiles (through generateTerrain)', () => {
   const SEEDS = 40;
   const kindsAcrossSeeds = (theme: Theme): Set<string> => {
     const seen = new Set<string>();
@@ -189,7 +189,7 @@ describe('§81a — per-theme procedural tiles (through generateTerrain)', () =>
     }
   });
 
-  it('fire is volcanic-only in the shipped config (the signed §81 revert, kept sparse)', () => {
+  it('fire is volcanic-only in the shipped config (kept sparse)', () => {
     // Guard the DESIGN intent directly, not just the mechanism: only volcanic
     // declares a fire knob today.
     for (const theme of THEMES) {
@@ -232,7 +232,7 @@ describe('§81a — per-theme procedural tiles (through generateTerrain)', () =>
     }
   });
 
-  it('§81b — camp sites ride with the theme pool; the spawnCamps pairing invariant holds', () => {
+  it('camp sites ride with the theme pool; the spawnCamps pairing invariant holds', () => {
     // A stocked-pool theme rolls sites on some seeds, and sites ALWAYS come
     // with the pool attached (spawnCamps throws on sites-without-pool).
     let rolled = 0;
@@ -248,7 +248,7 @@ describe('§81a — per-theme procedural tiles (through generateTerrain)', () =>
     expect(rolled).toBeGreaterThan(0);
   });
 
-  it('§81b — an empty-pool theme (shipped: volcanic) never rolls camp sites', () => {
+  it('an empty-pool theme (shipped: volcanic) never rolls camp sites', () => {
     expect(TERRAIN.procedural.camps.pools.volcanic).toEqual([]);
     for (let seed = 0; seed < 30; seed++) {
       const t = generateTerrain(new RNG(seed), G, G, BASE, null, 'volcanic');

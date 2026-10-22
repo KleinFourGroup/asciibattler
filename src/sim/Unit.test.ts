@@ -49,7 +49,7 @@ describe('Unit', () => {
     expect(u.behaviors).toEqual([]);
   });
 
-  it('clamps currentHp to the re-derived maxHp when seeded with a constitution debuff (§91c)', () => {
+  it('clamps currentHp to the re-derived maxHp when seeded with a constitution debuff', () => {
     // The constructor's clamp: a spawn-time effect that lowers
     // constitution lowers maxHp, and the unit must spawn AT that max, not over
     // it. Expected values re-derived from the fold + deriveStats, not from Unit.

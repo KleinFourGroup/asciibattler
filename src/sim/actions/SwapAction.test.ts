@@ -68,7 +68,7 @@ function expectIndexConsistent(world: World) {
   expect(world.swapReservedPartnerIndex).toEqual(scanReservedSwapPartners(world));
 }
 
-describe('SwapAction (deferred, 56c2)', () => {
+describe('SwapAction (deferred)', () => {
   it('start emits ONE unit:swapped and moves NOBODY (the flip is deferred)', () => {
     const bus = new EventBus<GameEvents>();
     const w = makeWorld(bus);
@@ -126,7 +126,7 @@ describe('SwapAction (deferred, 56c2)', () => {
     expect(events).toEqual([]);
   });
 
-  it('aborts at the flip when the cell is occupied by a third party (§36c shape)', () => {
+  it('aborts at the flip when the cell is occupied by a third party', () => {
     const bus = new EventBus<GameEvents>();
     const w = makeWorld(bus);
     const mover = spawn(w, 5, 5);
@@ -170,7 +170,7 @@ describe('SwapAction (deferred, 56c2)', () => {
     expect(aborts).toHaveLength(1);
   });
 
-  it('56e-pre2: removing the actor PRE-FLIP emits the two-body abort (death mid-window)', () => {
+  it('removing the actor PRE-FLIP emits the two-body abort (death mid-window)', () => {
     // The labyrinth desync's likeliest trigger: the actor is killed
     // inside the swap's first half. The flip will never fire, but BOTH
     // sprites began the dual lerp at start — removeUnit must tell the
@@ -192,7 +192,7 @@ describe('SwapAction (deferred, 56c2)', () => {
     expect(partner.position).toEqual({ x: 4, y: 5 }); // never moved logically
   });
 
-  it('56e-pre2: removing the actor POST-FLIP emits nothing (the exchange landed)', () => {
+  it('removing the actor POST-FLIP emits nothing (the exchange landed)', () => {
     const bus = new EventBus<GameEvents>();
     const w = makeWorld(bus);
     const actor = spawn(w, 5, 5);
@@ -218,7 +218,7 @@ describe('SwapAction (deferred, 56c2)', () => {
   });
 });
 
-describe('the swap-partner reserve (56c2; full-window since 56e-pre)', () => {
+describe('the swap-partner reserve (full-window)', () => {
   it('a named partner is reserved for the WHOLE window and freed when the action clears', () => {
     const w = makeWorld();
     const actor = spawn(w, 5, 5);
@@ -252,7 +252,7 @@ describe('the swap-partner reserve (56c2; full-window since 56e-pre)', () => {
   // every transition the chokepoint owns, plus the two invariants the design
   // called out (one-reservation-per-partner asserted; a removed ACTOR frees
   // its partner while a removed PARTNER's entry stands until the flip).
-  describe('the reserved-partner index (86c-L2b)', () => {
+  describe('the reserved-partner index', () => {
     it('stays scan-identical across seat → abort-clear', () => {
       const w = makeWorld();
       const mover = spawn(w, 5, 5);

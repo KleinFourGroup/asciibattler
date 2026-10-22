@@ -41,7 +41,7 @@ describe('layouts library', () => {
         expect(layout.id).toBe(id);
       });
 
-      it('declares D3 grid dimensions in [8, 32]', () => {
+      it('declares grid dimensions in [8, 32]', () => {
         expect(layout.gridW).toBeGreaterThanOrEqual(8);
         expect(layout.gridW).toBeLessThanOrEqual(32);
         expect(layout.gridH).toBeGreaterThanOrEqual(8);
@@ -94,7 +94,7 @@ describe('layouts library', () => {
         }
       });
 
-      it('is not severed by indestructible obstacles (auto-target-aware, §40 follow-up)', () => {
+      it('is not severed by indestructible obstacles (auto-target-aware)', () => {
         // Hand-authored layouts that HARD-sever the board are bugs, not seeds to be
         // rescued. Connectivity is auto-target-aware — rubble is
         // passable (the AI auto-breaks it) and a destructible wall/cover is only a
@@ -169,7 +169,7 @@ describe('layouts library', () => {
         }
       });
 
-      it('declares a known D8 theme', () => {
+      it('declares a known theme', () => {
         // The zod schema already gates on this at module load, so a
         // failure here would mean the JSON shipped without going through
         // the loader (impossible) — but the explicit assertion documents
@@ -205,8 +205,8 @@ describe('layouts library', () => {
   });
 });
 
-describe('§37e — theme palette rename + the three new themes', () => {
-  it('the renamed names resolve; the pre-37e names no longer do', () => {
+describe('the theme names', () => {
+  it('grassland and barren resolve; default and rock do not', () => {
     // The rename is the reason RunSnapshot bumped v23→v24 (theme is serialized);
     // the old strings must HARD-fail so a stale save can't smuggle one past zod.
     expect(ThemeSchema.safeParse('grassland').success).toBe(true);
@@ -228,7 +228,7 @@ describe('§37e — theme palette rename + the three new themes', () => {
   });
 });
 
-describe('§37g — a spawn region may sit on passable terrain, not impassable/occupied cells', () => {
+describe('a spawn region may sit on passable terrain, not impassable/occupied cells', () => {
   // One terrain cell placed at (0,0) — a player-spawn tile in the base — then run
   // through the REAL loader schema. Passable kinds must be ACCEPTED (a unit can
   // stand + fight there, its terrain mods applying live); impassable / neutral-
@@ -266,7 +266,7 @@ describe('§37g — a spawn region may sit on passable terrain, not impassable/o
   }
 });
 
-describe('§75a — camp spawns + the weighted camps list', () => {
+describe('camp spawns + the weighted camps list', () => {
   // A minimal valid 8×8 layout; callers drop in the camp fields under test.
   const layoutWith = (patch: Record<string, unknown>): Record<string, unknown> => ({
     id: 'camp-fixture',
@@ -366,7 +366,7 @@ describe('§75a — camp spawns + the weighted camps list', () => {
   });
 });
 
-describe('§40c — optional per-instance wall/cover HP (destructibility)', () => {
+describe('optional per-instance wall/cover HP (destructibility)', () => {
   // A minimal valid layout; callers drop in the wall / half-cover set under test.
   const layoutWith = (patch: Record<string, unknown>): Record<string, unknown> => ({
     id: 'destructible-wall',
@@ -406,7 +406,7 @@ describe('§40c — optional per-instance wall/cover HP (destructibility)', () =
   });
 });
 
-describe('§40d — rubble in layouts (destructible multi-tile neutrals)', () => {
+describe('rubble in layouts (destructible multi-tile neutrals)', () => {
   // A minimal valid 8×8 layout; callers drop in the rubble (and any walls) under
   // test. Single-tile spawns at opposite corners keep the valid-pair rule happy.
   const layoutWith = (patch: Record<string, unknown>): Record<string, unknown> => ({
@@ -482,7 +482,7 @@ describe('§40d — rubble in layouts (destructible multi-tile neutrals)', () =>
   });
 });
 
-describe('§40g — layered overlap (a neutral may sit on a terrain tile)', () => {
+describe('layered overlap (a neutral may sit on a terrain tile)', () => {
   // A minimal valid 8×8 layout; callers drop in the terrain/neutral sets under
   // test. Single-tile spawns at opposite corners keep the valid-pair rule happy
   // and stay clear of the (3,3)-region the overlap fixtures use.
@@ -569,7 +569,7 @@ describe('§40g — layered overlap (a neutral may sit on a terrain tile)', () =
   });
 });
 
-describe('SpawnRegion schema tile-count range (H2)', () => {
+describe('SpawnRegion schema tile-count range', () => {
   // Distinct, in-bounds tiles so only the count is under test (the
   // duplicate-coord refine is exercised separately below).
   const region = (n: number) => ({

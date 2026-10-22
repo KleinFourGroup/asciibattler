@@ -40,7 +40,7 @@ describe('Targeting / findTarget', () => {
     expect(findTarget(units[0]!, world)?.id).toBe(3);
   });
 
-  it('§43b2: breaks distance+HP ties by ALIGNMENT — the enemy nearest the own axis, not spawn order', () => {
+  it('breaks distance+HP ties by ALIGNMENT — the enemy nearest the own axis, not spawn order', () => {
     // Both enemies at Chebyshev 3, equal HP. The smaller minor-axis offset
     // wins (a lowest-id fallback would follow spawn order, the leftmost-spawn
     // funnel): (5,8) is straight ahead (minor 0), (2,8) is
@@ -53,7 +53,7 @@ describe('Targeting / findTarget', () => {
     expect(findTarget(units[0]!, world)?.id).toBe(9);
   });
 
-  it('§43b2: lower currentHp still outranks alignment (finish-off stays above the new layer)', () => {
+  it('lower currentHp still outranks alignment (finish-off stays above the alignment layer)', () => {
     // Equal distance; the wounded enemy is fully diagonal AND higher-id, the
     // healthy one straight ahead — the wounded pick must survive the insertion.
     const { world, units } = scene([
@@ -75,7 +75,7 @@ describe('Targeting / findTarget', () => {
     expect(findTarget(units[0]!, world)?.id).toBe(3);
   });
 
-  it('§43b2: the openField funnel is dead — each unit picks its opposite number', () => {
+  it('the openField funnel is dead — each unit picks its opposite number', () => {
     // A row of players facing a row of enemies, every cross-pair at
     // Chebyshev 9 (distance ties for ALL of them). Each commits to the enemy
     // in its own column; a lowest-id fallback would send all four to the
@@ -133,7 +133,7 @@ describe('Targeting / findTarget', () => {
   });
 });
 
-describe('Targeting / target stickiness (E5)', () => {
+describe('Targeting / target stickiness', () => {
   it('currentTarget falls back to the nearest enemy when uncommitted (targetId null)', () => {
     const { world, units } = scene([
       { id: 1, team: 'player', x: 0, y: 0 },
@@ -234,7 +234,7 @@ describe('Targeting / target stickiness (E5)', () => {
   });
 });
 
-describe('Targeting / shared objective (J1)', () => {
+describe('Targeting / shared objective', () => {
   // The objective only steers a player unit's target via `updateObjectiveTarget`
   // inside `updateTarget`. Applying it through the command channel + ONE tick is
   // the faithful path: the command drains at top of tick, then `updateTarget`
@@ -346,7 +346,7 @@ describe('Targeting / shared objective (J1)', () => {
   });
 });
 
-describe('Targeting / hold (O2)', () => {
+describe('Targeting / hold', () => {
   // Hold = act in place: target only what's ALREADY within attack range, never
   // reposition. One tick drains the command + runs updateTarget's hold branch.
   function setHold(world: World): void {
@@ -397,7 +397,7 @@ describe('Targeting / hold (O2)', () => {
   });
 });
 
-describe('Targeting / focus (O3)', () => {
+describe('Targeting / focus', () => {
   // Focus COMPLETELY preempts: a unit abandons any fight and ignores every
   // enemy except the focus (eating hits from non-focused attackers). Command +
   // one tick = the faithful path (drain → clearResolvedObjectives → updateTarget
@@ -490,7 +490,7 @@ describe('Targeting / focus (O3)', () => {
 // one tick = the faithful path (drain → clearResolvedObjectives → updateTarget
 // the same tick). `rubble_1x1` is a destructible neutral (has `hp`); `wall` is
 // hp-less → indestructible → never a valid target.
-describe('Targeting / destructible-neutral objective (§40e)', () => {
+describe('Targeting / destructible-neutral objective', () => {
   function applyObjective(world: World, mode: 'focus' | 'engage', unitId: number): void {
     world.enqueueCommand({
       kind: 'setObjective',

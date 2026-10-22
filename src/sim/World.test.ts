@@ -33,7 +33,7 @@ describe('World (Step 3.1 skeleton)', () => {
     expect(w.gridH).toBe(12);
   });
 
-  it('accepts explicit rectangular dimensions (D3)', () => {
+  it('accepts explicit rectangular dimensions', () => {
     const w = new World(new EventBus<GameEvents>(), new RNG(1), 15, 10);
     expect(w.gridW).toBe(15);
     expect(w.gridH).toBe(10);
@@ -217,7 +217,7 @@ describe('World battle-end detection', () => {
     expect(w.ended).toBe(false);
   });
 
-  it('34a — a genuine mutual wipe (empty board, no walls) ends immediately as a draw', () => {
+  it('a genuine mutual wipe (empty board, no walls) ends immediately as a draw', () => {
     // Both teams' last units die on the same tick with nothing left on the
     // board. Without the `_combatBegan` latch (set the first tick both teams
     // were alive) this would fall through `checkBattleEnd`'s empty-board guard
@@ -245,7 +245,7 @@ describe('World battle-end detection', () => {
     expect(w.ended).toBe(true);
   });
 
-  it('34a — a genuine mutual wipe with walls left standing ends immediately as a draw', () => {
+  it('a genuine mutual wipe with walls left standing ends immediately as a draw', () => {
     // The other wipe path: a neutral wall survives, so the board is non-empty
     // and the empty-board guard is skipped. Without the latch the `!playerAlive &&
     // !enemyAlive` branch would return silently; the latch draws at once.
@@ -361,7 +361,7 @@ describe('World inline death handling', () => {
   });
 });
 
-describe('World 27d tile statuses (fire→burn, healing→rejuvenate)', () => {
+describe('World tile statuses (fire→burn, healing→rejuvenate)', () => {
   // An inert enemy stationed far away keeps checkBattleEnd happy so the tile
   // tests can tick freely without the battle ending. No behaviors → never moves.
   const KEEP_BATTLE_ALIVE: DeathSceneUnit = { team: 'enemy', x: 11, y: 11, hp: 50 };
@@ -539,7 +539,7 @@ describe('World 27d tile statuses (fire→burn, healing→rejuvenate)', () => {
   });
 });
 
-describe('World.applyDamage — GP2 defense mitigation', () => {
+describe('World.applyDamage — defense mitigation', () => {
   // Build a 2-unit duel directly so the target's `defense` is explicit (the
   // shared `scene` helper bakes in the melee archetype's defense), placed so
   // `findUnit` resolves the attacker and the XP-ledger path runs end to end.
@@ -630,7 +630,7 @@ describe('World.applyDamage — GP2 defense mitigation', () => {
   });
 });
 
-describe('World.applyDamage — I2 dodge hit/miss roll', () => {
+describe('World.applyDamage — dodge hit/miss roll', () => {
   // A 2-unit duel where the attacker's precision and the target's evasion are
   // explicit, and the World's `combatRng` is seeded directly (the 6th ctor arg)
   // so the to-hit draw is controllable. Captures BOTH the hit and miss event
@@ -820,7 +820,7 @@ describe('World.applyDamage — I2 dodge hit/miss roll', () => {
   });
 });
 
-describe('World.applyDamage — §37c tile to-hit fold (generalizes M6 water bog-down)', () => {
+describe('World.applyDamage — tile to-hit fold', () => {
   // The water penalty lives in the TileDef table as
   // `shallow_water.accuracyMod`. WATER_PENALTY is its magnitude, derived from
   // the table (balance-proof — never hardcoded), so the assertions track the
@@ -1028,7 +1028,7 @@ describe('World.applyDamage — §37c tile to-hit fold (generalizes M6 water bog
   });
 });
 
-describe('World per-team objective (J1 → O1)', () => {
+describe('World per-team objective', () => {
   function setup(): { world: World; bus: EventBus<GameEvents>; player: Unit; enemy: Unit } {
     const bus = new EventBus<GameEvents>();
     const rng = new RNG(1);
@@ -1062,7 +1062,7 @@ describe('World per-team objective (J1 → O1)', () => {
     expect(set).toHaveBeenCalledWith({ team: 'player', objective });
   });
 
-  it('drainCommands applies a queued objective + emits, WITHOUT advancing the sim (Q2: orders while parked)', () => {
+  it('drainCommands applies a queued objective + emits, WITHOUT advancing the sim (orders while parked)', () => {
     const { world, bus, enemy } = setup();
     const set = vi.fn();
     bus.on('objective:set', set);
@@ -1153,7 +1153,7 @@ describe('World per-team objective (J1 → O1)', () => {
     expect(world.objectiveFor('player')).toEqual({ mode: 'atWill' });
   });
 
-  it('the enemy-team objective is real, independent storage (the O1 structural seam)', () => {
+  it('the enemy-team objective is real, independent storage', () => {
     const { world, bus, player } = setup();
     const set = vi.fn();
     bus.on('objective:set', set);
@@ -1201,7 +1201,7 @@ describe('World per-team objective (J1 → O1)', () => {
   });
 });
 
-describe('World command:applied (53a — the trace-recorder stamp)', () => {
+describe('World command:applied (the trace-recorder stamp)', () => {
   function setup(): { world: World; bus: EventBus<GameEvents>; enemy: Unit } {
     const bus = new EventBus<GameEvents>();
     const rng = new RNG(1);
@@ -1229,7 +1229,7 @@ describe('World command:applied (53a — the trace-recorder stamp)', () => {
     expect(applied[0]?.command).toBe(command);
   });
 
-  it('a PARKED drain (Q2 countdown/pause) stamps the NEXT tick — the first that can observe it (53c)', () => {
+  it('a PARKED drain (countdown/pause) stamps the NEXT tick — the first that can observe it', () => {
     const { world, bus } = setup();
     const applied: GameEvents['command:applied'][] = [];
     bus.on('command:applied', (p) => applied.push(p));
@@ -1364,7 +1364,7 @@ function scene(specs: DeathSceneUnit[]): {
 // Keep imports referenced even when a specific test stops using them.
 void ZERO_STATS;
 
-describe('§91a1 — the fallen-power ledger + the battle:ended reason (the casualty rule\'s input)', () => {
+describe('the fallen-power ledger + the battle:ended reason (the casualty rule\'s input)', () => {
   // Every expectation reads the unit's own `effectiveStats.power` (config-
   // derived, never a hardcoded weight) — the pins survive a change to the power table.
   function pair(): {
@@ -1435,7 +1435,7 @@ describe('§91a1 — the fallen-power ledger + the battle:ended reason (the casu
     expect(ends[0]!.fallenPower).toEqual({ player: 0, enemy: 0 });
   });
 
-  it('91e2 — a SUMMONED minion is booked at 0 by its summonedBy stamp, whatever its archetype weighs', () => {
+  it('a SUMMONED minion is booked at 0 by its summonedBy stamp, whatever its archetype weighs', () => {
     const { w, enemy, ends } = pair();
     const minion = w.spawnSummon('ghoul', 1, 'enemy', { x: 8, y: 8 }, enemy.id);
     w.tick(); // the summon joins
@@ -1450,7 +1450,7 @@ describe('§91a1 — the fallen-power ledger + the battle:ended reason (the casu
     expect(ends[0]!.fallenPower).toEqual({ player: 0, enemy: 0 });
   });
 
-  it('91e2 — a FIELDED ghoul (no stamp — an encounter or camp placed it) is booked at its table power', () => {
+  it('a FIELDED ghoul (no stamp — an encounter or camp placed it) is booked at its table power', () => {
     const { w, ends } = pair();
     const fielded = w.spawnUnit(rollUnit('ghoul', new RNG(11)), 'enemy', { x: 8, y: 8 });
     expect(fielded.summonedBy).toBeNull();
@@ -1463,7 +1463,7 @@ describe('§91a1 — the fallen-power ledger + the battle:ended reason (the casu
     expect(fielded.effectiveStats.power).toBeGreaterThan(0);
   });
 
-  it('92e — a template with an OVERRIDDEN power (the per-encounter lever) is booked at the stamped weight, not the table', () => {
+  it('a template with an OVERRIDDEN power (the per-encounter lever) is booked at the stamped weight, not the table', () => {
     const { w, ends } = pair();
     const tpl = rollUnit('mercenary', new RNG(12));
     const OVERRIDE = 6;
@@ -1518,7 +1518,7 @@ describe('§91a1 — the fallen-power ledger + the battle:ended reason (the casu
     expect(sp.enemy + fp.enemy).toBe(fielded.enemy);
   });
 
-  it('94d — unit:died carries the identity + the BOOKED power (the ledger\'s input): a combatant at its own power', () => {
+  it('unit:died carries the identity + the BOOKED power (the ledger\'s input): a combatant at its own power', () => {
     const { bus, w, player, ends } = pair();
     const deaths: GameEvents['unit:died'][] = [];
     bus.on('unit:died', (d) => deaths.push(d));
@@ -1541,7 +1541,7 @@ describe('§91a1 — the fallen-power ledger + the battle:ended reason (the casu
     expect(ends[0]!.fallenPower!.player).toBe(deaths[0]!.power);
   });
 
-  it('96.5b1 — survivorsByUnit is the per-unit form of survivorPower, and fallenPowerSoFar the live accumulator (both equal the battle:ended payload at the end)', () => {
+  it('survivorsByUnit is the per-unit form of survivorPower, and fallenPowerSoFar the live accumulator (both equal the battle:ended payload at the end)', () => {
     const { w, player, enemy, ends } = pair();
     // Mid-battle: nobody fallen, both standing, one row each.
     expect(w.fallenPowerSoFar()).toEqual({ player: 0, enemy: 0 });
@@ -1565,7 +1565,7 @@ describe('§91a1 — the fallen-power ledger + the battle:ended reason (the casu
     expect(w.fallenPowerSoFar().player).not.toBe(999);
   });
 
-  it('94d — a summon dies summoned:true at power 0 and a neutral at power 0 (what the rule booked: nothing)', () => {
+  it('a summon dies summoned:true at power 0 and a neutral at power 0 (what the rule booked: nothing)', () => {
     const { bus, w, enemy, ends } = pair();
     const deaths: GameEvents['unit:died'][] = [];
     bus.on('unit:died', (d) => deaths.push(d));

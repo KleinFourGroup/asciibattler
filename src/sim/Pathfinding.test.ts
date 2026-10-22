@@ -75,7 +75,7 @@ describe('Pathfinding / findPath', () => {
     expect(findPath({ x: 0, y: 0 }, { x: 12, y: 0 }, [], G, G)).toEqual([]);
   });
 
-  it('respects asymmetric bounds (D3 rectangular grids)', () => {
+  it('respects asymmetric bounds (rectangular grids)', () => {
     // 20 wide x 10 tall — (15, 8) is in-bounds; (5, 12) is not.
     expect(findPath({ x: 0, y: 0 }, { x: 15, y: 8 }, [], 20, 10)).not.toEqual([]);
     expect(findPath({ x: 0, y: 0 }, { x: 5, y: 12 }, [], 20, 10)).toEqual([]);
@@ -150,7 +150,7 @@ describe('Pathfinding / findPath with per-cell costs', () => {
     expect(path.length).toBe(4);
   });
 
-  it('D7.A: chasm tiles via TileGrid.costAt block paths and route around', () => {
+  it('chasm tiles via TileGrid.costAt block paths and route around', () => {
     // Wall x=5 via chasm (Infinity cost in TileGrid) instead of the
     // blockers list. End-to-end check that TileGrid → CostFn → A* glues
     // correctly for the chasm kind.
@@ -167,7 +167,7 @@ describe('Pathfinding / findPath with per-cell costs', () => {
     expect(path.some((c) => c.y !== 5)).toBe(true);
   });
 
-  it('§37b: deep_water tiles block paths and route around (like chasm)', () => {
+  it('deep_water tiles block paths and route around (like chasm)', () => {
     // Same end-to-end glue check as chasm — deep_water is impassable
     // (cost ∞), so a straight line through it must detour.
     const grid = new TileGrid(G, G);
@@ -183,7 +183,7 @@ describe('Pathfinding / findPath with per-cell costs', () => {
   });
 });
 
-describe('Pathfinding / findPath best-effort (J3)', () => {
+describe('Pathfinding / findPath best-effort', () => {
   it('routes to the closest reachable cell when the goal is a blocker', () => {
     // Strict gives up on a blocked goal; best-effort lands adjacent to it.
     expect(findPath({ x: 0, y: 0 }, { x: 5, y: 5 }, [{ x: 5, y: 5 }], G, G)).toEqual([]);
@@ -229,7 +229,7 @@ describe('Pathfinding / findPath best-effort (J3)', () => {
   });
 });
 
-describe('Pathfinding / findPath with a multi-tile footprint (§39b)', () => {
+describe('Pathfinding / findPath with a multi-tile footprint', () => {
   // A full-height wall along x=5 with a gap of `gapCells` rows starting at y=5.
   // The only way across is through the gap — the wall touches both edges.
   function wallWithGap(gapCells: number): GridCoord[] {
@@ -309,7 +309,7 @@ function assertContiguous(path: GridCoord[]): void {
  * drift PATHING.md measured on every map (openField: literally every step,
  * both teams).
  */
-describe('Pathfinding / the 43a straightness tie-break', () => {
+describe('Pathfinding / the straightness tie-break', () => {
   it('a vertical route on open ground is the straight column (the string-compare repro)', () => {
     // A string tie-break returns (6,0)(5,1)(5,2)(6,3): "5,1" < "6,1" pops first
     // and the min-cost path bends left. Same cost, wrong shape.

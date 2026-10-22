@@ -18,7 +18,7 @@ import { abilityDef } from '../config/abilities';
 import { knownTargetingIds } from './targetingStrategies';
 import { RNG } from '../core/RNG';
 
-describe('archetypes / rollUnit (E1: returns baseStats verbatim, no rolls)', () => {
+describe('archetypes / rollUnit (returns baseStats verbatim, no rolls)', () => {
   it('produces a melee template equal to the configured baseStats', () => {
     const rng = new RNG(1);
     const expected = ARCHETYPE_CONFIG.mercenary.baseStats;
@@ -44,7 +44,7 @@ describe('archetypes / rollUnit (E1: returns baseStats verbatim, no rolls)', () 
     expect(a).toEqual(b);
   });
 
-  it('different seeds produce IDENTICAL templates today (rolls land in E3)', () => {
+  it('different seeds produce IDENTICAL templates (no rolls)', () => {
     // A template's stats come straight from the archetype config, with no
     // per-stat randomization; seeds diverge only through the level-ups
     // (`simulateLevelUps`).
@@ -73,7 +73,7 @@ describe('archetypes / lookups', () => {
     expect(rangeForArchetype('archer')).toBeGreaterThan(1);
   });
 
-  it('minRangeForArchetype is the floor of the longest-range attack (O4, config-derived)', () => {
+  it('minRangeForArchetype is the floor of the longest-range attack (config-derived)', () => {
     // Balance-proof: the engagement floor IS the attack ability's minRangeCells,
     // whether that's 0 or set.
     expect(minRangeForArchetype('archer')).toBe(abilityDef('bow').minRangeCells);
@@ -111,7 +111,7 @@ describe('archetypes / targeting config', () => {
   });
 });
 
-describe('archetypes / I5 melee family', () => {
+describe('archetypes / the melee family', () => {
   // The four melee subclasses share the melee IDENTITY — a basic strike at
   // range 1, damage off `strength` — and diverge in stat VALUES (tuned by feel,
   // NOT pinned here, per BALANCE.md). Each carries its own WEAPON
@@ -125,7 +125,7 @@ describe('archetypes / I5 melee family', () => {
   } as const;
   const MELEE_FAMILY = Object.keys(MELEE_WEAPON) as (keyof typeof MELEE_WEAPON)[];
 
-  it('every melee subclass carries its I6 weapon at range 1', () => {
+  it('every melee subclass carries its weapon at range 1', () => {
     for (const a of MELEE_FAMILY) {
       expect(abilityIdsForArchetype(a)).toContain(MELEE_WEAPON[a]);
       expect(rangeForArchetype(a)).toBe(1);
@@ -149,7 +149,7 @@ describe('archetypes / config round-trip (every archetype)', () => {
   });
 });
 
-describe('§61g — nameForArchetype (derived from config)', () => {
+describe('nameForArchetype (derived from config)', () => {
   it('resolves every archetype to its configured display name', () => {
     for (const a of ALL_ARCHETYPES) {
       expect(nameForArchetype(a), a).toBe(ARCHETYPE_CONFIG[a].name);
@@ -162,7 +162,7 @@ describe('§61g — nameForArchetype (derived from config)', () => {
   });
 });
 
-describe('§61b — rarityForArchetype + DRAFTABLE_BY_TIER (derived from config)', () => {
+describe('rarityForArchetype + DRAFTABLE_BY_TIER (derived from config)', () => {
   it('resolves every archetype to its configured tier', () => {
     for (const a of ALL_ARCHETYPES) {
       expect(rarityForArchetype(a), a).toBe(ARCHETYPE_CONFIG[a].rarity);

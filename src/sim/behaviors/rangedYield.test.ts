@@ -83,7 +83,7 @@ function corridor(world: World, y: number, x0: number, x1: number) {
   addWalls(world, cells);
 }
 
-describe('56c2 — YIELD_SWAP_SCORE (balance-proof)', () => {
+describe('YIELD_SWAP_SCORE (balance-proof)', () => {
   it('outranks every shipped ability priority (else fill-phase attackers starve the yield)', () => {
     for (const def of Object.values(ABILITY_DEFS)) {
       expect(def.priority, `ability '${def.id}' priority`).toBeLessThan(YIELD_SWAP_SCORE);
@@ -91,7 +91,7 @@ describe('56c2 — YIELD_SWAP_SCORE (balance-proof)', () => {
   });
 });
 
-describe('56c2 — the ranged yield (blocker-initiated)', () => {
+describe('the ranged yield (blocker-initiated)', () => {
   /** The corridor jam from the blocker's side: archer in front of a boxed
    *  melee, enemy beyond. Returns the archer's MovementBehavior proposal. */
   function jam(opts: { allyArchetype?: Archetype; allyBusy?: boolean; walls?: boolean } = {}) {
@@ -135,7 +135,7 @@ describe('56c2 — the ranged yield (blocker-initiated)', () => {
   });
 });
 
-describe('56c2 — the tick-driven corridor drain (the scenario-1 regression)', () => {
+describe('the tick-driven corridor drain (the scenario-1 regression)', () => {
   it('a melee passes a PERPETUALLY-FIRING archer within a few cadences', () => {
     // The observed labyrinth bug: a fill-phase archer is never idle while
     // engaging, so no mover-side probe can ever catch it — the yield at its
@@ -163,7 +163,7 @@ describe('56c2 — the tick-driven corridor drain (the scenario-1 regression)', 
   });
 });
 
-describe('56c2/56e-pre — the swap-partner reserve (World.tick skip, full window)', () => {
+describe('the swap-partner reserve (World.tick skip, full window)', () => {
   it('a reserved partner starts NOTHING for the WHOLE swap window', () => {
     // The partner would otherwise attack every poll (adjacent enemy). While
     // the actor's swap is in flight the partner must not start an action —

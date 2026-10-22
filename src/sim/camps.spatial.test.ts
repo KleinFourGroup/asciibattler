@@ -64,7 +64,7 @@ function seatMove(world: World, unit: Unit, to: GridCoord, travel: number) {
   world.claimCell(to, unit.id);
 }
 
-describe('§75d — buildMovementContext (the moving-wall fix)', () => {
+describe('buildMovementContext (the moving-wall fix)', () => {
   it('an active neutral is SOFT (otherUnitCells + occupied), never a pathBlocker', () => {
     const world = freshWorld();
     // Camp first: campMemberAt ticks once, and a one-army board would trip
@@ -103,7 +103,7 @@ describe('§75d — buildMovementContext (the moving-wall fix)', () => {
   });
 });
 
-describe('§75d — the static-topology sets exclude active neutrals', () => {
+describe('the static-topology sets exclude active neutrals', () => {
   it('neutralCells: wall in, camp member out', () => {
     const world = freshWorld();
     const camp = campMemberAt(world, { x: 4, y: 4 });
@@ -183,7 +183,7 @@ describe('§75d — the static-topology sets exclude active neutrals', () => {
   });
 });
 
-describe('§75d — cover & LOS', () => {
+describe('cover & LOS', () => {
   it('an active neutral IS an LOS occluder (the deliberate census call)', () => {
     const world = freshWorld();
     const camp = campMemberAt(world, { x: 4, y: 4 });
@@ -192,7 +192,7 @@ describe('§75d — cover & LOS', () => {
   });
 });
 
-describe('§75d — tile statuses reach active neutrals', () => {
+describe('tile statuses reach active neutrals', () => {
   it('a camp member on a fire tile catches burn; a wall on fire stays clean', () => {
     const world = freshWorld();
     const camp = campMemberAt(world, { x: 4, y: 4 });

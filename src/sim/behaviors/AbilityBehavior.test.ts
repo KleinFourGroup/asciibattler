@@ -121,7 +121,7 @@ describe('AbilityBehavior', () => {
     expect(attacks).toHaveLength(1);
   });
 
-  it('E5: a strike gates on its ability config range, not the unit engagement range', () => {
+  it('a strike gates on its ability config range, not the unit engagement range', () => {
     // `derived.attackRange` is force-set to 5 here, but the bow's
     // config range is 3 — the strike must consult the ability's OWN range
     // and abstain at chebyshev 4; a strike that read `derived.attackRange`
@@ -149,7 +149,7 @@ describe('AbilityBehavior', () => {
     expect(attacks).toHaveLength(1);
   });
 
-  it('D6/E4: ranged attack passes through half-cover (LOS-transparent) at full damage', () => {
+  it('ranged attack passes through half-cover (LOS-transparent) at full damage', () => {
     const { world, units, attacks } = scene([
       { team: 'player', x: 0, y: 0, attackRange: 3, attackDamage: 5 },
       { team: 'enemy', x: 3, y: 0, hp: 30, inert: true },
@@ -163,7 +163,7 @@ describe('AbilityBehavior', () => {
     expect(attacks[0]!.damage).toBe(expectedDamage);
   });
 
-  it('D6: wall + half-cover mix — wall blocks, half-cover does not contribute', () => {
+  it('wall + half-cover mix — wall blocks, half-cover does not contribute', () => {
     const { world, units, attacks } = scene([
       { team: 'player', x: 0, y: 0, attackRange: 3, attackDamage: 5 },
       { team: 'enemy', x: 3, y: 0, hp: 30, inert: true },
@@ -175,7 +175,7 @@ describe('AbilityBehavior', () => {
     expect(attacks).toHaveLength(0);
   });
 
-  it('D7.A: chasm tile between attacker and target does NOT block ranged LOS', () => {
+  it('chasm tile between attacker and target does NOT block ranged LOS', () => {
     const { world, units, attacks } = scene([
       { team: 'player', x: 0, y: 0, attackRange: 3, attackDamage: 5 },
       { team: 'enemy', x: 3, y: 0, hp: 30, inert: true },
@@ -205,7 +205,7 @@ describe('AbilityBehavior', () => {
 
   // ─── Multi-ability scoring + per-ability cooldown ────────────────────────
 
-  it('E2: picks the higher-scoring ability when both fire on the same tick', () => {
+  it('picks the higher-scoring ability when both fire on the same tick', () => {
     // Synthetic unit with two abilities: a low-score one and a high-score
     // one, both proposing on every tick. AbilityBehavior should always
     // pick the high-score ability. Wraps a damage action so the existing
@@ -225,7 +225,7 @@ describe('AbilityBehavior', () => {
     expect(units[1]!.currentHp).toBe(91);
   });
 
-  it('E2: ties go to the first ability in config order (array order)', () => {
+  it('ties go to the first ability in config order (array order)', () => {
     // Two abilities, same score, different damage. AbilityBehavior uses
     // strict `>` against `best.score`, so the FIRST proposer wins.
     const { world, attacks } = sceneWithAbilities(
@@ -241,7 +241,7 @@ describe('AbilityBehavior', () => {
     expect(attacks[0]!.damage).toBe(4);
   });
 
-  it('E2: per-ability cooldown — sibling fires while a higher-scoring ability cools', () => {
+  it('per-ability cooldown — sibling fires while a higher-scoring ability cools', () => {
     // Two abilities on one unit:
     //   slow — damage 11, score 10, cooldown 10, duration 1.
     //          Single-tick "execute" but can't be reused for 10 ticks.

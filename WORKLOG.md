@@ -16713,3 +16713,55 @@ Readings: 290,889 on `7c080acb`, 343,259 at 13:15 before this entry:
 about 52k for 213 codes, near 245 a code. At that rate batches 2 and 3,
 453 codes, are about 110k, so the session takes both before its
 hand-off.
+
+### 126n, batch 2 — `src/sim` (2026-10-22, session c5a45a3d)
+
+249 codes in 237 titles of 54 files, in 236 hunks, to none. Most were a
+header code or a lettered tag in brackets ("Targeting / hold (O2)").
+
+Titles that said something only the code stood for, now in words:
+
+- "GP5 owns the healer (yield)", twice: `SupportMovementBehavior`, whose
+  test file holds the chokepoint yield. "the 56a doctrine": the
+  in-flight partner gate, as `SupportMovementBehavior.test.ts` names it.
+- `TileGrid.test.ts`, "every existing kind to its pre-37a cost" and "the
+  new terrain tiles": the test's own `EXISTING_COSTS` table, and the
+  tiles beyond it.
+- `layouts.test.ts`, "theme palette rename + the three new themes" and
+  "the renamed names resolve; the pre-37e names no longer do": the
+  theme names, and the four names the test parses (grassland and barren
+  resolve, default and rock do not).
+- `EffectAction.test.ts`, "WorldSnapshot v30 — the §31 effect-scaling
+  bump": the test rejects a v29 save, and the format is now v36, so the
+  title names the v29 save.
+- `occupancy.test.ts`, "not the §39 corner": the canonical corner, as
+  `environment.test.ts` calls it.
+
+**Statements found false or stale and corrected (rule 7):**
+
+- `resolveScalars.test.ts`: "the dormant `stat:'luck'` seam … (the 76f
+  gambler-def prerequisite)". Three shipped abilities scale a status's
+  duration by luck (`config/abilities.json:410`, `:467`, `:592`), so the
+  seam is live; the title now says it evaluates.
+- `archetypes.test.ts`: "IDENTICAL templates today (rolls land in E3)", a
+  plan; now "(no rolls)", as `rollUnit`'s `describe` says.
+- History dropped: "(§44b, was hold_band)" twice in `moveDecision.test.ts`
+  (named for here by 126m's batch 4), "the old spawnEnvironment shape",
+  "the first real multi-tile neutral", "the mobility fold goes live",
+  "generalizes M6 water bog-down", "the 2026-09-03 playtest", "the
+  pre-§45a flat rate" (now "the flat rate").
+
+**Proof.** `comment-strip HEAD src`: 54 files differ, comments and title
+words only, exit 0; the control named all 54. `comment-codes`: 453 →
+204, `--record` wrote it; `src/sim` at 0. `titles.mts --dupes src`: no
+full name repeated. `quoted.mjs`: no old title quoted whole; its six
+hits are phrases the new titles keep, one of them a `tests/tools` title
+of its own.
+
+**Read** (`batch`): `git show <this commit> -- src`. What changed: the
+step codes in `src/sim`'s test titles. Where to look: the titles listed
+above. Wrong looks like a title that no longer says what its test
+asserts, or a bracket left empty or naming nothing.
+
+Readings: 346,253 on `7b279f8b`, 392,318 at 13:22 before this entry:
+about 46k for 249 codes, near 185 a code.

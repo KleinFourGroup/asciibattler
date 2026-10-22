@@ -101,7 +101,7 @@ function setup(victimStats: Partial<UnitStats> = {}): Probe {
   return { world, victim, foe, applied, ticked, expired, deaths };
 }
 
-describe('27b — periodic DoT', () => {
+describe('periodic DoT', () => {
   it('fires status:applied on apply, then ticks one interval LATER (no double-dip)', () => {
     const p = setup();
     const hp0 = p.victim.currentHp;
@@ -174,7 +174,7 @@ describe('27b — periodic DoT', () => {
   });
 });
 
-describe('27b — periodic HoT + merge policies', () => {
+describe('periodic HoT + merge policies', () => {
   it('a HoT heals and clamps at maxHp (status:ticked carries the real delta)', () => {
     const p = setup();
     const max = p.victim.derived.maxHp;
@@ -218,7 +218,7 @@ describe('27b — periodic HoT + merge policies', () => {
   });
 });
 
-describe('27b — snapshot round-trip', () => {
+describe('snapshot round-trip', () => {
   it('a mid-flight DoT round-trips its cursor/source/magnitude and keeps ticking', () => {
     const p = setup();
     p.world.applyStatusEffect(p.victim, STATUS_DEFS.t_burn!, p.foe.id, 2); // sourced, magnitude 2

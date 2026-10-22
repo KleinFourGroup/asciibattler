@@ -265,7 +265,7 @@ describe('summon — propose-time cap gate', () => {
   });
 });
 
-describe('summon — level scaling (§31c)', () => {
+describe('summon — level scaling', () => {
   function summonDef(level: number | ScaledValue): AbilityDef {
     return parseAbilityDef({
       id: 'test_summon', name: 'Test Summon', cooldownSeconds: 3, rangeCells: 6,

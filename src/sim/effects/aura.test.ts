@@ -76,7 +76,7 @@ function hasStatus(unit: Unit, key: string): boolean {
   return unit.effects.some((e) => e.key === key);
 }
 
-describe('§76a — the aura pass', () => {
+describe('the aura pass', () => {
   it("sustains the status on the carrier + allies in radius; out-of-radius and (under 'allies') enemies stay clean", () => {
     const world = freshWorld();
     const carrier = makeUnit(world, 1, 'player', { x: 5, y: 5 });
@@ -205,7 +205,7 @@ describe('§76a — the aura pass', () => {
   });
 });
 
-describe('§76a — schema + boot guards', () => {
+describe('schema + boot guards', () => {
   it("rejects a pure aura on a non-'self' selector (the attackRange-inflation guard)", () => {
     expect(() =>
       AbilityDefSchema.parse({
@@ -236,7 +236,7 @@ describe('§76a — schema + boot guards', () => {
   });
 });
 
-describe('§76a — the mobility fold goes live (the K1 seam)', () => {
+describe('the mobility fold on the shipped path', () => {
   // The first shipped-path consumer of a mobility statMod: the fold + the
   // refreshDerived recompute + the snapshot-restore idempotence claim
   // (World.ts fromJSON re-folds and re-derives) all get exercised here.

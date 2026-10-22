@@ -181,7 +181,7 @@ describe('simulateLevelUps — distribution lands near expected value', () => {
   });
 });
 
-describe('H1 — `power` levels per growthRates (config-derived, balance-proof)', () => {
+describe('`power` levels per growthRates (config-derived, balance-proof)', () => {
   it('every archetype config defines a numeric power base + growth', () => {
     for (const arch of ALL_ARCHETYPES) {
       const cfg = ARCHETYPE_CONFIG[arch];
@@ -216,7 +216,7 @@ describe('H1 — `power` levels per growthRates (config-derived, balance-proof)'
   });
 });
 
-describe('I1 — `precision`/`evasion` level per growthRates (config-derived, balance-proof)', () => {
+describe('`precision`/`evasion` level per growthRates (config-derived, balance-proof)', () => {
   // The two dodge stats are plumbed exactly like every other stat; this proves
   // they level off the shipped config, NOT a hardcoded base/growth — so the
   // assertions stay correct when a re-tune moves the values.

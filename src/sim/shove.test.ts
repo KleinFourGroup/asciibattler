@@ -33,7 +33,7 @@ function spawnAt(world: World, team: Team, pos: GridCoord) {
   return world.spawnUnit({ archetype: 'mercenary', level: 1, stats: BASE, xp: 0 }, team, pos);
 }
 
-describe('World.shove — the §35c de-overlap backstop', () => {
+describe('World.shove — the de-overlap backstop', () => {
   it('relocates a co-located unit to the nearest free cell (deterministic), emitting unit:shoved + unit:moved', () => {
     const { world, bus } = setup();
     const a = spawnAt(world, 'player', { x: 5, y: 5 });

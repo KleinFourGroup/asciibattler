@@ -168,7 +168,7 @@ describe('proposeEffectAbility — aoe (magic_bolt)', () => {
   });
 });
 
-describe('proposeEffectAbility — chain (chain_lightning, §29c)', () => {
+describe('proposeEffectAbility — chain (chain_lightning)', () => {
   it('commits the primary + captures each inner op\'s cast-time scalars into chainOps', () => {
     const u = caster('chain_lightning', { x: 5, y: 5 });
     const enemy = makeUnit('enemy', { x: 8, y: 5 }); // dist 3, inside [2, 5] band
@@ -280,7 +280,7 @@ describe('proposeEffectAbility — self caster-reposition (dash)', () => {
   });
 });
 
-describe('proposeEffectAbility — applyStatus scaling capture (§31)', () => {
+describe('proposeEffectAbility — applyStatus scaling capture', () => {
   // Clone the shipped `cleaver` (a Reaver bleed-on-hit: effects [damage, applyStatus]
   // on impact) and inject scaled magnitude/duration onto its applyStatus op, so the
   // propose-time capture runs against a real multi-op def. Re-parsed through the
@@ -497,7 +497,7 @@ describe('proposeEffectAbility — footprint firing band (44-pre-c)', () => {
   });
 });
 
-describe('§76c — the caster-anchored blast propose arm (aoe anchor:caster)', () => {
+describe('the caster-anchored blast propose arm (aoe anchor:caster)', () => {
   // No shipped def authors `anchor:'caster'`, so these run on synthetic
   // parsed defs — the aura.test.ts pattern.
   function novaDef(over: Record<string, unknown> = {}): AbilityDef {
@@ -545,7 +545,7 @@ describe('§76c — the caster-anchored blast propose arm (aoe anchor:caster)', 
   });
 });
 
-describe('§76c — engagementReach (the attackRange contribution per ability)', () => {
+describe('engagementReach (the attackRange contribution per ability)', () => {
   const base = {
     id: 'test_reach', name: 'Test Reach', cooldownSeconds: 1, rangeCells: 4,
     timeline: [{ phase: 'recovery', seconds: 'fill' }] as const,

@@ -57,7 +57,7 @@ function kill(world: World, attacker: Unit, victim: Unit): void {
 
 type Ended = GameEvents['battle:ended'];
 
-describe('§75g — the campKills payload', () => {
+describe('the campKills payload', () => {
   it('a wiped camp rides battle:ended with its killer faction', () => {
     const { world, bus } = freshWorld();
     spawnCamps(world, [ANCHOR], [{ campId: 'bandit-squatters' }], 42, 1);
@@ -135,7 +135,7 @@ describe('a tile order parked on a camp anchor, once the camp is cleared', () =>
   });
 });
 
-describe('§75g — the hold on an uncleared hostile camp', () => {
+describe('the hold on an uncleared hostile camp', () => {
   it('a decisive win is HELD while an uncleared hostile camp remains, and lands once cleared', () => {
     const { world, bus } = freshWorld();
     spawnCamps(world, [ANCHOR], [{ campId: 'bandit-squatters' }], 42, 1);
@@ -174,7 +174,7 @@ describe('§75g — the hold on an uncleared hostile camp', () => {
   });
 });
 
-describe('§75g — the enemyPullChance seam', () => {
+describe('the enemyPullChance seam', () => {
   // The knob ships LIVE (`config/sim.json`), so the dormant
   // path is pinned by INJECTING 0 (mutate-then-restore), not by asserting the
   // shipped default. Restores capture the original value — a hardcoded
@@ -223,7 +223,7 @@ describe('§75g — the enemyPullChance seam', () => {
   // (what `applyTerrain` passes for a `kind:'boss'` encounter) suppresses the
   // pull even at chance 1 — the boss-side wave defends the pool. Camps still
   // spawn and prime normally; only the ordered engage is withheld.
-  it('boss boards: pullEligible=false withholds the order even at chance 1 (83d)', () => {
+  it('boss boards: pullEligible=false withholds the order even at chance 1', () => {
     const mutable = SIM as { enemyPullChance: number };
     const original = SIM.enemyPullChance;
     mutable.enemyPullChance = 1;
@@ -239,7 +239,7 @@ describe('§75g — the enemyPullChance seam', () => {
     }
   });
 
-  it('re-rolls per TURN: the same encounter seed disagrees across world seeds (§75j2)', () => {
+  it('re-rolls per TURN: the same encounter seed disagrees across world seeds', () => {
     // The fetidPond-caught replay defect's regression pin: under the old
     // terrainSeed-parent fork every worldSeed agreed (0 disagreements in an
     // 800-encounter probe). Scan for a disagreeing pair — self-healing (the

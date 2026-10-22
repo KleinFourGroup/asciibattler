@@ -62,7 +62,7 @@ function place(
   return u;
 }
 
-describe('§40b — rubble auto-target: selection', () => {
+describe('rubble auto-target: selection', () => {
   it('commits to a blocking rubble when the only hostile is unreachable', () => {
     const w = world(5, 1); // a 1-wide corridor: the rubble fully seals it
     const player = place(w, 100, 'player', 0, 0);
@@ -99,7 +99,7 @@ describe('§40b — rubble auto-target: selection', () => {
     expect(player.targetId).toBe(enemy.id);
   });
 
-  it('§40c — a DESTRUCTIBLE wall sealing the corridor is still never auto-targeted', () => {
+  it('a DESTRUCTIBLE wall sealing the corridor is still never auto-targeted', () => {
     // A destructible wall is combat-targetable (AoE / manual / focused fire) but
     // carries NO `autoTarget`, so — unlike rubble — a walled-off unit does NOT auto-
     // commit to chipping it. It keeps the (now unreachable) hostile, exactly like the
@@ -132,7 +132,7 @@ describe('§40b — rubble auto-target: selection', () => {
   });
 });
 
-describe('§40b — rubble auto-target: currentTarget', () => {
+describe('rubble auto-target: currentTarget', () => {
   it('honors a committed destructible rubble but never an indestructible wall', () => {
     const w = world(5, 1);
     const player = place(w, 100, 'player', 0, 0);
@@ -147,7 +147,7 @@ describe('§40b — rubble auto-target: currentTarget', () => {
   });
 });
 
-describe('§40b — rubble auto-target: movement approach', () => {
+describe('rubble auto-target: movement approach', () => {
   it('bestEffort-approaches a committed rubble, then waits once body-adjacent', () => {
     const w = world(6, 1);
     const player = place(w, 100, 'player', 0, 0);
@@ -165,7 +165,7 @@ describe('§40b — rubble auto-target: movement approach', () => {
   });
 });
 
-describe('§40b — rubble auto-target: integration', () => {
+describe('rubble auto-target: integration', () => {
   it('a walled-off unit paths up to the blocking rubble over ticks', () => {
     const w = world(6, 1);
     const player = place(w, 100, 'player', 0, 0, { moveCd: 1 });

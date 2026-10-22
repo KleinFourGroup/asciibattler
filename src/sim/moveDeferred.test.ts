@@ -59,7 +59,7 @@ function onlyBehavior(unit: { behaviors: Behavior[] }, b?: Behavior) {
   if (b) unit.behaviors.push(b);
 }
 
-describe('§36b — deferred logical position flip', () => {
+describe('deferred logical position flip', () => {
   it('the flip fraction is the locked 50% (sanity on the config dial)', () => {
     expect(SIM.moveFlipFraction).toBe(0.5);
     expect(FLIP_OFFSET).toBe(2); // floor(4 * 0.5)
@@ -126,7 +126,7 @@ describe('§36b — deferred logical position flip', () => {
   });
 });
 
-describe('§36b — the claim makes a second pather re-route (no collision)', () => {
+describe('the claim makes a second pather re-route (no collision)', () => {
   it('a peer whose move targets a CLAIMED cell aborts instead of colliding', () => {
     const { world, bus } = setup();
     const target = { x: 5, y: 5 };
@@ -160,7 +160,7 @@ describe('§36b — the claim makes a second pather re-route (no collision)', ()
   });
 });
 
-describe('§36b — release on reap', () => {
+describe('release on reap', () => {
   it('a unit removed mid-move drops its destination claim (no phantom block)', () => {
     const { world } = setup();
     const from = { x: 2, y: 2 };

@@ -95,7 +95,7 @@ describe('MovementBehavior', () => {
     expect(units[0]!.position).toEqual({ x: 5, y: 5 });
   });
 
-  it('moves toward a target whose attack-range neighbors are all walls + allies (C1d Labyrinth regression)', () => {
+  it('moves toward a target whose attack-range neighbors are all walls + allies (the Labyrinth regression)', () => {
     // The Labyrinth softlock: a goal picker that chose a cell within
     // attackRange of the target, then pathed there, returns null when every
     // in-range cell is a wall (e.g. row 8 of the Labyrinth) or an ally (the
@@ -135,7 +135,7 @@ describe('MovementBehavior', () => {
     expect(distAfter).toBeLessThan(4);
   });
 
-  it('D6: ranged unit with half-cover on the LOS line still abstains in-range (lets AttackBehavior fire)', () => {
+  it('ranged unit with half-cover on the LOS line still abstains in-range (lets AttackBehavior fire)', () => {
     // The LOS check ignores half-cover, so a ranged unit in range with a
     // half-cover between it and the target abstains from moving and is free
     // to fire; one that read half-cover as an LOS blocker would keep
@@ -151,7 +151,7 @@ describe('MovementBehavior', () => {
     expect(units[0]!.position).toEqual({ x: 0, y: 0 });
   });
 
-  it('E7.D: a unit whose ability ignores LOS abstains in-range even with a wall on the line', () => {
+  it('a unit whose ability ignores LOS abstains in-range even with a wall on the line', () => {
     // The catapult lobs an arcing shot over walls. In chebyshev range of the
     // target with a wall breaking LOS, a ranged/mage unit would keep pathing
     // forward to clear the wall (LOS-gated abstain fails) — but the catapult
@@ -168,7 +168,7 @@ describe('MovementBehavior', () => {
     expect(units[0]!.position).toEqual({ x: 0, y: 0 });
   });
 
-  it('E7.D: a normal LOS-gated unit in the SAME spot keeps pathing to clear the wall', () => {
+  it('a normal LOS-gated unit in the SAME spot keeps pathing to clear the wall', () => {
     // Contrast to the catapult case above: without an LOS-ignoring ability,
     // the in-range abstain requires line of sight, so the wall makes the unit
     // step forward for a clear shot. This pins that the abstain is genuinely
@@ -213,7 +213,7 @@ describe('MovementBehavior', () => {
     expect(units[1]!.position).toEqual(before[1]);
   });
 
-  it('E5.B: sidesteps to a free perpendicular cell when the forward step is occupied', () => {
+  it('sidesteps to a free perpendicular cell when the forward step is occupied', () => {
     // Forced chokepoint along the bottom edge (row y=0): P must reach T at
     // (5,0); an ally sits on the only forward cell (1,0); row 1 is walled at
     // x=1..5 so the sole route to T runs east through the occupied (1,0)
@@ -235,7 +235,7 @@ describe('MovementBehavior', () => {
     expect(units[0]!.position).toEqual({ x: 0, y: 1 });
   });
 
-  it('E5.B: abstains (queues) when the forward step is occupied and no sidestep is free', () => {
+  it('abstains (queues) when the forward step is occupied and no sidestep is free', () => {
     // Same chokepoint, but row 1 is fully walled (x=0..5) so neither
     // perpendicular cell is free. The unit falls back to abstaining —
     // corridor queueing still emerges.
@@ -251,7 +251,7 @@ describe('MovementBehavior', () => {
     expect(units[0]!.position).toEqual({ x: 0, y: 0 });
   });
 
-  it('GP4: a ranged unit in range but LOS-blocked repositions for a clear shot (does not charge)', () => {
+  it('a ranged unit in range but LOS-blocked repositions for a clear shot (does not charge)', () => {
     // Player ranged (range 6) is already in chebyshev range of the target, but
     // a wall on the straight line breaks LOS. It paths to the nearest cell
     // with a clear shot and holds there, rather than toward the target's cell
@@ -275,7 +275,7 @@ describe('MovementBehavior', () => {
     expect(dist).toBeGreaterThan(1); // held at standoff, didn't charge to melee
   });
 
-  it('GP4: a catapult (LOS-ignoring) out of range approaches and holds at firing range', () => {
+  it('a catapult (LOS-ignoring) out of range approaches and holds at firing range', () => {
     // Guards the dropped `!ignoresLos` exclusion: the catapult now routes via
     // the acting-cell search (range-only), so it must still close to range and
     // stop, not stall or overrun.
@@ -295,7 +295,7 @@ describe('MovementBehavior', () => {
   });
 });
 
-describe('MovementBehavior / tile objective (J1)', () => {
+describe('MovementBehavior / tile objective', () => {
   function setTileObjective(world: World, cell: GridCoord): void {
     world.enqueueCommand({
       kind: 'setObjective',
@@ -370,7 +370,7 @@ describe('MovementBehavior / tile objective (J1)', () => {
   });
 });
 
-describe('MovementBehavior / hold (O2)', () => {
+describe('MovementBehavior / hold', () => {
   function setHold(world: World): void {
     world.enqueueCommand({ kind: 'setObjective', team: 'player', objective: { mode: 'hold' } });
   }
@@ -406,7 +406,7 @@ describe('MovementBehavior / hold (O2)', () => {
   });
 });
 
-describe('MovementBehavior / focus tile (O3, leashAtNearest default)', () => {
+describe('MovementBehavior / focus tile (leashAtNearest default)', () => {
   function setFocusTile(world: World, cell: GridCoord): void {
     world.enqueueCommand({
       kind: 'setObjective',
@@ -443,7 +443,7 @@ describe('MovementBehavior / focus tile (O3, leashAtNearest default)', () => {
   });
 });
 
-describe('MovementBehavior / minRange kiting (O4)', () => {
+describe('MovementBehavior / minRange kiting', () => {
   const cheb = (a: GridCoord, b: GridCoord) =>
     Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y));
   // Config-derived so these hold at whatever floor the bow ships with.
@@ -525,7 +525,7 @@ describe('MovementBehavior / corridor kite-pin (Qb #3)', () => {
   });
 });
 
-describe('MovementBehavior / §36b: a pursuer holds for a target arriving into its band', () => {
+describe('MovementBehavior / a pursuer holds for a target arriving into its band', () => {
   it('a melee unit waits when its target CLAIMS a cell in its firing band (no kite-pin sidestep)', () => {
     // M targets E. E is mid-move toward M: logically still out of melee range, but
     // its destination CLAIM sits on the cell ADJACENT to M. M reads the claim as
@@ -725,7 +725,7 @@ describe('MovementBehavior — footprint firing band vs multi-tile targets (44-p
     expect(new MovementBehavior().proposeAction(b, world)?.action.id).toBe(WAIT_ACTION_ID);
   });
 
-  it("E7.D — a catapult holds when the body's far side enters its lob band", () => {
+  it("a catapult holds when the body's far side enters its lob band", () => {
     const { world, units } = scene([
       { team: 'player', x: 11, y: 5, attackRange: 6, archetype: 'catapult', ignoresLos: true },
       RUBBLE3,
@@ -809,7 +809,7 @@ describe('MovementBehavior — blind wander vs multi-tile footprints (44-pre-a)'
  * convergence must stay impossible": the vacancy-aware discounts touch
  * route selection only, never the commit/execution gates).
  */
-describe('§45a — corridor column (nose-to-tail under vacancy-aware costs)', () => {
+describe('corridor column (nose-to-tail under vacancy-aware costs)', () => {
   it('drains single-file with the occupancy invariant intact every tick', () => {
     const specs: SceneUnit[] = [
       { team: 'player', x: 0, y: 5, moveCooldownTicks: 4 },

@@ -62,7 +62,7 @@ describe('MoveAction.destinationCell — the proactive-destination seam', () => 
   });
 });
 
-describe('§35b — move abort at execution', () => {
+describe('move abort at execution', () => {
   it('aborts a move onto an occupied cell: no-op + unit:moveAborted, cooldown intact', () => {
     const { world, bus } = setup();
     const mover = spawnAt(world, 'player', { x: 2, y: 2 });

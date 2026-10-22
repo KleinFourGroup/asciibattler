@@ -16,7 +16,7 @@ import type { LayoutDef } from './layouts';
  * environment.test; this covers the glue that turns a `LayoutDef`'s `rubble` array
  * into spawned units — schema (`generateFromLayout`) through spawn (`spawnLayoutNeutrals`).
  */
-describe('§40d — spawnLayoutNeutrals wires layout rubble onto the board', () => {
+describe('spawnLayoutNeutrals wires layout rubble onto the board', () => {
   const fixture: LayoutDef = {
     id: 'neutrals-fixture',
     name: 'Neutrals Fixture',

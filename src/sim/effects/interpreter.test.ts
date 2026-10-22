@@ -180,7 +180,7 @@ describe('executeOp — damage (aoe / magic)', () => {
   });
 });
 
-describe('executeOp — aoe anchor:caster (§76c — the declared anchor, honoured)', () => {
+describe('executeOp — aoe anchor:caster (the declared anchor, honoured)', () => {
   const nova: TargetSelector = { kind: 'aoe', shape: 'square', radius: 1, anchor: 'caster', affects: 'enemies', ringMultiplier: 1 };
 
   it('detonates around the caster with NO captured centre (targetCell undefined)', () => {
@@ -301,7 +301,7 @@ describe('executeOp — move', () => {
   });
 });
 
-describe('executeOp — applyStatus (status-on-hit, §29)', () => {
+describe('executeOp — applyStatus (status-on-hit)', () => {
   // A fixture status injected into the (file-isolated) registry, so these mechanic
   // tests never depend on the shipped catalog (the balance-proof discipline).
   const TS = { id: 't_onhit', name: 't_onhit', durationSeconds: 4, merge: 'refresh' } as const;
@@ -375,7 +375,7 @@ describe('executeOp — applyStatus (status-on-hit, §29)', () => {
     expect(has(b)).toBe(true);
   });
 
-  it('reads the cast-time-captured magnitude + duration off the resolution (§31)', () => {
+  it('reads the cast-time-captured magnitude + duration off the resolution', () => {
     const { world } = setup();
     const caster = makeUnit('player', { x: 0, y: 0 });
     const target = makeUnit('enemy', { x: 1, y: 0 });
@@ -393,7 +393,7 @@ describe('executeOp — applyStatus (status-on-hit, §29)', () => {
   });
 });
 
-describe('executeOp — chain (§29c)', () => {
+describe('executeOp — chain', () => {
   // A pure-magic, non-evadable inner bolt (no crit, no defense interaction at
   // defense 0) so the per-hop damage is exactly baseDamage × falloff^jump.
   const innerDmg: EffectOp = {
@@ -526,7 +526,7 @@ describe('executeOp — chain (§29c)', () => {
     }
   });
 
-  it('§31 — the chained applyStatus rider carries its captured magnitude, unscaled per hop', () => {
+  it('the chained applyStatus rider carries its captured magnitude, unscaled per hop', () => {
     const TS = { id: 't_chain', name: 't_chain', durationSeconds: 4, merge: 'refresh' } as const;
     STATUS_DEFS.t_chain = parseStatusDef(TS);
     try {
@@ -555,7 +555,7 @@ describe('executeOp — chain (§29c)', () => {
   });
 });
 
-describe('executeOp — chain (deferred per-hop timing, §29c follow-up)', () => {
+describe('executeOp — chain (deferred per-hop timing)', () => {
   const innerDmg: EffectOp = {
     kind: 'damage', scaling: 'magic', might: 0, accuracy: 0.6, critBase: 0,
     critable: false, evadable: false, bypassDefense: false,

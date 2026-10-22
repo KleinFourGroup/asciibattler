@@ -54,7 +54,7 @@ describe('sampleProceduralParams', () => {
     }
   });
 
-  it('§81b — an empty theme pool forces camp count 0; a stocked pool can roll sites', () => {
+  it('an empty theme pool forces camp count 0; a stocked pool can roll sites', () => {
     // Derived from the shipped config: volcanic ships an EMPTY pool; swamp
     // ships a stocked one.
     expect(P.camps.pools.volcanic).toEqual([]);
@@ -70,7 +70,7 @@ describe('sampleProceduralParams', () => {
     expect(stockedRolled).toBeGreaterThan(0);
   });
 
-  it('§81a — resolves undeclared theme knobs to 0 (feature off) and samples declared ones in-range', () => {
+  it('resolves undeclared theme knobs to 0 (feature off) and samples declared ones in-range', () => {
     const TILE_KEYS = ['deepWaterFraction', 'hills', 'ice', 'sand', 'mud', 'fire'] as const;
     for (const theme of THEMES) {
       const declared = P.themeTiles[theme];
@@ -330,7 +330,7 @@ describe('generateProceduralMap', () => {
   });
 });
 
-describe('§81a — the theme tile layer', () => {
+describe('the theme tile layer', () => {
   // A swampy stress params set: big pools, half of them deepening.
   const swampy = (): ResolvedMapParams =>
     makeParams({
@@ -346,7 +346,7 @@ describe('§81a — the theme tile layer', () => {
     expect(deep).toBeGreaterThan(0);
   });
 
-  it('spawn bands stay connected with deep water blocking (the §81a guard rework)', () => {
+  it('spawn bands stay connected with deep water blocking', () => {
     for (const symmetry of ['none', 'mirror', 'point'] as Symmetry[]) {
       for (let seed = 0; seed < 30; seed++) {
         const r = generateProceduralMap(new RNG(seed), W, H, { ...swampy(), symmetry });
@@ -461,7 +461,7 @@ describe('§81a — the theme tile layer', () => {
   });
 });
 
-describe('§81b — camp-site placement', () => {
+describe('camp-site placement', () => {
   const camped = (
     count: number,
     mode: 'pair' | 'midBand' | 'free',

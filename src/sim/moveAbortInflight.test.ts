@@ -65,7 +65,7 @@ function onlyBehavior(unit: { behaviors: Behavior[] }, b?: Behavior) {
   if (b) unit.behaviors.push(b);
 }
 
-describe('§36c — in-flight move abort (the destination goes invalid mid-slide)', () => {
+describe('in-flight move abort (the destination goes invalid mid-slide)', () => {
   it('FLIP_OFFSET sanity (the pre-flip window has a tick to inject into)', () => {
     expect(FLIP_OFFSET).toBe(2); // floor(4 * 0.5) → there is a pre-flip tick at offset 1
   });

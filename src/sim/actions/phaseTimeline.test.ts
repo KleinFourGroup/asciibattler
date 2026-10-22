@@ -111,7 +111,7 @@ function scene(action: Action, phases: readonly ActionPhase[], cooldown = 9999):
   return { world, phases: log };
 }
 
-describe('F2 action phase timeline', () => {
+describe('action phase timeline', () => {
   it('charge: emits windup on the start tick, fires applyEffect once at the impact boundary', () => {
     const action = new ChargeProbe();
     const { world, phases } = scene(action, [

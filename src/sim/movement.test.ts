@@ -137,7 +137,7 @@ describe('movement / routeToward', () => {
   });
 });
 
-describe('§36a — claims block pathing (occupied OR claimed)', () => {
+describe('claims block pathing (occupied OR claimed)', () => {
   it("a peer's claimed cell joins the soft-block set; the unit's own claim does not", () => {
     const { world, units } = scene([
       { team: 'player', x: 0, y: 0 }, // the mover
@@ -224,7 +224,7 @@ describe('movement / advance (the byte-identical step)', () => {
   });
 });
 
-describe('§43b — the sidestep tie balance (cell-parity alternation)', () => {
+describe('the sidestep tie balance (cell-parity alternation)', () => {
   // Direct sidestep() probes on an empty board: both perpendiculars in-bounds,
   // walkable, unoccupied — the pure tie geometry `advance` can't reach in open
   // space (A* detours around soft blockers there; see the sidestep note above).
@@ -341,7 +341,7 @@ describe('§43b — the sidestep tie balance (cell-parity alternation)', () => {
   });
 });
 
-describe('movement / advance — M6 water bog-down (move duration)', () => {
+describe('movement / advance — water bog-down (move duration)', () => {
   /** The duration (ticks) a move proposal locks the unit + lerps the sprite over. */
   function moveTicks(proposal: { action: unknown } | null): number | null {
     if (proposal === null) return null;
@@ -386,7 +386,7 @@ describe('movement / advance — M6 water bog-down (move duration)', () => {
   });
 });
 
-describe('§45a — vacancy-aware costs (the tiered costAt + route choice)', () => {
+describe('vacancy-aware costs (the tiered costAt + route choice)', () => {
   /**
    * Seat `unit` mid-move to `to` the way World.executeActions does — active
    * action + destination claim — pre-flip (`travel` ticks remain before the
@@ -412,7 +412,7 @@ describe('§45a — vacancy-aware costs (the tiered costAt + route choice)', () 
     expect(SIM.vacancyWindowOwnSteps).toBeGreaterThanOrEqual(0);
   });
 
-  it('a static occupant prices at occupiedCellPenalty (the pre-§45a flat rate)', () => {
+  it('a static occupant prices at occupiedCellPenalty, the flat rate', () => {
     const { world, units } = scene([
       { team: 'player', x: 0, y: 0 },
       { team: 'player', x: 2, y: 2 },
@@ -537,7 +537,7 @@ describe('§45a — vacancy-aware costs (the tiered costAt + route choice)', () 
   });
 });
 
-describe('§45b — the ETA-gated wait-vs-sidestep', () => {
+describe('the ETA-gated wait-vs-sidestep', () => {
   /** Same seat shape as the vacancy-cost block above: active move + destination claim. */
   function seatMove(world: World, unit: Unit, to: GridCoord, travel: number) {
     const durationTicks = travel * 2;
@@ -590,7 +590,7 @@ describe('§45b — the ETA-gated wait-vs-sidestep', () => {
     expect(p!.phases).toEqual([]);
   });
 
-  it('does NOT wait for a blocker vacating beyond the gate (pre-§45b queue abstain)', () => {
+  it('does NOT wait for a blocker vacating beyond the gate (the queue abstain)', () => {
     // Gate = waitForVacancyOwnSteps × own step ticks; a glacial flip misses it.
     expect(boxedAdvance(10_000)).toBeNull();
   });
@@ -664,7 +664,7 @@ describe('§45b — the ETA-gated wait-vs-sidestep', () => {
   });
 });
 
-describe('§45c — the stable-route margin (anti-flicker hysteresis)', () => {
+describe('the stable-route margin (anti-flicker hysteresis)', () => {
   /** Same seat shape as the blocks above: active move + destination claim. */
   function seatMove(world: World, unit: Unit, to: GridCoord, travel: number) {
     const durationTicks = travel * 2;
@@ -777,7 +777,7 @@ describe('§45c — the stable-route margin (anti-flicker hysteresis)', () => {
  * 2026-07-15; the in-band eligibility alternative was
  * REJECTED (it excludes the canonical max-range corridor jam).
  */
-describe('56b — swap-through (the mover-initiated pass)', () => {
+describe('swap-through (the mover-initiated pass)', () => {
   /** A 1-wide corridor at row `y`: walls on y±1 across the full grid width. */
   function corridorSpecs(y: number, gridW = 12): Spec[] {
     const specs: Spec[] = [];
@@ -866,13 +866,13 @@ describe('56b — swap-through (the mover-initiated pass)', () => {
     expect(decisions[0]!.kind).toBe('queue');
   });
 
-  it('a SUPPORT blocker is never passed from the mover side (GP5 owns the healer yield)', () => {
+  it('a SUPPORT blocker is never passed from the mover side (SupportMovementBehavior owns the healer yield)', () => {
     const { proposal, decisions } = jam({ blockerSupport: true });
     expect(proposal).toBeNull();
     expect(decisions[0]!.kind).toBe('queue');
   });
 
-  it('a mid-move blocker resolves via the §45b WAIT gate, not the swap (56a doctrine upstream)', () => {
+  it('a mid-move blocker resolves via the WAIT gate, not the swap', () => {
     const { proposal, decisions } = jam({ blockerMidMove: true });
     expect(proposal).not.toBeNull();
     expect(proposal!.action.id).toBe('wait');
@@ -1038,7 +1038,7 @@ describe('56b — swap-through (the mover-initiated pass)', () => {
     expect(r!.position).toEqual({ x: 2, y: 5 }); // the archer filed to the rear
   });
 
-  it('56e-pre: post-flip but MID-WINDOW, the partner stays reserved — no re-grab', () => {
+  it('post-flip but MID-WINDOW, the partner stays reserved — no re-grab', () => {
     // A labyrinth desync's shape, pinned: m1's activeAction stays SEATED
     // through the flip (the real World.tick shape: the flip fires at the
     // impact boundary; the action ends at finishTick). A release anchored on

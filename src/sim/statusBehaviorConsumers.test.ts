@@ -149,7 +149,7 @@ describe('28 — panic', () => {
  * three strictly-farther cells (0,4)/(0,5)/(0,6) all occupied — retreatCell
  * is null by construction, so the probe is the only out.
  */
-describe('56c — the flee-swap (boxed panic bubble-back)', () => {
+describe('the flee-swap (boxed panic bubble-back)', () => {
   /** The rout: fleer boxed against a full rear rank. The two flankers are
    *  ALSO panicked (ineligible), so eligibility decides the middle. */
   function rout(middle: { archetype?: Archetype; panicked?: boolean } = {}) {
@@ -185,13 +185,13 @@ describe('56c — the flee-swap (boxed panic bubble-back)', () => {
     expect(new MovementBehavior().proposeAction(fleer, world)).toBeNull();
   });
 
-  it('never yanks a SUPPORT back into panic range (GP5 owns the healer)', () => {
+  it('never yanks a SUPPORT back into panic range (SupportMovementBehavior owns the healer)', () => {
     const { world, fleer, ally } = rout({ archetype: 'healer' });
     ally.behaviors.push(new SupportMovementBehavior());
     expect(new MovementBehavior().proposeAction(fleer, world)).toBeNull();
   });
 
-  it('never swaps with a mid-action partner (the 56a doctrine)', () => {
+  it('never swaps with a mid-action partner (the in-flight partner gate)', () => {
     const { world, fleer, ally } = rout();
     const durationTicks = 8;
     world.seatAction(ally, new MoveAction(ally.position, { x: 0, y: 7 }, durationTicks), [

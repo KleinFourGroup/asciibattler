@@ -52,7 +52,7 @@ function spawnAt(world: World, team: Team, pos: GridCoord): Unit {
 const chebyshev = (a: GridCoord, b: GridCoord): number =>
   Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y));
 
-describe('§75f — wiring', () => {
+describe('wiring', () => {
   it("the registry rehydrates the 'camp' kind", () => {
     expect(createBehavior('camp')).toBeInstanceOf(CampWanderBehavior);
   });
@@ -66,7 +66,7 @@ describe('§75f — wiring', () => {
   });
 });
 
-describe('§75f — EXIT INVARIANT: spawn vacated ≤N ticks (the drip keeps flowing)', () => {
+describe('EXIT INVARIANT: spawn vacated ≤N ticks (the drip keeps flowing)', () => {
   it('both bandit-squatters members materialize within the derived bound', () => {
     const world = campWorld();
     world.tick(); // member #1 drips onto the anchor
@@ -86,7 +86,7 @@ describe('§75f — EXIT INVARIANT: spawn vacated ≤N ticks (the drip keeps flo
   });
 });
 
-describe('§75f — EXIT INVARIANT: the leash bounds passive wander', () => {
+describe('EXIT INVARIANT: the leash bounds passive wander', () => {
   it('no member ever idles outside leashRadius, and the wander is actually live', () => {
     const world = campWorld();
     const leash = getCamp('bandit-squatters')!.leashRadius;
@@ -118,7 +118,7 @@ describe('§75f — EXIT INVARIANT: the leash bounds passive wander', () => {
   });
 });
 
-describe('§75f — RNG discipline', () => {
+describe('RNG discipline', () => {
   it('passive wander draws touch NEITHER the primary nor the combat stream', () => {
     const world = campWorld();
     const rngBefore = JSON.stringify(world.rng.toJSON());
@@ -143,7 +143,7 @@ describe('§75f — RNG discipline', () => {
   });
 });
 
-describe('§75f — the hostile delegate', () => {
+describe('the hostile delegate', () => {
   it('an aggroed member pursues past the leash and lands damage (leash bounds idling only)', () => {
     const world = campWorld();
     // Drip both members out before any faction unit exists (one-army boards

@@ -186,7 +186,7 @@ describe('EffectAction serialization', () => {
     expect(restored.toData()).toEqual(original.toData());
   });
 
-  it('§29c — round-trips a chain op\'s nested chainOps resolutions (deep clone)', () => {
+  it('round-trips a chain op\'s nested chainOps resolutions (deep clone)', () => {
     const w = world();
     const original = new EffectAction(chainDef, {
       targetId: 7,
@@ -211,7 +211,7 @@ describe('EffectAction serialization', () => {
     expect(d1.targetCell).toEqual(d2.targetCell);
   });
 
-  it('§31 — round-trips an applyStatus op\'s captured status magnitude + duration', () => {
+  it('round-trips an applyStatus op\'s captured status magnitude + duration', () => {
     const w = world();
     const original = new EffectAction(afflictDef, {
       targetId: 7,
@@ -225,7 +225,7 @@ describe('EffectAction serialization', () => {
   });
 });
 
-describe('WorldSnapshot v30 — the §31 effect-scaling bump', () => {
+describe('WorldSnapshot — a v29 save, from before effect scaling', () => {
   it('rejects a v29 in-flight save (no migration; a captured status scalar would be dropped)', () => {
     const w = world();
     w.placeUnits(makeUnit('player', { x: 0, y: 0 }));

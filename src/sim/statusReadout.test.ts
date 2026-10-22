@@ -58,7 +58,7 @@ describe('readUnitStatuses', () => {
     });
   });
 
-  it('folds §31 scaling into potency for a refresh status (magnitude is the scaled scalar, not a stack)', () => {
+  it('folds effect scaling into potency for a refresh status (magnitude is the scaled scalar, not a stack)', () => {
     // rejuvenate scaled to magnitude 2.5 by a high-magic caster: 3 × 2.5 ÷ 2s = 3.75/s.
     const [r] = readUnitStatuses([ticked('rejuvenate', 2.5, 4 * TICK_RATE)], 0, DEFS);
     expect(r.kind).toBe('heal');
@@ -92,7 +92,7 @@ describe('readUnitStatuses', () => {
     expect(gone.durationFraction).toBe(0); // past expiry → clamped
   });
 
-  it('skips raw K1 stat effects that have no StatusDef (empower / fatigue / daemon)', () => {
+  it('skips raw stat effects that have no StatusDef (empower / fatigue / daemon)', () => {
     const empower = ticked('empowered', 3, 100);
     const out = readUnitStatuses([empower, ticked('bleed', 1, 100)], 0, DEFS);
     expect(out).toHaveLength(1);

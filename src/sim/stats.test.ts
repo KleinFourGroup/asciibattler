@@ -63,7 +63,7 @@ describe('deriveStats — maxHp', () => {
   });
 });
 
-describe('critChanceFor — I6 per-ability crit (balance-proof off config/stats.json)', () => {
+describe('critChanceFor — per-ability crit (balance-proof off config/stats.json)', () => {
   it('is critBase + luck × critPerLuck below the cap', () => {
     for (const critBase of [0, 0.05, 0.2]) {
       for (const luck of [0, 1, 5, 10, 30]) {
@@ -80,7 +80,7 @@ describe('critChanceFor — I6 per-ability crit (balance-proof off config/stats.
     expect(critChanceFor(0.2, 99)).toBe(STATS.critCap);
   });
 
-  it('critBase 0 reproduces the pre-I6 luck-only crit exactly (byte-identical canary)', () => {
+  it('critBase 0 reproduces the luck-only crit exactly (byte-identical canary)', () => {
     // The old deriveStats value was min(critCap, luck × critPerLuck); with
     // critBase 0 the new helper must equal it for every luck.
     for (const luck of [0, 3, 12, 50, 99]) {
@@ -89,7 +89,7 @@ describe('critChanceFor — I6 per-ability crit (balance-proof off config/stats.
   });
 });
 
-describe('hitChanceFor — I2/I6 dodge to-hit (balance-proof off config/stats.json)', () => {
+describe('hitChanceFor — dodge to-hit (balance-proof off config/stats.json)', () => {
   // Accuracy is the firing weapon's per-ability base (no global
   // hitChanceBase). hitChanceFor is a primitive, so these mechanic
   // tests pass an explicit accuracy literal rather than reading the JSON.
@@ -215,7 +215,7 @@ describe('attackCooldownTicksFor — per-ability attack cadence', () => {
   });
 });
 
-describe('mobility / speed axes are independent (GP1 split guard)', () => {
+describe('mobility / speed axes are independent (the split guard)', () => {
   it('move CD uses the mobility knobs and attack CD uses the speed knobs', () => {
     // Same +stat through both axes. Each helper must resolve through its OWN
     // axis's knobs — derive both expectations straight from STATS so the

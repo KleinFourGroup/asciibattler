@@ -10,7 +10,7 @@ import { ALL_ARCHETYPES, ARCHETYPE_CONFIG } from '../archetypes';
  * Balance-proof: derive the expected behavior from the SAME catalog the factory
  * reads, so this pins the wiring (factory ⇄ config), not a hand-listed archetype.
  */
-describe('§38c-2 createMovementBehavior (catalog-driven)', () => {
+describe('createMovementBehavior (catalog-driven)', () => {
   it('selects each archetype\'s behavior from UnitDef.movementBehavior', () => {
     for (const a of ALL_ARCHETYPES) {
       const behavior = createMovementBehavior(a);

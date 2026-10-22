@@ -88,7 +88,7 @@ describe('registerBattleRules — evaluation semantics', () => {
     expect(enemy.effects).toHaveLength(0);
   });
 
-  it("applyTo 'target' lands the status on the STRUCK unit; the actor is untouched (venom — 49e)", () => {
+  it("applyTo 'target' lands the status on the STRUCK unit; the actor is untouched (venom)", () => {
     const { world, player, enemy } = scene([VENOM_HITS]);
     world.applyDamage(player.id, enemy, 3, { crit: false });
     expect(enemy.effects.map((e) => e.key)).toEqual(['poison']);
@@ -173,7 +173,7 @@ describe('installBattleRules — the install contract', () => {
   });
 });
 
-describe('serialization (the 47f/49e battleRules snapshot fields)', () => {
+describe('serialization (the battleRules snapshot fields)', () => {
   it('battle:ended carries a COPY of the tally', () => {
     const { world, bus, player, enemy } = scene([BITS_ON_HIT]);
     const payloads: GameEvents['battle:ended'][] = [];

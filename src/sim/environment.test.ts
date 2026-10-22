@@ -40,7 +40,7 @@ describe('environment / spawnWall', () => {
     expect(wall.activeAction).toBeNull();
   });
 
-  it('§38d — a catalog-spawned wall/half-cover matches the old spawnEnvironment shape', () => {
+  it('a catalog-spawned wall/half-cover has the environment shape', () => {
     const bus = new EventBus<GameEvents>();
     const w = new World(bus, new RNG(1));
 
@@ -119,7 +119,7 @@ describe('environment / spawnWall', () => {
     expect(restored.units[1]!.position).toEqual({ x: 4, y: 5 });
   });
 
-  it('spawns with the requested maxHp on derived, not stats (§40c: hp ⇒ destructible def)', () => {
+  it('spawns with the requested maxHp on derived, not stats (hp ⇒ destructible def)', () => {
     // Passing an `hp` routes to the `wall_destructible` def (the maxHp
     // lives on `derived`, the contract this test guards); it is the layout's per-
     // instance HP knob. The destructible-vs-indestructible routing is pinned in the
@@ -160,7 +160,7 @@ describe('environment / spawnWall', () => {
  * No `hp` ⇒ the indestructible default — the locked "wall-destructibility OFF by
  * default" rule. Balance-proof: nothing here hardcodes the pool (only the routing).
  */
-describe('§40c — destructible walls / cover', () => {
+describe('destructible walls / cover', () => {
   it('a wall given an HP pool spawns DESTRUCTIBLE (combat-targetable) at that maxHp', () => {
     const w = new World(new EventBus<GameEvents>(), new RNG(1));
     const wall = spawnWall(w, { x: 2, y: 2 }, 40);
@@ -201,7 +201,7 @@ describe('§40c — destructible walls / cover', () => {
  * the field ⇒ susceptible to all (byte-identical). Balance-proof: the allow-list
  * is read from `NEUTRAL_DEFS`, never hardcoded.
  */
-describe('§38d-3 — statusSusceptibility gate', () => {
+describe('statusSusceptibility gate', () => {
   const wallAllows = NEUTRAL_DEFS.wall!.statusSusceptibility!; // ['burn','frozen']
 
   it("a wall takes a status it's susceptible to, ignores one it isn't", () => {
@@ -266,7 +266,7 @@ describe('§38d-3 — statusSusceptibility gate', () => {
  * (a listless combatant still panics) pins that the gate is per-def, not
  * global.
  */
-describe('§83b — statusImmunities gate', () => {
+describe('statusImmunities gate', () => {
   const spawnCombatant = (w: World, archetype: 'healer' | 'mercenary', id: number): Unit => {
     const stats = { ...ARCHETYPE_CONFIG[archetype].baseStats };
     const u = new Unit({
@@ -322,7 +322,7 @@ describe('§83b — statusImmunities gate', () => {
  * drive HP / status directly; the paths that damage rubble in play are
  * pinned in rubbleAutoTarget.test.ts and Targeting.test.ts.
  */
-describe('§40a — rubble (the first real multi-tile neutral)', () => {
+describe('rubble (a multi-tile neutral)', () => {
   it('spawns as a neutral with the rubble glyph, catalog HP, and blocks LOS', () => {
     const w = new World(new EventBus<GameEvents>(), new RNG(1));
     const def = NEUTRAL_DEFS[RUBBLE_ARCHETYPE_BY_SIZE[2]]!;
@@ -337,7 +337,7 @@ describe('§40a — rubble (the first real multi-tile neutral)', () => {
     expect(rubble.activeAction).toBeNull();
   });
 
-  it('occupies its whole N×N footprint from the canonical corner (the §39 fill, live)', () => {
+  it('occupies its whole N×N footprint from the canonical corner (the footprint fill)', () => {
     const w = new World(new EventBus<GameEvents>(), new RNG(1));
     const corners: Record<1 | 2 | 3, GridCoord> = {
       1: { x: 1, y: 1 },
@@ -355,7 +355,7 @@ describe('§40a — rubble (the first real multi-tile neutral)', () => {
     }
   });
 
-  it('takes an overridden maxHp (the §40d per-placement configurable HP)', () => {
+  it('takes an overridden maxHp (the per-placement configurable HP)', () => {
     const w = new World(new EventBus<GameEvents>(), new RNG(1));
     const rubble = spawnRubble(w, { x: 1, y: 1 }, 1, 7);
     expect(rubble.derived.maxHp).toBe(7);

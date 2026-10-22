@@ -28,7 +28,7 @@ const instance = (id: number, patch: Partial<CampInstance> = {}): CampInstance =
   ...patch,
 });
 
-describe('§75b — installCamps (the presence gate)', () => {
+describe('installCamps (the presence gate)', () => {
   it('an empty install is a free no-op: nothing stored, campRng stays null', () => {
     const world = freshWorld();
     world.installCamps([], new RNG(99));
@@ -71,7 +71,7 @@ describe('§75b — installCamps (the presence gate)', () => {
   });
 });
 
-describe('§75b — hostility reads/writes', () => {
+describe('hostility reads/writes', () => {
   it('markCampHostile is camp-wide, per-faction, idempotent; reads degrade false', () => {
     const world = freshWorld();
     world.installCamps([instance(1)], new RNG(5));
@@ -86,7 +86,7 @@ describe('§75b — hostility reads/writes', () => {
   });
 });
 
-describe('§75c — spawnCamps (the setup-time roll)', () => {
+describe('spawnCamps (the setup-time roll)', () => {
   it('registers one instance per spawn tile: ids 1..n, anchors, count-expanded pending', () => {
     const world = freshWorld();
     spawnCamps(world, [{ x: 3, y: 3 }, { x: 8, y: 8 }], [{ campId: 'ghoul-nest' }], 42, 1);
@@ -140,7 +140,7 @@ describe('§75c — spawnCamps (the setup-time roll)', () => {
   });
 });
 
-describe('§75c — the portal-drip drain', () => {
+describe('the portal-drip drain', () => {
   const dripWorld = (): World => {
     const world = freshWorld();
     // bandit-squatters: 2×1×1 bandits — the pure single-tile drip case.
@@ -148,7 +148,7 @@ describe('§75c — the portal-drip drain', () => {
     return world;
   };
 
-  it('§75h2 — the FIRST member is PRIMED at setup: instant, no lockout, targetable pre-countdown', () => {
+  it('the FIRST member is PRIMED at setup: instant, no lockout, targetable pre-countdown', () => {
     const world = dripWorld();
     // Before any tick: the head-of-queue member already stands on the anchor
     // (like the initial teams, at the user's call).
@@ -209,7 +209,7 @@ describe('§75c — the portal-drip drain', () => {
   });
 });
 
-describe('§75b — isActiveNeutral (THE widening predicate)', () => {
+describe('isActiveNeutral (THE widening predicate)', () => {
   it('true only for a neutral WITH a campId', () => {
     expect(isActiveNeutral({ team: 'neutral', campId: 1 })).toBe(true);
     expect(isActiveNeutral({ team: 'neutral', campId: null })).toBe(false);

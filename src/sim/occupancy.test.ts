@@ -131,7 +131,7 @@ describe('occupiedCells — the shared set builder', () => {
   });
 });
 
-describe('findOverlappingCells — the §35d invariant detector', () => {
+describe('findOverlappingCells — the invariant detector', () => {
   it('is empty when every unit has its own cell', () => {
     const world = setup();
     spawnAt(world, 'player', { x: 2, y: 2 });
@@ -148,7 +148,7 @@ describe('findOverlappingCells — the §35d invariant detector', () => {
   });
 });
 
-describe('§36a — the claim registry queries', () => {
+describe('the claim registry queries', () => {
   it('claimCell makes a cell claimed; releaseClaim frees it', () => {
     const world = setup();
     const u = spawnAt(world, 'player', { x: 2, y: 2 });
@@ -209,7 +209,7 @@ describe('§36a — the claim registry queries', () => {
  * only reads `.archetype` + `.position`). The single-cell path is the shipped
  * roster's, and stays byte-identical.
  */
-describe('§39a — the footprint geometry seams', () => {
+describe('the footprint geometry seams', () => {
   const G2 = '__test_giant2'; // a 2×2 footprint
   const G3 = '__test_giant3'; // a 3×3 footprint
 
@@ -249,7 +249,7 @@ describe('§39a — the footprint geometry seams', () => {
   });
 
   describe('footprintOf — the call-time catalog read', () => {
-    it('reads the §38 footprint field off the catalog def', () => {
+    it('reads the footprint field off the catalog def', () => {
       expect(footprintOf(stub(G2, { x: 0, y: 0 }))).toBe(2);
       expect(footprintOf(stub(G3, { x: 0, y: 0 }))).toBe(3);
     });
@@ -308,7 +308,7 @@ describe('§39a — the footprint geometry seams', () => {
   });
 
   describe('cellUnitDistance — the cell-to-body distance (44-pre-b)', () => {
-    it('measures to the NEAREST footprint cell, not the §39 corner', () => {
+    it('measures to the NEAREST footprint cell, not the canonical corner', () => {
       const giant = stub(G2, { x: 5, y: 5 }); // occupies (5,5)..(6,6)
       // From (8,6): corner (5,5) is Chebyshev 3, body cell (6,6) is 2.
       expect(cellUnitDistance({ x: 8, y: 6 }, giant)).toBe(2);
@@ -335,7 +335,7 @@ describe('§39a — the footprint geometry seams', () => {
  * check. Pure + World-free: a grid-dims record + an `isFreeCell` predicate
  * built from a key set.
  */
-describe('§75c — anchorFootprint (the random-intersect policy)', () => {
+describe('anchorFootprint (the random-intersect policy)', () => {
   const grid = { gridW: 8, gridH: 8 };
   const allFree = () => true;
 
@@ -394,7 +394,7 @@ describe('§75c — anchorFootprint (the random-intersect policy)', () => {
   });
 });
 
-describe('§39c — anchorFootprint (the corner spawn policy)', () => {
+describe('anchorFootprint (the corner spawn policy)', () => {
   const GRID = { gridW: 12, gridH: 12 };
   const freeExcept = (occupied: string[]): ((c: GridCoord) => boolean) => {
     const occ = new Set(occupied);
@@ -459,7 +459,7 @@ describe('§39c — anchorFootprint (the corner spawn policy)', () => {
   });
 });
 
-describe('vacancyEtaOf — the §45a derived vacancy ETA', () => {
+describe('vacancyEtaOf — the derived vacancy ETA', () => {
   // Seat a MoveAction mid-flight the way World.executeActions does, including
   // the destination claim `MoveAction.start` would have placed — `ticksAgo`
   // back-dates the start so "N ticks into the move" needs no World.tick loop.

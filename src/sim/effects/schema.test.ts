@@ -104,7 +104,7 @@ describe('AbilityDef schema — valid shapes', () => {
     ).not.toThrow();
   });
 
-  it('§29c — accepts a chain op carrying damage + applyStatus inner ops', () => {
+  it('accepts a chain op carrying damage + applyStatus inner ops', () => {
     const chain = EffectOpSchema.parse({
       kind: 'chain',
       maxJumps: 3,
@@ -129,7 +129,7 @@ describe('AbilityDef schema — valid shapes', () => {
     if (chain.kind === 'chain') expect(chain.hopDelaySeconds).toBe(0.1);
   });
 
-  it('§29d — accepts a summon op and fills its spec + anchor defaults', () => {
+  it('accepts a summon op and fills its spec + anchor defaults', () => {
     const op = EffectOpSchema.parse({
       kind: 'summon',
       summon: { archetype: 'ghoul', maxLive: 3 },
@@ -143,7 +143,7 @@ describe('AbilityDef schema — valid shapes', () => {
     }
   });
 
-  it('§29d — accepts an explicit non-self anchor (a flank summon)', () => {
+  it('accepts an explicit non-self anchor (a flank summon)', () => {
     const op = EffectOpSchema.parse({
       kind: 'summon',
       summon: { archetype: 'ghoul', count: 2, maxLive: 4 },
@@ -188,7 +188,7 @@ describe('AbilityDef schema — rejects malformed shapes', () => {
     expect(() => parseAbilityDef(bad)).toThrow(/at most one 'fill'/);
   });
 
-  it('82e — releaseGate parses (default scalesWithSpeed=false) when a release phase exists', () => {
+  it('releaseGate parses (default scalesWithSpeed=false) when a release phase exists', () => {
     const gated = validStrikeDef() as Record<string, unknown>;
     gated.timeline = [
       { phase: 'windup', seconds: 1 },
@@ -201,7 +201,7 @@ describe('AbilityDef schema — rejects malformed shapes', () => {
     expect(def.releaseGate).toEqual({ reaimSeconds: 1, scalesWithSpeed: false });
   });
 
-  it('82e — rejects releaseGate without a release phase, on a non-single-target selector, and with a non-positive reaim', () => {
+  it('rejects releaseGate without a release phase, on a non-single-target selector, and with a non-positive reaim', () => {
     // No 'release' phase in the timeline → nothing would ever fire the gate.
     const noRelease = validStrikeDef() as Record<string, unknown>;
     noRelease.releaseGate = { reaimSeconds: 1 };
@@ -251,7 +251,7 @@ describe('AbilityDef schema — rejects malformed shapes', () => {
     expect(() => parseAbilityDef(bad)).toThrow();
   });
 
-  it('§29c — rejects a chain whose inner op is itself a chain (no nesting)', () => {
+  it('rejects a chain whose inner op is itself a chain (no nesting)', () => {
     // ChainInnerOp = damage | applyStatus only; a nested chain is excluded by
     // construction (no z.lazy recursion, no nested-falloff footgun).
     expect(() =>
@@ -265,7 +265,7 @@ describe('AbilityDef schema — rejects malformed shapes', () => {
     ).toThrow();
   });
 
-  it('§29c — rejects a chain carrying a move/heal inner op', () => {
+  it('rejects a chain carrying a move/heal inner op', () => {
     expect(() =>
       EffectOpSchema.parse({
         kind: 'chain',
@@ -277,7 +277,7 @@ describe('AbilityDef schema — rejects malformed shapes', () => {
     ).toThrow();
   });
 
-  it('§29c — rejects an empty chain ops list and a falloff above 1', () => {
+  it('rejects an empty chain ops list and a falloff above 1', () => {
     const base = { kind: 'chain', maxJumps: 2, rangeCells: 3, falloff: 0.5 };
     expect(() => EffectOpSchema.parse({ ...base, ops: [] })).toThrow();
     expect(() =>
@@ -289,11 +289,11 @@ describe('AbilityDef schema — rejects malformed shapes', () => {
     ).toThrow();
   });
 
-  it('§29d — rejects a summon op missing the required maxLive cap', () => {
+  it('rejects a summon op missing the required maxLive cap', () => {
     expect(() => EffectOpSchema.parse({ kind: 'summon', summon: { archetype: 'ghoul' } })).toThrow();
   });
 
-  it('§29d — rejects a summon as a chain-inner op (top-level op only)', () => {
+  it('rejects a summon as a chain-inner op (top-level op only)', () => {
     // ChainInnerOp = damage | applyStatus; a summon-per-hop is excluded by construction.
     expect(() =>
       EffectOpSchema.parse({

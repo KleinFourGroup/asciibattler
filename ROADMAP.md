@@ -383,7 +383,8 @@ the kickoff).
   by `@import`, whole and base blocks, the layout editor's sheet out.
   Kept: 17 rules, the tools' sheets −1,087 lines; the compare and the pane
   equal on all 12 pages.
-- ☐ **127d — `comment-length` takes any path** (`none`).
+- ☑ **127d — `comment-length` takes any path** (`none`). A copy outside the
+  repo measures as the folder in it.
 - ☐ **127e — `comment-strip` proves a file with a held comment** (`none`).
 - ☐ **127f — the re-skim of `tools/`** (`stop`), the `@fontsource` lead
   with it.

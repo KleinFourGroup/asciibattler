@@ -42,7 +42,7 @@
  */
 
 import { readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { splitSource } from './comments';
 
@@ -108,6 +108,41 @@ export function listSources(repoRoot: string, roots: readonly string[]): string[
   };
   for (const root of roots) walk(root);
   return out.sort();
+}
+
+export interface SourceAt {
+  /** The name it is reported by: repo-relative inside the repo, else the root as given with the rest of the path. */
+  readonly file: string;
+  /** Where it is read from. */
+  readonly path: string;
+  /** What it is summed under: inside the repo its folder two deep, else the root as given and its first folder. */
+  readonly group: string;
+}
+
+/** The files `listSources` would read under each root, where a root may also be one file, or a path outside the repo (read from `base`). */
+export function sourcesAt(roots: readonly string[], repoRoot: string = REPO_ROOT, base: string = repoRoot): SourceAt[] {
+  const out: SourceAt[] = [];
+  const slash = (p: string): string => p.split('\\').join('/');
+  for (const root of roots) {
+    const abs = resolve(base, root);
+    const fromRepo = relative(repoRoot, abs);
+    const inRepo = fromRepo === '' || (!fromRepo.startsWith('..') && !isAbsolute(fromRepo));
+    const at = (path: string): SourceAt => {
+      const rel = slash(relative(abs, path));
+      if (inRepo) {
+        const file = slash(relative(repoRoot, path));
+        return { file, path, group: file.split('/').slice(0, -1).slice(0, 2).join('/') };
+      }
+      const file = rel === '' ? slash(root) : `${slash(root).replace(/\/$/, '')}/${rel}`;
+      return { file, path, group: rel.includes('/') ? `${slash(root).replace(/\/$/, '')}/${rel.split('/')[0]}` : slash(root) };
+    };
+    if (statSync(abs).isFile()) {
+      if (/\.(?:ts|glsl|css)$/.test(abs)) out.push(at(abs));
+    } else {
+      for (const file of listSources(abs, ['.'])) out.push(at(join(abs, file)));
+    }
+  }
+  return out;
 }
 
 /** The step codes in one file's comments and test titles, each with the line it stands on, in line order. */

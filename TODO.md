@@ -103,11 +103,7 @@ every item below is done (WORKLOG §124, "The close of §124"; WORKLOG
 
 - ✅ **A guard on the context readings** — closed unbuilt: every recorded slip was caught by read-back before its commit, and the guard's inputs are harness internals (WORKLOG §127, the kickoff).
 
-- [ ] **`comment-length` takes only folders under the repo**
-  (`tests/oracle/cli.ts`), so each comment-pass batch copies its files
-  under `output/cl-<batch>/before` and `after` to measure them (WORKLOG
-  §124's batch entries). Taking a file, or any path, would save the copy.
-  Signed for here 2026-10-18 (WORKLOG §124, "The signs after batch 7").
+- ✅ **`comment-length` takes any path** — a file or a folder, in the repo or out of it (`sourcesAt`, WORKLOG §127, 127d).
 
 - [ ] **`comment-strip` proves a file with a held comment.** A comment the
   oracle holds as code (`TOOL_READ`: an `i18n-ok` marker line, or a block

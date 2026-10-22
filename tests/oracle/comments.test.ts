@@ -1,6 +1,9 @@
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { measure, splitCStyle, splitSource, splitTypeScript } from './comments';
-import { ceilingDrift, ceilingOf, codesInSource, stepCodes } from './stepCodes';
+import { REPO_ROOT, ceilingDrift, ceilingOf, codesInSource, listSources, sourcesAt, stepCodes } from './stepCodes';
 import { compareStripped, controlStripped, firstCodeDifference } from './strippedCompare';
 
 // The comment instruments. Each reader is held against an answer written out
@@ -304,5 +307,33 @@ describe('measure', () => {
 
   it('counts nothing in an empty file', () => {
     expect(measure('', splitTypeScript('m.ts', ''))).toEqual({ code: 0, comment: 0, blank: 0, words: 0 });
+  });
+});
+
+describe("comment-length's paths (sourcesAt)", () => {
+  it('reads a folder under the repo as listSources does, by the same names and folders', () => {
+    const found = sourcesAt(['tests/oracle']);
+    expect(found.map((s) => s.file)).toEqual(listSources(REPO_ROOT, ['tests/oracle']));
+    expect(new Set(found.map((s) => s.group))).toEqual(new Set(['tests/oracle']));
+    expect(sourcesAt(['tests/oracle/comments.ts'])).toEqual([found.find((s) => s.file === 'tests/oracle/comments.ts')]);
+  });
+
+  it('reads a file or a folder outside the repo, named from the root as given', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'comment-length-'));
+    try {
+      mkdirSync(join(dir, 'sim'));
+      writeFileSync(join(dir, 'a.ts'), '// one\nconst a = 1;\n');
+      writeFileSync(join(dir, 'sim', 'b.ts'), 'const b = 2;\n');
+      writeFileSync(join(dir, 'notes.md'), '# not read\n');
+      const root = dir.split('\\').join('/');
+      expect(sourcesAt([dir]).map(({ file, group }) => [file, group])).toEqual([
+        [`${root}/a.ts`, root],
+        [`${root}/sim/b.ts`, `${root}/sim`],
+      ]);
+      const [one] = sourcesAt([join(dir, 'a.ts')]);
+      expect(one!.file).toBe(`${root}/a.ts`);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
   });
 });

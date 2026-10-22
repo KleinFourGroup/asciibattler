@@ -7,7 +7,7 @@
  *   npm run oracle -- comment-strip <ref> [root…] the working tree against a ref with the comments out (strippedCompare.ts)
  *   npm run oracle -- css-compare <ref> [sheet…]  the working tree's stylesheets against a ref's, page by page, by their cascade (cssCompare.ts)
  *   npm run oracle -- comment-codes [--record|--list]  the step codes in comments and test titles, by folder (stepCodes.ts)
- *   npm run oracle -- comment-length [root…]      how much of the code is comment, by folder (comments.ts)
+ *   npm run oracle -- comment-length [path…]      how much of the code is comment, by folder; a path is a file or a folder, anywhere (comments.ts)
  *   npm run oracle -- reach-record [proof…]       run the behaviour proofs under the coverage tool (reach.ts)
  *   npm run oracle -- reach [folder…]             the lines each proof reaches, by folder
  *   npm run oracle -- reach --at=<file>[:<a>[-<b>]]  one file or a range of its lines, proof by proof
@@ -92,6 +92,7 @@ import {
   listSources,
   readCeiling,
   scanStepCodes,
+  sourcesAt,
   stepCodes,
   total,
   writeCeiling,
@@ -232,13 +233,13 @@ function commentLength(roots: string[]): number {
     sums.set(key, { files: s.files + 1, code: s.code + l.code, comment: s.comment + l.comment, blank: s.blank + l.blank, words: s.words + l.words });
   };
   const perFile: { file: string; l: Lengths }[] = [];
-  for (const file of listSources(REPO_ROOT, roots)) {
-    const text = readFileSync(join(REPO_ROOT, file), 'utf8');
+  for (const { file, path, group } of sourcesAt(roots)) {
+    const text = readFileSync(path, 'utf8');
     const split = splitSource(file, text);
     if (split === null) continue;
     const l = measure(text, split);
     perFile.push({ file, l });
-    for (const key of [folderOf(file), 'all']) add(`${isTest(file) ? 'tests' : 'source'}\t${key}`, l);
+    for (const key of [group, 'all']) add(`${isTest(file) ? 'tests' : 'source'}\t${key}`, l);
   }
   const head = ['folder', 'files', 'code lines', 'comment lines', 'comment words', 'words per code line'];
   for (const part of ['source', 'tests']) {
@@ -600,7 +601,7 @@ async function main(): Promise<number> {
   if (command === 'reach') return reach(roots);
   if (command === 'reach-diff' && a !== undefined && b !== undefined) return reachDiff(a, b);
   console.error(
-    'usage: npm run oracle -- config-dump <out.json> | json-diff <before> <after> | comment-strip <ref> [root…] | css-compare <ref> [sheet…] [--list] | comment-codes [--record|--list] | comment-length [root…] | reach-record [proof…] | reach [folder…] [--at=<file>[:<a>[-<b>]]] | reach-diff <before> <after> [--from=<ref>] | build-hash [ref] [--dev] | plant --at=<file>:<line> [--op=<kind>] [--nth=<n>] [--proofs=<id,id>] [--ref=<ref>] [--list] | refs <file>[:<name>] [--keys|--members=<Type>] [--list] | refs --all=<out.json> [folder…]',
+    'usage: npm run oracle -- config-dump <out.json> | json-diff <before> <after> | comment-strip <ref> [root…] | css-compare <ref> [sheet…] [--list] | comment-codes [--record|--list] | comment-length [path…] | reach-record [proof…] | reach [folder…] [--at=<file>[:<a>[-<b>]]] | reach-diff <before> <after> [--from=<ref>] | build-hash [ref] [--dev] | plant --at=<file>:<line> [--op=<kind>] [--nth=<n>] [--proofs=<id,id>] [--ref=<ref>] [--list] | refs <file>[:<name>] [--keys|--members=<Type>] [--list] | refs --all=<out.json> [folder…]',
   );
   return 2;
 }

@@ -116,8 +116,10 @@ If the renderer ever grows pure-logic helpers (e.g. atlas UV computation), those
   `tests/comment-codes-baseline.json`, file by file, so it can only fall.
   The rule for what counts is the header of `tests/oracle/stepCodes.ts`.
   `npm run oracle -- comment-codes` prints the count by folder and
-  `--record` lowers the ceiling; `npm run oracle -- comment-length` prints
-  how much of each folder is comment, in lines and in words.
+  `--record` lowers the ceiling; `npm run oracle -- comment-length [path…]`
+  prints how much of each folder is comment, in lines and in words, where a
+  path is a file or a folder, in the repo or out of it (a ref's copy
+  measured where `git archive` put it).
 - **The build against a ref:** `npm run oracle -- build-hash [ref]` builds
   the working tree and the tree at the ref (default HEAD) with the build's
   ID pinned, hashes every built file and names the ones that differ

@@ -17265,3 +17265,28 @@ element, which needs the editors' markup read.
 
 Reading: 424,879 at 16:18, before this entry; 127c took about 100k,
 most of it the pane's twelve pages read three times.
+
+### 127d — `comment-length` takes any path (2026-10-22, session 9e9f60a2)
+
+`sourcesAt` (`tests/oracle/stepCodes.ts`) gives `comment-length` its
+files: a root may be a file or a folder, in the repo or out of it (a
+relative path is read from the repo root). Inside the repo a file keeps
+its repo-relative name and its folder two deep, as `listSources` gave
+them; outside, it is named from the root as given, and summed under the
+root and its first folder. `listSources` itself is unchanged, since
+`comment-codes` and `refs` read the repo's own folders.
+
+Proof: two tests in `tests/oracle/comments.test.ts` (a folder under the
+repo by `listSources`'s names and folders, and one file of it; a folder
+and a file in a temporary folder, a Markdown file left out), and the
+command on a known answer: `tests/oracle` measured in the repo and as a
+copy in the session's scratchpad, both 14 source files, 2,282 code
+lines, 688 comment lines and 6,725 words, and 6 test files, 904, 60 and
+725; `tests/oracle/comments.ts` alone, 196 and 60, its row in the copy.
+
+Found and fixed: ARCHITECTURE's list of `npm run oracle` commands had no
+`css-compare`, 127b's twin; it now names it, and `comment-length`'s
+paths. DRIVER-HANDOFF's notes on `comment-length`'s form are the
+driver's to update.
+
+Reading: 451,364 at 16:24, before this entry.

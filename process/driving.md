@@ -228,7 +228,11 @@ has the detail.
   working session waits until its turn ends (2026-10-16: sent at 14:52,
   landed at 15:32, after five commits and the hand-off), whatever the
   tool's description says about the next tool round. It arrives as a
-  `<cross-session-message>` and starts a turn there.
+  `<cross-session-message>` and starts a turn there. A send can be
+  reported undelivered and still arrive (2026-10-22: a working
+  session's line after its first batch came back with no sign of
+  starting within 20 s, and reached the driver), so a session need not
+  resend one.
 - **Wakes.** A session's line starts a turn of yours. The app also wakes
   you when a session you proposed ends its first turn, or a turn your
   message began, while you are idle and none of your other sessions is

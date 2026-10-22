@@ -30,8 +30,8 @@ driver log ([archive/driver-trial/log-124.md](archive/driver-trial/log-124.md)).
   P9, P15, P21); the four WORKLOG headings (P16); 550k bars a step's
   start only (P20). **For brief 5:** note 5's "may run to the halt" gave
   no margin for the hand-off, and session 4's `distress` line names that
-  pull; driver 4's lean, put to Matthew: give the figures, not a rule
-  (§126's hand-offs cost about 8 to 12k; 126m's rate ran 400 to 540
+  pull. Signed (Matthew, 2026-10-22): brief 5 gives the figures, not a
+  rule (§126's hand-offs cost about 8 to 12k; 126m's rate ran 400 to 540
   tokens a code).
 - **Matthew's calls standing:** P12's note stays dropped (signed
   2026-10-21, after its §126 recurrence). P21's note from brief 3; P22
@@ -47,10 +47,9 @@ driver log ([archive/driver-trial/log-124.md](archive/driver-trial/log-124.md)).
   in your first message, then start the next batch. A `batch` read
   blocks nothing." Held: a coarse plant at the cut for a bar that names
   an instrument's catch ("pending a little bit more data").
-- **Open, put to Matthew at driver 4's last read:** the margin figures
-  for brief 5 (above); a dated fact for driving.md's Claude Code
-  section, that `SendMessage` can report undelivered a line that arrives
-  (session 4's batch-1 line reached driver 4).
+- **Signed at driver 4's last read** (2026-10-22): the figures above;
+  driving.md's "Messages.", a send reported undelivered can arrive.
+  Nothing is open for Matthew from driver 4.
 
 ## Patterns
 

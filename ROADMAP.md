@@ -377,7 +377,7 @@ the kickoff).
 
 - ☑ **127a — A-32, the sweep page** (`none`), with `sweepCommand.ts` and
   its test (call 1); the smoke 595 → 583 in 60 → 59 files.
-- ☐ **127b — the compare, `css-compare`** (`none`). HEAD against HEAD
+- ☑ **127b — the compare, `css-compare`** (`none`). HEAD against HEAD
   passes; four plants fail by name, a reorder across specificities passes.
 - ☐ **127c — B-05, a trial** (`none`, on its bar). `tools/editor-base.css`
   by `@import`, whole and base blocks, the layout editor's sheet out.

@@ -17137,3 +17137,55 @@ sweep" still names the fuzz CLI's own sweep, which stays. The main
 suite and the parity test run in the hook.
 
 Reading: 264,100 at 15:50, before the commit.
+
+### 127b — the compare (2026-10-22, session 9e9f60a2)
+
+`npm run oracle -- css-compare <ref> [sheet…]`, in
+`tests/oracle/cssCompare.ts`, with `tests/cssBlocks.ts`'s walker under
+it. A page is its entry sheet with what it imports by a relative path;
+the two checks are the kickoff's (the declarations in effect; no pair
+reordered where one importance, one specificity and overlapping
+properties make order decide). The property families: a shorthand's
+first word, with the shorthands whose longhands have other names listed
+(`inset`, `gap`, `font` with `line-height`, `place-*`, `columns`), the
+logical sizes with the physical ones, and `all` against everything but
+a custom property. Grouping by first word over-reports (`font-size`
+against `font-family`), which costs a read and never a missed pair. It
+refuses a brace in a string, a nested rule, an `@import` after a rule
+or with a media list, and any at-rule but `@media` and `@import`.
+
+Known answers, `tests/oracle/cssCompare.test.ts` (18 tests): what it
+must pass (a page against itself, relaid out and with comments; a hoist
+into an imported sheet, by `'…'` and by `url("…")`; a base block with
+the page keeping what it adds or changes; a reorder across
+specificities; a reorder of unrelated properties or equal declarations;
+a hidden declaration removed), what it must name (a changed value with
+its `@media`, a dropped declaration, an added rule, a change of
+importance, a reorder at one specificity, a hoist that lifts a shared
+rule above a page rule it can lose to, a shorthand and its longhand
+reordered on one selector, a base declaration the page lacked, a bare
+import), what it must refuse (six shapes), specificity by Selectors
+Level 4 on eleven selectors, the families on eleven pairs, and the
+control. The file is two-sided: a compare that named nothing would fail
+the nine cases it must name, and one that named everything the six it
+must pass.
+
+The exit, on the real sheets:
+
+- HEAD against HEAD: 12 pages, 0 differ; the control named 12 of 12;
+  exit 0.
+- Five plants on HEAD's camp editor sheet, in memory
+  (`scratch/127b/real-plants.mts`, no file on disk touched): a changed
+  value (`.bar h1`'s `font-size`), a dropped declaration (`.bar`'s
+  `gap`), an added rule, and `.bar` and `.workspace` swapped (both
+  `(0,1,0)`, both set `display` and `gap`) are each named; `#editor-root`
+  and `.bar` swapped, `(1,0,0)` against `(0,1,0)`, pass.
+
+Docs: TESTING's Tools ("A stylesheet move") and its oracle map's
+`tools/` line, with "What has no proof today" narrowed to match;
+ARCHITECTURE's `oracle/` entry; `process/oracles.md`'s presentation
+refactors point at the command and say it does not resolve `var()`.
+No second-model review (call 4).
+
+Reading: 322,041 at 16:02, before this entry. 127a and 127b took about
+58k between them (264,100 at 127a's commit).

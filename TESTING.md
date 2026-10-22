@@ -94,6 +94,20 @@ If the renderer ever grows pure-logic helpers (e.g. atlas UV computation), those
   made in memory (`plant.ts`'s middle edit, or a line appended to a file
   it finds none in), and a file the compare doesn't name then fails the
   run, so a comment pass needs no worktree.
+- **A stylesheet move:** `npm run oracle -- css-compare <ref> [sheet…]`
+  holds each page's sheets against the ref's by their cascade
+  (`tests/oracle/cssCompare.ts`). A page is its entry sheet (by default
+  every `tools/<page>/editor.css`) with the sheets it `@import`s by a
+  relative path, in their places. It exits 1 when the declarations in
+  effect differ (the last of each property for one selector in one
+  `@media`) or when two of them changed order where order decides: they
+  set overlapping properties, a shorthand overlapping its longhands, at
+  one importance and one specificity. It reads no document, so a pair it
+  names may never meet on one element, and the order the browser loads
+  the sheets in is checked in the browser. Values are compared as
+  written, and an at-rule other than `@media` and `@import` is refused.
+  Every run appends one rule to each page that passed, in memory, and
+  fails if the compare does not name it.
 - **The step-code ceiling:** `tests/comment-codes.test.ts` holds the count
   of step codes in the comments and test titles under `src` to
   `tests/comment-codes-baseline.json`, file by file, so it can only fall.
@@ -322,7 +336,11 @@ smoke tier, three on every `npm test`); "fuzz diff" is
   the run-config tool's flag parser failed nothing. `tests/tools` runs 4 %
   to 20 % of each editor's lines and none of the run-config tool's, the
   five `.ts` scripts run as command lines under no test, and the coverage
-  tool does not read the `.mjs` files.
+  tool does not read the `.mjs` files. The editors' stylesheets are the
+  exception: `css-compare` (Tools, "A stylesheet move"), shown to fail on
+  a changed value, a dropped declaration, an added rule and two rules at
+  one specificity reordered, each planted in the camp editor's sheet; a
+  reorder across specificities passed, as it must.
 - **A deleted test.** `npm run oracle -- reach-record npm-test` on the tree
   before and on the tree after, each into a `--dir` of its own, then
   `reach-diff` on the two folders: nothing the suite ran may be lost. Two readings of one
@@ -360,7 +378,8 @@ smoke tier, three on every `npm test`); "fuzz diff" is
 **What has no proof today:** a reshaping of code that only draws; the
 four port trades no stored run completes
 (buying a unit, buying a daemon, selling a packet, paying to remove a
-unit); the tools' pages and the build scripts; the lines neither the
+unit); the tools' pages, but for their stylesheets' cascade, and the
+build scripts; the lines neither the
 corpus nor the fuzz diff runs, a tenth of `src/sim` and a quarter of
 `src/run`. A candidate that lands in one of these names the suite, or
 waits for a proof to be built.

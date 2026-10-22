@@ -5,6 +5,7 @@
  *   npm run oracle -- config-dump <out.json>     every config loader's exports (configDump.ts)
  *   npm run oracle -- json-diff <before> <after>  two JSON files, or two folders of them, path by path (jsonDiff.ts)
  *   npm run oracle -- comment-strip <ref> [root…] the working tree against a ref with the comments out (strippedCompare.ts)
+ *   npm run oracle -- css-compare <ref> [sheet…]  the working tree's stylesheets against a ref's, page by page, by their cascade (cssCompare.ts)
  *   npm run oracle -- comment-codes [--record|--list]  the step codes in comments and test titles, by folder (stepCodes.ts)
  *   npm run oracle -- comment-length [root…]      how much of the code is comment, by folder (comments.ts)
  *   npm run oracle -- reach-record [proof…]       run the behaviour proofs under the coverage tool (reach.ts)
@@ -29,6 +30,13 @@
  * compared again with one code edit made in memory, and the run exits 1 too
  * when the compare misses one, so every run carries its failing control.
  * Roots default to `src`.
+ *
+ * `css-compare` reads each page from its entry sheet (default: every
+ * `tools/<page>/editor.css` in either tree) with the sheets it imports, and
+ * exits 1 when a page's declarations in effect differ or two of them changed
+ * order where order decides; `--list` prints every difference. Each page
+ * that passed is compared again with one rule appended in memory, and the
+ * run exits 1 too when the compare misses it.
  *
  * `comment-codes --record` writes the ceiling the count is held to
  * (tests/comment-codes-baseline.json). It refuses when the total would rise.
@@ -70,6 +78,7 @@ import { join } from 'node:path';
 import { compareBuildWith } from './buildHash';
 import { isHeldComment, measure, splitSource, type Lengths } from './comments';
 import { dumpConfig } from './configDump';
+import { compareSheets, controlCss, describeCss } from './cssCompare';
 import { describeDifference, jsonDiff, summarize, type JsonDifference } from './jsonDiff';
 import { applyEdit, describeEdit, editsOn, type Edit } from './plant';
 import { PLANT_PROOFS, dropTree, makeTree, recordClean, treeStatus, withPlant, type PlantProof } from './plantProofs';
@@ -125,6 +134,28 @@ function commentStrip(ref: string, roots: string[]): number {
   console.log(`oracle: ${result.differences.length} of them differ in more than comments:`);
   for (const d of result.differences) console.log(`  ${d.file}: ${d.what === 'code' ? '' : `${d.what}, `}${d.detail}`);
   return 1;
+}
+
+function cssCompare(ref: string, sheets: string[]): number {
+  const roots = sheets.length > 0 ? [...new Set(sheets.map((sheet) => sheet.split('/')[0]!))] : ['tools'];
+  const [before, after] = [readRef(ref, roots), readWorkingTree(roots)];
+  const editorSheet = /^tools\/[^/]+\/editor\.css$/;
+  const pages = sheets.length > 0 ? sheets : [...new Set([...before.keys(), ...after.keys()])].filter((path) => editorSheet.test(path)).sort();
+  const result = compareSheets(before, after, pages);
+  const controls = controlCss(before, after, result);
+  const missed = controls.filter((c) => !c.caught);
+  const shown = flags.has('--list') ? Infinity : 40;
+  console.log(`oracle: ${pages.length} pages held against ${ref} by their cascade; ${new Set(result.differences.map((d) => d.page)).size} differ`);
+  for (const page of pages) {
+    const found = result.differences.filter((d) => d.page === page);
+    if (found.length === 0) continue;
+    console.log(`  ${page}: ${found.length}`);
+    for (const d of found.slice(0, shown)) console.log(`    ${describeCss(d)}`);
+    if (found.length > shown) console.log(`    and ${found.length - shown} more (--list prints them all)`);
+  }
+  console.log(`oracle: the control, one rule appended in memory to each of the ${controls.length} that passed; the compare named ${controls.length - missed.length}`);
+  for (const c of missed) console.log(`  MISSED  ${c.page}`);
+  return result.differences.length === 0 && missed.length === 0 ? 0 : 1;
 }
 
 function commentCodes(): number {
@@ -559,6 +590,7 @@ async function main(): Promise<number> {
   }
   const roots = rest.filter((arg) => !arg.startsWith('--'));
   if (command === 'comment-strip' && a !== undefined) return commentStrip(a, roots.length > 1 ? roots.slice(1) : ['src']);
+  if (command === 'css-compare' && a !== undefined) return cssCompare(a, roots.slice(1));
   if (command === 'comment-codes') return commentCodes();
   if (command === 'comment-length') return commentLength(roots.length > 0 ? roots : ['src']);
   if (command === 'build-hash') return buildHash(a ?? 'HEAD');
@@ -568,7 +600,7 @@ async function main(): Promise<number> {
   if (command === 'reach') return reach(roots);
   if (command === 'reach-diff' && a !== undefined && b !== undefined) return reachDiff(a, b);
   console.error(
-    'usage: npm run oracle -- config-dump <out.json> | json-diff <before> <after> | comment-strip <ref> [root…] | comment-codes [--record|--list] | comment-length [root…] | reach-record [proof…] | reach [folder…] [--at=<file>[:<a>[-<b>]]] | reach-diff <before> <after> [--from=<ref>] | build-hash [ref] [--dev] | plant --at=<file>:<line> [--op=<kind>] [--nth=<n>] [--proofs=<id,id>] [--ref=<ref>] [--list] | refs <file>[:<name>] [--keys|--members=<Type>] [--list] | refs --all=<out.json> [folder…]',
+    'usage: npm run oracle -- config-dump <out.json> | json-diff <before> <after> | comment-strip <ref> [root…] | css-compare <ref> [sheet…] [--list] | comment-codes [--record|--list] | comment-length [root…] | reach-record [proof…] | reach [folder…] [--at=<file>[:<a>[-<b>]]] | reach-diff <before> <after> [--from=<ref>] | build-hash [ref] [--dev] | plant --at=<file>:<line> [--op=<kind>] [--nth=<n>] [--proofs=<id,id>] [--ref=<ref>] [--list] | refs <file>[:<name>] [--keys|--members=<Type>] [--list] | refs --all=<out.json> [folder…]',
   );
   return 2;
 }

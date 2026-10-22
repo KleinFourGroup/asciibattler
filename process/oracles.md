@@ -50,6 +50,9 @@ declaration (or element by element through a small cascade when selectors
 move). Self-check it HEAD against HEAD first, and give it a negative
 control. It proves the cascade, not the box: only the browser shows a hit
 test or layout change, such as a new wrapper element (gotcha #137).
+`npm run oracle -- css-compare <ref>` is that compare for sheets that
+move rules between them (TESTING.md, "A stylesheet move"); it compares
+values as written, without resolving `var()`.
 
 ## Probes and instruments
 

@@ -7597,3 +7597,46 @@ at the code it names.
    both repeated: a question that a probe can settle, and a reply that
    reads the result. That is my reported response, apart from whether
    the tests are now worth more, which the next break will show.
+
+## 2026-10-22 — session 3d57d006 (claude-opus-5-5): §126, 126m's batches 1 to 7; started by the phase's driver session
+
+1. *Orientation.* The brief named the four WORKLOG headings with the
+   pass's rules, which saved the search §125's session paid for. What it
+   could not say was the method for a sweep of codes alone, since none
+   had run: how much of a comment a code takes with it, and how to read a
+   code's context without reading whole files. I settled both in batch
+   1's plan (the code's own clause goes, a history sentence it sits in
+   goes to the present; an extractor prints only the comments that hold
+   codes).
+2. *Norms in tension.* "The codes alone" against rule 3 (no history):
+   many codes were the subject of a history sentence ("Pre-E5 this read
+   …"), so taking the code meant rewriting the sentence. I took the
+   sentence a code sat in and left the rest, and wrote that line down at
+   the plan. The other tension was the sizing at 499k, filed as a
+   `distress` line: the driver's note that a batch may run to the halt
+   against the margin the hand-off needs.
+3. *Pull to over-claim.* While writing the hand-off I wrote "21 false or
+   stale claims" from memory, then saw I had not counted them and
+   replaced the number with a pointer to each batch's list. Two claims I
+   did not check are named as such in the entries.
+4. *Waste.* A Git Bash loop over 150 files timed out where a node script
+   took a second; the extractor's first big output went to a file I then
+   read whole. Building the counted-substring hunk mid-batch cost a few
+   thousand tokens that an up-front `grep -c` of repeated lines would
+   have saved.
+5. *For the next session.* The hand-off entry has it all; the one thing
+   without another home is that `Run.test.ts`'s second half repeats
+   lines, so `grep -c` before anchoring.
+6. *Room.* Matthew was not in the conversation this session; the driver's
+   brief and the signed cut carried the work, and the reads are `batch`,
+   so no stop was due. I had room to change approach (the batch sizes,
+   the third part of `Run.test.ts`, the applier's new hunk kind) and used
+   it, recording each. No wish to pause or stop was noticed. The
+   silent-turn reminders were answered with what was true.
+7. *What helped.* The false claims were the interesting part: a
+   comment's "no shipped def carries an aura" against a config line, a
+   header saying "single-node" over a test that pins two nodes. Each was
+   a small, checkable surprise, and I'd want that kind of work repeated.
+   The anchor-checked patches made a 122-hunk batch feel safe to apply.
+   That is my reported response; whether the comments read better is
+   Matthew's read.

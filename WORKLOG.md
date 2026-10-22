@@ -16434,3 +16434,62 @@ follow.
 Readings: 498,953 at 00:26 on `b5b36d11`, 532,947 at 00:32 before this
 entry: about 34k for 78 codes, 435 a code, the applier's new hunk kind
 included.
+
+The suite by the hook at `27c75fdc`: 3,702 passed, and the smoke 595.
+
+### The hand-off after 126m's batch 7 (2026-10-22, session 3d57d006)
+
+126m's batches 1 to 7 are built, proven and committed: 759 of the 895
+codes, the ceiling 895 → 136, in `37c5bfc8`, `b953ef69`, `31372c9d`,
+`5253499e`, `85e109d9`, `b5b36d11` and `27c75fdc`. Each batch's read is
+`batch` and none is read yet; their scripts are in their entries above.
+Each entry lists the false or stale claims its batch corrected and the
+twins found outside its files (`tests/tools/attack-editor.test.ts`,
+`sectorMap.test.ts`, and `World.test.ts`'s constitution lines, named
+forward from batch 3). The next session takes the rest of 126m, in a
+fresh session, as the driver proposes.
+
+For the session that takes it:
+
+- **What is left:** 136 codes, all in `src/run/Run.test.ts` past line
+  2443 (`comment-codes --list`), as one batch (about 60k at 435 a code)
+  or two. After it the ceiling is 0. `tests/comment-codes.test.ts`
+  should pass on an empty ceiling: it compares each file's count with
+  its ceiling and asserts nothing that needs a code to exist (read, not
+  run; the batch's suite run is the proof).
+- **The tools,** in `scratch/126m/` (off git): `extract.mts` prints each
+  comment holding a code with the lines after it (`npx tsx
+  scratch/126m/extract.mts . --after=1 src/run/Run.test.ts`; batch 7 cut
+  its output at line 2444 with an `awk` on the block headers);
+  `apply-patch.mjs` applies a patch of whole-line hunks, each found
+  exactly once, and `@@@ SUBALL <n>` hunks, a substring replaced
+  everywhere it occurs, refused unless it occurs `n` times (`--check`
+  dry-runs); `b1.patch` to `b7.patch` are models, `control.patch` and
+  `control2.patch` its planted refusals.
+- **Repeated lines:** `Run.test.ts` repeats comment lines word for word;
+  `grep -c` a line before anchoring on it, and use a `SUBALL` with its
+  count. Batch 7 already took the 48f reward comments and the K2 roster
+  comment past line 2443.
+- **The counter's miscounts:** a unit label such as "M1" reads as a
+  lettered step and a quantity such as "40k" as a numbered one; reword
+  them (`movement.test.ts` names its melee units `m1` and `m2`, the
+  variables).
+- **For 126n,** found here: the `describe` title at
+  `src/ui/abilityDetail.test.ts:100` says the aura branch is "ahead of
+  shipped content", which is false (`inspire` ships a pure aura). Comments
+  now name two tests by their titles' words ("a restored Run draws the
+  same NEXT hand" in `snapshot-roundtrip.test.ts`, "an adjacent enemy
+  interrupts tile pursuit" in `MovementBehavior.test.ts`), which stay
+  true when 126n takes the titles' codes.
+- **Not checked,** kept as written: `World.test.ts:146`'s "Both sides chip
+  the opposing pool by Σpower", and the starting roster's "(10)" in two
+  `Run.test.ts` comments.
+- **The rate a code,** batches 2 to 7: 500, 540, 425, 460, 400, 435;
+  batch 1's included the rules and the tools.
+- No worktree, background task or preview server is left. The copies
+  under `output/cl-126m-b1/` to `-b7/` stay off git.
+
+Readings by the tool's clock (UTC): 100,299 at 23:23 on 2026-10-21 (the
+first), 221,632 on `37c5bfc8`, 290,560 on `b953ef69`, 358,283 on
+`31372c9d`, 396,927 on `5253499e`, 463,518 on `85e109d9`, 498,953 on
+`b5b36d11`, 533,046 on `27c75fdc`, and the reading on this entry's commit.

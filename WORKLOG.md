@@ -16493,3 +16493,94 @@ Readings by the tool's clock (UTC): 100,299 at 23:23 on 2026-10-21 (the
 first), 221,632 on `37c5bfc8`, 290,560 on `b953ef69`, 358,283 on
 `31372c9d`, 396,927 on `5253499e`, 463,518 on `85e109d9`, 498,953 on
 `b5b36d11`, 533,046 on `27c75fdc`, and the reading on this entry's commit.
+
+### 126m, batch 8 — `Run.test.ts`, line 2444 to the end (2026-10-22, session c5a45a3d)
+
+The session was started by the phase's driver session and works with the
+user as usual. Step zero, at `02edb066`: `comment-codes --list` reads 136
+codes, all in `Run.test.ts` past line 2443, as the hand-off has it. One
+batch, since the session started near 89k.
+
+136 codes, in 104 hunks, to none; three of the hunks are counted
+substrings: the schema pin's note (5 lines), `// 91e — both vocabularies`
+(2) and `// 48b — the selection may carry rewards` (2). Most codes were a
+note's header ("64a — the offer grows …"), where the code dropped and the
+words stayed. The six section headers kept their width.
+
+Reasons that replace a code, with where each was checked:
+
+- The bespoke idol's restore: `fromJSON` looks each daemon up in the
+  shipped catalog and rejects an unknown id (`Run.ts:3740`).
+- "the K1 reset" is `resetEncounterEffects`, which `beginEncounter` calls
+  before `drainPendingEncounterEffects` (`Run.ts:1711`).
+- "hop 1 is scatter-free — the 74i probe", twice: the scatter's band
+  starts at hop 2 (`NodeMap.ts:591`, `bandStart: 2`).
+- "the 67a gate", four times, is the `sectorCleared` gate, as batch 7 had
+  it.
+- "the §90 harness pin" is `tests/fuzz/harness.ts:479`, which reads
+  `poolBefore` off the payload.
+- "a `hopCount` probe is SINGLE-sector (67c)": `singleSectorRun` is
+  `config?.hopCount !== undefined` (`Run.ts:3988`).
+- "NOT persisted (the X1 RunConfig discipline)": `drawAmountAdd` is a
+  `RunConfig` dial, read at construction and not in `RunSnapshot`.
+- "the 65b seam reads effectiveDrawAmount": the wave's basis is
+  `min(team.length, effectiveDrawAmount)` (`Run.ts:2342`), and a packet's
+  draw never reaches it.
+- "74b's handleChooseEventOption contract" is `handleChooseEventOption`
+  (`Run.ts:1279`); "the resolve draw rides the DEDICATED eventRng stream"
+  is the `'event'` stream (`Run.ts:397`).
+- The raw config, read by a node script and not the loaders: brigands
+  authors `bits-small` at chance 1 and `packets-small` at 0.3; all 19
+  encounters carry a reward table; no daemon moves `drawAmount` (Mercury
+  and Janus grant redraws); highwaymen and deserters pool 29 against
+  `enemyHealthMax` 8, and the deepest pool is 44; each character's
+  starting roster is 10, which settles the "(10)" batch 7 left unchecked,
+  in its two comments and this batch's three.
+- The schema pin's note "117.75a — the rest phase (117b: the Escalation
+  level)" is now "the format with the rest phase and the Escalation
+  level": `RUN_SCHEMA_VERSION` is 49, `RunPhase` holds `rest`, and the
+  snapshot saves `escalation` (`Run.ts:283`, `:3603`).
+
+**Statements found false or stale and corrected (rule 7):**
+
+- `winEncounter`'s header said its survivors chip the enemy pool by
+  `HEALTH.enemyHealthMax`, and that a boss "needs a bigger chip — pass
+  `poolMax`". The chip is `poolMax`, whose default is 1,000, past every
+  shipped pool (44 at most), so the default drains a boss too; the header
+  now says so. Its twins in the same file: the rest walk chipped "rather
+  than the default 8", and the boss-win note said "the boss pool is
+  deeper than the default"; both now drop the comparison. No other test
+  in `src` or `tests` defines a `winEncounter`.
+- The two port tests' seeds, "Seed 42 (74e re-seed): 41's every port
+  route crossed an event node" and "Seed 87 … 84's", gave a reason that no
+  longer holds: both runs are built by `freshRunWithBus`, which suppresses
+  the event catalog, so a route through an event node fights a battle
+  (`dockAtPort`'s header). The two lines are dropped.
+- `driveToRecruitPhase`'s 48b note said the sector pool "can select a
+  rewards-carrying encounter (brigands …)"; every encounter carries a
+  table, so it now says a win can interpose the reward phase.
+
+**For 126n:** the title at `Run.test.ts:6106`, "an opened event comes from
+the SECTOR pool, not a bare catalog scan (the 74b placeholder retired)",
+keeps history in its words beside its code. Nothing else was read for
+126n here.
+
+**Proof.** `comment-strip HEAD src`: `Run.test.ts` differs in comments
+only, exit 0; the control named it. `comment-codes`: 136 → 0, and
+`--record` wrote 0 codes in 0 files (`tests/comment-codes-baseline.json`
+is `{}`). `comment-length` on the file: comment lines 801 → 796, words
+8,762 → 8,538, code lines 5,488 both.
+
+**Read** (`batch`): `git show <this commit> -- src`. What changed: the
+step codes in `Run.test.ts` from line 2444 on, and the false chip claims
+in `winEncounter`'s header and its two twins. Where to look: the
+`winEncounter` and `chipTurn` headers, `reachesPort`'s header, the two
+port tests that lost their seed notes. Wrong looks like a helper header
+that no longer says what its default does, or a seed that needed its
+reason.
+
+Readings: 89,143 at 12:46 UTC (the first), 206,242 at 12:55 before this
+entry: about 117k for the session's start and 136 codes, near 860 a
+code with the start's reading of the Cursor and the hand-off included.
+
+126m is built: 895 → 0 in eight batches, every read unread.

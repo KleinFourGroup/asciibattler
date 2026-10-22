@@ -361,9 +361,9 @@ kickoff"). A-25's tests have no step: none is left.
   cannot see (findings for the user).
 - ☑ **126l-post2 — the two findings** (`none`). The half-cover detour
   test deleted; the aura test's wall check on a status the wall takes.
-- ☐ **126m — the step codes in comments** (`batch`, per batch). 898, by
-  folder, through an anchor-checked patch file. Batches 1 to 7 built,
-  unread (895 → 136); `Run.test.ts`'s last 136 left (WORKLOG §126).
+- ◐ **126m — the step codes in comments** (`batch`, per batch). 898, by
+  folder, through an anchor-checked patch file. Eight batches built,
+  unread (895 → 0; WORKLOG §126).
 - ☐ **126n — the step codes in titles** (`batch`). `comment-strip`
   masks titles, the ceiling counts them; 667.
 - ☐ **126o — the close** (`stop`).

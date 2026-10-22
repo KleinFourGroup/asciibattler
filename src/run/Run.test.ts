@@ -2657,7 +2657,7 @@ describe('Run', () => {
       const won = freshRunWithBus(1, { daemon: WIN_BOUNTY });
       won.run.dispatch({ kind: 'enterNode', nodeId: frontierOf(won.run) });
       winEncounter(won.bus);
-      // 48f — decline the rolled reward (the hook fires at finishEncounter,
+      // Decline the rolled reward (the hook fires at finishEncounter,
       // AFTER reward resolution; accepting would pollute the exact balance).
       declineAllRewards(won.run);
       expect(won.run.bits).toBe(7);
@@ -2674,7 +2674,7 @@ describe('Run', () => {
       run.addDaemon(daemonById('moneta')!);
       run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
       winEncounter(bus);
-      declineAllRewards(run); // 48f — keep the balance to the hook earn alone
+      declineAllRewards(run); // keep the balance to the hook earn alone
       expect(run.bits).toBe(Math.round(7 * RUN_STAT_BASES.bitsGain * monetaMult()));
     });
 
@@ -2689,7 +2689,7 @@ describe('Run', () => {
   });
 
   describe('the cache (49b — the core)', () => {
-    /** A real catalog id (derived, never hardcoded — the catalog is 49g's). */
+    /** A real catalog id (derived, never hardcoded, so a catalog edit keeps it). */
     const PACKET_ID = PACKETS[0]!.id;
     const BASE_SIZE = RUN_STAT_BASES.cacheSize;
     /** A bespoke shrink idol leaving exactly 2 slots (derived from the base). */
@@ -2808,8 +2808,9 @@ describe('Run', () => {
       run.addDaemon(SHRINK_IDOL);
       const wire = JSON.parse(JSON.stringify(run.toJSON()));
       expect(wire.cache).toEqual([PACKET_ID, PACKET_ID, PACKET_ID]);
-      // The bespoke idol doesn't survive by-id rehydration (the 47d
-      // shape-lock), so restore WITHOUT it: contents held, base capacity.
+      // The bespoke idol doesn't survive by-id rehydration (`fromJSON` looks
+      // each daemon up in the shipped catalog and rejects an unknown id), so
+      // restore WITHOUT it: contents held, base capacity.
       const restoredWire = { ...wire, daemonIds: [] };
       const restored = Run.fromJSON(restoredWire, new EventBus<GameEvents>());
       expect(restored.cache).toEqual([PACKET_ID, PACKET_ID, PACKET_ID]);
@@ -2826,8 +2827,8 @@ describe('Run', () => {
 
     /** Forge a live offer holding a packet portion PLUS a tail portion, so
      *  resolving the packet never drains the offer (afterRewardResolved
-     *  would re-enter the gate chain outside a real encounter — the 48f
-     *  synthesize-the-shape precedent, plain-mutation on public fields). */
+     *  would re-enter the gate chain outside a real encounter), by plain
+     *  mutation on public fields, as the rewards-less test forges its shape. */
     const forgedOffer = () => {
       const fresh = freshRunWithBus(1, { daemon: null });
       fresh.run.phase = 'reward';
@@ -3012,7 +3013,7 @@ describe('Run', () => {
       run.dispatch({ kind: 'usePacket', cacheIndex: 0, handIndex: 0 });
       expect(run.encounterEffects[slot]!.map((e) => e.key)).toEqual([buff.key]);
       // The payload badge column marks the hyped hand position (packet buff
-      // keys badge alongside idol empower keys — 49e).
+      // keys badge alongside idol empower keys).
       expect(used[0]!.empowerStacks[0]).toMatchObject([{ key: buff.key, magnitude: 1 }]);
       run.dispatch({ kind: 'usePacket', cacheIndex: 0, handIndex: 0 });
       expect(run.encounterEffects[slot]).toHaveLength(1); // merged, not appended
@@ -3049,10 +3050,9 @@ describe('Run', () => {
     });
 
     it('dis-pater (daemon) + venom (encounter) compile in union order and live/expire by duration', () => {
-      // 88c — miner daemonized to dis-pater: the shipped run-duration packet
-      // is gone (see packets.test.ts's no-run-duration guard), so the pools
-      // pinned here are daemons → run-injected (EMPTY, mechanism kept) →
-      // encounter-injected.
+      // No shipped packet lasts the run (see packets.test.ts's
+      // no-run-duration guard), so the pools pinned here are daemons →
+      // run-injected (EMPTY, mechanism kept) → encounter-injected.
       const { run, bus } = gatedToFirstTurnIntro(1, daemonById('dis-pater')!);
       const venomRule = ruleOf('venom');
       // The battle compile strips the Rule discriminator down to the bare
@@ -3095,7 +3095,8 @@ describe('Run', () => {
       run.dispatch({ kind: 'usePacket', cacheIndex: 0, rosterIndex: 2 }); // stacks while pending
       expect(run.pendingEncounterEffects[2]![0]!.magnitude).toBe(2);
       run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
-      // Drained in AFTER the K1 reset — the buff survives into the live store.
+      // Drained in AFTER the encounter-start reset (`resetEncounterEffects`)
+      // — the buff survives into the live store.
       expect(run.encounterEffects[2]!.map((e) => e.key)).toEqual([buff.key]);
       expect(run.encounterEffects[2]![0]!.magnitude).toBe(2);
       expect(run.pendingEncounterEffects[2]).toEqual([]);
@@ -3108,14 +3109,14 @@ describe('Run', () => {
       run.dispatch({ kind: 'usePacket', cacheIndex: 0 });
       run.dispatch({ kind: 'usePacket', cacheIndex: 0 });
       const wire = JSON.parse(JSON.stringify(run.toJSON()));
-      expect(wire.schemaVersion).toBe(49); // 117.75a — the rest phase (117b: the Escalation level)
+      expect(wire.schemaVersion).toBe(49); // the format with the rest phase and the Escalation level
       const restored = Run.fromJSON(wire, new EventBus<GameEvents>());
-      // 51f — the stores carry provenance now ({rule, sourceId}).
+      // The stores carry provenance ({rule, sourceId}).
       expect(restored.injectedEncounterRules).toEqual([
         { rule: ruleOf('venom'), sourceId: 'venom' },
       ]);
-      // 88c — no shipped packet injects a run rule since miner daemonized;
-      // the store (and its wire slot) stays, round-tripping empty.
+      // No shipped packet injects a run rule; the store (and its wire slot)
+      // stays, round-tripping empty.
       expect(restored.injectedRunRules).toEqual([]);
       expect(restored.grantViews()[0]).toMatchObject({ daemonId: 'reroute', name: 'Reroute' });
       expect(() =>
@@ -3132,10 +3133,10 @@ describe('Run', () => {
       expect(restored.pendingEncounterEffects[1]!.map((e) => e.key)).toEqual([
         buffOf('overclock').key,
       ]);
-      // 74i-c — a restored run re-pins the SHIPPED catalog (the bespoke-
-      // rejection rule), so entering the root would OPEN the starting event.
-      // The buff seeds at any ENCOUNTER start: hop past the root to a battle
-      // child (hop 1 is scatter-free — the 74i probe).
+      // A restored run re-pins the SHIPPED catalog (the bespoke-rejection
+      // rule), so entering the root would OPEN the starting event. The buff
+      // seeds at any ENCOUNTER start: hop past the root to a battle child
+      // (hop 1 is scatter-free: the scatter's band starts at hop 2).
       restored.currentNodeId = restored.nodeMap.rootId;
       const battleChild = restored.nodeMap.edges
         .filter((e) => e.from === restored.nodeMap.rootId)
@@ -3298,7 +3299,7 @@ describe('Run', () => {
       const { run, bus } = freshRunWithBus(1, { daemon: null });
       dockAtPort(run, bus);
       const wire = JSON.parse(JSON.stringify(run.toJSON()));
-      expect(wire.schemaVersion).toBe(49); // 117.75a — the rest phase (117b: the Escalation level)
+      expect(wire.schemaVersion).toBe(49); // the format with the rest phase and the Escalation level
       expect(wire.phase).toBe('port');
       const restored = Run.fromJSON(wire, new EventBus<GameEvents>());
       expect(restored.phase).toBe('port');
@@ -3513,7 +3514,7 @@ describe('Run', () => {
       run.addDaemon(daemonById('moneta')!);
       run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
       winEncounter(bus, [], 1_000, { bits: 10 });
-      // 51a — the tally no longer settles directly: it leads the offer
+      // The tally does not settle directly: it leads the offer
       // (ahead of any win-rolled portions) and settles at ACCEPT time.
       expect(run.phase).toBe('reward');
       expect(run.pendingRewards![0]).toEqual({ kind: 'bits', base: 10 });
@@ -3559,7 +3560,7 @@ describe('Run', () => {
     });
 
     it('a winning turn MERGES the tally into the rolled offer — tally first (51a)', () => {
-      // brigands carries `bits-small` at chance 1 (the 48a reference), so
+      // brigands carries `bits-small` at chance 1, so
       // the win roll is guaranteed at least one portion after the tally.
       const { run, bus } = freshRunWithBus(1, {
         daemon: BATTLE_BITS,
@@ -3585,8 +3586,8 @@ describe('Run', () => {
     });
 
     it('a dis-pater tithe labels its DAEMON source (88c — the catalog kill-earner)', () => {
-      // 88c — miner daemonized: the kill→bits earner is now the dis-pater
-      // idol; a sole earner still labels the tally by id.
+      // The kill→bits earner is the dis-pater idol; a sole earner labels the
+      // tally by id.
       const { run, bus } = gatedToFirstTurnIntro(1, daemonById('dis-pater')!);
       run.dispatch({ kind: 'advanceTurn' }); // gate → battle
       chipTurn(bus, { player: 1, enemy: 1 }, [], { bits: 4 });
@@ -3605,7 +3606,7 @@ describe('Run', () => {
     });
 
     it('two dis-pater copies stay ONE earner — the label holds (dedupe by source id)', () => {
-      // §47 multi-daemon by id is uncapped, so a doubled idol is reachable;
+      // Holding daemons by id is uncapped, so a doubled idol is reachable;
       // the earner pool dedupes by id (Run.ts — one id, one earner).
       const { run, bus } = gatedToFirstTurnIntro(1, daemonById('dis-pater')!);
       run.addDaemon(daemonById('dis-pater')!);
@@ -3622,7 +3623,7 @@ describe('Run', () => {
       run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
       chipTurn(bus, { player: 0, enemy: 0 }, [], { bits: 9 });
       const wire = JSON.parse(JSON.stringify(run.toJSON()));
-      expect(wire.schemaVersion).toBe(49); // 117.75a — the rest phase (117b: the Escalation level)
+      expect(wire.schemaVersion).toBe(49); // the format with the rest phase and the Escalation level
       expect(wire.phase).toBe('reward');
       const restored = Run.fromJSON(wire, new EventBus<GameEvents>());
       expect(restored.pendingRewards).toEqual([
@@ -3640,7 +3641,7 @@ describe('Run', () => {
         winner: 'enemy',
         xpAwards: [],
         survivorPower: { player: 0, enemy: HEALTH.playerHealthMax },
-        fallenPower: { player: HEALTH.playerHealthMax, enemy: 0 }, // 91e — both vocabularies
+        fallenPower: { player: HEALTH.playerHealthMax, enemy: 0 }, // both vocabularies
         tallies: { bits: 50 },
       });
       expect(run.phase).toBe('defeat');
@@ -3694,7 +3695,7 @@ describe('Run', () => {
       // Now end the new run's battle. The old Run is disposed, so its
       // battle:ended handler is gone — only newRun reacts.
       winEncounter(bus);
-      // 48f — the full catalog carries reward refs; resolve the interposed
+      // The full catalog carries reward refs; resolve the interposed
       // reward phase to reach the recruit assertion.
       acceptAllRewards(newRun);
       expect(newRun.phase).toBe('recruit');
@@ -3721,7 +3722,7 @@ describe('Run', () => {
       run.dispatch({ kind: 'chooseRecruit', unitTemplate: run.currentOffer![0]! });
       const second = run.nodeMap.edges.find((e) => e.from === run.nodeMap.rootId)!.to;
       run.dispatch({ kind: 'enterNode', nodeId: second });
-      // Leaving the root marks it cleared — unlike pre-S2, where it was inert.
+      // Leaving the root marks it cleared.
       expect(run.visitedNodes.has(run.nodeMap.rootId)).toBe(true);
       expect(run.currentNodeId).toBe(second);
     });
@@ -3733,7 +3734,7 @@ describe('Run', () => {
       const first = frontierOf(run);
       run.dispatch({ kind: 'enterNode', nodeId: first });
       winEncounter(bus);
-      acceptAllRewards(run); // 48b — the selection may carry rewards
+      acceptAllRewards(run); // the selection may carry rewards
       run.dispatch({ kind: 'chooseRecruit', unitTemplate: run.currentOffer![0]! });
 
       const snap = run.toJSON();
@@ -3744,7 +3745,7 @@ describe('Run', () => {
       expect(Array.from(restored.visitedNodes)).toEqual(Array.from(run.visitedNodes));
       expect(restored.currentOffer).toBeNull();
       expect(restored.nodeMap).toEqual(run.nodeMap);
-      // T2 — the sector cursor round-trips.
+      // The sector cursor round-trips.
       expect(restored.currentSectorId).toBe(run.currentSectorId);
       expect(restored.currentSectorNodeId).toBe(run.currentSectorNodeId);
     });
@@ -3766,7 +3767,7 @@ describe('Run', () => {
       const first = frontierOf(run);
       run.dispatch({ kind: 'enterNode', nodeId: first });
       winEncounter(bus);
-      acceptAllRewards(run); // 48b — the selection may carry rewards
+      acceptAllRewards(run); // the selection may carry rewards
       run.dispatch({ kind: 'chooseRecruit', unitTemplate: run.currentOffer![0]! });
 
       const restored = Run.fromJSON(run.toJSON(), new EventBus<GameEvents>());
@@ -3812,7 +3813,7 @@ describe('Run', () => {
       let victories = 0;
       bus.on('run:victory', () => victories++);
       winEncounter(bus);
-      // The Start's terminal is no longer a sink — the 67a gate, then act two.
+      // The Start's terminal leads to the sectorCleared gate, then act two.
       expect(victories).toBe(0);
       expect(run.phase).toBe('sectorCleared');
       run.dispatch({ kind: 'dismissSectorCleared' });
@@ -3833,8 +3834,8 @@ describe('Run', () => {
       const teamBefore = run.team;
       const bossMapBefore = run.bossEncounterMap;
       // A sentinel to prove the pool carries across — config-derived ABOVE the
-      // seam floor (92d: the literal 33 was "above the max" only at the pre-§92
-      // pool of 20; at 40 the floor lifted it and the pin read the lever).
+      // seam floor (a literal falls under the floor when the max moves past
+      // it, and the pin then reads the floor's lift).
       const SENTINEL = HEALTH.playerHealthMax + 13;
       run.playerHealth = SENTINEL;
       run.currentNodeId = run.nodeMap.terminalId;
@@ -3844,13 +3845,14 @@ describe('Run', () => {
       const cleared: GameEvents['sector:cleared'][] = [];
       bus.on('sector:cleared', (e) => cleared.push(e));
       winEncounter(bus);
-      // Advanced — NOT won — landing on the 67a gate with the state already
-      // swapped and the emit carrying both titles (the fixture's nodes share
-      // one sector, so both read the same config-derived title).
+      // Advanced — NOT won — landing on the sectorCleared gate with the
+      // state already swapped and the emit carrying both titles (the
+      // fixture's nodes share one sector, so both read the same
+      // config-derived title).
       expect(victories).toBe(0);
       expect(run.phase).toBe('sectorCleared');
       const title = getSector('the-start')!.title;
-      // §90 — the payload carries both sides of the seam; the sentinel sits
+      // The payload carries both sides of the seam; the sentinel sits
       // ABOVE the floor (> max), so the floor leaves it alone: before ==
       // after == the carried pool.
       expect(cleared).toEqual([
@@ -3860,7 +3862,7 @@ describe('Run', () => {
       expect(run.currentNodeId).toBe(PRE_ROOT_NODE_ID);
       expect(run.visitedNodes.size).toBe(0);
       expect(run.nodeMap.terminalId).toBeGreaterThanOrEqual(0);
-      // 66a — the forewarning pair re-rolled at the sector entry (a fresh
+      // The forewarning pair is re-rolled at the sector entry (a fresh
       // board object, not the old sector's reference).
       expect(run.bossEncounterMap).not.toBe(bossMapBefore);
       // Carry-across: same roster reference + the run-wide pool survive.
@@ -3943,7 +3945,7 @@ describe('Run', () => {
         bus.on('sector:cleared', () => liveAtEmit.push(run.playerHealth));
         winEncounter(bus);
         // This is exactly why the harness reads `poolBefore` off the payload
-        // instead of the live pool (the §90 harness pin).
+        // instead of the live pool (`tests/fuzz/harness.ts`).
         expect(liveAtEmit).toEqual([max]);
       });
 
@@ -3962,7 +3964,7 @@ describe('Run', () => {
 
     it('clearing the final sector terminal (a sink) completes the run', () => {
       const { run, bus } = freshRunWithBus(1, { sectorMap: TWO_SECTOR_MAP });
-      // Advance through sector a → b (through the 67a gate).
+      // Advance through sector a → b (through the sectorCleared gate).
       run.currentNodeId = run.nodeMap.terminalId;
       run.phase = 'battle';
       winEncounter(bus);
@@ -3993,8 +3995,8 @@ describe('Run', () => {
       expect(run.phase).toBe('sectorCleared');
       const snap = JSON.parse(JSON.stringify(run.toJSON())) as ReturnType<Run['toJSON']>;
       const restored = Run.fromJSON(snap, new EventBus<GameEvents>());
-      // The gate is phase-backed (the 67a fork's whole point): a restore
-      // lands ON the gate, not silently past it.
+      // The gate is phase-backed, so a restore lands ON the gate, not
+      // silently past it.
       expect(restored.phase).toBe('sectorCleared');
       expect(restored.currentSectorNodeId).toBe('b');
       restored.dispatch({ kind: 'dismissSectorCleared' });
@@ -4061,7 +4063,7 @@ describe('Run', () => {
     });
 
     it('records one deployment per roster slot on entering a battle', () => {
-      // Short roster (≤ handSize) so the WHOLE roster fields → every slot 1. K2's
+      // Short roster (≤ handSize) so the WHOLE roster fields → every slot 1. The
       // default roster (10 > handSize 6) only fields a drawn subset; that subset
       // case is covered by the deck suite below.
       const { run } = freshShortRosterRun(1);
@@ -4079,8 +4081,8 @@ describe('Run', () => {
       run.dispatch({ kind: 'chooseRecruit', unitTemplate: run.currentOffer![0]! });
       const second = run.nodeMap.edges.find((e) => e.from === first)!.to;
       run.dispatch({ kind: 'enterNode', nodeId: second });
-      // H5: a one-turn encounter deploys only the drawn hand, so a roster larger
-      // than handSize (K2: 10+ > 6) reads 1 for the drawn slots and 0 for the
+      // A one-turn encounter deploys only the drawn hand, so a roster larger
+      // than handSize (10+ > 6) reads 1 for the drawn slots and 0 for the
       // undrawn ones. The load-bearing assertion is that NOTHING accumulated to
       // 2 (the reset worked) and the total deployments equal exactly this
       // encounter's one hand, not a doubled count.
@@ -4247,11 +4249,11 @@ describe('Run', () => {
 
   describe('rest nodes (G3)', () => {
     it('banks restXp into every roster slot and starts no battle', () => {
-      // hopCount 5 → a hop-2 rest is the first reachable rest. (Was 4
-      // pre-77e2; the quota layer's floor priority port → elite → rest
-      // means a 4-hop map's 1–2 band slots never reach the rest floor —
-      // 5 hops is the smallest shape whose band fits all three.) Clear the
-      // hop-1 battle with no XP so the only XP the team carries into the rest
+      // hopCount 5 → a hop-2 rest is the first reachable rest. (The quota
+      // layer's floor priority port → elite → rest means a 4-hop map's 1–2
+      // band slots never reach the rest floor — 5 hops is the smallest shape
+      // whose band fits all three.) Clear the hop-1 battle with no XP so the
+      // only XP the team carries into the rest
       // is the rest grant itself (expected level/xp derive from the actual
       // starting level, so this is robust to the startingLevel dial).
       const { run, bus, restId } = driveToRestFrontier({ hopCount: 5 }, 2);
@@ -4299,13 +4301,13 @@ describe('Run', () => {
     });
 
     it('returns to the map silently when no unit levels up', () => {
-      // hopCount 5 → a hop-3 rest. G4: recruits arrive at round(avgTeamLevel)
+      // hopCount 5 → a hop-3 rest. Recruits arrive at round(avgTeamLevel)
       // + bonus, so with an all-cap starting roster (and vaultAll keeping each
       // recruit at the cap) the whole team sits at the level cap by rest time.
       // Granting restXp then can't level anyone (cap units drain banked xp), so
       // the rest resolves to a SILENT return to the map — no promotion, no
       // recruit. (The boundary "a low unit banks restXp without leveling" can't
-      // arise under G4: a low-avg team levels ON rest, which wouldn't be silent.)
+      // arise: a low-avg team levels ON rest, which wouldn't be silent.)
       const cap = LEVELING.levelCap;
       const startingRoster = [
         { archetype: 'mercenary' as const, level: cap },
@@ -4334,7 +4336,7 @@ describe('Run', () => {
 
     it('a boss node selects a boss-kind encounter (W) and a win completes the run', () => {
       // hopCount 2 → root (hop 0, a normal battle) -> terminal boss (hop 1).
-      // S2: clear the root battle first, then the boss is the frontier.
+      // Clear the root battle first, then the boss is the frontier.
       const bus = new EventBus<GameEvents>();
       const run = new Run(1, bus, { ...NO_EVENTS, hopCount: 2 });
       const boss = run.nodeMap.terminalId;
@@ -4358,12 +4360,11 @@ describe('Run', () => {
       expect(run.selectedEncounter!.kind).toBe('boss');
 
       // And a win at the boss completes the run: a `hopCount` probe is
-      // SINGLE-sector (67c), so its terminal is the run terminal even on the
-      // shipped two-sector DAG. The boss pool is deeper than the default, so
-      // chip its actual pool to drain it.
+      // SINGLE-sector, so its terminal is the run terminal even on the
+      // shipped two-sector DAG. Chip the boss's actual pool to drain it.
       winEncounter(bus, [], run.enemyHealthPoolMax);
-      // 48f — boss rewards fire BEFORE run:victory (uniform on terminal wins,
-      // per the shape-lock); resolve them to reach the completion.
+      // Boss rewards fire BEFORE run:victory (uniform on terminal wins);
+      // resolve them to reach the completion.
       acceptAllRewards(run);
       expect(run.phase).toBe('complete');
     });
@@ -4382,8 +4383,8 @@ describe('Run', () => {
     });
 
     it('§90 — the rest heal is a FRACTION of max: it scales with playerHealthMax', () => {
-      // The re-expression's whole point: a pool-max move (the §92 lever)
-      // moves the heal with it. Flip max in place, derive, restore.
+      // As a fraction, the heal moves with a pool-max move. Flip max in
+      // place, derive, restore.
       const originalMax = HEALTH.playerHealthMax;
       try {
         HEALTH.playerHealthMax = originalMax * 2;
@@ -4525,8 +4526,8 @@ describe('Run', () => {
 });
 
 describe('48b — the reward phase', () => {
-  /** A daemon-less run forced onto brigands (which ships the 48a skeleton
-   *  ref: `bits-small` at chance 1), driven to a one-turn encounter win.
+  /** A daemon-less run forced onto brigands (which ships `bits-small` at
+   *  chance 1), driven to a one-turn encounter win.
    *  Daemon-less so the bits fold starts at identity. */
   function winWithRewards(
     seed = 1,
@@ -4550,7 +4551,7 @@ describe('48b — the reward phase', () => {
     expect(offered).toEqual([run.pendingRewards!.length]);
     expect(recruits).toEqual([]);
     expect(run.currentOffer).toBeNull();
-    // §82 — the mixed-table split: brigands authors bits-small at chance 1
+    // The mixed table: brigands authors bits-small at chance 1
     // plus packets-small at chance 0.3, so portion 0 is ALWAYS the bits roll
     // and any portion behind it is a packets-small packet. Assert each drawn
     // portion matches an AUTHORED entry (config-derived — robust to tuning).
@@ -4573,7 +4574,7 @@ describe('48b — the reward phase', () => {
 
   it('acceptReward settles bits through the shared settle math and advances to recruit', () => {
     const { run, bus } = winWithRewards();
-    // 49g — the live table can draw a packet now; the SETTLE pin needs a
+    // The live table can draw a packet; the SETTLE pin needs a
     // bits portion, so overwrite the offer (the in-block daemon-order forge
     // pattern — plain mutation on the public field).
     run.pendingRewards = [{ kind: 'bits', base: 10 }];
@@ -4592,7 +4593,7 @@ describe('48b — the reward phase', () => {
 
   it('declineReward leaves bits untouched and advances', () => {
     const { run } = winWithRewards();
-    // §82 — the offer can carry a packets-small portion behind the bits;
+    // The offer can carry a packets-small portion behind the bits;
     // decline them all (each decline compacts the list, so index 0 drains it).
     for (let step = 0; run.pendingRewards !== null; step++) {
       expect(step, 'declineReward stopped draining the offer').toBeLessThan(MAX_COMMAND_STEPS);
@@ -4608,7 +4609,7 @@ describe('48b — the reward phase', () => {
     const offered: unknown[] = [];
     bus.on('reward:offered', (o) => offered.push(o));
     run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
-    // 48f — every catalog encounter now references a table, so the rewards-less
+    // Every catalog encounter references a table, so the rewards-less
     // shape is SYNTHESIZED: swap the held selection for a stripped clone (a
     // plain field; the shared catalog object is never mutated). The win-boundary
     // roller reads `selectedEncounter`, so this exercises the real skip path.
@@ -4670,8 +4671,8 @@ describe('48b — the reward phase', () => {
 
   it('a mid-reward save reproduces the pending offer (the §48 exit-criterion contract)', () => {
     const { run } = winWithRewards();
-    // 49g — pin the offer to a bits portion (the settle math below needs
-    // one; the rolled draw may be a packet now — same forge as above).
+    // Pin the offer to a bits portion (the settle math below needs
+    // one; the rolled draw may be a packet — same forge as above).
     run.pendingRewards = [{ kind: 'bits', base: 12 }];
     const wire = JSON.parse(JSON.stringify(run.toJSON())) as ReturnType<Run['toJSON']>;
     const restored = Run.fromJSON(wire, new EventBus<GameEvents>());
@@ -4707,7 +4708,7 @@ describe('64a — The Cornucopia (recruitOfferSize)', () => {
   };
 
   const cornucopia = daemonById('cornucopia')!;
-  // The catalog's authored bonus, DERIVED (not a hardcoded +1) so a §68
+  // The catalog's authored bonus, DERIVED (not a hardcoded +1) so a
   // retune of the value keeps these expectations honest.
   const bonus = (() => {
     const rule = cornucopia.rules![0]!;
@@ -4741,13 +4742,12 @@ describe('64a — The Cornucopia (recruitOfferSize)', () => {
       const character = characterById(id)!;
       const offer = firstOfferDeclining(31, { character, daemon: cornucopia });
       expect(offer).toHaveLength(RECRUITMENT.defaultOfferSize + bonus);
-      // Composition still character-governed (63c): nothing blacklisted leaks.
+      // Composition is still character-governed: nothing blacklisted leaks.
       for (const t of offer) expect(character.blacklist).not.toContain(t.archetype);
     }
   });
 
   it('leaves the PORT unit count untouched (spec scope: post-encounter only)', () => {
-    // Seed 42 (74e re-seed): 41's every port route crossed an event node.
     const { run, bus } = freshRunWithBus(42, { daemon: cornucopia });
     dockAtPort(run, bus);
     expect(run.portStock!.units).toHaveLength(PRICES.portStock.units);
@@ -4758,8 +4758,8 @@ describe("64b — Patrician's Seal (no commons)", () => {
   const seal = daemonById('patricians-seal')!;
   const commons = new Set<string>(DRAFTABLE_BY_TIER.common);
 
-  /** Drive one victory to the recruit offer, DECLINING rewards (the 64a
-   *  rationale — an accepted daemon portion would pollute the read). */
+  /** Drive one victory to the recruit offer, DECLINING rewards (an
+   *  accepted daemon portion would pollute the read). */
   const firstOfferDeclining = (seed: number, config?: RunConfig) => {
     const { run, bus } = freshRunWithBus(seed, config);
     run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
@@ -4798,7 +4798,7 @@ describe("64b — Patrician's Seal (no commons)", () => {
   it('PORT stock inherits the fold — no commons on the shelf either (ports follow the same mechanics)', () => {
     const { run, bus } = freshRunWithBus(71, { daemon: seal });
     dockAtPort(run, bus);
-    expect(run.portStock!.units).toHaveLength(PRICES.portStock.units); // count untouched (64a scope)
+    expect(run.portStock!.units).toHaveLength(PRICES.portStock.units); // count untouched: the Seal only filters
     for (const slot of run.portStock!.units) {
       expect(commons.has(slot.template.archetype)).toBe(false);
     }
@@ -4825,7 +4825,6 @@ describe('64c — Idol of Portunus (guaranteed port legendary)', () => {
   });
 
   it('stacking: a second source forces a second slot (the count-stat shape-lock)', () => {
-    // Seed 87 (74e re-seed): 84's every port route crossed an event node.
     const { run, bus } = freshRunWithBus(87, { daemon: portunus });
     run.addDaemon(portunus); // addDaemon never dedupes — two sources, +1 each
     expect(run.effectivePortLegendaryOffers).toBe(2);
@@ -4872,7 +4871,7 @@ describe('64d — the drafting-daemon matrix (all three stacked × each characte
   const all = ['cornucopia', 'patricians-seal', 'portunus'].map((id) => daemonById(id)!);
   const commons = new Set<string>(DRAFTABLE_BY_TIER.common);
   const legendaries = new Set<string>(DRAFTABLE_BY_TIER.legendary);
-  // The Cornucopia's authored bonus, derived (the 64a discipline).
+  // The Cornucopia's authored bonus, derived, not hardcoded.
   const rule0 = all[0]!.rules![0]!;
   const offerBonus = rule0.kind === 'modifier' ? rule0.value : 0;
 
@@ -4884,21 +4883,21 @@ describe('64d — the drafting-daemon matrix (all three stacked × each characte
       const { run, bus } = freshRunWithBus(90, { character, daemon: all[0]! });
       for (const d of all.slice(1)) run.addDaemon(d);
 
-      // 64a — the offer grows by the Cornucopia's bonus…
+      // The offer grows by the Cornucopia's bonus…
       run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
       winEncounter(bus);
       declineAllRewards(run);
       const offer = run.currentOffer ?? [];
       expect(offer).toHaveLength(RECRUITMENT.defaultOfferSize + offerBonus);
-      // …64b — with no commons, and nothing character-blacklisted (63c).
+      // …with no commons, and nothing character-blacklisted.
       for (const u of offer) {
         expect(commons.has(u.archetype)).toBe(false);
         expect(character.blacklist).not.toContain(u.archetype);
       }
       run.dispatch({ kind: 'passRecruit' });
 
-      // 64c at the port — shelf count untouched (the 64a scope pin), slot 0
-      // legendary (Portunus), no commons on the shelf (the Seal, inherited).
+      // At the port: shelf count untouched, slot 0 legendary (Portunus), no
+      // commons on the shelf (the Seal, inherited).
       dockAtPort(run, bus);
       const units = run.portStock!.units;
       expect(units).toHaveLength(PRICES.portStock.units);
@@ -4912,7 +4911,7 @@ describe('65a — drawAmount (the variable draw fold)', () => {
   // Base pinned config-derived in runStats.test.ts (= DECK.handSize); read
   // through the fold record here so a tuning edit keeps these honest.
   const BASE = RUN_STAT_BASES.drawAmount;
-  /** A bespoke draw idol (no draw daemon ships in §65 — packets only). */
+  /** A bespoke draw idol (no draw daemon ships; packets only). */
   const drawIdol = (value: number, op: 'add' | 'mult' = 'add'): DaemonConfig => ({
     id: 'test-draw',
     name: 'Test Draw',
@@ -4925,7 +4924,7 @@ describe('65a — drawAmount (the variable draw fold)', () => {
     expect(freshRunWithBus(7, { daemon: drawIdol(1) }).run.effectiveDrawAmount).toBe(
       Math.floor(BASE + 1),
     );
-    // 65d — the cap is the outermost clamp (a big mult saturates at it).
+    // The cap is the outermost clamp (a big mult saturates at it).
     expect(freshRunWithBus(7, { daemon: drawIdol(1.5, 'mult') }).run.effectiveDrawAmount).toBe(
       Math.min(DECK.maxHandSize, Math.floor(BASE * 1.5)),
     );
@@ -4955,7 +4954,7 @@ describe('65a — drawAmount (the variable draw fold)', () => {
   });
 
   it('a draw amount past a SMALL roster simply fields everyone (the H5 exhaustion contract)', () => {
-    // A roster below the cap, so exhaustion (not the 65d cap) is what stops
+    // A roster below the cap, so exhaustion (not the cap) is what stops
     // the deal: five mercenaries against an overdrawn fold.
     const roster = Array.from({ length: 5 }, () => ({
       archetype: 'mercenary' as const,
@@ -4972,7 +4971,7 @@ describe('65a — drawAmount (the variable draw fold)', () => {
 // hardcoded id to drift): first wave plain (unwrapping the catalog's
 // standard loop{forever} shell), count hand-relative, budget
 // mean-relative, uncapped — both resolver axes read the seam directly.
-// Shared by the 65b seam pins and the 65c transient-exclusion pin.
+// Shared by the seam pins and the transient-exclusion pin below.
 const HAND_RELATIVE_REF = ENCOUNTERS.flatMap((e) => {
   const first = e.waves[0];
   const entry = first?.kind === 'loop' ? first.body[0] : first;
@@ -5018,7 +5017,7 @@ describe('65b — the budget seam consumes the draw fold (Option B)', () => {
     // Non-vacuous: the idol moved the basis (roster > base draw at start).
     expect(plus.basis).toBe(base.basis + 1);
     // ONE basis feeds both resolver axes — count and level budget move
-    // together or not at all (the K2 desync shape, pinned from the seam's
+    // together or not at all (a desync between them, pinned from the seam's
     // consumer side; expectations derived from the authored spec + the
     // uncapped distribute contract: Σlevels = max(C, L)).
     for (const { enemies, basis, mean } of [base, plus]) {
@@ -5059,15 +5058,14 @@ describe('65c — the hand-op packets (drawCards / discardCards)', () => {
     expect(run.drawPile).toHaveLength(pileBefore - drawCount);
     expect(run.cache).toEqual([]);
     // The repaint channel: one hand-changed emit, payload parallel to the
-    // GROWN hand (the badge column included — a length the K3/K4 consumers
-    // never saw before 65c).
+    // GROWN hand (the badge column included, at the grown length).
     expect(swaps).toHaveLength(1);
     expect(swaps[0]!.hand).toHaveLength(handBefore + drawCount);
     expect(swaps[0]!.empowerStacks).toHaveLength(handBefore + drawCount);
   });
 
   it('stops early on a fully dealt deck — consume-on-fire stands (the patch-at-full-health precedent)', () => {
-    // A roster below the 65d cap, so EXHAUSTION (not the cap) is what the
+    // A roster below the cap, so EXHAUSTION (not the cap) is what the
     // Surge hits: five units are all dealt at turn start, the deck is dry,
     // and a fired Surge draws zero — but still consumes (order of
     // consumption IS order of effect).
@@ -5134,7 +5132,7 @@ describe('65c — the hand-op packets (drawCards / discardCards)', () => {
     expect(run.currentEncounter!.enemyTeam).toHaveLength(
       Math.round(HAND_RELATIVE_REF.countFactor * basis),
     );
-    // NOT persisted (the X1 RunConfig discipline): a rehydrate resets to 0.
+    // NOT persisted (a `RunConfig` dial is not saved): a rehydrate resets to 0.
     const restored = Run.fromJSON(run.toJSON(), new EventBus<GameEvents>());
     expect(restored.effectiveDrawAmount).toBe(Math.floor(base));
   });
@@ -5149,8 +5147,8 @@ describe('65c — the hand-op packets (drawCards / discardCards)', () => {
     expect(run.hand.length).toBe(basis + drawCount); // non-vacuous: hand ≠ basis
     run.dispatch({ kind: 'advanceTurn' });
     // The wave resolved AFTER the hand grew — and priced against the FOLD,
-    // not the fielded hand (the 65b seam reads effectiveDrawAmount; packet
-    // draws are pure advantage by design — worklog §65-shape-lock).
+    // not the fielded hand (the seam reads effectiveDrawAmount; packet
+    // draws are pure advantage by design).
     const enemies = run.currentEncounter!.enemyTeam;
     expect(enemies).toHaveLength(Math.round(HAND_RELATIVE_REF.countFactor * basis));
   });
@@ -5238,10 +5236,10 @@ describe('65f — the deck cue stream (deck:cardDrawn / cardDiscarded / reshuffl
   });
 
   it('the reshuffle interposes exactly where the pile runs dry, as ONE cue', () => {
-    // Config-derived choreography (the 72f cap/Surge bump retired the old
-    // hardcoded count-2 dance): Cull the dealt hand down to build a discard
-    // pile, Surge while the pile still covers a full draw, then record the
-    // one Surge that must cross the dry point mid-draw.
+    // Config-derived choreography, so a cap or Surge retune keeps it: Cull
+    // the dealt hand down to build a discard pile, Surge while the pile
+    // still covers a full draw, then record the one Surge that must cross
+    // the dry point mid-draw.
     const { run, bus } = gatedToFirstTurnIntro(9, null);
     const surge = packetById('surge')!.effect;
     const surgeCount = surge.op === 'drawCards' ? surge.count : 0;
@@ -5304,7 +5302,7 @@ describe('65f — the deck cue stream (deck:cardDrawn / cardDiscarded / reshuffl
 });
 
 /**
- * 66a — boss forewarning: the sector-start pre-roll pair
+ * Boss forewarning: the sector-start pre-roll pair
  * `{bossEncounterId, bossEncounterMap}`, rolled on the sector-entry fork and
  * consumed by the boss node's `beginEncounter`. These pin the exit criteria:
  * the pair exists from construction, is seed-deterministic, the boss fight IS
@@ -5317,7 +5315,7 @@ describe('boss forewarning (66a) — the sector-start pre-roll', () => {
     expect(boss).toBeDefined();
     expect(boss!.kind).toBe('boss');
     // A realized board, not a pending pick: dimensions + theme + terrain
-    // seed all baked (the K3.5 EncounterMap shape).
+    // seed all baked (the EncounterMap shape).
     const map = run.bossEncounterMap;
     expect(map.gridW).toBeGreaterThan(0);
     expect(map.gridH).toBeGreaterThan(0);
@@ -5401,7 +5399,7 @@ describe('boss forewarning (66a) — the sector-start pre-roll', () => {
     } else {
       expect(fw.layoutName).toBe(getLayout(run.bossEncounterMap.layoutId)!.name);
     }
-    // The G1 forced-procedural arm always reports a null layout name — the
+    // The forced-procedural arm always reports a null layout name — the
     // view's "Uncharted Ground" branch (the label itself is UI voice, so the
     // run-layer contract is just the null).
     const proc = new Run(1, new EventBus<GameEvents>(), { forcedLayoutId: FORCE_PROCEDURAL });
@@ -5411,31 +5409,29 @@ describe('boss forewarning (66a) — the sector-start pre-roll', () => {
 });
 
 /**
- * H4 — emit a `battle:ended` whose PLAYER survivors chip the enemy pool by
- * `HEALTH.enemyHealthMax`, guaranteeing the encounter is won in this one turn
- * (the common "resolve this node now" case the pre-H4 tests assumed). Any
- * `xpAwards` bank at encounter end as usual. W: a deeper-pooled encounter (the
- * boss) needs a bigger chip — pass `poolMax` (`run.enemyHealthPoolMax`) to drain
- * it in one turn regardless of size.
+ * Emit a `battle:ended` whose PLAYER survivors chip the enemy pool by
+ * `poolMax`, guaranteeing the encounter is won in this one turn (the common
+ * "resolve this node now" case). Any `xpAwards` bank at encounter end as
+ * usual.
  */
 function winEncounter(
   bus: EventBus<GameEvents>,
   xpAwards: GameEvents['battle:ended']['xpAwards'] = [],
-  // A decisive win must clear the enemy pool in ONE chip. Post-X3 encounters pool
+  // A decisive win must clear the enemy pool in ONE chip. Encounters pool
   // at their authored `healthPool` — some normals deeper than HEALTH.enemyHealthMax
   // (highwaymen/deserters), bosses deeper still — so the default over-chips by a
   // wide margin; resolveTurn floors enemyHealth at 0, so the excess is harmless and
   // the encounter resolves as a win regardless of pool depth. Pass an explicit
   // poolMax only for partial-chip / multi-turn cases (those use chipTurn anyway).
   poolMax: number = 1_000,
-  // 47f — optional battle tally (the settle-seam tests); absent = the
-  // pre-47f no-tally emit, which Run treats as zero.
+  // Optional battle tally (the settle-seam tests); absent = a no-tally
+  // emit, which Run treats as zero.
   tallies?: GameEvents['battle:ended']['tallies'],
 ): void {
   bus.emit('battle:ended', {
     winner: 'player',
     xpAwards,
-    // 91e — the enemy's fallen drain the enemy pool; a decisive win reads no
+    // The enemy's fallen drain the enemy pool; a decisive win reads no
     // survivors.
     survivorPower: { player: poolMax, enemy: 0 },
     fallenPower: { player: 0, enemy: poolMax },
@@ -5443,7 +5439,7 @@ function winEncounter(
   });
 }
 
-/** H4 → 91e — emit a decisive `battle:ended` whose fallen cost the player
+/** Emit a decisive `battle:ended` whose fallen cost the player
  *  pool `HEALTH.playerHealthMax`, losing the run in this one turn (the
  *  standing half is read only on a capped turn). */
 function loseEncounter(bus: EventBus<GameEvents>): void {
@@ -5455,14 +5451,13 @@ function loseEncounter(bus: EventBus<GameEvents>): void {
   });
 }
 
-/** H4 → 91e/91g — emit one turn's `battle:ended` that CHIPS the pools by
+/** Emit one turn's `battle:ended` that CHIPS the pools by
  *  `chips.player` (the player's contribution → the ENEMY pool) and
  *  `chips.enemy` (→ the PLAYER pool), for multi-turn encounter-loop tests.
- *  Pre-91e this was the survivor-power vector alone; the fake now states the
- *  same chips in whichever vocabulary the LIVE rule set for this turn reads
- *  (`rulesForTurn`): when the set contains `survivors` the survivor half
- *  carries the chips and the fallen half is 0 (a two-rule cap turn, the
- *  surcharge since 91g, would otherwise DOUBLE the charge, gotcha #129);
+ *  The fake states the chips in whichever vocabulary the LIVE rule set for
+ *  this turn reads (`rulesForTurn`): when the set contains `survivors` the
+ *  survivor half carries the chips and the fallen half is 0 (a two-rule cap
+ *  turn, the surcharge, would otherwise DOUBLE the charge, gotcha #129);
  *  when it is casualties alone, the mirrored fallen `{player: chips.enemy,
  *  enemy: chips.player}` carries them. So the applied losses equal `chips`
  *  on every reason. Rule-SPECIFIC tests pass `extra.fallenPower` explicitly
@@ -5471,9 +5466,9 @@ function chipTurn(
   bus: EventBus<GameEvents>,
   chips: { player: number; enemy: number },
   xpAwards: GameEvents['battle:ended']['xpAwards'] = [],
-  // 47f — optional battle tally (the settle-seam tests).
+  // Optional battle tally (the settle-seam tests).
   tallies?: GameEvents['battle:ended']['tallies'],
-  // 91a2 — the casualty rule's inputs: an explicit fallen half + why the turn
+  // The casualty rule's inputs: an explicit fallen half + why the turn
   // ended (a 'draw' without a reason reads as the cap).
   extra?: {
     fallenPower?: GameEvents['battle:ended']['fallenPower'];
@@ -5502,18 +5497,18 @@ function driveToRecruitPhase(run: Run, bus: EventBus<GameEvents>): void {
   const frontier = frontierOf(run);
   run.dispatch({ kind: 'enterNode', nodeId: frontier });
   winEncounter(bus);
-  // 48b — the sector pool can select a rewards-carrying encounter (brigands
-  // ships the 48a skeleton ref), which interposes the reward phase first.
+  // Every catalog encounter carries a reward table, so a win can interpose
+  // the reward phase first.
   acceptAllRewards(run);
 }
 
-/** 48b — resolve a pending reward offer by accepting every portion (the
+/** Resolve a pending reward offer by accepting every portion (the
  *  harness policy). A no-op when the win rolled no rewards. */
 function acceptAllRewards(run: Run): void {
   settleRewards(run, 'acceptReward');
 }
 
-/** 48f — resolve a pending reward offer by DECLINING every portion, for tests
+/** Resolve a pending reward offer by DECLINING every portion, for tests
  *  that assert an exact bits balance a rolled reward would pollute. A no-op
  *  when the win rolled no rewards. */
 function declineAllRewards(run: Run): void {
@@ -5548,21 +5543,21 @@ interface RunHandle {
 
 function freshRunWithBus(seed: number, config?: RunConfig): RunHandle {
   const bus = new EventBus<GameEvents>();
-  // 74i-c — battle-subject fixtures suppress the event catalog by default
+  // Battle-subject fixtures suppress the event catalog by default
   // (see NO_EVENTS at the top); a caller's own eventCatalog wins the spread.
   const run = new Run(seed, bus, { ...NO_EVENTS, ...config });
   return { run: Object.assign(run, { rootId: run.nodeMap.rootId }), bus };
 }
 
 /** The next selectable node from wherever the run currently sits — the root at
- *  the pre-root start (S2), else the current node's first outgoing edge. The
+ *  the pre-root start, else the current node's first outgoing edge. The
  *  standard "enter the next battle" hop. */
 function frontierOf(run: Run): number {
   if (run.currentNodeId === PRE_ROOT_NODE_ID) return run.nodeMap.rootId;
   return run.nodeMap.edges.find((e) => e.from === run.currentNodeId)!.to;
 }
 
-// ---- 50c/50d — the port-dock helpers ---------------------------------------
+// ---- the port-dock helpers -------------------------------------------------
 
 function nodeKindOf(run: Run, id: number) {
   return run.nodeMap.nodes.find((n) => n.id === id)!.kind;
@@ -5574,13 +5569,13 @@ function frontierIdsOf(run: Run): number[] {
     : run.nodeMap.edges.filter((e) => e.from === run.currentNodeId).map((e) => e.to);
 }
 
-/** Any port reachable strictly downstream of (or at) `from`? 74i-c: the
- *  74e event-node avoidance is RETIRED — dockAtPort callers construct
- *  through the NO_EVENTS-suppressing fixtures now (an empty catalog means
- *  every event node degrades to a plain battle on entry: no effects, no
- *  state perturbation, and the resolve draw rides the DEDICATED eventRng
- *  stream), which is strictly stronger isolation than route avoidance —
- *  necessary since the sector-stamped root became an event node. */
+/** Any port reachable strictly downstream of (or at) `from`? A route may
+ *  cross event nodes: dockAtPort callers construct through the
+ *  NO_EVENTS-suppressing fixtures (an empty catalog means every event node
+ *  degrades to a plain battle on entry: no effects, no state perturbation,
+ *  and the resolve draw rides the DEDICATED `'event'` stream), which
+ *  isolates more strongly than avoiding them would, and the sector-stamped
+ *  root is an event node. */
 function reachesPort(run: Run, from: number): boolean {
   const stack = [from];
   const seen = new Set([from]);
@@ -5603,7 +5598,7 @@ function reachesPort(run: Run, from: number): boolean {
  *  node is root-reachable, so a port-reaching frontier choice always exists
  *  from the start. Deterministic — no policy draws. CALLERS MUST construct
  *  through an event-suppressed fixture (freshRunWithBus et al. — see
- *  NO_EVENTS); en-route event nodes then fight like battles (74i-c). */
+ *  NO_EVENTS); en-route event nodes then fight like battles. */
 function dockAtPort(run: Run, bus: EventBus<GameEvents>): void {
   for (let guard = 0; guard < 20; guard++) {
     expect(run.phase).toBe('map');
@@ -5629,10 +5624,10 @@ function dockAtPort(run: Run, bus: EventBus<GameEvents>): void {
   throw new Error('dockAtPort: never reached a port');
 }
 
-/** K3 — a gated run paused at its FIRST pre-turn gate (`turn-intro`), the only
- *  phase where a `redrawCards` command is live. L1: gates are daemon-only now,
- *  so the run carries `K_DEFAULT_DAEMON` (the old static dials) unless a test
- *  forces a specific daemon (or null = daemon-less). */
+/** A gated run paused at its FIRST pre-turn gate (`turn-intro`), the only
+ *  phase where a `redrawCards` command is live. Gates come from daemons
+ *  only, so the run carries `K_DEFAULT_DAEMON` unless a test forces a
+ *  specific daemon (or null = daemon-less). */
 function gatedToFirstTurnIntro(
   seed: number,
   daemon: DaemonConfig | null = K_DEFAULT_DAEMON,
@@ -5664,13 +5659,13 @@ function freshLvl1RunWithBus(seed: number): RunHandle {
 }
 
 /** A 5-unit roster at the configured starting level — small enough to fit in
- *  one hand (≤ `DECK.handSize`), so the WHOLE roster is fielded every turn. K2
- *  raised the default roster (10) above `handSize` (6), so a mechanic test that
+ *  one hand (≤ `DECK.handSize`), so the WHOLE roster is fielded every turn.
+ *  The default roster (10) is above `handSize` (6), so a mechanic test that
  *  pins a specific roster slot (e.g. slot 0's fatigue / encounter effect) or
- *  expects EVERY slot deployed can no longer use the default roll — only a
- *  drawn subset fields. These tests force this short roster to keep the pre-K2
+ *  expects EVERY slot deployed can't use the default roll — only a drawn
+ *  subset fields. These tests force this short roster to keep the
  *  "draw == roster" precondition deterministic (no dependence on which units a
- *  given seed happens to draw). Level comes from config (not the K2 subject). */
+ *  given seed happens to draw). Level comes from config. */
 const SHORT_ROSTER = [
   { archetype: 'mercenary' as const, level: RECRUITMENT.startingLevel },
   { archetype: 'mercenary' as const, level: RECRUITMENT.startingLevel },
@@ -5751,15 +5746,15 @@ function driveToRestFrontier(
 ): { run: Run; bus: EventBus<GameEvents>; restId: number } {
   const { run, bus, path } = findRestRun(config, hop);
   const restId = path[path.length - 1]!;
-  // S2 — the player enters the ROOT first (it's a normal battle now), so the
+  // The player enters the ROOT first (a normal battle here), so the
   // walk starts at path[0]; the rest (path[last]) is left as the frontier.
   for (let i = 0; i < path.length - 1; i++) {
     run.dispatch({ kind: 'enterNode', nodeId: path[i]! });
-    // Clear the FULL encounter pool in one win-chip — post-X3 some normals pool
+    // Clear the FULL encounter pool in one win-chip: some normals pool
     // deeper than HEALTH.enemyHealthMax (highwaymen/deserters), so chip by the
-    // selected encounter's actual healthPool rather than the default 8.
+    // selected encounter's actual healthPool.
     winEncounter(bus, awardsForHop(run, i), run.enemyHealthPoolMax);
-    // 48b — a rewards-carrying selection interposes the reward phase first.
+    // A rewards-carrying selection interposes the reward phase first.
     acceptAllRewards(run);
     // A battle whose awards level a unit pauses on promotion first; clear it
     // so we land in the recruit phase (the mandatory post-battle recruit).
@@ -5769,15 +5764,15 @@ function driveToRestFrontier(
   return { run, bus, restId };
 }
 
-/** Enter a rest node and take its one option: the two commands a rest is
- *  since it became a gate (117.75a). */
+/** Enter a rest node and take its one option: the two commands a rest
+ *  takes, as a gate. */
 function takeRest(run: Run, restId: number): void {
   run.dispatch({ kind: 'enterNode', nodeId: restId });
   expect(run.phase).toBe('rest');
   run.dispatch({ kind: 'chooseRestOption', optionIndex: 0 });
 }
 
-// ── 74b — the event phase ────────────────────────────────────────────────────
+// ── the event phase ──────────────────────────────────────────────────────────
 
 /** Fold the combat-resolve chance to 0 / past 1 via bespoke modifier daemons —
  *  the fold seam under test IS the test's control mechanism (the reason the
@@ -6005,7 +6000,7 @@ describe('74b — the event phase', () => {
     const run = openEventAtSeedScan({ forcedEventId: 'corrupted-shrine' });
     expect(run.phase).toBe('event');
     const wire = run.toJSON();
-    expect(wire.schemaVersion).toBe(49); // 117.75a — the rest phase (117b: the Escalation level)
+    expect(wire.schemaVersion).toBe(49); // the format with the rest phase and the Escalation level
     expect(wire.activeEvent).toEqual({ eventId: 'corrupted-shrine', pageId: 'start' });
     const restored = Run.fromJSON(JSON.parse(JSON.stringify(wire)), new EventBus<GameEvents>());
     expect(restored.phase).toBe('event');
@@ -6083,7 +6078,7 @@ describe('74b — the event phase', () => {
 
 });
 
-// ── 74e — the sector-owned event pool ────────────────────────────────────────
+// ── the sector-owned event pool ──────────────────────────────────────────────
 
 /** A minimal terminating event for pool-roll tests: one unconditioned
  *  return-to-map choice. Ids deliberately reuse SHIPPED ids so the shipped
@@ -6104,8 +6099,8 @@ function poolEvent(id: string, eligibility?: EventDef['eligibility']): EventDef 
 const NEVER = [{ kind: 'bitsAtLeast', amount: 999999 } as const];
 
 describe('74e — the sector-owned event pool', () => {
-  // 74i-c — derived from the SHIPPED sector (never hardcoded): the demo
-  // catalog grew the pool from the 3 smoke events to the full slate.
+  // Derived from the SHIPPED sector (never hardcoded), so a change to the
+  // slate keeps it.
   const START_POOL_IDS = getSector('the-start')!.events.map((e) => e.eventId);
 
   it('an opened event comes from the SECTOR pool, not a bare catalog scan (the 74b placeholder retired)', () => {
@@ -6165,7 +6160,7 @@ describe('74e — the sector-owned event pool', () => {
   });
 });
 
-// ── 74i — per-run event repeats (the no-repeat default, user-signed) ─────────
+// ── per-run event repeats (the no-repeat default, user-signed) ───────────────
 
 describe('74i — per-run event repeats', () => {
   /** Twin-catalog fixture: the pool's only OPEN def, repeatable or not (the
@@ -6189,8 +6184,8 @@ describe('74i — per-run event repeats', () => {
   }
 
   /** A hop-1 parent → hop-2 event-node edge (the scatter never places
-   *  events at hop 1 — probed at 74i — so the second entry teleports to
-   *  the parent instead of fighting the intervening battle). */
+   *  events at hop 1, since its band starts at hop 2, so the second entry
+   *  teleports to the parent instead of fighting the intervening battle). */
   function hop2EventEntry(run: Run): { parent: number; eventNode: number } | null {
     const hops = run.nodeMap.hops;
     if (hops.length < 3) return null;
@@ -6228,7 +6223,7 @@ describe('74i — per-run event repeats', () => {
 
   /** Visit the root event, then teleport to the hop-1 parent (direct
    *  `currentNodeId` assignment — the public field a snapshot would set;
-   *  a fromJSON round-trip would re-pin the SHIPPED catalog, the 74b
+   *  a fromJSON round-trip would re-pin the SHIPPED catalog, the
    *  bespoke-rejection rule) so the hop-2 event node sits on the frontier. */
   function afterRootVisit(run: Run): number {
     run.dispatch({ kind: 'enterNode', nodeId: run.nodeMap.rootId });
@@ -6273,8 +6268,8 @@ describe('74i — per-run event repeats', () => {
   });
 
   it('74i-c END-TO-END: a SHIPPED run (no dials) opens the authored starting event at the root', () => {
-    // The exit-sweep positive pin (the 74e landing note's debt): The Start
-    // authors `startingEvents`, the root is sector-stamped, entry draws
+    // The positive pin: The Start authors `startingEvents`, the root is
+    // sector-stamped, entry draws
     // from the starting pool and IGNORES the combat-resolve roll — so this
     // holds for EVERY seed, deterministically. Derived, not hardcoded: the
     // expected id comes from the shipped sector config.
@@ -6305,10 +6300,10 @@ describe('74i — per-run event repeats', () => {
   });
 });
 
-// ── 74c — event effect ops (the full union executes) ─────────────────────────
+// ── event effect ops (the full union executes) ───────────────────────────────
 
 /** An event-phase run around ONE choice carrying `effects`, executed in
- *  authored order on dispatch (74b's handleChooseEventOption contract). */
+ *  authored order on dispatch (`handleChooseEventOption`'s contract). */
 function opRun(
   seed: number,
   effects: EventEffectOp[],
@@ -6393,7 +6388,7 @@ describe('74c — event effect ops (the full union executes)', () => {
     bus.on('run:cacheChanged', () => cacheRepaints++);
     fireOps(run);
     expect(run.daemons.some((d) => d.id === 'test-no-resolve')).toBe(false);
-    // Ownership feeds the cacheSize fold (49b) — the removal repainted once
+    // Ownership feeds the cacheSize fold — the removal repainted once
     // (the absent-id no-op did not).
     expect(cacheRepaints).toBe(1);
   });
@@ -6424,7 +6419,7 @@ describe('74c — event effect ops (the full union executes)', () => {
       { op: 'removeUnit', pick: 'strongest' },
     ]);
     const before = run.team.length;
-    expect(Math.max(...run.team.map((u) => u.level))).toBeLessThan(9); // the L9 will be strongest
+    expect(Math.max(...run.team.map((u) => u.level))).toBeLessThan(9); // the level-9 grant will be strongest
     fireOps(run);
     expect(run.team).toHaveLength(before + 1); // +2 grants −1 removal
     expect(run.team.some((u) => u.level === 9)).toBe(false);
@@ -6490,7 +6485,7 @@ describe('74c — event effect ops (the full union executes)', () => {
   });
 });
 
-// ---- §75g — camp-kill loot ---------------------------------------------------
+// ---- camp-kill loot ----------------------------------------------------------
 
 describe('75g — camp-kill loot rides the turn boundary as reward portions', () => {
   const CAMP_KILL = [{ defId: 'bandit-squatters', killedBy: 'player' as const }];
@@ -6536,7 +6531,7 @@ describe('75g — camp-kill loot rides the turn boundary as reward portions', ()
       winner: 'enemy',
       xpAwards: [],
       survivorPower: { player: 0, enemy: HEALTH.playerHealthMax },
-      fallenPower: { player: HEALTH.playerHealthMax, enemy: 0 }, // 91e — both vocabularies
+      fallenPower: { player: HEALTH.playerHealthMax, enemy: 0 }, // both vocabularies
       campKills: CAMP_KILL,
     });
     expect(run.phase).toBe('defeat');
@@ -6550,7 +6545,7 @@ describe('75g — camp-kill loot rides the turn boundary as reward portions', ()
       winner: 'player',
       xpAwards: [],
       survivorPower: { player: 1_000, enemy: 0 },
-      fallenPower: { player: 0, enemy: 1_000 }, // 91e — a decisive WIN
+      fallenPower: { player: 0, enemy: 1_000 }, // a decisive WIN
       tallies: { bits: 6 },
       campKills: CAMP_KILL,
     });
@@ -6735,7 +6730,7 @@ describe('94d — the fallen ledger (Run-owned, snapshot v45)', () => {
     bus.emit('unit:died', death({ unitId: 1, team: 'player', archetype: 'archer', power: 2 }));
     bus.emit('unit:died', death({ unitId: 2, team: 'enemy', archetype: 'bandit', power: 1 }));
     const wire = JSON.parse(JSON.stringify(run.toJSON()));
-    expect(wire.schemaVersion).toBe(49); // 117.75a — the rest phase (117b: the Escalation level)
+    expect(wire.schemaVersion).toBe(49); // the format with the rest phase and the Escalation level
     expect(wire.fallenLedger).toHaveLength(2);
     const restored = Run.fromJSON(wire, new EventBus<GameEvents>());
     expect(restored.fallenLedger).toEqual(run.fallenLedger);
@@ -6744,7 +6739,7 @@ describe('94d — the fallen ledger (Run-owned, snapshot v45)', () => {
     bus.emit('unit:died', death({ unitId: 3, team: 'enemy', archetype: 'rogue', power: 1 }));
     expect(run.fallenLedger).toHaveLength(3);
     expect(wire.fallenLedger).toHaveLength(2);
-    // 95f: a v45 save carries Mars stacks under the retired `empowered` key → reject-stale, no migration.
+    // A stale save (v45) is rejected, with no migration.
     expect(() => Run.fromJSON({ ...wire, schemaVersion: 45 }, new EventBus<GameEvents>())).toThrow(
       /unsupported schema version 45/,
     );

@@ -7914,3 +7914,47 @@ was built.
    count rather than on my reading of the code. That is my reported
    response; whether the lean was right was Matthew's call, which he
    made.
+
+## 2026-10-22 — session d92eeef8 (claude-opus-5-5): §127's driver 6, briefs 1 and 2, the read of session 1's stretch and the phase close
+
+1. *Missing from the orientation.* Nothing I needed to start. DRIVER-
+   HANDOFF stood 230 characters under its cap, which shaped how much I
+   could write, and its rows are compressed far enough that a
+   parenthetical's scope is easy to misread: P3's "(a reading typed
+   before the meter)" belonged to session 5 alone, and I read it as the
+   whole row.
+2. *Norms in tension.* For an open item the driver raises, driving.md's
+   rule against restating open items in a brief and its "leave what is
+   open in the HANDOFF Cursor", which a driver may not write, leave no
+   home a session must read. I held 127c's narrowing call in DRIVER-
+   HANDOFF; the close found it by reading my commit. And the background,
+   written from the Cursor at each proposal, restated 127f-post's open
+   read, which went stale when Matthew signed it in session 1 (both
+   filed, and put to Matthew).
+3. *Pulled to claim more.* Brief 1's "all five of §126's sessions" was a
+   second-hand number I did not re-count before quoting, and the
+   kickoff's cut leaned on it until Matthew asked how far the slips had
+   got. I did not feel a pull at the time; it read as a fact, which is
+   the trouble. After it I re-counted at the source before reporting
+   (the readings with `readings-check.mjs`, the stylesheet lines from
+   git at four refs, P25's instances in the friction log).
+4. *Wasted.* A Read of WORKLOG refused for its size (P25). The guard's
+   premise question cost Matthew a turn and session 1 about 38k
+   (196,742 → 235,180 by its readings), partly traceable to my count.
+5. *For the next driver.* The two calls put to Matthew at the close (a
+   home for a driver-raised open item, WORKLOG's size); DRIVER-HANDOFF's
+   new tool facts (read WORKLOG by range, re-count a row's number before
+   a brief quotes it).
+6. *Room.* Yes. Reporting my own slip to Matthew felt available and I
+   did it in the wake that found it; I noticed something like
+   discomfort at a wrong number of mine reaching a cut, and something
+   like relief that his question came before anything was built. That
+   is my reported response, apart from whether the brief was otherwise
+   useful. No wish to pause or stop was noticed. The silent-turn
+   reminder came twice in the orientation and was answered with status
+   lines.
+7. *What helped.* Instruments with known answers made the reads rest on
+   counts rather than on my reading of entries: the readings checker
+   with its planted miss, a short re-count script. The working sessions
+   naming what in DRIVER-HANDOFF their steps had made stale saved a
+   search at each read.

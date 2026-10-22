@@ -50,11 +50,11 @@ const K_EMPOWER: { empowersPerTurn: number; buff: EmpowerConfig['buff'] } = {
   },
 };
 /**
- * 74i-c — the event-free control fixture. The Start authors a starting
+ * The event-free control fixture. The Start authors a starting
  * event now (`sector-1-start` — every shipped run OPENS on it), so any
  * test whose subject is the root BATTLE suppresses the catalog: an empty
  * catalog resolves no pool entry and every event-node entry degrades to
- * the fight (the 74b empty-eligible rule). The root's STAMPED kind and
+ * the fight (the empty-eligible rule). The root's STAMPED kind and
  * the battle-side streams are untouched (eventRng is dedicated), so
  * battle expectations hold byte-identically. Tests about events pass
  * their own catalogs; tests about the map's new shape assert the stamp.
@@ -92,7 +92,7 @@ describe('Run', () => {
     it('starts in map phase at the pre-root position (root is the first frontier)', () => {
       const run = new Run(1, new EventBus<GameEvents>(), NO_EVENTS);
       expect(run.phase).toBe('map');
-      // S2 — the run begins at the virtual pre-root; the root is selected as the
+      // The run begins at the virtual pre-root; the root is selected as the
       // first encounter rather than being the inert starting cell.
       expect(run.currentNodeId).toBe(PRE_ROOT_NODE_ID);
     });
@@ -224,9 +224,9 @@ describe('Run', () => {
     });
 
     it('the root is the STAMPED starting event at hop 0 (74i-c — never a boss) on a multi-hop map', () => {
-      // The Start authors `startingEvents` now, so every shipped run OPENS
-      // on the sector-stamped event root (74e's stampRootKind, live since
-      // 74i-c placement). The stamp is sector-driven — catalog suppression
+      // The Start authors `startingEvents`, so every shipped run OPENS
+      // on the sector-stamped event root (`stampRootKind`). The stamp is
+      // sector-driven — catalog suppression
       // (NO_EVENTS) changes entry BEHAVIOR (degrades to the fight), not the
       // node's kind.
       const { run } = freshRunWithBus(1);
@@ -256,7 +256,7 @@ describe('Run', () => {
       const granted = run.team[run.team.length - 1]!;
       expect(granted.archetype).toBe('rogue');
       expect(granted.level).toBe(RECRUITMENT.startingLevel);
-      // 50d — the parallel structures grew with the roster (the chokepoint proof).
+      // The parallel structures grew with the roster (the chokepoint proof).
       const parallel = run as unknown as { deploymentCounts: number[] };
       expect(parallel.deploymentCounts).toHaveLength(run.team.length);
     });
@@ -516,14 +516,14 @@ describe('Run', () => {
       run.dispatch({ kind: 'enterNode', nodeId: frontier });
       expect(run.currentEncounter).not.toBeNull();
       const hand = run.currentEncounter!.playerTeam;
-      // K2: the starting roster (10) > handSize (6), so the hand is a SHUFFLED
+      // The starting roster (10) > handSize (6), so the hand is a SHUFFLED
       // subset — compare as a set keyed by rosterIndex rather than position.
       // (The cap/subset case is covered in the deck suite below.)
       const handSize = Math.min(run.team.length, DECK.handSize);
       expect(hand).toHaveLength(handSize);
       const indices = hand.map((t) => t.rosterIndex!);
       expect(new Set(indices).size).toBe(handSize); // no duplicate cards
-      // E4: each drawn card carries the stats/level of its roster slot, stamped
+      // Each drawn card carries the stats/level of its roster slot, stamped
       // with that slot's index (never mutating run.team).
       for (const t of hand) {
         const { rosterIndex, ...rest } = t;
@@ -568,7 +568,7 @@ describe('Run', () => {
     });
 
     it('D8: encounter.theme is always a registered theme', () => {
-      // Sample many seeds — T2: procedural boards inherit the sector theme,
+      // Sample many seeds — procedural boards inherit the sector theme,
       // hand-authored layouts pin to layout.theme. Both paths must produce
       // valid Theme values.
       for (let seed = 1; seed <= 60; seed++) {
@@ -598,7 +598,7 @@ describe('Run', () => {
     });
 
     it('T2: procedural encounters inherit the current sector theme', () => {
-      // T2 replaced the per-battle theme roll with the SECTOR's theme: every
+      // The theme is the SECTOR's, not a per-battle roll: every
       // procedural board in "The Start" paints that sector's theme. Derive the
       // expected value from config (never hardcode the authored theme).
       const sectorTheme = getSector('the-start')!.theme;
@@ -617,7 +617,7 @@ describe('Run', () => {
     });
 
     it('encounter layoutId is null OR a sector-pool layout (T2 weighted pool)', () => {
-      // T2: the board is a WEIGHTED pick over the current sector's pool — the
+      // The board is a WEIGHTED pick over the current sector's pool — the
       // procedural sentinel + every hand-authored layout, each `weight ?? 1`.
       // Confirm both the procedural and named branches fire and stay in LAYOUT_IDS.
       let proceduralCount = 0;
@@ -677,7 +677,7 @@ describe('Run', () => {
       const frontier = frontierOf(run);
       run.dispatch({ kind: 'enterNode', nodeId: frontier });
       winEncounter(bus);
-      acceptAllRewards(run); // 48f — the full catalog carries reward refs
+      acceptAllRewards(run); // the full catalog carries reward refs
       expect(run.phase).toBe('recruit');
       expect(run.currentEncounter).toBeNull();
       expect(run.currentOffer).not.toBeNull();
@@ -691,7 +691,7 @@ describe('Run', () => {
       const offers: number[] = [];
       bus.on('recruit:offered', ({ units }) => offers.push(units.length));
       winEncounter(bus);
-      acceptAllRewards(run); // 48f — the full catalog carries reward refs
+      acceptAllRewards(run); // the full catalog carries reward refs
       expect(offers).toEqual([3]);
       expect(run.currentOffer).toHaveLength(3);
     });
@@ -723,9 +723,9 @@ describe('Run', () => {
     });
 
     it('G4: recruit level tracks round(avgTeamLevel) + bonus, not the hop', () => {
-      // A leveled starting roster (avg 6) lands at hop 1. Under the old
-      // `currentFloor` basis the offer would be level 1; G4 keys it off the
-      // team average, so offered cards are ≥ round(avg) (= 6). Empty xpAwards
+      // A leveled starting roster (avg 6) lands at hop 1. The offer keys off
+      // the team average, not `currentFloor` (which would give level 1), so
+      // offered cards are ≥ round(avg) (= 6). Empty xpAwards
       // keep the roster levels fixed so the average is exactly the config.
       const bus = new EventBus<GameEvents>();
       const run = new Run(1, bus, {
@@ -739,7 +739,7 @@ describe('Run', () => {
       const frontier = frontierOf(run);
       run.dispatch({ kind: 'enterNode', nodeId: frontier });
       winEncounter(bus);
-      acceptAllRewards(run); // 48f — the full catalog carries reward refs
+      acceptAllRewards(run); // the full catalog carries reward refs
 
       const offer = run.currentOffer!;
       expect(offer).not.toBeNull();
@@ -748,9 +748,9 @@ describe('Run', () => {
         expect(u.level).toBeGreaterThanOrEqual(avg); // base, before any per-card bonus
         expect(u.level).toBeLessThanOrEqual(LEVELING.levelCap);
       }
-      // Post-G5: the geometric bonus is drawn per card (over the shared `avg`
+      // The geometric bonus is drawn per card (over the shared `avg`
       // base), so cards MAY differ — there is no "all share one level"
-      // invariant anymore. Per-card independence is pinned in Recruitment.test.
+      // invariant. Per-card independence is pinned in Recruitment.test.
     });
 
     it('winning at the terminal node routes to the sector gate (not recruit)', () => {
@@ -758,8 +758,8 @@ describe('Run', () => {
       // Force currentNodeId to the terminal so the next battle's win is the
       // final one. Manual state surgery is acceptable for this targeted
       // test — driving a full run is the browser-verify path.
-      // 67c: The Start's terminal is no longer a sink, so the win lands on
-      // the 67a gate; sink completion is pinned in the sector-walk suite.
+      // The Start's terminal is not a sink, so the win lands on the
+      // `sectorCleared` gate; sink completion is pinned in the sector-walk suite.
       run.currentNodeId = run.nodeMap.terminalId;
       run.phase = 'battle';
       let victoryCount = 0;
@@ -845,7 +845,7 @@ describe('Run', () => {
     });
 
     it('banks damage XP for a fallen unit (rosterIndex set even though unit died)', () => {
-      // E4 follow-up: roster persists across battles, so a unit that
+      // The roster persists across battles, so a unit that
       // died in this battle still gets damage credit on its roster
       // slot. The xpFlatPerFallen slice is the participation reward;
       // the per-damage share is paid regardless.
@@ -867,7 +867,7 @@ describe('Run', () => {
       const { run, bus } = freshLvl1RunWithBus(3);
       const frontier = frontierOf(run);
       run.dispatch({ kind: 'enterNode', nodeId: frontier });
-      // H4/M1: a losing turn ends the run (player pool emptied) and skips the
+      // A losing turn ends the run (player pool emptied) and skips the
       // turn's XP bank. (Non-empty awards on a losing turn are pinned
       // separately in the encounter-loop suite.)
       loseEncounter(bus);
@@ -884,7 +884,7 @@ describe('Run', () => {
       const promotions: number[] = [];
       bus.on('promotion:pending', ({ promotions: p }) => promotions.push(p.length));
       winEncounter(bus, [{ unitId: 1, rosterIndex: 0, damageDealt: 0, xpGained: 5 }]);
-      acceptAllRewards(run); // 48f — the full catalog carries reward refs
+      acceptAllRewards(run); // the full catalog carries reward refs
       expect(promotions).toEqual([]);
       // Flow lands directly in recruit phase (no promotion interposes).
       expect(run.phase).toBe('recruit');
@@ -902,7 +902,7 @@ describe('Run', () => {
       );
       bus.on('recruit:offered', ({ units }) => offers.push(units.length));
       winEncounter(bus, [{ unitId: 1, rosterIndex: 0, damageDealt: 0, xpGained: xpToNext(1) }]);
-      acceptAllRewards(run); // 48f — rewards interpose ahead of promotion
+      acceptAllRewards(run); // rewards interpose ahead of promotion
       expect(run.phase).toBe('promotion');
       expect(run.pendingPromotions).not.toBeNull();
       expect(run.pendingPromotions).toHaveLength(1);
@@ -923,8 +923,8 @@ describe('Run', () => {
       const offers: number[] = [];
       bus.on('recruit:offered', ({ units }) => offers.push(units.length));
       winEncounter(bus, [{ unitId: 1, rosterIndex: 0, damageDealt: 0, xpGained: xpToNext(1) }]);
-      // 48f — the full catalog carries reward refs, so the reward phase
-      // interposes first (the shape-locked sequence); resolve it to reach
+      // The full catalog carries reward refs, so the reward phase
+      // interposes first (the signed sequence); resolve it to reach
       // the promotion assertion this test is about.
       acceptAllRewards(run);
       expect(run.phase).toBe('promotion');
@@ -947,7 +947,7 @@ describe('Run', () => {
       const frontier = frontierOf(run);
       run.dispatch({ kind: 'enterNode', nodeId: frontier });
       winEncounter(bus, [{ unitId: 1, rosterIndex: 0, damageDealt: 0, xpGained: xpToNext(1) }]);
-      acceptAllRewards(run); // 48f — rewards interpose ahead of promotion
+      acceptAllRewards(run); // rewards interpose ahead of promotion
       const restored = Run.fromJSON(run.toJSON(), new EventBus<GameEvents>());
       expect(restored.phase).toBe('promotion');
       expect(restored.pendingPromotions).toEqual(run.pendingPromotions);
@@ -976,9 +976,9 @@ describe('Run', () => {
       );
       const selected = pooled.find((e) => e.name === run.currentEncounterName);
       expect(selected).toBeDefined();
-      // V1 — the pool comes from the SELECTED encounter's AUTHORED healthPool
-      // (77d2 re-derived this from the catalog instead of assuming the old
-      // global HEALTH.enemyHealthMax — some catalog fights pool deeper, and a
+      // The pool comes from the SELECTED encounter's AUTHORED healthPool
+      // (read from the catalog, not assumed to be the global
+      // HEALTH.enemyHealthMax — some catalog fights pool deeper, and a
       // stream break re-deals which one seed 1 selects).
       expect(run.enemyHealth).toBe(selected!.healthPool);
       expect(run.enemyHealthPoolMax).toBe(selected!.healthPool);
@@ -993,7 +993,7 @@ describe('Run', () => {
       const frontier = frontierOf(run);
       run.dispatch({ kind: 'enterNode', nodeId: frontier });
       expect(starts).toHaveLength(1); // turn 1 spun up
-      // 77d2 — derive the pool from the selected encounter (seed-robust).
+      // Derive the pool from the selected encounter (seed-robust).
       const pool = run.enemyHealth;
       expect(pool).toBeGreaterThanOrEqual(2);
 
@@ -1007,7 +1007,7 @@ describe('Run', () => {
       // A chip >= the remaining pool empties it → encounter won → recruit.
       chipTurn(bus, { player: pool, enemy: 0 });
       expect(run.enemyHealth).toBe(0);
-      acceptAllRewards(run); // 48f — the full catalog carries reward refs
+      acceptAllRewards(run); // the full catalog carries reward refs
       expect(run.phase).toBe('recruit');
       expect(run.turnIndex).toBe(2);
       expect(starts).toHaveLength(2); // no turn 3
@@ -1023,12 +1023,12 @@ describe('Run', () => {
       expect(run.playerHealth).toBe(HEALTH.playerHealthMax - 5);
       // Win the encounter, recruit, then enter the next node.
       winEncounter(bus);
-      acceptAllRewards(run); // 48f — the full catalog carries reward refs
+      acceptAllRewards(run); // the full catalog carries reward refs
       run.dispatch({ kind: 'chooseRecruit', unitTemplate: run.currentOffer![0]! });
       const second = run.nodeMap.edges.find((e) => e.from === first)!.to;
       run.dispatch({ kind: 'enterNode', nodeId: second });
       expect(run.playerHealth).toBe(HEALTH.playerHealthMax - 5); // carried the wound
-      // 77d2 — reset-to-max derived from the NEW encounter's own pool.
+      // Reset-to-max derived from the NEW encounter's own pool.
       expect(run.enemyHealth).toBe(run.enemyHealthPoolMax);
       expect(run.enemyHealth).toBeGreaterThan(0);
     });
@@ -1073,7 +1073,7 @@ describe('Run', () => {
       expect(run.phase).toBe('battle');
       for (let n = HEALTH.maxTurns - run.turnIndex; n > 0; n--) chipTurn(bus, { player: 0, enemy: 0 });
       // playerFrac (1.0) > enemyFrac (1/max) → encounter won.
-      acceptAllRewards(run); // 48f — the full catalog carries reward refs
+      acceptAllRewards(run); // the full catalog carries reward refs
       expect(run.phase).toBe('recruit');
     });
 
@@ -1104,7 +1104,7 @@ describe('Run', () => {
       ]);
       // The second half crosses → the promotion pauses at the WINNING turn's
       // boundary, before the encounter resolves into the recruit offer
-      // (rewards interpose ahead of it — 48f, the full catalog carries refs).
+      // (rewards interpose ahead of it: the full catalog carries refs).
       acceptAllRewards(run);
       expect(run.phase).toBe('promotion');
       expect(promotions).toEqual([[0]]);
@@ -1118,7 +1118,7 @@ describe('Run', () => {
       const { run, bus } = freshLvl1RunWithBus(1);
       const frontier = frontierOf(run);
       run.dispatch({ kind: 'enterNode', nodeId: frontier });
-      // A big award on the LOSING turn must not bank (M1 skips the bank on a
+      // A big award on the LOSING turn must not bank (the bank is skipped on a
       // lost result — no promotion screen in front of the defeat screen).
       chipTurn(bus, { player: 0, enemy: HEALTH.playerHealthMax }, [
         { unitId: 1, rosterIndex: 0, damageDealt: 0, xpGained: xpToNext(1) * 5 },
@@ -1136,13 +1136,13 @@ describe('Run', () => {
         { unitId: 1, rosterIndex: 0, damageDealt: 0, xpGained: 5 },
       ]);
       expect(run.phase).toBe('battle'); // mid-encounter
-      // M1: the award is already ON the roster slot (no pending-XP sidecar).
+      // The award is already ON the roster slot (no pending-XP sidecar).
       expect(run.team[0]!.xp).toBe(5);
       const restored = Run.fromJSON(run.toJSON(), new EventBus<GameEvents>());
       expect(restored.playerHealth).toBe(run.playerHealth);
       expect(restored.enemyHealth).toBe(run.enemyHealth);
       expect(restored.turnIndex).toBe(run.turnIndex);
-      // U3 — the selected encounter + wave cursor round-trip (replaces the budget).
+      // The selected encounter + wave cursor round-trip.
       expect(restored.currentEncounterName).toBe(run.currentEncounterName);
       expect(restored.waveCursor).toEqual(run.waveCursor);
       expect(restored.team[0]!.xp).toBe(5);
@@ -1186,8 +1186,8 @@ describe('Run', () => {
       run.dispatch({ kind: 'dismissPromotion' });
       chipTurn(bus, { player: 1, enemy: 0 }, levelSlot0(2));
       run.dispatch({ kind: 'dismissPromotion' });
-      // Two separate pauses, two separate level-ups — the pre-M1 model showed
-      // exactly ONE PromotionScene per encounter regardless of turn count.
+      // Two separate pauses, two separate level-ups: a promotion per turn,
+      // not one per encounter.
       expect(promotions).toEqual([[0], [0]]);
       expect(run.team[0]!.level).toBe(3);
       expect(run.phase).toBe('battle');
@@ -1200,7 +1200,7 @@ describe('Run', () => {
       run.dispatch({ kind: 'dismissPromotion' });
       // The 5-unit LVL1 roster fits one hand (≤ handSize), so slot 0 fields
       // every turn. The next turn's encounter embeds the LEVELED template —
-      // spawn derives full HP from these stats (the H4 no-attrition re-field).
+      // spawn derives full HP from these stats (the no-attrition re-field).
       const leveled = run.currentEncounter!.playerTeam.filter((u) => u.level === 2);
       expect(leveled).toHaveLength(1);
       expect(leveled[0]!.stats).toEqual(run.team[0]!.stats);
@@ -1284,7 +1284,7 @@ describe('Run', () => {
       expect(starting).toHaveLength(1);
       expect(starting[0]!.turn).toBe(1);
       expect(starting[0]!.playerHealth).toBe(HEALTH.playerHealthMax);
-      // 77d2 — the payload's pool is the selected encounter's own.
+      // The payload's pool is the selected encounter's own.
       expect(starting[0]!.enemyHealth).toBe(run.enemyHealthPoolMax);
       // The battle hasn't spun up yet — the screen gates it.
       expect(battleStarts).toHaveLength(0);
@@ -1311,7 +1311,7 @@ describe('Run', () => {
       expect(resolved[0]!.enemyPoolChip).toBe(1);
       expect(resolved[0]!.playerPoolChip).toBe(2);
       expect(resolved[0]!.result).toBe('ongoing');
-      // 77d2 — derived from the selected encounter's own pool.
+      // Derived from the selected encounter's own pool.
       expect(resolved[0]!.enemyHealth).toBe(run.enemyHealthPoolMax - 1);
       expect(resolved[0]!.playerHealth).toBe(HEALTH.playerHealthMax - 2);
 
@@ -1334,7 +1334,7 @@ describe('Run', () => {
         playerAfter: HEALTH.playerHealthMax - 2,
         enemyBefore: enemyMax,
         enemyAfter: enemyMax - 1,
-        // 91a2 — the uncapped charges beside the applied pools (survivors:
+        // The uncapped charges beside the applied pools (survivors:
         // the opposing survivors × chipMultiplier).
         playerCharge: 2 * HEALTH.chipMultiplier,
         enemyCharge: 1 * HEALTH.chipMultiplier,
@@ -1369,7 +1369,7 @@ describe('Run', () => {
       chipTurn(bus, { player: 1, enemy: 2 }); // a fake without a reason → the documented mapping
       expect(resolved).toHaveLength(1);
       // A reason-less fake maps 'draw' → 'cap' (the driver's cap) and anything
-      // else → 'decisive' — the pre-§91a1 emitters' meaning (Run.handleTurnEnded).
+      // else → 'decisive' — what an emitter with no reason meant (Run.handleTurnEnded).
       expect(resolved[0]!.reason).toBe(resolved[0]!.winner === 'draw' ? 'cap' : 'decisive');
 
       // Turn 2 (a fresh hand): still the hand's bound against the live pool.
@@ -1379,7 +1379,7 @@ describe('Run', () => {
     });
 
     it('89e — the preview derive perturbs nothing: the gated run fields the headless run\'s waves', () => {
-      // The H4b RNG-alignment contract, re-pinned against the preview: the
+      // The RNG-alignment contract, pinned against the preview: the
       // gated path previews EVERY turn's wave before the gate (an extra
       // stream derive per turn); the headless path never previews. If the
       // preview consumed from a shared stream, the two would diverge.
@@ -1456,12 +1456,12 @@ describe('Run', () => {
       run.dispatch({ kind: 'advanceTurn' }); // → battle
       expect(run.phase).toBe('battle');
 
-      chipTurn(bus, { player: run.enemyHealth, enemy: 0 }); // lethal → won (pool-derived, 77d2)
+      chipTurn(bus, { player: run.enemyHealth, enemy: 0 }); // lethal → won (pool-derived)
       expect(run.phase).toBe('turn-outcome');
       expect(resolved[0]!.result).toBe('won');
 
       run.dispatch({ kind: 'advanceTurn' }); // won → rewards → finishEncounter → recruit
-      acceptAllRewards(run); // 48f — the full catalog carries reward refs
+      acceptAllRewards(run); // the full catalog carries reward refs
       expect(run.phase).toBe('recruit');
       expect(run.currentOffer).not.toBeNull();
     });
@@ -1496,13 +1496,13 @@ describe('Run', () => {
   describe('redraw at the pre-turn gate (K3)', () => {
     it('discards the selected positions and refills them in place from the draw pile', () => {
       const { run } = gatedToFirstTurnIntro(1);
-      // K2 default: roster (10) > handSize (6), so the draw pile holds the rest.
+      // By default the roster (10) > handSize (6), so the draw pile holds the rest.
       expect(run.hand).toHaveLength(Math.min(DECK.handSize, run.team.length));
       const before = run.hand.slice();
       const pile = run.drawPile.slice();
       // Deliberately unsorted: positions refill in ASCENDING hand order
       // whatever the dispatch order, so 1 gets the pile top, 3 the next.
-      // (49d: K_DEFAULT_DAEMON's queue is [redraw@0, empower@1].)
+      // (K_DEFAULT_DAEMON's queue is [redraw@0, empower@1].)
       run.dispatch({ kind: 'redrawCards', handIndices: [3, 1], grantIndex: 0 });
       expect(run.hand).toHaveLength(before.length);
       expect(run.hand[1]).toBe(pile[pile.length - 1]);
@@ -1549,7 +1549,7 @@ describe('Run', () => {
       run.dispatch({ kind: 'redrawCards', handIndices: [], grantIndex: 0 }); // empty
       run.dispatch({ kind: 'redrawCards', handIndices: [0, 0], grantIndex: 0 }); // duplicate
       run.dispatch({ kind: 'redrawCards', handIndices: [run.hand.length], grantIndex: 0 }); // range
-      // 49d — grant-targeting rejects: the wrong KIND (index 1 is the
+      // Grant-targeting rejects: the wrong KIND (index 1 is the
       // empower grant) and an out-of-range queue index.
       run.dispatch({ kind: 'redrawCards', handIndices: [0], grantIndex: 1 });
       run.dispatch({ kind: 'redrawCards', handIndices: [0], grantIndex: 99 });
@@ -1684,7 +1684,7 @@ describe('Run', () => {
     });
 
     it('round-trips the grant queue (a save at the gate must not refresh a spent budget)', () => {
-      // 47d — save/reload needs a CATALOG daemon (bespoke ids hard-reject on
+      // Save/reload needs a CATALOG daemon (bespoke ids hard-reject on
       // load); janus is the guaranteed-redraw idol.
       const { run } = gatedToFirstTurnIntro(10, daemonById('janus')!);
       run.dispatch({ kind: 'redrawCards', handIndices: [1], grantIndex: 0 });
@@ -1692,26 +1692,26 @@ describe('Run', () => {
       const restored = Run.fromJSON(wire, new EventBus<GameEvents>());
       expect(restored.phase).toBe('turn-intro');
       expect(restored.hand).toEqual(run.hand);
-      // 49d — the queue entries round-trip whole (used/passed included).
+      // The queue entries round-trip whole (used/passed included).
       expect(restored.grantViews()).toEqual(run.grantViews());
       expect(restored.grantViews()[0]!.remaining).toBe(0); // still spent
-      // (The pre-K3 v12 reject rides the generic `schemaVersion - 1` test.)
+      // (A stale save's reject rides the generic `schemaVersion - 1` test.)
     });
   });
 
   describe('empower at the pre-turn gate (K4)', () => {
-    // 49f — this block pins the empower MECHANIC (store/budget/badges),
+    // This block pins the empower MECHANIC (store/budget/badges),
     // not queue ordering, and K_DEFAULT_DAEMON's queue is [redraw@0,
-    // empower@1] — under the now-shipped strict default (`passIsFinal:
-    // true`, the 49f flip) an empower behind the cursor rejects. These
+    // empower@1] — under the shipped strict default (`passIsFinal:
+    // true`) an empower behind the cursor rejects. These
     // tests run under an explicit FREE-mode override; the strict-ordering
-    // behavior has its own 49d pins ("the grant queue" block below).
+    // behavior has its own pins ("the grant queue" block below).
     const FREE_MODE = { passIsFinal: false } as const;
     it('adds the configured buff to the slot store; the fielded unit carries it that turn', () => {
       const { run } = gatedToFirstTurnIntro(1, K_DEFAULT_DAEMON, FREE_MODE);
       const pos = 2;
       const slot = run.hand[pos]!;
-      // 49d: K_DEFAULT_DAEMON's queue is [redraw@0, empower@1].
+      // K_DEFAULT_DAEMON's queue is [redraw@0, empower@1].
       run.dispatch({ kind: 'empowerUnit', grantIndex: 1, handIndex: pos });
       const stored = run.encounterEffects[slot]!;
       expect(stored).toHaveLength(1);
@@ -1760,7 +1760,7 @@ describe('Run', () => {
       run.dispatch({ kind: 'empowerUnit', grantIndex: 1, handIndex: run.hand.length }); // range
       run.dispatch({ kind: 'empowerUnit', grantIndex: 1, handIndex: -1 }); // negative
       run.dispatch({ kind: 'empowerUnit', grantIndex: 1, handIndex: 0.5 }); // non-integer
-      // 49d — grant-targeting rejects: the wrong KIND (index 0 is the redraw
+      // Grant-targeting rejects: the wrong KIND (index 0 is the redraw
       // grant) and an out-of-range queue index.
       run.dispatch({ kind: 'empowerUnit', grantIndex: 0, handIndex: 0 });
       run.dispatch({ kind: 'empowerUnit', grantIndex: 99, handIndex: 0 });
@@ -1805,7 +1805,7 @@ describe('Run', () => {
       run.dispatch({ kind: 'empowerUnit', grantIndex: 1, handIndex: pos2 });
       const stored = run.encounterEffects[slot]!;
       expect(stored).toHaveLength(1);
-      // Expectation derived from the config merge policy (K1 magnitude math).
+      // Expectation derived from the config merge policy (the status magnitude math).
       expect(stored[0]!.magnitude).toBe(combineMagnitude(K_EMPOWER.buff.merge, 1, 1));
     });
 
@@ -1847,7 +1847,7 @@ describe('Run', () => {
       expect(empowereds[0]!.handIndex).toBe(1);
       expect(empowereds[0]!.grants).toEqual(run.grantViews());
       expect(empowereds[0]!.grants[1]!.remaining).toBe(K_EMPOWER.empowersPerTurn - 1);
-      // 78c — per-key: the buffed position carries one entry (the idol's
+      // Per-key: the buffed position carries one entry (the idol's
       // key, mods straight from the authored buff — config-derived, never
       // hardcoded); every other position is empty.
       expect(empowereds[0]!.empowerStacks.map((s) => s.length)).toEqual(
@@ -1876,7 +1876,7 @@ describe('Run', () => {
     });
 
     it('round-trips the spent grant (a save at the gate must not refresh the budget)', () => {
-      // 47d — save/reload needs a CATALOG daemon (bespoke ids hard-reject on
+      // Save/reload needs a CATALOG daemon (bespoke ids hard-reject on
       // load); mars is the guaranteed-empower idol (its queue = [empower@0]).
       const { run } = gatedToFirstTurnIntro(9, daemonById('mars')!);
       run.dispatch({ kind: 'empowerUnit', grantIndex: 0, handIndex: 0 });
@@ -1885,9 +1885,9 @@ describe('Run', () => {
       expect(restored.phase).toBe('turn-intro');
       expect(restored.grantViews()).toEqual(run.grantViews());
       expect(restored.grantViews()[0]!.remaining).toBe(0); // still spent
-      // The buff itself rides the K1 v12 `encounterEffects` round-trip.
+      // The buff itself rides the `encounterEffects` round-trip.
       expect(restored.encounterEffects).toEqual(run.encounterEffects);
-      // (The pre-K4 v14 reject rides the generic `schemaVersion - 1` test.)
+      // (A stale save's reject rides the generic `schemaVersion - 1` test.)
     });
   });
 
@@ -2008,7 +2008,7 @@ describe('Run', () => {
               id: mars.id,
               name: mars.name,
               description: mars.description,
-              // L1c2→47d — hook presence, derived from the catalog entry's
+              // Hook presence, derived from the catalog entry's
               // rules (mars is empower-only). The buff rides `empowers`.
               redrawGate: false,
               empowerGate: true,
@@ -2023,7 +2023,7 @@ describe('Run', () => {
         bus.on('turn:starting', (p) => startings.push(p));
         run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
         expect(startings[0]!.daemons).toEqual(expected);
-        // 49d — the queue view carries the buff + source identity.
+        // The queue view carries the buff + source identity.
         if (daemon !== null) {
           expect(startings[0]!.grants).toEqual([
             {
@@ -2050,7 +2050,7 @@ describe('Run', () => {
       const mercury = daemonById('mercury')!;
       const { run, bus } = gatedToFirstTurnIntro(27, mercury);
       const wire = JSON.parse(JSON.stringify(run.toJSON()));
-      // 47d — the wire carries ids only, not rule payloads.
+      // The wire carries ids only, not rule payloads.
       expect(wire.daemonIds).toEqual(['mercury']);
       const busB = new EventBus<GameEvents>();
       const restored = Run.fromJSON(wire, busB);
@@ -2202,7 +2202,7 @@ describe('Run', () => {
         run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
         const first = run.encounterMap!.layoutId;
         winEncounter(bus);
-        acceptAllRewards(run); // 48f — the full catalog carries reward refs
+        acceptAllRewards(run); // the full catalog carries reward refs
         if (run.phase === 'promotion') run.dispatch({ kind: 'dismissPromotion' });
         if (run.phase !== 'recruit') continue;
         run.dispatch({ kind: 'passRecruit' });
@@ -2283,7 +2283,7 @@ describe('Run', () => {
       run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
       expect(run.encounterMap).not.toBeNull();
       winEncounter(bus);
-      acceptAllRewards(run); // 48f — finishEncounter (which drops the map) runs after rewards
+      acceptAllRewards(run); // finishEncounter (which drops the map) runs after rewards
       expect(run.encounterMap).toBeNull(); // dropped with the encounter
       // The defeat path drops it too.
       const lost = freshRunWithBus(2);
@@ -2301,7 +2301,7 @@ describe('Run', () => {
       const wire = JSON.parse(JSON.stringify(run.toJSON()));
       const restored = Run.fromJSON(wire, new EventBus<GameEvents>());
       expect(restored.encounterMap).toEqual(run.encounterMap);
-      // (The pre-K3.5 v13 reject rides the generic `schemaVersion - 1` test.)
+      // (A stale save's reject rides the generic `schemaVersion - 1` test.)
     });
   });
 
@@ -2381,7 +2381,7 @@ describe('Run', () => {
       run.currentEncounter!.playerTeam.find((u) => u.rosterIndex === rosterIndex)!;
 
     /** Effective stats of that fielded unit — base `stats` folded with the
-     *  seeded `effects` (where the Fatigued debuff now lives, post-K1). */
+     *  seeded `effects` (where the Fatigued debuff lives). */
     const fieldedStats = (run: Run, rosterIndex: number) => {
       const t = fielded(run, rosterIndex);
       return foldEffects(t.stats, t.effects ?? []);
@@ -2406,7 +2406,7 @@ describe('Run', () => {
     it('seeds a Fatigued effect that reduces CONSTITUTION (starting HP), not power, once the knob is positive (§91c)', () => {
       // rate > 0.5 so even a low-constitution unit rounds strictly down at 1 stack.
       HEALTH.fatiguePerStack = 0.6;
-      const { run, bus } = freshShortRosterRun(1); // slot 0 must field every turn (K2)
+      const { run, bus } = freshShortRosterRun(1); // slot 0 must field every turn (the roster fits one hand)
       run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
 
       const base = run.team[0]!.stats;
@@ -2460,7 +2460,7 @@ describe('Run', () => {
     });
 
     it('seeds an encounter effect onto the fielded unit and persists it across turns', () => {
-      const { run, bus } = freshShortRosterRun(1); // slot 0 must field every turn (K2)
+      const { run, bus } = freshShortRosterRun(1); // slot 0 must field every turn (the roster fits one hand)
       run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
       run.addEncounterEffect(0, empower()); // added after turn 1's seed → from turn 2
       chipTurn(bus, { player: 1, enemy: 0 }); // → turn 2
@@ -2490,7 +2490,7 @@ describe('Run', () => {
       run.dispatch({ kind: 'enterNode', nodeId: first });
       run.addEncounterEffect(0, empower());
       winEncounter(bus);
-      acceptAllRewards(run); // 48f — the full catalog carries reward refs
+      acceptAllRewards(run); // the full catalog carries reward refs
       run.dispatch({ kind: 'chooseRecruit', unitTemplate: run.currentOffer![0]! });
       const second = run.nodeMap.edges.find((e) => e.from === first)!.to;
       run.dispatch({ kind: 'enterNode', nodeId: second });
@@ -2503,7 +2503,7 @@ describe('Run', () => {
       run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
       const before = run.team.length;
       winEncounter(bus);
-      acceptAllRewards(run); // 48f — the full catalog carries reward refs
+      acceptAllRewards(run); // the full catalog carries reward refs
       run.dispatch({ kind: 'chooseRecruit', unitTemplate: run.currentOffer![0]! });
       expect(run.encounterEffects).toHaveLength(before + 1);
       expect(run.encounterEffects[run.encounterEffects.length - 1]).toEqual([]);
@@ -3717,7 +3717,7 @@ describe('Run', () => {
 
       // Clear the root battle, recruit, then hop to a child node.
       winEncounter(bus);
-      acceptAllRewards(run); // 48f — the full catalog carries reward refs
+      acceptAllRewards(run); // the full catalog carries reward refs
       run.dispatch({ kind: 'chooseRecruit', unitTemplate: run.currentOffer![0]! });
       const second = run.nodeMap.edges.find((e) => e.from === run.nodeMap.rootId)!.to;
       run.dispatch({ kind: 'enterNode', nodeId: second });
@@ -4075,7 +4075,7 @@ describe('Run', () => {
       const first = frontierOf(run);
       run.dispatch({ kind: 'enterNode', nodeId: first });
       winEncounter(bus);
-      acceptAllRewards(run); // 48f — the full catalog carries reward refs
+      acceptAllRewards(run); // the full catalog carries reward refs
       run.dispatch({ kind: 'chooseRecruit', unitTemplate: run.currentOffer![0]! });
       const second = run.nodeMap.edges.find((e) => e.from === first)!.to;
       run.dispatch({ kind: 'enterNode', nodeId: second });
@@ -4095,7 +4095,7 @@ describe('Run', () => {
       run.dispatch({ kind: 'enterNode', nodeId: first });
       const before = run.team.length;
       winEncounter(bus);
-      acceptAllRewards(run); // 48f — the full catalog carries reward refs
+      acceptAllRewards(run); // the full catalog carries reward refs
       run.dispatch({ kind: 'chooseRecruit', unitTemplate: run.currentOffer![0]! });
       expect(run.team).toHaveLength(before + 1);
       expect(run.deploymentCounts).toHaveLength(run.team.length);
@@ -4202,7 +4202,7 @@ describe('Run', () => {
       run.dispatch({ kind: 'enterNode', nodeId: first });
       const sizeBefore = run.team.length;
       winEncounter(bus);
-      acceptAllRewards(run); // 48f — the full catalog carries reward refs
+      acceptAllRewards(run); // the full catalog carries reward refs
       run.dispatch({ kind: 'chooseRecruit', unitTemplate: run.currentOffer![0]! });
       expect(run.team).toHaveLength(sizeBefore + 1);
       const second = run.nodeMap.edges.find((e) => e.from === first)!.to;
@@ -4347,7 +4347,7 @@ describe('Run', () => {
       // The root is a normal battle node → a normal encounter.
       expect(run.selectedEncounter!.kind).toBe('normal');
       winEncounter(bus);
-      acceptAllRewards(run); // 48f — the full catalog carries reward refs
+      acceptAllRewards(run); // the full catalog carries reward refs
       run.dispatch({ kind: 'chooseRecruit', unitTemplate: run.currentOffer![0]! });
 
       run.dispatch({ kind: 'enterNode', nodeId: boss });

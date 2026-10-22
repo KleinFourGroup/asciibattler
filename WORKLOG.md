@@ -16375,3 +16375,62 @@ over.
 
 Readings: 463,518 at 00:18 on `85e109d9`, 498,659 at 00:23 before this
 entry: about 35k for 87 codes, 400 a code.
+
+The suite by the hook at `b5b36d11`: 3,702 passed, and the smoke 595.
+
+### 126m, batch 7 — `Run.test.ts`, lines 1 to 2443 (2026-10-22, session 3d57d006)
+
+The plan's two halves of `Run.test.ts` became three parts when this
+batch started: at 499k, a half (about 107 codes, about 50k) with the
+hand-off after it would have ended near 585k, too close to the halt, so
+this batch takes the file to the `describe` at line 2444, 70 codes, and
+the rest (136 codes, lines 2444 to the end) is the next session's, in
+one batch or two.
+
+78 codes, in 54 hunks: the 70 before line 2444, and 8 after it that two
+repeated comments carried. The applier gained a hunk kind for those: a
+substring replaced a stated number of times, refused when the count in
+the file differs before or after the line hunks (its control: a planted
+count of 15 against the file's 16, refused with nothing written). Three
+substrings went that way: `(run); // 48f — the full catalog carries
+reward refs` (16 lines, 7 of them past line 2444), `(run); // 48f —
+rewards interpose ahead of promotion` (2) and `// slot 0 must field every
+turn (K2)` (2, one past line 2444).
+
+Reasons that replace a code, with where each was checked:
+
+- "74e's stampRootKind, live since 74i-c placement" is `stampRootKind`
+  (`NodeMap.ts:882`).
+- "the 67a gate" is the `sectorCleared` gate (`Run.ts:155`).
+- "the 49f flip" and "the now-shipped strict default" are the shipped
+  default, `passIsFinal: true` (`config/deck.json:5`).
+- "(The pre-K3 v12 reject …)", "(The pre-K4 v14 …)", "(The pre-K3.5 v13
+  …)" are a stale save's reject, which the generic `schemaVersion - 1`
+  test covers.
+- "the 48f full catalog carries reward refs" and the rest of the 48f
+  notes keep their words; "the shape-locked sequence" is the signed
+  sequence.
+- The G4, G5, M1, H4, U3, 77d2 and 91a1 notes put in the present, with
+  what they replaced dropped.
+
+No claim in this part was found false. Not checked: the starting
+roster's size, "(10)", in two comments; the code beside each reads it
+from the run.
+
+**Proof.** `comment-strip HEAD src`: `Run.test.ts` differs in comments
+only, exit 0; the control named it. `comment-codes`: 214 → 136, all past
+line 2443, and `--record` wrote 136 in 1 file. `comment-length` on the
+file: comment lines 801 both, words 8,836 → 8,762, code lines 5,488
+both.
+
+**Read** (`batch`): `git show <this commit> -- src`. What changed: the
+step codes in `Run.test.ts`'s first 2,443 lines, and eight in its later
+lines that repeat the same words. Where to look: the event-free fixture's
+header, the empower block's FREE-mode note, the 48f reward comments.
+Wrong looks like a reward comment that no longer says why
+`acceptAllRewards` is called, or a present-tense rule the run does not
+follow.
+
+Readings: 498,953 at 00:26 on `b5b36d11`, 532,947 at 00:32 before this
+entry: about 34k for 78 codes, 435 a code, the applier's new hunk kind
+included.

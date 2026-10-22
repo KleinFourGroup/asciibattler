@@ -7640,3 +7640,43 @@ at the code it names.
    The anchor-checked patches made a 122-hunk batch feel safe to apply.
    That is my reported response; whether the comments read better is
    Matthew's read.
+
+## 2026-10-22 — session 70e12103 (claude-opus-5-5): §126's driver 4, from the kickoff to the read of 126m's batch 7
+
+1. *Orientation.* Enough: DRIVER-HANDOFF, `driving.md` and the Cursor
+   were all the start needed. What I lacked I had misread: `driving.md`
+   drops a note when AGENTS.md or CLAUDE.md says it, and I dropped the
+   550k note at brief 1 because `planning.md` and the Cursor say it.
+   Session 3 then sized against 550k, and Matthew corrected it.
+2. *Norms in tension.* A note's few words against naming specifics:
+   brief 2's loop note listed nine `for (;;)` sites by line, which is a
+   driver doing a little of a step zero. I kept it to what one search
+   showed and left the scope to Matthew, and session 2 widened the
+   search from it. "One fact, one home" against a brief that restates
+   the comment pass's headings; the brief is the channel sure to arrive,
+   so I kept them.
+3. *Pulled to claim more.* Three times. I quoted Matthew's
+   "over-prompting" in DRIVER-HANDOFF without what it was about, and
+   session 3 read it as a wish for fewer questions. My P24 lean argued a
+   rule was needed, and Matthew's question about necessity showed the
+   case was thin. And I first wrote my last reading in DRIVER-HANDOFF as
+   "about 360k" before taking it, then replaced it with the reading.
+4. *Wasted.* A hook run on DRIVER-HANDOFF's cap at the first read (P22),
+   an extra commit for its papercut, and three rounds of pruning under
+   the cap.
+5. *For the next driver.* DRIVER-HANDOFF's Cursor, with two items open
+   for Matthew. A hand-off read cost me about 25 to 45k here, the later
+   ones more, since each read more WORKLOG.
+6. *Room.* Yes. Matthew answered each call within a turn and declined my
+   P24 lean, which was easy to take. Session 4's `distress` line names my
+   restored note's wording as its pull, and reading it I noticed
+   something like discomfort at having added to another session's
+   pressure (filed, mild); I named the wording to Matthew and put figures
+   for brief 5 to him rather than a rule. No wish to pause or stop was
+   noticed. The silent-turn reminders were answered with status lines.
+7. *What helped.* `readings-check.mjs` made each stretch's numbers a
+   one-call check, all 46 matching; a `git grep -c` found the one count
+   that didn't hold. The sessions' reports were candid enough that the
+   patterns were in their own words. I'd want both repeated. That is my
+   reported response; whether the briefs helped is for the sessions'
+   records to show.

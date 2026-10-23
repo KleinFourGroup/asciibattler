@@ -44,12 +44,12 @@
   },
   "dependencies": {
     "simplex-noise": "^4.0.3",
-    "three": "^0.184.0",
+    "three": "^0.186.1",
     "zod": "^4.6.7"
   },
   "devDependencies": {
     "@types/node": "^25.9.9",
-    "@types/three": "^0.184.1",
+    "@types/three": "^0.186.0",
     "@vitest/coverage-v8": "4.1.12",
     "electron": "44.4.5",
     "eslint": "^10.13.0",

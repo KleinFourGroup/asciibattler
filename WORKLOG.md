@@ -18041,3 +18041,47 @@ blank page, a console error, a missing font or sound, or a save that no
 longer reloads the page.
 
 Readings: **310,540** on 129c's commit.
+
+### 129e — three and @types/three to 0.186 (2026-10-23, session 1c4b19b7; built, its read at 129g)
+
+**Step zero.** The migration guide's 184 → 185 and 185 → 186 sections,
+held against our use (`WebGLRenderer`, `EffectComposer`, `RenderPass`,
+`UnrealBloomPass`, `ShaderPass`, `OutputPass`): no `matrixAutoUpdate =
+false` (185's world-matrix rule), no `inverseTransformDirection` in a
+shader (deprecated at 185), no `Object3D` subclass to call
+`super.dispose()` (186). r185's fix to `Raycaster.setFromCamera` for
+orthographic cameras (#33568) reaches `Renderer.pickCell`, but it changes
+the ray's origin only under reversed depth or WebGPU's coordinates; for
+`WebGLRenderer` the formula is the old one. Nothing to change in `src`.
+
+**The change.** `three` `^0.186.1`, `@types/three` `^0.186.0`; the
+typecheck is clean.
+
+**The proofs.**
+
+- *A still frame* (`scratch/129/still-hash.js`): the run's clocks parked,
+  one frame rendered by `__probe.frame(0)`, which never moves the sim, and
+  the whole 1280×720 canvas read back in that task, hashed and reduced to
+  a 16×9 grid of mean colours. Two launches of one build differ in a few
+  pixels (the hash differs; 2 to 6 grid cells move by one level), some
+  render-side detail that runs on real time before the clocks park, so
+  the grid with its noise floor is the measure. On the `quarry` and `live`
+  fixtures at tick 0, two shots each on 0.184 (129d's build) and two on
+  0.186: every pair across the bump differs in 1 to 5 cells by one level,
+  inside the same-build pairs' 2 to 6. The known answer: the bloom pass's
+  strength raised 10% in the page moves 35 to 46 cells by up to two
+  levels.
+- *Render time per frame* (129d's probe): 0.472, 0.455 and 0.446 ms after,
+  against 0.458, 0.480 and 0.455 before; 60 fps and no hitch; the same
+  three console warnings and none from three.js; no failed load.
+- *The production build:* `dev-scan` clean; the `three` chunk 522,971 →
+  543,859 bytes, the rest the same sizes.
+
+**Not verified here:** Firefox, the map, the screens and anything moving
+(the stills are two boards at their first tick). The user's read at 129g,
+in Firefox: a battle and the map, the bloom on the bright glyphs, the
+ground marks, glyph edges, the CRT look; wrong looks like a colour shift,
+a halo grown or gone, a soft or missing glyph, or a three.js warning in
+the console.
+
+Readings: **331,673** on 129d's commit.

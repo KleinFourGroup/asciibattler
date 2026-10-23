@@ -368,7 +368,7 @@ task rather than bundling the fix.
 
 - Node 25.5, npm 11.8
 - TypeScript 6.0.3, Vite 8.3.5
-- three.js 0.184.0, simplex-noise 4.0.3; fonts are self-hosted subsets
+- three.js 0.186.1, simplex-noise 4.0.3; fonts are self-hosted subsets
   (JetBrains Mono 2.304 + DejaVu Sans Mono 2.37 under `assets/fonts/`, built
   by `npm run gen:font`)
 - Vitest 4.1.12, ESLint 10.13.0, typescript-eslint 8.72.0, prettier 3.9.10

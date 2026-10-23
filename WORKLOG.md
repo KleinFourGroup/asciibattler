@@ -17908,3 +17908,27 @@ change the process tree CLAUDE.md's "Background work" kills by PID.
 
 Readings: **99,956** at 14:56 UTC after HANDOFF; **173,398** at 15:06
 with the cut drafted; **193,042** at 15:23 with 129i added.
+
+### 129a — Vitest and coverage-v8 to 4.1.12 (2026-10-23, session 1c4b19b7)
+
+**Step zero.** The notes from 4.1.7 to 4.1.12 are bug fixes; the two
+security fixes (4.1.11, 4.1.12) harden `vi.mock`'s redirect and manual
+mocks, and the suite has no `vi.mock`, `vi.doMock` or `vi.hoisted` (a grep
+that finds the 38 `vi.fn` and `vi.spyOn` calls, its control).
+
+**The change.** `vitest` `^4.1.12`, `@vitest/coverage-v8` `4.1.12` (each
+pin kept in its style). The lockfile moved Vitest's own packages and
+seven of its dependencies (`chai` 6.3.0, `es-module-lexer`, `expect-type`,
+`obug`, `std-env`, `tinyexec`, `tinyrainbow`), nothing else.
+
+**The proof.** `reach-record npm-test smoke` on 4.1.6 before the install
+and on 4.1.12 after (`scratch/129/a/before`, `after`): 3727 tests in 257
+files and 583 in 59 passing both times, and `reach-diff` reads "nothing
+lost" in each direction for both proofs, so the two versions run the same
+lines, functions and branch arms. Its control: the suite's reading against
+the smoke's reports 5,853 lines lost in 205 files, exit 1. The parity test
+passes on both. `npm audit` reads 7 (the three Vitest packages gone), and
+`npm audit signatures` verifies all 179 packages, 61 with attestations.
+
+The readings under `output/reach/` for `npm-test` and `smoke` are now of
+this tree; the other four are still of `a45a7af`.

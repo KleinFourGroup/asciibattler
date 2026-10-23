@@ -429,7 +429,8 @@ Electron to 44.9.3 only, lint ignoring `output/` and `clips/`. Every
 "before" reading is taken before its install (WORKLOG §129, "The
 kickoff").
 
-- ☐ **129a — Vitest and coverage-v8 to 4.1.12** (`none`).
+- ☑ **129a — Vitest and coverage-v8 to 4.1.12** (`none`). The suite and
+  the smoke reach the same lines both ways; the audit 10 → 7 (WORKLOG §129).
 - ☐ **129b — the dev-only minors, and lint's ignore list** (`none`).
 - ☐ **129c — zod to 4.6.7** (`none`).
 - ☐ **129d — Vite to 8.3.5** (`batch`; read at 129g).

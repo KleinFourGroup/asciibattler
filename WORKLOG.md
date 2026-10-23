@@ -17974,3 +17974,27 @@ repack, and a session that regenerates for another reason will see it in
 its diff.
 
 Readings: **269,685** on 129a's commit.
+
+### 129c — zod to 4.6.7 (2026-10-23, session 1c4b19b7)
+
+**Step zero.** 4.5.0's soundness fixes "may now reject input it used to
+accept" (a string's `.min()`, `.max()` and `.length()` count code points,
+not UTF-16 units; an intersection of objects folds into one object; a
+wrapper's inner schema runs on its own payload), and 4.6.0 fixes a
+memory regression of 4.5's in recursive schemas. 4.6.6's notes carry a
+notice: six malicious commits pushed to zod's `main` on 2026-09-21 with a
+stolen credential, reverted that day, none published to npm; its
+releases are staged for approval since.
+
+**The change.** `zod` `^4.6.7`, the one package moved.
+
+**The proofs.** `config-dump` of the 69 exports under `src/config` on
+4.4.3 before the install and on 4.6.7 after: `json-diff` reads no
+difference. Its control, the before dump with its first number raised
+(`scratch/129/plant-json.mjs`), is reported
+(`ABILITIES_PROSE…sword.cooldownSeconds: 1.5 → 2.5`, exit 1). The fuzz
+diff's shapes are byte-identical to 129b's after reading; the smoke, run
+by hand since the hook's paths miss the package files, 583 of 583 in 59; the
+suite and the corpus by the hook. `npm audit signatures`: 186 verified.
+
+Readings: **298,636** on 129b's commit.

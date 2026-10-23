@@ -434,7 +434,8 @@ kickoff").
 - ☑ **129b — the dev-only minors, and lint's ignore list** (`none`).
   `dist/` and the fuzz shapes byte-identical, lint 0; the font call to
   129g (WORKLOG §129).
-- ☐ **129c — zod to 4.6.7** (`none`).
+- ☑ **129c — zod to 4.6.7** (`none`). The parsed config and the fuzz
+  shapes unchanged; the smoke 583 (WORKLOG §129).
 - ☐ **129d — Vite to 8.3.5** (`batch`; read at 129g).
 - ☐ **129e — three and @types/three to 0.186** (`batch`; read at 129g).
 - ☐ **129f — Electron to 44.9.3, and `npm audit fix`** (`none`).

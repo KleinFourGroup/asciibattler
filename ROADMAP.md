@@ -447,8 +447,9 @@ kickoff").
   audit 0; the recorder's twin unchanged, both controls caught.
 - ☑ **129g — Node 26** (`stop`, the user's install). 26.12.1 and npm
   11.20; config, fuzz shapes and build the same as under 25.
-- ☐ **129h — Vitest and coverage-v8 to 5** (`none`; `stop` if a changed
-  default changes what a test proves).
+- ☑ **129h — Vitest and coverage-v8 to 5** (`none`; `stop` if a changed
+  default changes what a test proves). No default reached a test; the
+  same code reached; the smoke's time unchanged by a paired bench.
 - ☐ **129i — nvm for Windows 2.0.1** (`stop`, the user's install).
 - ☐ **129j — the close** (`stop`).
 

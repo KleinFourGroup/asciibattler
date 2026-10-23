@@ -358,7 +358,7 @@ It takes about 45 s, or about 3 minutes with the smoke. Never bypass it
 with `--no-verify`; a failing hook means the tree needs fixing. It doesn't
 run lint or prettier; leave formatting drift in files you didn't touch.
 
-Vitest's esbuild transform accepts some code that strict `tsc` rejects
+Vitest's transform accepts some code that strict `tsc` rejects
 (readonly mutation, `exactOptionalPropertyTypes` mismatches), which is why
 the hook runs both. On a clone without the hook, run the same commands by
 hand. If typecheck fails on a file you didn't touch, flag it as a separate
@@ -371,4 +371,4 @@ task rather than bundling the fix.
 - three.js 0.186.1, simplex-noise 4.0.3; fonts are self-hosted subsets
   (JetBrains Mono 2.304 + DejaVu Sans Mono 2.37 under `assets/fonts/`, built
   by `npm run gen:font`)
-- Vitest 4.1.12, ESLint 10.13.0, typescript-eslint 8.72.0, prettier 3.9.10
+- Vitest 5.0.5, ESLint 10.13.0, typescript-eslint 8.72.0, prettier 3.9.10

@@ -18164,3 +18164,67 @@ under Node 25's install; the smoke 583 of 583 in 59; the parity test
   `setItem`. The store never trusted `typeof localStorage`, and the tests
   plant Node 25's shape themselves; the comments that name Node 25 stay
   true as written.
+
+### 129h — Vitest and coverage-v8 to 5 (2026-10-23, session 1c4b19b7)
+
+**Step zero, the migration guide held against the suite.** `clearMocks`
+now defaults to true; the five files with `vi.fn` or `vi.spyOn` create
+their mocks inside the test bodies (the two `beforeAll` hooks, in the
+rollout tests, set up other state), so a cleared history is never read.
+Unawaited `.resolves` and `.rejects` now fail; all eight are awaited.
+No test uses snapshots, `toThrow('')`, `expect.poll`, `sequential`,
+worker ids, projects, a `$` title or a removed entry point. Coverage
+`include` and `exclude` now match root-relative paths without
+`contains`; `reach.ts`'s globs were root-relative already. The JSON
+reporter writes to `.vitest/` unless given a file; `plantProofs.ts` gives
+`--outputFile`. Vitest 5 requires Node 22, 24 or 26 (hence 129g). Not
+taken from the notes: a guess that Vitest 4's compile cache had made
+coverage misplace statements. PR #10742 says the v8 provider always
+stripped the cache from workers.
+
+**The change.** `vitest` `^5.0.5`, `@vitest/coverage-v8` `5.0.5` (pinned
+exactly, as before). 28 packages moved; `@vitest/expect`, `runner`,
+`snapshot`, `utils` and `pretty-format` leave the tree, since 5 bundles
+its assertions. TESTING.md: Vitest 5, and a reading is of the tree and
+the toolchain. AGENTS: the transform is no longer esbuild's (Vite 8 moved
+it to oxc before this phase); the toolchain line.
+
+**The proofs.**
+
+- *The counts:* the suite 3727 in 257, the smoke 583 in 59, the parity
+  test 1, on 5.0.5.
+- *What the proofs reach:* `reach-record npm-test smoke` on 4.1.12 and on
+  5.0.5, both under Node 26 and Vite 8.3.5. `reach-diff` refuses the pair:
+  coverage-v8 5 counts 28 lines as no statement's start that 4 counted
+  (ordinary `const` declarations, such as `Run.ts:1528`), so 19 of 391
+  files change shape. `scratch/129/reach-common.mjs` compares what both
+  count: 28,942 statement lines, 5,660 functions and 16,948 branch arms,
+  reached or not the same in both, for the suite and for the smoke (0
+  disagreements). Its control, the suite's reading against the smoke's:
+  15,833 disagreements, exit 1.
+- *The plant reads Vitest 5's report:* `oracle plant
+  --at=src/core/RNG.ts:64 --op=bump --proofs=suite` (`+ 1` → `+ 2` in
+  `int()`) exits 0, the suite failing in 41 files.
+- The typecheck clean; `npm audit` 0; no `.vitest/` folder written.
+
+**Reach across the toolchain.** 129a's readings (Node 25, Vite 8.0.13,
+Vitest 4.1.12) against 129h's before (Node 26, Vite 8.3.5, the same
+Vitest): 15 files shift a statement's start by a line or add one, with the
+same functions and branches, so `reach-diff` refuses that pair too. Vite's
+transform and V8 both moved between them; which one did it is not
+measured. Hence TESTING's line.
+
+**Time.** Two single smoke runs on 5.0.5 (105.7 s, 100.7 s) against one
+on 4.1.12 under Node 26 (86.1 s at 129g) looked 20% slower, and the hook
+runs the smoke for every sim commit. A paired bench settled it
+(`scratch/129/smoke-bench.sh`): 4.1.12 in a worktree at `350a080f` with
+its own `npm ci`, not the junction, one discarded leg, then the two in
+turn, one at a time. 4.1.12: 107.5 and 92.7 s (the discarded leg 105.2);
+5.0.5: 106.3 and 102.0 s; each leg's `RUN` line names its version. The
+means, 100.1 and 104.1 s, sit inside 4.1.12's own 15 s spread, so no
+difference shows at this n, and 86.1 s was a quiet moment on the
+machine. Vitest 5's default worker count in a run is still the cores
+less one (31 here). The suite: 54.5 s on 5.0.5, alone. The worktree is
+removed.
+
+Readings: **405,220** on 129g's commit.

@@ -32,7 +32,7 @@ If the renderer ever grows pure-logic helpers (e.g. atlas UV computation), those
 
 ## Tools
 
-- **Vitest 4** — shares the Vite config, so module resolution Just Works.
+- **Vitest 5** — shares the Vite config, so module resolution Just Works.
 - Run all tests once: `npm test` (all green, 0 todo — run it for the current count rather than trusting a number baked in here).
 - Watch mode: `npm run test:watch`
 - Imports are explicit (`import { describe, it, expect } from 'vitest'`) — no globals.
@@ -139,8 +139,10 @@ If the renderer ever grows pure-logic helpers (e.g. atlas UV computation), those
   `output/reach/`; `npm run oracle -- reach [folder…]` prints the share of
   each folder's lines each proof ran, and `reach --at=<file>[:<a>[-<b>]]`
   answers for one file or range, with the functions there and their calls
-  (`tests/oracle/reach.ts`). A reading is of the tree it was recorded on:
-  record again after the code moves (about seven minutes for all six).
+  (`tests/oracle/reach.ts`). A reading is of the tree and the toolchain it
+  was recorded on: record again after the code moves, or after Node or
+  Vite does, since a new V8 or transform can start a statement a line away
+  and `reach-diff` then refuses the pair (about seven minutes for all six).
   Reached is not proven, and unreached is a finding: "The oracle map"
   below. `reach-diff <before> <after>` lists what the first reading runs
   and the second does not, which is the check for a deleted test; given

@@ -23,9 +23,11 @@ driver log ([archive/driver-trial/log-124.md](archive/driver-trial/log-124.md)).
 - **Brief 2's notes**, the last: Write or Edit, `-F`, no stdin reader
   (P2); a count re-counted at its source, brief 1's slip as the case
   (P3, P9, P21); a send reported undelivered arrives.
-- **Matthew's calls standing:** open: a CLAUDE.md line for WORKLOG's
-  size (P25), put at §127's close; he asked first whether the size is
-  this round's or the usual. Settled at §127: driving.md's line for an
+- **Matthew's calls standing:** after §127's close: P25's CLAUDE.md
+  line dropped, phase-close archiving shelved until the re-cut, two TODO
+  §128 rows (the re-cut, round-scoped rules); his concern there, rules
+  and guards put too fast for harmless or rare patterns, weighs on any
+  guard a driver proposes. At §127: driving.md's line for an
   open item the driver raised ("1 is a clear hole, and I see no harm in
   it"); the readings guard closed unbuilt, no reading rule in its place;
   the compare's narrowing inside 127c's intent (all 2026-10-22). P12's
@@ -60,10 +62,10 @@ Numbered from §123. "Quiet" means no instance in the last phase; s = session.
 | P19 | the silent-turn reminder every few calls through long checks | every §124.5 report, its s6 `distress` line; §125 s3; §126 s1, s2, s5, driver 5; §127 s1 (many), s2 (three), driver 6 | open, for the welfare read; the Cursor's riders (1), (3) |
 | P20 | a session hands off early, bounding the next step's end by 550k | §124.5 s3, 5, 6; §125 s1 (524k), s2 (463k); §126 s3 | brief 5's figures (signed 2026-10-22); quiet in §127 (s1's hand-off at 522k was Matthew's sign at 127f) |
 | P21 | a count or absence read from a shell search's filtered, truncated or narrowed output | 124j b6 (`grep -rn --include`); §125 s3 (`head -3`); §126 s2 (`git grep` without `:(glob)`) | a note from brief 3 (signed 2026-10-21); quiet in §127 |
-| P22 | a doc cap tripped by a first wording (P10's cousin) | BALANCE's header (125e); driver 4's DRIVER-HANDOFF; 126g's AGENTS (20,042) | no action (Matthew, 2026-10-21); quiet in §127 |
+| P22 | a doc cap tripped by a first wording (P10's cousin) | BALANCE's header (125e); driver 4's DRIVER-HANDOFF; 126g's AGENTS (20,042); driver 6's (12,031, before the test) | no action (Matthew, 2026-10-21); quiet in §127 |
 | P23 | a turn ended mid-stretch with a status line while a background run went on | §126 s1 (126b, twice), s2 (four; called waste) | no action (Matthew, 2026-10-21); quiet in §127 |
 | P24 | a gap in the rules filled by the session's own reading, flagged in its report | §126 s1 (a plant under `scratch/126b/`), s2 (126g built while 126f's call waited); §127 s1 (the compare narrowed inside 127c, signed at the close; the bar's named pairs left in the pages) | a watch (signed 2026-10-21): a rule only on the bad version |
-| P25 | a Read of WORKLOG.md at an offset with no limit, refused at its size (~950KB) | §126 driver 5 (line 325); §127 driver 6, s2 | one call each; a CLAUDE.md line put to Matthew at §127's close |
+| P25 | a Read of WORKLOG.md at an offset with no limit, refused at its size (~950KB) | §126 driver 5 (line 325); §127 driver 6, s2 | no action (Matthew, 2026-10-22): one call each; a tool fact below |
 
 **Closed:** P1, the ceiling failing a suite run after a deletion (122b
 to 123d; 125e once; a second miss reopens it). P4, the reach tools'

@@ -147,6 +147,50 @@ every item below is done (WORKLOG §124, "The close of §124"; WORKLOG
   the re-open, the live page itself after some days, where Copy
   diagnostics shows the store's sections still there.
 
+- [ ] **Rounds 9 and 10, re-cut into smaller rounds with smaller phases**
+  (the user, 2026-10-22, at §127's close: "I think that they need to be
+  recombined and chopped up into more, smaller rounds, with smaller phases
+  in turn"). Round 9's charter is 257 lines of META-ROADMAP with 21 items
+  in scope besides the atlas pre-step, the scripted run and the riders,
+  then 24 open rows in this file and 11 census items; Round 8's section,
+  its close notes included, is 190 lines, and the round took 11 phases.
+  Round 10 opens with the design round for a whole act. A phase has
+  drifted too: about 8 WORKLOG entries a phase in Round 7, 12 in 7.5, 16
+  in 8 and 26 in 8.5 (§124.5 ran eight sessions, §126 five), while an
+  entry's size held (median 2.7 to 2.9 KB since Round 7). Raised with it:
+  the itch build updates only at a round close; rounds that each build a
+  seam with its act-3 content meet ordering principle #1 (each seam
+  designed once with its consumers in view), which the finale's design
+  round, moved first, might answer; and a phase's size set at its cut
+  (one or two sessions, say). A planning session of its own, with the
+  close's re-read of the next charter. WORKLOG reached 975 KB (Round 8's
+  669, Round 7's 321, by the same count); archiving each phase at its
+  close is shelved until the re-cut, since smaller rounds may keep it
+  under the Read tool's 256 KB on their own.
+
+- [ ] **Round-scoped rules, and a close that deletes as well as promotes**
+  (the user, 2026-10-22: "this speaks more to needing a system for
+  round-scoped rules, rather than simply tying them back into AGENTS and
+  processes. That, or some sort of regular deletion pass", with a concern
+  that rules and guards are proposed too quickly "for patterns that are
+  either ultimately harmless or that haven't actually recurred much").
+  The rules sessions follow from this round's WORKLOG entries mostly
+  apply to this round: the comment pass's seven rules (§121, 121i; their
+  general half largely in AGENTS "Voice" and `comment-codes` already),
+  how a batch runs (124.5h's plan, 125k's), the drops rule (§124, "The
+  signs after batch 7", the sixth), and no subagents for comment work
+  (122n). Raised as options, not decided: round-scoped rules kept in the
+  round's spec, archived with it, so each lapses unless the close keeps
+  it; the close listing the lines the round added to AGENTS, CLAUDE.md
+  and `process/` (driving.md's of 2026-10-22, on an open item the driver
+  raised, came from one harmless instance) and keeping each only if it
+  did something, as the standing decisions are revisited; and a bar for
+  a new guard or permanent rule, a pattern that recurred and cost
+  something (the readings guard, closed unbuilt, was for a slip caught
+  every time). driving.md's path from a repeated pattern to a guard has
+  no cost test. Bears on the Cursor's carried P16 item (a home for the
+  procedures) and the standing decisions' revisit.
+
 ### §129 the dependency phase
 
 - [ ] **Dev-toolchain `npm audit` debt (5 vulns, 4 high — §79g flag, filed

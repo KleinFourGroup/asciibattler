@@ -17998,3 +17998,46 @@ by hand since the hook's paths miss the package files, 583 of 583 in 59; the
 suite and the corpus by the hook. `npm audit signatures`: 186 verified.
 
 Readings: **298,636** on 129b's commit.
+
+### 129d — Vite to 8.3.5 (2026-10-23, session 1c4b19b7; built, its read at 129g)
+
+**Step zero.** Vite's changelog from 8.0.13 to 8.3.5 lists rolldown
+updates, fixes and features, nothing marked breaking. The cut's frame-rate
+probe counts frames against the window's set rate, so it would see only a
+regression that drops frames. A scratch copy, `scratch/129/frame-rate-timed.js`,
+also times each `renderTwoPass` call on the main thread (three.js's CPU
+side of a frame), with a known answer: `--arg` `plantMs` busy-waits inside
+the timed call. Planted 2 ms, it read a mean of 2.448 ms against 0.459,
++1.99 ms. Each reading is 30 s of the `board-live` fixture offscreen at
+1280×720 under Electron's Chromium on the RTX 4080 SUPER; the battle ends
+inside the window, the same way each run (seed 7).
+
+**The change.** `vite` `^8.3.5` (42 packages moved: `rolldown` 1.0.1 →
+1.2.15, `lightningcss` 1.33.0, and the audit's `postcss`, `nanoid` and
+`source-map-js` to fixed versions). Vite 8.3 warned that `vite.config.ts`
+imported `./src/dev/probe/bootstrap` and `./src/buildId` without an
+extension, which its `configLoader: 'native'` will not resolve when that
+becomes the default in a later major; neither file imports anything, so
+the two imports now name `.ts` (`allowImportingTsExtensions` was already
+on), and the warning is gone. Inside the step's intent; flagged here.
+
+**What was measured.** The production build with the ID pinned: 32 files
+before and after, 30 of them the same name and size (the stylesheet
+among them); `index` 670,448 → 669,351 bytes and `three` 525,294 →
+522,971; `dev-scan` clean; the `.ts` edit left the hash as it was
+(`505022ba…`). The development build in the probe: render time per frame
+0.459, 0.453 and 0.436 ms before, 0.458, 0.480 and 0.455 after, 60 fps
+and no hitch in all six; the same three console warnings (Electron's
+content-security notice, a canvas readback hint, the dev roster
+override) and no failed load. The audit reads 3 (`brace-expansion`,
+`electron`, `esbuild` 0.28.0 under `tsx`); signatures 186 verified.
+Before Vite, the build was 21,758 bytes larger than 129b's: zod 4.6's
+growth in the main chunk.
+
+**Not verified here:** the dev server and its hot reload, and anything in
+Firefox. They are the user's read at 129g: restart the dev server fresh,
+and try `build` + `preview`; a battle and the map; wrong looks like a
+blank page, a console error, a missing font or sound, or a save that no
+longer reloads the page.
+
+Readings: **310,540** on 129c's commit.

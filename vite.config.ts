@@ -3,9 +3,9 @@ import { writeFile } from 'node:fs/promises';
 import { join, sep } from 'node:path';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { defineConfig, type Plugin } from 'vite';
-import { PROBE_BOOTSTRAP } from './src/dev/probe/bootstrap';
+import { PROBE_BOOTSTRAP } from './src/dev/probe/bootstrap.ts';
 import { buildId } from './scripts/build-id.mjs';
-import { atLoadScript } from './src/buildId';
+import { atLoadScript } from './src/buildId.ts';
 
 /**
  * Dev-only save endpoint for the config editors (the archetype editor in I4;

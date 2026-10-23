@@ -190,12 +190,7 @@ to §133 say which phase takes each row.
 
 ### §129 the dependency phase
 
-- [ ] **Dev-toolchain `npm audit` debt (5 vulns, 4 high — §79g flag, filed
-  §79-post).** As measured 2026-08-16: all five in the dev toolchain
-  (vite/esbuild/postcss/nanoid/brace-expansion), none shipped in `dist/`;
-  `subset-font@2.5.0` has zero deps and introduced none. Clear at a
-  deliberate toolchain-bump round (a Vite major is a build-pipeline change
-  with its own verify pass), not in passing. Detail: WORKLOG §79g/§79-post.
+- ✅ **Dev-toolchain `npm audit` debt** — 10 at §129's kickoff, 0 at 129f (WORKLOG §129).
 
 ## Round 9 — Extensions
 

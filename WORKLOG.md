@@ -18085,3 +18085,30 @@ a halo grown or gone, a soft or missing glyph, or a three.js warning in
 the console.
 
 Readings: **331,673** on 129d's commit.
+
+### 129f — Electron to 44.9.3, and `npm audit fix` (2026-10-23, session 1c4b19b7)
+
+**The change.** `electron` `44.9.3`, pinned exactly as before (the
+advisory's fix); then `npm audit fix` without `--force`, which moved
+`esbuild` 0.28.0 → 0.28.2 (under `tsx`) and `brace-expansion` 5.0.6 →
+5.0.12. `npm audit`: 0 vulnerabilities, from 10 at the kickoff. TODO's
+audit-debt row is closed.
+
+**The proofs.**
+
+- *The recorder* (`npm run record -- --board=corridors --check
+  --countdown=skip`): on 44.4.5 before the install and on 44.9.3 after,
+  the same reading, OK: 66.5 s, 0 of 3,968 frames missing, colours within
+  2, audio 7 ms behind its picture at each of the seven tones, 128 of 128
+  cues. Its two planted controls on 44.9.3 both fail the check as they
+  should: `--plant-stall=20:300` a 250 ms freeze at 20.1 s;
+  `--plant-pause=20:300` 19 frames never painted and a 317 ms freeze at
+  20.0 s.
+- *The frame-rate probe* on 129e's build under 44.9.3: 0.457 and 0.493 ms
+  a render, 60 fps, no hitch (Chromium moved under it, so these are not a
+  pair with 129e's).
+- *For the audit fix:* the fuzz diff's shapes byte-identical to 129c's;
+  `dist/` with the ID pinned `47139668…` as at 129e; lint 0; signatures
+  186 verified, 68 with attestations.
+
+Readings: **354,573** on 129e's commit.

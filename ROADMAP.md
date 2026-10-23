@@ -440,7 +440,8 @@ kickoff").
   clean, render time unchanged, two config imports given `.ts`.
 - ◐ **129e — three and @types/three to 0.186** (`batch`; read at 129g).
   Built: no code change, still frames and render time unchanged.
-- ☐ **129f — Electron to 44.9.3, and `npm audit fix`** (`none`).
+- ☑ **129f — Electron to 44.9.3, and `npm audit fix`** (`none`). The
+  audit 0; the recorder's twin unchanged, both controls caught.
 - ☐ **129g — Node 26** (`stop`, the user's install).
 - ☐ **129h — Vitest and coverage-v8 to 5** (`none`; `stop` if a changed
   default changes what a test proves).

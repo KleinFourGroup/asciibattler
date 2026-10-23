@@ -18227,4 +18227,52 @@ machine. Vitest 5's default worker count in a run is still the cores
 less one (31 here). The suite: 54.5 s on 5.0.5, alone. The worktree is
 removed.
 
+### 129i, step zero: nvm for Windows 2.0.1 read before the install (2026-10-23, session 1c4b19b7)
+
+A subagent read `nvm-windows/docs` (`main`), the README and the release
+notes; its copy is in the session's scratch directory. The docs are not
+versioned: the malware-check pages landed 2026-10-20, after 2.0.1, so
+they describe 2.1 unmarked. What it found, inference marked:
+
+- *Upgrade:* the 2.x installer "automatically migrates v1 to v2" (1.1.7
+  and later); the v1 updater does not work with v2. Whether the Node
+  versions under `%APPDATA%\nvm` move is not documented; a 2.0.1 hotfix
+  commit names a "copy-then-delete migration" (inference: copied to
+  `%LOCALAPPDATA%\Author Software\nvm\installs`, the old ones deleted).
+  What happens to the symlink and the PATH entries is not documented.
+- *Admin:* the community installer asks UAC only for an event source,
+  and the docs say not to install it as Administrator; a 2.0.1 commit:
+  "A standard-user install cannot put NVM ahead of a system Node PATH
+  entry".
+- *Modes:* shim is the default; `nvm use link` or `nvm cfg set mode=link`
+  switches. Link mode is a junction on PATH that `nvm use` retargets, no
+  latency, none of the shim's checks. Shim mode runs node.exe as a child
+  of a Zig shim also named `node.exe` (about 25 to 35 ms a launch), and
+  `npm` and `npx` as hardlinked proxies; whether `process.execPath` names
+  the real node.exe is not documented.
+- *Firewall:* in 2.0.1's community build, the trust firewall only (npm,
+  npx, yarn, corepack and pnpm trusted by default; no network call with
+  the default lists; no off switch; link mode bypasses it). The malware
+  checks, on by default, are 2.1's.
+- *Licence:* MIT, "the full application with all features"; NVM4101 is
+  an advisory for an nvm.exe outside its LocalAppData root; NVM4102 a
+  licence-mode notice on help and env; telemetry not documented either
+  way. Whether community builds are code-signed: the docs disagree.
+- *Rollback:* none documented; an uninstall removes the managed Node
+  versions.
+
+**What the session measured:** this machine's PATH. nvm 1.1.12 put
+`C:\Users\mkilg\AppData\Roaming\nvm` and `C:\Program Files\nodejs` on
+the machine PATH as well as the user's, with `NVM_HOME` and
+`NVM_SYMLINK` set machine-wide; the symlink names
+`…\Roaming\nvm\v26.12.1`. Windows puts the machine PATH first, so a
+per-user 2.x install sits behind those entries until an administrator
+removes them, once. If the migration deletes the old root, the
+machine-wide symlink dangles (inference: `node` then falls through to
+2.x's entry, and `NVM_HOME` still names the old root).
+
+So the user's premise holds after one admin cleanup, not before: no
+`nvm use` from then on would need UAC, and this round's switch is
+already made. Put to the user at 129i's stop, with the session's lean.
+
 Readings: **405,220** on 129g's commit.

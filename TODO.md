@@ -107,7 +107,10 @@ every item below is done (WORKLOG §124, "The close of §124"; WORKLOG
 
 - ✅ **`comment-strip` proves a file with a held comment** — named apart with its held comments, its code proven with every comment out and controlled (WORKLOG §127, 127e).
 
-### §128 the close
+### §128 to §133, the close
+
+Split at §128's kickoff (2026-10-23); ROADMAP's entries for §128 and §130
+to §133 say which phase takes each row.
 
 - [ ] **DESIGN's "Out of scope" list names as backlog what has since been
   built** (found at the §115 close, which struck save/load and replay):
@@ -136,7 +139,8 @@ every item below is done (WORKLOG §124, "The close of §124"; WORKLOG
   launch window or a recording dirties the tree: the box holds on a dirty
   tree, and a clip is stamped `-dirty` (111f-post, 118b). An untracked
   spool that the tool drains at the next clean moment would keep "file
-  when noticed".
+  when noticed". Signed in its place at §128's kickoff: the dirty checks
+  leave out the log's path (WORKLOG §128, call 2).
 
 - [ ] **Two lines of the smoke were not read** (118i): the storage keys
   visible from our frame on itch's shared origin that aren't ours (read

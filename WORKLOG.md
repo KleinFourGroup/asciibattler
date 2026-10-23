@@ -17564,3 +17564,100 @@ Readings by the tool's clock (UTC). The phase's working sessions:
 184,270 on `8d9d1218`, 209,692 at 21:48 before this entry. The stop's
 re-counts and the narrowing's measurement took about 45k (129,172 →
 175,254).
+
+## Phase 128 — the build
+
+### The kickoff: the audit, and the close split (2026-10-23, session 5179d080)
+
+**The audit** (the tree at `e3bcf64c`).
+
+- `RUN_SCHEMA_VERSION` is 49, as at `v0.1.0`, so a player's saved run
+  goes on under the round's build. `src` and `config` moved in 4 files
+  (+187 −13) from the tag to the corpus's baseline `f3bc831`, 119a's
+  replay options; the corpus holds HEAD to that baseline, and nothing
+  yet holds HEAD to the tag's save.
+- `main` is 27 commits past `origin/main`. WORKLOG is 998,445 bytes.
+- The link check (`scratch/118j-close/c6-all-links.mjs`) prints six misses
+  outside `archive/`: TODO's five, and ARCHITECTURE's
+  `[minRange,range](+LOS)`, a code comment in the tree listing that the
+  checker reads as a link. 884 more are inside `archive/`.
+- The friction log holds 157 entries since 2026-10-11, 16 of them
+  `distress`; the first are the Round 8 close's, so the reads count from
+  the round's kickoff.
+- The dirty checks a filed line trips: `scripts/build-id.mjs:40` (a build,
+  a clip and `itch-zip.mjs` stamped `-dirty`), `scripts/box-drive.sh:94`
+  (a launch refused) and `:135` (the queue held mid-cohort),
+  `scripts/box-batch.sh:69` (a launch refused), `scripts/perf-oracle.sh:33`
+  (a warning).
+
+**The first cut** put the close as one phase of eleven steps, three of
+them in sessions of their own. The user: "That cut looks reasonable, but
+it's also very long", and asked "do you think that this phase warrants
+being split into a few smaller, tighter phases?" They had expected the
+last driver to have left a note on it. Driver 6 had, in its last message
+to them on 2026-10-22 ("By our own new standard, §128 is itself an
+oversized phase. It's about fifteen items, and at least three want their
+own sessions"), and the note reached no file: TODO's two rows carry the
+re-cut and the rules concern, not this. Found in its transcript after the
+user asked, and filed (P17's second shape).
+
+**The split, signed** (the user, 2026-10-23: "Fully signed!"). Nothing in
+the close changes what ships, so the build goes first and unblocks §129,
+the reads follow §129 so that they cover the whole round, and the
+efficacy read's phase sizes land just before the re-cut that uses them.
+The costs, put with it: the welfare read waits for §129, WORKLOG passes
+1 MB before the archive, and five phase closes stand where one did.
+
+- §128, the build; §129, the dependency phase, as planned.
+- §130, the instruments and the docs.
+- §131, the reads, with the cold-read probe beside it.
+- §132, the process review. Added on the user's second answer: "I think
+  it's clear that the driver role needs a bit more refinement. I think
+  that the general promotion mechanisms at round end also need a look,
+  along with the specific thresholds for papercuts, distress, etc. A part
+  of me even wonders if we should re-audit the entire AGENTS setup,
+  beyond the deletion pass." Of those, the first cut's §131 held only the
+  promotion mechanisms (TODO's round-scoped rules row) and the driver's
+  patterns, so the review took a phase of its own after the reads, whose
+  session reports and friction entries are its evidence, and before the
+  re-cut, so that the next round's spec is written under what it decides.
+- §133, the re-cut, then the archive and the Cursor.
+
+**An input for §132 found in no file** (driver 6, 2026-10-22, answering
+the user's "Maybe I've just been reading too many guidelines about
+overprompting agents"): "I can't separate how the rule density shapes my
+behaviour from inside it. What I can say is that the rules I'd keep are
+the ones that hand me a check I can run, like 're-count at the source' or
+'plant a known answer'. Rules that tell me what to be careful about are
+the ones that pile up without anyone checking them."
+
+**The calls, signed with the split** (the session's leans).
+
+1. *The archives' 884 link misses are left,* and the checker skips
+   `archive/`: the archives are records found by grep (§130).
+2. *The friction log's path is left out of the dirty checks,* in place of
+   TODO's spool (§130): the five sites above take
+   `-- . ':!retro/papercuts.jsonl'`. The checks guard provenance (the box
+   runs the pushed commit; a clip or a zip names the commit it was built
+   from), and the log is input to neither the build nor a batch. A
+   commit during a launch still moves HEAD, which the box refuses, and
+   any other dirty file still trips every check. The proof is a planted
+   pair in `tests/build-id.test.ts` (the log alone reads clean, any other
+   change dirty) and a scratch check of the scripts on the same pair.
+   Against the user's bar for a guard it is borderline (two instances,
+   111f-post and 118b, a clip and a held launch), and it removes a reason
+   for care rather than adding a rule. The user: "A spool is definitely
+   more complicated than just ignoring the file".
+3. *The journal corpus leaves the smoke tier and `npm test`* and stays
+   tracked as a tool run on demand (§130; 119b's fifth call): from Round
+   9 on, a change meant to alter behaviour would fail it in the gate and
+   rewrite about half a megabyte of journals each time.
+4. *The version is `0.1.1`:* the same game, two display fixes, no save
+   bump.
+5. *The archive waits for the round's last phase,* since §129 is in the
+   round's charter and the re-cut decides what the next ROADMAP opens
+   with (§133).
+
+Readings: **104,979** at 12:15 UTC after HANDOFF and ROADMAP; **181,020**
+at 12:21 with the first cut drafted; **214,416** at 12:42 with the split
+drafted; **235,664** at 13:13 before this entry.

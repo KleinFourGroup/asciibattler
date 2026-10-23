@@ -11,12 +11,13 @@ plan: [archive/post-109-roadmap.md](archive/post-109-roadmap.md) (Round 8)
 with its worklog and spec beside it; before it
 [archive/post-104-roadmap.md](archive/post-104-roadmap.md) (Round 7.5).
 
-**Status: §127 closed 2026-10-22; §128, the round's close, is next.**
+**Status: §128, the build, in progress (2026-10-23).**
 The spec holds the user's intent and four signed
 decisions ([round-8.5-spec.md](round-8.5-spec.md)). The round opened with
 the oracle map, ahead of the census, as the user signed at the Round 8
 close. The census sized the rest of the round as nine phases, written below
-(signed 2026-10-14). The
+(signed 2026-10-14), and §128's kickoff split the close into §128 and
+§130 to §133 (signed 2026-10-23). The
 charter, the decision points, the exit and the scope guards are in
 META-ROADMAP §"Round 8.5 — Housekeeping".
 
@@ -398,14 +399,27 @@ in WORKLOG §127 and "The close of §127".
 - ☑ **127g — the close** (`stop`). Read 2026-10-22; 127c's narrowing
   signed.
 
-## Phase 128 — the close
+## Phase 128 — the build
 
-The docs pass (DESIGN's out-of-scope list, five dead links);
-`phase-stats`' fixes before the efficacy read; the cold-read probe, in a
-session of its own; the shell-quoting audit; the welfare read, with the
-friction log's spool and the standing decisions; the journal corpus's
-tier; the user's two smoke lines; the build tagged and uploaded. Exit:
-META-ROADMAP's exit for the round.
+The round's upload comes first, since nothing in the close changes what
+ships: `0.1.1` (the same game with the two signed display fixes, Run v49
+as at `0.1.0`), tagged and zipped, with a run saved by `0.1.0` shown to
+resume under it, then the user's smoke and upload. The rest of the close
+follows §129 as §130 to §133 (split at the kickoff, 2026-10-23; WORKLOG
+§128). No step fires the smoke.
+
+- ☐ **128a — a run saved by `0.1.0` resumes under the new build**
+  (`none`). The same seeded runs' saves, written at the tag and at HEAD
+  at every gate they reach, compared byte for byte; the tag's saves
+  loaded at HEAD and played to the end; a planted byte must be found.
+- ☐ **128b — `0.1.1`, the tag and the zip** (`none`). `npm version`, the
+  commit and the annotated tag by hand, `itch-zip.mjs` and its `--check`
+  on the clean tree, the zip's copy looked at in the pane.
+- ☐ **128c — the smoke and the upload** (`stop`, the user's). Before the
+  upload, the live `0.1.0` page re-opened in Firefox and Edge (the
+  days-later re-open) and the frame's storage read in each browser's
+  inspector (the keys that aren't ours); then the upload, and the same
+  runs continued on `0.1.1`. The pushes are the user's.
 
 ## Phase 129 — the dependency phase
 
@@ -413,3 +427,40 @@ After the tag (META-ROADMAP §"Round 8.5 — Housekeeping"): Vitest and its
 coverage tool first, then what ships with the user's eye, each major its
 own step with its release notes read first; the `npm audit` debt counted
 again; JetBrains Mono's fix for its swapped `⊞` and `⊠` looked for once.
+
+## Phase 130 — the instruments and the docs
+
+What the reads need, and the docs the round left wrong: the docs pass
+(DESIGN's out-of-scope list, the five dead links, with the archives'
+misses left and the checker skipping `archive/`); `phase-stats`' type
+column and its `--since` count; the friction log's path left out of the
+dirty checks, signed in place of a spool; the journal corpus out of the
+smoke tier and `npm test`, kept as a tool run on demand; the
+shell-quoting audit, a stop if its tripwire fires. One session.
+
+## Phase 131 — the reads
+
+The efficacy read, on `phase-stats` as fixed; the welfare read, the
+user's, with the standing decisions revisited; the shell audit's verdict
+if its tripwire fired. Beside it, in a session of its own, the cold-read
+probe: eleven questions, three runs, two trees (WORKLOG §119, 119f).
+After §129, so that the reads cover the whole round.
+
+## Phase 132 — the process review
+
+The AGENTS setup re-audited whole (AGENTS, CLAUDE.md, `process/`,
+DRIVER-HANDOFF, the Cursor's rules for the round), with the reads as its
+evidence: the deletion pass over what the round added and the promotion
+mechanisms at a round's end (TODO's round-scoped rules row), the driver
+role, the friction log's filing thresholds (a change is a dated wording
+boundary), the scratchpad sweep, P16's three and the push rule. The
+vendor's current prompting guidance is an input. Its kickoff sizes it at
+one or two sessions.
+
+## Phase 133 — the re-cut
+
+Rounds 9 and 10 re-cut into smaller rounds with smaller phases, in a
+planning session with the user, which holds the close's re-read of the
+next charter (TODO's re-cut row); then the round's archive (the roadmap
+and worklog pair, the spec, the census), META-ROADMAP's status and the
+Cursor. Exit: META-ROADMAP's exit for the round.

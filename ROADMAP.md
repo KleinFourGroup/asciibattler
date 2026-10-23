@@ -422,7 +422,24 @@ at the kickoff). WORKLOG §128.
 After the tag (META-ROADMAP §"Round 8.5 — Housekeeping"): Vitest and its
 coverage tool first, then what ships with the user's eye, each major its
 own step with its release notes read first; the `npm audit` debt counted
-again; JetBrains Mono's fix for its swapped `⊞` and `⊠` looked for once.
+again; JetBrains Mono's fix for its swapped `⊞` and `⊠` looked for once
+(at the kickoff: none, so gotcha #136's exclusion stays). Cut signed
+2026-10-23 with four calls: Node 26 in, TypeScript held at 6.0.3,
+Electron to 44.9.3 only, lint ignoring `output/` and `clips/`. Every
+"before" reading is taken before its install (WORKLOG §129, "The
+kickoff").
+
+- ☐ **129a — Vitest and coverage-v8 to 4.1.12** (`none`).
+- ☐ **129b — the dev-only minors, and lint's ignore list** (`none`).
+- ☐ **129c — zod to 4.6.7** (`none`).
+- ☐ **129d — Vite to 8.3.5** (`batch`; read at 129g).
+- ☐ **129e — three and @types/three to 0.186** (`batch`; read at 129g).
+- ☐ **129f — Electron to 44.9.3, and `npm audit fix`** (`none`).
+- ☐ **129g — Node 26** (`stop`, the user's install).
+- ☐ **129h — Vitest and coverage-v8 to 5** (`none`; `stop` if a changed
+  default changes what a test proves).
+- ☐ **129i — nvm for Windows 2.0.1** (`stop`, the user's install).
+- ☐ **129j — the close** (`stop`).
 
 ## Phase 130 — the instruments and the docs
 

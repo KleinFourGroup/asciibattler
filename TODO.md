@@ -338,6 +338,15 @@ META-ROADMAP §"Round 9 — Extensions" names each group.
 
 ### The first phase, and the bump window
 
+- [ ] **TypeScript 7, held at 6.0.3 at §129** (signed 2026-10-23). The
+  7.0.2 package's root exports a version stub and its compiler API sits
+  under `unstable/`, which eight of our files would need (one in `src`,
+  `src/i18n/literalScan.ts`, behind a permanent gate); typescript-eslint
+  8.72 takes TypeScript `<6.1.0`. Look again at a round's first phase:
+  when typescript-eslint takes 7 and the API leaves `unstable/`, it is a
+  step of its own, release notes first. The typecheck took 10.5 s warm
+  on 6.0.3 (WORKLOG §129, "The kickoff").
+
 - [ ] **FX_REGISTRY's own coverage gap** (§104 call 5, out of that phase's scope guard): its boot asserts check authored keys RESOLVE, not coverage — an ability with no `fx`, or a `*_tick` status key with no `sound`, passes silently. The §104 shape fits: every tick key carries a `sound` or sits on an explicit visual-only list, pinned in `fxRegistry.test.ts`.
 
 - [ ] **Power's level-up draw and its growth key.** `growthRates.power`
@@ -594,6 +603,12 @@ META-ROADMAP §"Round 11 — Onboarding & Feel" names each group.
 META-ROADMAP §"Round 12 — Ship" names each group.
 
 ### The shell, packaged
+
+- [ ] **Electron's major, chosen with the packaging** (signed 2026-10-23
+  at §129, which took 44.9.3 for its advisory and left 45). The shell
+  runs only the recorder and the probes until it ships, so its major is
+  picked here, read on the recorder's check twin and its two planted
+  controls and on the frame-rate probe.
 
 - [ ] **One instance of the Electron shell per profile.** The two-tab lock
   is the browser's own, so a second instance of the shell on the same

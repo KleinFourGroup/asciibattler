@@ -17805,3 +17805,106 @@ What it hands on:
   background task is left.
 
 Readings: **343,995** at 14:32 before 128c's entry and this one.
+
+## Phase 129 — the dependency phase
+
+### The kickoff: the audit, and the cut signed (2026-10-23, session 1c4b19b7)
+
+**The audit** (the tree at `a6ec1ec1`, Node 25.5.0, npm 11.8.0).
+
+- *Behind:* 15 packages, as at §119. Three ship (`three` 0.184.0 to
+  0.186.1, `zod` 4.4.3 to 4.6.7, and `vite` 8.0.13 to 8.3.5 builds them).
+  Majors out: TypeScript 7.0.2, Vitest and coverage-v8 5.0.5 (now the
+  `latest` tag, though `npm outdated` printed 4.1.12 in its Latest
+  column), Electron 45.0.0, @types/node 26.
+- *`npm audit`:* 10 packages (5 high, 4 moderate, 1 low), against
+  §119's nine: `@vitest/mocker`, `vitest`, `@vitest/coverage-v8` (to
+  4.1.12), `vite` (to 8.1.6 or later; Windows dev-server advisories, one
+  of them launch-editor's NTLMv2 hash on UNC paths), `esbuild` (a Windows
+  dev-server file read), `electron` (to 44.9.3; pinned exactly, so
+  `audit fix` needs `--force`), and four transitive (`brace-expansion`,
+  `nanoid`, `postcss`, `source-map-js`) that `npm audit fix` takes.
+- *Node:* 25 reached its end of life on 2026-06-01. Vitest 5's engines
+  are `^22.12.0 || ^24.0.0 || >=26.0.0`. Node 24 is the maintenance LTS
+  (to 2028-04-30); 26.12.1 is out, LTS on 2026-10-28, maintained to
+  2029-04-30. Installed by nvm for Windows 1.1.12 (the exe dated
+  2023-11-22, that release's day), with `C:\Program Files\nodejs` its
+  symlink; `scripts/box-setup.sh` pins v25.5.0.
+- *TypeScript 7:* the 7.0.2 package's `.` export is `./lib/version.cjs`,
+  and the compiler API is under `./unstable/*`. Eight files import
+  `typescript` for its API: `src/i18n/literalScan.ts`,
+  `tests/importGraph.ts`, `tests/saveShape.ts`, `tests/dev-guard.test.ts`,
+  and `tests/oracle/` `refs.ts`, `plant.ts`, `plant.test.ts`,
+  `comments.ts`. typescript-eslint 8.72.0 takes `typescript
+  >=4.8.4 <6.1.0`. `tsc --noEmit` took 10.5 s warm on 6.0.3, about a
+  quarter of the hook.
+- *JetBrains Mono, looked for once:* the latest release is still v2.304
+  (2023-01-14); #676 and the fix PR #702 are open (#702 last touched
+  2026-09-12); `master` is still `1937130`. Gotcha #136's exclusion stays.
+- *The proofs across a bump:* `tests/oracle/buildHash.ts` builds a ref
+  against this tree's own `node_modules`, and the recorder's pairs link
+  them by a junction. Across a commit that changes only `package.json`
+  and the lockfile, `build-hash <ref>` compares the new packages with
+  themselves and reads identical whatever they did. So every "before"
+  reading in this phase is taken before its install and kept under
+  `scratch/129/`.
+- *The hook's smoke* fires on staged paths under `src/sim|run|core|config|bot/`,
+  `config/` and `tests/fuzz/`; the package files are outside them, so a
+  step that can reach the sim runs the smoke and the corpus by hand.
+- *Lint* read 26,007 errors on the tree, 26,006 of them in gitignored old
+  builds under `output/` and one under `clips/`: the ignore list holds
+  `dist/` and `scratch/` only. The tracked source lints clean. Prettier
+  reports drift in 626 files; the repo does not run it.
+- *The frame-rate instrument* is `shell/electron/probes/frame-rate.js`,
+  under Electron's Chromium: the page's frames and the game's renders
+  against the set rate, and hitches over 1.5 times the median. It sees a
+  regression that drops frames, not a fraction of a millisecond, and not
+  Firefox.
+
+**The cut, signed** (the user, 2026-10-23: "Fully signed, Claude! 😁").
+ROADMAP §129 has the lines. The reads: 129a, 129b, 129c and 129f `none`;
+129d and 129e `batch`, read at 129g; 129g and 129i the user's installs;
+129h `none`, upgraded to `stop` if a changed default changes what a test
+proves. The proofs, by step: the suite's counts (3727, 583, 1) in every
+step, a count that moves being a finding; 129a `reach-record` against a
+reading taken before; 129b `dist/`'s hash from before, lint at 0, the
+fonts from `gen:font` into a temporary folder against `assets/fonts`;
+129c `config-dump` against a dump from before, the corpus; 129d and 129e
+the frame-rate probe before 129d, after it and after 129e; 129f the
+audit's count and the recorder's check twin with its two planted
+controls; 129g the corpus, the smoke and a fuzz summary taken under Node
+25; 129h the suite, the smoke and `reach-record`; 129i Node held at
+26.12.1, the hook's counts and time, the corpus and a test run's process
+tree.
+
+The calls, signed with it (the session's leans):
+
+1. *Node 26 is in* (129g), since Vitest 5 needs a supported Node and 25
+   is past its end. The alternative was 24.
+2. *TypeScript holds at 6.0.3,* with a TODO row under Round 9's first
+   phase. The alternative was a trial of 7's `tsc` for the typecheck
+   alone, two compilers behind one gate.
+3. *Electron goes to 44.9.3 for its advisory, and 45 waits for Round 12,*
+   where the shell ships (a TODO row there); a major here would also
+   change the Chromium under the frame-rate pairs.
+4. *`output/**` and `clips/**` join lint's ignore list* in 129b, so that
+   lint reads 0 and can serve as a proof.
+
+**129i, added at the user's note** ("it looks like there's outright a new
+version of nvm for Windows, no? ... it looks like it doesn't need admin
+privileges, which probably helps our future updates?"). nvm for Windows
+2.x is a rewrite: 2.0.0 on 2026-09-02, 2.0.1 stable on 2026-10-02, then
+three hotfix pre-releases from 10-13 to 10-17, and 2.1.0's second beta on
+2026-10-23. Its README: "No mandatory administrator privileges", a shim
+mode and a link mode (junctions); 2.0.1's notes put its root per user
+under LocalAppData, and add a "firewall" with npm and npx trusted by
+default (2.1 adds a malware-feed check before installs). It goes last,
+after Vitest 5, so that Node 26 is proven under the nvm we know and the
+swap is held to "changes nothing" with Node fixed; the root and the PATH
+entry move, and the desktop app keeps the PATH it was launched with, so
+the session may need the app restarted. 2.0.1, not the beta; link mode if
+the docs let it be chosen, since a shim process in front of `node` would
+change the process tree CLAUDE.md's "Background work" kills by PID.
+
+Readings: **99,956** at 14:56 UTC after HANDOFF; **173,398** at 15:06
+with the cut drafted; **193,042** at 15:23 with 129i added.

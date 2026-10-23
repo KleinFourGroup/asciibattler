@@ -542,6 +542,15 @@ round's spec writes the first two).
   `main` may hold a save-format bump. A bump is expected every round while
   features and content are landing, and a migration system is considered
   only if rejected saves become a problem.
+  **The version** (the user, 2026-10-23, replacing Round 8's milestone
+  rule): release status . features . fixes. The first number is 0 until
+  the Steam release, `1.0`. The middle goes up when a returning player
+  would find something new or changed in play (content, mechanics,
+  balance, a feature), or when the upload rejects runs saved by the one
+  before it. The last goes up for everything else (fixes, performance,
+  internal work, dependencies), so an upload that moves only the last
+  number keeps a run in progress. `0.1.1`, the Round 8.5 upload, is the
+  first under it.
 - Closes with a board re-run (ascension is a balance surface).
 
 **Depends on:** Round 7 (the menu/settings build on audited idioms + the

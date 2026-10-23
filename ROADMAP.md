@@ -431,7 +431,9 @@ kickoff").
 
 - ☑ **129a — Vitest and coverage-v8 to 4.1.12** (`none`). The suite and
   the smoke reach the same lines both ways; the audit 10 → 7 (WORKLOG §129).
-- ☐ **129b — the dev-only minors, and lint's ignore list** (`none`).
+- ☑ **129b — the dev-only minors, and lint's ignore list** (`none`).
+  `dist/` and the fuzz shapes byte-identical, lint 0; the font call to
+  129g (WORKLOG §129).
 - ☐ **129c — zod to 4.6.7** (`none`).
 - ☐ **129d — Vite to 8.3.5** (`batch`; read at 129g).
 - ☐ **129e — three and @types/three to 0.186** (`batch`; read at 129g).

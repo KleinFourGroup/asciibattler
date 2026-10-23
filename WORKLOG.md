@@ -17932,3 +17932,45 @@ passes on both. `npm audit` reads 7 (the three Vitest packages gone), and
 
 The readings under `output/reach/` for `npm-test` and `smoke` are now of
 this tree; the other four are still of `a45a7af`.
+
+### 129b — the dev-only minors, and lint's ignore list (2026-10-23, session 1c4b19b7)
+
+**The change.** `eslint` 10.13.0, `typescript-eslint` 8.72.0, `globals`
+17.13.0, `prettier` 3.9.10, `tsx` 4.23.15, `subset-font` 2.9.0 and
+`@types/node` 25.9.9 (36 packages moved, by `scratch/129/lock-diff.mjs`;
+among them `subset-font`'s `harfbuzzjs` 0.10.3 → 1.6.4). `eslint.config.js`
+ignores `output/**` and `clips/**` (call 4).
+
+**The proofs,** each taken after 129a's install and before this one
+(`scratch/129/b/`):
+
+- `dist/` with the build ID pinned: `491e1011…` over 32 files, 2,568,757
+  bytes, before and after; a second build before read the same.
+- The fuzz diff's two shapes run in this tree (`scratch/129/fuzz-shapes.sh`,
+  since `perf-oracle.sh`'s baseline worktree would run the new packages
+  too): the five CSVs' hashes the same before and after, and the same on a
+  second run before.
+- Lint 0 after (it was 0 before on the tracked tree with the two folders
+  ignored by flag); its control, a planted unused expression piped in as
+  `src/planted-129b.ts`, is reported. Prettier's drift count is 626 files
+  both times; nothing was formatted.
+- `npm audit signatures`: 186 verified, 66 with attestations. The audit
+  holds at 7.
+
+**The font, a call for 129g's stop.** `gen:font` on 2.5.0 rewrote both
+subsets byte-identical to the commit (their times checked, so the run
+wrote them). On 2.9.0 the DejaVu subset is the same and the JetBrains Mono
+subset is not: 53,352 bytes against 53,356, the same 710 glyphs. A WOFF2
+table reader (`scratch/129/woff2-tables.mjs`, its control a font against
+itself) finds two tables differ: `head` at bytes 8 to 11, the whole-file
+checksum, and `GSUB`, 16 bytes shorter. `scratch/129/gsub-dump.mjs` reads
+GSUB's lists: the same scripts and languages, the same 39 features with
+the same lookup indices, the same 456 lookups, the script list and the
+whole lookup list (21,858 bytes) byte-identical; the FeatureList alone is
+786 bytes against 802, its feature tables 16 bytes earlier. So it is the
+same font repacked. The committed subset is kept, so 129b ships nothing
+new. Until the call, `gen:font` with no change to the ranges writes this
+repack, and a session that regenerates for another reason will see it in
+its diff.
+
+Readings: **269,685** on 129a's commit.

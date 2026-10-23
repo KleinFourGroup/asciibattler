@@ -434,12 +434,15 @@ kickoff").
 - ☑ **129b — the dev-only minors, and lint's ignore list** (`none`).
   `dist/` and the fuzz shapes byte-identical, lint 0; the font call to
   129g (WORKLOG §129).
+- ☑ **129b-post — subset-font 2.9's repack of the JetBrains Mono subset**
+  (`none`). Inserted at 129g's stop, the user's call: `gen:font`
+  reproduces the committed font again.
 - ☑ **129c — zod to 4.6.7** (`none`). The parsed config and the fuzz
   shapes unchanged; the smoke 583 (WORKLOG §129).
-- ◐ **129d — Vite to 8.3.5** (`batch`; read at 129g). Built: `dev-scan`
-  clean, render time unchanged, two config imports given `.ts`.
-- ◐ **129e — three and @types/three to 0.186** (`batch`; read at 129g).
-  Built: no code change, still frames and render time unchanged.
+- ☑ **129d — Vite to 8.3.5** (`batch`; read at 129g). Read clear
+  2026-10-23; two config imports given `.ts`.
+- ☑ **129e — three and @types/three to 0.186** (`batch`; read at 129g).
+  Read clear 2026-10-23; no code change.
 - ☑ **129f — Electron to 44.9.3, and `npm audit fix`** (`none`). The
   audit 0; the recorder's twin unchanged, both controls caught.
 - ☐ **129g — Node 26** (`stop`, the user's install).

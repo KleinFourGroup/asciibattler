@@ -18112,3 +18112,25 @@ audit-debt row is closed.
   186 verified, 68 with attestations.
 
 Readings: **354,573** on 129e's commit.
+
+### 129g's stop: the reads, the font call and the install (2026-10-23)
+
+The stop put three things to the user: the reads of 129d and 129e in
+Firefox (before the Node switch, so a finding could not be Node's), the
+font call from 129b with the session's lean to commit the repack, and the
+Node 26 install. The user: "Done, signed, and done! 😁", taken as the
+three in that order: both reads clear, the repack signed, Node 26
+installed. The session saw no report of the reads; they stand on the
+user's word. `node --version` reads v26.12.1 and `npm --version` 11.20.0
+in the session's shells afterwards.
+
+### 129b-post — subset-font 2.9's repack of the JetBrains Mono subset (2026-10-23, session 1c4b19b7)
+
+`gen:font` writes the subset 129b read table by table (`a9aadf4b…`, the
+same bytes), and it is committed, so the generator reproduces the
+committed font again. The production build with the ID pinned moves in
+four files, as the bundler's content-hashed names predict: the font; the
+stylesheet, whose `@font-face` URL names the font's new hash; `index.html`,
+which names the stylesheet; and the main chunk's name, its bytes the same
+(`c1fa14fd…`). 2,607,983 → 2,607,979 bytes. `tests/font-coverage.test.ts`
+passes, 10 of 10.

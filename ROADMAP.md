@@ -464,8 +464,9 @@ Cut and signed 2026-10-23 (WORKLOG §130, "The kickoff").
 - ◐ **130d — the docs pass** (`batch`: DESIGN.md's "Out of scope", each
   struck line names the phase that built it; wrong looks like a struck
   item the game lacks). The five links; the link check a docs test.
-- ☐ **130e — the shell-quoting audit** (`batch`, `stop` if the tripwire
-  fires). The planted slip and 79f18990's found; the shell fact corrected.
+- ◐ **130e — the shell-quoting audit** (`stop`: the tripwire fired, one
+  wrong sentence in WORKLOG §129h from a halved grep). The planted slip and
+  79f18990's found; the shell fact corrected.
 - ☐ **130f — the close** (`stop`).
 
 ## Phase 131 — the reads

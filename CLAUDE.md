@@ -46,7 +46,11 @@ in AGENTS.md, which other harnesses read too.
   Edits, since a commit beside a missed Edit runs anyway. The Bash tool
   runs Git Bash: multi-line commit messages take several `-m` flags or a
   file, and PowerShell's `@'…'@` here-strings belong to the PowerShell
-  tool only.
+  tool only. The Bash tool halves a run of backslashes, rounding up,
+  unless a double quote follows it, inside single quotes and a quoted
+  heredoc too, while the transcript shows the command as written; the
+  PowerShell tool passes them whole (measured 2026-10-23, Claude Code
+  2.1.308; WORKLOG §130, 130e).
 - **The Grep tool** can answer "No matches found" for a brace glob given
   together with a path, when files plainly match. Give a path and no brace
   glob, and don't read that answer as a negative.

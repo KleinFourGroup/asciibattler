@@ -18173,8 +18173,10 @@ their mocks inside the test bodies (the two `beforeAll` hooks, in the
 rollout tests, set up other state), so a cleared history is never read.
 Unawaited `.resolves` and `.rejects` now fail; all eight are awaited.
 No test uses snapshots, `toThrow('')`, `expect.poll`, `sequential`,
-worker ids, projects, a `$` title or a removed entry point. Coverage
-`include` and `exclude` now match root-relative paths without
+worker ids, projects, a `$` title or a removed entry point. [Corrected
+at 130e: one test has a `$` title, `tests/oracle/proofs/fuzzDiff.proof.ts:19`;
+the count of 0 came from a grep whose `\\$` the Bash tool halved to `$`.]
+Coverage `include` and `exclude` now match root-relative paths without
 `contains`; `reach.ts`'s globs were root-relative already. The JSON
 reporter writes to `.vitest/` unless given a file; `plantProofs.ts` gives
 `--outputFile`. Vitest 5 requires Node 22, 24 or 26 (hence 129g). Not
@@ -18557,3 +18559,88 @@ of call 4 is beside TypeScript 7 there.
 The read (`batch`): DESIGN.md's "Out of scope". Each struck line should
 name the phase that built it; wrong looks like a struck item the game
 lacks.
+
+### 130e — the shell-quoting audit: the tripwire fired (2026-10-23, session 0e7e3d85)
+
+**The instrument** (`scratch/130/shell-audit.mjs`; `--plant`, `--all`,
+`--show=<session>@<time>`). It reads every transcript record from
+2026-10-11 on (296 files with the subagents'), models what bash received
+and what it would have received as written, and compares bash's reading
+of the two segment by segment. A call whose readings agree is cleared;
+one that differs gets a card with its result and a search of the lines
+added by the repo's commits from the call to its session's end, for a
+delivered line whose twin as written is absent.
+
+**The model, measured.** The kickoff's probe said the Bash tool turns
+`\\` into `\` whatever the quoting. Incomplete: a run of backslashes is
+halved, rounding up (three gave two, five gave three), unless a double
+quote follows it, when the run comes through whole (`"X:\\\"Y"` read
+`\"`, `'S:\\\"'` kept three). That fits Windows command-line quoting
+followed by a pass that halves every run; the PowerShell tool keeps
+both. 79f18990's patch at 19:09 on 2026-10-12 relied on the quote case,
+and the first model carded it as changed though its result shows the
+patch landed as meant: the known-good case that corrected the model.
+
+**The plant** (`--plant`): a temporary transcript and repo, a quoted
+heredoc whose `'\\'` reaches a commit as `'\'`, and two controls, a
+`\d` with no pair and a pair before a double quote. PASS: the slip is
+carded and found in its commit, both controls cleared. Its first run
+failed, on the instrument: a segment's first line kept its context
+prefix and could never match a committed line.
+
+**The registered set** (a heredoc or an inline script, and a
+backslash): 382 Bash calls, none through PowerShell; 358 cleared by the
+model, 24 changed, each read by hand.
+
+- *Loud, nothing landed* (14): a syntax error or a refused anchor, among
+  them this session's own probe, 3b697370's plant script at 120c, the two
+  of 4052fd6f at 120e, 854d0fbd's backspace at 123g, and patch scripts
+  that check every anchor before writing (6677fa11, bb91da2f, a2b4ebd8,
+  462d21b3, f677c6ff).
+- *Landed in a tracked file, fixed before its commit* (2): 79f18990's
+  `/:\d+$/` in `tests/oracle/cli.ts` (the halved script inserted
+  `/:d+$/`; `ee382a93` holds the right regex) and 3ecdd7bf's fixture in
+  `tests/oracle/refs.test.ts` (the escaped backticks were lost; `c2bdeb92`
+  holds them). The audit's line match carded two lines as delivered and
+  committed, 79f18990's regex and f8bbd64e's `/^\+\+\+ b\/(.+)$/m`
+  (`36d6345b`): both are the right code, which a halved script with a
+  second escaping layer and the correct final line share; read by hand.
+- *Ran, and the output was read and acted on* (4): 94055418's search,
+  whose `\b` became a backspace and found nothing, rerun 29 s later as a
+  file with a planted known answer; 854d0fbd's diagnosis; deb86374's
+  probe of the heredoc, at §123's driver trial; this session's probe.
+- *Ran, output not affected* (4): 3ecdd7bf's `'\$&'` (no exported name
+  holds a `$`, by the Grep tool, its control finding `GRID_SIZE`); a9f26053's
+  two `'\.'` (a dot matching any character in a path that has a dot);
+  f8bbd64e's patch, as above.
+
+**Outside it** (`--all`): 18 more changed Bash calls, greps and seds.
+**One put a wrong result into a commit.** At 129h, 1c4b19b7's grep for
+each and for titles holding a `$` had `\\$` in double quotes, meant as a
+literal `\$`; halved, it was `$`, an end anchor, and the probe printed
+`each/for titles with $: 0`. WORKLOG §129h, committed at `d47d1ff3`,
+reads "No test uses … a `$` title". The Grep tool finds one:
+`tests/oracle/proofs/fuzzDiff.proof.ts:19`, `it.each(shapes)('$name
+writes its summary', …)`. Under Vitest 5, `vitest list` on its config
+prints the title as `$name writes its summary`, uninterpolated, which fits
+the `$` title change the migration guide named; what 4.1.12 printed is
+not measured, and no file but the test names the title. The sentence in
+§129h is corrected in place. Of the rest: ebe41cd8's empty search was
+right for its two folders (the Grep tool finds the pattern only outside
+them); 6677fa11's `sed -i` on a scratch script in a subagent's worktree
+matched nothing, its read-back grep printed nothing, and nothing was
+committed; the other searches were read back on the spot, and none was
+traced to a claim.
+
+**The verdict:** the tripwire pre-registered at the Round 8 close fired
+once ("a quoting slip found to have put a wrong result into a commit
+brings the rule back with a hook"): a false sentence in a WORKLOG entry,
+from a grep, outside the set the audit was registered on. 130e becomes a
+`stop`. The fact is corrected (call 3): AGENTS' line no longer blames
+quoting and points at CLAUDE.md, whose "Editing" note gives the measured
+rule. What the rule and its hook are is the user's call.
+
+Not covered: commands outside the registered set were carded only where
+the model found a change, and their outputs were traced to a claim only
+where a recorded count matched one; a slip in a call the transcripts no
+longer hold (Claude Code's retention) is out of reach.

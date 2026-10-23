@@ -195,9 +195,9 @@ ends. The terms and the rollback rule are in
 The repo lives on Windows; the shells are Git Bash and PowerShell.
 
 - **Shell quoting, as facts.** A stray quote ends a command and nothing
-  runs: retry. A backslash lost in quoting leaves a regex that still runs,
-  so when code with an escape went through the shell, read back what
-  landed. Your file-writing tool avoids both, and long quoted heredocs have
+  runs: retry. A backslash dropped in transit (CLAUDE.md) leaves a regex
+  that still runs, so when code with an escape went through the shell,
+  read back what landed. Your file-writing tool avoids both, and long quoted heredocs have
   been refused here. A multi-hunk patch is a small script that checks every
   anchor in every file before it writes any. A commit message with a quote goes through
   `git commit -F <file>`.

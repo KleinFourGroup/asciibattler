@@ -451,6 +451,23 @@ dirty checks, signed in place of a spool; the journal corpus out of the
 smoke tier and `npm test`, kept as a tool run on demand; the
 shell-quoting audit, a stop if its tripwire fires. One session.
 
+Cut and signed 2026-10-23 (WORKLOG §130, "The kickoff").
+
+- ☐ **130a — the friction log out of the dirty checks** (`none`). Six
+  sites skip `retro/papercuts.jsonl`; a planted pair in a real repo in
+  `build-id.test.ts`, the scripts checked on the same pair.
+- ☐ **130b — the journal corpus out of the gate** (`none`).
+  `corpus-quick.test.ts` deleted, the smoke excludes `tests/fuzz/corpus/`,
+  `npm run corpus` kept.
+- ☐ **130c — `phase-stats`' type column and its `--since` count**
+  (`none`). Round 8's 196 commits by git, each placed.
+- ☐ **130d — the docs pass** (`batch`: DESIGN.md's "Out of scope", each
+  struck line names the phase that built it; wrong looks like a struck
+  item the game lacks). The five links; the link check a docs test.
+- ☐ **130e — the shell-quoting audit** (`batch`, `stop` if the tripwire
+  fires). The planted slip and 79f18990's found; the shell fact corrected.
+- ☐ **130f — the close** (`stop`).
+
 ## Phase 131 — the reads
 
 The efficacy read, on `phase-stats` as fixed; the welfare read, the

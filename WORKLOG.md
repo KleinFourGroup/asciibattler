@@ -18340,3 +18340,82 @@ worktree, preview server or background task is left.
 
 Readings: **468,605** at 129i's stop; **490,111** at 17:48 before this
 entry.
+
+## Phase 130 — the instruments and the docs
+
+### The kickoff: the audit, and the cut signed (2026-10-23, session 0e7e3d85)
+
+**The audit** (the tree at `099d4441`).
+
+- *The links:* `scratch/118j-close/c6-all-links.mjs` prints 7 misses
+  outside `archive/`: TODO's five, and `[minRange,range](+LOS)` twice, a
+  code span in ARCHITECTURE's tree listing and §128's quote of it here.
+  891 in all, 884 inside `archive/`.
+- *DESIGN's "Out of scope"* (`DESIGN.md:822`): four lines struck; plain
+  are shop and economy, synergies and traits, larger units, in-battle
+  commands, audio, camera rotation and larger maps, line of sight,
+  terrain, and statuses. The census read six of them and shop and economy
+  as built (T-62); synergies and the camera are not yet checked.
+- *`phase-stats`* (`scripts/phase-stats.mjs`): under `--since` a row is
+  kept only if its phase is all digits, so `117.5` drops; `PHASE_RE`
+  takes `.5` only, so `117.75a` parses as 117. A word scope (`save`,
+  `settings`, `menu`) becomes a phase of its own, and most of those
+  subjects lead with their step (`feat(save): 115e, the build`). The
+  fix ratio word-matches the subject, as
+  `process/welfare-and-efficacy.md` warns. Round 8 by git:
+  `c79d542` to `631e24d`, 196 commits (`35f28e3..631e24d` is 200, four of
+  them the 7.5 close's).
+- *The dirty checks:* the five sites of §128's audit, and a sixth it did
+  not list, the fuzz manifest's `dirty` (`tests/fuzz/manifest.ts:88`,
+  a batch's provenance). `tests/oracle/plantProofs.ts:262` compares a
+  tree's status before and after its plants, in a worktree the log is not
+  filed in; it is left.
+- *The corpus:* `tests/corpus-quick.test.ts` on every `npm test` (four
+  tests), `tests/fuzz/corpus/corpus.test.ts` in the smoke (34 by its
+  table of 30), `npm run corpus` the replay from the command line, which
+  the plant tool's `corpus` proof launches. `tests/oracle/reach.ts` names
+  both files as proofs.
+- *The shell audit's size:* in the transcripts' records from 2026-10-11 on
+  (296 files with the subagents'), 7,319 Bash calls and no PowerShell
+  call that sent a backslash through a heredoc or an inline script: 379
+  Bash calls in 53 sessions. 29 of them hold a doubled backslash (13
+  heredocs, 16 inline), 5 flagged errors.
+- *A finding while sizing:* a quoted heredoc of the session's lost one of
+  a doubled backslash, and the script failed to parse. Probed: the Bash
+  tool turns `\\` into `\` inside single quotes, double quotes and a
+  quoted heredoc alike, while the transcript records the pair; `\n`,
+  `\t`, `\"`, `\u`, `\x` and `\/` pass as written, and the PowerShell
+  tool keeps both of a pair. AGENTS' "a backslash lost in quoting" names
+  the wrong cause, and five friction entries this round describe the
+  shape (79f18990's at 120a landed in `tests/oracle/cli.ts`). Filed.
+
+**The cut, signed** (the user, 2026-10-23: "Enthusiastically signing all
+of those leans and the cut"). ROADMAP §130 has the lines. The reads: 130a
+to 130c `none`; 130d `batch`; 130e `batch`, a `stop` if the tripwire
+fires; 130f `stop`. Predicted: no snapshot, no RNG stream; the smoke and
+the parity test fire at 130a and 130b (`tests/fuzz/` staged); 130b moves
+`npm test` from 3727 to 3723 and the smoke from 583 to 549, counted from
+the hook's output when it runs.
+
+The calls, signed with it (the session's leans):
+
+1. *A commit with no step code in its scope or at the head of its
+   subject goes to the phase in flight* in `phase-stats`, counted in an
+   `inferred` column, since a phase's size for the re-cut includes its
+   docs and report commits. The alternative was an `(untagged)` row.
+2. *The link check is a test in `tests/docs.test.ts`,* outside `archive/`
+   and skipping code spans, with a planted miss it must catch: a check
+   that runs, which fails when a file is moved or deleted, where fixing
+   the link is cheapest. The alternative was a script run at a close.
+3. *The shell fact is corrected in 130e's commit:* AGENTS' line rewritten
+   in place, and the Bash tool's halving in CLAUDE.md "Editing". The
+   alternative was to leave it to §132.
+4. *`scratch/129/reach-common.mjs` stays out of §130,* with a TODO row
+   beside TypeScript 7, its next user.
+5. *The dirty checks take the top-anchored pathspec*
+   (`':/' ':(top,exclude)retro/papercuts.jsonl'`), since `.` from a
+   subfolder would check that folder alone; and the fuzz manifest is the
+   sixth site, inside the signed intent.
+
+Readings: **103,307** at 21:20 UTC after HANDOFF and ROADMAP; **184,947**
+at 21:28 with the cut drafted; **200,479** at 21:33 before this entry.

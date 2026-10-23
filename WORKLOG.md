@@ -18621,11 +18621,11 @@ literal `\$`; halved, it was `$`, an end anchor, and the probe printed
 `each/for titles with $: 0`. WORKLOG §129h, committed at `d47d1ff3`,
 reads "No test uses … a `$` title". The Grep tool finds one:
 `tests/oracle/proofs/fuzzDiff.proof.ts:19`, `it.each(shapes)('$name
-writes its summary', …)`. Under Vitest 5, `vitest list` on its config
-prints the title as `$name writes its summary`, uninterpolated, which fits
-the `$` title change the migration guide named; what 4.1.12 printed is
-not measured, and no file but the test names the title. The sentence in
-§129h is corrected in place. Of the rest: ebe41cd8's empty search was
+writes its summary', …)`. [Corrected at 129h-post: `vitest list` prints
+every each title as its template, `%s` included, so its
+`$name writes its summary` showed no change; run, the title reads per
+shape under Vitest 5.] No file but the test names the title. The
+sentence in §129h is corrected in place. Of the rest: ebe41cd8's empty search was
 right for its two folders (the Grep tool finds the pattern only outside
 them); 6677fa11's `sed -i` on a scratch script in a subagent's worktree
 matched nothing, its read-back grep printed nothing, and nothing was
@@ -18678,4 +18678,57 @@ halved, the two runs that end at a double quote intact, PowerShell
 intact); and 129h-post, the `$name` title measured under Vitest 5 and
 fixed if it no longer reads per shape. Not covered by the reply: 130d's
 read, and where the rest runs, since the fresh-session lean rested on
-building the hook.
+building the hook. Then (the user): the report is sent; 130d's list
+"looks good"; the rest runs in this session.
+
+### 129h-post — the `$name` title under Vitest 5 (2026-10-23, session 0e7e3d85)
+
+A twin of the proof's title in `scratch/130/title/`: `it.each` over two
+object rows with `'$name writes its summary'`, and the control, `%s`
+over two array rows. Run with the verbose reporter under Vitest 5.0.5:
+`alpha writes its summary`, `beta writes its summary`, `gamma plain`,
+`delta plain`. Listed with `vitest list`: `$name writes its summary` and
+`%s plain`, both as templates. So the list was no evidence of a change,
+130e's reading of it was wrong (corrected there), and the proof's title
+reads per shape when it runs. No change to the test. What the migration
+guide's `$` title item changes was not looked up; this proof's
+`$name` over object rows is not affected by it.
+
+### The close of §130 (2026-10-23, session 0e7e3d85)
+
+130a to 130f are ticked, with 129h-post inserted at 130e's stop. 130d's
+`batch` read was signed clear ("The list looks good to me!") and 130e's
+stop read with the hook deferred; nothing is ◐. One session, no driver,
+from the kickoff at `099d4441`.
+
+What changed: `TREE_PATHSPEC` and the six dirty checks; the corpus out
+of `npm test` and the smoke (3727 → 3724 → 3726 with 130a's and 130d's
+tests; 583 → 549); `phase-stats` with `inferred`, `fixT%` and `--until`;
+DESIGN's backlog, five links and a link test; the shell audit, CLAUDE.md's
+measured rule and AGENTS' line; §129h's false sentence corrected. Sent
+by the user: the harness report. Deferred: the shell hook, to §132, with
+the audit re-run at the next round close.
+
+What it found that outlives it:
+
+- *The Bash tool halves a run of backslashes unless a double quote
+  follows it,* whatever the quoting; the transcript shows the command as
+  written. CLAUDE.md has the rule; the report is upstream.
+- *A control earns its keep on the instrument as well as the code:* the
+  audit's plant found a bug in the audit, a known-good patch corrected its
+  model, and a `%s` twin showed `vitest list` prints each titles as
+  templates.
+- *The corpus is a by-hand proof now:* TESTING says a change that claims
+  to alter nothing runs it, since two of §119's plants were caught by
+  nothing else the gate runs.
+
+Tools, off git: `scratch/130/shell-audit.mjs` (with `--plant`, `--all`,
+`--show`), `scratch/130/dirty-sites.sh`, `scratch/130/phase-stats-before.csv`
+and `-after.csv`, `scratch/130/title/` (the title twin), the audit's
+outputs `audit-registered.txt` and `audit-all.txt`. No worktree, preview
+server or background task is left.
+
+Readings: **184,947** at 21:28 UTC with the cut drafted; **239,091** at
+130a's commit; **270,682** at 130b's; **289,605** at 130c's; **329,337**
+at 130d's; **418,282** at 130e's; **442,778** at the stop's record;
+**464,356** at 23:44 before this entry.

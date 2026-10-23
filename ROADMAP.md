@@ -11,8 +11,8 @@ plan: [archive/post-109-roadmap.md](archive/post-109-roadmap.md) (Round 8)
 with its worklog and spec beside it; before it
 [archive/post-104-roadmap.md](archive/post-104-roadmap.md) (Round 7.5).
 
-**Status: §129, the dependency phase, closed 2026-10-23; §130, the
-instruments and the docs, is next.**
+**Status: §130, the instruments and the docs, closed 2026-10-23; §131,
+the reads, is next.**
 The spec holds the user's intent and four signed
 decisions ([round-8.5-spec.md](round-8.5-spec.md)). The round opened with
 the oracle map, ahead of the census, as the user signed at the Round 8
@@ -441,33 +441,21 @@ TODO; JetBrains Mono's swap still unfixed upstream. WORKLOG §129.
   user's call: one admin cleanup here and no documented rollback (TODO).
 - ☑ **129j — the close** (`stop`).
 
-## Phase 130 — the instruments and the docs
+## Phase 130 — the instruments and the docs ✅ (closed 2026-10-23)
 
-What the reads need, and the docs the round left wrong: the docs pass
-(DESIGN's out-of-scope list, the five dead links, with the archives'
-misses left and the checker skipping `archive/`); `phase-stats`' type
-column and its `--since` count; the friction log's path left out of the
-dirty checks, signed in place of a spool; the journal corpus out of the
-smoke tier and `npm test`, kept as a tool run on demand; the
-shell-quoting audit, a stop if its tripwire fires. One session.
+The friction log outside the dirty checks; the journal corpus out of the
+gate, run by hand; `phase-stats` placing every commit, with a fix column
+by type; DESIGN's backlog struck, the five links fixed and a link test;
+the shell audit, whose tripwire fired once (a false sentence in a
+record), the hook deferred to §132 and the harness told. WORKLOG §130.
 
-Cut and signed 2026-10-23 (WORKLOG §130, "The kickoff").
-
-- ☑ **130a — the friction log out of the dirty checks** (`none`). Six
-  sites skip `retro/papercuts.jsonl`; a planted pair in a real repo in
-  `build-id.test.ts`, the scripts checked on the same pair.
+- ☑ **130a — the friction log out of the dirty checks** (`none`).
 - ☑ **130b — the journal corpus out of the gate** (`none`).
-  `corpus-quick.test.ts` deleted, the smoke excludes `tests/fuzz/corpus/`,
-  `npm run corpus` kept.
-- ☑ **130c — `phase-stats`' type column and its `--since` count**
-  (`none`). Round 8's 196 commits by git, each placed.
-- ◐ **130d — the docs pass** (`batch`: DESIGN.md's "Out of scope", each
-  struck line names the phase that built it; wrong looks like a struck
-  item the game lacks). The five links; the link check a docs test.
-- ☑ **130e — the shell-quoting audit** (`stop`: the tripwire fired, one
-  false sentence in WORKLOG §129h). Read 2026-10-23: the hook to §132.
-- ☐ **129h-post — the `$name` title under Vitest 5** (`none`).
-- ☐ **130f — the close** (`stop`).
+- ☑ **130c — `phase-stats`' type column and its `--since` count** (`none`).
+- ☑ **130d — the docs pass** (`batch`). Read clear 2026-10-23.
+- ☑ **130e — the shell-quoting audit** (`stop`). Read 2026-10-23.
+- ☑ **129h-post — the `$name` title under Vitest 5** (`none`; no change).
+- ☑ **130f — the close** (`stop`).
 
 ## Phase 131 — the reads
 

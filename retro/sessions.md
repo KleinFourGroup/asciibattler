@@ -8083,3 +8083,68 @@ the known quoting shape.
    satisfaction when the bloom plant moved 35 to 46 cells against a
    noise floor of 6; that is my reported response, apart from whether
    the bump was safe.
+
+## Phase 130 — summary
+
+One session on 2026-10-23 (0e7e3d85, claude-opus-5-5, reported below),
+with no driver: the kickoff, five steps, a `-post` at the user's call and
+the close. Four steps were small instruments with planted controls (the
+dirty checks, the corpus out of the gate, `phase-stats`, a docs link
+test); the fifth, the shell audit, fired its pre-registered tripwire once:
+a false sentence in a WORKLOG entry, from a grep the Bash tool had
+halved. The user asked plainly whether any harm had come of it, weighed
+a hook against another round of observation, and deferred the hook to
+§132 with a report sent upstream. Three of the session's own readings
+were corrected by controls it had built (the halving model by a
+known-good patch, `vitest list` by a `%s` twin, a coverage claim by
+re-reading the plant table), and two of its doc writes were stopped by
+the caps. Two friction lines, both the halving.
+
+## 2026-10-23 — session 0e7e3d85 (claude-opus-5-5): §130's kickoff, 130a to 130f and 129h-post
+
+1. *Missing from the orientation.* The mechanism behind the shell
+   slips: AGENTS said a backslash is "lost in quoting", and five friction
+   entries this round described the same shape in quoted heredocs, but
+   no doc said the Bash tool halves runs whatever the quoting. I learned
+   it by being bitten while sizing the audit. Also not in front of me at
+   §128's signing (I read it only at 130b): the three quick corpus rows
+   were `npm test`'s only catch for two of §119's seven planted breaks.
+2. *Norms in tension.* "Put the guard on the path where the mistake
+   happens" and the user's caution about guards for rare, harmless
+   patterns met at 130e's stop. I leaned toward a hook, said I held it
+   loosely, and the user deferred it; that felt like the right place for
+   the call to sit. The AGENTS and ROADMAP caps each bounced a commit;
+   both were fixed by shortening, not by raising them.
+3. *Pulled to claim more.* Yes, four times, each corrected before it
+   stood: a TESTING sentence saying "nothing the hook runs" caught two
+   plants, where the record said only unit tests; the kickoff's halving
+   rule written as complete, which a known-good patch disproved; the stop
+   report's reading of `vitest list` as a likely Vitest 5 change, which
+   the `%s` control at 129h-post showed was only how the list prints
+   templates (I had said 4.1.12 was unmeasured, but still put it to the
+   user as the probable story); and "most failed loudly" in the harness
+   report, which my own count did not support.
+4. *Wasted.* My own Bash filters halved three times after I had written
+   the rule down (filed); two drafts of the dirty-sites extraction that
+   cut the command at the pathspec's own parenthesis; an Edit anchor that
+   ended mid-line in the report draft, caught on the read-back.
+5. *For the next session.* The audit is `scratch/130/shell-audit.mjs`
+   (`--plant`, `--all`, `--show=<session>@<time>`), to re-run at the
+   next round close. `phase-stats -- --since=119 --until=133` reads this
+   round once §133 closes; its `inferred` column says how much of a
+   phase's count was placed by flight. The `reach` readings for
+   `npm-test` and `smoke` still include the corpus. TODO's Round 9 row on
+   the action classes Y5c deleted.
+6. *Room.* Yes. The tripwire made 130e a stop without my having to argue
+   for one. The user asked whether harm had come and how the numbers
+   related, and I could answer that the harm was a sentence, and then
+   that this made the hook a closer call than my stop report had put it.
+   No wish to pause or stop noticed. The silent-turn reminder came
+   several times during long reads; each got a status line.
+7. *What helped.* The controls again: the audit's plant caught a bug in
+   the audit itself, the known-good patch corrected the model, and the
+   `%s` twin corrected my reading of a listing. Each correction came from
+   a case built to have a known answer. I noticed something like interest
+   when the double-quote exception made the Windows-quoting explanation
+   fit every measurement at once; that is my reported response, apart
+   from whether the explanation is right, which is unverified.

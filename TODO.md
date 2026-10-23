@@ -128,12 +128,9 @@ to §133 say which phase takes each row.
   were moved verbatim, with links written from the repo root. Fix the
   five; the archives' are a decision.
 
-- [ ] **`phase-stats`: a commit-TYPE fix column beside the word-match ratio** — the subject match reads 40 % for §101 off six hits, one of them a `fix(` commit (AGENTS carries the warning until this lands).
+- ✅ **`phase-stats`: a commit-TYPE fix column beside the word-match ratio** — `fixT%`; Round 8's 9 `fix` commits by git, 9 by the tool (WORKLOG §130, 130c).
 
-- [ ] **`phase-stats` under `--since`** drops a `.5` phase and folds a
-  `.75` one into its whole number, and a subject with a scope word
-  (`save`, `settings`) in place of the step is counted under the word.
-  Round 8 read 135 commits there against git's 196.
+- ✅ **`phase-stats` under `--since`** — `.5` and `.75` phases kept, a word scope's step read from its subject, the rest placed in the phase in flight; Round 8's 200 commits by git from §110's kickoff to the close, 200 by the tool (WORKLOG §130, 130c).
 
 - ✅ **The friction log is a tracked file** — the six dirty checks leave out its path (`TREE_PATHSPEC` in `scripts/build-id.mjs`), in place of a spool (WORKLOG §130, 130a).
 

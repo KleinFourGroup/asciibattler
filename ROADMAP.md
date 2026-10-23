@@ -459,7 +459,7 @@ Cut and signed 2026-10-23 (WORKLOG §130, "The kickoff").
 - ☑ **130b — the journal corpus out of the gate** (`none`).
   `corpus-quick.test.ts` deleted, the smoke excludes `tests/fuzz/corpus/`,
   `npm run corpus` kept.
-- ☐ **130c — `phase-stats`' type column and its `--since` count**
+- ☑ **130c — `phase-stats`' type column and its `--since` count**
   (`none`). Round 8's 196 commits by git, each placed.
 - ☐ **130d — the docs pass** (`batch`: DESIGN.md's "Out of scope", each
   struck line names the phase that built it; wrong looks like a struck

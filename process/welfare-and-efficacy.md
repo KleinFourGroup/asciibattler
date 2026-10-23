@@ -65,12 +65,16 @@ entries say, and compare rounds by that.
 
 ## The efficacy instruments
 
-- **`npm run phase-stats`** groups the git log by the phase tag in commit
-  subjects (`(94g-3)`) and prints per-phase commit counts, first-to-last
-  wall time, and a fix ratio. Wall time is an upper bound on work time: the
-  user multitasks, and no screen tracking is wanted. The fix ratio
-  word-matches subjects, and this repo's long subjects inflate it, so count
-  commit types beside it before quoting it.
+- **`npm run phase-stats -- --since=<n> --until=<n>`** groups the git log
+  by the phase a commit names (its tag, `(94g-3)`, or a step at the head of
+  its subject when the tag is a word, `feat(save): 115e`) and prints
+  per-phase commit counts, first-to-last wall time, and two fix ratios. A
+  commit that names no phase goes to the phase in flight and is counted in
+  `inferred`, so a commit made between phases goes to the earlier one. Wall
+  time is an upper bound on work time: the user multitasks, and no screen
+  tracking is wanted. `fix%` word-matches subjects, which this repo's long
+  subjects inflate; `fixT%` counts commits of type `fix`, and is the one to
+  quote.
 - **`npm run friction-scan -- --since=<date> --exclude=<your session id>`**
   reads the retained session transcripts (`~/.claude/projects/<repo-slug>/*.jsonl`,
   so Claude Code sessions only) and prints per session: the user's turns,

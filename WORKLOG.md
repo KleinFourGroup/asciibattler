@@ -18478,3 +18478,41 @@ that claims to change nothing is proven by the corpus run by hand.
 Docs: TESTING (the corpus's paragraph, "By part" and `src/sim`),
 ARCHITECTURE's tree, `vitest.fuzz.config.ts`, `corpus.test.ts`'s header
 and `corpus.ts`'s `quick` field, which now picks the plants' journal.
+
+The hook at `9c759604`: 3724 in 256 files (−4, −1), the smoke 549 in 58
+(−34, −1), as predicted. On demand, `vitest run --config
+vitest.fuzz.config.ts tests/fuzz/corpus`: 34 of 34.
+
+### 130c — `phase-stats`' type column and its `--since` count (2026-10-23, session 0e7e3d85)
+
+A commit is placed by the first of: its tag; a numeric step at the head of
+its subject when the tag is a word (`feat(save): 115e, …` → 115); the
+phase in flight, counted in a new `inferred` column (call 1). `PHASE_RE`
+takes any `\d+.\d+`, so 117.5 and 117.75 are rows of their own, and
+`--since` and the new `--until` keep a decimal phase. `fixT%` counts type
+`fix` beside the word-matched `fix%`. The CSV gains `inferred` and
+`fix_type_ratio`.
+
+**The known answer, re-derived from git.** Round 8 was 196 commits from
+`c79d542` to `631e24d`, the efficacy read's range. The tool reads 200 for
+§110 to §118. Accounted for: 194 of the range from §110's kickoff
+`77ef1bc9` on; the range's three before it (`c79d542` and `5456c424`,
+META commits that name no phase, inferred to 7.5's close, and
+`3a9cc7b2`, tagged 7.5) are not in §110 to §118; and six 118j commits
+after `631e24d`, the round close's own, are. Git from `77ef1bc9` through
+the last 118j commit `5d2cdaf5`: 200 commits, 9 of type `fix`; the tool:
+200 and 9. A search for commits outside that span naming §110 to §118 by
+tag or subject finds none, and §118 has 0 inferred, so nothing after the
+span was placed in it.
+
+Before and after (`scratch/130/phase-stats-before.csv`, `-after.csv`):
+§110 to §118 read 141 and now 200; §115 4 → 23, §116 19 → 40 (their word
+scopes); 117 splits into 117 (12), 117.5 (14) and 117.75 (4). Over the
+whole log, 282 rows become 207: the word-scope rows (`save`, `handoff`,
+`r6`, `r7-close C1` …) are placed in phases, 374 commits inferred and
+154 before any phase is named; §50 (Ports) appears, all of its commits
+word-scoped, and §49 reads 13 where it read 2. The old CSV summed 2239 of
+2243, a scope with a comma (`sim,run`) having shifted its columns; the
+new one sums 2243, git's count.
+
+`process/welfare-and-efficacy.md` describes the columns; TODO's two rows ✅.

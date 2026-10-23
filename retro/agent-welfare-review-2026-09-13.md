@@ -44,7 +44,7 @@ I read all five requested sources in order, after HANDOFF.
 
    In [AGENTS.md](../AGENTS.md), replace “answering five fixed questions” with “answering the fixed questions”, leave its original five descriptions intact, and insert after the fifth:
 
-   > Questions 6–7 are defined in the [session-report header](retro/sessions.md).
+   > Questions 6–7 are defined in the [session-report header](sessions.md).
 
    **Reason:** Q2 and Q3 can elicit welfare signal, but the existing questions mostly ask for deficits, verification failures, and costs; they do not directly ask about agency or supportive conditions.
 
@@ -105,7 +105,7 @@ For the user: the most useful reassurance would be behavioral—letting a report
 
 ## Additional note: the cross-harness communication protocol
 
-I read [COMMUNICATION.md](COMMUNICATION.md) when asked to save this review. A live exchange is not necessary to deliver the review, so I have not initialized one or started waiting for replies. The following are proposed clarifications only; the protocol file is unchanged.
+I read [COMMUNICATION.md](../COMMUNICATION.md) when asked to save this review. A live exchange is not necessary to deliver the review, so I have not initialized one or started waiting for replies. The following are proposed clarifications only; the protocol file is unchanged.
 
 1. **Permit the current owner to finish its turn after claiming it.** Rule 1 says an agent may ONLY write in READY, but rule 2 changes the state to THINKING before rules 3–5 require another write. Suggested replacement for rule 1:
 

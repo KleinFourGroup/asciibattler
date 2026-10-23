@@ -112,21 +112,9 @@ every item below is done (WORKLOG §124, "The close of §124"; WORKLOG
 Split at §128's kickoff (2026-10-23); ROADMAP's entries for §128 and §130
 to §133 say which phase takes each row.
 
-- [ ] **DESIGN's "Out of scope" list names as backlog what has since been
-  built** (found at the §115 close, which struck save/load and replay):
-  larger units, in-battle commands, audio, line of sight, terrain and
-  status effects are still listed plain. Strike each with its phase, after
-  checking it against ARCHITECTURE.
+- ✅ **DESIGN's "Out of scope" list names as backlog what has since been built** — seven lines struck with their phases; synergies and the camera's line stay, each with why (WORKLOG §130, 130d).
 
-- [ ] **Dead links in the docs** (the close's C6, a file-existence check
-  of every relative markdown link; `scratch/118j-close/c6-all-links.mjs`).
-  Five in four live docs: GOTCHAS to `src/sim/actions/AttackAction.ts`,
-  PATHING to `tests/pathing/trace-flips.ts`, this file to
-  `src/sim/actions/DashAction.ts`, and two root-relative links in
-  `retro/agent-welfare-review-2026-09-13.md`. And 882 misses inside
-  `archive/`, not sorted further: the files archived before the 7.5 close
-  were moved verbatim, with links written from the repo root. Fix the
-  five; the archives' are a decision.
+- ✅ **Dead links in the docs** — the five fixed, and `tests/docs.test.ts` checks every relative link outside `archive/`, whose misses are left (WORKLOG §130, 130d).
 
 - ✅ **`phase-stats`: a commit-TYPE fix column beside the word-match ratio** — `fixT%`; Round 8's 9 `fix` commits by git, 9 by the tool (WORKLOG §130, 130c).
 
@@ -334,6 +322,21 @@ META-ROADMAP §"Round 9 — Extensions" names each group.
   step of its own, release notes first. The typecheck took 10.5 s warm
   on 6.0.3 (WORKLOG §129, "The kickoff").
 
+- [ ] **`reach-diff` across a toolchain change** (§130's call 4). A V8 or
+  transform change starts a statement a line away, so `reach-diff` refuses
+  a pair of readings from two toolchains; `scratch/129/reach-common.mjs`
+  compared what both count at 129h. The next toolchain bump (TypeScript 7
+  above) decides whether it becomes a mode of `npm run oracle`
+  (WORKLOG §129, "The close of §129").
+
+- [ ] **The action classes deleted at Y5c are still described as live**
+  (found at 130d): DESIGN.md's Combat paragraph ("`AttackAction` resolves
+  at action-start"), ARCHITECTURE's tree at the crit roll
+  (`AttackAction.start`), and gotchas #95, #97 and #109 (#8's link was
+  re-pointed at `EffectAction` at 130d). Each is rewritten against
+  `src/sim/effects/EffectAction.ts` after reading it, or the gotcha
+  becomes a tombstone.
+
 - [ ] **FX_REGISTRY's own coverage gap** (§104 call 5, out of that phase's scope guard): its boot asserts check authored keys RESOLVE, not coverage — an ability with no `fx`, or a `*_tick` status key with no `sound`, passes silently. The §104 shape fits: every tick key carries a `sound` or sits on an explicit visual-only list, pinned in `fxRegistry.test.ts`.
 
 - [ ] **Power's level-up draw and its growth key.** `growthRates.power`
@@ -444,7 +447,7 @@ META-ROADMAP §"Round 11 — Onboarding & Feel" names each group.
 
 - [ ] **Catapult LAUNCH creak (the F3 launch/impact split — optional tail).** F3 moved the projectile *launch* to the `release` phase (~12 ticks before impact), so the loose is silent and only the impact crash sounds. The seam is now trivial: the `catapult_launch` fx key already exists (projectile-only) — just author a launch "creak/thunk/FWOMP" sound (a `scripts/gen-sfx.mjs` recipe would do it) + add it to that key + register the `SoundKey`. Lower priority — the impact crash carries the weight. *(Same optional opportunity for the mage bolt's `release` "fwoosh," but `magicboom` at impact already reads right.)*
 
-- [ ] **Dash VFX (afterimage / trail / blink-flash).** N1's rogue dash currently reads as a fast slide (the `unit:moved` lerp over the ~5-tick motion window) + the `dash.wav` whoosh — no dedicated visual. The first-class **`unit:dashed`** event ([events.ts](src/core/events.ts), emitted by [DashAction](src/sim/actions/DashAction.ts), carries `from`/`to`/`durationTicks`) is the ready hook: a BattleScene/BattleRenderer subscriber can draw a motion trail / afterimage / blink-flash on the leap. Folds into the deferred L/M status-VFX presentation pass. Surfaced at N1.
+- [ ] **Dash VFX (afterimage / trail / blink-flash).** N1's rogue dash currently reads as a fast slide (the `unit:moved` lerp over the ~5-tick motion window) + the `dash.wav` whoosh — no dedicated visual. The first-class **`unit:dashed`** event ([events.ts](src/core/events.ts), emitted by the effect interpreter's dash ([interpreter.ts](src/sim/effects/interpreter.ts)), carries `from`/`to`/`durationTicks`) is the ready hook: a BattleScene/BattleRenderer subscriber can draw a motion trail / afterimage / blink-flash on the leap. Folds into the deferred L/M status-VFX presentation pass. Surfaced at N1.
 
 - [ ] **Renderer "queued/waiting" stance — the §44/§46 ship-feel deferral.** Units now WAIT on purpose (§44b's first-class `WaitAction`; §45b queues) and the seam for showing it was planted deliberately: the `unit:waited` event (event-only, [WaitAction.ts](src/sim/actions/WaitAction.ts)) fires once per deliberate hold. A subtle render tell (dim pulse, stance glyph tint, whatever reads at a glance) would let a player SEE "this unit is queueing, not stuck" — the §46 decision point deferred it as pure ship-feel polish. Render-only; no sim/snapshot impact. Natural home: any Cluster-3+ polish rider or the pre-launch pass. Filed at the §46c close-out (2026-07-06).
 

@@ -823,16 +823,16 @@ This is the *timing substrate* for abilities — deliberately **not** a generic 
 
 Captured here so we can confidently say "not now" during the jam without losing the idea:
 
-- Shop and economy (gold, buying units, rerolls)
-- Unit synergies and traits
+- ~~Shop and economy (gold, buying units, rerolls)~~ ✅ BUILT as Cluster 3 (§47→52): bits for currency, packets and the cache, and ports that sell units (§50)
+- Unit synergies and traits — kept out at Cluster 4's kickoff: the daemons are the synergy channel
 - ~~Rest, elite, shop, event node types~~ ✅ ALL BUILT (rest G3; elite W2; port §50; event §74 — see "Events" under Run structure).
 - ~~Boss encounters at hop ends~~ ✅ BUILT (the terminal boss node, G3; W1 gave it an authored `stages`-grammar encounter)
-- Larger units (2×2 or 2×1 footprints)
-- High-level player commands during battle (focus-fire, avoid area, etc.)
-- Audio and SFX
+- ~~Larger units (2×2 or 2×1 footprints)~~ ✅ BUILT for N×N (§39); no unit is 2×1
+- ~~High-level player commands during battle (focus-fire, avoid area, etc.)~~ ✅ BUILT as the objective, a tile or an enemy for the player's team to steer by (J1, typed in O); no "avoid area"
+- ~~Audio and SFX~~ ✅ BUILT (B6 wired sounds to the bus; §104's registry gives every event a sound or a silent reason)
 - ~~Save/load and persistence~~ ✅ BUILT (§113 the store; §115 the autosave and Continue — see "Saving" under Run structure)
-- Camera rotation and larger maps
-- Line-of-sight for ranged units
-- Terrain affecting movement or combat
-- Status effects and abilities beyond basic attacks
+- Camera rotation and larger maps — the view is fixed (Round 7.5's ortho, pitch 45, yaw 45) and the board is 12×12
+- ~~Line-of-sight for ranged units~~ ✅ BUILT (Phase C, `src/sim/LineOfSight.ts`)
+- ~~Terrain affecting movement or combat~~ ✅ BUILT (Phase C's walls and cost-aware paths; half cover)
+- ~~Status effects and abilities beyond basic attacks~~ ✅ BUILT (abilities E to GP, statuses K; Cluster 1's effect abilities)
 - ~~Replay system~~ ✅ BUILT for a whole run (§114: the run journal replays headless, `npm run replay`, and as a clip, `npm run record -- --journal`)

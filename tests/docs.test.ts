@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import { execFileSync } from 'node:child_process';
 import { readFileSync, existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -30,6 +31,9 @@ import { fileURLToPath } from 'node:url';
 //      log, and §124's reached 889 lines with four state sections, each
 //      added on top of the last. The state is now rewritten in place
 //      (process/driving.md), and the caps hold it to that.
+//   8. Dead links — a moved or deleted file leaving the docs that link it
+//      pointing nowhere (five in the live docs at the Round 8.5 close, found
+//      by a hand-run check).
 // All are forcing functions: when one trips, do the cleanup it points at — or
 // bump the threshold deliberately if the growth is legitimate.
 
@@ -327,5 +331,43 @@ describe('docs hygiene', () => {
       missing,
       `ARCHITECTURE.md's tree lists path(s) that no longer exist — update the tree: ${missing.join(', ')}`,
     ).toEqual([]);
+  });
+
+  // Every relative link in a tracked doc outside archive/ names a file that
+  // exists, read from the linking file's folder. Code spans and fenced blocks
+  // are skipped, since a tree listing's `[a,b](c)` is not a link. The archives
+  // were moved verbatim with links written from the repo root; they are
+  // records found by grep, and their misses are left.
+  const deadLinks = (docs: readonly { path: string; text: string }[], exists: (rel: string) => boolean): string[] => {
+    const misses: string[] = [];
+    for (const { path, text } of docs) {
+      const prose = text.replace(/```[\s\S]*?```/g, '').replace(/`[^`\n]*`/g, '');
+      for (const m of prose.matchAll(/\]\(([^)\s]+)\)/g)) {
+        const target = m[1]!;
+        if (/^(https?:|mailto:|#)/.test(target)) continue;
+        const file = decodeURIComponent(target.split('#')[0]!.split(':')[0]!);
+        if (file !== '' && !exists(join(dirname(path), file))) misses.push(`${path}: ${target}`);
+      }
+    }
+    return misses;
+  };
+  const onDisk = (rel: string) => existsSync(join(repoRoot, rel));
+
+  it('every relative link in a doc outside archive/ names a file that exists', () => {
+    const docs = execFileSync('git', ['ls-files', '-z', '*.md'], { cwd: repoRoot, encoding: 'utf8' })
+      .split('\0')
+      .filter((f) => f !== '' && !f.startsWith('archive/'))
+      .map((path) => ({ path, text: read(path) }));
+    expect(docs.length, 'listed no docs — the listing drifted').toBeGreaterThan(30);
+    const misses = deadLinks(docs, onDisk);
+    expect(misses, `dead link(s) — re-point or unlink each: ${misses.join(', ')}`).toEqual([]);
+  });
+
+  it('the link check catches a planted dead link and skips code', () => {
+    const planted = {
+      path: 'retro/planted.md',
+      text: 'A [good](../AGENTS.md) link, a [dead](../NO-SUCH-FILE.md) one, a `[a,b](+LOS)` span,\n```\n[fenced](nowhere.md)\n```\nand a [line](../AGENTS.md:12).\n',
+    };
+    expect(deadLinks([planted], onDisk)).toEqual(['retro/planted.md: ../NO-SUCH-FILE.md']);
   });
 });

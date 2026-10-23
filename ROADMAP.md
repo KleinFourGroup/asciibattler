@@ -461,7 +461,7 @@ Cut and signed 2026-10-23 (WORKLOG §130, "The kickoff").
   `npm run corpus` kept.
 - ☑ **130c — `phase-stats`' type column and its `--since` count**
   (`none`). Round 8's 196 commits by git, each placed.
-- ☐ **130d — the docs pass** (`batch`: DESIGN.md's "Out of scope", each
+- ◐ **130d — the docs pass** (`batch`: DESIGN.md's "Out of scope", each
   struck line names the phase that built it; wrong looks like a struck
   item the game lacks). The five links; the link check a docs test.
 - ☐ **130e — the shell-quoting audit** (`batch`, `stop` if the tripwire

@@ -18516,3 +18516,44 @@ word-scoped, and §49 reads 13 where it read 2. The old CSV summed 2239 of
 new one sums 2243, git's count.
 
 `process/welfare-and-efficacy.md` describes the columns; TODO's two rows ✅.
+
+### 130d — the docs pass (2026-10-23, session 0e7e3d85)
+
+**DESIGN's "Out of scope"** (`DESIGN.md:822`), each line checked against
+ARCHITECTURE and the git log before it was struck: shop and economy
+(Cluster 3, §47 to §52: bits, packets and the cache, ports that sell
+units, §50); larger units (§39, N×N; no unit is 2×1); in-battle commands
+(the objective, a tile or an enemy for the player's team to steer by,
+J1, typed in O; no "avoid area"); audio (B6, and §104's registry); line
+of sight (Phase C, `src/sim/LineOfSight.ts`); terrain (Phase C's walls
+and cost-aware paths, half cover); statuses and abilities (E to GP, K,
+Cluster 1). Left plain, with why: synergies and traits, kept out at
+Cluster 4's kickoff with the daemons as the synergy channel
+(`archive/cluster-4-spec.md`); camera rotation and larger maps, since the
+view is the signed fixed one and `GRID_SIZE` is 12. The census's T-62 had
+read six of these and shop and economy as built.
+
+**The five links:** GOTCHAS #8 to `src/sim/effects/EffectAction.ts`,
+which took over from `AttackAction` when Y5c deleted the per-ability
+classes; TODO's dash row to the interpreter's `unit:dashed`; PATHING's
+`trace-flips.ts`, deleted at §46's close, unlinked with its commit; the
+welfare review's two links made relative to `retro/`.
+
+**The link check** (call 2) in `tests/docs.test.ts`: every relative link
+in a tracked `.md` outside `archive/`, with fenced blocks and code spans
+skipped, names a file that exists from the linking file's folder; a
+planted doc holds a good link, a dead one, a code span, a fenced link and
+a `path:line` link, and only the dead one is reported. Control: the test
+in a worktree at `fda01c4d` fails on exactly the five, and not on the two
+`[minRange,range](+LOS)` code spans the hand-run checker counted. Tests
+3724 → 3726.
+
+**Found beside it, to TODO** (Round 9's first phase): DESIGN's Combat
+paragraph, ARCHITECTURE's tree and gotchas #95, #97 and #109 describe the
+action classes Y5c deleted as live. Each needs `EffectAction` read before
+it is rewritten, or a tombstone, so it is not a link fix. The reach row
+of call 4 is beside TypeScript 7 there.
+
+The read (`batch`): DESIGN.md's "Out of scope". Each struck line should
+name the phase that built it; wrong looks like a struck item the game
+lacks.

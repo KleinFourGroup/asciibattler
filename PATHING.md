@@ -945,7 +945,7 @@ snapshot bump — resolves on data.
 - **`pathfindingCalls` (+ /100t)** — the A* delta per run, off the §J2
   `pathfindingStats` counter. The headline tables carry both new columns
   from this entry on.
-- **[tests/pathing/trace-flips.ts](tests/pathing/trace-flips.ts)** — the
+- **`tests/pathing/trace-flips.ts`** (deleted at §46's close, `4014541a`; in git before it) — the
   attribution tool: for every flip it re-derives the route under
   counterfactual contexts (claims stripped / all soft bodies stripped) and
   names the cause. Kept through §46 alongside trace-no-route.ts.

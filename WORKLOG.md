@@ -18453,3 +18453,28 @@ The docs that said "anything uncommitted": ARCHITECTURE's two rows,
 `process/browser-pane.md`, and `process/measurement.md`, which now says
 `npm run papercut` may file during a cohort's launch window. TODO's row ✅.
 Tests 3727 → 3728.
+
+### 130b — the journal corpus out of the gate (2026-10-23, session 0e7e3d85)
+
+`tests/corpus-quick.test.ts` deleted; `fuzz:smoke` leaves out
+`tests/fuzz/corpus/corpus.test.ts` by a second `--exclude`, beside the
+parity test's (a file name, not a glob, so no shell expands it). The
+corpus runs by hand: `npm run corpus`, or the test file with its plants.
+`tests/oracle/reach.ts` drops the `corpus-quick` reading and names the
+file as `CORPUS_TEST` in the smoke's arguments, and its test now reads
+both exclusions from `package.json` and holds the smoke reading's
+arguments to them. `output/reach/corpus-quick.json` is deleted (ignored by
+git); the `smoke` and `npm-test` readings there are of the tree with the
+corpus in, so record them again before quoting one.
+
+**What the call costs, from §119's plant table** (WORKLOG §119, 119g):
+`npm test` caught the mirrored camp step and the heal restoring one more
+through the quick rows alone, two of the seven sim and run plants, and
+the smoke's other tests were not run on them. Since this step the hook
+catches neither unless the smoke does, unmeasured; the corpus caught them
+18 and 10 times of 30. TESTING's `src/sim` paragraph now says a change
+that claims to change nothing is proven by the corpus run by hand.
+
+Docs: TESTING (the corpus's paragraph, "By part" and `src/sim`),
+ARCHITECTURE's tree, `vitest.fuzz.config.ts`, `corpus.test.ts`'s header
+and `corpus.ts`'s `quick` field, which now picks the plants' journal.

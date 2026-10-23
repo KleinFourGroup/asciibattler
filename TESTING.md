@@ -58,9 +58,11 @@ If the renderer ever grows pure-logic helpers (e.g. atlas UV computation), those
   seed twice on the same code cannot give. A journal's own replay checks
   each battle's winner and tick count and the end's hash only; a planted
   change to a wandering camp member's step left all of those unmoved on one
-  of the 30 runs, and the event digests caught it. All 30 run in the smoke
-  tier (`corpus.test.ts`) and three on every `npm test`
-  (`tests/corpus-quick.test.ts`). `corpus.ts` says when the baseline may be
+  of the 30 runs, and the event digests caught it. Neither `npm test` nor
+  the smoke runs it, since a change meant to alter behaviour would fail it
+  in the gate: it runs by hand, as `npm run corpus` or as `corpus.test.ts`
+  with its plants (the smoke's script leaves the file out), on a change
+  that claims to leave behaviour alone. `corpus.ts` says when the baseline may be
   retaken (`--rebaseline`, `--record`) and what has to be shown first. Its
   reach has limits: four port trades never change a run in it, and a
   changed number shows only on the runs that meet it (a rest healing half
@@ -255,8 +257,8 @@ suite both missed, so what those two miss, the pre-commit hook misses;
 and with every hit dealing one more the smoke failed in one file of 65,
 the corpus's own test.
 
-**By part.** "Corpus" is `npm run corpus` (30 journals; all of them in the
-smoke tier, three on every `npm test`); "fuzz diff" is
+**By part.** "Corpus" is `npm run corpus` (30 journals, run by hand: the
+pre-commit hook does not run it); "fuzz diff" is
 `bash scripts/perf-oracle.sh [ref]`; "build compare" is
 `npm run oracle -- build-hash [ref]`.
 
@@ -266,10 +268,10 @@ smoke tier, three on every `npm test`); "fuzz diff" is
   test files); a wandering camp member's mirrored step (18 of 30, one of
   them by its events alone); a heal restoring one more (10 of 30); the
   path search's estimate changed (8 of 30). Missed: the path-search change
-  by the fuzz diff, by the three quick rows and by every unit test; the
-  mirrored step and the heal by every unit test. So a sim change is proven
-  by the whole corpus, which the pre-commit hook runs when sim paths are
-  staged.
+  by the fuzz diff and by every unit test; the mirrored step and the heal
+  by every unit test. So a sim change that claims to change nothing is
+  proven by the whole corpus, run by hand, since no unit test caught the
+  mirrored step or the heal.
 - **`src/run`.** Proof: the corpus, then the fuzz diff: 69 % and 65 %, 73 %
   between them; the suite 97 %. Shown to fail on: a declined reward made a
   no-op (8 of 30, one fuzz shape, the chaos census); the map splitting a

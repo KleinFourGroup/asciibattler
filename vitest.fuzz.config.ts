@@ -14,7 +14,9 @@ import { defineConfig } from 'vite';
  * `npm run fuzz:smoke` leaves out `parallelRunDecisions.test.ts` by its
  * `--exclude`, and `npm run fuzz:jobs-parity` runs that file alone: it holds a
  * `--jobs` batch byte-identical to a serial one, and runs where that can break
- * (`.githooks/pre-commit`, `scripts/box-batch.sh`).
+ * (`.githooks/pre-commit`, `scripts/box-batch.sh`). It leaves out the journal
+ * corpus's `corpus.test.ts` as well, which a change meant to alter behaviour
+ * would fail: that file runs on demand, beside `npm run corpus`.
  *
  * `testTimeout` is raised well above the 5s default: these cases each drive
  * SEVERAL full multi-hop runs, and under the full-suite's parallel CPU

@@ -456,7 +456,7 @@ Cut and signed 2026-10-23 (WORKLOG §130, "The kickoff").
 - ☑ **130a — the friction log out of the dirty checks** (`none`). Six
   sites skip `retro/papercuts.jsonl`; a planted pair in a real repo in
   `build-id.test.ts`, the scripts checked on the same pair.
-- ☐ **130b — the journal corpus out of the gate** (`none`).
+- ☑ **130b — the journal corpus out of the gate** (`none`).
   `corpus-quick.test.ts` deleted, the smoke excludes `tests/fuzz/corpus/`,
   `npm run corpus` kept.
 - ☐ **130c — `phase-stats`' type column and its `--since` count**

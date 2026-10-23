@@ -7,7 +7,9 @@ import { CORPUS, loadBaseline, loadJournal, reachDifferences, replayReach, rowId
 // tree, reaches what it reached when it was recorded, event for event. A
 // failure here means behaviour changed. If the change was meant, corpus.ts
 // says which of `--rebaseline` and `--record` applies, and what has to be
-// shown first.
+// shown first. Neither `npm test` nor the smoke runs this file (package.json's
+// `fuzz:smoke` leaves it out): run it, or `npm run corpus`, on the change
+// that claims to leave behaviour alone.
 
 const baseline = loadBaseline();
 const ids = CORPUS.map(rowId);

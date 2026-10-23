@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { PLANT_PROOFS } from './plantProofs';
-import { JOBS_PARITY, PROOFS, countAt, countBy, fromIstanbul, functionsAt, fuzzDiffShapes, lineMap, lost, parseAt, proofId, union, type Reading } from './reach';
+import { CORPUS_TEST, JOBS_PARITY, PROOFS, countAt, countBy, fromIstanbul, functionsAt, fuzzDiffShapes, lineMap, lost, parseAt, proofId, union, type Reading } from './reach';
 
 // The reader of the coverage tool's output (reach.ts), held against a
 // coverage file written by hand, so the known answer does not come from the
@@ -202,7 +202,7 @@ describe('the proofs a reading can be taken of', () => {
     expect(proofId('npm-test', PLANT_PROOFS)).toBe('suite');
     expect(proofId('suite', PLANT_PROOFS)).toBe('suite');
     expect(proofId('corpus', PLANT_PROOFS)).toBe('corpus');
-    expect(proofId('corpus-quick', PLANT_PROOFS)).toBeUndefined();
+    expect(proofId('chaos', PLANT_PROOFS)).toBeUndefined();
     expect(proofId('suites', readings)).toBeUndefined();
   });
 
@@ -211,10 +211,11 @@ describe('the proofs a reading can be taken of', () => {
     expect(PROOFS.find((proof) => proof.id === 'fuzz-diff')!.vitest).toContain('tests/oracle/proofs.vitest.config.ts');
   });
 
-  it('leaves out of the smoke the test that npm run fuzz:smoke leaves out', () => {
+  it('leaves out of the smoke the tests that npm run fuzz:smoke leaves out', () => {
     const scripts = (JSON.parse(readFileSync('package.json', 'utf8')) as { scripts: Record<string, string> }).scripts;
-    expect(scripts['fuzz:smoke']).toContain(`--exclude ${JOBS_PARITY}`);
+    const excluded = [...scripts['fuzz:smoke']!.matchAll(/--exclude (\S+)/g)].map((m) => m[1]);
+    expect(excluded).toEqual([JOBS_PARITY, CORPUS_TEST]);
     expect(scripts['fuzz:jobs-parity']).toContain(JOBS_PARITY);
-    expect(PROOFS.find((proof) => proof.id === 'smoke')!.vitest).toEqual(['--config', 'vitest.fuzz.config.ts', '--exclude', JOBS_PARITY]);
+    expect(PROOFS.find((proof) => proof.id === 'smoke')!.vitest).toEqual(['--config', 'vitest.fuzz.config.ts', ...excluded.flatMap((file) => ['--exclude', file])]);
   });
 });

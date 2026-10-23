@@ -51,7 +51,7 @@ export interface CorpusRow {
   readonly seed: number;
   /** The run's dials as URL query text. */
   readonly dials: string;
-  /** Replayed on every `npm test` as well (tests/corpus-quick.test.ts). */
+  /** A short run: corpus.test.ts plants its edits in one of these. */
   readonly quick?: true;
 }
 

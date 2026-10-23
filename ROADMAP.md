@@ -464,9 +464,9 @@ Cut and signed 2026-10-23 (WORKLOG §130, "The kickoff").
 - ◐ **130d — the docs pass** (`batch`: DESIGN.md's "Out of scope", each
   struck line names the phase that built it; wrong looks like a struck
   item the game lacks). The five links; the link check a docs test.
-- ◐ **130e — the shell-quoting audit** (`stop`: the tripwire fired, one
-  wrong sentence in WORKLOG §129h from a halved grep). The planted slip and
-  79f18990's found; the shell fact corrected.
+- ☑ **130e — the shell-quoting audit** (`stop`: the tripwire fired, one
+  false sentence in WORKLOG §129h). Read 2026-10-23: the hook to §132.
+- ☐ **129h-post — the `$name` title under Vitest 5** (`none`).
 - ☐ **130f — the close** (`stop`).
 
 ## Phase 131 — the reads
@@ -484,7 +484,9 @@ DRIVER-HANDOFF, the Cursor's rules for the round), with the reads as its
 evidence: the deletion pass over what the round added and the promotion
 mechanisms at a round's end (TODO's round-scoped rules row), the driver
 role, the friction log's filing thresholds (a change is a dated wording
-boundary), the scratchpad sweep, P16's three and the push rule. The
+boundary), the scratchpad sweep, P16's three and the push rule; the shell hook, deferred
+at 130e's stop (WORKLOG §130), with its audit re-run at the next round
+close. The
 vendor's current prompting guidance is an input. Its kickoff sizes it at
 one or two sessions.
 

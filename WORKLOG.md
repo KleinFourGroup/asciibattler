@@ -18644,3 +18644,38 @@ Not covered: commands outside the registered set were carded only where
 the model found a change, and their outputs were traced to a claim only
 where a recorded count matched one; a slip in a call the transcripts no
 longer hold (Claude Code's retention) is out of reach.
+
+### 130e's stop: the hook deferred to §132 (2026-10-23, session 0e7e3d85)
+
+The user asked first whether any harm had come of it, and how 42 related
+to 382. The answer, as put: nothing reached the code or the game; one
+false sentence reached a record and left one migration item unlooked-at,
+with an effect that looks cosmetic and is unmeasured; 382 is the
+registered set, 358 of it unchanged by construction, and 42 is its 24
+changed calls and the 18 outside it.
+
+Then the user weighed it aloud: §132 may slim the AGENTS setup, which
+might make notes better observed and argue for another round of
+observation; a warning might add to what the silent-turn reminder
+already costs sessions; the calls are rare. The session's answer: a
+slimmer setup is unlikely to change this one, since the slip happens
+after the text the model writes and reads back (the session bit itself
+twice after writing the fact down); a warn variant lets the halved
+command run, so a hook that does anything refuses; a refusal that fires
+only on a changed command and names the change reads as information about
+the session's own action, unlike a reminder on elapsed time (a
+self-report); the root fix is the harness's, and the audit makes another
+round of observation cheap. Its lean, held loosely: report it upstream
+and fold the hook into §132.
+
+**Signed** (the user: "Deferring sounds good to me", and "Signing all of
+your other leans"): the hook question goes to §132, with this entry and
+130e's as its evidence, and the audit re-run at the next round close as
+the observation in the meantime; the harness report drafted for the user
+to send (`scratch/claude-code-feedback-4-backslashes.txt`, with the
+repro re-run on 2.1.308: `'a:\\'`, `'d:\\\x'` and a quoted heredoc
+halved, the two runs that end at a double quote intact, PowerShell
+intact); and 129h-post, the `$name` title measured under Vitest 5 and
+fixed if it no longer reads per shape. Not covered by the reply: 130d's
+read, and where the rest runs, since the fresh-session lean rested on
+building the hook.

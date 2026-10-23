@@ -18134,3 +18134,33 @@ stylesheet, whose `@font-face` URL names the font's new hash; `index.html`,
 which names the stylesheet; and the main chunk's name, its bytes the same
 (`c1fa14fd…`). 2,607,983 → 2,607,979 bytes. `tests/font-coverage.test.ts`
 passes, 10 of 10.
+
+### 129g — Node 26 (2026-10-23, session 1c4b19b7)
+
+**The change.** The user installed Node 26.12.1 with nvm for Windows
+1.1.12; npm 11.20.0 comes with it. `npm ci` from the lockfile, then
+`@types/node` `^26.6.5`; `scripts/box-setup.sh` pins `v26.12.1`, since
+its comment ties the box to the local toolchain; AGENTS' toolchain line.
+
+**The proofs,** against readings taken under Node 25: the typecheck clean
+on `@types/node` 26; `config-dump` equal to 129c's (json-diff, its control
+caught at 129c); the fuzz diff's shapes byte-identical to 129f's; the
+production build with the ID pinned `25ad62e7…`, the same as 129b-post's
+under Node 25's install; the smoke 583 of 583 in 59; the parity test
+1 of 1; the suite and the corpus by the hook.
+
+**Two findings.**
+
+- *npm 11.20 blocks a dependency's install scripts by default* unless
+  `package.json`'s `allowScripts` names it, and lists what it skipped.
+  Here that is esbuild 0.28.2's `postinstall`, which checks its platform
+  binary and fetches it if the optional package is missing; esbuild runs
+  without it (`npx esbuild --version` 0.28.2, and every proof above runs
+  `tsx` on it). Electron 44 has no install script: it fetched its binary
+  on its first run after `npm ci`. Whether to approve or deny esbuild's
+  script is a call for 129i's stop; `allowScripts` is unwritten until then.
+- *Node 26 has no `localStorage` global* (`typeof` reads `undefined`, with
+  an ExperimentalWarning on access) where Node 25 defined one with no
+  `setItem`. The store never trusted `typeof localStorage`, and the tests
+  plant Node 25's shape themselves; the comments that name Node 25 stay
+  true as written.

@@ -14,7 +14,7 @@ set -euo pipefail
 # The Node pin MUST match the local toolchain (AGENTS.md §Toolchain): the
 # cross-machine byte-identity proof (worklog §57f2) holds per (commit,
 # toolchain) pair — the box tracks the local version deliberately, not latest.
-NODE_VERSION=v25.5.0
+NODE_VERSION=v26.12.1
 REPO_URL=https://github.com/KleinFourGroup/asciibattler.git
 REPO_DIR=/root/asciibattler
 

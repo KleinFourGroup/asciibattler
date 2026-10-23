@@ -445,7 +445,8 @@ kickoff").
   Read clear 2026-10-23; no code change.
 - ☑ **129f — Electron to 44.9.3, and `npm audit fix`** (`none`). The
   audit 0; the recorder's twin unchanged, both controls caught.
-- ☐ **129g — Node 26** (`stop`, the user's install).
+- ☑ **129g — Node 26** (`stop`, the user's install). 26.12.1 and npm
+  11.20; config, fuzz shapes and build the same as under 25.
 - ☐ **129h — Vitest and coverage-v8 to 5** (`none`; `stop` if a changed
   default changes what a test proves).
 - ☐ **129i — nvm for Windows 2.0.1** (`stop`, the user's install).

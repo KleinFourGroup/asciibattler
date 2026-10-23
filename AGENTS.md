@@ -366,7 +366,7 @@ task rather than bundling the fix.
 
 ## Toolchain
 
-- Node 25.5, npm 11.8
+- Node 26.12, npm 11.20
 - TypeScript 6.0.3, Vite 8.3.5
 - three.js 0.186.1, simplex-noise 4.0.3; fonts are self-hosted subsets
   (JetBrains Mono 2.304 + DejaVu Sans Mono 2.37 under `assets/fonts/`, built

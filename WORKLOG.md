@@ -18227,6 +18227,8 @@ machine. Vitest 5's default worker count in a run is still the cores
 less one (31 here). The suite: 54.5 s on 5.0.5, alone. The worktree is
 removed.
 
+Readings: **405,220** on 129g's commit; **460,827** on 129h's.
+
 ### 129i, step zero: nvm for Windows 2.0.1 read before the install (2026-10-23, session 1c4b19b7)
 
 A subagent read `nvm-windows/docs` (`main`), the README and the release
@@ -18275,4 +18277,66 @@ So the user's premise holds after one admin cleanup, not before: no
 `nvm use` from then on would need UAC, and this round's switch is
 already made. Put to the user at 129i's stop, with the session's lean.
 
-Readings: **405,220** on 129g's commit.
+### 129i's stop: two calls (2026-10-23)
+
+Put to the user with the session's leans: nvm for Windows 2 deferred to
+the next Node switch, reversing the lean given when the user raised it,
+since its benefit arrives at that switch and its costs (an admin cleanup,
+no documented rollback, a rewrite still taking hotfixes) arrive now; and
+esbuild's install script denied. The user: "Oooh I didn't realize that
+there wasn't a documented way back 😅 Yeah, if v2 still isn't looking
+stable, then I'm on-board with waiting a bit! 😁 And signing your script
+recommendation too!" 129i closes deferred, with a TODO row under "Not
+yet placed".
+
+### 129g-post — esbuild's install script denied (2026-10-23, session 1c4b19b7)
+
+`npm install-scripts deny esbuild` writes `"allowScripts": { "esbuild":
+false }` to `package.json`. A fresh `npm ci` after it prints no skipped
+script, and `npx esbuild --version` (0.28.2) and `tsx` run. 129g's and
+129h's proofs ran with the script already skipped, so nothing they
+measured moves.
+
+### The close of §129 (2026-10-23, session 1c4b19b7)
+
+129a to 129j are ticked, with 129b-post and 129g-post inserted at the
+user's calls and 129i deferred by one. The two `batch` reads, 129d and
+129e, were read clear at 129g's stop; nothing is ◐. The phase ran from
+the kickoff's ref `a6ec1ec1` in one session, with no driver.
+
+What changed: Node 26.12.1 with npm 11.20 (and the box's pin), Vitest
+and coverage-v8 5.0.5, Vite 8.3.5 (rolldown 1.2), three 0.186.1, zod
+4.6.7, Electron 44.9.3, ESLint 10.13, typescript-eslint 8.72, prettier
+3.9.10, tsx 4.23.15, subset-font 2.9.0 and the repacked font it writes,
+@types/node 26; `npm audit` 10 → 0. Held: TypeScript at 6.0.3 (TODO,
+Round 9), Electron's major (TODO, Round 12), nvm for Windows 2 (TODO, not
+yet placed). JetBrains Mono's swap: still open upstream.
+
+What it found that outlives it:
+
+- *A proof across a package install keeps its "before" outside the
+  worktrees:* `build-hash <ref>`, the fuzz diff and the recorder's pairs
+  link this tree's `node_modules`, so across a bump they compare the new
+  packages with themselves. Readings were taken before each install
+  instead, and the fuzz diff's shapes run in this tree
+  (`scratch/129/fuzz-shapes.sh`). A later dependency change would need
+  the same; it has no rule beyond this entry.
+- *A `reach` reading belongs to its toolchain:* a V8 or transform change
+  starts a statement a line away, and coverage-v8 5 counts 28 lines
+  differently from 4, so `reach-diff` refuses such pairs.
+  `scratch/129/reach-common.mjs` compares what both readings count.
+  TESTING.md says so; a candidate for §130's instruments.
+- *npm 11.20 blocks dependency install scripts* unless `allowScripts`
+  names them.
+
+Tools, off git under `scratch/129/`: `fuzz-shapes.sh`, `lock-diff.mjs`,
+`woff2-tables.mjs` and `gsub-dump.mjs` (a font's tables and GSUB lists,
+with a self-compare control), `plant-json.mjs` (json-diff's control),
+`frame-rate-timed.js` (render time per frame, its planted known answer),
+`still-hash.js` (a still frame's 16×9 grid, its bloom plant),
+`reach-shape.mjs`, `reach-common.mjs`, `smoke-bench.sh`. The recorder's
+four check clips are in `clips/129f-*` (about 104 MB, gitignored). No
+worktree, preview server or background task is left.
+
+Readings: **468,605** at 129i's stop; **490,111** at 17:48 before this
+entry.

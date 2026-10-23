@@ -11,8 +11,8 @@ plan: [archive/post-109-roadmap.md](archive/post-109-roadmap.md) (Round 8)
 with its worklog and spec beside it; before it
 [archive/post-104-roadmap.md](archive/post-104-roadmap.md) (Round 7.5).
 
-**Status: §128 closed 2026-10-23 (`0.1.1` uploaded); §129, the
-dependency phase, is next.**
+**Status: §129, the dependency phase, closed 2026-10-23; §130, the
+instruments and the docs, is next.**
 The spec holds the user's intent and four signed
 decisions ([round-8.5-spec.md](round-8.5-spec.md)). The round opened with
 the oracle map, ahead of the census, as the user signed at the Round 8
@@ -417,41 +417,29 @@ at the kickoff). WORKLOG §128.
   2026-10-23: Firefox kept our keys 24 days; one foreign key; Edge's
   storage empty before the day, cause unknown; all reads clear.
 
-## Phase 129 — the dependency phase
+## Phase 129 — the dependency phase ✅ (closed 2026-10-23)
 
-After the tag (META-ROADMAP §"Round 8.5 — Housekeeping"): Vitest and its
-coverage tool first, then what ships with the user's eye, each major its
-own step with its release notes read first; the `npm audit` debt counted
-again; JetBrains Mono's fix for its swapped `⊞` and `⊠` looked for once
-(at the kickoff: none, so gotcha #136's exclusion stays). Cut signed
-2026-10-23 with four calls: Node 26 in, TypeScript held at 6.0.3,
-Electron to 44.9.3 only, lint ignoring `output/` and `clips/`. Every
-"before" reading is taken before its install (WORKLOG §129, "The
-kickoff").
+The packages brought up to date after `0.1.1`'s tag, each proven against
+readings taken before its install: Node 26, Vitest 5, Vite 8.3, three
+0.186, zod 4.6, Electron 44.9, the dev minors; `npm audit` 10 → 0.
+TypeScript held at 6.0.3, Electron's major and nvm for Windows 2 left to
+TODO; JetBrains Mono's swap still unfixed upstream. WORKLOG §129.
 
-- ☑ **129a — Vitest and coverage-v8 to 4.1.12** (`none`). The suite and
-  the smoke reach the same lines both ways; the audit 10 → 7 (WORKLOG §129).
+- ☑ **129a — Vitest and coverage-v8 to 4.1.12** (`none`).
 - ☑ **129b — the dev-only minors, and lint's ignore list** (`none`).
-  `dist/` and the fuzz shapes byte-identical, lint 0; the font call to
-  129g (WORKLOG §129).
 - ☑ **129b-post — subset-font 2.9's repack of the JetBrains Mono subset**
-  (`none`). Inserted at 129g's stop, the user's call: `gen:font`
-  reproduces the committed font again.
-- ☑ **129c — zod to 4.6.7** (`none`). The parsed config and the fuzz
-  shapes unchanged; the smoke 583 (WORKLOG §129).
-- ☑ **129d — Vite to 8.3.5** (`batch`; read at 129g). Read clear
-  2026-10-23; two config imports given `.ts`.
-- ☑ **129e — three and @types/three to 0.186** (`batch`; read at 129g).
-  Read clear 2026-10-23; no code change.
-- ☑ **129f — Electron to 44.9.3, and `npm audit fix`** (`none`). The
-  audit 0; the recorder's twin unchanged, both controls caught.
-- ☑ **129g — Node 26** (`stop`, the user's install). 26.12.1 and npm
-  11.20; config, fuzz shapes and build the same as under 25.
-- ☑ **129h — Vitest and coverage-v8 to 5** (`none`; `stop` if a changed
-  default changes what a test proves). No default reached a test; the
-  same code reached; the smoke's time unchanged by a paired bench.
-- ☐ **129i — nvm for Windows 2.0.1** (`stop`, the user's install).
-- ☐ **129j — the close** (`stop`).
+  (`none`; inserted at 129g's stop, the user's call).
+- ☑ **129c — zod to 4.6.7** (`none`).
+- ☑ **129d — Vite to 8.3.5** (`batch`). Read clear at 129g.
+- ☑ **129e — three and @types/three to 0.186** (`batch`). Read clear at 129g.
+- ☑ **129f — Electron to 44.9.3, and `npm audit fix`** (`none`).
+- ☑ **129g — Node 26** (`stop`, the user's install).
+- ☑ **129g-post — esbuild's install script denied in `allowScripts`**
+  (`none`; the user's call at 129i's stop).
+- ☑ **129h — Vitest and coverage-v8 to 5** (`none`).
+- ☑ **129i — nvm for Windows 2.0.1** (`stop`). Deferred at its stop, the
+  user's call: one admin cleanup here and no documented rollback (TODO).
+- ☑ **129j — the close** (`stop`).
 
 ## Phase 130 — the instruments and the docs
 

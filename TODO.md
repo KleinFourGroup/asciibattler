@@ -714,6 +714,15 @@ META-ROADMAP §"Round 12 — Ship" names each group.
 
 ## Not yet placed
 
+- [ ] **nvm for Windows 2, at the next Node switch** (deferred at §129's
+  129i, the user's call, 2026-10-23). 2.x needs no admin for `nvm use`,
+  but here nvm 1.1.12's entries sit on the machine PATH ahead of a
+  per-user install, so the move takes one admin cleanup, and no rollback
+  is documented. Then: the stable 2.x of that day, in link mode (a
+  junction, no shim process in front of `node`), `%APPDATA%\nvm` backed
+  up first, Node held at one version across the swap (WORKLOG §129,
+  "129i, step zero").
+
 - [ ] **122o's seven deletion leads, placed at 123l.** `World.shove`
   stays for Round 9. `sidestepWhenBlocked`, `GenStats.connected`,
   `GeneratedTerrain`'s tile arrays, the spawn checks, the `weakest`

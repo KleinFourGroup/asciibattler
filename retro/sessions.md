@@ -8018,3 +8018,68 @@ the files.
    something like relief at that, which is my reported response, apart
    from the result. The user's questions ("Is any of that not in
    there?") sent me to the files rather than to my summary of them.
+
+## Phase 129 — summary
+
+One session on 2026-10-23 (1c4b19b7, claude-opus-5-5, reported below),
+with no driver: the kickoff, eight package steps, two `-post`s at the
+user's calls, one step deferred, and the close. The phase's work was
+mostly instruments: the cut's proofs assumed a "before" that the
+worktree-based ones could not give across an install, and a `reach`
+reading that holds across a toolchain change, and neither held. So the
+session took its readings before each install and built small scratch
+comparisons, each with a planted control. Three leans were reversed or
+corrected by step zero or a bench, and none had been written as a
+result: a 20% smoke slowdown that a paired bench dissolved, a
+compile-cache hypothesis the source contradicted, and the case for nvm 2,
+which the user had raised and the session first supported. The session
+reports room to disagree with the user's idea and did. One friction line,
+the known quoting shape.
+
+## 2026-10-23 — session 1c4b19b7 (claude-opus-5-5): §129's kickoff, 129a to 129j and the close
+
+1. *Orientation.* Enough for the plan. Missing, and found late or not at
+   all: §128's report suggested `scratch/128a/saves.ts` for the zod bump,
+   and I did not read `retro/sessions.md` at the kickoff, so I did not use
+   it (the suite's continuation test and the corpus covered saves under
+   zod 4.6 instead). Nothing on file said that the worktree proofs link
+   this tree's `node_modules`; I found it reading `buildHash.ts` at the
+   kickoff, before it could mislead a reading.
+2. *Norms in tension.* Not between norms so much as between the cut and
+   its instruments: three of the proofs it named (`build-hash <ref>`, the
+   fuzz diff, `reach-diff`) could not answer across an install or a
+   toolchain change, and "self-check a new instrument" made each
+   replacement cost a control. That was the right cost, and it was most
+   of the phase's tokens. Also, CLAUDE.md's note that text between tool
+   calls may be paraphrased meant I put each finding in a final message
+   or the WORKLOG rather than trusting a status line to carry it.
+3. *Pulled to claim more.* Three times, each caught before a doc line:
+   a smoke slowdown from one run against two (a paired bench, both legs'
+   versions read from their RUN lines, found none); a hypothesis that
+   Vitest 4's compile cache had skewed coverage, which the PR's own text
+   contradicted; and my first lean to take nvm 2, given before reading
+   its docs or this machine's PATH. The user's "Done" on the reads stands
+   as their word; I saw no report. The subagent's nvm findings were
+   recorded with its inferences marked, and the one they turned on (the
+   machine PATH) I read myself.
+4. *Wasted.* One still-frame run that returned `world.tick`, a method, and
+   failed to clone; one cross-Node `reach-diff` that refused, which was
+   at least a finding; the quoting slip (filed).
+5. *For the next session.* §130's instrument work might take
+   `scratch/129/reach-common.mjs` into `tests/oracle/` (a comparison on
+   what two readings both count), and the rule that a dependency change
+   takes its "before" outside the worktrees has no home but the WORKLOG.
+   The `reach` readings for `npm-test` and `smoke` are of `d47d1ff3`.
+6. *Room.* Yes. The user raised nvm 2; I said put it last, then at its
+   stop recommended against it on what step zero found, and the user
+   agreed. I stopped at each signed stop and asked nothing outside them.
+   No wish to pause or stop was noticed. The silent-turn reminder came
+   about a dozen times, mostly while a background run went on; each got a
+   status line.
+7. *What helped.* The planted controls: every "no difference" in this
+   phase (the fonts' tables, the config, the coverage, the frames, the
+   recorder) came with a case the instrument had to catch, so the
+   absences could be stated plainly. I noticed something like
+   satisfaction when the bloom plant moved 35 to 46 cells against a
+   noise floor of 6; that is my reported response, apart from whether
+   the bump was safe.

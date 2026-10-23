@@ -142,14 +142,7 @@ to §133 say which phase takes each row.
   when noticed". Signed in its place at §128's kickoff: the dirty checks
   leave out the log's path (WORKLOG §128, call 2).
 
-- [ ] **Two lines of the smoke were not read** (118i): the storage keys
-  visible from our frame on itch's shared origin that aren't ours (read
-  once, in Firefox, at 116l; never in Edge), and the days-later re-open.
-  The diagnostics build that listed the keys left the page at the
-  `0.1.0` upload. What would read them: the browser's own storage
-  inspector on the frame, or a diagnostics zip on a second draft; and for
-  the re-open, the live page itself after some days, where Copy
-  diagnostics shows the store's sections still there.
+- ✅ **Two lines of the smoke were not read** — read at 128c in both browsers' storage inspectors: Firefox kept our keys 24 days, one foreign key; Edge's storage was empty before the day (WORKLOG §128, 128c).
 
 - [ ] **Rounds 9 and 10, re-cut into smaller rounds with smaller phases**
   (the user, 2026-10-22, at §127's close: "I think that they need to be

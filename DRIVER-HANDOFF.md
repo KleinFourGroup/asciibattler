@@ -8,12 +8,10 @@ driver log ([archive/driver-trial/log-124.md](archive/driver-trial/log-124.md)).
 
 ## Cursor
 
-- **Phase:** **§127 closed 2026-10-22** on Matthew's read (`3ee6d985`;
-  WORKLOG §127, "The close of §127"). **Next: §128, the close of Round
-  8.5**, from its kickoff (ROADMAP §128). Sessions 1 (9e9f60a2, 98,547 →
-  522,392) and 2 (8a6e4b31, 129,172 → 209,692); every reading of both
-  matches its transcript. No card waits: §128's driver, if Matthew
-  starts one, begins here.
+- **Phase:** **§128 closed 2026-10-23** with no driver (session
+  5179d080; WORKLOG §128); its kickoff split the close into §128 to §133.
+  **Next: §129**, from its kickoff (ROADMAP §129). No card waits: §129's
+  driver, if Matthew starts one, begins here.
 - **Driver:** none working. Driver 6 was
   `local_22c29698-92ab-4813-aab7-bbb7ee4750eb` (d92eeef8), 2026-10-22
   14:26 UTC to the close, 118,466 → the close's commit; two reads and
@@ -58,7 +56,7 @@ Numbered from §123. "Quiet" means no instance in the last phase; s = session.
 | P12 | a shell's working directory moved by a `cd` | §124; §124.5 twice; §126 s3 (inside a worktree, a removal failed) | note dropped (Matthew, 2026-10-20); quiet in §127 |
 | P15 | a count by a name's written form misses a copy written another way | 122h, 124.5c, 124.5f; §126's kickoff: 54 `while (` lines, missing `for (;;)` | brief 2's note credited (126e found 60); quiet in §127 |
 | P16 | a procedure or its data findable only in old WORKLOG entries or an unnamed scratch folder | §124.5 s1, 2, 6; §125 s2, s3 (20k); §126 s1, s5 (the title probe, gone); §127 s1 (the pane dumper in `scratch/127c/`, named in its hand-off), s2 (two probes moved from its scratchpad to `scratch/127g/` once raised) | carried to the Round 8.5 close (HANDOFF Cursor) |
-| P17 | open items across a hand-off: Matthew answers one in the old session and the waiting brief goes stale; or one the driver raised reaches no file a session reads | §124.5 after s1, 2, 7; §125 after s1; §127 after s1 (driver 6's brief 2 background named 127f-post's read open), s2 (the 127c call held only in DRIVER-HANDOFF; found by reading the driver's commit) | open items in the Cursor (2026-10-20); one the driver raised, in the brief, dated (driving.md, 2026-10-22) |
+| P17 | open items across a hand-off: Matthew answers one in the old session and the waiting brief goes stale; or one the driver raised reaches no file a session reads | §124.5 after s1, 2, 7; §125 after s1; §127 after s1 (driver 6's brief 2 background named 127f-post's read open), s2 (the 127c call held only in DRIVER-HANDOFF; found by reading the driver's commit); driver 6's note that §128 was oversized, in its last message only (found at §128's kickoff) | open items in the Cursor (2026-10-20); one the driver raised, in the brief, dated (driving.md, 2026-10-22) |
 | P19 | the silent-turn reminder every few calls through long checks | every §124.5 report, its s6 `distress` line; §125 s3; §126 s1, s2, s5, driver 5; §127 s1 (many), s2 (three), driver 6 | open, for the welfare read; the Cursor's riders (1), (3) |
 | P20 | a session hands off early, bounding the next step's end by 550k | §124.5 s3, 5, 6; §125 s1 (524k), s2 (463k); §126 s3 | brief 5's figures (signed 2026-10-22); quiet in §127 (s1's hand-off at 522k was Matthew's sign at 127f) |
 | P21 | a count or absence read from a shell search's filtered, truncated or narrowed output | 124j b6 (`grep -rn --include`); §125 s3 (`head -3`); §126 s2 (`git grep` without `:(glob)`) | a note from brief 3 (signed 2026-10-21); quiet in §127 |

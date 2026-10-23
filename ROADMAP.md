@@ -11,7 +11,8 @@ plan: [archive/post-109-roadmap.md](archive/post-109-roadmap.md) (Round 8)
 with its worklog and spec beside it; before it
 [archive/post-104-roadmap.md](archive/post-104-roadmap.md) (Round 7.5).
 
-**Status: §128, the build, in progress (2026-10-23).**
+**Status: §128 closed 2026-10-23 (`0.1.1` uploaded); §129, the
+dependency phase, is next.**
 The spec holds the user's intent and four signed
 decisions ([round-8.5-spec.md](round-8.5-spec.md)). The round opened with
 the oracle map, ahead of the census, as the user signed at the Round 8
@@ -399,14 +400,12 @@ in WORKLOG §127 and "The close of §127".
 - ☑ **127g — the close** (`stop`). Read 2026-10-22; 127c's narrowing
   signed.
 
-## Phase 128 — the build
+## Phase 128 — the build ✅ (closed 2026-10-23)
 
-The round's upload comes first, since nothing in the close changes what
-ships: `0.1.1` (the same game with the two signed display fixes, Run v49
-as at `0.1.0`), tagged and zipped, with a run saved by `0.1.0` shown to
-resume under it, then the user's smoke and upload. The rest of the close
-follows §129 as §130 to §133 (split at the kickoff, 2026-10-23; WORKLOG
-§128). No step fires the smoke.
+`0.1.1` uploaded and pushed with its tag: the same game with two display
+fixes, a run saved by `0.1.0` resuming under it, under the user's new
+version rule. The rest of the close follows §129 as §130 to §133 (split
+at the kickoff). WORKLOG §128.
 
 - ☑ **128a — a run saved by `0.1.0` resumes under the new build**
   (`none`). 189 gates' saves byte-identical across the trees; all 189 of
@@ -414,11 +413,9 @@ follows §129 as §130 to §133 (split at the kickoff, 2026-10-23; WORKLOG
 - ☑ **128b — `0.1.1`, the tag and the zip** (`none`). `v0.1.1` on
   `7baa695c`, the zip `asciibattler-0.1.1_7baa695.zip` checked; the version
   rule replaced by the user's (META-ROADMAP §Round 8; WORKLOG §128).
-- ☐ **128c — the smoke and the upload** (`stop`, the user's). Before the
-  upload, the live `0.1.0` page re-opened in Firefox and Edge (the
-  days-later re-open) and the frame's storage read in each browser's
-  inspector (the keys that aren't ours); then the upload, and the same
-  runs continued on `0.1.1`. The pushes are the user's.
+- ☑ **128c — the smoke and the upload** (`stop`, the user's). Read
+  2026-10-23: Firefox kept our keys 24 days; one foreign key; Edge's
+  storage empty before the day, cause unknown; all reads clear.
 
 ## Phase 129 — the dependency phase
 

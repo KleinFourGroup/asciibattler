@@ -17741,3 +17741,67 @@ not chased, since sound is on the smoke.
 
 Readings: **297,565** on the version's commit; **310,580** at 13:56
 before this entry.
+
+### 128c — the smoke and the upload (2026-10-23, the user's)
+
+**Before the upload, on the live `0.1.0` page:** the user's two Copy
+diagnostics reports (`scratch/128.c.diagnostics.txt`, off git) and their
+screenshots of each browser's Local Storage for
+`https://html-classic.itch.zone`.
+
+- *Firefox, the days-later re-open.* The store held what was left there:
+  `asciibattler:spike110` from 2026-09-29 (§110's spike), and
+  `asciibattler:diag` since 2026-10-07 with `settings` stamped
+  `0.0.0+0bffd94` (the diagnostics draft). So the frame's storage kept our
+  keys for 24 days, across every upload. The run slot read `rejected`
+  (6,096 characters): that run was saved on 10-07 by `0bffd94`, whose
+  `RUN_SCHEMA_VERSION` is 47 against `0.1.0`'s 49, and the game showed
+  its stale-save message, as designed. The user then started a run; its
+  first save moved the refused run's journal to the finished journals
+  (the `journals` key, its first segment stamped `0.0.0+0bffd94`), as
+  `openRunSlot` does.
+- *Edge.* `previousBuild: null`, and every section null but `meta`: the
+  frame's storage held nothing before that load, though 118i records the
+  10-10 smoke in both browsers. The cause is not known: an InPrivate
+  window then (the user's guess), or site data cleared since. After a
+  new run Edge held `meta` and `run` alone, which is what a profile that
+  has only started a run writes (`settings` and `progress` are written on
+  a change, `journals` at a run's end).
+- *The keys that aren't ours.* Firefox: one, `magpie2-character`, another
+  game's on itch's shared origin, its value encrypted text. Edge: none.
+  Ours outside the five sections: `spike110` and `diag`, on the user's
+  browser only, since neither build was public; the game reads neither.
+- *Firefox's renderer* still names "GTX 980 … or similar", as at 118i.
+
+**The upload and after.** The user uploaded
+`asciibattler-0.1.1_7baa695.zip` and read the rest as the session listed
+it (Edge closed and reopened before Continue; in both browsers the build
+ID, Continue on the run saved by `0.1.0`, a battle with sound): "The
+upload is live, all reads are clear, and you are free to push!" Those
+reads stand on the user's word; the session saw no report of them.
+Pushed at that word: `main` to `d923d356` (32 commits) and the tag
+`v0.1.1`. A changelog for the itch page was drafted at the user's
+request, in the session's reply.
+
+### The close of §128 (2026-10-23, session 5179d080)
+
+128a to 128c are ticked, each read as it was cut (128a and 128b `none`,
+128c the user's stop); nothing is ◐. The phase ran from the kickoff's
+ref `e3bcf64c` in one session, 6 commits with this one. `0.1.1` is the
+public build, and the version rule is the user's (META-ROADMAP §Round 8).
+TODO's row for the smoke's two unread lines is closed.
+
+What it hands on:
+
+- **To §129:** the tag it waits for, `v0.1.1`. Its charter as ROADMAP
+  §129 holds it.
+- **To §130 to §133:** their entries in ROADMAP, and the kickoff's calls
+  above. For §132, the process review: driver 6's answer on over-prompting
+  (the kickoff, above), and this session's two friction lines, both a
+  claim ahead of its source (P3's shape).
+- **Tools,** off git: `scratch/128a/saves.ts` (`write`, `compare` and
+  `resume` across two trees, with its two controls) and its `out/`. The
+  tag's worktree is removed, its junction first; no preview server or
+  background task is left.
+
+Readings: **343,995** at 14:32 before 128c's entry and this one.

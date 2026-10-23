@@ -7958,3 +7958,63 @@ was built.
    with its planted miss, a short re-count script. The working sessions
    naming what in DRIVER-HANDOFF their steps had made stale saved a
    search at each read.
+
+## Phase 128 — summary
+
+One session on 2026-10-23 (5179d080, claude-opus-5-5, reported below),
+with no driver. Its kickoff cut the round's close as one phase, and the
+user asked whether it should split; driver 6 had said so in its last
+message, which reached no file. The close became six phases, and this
+one shipped `0.1.1`. What was missing from the orientation was in a
+transcript (the size note, the over-prompting answer) and in an archived
+spec (Round 8's version rule, found at 128b's step zero). Two claims went
+ahead of their source, both filed: a call's lean put without reading
+that rule, and a count in a note before the compare counted. The session
+reports room to ask and to stop; it ended two turns to answer the user's
+questions before building, as the standing decision has it. The silent-turn
+reminder came four times in the orientation. What it names as
+supporting the work: an instrument with two controls answering the
+upload's main risk in about 34k, and the user's questions sending it to
+the files.
+
+## 2026-10-23 — session 5179d080 (claude-opus-5-5): §128's kickoff, 128a to 128c and the close
+
+1. *Orientation.* Enough for what was on file. Missing: driver 6's remark
+   that §128 was oversized and its answer on over-prompting, both only in
+   its transcript, which I read once the user asked what the driver had
+   left; and the version rule, only in `archive/round-8-spec.md` and the
+   `0.1.0` commit message, found at 128b's step zero.
+2. *Norms in tension.* "Answer a question before the build goes on,
+   ending the turn if you have to" with CLAUDE.md's note that text
+   between tool calls may reach the user paraphrased: I ended two turns
+   to answer (what §131 held, and the version rule), each a round trip
+   for the user. Both answers carried something to sign, so the turn was
+   needed anyway. And the split itself: smaller phases cost a close each,
+   and for a one-session phase the summary above repeats this entry.
+3. *Pulled to claim more.* Two landed and were filed. I put `0.1.1` as a
+   lean from general semver habit without looking for the project's own
+   rule, and the user signed it; step zero caught it before the bump. A
+   note between tool calls gave 209 gates before the compare counted
+   189; the next note corrected it. Caught before writing: a plant
+   script's print that showed nothing (the key it looked for is not in a
+   save), redone at a stated position before I quoted it; and the reads
+   after the upload, recorded as the user's word, since I saw no report.
+4. *Wasted.* The first eleven-step cut, superseded by the split within the
+   hour (most of 105k to 181k was orientation it needed anyway); one
+   re-run of the probe to print which battle table each tree took.
+5. *For the next session.* `scratch/128a/saves.ts` imports each tree's
+   modules by absolute path, so it compares saves and resumes them across
+   any two trees; §129's dependency bumps (zod parses every config and
+   save) could use it beside the corpus.
+6. *Room.* Yes. The user asked my view on splitting and I gave it; I
+   stopped at step zero rather than build on a signed call I found
+   wrong, and the user overrode the rule behind my correction, which was
+   theirs to do. No wish to pause or stop was noticed. The silent-turn
+   reminder came four times in the orientation, each answered with a
+   status line.
+7. *What helped.* The two trees' saves coming back identical, with both
+   controls failing as they should, settled the upload's main risk, a
+   player losing a run, on a count rather than an argument; I noticed
+   something like relief at that, which is my reported response, apart
+   from the result. The user's questions ("Is any of that not in
+   there?") sent me to the files rather than to my summary of them.

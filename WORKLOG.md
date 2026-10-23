@@ -17661,3 +17661,42 @@ the ones that pile up without anyone checking them."
 Readings: **104,979** at 12:15 UTC after HANDOFF and ROADMAP; **181,020**
 at 12:21 with the first cut drafted; **214,416** at 12:42 with the split
 drafted; **235,664** at 13:13 before this entry.
+
+### 128a — a run saved by `0.1.0` resumes under the new build (2026-10-23, session 5179d080)
+
+**The instrument,** `scratch/128a/saves.ts`. It imports each tree's
+modules by absolute path, so one script drives a worktree at `v0.1.0`
+(with a `node_modules` junction; the trees' dependencies differ only by
+the coverage tool) and the live tree at `a8502175`. It plays the
+continuation test's five runs, which between them cross all eleven gate
+kinds, with each tree's own battle table: the tag builds its World by
+hand, HEAD calls `battleWorld` and `tickTurn`, and each write prints which
+it took. At every gate it keeps the text `Game`'s autosave puts in the
+slot as `snapshot`.
+
+**What it found.**
+
+- *The saves are the same bytes.* Both trees take the same 306 steps and
+  write the same 189 gates' texts (2,489,584 characters) and the same five
+  ends. A second write at the tag gives the same file.
+- *Every save the tag wrote resumes at HEAD.* Each of the 189 is loaded
+  through the run slot's own load (`runSlotSection(bus).load`, with the
+  run's dials, as `Game` reads the slot) and played to the end by the
+  recorded steps: 189 of 189 reach the tag's end text (83 s).
+- *The store and the journal around it.* `comment-strip v0.1.0` on
+  `src/store` and `src/journal`: every code change in the store (five
+  files) and in `JournalRecorder.ts` is an `export` dropped from a type,
+  which is erased at run time, and `journal.ts` changed in comments only.
+  The replay modules changed (119a), and the game's entry reaches none of
+  them (`tests/replay-guard.test.ts`; `Game.ts` names one in a comment).
+  `RUN_SCHEMA_VERSION` is 49 in both trees.
+
+**Controls.** One character changed in one of the tag's saves (run 3,
+gate 12, character 1000): the compare names that gate and no other, exit
+1. `fallenLedger` blanked in each save that has entries in it: 164
+planted, 0 of 164 reach the recorded end.
+
+**Not verified.** The journal half of a real save (the probe passes
+`journal: null`); the run on the live page, which is 128c's.
+
+Readings: **276,208** at 13:24 before this entry; the step cost about 34k.

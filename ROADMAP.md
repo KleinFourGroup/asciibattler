@@ -408,10 +408,9 @@ resume under it, then the user's smoke and upload. The rest of the close
 follows §129 as §130 to §133 (split at the kickoff, 2026-10-23; WORKLOG
 §128). No step fires the smoke.
 
-- ☐ **128a — a run saved by `0.1.0` resumes under the new build**
-  (`none`). The same seeded runs' saves, written at the tag and at HEAD
-  at every gate they reach, compared byte for byte; the tag's saves
-  loaded at HEAD and played to the end; a planted byte must be found.
+- ☑ **128a — a run saved by `0.1.0` resumes under the new build**
+  (`none`). 189 gates' saves byte-identical across the trees; all 189 of
+  the tag's resume at HEAD to its end; both plants caught (WORKLOG §128).
 - ☐ **128b — `0.1.1`, the tag and the zip** (`none`). `npm version`, the
   commit and the annotated tag by hand, `itch-zip.mjs` and its `--check`
   on the clean tree, the zip's copy looked at in the pane.

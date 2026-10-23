@@ -66,7 +66,8 @@ box() {
 
 launch() {
   # The parity guard, local half: an uncommitted tree can't match any box HEAD.
-  if [ -n "$(git status --porcelain)" ]; then
+  # The friction log is left out (scripts/build-id.mjs, TREE_PATHSPEC, says why).
+  if [ -n "$(git status --porcelain -- ':/' ':(top,exclude)retro/papercuts.jsonl')" ]; then
     echo "PARITY FAIL: local tree is dirty — commit (and push) before launching a batch" >&2
     exit 1
   fi

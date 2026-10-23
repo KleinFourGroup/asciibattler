@@ -453,7 +453,7 @@ shell-quoting audit, a stop if its tripwire fires. One session.
 
 Cut and signed 2026-10-23 (WORKLOG §130, "The kickoff").
 
-- ☐ **130a — the friction log out of the dirty checks** (`none`). Six
+- ☑ **130a — the friction log out of the dirty checks** (`none`). Six
   sites skip `retro/papercuts.jsonl`; a planted pair in a real repo in
   `build-id.test.ts`, the scripts checked on the same pair.
 - ☐ **130b — the journal corpus out of the gate** (`none`).

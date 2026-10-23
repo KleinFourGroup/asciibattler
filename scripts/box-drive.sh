@@ -91,7 +91,9 @@ else
 fi
 
 # --- pre-flight: push-before-launch, and pin the cohort HEAD -----------------
-if [ -n "$(git status --porcelain)" ]; then
+# The friction log is left out of both dirty checks (scripts/build-id.mjs,
+# TREE_PATHSPEC, says why).
+if [ -n "$(git status --porcelain -- ':/' ':(top,exclude)retro/papercuts.jsonl')" ]; then
   echo "[$(ts)] REFUSED: dirty tree — commit and push before a cohort launches" >&2
   exit 1
 fi
@@ -132,7 +134,7 @@ for LINE in "${QUEUE[@]}"; do
 
   # ONE HEAD PER COHORT — refuse a mid-queue flip instead of silently
   # rerunning the remainder at the new HEAD.
-  if [ -n "$(git status --porcelain)" ]; then
+  if [ -n "$(git status --porcelain -- ':/' ':(top,exclude)retro/papercuts.jsonl')" ]; then
     hold "batch $N/${#QUEUE[@]}: tree went DIRTY mid-cohort"
   fi
   if [ "$(git rev-parse HEAD)" != "$COHORT_HEAD" ]; then

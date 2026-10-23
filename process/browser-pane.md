@@ -113,7 +113,7 @@ C2 and C4).
   server restarted (seen once, 2026-10-22). Write the imported sheet first.
 - The dev server stamps the build's ID into each page it serves, so
   `ready()`'s `build` names the commit and the tree's state as of that
-  load (`-dirty` while anything is uncommitted), not as of the server's
+  load (`-dirty` while anything but the friction log is uncommitted), not as of the server's
   start.
 - Editing `vite.config.ts`, or a file it imports (`src/buildId.ts`,
   `scripts/build-id.mjs`, the probe's `bootstrap.ts`), restarts every

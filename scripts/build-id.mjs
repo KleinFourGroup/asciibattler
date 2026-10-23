@@ -2,7 +2,8 @@
 // made from, as `<version>+<commit>`.
 //
 //   0.1.0+abc1234          a build of a clean tree at that commit
-//   0.1.0+abc1234-dirty    the tree had uncommitted changes
+//   0.1.0+abc1234-dirty    the tree had uncommitted changes (the friction
+//                          log aside: TREE_PATHSPEC)
 //   0.1.0+abc1234-dev      served live (the dev server, Vitest), where the
 //                          tree can change under a running server. A dev
 //                          server's page carries the ID as git gave it when
@@ -24,6 +25,13 @@ export const BUILD_ID_ENV = 'ASCIIBATTLER_BUILD_ID';
 export const NO_GIT = 'nogit';
 /** The suffix of an ID served live. */
 export const LIVE_SUFFIX = '-dev';
+/** What a dirty check reads: the whole tree but the friction log, which a
+ *  session appends to at any time (`npm run papercut`) and which no build or
+ *  batch reads. Anchored at the top, so a check run from a subfolder still
+ *  reads the whole tree. The fuzz manifest takes it from here, and the shell
+ *  scripts that refuse a dirty tree (box-drive.sh, box-batch.sh,
+ *  perf-oracle.sh) write the same two pathspecs. */
+export const TREE_PATHSPEC = [':/', ':(top,exclude)retro/papercuts.jsonl'];
 
 function runGit(cwd) {
   return (args) => {
@@ -34,10 +42,10 @@ function runGit(cwd) {
 }
 
 /** `abc1234`, or `abc1234-dirty` when `git status --porcelain` lists
- *  anything. Throws when git fails. */
+ *  anything under TREE_PATHSPEC. Throws when git fails. */
 export function commitStamp(cwd, git = runGit(cwd)) {
   const commit = git(['rev-parse', '--short=7', 'HEAD']);
-  return git(['status', '--porcelain']) === '' ? commit : `${commit}-dirty`;
+  return git(['status', '--porcelain', '--', ...TREE_PATHSPEC]) === '' ? commit : `${commit}-dirty`;
 }
 
 /** The ID of the tree at `cwd`. `live` marks one served from a tree that can

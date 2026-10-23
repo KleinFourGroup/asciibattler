@@ -135,12 +135,7 @@ to §133 say which phase takes each row.
   (`save`, `settings`) in place of the step is counted under the word.
   Round 8 read 135 commits there against git's 196.
 
-- [ ] **The friction log is a tracked file,** so filing during a cohort's
-  launch window or a recording dirties the tree: the box holds on a dirty
-  tree, and a clip is stamped `-dirty` (111f-post, 118b). An untracked
-  spool that the tool drains at the next clean moment would keep "file
-  when noticed". Signed in its place at §128's kickoff: the dirty checks
-  leave out the log's path (WORKLOG §128, call 2).
+- ✅ **The friction log is a tracked file** — the six dirty checks leave out its path (`TREE_PATHSPEC` in `scripts/build-id.mjs`), in place of a spool (WORKLOG §130, 130a).
 
 - ✅ **Two lines of the smoke were not read** — read at 128c in both browsers' storage inspectors: Firefox kept our keys 24 days, one foreign key; Edge's storage was empty before the day (WORKLOG §128, 128c).
 

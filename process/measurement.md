@@ -59,7 +59,8 @@ Boxes are created on demand and destroyed after use.
   batch.
 - From the first launch until the last one has fired: no commits and no doc
   edits in the tree. `box-drive.sh` refuses a dirty tree or a moved HEAD
-  before each launch.
+  before each launch. The friction log is outside its check, so
+  `npm run papercut` may file during the window.
 - To keep building during a cohort's launch window (it can be hours), work
   in a detached worktree: `git worktree add --detach <dir>` plus a
   `node_modules` junction. Build, typecheck, test and smoke there, then land

@@ -25,6 +25,7 @@ import { spawnSync } from 'node:child_process';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { TREE_PATHSPEC } from '../../scripts/build-id.mjs';
 
 export const MANIFEST_FILE = 'manifest.json';
 export const MANIFEST_VERSION = 1;
@@ -85,7 +86,7 @@ export function captureGitProvenance(cwd: string = REPO_ROOT): GitProvenance {
   if (head.error || head.status !== 0) return { head: null, dirty: null };
   const sha = head.stdout.trim();
   if (!/^[0-9a-f]{40}$/.test(sha)) return { head: null, dirty: null };
-  const status = spawnSync('git', ['status', '--porcelain'], { cwd, encoding: 'utf8' });
+  const status = spawnSync('git', ['status', '--porcelain', '--', ...TREE_PATHSPEC], { cwd, encoding: 'utf8' });
   // A sha without a readable status is a half-answer — record it as
   // unknown provenance rather than guessing at cleanliness.
   if (status.error || status.status !== 0) return { head: null, dirty: null };

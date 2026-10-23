@@ -4,6 +4,7 @@
 export declare const BUILD_ID_ENV: 'ASCIIBATTLER_BUILD_ID';
 export declare const NO_GIT: 'nogit';
 export declare const LIVE_SUFFIX: '-dev';
+export declare const TREE_PATHSPEC: readonly string[];
 
 /** Runs `git <args>` in the tree and returns its trimmed output; throws on failure. */
 export type Git = (args: readonly string[]) => string;

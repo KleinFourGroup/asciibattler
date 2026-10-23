@@ -18419,3 +18419,37 @@ The calls, signed with it (the session's leans):
 
 Readings: **103,307** at 21:20 UTC after HANDOFF and ROADMAP; **184,947**
 at 21:28 with the cut drafted; **200,479** at 21:33 before this entry.
+
+### 130a — the friction log out of the dirty checks (2026-10-23, session 0e7e3d85)
+
+`TREE_PATHSPEC` in `scripts/build-id.mjs` (`':/'` and
+`':(top,exclude)retro/papercuts.jsonl'`) is what `commitStamp` and the fuzz
+manifest's `captureGitProvenance` read; `box-drive.sh` (both checks),
+`box-batch.sh` and `perf-oracle.sh` write the same two pathspecs, with a
+comment pointing at the constant. Step zero, in a planted repo: the
+top-anchored form reads the log alone as clean from the top and from a
+subfolder, and `-- . ':!…'` run from a subfolder missed a change at the top.
+
+The proofs:
+
+- *The planted pair* in `tests/build-id.test.ts`, in a real repository:
+  clean; the log alone changed reads clean from the top and from `sub/`,
+  with git's own list shown non-empty; another file changed reads
+  `-dirty`, from `sub/` too; a new file beside the log reads `-dirty`.
+  Controls in a worktree at `dad48627`: the test against the old
+  `commitStamp` fails at the log alone (`64164cc-dirty` for `64164cc`),
+  and against the `.` form at the subfolder case (clean for `-dirty`).
+- *The scripts* (`scratch/130/dirty-sites.sh`): the four commands
+  extracted from the scripts as written and run in a planted repo in the
+  same states: PASS on all four, and the bare `git status --porcelain`,
+  the control, reads the log alone as dirty. The extraction's first two
+  drafts cut the command at the pathspec's own `)` and failed every
+  site loudly.
+- *The test's own expectation* for this tree's stamp now takes git's
+  whole list and drops the log's line itself, so it does not consult the
+  constant it checks.
+
+The docs that said "anything uncommitted": ARCHITECTURE's two rows,
+`process/browser-pane.md`, and `process/measurement.md`, which now says
+`npm run papercut` may file during a cohort's launch window. TODO's row ✅.
+Tests 3727 → 3728.

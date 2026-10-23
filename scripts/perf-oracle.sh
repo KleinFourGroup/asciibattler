@@ -30,7 +30,8 @@ cd "$ROOT"
 
 BASE_SHA="$(git rev-parse --short "$BASE_REF")"
 DIRTY=""
-[ -n "$(git status --porcelain)" ] && DIRTY=" (live tree DIRTY — candidate includes uncommitted edits)"
+# The friction log is left out (scripts/build-id.mjs, TREE_PATHSPEC, says why).
+[ -n "$(git status --porcelain -- ':/' ':(top,exclude)retro/papercuts.jsonl')" ] && DIRTY=" (live tree DIRTY — candidate includes uncommitted edits)"
 echo "perf-oracle: baseline=$BASE_REF ($BASE_SHA) vs live tree$DIRTY"
 
 SCRATCH="$(mktemp -d "${TMPDIR:-/tmp}/perf-oracle-XXXXXX")"

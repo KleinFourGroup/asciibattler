@@ -1,5 +1,6 @@
 import { spawnSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { appendFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { BUILD_ID_ENV, LIVE_SUFFIX, NO_GIT, buildId, commitStamp, type Git } from '../scripts/build-id.mjs';
@@ -30,6 +31,45 @@ describe('113a — the build ID', () => {
     expect(commitStamp(repo, fakeGit('abc1234', ''))).toBe('abc1234');
     expect(commitStamp(repo, fakeGit('abc1234', '?? planted.txt'))).toBe('abc1234-dirty');
     expect(() => commitStamp(repo, noGit)).toThrow('not a git repository');
+  });
+
+  it('reads a tree whose only change is the friction log as clean, and any other change as dirty', () => {
+    // A planted pair in a real repository, since the pathspec is git's to
+    // apply and a fake git would only echo it.
+    const tree = mkdtempSync(join(tmpdir(), 'build-id-'));
+    const git = (...args: string[]): string => {
+      const r = spawnSync('git', args, { cwd: tree, encoding: 'utf8' });
+      if (r.status !== 0) throw new Error(`git ${args.join(' ')}: ${r.stderr}`);
+      return r.stdout.trim();
+    };
+    try {
+      mkdirSync(join(tree, 'retro'));
+      mkdirSync(join(tree, 'sub'));
+      writeFileSync(join(tree, 'retro', 'papercuts.jsonl'), '{}\n');
+      writeFileSync(join(tree, 'README.md'), 'a\n');
+      writeFileSync(join(tree, 'sub', 'kept.txt'), 'a\n');
+      git('init', '-q');
+      git('add', '.');
+      git('-c', 'user.name=plant', '-c', 'user.email=plant@example.invalid', 'commit', '-q', '-m', 'planted');
+      const head = git('rev-parse', '--short=7', 'HEAD');
+      expect(commitStamp(tree)).toBe(head);
+
+      appendFileSync(join(tree, 'retro', 'papercuts.jsonl'), '{}\n');
+      expect(git('status', '--porcelain')).not.toBe(''); // git itself sees the change
+      expect(commitStamp(tree)).toBe(head);
+      expect(commitStamp(join(tree, 'sub'))).toBe(head);
+
+      writeFileSync(join(tree, 'README.md'), 'b\n');
+      expect(commitStamp(tree)).toBe(`${head}-dirty`);
+      // From a subfolder, a change outside it still counts.
+      expect(commitStamp(join(tree, 'sub'))).toBe(`${head}-dirty`);
+
+      git('checkout', '-q', '--', 'README.md');
+      writeFileSync(join(tree, 'retro', 'other.jsonl'), '{}\n');
+      expect(commitStamp(tree)).toBe(`${head}-dirty`);
+    } finally {
+      rmSync(tree, { recursive: true, force: true });
+    }
   });
 
   it('is the version, a plus, and the stamp', () => {
@@ -131,7 +171,10 @@ describe('113f-post — the ID stamped at each page load', () => {
     }
     // The expectation comes from git itself, asked here, not from buildId().
     const head = spawnSync('git', ['rev-parse', '--short=7', 'HEAD'], { cwd: repo, encoding: 'utf8' }).stdout.trim();
-    const dirty = spawnSync('git', ['status', '--porcelain'], { cwd: repo, encoding: 'utf8' }).stdout.trim() !== '';
+    // Git's whole list, with the friction log's line taken out here.
+    const dirty = spawnSync('git', ['status', '--porcelain'], { cwd: repo, encoding: 'utf8' })
+      .stdout.split('\n')
+      .some((line) => line.trim() !== '' && line.slice(3) !== 'retro/papercuts.jsonl');
     expect(head).toMatch(/^[0-9a-f]{7}$/);
     expect(stamped).toBe(`${version}+${head}${dirty ? '-dirty' : ''}-dev`);
   });

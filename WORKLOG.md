@@ -17700,3 +17700,44 @@ planted, 0 of 164 reach the recorded end.
 `journal: null`); the run on the live page, which is 128c's.
 
 Readings: **276,208** at 13:24 before this entry; the step cost about 34k.
+
+### 128b — `0.1.1`, the tag and the zip (2026-10-23, session 5179d080)
+
+**Step zero changed call 4, and the user changed the rule.** The `0.1.0`
+commit cites Round 8's version rule ("the middle number goes up at each
+milestone upload and the last at each hotfix", `archive/round-8-spec.md`),
+by which a round's upload is `0.2.0`; the session's lean for `0.1.1` had
+not read it, and the bump waited on the user. The user kept `0.1.1`:
+"This phase was entirely internal engine work, with two incidental
+user-facing bugs being caught and fixed. I don't think we can call this a
+milestone", and the old rule "hasn't been communicated publicly". They
+proposed release status . new features . bug fixes; the session's two
+refinements, both signed: the last number covers everything a player
+would not notice as new (fixes, performance, internal work,
+dependencies), and an upload that rejects runs saved by the one before
+goes up the middle number, so a last-number upload keeps a run in
+progress. The rule is in META-ROADMAP §Round 8 beside the release policy,
+and DESIGN's Saving paragraph points at it (`d409c1d8`).
+
+**Built.** `npm version 0.1.1 --no-git-tag-version` changed `package.json`
+and the lock file; the commit (`7baa695c`) and the annotated tag `v0.1.1`
+were made by hand, as at `0.1.0`. Neither is pushed. `node
+scripts/itch-zip.mjs` on the clean tree: `asciibattler-0.1.1_7baa695.zip`,
+build ID `0.1.1+7baa695`, 32 entries, 1,243,915 bytes (`0.1.0`'s:
+32 and 1,248,410), the build's hash `bf1f9189…393390d0`; `--check` against
+the build, run on its own, exit 0.
+
+**In the pane** (Chromium, `itch-preview` over `output/itch/current`):
+`<html data-build>` and the menu's corner read `0.1.1+7baa695`; JetBrains
+Mono and DejaVu Sans Mono loaded; `__game`, `__probe` and `__diag`
+undefined; the inline script first and one module bundle; the menu with
+New run, Settings, Credits and the seed field. The console held eight
+cache errors and, at boot, WebGL warnings of a zero-size framebuffer (the
+canvas read 1024×768 after). Each of the 25 sound files loaded once with
+a 206 beside three failed cache attempts, the kind 118h saw at `0.1.0`;
+not chased, since sound is on the smoke.
+
+**Not verified.** Firefox and Edge, the itch frame, sound by ear: 128c.
+
+Readings: **297,565** on the version's commit; **310,580** at 13:56
+before this entry.

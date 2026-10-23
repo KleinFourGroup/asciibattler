@@ -411,9 +411,9 @@ follows §129 as §130 to §133 (split at the kickoff, 2026-10-23; WORKLOG
 - ☑ **128a — a run saved by `0.1.0` resumes under the new build**
   (`none`). 189 gates' saves byte-identical across the trees; all 189 of
   the tag's resume at HEAD to its end; both plants caught (WORKLOG §128).
-- ☐ **128b — `0.1.1`, the tag and the zip** (`none`). `npm version`, the
-  commit and the annotated tag by hand, `itch-zip.mjs` and its `--check`
-  on the clean tree, the zip's copy looked at in the pane.
+- ☑ **128b — `0.1.1`, the tag and the zip** (`none`). `v0.1.1` on
+  `7baa695c`, the zip `asciibattler-0.1.1_7baa695.zip` checked; the version
+  rule replaced by the user's (META-ROADMAP §Round 8; WORKLOG §128).
 - ☐ **128c — the smoke and the upload** (`stop`, the user's). Before the
   upload, the live `0.1.0` page re-opened in Firefox and Edge (the
   days-later re-open) and the frame's storage read in each browser's

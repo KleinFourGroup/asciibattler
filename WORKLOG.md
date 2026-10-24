@@ -19109,7 +19109,9 @@ the docs-only set derived at hook time from the tests that read a `.md`,
 so it cannot go stale, and built first in §132 since §132 and §133 are
 docs commits. The probe, the session's lean: retired as a round measure;
 its one human-shaped lead is V2, whose cost rose where a rewritten comment
-dropped the search order the question keys on.
+dropped the search order the question keys on. The trigger's number,
+signed in a comment on the user's summary doc (2026-10-24): "I think 500
+is good!"
 
 ### 131p — the cold-read probe at the Round 8.5 close (2026-10-24, session e9218d3d)
 

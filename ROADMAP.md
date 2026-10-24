@@ -467,8 +467,8 @@ vendor's current prompting guidance is an input, and so are the user's
 leans from §131 (WORKLOG §131, after 131c). Cut signed 2026-10-24 with
 eleven calls (WORKLOG §132, the kickoff).
 
-- ☐ **132a — the docs-only hook** (`none`). A docs-only commit runs only
-  the tests that read docs, a set derived at hook time.
+- ☑ **132a — the docs-only hook** (`none`). A docs-only commit runs only
+  the tests that read docs, a set derived at hook time. 7 files, ~14 s.
 - ☐ **132b — the shell note** (`batch`; a `stop` if its count differs
   from 130e's instrument's). A halved Bash command runs with a line
   saying what bash received.

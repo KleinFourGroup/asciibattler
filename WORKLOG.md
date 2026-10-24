@@ -19458,3 +19458,40 @@ kickoff's guess, with a hand-off before 132f.
 
 Readings: **112,446** at 15:52 UTC after HANDOFF; **178,447** at 15:57
 with the cut drafted; **196,017** at 17:19 before this entry.
+
+### 132a — the docs-only hook (2026-10-24, session 60e58d62)
+
+**Step zero.** A Vitest setup file logged every `readFileSync`,
+`existsSync`, `statSync`, `openSync` and `promises.readFile` of a `.md` or
+`.jsonl` path with the test file running, through a scratch config over
+the repo's; the suite ran green under it (3726). Three test files read a
+repo doc's contents: `tests/docs.test.ts` (49 files), `src/audio/eventSounds.test.ts`
+(ARCHITECTURE.md) and `tests/prior-table-coverage.test.ts` (BALANCE.md),
+the first two the known answers. `tests/licences.test.ts` reads a licence
+under `node_modules`; seven files only `stat` `src/ui/HITSPLATS.md` in a
+walk of `src/`, and `tests/oracle/comments.test.ts` a temporary file of
+its own. No test read the friction log.
+
+**The set.** At commit time the hook takes the test files under `src/`
+and `tests/`, less `tests/fuzz/`, whose text names a `.md` path in a
+string: seven, a superset of the three, in about 14 s against about 55 s
+for the suite and the typecheck. Docs alone means every staged path ends
+in `.md` or is `retro/papercuts.jsonl`. No tracked `.md` lies under a
+smoke path, so the docs path cannot skip a smoke. A test that reads a doc
+only through a helper module would be missed; none did.
+
+**The controls** (a worktree at `d28f6d9d` with the new hook, run as `sh
+.githooks/pre-commit` on a staged set): A, a dead link planted in TODO.md,
+refused on the docs path by `docs.test.ts`'s link check alone; B, a clean
+TODO line and a friction-log line, passed on the docs path (7 files, 93
+tests); C, a TODO line and a comment in `src/ui/BitsOverlay.ts`, took the
+typecheck and the full suite (3726) and passed. The script's first run
+restored files from the index rather than HEAD, so the plant leaked into B
+and C, and C's comment held a step code the ceiling test caught; both
+fixed and the three rerun. AGENTS "Pre-commit", HANDOFF's pointer and the
+Cursor's timing say the docs path; AGENTS' first wording tripped its
+character cap at the commit, so its sentence of timings went, the Cursor
+holding them (19,996 of 20,000).
+
+Tools: `scratch/132a/` (the trace, its config, the summary script, the
+controls). Reading: **243,197** at 17:30 UTC before this entry.

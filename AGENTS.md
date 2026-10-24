@@ -354,9 +354,10 @@ The versioned hook [.githooks/pre-commit](.githooks/pre-commit) runs
 `npm run typecheck` and `npm test` before every commit, plus
 `npm run fuzz:smoke` when staged paths touch `src/sim|run|core|config|bot/`,
 `config/` or `tests/fuzz/`, and the `--jobs` parity test for `tests/fuzz/`.
-It takes about 45 s, or about 3 minutes with the smoke. Never bypass it
-with `--no-verify`; a failing hook means the tree needs fixing. It doesn't
-run lint or prettier; leave formatting drift in files you didn't touch.
+A commit of docs alone runs only the tests that read docs. Never bypass
+it with `--no-verify`; a failing hook means the tree needs fixing. It
+doesn't run lint or prettier; leave formatting drift in files you didn't
+touch.
 
 Vitest's transform accepts some code that strict `tsc` rejects
 (readonly mutation, `exactOptionalPropertyTypes` mismatches), which is why

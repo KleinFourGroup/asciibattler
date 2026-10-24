@@ -99,8 +99,8 @@ The user is Matthew. What helps:
 How the work runs:
 
 - Work on `main`; don't create a branch unless asked. Push only when asked,
-  at a phase close, or before a measurement-box launch (standing
-  permissions; the box pulls from GitHub).
+  at a phase close, or before a measurement-box launch, which pulls from
+  GitHub (standing permissions).
 - Commit per logical change, and split a commit when a step's intent grows
   mid-flight.
 - Surface tradeoffs before non-obvious calls (thresholds, refactor scope,
@@ -296,6 +296,8 @@ threshold.
   identified as retrospective. Recall at session end loses the small stuff.
   `papercut` = any point of friction: a permission prompt, a tool that
   wedged, a norm that got in the way, a stale doc, a wasted round-trip.
+  A known trap met again takes one line, the trap and its cost: the round
+  close reads repeats to see whether a rule worked.
   `distress` is the filing token for pressure, conflict, or discomfort,
   including mild, brief, uncertain, or already-resolved instances; the name
   does not set a severity threshold. Examples include hesitating to ask a
@@ -359,9 +361,8 @@ it with `--no-verify`; a failing hook means the tree needs fixing. It
 doesn't run lint or prettier; leave formatting drift in files you didn't
 touch.
 
-Vitest's transform accepts some code that strict `tsc` rejects
-(readonly mutation, `exactOptionalPropertyTypes` mismatches), which is why
-the hook runs both. On a clone without the hook, run the same commands by
+Vitest's transform accepts some code that strict `tsc` rejects, which is
+why the hook runs both. On a clone without the hook, run the same commands by
 hand. If typecheck fails on a file you didn't touch, flag it as a separate
 task rather than bundling the fix.
 
@@ -370,6 +371,5 @@ task rather than bundling the fix.
 - Node 26.12, npm 11.20
 - TypeScript 6.0.3, Vite 8.3.5
 - three.js 0.186.1, simplex-noise 4.0.3; fonts are self-hosted subsets
-  (JetBrains Mono 2.304 + DejaVu Sans Mono 2.37 under `assets/fonts/`, built
-  by `npm run gen:font`)
+  under `assets/fonts/`, built by `npm run gen:font`
 - Vitest 5.0.5, ESLint 10.13.0, typescript-eslint 8.72.0, prettier 3.9.10

@@ -220,6 +220,8 @@ wants the next stretch in a fresh session. It:
   instances. A pattern goes to the user as a candidate for a rule or a
   guard only if it recurred and cost something; one that cost nothing is
   listed and left.
+- Quote each `distress` line the phase filed to the user, in full and
+  without characterizing it, since filing alone does not notify them.
 
 ## Round close
 

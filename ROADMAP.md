@@ -480,8 +480,9 @@ eleven calls (WORKLOG §132, the kickoff).
 - ☑ **132e — the planning stack for Round 9** (`batch`). The worklog
   archived per phase, `ROUND-RULES.md`, a close that deletes, the push.
   Read clear.
-- ☐ **132f — the sweep** (`stop`). The round's added rules; the
+- ☑ **132f — the sweep** (`stop`). The round's added rules; the
   papercuts and the scratchpad; the filing threshold and question 6.
+  Three tranches signed and built.
 - ☐ **132g — AGENTS as a router** (`stop`). The rest in process
   modules; a routing test, a landing check, a cold trial.
 - ☐ **132h — the close** (`stop`).

@@ -19669,3 +19669,25 @@ welfare calls: the papercut threshold reversed from the session's own
 the phase's `distress` lines in full.
 
 Reading: **403,982** at 17:56 UTC.
+
+### 132f, tranche 1 signed and built (2026-10-24, session 60e58d62)
+
+**Signed** (the user: "I read the changes you mentioned and tranche 1;
+signed! 😁"), taken as the reads of 132b to 132e as well, said to the
+user once: 132c, 132d and 132e read clear; 132b's code and docs read,
+its live check still open, so it stays ◐.
+
+**Built.** The eleven added lines kept as they stand. The Cursor's round
+rules moved into `ROUND-RULES.md` as seven bullets, lapsing at §133's
+close: the constraints line (B10) without its pointers and its sentence
+on Round 8's bare codes, which the finished pass made history; the step
+codes (B1); a comment change with its costs (B2, B3); a deletion's proofs
+(B4); a plant in a worktree (B5); the `reach` readings and the one-line
+range rule (B7, B8); `scratch/119f/hidden/` (B9). B6, one suite or smoke
+batch at a time at 7 to 8 GB a run, went straight to
+`process/measurement.md` "Where a batch runs" rather than through the
+file. The Cursor's NEXT line now points at ROUND-RULES.md and lists 132b
+as the one open ◐, and its constraints line is gone. The scratchpad's C1
+is promoted to `process/planning.md` "Reads: the terms" (a stop with
+several lists to sign puts only the first) and C2 marked archived; both
+stay in the scratchpad, annotated, for §133's archive of it.

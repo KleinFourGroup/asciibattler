@@ -137,6 +137,9 @@ is no longer taken at each close.
   and what was not. It tells each call by what a player would see, and
   brings a taste call with both arms drawn. When a reply covers the reads
   and not the calls, say once which calls it did not cover.
+- A stop that hands over more than one list to sign says in a few lines
+  what was built, names the tranches, and puts only the first; the next
+  follows its sign.
 - Before a stretch starts the user is present, so that is where questions
   are cheap: a reply that leaves the cut, a read, or a call the first
   steps rest on unsigned or unclear is named, once, and the session waits.

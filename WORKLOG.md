@@ -19767,3 +19767,12 @@ keep whatever happens. The report goes to
 `C:\Users\mkilg\projects\playground\cold-read-132g.md`.
 
 Reading: **476,988** at 22:53 UTC.
+
+**The session's own options** (`scratch/132g/options-session.md`),
+written before the cold report existed: seven core issues as this
+session reads them, seven guiding principles, nine options from trimming
+in place (O1) to a one-page constitution trialled for a phase (O9), a
+cross-cutting list of Matthew's calls, and a lean (O2 with O3, O5 and O6;
+O9 offered to §133's re-cut as a trial). Its size figures were measured
+against the files at the time: CLAUDE.md with its import is 502 lines
+and 28 KB.

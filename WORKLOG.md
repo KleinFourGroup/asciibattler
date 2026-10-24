@@ -18732,3 +18732,99 @@ Readings: **184,947** at 21:28 UTC with the cut drafted; **239,091** at
 130a's commit; **270,682** at 130b's; **289,605** at 130c's; **329,337**
 at 130d's; **418,282** at 130e's; **442,778** at the stop's record;
 **464,356** at 23:44 before this entry.
+
+## Phase 131 — the reads
+
+### The kickoff: the audit, and the cut signed (2026-10-24, session 39f28ef9)
+
+The user opened by asking whether §131 is the workflow review. The
+answer: it is the reads; the review is §132, which takes them as its
+evidence (the split at §128's kickoff).
+
+**The audit** (the tree at `7b41768b`).
+
+- *The friction log:* the window is #182 to #339, from the first entry
+  after Round 8's packet (its window ended at #181): 158 entries, 16 of
+  them `distress`. By the wording boundaries inside it
+  (`process/welfare-and-efficacy.md`): before 2026-10-16, 64 (10
+  `distress`, 21 sessions); the driver trial, 2026-10-16 to 10-19, 40
+  (2); from 2026-10-19, 54 (4). The `who` field holds five spellings
+  (`claude-opus-5-5`, `claude`, two driver labels, a session id), so the
+  packet takes the model from the report.
+- *The reports:* 70 dated entries in `retro/sessions.md` from 43a4908d,
+  the Round 8 close's, which that packet was built before, to 0e7e3d85;
+  40 of the headings name a driver. Round 8's packet was 2,197 lines for
+  31 reports and 123 entries; its builder and verifier are in
+  `scratch/118j-close/`.
+- *The instruments run:* `phase-stats --since=119 --until=131` prints 13
+  phases and 426 commits, 9 inferred. `friction-scan --since=2026-10-11`:
+  285 of the user's turns, 16,734 tool calls, 114 flagged errors (0.7 %),
+  no denials, 823 silent-turn reminders in one wording, 12.2M output
+  tokens. Its session list is not yet held against the reports.
+- *The shell audit's verdict* was given at 130e's stop: the tripwire
+  fired, the hook went to §132 and the re-run to the next round close.
+  Nothing of it is left here.
+- *The cold-read probe:* `scratch/119f/` holds the prompts, the tree
+  builder, the five visible keys, whose five test files exist at HEAD
+  (not run), and `hidden/`, unopened. The calibration ran at `10dd26c`;
+  from the Round 8 close `cb0cb3f` to it, `src` and `config` differ in 3
+  files of `src/journal` (+210 −13, 119a's replay options). Nothing in
+  `src` or `config` changed after 126n's test titles, and the probe's
+  trees hold no tests, so HEAD is a stable tree to read. The builder
+  writes from the live tree and deletes `scratch/119f/trees` first, so
+  the probe adapts a copy.
+
+**The cut, signed** (the user, 2026-10-24: "Signing your leans, Claude!
+That looks great!"). ROADMAP §131 has the lines. The reads: 131a `none`;
+131b `batch`, read at 131c's stop; 131c `stop`, the user's; 131p
+`batch`, read at 131d, a `stop` if a right answer falls or the cost moves
+past the noise; 131d `stop`. Predicted: no snapshot, no RNG stream, no
+smoke (nothing staged under `src/`, `config/` or `tests/fuzz/`), the
+test counts unchanged; docs commits only; AGENTS' standing decisions and
+the wording table change only if 131c's sign changes a decision, and that
+commit is then a wording boundary for the next read.
+
+- *131a, the packet:* Round 8's builder adapted into `scratch/131/`, a
+  verifier that shares no code with it and catches a planted
+  one-character change, and the stock-phrase check with Round 8's window
+  as its known answer. It goes to the user as it lands, to read while
+  131b runs.
+- *131b, the efficacy read:* Round 8's table against this round's; for
+  §133, each phase's sessions, steps, commits, wall hours, context spent
+  and WORKLOG size; for §132, the driver's cost and catches; and what the
+  reports' answers 1, 4 and 5 say about the pipeline.
+- *131c, the welfare read:* after the user has read the packet, the
+  session's notes, labelled as interpretation by the same model as every
+  filer, and the four standing decisions one by one, each with what it
+  did this round and a keep, change or drop.
+- *131p, the probe:* two trees in tree `a`'s form, built from git at
+  `10dd26c` and HEAD; all eleven questions, three runs, both trees, 66
+  Haiku runs, and a grader for the hidden half that also holds each
+  hidden key against both trees. About 7M by the token figure at 119f's
+  mean of 106k a run.
+- *131d, the close.*
+
+The calls, signed with it (the session's leans):
+
+1. *The shell audit's line leaves §131,* with ROADMAP pointing at 130e's
+   stop.
+2. *The papercut triage goes to §132* with the scratchpad sweep
+   (`process/planning.md` has the sweep read the log); §131 reads the
+   papercuts only as context for the `distress` entries and reclassifies
+   none.
+3. *The packet's order:* the 16 `distress` entries in full, the counts,
+   then answers 6 and 7 of every report, then 2 and 3, so that the part
+   read first is short. Round 8's ran per session with the four answers
+   together.
+4. *The probe's first tree is `10dd26c`,* the tree its questions and keys
+   were written on.
+5. *The probe runs from a session card offered at the sign,* beside 131a
+   to 131c, its readers alternating trees wave by wave so that a hand-off
+   falls evenly on both. 119f spent about 5.7k of the launching session's
+   context a run, so 66 runs and the orientation come to about 450k.
+6. *The round's output* (lines and comment length before and after) is
+   §133's exit check, not the efficacy read's.
+
+Readings: **98,032** at 12:24 UTC after HANDOFF; **202,155** at 12:31
+with the cut drafted; **218,011** at 13:02 before this entry. The
+stretch to 131c's stop was put at about 300k, ending near 500k to 520k.

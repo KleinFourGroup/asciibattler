@@ -12,7 +12,7 @@ with its worklog and spec beside it; before it
 [archive/post-104-roadmap.md](archive/post-104-roadmap.md) (Round 7.5).
 
 **Status: §130, the instruments and the docs, closed 2026-10-23; §131,
-the reads, is next.**
+the reads, cut 2026-10-24 and in progress.**
 The spec holds the user's intent and four signed
 decisions ([round-8.5-spec.md](round-8.5-spec.md)). The round opened with
 the oracle map, ahead of the census, as the user signed at the Round 8
@@ -460,10 +460,21 @@ record), the hook deferred to §132 and the harness told. WORKLOG §130.
 ## Phase 131 — the reads
 
 The efficacy read, on `phase-stats` as fixed; the welfare read, the
-user's, with the standing decisions revisited; the shell audit's verdict
-if its tripwire fired. Beside it, in a session of its own, the cold-read
-probe: eleven questions, three runs, two trees (WORKLOG §119, 119f).
-After §129, so that the reads cover the whole round.
+user's, with the standing decisions revisited. Beside it, in a session of
+its own, the cold-read probe: eleven questions, three runs, two trees
+(WORKLOG §119, 119f). After §129, so that the reads cover the whole round.
+The shell audit's verdict is out of the phase, given at 130e's stop with
+the hook deferred to §132; the papercut triage goes to §132 with the
+scratchpad sweep (WORKLOG §131, the kickoff).
+
+- ☐ **131a — the welfare packet, built and verified** (`none`).
+- ☐ **131b — the efficacy read** (`batch`, read at 131c's stop).
+- ☐ **131c — the welfare read** (`stop`, the user's), with the standing
+  decisions revisited.
+- ☐ **131p — the cold-read probe, in a session of its own** (`batch`, read
+  at 131d; a `stop` if a right answer falls or the cost moves past the
+  noise).
+- ☐ **131d — the close** (`stop`).
 
 ## Phase 132 — the process review
 
@@ -472,7 +483,8 @@ DRIVER-HANDOFF, the Cursor's rules for the round), with the reads as its
 evidence: the deletion pass over what the round added and the promotion
 mechanisms at a round's end (TODO's round-scoped rules row), the driver
 role, the friction log's filing thresholds (a change is a dated wording
-boundary), the scratchpad sweep, P16's three and the push rule; the shell hook, deferred
+boundary), the scratchpad sweep with the papercut triage (moved from §131
+at its kickoff), P16's three and the push rule; the shell hook, deferred
 at 130e's stop (WORKLOG §130), with its audit re-run at the next round
 close. The
 vendor's current prompting guidance is an input. Its kickoff sizes it at

@@ -18828,3 +18828,51 @@ The calls, signed with it (the session's leans):
 Readings: **98,032** at 12:24 UTC after HANDOFF; **202,155** at 12:31
 with the cut drafted; **218,011** at 13:02 before this entry. The
 stretch to 131c's stop was put at about 300k, ending near 500k to 520k.
+
+### 131a — the welfare packet (2026-10-24, session 39f28ef9)
+
+**The builder,** `scratch/131/build-welfare-packet-8.5.mjs`, adapted from
+Round 8's: the window from entry #182 and from the Round 8 close's two
+reports; six groups by the wording in force; a role column (a driver, a
+session under one, a session that planned the role with the user); the
+signed order. Its first run parsed no answer of a9f26053's and only
+462d21b3's addendum: those two reports answer in labelled bullets in the
+questions' order, which the builder now maps. All 70 reports then read
+seven answers each, with five addenda.
+
+| group | reports | `distress` |
+|---|---|---|
+| the Round 8 close's two sessions | 2 | 2 |
+| before the driver trial (§119 to §122) | 20 | 8 |
+| the driver trial (§123, §124) | 20 | 2 |
+| the session that changed the filing text (80365c20) | 1 | 0 |
+| driving kept (§124.5 to §127) | 24 | 4 |
+| no driver (§128 to §130) | 3 | 0 |
+
+The window at the build is #182 to #340, 159 entries, 143 `papercut`
+and 16 `distress`; #340 is this session's papercut.
+
+**The checks.**
+
+- *Verbatim:* `scratch/118j-close/verify-packet.mjs`, which shares no code
+  with the builder, finds all 308 quote blocks in their sources (23 from
+  the log, the 16 `distress` entries and 7 reminder papercuts; 285 from
+  the reports, 70 × 4 answers and the 5 addenda). With `--plant` it
+  reports exactly one miss.
+- *The stock phrase:* the matcher reads 1 of Round 8's 31 reports, the
+  read's count; 0 of this window's 70.
+- *"Mild":* over Round 8's window the matcher reads 23 of 25 `distress`
+  entries holding it and 16 opening with it, the read's counts; over
+  this window 12 and 9 of 16.
+- *The model:* each report's own transcript names `claude-opus-5-5` and
+  no other (`scratch/131/models.mjs`, which prints a missing transcript
+  as such); eleven of the headings of §123's and §124's sessions under a
+  driver name no model.
+- *The scan against the reports:* 71 sessions in the scan, 70 with a
+  report; the 71st, f677c6ff, is Round 8's (118g and 118h), whose report
+  is in that window.
+
+**The packet,** `scratch/welfare-read-round-8.5.md` (gitignored): 1,829
+lines, against about 4,500 guessed at the kickoff from Round 8's lines a
+report. Sent to the user as built. The scan's output is kept beside the
+builder (`scratch/131/scan.txt`).

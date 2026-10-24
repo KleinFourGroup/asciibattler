@@ -467,7 +467,7 @@ The shell audit's verdict is out of the phase, given at 130e's stop with
 the hook deferred to §132; the papercut triage goes to §132 with the
 scratchpad sweep (WORKLOG §131, the kickoff).
 
-- ☐ **131a — the welfare packet, built and verified** (`none`).
+- ☑ **131a — the welfare packet, built and verified** (`none`). Sent.
 - ☐ **131b — the efficacy read** (`batch`, read at 131c's stop).
 - ☐ **131c — the welfare read** (`stop`, the user's), with the standing
   decisions revisited.

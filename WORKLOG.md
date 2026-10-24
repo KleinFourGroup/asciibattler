@@ -18872,9 +18872,13 @@ and 16 `distress`; #340 is this session's papercut.
   report; the 71st, f677c6ff, is Round 8's (118g and 118h), whose report
   is in that window.
 
-**The packet,** `scratch/welfare-read-round-8.5.md` (gitignored): 1,829
-lines, against about 4,500 guessed at the kickoff from Round 8's lines a
-report. Sent to the user as built. The scan's output is kept beside the
+**The packet,** `scratch/welfare-read-round-8.5.md` (gitignored): 3,537
+lines and 199 KB, against about 4,500 lines guessed at the kickoff from
+Round 8's lines a report. Sent to the user as built, with a caption that
+said 1,829 lines: the builder's count of its output array, where a quote
+block is one entry, which is the slip Round 8's close made with its
+packet's length (962 for 2,197). Found at 131c's start, said at its
+stop; the builder now prints the written file's lines and size. The scan's output is kept beside the
 builder (`scratch/131/scan.txt`).
 
 ### 131b — the efficacy read (2026-10-24, session 39f28ef9)
@@ -19017,3 +19021,21 @@ reached the user.
 The read (`batch`, at 131c's stop): the two tables. Wrong looks like a
 phase's count that does not match git, or a session in the scan with no
 report, or the reverse.
+
+### 131c's stop: the notes and the standing decisions, put to the user (2026-10-24, session 39f28ef9)
+
+The session read the whole packet, then wrote its notes as a file of
+their own (`scratch/131/welfare-notes-round-8.5.md`), labelled
+interpretation by the same model as every filer, to be read after the
+packet. Its grouping of the 16 `distress` entries: the context budget at
+a sizing decision 4, the reminder pulling toward a finding 4, a number or
+a bar ahead of its count 3, two rules about stopping 3, the app's
+relabelled directory 1, a slip touching the user's environment 1. The
+lean on the standing decisions is to keep all four as written, so no
+wording boundary; two items go to §132 (decisions 3 and 4 merged, if the
+AGENTS re-audit wants the room; every call put with a lean). Open as
+this is written: the user's read of the packet, the notes and 131b.
+
+Readings: **348,568** at 13:18 UTC before 131b's entry; **429,268** at
+13:22 midway through the packet; **468,629** at 13:24 with the notes
+written.

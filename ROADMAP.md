@@ -469,7 +469,7 @@ scratchpad sweep (WORKLOG §131, the kickoff).
 
 - ☑ **131a — the welfare packet, built and verified** (`none`). Sent.
 - ◐ **131b — the efficacy read** (`batch`, read at 131c's stop).
-- ☐ **131c — the welfare read** (`stop`, the user's), with the standing
+- ◐ **131c — the welfare read** (`stop`, the user's), with the standing
   decisions revisited.
 - ☐ **131p — the cold-read probe, in a session of its own** (`batch`, read
   at 131d; a `stop` if a right answer falls or the cost moves past the

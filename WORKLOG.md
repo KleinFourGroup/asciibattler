@@ -19495,3 +19495,54 @@ holding them (19,996 of 20,000).
 
 Tools: `scratch/132a/` (the trace, its config, the summary script, the
 controls). Reading: **243,197** at 17:30 UTC before this entry.
+
+### 132b — the shell note (2026-10-24, session 60e58d62)
+
+**Step zero.** Over the transcripts from 2026-10-11, 7,618 Bash calls: a
+text test (the halved command differs from the command as written) would
+note 68, and 130e's instrument, run with `--all` over the same window,
+cards 51 whose bash reading changed (28 in its registered set, 23 outside
+it). The other 17 are runs bash reads the same either way, such as `"\\."`
+in double quotes. A text test would have tripped the cut's pre-registered
+`stop`, and its extra notes would be noise, so the hook carries the
+instrument's model of bash's reading.
+
+**The build.** `.claude/skills/context-meter/hooks/halving.ts`: the
+instrument's `halve` and `lex` ported to TypeScript, the changed lines, and
+the note, which names the version the model was measured on and the one
+running (`$.session.version()`). `register.ts`'s Bash hook adds the note to
+the result's context after the commit reading, and a dim transcript line
+for the user; it never refuses.
+
+**The checks.**
+
+- *The port, call by call:* over 7,624 Bash calls at the check, the hook's
+  model notes 51 and the instrument cards 51, with none noted and not
+  carded or the reverse (`scratch/132b/port-check.mjs`). The model itself
+  rests on 130e's measured cases.
+- *A guard on every `npm test`:* `tests/shell-halving.test.ts`, four tests
+  on 130e's measured cases (a run halved, a run a double quote follows kept,
+  a quoted heredoc noted, `"\\."` silent, both versions named). A planted
+  break, the double-quote rule dropped from `halve`, failed two of the
+  four; the file was put back from a copy. The repo's typecheck covers
+  `halving.ts` through the test.
+- *The mod:* `tsc -p` with the skill's declarations, exit 0;
+  `claude plugin validate` passed, tracing `$.session.version` through
+  `withHalvingNote`, so the `./halving.ts` import resolves (its license and
+  icon warnings are the plugin directory's).
+- *Not verified: the note live.* The edit did not load within its turn: a
+  probe, `printf '%s\n' 'a:\\'`, printed `a:\` with no note, which does show
+  the halving still on 2.1.308. The next session's first Bash call of that
+  shape is the live check, and whether the hook's input is the command as
+  written is part of it.
+
+The main count rises by four (3726 → 3730) in a new test file, where the
+cut predicted a test or two in `tests/docs.test.ts`. CLAUDE.md "Editing"
+names the note; "The context meter" says an edit did not load in its
+turn, the tsconfig option the import needs, and the CLI's build folder.
+
+The read (`batch`): in a fresh session, a Bash command such as `printf
+'%s\n' 'a:\\'` gets the note and a dim line "backslash note: …". Wrong
+looks like no note, or a note on `"\\."` in double quotes or on one
+backslash. Tools: `scratch/132b/` (`count.mjs`, `port-check.mjs`).
+Reading: **301,721** at 17:40 UTC before this entry.

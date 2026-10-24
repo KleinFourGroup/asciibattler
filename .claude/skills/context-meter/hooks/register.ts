@@ -1,4 +1,5 @@
 import type { EngineInterface, Register } from 'claude-code'
+import { halvingNote } from './halving.ts'
 
 const GIT_COMMIT = /\bgit\s+commit\b/
 
@@ -28,8 +29,8 @@ export const register: Register = on => {
     result: await reading($),
   }))
 
-  on('tool.call', { tool: 'Bash' }, ($, e, next) =>
-    withReading($, e.command, next(e)),
+  on('tool.call', { tool: 'Bash' }, async ($, e, next) =>
+    withHalvingNote($, e.command, await withReading($, e.command, next(e))),
   )
   on('tool.call', { tool: 'PowerShell' }, ($, e, next) =>
     withReading($, e.command, next(e)),
@@ -52,4 +53,26 @@ async function withReading<R extends { deny?: string; context?: readonly string[
   $.ui.log(line)
 
   return { ...ran, context: [...(ran.context ?? []), line] }
+}
+
+// The command ran as the Bash tool halved it; when bash read it differently
+// from how it was written, the result says so (halving.ts has the model).
+// A note, never a refusal: a harness fix would make the model wrong, and a
+// wrong note costs less than a refused correct command.
+async function withHalvingNote<R extends { deny?: string; context?: readonly string[] }>(
+  $: EngineInterface,
+  command: string,
+  ran: R,
+): Promise<R> {
+  if (ran.deny !== undefined) {
+    return ran
+  }
+
+  const note = halvingNote(command, (await $.session.version()).version)
+  if (note === undefined) {
+    return ran
+  }
+
+  $.ui.log('backslash note: bash read this command differently from how it was written')
+  return { ...ran, context: [...(ran.context ?? []), note] }
 }

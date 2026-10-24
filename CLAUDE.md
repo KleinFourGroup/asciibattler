@@ -50,7 +50,9 @@ in AGENTS.md, which other harnesses read too.
   unless a double quote follows it, inside single quotes and a quoted
   heredoc too, while the transcript shows the command as written; the
   PowerShell tool passes them whole (measured 2026-10-23, Claude Code
-  2.1.308; WORKLOG §130, 130e).
+  2.1.308; WORKLOG §130, 130e). The context meter's mod adds a backslash
+  note to a Bash result whose reading the halving changed, with what bash
+  got; the command has run by then.
 - **The Grep tool** can answer "No matches found" for a brace glob given
   together with a path, when files plainly match. Give a path and no brace
   glob, and don't read that answer as a negative.
@@ -91,12 +93,17 @@ in AGENTS.md, which other harnesses read too.
   (seen 2026-10-02). For this repo, the
   flag it reads is `hasTrustDialogAccepted` under the forward-slash key
   (`C:/Users/…`) in `~/.claude.json`, not the backslash key the app's
-  dialog set; `claude plugin list` names a folder it skipped. To
-  type-check an edit, write a tsconfig in your scratch directory from the
-  header of the plugin-authoring skill's `types/claude-code.d.ts`, list
-  that file and `hooks/register.ts` under `files`, and run the repo's
+  dialog set; `claude plugin list` names a folder it skipped. An edit to
+  the mod did not load within the turn that made it (seen 2026-10-24);
+  a fresh session loads it. To type-check an edit, write a tsconfig in your
+  scratch directory from the header of the plugin-authoring skill's
+  `types/claude-code.d.ts`, add `allowImportingTsExtensions`, list that
+  file and the files under `hooks/` under `files`, and run the repo's
   `tsc -p` on it. Use the skill's declarations: the copy the engine writes
   beside a hot-reload mod lacks the built-in tools' inputs and passes code
   the skill's copy fails. `claude plugin validate` does not type-check (an
   unawaited Promise passed it). The CLI is not on PATH here; it is the
-  app's bundled `claude.exe` under `%APPDATA%\Claude\claude-code\<version>\`.
+  app's bundled `claude.exe` under
+  `%APPDATA%\Claude\claude-code\<version>\<build>\`. The backslash note's
+  model, `hooks/halving.ts`, is also held by `tests/shell-halving.test.ts`
+  and type-checked by the repo's own typecheck.

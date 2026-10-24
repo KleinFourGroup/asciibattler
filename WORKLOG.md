@@ -19691,3 +19691,19 @@ as the one open ◐, and its constraints line is gone. The scratchpad's C1
 is promoted to `process/planning.md` "Reads: the terms" (a stop with
 several lists to sign puts only the first) and C2 marked archived; both
 stay in the scratchpad, annotated, for §133's archive of it.
+
+### 132f, tranche 2 signed and built (2026-10-24, session 60e58d62)
+
+**Signed** (the user: "Signing all of those as well, Claude! 😁"): the
+nineteen themes as listed in `scratch/132f/sweep.md`.
+
+**Built.** CLAUDE.md gains "Bash calls" (T2, a first line reading stdin
+waits out the timeout; T12, a spawn costs about 0.2 s in Git Bash, so
+one node script over a per-file loop) and "Subagents" (T11, the
+transcript under `subagents/` and the empty output file; a worktree
+agent cut from `origin/main`). `process/welfare-and-efficacy.md` gains
+"Times" (T17, local commit times against UTC readings). T5, a search
+covering the test files and every written form with the Grep tool for an
+absence or a count, merges into AGENTS' absence line at 132g. The rest
+are done or left, as the list says; T6's six open tool quirks and T18's
+22 single entries stand in the list as their record.

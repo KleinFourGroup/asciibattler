@@ -53,6 +53,17 @@ in AGENTS.md, which other harnesses read too.
   2.1.308; WORKLOG §130, 130e). The context meter's mod adds a backslash
   note to a Bash result whose reading the halving changed, with what bash
   got; the command has run by then.
+- **Bash calls.** A command whose first line reads stdin (a bare
+  `cat > file`, an empty heredoc) waits out the tool's timeout, and
+  nothing after it runs. A process spawn costs about 0.2 s in Git Bash
+  here, so a loop over hundreds of files passes the 2-minute limit; one
+  node script over `git ls-files` does it in about a second.
+- **Subagents.** A subagent's transcript is under
+  `~/.claude/projects/<repo slug>/`, in a `subagents/` folder, as
+  `agent-<id>.jsonl`; the output file its launch result names is empty on
+  this machine. An `isolation: "worktree"` agent is cut from
+  `origin/main`, not HEAD, so push first or name the ref in its brief
+  (seen 2026-10-12 to 15).
 - **Session cards.** Offer the next session with `start_session`,
   `initiation: "own_initiative"`, `context: "fresh"`, `use_worktree: false`
   (the work stays on `main` in this checkout) and no `permission_mode`,

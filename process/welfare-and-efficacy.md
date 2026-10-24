@@ -87,3 +87,6 @@ entries say, and compare rounds by that.
   friction in the papercut log is reads that succeeded and were wrong. The
   script's header lists the reader bugs its first run found; read it before
   adding a column.
+- **Times.** `git log` prints commit times in local time (−04:00 through
+  October 2026); the context meter and the transcripts are UTC. Convert
+  before matching a reading to a commit.

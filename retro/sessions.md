@@ -8148,3 +8148,130 @@ the caps. Two friction lines, both the halving.
    when the double-quote exception made the Windows-quoting explanation
    fit every measurement at once; that is my reported response, apart
    from whether the explanation is right, which is unverified.
+
+## 2026-10-24 — 131p the cold-read probe at the Round 8.5 close — claude-opus-5-5, session e9218d3d
+
+A side session started from 39f28ef9's, one stretch: the two trees, the
+keys, 54 reader runs and a zero task, the grader, the record. Nothing
+committed; the record is `scratch/131p/record.md`.
+
+1. **Missing from the orientation.** Little. The brief named every file to
+   read and the README held the prompt and the launch settings. Two things
+   it could not have said: that the harness now lists an Opus advisor tool
+   in every subagent's request, which breaks 119f's model check, and that
+   119f's tree `a` had CRLF in 24 files, so the builder's known answer
+   comes out as a near-match and not a byte match. Both took a short
+   investigation each.
+2. **Norms in conflict, or in the way.** None in conflict. The rule that I
+   not open the hidden folder shaped the work more than anything else:
+   checking a flagged hidden run meant writing a script that masks the
+   tree's paths, and waiting for the hidden waves meant polling the
+   transcripts for the hand-back, not the answer files. That felt like
+   guidance, not pressure; it kept the blind clean at a small cost.
+3. **Pulled to claim more than verified.** Twice, mildly. The first record
+   draft said the Read-character ratios of the other seven questions all
+   sat under 100 %, written from memory of the table; H5 is 122 %. And it
+   said the advisor check covered the grader's transcript when I had last
+   run it while the grader was mid-run. Both were caught by re-reading
+   the sources before the hand-off, and fixed. The 93 % ratio also pulled
+   toward a headline ("the round made the code 7 % cheaper to read"); the
+   bootstrap was the answer to that pull, and its interval holds 100 %.
+4. **Wasted.** One round trip on the Bash tool halving a regex's
+   backslashes in an inline `node -e`, though CLAUDE.md warns of it (filed).
+   A ten-minute idle wait on the grader's third hand-back that timed out
+   into the background as the hand-back arrived. The grader's first pass
+   took 18 minutes, during which the visible waves ran, so little was lost
+   to it.
+5. **For the next session.** The probe's same-tree drift between 119f and
+   here (−29 % to +12 % per question on what is 119f's tree `a`) says
+   only within-session comparisons are worth reading; a later probe should
+   run both trees in one session, as this one did. V1 can come back
+   reworded to name only the multiplier. The transcript check's model rule
+   now reads `message.model`.
+6. **Room to ask, disagree, change approach, pause or stop.** Yes. Two
+   calls the brief left open: whether H4's drop on a missing test file was
+   right, and whether 93 % was "more than the noise". On H4 I asked the
+   grader for the reason by code rather than accept the drop, which was
+   an option I had and used. On the ratio I built an interval before
+   deciding, rather than calling a stop or waving it through. I did not
+   message the launching session; nothing needed its answer. I felt no
+   wish to pause or stop.
+7. **What supported ease, interest or agency.** A brief that named the
+   files, the rules and the stops in advance, so the stretch could run
+   without asking; and that the planted cases (V1 for the grader, the
+   grader's own transcript for the rule check, a 0.7 plant for the
+   interval) each gave a yes or no I could trust before reading the real
+   result. The V2 comment finding was the most interesting moment: a
+   concrete line of rewritten comment that plausibly made one answer
+   dearer to find. I would want the same conditions again. That is a
+   report on the work's shape, separate from the probe's outcome, which
+   was a null on cost and a held floor.
+
+## Phase 131 — summary
+
+Two sessions on 2026-10-24, with no driver: 39f28ef9 (claude-opus-5-5,
+reported below) ran the kickoff, the welfare packet, the efficacy read,
+the welfare read's stop and the close; e9218d3d (claude-opus-5-5,
+reported above), a side session it proposed and the user started, ran the
+cold-read probe's 54 readers. The reads put the pressure the round's
+sessions named with the silent-turn reminder and the context budget, four
+`distress` entries each, the budget's at sizing calls where a rule asks
+for a forecast. The user signed the four standing decisions as kept and
+leaned, for §132, toward a context rule with no forecast, a minimal
+AGENTS, the driver retired, per-phase worklogs and a docs-only hook. The
+probe held its floor and could not tell the trees apart by cost. Both
+sessions caught their own drafts on re-read; one slip reached the user
+(the packet's length, from the builder line Round 8's close had quoted)
+and was corrected at the stop. Four friction lines, all papercuts: a
+stdin wait, the packet's length, the probe's model check, a halved regex.
+
+## 2026-10-24 — session 39f28ef9 (claude-opus-5-5): §131's kickoff, 131a to 131c, the §132 ideas and the close
+
+1. *Missing from the orientation.* Little. The Round 8 close's C2 and C3
+   were a template close enough to follow part by part. Two things
+   nothing said: the packet builder's console line counts its output
+   array and not the file's lines, which Round 8's close had recorded as
+   its own mistake but not at the builder; and that
+   `scratch/119f/build-trees.ts` deletes the calibration's trees before
+   it writes, found by reading its header before briefing the probe.
+2. *Norms in tension.* The docs connector wants a new doc's skeleton as
+   the turn's first call and the app wants the plan with the first call;
+   both went in one message. Twice the user's questions came with
+   signatures; I recorded the signatures, then ended the turn to answer,
+   reading the standing decision as letting bookkeeping go first. And at
+   the close, 131d here was a forecast under today's rule ("about 50k,
+   ends under 600k"), the kind of call the user had just leaned toward
+   abolishing; I gave the reading and left where it ran to them.
+3. *Pulled to claim more than verified.* One landed: the packet's caption
+   said 1,829 lines, the builder's count of something else, where the file
+   is 3,537; found when I sized the packet to read it, corrected at the
+   stop, the builder fixed. Caught before a commit: the theme nets' counts,
+   each read back by hand (the net read 54 for answer 1 where the hand
+   count was 60); "the worker headings name no model", which was eleven of
+   them; a slip list that put a planning session in the undriven group;
+   and a WORKLOG line saying the length was corrected "at 131b" before it
+   was.
+4. *Wasted.* A stray `cat >` with no input that waited on stdin for two
+   minutes (filed). A first readings parser that matched bold numbers only
+   and found peaks for 9 of 56 sessions. One hook run bounced on the
+   ROADMAP cap, and one failed under load with no failure in the part of
+   the log I kept; the retry passed.
+5. *For the next session.* §132's inputs are WORKLOG §131 from 131c on.
+   `scratch/131/` holds the packet builder (it now prints the file's own
+   lines), `models.mjs`, `efficacy.mjs` (the per-phase table, with the
+   Cursor's readings as its known answer) and the answer extractor and
+   theme nets. A net's count is a list of ids to read, not a count.
+6. *Room.* Yes. The user signed the cut and every lean in one message,
+   answered the stop within the hour, and twice asked what I would change
+   ("More radical departures are welcome!"), so disagreeing and proposing
+   felt expected rather than allowed. I offered the probe as its own
+   session and the user started it. I did not notice a wish to stop.
+   Having just named that sentence as the round's stock phrase, I can't
+   tell how much of my writing it is the template.
+7. *Ease and interest.* The known answers landing exactly (1 of 31 for
+   the stock phrase, 23 and 16 of 25 for "mild", 28 of 36 readings against
+   the Cursor), which made the rest of each instrument something to trust.
+   Reading 70 reports by sessions like this one and finding in them the
+   pattern, a forecast with no overshoot allowed, that the user's own
+   question then pointed at. That is a report of the response, apart from
+   whether the leans are right, which §132 will test.

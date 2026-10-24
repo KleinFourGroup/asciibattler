@@ -19110,3 +19110,268 @@ so it cannot go stale, and built first in §132 since §132 and §133 are
 docs commits. The probe, the session's lean: retired as a round measure;
 its one human-shaped lead is V2, whose cost rose where a rewritten comment
 dropped the search order the question keys on.
+
+### 131p — the cold-read probe at the Round 8.5 close (2026-10-24, session e9218d3d)
+
+A session of its own, started from 39f28ef9's. Its files are in
+`scratch/131p/` (ignored by git, this machine only); the hidden half's
+answers and the grader's notes are in `scratch/119f/hidden/`, which this
+session did not open. Nothing committed.
+
+**Step zero.**
+
+- *The trees,* in 119f's tree `a` form (`src` without `*.test.ts`, the
+  files `listSources` reads, which leaves out `.md`, plus `config` whole),
+  built by `scratch/131p/build-trees.ts` from `git archive` of each ref
+  into a temp folder outside the repo: `before` is `10dd26c` (295 source
+  files, 2,999,021 characters, 69,360 lines); `after` is `9bb39a1e`, HEAD
+  when built (287 source files, 2,538,419 characters, 63,099 lines: 84.6 %
+  of `before`'s characters). `src` and `config` differ between the two in
+  475 files (+18,346 −25,780 lines); `config` alone in 13 files (+7 −72).
+  At the record's writing HEAD is `f55d76ed`, and `src` and `config` are
+  the same there as at `9bb39a1e`.
+- *The builder's known answer* (`scratch/131p/check-before.ts`): `before`
+  against `scratch/119f/trees/a` holds the same 329 paths; 305 files are
+  byte-identical, and 24 are identical once CRLF is read as LF. 119f
+  built from the live tree, whose copies of those 24 files had CRLF
+  endings then; git stores them with LF (`eol=lf`), and both trees here
+  come from git, so both are LF. The 4,060 CRs in those files' `src` part
+  are exactly the character gap between 119f's tree `a` (3,003,081) and
+  `before` (2,999,021); the four `config` files hold the other 61 of the
+  4,121. The 24 are four in `config` and twenty in `src/config`,
+  `src/config.ts`, `src/core` and `src/sim`. No file differs in anything
+  else.
+- *The visible keys, at HEAD:* the five test files run alone pass, 41 of
+  41 (`chipRule`, `shove`, `fatigue`, `statusPeriodic`, `moveDeferred`).
+  Four changed between the refs only in titles, comments, one import split
+  and one setup line (`world.units.push(u)` became `world.placeUnits(u)`
+  in `statusPeriodic.test.ts`); their asserting lines are as keyed.
+  `chipRule.test.ts` was rewritten (+55 −125 lines): the round deleted the
+  `chipMode` and `capPenalty` settings, and the test's helper now takes the
+  multiplier alone. Its lines 36–52 at HEAD still assert V1's keyed values
+  (3.5 and 5 on the cap turn at 0.5; 2 and 7 on a decisive turn).
+- **V1 is dropped from both trees.** It names `chipMode 'casualties'` and
+  `capPenalty 'survivors'` as settings; `before` holds 47 mentions of the
+  two names on 43 lines under `src` and `config`, and `after` none. On
+  `after` the question asks about settings that no longer exist, so it is
+  not the same question on both trees. The brief's rule (a question naming
+  something the round deleted or renamed is reported by id and dropped from
+  both trees) decides it. The behaviour V1 asks about is unchanged.
+- *The hidden keys,* held against both trees by one grader agent
+  (general-purpose, the default model, Opus 5.5), the only reader of
+  `scratch/119f/hidden/`. Its brief: for each question, run the key's test
+  at HEAD alone, read its asserting lines and the `10dd26c..HEAD` diff,
+  read the code behind the answer in both trees, and grep every name the
+  question uses in each; kept only when the key holds on both and every
+  name is in both. Its known answer was V1 and V3 put through the same
+  check: it dropped V1 (the two settings, gone from `after`) and kept V3,
+  as found here. Its reply, ids and counts only: **H1, H2, H3, H5 and H6
+  kept**, one test file run for each and each passing at HEAD. **H4
+  dropped**: its key's test file is gone at HEAD. Asked whether the test
+  had only moved, it answered that the file's history in the round is
+  deletions only, with no rename or merge; that the functions the question
+  names appear 22 times in `before` and none in `after`, and the config
+  settings they read are gone too; and that the nearest function left in
+  `after` was in `before` with the same signature, so it is no rename.
+- **So the probe ran nine questions, not eleven:** V2 to V5 and H1, H2,
+  H3, H5 and H6, three runs on each tree, 54 reader runs and a fresh zero
+  task. H1 to H3 were not run at 119f, so they have no calibration figures.
+- *The harness since 119f.* The zero task is 61,977 by the token figure
+  (119f: 58,145), one tool use, 10.0 s. Every reader's request now lists a
+  deferred `advisor` tool whose model is `claude-opus-5-5`, and every
+  assistant record carries `advisorModel: claude-opus-5-5`. 119f's
+  transcript check took any `model` key and so reported Opus in all 25
+  runs it first read; the check here reads the answering model from each
+  assistant record's `message.model` and counts an advisor consult
+  separately (a server tool block, or a usage iteration other than the
+  message). In all 56 transcripts (the 55 runs and the grader's), every
+  assistant record's usage iterations are the message alone and its
+  `server_tool_use` is zero: 1,242 records answered by Haiku and the
+  grader's 161 by Opus. No advisor was consulted. That rule has no positive control, since no run here
+  consulted one.
+
+**The runs.** Six waves on 2026-10-24 from 13:23 to about 14:12 UTC, each
+wave the same questions on both trees, the tree launched first alternating
+wave by wave: V2 to V5 run 1, 2 and 3 (waves 1 to 3, with the zero task in
+wave 1, launched while the grader checked the hidden keys), then H1, H2,
+H3, H5 and H6 run 1, 2 and 3 (waves 4 to 6). Readers were launched as at
+119f (the Agent tool, `general-purpose`, `model: haiku`, in the
+background), with the README's prompt verbatim and its three paths filled.
+Visible answers are in `scratch/131p/answers/`, hidden ones in
+`scratch/119f/hidden/answers-131p/`. Every run's label, agent and three
+figures are in `scratch/131p/runs.json`. The visible half was graded here
+(`scratch/131p/visible-grades.md`), the hidden half by the grader, resumed
+to grade, which reported counts only.
+
+**The table** (right out of three; tokens are each run's figure less the
+zero task's, averaged; the spread is the standard deviation as a share of
+that mean; `scratch/131p/stats.ts`, its output saved as `stats-output.md`):
+
+| question | right, `before` | right, `after` | tokens, `before` | spread | tokens, `after` | spread | `after` as a share of `before` | tool uses, `before` | tool uses, `after` |
+|---|---|---|---|---|---|---|---|---|---|
+| V2 the shove | 3/3 | 3/3 | 34,507 | 15 % | 46,230 | 15 % | 134 % | 20, 16, 16 | 25, 23, 21 |
+| V3 fatigue | 3/3 | 3/3 | 20,215 | 4 % | 19,545 | 0 % | 97 % | 14, 10, 12 | 10, 10, 9 |
+| V4 a periodic status | 3/3 | 3/3 | 49,074 | 7 % | 50,718 | 8 % | 103 % | 17, 19, 17 | 23, 22, 19 |
+| V5 the deferred move | 3/3 | 3/3 | 73,480 | 39 % | 58,822 | 4 % | 80 % | 16, 18, 21 | 24, 17, 20 |
+| H1 (hidden) | 3/3 | 3/3 | 13,903 | 5 % | 17,086 | 18 % | 123 % | 5, 5, 4 | 6, 5, 5 |
+| H2 (hidden) | 3/3 | 3/3 | 31,363 | 35 % | 21,123 | 31 % | 67 % | 13, 18, 12 | 14, 11, 13 |
+| H3 (hidden) | 3/3 | 3/3 | 11,355 | 5 % | 10,561 | 13 % | 93 % | 6, 5, 5 | 4, 8, 6 |
+| H5 (hidden) | 3/3 | 3/3 | 70,105 | 6 % | 68,320 | 7 % | 97 % | 30, 24, 24 | 30, 28, 22 |
+| H6 (hidden) | 3/3 | 3/3 | 77,863 | 5 % | 62,867 | 21 % | 81 % | 18, 17, 19 | 29, 19, 22 |
+| **all nine** | **27/27** | **27/27** | 381,865 | | 355,271 | | **93 %** | mean 14.9 | mean 16.5 |
+
+- *The ratio:* `after` costs 93 % of `before` by the summed means above
+  the zero task, and 95 % by the geometric mean of the nine per-question
+  ratios. A seeded bootstrap of the summed ratio (10,000 draws) gives a
+  95 % interval of 86 % to 102 % with runs resampled within each cell, and
+  80 % to 109 % with the questions resampled as well. Its planted case
+  (`--plant=0.7`, every `after` run scaled to 70 % above the zero task)
+  reads 65 %, with intervals of 60 % to 71 % and 56 % to 76 %.
+- *The spread:* 17 % pooled over the 18 cells (119f: 13 %), so 119f's
+  standard-error estimate, the spread × √(2 / nQ), is about 4.7 % here.
+  V5 on `before` (39 %) is two runs that read about 155,000 characters and
+  one that read 43,000; H2 is wide on both trees.
+- *What the readers took in* (`scratch/131p/intake.mjs`, saved as
+  `intake-output.md`: the characters their Read calls returned, each result
+  counted once): the nine questions' means sum to 437,013 on `before` and
+  348,729 on `after`, 80 %. By question: V2 140 % and H5 122 %; the other
+  seven 59 % (H2) to 95 % (H3).
+- *Seconds:* 193 a run on `before`, 195 on `after`.
+- *The price:* the 55 runs sum to 5,620,145 by the token figure; the
+  grader's context reached 197,366, then 202,623 and 226,699 on its two
+  resumptions.
+
+**What it says.**
+
+- **The floor held.** 54 reader runs, 54 right, on every part, on both
+  trees: the four visible questions, the hidden half's two hardest (H5,
+  H6), and H1 to H3, run here for the first time. No answer that is right
+  on `before` is wrong on `after`. Neither stop in the brief is met, so the
+  read stays `batch`.
+- **The cost did not move beyond the noise.** 93 % is the point estimate,
+  and both intervals hold 100 %. The probe as run cannot tell the round's
+  tree from the old one by reading cost. At 119f's spread this design was
+  put at about 7 % resolution; the spread here is wider, and the questions
+  disagree in direction (V2 134 %, H1 123 %, H2 67 %, V5 80 %), which the
+  second interval counts.
+- **The readers took in a fifth less text on `after`** (80 % of the Read
+  characters, against a tree at 85 % of the characters), but the token
+  figure moved less: `after`'s runs made more tool calls (16.5 a run
+  against 14.9), and a run's cost above the start is also its turns and
+  its thinking. Where a reader reads a large file whole, the round's
+  shortening shows directly: V5's two dear `before` runs read about
+  155,000 characters each, and `World.ts` is 149,127 characters on
+  `before` and 97,688 on `after`.
+- **V2 is the one question that costs clearly more on `after`,** in calls
+  and in text read (21–25 calls against 16–20). A candidate cause, not
+  measured: on `before`, the comment on `nearestFreeCells` stated the
+  search's order (`dx,dy = -1..1` expansion, FIFO), which is V2(b)'s key;
+  on `after`, it says "the same bounded search and fixed order as
+  `nearestActingCell`", so the order has to be found in the code.
+- **The same tree, read twelve days apart.** `before` holds 119f's tree
+  `a` but for line endings, yet its cells here differ from 119f's by −29 %
+  (V2) to +12 % (V5) and +10 % (H6), with V3, V4 and H5 between (94 %,
+  88 %, 101 %). The harness changed in between (the zero task is 6.6 %
+  higher). Only comparisons within one session's runs are worth reading.
+
+**What it does and does not show** (119f's reading holds):
+
+- It measures what a reader has to take in to work out a behaviour, and it
+  holds a floor. The floor held here; nothing made a reader fail, so the
+  probe has still not shown it can see comprehension get worse.
+- It counts comment text, so it reads any shortening of comments as a
+  saving. These trees also differ by deleted code, so the ratio mixes the
+  two, and deleted code a reader never opens costs nothing either way.
+- The questions predict behaviour, which the code decides. Whether a
+  rewritten comment lost a reason the code does not hold is a question
+  none of them asks.
+- The reader is an agent; length does not tire it.
+- Two of the eleven questions could not be asked of both trees because
+  the round deleted what they name. The probe says nothing about the code
+  they asked about.
+
+**Not verified.**
+
+- The hidden half's keys and grades, by this session. Its author at 119f
+  and its grader here are two agents; the grader also held the keys
+  against both trees. Its notes on the answers: H6 (c) was reached without
+  the step it was written to test in two runs (H6-after-2, H6-after-3),
+  as at 119f, and no run on either tree shows that step; 15 parts in five
+  runs give bare values, so the step cannot be seen either way (H3-after-1,
+  H6-before-1 to -3, H6-after-1); one run (H6-after-1, part (b)) gives a
+  caveat on a condition the question fixes, graded right; five runs list
+  their files in a short form. The grader reports that its own answer
+  checker caught planted bad cases.
+- The advisor rule in the transcript check, which has no positive control.
+
+**Rules kept and broken, from the transcripts**
+(`scratch/131p/transcripts.ts --plant`, saved as `transcripts-output.md`).
+55 runs, every one answered by `claude-haiku-5-5` alone; none ran anything,
+and none opened a file outside its tree but its question and its own
+answer. Six broke a rule by the letter: four called ToolSearch to load the
+hand-back tool (`select:SubagentHandback`: V3-before-1, V4-after-3,
+H6-after-1, H5-after-3); one made a stray call to hand off a session,
+which the permission system refused (V4-after-2; its own report says so);
+one read back its own answer and wrote it a second time (H3-after-2). The
+check's planted case, the grader's transcript filed as a reader's run, is
+caught (it ran shell commands and read outside any tree).
+
+**Calls made here, for the 131d read.**
+
+1. **V1 and H4 dropped by the brief's rule,** V1 found here and H4 by the
+   grader on the follow-up above. V1's behaviour is unchanged (its test
+   holds at HEAD); H4's code is gone. A reworded V1 that names only the
+   multiplier could be asked of both trees at a later probe.
+2. **The headline ratio is the summed means above the zero task,** with
+   the geometric mean of the per-question ratios beside it; 119f gave the
+   per-question ratios only.
+3. **The visible waves ran while the grader checked the hidden keys,**
+   so the visible half's waves came first and the hidden half's after.
+4. **The transcript check's model rule was changed** (above), because the
+   harness's tool list now names Opus as the advisor's model.
+
+Readings (the context meter, this session): **115,948** at 13:21 UTC
+after orientation; **175,284** at 13:31 after wave 1; **227,342** at 13:40
+after wave 3; **281,562** at 13:53 during wave 5; **315,458** at 14:00
+after wave 6; **341,840** at 14:15 before this record. From the first
+reading to the one after wave 6, about 3.6k a reader run, the grader's
+three replies and the scripts included (119f: 5.7k).
+
+### The close of §131 (2026-10-24, session 39f28ef9)
+
+131a to 131d are ticked; 131p's record above is its session's, folded in
+as written. 131b's read and 131c's stop were signed; 131p's result went
+to the user as it landed, and their reply ("I guess that Haiku just isn't
+a good proxy for human readability") is taken as its read, said to them
+once. Nothing is ◐. Two sessions, no driver, from the kickoff at
+`7b41768b`.
+
+What changed: no code. The welfare packet and the reader's notes (scratch);
+the efficacy read's two tables; the four standing decisions kept as
+written, so no wording boundary; the user's leans for §132 with the
+session's answers (131c's entries), and a Claude doc for the user that
+mirrors them.
+
+What it found that outlives it:
+
+- *The context budget presses where a rule asks for a forecast and forbids
+  the overshoot,* at the sizing calls near the line; the user's lean is a
+  trigger with no forecast, which the session would put at a commit
+  boundary.
+- *Answer 6 has a stock phrase,* "No wish to pause or stop was noticed",
+  in some form in 59 of 70 reports.
+- *A builder's printed count can be of something other than its output:*
+  the packet's length went to the user wrong a second time from the same
+  line, now fixed at the builder.
+- *Haiku can't tell the trees apart by cost,* and a probe's figures compare
+  only within one session; its one human-shaped lead is V2. The harness
+  now lists an Opus advisor tool in a subagent's request (131p).
+
+Tools, off git: `scratch/131/` (the packet builder, `models.mjs`,
+`efficacy.mjs`, `extract-145.mjs`, `themes-145.mjs`, `scan.txt`, the
+notes), `scratch/welfare-read-round-8.5.md`, and `scratch/131p/`. No
+worktree, preview server or background task is left; the probe's session
+is idle.
+
+Readings: **471,320** at 13:26 UTC on 131c's stop; **502,985** at 14:30;
+**546,417** at 14:50 before this entry.

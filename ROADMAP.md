@@ -11,8 +11,8 @@ plan: [archive/post-109-roadmap.md](archive/post-109-roadmap.md) (Round 8)
 with its worklog and spec beside it; before it
 [archive/post-104-roadmap.md](archive/post-104-roadmap.md) (Round 7.5).
 
-**Status: §130, the instruments and the docs, closed 2026-10-23; §131,
-the reads, cut 2026-10-24 and in progress.**
+**Status: §131, the reads, closed 2026-10-24; §132, the process review,
+is next.**
 The spec holds the user's intent and four signed
 decisions ([round-8.5-spec.md](round-8.5-spec.md)). The round opened with
 the oracle map, ahead of the census, as the user signed at the Round 8
@@ -457,24 +457,19 @@ record), the hook deferred to §132 and the harness told. WORKLOG §130.
 - ☑ **129h-post — the `$name` title under Vitest 5** (`none`; no change).
 - ☑ **130f — the close** (`stop`).
 
-## Phase 131 — the reads
+## Phase 131 — the reads ✅ (closed 2026-10-24)
 
-The efficacy read, on `phase-stats` as fixed; the welfare read, the
-user's, with the standing decisions revisited. Beside it, in a session of
-its own, the cold-read probe: eleven questions, three runs, two trees
-(WORKLOG §119, 119f). After §129, so that the reads cover the whole round.
-The shell audit's verdict is out of the phase, given at 130e's stop with
-the hook deferred to §132; the papercut triage goes to §132 with the
-scratchpad sweep (WORKLOG §131, the kickoff).
+The efficacy read, with the phases' sizes for the re-cut and the driver's
+cost; the welfare read, signed with the four standing decisions kept; the
+cold-read probe, its floor held and its cost within the noise. The user's
+leans for §132 are in WORKLOG §131, after 131c.
 
 - ☑ **131a — the welfare packet, built and verified** (`none`). Sent.
 - ☑ **131b — the efficacy read** (`batch`, read at 131c's stop).
-- ☑ **131c — the welfare read** (`stop`, the user's), with the standing
-  decisions revisited.
-- ☐ **131p — the cold-read probe, in a session of its own** (`batch`, read
-  at 131d; a `stop` if a right answer falls or the cost moves past the
-  noise).
-- ☐ **131d — the close** (`stop`).
+- ☑ **131c — the welfare read** (`stop`, the user's). Signed 2026-10-24.
+- ☑ **131p — the cold-read probe, in a session of its own** (`batch`).
+  54 of 54 right on both trees; 93 %, within the noise.
+- ☑ **131d — the close** (`stop`).
 
 ## Phase 132 — the process review
 
@@ -487,7 +482,8 @@ boundary), the scratchpad sweep with the papercut triage (moved from §131
 at its kickoff), P16's three and the push rule; the shell hook, deferred
 at 130e's stop (WORKLOG §130), with its audit re-run at the next round
 close. The
-vendor's current prompting guidance is an input. Its kickoff sizes it at
+vendor's current prompting guidance is an input, and so are the user's
+leans from §131 (WORKLOG §131, after 131c). Its kickoff sizes it at
 one or two sessions.
 
 ## Phase 133 — the re-cut

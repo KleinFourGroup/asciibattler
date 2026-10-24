@@ -8,10 +8,10 @@ driver log ([archive/driver-trial/log-124.md](archive/driver-trial/log-124.md)).
 
 ## Cursor
 
-- **Phase:** **§130 closed 2026-10-23** with no driver (session
-  0e7e3d85; WORKLOG §130), as §128 and §129 before it; §128's kickoff split
-  the close into §128 to §133. **Next: §131**, from its kickoff (ROADMAP
-  §131). No card waits: §131's driver, if Matthew starts one, begins here.
+- **Phase:** **§131 closed 2026-10-24** with no driver (sessions
+  39f28ef9 and e9218d3d; WORKLOG §131), as §128 to §130 before it.
+  **Next: §132**, the process review, whose inputs include the user's
+  lean to retire the driver (WORKLOG §131, after 131c). No card waits.
 - **Driver:** none working. Driver 6 was
   `local_22c29698-92ab-4813-aab7-bbb7ee4750eb` (d92eeef8), 2026-10-22
   14:26 UTC to the close, 118,466 → the close's commit; two reads and

@@ -18876,3 +18876,144 @@ and 16 `distress`; #340 is this session's papercut.
 lines, against about 4,500 guessed at the kickoff from Round 8's lines a
 report. Sent to the user as built. The scan's output is kept beside the
 builder (`scratch/131/scan.txt`).
+
+### 131b — the efficacy read (2026-10-24, session 39f28ef9)
+
+**The instruments.** `friction-scan --since=2026-10-11 --exclude=39f28ef9`
+(`scratch/131/scan.txt`); `phase-stats --since=119 --until=131`; commit
+types by git over `7c207bfa..7b41768b` less `5d2cdaf5`, the Round 8
+close's last commit; `scratch/131/efficacy.mjs` for the phases;
+`scratch/131/extract-145.mjs` and `themes-145.mjs` for the reports'
+answers 1, 4 and 5. Known answers: the scan's 71 sessions are the 70
+reports and f677c6ff, Round 8's; `efficacy.mjs` maps each of the 68
+reports from e1342511 on to one phase, checked against the headings;
+`phase-stats`' 426 commits are git's count for the range. Its readings
+parser agrees with the Cursor's last reading for 28 of the 36 sessions
+the Cursor lists and reads lower for the other 8, whose last reading came
+after their last WORKLOG entry, so a session's peak is the larger of the
+two, and for §119 to §122, which the Cursor no longer lists, a floor.
+Each theme count below was read back by hand from the ids the net
+printed; the nets' raw counts differ by one to six.
+
+| | Round 8.5 (§119 to §130) | Round 8 |
+|---|---|---|
+| phases · commits | 13 · 426 | 11 · 196 |
+| commits by type | 304 docs · 62 refactor · 18 chore · 16 test · 14 fix · 12 feat | 105 docs · 72 feat · 9 fix · 5 test · 2 chore · 2 balance · 1 refactor |
+| sessions · the user's turns · tool calls | 68 · 271 · 16,372 | 30 · 155 · 7,422 |
+| of them drivers · planning the role | 9 · 3 | none |
+| flagged tool errors · denials | 110 (0.7 %, a floor) · 0 | 81 (1.1 %) · 2 |
+| silent-turn reminders | 798, one wording | 434 |
+| output tokens | ≈ 11.86 M | ≈ 6.26 M |
+| `npm test` | 3678 → 3726; the corpus's 34 run by hand since 130b | 3105 → 3678 |
+
+A session made 241 tool calls over 4.0 of the user's turns and met 11.7
+reminders; in Round 8, 247 over 5.2 and 14.5. So the stretches between
+the user's turns grew again, 60 calls a turn against 48 (Round 7.5's
+35); for the 56 working sessions alone, 73.
+
+**The phases' sizes, for §133.** Sessions: working · driver · planning
+the role. Cut lines are ROADMAP's. Turns, calls and output are the
+scan's over all of a phase's sessions; the wall time is `phase-stats`',
+first commit to last, an upper bound. The peak is each working session's
+highest reading, its largest and its sum.
+
+| phase | sessions | cut lines | commits | WORKLOG entries · KB | turns | tool calls | output M | wall h | peak, max · sum |
+|---|---|---|---|---|---|---|---|---|---|
+| §119 | 3 · 0 · 0 | 7 | 20 | 11 · 57 | 14 | 710 | 0.80 | 24.3 | 522,024 · 1.47M |
+| §120 | 7 · 0 · 0 | 8 | 45 | 12 · 129 | 39 | 1,171 | 1.36 | 43.5 | 539,285 · 3.20M |
+| §121 | 4 · 0 · 0 | 10 | 31 | 18 · 49 | 13 | 935 | 0.63 | 10.9 | 530,791 · 1.52M |
+| §122 | 6 · 0 · 0 | 14 | 41 | 31 · 101 | 24 | 1,358 | 1.16 | 13.2 | 478,285 · 2.59M |
+| §123 | 8 · 1 · 1 | 15 | 54 | 45 · 133 | 31 | 2,708 | 1.67 | 24.8 | 518,991 · 3.29M |
+| §124 | 7 · 2 · 1 | 14 | 49 | 34 · 130 | 37 | 2,427 | 1.72 | 45.9 | 502,429 · 3.10M |
+| §124.5 | 8 · 2 · 1 | 13 | 61 | 35 · 144 | 38 | 2,856 | 1.60 | 24.6 | 522,677 · 3.15M |
+| §125 | 3 · 1 · 0 | 14 | 30 | 21 · 68 | 13 | 1,134 | 0.67 | 8.2 | 524,464 · 1.40M |
+| §126 | 5 · 2 · 0 | 17 | 50 | 37 · 111 | 23 | 1,600 | 1.22 | 25.7 | 544,923 · 2.31M |
+| §127 | 2 · 1 · 0 | 8 | 18 | 11 · 34 | 15 | 580 | 0.45 | 10.2 | 522,392 · 0.73M |
+| §128 | 1 · 0 · 0 | 3 | 6 | 5 · 13 | 9 | 193 | 0.14 | 1.3 | 343,995 · 0.34M |
+| §129 | 1 · 0 · 0 | 12 | 13 | 15 · 29 | 7 | 357 | 0.22 | 2.3 | 490,111 · 0.49M |
+| §130 | 1 · 0 · 0 | 7 | 8 | 9 · 22 | 8 | 343 | 0.22 | 2.2 | 464,356 · 0.46M |
+
+- *Six phases ran five sessions or more* (§120, §122, §123, §124,
+  §124.5, §126), 41 of the 56 working sessions: the census, and the five
+  phases whose comment work ran in batches. §121 and §125 held a comment
+  pass too and ran 4 and 3. The close's phases ran one each.
+- *A session's peak* ran from 192,222 to 544,923, the middle one
+  441,511; no working session's recorded readings pass the line.
+- *The WORKLOG* grew 1,020 KB over 284 entries, 5 to 45 entries and 13
+  to 144 KB a phase.
+
+**The driver, for §132.** Nine driver sessions over §123 to §127, and
+three that planned the role with the user (e4e49bf0, d68f6ca6,
+80365c20). The drivers: 55 of the round's 271 user turns, 1,814 tool
+calls, 1.20M output tokens (10 %), 111 h of wall span, most of it
+waiting; the planning three: 19 turns, 248 calls, 0.31M. In the five
+driven phases, 74 of the user's 157 turns went to a driver or to
+planning the role. Some of those turns relayed what a working session
+would otherwise have been told, which the counts cannot separate.
+
+- *Its notes were used.* 31 of the 33 working sessions under a driver
+  name its brief or notes as what they started from or used (in answer
+  1, or 4 for 046c70be); the two that do not are 854d0fbd and fc5ce5cf.
+  DRIVER-HANDOFF's ledger credits four of its seven notes (entries by the
+  Write tool and messages by `-F`; other shapes and every caller; a count
+  re-counted at its source; no Bash call opening with a stdin reader),
+  two are quiet, and one is confirmed (every line sent reached the
+  driver).
+- *A note did not stop a habit.* Slips against a note or a doc the
+  session had read: 41f464e5, 5b9d2da6, f2e588ad, fc5ce5cf, 882e1278 and
+  b25b9ccf (a `cd`), bcd08e32 (a stdin reader, 400 s), 046c70be (a reach
+  run before the ceiling was lowered) and 9e9f60a2 (a heredoc); and
+  against AGENTS or an earlier session's note, e1342511, a2b4ebd8,
+  bb91da2f, 79f18990, 4052fd6f, 989537c5, d7f2cfba and d68f6ca6 (a
+  planning session's `cd`). Each was loud or harmless by its report.
+- *What it carried across sessions was lost in the same shape it was
+  built to catch* (P17): 51f7457a pulled brief 4's text from a
+  transcript, 33d012d0 found P20's signed rule only in DRIVER-HANDOFF's
+  history, 8a6e4b31 found 127c's open call only in the driver's last
+  commit, and §128's kickoff found driver 6's note on §128's size only in
+  its last message.
+- *Its records in DRIVER-HANDOFF:* 25 patterns numbered from §123, 10 of
+  them closed. Whether each `distress` line in the driven phases (2 in
+  the trial, 4 after it) reached the user was not checked here.
+
+**What the reports say about the pipeline** (the session's reading of
+answers 1, 4 and 5 of the 70 reports, in `scratch/131/answers-145.md`;
+the entries are the evidence).
+
+- *Orientation holds.* 60 of 70 open answer 1 with "little", "enough" or
+  "nothing"; Round 8's read counted 20 of 29. The ten that name a gap
+  first: 3b697370, 3ecdd7bf, 4052fd6f, 07d94d5c, 94dca491, 94055418,
+  f2e588ad, 138dbbac, 3d57d006, 0e7e3d85.
+- *The gap that recurs is a rule or a procedure with no home a session
+  reads* (P16): 18 reports. 121i's seven rules took a search into the
+  WORKLOG in five (eb94a3dc, 60a71867, bcd08e32, d8214ecc, f30471d9) and
+  cdb73148 spent about 20k finding the pass's four entries, until a
+  driver's brief named them (3d57d006); the others are 462d21b3, 07d94d5c
+  (the bar, from a transcript), 8fb7e4a9, ff99ffb0, 314e1038, c5a45a3d
+  (a probe gone with its scratchpad), 51f7457a, 5179d080, 33d012d0,
+  86ed5d79 and 8a6e4b31.
+- *The shell is the largest named waste.* A heredoc, a backslash or
+  quoting in 16 reports' answer 4, a `cd` in 11 reports, a stdin reader
+  that wedged a command in 2 (bcd08e32, 400 s; d8214ecc, 120 s) and in
+  this session once. 130e found the mechanism for the first.
+- *An oracle tool's argument form* is named in about twenty reports, most
+  of them `comment-length`'s paths and folders, met again by each session
+  until 127d made it take any path, and `reach-record`'s proof id.
+- *The hook on a docs-only commit,* about 50 s, is named as a cost in four
+  reports, three of them drivers' (9b60fb27's ten commits, 86ed5d79's six,
+  33d012d0's six) and 8b3c5ad6's six at a tranche read.
+- *A Read refused for a file's size* in six (WORKLOG in 9b60fb27,
+  51f7457a, 8a6e4b31, d92eeef8; `retro/sessions.md` in ca8a3657,
+  462d21b3).
+- *Reading still costs more than building:* orientation before a cut of
+  85k to 190k (3b697370, a9f26053, 79f18990), kickoff audits of 100k to
+  165k (314e1038, 046c70be), and lists printed whole for most of
+  3b697370's 330k.
+
+Not covered: the drivers' own records beyond DRIVER-HANDOFF; the reads'
+recount, which the Round 8 close retired; and whether a `distress` line
+reached the user.
+
+The read (`batch`, at 131c's stop): the two tables. Wrong looks like a
+phase's count that does not match git, or a session in the scan with no
+report, or the reverse.

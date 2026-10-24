@@ -19377,3 +19377,84 @@ is idle.
 
 Readings: **471,320** at 13:26 UTC on 131c's stop; **502,985** at 14:30;
 **546,417** at 14:50 before this entry.
+
+## Phase 132 — the process review
+
+### The kickoff: the audit, and the cut signed (2026-10-24, session 60e58d62)
+
+**The audit** (the tree at `c08f4a72`).
+
+- *AGENTS.md:* 374 lines, about 20 KB against its 20,000-character cap.
+- *What the round added:* from the Round 8 close (`5d2cdaf5`), `git diff
+  --stat` over AGENTS, CLAUDE.md, `process/` and DRIVER-HANDOFF reads 504
+  lines added and 42 removed. 415 of the added are the driver's two files
+  (`driving.md` 267, DRIVER-HANDOFF 148); the other seven files hold 89
+  added and the 42 removed. The Cursor carries two paragraphs of rules
+  for this round (the comment change, and "for every phase of the
+  round").
+- *The friction log:* #182 to #343 unswept at the kickoff, 162 entries,
+  146 `papercut` and 16 `distress` (the latter read at 131c); #344 is
+  this session's. The scratchpad holds two entries.
+- *The hook* has no docs-only path. A text search names about a dozen
+  test files that mention a `.md` path; which open one is 132a's step
+  zero.
+- *The context-meter mod* handles every Bash and PowerShell call, and its
+  handler's result type carries a `deny`; the commit reading rides there.
+- *`main`* is 8 commits ahead of `origin/main`.
+- Not read at the kickoff: the papercut entries, and `driving.md`,
+  `browser-pane.md`, `measurement.md`, `oracles.md` and `COMMUNICATION.md`
+  in full. Each is read at the step zero of the step that touches it.
+
+**The cut, signed** (the user, 2026-10-24: "Signing the cut otherwise!
+😁"). ROADMAP §132 has the lines. Reads: 132a `none` (a planted dead link
+in a docs-only commit refused; a mixed commit runs the full suite); 132b
+`batch`, a `stop` if the hook's count over the round's transcripts
+differs from the 130e audit instrument's over the same window; 132c to
+132e `batch`; 132f to 132h `stop`. Predicted: no snapshot, no RNG
+stream, no smoke (nothing staged under `src/`, `config/` or
+`tests/fuzz/`); the main count moves by a test or two in
+`tests/docs.test.ts`.
+
+The calls, as signed:
+
+1. *The order:* the hook first, the content (132c to 132f) before the
+   restructure (132g), so the router moves text already cut.
+2. *The shell hook is a note, not a refusal* (the user: "It's the
+   blocking a correct command part that keeps eating at me. I think a
+   quick warn note like you're describing makes far more sense!"): the
+   command runs and its result gets a line saying what bash received. It
+   names the Claude Code version it was measured on, since a harness fix
+   would make it wrong.
+3. *Hand-offs without a driver:* the outgoing session writes its hand-off
+   entry and offers a session card; the phase close reads the phase's
+   friction for patterns across sessions. The brief restates nothing in
+   AGENTS, HANDOFF or the entry, so it is close to one line (the user:
+   proposals "can be quite verbose").
+4. *The driver's open patterns* go into 132f's list; the audio
+   notification for a driver's raises is dropped with the role.
+5. *The live worklog is always `WORKLOG.md`* (the user, correcting the
+   session's per-phase file names), moved to `archive/worklog-phase-N.md`
+   at each phase close from Round 9; `retro/sessions.md` the same way at
+   each round close. §133 archives the current file whole.
+6. *`ROUND-RULES.md`* (the user's, in place of a section in the spec,
+   which sessions don't read routinely): named in AGENTS' start list and
+   by one line in the Cursor, moved to `archive/round-N-rules.md` at the
+   round close and left empty, so a rule lapses unless the close promotes
+   it. Not `@`-imported (the user: "much of the point of g is to reduce
+   what's automatically loaded"), to be revisited if unloaded rules
+   become a problem. 132f moves the Cursor's rules for this round into it.
+7. *`batch` stays* the read kind (the user ceded `batched`); the comment
+   pass's units end with the round.
+8. *A standing permission to push `main` at each phase close.*
+9. *Standing decisions 3 and 4 merged* in 132g if the router wants the
+   room.
+10. *132g's trial:* a fresh session from a card, five tasks put as
+    questions, the key written at 132g's step zero before the router is
+    drafted; no control tree.
+11. *One wording-boundary row at the close* for all of §132's changes.
+
+The stretch: 132a to 132e in this session, to about 450k by the
+kickoff's guess, with a hand-off before 132f.
+
+Readings: **112,446** at 15:52 UTC after HANDOFF; **178,447** at 15:57
+with the cut drafted; **196,017** at 17:19 before this entry.

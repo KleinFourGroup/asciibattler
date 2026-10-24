@@ -11,8 +11,7 @@ plan: [archive/post-109-roadmap.md](archive/post-109-roadmap.md) (Round 8)
 with its worklog and spec beside it; before it
 [archive/post-104-roadmap.md](archive/post-104-roadmap.md) (Round 7.5).
 
-**Status: §131, the reads, closed 2026-10-24; §132, the process review,
-is next.**
+**Status: §132, the process review, cut and signed 2026-10-24.**
 The spec holds the user's intent and four signed
 decisions ([round-8.5-spec.md](round-8.5-spec.md)). The round opened with
 the oracle map, ahead of the census, as the user signed at the Round 8
@@ -122,39 +121,21 @@ seven rules, after a pilot settled it in session. Over the 64 files, now
 ceiling 5,783 → 4,169. Each step's record, the pilot's outcome and the
 leads it hands on are in WORKLOG §122.
 
-- ☑ **122a — list A's dead exports** (`none`). A-22's eighteen sim,
-  core and config names, A-29's two files; the build's bytes unchanged.
-- ☑ **122b — A-25's five, with their tests** (`none`). Seven tests out;
-  `reach-diff`: nothing lost.
-- ☑ **122c — A-28's field and A-38's option** (`none`). Proof: sim,
-  0 of 30 and PASS.
-- ☑ **122d — A-26, the word `export`** (`none`). 68 declarations in 40
-  files; the build's bytes unchanged.
-- ☑ **122e — A-34, the test pair** (`none`). The lockout test moved
-  with the cooldown test (flagged); `reach-diff`: nothing lost.
-- ☑ **122f — B-01, the two predicates by name** (read by the user). A
-  no-op: proven the same, under the bar on lines (+7), reverted. B-02 goes
-  to Round 9 (WORKLOG §122, 122f).
-- ☑ **122g — B-07, a spawned unit's wiring once** (`none`). Kept:
-  `World.wireSpawned`; corpus 0 of 30, fuzz diff PASS, lines −10.
-- ☑ **122h — B-08, the objective rule called, not restated** (`none`).
-  Kept; corpus 0 of 30, fuzz diff PASS, lines −9.
-- ☑ **122i — B-09, the death trigger in `reapUnit`** (`none`). Kept;
-  corpus 0 of 30, fuzz diff PASS, lines −2.
-- ☑ **122j — B-17, one `chebyshev`** (`none`). Kept; corpus 0 of 30,
-  fuzz diff PASS, lines −14.
-- ☑ **122k — the focus-tile directive folded into `updateFocusTarget`**
-  (`none`; a lead). Kept; a file and a type gone, lines −58.
-- ~~**122l — B-02, the split, if signed at 122f**~~ — a trial in Round 9,
-  signed at 122f (META-ROADMAP §Round 9).
-- ☑ **122m — the re-skim** (`none`). No trial over the bar; four
-  fix-ups; three calls for the user.
-- ☑ **122n — the fan-out pilot** (read by the user). Decided: (a), fresh
-  sessions on this model; the Opus arm's eight files landed as the
-  example of rule 1 on code.
-- ☑ **122o — the comment pass, the rest** (`batch`), in fresh sessions
-  on this model, as 121j ran. Eight batches by file, each read with no
-  finding; about 74 tokens a line.
+- ☑ **122a — list A's dead exports** (`none`). A-22's eighteen, A-29's two files.
+- ☑ **122b — A-25's five, with their tests** (`none`). Seven tests out.
+- ☑ **122c — A-28's field and A-38's option** (`none`).
+- ☑ **122d — A-26, the word `export`** (`none`). 68 declarations.
+- ☑ **122e — A-34, the test pair** (`none`).
+- ☑ **122f — B-01, the two predicates by name** (read). A no-op, reverted.
+- ☑ **122g — B-07, a spawned unit's wiring once** (`none`). Kept, −10.
+- ☑ **122h — B-08, the objective rule called** (`none`). Kept, −9.
+- ☑ **122i — B-09, the death trigger in `reapUnit`** (`none`). Kept, −2.
+- ☑ **122j — B-17, one `chebyshev`** (`none`). Kept, −14.
+- ☑ **122k — the focus-tile directive folded** (`none`; a lead). Kept, −58.
+- ~~**122l — B-02, the split**~~ — a trial in Round 9, signed at 122f.
+- ☑ **122m — the re-skim** (`none`). Four fix-ups; three calls.
+- ☑ **122n — the fan-out pilot** (read). Fresh sessions on this model.
+- ☑ **122o — the comment pass, the rest** (`batch`). Eight batches.
 
 ## Phase 123 — run ✅ (closed 2026-10-17)
 
@@ -483,8 +464,25 @@ at its kickoff), P16's three and the push rule; the shell hook, deferred
 at 130e's stop (WORKLOG §130), with its audit re-run at the next round
 close. The
 vendor's current prompting guidance is an input, and so are the user's
-leans from §131 (WORKLOG §131, after 131c). Its kickoff sizes it at
-one or two sessions.
+leans from §131 (WORKLOG §131, after 131c). Cut signed 2026-10-24 with
+eleven calls (WORKLOG §132, the kickoff).
+
+- ☐ **132a — the docs-only hook** (`none`). A docs-only commit runs only
+  the tests that read docs, a set derived at hook time.
+- ☐ **132b — the shell note** (`batch`; a `stop` if its count differs
+  from 130e's instrument's). A halved Bash command runs with a line
+  saying what bash received.
+- ☐ **132c — the context rule** (`batch`). Past 500k at a commit, hand
+  off; no halt, no forecast; the commit's reading says so.
+- ☐ **132d — the driver retired** (`batch`). Its files archived; the
+  hand-off entry, a one-line card and the close's pattern read instead.
+- ☐ **132e — the planning stack for Round 9** (`batch`). The worklog
+  archived per phase, `ROUND-RULES.md`, a close that deletes, the push.
+- ☐ **132f — the sweep** (`stop`). The round's added rules; the
+  papercuts and the scratchpad; the filing threshold and question 6.
+- ☐ **132g — AGENTS as a router** (`stop`). The rest in process
+  modules; a routing test, a landing check, a cold trial.
+- ☐ **132h — the close** (`stop`).
 
 ## Phase 133 — the re-cut
 

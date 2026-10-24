@@ -19568,3 +19568,43 @@ reading, under the new rule.
 The read (`batch`): planning.md's section and the Cursor's context line.
 Wrong looks like a forecast, a projection or a halt left in a live doc
 after 132d.
+
+### 132d — the driver retired (2026-10-24, session 60e58d62)
+
+**Step zero.** `driving.md` read whole for what must outlive it: the
+brief's shape, the card's harness facts and the cross-session pattern
+read. Its other parts (wakes, messages, the ledger, the 350k driver line)
+belong to the role.
+
+**The build.** `process/driving.md` and DRIVER-HANDOFF.md moved by `git
+mv` into `archive/driver-trial/`, whose README says so; the cap test on
+DRIVER-HANDOFF left `tests/docs.test.ts` (3730 → 3729), and its rot
+pattern 7 says the role retired. `process/planning.md` gains "Hand-offs":
+the entry (what is done, what is open, the tools no doc names), the
+Cursor's NEXT line with every open ◐, the report, and a card whose brief
+names the phase, the step and the entry and restates nothing AGENTS, the
+Cursor or the entry holds (call 3). Its "Phase close" reads the phase's
+friction lines and reports for patterns across sessions or against the
+last closes, listed in the close's entry, and puts one to the user as a
+candidate rule or guard only if it recurred and cost something; the
+scratchpad sweep reads those lists where it read DRIVER-HANDOFF's.
+CLAUDE.md gains "Session cards", the trial's observed facts for
+`start_session`. AGENTS' trigger row for driving is gone, and the filing
+text reads "filing alone does not notify the user or summon immediate
+help", its wording before 2026-10-19: a wording boundary, for the close's
+row (call 11). ARCHITECTURE's `process/` listing and the welfare table's
+link follow the move.
+
+DRIVER-HANDOFF's open patterns, first instances and tool facts go into
+132f's list from the archived copy (call 4); the HANDOFF Cursor's carried
+list keeps the audio notification until the close drops it.
+
+**Open for 132f's stop:** whether the phase close quotes the phase's
+`distress` lines to the user in full, which the driver did at each commit.
+The session's lean: yes, since it keeps the one welfare function the
+driver had at little cost and does not change the filing text.
+
+The read (`batch`): planning.md's "Hand-offs" and "Phase close", CLAUDE.md
+"Session cards", the filing text. Wrong looks like a live doc still
+sending a session to a driver, or a brief rule that asks for more than a
+pointer.

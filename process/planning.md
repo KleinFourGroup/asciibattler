@@ -164,6 +164,22 @@ meter. One trigger, with no forecast:
 The WORKLOG keeps a session's first reading and its last, at its hand-off
 or end, with their times.
 
+## Hand-offs
+
+A session hands off at the trigger (above), or at a stop when the user
+wants the next stretch in a fresh session. It:
+
+- writes a hand-off entry in the WORKLOG ("The hand-off after <step>"):
+  what is done, what is open (a call the user hasn't answered, a read
+  pending, a step half-built and where it stands), and the tools or files
+  the next session needs that no doc names;
+- brings the HANDOFF Cursor's NEXT line up to date, with every open ◐;
+- writes its session report and commits;
+- offers the next session as a card (Claude Code: CLAUDE.md "Session
+  cards"). The brief names the phase, the step to start and the hand-off
+  entry, and restates nothing that AGENTS, the Cursor or the entry
+  already holds, so it is about a line long.
+
 ## HANDOFF upkeep
 
 - The Cursor holds live status only: the next step, what's in flight,
@@ -184,8 +200,12 @@ or end, with their times.
   reports to [retro/sessions.md](../retro/sessions.md), under a
   `## Phase N — summary` heading.
 - Demote the phase in HANDOFF.
-- If the phase has a driver, the close is its last hand-off, sent and read
-  as the others are ([driving.md](driving.md), "The phase close").
+- Read the friction lines filed in the phase, and its session reports, for
+  a pattern that recurs across its sessions or across the last phases'
+  close entries, and list each in the close's WORKLOG entry with its
+  instances. A pattern goes to the user as a candidate for a rule or a
+  guard only if it recurred and cost something; one that cost nothing is
+  listed and left.
 
 ## Round close
 
@@ -210,7 +230,7 @@ or end, with their times.
 
 At each round boundary, go through [retro/scratchpad.md](../retro/scratchpad.md)
 along with [retro/sessions.md](../retro/sessions.md), the papercut log, and
-the pattern list in [DRIVER-HANDOFF.md](../DRIVER-HANDOFF.md).
+the patterns the round's phase closes listed.
 Each scratchpad entry is either promoted or archived (moved to `archive/`
 with the round's docs); the scratchpad keeps only the current round's
 undistilled notes.

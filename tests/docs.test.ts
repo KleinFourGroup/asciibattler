@@ -29,8 +29,9 @@ import { fileURLToPath } from 'node:url';
 //      as the note here promised.)
 //   7. DRIVER-HANDOFF-as-log — the driver trial's state lived in a per-phase
 //      log, and §124's reached 889 lines with four state sections, each
-//      added on top of the last. The state is now rewritten in place
-//      (process/driving.md), and the caps hold it to that.
+//      added on top of the last. The state was then rewritten in place and
+//      capped here until the role retired (2026-10-24); the file is in
+//      archive/driver-trial/.
 //   8. Dead links — a moved or deleted file leaving the docs that link it
 //      pointing nowhere (five in the live docs at the Round 8.5 close, found
 //      by a hand-run check).
@@ -287,20 +288,6 @@ describe('docs hygiene', () => {
     expect(lineCount(text), `AGENTS.md is ${lineCount(text)} lines. ${hint}`).toBeLessThanOrEqual(AGENTS_MAX_LINES);
   });
 
-  // DRIVER-HANDOFF.md is a phase driver's live state, read whole by every
-  // driver that starts or takes over (rot pattern 7). It opened at ~5.7k
-  // chars and 96 lines on 2026-10-19; the caps leave about twice that for
-  // patterns that accumulate across phases.
-  const DRIVER_HANDOFF_MAX_CHARS = 12_000;
-  const DRIVER_HANDOFF_MAX_LINES = 160;
-
-  it(`DRIVER-HANDOFF.md stays under ${DRIVER_HANDOFF_MAX_CHARS} chars and ${DRIVER_HANDOFF_MAX_LINES} lines`, () => {
-    const text = read('DRIVER-HANDOFF.md');
-    const hint =
-      'It is live state, rewritten in place: move patterns quiet for two phases to the closed list, and prune the closed list and older instances first (process/driving.md "DRIVER-HANDOFF.md"), or bump the cap deliberately.';
-    expect(text.length, `DRIVER-HANDOFF.md is ${text.length} chars. ${hint}`).toBeLessThanOrEqual(DRIVER_HANDOFF_MAX_CHARS);
-    expect(lineCount(text), `DRIVER-HANDOFF.md is ${lineCount(text)} lines. ${hint}`).toBeLessThanOrEqual(DRIVER_HANDOFF_MAX_LINES);
-  });
 
   // ARCHITECTURE.md "Top-level structure" is the single canonical source tree
   // (HANDOFF + AGENTS point to it). Parse it and assert every listed file path

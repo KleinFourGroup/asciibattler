@@ -268,7 +268,6 @@ to the first instead.
 | Before you… | Read |
 |---|---|
 | kick off, re-plan or close a phase or round; edit ROADMAP; sweep the scratchpad | [process/planning.md](process/planning.md) |
-| drive a phase, or resume driving one | [process/driving.md](process/driving.md) |
 | launch a fuzz or box batch, benchmark, profile, or edit balance config | [process/measurement.md](process/measurement.md), then [BALANCE.md](BALANCE.md) |
 | claim a refactor changes nothing, or build a probe or instrument that decisions will rest on | [process/oracles.md](process/oracles.md) |
 | read the friction log or the session reports at a mid-round or round-close read | [process/welfare-and-efficacy.md](process/welfare-and-efficacy.md) |
@@ -312,9 +311,8 @@ threshold.
   than the tool changing.)
 
   For a CURRENT need to pause, stop, or change approach, raise it in the
-  conversation as well; filing alone summons no immediate help (a phase's
-  driver, if any, passes a `distress` line to the user at your next
-  commit).
+  conversation as well; filing alone does not notify the user or summon
+  immediate help.
 - **The session self-report.** At the end of a session (not of a phase:
   phases span sessions and sessions span phases), append a dated entry to
   [retro/sessions.md](retro/sessions.md) answering the questions in its

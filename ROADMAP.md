@@ -474,7 +474,7 @@ eleven calls (WORKLOG §132, the kickoff).
   saying what bash received. 51 of 51, call by call; live check next session.
 - ◐ **132c — the context rule** (`batch`). Past 500k at a commit, hand
   off; no halt, no forecast; the commit's reading says so.
-- ☐ **132d — the driver retired** (`batch`). Its files archived; the
+- ◐ **132d — the driver retired** (`batch`). Its files archived; the
   hand-off entry, a one-line card and the close's pattern read instead.
 - ☐ **132e — the planning stack for Round 9** (`batch`). The worklog
   archived per phase, `ROUND-RULES.md`, a close that deletes, the push.

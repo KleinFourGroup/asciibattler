@@ -53,6 +53,13 @@ in AGENTS.md, which other harnesses read too.
   2.1.308; WORKLOG §130, 130e). The context meter's mod adds a backslash
   note to a Bash result whose reading the halving changed, with what bash
   got; the command has run by then.
+- **Session cards.** Offer the next session with `start_session`,
+  `initiation: "own_initiative"`, `context: "fresh"`, `use_worktree: false`
+  (the work stays on `main` in this checkout) and no `permission_mode`,
+  since a session in another mode holds messages for the user's approval.
+  A `fresh` start needs a `background` of at least 80 characters; the card
+  runs nothing until the user clicks it, and expires after a week
+  (observed 2026-10-15 to 18, `archive/driver-trial/findings.md`).
 - **The Grep tool** can answer "No matches found" for a brace glob given
   together with a path, when files plainly match. Give a path and no brace
   glob, and don't read that answer as a negative.

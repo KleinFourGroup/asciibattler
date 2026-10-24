@@ -1,8 +1,10 @@
 # The driver trial's records (§123 and §124)
 
 The phase driver was tried on §123 and §124 and kept by the user on
-2026-10-18. The verdicts are in WORKLOG §123 and §124, "The driver trial";
-the role's procedure is now [process/driving.md](../../process/driving.md).
+2026-10-18. The verdicts are in WORKLOG §123 and §124, "The driver trial".
+The role ran as an option from §124.5 to §127 and was retired at §132
+(2026-10-24, WORKLOG §132, 132d); its procedure, [driving.md](driving.md),
+and its last state, [DRIVER-HANDOFF.md](DRIVER-HANDOFF.md), are here.
 These files ran from `scratch/`, ignored by git, and were moved here on
 2026-10-19 so the verdicts' sources survive off the machine they ran on.
 Where a verdict cites `scratch/123-driver-trial/` or

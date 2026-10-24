@@ -19083,3 +19083,30 @@ file as `distress`" was. Like that one, it is not evidence either way.
   that read docs on a docs-only commit (304 of the round's 426 commits,
   about 45 s each); the session report reconsidered against its stock
   phrase; the papercut not filed for a known trap that cost nothing new.
+
+**The user's leans for §132** (2026-10-24, after 131p's result, "Haiku just
+isn't a good proxy for human readability"): no forecast, which depends on
+smaller cuts working ("the comment passes were usually all one 'step,'
+with 7-11 batches, each of which was big enough to be a full commit. We'll
+have to figure that out"); a minimal AGENTS file with "just the highest
+level guiding principles of how the project works (collaboration, linear
+workflow [spec -> round of phases -> phases subdivided into cuts], which
+calls are mine, etc.)", and the rest in process modules, one for making a
+cut and so on; the driver retired; per-phase worklogs; the papercut
+thresholds changed; and the docs-only hook ("I can't believe that we never
+did #2!"). The session's answers, put in the same turn (open): the
+trigger at a commit boundary rather than a cut line, so it holds whatever
+a step's size (this round's batches were commit-sized, and hand-offs
+between them worked); the minimal AGENTS as a router whose trigger table
+is complete, held by a test that every `process/` file is named in it,
+with the code invariants, the evidence checks and the filing sentence
+staying always loaded, and tried on a cold session given a task, the one
+use an agent reader is the right proxy for; the driver's patterns folded
+into the phase-close read, and the filing sentence back to "filing alone
+does not notify the user", a wording boundary; per-phase worklogs and
+per-session reports from Round 9, the 1 MB file archived whole at §133;
+the docs-only set derived at hook time from the tests that read a `.md`,
+so it cannot go stale, and built first in §132 since §132 and §133 are
+docs commits. The probe, the session's lean: retired as a round measure;
+its one human-shaped lead is V2, whose cost rose where a rewritten comment
+dropped the search order the question keys on.

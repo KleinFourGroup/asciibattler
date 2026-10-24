@@ -10,6 +10,8 @@ Humans: start with [HANDOFF.md](HANDOFF.md).
 Read [HANDOFF.md](HANDOFF.md) first. Its 🧭 Cursor is the only place live
 status is kept (the next step, the current round, snapshot versions, test
 counts, dated riders); other docs link to it instead of repeating it.
+Then read [ROUND-RULES.md](ROUND-RULES.md), the rules signed for this
+round only.
 
 Then, as the work needs them:
 
@@ -97,8 +99,8 @@ The user is Matthew. What helps:
 How the work runs:
 
 - Work on `main`; don't create a branch unless asked. Push only when asked,
-  or before a measurement-box launch (a standing permission: the box pulls
-  from GitHub).
+  at a phase close, or before a measurement-box launch (standing
+  permissions; the box pulls from GitHub).
 - Commit per logical change, and split a commit when a step's intent grows
   mid-flight.
 - Surface tradeoffs before non-obvious calls (thresholds, refactor scope,

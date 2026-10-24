@@ -145,28 +145,7 @@ to §133 say which phase takes each row.
   close is shelved until the re-cut, since smaller rounds may keep it
   under the Read tool's 256 KB on their own.
 
-- [ ] **Round-scoped rules, and a close that deletes as well as promotes**
-  (the user, 2026-10-22: "this speaks more to needing a system for
-  round-scoped rules, rather than simply tying them back into AGENTS and
-  processes. That, or some sort of regular deletion pass", with a concern
-  that rules and guards are proposed too quickly "for patterns that are
-  either ultimately harmless or that haven't actually recurred much").
-  The rules sessions follow from this round's WORKLOG entries mostly
-  apply to this round: the comment pass's seven rules (§121, 121i; their
-  general half largely in AGENTS "Voice" and `comment-codes` already),
-  how a batch runs (124.5h's plan, 125k's), the drops rule (§124, "The
-  signs after batch 7", the sixth), and no subagents for comment work
-  (122n). Raised as options, not decided: round-scoped rules kept in the
-  round's spec, archived with it, so each lapses unless the close keeps
-  it; the close listing the lines the round added to AGENTS, CLAUDE.md
-  and `process/` (driving.md's of 2026-10-22, on an open item the driver
-  raised, came from one harmless instance) and keeping each only if it
-  did something, as the standing decisions are revisited; and a bar for
-  a new guard or permanent rule, a pattern that recurred and cost
-  something (the readings guard, closed unbuilt, was for a slip caught
-  every time). driving.md's path from a repeated pattern to a guard has
-  no cost test. Bears on the Cursor's carried P16 item (a home for the
-  procedures) and the standing decisions' revisit.
+- ✅ **Round-scoped rules, and a close that deletes as well as promotes** — `ROUND-RULES.md`, archived at each round close; the close keeps a line the round added only if it did something; a bar for a new rule or guard (`process/planning.md`; WORKLOG §132, 132e). Round 8.5's own list is 132f's.
 
 ### §129 the dependency phase
 

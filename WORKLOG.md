@@ -19608,3 +19608,29 @@ The read (`batch`): planning.md's "Hand-offs" and "Phase close", CLAUDE.md
 "Session cards", the filing text. Wrong looks like a live doc still
 sending a session to a driver, or a brief rule that asks for more than a
 pointer.
+
+### 132e — the planning stack for Round 9 (2026-10-24, session 60e58d62)
+
+`process/planning.md`, "The artifacts": the live worklog is always
+`WORKLOG.md`, moved to `archive/worklog-phase-N.md` at each phase close
+from Round 9, a round's kickoff opening its first phase's file, and
+"WORKLOG §N" naming the live file and then its archive (call 5);
+`ROUND-RULES.md`, not loaded automatically (call 6). "Phase close": the
+worklog's move, and a push of `main`, a standing permission (call 8).
+"Round close": `retro/sessions.md` archived as
+`archive/sessions-round-N.md`, ROUND-RULES.md with it; the close lists
+the lines the round added to AGENTS, CLAUDE.md and `process/`, with
+ROUND-RULES.md's rules, and keeps each only if it did something; the bar
+for a new permanent rule or guard, a pattern that recurred and cost
+something. `ROUND-RULES.md` is created with its header and an empty Round
+8.5 section that 132f fills; AGENTS' start list names it, and its push
+line and the Cursor's branch line name the phase close. TODO's
+round-scoped rules row is ticked; Round 8.5's own list is 132f's.
+
+AGENTS stands at 19,948 characters of 20,000, so "Where things go" got
+no row for ROUND-RULES.md; 132g's router takes it. The Cursor's pointer
+to the file comes with 132f's move of its rules.
+
+The read (`batch`): "The artifacts", "Phase close" and "Round close" in
+planning.md, and ROUND-RULES.md's header. Wrong looks like a rule that
+applies to Round 8.5's archive, which §133 archives whole.

@@ -29,12 +29,20 @@ matching it.
   cross-phase dependencies, a risk rating, known decision points, exit
   criteria, and scope guards (the not-doing list). No sub-steps until the
   phase kicks off, and no as-built prose ever.
-- **WORKLOG.md**: the round's narrative: findings, rationale, rejected
-  alternatives, playtest verdicts. One file per roadmap, sectioned
-  `## Phase N`, created at the round's kickoff and archived with its
-  roadmap as a pair (`archive/post-NN-roadmap.md` + `-worklog.md`).
-  Sessions orient from the HANDOFF Cursor and the ROADMAP, and open the
-  worklog to append or to investigate.
+- **WORKLOG.md**: the phase's narrative: findings, rationale, rejected
+  alternatives, playtest verdicts. The live file is always `WORKLOG.md`,
+  holding the phase in progress under `## Phase N`; a round's kickoff
+  entries open its first phase's file. At each phase close it moves to
+  `archive/worklog-phase-N.md` and a fresh `WORKLOG.md` starts, so a
+  pointer "WORKLOG §N" names the live file while phase N runs and its
+  archive after. (From Round 9; Round 8.5's one file is archived whole at
+  its close.) Sessions orient from the HANDOFF Cursor and the ROADMAP,
+  and open the worklog to append or to investigate.
+- **ROUND-RULES.md**: rules the user signs for one round only, read at
+  each session's start. It is not loaded automatically. At the round
+  close each rule is kept, by moving it to its permanent home, or lapses;
+  the file moves to `archive/round-N-rules.md` and a fresh one starts with
+  its header.
 - **Domain run-logs** ([BALANCE.md](../BALANCE.md),
   [PATHING.md](../PATHING.md)): permanent measurement records with a
   protocol header, across rounds. Measurements go there; narrative goes to
@@ -196,6 +204,9 @@ wants the next stretch in a fresh session. It:
 ## Phase close
 
 - Tick the phase's cut lines and demote its ROADMAP section (above).
+- Move `WORKLOG.md` to `archive/worklog-phase-N.md` and start a fresh one
+  (from Round 9).
+- Push `main`: a standing permission at a phase close.
 - The closing session adds a one-paragraph summary of that phase's session
   reports to [retro/sessions.md](../retro/sessions.md), under a
   `## Phase N — summary` heading.
@@ -209,8 +220,18 @@ wants the next stretch in a fresh session. It:
 
 ## Round close
 
-- Archive the roadmap + worklog pair and the spec; sweep the scratchpad
-  (below); update META-ROADMAP's status; rewrite the HANDOFF Cursor.
+- Archive the roadmap, the spec, `retro/sessions.md` (as
+  `archive/sessions-round-N.md`, a fresh one starting with its header)
+  and ROUND-RULES.md; sweep the scratchpad (below); update META-ROADMAP's
+  status; rewrite the HANDOFF Cursor.
+- **The close deletes as well as promotes.** List the lines the round
+  added to AGENTS.md, CLAUDE.md and `process/` (`git diff` from the last
+  round close), with ROUND-RULES.md's rules, and keep each only if it did
+  something this round: a session's record names it as the reason for an
+  action, or a slip it was written against stopped. The rest are deleted.
+  The user signs the list.
+- **The bar for a new permanent rule or guard:** a pattern that recurred
+  and cost something. A rule that one round needs goes in ROUND-RULES.md.
 - Re-read the next round's charter against the code as it is now, and pose
   it to the user as well. If a gap needs a round of its own, insert it then
   as a planned entry rather than discovering it at the next kickoff.

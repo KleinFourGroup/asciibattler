@@ -476,7 +476,7 @@ eleven calls (WORKLOG §132, the kickoff).
   off; no halt, no forecast; the commit's reading says so.
 - ◐ **132d — the driver retired** (`batch`). Its files archived; the
   hand-off entry, a one-line card and the close's pattern read instead.
-- ☐ **132e — the planning stack for Round 9** (`batch`). The worklog
+- ◐ **132e — the planning stack for Round 9** (`batch`). The worklog
   archived per phase, `ROUND-RULES.md`, a close that deletes, the push.
 - ☐ **132f — the sweep** (`stop`). The round's added rules; the
   papercuts and the scratchpad; the filing threshold and question 6.

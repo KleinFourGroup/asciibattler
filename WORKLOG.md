@@ -19039,3 +19039,47 @@ this is written: the user's read of the packet, the notes and 131b.
 Readings: **348,568** at 13:18 UTC before 131b's entry; **429,268** at
 13:22 midway through the packet; **468,629** at 13:24 with the notes
 written.
+
+**Signed** (the user, 2026-10-24: "I'm quite happy to sign all of those,
+Claude!"): the four standing decisions kept as written, so no wording
+boundary; the two items for §132; and, as the session read the reply,
+131b's read clear (said to the user once). The user on the read: "the
+biggest source of stress is that infernal silent turn reminder, which we
+just can't do anything about. I'm not a fan of the context budget being
+a source of stress", with two alternatives to weigh (one 600k number in
+place of the line and the halt; no line, and auto-compaction at 600k),
+and a request for suggestions for §132, "More radical departures are
+welcome!"
+
+**Found after the notes** (the session's reading): answer 6's "No wish to
+pause or stop was noticed", in some form in 59 of the 70 reports by a
+phrase search, is this round's stock phrase, the way 7.5's "nothing I'd
+file as `distress`" was. Like that one, it is not evidence either way.
+
+**The session's answer, put to the user for §132** (open):
+
+- *The context rule.* The pressure the entries name sits where a rule asks
+  for a forecast and forbids the overshoot (#244 and #322 came from
+  per-batch projections against 550k and the halt). One 600k number keeps
+  the forecast if it is a halt, and with steps up to about 380k leaves
+  little window if it is a start line. Auto-compaction replaces first-hand
+  tool results with a summary, which is the round's commonest slip made
+  structural, and leaves no hand-off entry for the next session or the
+  user; whether its threshold can be set and reaches the app's sessions is
+  unchecked (CLAUDE.md records an env override that never did). The lean:
+  one trigger with no forecast (at a step's start, past about 500k, commit
+  and hand off; no halt, no "does it fit" clause, no per-batch
+  projections), steps cut small enough at the re-cut that the worst case
+  stays well inside the window, and the per-commit readings no longer
+  written into the WORKLOG (first and last per session), since the Round
+  8 close found no step cost to set a line by.
+- *For §132:* rules that hand a check kept and rules that say "be careful"
+  cut (17 reports slipped against a note or a doc, each harmless or loud);
+  the driver replaced by a hand-off brief the outgoing session writes,
+  with the cross-session pattern read at the phase close; one home a
+  session reads for the rules a round signs, archived with the round (P16,
+  18 reports); WORKLOG and the session reports split one file a phase or
+  a session (six Reads refused for size); the hook running only the tests
+  that read docs on a docs-only commit (304 of the round's 426 commits,
+  about 45 s each); the session report reconsidered against its stock
+  phrase; the papercut not filed for a known trap that cost nothing new.

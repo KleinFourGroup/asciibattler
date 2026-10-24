@@ -19776,3 +19776,66 @@ cross-cutting list of Matthew's calls, and a lean (O2 with O3, O5 and O6;
 O9 offered to §133's re-cut as a trial). Its size figures were measured
 against the files at the time: CLAUDE.md with its import is 502 lines
 and 28 KB.
+
+### 132g's stop: the two readings compared, put to the user (2026-10-24, session 60e58d62)
+
+The cold report (the user ran the prompt in `playground`; 640 lines,
+copied byte for byte into `scratch/132g/cold-read-132g.md`) reads the
+setup as mostly earned: ten principles, fewer weak-model rules than
+expected, the problem where text sits rather than what it says, and a lean
+of tidy now, the router with C's three cheapest items, judged by a process
+probe. The user, reading both: "I wonder if we should have had it look at
+the prompting guidance first 😅 I've read your summary and generally agree
+with it more."
+
+**The comparison** (`scratch/132g/comparison.md`). Agreed: the principles
+(the cold reader's ten hold the session's seven and add three: measure
+now, spend the owner's attention only where nothing else reaches, the
+environment as dated facts), the router next with mechanization beside
+it, the minimal end held. Differing: how much was written for a weaker
+model, where the guidance sides with the session on verification
+instructions and the cold reader with keeping the evidence rules' force,
+reconciled as a four-line core of definitions with the method moved to
+`oracles.md`; context counts, shown on every commit (cold) or silent below
+the trigger (session and guidance); the record and the ending, each
+proposed by one reader only. Found only by the cold reader: the tradeoff
+lines that pull against "between stops you keep going", stale or drifted
+lines (the next-step box note, confirmed against this session's own
+wrap-up instructions; Pre-flight's port; the Cursor's paraphrase of the
+push rule; the welfare table's row, due at the close), a Cursor half not
+live status, a cap that pushes text into uncapped neighbours, two mod
+gaps (`git -C` commits unread; a refused commit read), and a better trial.
+
+**Put to the user, in three tranches** (tranche 1 first, per
+planning.md): 1, the direction (the fixes first, the router opened by the
+principles, the evidence core, no counts below the trigger); 2, the
+mechanisms and the trial (C's cheapest items, the process probe keyed to
+the user's intent); 3, the record and the ceremony (a lighter WORKLOG
+from Round 9, an ending scaled to the session, E and the full D held).
+
+### The hand-off after 132g's stop (2026-10-24, session 60e58d62)
+
+The commit carrying the comparison is past 500k (530,453 before it), so
+the session hands off at the stop.
+
+- **Done:** 132a (`none`, ☑), 132b (◐), 132c to 132f (☑), 132g's options:
+  the guidance read and spot-checked, the cold read, the session's own
+  options, the comparison.
+- **Open:** the user's answer to 132g's tranche 1, then tranches 2 and 3,
+  all in `scratch/132g/comparison.md`; 132b's live check, a fresh
+  session's first Bash call with a halved run (`printf '%s\n' 'a:\\'`
+  should come back with a backslash note); the commit reading's 500k line,
+  untested live. 132h builds the chosen direction; 132i closes, with the
+  welfare table's row for §132's wording changes (the filing text twice,
+  the context rule; call 11), the Cursor's carried list (the audio
+  notification and P16's three resolved, the push rule's paraphrase), a
+  push of `main`, and the phase's session-report summary.
+- **Files no doc names yet:** `scratch/132g/` (`guidance.md`,
+  `cold-read-prompt.md`, `options-session.md`, `cold-read-132g.md`,
+  `comparison.md`); `scratch/132f/sweep.md` (the signed sweep, with the
+  six open tool quirks and the 22 single entries as their record);
+  `scratch/132a/` and `scratch/132b/` (the hook's trace and controls, the
+  note's port check).
+
+Readings: first **112,446** at 15:52 UTC; last **530,453** at 23:45
+before this entry.

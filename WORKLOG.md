@@ -19723,3 +19723,47 @@ READMEs hold (19,962). W2: question 6 unchanged. W3: planning.md's
 "Phase close" quotes each `distress` line the phase filed to the user in
 full, without characterizing it. 132f is done; its tranche reads were
 the user's signs.
+
+### 132g, the options: the split signed, the guidance read, the cold reader's prompt (2026-10-24, session 60e58d62)
+
+**The user's idea, and the split.** The user asked for a context-free
+subagent to read the whole pipeline and distill its guiding principles,
+for a look at what made sense with less capable models and no longer
+does, and for the whole range of changes, radical ones included. A
+subagent of this session is not context-free: one asked, with a prompt
+naming nothing of the project, quoted CLAUDE.md, AGENTS.md (through the
+import) and the memory index as loaded before its task, at about 64k
+tokens. The bundled CLI run headless from an empty folder answered "Not
+logged in". **Signed** (the user, after being away: "1. Absolutely! 2. I
+have a folder … Give me your preferred prompt, and I'll run it there? 3.
+Agreed; docs alone"): 132g splits into the options (`stop`) and 132h the
+build (`stop`), the close becoming 132i; the cold reader runs in
+`C:\Users\mkilg\projects\playground` (the user wrote "playgroun"; the
+folder on disk is `playground`), started by the user from the session's
+prompt; it reads the docs alone. The folder holds no CLAUDE.md, AGENTS.md
+or `.claude`, none sits above it, there is no user-level CLAUDE.md, and
+`~/.claude/projects` has no memory for it.
+
+**The guidance** (`scratch/132g/guidance.md`): a subagent's read of
+Anthropic's current prompting pages, its five weightiest claims checked
+against the pages' own sentences by a second fetch, all five holding with
+three wording corrections. For 132g: a CLAUDE.md under 200 lines, an
+import costing as much as inline text; explicit verification steps
+removed for Opus 5, which verifies unprompted; context-budget counts
+surfaced as little as possible, since a remaining-token countdown is the
+commonest trigger of a suggested hand-off; and the silent-turn reminder
+given as an example for harness builders, stopped after two or three if
+the turn stays quiet (798 reached this round's sessions).
+
+**The prompt** (`scratch/132g/cold-read-prompt.md`): what the project is
+in a paragraph, the files to read (CLAUDE.md and AGENTS.md, the Cursor,
+ROUND-RULES.md, `process/`, TESTING.md, COMMUNICATION.md, the report
+questions, the hook, the docs test and the mod), what not to open (the
+WORKLOG, the friction log, the reports, `archive/`, `scratch/`, the git
+log, the game's docs), and five questions: the guiding principles, what
+may have outlived its reason, friction in the setup, the full range of
+changes from keep-nearly-everything to keep-nearly-nothing, and what to
+keep whatever happens. The report goes to
+`C:\Users\mkilg\projects\playground\cold-read-132g.md`.
+
+Reading: **476,988** at 22:53 UTC.

@@ -483,9 +483,12 @@ eleven calls (WORKLOG §132, the kickoff).
 - ☑ **132f — the sweep** (`stop`). The round's added rules; the
   papercuts and the scratchpad; the filing threshold and question 6.
   Three tranches signed and built.
-- ☐ **132g — AGENTS as a router** (`stop`). The rest in process
-  modules; a routing test, a landing check, a cold trial.
-- ☐ **132h — the close** (`stop`).
+- ☐ **132g — the options** (`stop`; split 2026-10-24). The vendor's
+  guidance, a cold reader outside the repo, the session's own range of
+  options written before reading it, and a comparison; the user chooses.
+- ☐ **132h — the build** (`stop`). The chosen direction; a routing
+  test, a landing check, a trial in a fresh session.
+- ☐ **132i — the close** (`stop`).
 
 ## Phase 133 — the re-cut
 

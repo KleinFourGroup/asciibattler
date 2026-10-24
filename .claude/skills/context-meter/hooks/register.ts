@@ -3,6 +3,10 @@ import { halvingNote } from './halving.ts'
 
 const GIT_COMMIT = /\bgit\s+commit\b/
 
+// The hand-off trigger (process/planning.md, "Context: the hand-off
+// trigger"): a commit past it is where the session hands off.
+const HAND_OFF_AT = 500_000
+
 // The reading is the input tokens the last response was answered over, so it
 // trails the live window by that response's output and any tool results since.
 async function reading($: EngineInterface): Promise<string> {
@@ -49,7 +53,11 @@ async function withReading<R extends { deny?: string; context?: readonly string[
     return ran
   }
 
-  const line = await reading($)
+  const { context } = await $.session.usage()
+  const past = context.tokens !== undefined && context.tokens > HAND_OFF_AT
+  const line = past
+    ? `${await reading($)}; past the hand-off trigger (${HAND_OFF_AT / 1000}k): hand off after this commit`
+    : await reading($)
   $.ui.log(line)
 
   return { ...ran, context: [...(ran.context ?? []), line] }

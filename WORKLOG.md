@@ -19546,3 +19546,25 @@ The read (`batch`): in a fresh session, a Bash command such as `printf
 looks like no note, or a note on `"\\."` in double quotes or on one
 backslash. Tools: `scratch/132b/` (`count.mjs`, `port-check.mjs`).
 Reading: **301,721** at 17:40 UTC before this entry.
+
+### 132c — the context rule (2026-10-24, session 60e58d62)
+
+`process/planning.md`'s section is now "Context: the hand-off trigger":
+at a commit past 500k, hand off; under it, go on whatever the next step's
+size looks like, with no projection of a step's cost, no bound on the
+next step's end and no early hand-off for a step that looks large; a stop
+or shape-lock gives the reading with no forecast; the WORKLOG keeps a
+session's first and last readings. The halt, the hand-off line and the
+"likely to fit" clause are gone from it, from the kickoff's step 3, from
+CLAUDE.md's pointer and from the Cursor, whose list of past readings is
+left to git at `c08f4a72`. The context-meter mod's commit reading, past
+500k, adds "past the hand-off trigger (500k): hand off after this commit"
+(type-checked and validated; live only in a fresh session, as 132b's
+note, and only past 500k). `driving.md` and DRIVER-HANDOFF still name the
+old numbers; they leave at 132d. The welfare table's row for §132's
+changes comes at the close (call 11). This entry and the next carry no
+reading, under the new rule.
+
+The read (`batch`): planning.md's section and the Cursor's context line.
+Wrong looks like a forecast, a projection or a halt left in a live doc
+after 132d.

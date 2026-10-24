@@ -84,8 +84,8 @@ in AGENTS.md, which other harnesses read too.
   The same reading is added to the result of every Bash or PowerShell
   command that runs `git commit`, as context for you and a transcript line
   for the user. The rule that uses it is in
-  [process/planning.md](process/planning.md) ("Context: the halt and the
-  hand-off line"). Under the app it can be listed only as a deferred
+  [process/planning.md](process/planning.md) ("Context: the hand-off
+  trigger"); past it, a commit's reading says so. Under the app it can be listed only as a deferred
   tool: load it with ToolSearch (`select:mcp__context-meter__read`) before
   the first call, since deferred is not absent. If it is absent, ask the
   user for the reading. The engine loads the mod only in a trusted

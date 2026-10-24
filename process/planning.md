@@ -82,8 +82,8 @@ Cut sub-steps when the phase starts, not when the roadmap is written.
    render second, so the eyeball-only part is only what's actually visual.
 3. **Shape-lock with the user.** This is a stop: the user signs the cut and
    its reads. The same message says what the stretch the cut opens holds,
-   with the session's context reading ("Context: the halt and the hand-off
-   line", below). From there the session runs to the next `stop` or
+   with the session's context reading ("Context: the hand-off trigger",
+   below). From there the session runs to the next `stop` or
    decision point.
 4. **Write the cut into the ROADMAP phase section** as checkbox one-liners;
    rationale and audit findings go to the worklog.
@@ -142,38 +142,27 @@ is no longer taken at each close.
 - If the doctrine is ever rolled back, the fallback is the old rule: pause
   after every commit.
 
-## Context: the halt and the hand-off line
+## Context: the hand-off trigger
 
 The session reads its own context use where the harness gives it a tool
 (Claude Code: CLAUDE.md "The context meter"); otherwise the user reads the
-meter. An autonomous stretch is the work between two interruptions: from a
-shape-lock or a stop's read to the next `stop`, decision point or phase
-end. The reads doctrine exists to make those stretches long, and one can
-take a few hundred thousand tokens. Two numbers manage that (both in the
-HANDOFF Cursor), and neither is a hard limit.
+meter. One trigger, with no forecast:
 
-- **The halt** (600k) is where the user wants the work in a fresh session,
-  whatever is in flight. Passing it by a little is not a failure.
-- **The hand-off line** (550k) sits under the halt so that a step started
-  under it ends near the halt. At the start of each step, read the
-  context; the reading on the previous step's commit counts. Past the
-  line, commit what is done and hand off. The line says when a step must
-  not start: under it, a session may still hand off when the next step
-  looks larger than the room to the halt.
-- **At a stop or a shape-lock**, the report gives the session's reading
-  and says whether the stretch it opens looks likely to fit under the line.
-  The user decides whether the stretch starts here or in a fresh session,
-  so most hand-offs fall at a stop rather than in mid-stretch, where the
-  next session's orientation costs more.
+- **At a commit past 500k, hand off.** The reading on the commit decides:
+  past 500k, the session writes its hand-off entry and offers the next
+  session. Under it, the session goes on to the next step whatever that
+  step's size looks like. Nobody projects a step's cost, bounds the next
+  step's end, or hands off early for a step that looks large; a step is not
+  cut short for the trigger, which is read only at a commit. The number is
+  the user's (signed 2026-10-24); steps have cost from 17k to about 380k,
+  so a step begun just under it ends inside the window.
+- **At a stop or a shape-lock**, the report gives the reading, with no
+  forecast.
 - **Without the tool**, ask the user for the reading at each stop and
-  shape-lock. The user may name a span of wall-clock time; once it has
-  passed, pause at the next step boundary and ask again.
+  shape-lock.
 
-Write the readings into the WORKLOG with their times: each step's commit
-reading, and the readings at a stretch's start and end. The Round 8 close
-kept both numbers on those readings: fourteen of fourteen sessions ended
-under the halt, and steps cost from 17k to about 380k, so no one step's
-cost gives a better line.
+The WORKLOG keeps a session's first reading and its last, at its hand-off
+or end, with their times.
 
 ## HANDOFF upkeep
 

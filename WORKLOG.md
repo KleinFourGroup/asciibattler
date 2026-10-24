@@ -19634,3 +19634,38 @@ to the file comes with 132f's move of its rules.
 The read (`batch`): "The artifacts", "Phase close" and "Round close" in
 planning.md, and ROUND-RULES.md's header. Wrong looks like a rule that
 applies to Round 8.5's archive, which §133 archives whole.
+
+### 132f's stop: the sweep, put to the user (2026-10-24, session 60e58d62)
+
+132f started in this session at 353,492, under the trigger 132c signed,
+where the kickoff had guessed a hand-off before it; the new rule goes on
+under 500k whatever the next step's size looks like.
+
+**Step zero.** The 146 papercuts #183 to #343 and this session's #344
+read whole (`scratch/132f/papercuts.mjs`); the round's changes to AGENTS,
+CLAUDE.md and `process/` read as a diff from `5d2cdaf5` to `c08f4a72`;
+DRIVER-HANDOFF's patterns, notes and tool facts from its archived copy.
+The round added few rules to the permanent docs: AGENTS and `process/`
+took facts and corrections, CLAUDE.md two rules (the next-step box and
+whole-line Edit anchors), and the round's own rules lived in the Cursor.
+The anchor rule landed at 15:03 UTC on 2026-10-20, after all three
+anchor papercuts (the last at 14:32), and none of that shape was filed
+after it.
+
+**The list,** in `scratch/132f/sweep.md`, three tranches, each row with
+a lean. Tranche 1, the rules: the eleven added lines all kept; the
+Cursor's ten round rules moved into ROUND-RULES.md, of which one (one
+batch at a time, 7 to 8 GB a run) is promoted to measurement.md and the
+rest lapse at §133; the scratchpad's two, one promoted to planning.md
+(tranches at a multi-read stop) and one archived. Tranche 2, the
+friction by theme: nineteen themes, four facts to add (a stdin reader
+waits out its timeout, subagents' transcripts and worktree base, per-file
+shell loops, commit times against UTC readings), one merge into AGENTS at
+132g (a search covers tests and every written form), the rest done by
+132a to 132e or earlier phases, or listed and left. Tranche 3, the
+welfare calls: the papercut threshold reversed from the session's own
+131c suggestion, since 132e's close needs the repeats as its evidence
+(a repeat is one line instead); question 6 kept; the phase close quoting
+the phase's `distress` lines in full.
+
+Reading: **403,982** at 17:56 UTC.

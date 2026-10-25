@@ -19908,3 +19908,31 @@ user once:
   the 132d revert and 132f's added line are the close's row (call 11), so
   a test pinning the filing text to the last row fails until 132i writes
   it.
+
+### 132g, tranche 2 signed but for 5b (2026-10-24, session 96d1ff74)
+
+**Signed** (the user: "Signing the other recommendations!"), as leaned:
+5a, the papercut tool reads its text from stdin or a file and its session
+id from `$CLAUDE_CODE_SESSION_ID`, with `--session` as the fallback; 5c,
+the filing text pinned to the welfare table's last row by hash, landing at
+132i with the close's row; 5d, no refusal of `--no-verify`, and 5e, no
+count of commits ahead of `origin`, both under 132e's bar; 6, the process
+probe in place of call 10's five tasks, with 3 to 5 scenarios of the
+user's own, keyed by him and held from the router's session until the
+router is written. **Open:** 5b, the caps; the user asked for more on it.
+
+**The start-of-session reading, measured** (`String.length`, as the docs
+test counts; the session's `scratchpad/start-set.mjs`, self-checked
+against the cold reader's figures at `35f716d2`: 9,633 for the Cursor and
+40,811 for the set, both exact):
+
+| Commit | AGENTS | CLAUDE.md | Cursor | ROUND-RULES | Set |
+|---|---|---|---|---|---|
+| `5d2cdaf5`, Round 8's close | 19,989 | 5,499 | 10,061 | none | 35,549 |
+| `c08f4a72`, §132's kickoff | 19,993 | 6,596 | 15,862 | none | 42,451 |
+| `64a4a15b`, now | 19,962 | 8,258 | 9,749 | 2,958 | 40,927 |
+
+AGENTS held at its cap through the round while CLAUDE.md grew by half and
+the Cursor peaked at 15,862 before 132f moved its round rules into
+ROUND-RULES.md, which is read at start as well. The capped file stayed
+flat and the set grew 15 %.

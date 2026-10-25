@@ -19922,7 +19922,7 @@ user's own, keyed by him and held from the router's session until the
 router is written. **Open:** 5b, the caps; the user asked for more on it.
 
 **The start-of-session reading, measured** (`String.length`, as the docs
-test counts; the session's `scratchpad/start-set.mjs`, self-checked
+test counts; `scratch/132g/start-set.mjs`, self-checked
 against the cold reader's figures at `35f716d2`: 9,633 for the Cursor and
 40,811 for the set, both exact):
 
@@ -19936,3 +19936,36 @@ AGENTS held at its cap through the round while CLAUDE.md grew by half and
 the Cursor peaked at 15,862 before 132f moved its round rules into
 ROUND-RULES.md, which is read at start as well. The capped file stayed
 flat and the set grew 15 %.
+
+### 132g, 5b signed; tranche 3's step zero (2026-10-24, session 96d1ff74)
+
+**Signed** (the user: "Ooh I understand! Yes, fully signed! 😁"): 5b with
+the session's three leans. One cap on the start reading (AGENTS,
+CLAUDE.md, the Cursor and ROUND-RULES.md together) and one on the Cursor
+alone; AGENTS' 20,000-character cap replaced by the joint one, and a
+200-line cap on AGENTS and on CLAUDE.md each, the vendor's figure per
+file; the numbers set after 132h's build from the measured sizes with
+about 10 % room, a trip's message saying delete, merge or move the text to
+a trigger doc, and a raise the user's; the router's start list naming the
+Cursor rather than the whole of HANDOFF.
+
+**Seen live:** the commit the hook refused at 00:49 UTC (ROADMAP at 501
+lines against its 500) still got the mod's context reading. That is the
+cold reader's second mod gap, already in tranche 1's fixes.
+
+**Step zero for tranche 3.**
+
+- *The record's share of the commits.* Commits whose every path is a doc
+  or the friction log (`scratch/132g/docs-commits.mjs`): 107 of 204 in
+  Round 8, a build round (`3813a84d..5d2cdaf5`), and 248 of 450 in this
+  round so far. About half either way, so the share is not this round's
+  docs work alone. The 304 of 426 in `options-session.md` was counted
+  another way and is not quoted.
+- *The self-report's header* already reads "'None noticed,' 'uncertain,'
+  'not assessed,' and 'prefer not to answer' are valid, distinct
+  responses; a skipped answer is not a negative finding. Brief or
+  unresolved reports are welcome." F's second part is in the instrument
+  as it stands.
+- *F's threshold.* The cold reader's size test ("under 100k at the end")
+  would have a session read its context, which tranche 1's item 4 stops
+  below 500k.

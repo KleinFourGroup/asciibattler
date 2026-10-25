@@ -483,10 +483,10 @@ eleven calls (WORKLOG §132, the kickoff).
 - ☑ **132f — the sweep** (`stop`). The round's added rules; the
   papercuts and the scratchpad; the filing threshold and question 6.
   Three tranches signed and built.
-- ☐ **132g — the options** (`stop`; split 2026-10-24). The vendor's
+- ☑ **132g — the options** (`stop`; split 2026-10-24). The vendor's
   guidance, a cold reader outside the repo, the session's own options
-  written first, a comparison; the user chooses. Tranches 1 and 2 signed
-  2026-10-24 (WORKLOG §132).
+  written first, a comparison; the user chooses. All three tranches
+  signed 2026-10-24 (WORKLOG §132).
 - ☐ **132h — the build** (`stop`). The chosen direction; a routing
   test, a landing check, a trial in a fresh session.
 - ☐ **132i — the close** (`stop`).

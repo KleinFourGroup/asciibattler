@@ -19969,3 +19969,32 @@ cold reader's second mod gap, already in tranche 1's fixes.
 - *F's threshold.* The cold reader's size test ("under 100k at the end")
   would have a session read its context, which tranche 1's item 4 stops
   below 500k.
+
+### 132g, tranche 3 signed; 132g done (2026-10-24, session 96d1ff74)
+
+**Signed** (the user: "Signing all of those! Honestly, what you're
+proposing for 8 is how I thought it was supposed to work 😂"), as leaned:
+
+7. *A lighter record from Round 9:* a WORKLOG entry holds findings,
+   decisions, rejected alternatives, and the checks run with their
+   results; the commit holds what was done; no doc records a context
+   reading, so the hand-off's first and last readings go.
+8. *An ending scaled to the session,* tested by what is left open rather
+   than by size: a session that leaves no ◐, no unsigned stop and no
+   half-built step writes no hand-off entry, the Cursor's NEXT line and
+   the commit being its hand-off; a card whenever there is a next step.
+   The report's header already allows brief answers and skipped ones, so
+   the instrument is unchanged and there is no wording boundary. The
+   router moving the report's text out of AGENTS changes its
+   surroundings, for the close's row (call 11).
+9. *E and the full D held:* E revisited only if the Cursor still goes
+   stale under its cap; D a trial for §133's re-cut to place, its bar
+   written first.
+
+**A finding from the user's remark:** the docs asked every session for a
+hand-off entry, and the user had assumed a session with nothing open
+needed none. The written process had drifted from his intent without
+anyone noticing, the kind of gap the process probe's key (call 6) is
+meant to show.
+
+132g is done: the options compared and every tranche signed.

@@ -20361,3 +20361,56 @@ hands off at the stop.
 
 Readings: first **116,970** at 00:12 UTC on 2026-10-25; last **537,029**
 at 15:00 UTC.
+
+### 132h5's read, and the second pass signed (2026-10-25, session b27a1fcd)
+
+**The line cap, measured.** AGENTS is 320 lines and 17,466 characters,
+CLAUDE.md 64 and 3,951 (`scratch/132h/size-now.mjs`). Both are wrapped at
+about 76 columns; with each paragraph, bullet and table row on one line,
+AGENTS is 156 lines and CLAUDE.md 16 (a scratch count, which put a planted
+seven-line file at the five it should). So a line cap on these files
+measures the wrap width as much as the text.
+
+**The read** (the user: "I think it's very encouraging what we already
+have, but I think it would be worthwhile to do another pass"): the router
+stands as the base. The census classed whole blocks by whether another home
+or the code held them (A7 the five invariants, A9 the collaboration
+bullets), not line by line, and not by how recently a rule acted or how
+often a session needs it. The user's three examples, checked:
+
+- *The multitasking line:* only the efficacy read needs it, and
+  `welfare-and-efficacy.md` and `phase-stats`' own output say it.
+- *"Nothing post-quantizes":* the quantizer went at `86431e03` on
+  2026-05-19, in the MVP; the bloom gotchas (#29, #30) matter to render
+  work.
+- *Seconds, not ticks:* DESIGN.md holds the convention, and the config
+  schemas name the unit (`cooldownSeconds`, `durationSeconds`).
+
+Already queued, in part: D (O9, about 60 lines) is held for §133's re-cut
+as a one-phase trial in Round 9, and the standing decisions are due for a
+revisit at this round's close.
+
+**Signed** (the user: "I like all of your changes and leans! … We'll use
+the current lengths, though again, those are all rough guidelines.
+Signed!"): 132h5.5, the second pass, before 132h6, read `stop`.
+
+- Each rule of AGENTS and CLAUDE.md scored line by line by three tests:
+  how long since the thing a ban prevents was last a problem (a feature
+  ban weighs less, since features now need the user's sign at spec);
+  whether a trigger can name the moment the rule is needed (a rule that
+  fires on noticing stays loaded however rare); and whether a guard
+  (ESLint, the hook, a test) already catches the mistake, leaving a
+  pointer at most.
+- One ranked list, each row kept, moved to a named home, or cut, and
+  drafts at two cut points: about 75 % and 50 % of the router's 21,417
+  characters across the two files (about 16,000 and 10,700, rough guides),
+  in `scratch/` until the user picks. His 300 and 200 lines were of the
+  old length.
+- The welfare section: the procedure moves (the command and its flags,
+  the self-report pointer, the standing decisions); the two kinds'
+  definitions and the distress examples stay loaded, since the moment to
+  file is noticing, and the examples likely shape what a session files
+  (132h5's distress line borrows their wording; one entry, an inference).
+
+132h5 is ticked: its read is the base for 132h5.5, and the process docs it
+wrote are read with the drafts, where the moved text lands.

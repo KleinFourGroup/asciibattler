@@ -20206,3 +20206,33 @@ instead, since the script has no seam to test.
 The read: the tools `none`, by their planted controls and the known
 answer. The mod's live line (`batch`): in a fresh session a commit below
 500k shows no reading line; wrong looks like one.
+
+### 132h4 — the rule census, put to the user (2026-10-25, session 96d1ff74)
+
+`scratch/132h/census.md`: AGENTS.md and CLAUDE.md at `a77b0ce8`, 63 rows
+(46 and 17), each kept, moved to a named home, or cut. Nine rows are
+cuts, which need the user's sign: AGENTS' context-reading line (tranche
+1, item 4), "Keep HANDOFF lean" and "This file is capped" (planning.md
+says both, and the docs test caps both files), the hook's path filter
+(the hook holds it), and the packages' versions and the fonts line
+(`package.json` holds each version, ARCHITECTURE the fonts); CLAUDE.md's
+retired-reword parenthetical (TODO's watch and the archive hold it), the
+Grep note, and the duplicate parts of "The Browser pane" and "Background
+work" (browser-pane.md and measurement.md hold them).
+
+**Step zero for the census.**
+
+- *The Grep note:* re-tested on 2.1.308 with a path and the brace glob
+  `*.{md,ts}`, at the repo root and in `process/`: both found
+  `process/planning.md`, which holds the phrase searched. The bug did not
+  reproduce.
+- *The homes the cuts rely on:* `package.json` holds all eight versions
+  as AGENTS gives them; `process/browser-pane.md` holds Chromium against
+  Firefox, `dev-preview` and 5191, `__game.world` and `activeScene`, the
+  headless pointer and the 1–2 px smear, but not `getImageData`, which
+  moves there; `measurement.md` holds the timeout or output check and the
+  whole process tree, but not `TaskStop`, `Get-CimInstance` or
+  `preview_stop`, which move.
+- *"What the user sees"* has its 2026-09-23 observation in no other
+  repo doc, so its parenthetical moves to the WORKLOG at 132h5 rather
+  than being cut.

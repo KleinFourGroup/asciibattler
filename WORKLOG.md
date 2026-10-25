@@ -20718,3 +20718,32 @@ user in full at this stop.
 
 **The phase summary** is in `retro/sessions.md` under "Phase 132 —
 summary".
+
+### The hand-off after 132i's stop (2026-10-25, session b27a1fcd)
+
+The commit carrying the close (`0b5e0283`) is past 500k: the mod's line
+gave 525,241 and said to hand off. That is 132h3's past-trigger half seen
+live; below 500k none of this session's eight commits before it showed a
+reading.
+
+- **Done:** 132h5 (☑, the base for the second pass); 132h5.5 (☑, the 75 %
+  version applied with the sim/render separation kept, and the hook's
+  failure line); 132h6 (☑); 132h7 (☑, shipped, the RNG line fixed, two
+  TODO follow-ups, the home paths out of the tree); 132i built (◐).
+- **Open:** the user's read of the close: the welfare row; the patterns,
+  with the candidate guard (the mod refusing a Bash command its halving
+  would change, rather than noting it after); the one `distress` line,
+  quoted to him at the stop. His calls on a guard against home paths in
+  tracked files, and on the history (the session's lean: no rewrite, since
+  every commit hash the docs cite would change). His score for scenario
+  19, which his reply did not cover. On his read: the push of `main`, and
+  §132 demoted in ROADMAP and HANDOFF. The `batch` reads of 132b, 132h2
+  and 132h3. The two probe folders (`~\projects\probe-132h7-old` and
+  `-new`) and the two probe sessions: deleting and archiving them is his
+  call. Then §133.
+- **Files no doc names:** `scratch/132h/pass2/` (`ranked.md`, the four
+  drafts, `moves-both.md`, `moves-50.md`, `rows.mjs`, `landing2.mjs` with
+  `landing-75.json`, `landing-50.json` and `landing-applied.json`,
+  `trap-check.sh`); `scratch/132h/probe/` (`build-trees.sh`,
+  `make-prompt.mjs`, `prompt.md`, `cost.mjs`, `scores.md`,
+  `answers-old.md`, `answers-new.md`).

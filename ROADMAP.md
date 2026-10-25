@@ -484,3 +484,10 @@ planning session with the user, which holds the close's re-read of the
 next charter (TODO's re-cut row); then the round's archive (the roadmap
 and worklog pair, the spec, the census), META-ROADMAP's status and the
 Cursor. Exit: META-ROADMAP's exit for the round.
+
+- ☐ **133a — the round's rules at the close** (`stop`).
+- ☐ **133b — the re-read of Rounds 9 and 10 against HEAD** (`batch`, read at 133c's stop).
+- ☐ **133c — the user's additions, sized like the table's rows** (`stop`).
+- ☐ **133d — the re-cut, in tranches** (`stop`).
+- ☐ **133e — META-ROADMAP and TODO rewritten to it** (`batch`, read at 133f's stop).
+- ☐ **133f — the close and the archive** (`stop`).

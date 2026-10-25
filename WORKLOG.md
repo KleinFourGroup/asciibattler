@@ -20798,3 +20798,70 @@ don't want it front and center. 4. Both versions were right on 19! 👍
   `~\projects\probe-132h7-old` and `-new` deleted.
 - **Closed:** 132b, 132h2, 132h3 and 132i ticked; §132 demoted in ROADMAP
   and HANDOFF; the Cursor's NEXT line to §133's kickoff.
+
+## Phase 133 — the re-cut
+
+### The kickoff: the audit, and the cut signed (2026-10-25, session d3325476)
+
+**The audit** (the tree at `f0e5f3c5`).
+
+- *What is left of the round close.* §130 to §132 ran the docs pass, the
+  shell audit, the efficacy and welfare reads, the cold-read probe, the
+  scratchpad sweep, and the keep test over the lines the round added to
+  AGENTS, CLAUDE.md and `process/` through `c08f4a72` (132f). §133 holds
+  the round's rules, the re-cut and the archive.
+- *The re-cut's input.* Round 9's charter: 21 items in scope (11 in
+  combat and effects, 5 in the run layer, 5 spatial), the atlas pre-step
+  (moot unless the round needs more than 17 new glyphs), the scripted run
+  and the riders. Round 10's: the finale's design, sector 3, the orphans,
+  the unlock mapping, the extended sheet, and Escalation's rule levers
+  from its header note. TODO, counting `- [ ]` lines under each `## `
+  heading: 29 open under Round 9, 8 under Round 10, 6 not yet placed, and
+  3 under Round 8.5 (the comment pass, the re-cut, the deletion's proof).
+- *The archive.* Files outside `archive/` that name a file the archive
+  moves, by `git grep -l`: the spec 5, the census 4, `retro/sessions.md`
+  8, `retro/scratchpad.md` 6. `ROUND-RULES.md` stays at its path.
+  `tests/docs.test.ts` requires `ROADMAP.md` and `WORKLOG.md` and reads
+  `ROUND-RULES.md`, so their fresh copies start in the archive's commit.
+  ROADMAP is 486 lines of its 500.
+- *ROUND-RULES.* Two lines have a permanent home already: the plant in a
+  worktree (`process/oracles.md`, the control planted in a source file)
+  and the step-code ceiling (`tests/comment-codes.test.ts`, which fails a
+  new code whether or not a rule lists it).
+- *TODO's comment-pass row* is open; the exit check ticks it or says what
+  is left.
+
+**The cut, signed** (the user, 2026-10-25: "Alright, Claude, that broadly
+looks correct", with two amendments, in calls 1 and 2). ROADMAP §133 has
+the lines. Reads: 133a `stop`; 133b `batch`, read at 133c's stop (wrong
+looks like a row whose premise a search of its named file contradicts,
+or an item of either round with no row); 133c `stop`; 133d `stop`, in
+tranches; 133e `batch`, read at 133f's stop, with a script check that
+every item and row of the old Rounds 9 and 10 lands in exactly one new
+round and a planted miss it must catch (wrong looks like an item in no
+round, or a row under a round whose charter does not name it); 133f
+`stop`. Predicted: docs only, so no snapshot, no RNG stream and no smoke;
+the main count stays 3742.
+
+The calls, as signed:
+
+1. *The sizes.* A round of five to seven phases, the user's amendment of
+   the three to five proposed: "though it's much more important that
+   they be logically / thematically connected." A phase sized at its cut
+   to one or two sessions; each round ends in an upload.
+2. *133b by four read-only subagent sweeps* (combat and effects, the run
+   layer, spatial, and Round 10 with the unplaced rows), each finding the
+   re-cut leans on re-read by this session. *A step after the table for
+   the user's additions*, the user's: "a phase after the table where I can
+   add any additional features to the list that I've since come up with
+   or forgot to note down." Cut as 133c, a step of this phase, since the
+   re-cut that follows places them; each addition is sized like the
+   table's rows.
+3. *Rounds 11 and 12 stay out of the re-cut,* but for an item the re-read
+   moves and the unplaced rows.
+4. *No upload and no further playtest at this close.* `0.1.1` is the
+   round's build, smoked at 128c; `main`'s new packages were read at 129d
+   and 129e and get the next round's play before they reach anyone.
+
+The stretch: 133b's sweeps launched, 133a put to the user while they run,
+then the table re-read and built for 133c's stop.

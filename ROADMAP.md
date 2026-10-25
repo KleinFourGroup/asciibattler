@@ -489,7 +489,7 @@ eleven calls (WORKLOG §132, the kickoff).
 - ☑ **132h5.5 — the second pass** (`stop`). Inserted at 132h5's read; the 75 % draft signed with sim/render kept, applied (WORKLOG §132).
 - ☑ **132h6 — the caps** (`none`). The start reading at 25,000 characters and the Cursor at 3,900, each failed by a planted overflow; line caps dropped.
 - ☑ **132h7 — the probe run** (`stop`). Old 12 of 17 right, new 16; shipped, with the RNG line fixed and two follow-ups in TODO.
-- ☐ **132i — the close** (`stop`).
+- ◐ **132i — the close** (`stop`). The welfare row, the hash test, the patterns and the summary; the push after the read.
 
 ## Phase 133 — the re-cut
 

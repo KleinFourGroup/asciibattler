@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { execFileSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import { readFileSync, existsSync, readdirSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -314,6 +315,31 @@ describe('docs hygiene', () => {
       cursor.length,
       `The HANDOFF Cursor is ${cursor.length} characters. It holds live status only (planning.md "HANDOFF upkeep"): move anything else to its home, and point at entries rather than retelling them. Raising the cap is the user's call.`,
     ).toBeLessThanOrEqual(CURSOR_MAX_CHARS);
+  });
+
+  // The friction log's filing text is the welfare instrument's wording, and
+  // the reads compare rounds by it (process/welfare-and-efficacy.md "Wording
+  // boundaries"). Its hash is held to that table's last row, so a change to
+  // the text fails here until a row records it. The text is AGENTS' friction
+  // log bullet to the end of its section, whitespace collapsed, so rewrapping
+  // it is not a change.
+  it("the filing text's hash matches the welfare table's last row", () => {
+    const lines = read('AGENTS.md').split(/\r?\n/);
+    const start = lines.findIndex((l) => l.startsWith('- **The friction log.**'));
+    expect(start, 'AGENTS.md has no "- **The friction log.**" bullet').toBeGreaterThan(-1);
+    const rest = lines.slice(start);
+    const end = rest.findIndex((l, i) => i > 0 && l.startsWith('## '));
+    const text = rest.slice(0, end === -1 ? rest.length : end).join('\n').replace(/\s+/g, ' ').trim();
+    const hash = createHash('sha256').update(text).digest('hex').slice(0, 12);
+    const rows = read('process/welfare-and-efficacy.md')
+      .split(/\r?\n/)
+      .filter((l) => /^\| \d{4}-\d{2}-\d{2} \|/.test(l));
+    const pinned = /hash[^|]*`([0-9a-f]{12})`/.exec(rows[rows.length - 1] ?? '')?.[1];
+    expect(pinned, "the welfare table's last row holds no filing-text hash").toBeDefined();
+    expect(
+      hash,
+      `AGENTS' filing text hashes to ${hash}; the welfare table's last row holds ${pinned}. A change to the filing text is a wording boundary: add a row to process/welfare-and-efficacy.md "Wording boundaries" saying what changed, with the new hash.`,
+    ).toBe(pinned);
   });
 
   // AGENTS.md routes the procedures: a process/ doc that no row of its

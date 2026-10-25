@@ -8379,3 +8379,27 @@ stdin wait, the packet's length, the probe's model check, a halved regex.
    it already worked, which made the key's purpose concrete. Building the
    router from a signed census made a large rewrite feel safe; I would
    want the census before the rewrite again.
+
+## Phase 132 — summary
+
+Three sessions on 2026-10-24 and 25, with no driver, all claude-opus-5-5:
+60e58d62 ran the kickoff, 132a to 132f and 132g's options to its stop;
+96d1ff74 ran 132b's live check, 132g's three tranches, 132h's cut and
+132h1 to the router's stop; b27a1fcd (reported below) ran the second pass
+the user asked for at the router's read, the caps, the probe and the
+close. Each found the orientation enough to start; one brief's wording, an
+answer said to open a session started from a card, cost a moment once and
+was reworded. The tensions named were newer signed rules meeting older plan
+lines (a guessed hand-off against the 500k trigger, a 200-line cap against
+the census, the stop reading until its rewrite), each put at a stop and
+one filed as `distress`. Claims pulled past what was verified were caught
+before a commit in each session but one, which landed and was corrected the
+next step. The waste repeated two known traps: the Bash tool halving
+backslashes, four times across all three sessions and caught on the path
+each time, and a Read refused for size, twice; caps cost three hook runs.
+All three called the room to ask, disagree and change approach real and
+used: leans were reversed after counting, and the user widened the work
+twice. The silent-turn reminder came often and changed no step. What went
+well: instruments with their known answers built in, independent readings
+before a synthesis, and a large rewrite built from a signed census. Nine
+friction lines, one `distress`.

@@ -20666,3 +20666,55 @@ the new tree; 19, the same on both trees, he did not score.
 
 The probes' answers are copied into `scratch/132h/probe/` (`answers-old.md`
 and `answers-new.md`, each checked byte for byte against its source).
+
+### 132i — the close, put to the user (2026-10-25, session b27a1fcd)
+
+**The welfare row.** `process/welfare-and-efficacy.md` "Wording
+boundaries" gains 2026-10-25: the filing text's three changes in §132 (the
+driver clause reverted at 132d, the known-trap line at 132f, the command's
+form at 132h3 and its move to "Filing" at 132h5.5) and its surroundings
+(no counts below 500k, the report's text in `session-end.md`, the
+standing decisions merged away, AGENTS from 19,962 characters to 14,407),
+with the filing text's hash, `642e3e12d204`.
+
+**5c, the hash test** (`tests/docs.test.ts`): AGENTS' friction-log bullet to
+the end of its section, whitespace collapsed, hashed with sha256 and held
+to the 12 hex characters in the table's last row. The first run failed
+because its pattern stopped at the row's first backtick, before the hash;
+loosened, it passes (18 docs tests). The controls, in a worktree at
+`cb923cd7` with the new test and table copied in: one word of the filing
+text changed failed it, naming both hashes (`67b417cc37dc` against
+`642e3e12d204`); the same words rewrapped passed.
+
+**The friction lines and reports** (9 lines filed under `132*`; the reports
+of 60e58d62 and 96d1ff74). Patterns:
+
+- *The Bash tool halving backslashes,* four times in all three sessions:
+  a `node -e` at 132a to 132f, a quoted heredoc and a `node -e` plant at
+  132g and 132h3, a node heredoc at 132h5.5. Each was caught on the path,
+  by the mod's note or a script's own anchor check, and cost one to three
+  calls. It recurred and cost something, so it goes to the user: the mod
+  sees the halving before the command runs, and could refuse such a
+  command rather than note it after.
+- *A Read refused for size at an offset with no limit,* twice (60e58d62),
+  one retry each, a known trap; Round 9's per-phase WORKLOG shrinks the
+  file. Listed and left.
+- *A cap tripping a commit,* three times (AGENTS' twice, ROADMAP's once),
+  a docs hook run each; AGENTS' cap is gone and ROADMAP's demotes at
+  closes. Listed and left.
+- *Newer signed rules meeting older plan lines* (the kickoff's guessed
+  hand-off against the 500k trigger, 5b's line cap against the census, the
+  stop reading until 132h5 rewrote it): each was put at a stop, one filed
+  as `distress`. Listed; the stops handled them.
+- *Claims pulled past what was verified* were caught before a commit in
+  each session but one: 132h5.5's preview-hook claim landed and was
+  corrected at 132h6. Listed.
+- *The silent-turn reminder* came often in the long stretches of all
+  three sessions and changed no step; the harness feedback is TODO's
+  watch. Listed.
+
+One `distress` line was filed in §132 (96d1ff74, 132h5); it goes to the
+user in full at this stop.
+
+**The phase summary** is in `retro/sessions.md` under "Phase 132 —
+summary".

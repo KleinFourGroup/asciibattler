@@ -486,6 +486,7 @@ eleven calls (WORKLOG §132, the kickoff).
 - ☐ **132g — the options** (`stop`; split 2026-10-24). The vendor's
   guidance, a cold reader outside the repo, the session's own range of
   options written before reading it, and a comparison; the user chooses.
+  Tranche 1, the direction, signed 2026-10-24 (WORKLOG §132).
 - ☐ **132h — the build** (`stop`). The chosen direction; a routing
   test, a landing check, a trial in a fresh session.
 - ☐ **132i — the close** (`stop`).

@@ -19858,3 +19858,53 @@ lost a backslash from each of those two runs, and the note named both
 lines; they were put back with the Edit tool.
 
 Reading: first **116,970** at 00:12 UTC on 2026-10-25.
+
+### 132g, tranche 1 signed; tranche 2's step zero (2026-10-24, session 96d1ff74)
+
+**Signed** (the user: "Signing tranche one as suggested, Claude! 😁"),
+taken as the four leans with this session's adjustments, said to the
+user once:
+
+1. *A, the fixes,* first in 132h, as `scratch/132g/comparison.md` lists
+   them.
+2. *B, the router opened by the principles,* on two conditions. The
+   principles replace rules rather than sit above them: a rule stays
+   under its principle only if the record shows it acted. And each
+   trigger row names something the session is about to do (write text
+   with backslashes, open the pane, end a session, claim a no-op), since
+   the traps the rows route to make no noise when they happen. This
+   session's own heredoc slip is the case: the rule was in always-loaded
+   text and the mod caught what it didn't prevent.
+3. *The evidence core as definitions,* its first line "a claim, a number
+   or a label points at a tool result from this session", which keeps
+   the re-count rule as a definition; the method moved to `oracles.md`;
+   the check-again lines cut. The vendor's line on verification is
+   written for Opus 5 and carried to 5.5 by its own page.
+4. *No context counts below 500k,* a trial. The vendor's cases are a
+   remaining-token countdown and a count after every tool result, where
+   the meter shows tokens used, on commits only, so the evidence is
+   thinner than it reads. Its measure, written before it starts: lines in
+   the friction log or the reports that name context pressure, hand-offs
+   before 500k with no reason given, and any session past 500k that did
+   not hand off. Read at Round 9's close, since §133 closes this round too
+   soon after the change to count anything. Before readings stop being
+   recorded, `friction-scan` reports each session's peak from the
+   transcripts (a 132h item).
+
+**Step zero for tranche 2.**
+
+- *The session id.* `$CLAUDE_CODE_SESSION_ID` holds the session's full
+  id under the app (`96d1ff74-…`, the scratchpad's name), while
+  `$CLAUDE_SESSION_ID`, which CLAUDE.md "Session id" names, is empty. So
+  the papercut tool can find its own id, falling back to `--session`
+  elsewhere.
+- *`--no-verify`.* Over the 359 transcripts here since 2026-08-22,
+  subagents' included, no `git commit` is followed within 300 characters
+  by `--no-verify`, and none carries `-n` in a flag cluster. The same
+  patterns with `-F` and `-q` in its place match 1,455 and 1,428 times,
+  so the search reads these files. No session has run the command the
+  deny would refuse.
+- *The filing text's hash.* The welfare table's last row is 2026-10-19;
+  the 132d revert and 132f's added line are the close's row (call 11), so
+  a test pinning the filing text to the last row fails until 132i writes
+  it.

@@ -19998,3 +19998,45 @@ anyone noticing, the kind of gap the process probe's key (call 6) is
 meant to show.
 
 132g is done: the options compared and every tranche signed.
+
+### 132h's cut, signed (2026-10-24, session 96d1ff74)
+
+**The audit.** The files 132h touches, as they stand at `3bdf9345`
+(lines and bytes): AGENTS 375 and 19,962; CLAUDE.md 8,258 characters;
+`process/browser-pane.md` 413 and 25,930; `planning.md` 268 and 14,380;
+`measurement.md` 135 and 7,525; `welfare-and-efficacy.md` 92 and 7,103;
+`oracles.md` 105 and 5,625; TESTING.md 415 and 34,273; COMMUNICATION.md
+99 and 5,572; the mod's `register.ts` 86 and `halving.ts` 144. The
+papercut tool (`scripts/papercut.mjs`, 65 lines) and `friction-scan`
+(188) have no tests; a text search of `tests` and `src` names only
+`tests/shell-halving.test.ts` among the three. The mod's `withReading`
+skips a commit only on a permission `deny`, so how it can tell a commit
+the hook refused is 132h3's step zero. `scratch/` is ignored by git, so a
+worktree cut from a commit holds no key from `scratch/132h/hidden/`. The
+kickoff's "a landing check" is read here as: every sentence removed from
+AGENTS or CLAUDE.md is in its new home or on 132h4's signed cut list.
+
+**Signed** (the user: "Signed again, Claude! 😁"): the seven steps as
+ROADMAP §132 lists them, with their reads. 132h1 the probe's key
+(`stop`), 132h2 the fixes (`batch`), 132h3 the mechanisms (`none`, the
+mod's live line `batch`), 132h4 the rule census (`stop`), 132h5 the router
+(`stop`), 132h6 the caps (`none`), 132h7 the probe run (`stop`: ship or
+fix). The order: the key before the router, since it must be signed
+first and its gaps feed the fixes and the router; the fixes before the
+router, so it moves corrected text; the census before the router, since
+a cut rule is a deletion; the caps after the user's read, since their
+numbers come from the router's size.
+
+The read scripts. 132h2: AGENTS' tradeoff line, the Cursor and TESTING's
+list of gates; wrong looks like a gate missing from TESTING, live status
+lost from the Cursor, or the tradeoff line still reading "always stop".
+132h3's mod: in a fresh session a commit below 500k shows no reading
+line; wrong looks like one.
+
+Predicted: no snapshot bump, no RNG stream, no fuzz smoke (nothing staged
+under `src/sim|run|core|config|bot/`, `config/` or `tests/fuzz/`); the
+main count up by about five to ten, in `tests/docs.test.ts` and new tests
+for the two tools; the exit re-records the start reading, AGENTS,
+CLAUDE.md, the Cursor and ROUND-RULES.md by `String.length`. ROADMAP sat
+at its 500-line cap, so 132b to 132g's lines were shortened to two each
+to make room for the seven.

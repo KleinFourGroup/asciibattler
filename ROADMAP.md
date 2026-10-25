@@ -469,26 +469,25 @@ eleven calls (WORKLOG §132, the kickoff).
 
 - ☑ **132a — the docs-only hook** (`none`). A docs-only commit runs only
   the tests that read docs, a set derived at hook time. 7 files, ~14 s.
-- ◐ **132b — the shell note** (`batch`; a `stop` if its count differs
-  from 130e's instrument's). A halved Bash command runs with a line
-  saying what bash received. 51 of 51, call by call; live check next session.
+- ◐ **132b — the shell note** (`batch`). A halved Bash command runs with a
+  line saying what bash received. 51 of 51; live check passed, read open.
 - ☑ **132c — the context rule** (`batch`). Past 500k at a commit, hand
   off; no halt, no forecast; the commit's reading says so. Read clear.
 - ☑ **132d — the driver retired** (`batch`). Its files archived; the
-  hand-off entry, a one-line card and the close's pattern read instead.
-  Read clear.
-- ☑ **132e — the planning stack for Round 9** (`batch`). The worklog
-  archived per phase, `ROUND-RULES.md`, a close that deletes, the push.
-  Read clear.
-- ☑ **132f — the sweep** (`stop`). The round's added rules; the
-  papercuts and the scratchpad; the filing threshold and question 6.
-  Three tranches signed and built.
-- ☑ **132g — the options** (`stop`; split 2026-10-24). The vendor's
-  guidance, a cold reader outside the repo, the session's own options
-  written first, a comparison; the user chooses. All three tranches
-  signed 2026-10-24 (WORKLOG §132).
-- ☐ **132h — the build** (`stop`). The chosen direction; a routing
-  test, a landing check, a trial in a fresh session.
+  hand-off entry, a one-line card and the close's pattern read. Read clear.
+- ☑ **132e — the planning stack for Round 9** (`batch`). Per-phase
+  worklogs, `ROUND-RULES.md`, a close that deletes, the push. Read clear.
+- ☑ **132f — the sweep** (`stop`). The round's rules, the papercuts, the
+  scratchpad, the filing threshold, question 6. Three tranches signed.
+- ☑ **132g — the options** (`stop`). The guidance, a cold reader, the
+  session's own options, a comparison; three tranches signed (WORKLOG §132).
+- ☐ **132h1 — the probe's key** (`stop`). About 15 scenarios keyed to the user's intent; his own 3 to 5 held out.
+- ☐ **132h2 — the fixes** (`batch`). The tradeoff line, the stale lines, the Cursor to live status, the mod's README.
+- ☐ **132h3 — the mechanisms** (`none`; the mod live `batch`). The mod's silence and gaps, the papercut tool, `friction-scan`'s peak.
+- ☐ **132h4 — the rule census** (`stop`). Each rule in AGENTS and CLAUDE.md kept, moved or cut; the cuts signed.
+- ☐ **132h5 — the router** (`stop`). AGENTS, the modules, CLAUDE.md; a routing test and a landing check.
+- ☐ **132h6 — the caps** (`none`). 5b's numbers from the measured sizes, each with a planted overflow.
+- ☐ **132h7 — the probe run** (`stop`). Two fresh sessions on the old tree and the new; ship or fix.
 - ☐ **132i — the close** (`stop`).
 
 ## Phase 133 — the re-cut

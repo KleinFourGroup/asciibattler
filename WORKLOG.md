@@ -20236,3 +20236,15 @@ work" (browser-pane.md and measurement.md hold them).
 - *"What the user sees"* has its 2026-09-23 observation in no other
   repo doc, so its parenthetical moves to the WORKLOG at 132h5 rather
   than being cut.
+
+**Signed** (the user: "Signing all of those, Claude! 😁"): the nine cuts.
+**A6 cut too** (the user: "All references to the Github Pages address are
+obsolete and can be cut. Prior to the itch release, I would upload
+releases to a github pages repository with just about every JS toy
+repository that I'd ever made. While it wasn't private, per se, it was
+very unpolished, and I didn't want it named as something official. Now
+that there is an itch release, the github pages version has been taken
+down."). The rule's two live copies go: AGENTS "The project" and
+`itch/settings.md`'s header, cut here. The lines that only record the
+site's history stay (HANDOFF's MVP and Round 8 lines, META-ROADMAP, the
+spec). Ten cuts in all.

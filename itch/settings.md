@@ -2,8 +2,7 @@
 
 What the itch.io project page is set to, beside its text
 ([page.md](page.md)). The page may be named, since it links back to this
-repo; the retired GitHub Pages deploy's address is the one kept out
-(AGENTS.md "The project"). The upload itself is done by hand; README "The
+repo. The upload itself is done by hand; README "The
 itch build and the diagnostics build" has the zip.
 
 itch's own page on HTML5 embeds would not load for the session that wrote

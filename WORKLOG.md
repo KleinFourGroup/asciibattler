@@ -20895,3 +20895,216 @@ running it anytime soon again").
 - *The lines §132 added* (`c08f4a72` to `f0e5f3c5`, 11 files, 520 lines in
   and 779 out, most of it moved text): a TODO row under Round 9's "At the
   round's close", the keep test there.
+
+### 133b — the re-read of Rounds 9 and 10 against HEAD (2026-10-25, session d3325476)
+
+**The instrument.** Four read-only subagent sweeps, each with one area and
+the same eleven columns (premise, the code now with file:line, size,
+phases, save, RNG, board, kind, depends on and consumed by, notes):
+combat and effects (`scratch/133/sweep-combat.md`, 23 rows), the run layer
+and the round's tooling and UI rows (`sweep-run.md`, 24), spatial
+(`sweep-spatial.md`, 12) and act-3 content with TODO's unplaced rows
+(`sweep-content.md`, 41): 100 rows, every item, pre-step and rider of both
+charters and every open TODO row under Rounds 9 and 10 and "Not yet
+placed". The tree moved from `c0b0ed69` to `3f7ed123` under two of them;
+133a moved TODO's rows three lines with their text unchanged. The files
+hold the evidence; the table below is their verdicts.
+
+**Re-read by this session** (the claims a size or an order rests on):
+- Walls, half cover and rubble are units on the one occupancy plane
+  (`TileGrid.ts:9-11`) and hard path blockers (`movement.ts:39-41`,
+  `:106-109`), against the flight lock's Q2, no co-location, and Q3, pass
+  over all ground obstacles (`archive/post-34-roadmap.md:1341-1351`).
+- Direct `tileGrid.costAt(` reads: 10 in 7 files by a search of `src`
+  (the sweep said 8 files). The movement step's own comment says the
+  collision check and the sidestep test one cell (`movement.ts:410-413`);
+  the role-order swap returns null on a footprint over 1 (`:499`, `:507`).
+- A run's dials are saved: the slot keeps them as text
+  (`src/store/runSlot.ts:40-45`) and `Run.fromJSON` applies the forced ids
+  (`Run.ts:3708-3716`).
+- Every spawn path goes through `World.wireSpawned` (`World.ts:2066`).
+- `handleDismissPromotion` throws for a promotion outside an encounter on
+  a node that is not a rest (`Run.ts:3241-3244`).
+- A fight's streams are keyed by sector, node and turn (`Run.ts:1684`,
+  `:2322`, `:2560-2561`, `:3264`), and `turnIndex` returns to 0 at each
+  encounter's start (`Run.ts:1700`), so a second fight at a node would
+  draw what the first drew.
+- typescript-eslint 8.72.0 in `node_modules` takes TypeScript
+  `>=4.8.4 <6.1.0`.
+- The save's fingerprint holds `BattleRuleEffect` and `TurnEndReason`
+  (`tests/run-snapshot-shape.txt:75`, `:218`); `battleRules` is in the
+  World snapshot (`World.ts:227`).
+- `World.shove` is called by its own test alone (a search of `src`,
+  `tests` and `tools`).
+- A port's packets are a uniform `sampleDistinct` (`Run.ts:1558-1562`).
+- BALANCE's §118e partial board read the boss wall at 0.552 against 30-35
+  (`BALANCE.md:4884-4886`).
+- `config/abilities.json` holds one aura, `inspire`, on allies (`:697`).
+- A kill's tithe goes to the World's tally (`battleRules.ts:104-105`,
+  `World.ts:563-564`), a turn's tally is one bits portion
+  (`Run.ts:2537-2551`), and `gainBits` rounds it once (`Run.ts:2009-2010`,
+  `:1997-1998`); the tally landed at 47f (`c2668e8e`, 2026-07-08), before
+  118e's reading that each kill was rounded.
+- Draft pools are the character's over the whole run
+  (`Run.ts:961-965`, `Recruitment.ts:116-136`).
+- The ladder has three number levers (`escalation.ts:40-44`); elite, port
+  and event chances are one global block (`config/nodemap.json:8-12`).
+- An event's `start-encounter` names an encounter only (`events.ts:192-199`),
+  and the layout roll throws when none fits (`selection.ts:94-102`).
+- CLAUDE.md has no "Editing" section (a count of 0).
+
+The other file:line claims are the sweeps', not re-read here.
+
+**What changes the plan.**
+
+1. *Round 9's order rests on a false premise.* "Combat and effects first
+   (no serialized-shape changes)": `healActor` bumps the Run and the
+   World, Retreat the Run (a turn-end reason) and the World, the neutral
+   split the World. Only the Run is saved for players, so a World bump
+   rejects no player's run (the combat sweep's inference).
+2. *A forced id is saved* since 115a and 115e, so the scripted run needs
+   no save work if its entries are keyed by position and have a URL form.
+   `--sectorHops` already parses in the run-config CLI.
+3. *Traversal is wider than written,* and its step zero holds a real fork:
+   flyers over walls co-locate with scenery under the lock as signed.
+   Moving N×N has more one-cell sites than listed, the sidestep among
+   them. The flyer's lift, the reconciliation, the float and the N×N
+   render side share one render channel and go in one phase.
+4. *Seams without consumers.* Forced movement and the teleport, camp-aware
+   `affects` and the cavalier have no consumer in either charter's exit;
+   the marine, the falconer and the cavalier appear in both rounds'
+   lists. "Act-3" daemons, packets and draftables cannot be held to act 3:
+   ports and draft pools are run-wide, so each is offered from act 1 and
+   needs a prior-table row; scoping them is a mechanism.
+5. *Round 10 holds unbuilt mechanisms:* Escalation's rule levers and
+   per-act hop economics (one seam: node-map parameters by sector or
+   level), the unlock mapping, event-gated camps (a layout on the
+   terminal, beside the event resume), the camp level fork, the extended
+   sheet's tooling (two-act shaped), and the event `art` reader.
+6. *Already built or moved:* the tithe is rounded on the turn's award
+   (open only if "the award" means the encounter); the §76f four fight in
+   both act-2 bosses; the run-config CLI takes `--sectorHops`; 122o's
+   deletion leads are done but `World.shove`; the forced-id comment
+   landed at 123m. The wall watch is worse (0.552), the roster table is
+   v3 and already deduplicated, and power's level-up draw moves five run
+   streams, not one.
+7. *Sequencing facts:* XP rewards need the new `levelup` site and a
+   promotion route outside encounters; a fight from a resumed event page
+   needs a fight counter; the ability-grant channel and census F-1 share
+   one World bump; TypeScript 7 is still blocked and touches the save
+   fingerprint's tool, so it stays apart from the bump window; before the
+   closing board, the roster guard and `box-drive.sh` first, then power
+   diversity and the kits, then one board.
+
+**The table.** Phases are the sweeps' estimates of one-to-two-session
+phases, a range where they gave one. Save: R a Run bump, W a World bump.
+The header-note rows (H0, R1, S0) and the riders paragraphs (R8, A25)
+are folded into item 1 and the rows they name.
+
+| id | item | the code now | size | phases | save | board | kind |
+|---|---|---|---|---|---|---|---|
+| C1 | lifesteal, resolved damage | holds; `healActor` bumps | M | 1-1.5 | R W | with the vampire | mechanism |
+| C2 | specials | holds; a self-buff routes to the leap | S | 1 | – | with a consumer | mechanism |
+| C3 | camp-aware `affects` | holds, latent; no consumer | S | 0.5 | – | no | mechanism |
+| C4 | the neutral split, a trial | holds; its sites moved | L | 1-2 | W | if behaviour moves | trial |
+| C5 | cavalier | holds | S | 0.5-1 | – | with the archetype | mechanism |
+| C6 | forced movement, a teleport | modes gone; `shove` has no direction; no consumer | M-L | 1-2 | W? | with a consumer | design, mechanism |
+| C7 | fatigue | holds, rate 0 | design | 1-2 | ? | yes | design |
+| C8 | retreat | unbuilt | L | 2 | R W | yes | design, mechanism |
+| C9 | optional deploy | unbuilt | M | 1 | R? | yes | mechanism |
+| C10 | the port shelf guarantee | holds; its precedent is gone | S | 0.5 | – | yes | mechanism |
+| C11 | injuries | unbuilt | design | 1 | R? | yes | design |
+| C12 | a blinded ranged unit | holds | S | 0.5 | – | yes | behaviour |
+| C13 | the roster table's guard | holds; passes today | S | 0.25 | – | no | tooling |
+| C14 | compact the roster table | v3, already deduplicated | S-M | 0.5 | – | no | tooling |
+| C15 | `box-drive.sh` mixed queues | holds | S | 0.25 | – | no | tooling |
+| C16 | the priest's parity | holds | S | 0.5-1 | – | yes | balance |
+| C17 | the wall watch | worse: 0.552 | read | 0 | – | the board | balance |
+| C18 | power diversity | holds, 1/1/1/2 | S-M | 1 | – | yes | balance |
+| C19 | the AoE-status retune | holds | S | 0.5 | – | yes | balance |
+| C20 | the kit watches | holds | S-M | 1 | – | yes | balance |
+| C21 | the camp-anchor revert | holds | S | 0.25 | – | maybe | behaviour |
+| C22 | a won-turn reward shape | holds; its precondition met | design | 0.5-1 | R? | yes | design |
+| R2 | the scripted run (R11 the same) | dials hold; forced ids saved | L | 2 | – | no | tooling |
+| R3 | deck-event triggers | unbuilt | M | 1-1.5 | R | with a consumer | mechanism |
+| R4 | the ability-grant channel, with R24 | one spawn helper now | M | 1.5 | R W | with a consumer | mechanism |
+| R5 | XP rewards | unbuilt; larger than written | M | 1-1.5 | R | when shipped | mechanism |
+| R6 | event → battle → resume | unbuilt; a second fight replays draws | M | 1 | R | no | mechanism |
+| R7 | archetype `extends` | unbuilt; 26-28 leaves | M | 1 | – | a draftable reskin | mechanism |
+| R9 | the no-counts trial's read | holds | S | 0.25 | – | no | process |
+| R10 | a home for a performance number | holds | S | 0 | – | no | call |
+| R12 | `--sector-hops` | the CLI takes `--sectorHops` | S | 0.1 | – | no | tooling |
+| R13 | the forced-encounter warning | unbuilt | S | 0.25 | – | no | tooling |
+| R14 | the forced id's kind rule | comment done at 123m | – | 0 | – | no | docs |
+| R15 | TypeScript 7 | still blocked | M | 0.5-1 | – | no | tooling |
+| R16 | `reach-diff` across toolchains | holds | S-M | 0.5 | – | no | tooling |
+| R17 | the deleted action classes in docs | holds, and in gotchas #19, #93 | S | 0.25 | – | no | docs |
+| R18 | `FX_REGISTRY`'s coverage guard | holds; 4 abilities have no fx | S | 0.25 | – | no | tooling |
+| R19 | power's level-up draw | holds; moves five streams | S | 0.5 | – | yes | balance |
+| R20 | the reward ledger's pin | holds | S | 0.25 | – | no | tooling |
+| R21 | a `reward:resolved` event | holds | S-M | 0.5 | – | no | UI |
+| R22 | the rarity stars' tap | holds | S | 0.25 | – | no | UI |
+| R23 | the event screen on `run:cacheChanged` | holds, latent | S | 0.25 | – | no | UI |
+| S1 | the atlas | 31 of 48 cells | S | 0 | – | no | render |
+| S2 | the flight lock's re-audit | Q3 against scenery as units | S | 0.5 | – | no | design |
+| S3 | traversal | holds, wider | L | 2-3 | – | with a consumer | mechanism |
+| S4 | the flyer's presentation | holds; 10 position readers | M | 1 | – | no | render |
+| S5 | the reconciliation | holds; after S4 | S | 0.25 | – | no | render |
+| S6 | ice under 1 | unbuilt; the arrival bound | M | 0.5 | – | yes | mechanism |
+| S7 | mud | holds; its switch is gone | design | 1-1.5 | – | yes | design |
+| S8 | moving N×N, the sim | holds; more one-cell sites | L | 1.5-2 | – | yes | mechanism |
+| S9 | moving N×N, the render | holds; the HP bar too | S-M | 0.5 | – | no | render |
+| S10 | flyers float | unbuilt | S | 0.25-0.5 | – | no | render |
+| S11 | no draftable multi-tile unit | one test pin, no guard | S | 0 | – | no | test |
+| A1 | Escalation's rule levers | unbuilt mechanism | M | 1-2 | – | yes | mechanism, design |
+| A2 | level 3's read | holds | S | 0-1 | – | yes | balance |
+| A3 | the unlock store's premise | holds | – | 0 | – | – | constraint |
+| A4 | removing an id breaks a save | holds, wider | – | 0 | – | – | constraint |
+| A5 | the atlas (struck) | as S1 | – | 0 | – | – | – |
+| A6 | the finale's design | unwritten; four themes unused | design | 1 | – | no | design |
+| A7 | sector 3 | content on built mechanisms | L | 2-4 | – | yes | content |
+| A8 | the riflemen | content if enemy-only | S-M | 1 | – | yes | content |
+| A9 | the §76f four as enemies | in both act-2 bosses | S | 0 | – | – | content |
+| A10 | the volcanic camp resident | unreachable but by the finale | S | 0 | – | – | content |
+| A11 | the camp level fork | undecided; neither branch pure content | M | 1-2 | – | yes | read, mechanism |
+| A12 | event-gated camps | the code says no; a layout on the terminal | S-M | 1 | – | in a shipped pool | mechanism, content |
+| A13 | the event `art` reader | unbuilt; no fx field | M | 1 | – | no | UI |
+| A14 | bit sinks | design | design | 1-2 | R? | yes | design |
+| A15 | the shrink flow's trigger | holds; a curse would be on sale | S | 0-1 | – | yes | content |
+| A16 | act-3 daemons and packets | cannot be held to act 3 | S-M | 1-2 | – | yes | content, mechanism |
+| A17 | fauna | content; flyers and swimmers need S3 | M | 1 | – | yes | content |
+| A18 | a cavalier | C5's consumer | S | 0 | – | – | content |
+| A19 | a marine | S3's consumer | S | 0 | – | – | content |
+| A20 | a falconer | needs flight | S-M | 0-1 | – | – | content |
+| A21 | reskins | need R7 | S | 0-1 | – | a draftable one | content |
+| A22 | the unlock content mapping | unbuilt mechanism | M-L | 1-2 | R? | if pools change | mechanism, design |
+| A23 | the sheet extended | two-act tooling | M + XL | 2-3 | – | yes | tooling, balance |
+| A24 | hops per act, the hop economy | length holds; one global block | S-M | 0-1 | – | yes | design, mechanism |
+| A26 | a layout's `minHop` | holds, unused | S | 0 | – | – | content |
+| A27 | the bot's check after content | holds, unscoped | M | 1 | – | yes | balance |
+| A28 | Dis Pater's sentence | true on a one-kill turn only | S | 0 | – | no | watch |
+| A29 | the tithe on the award | built, but for "award" as encounter | – | 0-1 | R? | if changed | call |
+| A30 | Escalation 3's watch | holds | S | 0 | – | later | watch |
+| A31 | Dis Pater's `--grant` read | can run once A29 stands | S | 0-1 | – | the read | balance |
+| A32 | the mapgen hint | holds | S | 0 | – | no | tooling |
+| A33 | ability descriptions | unbuilt | S | 0-1 | – | no | UI, content |
+| A34 | the deep-end cost residuals | holds; one wave is The Start's | S | 0-1 | – | yes | balance |
+| A35 | rounded plates | holds; no organic scenery | S-M | 0-1 | – | no | render |
+| U1 | the harness feedback watch | its "Editing" pointer stale | S | 0 | – | – | watch |
+| U2 | nvm 2 | holds | S | 0 | – | – | machine |
+| U3 | 122o's deletion leads | done but `shove` | – | 0 | – | – | close |
+| U4 | §123's comment-pass leads | not audited one by one | S-M | 1 | – | no | refactor |
+| U5 | split `Run.ts` and `World.ts` | holds | L-XL | 2-4 | R? | no | refactor |
+| U6 | `knownAbilityIds` | holds | S | 0 | – | no | refactor |
+
+**The sum,** by a script over this table's phases column (its row counts
+by area, 22, 20, 11, 34 and 6, are the table's): combat and effects 15.75
+to 20.75 phases, the run layer and its riders 11.35 to 12.85, spatial 7.5
+to 9.75, act-3 content 15 to 33, the unplaced rows 3 to 5; in all 52.6 to
+81.35. At five to seven phases a round that is eight to sixteen rounds
+before Round 11, on the sweeps' rough estimates; most of the spread is
+sector 3, the extended sheet and the splitting of `Run.ts` and `World.ts`.
+
+The read (`batch`, at 133c's stop): the table and the seven points above.
+Wrong looks like a row whose premise a search of its named file
+contradicts, or an item of either charter with no row.

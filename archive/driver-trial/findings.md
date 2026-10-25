@@ -29,7 +29,7 @@ From the app's instructions to the session, not from a test:
 ## Measured (2026-10-16, session e4e49bf0)
 
 Each session's transcript,
-`~/.claude/projects/C--Users-mkilg-projects-asciibattler/<session uuid>.jsonl`,
+`~/.claude/projects/<the repo's slug>/<session uuid>.jsonl`,
 records every API response's `usage`: `cache_creation_input_tokens`,
 `cache_read_input_tokens`, and the write split by tier
 (`cache_creation.ephemeral_1h_input_tokens` / `_5m_`). So a wake's cost is

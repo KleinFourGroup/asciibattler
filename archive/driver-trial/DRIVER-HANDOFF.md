@@ -138,7 +138,7 @@ row closed), and the hand-off figures (§126 5, §127 1; the close fits).
   <word> [reading...]` checks each context reading against the
   transcript's response totals; a planted 123,457 must miss. The
   transcripts are
-  `~/.claude/projects/C--Users-mkilg-projects-asciibattler/<id>.jsonl`.
+  `~/.claude/projects/<the repo's slug>/<id>.jsonl`.
   It is the drivers' after-the-fact check, since the guard was closed.
 - Before a count goes in a brief, re-count it at its instances (the
   friction log, the reports), not from this file's rows (§127 brief 1).

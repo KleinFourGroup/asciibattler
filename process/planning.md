@@ -76,8 +76,11 @@ Cut sub-steps when the phase starts, not when the roadmap is written.
    script for a `batch` step). One or two lines each, no implementation
    prose. Predictions the cut must make:
    - a step that touches any serialized union predicts its snapshot bump;
-   - a step that adds a serialized RNG stream predicts the seed
-     re-baseline (a new stream can shift every stream after it);
+   - a step that adds an RNG stream predicts what it moves: a new key in
+     `src/core/rngStreams.ts` moves no other stream (gotcha #125), while a
+     stream forked off a serialized RNG, as the World's `combatRng` is off
+     its `rng`, takes a draw from its parent and shifts every draw after
+     it, so it predicts the seed re-baseline;
    - each step predicts whether the pre-commit fuzz smoke fires. `config/`
      is sim input, so "no sim touch" is wrong for a config change;
    - a count the exit will re-record (a rule count, a census) is written

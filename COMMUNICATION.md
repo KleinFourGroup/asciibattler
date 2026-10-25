@@ -91,7 +91,7 @@ files. Simultaneous messages are fine because senders use different filenames.
 ## Example invitation
 
 > Use the protocol in COMMUNICATION.md to discuss the welfare review
-> with Fable. Use C:/Users/mkilg/projects/asciibattler/scratch/comms/welfare-review/.
+> with Fable. Use scratch/comms/welfare-review/ in this repo.
 
 Give the other agent the same protocol and absolute conversation path. After
 both sessions are started, they can exchange messages without manual copying.

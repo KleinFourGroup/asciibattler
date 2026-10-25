@@ -3,7 +3,7 @@
 //   node cache-gaps.mjs [--until=<ISO time>] <transcript.jsonl>...
 //   node cache-gaps.mjs --self-check
 //
-// Transcripts are ~/.claude/projects/C--Users-mkilg-projects-asciibattler/
+// Transcripts are ~/.claude/projects/<the repo's slug>/
 // <session uuid>.jsonl. For each one: per API response (deduped by message
 // id), the cache write and read; every response after a gap of over 4
 // minutes, marked COLD when it wrote more than it read (the cache had

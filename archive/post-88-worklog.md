@@ -3004,9 +3004,8 @@ local, `--merge-stages` the ten checked rows (it POOLS pacing.csv now),
 → the numeric re-pins onto the sheet (the shape is already there) → ⛔ the
 signing → 94i the close (this file's archive as `post-88-worklog.md`).
 
-**The session's scratchpad** (`C:\Users\mkilg\AppData\Local\Temp\claude\
-C--Users-mkilg-projects-asciibattler\cd2dd75f-30bd-436a-b457-9d57a4f0e057\
-scratchpad\`): `read-94a.mjs` · `read-94c.mjs` (self-checked against 92h)
+**The session's scratchpad** (`%TEMP%\claude\<the repo's slug>\
+cd2dd75f-30bd-436a-b457-9d57a4f0e057\scratchpad\`): `read-94a.mjs` · `read-94c.mjs` (self-checked against 92h)
 · `read-94g.mjs` · `encounters-surgery-94b.ts` / `-dropcap-94b.ts` ·
 `probe-frontier-94b.ts` · `94b-proposal.md` (the design + the throughput
 lesson) · `94f-price-book.md` · `94d-94e-design.md` · `land-94.sh` · the

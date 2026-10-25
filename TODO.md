@@ -147,6 +147,14 @@ to §133 say which phase takes each row.
 
 - ✅ **Round-scoped rules, and a close that deletes as well as promotes** — `ROUND-RULES.md`, archived at each round close; the close keeps a line the round added only if it did something; a bar for a new rule or guard (`process/planning.md`; WORKLOG §132, 132e). Round 8.5's own list is 132f's.
 
+- [ ] **A deletion's proof once ROUND-RULES' rule lapses** (§133; the
+  probe's scenario 6, WORKLOG §132, "132h7 — the probe run, scored"). When
+  "A deletion's proofs" lapses, add a line to `process/oracles.md` in the
+  user's words from 132h1: the proof that a deletion changes nothing is
+  fitted to its size and risk, "more of an ask me situation than a hard
+  and fast 'corpus and fuzz always'", and where that is unclear, ask him.
+  The search behind the absence holds at any size (AGENTS "Evidence").
+
 ### §129 the dependency phase
 
 - ✅ **Dev-toolchain `npm audit` debt** — 10 at §129's kickoff, 0 at 129f (WORKLOG §129).
@@ -165,6 +173,14 @@ META-ROADMAP §"Round 9 — Extensions" names each group.
   pressure; hand-offs before 500k with no reason given; any session past
   500k that did not hand off (`friction-scan`'s `peak` column). Keep the
   silence, or bring the counts back, on what those show.
+
+### When perf work comes up
+
+- [ ] **A home for a performance number** (the probe's scenario 15, WORKLOG
+  §132, "132h7 — the probe run, scored"). AGENTS "Where things go" sends
+  measurements to a domain run-log, BALANCE.md or PATHING.md, and a frame
+  cost or a render number belongs to neither. The user picks its home when
+  the work that measures one is cut.
 
 ### Early: a scripted run for content work
 

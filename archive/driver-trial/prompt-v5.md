@@ -132,7 +132,7 @@ turn ends, so put anything urgent to Matthew.
     the list-price totals of your transcript and the session's
     (`scratch/123-driver-trial/cache-gaps.mjs`; the transcripts are the
     `.jsonl` files under
-    `~/.claude/projects/C--Users-mkilg-projects-asciibattler/`, each named
+    `~/.claude/projects/<the repo's slug>/`, each named
     after its session's scratchpad directory).
   - **Under 350k:** propose the next session. **Past 350k:** propose
     nothing, and ask Matthew to start a fresh driver from this prompt as a

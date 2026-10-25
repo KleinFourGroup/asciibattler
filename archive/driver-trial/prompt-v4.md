@@ -142,7 +142,7 @@ session report in `retro/sessions.md`, and commit.
   more earlier instances stops recurring after its note.
 - At each hand-off, run `scratch/123-driver-trial/cache-gaps.mjs` on your
   own transcript (the `.jsonl` under
-  `~/.claude/projects/C--Users-mkilg-projects-asciibattler/` named after
+  `~/.claude/projects/<the repo's slug>/` named after
   your scratchpad directory) and log its list-price total, so the cost
   shows as it goes.
 - Any stall: a hand-off that went unnoticed until Matthew came back, and

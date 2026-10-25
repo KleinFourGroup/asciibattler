@@ -550,7 +550,7 @@ Hetzner side themselves, per the phase's design:
   touched it). Clarified live: a context is a global user-config slot
   for one token (which is what binds to a Hetzner project) — not
   directory-scoped, nothing to do with the repo folder.
-- **Key:** `mkilgore_desktop` SURVIVED the 57f2 round-close teardown
+- **Key:** the desktop's SSH key SURVIVED the 57f2 round-close teardown
   (project keys outlive servers) — zero key work needed.
 - **Type/price read (the June-hike check):** cx43 $0.0296/hr — the CPX
   line is the one that tripled (cpx42 = 4.4× for the same 8 cores);

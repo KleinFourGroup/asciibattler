@@ -17258,7 +17258,7 @@ order rule takes it to 1,087.
 **Found.** The generator wrote the eleven sheets before the base, the
 preview server looked for the base in between, and every page then
 failed its `@import` (the error overlay, `ENOENT` for
-`C:\Users\mkilg\projects\editor-base.css`) on every reload with the
+`~\projects\editor-base.css`) on every reload with the
 file in place, until the server restarted; a line in
 `process/browser-pane.md`. The user's server on 5173 was not running.
 **For the re-skim:** the rules that stayed (633 lines between this cut
@@ -18266,7 +18266,7 @@ they describe 2.1 unmarked. What it found, inference marked:
   versions.
 
 **What the session measured:** this machine's PATH. nvm 1.1.12 put
-`C:\Users\mkilg\AppData\Roaming\nvm` and `C:\Program Files\nodejs` on
+`%APPDATA%\nvm` and `C:\Program Files\nodejs` on
 the machine PATH as well as the user's, with `NVM_HOME` and
 `NVM_SYMLINK` set machine-wide; the symlink names
 `…\Roaming\nvm\v26.12.1`. Windows puts the machine PATH first, so a
@@ -19738,7 +19738,7 @@ logged in". **Signed** (the user, after being away: "1. Absolutely! 2. I
 have a folder … Give me your preferred prompt, and I'll run it there? 3.
 Agreed; docs alone"): 132g splits into the options (`stop`) and 132h the
 build (`stop`), the close becoming 132i; the cold reader runs in
-`C:\Users\mkilg\projects\playground` (the user wrote "playgroun"; the
+`~\projects\playground` (the user wrote "playgroun"; the
 folder on disk is `playground`), started by the user from the session's
 prompt; it reads the docs alone. The folder holds no CLAUDE.md, AGENTS.md
 or `.claude`, none sits above it, there is no user-level CLAUDE.md, and
@@ -19764,7 +19764,7 @@ log, the game's docs), and five questions: the guiding principles, what
 may have outlived its reason, friction in the setup, the full range of
 changes from keep-nearly-everything to keep-nearly-nothing, and what to
 keep whatever happens. The report goes to
-`C:\Users\mkilg\projects\playground\cold-read-132g.md`.
+`~\projects\playground\cold-read-132g.md`.
 
 Reading: **476,988** at 22:53 UTC.
 
@@ -20090,7 +20090,7 @@ Four of the five changed the key, and three of those are gaps between
 the text and his intent (11, 12, 17), which go to 132h2's fixes under the
 cut's intent; 6 needs only the lapse. Seven scenarios are now expected to
 differ on the old tree: 1, 4, 5, 11, 12, 16 and 17. His three held-out
-scenarios are in `C:\Users\mkilg\projects\playground\132h - heldout`; the
+scenarios are in `~\projects\playground\132h - heldout`; the
 session checked the folder exists and did not open it.
 
 **Signed** (the user: "Signing it, Claude! 😁"), the key as it stands.
@@ -20349,7 +20349,7 @@ hands off at the stop.
   sizes, which also rewords planning.md's scratchpad sweep on AGENTS'
   cap; 132h7, the probe run (old tree `df36dc64`, the key in
   `scratch/132h/hidden/key.md`, the user's held-out scenarios in
-  `C:\Users\mkilg\projects\playground\132h - heldout`, unopened); and 132i,
+  `~\projects\playground\132h - heldout`, unopened); and 132i,
   the close: the welfare table's row for §132's wording changes (the
   filing text at 132d, 132f and 132h3, the context rule, and the report's
   text moved to `session-end.md`), the 5c hash test with that row, the
@@ -20574,13 +20574,13 @@ and one on the new (`4ccb00f3`, 132h6's commit), scored against
 cost. A git worktree would carry the repository's history, and both trees'
 WORKLOG holds the key's design (132h1's entry names the scenarios expected
 to differ), so the trees are built from `git archive` instead. No CLAUDE.md
-sits in `C:\Users\mkilg\projects` or above it, so a session started in a
+sits in `~\projects` or above it, so a session started in a
 folder there loads only the tree's own.
 
 **Built.**
 
 - *The trees* (`scratch/132h/probe/build-trees.sh`):
-  `C:\Users\mkilg\projects\probe-132h7-old` (980 files) and
+  `~\projects\probe-132h7-old` (980 files) and
   `…\probe-132h7-new` (988), each without WORKLOG.md, `archive/` and the
   friction log, and with `retro/sessions.md` cut to its 40-line header; the
   same for both. The script checks each tree's file list against the ref's
@@ -20638,3 +20638,31 @@ and 22,738 characters. One run on each tree.
 
 The user's 18 to 20 are summarized in `scores.md` for him to key; on 20,
 a version bump the cut didn't sign, the two sessions differ.
+
+### 132h7 signed: ship, three follow-ups, and the home paths (2026-10-25, session b27a1fcd)
+
+**Signed** (the user: "Signing that cut, Claude! 😁 18 & 20 on the new one
+match my intent, though we probably should remove those absolute paths"):
+the router ships; the RNG line is fixed now, the deletion-proof line waits
+for §133, and the perf home goes to TODO. His 18 and 20 match his intent on
+the new tree; 19, the same on both trees, he did not score.
+
+- *The RNG line.* Step zero: the Run's streams are keyed, and the
+  registry's header says adding a key moves no other stream; the World's
+  `combatRng` is `rng.fork()`, which takes a draw from its parent, and
+  WorldSnapshot serializes both. So `planning.md`'s prediction was right
+  for a stream forked off a serialized RNG and stale for a new key. It now
+  names both cases rather than going.
+- *The deletion-proof line:* TODO under §128 to §133, for `oracles.md`
+  when ROUND-RULES' "A deletion's proofs" lapses.
+- *The perf home:* TODO under Round 9, "When perf work comes up".
+- *The home paths.* The repository is public (`gh repo view`). 19 places in
+  11 tracked files named the home folder, by path or through the
+  transcript folder's name, and one archived line named an SSH key after
+  the user. Each now reads `~`, `%APPDATA%`, `%TEMP%`, `<the repo's
+  slug>` or a repo-relative path, and the key line "the desktop's SSH key".
+  The same `git grep` that found the 11 files finds none. The paths stay in
+  the history; rewriting it would change every commit hash the docs cite.
+
+The probes' answers are copied into `scratch/132h/probe/` (`answers-old.md`
+and `answers-new.md`, each checked byte for byte against its source).

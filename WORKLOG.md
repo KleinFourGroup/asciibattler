@@ -20414,3 +20414,62 @@ Signed!"): 132h5.5, the second pass, before 132h6, read `stop`.
 
 132h5 is ticked: its read is the base for 132h5.5, and the process docs it
 wrote are read with the drafts, where the moved text lands.
+
+### 132h5.5 — the second pass, put to the user (2026-10-25, session b27a1fcd)
+
+**Step zero.** The router's rows by line range (`scratch/132h/pass2/rows.mjs`,
+whose `--check` puts every non-blank, non-heading line in exactly one row):
+61 rows in AGENTS and 10 in CLAUDE.md, each measured in characters. The
+evidence the tests rest on:
+
+- *Guards.* ESLint bans `Math.random()` in `src/sim`, `src/run` and
+  `src/bot` (the router named the first two); `rngStreams.test.ts` pins the
+  hash. No test guards a sim import of `src/render` or `src/ui`: the
+  import-graph guards cover the store, the replay and `src/dev`.
+- *Recency.* A keyword search of this round's WORKLOG and the archived
+  worklogs of Rounds 7 to 8 finds no incident of post-quantization, seconds
+  against ticks, the cooldown order, a sim import of render code or a
+  determinism break. A keyword search can miss a differently worded entry.
+  The quantizer went at `86431e03` on 2026-05-19. No session recorded
+  skipping a check under context pressure (the friction log, the reports
+  and this WORKLOG).
+- *The preview hook.* No request followed any of this session's Writes or
+  Edits, and the app's own instructions now limit a verify to what the
+  preview can show.
+- *Duplicates.* Wall time (`welfare-and-efficacy.md` and `phase-stats`'
+  output), the model-id rule (the Cursor), the TODO convention (TODO's
+  header), the stretch rule (`planning.md` "Reads: the terms"), the pane's
+  three facts (`browser-pane.md`). The context meter's README lacked the
+  tool's deferred loading, so that sentence moves rather than goes.
+- *Cited headings.* Nine AGENTS headings are cited by name elsewhere, and
+  both drafts keep them; "Pre-flight", which the hook's header cites, goes,
+  and the comment is re-pointed in the moves.
+
+**Built,** in `scratch/132h/pass2/`: `ranked.md`, every row with the test
+that decides it and its evidence, ranked from the first to go, the two
+cut points marked; the drafts `AGENTS-75.md`, `CLAUDE-75.md`,
+`AGENTS-50.md` and `CLAUDE-50.md`; the moves with their landing text
+(`moves-both.md`, `moves-50.md`). The 75 % draft removes duplicates, old
+bans and rows with a trigger and a home, and keeps the doctrine's text
+word for word; the 50 % draft also condenses the doctrine, mostly by
+dropping reason clauses and examples. The filing text is word for word in
+both.
+
+| Version | AGENTS | CLAUDE.md | Together |
+|---|---|---|---|
+| The router | 17,466 · 320 lines | 3,951 · 64 | 21,417 |
+| 75 % | 14,309 · 254 | 1,937 · 34 | 16,246 (75.9 %) |
+| 50 % | 9,395 · 177 | 1,002 · 20 | 10,397 (48.5 %) |
+
+**The landing check** (`landing2.mjs --cut=75|50`, with
+`landing-75.json` and `landing-50.json`): each of the router's 213
+sentences is in the draft word for word, in that cut's moves, or in a doc
+of the tree other than the live AGENTS, CLAUDE.md and WORKLOG, or it is
+accounted as a cut or a rewording with its reason. At 75 %, 167 land and 46
+are accounted; at 50 %, 82 and 131; none unaccounted and none stale in
+either. With `--plant`, the perf sentence dropped from `moves-both.md`, it
+comes back unaccounted and the check exits 1.
+
+**For the stop:** which version, or a point between; the standing
+decisions' revisit (ranks 4, 8 and 22 to 24 in `ranked.md`); and 5b's
+per-file line caps, which 132h6 builds on.

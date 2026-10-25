@@ -588,6 +588,9 @@ process/                     # agent procedures read on a trigger (AGENTS.md "Be
   oracles.md                 # refactor oracles, failing controls, instrument self-checks
   welfare-and-efficacy.md    # reading the friction log, session reports, phase-stats, friction-scan
   browser-pane.md            # Claude Code's Browser pane: getting a live page, the hidden pane, fixtures
+  browser-pane-recipes.md    # the pane's recipes: a build, the store, the failure plate, settings and data rows, screens, layout
+  shell-and-windows.md       # quoting, pipes, Node and Vite processes; Claude Code's editing, Bash, subagents, background work
+  session-end.md             # a session's end: the report, the Cursor, a hand-off entry when something is open, the card
 
 archive/                     # superseded roadmaps + feedback + phase worklogs
 
@@ -798,6 +801,18 @@ UI screens hold a `RunDispatcher` (Game implements it) and call `dispatcher.disp
 3. **Bloom** is selective via two composers (B1.1): `bloomComposer` renders the layer-1 bloom mesh through `UnrealBloomPass` (max-channel high-pass, not Rec.709 — gotcha #29) into an offscreen RT; `mainComposer` renders the layer-0 visible mesh, then folds the bloom RT in additively via `MixPass`. Sat-clamp + `OutputPass` finish the chain. Per-instance `bloomIntensity` decouples halo strength from visible color: 0 suppresses, 1 is natural, >1 forces.
 4. **CRT scanlines** are a CSS `<div>` overlay (`#scanlines`), not a post-process pass (B5). One source of truth across the canvas/DOM seam.
 5. **Palette quantization is GONE** (retired at B1). The `COLORS` table is art-direction discipline now, not shader enforcement. Gotchas #1/#3/#4 retired as a consequence.
+
+## Where to add things
+
+A sim fix or behaviour change goes under
+`src/sim/` with a co-located `*.test.ts`; update the determinism
+integration test if the event sequence changes. A render feature goes
+under `src/render/` and is checked by eye (`render/` and `ui/` have no
+tests). A new event goes in [src/core/events.ts](src/core/events.ts)
+(named `subject:verbed`), in ARCHITECTURE's event table, and in
+[src/audio/eventSounds.ts](src/audio/eventSounds.ts) as a cue or as
+silent with a reason; typecheck or `npm test` fails until it's in all
+three. A gotcha that bit you goes in GOTCHAS.md with its commit.
 
 ## What's deliberately not abstracted yet
 

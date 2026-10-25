@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { execFileSync } from 'node:child_process';
-import { readFileSync, existsSync } from 'node:fs';
+import { readFileSync, existsSync, readdirSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -47,7 +47,7 @@ const read = (rel: string) => readFileSync(join(repoRoot, rel), 'utf8');
 const lineCount = (s: string) => s.replace(/\r?\n$/, '').split(/\r?\n/).length;
 
 describe('docs hygiene', () => {
-  // The rule (AGENTS "Keep HANDOFF lean"): only the in-progress phase stays
+  // The rule (planning.md "HANDOFF upkeep"): only the in-progress phase stays
   // verbose in `Current state`; every completed phase is one terse line + an
   // archive pointer. These caps have generous headroom over the current size
   // (~131 total / ~73 in Current state at the 2026-06-07 trim) — tripping one
@@ -70,7 +70,7 @@ describe('docs hygiene', () => {
     const n = lineCount(read('HANDOFF.md'));
     expect(
       n,
-      `HANDOFF.md is ${n} lines. Demote completed-phase "Current state" entries to one line + an archive pointer (AGENTS "Keep HANDOFF lean"), or bump HANDOFF_MAX_LINES deliberately.`,
+      `HANDOFF.md is ${n} lines. Demote completed-phase "Current state" entries to one line + an archive pointer (planning.md "HANDOFF upkeep"), or bump HANDOFF_MAX_LINES deliberately.`,
     ).toBeLessThanOrEqual(HANDOFF_MAX_LINES);
   });
 
@@ -83,7 +83,7 @@ describe('docs hygiene', () => {
     const len = next === -1 ? after.length : next;
     expect(
       len,
-      `"## Current state" is ${len} lines. Only the in-progress phase should be verbose — demote completed phases to one line + an archive pointer (AGENTS "Keep HANDOFF lean"), or bump CURRENT_STATE_MAX_LINES deliberately.`,
+      `"## Current state" is ${len} lines. Only the in-progress phase should be verbose — demote completed phases to one line + an archive pointer (planning.md "HANDOFF upkeep"), or bump CURRENT_STATE_MAX_LINES deliberately.`,
     ).toBeLessThanOrEqual(CURRENT_STATE_MAX_LINES);
   });
 
@@ -91,7 +91,7 @@ describe('docs hygiene', () => {
     const n = read('HANDOFF.md').length;
     expect(
       n,
-      `HANDOFF.md is ${n} chars (~${Math.round(n / 2.3)} tokens) — past the ~25k-token Read-tool limit, so it can't be read in one call even though it may pass the line caps (dense, oversized lines). Demote completed-phase "Current state" detail to one line + an archive pointer (AGENTS "Keep HANDOFF lean"), or bump HANDOFF_MAX_CHARS deliberately.`,
+      `HANDOFF.md is ${n} chars (~${Math.round(n / 2.3)} tokens) — past the ~25k-token Read-tool limit, so it can't be read in one call even though it may pass the line caps (dense, oversized lines). Demote completed-phase "Current state" detail to one line + an archive pointer (planning.md "HANDOFF upkeep"), or bump HANDOFF_MAX_CHARS deliberately.`,
     ).toBeLessThanOrEqual(HANDOFF_MAX_CHARS);
   });
 
@@ -104,7 +104,7 @@ describe('docs hygiene', () => {
     const n = after.slice(0, next === -1 ? after.length : next).join('\n').length;
     expect(
       n,
-      `"## Closed rounds" is ${n} chars. It is ONE LINE per round — a close appends its condensed paragraph to archive/closed-rounds.md and one line here (AGENTS "Keep HANDOFF lean"), or bump CLOSED_ROUNDS_MAX_CHARS deliberately.`,
+      `"## Closed rounds" is ${n} chars. It is ONE LINE per round — a close appends its condensed paragraph to archive/closed-rounds.md and one line here (planning.md "HANDOFF upkeep"), or bump CLOSED_ROUNDS_MAX_CHARS deliberately.`,
     ).toBeLessThanOrEqual(CLOSED_ROUNDS_MAX_CHARS);
   });
 
@@ -286,6 +286,22 @@ describe('docs hygiene', () => {
       'Merge the new lesson into an existing line or replace one; if it only applies on a trigger, put it in the process/ doc for that trigger (AGENTS "Where things go"). Raise the cap only deliberately, with the user.';
     expect(text.length, `AGENTS.md is ${text.length} chars. ${hint}`).toBeLessThanOrEqual(AGENTS_MAX_CHARS);
     expect(lineCount(text), `AGENTS.md is ${lineCount(text)} lines. ${hint}`).toBeLessThanOrEqual(AGENTS_MAX_LINES);
+  });
+
+  // AGENTS.md routes the procedures: a process/ doc that no row of its
+  // trigger table links is read only by a session that already knows it is
+  // there.
+  it('every process/ doc is linked from AGENTS.md "Before you… read…"', () => {
+    const lines = read('AGENTS.md').split(/\r?\n/);
+    const start = lines.findIndex((l) => /^## Before you… read…/.test(l));
+    expect(start, 'AGENTS.md has no "## Before you… read…" table').toBeGreaterThan(-1);
+    const after = lines.slice(start + 1);
+    const end = after.findIndex((l) => l.startsWith('## '));
+    const table = after.slice(0, end === -1 ? after.length : end).join('\n');
+    const docs = readdirSync(join(repoRoot, 'process')).filter((n) => n.endsWith('.md'));
+    expect(docs.length, 'listed no process/ docs').toBeGreaterThan(3);
+    const unrouted = docs.filter((n) => !table.includes(`(process/${n})`));
+    expect(unrouted, 'process/ docs that no row of AGENTS.md "Before you… read…" links').toEqual([]);
   });
 
 

@@ -20248,3 +20248,82 @@ down."). The rule's two live copies go: AGENTS "The project" and
 `itch/settings.md`'s header, cut here. The lines that only record the
 site's history stay (HANDOFF's MVP and Round 8 lines, META-ROADMAP, the
 spec). Ten cuts in all.
+
+### 132h5 — the router (2026-10-25, session 96d1ff74)
+
+**Step zero.** Eight AGENTS headings are cited by name elsewhere: "The
+planning stack" and "Reads are cut, not improvised" (ROADMAP, planning.md,
+the docs test), "Working with the user" (measurement.md, the Cursor),
+"Evidence" (oracles.md), "Voice" (two tests, TODO, META-ROADMAP), "Where
+things go" (the docs test), "Session self-report + the friction log"
+(welfare-and-efficacy.md, three script headers) and "Before you… read…"
+(ARCHITECTURE). So the router keeps them and opens each section with its
+principle, rather than renumbering the file. A probe's comment
+(`shell/electron/probes/progress-win.js`) cites browser-pane.md "Fixtures"
+for the forced end screen, so that bullet stays in browser-pane.md.
+
+**Built,** from the signed census (`scratch/132h/census.md`):
+
+- *AGENTS:* each section opens with the principle it serves and its
+  reason, and holds the rules the census kept: the invariants; the user's
+  questions are real; the user signs the shape (with the user's calls
+  listed, and a rule kept while it does something); a claim points at a
+  result that could have come out otherwise (the evidence core as
+  definitions, its first line naming numbers, labels, doc lines and
+  comments, the absence line with 132f's T5 merged in); one fact, one home
+  (rows for ROUND-RULES.md, TESTING.md and DESIGN.md, the old doc list's
+  homes); sessions are participants; the guard on the path. The filing
+  text and the standing decisions are word for word. The trigger table
+  has eleven rows, each naming what the session is about to do, and links
+  every `process/` doc.
+- *New docs:* `process/shell-and-windows.md` (AGENTS' shell section;
+  CLAUDE.md's Editing, Bash calls, Subagents and the `TaskStop` line),
+  `process/session-end.md` (the report, the Cursor, a hand-off entry only
+  when something is open, the card and the session-card facts) and
+  `process/browser-pane-recipes.md` (thirteen recipe blocks moved verbatim
+  by `scratch/132h/split-pane.mjs`, each range checked by its first line
+  before anything was written).
+- *Moved:* "Where to add things" to ARCHITECTURE; the headless patterns to
+  TESTING "Adding a test"; the forcing flag and a bug shape biting twice
+  to `oracles.md`, which already held the old path, the baseline and the
+  known answer; Node and npm's versions to `measurement.md`;
+  `getImageData` and `preview_stop` to browser-pane.md.
+- *planning.md:* item 4 in "Context: the hand-off trigger" (the mod reads
+  it, nothing below it, a trial whose measure is in TODO under Round 9),
+  item 7 in the WORKLOG bullet, item 8 by "Hand-offs" pointing at
+  `session-end.md`; the kickoff's shape-lock without a reading.
+- *CLAUDE.md:* the import and eight notes, one of them a single line on
+  backslashes.
+- *Cut:* the ten signed rows.
+- *Pointers:* the docs test's four messages and one comment now name
+  planning.md "HANDOFF upkeep" for the rule A33 cut (the comment is a
+  stale pointer corrected with its twins, flagged here); HANDOFF's
+  pre-flight section; ARCHITECTURE's `process/` listing; `oracles.md`'s
+  header.
+
+C3, the observation behind CLAUDE.md "What the user sees", moved here: (Observed
+2026-09-23, Claude Code 2.1.280, claude-opus-5-5: the paragraph before a
+dialog arrived paraphrased; of eight notes in one later turn, two arrived
+paraphrased, and one of those dropped its caveat and misstated a result.)
+
+**The checks.**
+
+- *The routing test* (`tests/docs.test.ts`, new): every `process/` doc
+  is linked from AGENTS "Before you… read…". A planted `process/zz-plant.md`
+  failed it and was removed.
+- *The landing check* (`scratch/132h/landing.mjs`): every sentence of
+  AGENTS.md and CLAUDE.md at `86ce0fe7` is found word for word in a doc of
+  the tree, or is accounted in `scratch/132h/landing-accounted.json` as a
+  signed cut or a rewording with its home: of 261, 212 landed word for
+  word and 49 are accounted, with none unaccounted and no accounting
+  stale. With `--plant`, one moved sentence dropped from
+  `shell-and-windows.md`, that sentence comes back unaccounted.
+- *The sizes* (`scratch/132h/size-now.mjs`, `String.length`): AGENTS
+  17,466 characters and 320 lines, from 19,971 and 376; CLAUDE.md 3,951
+  and 64, from 7,308 and 113; the start reading (AGENTS, CLAUDE.md, the
+  Cursor, ROUND-RULES.md) 27,723, from 33,585 at `86ce0fe7` and 40,927
+  when 5b was asked.
+
+**For the stop.** 5b signed a 200-line cap on AGENTS and on CLAUDE.md.
+CLAUDE.md is at 64; AGENTS is at 320, and the census's kept rows add up to
+that, so 200 means cutting rows the census kept, which is the user's call.

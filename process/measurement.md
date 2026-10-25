@@ -31,7 +31,7 @@ Boxes are created on demand and destroyed after use.
   and is never substituted, because cores, `--jobs` and price are the
   user's call.
 - `scripts/box-setup.sh` provisions a box from scratch; its Node version
-  must match local (AGENTS "Toolchain").
+  must match local (Node 26.12, npm 11.20, as of 2026-10-25).
 - `scripts/box-batch.sh <user@host> launch|status|fetch|kill|run …` is the
   only way to drive a batch: it enforces commit parity and runs detached,
   never over a live ssh pipe.

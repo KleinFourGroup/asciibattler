@@ -485,7 +485,7 @@ eleven calls (WORKLOG §132, the kickoff).
 - ◐ **132h2 — the fixes** (`batch`). The tradeoff line, the stale lines, the Cursor to live status, the mod's README.
 - ◐ **132h3 — the mechanisms** (`none`; the mod live `batch`). The mod's silence and gaps, the papercut tool, `friction-scan`'s peak.
 - ☑ **132h4 — the rule census** (`stop`). 63 rows of AGENTS and CLAUDE.md kept, moved or cut; ten cuts signed.
-- ☐ **132h5 — the router** (`stop`). AGENTS, the modules, CLAUDE.md; a routing test and a landing check.
+- ◐ **132h5 — the router** (`stop`). AGENTS, the modules, CLAUDE.md; a routing test and a landing check.
 - ☐ **132h6 — the caps** (`none`). 5b's numbers from the measured sizes, each with a planted overflow.
 - ☐ **132h7 — the probe run** (`stop`). Two fresh sessions on the old tree and the new; ship or fix.
 - ☐ **132i — the close** (`stop`).

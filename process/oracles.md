@@ -2,7 +2,7 @@
 
 Read this before claiming that a refactor changes nothing, or before
 building a probe or instrument that decisions will rest on. AGENTS.md
-"Evidence" holds the short version.
+"Evidence" holds the definitions; this file holds the method.
 
 ## Behaviour-equivalence refactors
 
@@ -66,6 +66,8 @@ values as written, without resolving `var()`.
   result exactly before it reads new data. Better, give it a case it must
   catch: a planted defect, a value known to be out of range. A trusted
   negative rests on one of these.
+- **A forcing flag is a request**, so count the forced thing in the output
+  before naming a result after it.
 - **Pool with a script that prints its arm count**, never by reading the
   first rows by eye. A table once quoted one arm's rows as "all six arms
   pooled".
@@ -89,6 +91,9 @@ values as written, without resolving `var()`.
 - When you add a new consumer to an old seam, test the seam's edge branches
   under the new consumer, not just its happy path. Branches that nothing
   exercised before can be broken.
+- When a bug shape bites a second time, list every instance of the shape
+  the same day. Fix the ones inside the current change, and put the rest in
+  TODO or ask.
 
 ## Outside review
 

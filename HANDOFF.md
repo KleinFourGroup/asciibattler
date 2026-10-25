@@ -6,7 +6,7 @@ A fresh-session orientation for ASCIIbattler. Read this first; then dive into th
 
 **The ONE home for live status.** Other docs (and the agent memory) point here instead of restating it; when state changes, this section is the single place that updates.
 
-- **NEXT — §132, the process review: 132h4's stop, the rule census put to the user** (`scratch/132h/census.md`; [ROADMAP.md](ROADMAP.md) §132, the cut 132h1 to 132h7, signed; WORKLOG §132, "132h's cut, signed", with the signed decisions in the tranche entries before it; the inputs in `scratch/132g/`, the probe's key in `scratch/132h/hidden/`). Then 132h5 to 132h7, 132i the close, and §133, the re-cut and the archive. **Open ◐:** 132b (the shell note: its live check passed on 2026-10-24; the user's read of the dim transcript line is open; WORKLOG §132, "132b's live check"); 132h2 (the fixes, `batch`); 132h3 (the mod's live line in a fresh session, `batch`).
+- **NEXT — §132, the process review: 132h5's stop, the router built and put to the user** (WORKLOG §132, "132h5 — the router"; `scratch/132h/census.md`; [ROADMAP.md](ROADMAP.md) §132, the cut 132h1 to 132h7, signed; WORKLOG §132, "132h's cut, signed", with the signed decisions in the tranche entries before it; the inputs in `scratch/132g/`, the probe's key in `scratch/132h/hidden/`). Then 132h5 to 132h7, 132i the close, and §133, the re-cut and the archive. **Open ◐:** 132b (the shell note: its live check passed on 2026-10-24; the user's read of the dim transcript line is open; WORKLOG §132, "132b's live check"); 132h2 (the fixes, `batch`); 132h3 (the mod's live line in a fresh session, `batch`); 132h5 (the router, `stop`, with 5b's 200-line cap on AGENTS open).
 - **The public build is `0.1.1`** (`7baa695c`, tagged `v0.1.1`), uploaded to itch.io on 2026-10-23 at §128, after `0.1.0` (`d6a834e`) from 2026-10-10; its number follows the user's version rule (META-ROADMAP §Round 8, "The version"). From itch by 2026-10-23, the user's word: a handful of players and no comments. A stranger's finding rides here, as do the 7.5 close's two watches, frame rate on other machines and the overlay stack; none is recorded yet.
 - **Model id: `claude-opus-5-5`** (from `claude-fable-5-1` on 2026-09-22; the tone audit ran 2026-09-23, `archive/post-104-worklog.md` §"The new-model tone audit"). A session on another id says so at its next stop (AGENTS "Working with the user").
 - **Last phase: §131 ✅ closed 2026-10-24** on the user's read: the reads ([ROADMAP.md](ROADMAP.md) §131; [WORKLOG.md](WORKLOG.md) §131).
@@ -81,8 +81,8 @@ drift crept in). ARCHITECTURE also carries the event + command catalogs.
 
 ## Pre-flight, pre-commit & toolchain
 
-In **[AGENTS.md](AGENTS.md)** (`## Pre-flight` / `## Pre-commit` /
-`## Toolchain`). The versioned pre-commit hook runs `npm run typecheck` and
+In **[AGENTS.md](AGENTS.md)** (`## Pre-flight` / `## Pre-commit`); the
+toolchain's versions are in `package.json`. The versioned pre-commit hook runs `npm run typecheck` and
 `npm test`, plus `npm run fuzz:smoke` when sim/run/core/config paths are staged,
 and only the tests that read docs when docs alone are staged.
 

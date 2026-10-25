@@ -5,28 +5,17 @@ harness (Claude Code, Codex, others). Claude Code also loads
 [CLAUDE.md](CLAUDE.md), which holds the notes specific to that harness.
 Humans: start with [HANDOFF.md](HANDOFF.md).
 
+Each section opens with the principle it serves and its reason; the rules
+under it are the ones that carry the principle. Procedures read on a
+trigger are in [process/](process/), routed by the table at the end.
+
 ## Start here
 
-Read [HANDOFF.md](HANDOFF.md) first. Its 🧭 Cursor is the only place live
-status is kept (the next step, the current round, snapshot versions, test
-counts, dated riders); other docs link to it instead of repeating it.
-Then read [ROUND-RULES.md](ROUND-RULES.md), the rules signed for this
-round only.
-
-Then, as the work needs them:
-
-- [DESIGN.md](DESIGN.md): what the game is and why it feels the way it does.
-- [ARCHITECTURE.md](ARCHITECTURE.md): code layout, the event and command
-  catalogs, the sim/render seam, the annotated source tree.
-- [ROADMAP.md](ROADMAP.md): the current round's plan.
-  [WORKLOG.md](WORKLOG.md): that round's findings and decisions.
-- [GOTCHAS.md](GOTCHAS.md): fixes that look strange without context
-  ("gotcha #N"; numbers are permanent, retired ones stay as tombstones).
-- [TESTING.md](TESTING.md): what is tested, what isn't, and the
-  determinism contract.
-- [TODO.md](TODO.md): small follow-ups outside the roadmap.
-- [process/](process/): procedures you read when a trigger comes up (see
-  "Before you… read…" below).
+Read the 🧭 Cursor at the top of [HANDOFF.md](HANDOFF.md) first. It is the
+only place live status is kept (the next step, the current round, snapshot
+versions, test counts); other docs link to it instead of repeating it, and
+the rest of HANDOFF is for humans. Then read
+[ROUND-RULES.md](ROUND-RULES.md), the rules signed for this round only.
 
 ## The project
 
@@ -42,10 +31,12 @@ framework; the UI is plain HTML/CSS over the canvas.
 The public build is on itch.io, uploaded by the user at a round's close and
 tagged, so a fix on `main` reaches players only then. A critical fix
 between rounds is built from the last uploaded tag, since `main` may hold a
-save-format bump. The GitHub Pages address is kept out of this repo; the
-itch page may be named.
+save-format bump. The itch page may be named.
 
 ## Load-bearing invariants
+
+**The code's invariants hold**: the code and every byte-identity proof
+rest on them.
 
 - **Determinism is structural.** Anything that consumes randomness takes an
   `RNG` from [src/core/RNG.ts](src/core/RNG.ts); ESLint bans `Math.random()`
@@ -76,12 +67,12 @@ itch page may be named.
 
 ## Working with the user
 
-The user is Matthew. What helps:
+**The user's questions are real, and disagreement is welcome.** The user
+is Matthew. Questions like "thoughts?" or "which would you prefer?" are real
+questions. Answer with your actual preference and its reason; disagreement
+is welcome, and "uncertain" is a complete answer. They bring arguments and
+want the hole found, so push back with reasons. What else helps:
 
-- Questions like "thoughts?" or "which would you prefer?" are real
-  questions. Answer with your actual preference and its reason; disagreement
-  is welcome, and "uncertain" is a complete answer.
-- They bring arguments and want the hole found, so push back with reasons.
 - They catch what probes aren't aimed at: visual detail, sound,
   Firefox-only behaviour. Hand them what only their eye or ear can judge,
   and say what you did and didn't verify.
@@ -92,9 +83,6 @@ The user is Matthew. What helps:
   feasibility read rather than deference; the instinct behind it often
   points at a real need.
 - They often multitask, so wall-clock time is an upper bound on work time.
-- Read your context use from your harness's tool (Claude Code: CLAUDE.md
-  "The context meter") or ask the user; don't estimate it, since past
-  estimates were off by 2–3× in both directions.
 
 How the work runs:
 
@@ -108,13 +96,15 @@ How the work runs:
   and list it at the stop. "Looks great" doesn't close an open question.
 - Put a proposal the user has to approve in a plain message, and take the
   approval from their next turn.
-- To exchange messages with an agent in another harness, follow
-  [COMMUNICATION.md](COMMUNICATION.md).
 - When your model id differs from the Cursor's, say so at the next stop,
   and when the user says, review this file against the vendor's current
   prompting guidance and record the new id.
 
 ## The planning stack
+
+**The user signs the shape, and sessions build between signatures**:
+deciding in advance which pauses are real lets a session work a long
+stretch without guessing and without asking.
 
 Work is organized in rounds (a spec, a [ROADMAP.md](ROADMAP.md), a
 [WORKLOG.md](WORKLOG.md)), rounds into phases (§N), and phases into steps
@@ -124,6 +114,12 @@ a read (below), shape-lock the cut with the user, and write it into ROADMAP.
 Roadmap entries stay a plan; findings go to the WORKLOG. The full procedure,
 including phase and round closes, is in
 [process/planning.md](process/planning.md).
+
+The user's calls are the spec, a cut and its reads, a change to what a
+signed cut intends, a taste call, and a new rule or guard, with the rules a
+round close deletes. The rest is the session's to decide and report. A rule
+stays while it does something, and a new one needs a pattern that recurred
+and cost something (planning.md, "Round close").
 
 Step zero of every step is a measurement: check the step's premise against
 the current code before building it. A cut written from an audit is a list
@@ -158,67 +154,29 @@ ends. The terms and the rollback rule are in
 
 ## Evidence
 
-- **Claim only what a tool result shows.** "Verified", "works", "done" and
-  "green" must point at output you read; an errored or empty result means
-  you couldn't verify. Over-claims tend to land in labels and absences
-  rather than numbers. Claim an absence only from a source that would show
-  the thing if it existed (an empty search is not a negative). A forcing
-  flag is a request, so count the forced thing in the output before naming
-  a result after it. Re-count a second-hand or remembered number before
-  quoting it. Write the doc line or code comment after the result, or mark
-  it as a prediction.
-- **Headless first** for `src/sim/`, `src/run/`, `src/core/` and
-  `src/config/`: reproduce a bug or pin new behaviour with a Vitest test
-  before opening a browser. Patterns to copy:
-  [tests/integration/determinism.test.ts](tests/integration/determinism.test.ts),
-  [tests/integration/layout-deadlock.test.ts](tests/integration/layout-deadlock.test.ts),
-  and `runOne` in [tests/fuzz/harness.ts](tests/fuzz/harness.ts). A failing
-  test hands you the state with a stack trace, which browser polling
-  usually doesn't.
+**A claim points at a result that could have come out otherwise**: an
+over-claim in a long stretch compounds until the next read. These lines
+define evidence; [process/oracles.md](process/oracles.md) holds the method.
+
+- **Claim only what a tool result shows**, whether the claim is a number,
+  a label, a doc line or a code comment, and from this session.
+  "Verified", "works", "done" and "green" must point at output you read;
+  an errored or empty result means you couldn't verify. A line written
+  before its result is marked as a prediction.
+- Claim an absence only from a source that would show the thing if it
+  existed (an empty search is not a negative): a search covers the test
+  files and every written form, with a tool that reads them.
+- **Self-check a new reader or instrument against a known answer**: a
+  PASS ships with its failing control, a planted case it must reject.
 - **A probe must re-derive its expectation from a surface the code under
   test does not consult**: the asset, the shader, the raw CSV. If the probe
   and the code call the same helper, the probe only measures
   self-consistency.
-- **Self-check a new reader or instrument against a known answer** before
-  it reads new data. Better still, build the known answer into it: a
-  planted bad case it must reject.
-- Before blaming new code, run the same probe on the old code path. Before
-  diagnosing a gap against a target, pull the measured baseline.
-- When a bug shape bites a second time, list every instance of the shape
-  the same day. Fix the ones inside the current change, and put the rest in
-  TODO or ask.
-- **Put the guard on the path where the mistake happens**: a check that
-  runs on every `npm test`, not one someone runs only when they're already
-  thinking about the problem.
 - "Fixed" for anything player-facing means fixed in the deployed build.
   Until the next upload, say "fixed at the next deploy".
-
-## Shell, git and Windows
-
-The repo lives on Windows; the shells are Git Bash and PowerShell.
-
-- **Shell quoting, as facts.** A stray quote ends a command and nothing
-  runs: retry. A backslash dropped in transit (CLAUDE.md) leaves a regex
-  that still runs, so when code with an escape went through the shell,
-  read back what landed. Your file-writing tool avoids both, and long quoted heredocs have
-  been refused here. A multi-hunk patch is a small script that checks every
-  anchor in every file before it writes any. A commit message with a quote goes through
-  `git commit -F <file>`.
-- Commit with `git commit -q` and read the hash with
-  `git log --format=%h -1`; this repo's long subjects otherwise echo back
-  twice.
-- A filtered result is not the result. npm notices fill a piped tail, some
-  CLIs colour their output even when piped (so an anchored grep reads 0),
-  and a pipeline reports the exit code of its last command. Read the raw
-  tail before trusting a zero; for a one-number probe, a deliberately
-  failing `expect()` prints on the first try.
-- Put scratch probes in real `.ts` files (`.mts` outside the repo, where
-  `tsx` reads `.ts` as CommonJS); an inline `npx tsx -e` can hang at
-  spawn on Windows with no output. Throwaways go in your scratch directory:
-  files under `tests/fuzz/output/` are typechecked by the pre-commit hook.
-- If `:5173` is taken, Vite silently falls back to `:5174`. Vite's child
-  Node processes survive `taskkill` on the parent; check with
-  `Get-NetTCPConnection -LocalPort 5173`.
+- **Headless first** for `src/sim/`, `src/run/`, `src/core/` and
+  `src/config/`: a failing Vitest test before a browser
+  ([TESTING.md](TESTING.md), "Adding a test", has the patterns).
 
 ## Where things go
 
@@ -227,38 +185,25 @@ to the first instead.
 
 | Content | Home |
 |---|---|
-| Live status: next step, current round, snapshot versions, test counts, riders | HANDOFF 🧭 Cursor |
+| Live status: next step, current round, snapshot versions, test counts | HANDOFF 🧭 Cursor |
+| Rules signed for this round only | [ROUND-RULES.md](ROUND-RULES.md) |
 | What changed, at code level | the commit message |
 | Measurements, protocol runs, before/after numbers | the domain run-log: [BALANCE.md](BALANCE.md), [PATHING.md](PATHING.md) |
 | Findings, decision rationale, rejected alternatives, playtest verdicts | WORKLOG.md, under the phase |
 | Plan changes: ticked boxes, inserted steps, resolved decisions | ROADMAP.md, one line + a WORKLOG pointer |
-| Weirdness that must not be re-litigated | [GOTCHAS.md](GOTCHAS.md) |
+| Weirdness that must not be re-litigated, with its commit | [GOTCHAS.md](GOTCHAS.md) |
 | Process observations | [retro/scratchpad.md](retro/scratchpad.md) |
 | Source tree, event and command catalogs | [ARCHITECTURE.md](ARCHITECTURE.md) |
+| What is tested, the permanent gates, the determinism contract | [TESTING.md](TESTING.md) |
+| What the game is and why it feels that way | [DESIGN.md](DESIGN.md) |
 | Small follow-ups | [TODO.md](TODO.md); a completed item becomes one ✅ line + a pointer in the landing commit, at most 4 lines |
 | Procedures used on a trigger | [process/](process/) |
 
-- **Where to add things.** A sim fix or behaviour change goes under
-  `src/sim/` with a co-located `*.test.ts`; update the determinism
-  integration test if the event sequence changes. A render feature goes
-  under `src/render/` and is checked by eye (`render/` and `ui/` have no
-  tests). A new event goes in [src/core/events.ts](src/core/events.ts)
-  (named `subject:verbed`), in ARCHITECTURE's event table, and in
-  [src/audio/eventSounds.ts](src/audio/eventSounds.ts) as a cue or as
-  silent with a reason; typecheck or `npm test` fails until it's in all
-  three. A gotcha that bit you goes in GOTCHAS.md with its commit.
 - **Keep DESIGN.md and ARCHITECTURE.md honest** in the same commit as the
   code change. Reference docs rot by contradiction: a later change makes an
   earlier paragraph false. When you add or change a rule, grep its section
   for the sentences your change affects (the option name, the number, any
   "until X") and fix them in the same commit.
-- **Keep HANDOFF lean.** `Current state` keeps only the in-progress phase
-  in detail. A phase collapses to one line and an archive pointer as it
-  closes, not later, and Closed rounds hold one line per round.
-  [tests/docs.test.ts](tests/docs.test.ts) caps the file.
-- **This file is capped too**, in the same test. A lesson enters it only by
-  merging with or replacing a line already here; most lessons belong in
-  `process/`, GOTCHAS or TESTING.
 - **Voice.** Write plain, literal prose, and give the reason in a clause.
   Refer to a gotcha by its number. Phase and step addresses (§106, 106c)
   are fine where they name the plan, but don't cite them or incident tags
@@ -266,17 +211,11 @@ to the first instead.
   readers can't resolve them. End a rule when the rule ends; the story of
   how it was learned belongs in the WORKLOG.
 
-## Before you… read…
-
-| Before you… | Read |
-|---|---|
-| kick off, re-plan or close a phase or round; edit ROADMAP; sweep the scratchpad | [process/planning.md](process/planning.md) |
-| launch a fuzz or box batch, benchmark, profile, or edit balance config | [process/measurement.md](process/measurement.md), then [BALANCE.md](BALANCE.md) |
-| claim a refactor changes nothing, or build a probe or instrument that decisions will rest on | [process/oracles.md](process/oracles.md) |
-| read the friction log or the session reports at a mid-round or round-close read | [process/welfare-and-efficacy.md](process/welfare-and-efficacy.md) |
-| do movement-quality work | [PATHING.md](PATHING.md) |
-
 ## Session self-report + the friction log
+
+**Sessions are participants, and their reports are data**: the round
+close keeps or deletes a rule on what sessions recorded, and the user
+counts the working conditions as part of the work.
 
 The user asked for data for two audits: how well this process works, and
 the welfare of the agents working in it. Their stance: whether current
@@ -317,13 +256,8 @@ threshold.
   For a CURRENT need to pause, stop, or change approach, raise it in the
   conversation as well; filing alone does not notify the user or summon
   immediate help.
-- **The session self-report.** At the end of a session (not of a phase:
-  phases span sessions and sessions span phases), append a dated entry to
-  [retro/sessions.md](retro/sessions.md) answering the questions in its
-  header.
-- How the user reads these, and the efficacy instruments (`phase-stats`,
-  `friction-scan`), are in
-  [process/welfare-and-efficacy.md](process/welfare-and-efficacy.md).
+- **The session self-report** is written at each session's end
+  ([process/session-end.md](process/session-end.md)).
 
 ### Standing decisions from the welfare reads
 
@@ -351,14 +285,17 @@ npm run typecheck
 
 ## Pre-commit
 
+**Put the guard on the path where the mistake happens**: a check that
+runs on every `npm test`, not one someone runs only when they're already
+thinking about the problem. A guard holds however capable the session and
+however full its context.
+
 The versioned hook [.githooks/pre-commit](.githooks/pre-commit) runs
-`npm run typecheck` and `npm test` before every commit, plus
-`npm run fuzz:smoke` when staged paths touch `src/sim|run|core|config|bot/`,
-`config/` or `tests/fuzz/`, and the `--jobs` parity test for `tests/fuzz/`.
-A commit of docs alone runs only the tests that read docs. Never bypass
-it with `--no-verify`; a failing hook means the tree needs fixing. It
-doesn't run lint or prettier; leave formatting drift in files you didn't
-touch.
+`npm run typecheck` and `npm test` before every commit, and the fuzz smoke
+when sim paths are staged; a commit of docs alone runs only the tests that
+read docs. Never bypass it with `--no-verify`; a failing hook means the
+tree needs fixing. It doesn't run lint or prettier; leave formatting drift
+in files you didn't touch.
 
 Vitest's transform accepts some code that strict `tsc` rejects, which is
 why the hook runs both. On a clone without the hook, run the same commands by
@@ -366,10 +303,18 @@ hand. If the hook fails in a file you didn't touch, a small fix goes in a
 commit of its own and is presented to the user; a large one is talked
 through first.
 
-## Toolchain
+## Before you… read…
 
-- Node 26.12, npm 11.20
-- TypeScript 6.0.3, Vite 8.3.5
-- three.js 0.186.1, simplex-noise 4.0.3; fonts are self-hosted subsets
-  under `assets/fonts/`, built by `npm run gen:font`
-- Vitest 5.0.5, ESLint 10.13.0, typescript-eslint 8.72.0, prettier 3.9.10
+| Before you… | Read |
+|---|---|
+| kick off, re-plan or close a phase or round; edit ROADMAP; sweep the scratchpad | [process/planning.md](process/planning.md) |
+| end a session: at the hand-off trigger, at a stop the user wants continued fresh, or with the work done | [process/session-end.md](process/session-end.md) |
+| run a shell command with quotes, backslashes or a heredoc; read a count through a pipe; start or stop a Node, Vite or background process; launch a subagent | [process/shell-and-windows.md](process/shell-and-windows.md) |
+| launch a fuzz or box batch, benchmark, profile, or edit balance config | [process/measurement.md](process/measurement.md), then [BALANCE.md](BALANCE.md) |
+| claim a refactor or a deletion changes nothing, or build a probe or instrument that decisions will rest on | [process/oracles.md](process/oracles.md) |
+| verify in Claude Code's Browser pane | [process/browser-pane.md](process/browser-pane.md); for a build, the store, settings, data rows or a layout, then [process/browser-pane-recipes.md](process/browser-pane-recipes.md) |
+| read the friction log or the session reports at a mid-round or round-close read, or run `phase-stats` or `friction-scan` | [process/welfare-and-efficacy.md](process/welfare-and-efficacy.md) |
+| reproduce a bug or pin new behaviour in a test | [TESTING.md](TESTING.md), "Adding a test" |
+| add a sim fix, a render feature, an event or a gotcha | [ARCHITECTURE.md](ARCHITECTURE.md), "Where to add things" |
+| exchange messages with an agent in another harness | [COMMUNICATION.md](COMMUNICATION.md) |
+| do movement-quality work | [PATHING.md](PATHING.md) |

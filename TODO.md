@@ -155,6 +155,17 @@ to §133 say which phase takes each row.
 
 META-ROADMAP §"Round 9 — Extensions" names each group.
 
+### At the round's close: the no-counts trial
+
+- [ ] **Read the trial of no context counts below 500k** (signed at 132g,
+  tranche 1, item 4; WORKLOG §132, "132g, tranche 1 signed"). The
+  context meter says nothing below the hand-off trigger, and no doc asks a
+  session to read or record its context. Its measure, written before it
+  started: lines in the friction log or the reports that name context
+  pressure; hand-offs before 500k with no reason given; any session past
+  500k that did not hand off (`friction-scan`'s `peak` column). Keep the
+  silence, or bring the counts back, on what those show.
+
 ### Early: a scripted run for content work
 
 - [ ] **A scripted run for content work** (the user, 2026-10-13, at the

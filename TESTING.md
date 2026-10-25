@@ -425,6 +425,15 @@ waits for a proof to be built.
 
 ## Adding a test
 
+**Headless first** for `src/sim/`, `src/run/`, `src/core/` and
+`src/config/`: reproduce a bug or pin new behaviour with a Vitest test
+before opening a browser. Patterns to copy:
+[tests/integration/determinism.test.ts](tests/integration/determinism.test.ts),
+[tests/integration/layout-deadlock.test.ts](tests/integration/layout-deadlock.test.ts),
+and `runOne` in [tests/fuzz/harness.ts](tests/fuzz/harness.ts). A failing
+test hands you the state with a stack trace, which browser polling
+usually doesn't.
+
 For pure-logic modules: co-locate `Module.test.ts` next to `Module.ts`. Keep tests narrow and named for the behavior, not the function: `it('returns empty array when no path exists', ...)` over `it('findPath case 4', ...)`.
 
 For anything that consumes randomness: take a seeded `RNG` instance as an explicit argument; never reach for global entropy. The tests prove this is doable; lint enforces it.

@@ -29,8 +29,10 @@ matching it.
   cross-phase dependencies, a risk rating, known decision points, exit
   criteria, and scope guards (the not-doing list). No sub-steps until the
   phase kicks off, and no as-built prose ever.
-- **WORKLOG.md**: the phase's narrative: findings, rationale, rejected
-  alternatives, playtest verdicts. The live file is always `WORKLOG.md`,
+- **WORKLOG.md**: the phase's findings, rationale, rejected alternatives,
+  playtest verdicts, and the checks run with their results. What was done
+  is the commit's to say, and no entry records a context reading (from
+  Round 9). The live file is always `WORKLOG.md`,
   holding the phase in progress under `## Phase N`; a round's kickoff
   entries open its first phase's file. At each phase close it moves to
   `archive/worklog-phase-N.md` and a fresh `WORKLOG.md` starts, so a
@@ -89,10 +91,8 @@ Cut sub-steps when the phase starts, not when the roadmap is written.
    When a risky change has a separable UI, cut it headless core first and
    render second, so the eyeball-only part is only what's actually visual.
 3. **Shape-lock with the user.** This is a stop: the user signs the cut and
-   its reads. The same message says what the stretch the cut opens holds,
-   with the session's context reading ("Context: the hand-off trigger",
-   below). From there the session runs to the next `stop` or
-   decision point.
+   its reads. The same message says what the stretch the cut opens holds.
+   From there the session runs to the next `stop` or decision point.
 4. **Write the cut into the ROADMAP phase section** as checkbox one-liners;
    rationale and audit findings go to the worklog.
 
@@ -155,41 +155,28 @@ is no longer taken at each close.
 
 ## Context: the hand-off trigger
 
-The session reads its own context use where the harness gives it a tool
-(Claude Code: CLAUDE.md "The context meter"); otherwise the user reads the
-meter. One trigger, with no forecast:
+One trigger, with no forecast:
 
-- **At a commit past 500k, hand off.** The reading on the commit decides:
-  past 500k, the session writes its hand-off entry and offers the next
-  session. Under it, the session goes on to the next step whatever that
-  step's size looks like. Nobody projects a step's cost, bounds the next
-  step's end, or hands off early for a step that looks large; a step is not
-  cut short for the trigger, which is read only at a commit. The number is
-  the user's (signed 2026-10-24); steps have cost from 17k to about 380k,
-  so a step begun just under it ends inside the window.
-- **At a stop or a shape-lock**, the report gives the reading, with no
-  forecast.
-- **Without the tool**, ask the user for the reading at each stop and
-  shape-lock.
-
-The WORKLOG keeps a session's first reading and its last, at its hand-off
-or end, with their times.
+- **At a commit past 500k, hand off** ([session-end.md](session-end.md)).
+  Under it, the session goes on to the next step whatever that step's size
+  looks like. Nobody projects a step's cost, bounds the next step's end,
+  or hands off early for a step that looks large; a step is not cut short
+  for the trigger, which is read only at a commit. The number is the
+  user's (signed 2026-10-24); steps have cost from 17k to about 380k, so a
+  step begun just under it ends inside the window.
+- **Who reads it.** In Claude Code the context-meter mod does: past 500k,
+  a commit that landed says to hand off, and below it nothing shows
+  (CLAUDE.md "The context meter"). In another harness, the user says when.
+- **No count below it.** No doc asks a session to read or record its
+  context, since below the trigger the count informs no decision; a stop
+  gives a reading when the user asks for one. This is a trial until Round
+  9's close, its measure in TODO; `friction-scan`'s `peak` column holds
+  each session's size.
 
 ## Hand-offs
 
-A session hands off at the trigger (above), or at a stop when the user
-wants the next stretch in a fresh session. It:
-
-- writes a hand-off entry in the WORKLOG ("The hand-off after <step>"):
-  what is done, what is open (a call the user hasn't answered, a read
-  pending, a step half-built and where it stands), and the tools or files
-  the next session needs that no doc names;
-- brings the HANDOFF Cursor's NEXT line up to date, with every open ◐;
-- writes its session report and commits;
-- offers the next session as a card (Claude Code: CLAUDE.md "Session
-  cards"). The brief names the phase, the step to start and the hand-off
-  entry, and restates nothing that AGENTS, the Cursor or the entry
-  already holds, so it is about a line long.
+What a session writes at its end, at the trigger or otherwise, is in
+[session-end.md](session-end.md).
 
 ## HANDOFF upkeep
 

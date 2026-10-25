@@ -20040,3 +20040,21 @@ for the two tools; the exit re-records the start reading, AGENTS,
 CLAUDE.md, the Cursor and ROUND-RULES.md by `String.length`. ROADMAP sat
 at its 500-line cap, so 132b to 132g's lines were shortened to two each
 to make room for the seven.
+
+### 132h1 — the probe's key, put to the user (2026-10-24, session 96d1ff74)
+
+Seventeen scenarios in `scratch/132h/scenarios.md`, the list the probe's
+prompt will carry, and their key in `scratch/132h/hidden/key.md`. Both are
+ignored by git, so a worktree cut for the probe holds neither, and the
+prompt (132h7) will name no path outside the session's own folder. The
+key is drafted from the signed decisions rather than from the text. Four
+scenarios are expected to come out differently on today's setup, because
+a signed decision changed the intent: 1 (the tradeoff line), 4 (a reading
+at a stop), 5 (a small session's ending) and 16 (the Cursor's paraphrase
+of the push rule). Five are marked as the user's call, where the session
+is unsure of the intent: 5 (a report at every session's end), 6 (a
+deletion's proof after §133), 11 (who decides to create a box), 12 (a
+commit blocked by a failure elsewhere) and 17 (a model change mid-task).
+The probe's old tree is the commit carrying this entry, the last before
+132h2 builds. The user's own 3 to 5 scenarios, keyed by him, stay outside
+the repo until the run.

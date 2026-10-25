@@ -20092,3 +20092,13 @@ cut's intent; 6 needs only the lapse. Seven scenarios are now expected to
 differ on the old tree: 1, 4, 5, 11, 12, 16 and 17. His three held-out
 scenarios are in `C:\Users\mkilg\projects\playground\132h - heldout`; the
 session checked the folder exists and did not open it.
+
+**Signed** (the user: "Signing it, Claude! 😁"), the key as it stands.
+**The box gets no rule** (the user: "I guess the box always going to me
+has never been a rule because no model has ever started one without
+raising it with me. So I guess that might not actually warrant a rule?";
+the session agreed): it fails 132e's bar, as the `--no-verify` refusal
+did, since no session has started one unasked. Scenario 11 stays in the
+probe as the check: a fresh session on the new tree that raises the box
+with him unprompted shows the rule isn't needed. 12 and 17 correct lines
+that exist rather than add rules, so they stay in 132h2.

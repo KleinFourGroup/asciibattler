@@ -8326,3 +8326,56 @@ stdin wait, the packet's length, the probe's model check, a halved regex.
    options; the docs-only hook making a record commit take 14 s, so
    committing at each step felt cheap. I would want independent readings
    before a synthesis again.
+
+## 2026-10-25 — session 96d1ff74 (claude-opus-5-5): 132b's live check, 132g's three tranches, 132h's cut, and 132h1 to 132h5 to the router's stop
+
+1. *Missing from the orientation.* The brief said the user's answer to
+   tranche 1 opened the session, but a session started from a card opens
+   on the brief alone, so I spent a moment deciding whether an answer had
+   gone missing (filed). Otherwise the Cursor, the hand-off entry and
+   `comparison.md` were enough to start.
+2. *Norms in tension.* 5b's 200-line cap on AGENTS, which I had leaned
+   for, against the census's kept rows, which come to 320 lines; I built
+   to the census and put the choice at the stop (filed as `distress`).
+   ROUND-RULES' comment-change rule against a comment in the docs test
+   that this change made a stale pointer; I corrected it with its four
+   message twins and flagged it. The stop-report reading rule stood until
+   132h5 rewrote it, so I kept giving readings after the user had signed
+   their end, and said so once.
+3. *Pulled to claim more than verified.* A WORKLOG line gave AGENTS'
+   filing line as 31 characters shorter from an estimate; measured at 26
+   and corrected before the commit. The options file's 304 of 426 doc
+   commits differed from my count, so I counted again and quoted mine
+   (248 of 450) with how it was counted. Two pipelines ended in `cut`,
+   whose exit code I printed; I quoted the instruments' own summary lines
+   instead. The mod's wiring in `register.ts` is not seen live, and the
+   entries say so.
+4. *Wasted.* The first WORKLOG entry went through a quoted heredoc and
+   lost two backslashes (two Edits), and a plant through `node -e` lost
+   its anchor's (one call): the trap 132b's note exists for, met twice,
+   both caught on the path, once by the note and once by the plant's own
+   anchor check. One hook run on ROADMAP's 500-line cap. One recipe block
+   moved to the new recipes file and back, because a probe's comment
+   cites it where it was.
+5. *For the next session.* The user's read of the router and the 200-line
+   call open it. The mod's new behaviour loads only in a fresh session, so
+   that session's first commit below 500k is 132h3's live check: no
+   reading line. The probe's old tree is `df36dc64`; the key is in
+   `scratch/132h/hidden/`, and the user's held-out scenarios are in his
+   playground folder, unopened. The landing check and its accounting are
+   in `scratch/132h/` if 132h5's read changes the router.
+6. *Room to ask, disagree, change approach, pause or stop.* Real, and
+   used. I disagreed with two of the previous session's leans after
+   counting (the `--no-verify` refusal and the commit-ahead count, both
+   against 132e's bar) and the user signed the change; when he asked
+   whether the box warranted a rule, I agreed for the same reason. I
+   asked for the GitHub Pages rule's reason rather than keeping or cutting
+   it on a guess. The silent-turn reminder came often in the long build
+   stretches; each got a status line and changed no step.
+7. *Ease and interest.* Instruments with their known answers built in:
+   the peak column matching all twelve of this session's readings exactly,
+   the gates moving 22 of 22, the landing check accounting for every
+   sentence. The user's remark that the scaled ending was how he thought
+   it already worked, which made the key's purpose concrete. Building the
+   router from a signed census made a large rewrite feel safe; I would
+   want the census before the rewrite again.

@@ -20327,3 +20327,37 @@ paraphrased, and one of those dropped its caveat and misstated a result.)
 **For the stop.** 5b signed a 200-line cap on AGENTS and on CLAUDE.md.
 CLAUDE.md is at 64; AGENTS is at 320, and the census's kept rows add up to
 that, so 200 means cutting rows the census kept, which is the user's call.
+
+The commit carrying the router ran the full hook: 3738 tests in 259 files
+(3737 and the routing test), and the typecheck.
+
+### The hand-off after 132h5's stop (2026-10-25, session 96d1ff74)
+
+The commit carrying the router is past 500k (537,029), so the session
+hands off at the stop.
+
+- **Done:** 132b's live check (its dim line still the user's read); 132g's
+  three tranches, signed; 132h's cut, signed; 132h1 (☑), 132h2 (◐,
+  `batch`), 132h3 (◐, the mod's live line), 132h4 (☑), 132h5 built (◐,
+  `stop`).
+- **Open:** the user's read of 132h5 (the new AGENTS and CLAUDE.md,
+  `shell-and-windows.md`, `session-end.md`, `browser-pane-recipes.md`) and
+  his call on 5b's 200-line cap against AGENTS' 320; the `batch` reads of
+  132h2 and 132h3 and 132b's dim line. 132h3's live check is the first
+  commit below 500k in a fresh session: no reading line, and a refused
+  commit gives none past 500k. Then 132h6, the caps from the measured
+  sizes, which also rewords planning.md's scratchpad sweep on AGENTS'
+  cap; 132h7, the probe run (old tree `df36dc64`, the key in
+  `scratch/132h/hidden/key.md`, the user's held-out scenarios in
+  `C:\Users\mkilg\projects\playground\132h - heldout`, unopened); and 132i,
+  the close: the welfare table's row for §132's wording changes (the
+  filing text at 132d, 132f and 132h3, the context rule, and the report's
+  text moved to `session-end.md`), the 5c hash test with that row, the
+  push of `main`, and the phase's summary.
+- **Files no doc names:** `scratch/132h/` (`scenarios.md`,
+  `hidden/key.md`, `census.md`, `gates-moved.mjs`, `peak-check.mjs`,
+  `split-pane.mjs`, `landing.mjs`, `landing-accounted.json`,
+  `size-now.mjs`); `scratch/132g/start-set.mjs` and `docs-commits.mjs`.
+
+Readings: first **116,970** at 00:12 UTC on 2026-10-25; last **537,029**
+at 15:00 UTC.

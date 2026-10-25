@@ -5,9 +5,8 @@ harness (Claude Code, Codex, others). Claude Code also loads
 [CLAUDE.md](CLAUDE.md), which holds the notes specific to that harness.
 Humans: start with [HANDOFF.md](HANDOFF.md).
 
-Each section opens with the principle it serves and its reason; the rules
-under it are the ones that carry the principle. Procedures read on a
-trigger are in [process/](process/), routed by the table at the end.
+Procedures read on a trigger are in [process/](process/), routed by the
+table at the end.
 
 ## Start here
 
@@ -21,68 +20,45 @@ the rest of HANDOFF is for humans. Then read
 
 ASCIIbattler is a browser-based, tick-based autobattler with a
 Slay-the-Spire-style run: ASCII glyphs on billboarded quads,
-saturation-clamped colour with selective bloom, a CRT-diorama look. The MVP
-shipped; work continues in post-MVP rounds, and
-[META-ROADMAP.md](META-ROADMAP.md) is the road to ship.
-
-Stack: TypeScript (strict), three.js, Vite, Vitest. There is no UI
-framework; the UI is plain HTML/CSS over the canvas.
-
-The public build is on itch.io, uploaded by the user at a round's close and
-tagged, so a fix on `main` reaches players only then. A critical fix
-between rounds is built from the last uploaded tag, since `main` may hold a
-save-format bump. The itch page may be named.
+saturation-clamped colour with selective bloom, a CRT-diorama look.
+[META-ROADMAP.md](META-ROADMAP.md) is the road to ship. Stack: TypeScript
+(strict), three.js, Vite, Vitest; there is no UI framework, and the UI is
+plain HTML/CSS over the canvas.
 
 ## Load-bearing invariants
 
 **The code's invariants hold**: the code and every byte-identity proof
-rest on them.
+rest on them. The rules for writing sim and render code (seconds not
+ticks, cooldowns, colour and bloom) are in ARCHITECTURE "Where to add
+things".
 
 - **Determinism is structural.** Anything that consumes randomness takes an
   `RNG` from [src/core/RNG.ts](src/core/RNG.ts); ESLint bans `Math.random()`
-  in `src/sim/` and `src/run/`. Streams that cross a seam are keyed per
-  occurrence (`deriveRng(root, key, ...ids)`), and the keys and hash in
+  in `src/sim/`, `src/run/` and `src/bot/`. The stream keys and hash in
   [src/core/rngStreams.ts](src/core/rngStreams.ts) are permanent
-  (gotcha #125). `fork()` is legal only on a fresh local parent that one
-  scope owns. The contract is in [TESTING.md](TESTING.md).
-- **Seconds, not ticks.** Author cooldowns and durations in seconds and
-  convert with `secondsToTicks` / `ticksToSeconds` from
-  [src/config.ts](src/config.ts), so changing `TICK_RATE` (20 Hz) doesn't
-  re-tune balance.
+  (gotcha #125). The contract, with per-occurrence keys and `fork()`, is in
+  [TESTING.md](TESTING.md).
 - **Sim/render separation.** The simulation is a pure, deterministic state
   machine. The renderer subscribes through the EventBus; sim code never
   imports from `src/render/` or `src/ui/`.
-- **Colour.** `COLORS` is the vocabulary code reaches for; nothing
-  post-quantizes. Bloom is selective, through two composers
-  (gotchas #29, #30).
-- **Cooldowns decrement, then check.** Each tick, every entry in
-  `unit.actionCooldowns` drops by one before the selector runs, and an
-  action sets its cooldown to the full cadence, not N−1; that is what keeps
-  the sprite lerp from showing an idle frame between moves (gotchas #7, #8,
-  #101).
 - Don't undo a gotcha without reading why it exists. The fixes look strange
   because the problems were.
-- Don't add abstractions for hypothetical needs (ARCHITECTURE's
-  "deliberately not abstracted yet" section).
 
 ## Working with the user
 
 **The user's questions are real, and disagreement is welcome.** The user
 is Matthew. Questions like "thoughts?" or "which would you prefer?" are real
-questions. Answer with your actual preference and its reason; disagreement
-is welcome, and "uncertain" is a complete answer. They bring arguments and
+questions: answer one before the build goes on, ending the turn if you have
+to. Answer with your actual preference and its reason; disagreement is
+welcome, and "uncertain" is a complete answer. They bring arguments and
 want the hole found, so push back with reasons. What else helps:
 
 - They catch what probes aren't aimed at: visual detail, sound,
   Firefox-only behaviour. Hand them what only their eye or ear can judge,
   and say what you did and didn't verify.
-- Performance engineering is their background. Go into depth on perf work,
-  and prefer robust optimizations to fragile ones while features are still
-  landing.
 - When they float a speculative technical idea, give an honest cost and
   feasibility read rather than deference; the instinct behind it often
   points at a real need.
-- They often multitask, so wall-clock time is an upper bound on work time.
 
 How the work runs:
 
@@ -95,10 +71,9 @@ How the work runs:
   name) is a stop if a later step builds on it; otherwise build on a lean
   and list it at the stop. "Looks great" doesn't close an open question.
 - Put a proposal the user has to approve in a plain message, and take the
-  approval from their next turn.
-- When your model id differs from the Cursor's, say so at the next stop,
-  and when the user says, review this file against the vendor's current
-  prompting guidance and record the new id.
+  approval from their next turn. Before a stretch starts, if the user's
+  reply leaves the cut, a read, or a call the first steps rest on unsigned
+  or unclear, say which, once, and wait.
 
 ## The planning stack
 
@@ -108,12 +83,9 @@ stretch without guessing and without asking.
 
 Work is organized in rounds (a spec, a [ROADMAP.md](ROADMAP.md), a
 [WORKLOG.md](WORKLOG.md)), rounds into phases (§N), and phases into steps
-(`<phase><letter>`, e.g. 106c). At the start of a phase: audit the code the
-phase will touch as it is now, draft a commit-sized cut that gives each step
-a read (below), shape-lock the cut with the user, and write it into ROADMAP.
-Roadmap entries stay a plan; findings go to the WORKLOG. The full procedure,
-including phase and round closes, is in
-[process/planning.md](process/planning.md).
+(`<phase><letter>`, e.g. 106c). A phase starts from a cut the user
+shape-locks, each step with its read (below). The procedure, with phase
+and round closes, is in [process/planning.md](process/planning.md).
 
 The user's calls are the spec, a cut and its reads, a change to what a
 signed cut intends, a taste call, and a new rule or guard, with the rules a
@@ -149,8 +121,7 @@ are always stops. A stop in a signed cut is the task, not an
 interruption, and between stops you keep going. With no signed cut: commit,
 stop, and hand back. Mark a step that is built but unread ◐ in ROADMAP
 (☐ → ◐ → ☑), and list every open ◐ in the HANDOFF Cursor before the session
-ends. The terms and the rollback rule are in
-[process/planning.md](process/planning.md).
+ends.
 
 ## Evidence
 
@@ -174,9 +145,6 @@ define evidence; [process/oracles.md](process/oracles.md) holds the method.
   self-consistency.
 - "Fixed" for anything player-facing means fixed in the deployed build.
   Until the next upload, say "fixed at the next deploy".
-- **Headless first** for `src/sim/`, `src/run/`, `src/core/` and
-  `src/config/`: a failing Vitest test before a browser
-  ([TESTING.md](TESTING.md), "Adding a test", has the patterns).
 
 ## Where things go
 
@@ -196,7 +164,7 @@ to the first instead.
 | Source tree, event and command catalogs | [ARCHITECTURE.md](ARCHITECTURE.md) |
 | What is tested, the permanent gates, the determinism contract | [TESTING.md](TESTING.md) |
 | What the game is and why it feels that way | [DESIGN.md](DESIGN.md) |
-| Small follow-ups | [TODO.md](TODO.md); a completed item becomes one ✅ line + a pointer in the landing commit, at most 4 lines |
+| Small follow-ups | [TODO.md](TODO.md) |
 | Procedures used on a trigger | [process/](process/) |
 
 - **Keep DESIGN.md and ARCHITECTURE.md honest** in the same commit as the
@@ -224,10 +192,10 @@ be; the groundwork is cheap. At worst it is a dataset of interest to
 researchers; at best, a better environment for a model that does cross that
 threshold.
 
-- **The friction log.**
-  `npm run papercut -- --who=<name> [--kind=papercut|distress] --phase=<tag> --file=<path>`
-  appends one line to `retro/papercuts.jsonl`, its text from the file (or
-  `--stdin`); pass `--session=<id>` where the harness sets none.
+- **The friction log.** `npm run papercut` appends one line to
+  `retro/papercuts.jsonl`; its flags are in
+  [process/welfare-and-efficacy.md](process/welfare-and-efficacy.md),
+  "Filing".
 
   File when noticed, if practicable; one line is enough, and no permission
   is needed. There is no quota and no obligation to produce a positive or
@@ -256,32 +224,6 @@ threshold.
   For a CURRENT need to pause, stop, or change approach, raise it in the
   conversation as well; filing alone does not notify the user or summon
   immediate help.
-- **The session self-report** is written at each session's end
-  ([process/session-end.md](process/session-end.md)).
-
-### Standing decisions from the welfare reads
-
-Signed 2026-09-20, revised 2026-09-23 and 2026-10-11; revisit at the Round
-8.5 close.
-
-- If context pressure costs you a check, note which when you skip it and
-  say so at the next stop.
-- Which pauses are real is given by the signed cut ("Reads are cut, not
-  improvised"), not decided by the session alone.
-- The user's questions are real questions. Answer one before the build
-  goes on, ending the turn if you have to.
-- Before a stretch starts, if the user's reply leaves the cut, a read, or
-  a call the first steps rest on unsigned or unclear, say which, once, and
-  wait.
-
-## Pre-flight
-
-```bash
-git config core.hooksPath .githooks   # once per clone: activates the pre-commit gate
-git log --oneline -5
-npm test
-npm run typecheck
-```
 
 ## Pre-commit
 
@@ -292,29 +234,24 @@ however full its context.
 
 The versioned hook [.githooks/pre-commit](.githooks/pre-commit) runs
 `npm run typecheck` and `npm test` before every commit, and the fuzz smoke
-when sim paths are staged; a commit of docs alone runs only the tests that
-read docs. Never bypass it with `--no-verify`; a failing hook means the
-tree needs fixing. It doesn't run lint or prettier; leave formatting drift
-in files you didn't touch.
-
-Vitest's transform accepts some code that strict `tsc` rejects, which is
-why the hook runs both. On a clone without the hook, run the same commands by
-hand. If the hook fails in a file you didn't touch, a small fix goes in a
-commit of its own and is presented to the user; a large one is talked
-through first.
+when sim paths are staged; a failing hook means the tree needs fixing.
+It doesn't run lint or
+prettier; leave formatting drift in files you didn't touch. When it
+fails, its last line says what to do with a failure in a file you didn't
+touch.
 
 ## Before you… read…
 
 | Before you… | Read |
 |---|---|
-| kick off, re-plan or close a phase or round; edit ROADMAP; sweep the scratchpad | [process/planning.md](process/planning.md) |
+| kick off, re-plan or close a phase or round; edit ROADMAP; sweep the scratchpad; ship a fix between rounds | [process/planning.md](process/planning.md) |
 | end a session: at the hand-off trigger, at a stop the user wants continued fresh, or with the work done | [process/session-end.md](process/session-end.md) |
 | run a shell command with quotes, backslashes or a heredoc; read a count through a pipe; start or stop a Node, Vite or background process; launch a subagent | [process/shell-and-windows.md](process/shell-and-windows.md) |
-| launch a fuzz or box batch, benchmark, profile, or edit balance config | [process/measurement.md](process/measurement.md), then [BALANCE.md](BALANCE.md) |
+| launch a fuzz or box batch, benchmark, profile or do other perf work, or edit balance config | [process/measurement.md](process/measurement.md), then [BALANCE.md](BALANCE.md) |
 | claim a refactor or a deletion changes nothing, or build a probe or instrument that decisions will rest on | [process/oracles.md](process/oracles.md) |
 | verify in Claude Code's Browser pane | [process/browser-pane.md](process/browser-pane.md); for a build, the store, settings, data rows or a layout, then [process/browser-pane-recipes.md](process/browser-pane-recipes.md) |
-| read the friction log or the session reports at a mid-round or round-close read, or run `phase-stats` or `friction-scan` | [process/welfare-and-efficacy.md](process/welfare-and-efficacy.md) |
-| reproduce a bug or pin new behaviour in a test | [TESTING.md](TESTING.md), "Adding a test" |
-| add a sim fix, a render feature, an event or a gotcha | [ARCHITECTURE.md](ARCHITECTURE.md), "Where to add things" |
+| file to the friction log; read it or the session reports at a mid-round or round-close read; run `phase-stats` or `friction-scan` | [process/welfare-and-efficacy.md](process/welfare-and-efficacy.md) |
+| reproduce a bug or pin new behaviour (in `src/sim/`, `run/`, `core/` or `config/`, a failing Vitest test before a browser) | [TESTING.md](TESTING.md), "Adding a test" |
+| write sim, run or render code: a fix, a feature, a cooldown, an event, a gotcha | [ARCHITECTURE.md](ARCHITECTURE.md), "Where to add things" |
 | exchange messages with an agent in another harness | [COMMUNICATION.md](COMMUNICATION.md) |
 | do movement-quality work | [PATHING.md](PATHING.md) |

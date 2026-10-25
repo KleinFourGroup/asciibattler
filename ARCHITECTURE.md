@@ -814,6 +814,18 @@ tests). A new event goes in [src/core/events.ts](src/core/events.ts)
 silent with a reason; typecheck or `npm test` fails until it's in all
 three. A gotcha that bit you goes in GOTCHAS.md with its commit.
 
+Sim and render code also rest on these rules, beside AGENTS' determinism
+and sim/render separation. Author cooldowns and durations in seconds and
+convert with `secondsToTicks` / `ticksToSeconds` from
+[src/config.ts](src/config.ts), so changing `TICK_RATE` (20 Hz) doesn't
+re-tune balance (DESIGN.md, "Authoring convention"). Each tick, every entry
+in `unit.actionCooldowns` drops by one before the selector runs, and an
+action sets its cooldown to the full cadence, not N−1; that is what keeps
+the sprite lerp from showing an idle frame between moves (gotchas #7, #8,
+#101). `COLORS` is the vocabulary code reaches for. Bloom is selective,
+through two composers (gotchas #29, #30). Don't add abstractions for
+hypothetical needs ("What's deliberately not abstracted yet", below).
+
 ## What's deliberately not abstracted yet
 
 A few things would be over-engineering at the current scope; flagging them so we know what we're choosing not to build:

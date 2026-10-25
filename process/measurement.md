@@ -104,6 +104,9 @@ Boxes are created on demand and destroyed after use.
 
 ## Benchmarks and profiling
 
+- Performance engineering is the user's background. Go into depth on perf
+  work, and prefer robust optimizations to fragile ones while features are
+  still landing.
 - Count the shape before timing it. A group-by over an existing
   `decisions.csv` can show a mechanism firing ten times more often than
   intended, before any timed probe runs.

@@ -172,6 +172,8 @@ One trigger, with no forecast:
   gives a reading when the user asks for one. This is a trial until Round
   9's close, its measure in TODO; `friction-scan`'s `peak` column holds
   each session's size.
+- **A check skipped.** If context pressure costs you a check, note which
+  when you skip it and say so at the next stop.
 
 ## Hand-offs
 
@@ -216,6 +218,10 @@ What a session writes at its end, at the trigger or otherwise, is in
   `archive/sessions-round-N.md`, a fresh one starting with its header)
   and ROUND-RULES.md; sweep the scratchpad (below); update META-ROADMAP's
   status; rewrite the HANDOFF Cursor.
+- **The upload.** The public build is on itch.io, uploaded by the user at a
+  round's close and tagged, so a fix on `main` reaches players only then. A
+  critical fix between rounds is built from the last uploaded tag, since
+  `main` may hold a save-format bump. The itch page may be named.
 - **The close deletes as well as promotes.** List the lines the round
   added to AGENTS.md, CLAUDE.md and `process/` (`git diff` from the last
   round close), with ROUND-RULES.md's rules, and keep each only if it did

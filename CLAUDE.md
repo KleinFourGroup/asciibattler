@@ -1,18 +1,9 @@
-<!-- AGENTS.md is the shared, harness-neutral instruction file. Claude Code
-     loads CLAUDE.md, and the @-import below inlines AGENTS.md at session
-     start (tests/docs.test.ts checks the import line). Only notes specific to
-     Claude Code and the Claude desktop app belong below it. -->
-
 @AGENTS.md
 
 # Claude Code notes
 
-Notes specific to Claude Code and the Claude desktop app. Everything else is
-in AGENTS.md, which other harnesses read too. The notes on Claude Code's
-tools that matter only on a trigger (editing, Bash calls, subagents,
-background work) are in
-[process/shell-and-windows.md](process/shell-and-windows.md), and session
-cards in [process/session-end.md](process/session-end.md).
+Notes specific to Claude Code and the Claude desktop app; everything else
+is in AGENTS.md, which other harnesses read too.
 
 - **What the user sees.** A note written between tool calls may reach the
   user as a one-line summary the app writes, not as your text, and you
@@ -35,30 +26,9 @@ cards in [process/session-end.md](process/session-end.md).
   is true now ("still reading X, no result yet") and continue. In a long
   stretch it comes every few tool calls, and a status line beforehand does
   not head it off.
-- **Session id.** Under the desktop app `$CLAUDE_CODE_SESSION_ID` holds
-  it, the scratchpad directory's name, whose first 8 characters name a
-  session in the docs; `npm run papercut` reads it itself.
-  `$CLAUDE_SESSION_ID` is empty (seen 2026-10-25, Claude Code 2.1.308).
-- **Backslashes.** Text with backslashes goes through Write, Edit or the
-  PowerShell tool: the Bash tool halves them, heredocs included, and the
-  context meter's mod notes a halved command only after it has run.
-- **The Browser pane** starts with the `dev-preview` launch config
-  ([.claude/launch.json](.claude/launch.json), port 5191). Before any pane
-  verify, read [process/browser-pane.md](process/browser-pane.md); a pane
-  session starts with `await __probe.ready()`.
-- **The preview hook** asks for a browser verify after every Write,
-  including headless tests and scratch files. Follow it only when the change
-  is observable in the pane.
-- **The context meter** is a mod in
-  [.claude/skills/context-meter/](.claude/skills/context-meter/). The tool
-  `mcp__context-meter__read` returns the session's context fill on
-  request: the input tokens the last response was answered over, as the
-  status line has them. Below the hand-off trigger
-  ([process/planning.md](process/planning.md), "Context: the hand-off
-  trigger") the mod shows no count; past it, a Bash or PowerShell commit
-  that landed gets the reading and a line saying to hand off after it, as
-  context for you and a transcript line for the user. Under the app the tool can be listed only as a deferred
-  tool: load it with ToolSearch (`select:mcp__context-meter__read`) before
-  the first call, since deferred is not absent. If it is absent, ask the
-  user for the reading. Editing the mod, or finding why it didn't load:
-  its [README](.claude/skills/context-meter/README.md).
+- **The context meter**, a mod in
+  [.claude/skills/context-meter/](.claude/skills/context-meter/), is silent
+  below the hand-off trigger; past it, a commit that landed gets the
+  reading and a line saying to hand off after it
+  ([process/session-end.md](process/session-end.md)). Its tool and its
+  upkeep: the [README](.claude/skills/context-meter/README.md).

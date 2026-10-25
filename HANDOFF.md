@@ -6,15 +6,15 @@ A fresh-session orientation for ASCIIbattler. Read this first; then dive into th
 
 **The ONE home for live status.** Other docs (and the agent memory) point here instead of restating it; when state changes, this section is the single place that updates.
 
-- **NEXT — §132, the process review: 132h5.5's stop, the ranked list and two drafts put to the user** (WORKLOG §132, "132h5.5 — the second pass, put to the user"; `scratch/132h/pass2/ranked.md`; the router at `27d13fb8` as the base; `scratch/132h/census.md`; [ROADMAP.md](ROADMAP.md) §132, the cut 132h1 to 132h7, signed, with 132h5.5 inserted; the inputs in `scratch/132g/`, the probe's key in `scratch/132h/hidden/`). Then 132h6 and 132h7, 132i the close, and §133, the re-cut and the archive. **Open ◐:** 132b (the shell note: its live check passed on 2026-10-24; the user's read of the dim transcript line is open; WORKLOG §132, "132b's live check"); 132h2 (the fixes, `batch`); 132h3 (the mod's live line in a fresh session, `batch`); 132h5.5 (the second pass, `stop`).
+- **NEXT — §132, the process review: 132h6, the caps, after the user's call on 5b's per-file line caps** (WORKLOG §132, "132h5.5, signed and applied"; `scratch/132h/pass2/`; `scratch/132h/census.md`; [ROADMAP.md](ROADMAP.md) §132, the cut 132h1 to 132h7, signed, with 132h5.5 inserted; the inputs in `scratch/132g/`, the probe's key in `scratch/132h/hidden/`). Then 132h7, 132i the close, and §133, the re-cut and the archive. **Open ◐:** 132b (the shell note: its live check passed on 2026-10-24; the user's read of the dim transcript line is open; WORKLOG §132, "132b's live check"); 132h2 (the fixes, `batch`); 132h3 (the mod's live line in a fresh session, `batch`).
 - **The public build is `0.1.1`** (`7baa695c`, tagged `v0.1.1`), uploaded to itch.io on 2026-10-23 at §128, after `0.1.0` (`d6a834e`) from 2026-10-10; its number follows the user's version rule (META-ROADMAP §Round 8, "The version"). From itch by 2026-10-23, the user's word: a handful of players and no comments. A stranger's finding rides here, as do the 7.5 close's two watches, frame rate on other machines and the overlay stack; none is recorded yet.
-- **Model id: `claude-opus-5-5`** (from `claude-fable-5-1` on 2026-09-22; the tone audit ran 2026-09-23, `archive/post-104-worklog.md` §"The new-model tone audit"). A session on another id says so at its next stop (AGENTS "Working with the user").
+- **Model id: `claude-opus-5-5`** (from `claude-fable-5-1` on 2026-09-22; the tone audit ran 2026-09-23, `archive/post-104-worklog.md` §"The new-model tone audit"). When your model id differs from this one, say so at the next stop, and when the user says, review AGENTS.md against the vendor's current prompting guidance and record the new id.
 - **Last phase: §131 ✅ closed 2026-10-24** on the user's read: the reads ([ROADMAP.md](ROADMAP.md) §131; [WORKLOG.md](WORKLOG.md) §131).
 - **Earlier:** Round 8 and everything before it are in Closed rounds below; per-phase detail is in each round's archived roadmap and worklog.
 - **In flight: nothing on the box** since 2026-10-10. The tree plays the frozen config at `d9675b6` under the Escalation ladder (`config/escalation.json`; level 0 is that game); its board state and named watches are BALANCE.md's (2026-10-10 §118e), and the riders TODO's, under "Round 9" and "Round 10".
 - **Branch / tree:** `main`. Tag `v0.1.1` is the uploaded build, `v0.1.0` the one before it. Tags `pre-casualty-experiment` and `casualty-seams` stay as history: the experiment was kept, so they mark the floor the rule was measured against, not a rollback plan.
 - **Snapshots:** WorldSnapshot **v36** (91a1: the fallen-power ledger + `battle:ended.reason`) · RunSnapshot **v49** (117.75a: the `rest` phase, no new field; a v48 save rejects).
-- **Tests:** **3738 main (0 skipped)** in 259 files, green, by the hook at `27d13fb8` on 2026-10-25, and **549 fuzz:smoke** in 58 files and **1 fuzz:jobs-parity** by the hook at `9c759604`, on 2026-10-23 (Vitest 5.0.5, Node 26; the parity test runs when `tests/fuzz/` is staged and before a `--jobs` batch). The journal corpus is outside both since 130b: 34 tests, run by hand (TESTING.md). Typecheck clean. The hook takes ~15 s for docs alone (132a), ~45 s for UI, ~3 min when the smoke runs. The tests nearest the default 5 s beside the suite carry 15 s since 126f (WORKLOG §126).
+- **Tests:** **3738 main (0 skipped)** in 259 files, green, by the hook at `3c086b30` on 2026-10-25, and **549 fuzz:smoke** in 58 files and **1 fuzz:jobs-parity** by the hook at `9c759604`, on 2026-10-23 (Vitest 5.0.5, Node 26; the parity test runs when `tests/fuzz/` is staged and before a `--jobs` batch). The journal corpus is outside both since 130b: 34 tests, run by hand (TESTING.md). Typecheck clean. The hook takes ~15 s for docs alone (132a), ~45 s for UI, ~3 min when the smoke runs. The tests nearest the default 5 s beside the suite carry 15 s since 126f (WORKLOG §126).
 - **Last closed: ROUND 8 — FOUNDATIONS** (Phases 110→118, with §117.5 and §117.75; 2026-09-28 → 2026-10-11), each phase closed on the user's read; see Closed rounds below.
 
 ## Current state
@@ -81,7 +81,16 @@ drift crept in). ARCHITECTURE also carries the event + command catalogs.
 
 ## Pre-flight, pre-commit & toolchain
 
-In **[AGENTS.md](AGENTS.md)** (`## Pre-flight` / `## Pre-commit`); the
+Pre-flight, for a fresh clone or a check of the tree before work starts:
+
+```bash
+git config core.hooksPath .githooks   # once per clone: activates the pre-commit gate
+git log --oneline -5
+npm test
+npm run typecheck
+```
+
+The gate itself is in **[AGENTS.md](AGENTS.md)** "Pre-commit"; the
 toolchain's versions are in `package.json`. The versioned pre-commit hook runs `npm run typecheck` and
 `npm test`, plus `npm run fuzz:smoke` when sim/run/core/config paths are staged,
 and only the tests that read docs when docs alone are staged.

@@ -20473,3 +20473,60 @@ comes back unaccounted and the check exits 1.
 **For the stop:** which version, or a point between; the standing
 decisions' revisit (ranks 4, 8 and 22 to 24 in `ranked.md`); and 5b's
 per-file line caps, which 132h6 builds on.
+
+### 132h5.5, signed and applied (2026-10-25, session b27a1fcd)
+
+**Signed** (the user: "I think I agree with all of your recommendations,
+save one: I think we should bring back sim/render separation. Like you
+said, it is foundational; I think that warrants being always loaded.
+Otherwise, I absolutely love this!"): the 75 % version, with rank 37 (the
+hook prints the rule for a failure in a file the session didn't touch) and
+with the sim/render separation kept in AGENTS' invariants. The standing
+decisions' revisit is signed with it: "which pauses are real" cut as a
+repeat of the reads, the context-pressure line to `planning.md`, the other
+two merged into "Working with the user". 5b's per-file line caps are the
+next call, unsigned.
+
+**Built.**
+
+- *The hook* (`3c086b30`): an EXIT trap prints the rule when the hook
+  fails; its header takes the Vitest and `tsc` reason and the clone note,
+  and points at HANDOFF's pre-flight section. The check,
+  `scratch/132h/pass2/trap-check.sh`, reads the trap line from the hook and
+  runs it after a failing command (it printed the rule), a passing one and
+  an early `exit 0` (both silent); a copy with `-ne` planted as `-eq`
+  failed it. The full hook on that commit: 3738 tests in 259 files and the
+  typecheck, with no failure line.
+- *AGENTS and CLAUDE.md* from `AGENTS-75.md` and `CLAUDE-75.md`, with the
+  sim/render bullet back word for word and "Pre-commit" pointing at the
+  hook's failure line.
+- *The moves,* as `moves-both.md` lists them, but for the sim/render
+  sentences, which stay in AGENTS: ARCHITECTURE "Where to add things"
+  (seconds, cooldowns, colour and bloom, the abstractions pointer);
+  `measurement.md` (perf, "their" made "the user's"); `planning.md` (the
+  upload in "Round close", the skipped check in the hand-off trigger);
+  `welfare-and-efficacy.md` (a "Filing" section first, its header
+  rewritten to route filing); `session-end.md` (the session id); the
+  meter's README (the tool and its deferred loading); HANDOFF (the
+  model-id rule in the Cursor's bullet, the pre-flight block in
+  "Pre-flight, pre-commit & toolchain").
+- *The landing check, applied* (`landing2.mjs --cut=applied`, with
+  `landing-applied.json`): of the router's 213 sentences, 163 land word for
+  word in the tree and 50 are accounted, with none unaccounted and none
+  stale. The plant now drops the perf sentence from where it lives
+  (`measurement.md` once applied, `moves-both.md` for a draft) and requires
+  it to occur exactly once; planted, it comes back unaccounted and the
+  check exits 1. Moving the plant was needed: once applied, dropping the
+  sentence from `moves-both.md` no longer removed it from the corpus, and
+  the old plant passed.
+- *The sizes:* AGENTS 14,407 characters and 257 lines (122 with each
+  paragraph on one line), CLAUDE.md 1,937 and 34; the start reading
+  (AGENTS, CLAUDE.md, the Cursor, ROUND-RULES.md) 22,856, from 27,869 before
+  the pass.
+
+A known trap met again while building, filed: a heredoc halved an
+anchor's backslash, and the anchor check refused before writing. CLAUDE.md's
+backslash line was in this session's context from its start.
+
+For 132i's welfare row: the filing text is unchanged, but its surroundings
+are, since the command and its flags moved to `welfare-and-efficacy.md`.

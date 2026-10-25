@@ -1,10 +1,16 @@
 # Reading the welfare and efficacy instruments
 
-Read this before a mid-round or round-close read of the friction log
-([retro/papercuts.jsonl](../retro/papercuts.jsonl)) and the session reports
-([retro/sessions.md](../retro/sessions.md)). How sessions FILE is in
-AGENTS.md "Session self-report + the friction log"; this page is for the
-reader.
+Read "Filing" to file to the friction log, and the rest before a mid-round
+or round-close read of it ([retro/papercuts.jsonl](../retro/papercuts.jsonl))
+and of the session reports ([retro/sessions.md](../retro/sessions.md)).
+What to file, and when, is in AGENTS.md "Session self-report + the friction
+log".
+
+## Filing
+
+`npm run papercut -- --who=<name> [--kind=papercut|distress] --phase=<tag> --file=<path>`
+appends one line to `retro/papercuts.jsonl`, its text from the file (or
+`--stdin`); pass `--session=<id>` where the harness sets none.
 
 ## Who reads, and what a read produces
 

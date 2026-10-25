@@ -1,7 +1,17 @@
 # The context-meter mod
 
 What the mod does for a session is in CLAUDE.md, "The context meter".
-This file is for a session that edits the mod, or finds it not loaded.
+This file is for a session that reads a count on request, edits the mod,
+or finds it not loaded.
+
+## The tool
+
+The tool `mcp__context-meter__read` returns the session's context fill on
+request: the input tokens the last response was answered over, as the
+status line has them. Under the app the tool can be listed only as a deferred
+tool: load it with ToolSearch (`select:mcp__context-meter__read`) before
+the first call, since deferred is not absent. If it is absent, ask the
+user for the reading.
 
 ## Loading
 

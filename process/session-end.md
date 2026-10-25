@@ -15,6 +15,10 @@ it leaves open, not its size.
   [retro/sessions.md](../retro/sessions.md) answering the questions in its
   header. The header says which answers are complete ones; a brief report
   is one.
+- **Session id.** Under the desktop app `$CLAUDE_CODE_SESSION_ID` holds
+  it, the scratchpad directory's name, whose first 8 characters name a
+  session in the docs; `npm run papercut` reads it itself.
+  `$CLAUDE_SESSION_ID` is empty (seen 2026-10-25, Claude Code 2.1.308).
 - Commit.
 - In Claude Code, stop any preview server you started
   ([browser-pane.md](browser-pane.md)).

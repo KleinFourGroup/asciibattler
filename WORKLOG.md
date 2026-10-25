@@ -20747,3 +20747,54 @@ reading.
   `trap-check.sh`); `scratch/132h/probe/` (`build-trees.sh`,
   `make-prompt.mjs`, `prompt.md`, `cost.mjs`, `scores.md`,
   `answers-old.md`, `answers-new.md`).
+
+### 132i's read, signed; §132 closed (2026-10-25, session 53728777)
+
+The user's read of the close, the six calls in one reply: "1. I agree with
+your lean: no refusal! 2. Yeah, let's go with that guard! 3. I'm okay with
+leaving the history. This isn't exactly top-secret information; I just
+don't want it front and center. 4. Both versions were right on 19! 👍
+5. All the batch reads were good! 6. Let's delete and archive! 😁"
+
+- **The halving guard: no refusal;** the mod's note stays a note. The
+  stop's lean rested on `scratch/132i/noted-calls.mjs`, which lists every
+  Bash call in this project's transcripts that the note's model fires on,
+  each changed line as written and as bash got it: 88 of 17,432 calls
+  since 2026-08-01. At least 14 could do no harm: 10 deliberate probes of
+  the halving, and 4 where both readings mean the same, such as the
+  bracket class `[\\/]` against `[\/]`. Since the note shipped on 2026-10-24
+  it fired 7 times: 3 harmless or probes; 3 damaging (a WORKLOG entry,
+  fixed after the note by a Read and two Edits, and two plants refused by
+  their own anchor checks at one call each, the cost a refusal would have
+  had); one grep not judged. A refusal would have saved about three calls
+  and cost about three. This session's own `git grep` over the old tree
+  drew the note on a harmless bracket class, the same shape.
+- **The home-path guard** (`919e5b15`): `tests/docs.test.ts` holds that no
+  tracked file names a home folder, by a Windows profile path with either
+  slash, doubled or not, its Git Bash form, or the transcript folder's name
+  built from it; a placeholder with no name after the folder passes. It
+  reads all 1,073 tracked files in about 221 ms. Its planted cases flag six
+  shapes and pass three. In a worktree at `a36640a4`, a real profile path
+  appended to README failed the live test, naming `README.md:101`, and the
+  slug branch dropped from the pattern failed the planted test at its
+  line 6. Over `7b41768b`'s tree the pattern finds 12 lines, `git grep`'s 13
+  less the one placeholder (`C:/Users/…` in CLAUDE.md). That corrects the
+  stop's count: the tip then public held 12 such lines in 10 files, not 13
+  in 11. TESTING's gate line names what the docs test holds.
+- **The history: left.** While the stop was out, `origin/main` went from
+  `7b41768b` to `a36640a4` by a push this session did not make (17:15
+  -0400, the remote ref's reflog), so the 46 commits, with the six
+  home-path lines `cb923cd7` removed, are in the public history; the
+  user's call covers it.
+- **Scenario 19:** right on both trees. With 18 and 20, which matched his
+  intent on the new tree, the new tree is right on all three held out.
+- **The batch reads:** 132b, 132h2 and 132h3 read clear. 132b's live check
+  ran again first in this session: a single-quoted run of two backslashes
+  drew the note, the two controls none. For 132h3, this session's commit
+  `919e5b15`, below 500k, carried no reading line.
+- **The probe folders and sessions:** both answer files checked byte for
+  byte against their copies in `scratch/132h/probe/` again; the two probe
+  sessions archived, since their processes held the folders; then
+  `~\projects\probe-132h7-old` and `-new` deleted.
+- **Closed:** 132b, 132h2, 132h3 and 132i ticked; §132 demoted in ROADMAP
+  and HANDOFF; the Cursor's NEXT line to §133's kickoff.

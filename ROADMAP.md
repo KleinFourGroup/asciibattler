@@ -11,7 +11,7 @@ plan: [archive/post-109-roadmap.md](archive/post-109-roadmap.md) (Round 8)
 with its worklog and spec beside it; before it
 [archive/post-104-roadmap.md](archive/post-104-roadmap.md) (Round 7.5).
 
-**Status: §132, the process review, cut and signed 2026-10-24.**
+**Status: §132 closed 2026-10-25; §133, the re-cut, is next.**
 The spec holds the user's intent and four signed
 decisions ([round-8.5-spec.md](round-8.5-spec.md)). The round opened with
 the oracle map, ahead of the census, as the user signed at the Round 8
@@ -452,44 +452,30 @@ leans for §132 are in WORKLOG §131, after 131c.
   54 of 54 right on both trees; 93 %, within the noise.
 - ☑ **131d — the close** (`stop`).
 
-## Phase 132 — the process review
+## Phase 132 — the process review ✅ (closed 2026-10-25)
 
-The AGENTS setup re-audited whole (AGENTS, CLAUDE.md, `process/`,
-DRIVER-HANDOFF, the Cursor's rules for the round), with the reads as its
-evidence: the deletion pass over what the round added and the promotion
-mechanisms at a round's end (TODO's round-scoped rules row), the driver
-role, the friction log's filing thresholds (a change is a dated wording
-boundary), the scratchpad sweep with the papercut triage (moved from §131
-at its kickoff), P16's three and the push rule; the shell hook, deferred
-at 130e's stop (WORKLOG §130), with its audit re-run at the next round
-close. The
-vendor's current prompting guidance is an input, and so are the user's
-leans from §131 (WORKLOG §131, after 131c). Cut signed 2026-10-24 with
-eleven calls (WORKLOG §132, the kickoff).
+AGENTS rebuilt from a signed census as a router to `process/`, cut by a
+second pass from 19,962 characters to 14,407, and shown by a probe to
+route better (16 of 17 right against 12); the driver retired; the halving
+note and the hand-off line in the mod; the planning stack for Round 9;
+caps on what loads at start; a guard against home paths. WORKLOG §132.
 
-- ☑ **132a — the docs-only hook** (`none`). A docs-only commit runs only
-  the tests that read docs, a set derived at hook time. 7 files, ~14 s.
-- ◐ **132b — the shell note** (`batch`). A halved Bash command runs with a
-  line saying what bash received. 51 of 51; live check passed, read open.
-- ☑ **132c — the context rule** (`batch`). Past 500k at a commit, hand
-  off; no halt, no forecast; the commit's reading says so. Read clear.
-- ☑ **132d — the driver retired** (`batch`). Its files archived; the
-  hand-off entry, a one-line card and the close's pattern read. Read clear.
-- ☑ **132e — the planning stack for Round 9** (`batch`). Per-phase
-  worklogs, `ROUND-RULES.md`, a close that deletes, the push. Read clear.
-- ☑ **132f — the sweep** (`stop`). The round's rules, the papercuts, the
-  scratchpad, the filing threshold, question 6. Three tranches signed.
-- ☑ **132g — the options** (`stop`). The guidance, a cold reader, the
-  session's own options, a comparison; three tranches signed (WORKLOG §132).
-- ☑ **132h1 — the probe's key** (`stop`). Seventeen scenarios keyed to the user's intent, signed; his three held out.
-- ◐ **132h2 — the fixes** (`batch`). The tradeoff line, the stale lines, the Cursor to live status, the mod's README.
-- ◐ **132h3 — the mechanisms** (`none`; the mod live `batch`). The mod's silence and gaps, the papercut tool, `friction-scan`'s peak.
-- ☑ **132h4 — the rule census** (`stop`). 63 rows of AGENTS and CLAUDE.md kept, moved or cut; ten cuts signed.
-- ☑ **132h5 — the router** (`stop`). AGENTS, the modules, CLAUDE.md; a routing test and a landing check. Read: the base for 132h5.5.
-- ☑ **132h5.5 — the second pass** (`stop`). Inserted at 132h5's read; the 75 % draft signed with sim/render kept, applied (WORKLOG §132).
-- ☑ **132h6 — the caps** (`none`). The start reading at 25,000 characters and the Cursor at 3,900, each failed by a planted overflow; line caps dropped.
-- ☑ **132h7 — the probe run** (`stop`). Old 12 of 17 right, new 16; shipped, with the RNG line fixed and two follow-ups in TODO.
-- ◐ **132i — the close** (`stop`). The welfare row, the hash test, the patterns and the summary; the push after the read.
+- ☑ **132a — the docs-only hook** (`none`).
+- ☑ **132b — the shell note** (`batch`). Read clear 2026-10-25.
+- ☑ **132c — the context rule** (`batch`).
+- ☑ **132d — the driver retired** (`batch`).
+- ☑ **132e — the planning stack for Round 9** (`batch`).
+- ☑ **132f — the sweep** (`stop`).
+- ☑ **132g — the options** (`stop`).
+- ☑ **132h1 — the probe's key** (`stop`).
+- ☑ **132h2 — the fixes** (`batch`). Read clear 2026-10-25.
+- ☑ **132h3 — the mechanisms** (`none`; the mod live `batch`). Read clear 2026-10-25.
+- ☑ **132h4 — the rule census** (`stop`).
+- ☑ **132h5 — the router** (`stop`).
+- ☑ **132h5.5 — the second pass** (`stop`).
+- ☑ **132h6 — the caps** (`none`).
+- ☑ **132h7 — the probe run** (`stop`).
+- ☑ **132i — the close** (`stop`). Read 2026-10-25; the home-path guard added.
 
 ## Phase 133 — the re-cut
 

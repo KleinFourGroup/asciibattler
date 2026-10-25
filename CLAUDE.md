@@ -36,9 +36,10 @@ in AGENTS.md, which other harnesses read too.
   not head it off. (A reworded text set
   through `CLAUDE_CODE_SILENT_TURN_REMINDER_TEXT` never reached sessions
   under the app; that trial was retired 2026-09-26.)
-- **Session id.** `$CLAUDE_SESSION_ID` is empty under the desktop app. For
-  `npm run papercut -- --session=…`, use the first 8 characters of your
-  scratchpad directory's name.
+- **Session id.** Under the desktop app `$CLAUDE_CODE_SESSION_ID` holds
+  it, the scratchpad directory's name, whose first 8 characters name a
+  session in the docs; `npm run papercut` reads it itself.
+  `$CLAUDE_SESSION_ID` is empty (seen 2026-10-25, Claude Code 2.1.308).
 - **Editing.** Batching several Edits to one file in a message is fine when
   the anchors are distinct; each Edit reports its own result, and the
   pre-commit hook catches anything that slips. Anchor each Edit on whole
@@ -99,13 +100,13 @@ in AGENTS.md, which other harnesses read too.
   outlive a killed parent.
 - **The context meter** is a mod in
   [.claude/skills/context-meter/](.claude/skills/context-meter/). The tool
-  `mcp__context-meter__read` returns the session's context fill: the input
-  tokens the last response was answered over, as the status line has them.
-  The same reading is added to the result of every Bash or PowerShell
-  command that runs `git commit`, as context for you and a transcript line
-  for the user. The rule that uses it is in
-  [process/planning.md](process/planning.md) ("Context: the hand-off
-  trigger"); past it, a commit's reading says so. Under the app it can be listed only as a deferred
+  `mcp__context-meter__read` returns the session's context fill on
+  request: the input tokens the last response was answered over, as the
+  status line has them. Below the hand-off trigger
+  ([process/planning.md](process/planning.md), "Context: the hand-off
+  trigger") the mod shows no count; past it, a Bash or PowerShell commit
+  that landed gets the reading and a line saying to hand off after it, as
+  context for you and a transcript line for the user. Under the app the tool can be listed only as a deferred
   tool: load it with ToolSearch (`select:mcp__context-meter__read`) before
   the first call, since deferred is not absent. If it is absent, ask the
   user for the reading. Editing the mod, or finding why it didn't load:

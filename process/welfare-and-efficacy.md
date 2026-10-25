@@ -79,7 +79,9 @@ entries say, and compare rounds by that.
   reads the retained session transcripts (`~/.claude/projects/<repo-slug>/*.jsonl`,
   so Claude Code sessions only) and prints per session: the user's turns,
   tool calls, flagged tool errors and denials, the harness's silent-turn
-  reminders and their wording, output tokens, the wall span, and the
+  reminders and their wording, output tokens, the peak context (the
+  figure the context meter reads, and the only record of a session's size
+  from Round 9), the wall span, and the
   Browser pane, probe-kit and probe-runner calls (built for the kit's
   criteria, META-ROADMAP §Round 8, which were counted and retired at that
   round's close; the header says how each is matched). It prints

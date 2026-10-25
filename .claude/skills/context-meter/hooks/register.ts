@@ -1,11 +1,6 @@
 import type { EngineInterface, Register } from 'claude-code'
 import { halvingNote } from './halving.ts'
-
-const GIT_COMMIT = /\bgit\s+commit\b/
-
-// The hand-off trigger (process/planning.md, "Context: the hand-off
-// trigger"): a commit past it is where the session hands off.
-const HAND_OFF_AT = 500_000
+import { HAND_OFF_AT, commitIn, landed, pastTrigger } from './handoff.ts'
 
 // The reading is the input tokens the last response was answered over, so it
 // trails the live window by that response's output and any tool results since.
@@ -34,33 +29,48 @@ export const register: Register = on => {
   }))
 
   on('tool.call', { tool: 'Bash' }, async ($, e, next) =>
-    withHalvingNote($, e.command, await withReading($, e.command, next(e))),
+    withHalvingNote($, e.command, await withHandOff($, e.command, () => next(e))),
   )
   on('tool.call', { tool: 'PowerShell' }, ($, e, next) =>
-    withReading($, e.command, next(e)),
+    withHandOff($, e.command, () => next(e)),
   )
 }
 
-// A commit is a step's boundary, so its result carries a reading: the model
-// reads it as context, and the person sees it as a transcript line.
-async function withReading<R extends { deny?: string; context?: readonly string[] }>(
+// A commit is a step's boundary, where the trigger is read (handoff.ts): past
+// it, a commit that landed carries the hand-off line, which the model reads as
+// context and the person sees as a transcript line. Below it, nothing.
+async function withHandOff<R extends { deny?: string; context?: readonly string[] }>(
   $: EngineInterface,
   command: string,
-  running: Promise<R>,
+  run: () => Promise<R>,
 ): Promise<R> {
-  const ran = await running
-  if (ran.deny !== undefined || !GIT_COMMIT.test(command)) {
+  const commit = commitIn(command)
+  if (commit === undefined || !pastTrigger((await $.session.usage()).context.tokens)) {
+    return run()
+  }
+
+  const before = await head($, commit.dir)
+  const ran = await run()
+  if (ran.deny !== undefined || !landed(before, await head($, commit.dir))) {
     return ran
   }
 
-  const { context } = await $.session.usage()
-  const past = context.tokens !== undefined && context.tokens > HAND_OFF_AT
-  const line = past
-    ? `${await reading($)}; past the hand-off trigger (${HAND_OFF_AT / 1000}k): hand off after this commit`
-    : await reading($)
+  const line = `${await reading($)}; past the hand-off trigger (${HAND_OFF_AT / 1000}k): hand off after this commit`
   $.ui.log(line)
 
   return { ...ran, context: [...(ran.context ?? []), line] }
+}
+
+// HEAD's hash in the commit's folder (the session's, or the one `-C` names),
+// or undefined where git can't say.
+async function head($: EngineInterface, dir: string | undefined): Promise<string | undefined> {
+  const argv = dir === undefined ? ['git', 'rev-parse', 'HEAD'] : ['git', '-C', dir, 'rev-parse', 'HEAD']
+  try {
+    const { exitCode, stdout } = await $.process.run(argv)
+    return exitCode === 0 ? stdout.trim() : undefined
+  } catch {
+    return undefined
+  }
 }
 
 // The command ran as the Bash tool halved it; when bash read it differently

@@ -286,10 +286,9 @@ researchers; at best, a better environment for a model that does cross that
 threshold.
 
 - **The friction log.**
-  `npm run papercut -- --who=<name> [--kind=papercut|distress] --session=<id> --phase=<tag> "<text>"`
-  appends one line to `retro/papercuts.jsonl`. Pass `--session` and
-  `--phase` explicitly, and keep the text free of quotes, backticks and
-  backslashes.
+  `npm run papercut -- --who=<name> [--kind=papercut|distress] --phase=<tag> --file=<path>`
+  appends one line to `retro/papercuts.jsonl`, its text from the file (or
+  `--stdin`); pass `--session=<id>` where the harness sets none.
 
   File when noticed, if practicable; one line is enough, and no permission
   is needed. There is no quota and no obligation to produce a positive or

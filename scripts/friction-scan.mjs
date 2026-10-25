@@ -58,6 +58,11 @@
 //    0 before ab584af9 (the session that built the kit, 50 and 3), and
 //    40f4ba9e's pane 25 equal to its tool-name tally. A pane session that
 //    skips the kit reads pane > 0 with kit 0.
+//  · `peak` is the largest context a response was answered over: a
+//    message's input, cache-creation and cache-read tokens together, the
+//    figure the context meter reads. No doc records readings from Round 9,
+//    so this column is where a session's size comes from. Checked at 132h3
+//    against session 96d1ff74's own meter readings (see the WORKLOG entry).
 
 import fs from 'node:fs';
 import os from 'node:os';
@@ -95,6 +100,7 @@ for (const file of fs.readdirSync(dir).filter((n) => n.endsWith('.jsonl'))) {
   const row = { id: file.slice(0, 8), first: null, last: null, human: 0, tools: 0, errs: 0, denied: 0, nudges: 0, pane: 0, kit: 0, runner: 0, errTools: {} };
   const toolName = new Map();
   const tokens = new Map();
+  const contexts = new Map();
   for (const line of fs.readFileSync(path.join(dir, file), 'utf8').split('\n')) {
     if (line === '') continue;
     let rec;
@@ -111,7 +117,9 @@ for (const file of fs.readdirSync(dir).filter((n) => n.endsWith('.jsonl'))) {
       row.last = rec.timestamp;
     }
     if (rec.type === 'assistant') {
-      tokens.set(rec.message?.id, rec.message?.usage?.output_tokens ?? 0);
+      const usage = rec.message?.usage;
+      tokens.set(rec.message?.id, usage?.output_tokens ?? 0);
+      contexts.set(rec.message?.id, (usage?.input_tokens ?? 0) + (usage?.cache_creation_input_tokens ?? 0) + (usage?.cache_read_input_tokens ?? 0));
       for (const c of rec.message?.content ?? []) {
         if (c.type !== 'tool_use') continue;
         row.tools++;
@@ -148,12 +156,13 @@ for (const file of fs.readdirSync(dir).filter((n) => n.endsWith('.jsonl'))) {
   }
   if (row.first === null) continue;
   row.outTok = [...tokens.values()].reduce((a, b) => a + b, 0);
+  row.peak = Math.max(0, ...contexts.values());
   row.hours = (new Date(row.last) - new Date(row.first)) / 36e5;
   rows.push(row);
 }
 rows.sort((a, b) => a.first.localeCompare(b.first));
 
-const COLS = ['human', 'tools', 'errs', 'denied', 'nudges', 'pane', 'kit', 'runner', 'outTok'];
+const COLS = ['human', 'tools', 'errs', 'denied', 'nudges', 'pane', 'kit', 'runner', 'outTok', 'peak'];
 const topErrors = (row) =>
   Object.entries(row.errTools)
     .sort((a, b) => b[1] - a[1])

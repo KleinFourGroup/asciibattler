@@ -20152,3 +20152,57 @@ wall watch under Round 9. No test reads the Cursor's gates list.
 The read (`batch`): AGENTS' tradeoff line, the Cursor and TESTING's list
 of gates. Wrong looks like a gate missing from TESTING, live status lost
 from the Cursor, or the tradeoff line still reading "always stop".
+
+### 132h3 — the mechanisms (2026-10-25, session 96d1ff74)
+
+**Step zero.** The engine's declarations (the plugin-authoring skill's
+`types/claude-code.d.ts`, 2.1.308) give Bash's result a `gitOperation`
+record with the commit's sha, but none of this session's 170 tool results
+in its transcript carries one: its commits run `git commit -q … | tail`,
+and the pipe hides the exit code too. So neither tells a refused commit
+from one that landed. A hooks module has no Node, but `$.process.run`
+runs a command on the host, so the mod reads HEAD before and after.
+
+**Built.**
+
+- *The mod:* `hooks/handoff.ts` holds the logic as pure functions
+  (`commitIn`, `pastTrigger`, `landed`), and `register.ts` wires it.
+  Below 500k a commit gets nothing; past it, a commit gets the reading and
+  the hand-off line only if HEAD moved, a HEAD git can't read counting as
+  moved. `git -C <dir> commit` and `git -c k=v commit` are read as commits
+  (HEAD read in the `-C` folder), `git commit-tree` is not.
+  `tests/context-meter.test.ts`, four tests; a planted break, the
+  `commit-tree` lookahead dropped, failed one and was put back from a
+  copy. The mod's `tsc -p` with the skill's declarations exits 0, and a
+  planted `$.process.runn` in a scratch copy fails it (TS2551), so the
+  check reads these files; `claude plugin validate` passes, with the
+  plugin directory's license and icon warnings. Not checked: the wiring in
+  `register.ts` live, which loads in a fresh session. CLAUDE.md "The
+  context meter" says what the mod now does.
+- *The papercut tool:* `--file=<path>` or `--stdin` for the text, stdin
+  read only on the flag, since a stdin that never closes waits out the
+  Bash tool's timeout; the session id from `$CLAUDE_CODE_SESSION_ID`'s
+  first 8 characters, then `$CLAUDE_SESSION_ID`, with `--session` first;
+  `entryFrom` exported, as `dev-scan.mjs` does, with `papercut.d.mts`.
+  `tests/papercut.test.ts`, four tests; a planted break, the new variable's
+  branch dropped, failed one and was put back from a copy. Filed live with
+  `--file` and no `--session`: the entry carries `96d1ff74`, and its
+  backslashes and backticks landed whole. AGENTS' filing line gives the
+  new form, 26 characters shorter (19,971); it is in the filing text, so it is a
+  wording boundary for the close's row (call 11). CLAUDE.md "Session id"
+  names the variable that holds the id.
+- *`friction-scan`:* a `peak` column, the largest input, cache-creation
+  and cache-read sum of a session's responses. The known answer
+  (`scratch/132h/peak-check.mjs`): all twelve context-meter readings this
+  session received equal a message's sum in its transcript, and a reading
+  planted one token off is not found. The scan reads this session's peak
+  at 395,817 and 60e58d62's at 547,552, past the 530,453 its last entry
+  recorded. `welfare-and-efficacy.md` names the column.
+
+The cut predicted tests for the two tools; the mod and the papercut tool
+got them (eight), and `friction-scan`'s column has its known-answer check
+instead, since the script has no seam to test.
+
+The read: the tools `none`, by their planted controls and the known
+answer. The mod's live line (`batch`): in a fresh session a commit below
+500k shows no reading line; wrong looks like one.

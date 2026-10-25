@@ -483,7 +483,7 @@ eleven calls (WORKLOG §132, the kickoff).
   session's own options, a comparison; three tranches signed (WORKLOG §132).
 - ☑ **132h1 — the probe's key** (`stop`). Seventeen scenarios keyed to the user's intent, signed; his three held out.
 - ◐ **132h2 — the fixes** (`batch`). The tradeoff line, the stale lines, the Cursor to live status, the mod's README.
-- ☐ **132h3 — the mechanisms** (`none`; the mod live `batch`). The mod's silence and gaps, the papercut tool, `friction-scan`'s peak.
+- ◐ **132h3 — the mechanisms** (`none`; the mod live `batch`). The mod's silence and gaps, the papercut tool, `friction-scan`'s peak.
 - ☐ **132h4 — the rule census** (`stop`). Each rule in AGENTS and CLAUDE.md kept, moved or cut; the cuts signed.
 - ☐ **132h5 — the router** (`stop`). AGENTS, the modules, CLAUDE.md; a routing test and a landing check.
 - ☐ **132h6 — the caps** (`none`). 5b's numbers from the measured sizes, each with a planted overflow.

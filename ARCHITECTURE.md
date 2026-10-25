@@ -826,6 +826,14 @@ the sprite lerp from showing an idle frame between moves (gotchas #7, #8,
 through two composers (gotchas #29, #30). Don't add abstractions for
 hypothetical needs ("What's deliberately not abstracted yet", below).
 
+A comment says what the code can't: what a key does, its unit or range,
+what its ends do, what a change must respect, and the reason for a
+shipped value. It carries no history (the WORKLOG and git hold that), no
+step codes (`tests/comment-codes.test.ts` holds `src` to its ceiling), no
+plans, and no example that restates the code. A rule several keys share
+is said once above them. A comment found false is corrected where it is
+found. Lists take ``- `key` — text``.
+
 ## What's deliberately not abstracted yet
 
 A few things would be over-engineering at the current scope; flagging them so we know what we're choosing not to build:

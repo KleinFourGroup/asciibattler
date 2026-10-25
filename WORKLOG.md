@@ -20865,3 +20865,33 @@ The calls, as signed:
 
 The stretch: 133b's sweeps launched, 133a put to the user while they run,
 then the table re-read and built for 133c's stop.
+
+### 133a — the round's rules at the close (2026-10-25, session d3325476)
+
+**Signed** (the user: "Signing your 133a proposals, Claude! 😁 As for the
+probe note, I think we can drop that for now 👍 I don't anticipate
+running it anytime soon again").
+
+- *Kept, by a move:* the seven comment-style rules signed at 121i,
+  shortened into one paragraph of ARCHITECTURE "Where to add things".
+  Every comment pass after 121i took them as its brief (WORKLOG §121,
+  "121i", and the briefs of §122 on), and the drift they answer (history,
+  codes and length in comments) recurred for months and cost the round
+  its pass. The paragraph names `tests/comment-codes.test.ts`, which holds
+  the step codes whether or not a rule lists them.
+- *Replaced:* "A deletion's proofs" by a paragraph in `process/oracles.md`
+  "Behaviour-equivalence refactors", in the user's words from 132h1;
+  TODO's row ticked. The signed draft's clause on why this round ran the
+  corpus and the fuzz diff is left out, since AGENTS "Voice" puts how a
+  rule was learned in the WORKLOG.
+- *Lapse at §133's close,* with ROUND-RULES.md's archive at 133f: the
+  round's constraints; the step codes' line; the comment change's proof,
+  sessions and costs; the plant in a worktree, which `oracles.md` already
+  holds; the `reach` readings; the one-line range rule, which no WORKLOG
+  entry after the slip it was written for names (a search for "function's
+  range" and "range rule" finds its own line and 132f's list); and
+  `scratch/119f/hidden/`, since no probe is planned (the user's call, in
+  place of the session's lean to carry it).
+- *The lines §132 added* (`c08f4a72` to `f0e5f3c5`, 11 files, 520 lines in
+  and 779 out, most of it moved text): a TODO row under Round 9's "At the
+  round's close", the keep test there.

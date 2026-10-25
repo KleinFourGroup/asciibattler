@@ -9,6 +9,12 @@ building a probe or instrument that decisions will rest on. AGENTS.md
 A refactor that claims to change nothing gets a before/after diff oracle,
 with the "before" pinned in a worktree.
 
+**A deletion's proof** is fitted to its size and risk: some proof is
+always needed, but a small deletion doesn't need the journal corpus and
+the fuzz diff. It is "more of an ask me situation than a hard and fast
+'corpus and fuzz always'" (the user): where the fit is unclear, ask. The
+search behind the absence holds at any size (AGENTS "Evidence").
+
 - Capture baselines at HEAD before the surgery (per-arm fuzz
   `summary.csv`, or `scripts/perf-oracle.sh` output), re-run after, and
   `diff`. Byte-identity across arms is the cheapest strong proof; it

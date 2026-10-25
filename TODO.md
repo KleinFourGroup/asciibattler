@@ -147,13 +147,7 @@ to §133 say which phase takes each row.
 
 - ✅ **Round-scoped rules, and a close that deletes as well as promotes** — `ROUND-RULES.md`, archived at each round close; the close keeps a line the round added only if it did something; a bar for a new rule or guard (`process/planning.md`; WORKLOG §132, 132e). Round 8.5's own list is 132f's.
 
-- [ ] **A deletion's proof once ROUND-RULES' rule lapses** (§133; the
-  probe's scenario 6, WORKLOG §132, "132h7 — the probe run, scored"). When
-  "A deletion's proofs" lapses, add a line to `process/oracles.md` in the
-  user's words from 132h1: the proof that a deletion changes nothing is
-  fitted to its size and risk, "more of an ask me situation than a hard
-  and fast 'corpus and fuzz always'", and where that is unclear, ask him.
-  The search behind the absence holds at any size (AGENTS "Evidence").
+- ✅ **A deletion's proof once ROUND-RULES' rule lapses** — `process/oracles.md` "Behaviour-equivalence refactors": fitted to the deletion's size and risk, in the user's words from 132h1 (WORKLOG §133, 133a).
 
 ### §129 the dependency phase
 
@@ -163,7 +157,16 @@ to §133 say which phase takes each row.
 
 META-ROADMAP §"Round 9 — Extensions" names each group.
 
-### At the round's close: the no-counts trial
+### At the round's close
+
+- [ ] **The keep test over the lines §132 added** (signed at 133a,
+  2026-10-25; WORKLOG §133, 133a). From `c08f4a72` to `f0e5f3c5`, AGENTS,
+  CLAUDE.md and `process/` took the router, the caps, `session-end.md`,
+  `shell-and-windows.md` and `browser-pane-recipes.md`, mostly moved
+  text, signed in the week they landed, so no round has used them. At
+  this round's close, list each rule they added and keep it only if a
+  session's record names it as the reason for an action, or a slip it was
+  written against stopped (`process/planning.md`, "Round close").
 
 - [ ] **Read the trial of no context counts below 500k** (signed at 132g,
   tranche 1, item 4; WORKLOG §132, "132g, tranche 1 signed"). The

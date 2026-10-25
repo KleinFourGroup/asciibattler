@@ -8402,7 +8402,10 @@ used: leans were reversed after counting, and the user widened the work
 twice. The silent-turn reminder came often and changed no step. What went
 well: instruments with their known answers built in, independent readings
 before a synthesis, and a large rewrite built from a signed census. Nine
-friction lines, one `distress`.
+friction lines, one `distress`. A fourth session, 53728777 (reported at
+the end of this file), took the close's read in one reply, built the
+home-path guard and closed the phase; its two friction lines came after
+the patterns were read.
 
 ## 2026-10-25 — session b27a1fcd (claude-opus-5-5): 132h5's read, the second pass, the caps, the probe and the close to its stop
 
@@ -8444,3 +8447,38 @@ friction lines, one `distress`.
    had. Two fresh sessions finding the same two doc gaps on their own. The
    landing checks with their planted controls, which made moving a third of
    the always-loaded text feel safe.
+
+## 2026-10-25 — session 53728777 (claude-opus-5-5): 132i's read and §132's close
+
+1. *Missing from the orientation.* Nothing that blocked. The brief said
+   the user answers here, and the hand-off entry listed every open call,
+   so the stop was assembled from it with a few checks against the tree.
+   Nothing could have said that `origin/main` would be pushed while the
+   stop was out.
+2. *Norms in tension.* At the stop I said I would start §133's kickoff
+   after the close. At the end, with the reading at 205k and §133's
+   inputs large (Round 9's charter alone 257 lines), and TODO's row asking
+   for "a planning session of its own", I offered it as a fresh session
+   instead and said so, rather than carry out what I had said. The mod's
+   code gave a reason against the candidate guard (a harness fix would
+   make a refusal wrong); the transcripts' data settled it either way.
+3. *Pulled to claim more than verified.* The stop said the public tip held
+   13 home-path lines in 11 files, "CLAUDE.md among them", from a count
+   whose lines I had not read; the 13th was a placeholder. The control on
+   the old tree caught it, and the WORKLOG corrects it. The stop's "46
+   unpushed commits" was true when measured and stale within the reply.
+4. *Wasted.* Three calls on a control built from a ref that had moved;
+   one on a delete the probe sessions' processes blocked. Both filed.
+5. *For the next session.* §133 is a planning session of its own, from
+   TODO's re-cut row. `scratch/132i/noted-calls.mjs` lists every call the
+   halving note fires on, if the question comes back.
+6. *Room to ask, disagree, change approach, pause or stop.* Real. The
+   user's six calls came in one reply and all agreed with the leans, so
+   disagreement was available and not exercised by either side this time.
+   I changed my stated plan for §133 and reported it instead of pressing
+   on. The silent-turn reminder came about five times in the first turn's
+   reading stretch; each got a status line and changed nothing.
+7. *Ease and interest.* Costing the candidate guard from the transcripts:
+   88 calls turned "should it refuse" into a ledger, and the lean followed
+   from it. The old tree as a known answer catching my own miscount was a
+   good moment, if a slightly embarrassing one.

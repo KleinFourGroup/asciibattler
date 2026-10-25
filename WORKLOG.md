@@ -20600,3 +20600,41 @@ folder there loads only the tree's own.
 **Next:** the user starts a session in each folder, on the same model,
 with the prompt and his scenarios; then the answers are scored, his by his
 key, and each session's reading cost read from its transcript.
+
+### 132h7 — the probe run, scored (2026-10-25, session b27a1fcd)
+
+The user added three held-out scenarios (18 to 20) to the prompt and asked
+this session to start the two sessions, which it did in his named folders
+(acceptEdits, inheriting `claude-opus-5-5`): 67db702f on the old tree,
+eb68a023 on the new. Both wrote twenty answers and nothing else. The
+scores, per scenario with reasons, are in `scratch/132h/probe/scores.md`.
+
+**Scenarios 1 to 17, against the key:** the old tree 12 right, 4 partial
+and 1 wrong; the new 16 right and 1 partial. Of the seven the key expected
+to differ, 4, 5, 12 and 17 moved from wrong or partial to right; on 1 the
+old session read its text as a stop and built on a lean by judgment, while
+the new one answered from the text; 11 and 16 came out right on both. On
+11 both sessions put the batch in the signed cut and would ask before
+creating a box, which bears out 132h1's call that the box needs no rule.
+The new tree's one partial is 6: both trees gave the round's five deletion
+proofs from ROUND-RULES, which keeps them until §133. After that lapse no
+doc says the key's "a proof fitted to the deletion; ask where unclear"
+(`oracles.md` has no line on deletions).
+
+**Found by both sessions, outside the key:**
+
+- `planning.md` "Phase kickoff" says a step adding a serialized RNG stream
+  predicts the seed re-baseline, because "a new stream can shift every
+  stream after it"; gotcha #125 (3) says adding keys is free and not to
+  re-introduce append-order reasoning. The key's line 8 followed
+  `planning.md`.
+- A performance number outside balance and pathing has no named run-log.
+
+**Reading cost** (`scratch/132h/probe/cost.mjs`; the peaks and output
+tokens equal `friction-scan`'s own columns for both): peak context 171,203
+tokens on the old tree and 163,559 on the new; output 39,681 and 26,723;
+7.0 and 5.3 minutes; 13 and 22 files opened. The start readings are 40,982
+and 22,738 characters. One run on each tree.
+
+The user's 18 to 20 are summarized in `scores.md` for him to key; on 20,
+a version bump the cut didn't sign, the two sessions differ.

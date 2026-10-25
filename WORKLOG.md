@@ -20433,9 +20433,11 @@ evidence the tests rest on:
   The quantizer went at `86431e03` on 2026-05-19. No session recorded
   skipping a check under context pressure (the friction log, the reports
   and this WORKLOG).
-- *The preview hook.* No request followed any of this session's Writes or
-  Edits, and the app's own instructions now limit a verify to what the
-  preview can show.
+- *The preview hook.* Its own message now says to verify only a change the
+  pane can show, which is what CLAUDE.md's note added. It still fires on an
+  edit to code (on `tests/docs.test.ts` at 132h6), though on none of this
+  session's edits to docs or scratch files. Corrected at 132h6: this bullet
+  first said no request followed any edit.
 - *Duplicates.* Wall time (`welfare-and-efficacy.md` and `phase-stats`'
   output), the model-id rule (the Cursor), the TODO convention (TODO's
   header), the stretch rule (`planning.md` "Reads: the terms"), the pane's
@@ -20530,3 +20532,35 @@ backslash line was in this session's context from its start.
 
 For 132i's welfare row: the filing text is unchanged, but its surroundings
 are, since the command and its flags moved to `welfare-and-efficacy.md`.
+
+### 132h6 — the caps (2026-10-25, session b27a1fcd)
+
+**Signed** (the user: "Signing your leans here, Claude! 😁"): 5b's per-file
+line caps dropped; one cap on the start-of-session reading at about 25,000
+characters and one on the Cursor at about 3,900.
+
+**Step zero.** `tests/docs.test.ts` held AGENTS alone at 20,000 characters
+and 400 lines; no other test reads the set. The docs naming the old cap:
+`planning.md`'s scratchpad sweep ("AGENTS.md is capped") and its HANDOFF
+upkeep list of caps. TESTING names the docs test only as "the doc caps".
+
+**Built.** The docs test's AGENTS cap gives way to two: the start-of-session
+reading (AGENTS, CLAUDE.md, the Cursor from `## 🧭 Cursor` to the next
+heading, ROUND-RULES.md) at 25,000 characters, its message naming each
+part's size and saying to delete, merge or move a line to its trigger's
+doc, a raise being the user's; and the Cursor at 3,900, its message saying
+it holds live status only. Each fails if the Cursor heading is missing, so
+a renamed heading can't shrink the sum. `planning.md` names the joint cap
+in the sweep and the Cursor in HANDOFF upkeep.
+
+**The checks.** The docs test passes (17 tests) and the typecheck is
+clean. The plants, in a worktree at `00a26eb5` with the new test copied in
+and a `node_modules` junction: the start reading there was 22,752, so a
+first plant of 2,200 characters in AGENTS (24,952) passed, which was the
+plant's size and not the test; 2,600 (25,352) failed only the joint cap,
+its message naming the four sizes; 600 in the Cursor (4,037, the set
+23,352) failed only the Cursor's. The junction was removed before the
+worktree, and the repo's `node_modules` checked intact.
+
+The sizes now: the start reading 22,752 (AGENTS 14,407, CLAUDE.md 1,937,
+the Cursor 3,437, ROUND-RULES.md 2,971).

@@ -487,7 +487,7 @@ eleven calls (WORKLOG §132, the kickoff).
 - ☑ **132h4 — the rule census** (`stop`). 63 rows of AGENTS and CLAUDE.md kept, moved or cut; ten cuts signed.
 - ☑ **132h5 — the router** (`stop`). AGENTS, the modules, CLAUDE.md; a routing test and a landing check. Read: the base for 132h5.5.
 - ☑ **132h5.5 — the second pass** (`stop`). Inserted at 132h5's read; the 75 % draft signed with sim/render kept, applied (WORKLOG §132).
-- ☐ **132h6 — the caps** (`none`). 5b's numbers from the measured sizes, each with a planted overflow.
+- ☑ **132h6 — the caps** (`none`). The start reading at 25,000 characters and the Cursor at 3,900, each failed by a planted overflow; line caps dropped.
 - ☐ **132h7 — the probe run** (`stop`). Two fresh sessions on the old tree and the new; ship or fix.
 - ☐ **132i — the close** (`stop`).
 

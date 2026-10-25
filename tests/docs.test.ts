@@ -269,23 +269,51 @@ describe('docs hygiene', () => {
     ).toMatch(/^@AGENTS\.md\s*$/m);
   });
 
-  // AGENTS.md loads into every session in every harness, and instruction
-  // files lose adherence as they grow. It went from 171 lines (2026-05-18) to
-  // 895 (2026-09-20) with no cap: each lesson promoted into it was justified
-  // on its own and nothing ever left. The rewrite of 2026-09-23 (user-signed)
-  // caps it, and a lesson now enters only by merging with or replacing an
-  // existing line; trigger-specific procedures live in process/. Characters
-  // are the binding measure (a proxy for tokens that ignores wrapping); the
-  // line cap is a backstop.
-  const AGENTS_MAX_CHARS = 20_000;
-  const AGENTS_MAX_LINES = 400;
+  // What every session reads before its first step: AGENTS.md and CLAUDE.md
+  // (Claude Code loads them together, and an import costs what inline text
+  // does), the HANDOFF Cursor and ROUND-RULES.md. Instruction files lose
+  // adherence as they grow, and AGENTS.md went from 171 lines (2026-05-18) to
+  // 895 (2026-09-20) with no cap. A cap on AGENTS.md alone then pushed new
+  // lessons into the other three, which load as well: it sat at its cap for a
+  // round while CLAUDE.md grew by half and the Cursor reached 15,862
+  // characters. So one cap covers the set, and one the Cursor, which goes
+  // stale when it holds more than live status. Characters are the measure (a
+  // proxy for tokens that ignores wrapping). Set on 2026-10-25 at about 10 %
+  // over the sizes when the user signed them (22,856 and 3,541); raising one
+  // is the user's call.
+  const START_READING_MAX_CHARS = 25_000;
+  const CURSOR_MAX_CHARS = 3_900;
+  const cursorOf = (handoff: string) => {
+    const lines = handoff.split(/\r?\n/);
+    const start = lines.findIndex((l) => l.startsWith('## 🧭 Cursor'));
+    if (start === -1) return '';
+    const rest = lines.slice(start);
+    const end = rest.findIndex((l, i) => i > 0 && l.startsWith('## '));
+    return rest.slice(0, end === -1 ? rest.length : end).join('\n');
+  };
+  const trimHint =
+    'Delete a line that no longer does anything, merge a new one into a line already there, or move it to the process/ doc for its trigger (AGENTS "Where things go"). Raising the cap is the user\'s call.';
 
-  it(`AGENTS.md stays under ${AGENTS_MAX_CHARS} chars and ${AGENTS_MAX_LINES} lines`, () => {
-    const text = read('AGENTS.md');
-    const hint =
-      'Merge the new lesson into an existing line or replace one; if it only applies on a trigger, put it in the process/ doc for that trigger (AGENTS "Where things go"). Raise the cap only deliberately, with the user.';
-    expect(text.length, `AGENTS.md is ${text.length} chars. ${hint}`).toBeLessThanOrEqual(AGENTS_MAX_CHARS);
-    expect(lineCount(text), `AGENTS.md is ${lineCount(text)} lines. ${hint}`).toBeLessThanOrEqual(AGENTS_MAX_LINES);
+  it(`the start-of-session reading stays under ${START_READING_MAX_CHARS} characters`, () => {
+    const parts: Record<string, string> = {
+      'AGENTS.md': read('AGENTS.md'),
+      'CLAUDE.md': read('CLAUDE.md'),
+      'the HANDOFF Cursor': cursorOf(read('HANDOFF.md')),
+      'ROUND-RULES.md': read('ROUND-RULES.md'),
+    };
+    expect(parts['the HANDOFF Cursor'], 'HANDOFF.md has no "## 🧭 Cursor" section').not.toBe('');
+    const total = Object.values(parts).reduce((n, t) => n + t.length, 0);
+    const each = Object.entries(parts).map(([name, t]) => `${name} ${t.length}`).join(', ');
+    expect(total, `The start-of-session reading is ${total} characters (${each}). ${trimHint}`).toBeLessThanOrEqual(START_READING_MAX_CHARS);
+  });
+
+  it(`the HANDOFF Cursor stays under ${CURSOR_MAX_CHARS} characters`, () => {
+    const cursor = cursorOf(read('HANDOFF.md'));
+    expect(cursor, 'HANDOFF.md has no "## 🧭 Cursor" section').not.toBe('');
+    expect(
+      cursor.length,
+      `The HANDOFF Cursor is ${cursor.length} characters. It holds live status only (planning.md "HANDOFF upkeep"): move anything else to its home, and point at entries rather than retelling them. Raising the cap is the user's call.`,
+    ).toBeLessThanOrEqual(CURSOR_MAX_CHARS);
   });
 
   // AGENTS.md routes the procedures: a process/ doc that no row of its

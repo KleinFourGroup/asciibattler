@@ -189,8 +189,9 @@ What a session writes at its end, at the trigger or otherwise, is in
   phase to one line and an archive pointer as you close it, not later.
 - Closed rounds hold one line per round in HANDOFF; the condensed paragraph
   is appended to [archive/closed-rounds.md](../archive/closed-rounds.md).
-- `tests/docs.test.ts` caps HANDOFF, its `Current state`, and its Closed
-  rounds. When a cap trips, demote completed material; raise a cap only
+- `tests/docs.test.ts` caps HANDOFF, its `Current state`, its Closed
+  rounds and its Cursor, which also counts toward the start-of-session
+  reading's cap. When a cap trips, demote completed material; raise a cap only
   deliberately, when the current phase needs the room.
 
 ## Phase close
@@ -256,6 +257,8 @@ undistilled notes.
 
 Promotion targets, in order of preference: a TODO item, a gotcha, a pattern
 in TESTING.md, a line in a `process/` doc, and last of all AGENTS.md.
-AGENTS.md is capped, so a lesson enters it only by merging with or
-replacing a line already there. A lesson that applies only when some
-trigger comes up belongs in the `process/` doc for that trigger.
+What every session reads at its start (AGENTS.md, CLAUDE.md, the Cursor
+and ROUND-RULES.md) is capped together, so a lesson enters AGENTS.md or
+CLAUDE.md only by merging with or replacing a line already there. A lesson
+that applies only when some trigger comes up belongs in the `process/` doc
+for that trigger.

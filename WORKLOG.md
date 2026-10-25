@@ -19839,3 +19839,22 @@ the session hands off at the stop.
 
 Readings: first **112,446** at 15:52 UTC; last **530,453** at 23:45
 before this entry.
+
+### 132b's live check, and tranche 1 put again (2026-10-24, session 96d1ff74)
+
+The session opened on the hand-off's brief, with no answer to tranche 1
+in it, so tranche 1 goes to the user again here, from
+`scratch/132g/comparison.md` unchanged.
+
+**132b's live check.** The session's first Bash call with a halved run,
+`printf '%s\n' 'a:\\'`, printed `a:\` and its result carried the note:
+"as written: a:\\", "bash got: a:\", measured on 2.1.308 and running
+2.1.308. So the hook's input is the command as written. The two controls
+in one later call, `"a\\."` in double quotes and `'b\c'`, printed `a\.`
+and `b\c` with no note. Not seen by the session: the dim transcript line
+for the user, which is the user's read. 132b stays ◐ until then. A third
+case came unplanned: this entry, first appended through a quoted heredoc,
+lost a backslash from each of those two runs, and the note named both
+lines; they were put back with the Edit tool.
+
+Reading: first **116,970** at 00:12 UTC on 2026-10-25.

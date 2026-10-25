@@ -5,9 +5,16 @@
 # a failing hook means fix the tree, not skip the check.
 #
 # Activate once per clone:   git config core.hooksPath .githooks
-# (Documented in AGENTS.md "Pre-flight". Runs under Git Bash / sh on Windows.)
+# (HANDOFF.md "Pre-flight, pre-commit & toolchain". Runs under Git Bash / sh on
+# Windows.) Vitest's transform accepts some code that strict `tsc` rejects,
+# which is why the hook runs both. On a clone without the hook, run the same
+# commands by hand.
 
 set -e
+
+# A failure says what to do with it at the moment it happens, rather than in a
+# doc read beforehand (AGENTS "Pre-commit").
+trap 'rc=$?; if [ "$rc" -ne 0 ]; then echo "[pre-commit] FAILED (exit $rc). If the failure is in a file you did not touch: a small fix goes in a commit of its own and is presented to the user; a large one is talked through first."; fi' EXIT
 
 # A commit of docs alone (every staged path a .md file, or the friction log)
 # runs only the tests that read docs: the test files whose code names a .md

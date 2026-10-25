@@ -20564,3 +20564,39 @@ worktree, and the repo's `node_modules` checked intact.
 
 The sizes now: the start reading 22,752 (AGENTS 14,407, CLAUDE.md 1,937,
 the Cursor 3,437, ROUND-RULES.md 2,971).
+
+### 132h7 — the probe run, set up (2026-10-25, session b27a1fcd)
+
+**Step zero.** The plan is two fresh sessions answering the seventeen
+scenarios and the user's held-out ones, one on the old tree (`df36dc64`)
+and one on the new (`4ccb00f3`, 132h6's commit), scored against
+`scratch/132h/hidden/key.md` (not opened yet) for accuracy and reading
+cost. A git worktree would carry the repository's history, and both trees'
+WORKLOG holds the key's design (132h1's entry names the scenarios expected
+to differ), so the trees are built from `git archive` instead. No CLAUDE.md
+sits in `C:\Users\mkilg\projects` or above it, so a session started in a
+folder there loads only the tree's own.
+
+**Built.**
+
+- *The trees* (`scratch/132h/probe/build-trees.sh`):
+  `C:\Users\mkilg\projects\probe-132h7-old` (980 files) and
+  `…\probe-132h7-new` (988), each without WORKLOG.md, `archive/` and the
+  friction log, and with `retro/sessions.md` cut to its 40-line header; the
+  same for both. The script checks each tree's file list against the ref's
+  tracked paths less the excluded ones, AGENTS.md and CLAUDE.md byte for
+  byte, and the excluded paths' absence; a WORKLOG.md planted in the old
+  tree made the lists differ, and was removed. One asymmetry is left: the
+  new tree's Cursor names `scratch/132h/hidden/` as the key's folder, which
+  is in neither tree.
+- *The prompt* (`scratch/132h/probe/prompt.md`, made by `make-prompt.mjs`
+  from `scenarios.md`, which it counts at seventeen): read the setup as a
+  session would at start and as each scenario routes; read only inside the
+  folder; run nothing and write only `answers.md`, numbered, ending with the
+  files opened in order; for each scenario, what to do and which file and
+  section says so, or judgment. A marked place takes the user's held-out
+  scenarios from 18.
+
+**Next:** the user starts a session in each folder, on the same model,
+with the prompt and his scenarios; then the answers are scored, his by his
+key, and each session's reading cost read from its transcript.

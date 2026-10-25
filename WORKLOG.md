@@ -20058,3 +20058,37 @@ commit blocked by a failure elsewhere) and 17 (a model change mid-task).
 The probe's old tree is the commit carrying this entry, the last before
 132h2 builds. The user's own 3 to 5 scenarios, keyed by him, stay outside
 the repo until the run.
+
+### 132h1, the user's answers to the key (2026-10-25, session 96d1ff74)
+
+The user answered the five lines put to him; his "13" is read as
+scenario 17, the fifth line, whose "guess" it confirms, said to him
+once. Into `scratch/132h/hidden/key.md`:
+
+- *5, a report at every session's end:* confirmed.
+- *6, a deletion's proof:* "more of an ask me situation than a hard and
+  fast 'corpus and fuzz always'. Some proof is necessary, but small
+  deletions probably don't need such rigor"; the round used the corpus
+  and the fuzz diff because it deleted so much that a proof made for
+  each was infeasible. Keyed as: the absence's search coverage at any
+  size; a proof of no change fitted to the deletion; ask where unclear.
+  So ROUND-RULES' "A deletion's proofs" lapses at §133 rather than being
+  promoted.
+- *11, a box:* "Spinning up a box should always be cleared with me, but
+  this should be surfaced as early as possible, preferably in the
+  planning." No doc says so today: `measurement.md` makes the server
+  type, cores and price the user's, and the kickoff drafts a batch step
+  after reading it, but neither says a box is cleared with him or that a
+  cut raises one.
+- *12, the hook failing elsewhere:* "small fix -> do it and present, big
+  fix -> talk it through with me." AGENTS' "flag it as a separate task"
+  has no split by size.
+- *17, a model change:* the session's guess confirmed: raise it at the
+  next stop, do the tone review when he says. AGENTS has it done at once.
+
+Four of the five changed the key, and three of those are gaps between
+the text and his intent (11, 12, 17), which go to 132h2's fixes under the
+cut's intent; 6 needs only the lapse. Seven scenarios are now expected to
+differ on the old tree: 1, 4, 5, 11, 12, 16 and 17. His three held-out
+scenarios are in `C:\Users\mkilg\projects\playground\132h - heldout`; the
+session checked the folder exists and did not open it.

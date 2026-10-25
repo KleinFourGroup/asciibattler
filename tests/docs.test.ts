@@ -36,6 +36,8 @@ import { fileURLToPath } from 'node:url';
 //   8. Dead links — a moved or deleted file leaving the docs that link it
 //      pointing nowhere (five in the live docs at the Round 8.5 close, found
 //      by a hand-run check).
+//   9. Home paths — tracked files naming the user's home folder in a public
+//      repository (19 places in 11 files when it was found, swept by hand).
 // All are forcing functions: when one trips, do the cleanup it points at — or
 // bump the threshold deliberately if the growth is legitimate.
 
@@ -426,5 +428,50 @@ describe('docs hygiene', () => {
       text: 'A [good](../AGENTS.md) link, a [dead](../NO-SUCH-FILE.md) one, a `[a,b](+LOS)` span,\n```\n[fenced](nowhere.md)\n```\nand a [line](../AGENTS.md:12).\n',
     };
     expect(deadLinks([planted], onDisk)).toEqual(['retro/planted.md: ../NO-SUCH-FILE.md']);
+  });
+
+  // No tracked file names a home folder, since the repository is public: a
+  // Windows profile path with either slash, doubled in a string or not, its
+  // Git Bash form, or the transcript folder's name built from it. Sessions
+  // copy these from tool output. A placeholder such as `C:/Users/…` passes,
+  // since no name follows the folder.
+  const HOME_PATH = /[a-z]:[\\/]+users[\\/]+\w|\/[a-z]\/users\/\w|[a-z]--users-\w/i;
+  const homePaths = (files: readonly { path: string; text: string }[]): string[] =>
+    files.flatMap(({ path, text }) =>
+      text.split(/\r?\n/).flatMap((line, i) => (HOME_PATH.test(line) ? [`${path}:${i + 1}`] : [])),
+    );
+
+  it('no tracked file names a home folder', () => {
+    const files = execFileSync('git', ['ls-files', '-z'], { cwd: repoRoot, encoding: 'utf8' })
+      .split('\0')
+      .filter((f) => f !== '')
+      .map((path) => ({ path, bytes: readFileSync(join(repoRoot, path)) }))
+      .filter(({ bytes }) => !bytes.includes(0))
+      .map(({ path, bytes }) => ({ path, text: bytes.toString('utf8') }));
+    expect(files.length, 'listed no files — the listing drifted').toBeGreaterThan(500);
+    const hits = homePaths(files);
+    expect(
+      hits,
+      `line(s) naming a home folder — write ~, %APPDATA%, %TEMP%, <the repo's slug> or a repo-relative path: ${hits.join(', ')}`,
+    ).toEqual([]);
+  });
+
+  it('the home-folder check catches planted paths and passes placeholders', () => {
+    const name = 'someone';
+    const planted = {
+      path: 'retro/planted.md',
+      text: [
+        `C:\\Users\\${name}\\projects`,
+        `"C:\\\\Users\\\\${name}\\\\projects"`,
+        `C:/Users/${name}/projects`,
+        `d:\\users\\${name}`,
+        `/c/Users/${name}/projects`,
+        `~/.claude/projects/C--Users-${name}-projects-x/`,
+        'C:/Users/…/projects',
+        'C:\\Users\\<you>\\projects',
+        "~/projects, %APPDATA%\\Claude, <the repo's slug>, C:\\repo\\tree\\src",
+      ].join('\n'),
+    };
+    expect(homePaths([planted])).toEqual([1, 2, 3, 4, 5, 6].map((n) => `retro/planted.md:${n}`));
   });
 });

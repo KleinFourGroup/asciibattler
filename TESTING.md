@@ -32,7 +32,7 @@ Never relaxed. Pin history per round lives in the archived worklogs.
 - `tests/prior-table-coverage.test.ts` (the derived-artifact tripwire)
 - `src/config/packets.test.ts` (no run-duration packet)
 - `tests/fuzz/roster/rosterTable.test.ts` + `tests/fuzz/commands/sampledRosterArg.test.ts` (the roster table and sampled mode)
-- `tests/docs.test.ts` (the doc caps)
+- `tests/docs.test.ts` (the doc caps, the links, the filing text's hash, no home-folder path in a tracked file)
 - `tests/board/cameraFit.test.ts` (the lean pin, permanent once ortho ships)
 - `tests/board/slab.test.ts` (the N×N slab rule, production since 107b)
 - `tests/board/clip.test.ts` (upright depth: no terrain behind a standing glyph hides it, 107d-post)

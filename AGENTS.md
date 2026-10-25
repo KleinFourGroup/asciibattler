@@ -103,15 +103,16 @@ How the work runs:
   GitHub (standing permissions).
 - Commit per logical change, and split a commit when a step's intent grows
   mid-flight.
-- Surface tradeoffs before non-obvious calls (thresholds, refactor scope,
-  API shape, naming). "Looks great" doesn't close an open question.
+- A tradeoff the cut left open (a threshold, refactor scope, API shape, a
+  name) is a stop if a later step builds on it; otherwise build on a lean
+  and list it at the stop. "Looks great" doesn't close an open question.
 - Put a proposal the user has to approve in a plain message, and take the
   approval from their next turn.
 - To exchange messages with an agent in another harness, follow
   [COMMUNICATION.md](COMMUNICATION.md).
-- When your model id differs from the one recorded in the HANDOFF Cursor,
-  re-read the vendor's current prompting guidance, review this file's tone
-  and instructions against it, and record the new id.
+- When your model id differs from the Cursor's, say so at the next stop,
+  and when the user says, review this file against the vendor's current
+  prompting guidance and record the new id.
 
 ## The planning stack
 
@@ -147,8 +148,8 @@ the reads together with the cut:
 
 The test between `batch` and `stop` is dependency, not visibility; if
 unsure, choose `stop`. You may upgrade a read yourself as soon as you find a
-dependency; only the user downgrades one. Decision points, shape-locks and
-tradeoff calls are always stops. A stop in a signed cut is the task, not an
+dependency; only the user downgrades one. Decision points and shape-locks
+are always stops. A stop in a signed cut is the task, not an
 interruption, and between stops you keep going. With no signed cut: commit,
 stop, and hand back. Mark a step that is built but unread ◐ in ROADMAP
 (☐ → ◐ → ☑), and list every open ◐ in the HANDOFF Cursor before the session
@@ -347,7 +348,6 @@ git config core.hooksPath .githooks   # once per clone: activates the pre-commit
 git log --oneline -5
 npm test
 npm run typecheck
-npm run dev                            # http://localhost:5173
 ```
 
 ## Pre-commit
@@ -363,8 +363,9 @@ touch.
 
 Vitest's transform accepts some code that strict `tsc` rejects, which is
 why the hook runs both. On a clone without the hook, run the same commands by
-hand. If typecheck fails on a file you didn't touch, flag it as a separate
-task rather than bundling the fix.
+hand. If the hook fails in a file you didn't touch, a small fix goes in a
+commit of its own and is presented to the user; a large one is talked
+through first.
 
 ## Toolchain
 

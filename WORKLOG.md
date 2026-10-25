@@ -20102,3 +20102,53 @@ did, since no session has started one unasked. Scenario 11 stays in the
 probe as the check: a fresh session on the new tree that raises the box
 with him unprompted shows the rule isn't needed. 12 and 17 correct lines
 that exist rather than add rules, so they stay in 132h2.
+
+### 132h2 — the fixes (2026-10-25, session 96d1ff74)
+
+**Step zero.** Each fix's premise held against the files at `fb5e70f3`:
+AGENTS' two tradeoff lines, the model-id line, the hook line and
+Pre-flight's `npm run dev`; the Cursor's carried bullet with the push
+paraphrase and the P16 pointer; the gates list; CLAUDE.md's box note and
+the mod's notes. Every fact the Cursor's in-flight bullet repeated is in
+BALANCE.md (the frozen config at `d9675b6`, 118e's partial board, prior
+table v4, the four named watches by their numbers), and TODO holds the
+wall watch under Round 9. No test reads the Cursor's gates list.
+
+**Built.**
+
+- *AGENTS:* a tradeoff the cut left open is a stop if a later step
+  builds on it, otherwise built on a lean and listed at the stop; the
+  reads paragraph's "tradeoff calls are always stops" goes, leaving
+  decision points and shape-locks. A model-id change is said at the next
+  stop, and the review against the vendor's guidance is done when the
+  user says (scenario 17). A hook failure in an untouched file: a small
+  fix in a commit of its own, presented; a large one talked through first
+  (scenario 12). Pre-flight's `npm run dev` goes; HANDOFF's "Dev server"
+  line keeps the command with the `dev-preview` pointer. 19,997
+  characters, under the cap by 3, so the corrected lines were written
+  tight; the router rewrites them at 132h5.
+- *The Cursor, cut to live status:* the context rule (planning.md holds
+  it), the carried bullet (each item has its phase in ROADMAP §130 to
+  §133 or is done: the push at 132e, the audio notification with the
+  driver at 132d, `batch` kept as the read kind at call 7), rider (1),
+  the retired reword (its evidence is archived, and CLAUDE.md holds the
+  practice), the Pages and push repeats AGENTS holds, §131's detail, the
+  in-flight bullet's copy of BALANCE, and the phase map ROADMAP holds.
+  Rider (3), the harness feedback sent, is a watch in TODO "Not yet
+  placed". The model id stays, with its new rule. 132i's carried-list
+  item is done here.
+- *The gates* in TESTING.md "The permanent gates", one per line, pointed
+  at from planning.md's "HANDOFF upkeep" and ROUND-RULES.md. The oracle,
+  `scratch/132h/gates-moved.mjs`: the Cursor's 22 at `fb5e70f3` against
+  TESTING's, none missing and none added; with `--plant`, one dropped,
+  it fails.
+- *CLAUDE.md:* the box note says what this session's instructions and
+  results show, that the closing message follows the wrap-up call and the
+  call's result says whether the box shows the question; the mod's
+  loading and checking notes moved verbatim into
+  `.claude/skills/context-meter/README.md`, with a pointer left. CLAUDE.md
+  "Session id" waits for 132h3, which changes the tool it describes.
+
+The read (`batch`): AGENTS' tradeoff line, the Cursor and TESTING's list
+of gates. Wrong looks like a gate missing from TESTING, live status lost
+from the Cursor, or the tradeoff line still reading "always stop".

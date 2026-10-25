@@ -21,12 +21,14 @@ in AGENTS.md, which other harnesses read too.
   dialog arrived paraphrased; of eight notes in one later turn, two arrived
   paraphrased, and one of those dropped its caveat and misstated a result.)
 - **The next-step box.** The app's wrap-up box shows a recap and at most
-  one short question with buttons, and a box that shows a question ends
-  the turn with no text after it. When the user has to read something
-  before answering (a cut, rows to sign, calls with their reasons), call
-  wrap_up with the recap alone and put the proposal and its question in
-  the turn's final message, after the call. Keep the box's question for a
-  decision that stands on its own, such as a go-ahead to commit.
+  one short question with buttons. The turn's closing message comes after
+  the wrap-up call and arrives as written, and the call's result says
+  whether the box shows the question (seen 2026-10-25, Claude Code
+  2.1.308). When the user has to read something before answering (a cut,
+  rows to sign, calls with their reasons), call wrap_up with the recap
+  alone and put the proposal and its question in the closing message.
+  Keep the box's question for a decision that stands on its own, such as
+  a go-ahead to commit.
 - **The silent-turn reminder.** The harness sometimes adds "The user hasn't
   heard from you in a while". It never obliges a finding: answer with what
   is true now ("still reading X, no result yet") and continue. In a long
@@ -106,22 +108,5 @@ in AGENTS.md, which other harnesses read too.
   trigger"); past it, a commit's reading says so. Under the app it can be listed only as a deferred
   tool: load it with ToolSearch (`select:mcp__context-meter__read`) before
   the first call, since deferred is not absent. If it is absent, ask the
-  user for the reading. The engine loads the mod only in a trusted
-  workspace, and that is enough: no hot-reload question needs answering
-  (seen 2026-10-02). For this repo, the
-  flag it reads is `hasTrustDialogAccepted` under the forward-slash key
-  (`C:/Users/…`) in `~/.claude.json`, not the backslash key the app's
-  dialog set; `claude plugin list` names a folder it skipped. An edit to
-  the mod did not load within the turn that made it (seen 2026-10-24);
-  a fresh session loads it. To type-check an edit, write a tsconfig in your
-  scratch directory from the header of the plugin-authoring skill's
-  `types/claude-code.d.ts`, add `allowImportingTsExtensions`, list that
-  file and the files under `hooks/` under `files`, and run the repo's
-  `tsc -p` on it. Use the skill's declarations: the copy the engine writes
-  beside a hot-reload mod lacks the built-in tools' inputs and passes code
-  the skill's copy fails. `claude plugin validate` does not type-check (an
-  unawaited Promise passed it). The CLI is not on PATH here; it is the
-  app's bundled `claude.exe` under
-  `%APPDATA%\Claude\claude-code\<version>\<build>\`. The backslash note's
-  model, `hooks/halving.ts`, is also held by `tests/shell-halving.test.ts`
-  and type-checked by the repo's own typecheck.
+  user for the reading. Editing the mod, or finding why it didn't load:
+  its [README](.claude/skills/context-meter/README.md).

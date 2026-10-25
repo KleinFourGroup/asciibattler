@@ -688,6 +688,19 @@ META-ROADMAP §"Round 12 — Ship" names each group.
 
 ## Not yet placed
 
+- [ ] **A watch on the harness feedback the user sent** (the Cursor's
+  rider until 132h2). Four messages to the Claude Code team: on
+  2026-09-20 the silent-turn reminder's timing and wording, and the
+  keep-going guidance having no project override
+  (`scratch/claude-code-feedback-1-reminder.txt`, `-2-pauses.txt`); on
+  2026-09-27 the settings override never reaching the app's sessions
+  (`-3-env.txt`); on 2026-10-23 the Bash tool halving backslashes
+  (`-4-backslashes.txt`). If a release documents
+  `CLAUDE_CODE_SILENT_TURN_REMINDER*` or changes either behaviour, correct
+  CLAUDE.md's "The silent-turn reminder" and "Editing", and the backslash
+  note's `MEASURED_ON` in the mod. The retired reword's evidence is in
+  `archive/post-104-worklog.md` §"The Round 7.5 close".
+
 - [ ] **nvm for Windows 2, at the next Node switch** (deferred at §129's
   129i, the user's call, 2026-10-23). 2.x needs no admin for `nvm use`,
   but here nvm 1.1.12's entries sit on the machine PATH ahead of a

@@ -17,7 +17,7 @@ already in `process/measurement.md`.
   deletion first, and reshaping only by trial against a bar written before
   it (the spec's D1 and D2): no behaviour change, no new abstraction, no
   balance number moved, no gotcha undone without its entry read, the
-  permanent gates never relaxed. The user signs the census before anything
+  permanent gates (TESTING.md) never relaxed. The user signs the census before anything
   is deleted. A deletion in sim, run or config is byte-identical under the
   journal corpus and the fuzz diff (TESTING.md "The oracle map"), or it is
   a change and goes to the user with a board re-run. The save format may

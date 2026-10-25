@@ -14,6 +14,33 @@ How we keep the simulation honest. Companion to `DESIGN.md`, `ARCHITECTURE.md`, 
 
 - **The dev-code guard** (`tests/dev-guard.test.ts`) — no shipped source file reaches `src/dev` but by a DEV-gated dynamic import, read from the source text with planted faults; and the build scan's marker list covers every entry of `src/dev`. The scan of a real build is not in `npm test`: `npm run build` and `scripts/itch-zip.mjs` run it on what they build.
 
+## The permanent gates
+
+Never relaxed. Pin history per round lives in the archived worklogs.
+
+- `tests/nodemap-metrics.test.ts` (the signed 77c sheet at n=500)
+- `src/audio/eventSounds.test.ts` (every bus event has a sound or a silent reason)
+- `src/audio/AudioPlayer.test.ts` (every sound key has a file, every file a key)
+- `src/render/fxRegistry.test.ts` (a projectile launch has travel time)
+- `tests/font-coverage.test.ts` (the UI glyph inventory, fallback coverage, the line-box pin)
+- `tests/ui-focus.test.ts` (every `:hover` has its `:focus-visible` twin)
+- `tests/ui-motion.test.ts` (every animation has its reduced-motion twin)
+- `tests/ui-tooltips.test.ts` (zero native `title=`)
+- `tests/i18n-literal-pin.test.ts` (the literal baseline stays empty)
+- `src/render/statusDisplay.test.ts` (every buff key has a colour)
+- `src/sim/terrainGen.test.ts` (per-theme tiles)
+- `tests/prior-table-coverage.test.ts` (the derived-artifact tripwire)
+- `src/config/packets.test.ts` (no run-duration packet)
+- `tests/fuzz/roster/rosterTable.test.ts` + `tests/fuzz/commands/sampledRosterArg.test.ts` (the roster table and sampled mode)
+- `tests/docs.test.ts` (the doc caps)
+- `tests/board/cameraFit.test.ts` (the lean pin, permanent once ortho ships)
+- `tests/board/slab.test.ts` (the N×N slab rule, production since 107b)
+- `tests/board/clip.test.ts` (upright depth: no terrain behind a standing glyph hides it, 107d-post)
+- `tests/store-guard.test.ts` (headless code never reaches `src/store`)
+- `tests/store-boot.test.ts` (the store is `main.ts`'s first import and reaches no catalog)
+- `tests/replay-guard.test.ts` (the game's entry never reaches the journal replay, whose tool-only options go past a config mismatch)
+- `tests/save-fingerprint.test.ts` (a change to `RunSnapshot`'s structure needs a `RUN_SCHEMA_VERSION` bump, then `npm run save:fingerprint`)
+
 ## What does NOT get tested here
 
 - **`src/render`** — three.js, shaders, DOM. Visual verification by eyeball. Trying to unit-test render code with jsdom is a tax we choose not to pay for an MVP.

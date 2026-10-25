@@ -194,8 +194,8 @@ wants the next stretch in a fresh session. It:
 ## HANDOFF upkeep
 
 - The Cursor holds live status only: the next step, what's in flight,
-  snapshot versions, live test counts, and the permanent gates. Pin history
-  belongs to the archived worklogs.
+  snapshot versions and live test counts. The permanent gates are listed
+  in TESTING.md; pin history belongs to the archived worklogs.
 - `Current state` keeps only the in-progress phase in detail. Demote a
   phase to one line and an archive pointer as you close it, not later.
 - Closed rounds hold one line per round in HANDOFF; the condensed paragraph

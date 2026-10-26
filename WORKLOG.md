@@ -21777,6 +21777,9 @@ whether a resumed page can fight; XP's targeting; what event art is.
 event art. *Save:* Run bumps (the resume, the XP portion, the template
 field) and a World bump (F-1 with the grant).
 
+**Signed** (the user, 2026-10-26, in session 19020674: "Signing 2b and 2c,
+Claude! 😁").
+
 ### The hand-off after 133d's tranche 2b (2026-10-26, session d3325476)
 
 Past the trigger at the commit of tranche 2b (`5a742f9b`; the mod's line
@@ -21977,3 +21980,75 @@ and the crab in); 71.7 to 94.95 in all, unchanged.
   A29 closes as built and Dis Pater's `--grant` read runs in round 11; if
   the award is the encounter, A29 is a Run bump and goes in round 11
   before that read, not in round 23 where tranche 1's sums had it.
+
+**Signed** (the user, 2026-10-26: "Signing 2b and 2c, Claude! 😁 Signing
+your ability description changes also. And yes, that is indeed what I
+meant for Dis! 😂"): rounds 19 to 23 with 19 and 20 re-sorted, ability
+descriptions in round 11, and the tithe as built, rounded once on a
+turn's total. A29 closes; Dis Pater's `--grant` read runs in round 11 as
+signed in tranche 2a.
+
+### 133d, tranche 3: where each TODO row goes, put to the user (2026-10-26, session 19020674)
+
+The open rows, `- [ ]` under each `## ` heading of TODO.md by a script:
+Round 8.5 2, Round 9 30, Round 10 8, Round 11 25, Round 12 14, "Not yet
+placed" 6; 85 in all. A row the signed tranches place is listed under its
+round by its id; the session's calls are marked *new*.
+
+- *Round 8.5, staying:* the comment pass, which 133f's exit check ticks or
+  says what is left of; the re-cut, ticked at 133e.
+- *Round 9:* the keep test over §132's lines and the no-counts trial's
+  read (R9), at its close; the roster table's guard (C13) and its
+  compaction (C14); `box-drive.sh`'s mixed queues (C15); the deleted
+  action classes in the docs (R17); `FX_REGISTRY`'s coverage (R18).
+  *New:* the rarity stars' tap on touch (R22), which no tranche placed: a
+  small fix for the first release.
+- *Round 10:* the scripted run (R2), with `--sector-hops` (R12) and the
+  zero-match warning (R13) folded in. R12 is half built: the CLI forwards
+  any flag named as a URL parameter (`RUN_CONFIG_KEYS`,
+  `tools/run-config/cli.ts:31`), so `--sectorHops` parses already; the
+  kebab spelling and a help line are left.
+- *Round 11:* blind (C12), the priest (C16), the wall watch (C17), power
+  by rarity (C18), the area retune (C19), the kit watches (C20), power's
+  level-up draw (R19), Dis Pater's `--grant` read (A31), ability
+  descriptions (A33, signed above). *New:* Dis Pater's sentence (A28),
+  rewritten to the rule as built and read with A31: at a bits lever of
+  0.75 one kill in a turn pays 2 and two pay 3, so "each kill tithes 2
+  bits" holds for a one-kill turn alone.
+- *Round 12, new:* the dash's visual (old Round 11's feel sweep), since
+  the teleport needs a blink visual and the `unit:dashed` hook serves
+  both (ordering principle 4, "Polish rides its feature").
+- *Round 13:* `knownAbilityIds` (U6). *Round 14:* the camp-anchor revert
+  (C21). *Round 15:* the split (U5) and §123's comment-pass leads (U4).
+  *Round 16:* a won turn's reward (C22).
+- *Round 17, new:* Escalation 3's watch (A30) folded into level 3's read
+  (A2) on this round's board, the tithe now settled, with exported
+  journals if any exist by then.
+- *Round 18:* the reward ledger's pin (R20), `reward:resolved` (R21), the
+  event screen on `run:cacheChanged` (R23), a queued unit's seeded
+  effects (census F-1, R24).
+- *Round 20:* the reconciliation (S5), flyers float (S10), rounded plates
+  (A35). *Round 21:* the deep-end cost residuals (A34). *Round 22:* the
+  mapgen hint (A32), with the volcanic resident or dropped. Rounds 19 and
+  23 take no TODO row; their work is the charters'.
+- *Round 24 (the old 11):* its rows as they stand, but the dash's visual.
+  *Round 25 (the old 12):* its 14 rows as they stand; the gauntlet cells'
+  row reads against act 1's start once round 10 lands.
+- *Closed:* the tithe's rounding (A29, built, the user's answer above);
+  the forced id's kind rule (R14, stated at `src/run/RunConfig.ts:73-79`);
+  122o's leads (U3: the row records six deleted at 123l, `GenStats` has no
+  `connected` field, `proceduralMap.ts:114-125`; `World.shove` is in round
+  12's scope).
+- *New: a "Watches" section* for rows with a trigger and no round:
+  TypeScript 7 (R15) with `reach-diff` across toolchains (R16), when
+  typescript-eslint takes 7; nvm 2 (U2), at the next Node switch; the
+  harness feedback (U1), its pointer to CLAUDE.md's "Editing" moved to
+  `process/shell-and-windows.md`, where that bullet is now (CLAUDE.md has
+  none); a home for a performance number (R10), when perf work is cut;
+  and two rows from 133c: Euclidean distance, on players' reports, and the
+  half-tile grid, if round 19's swarms do not feel right. "Not yet placed"
+  stays as the inbox for new rows.
+
+By round: 9 takes 8 of the old Round 9's 30, 10 three, 11 seven, 14 one,
+16 one, 18 four, 20 two, the watches three, and one closes; the old Round
+10's 8 go to rounds 11 (three), 17, 20, 21 and 22, and one closes.

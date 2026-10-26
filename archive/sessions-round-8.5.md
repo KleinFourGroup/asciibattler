@@ -8570,6 +8570,13 @@ the patterns were read.
    warm sign-offs kept the tranches moving; I would want that cadence
    again.
 
+*Addendum, after the archive* (session 19020674): the user signed tranche
+3 whole, and the round closed with no open mark. Two more slips, both
+filed: a link test's failing control that passed while the fresh files
+were unstaged, and a backup that went to `/tmp` while the restore read
+the scratchpad; neither reached a commit. Nothing changes in answers 1 to
+7.
+
 ## Phase 133 — summary
 
 Two sessions. d3325476 ran the kickoff to tranche 2b: the audit and the

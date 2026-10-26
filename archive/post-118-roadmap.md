@@ -14,7 +14,7 @@ with its worklog and spec beside it; before it
 **Status: ROUND 8.5 (HOUSEKEEPING) ✅ CLOSED 2026-10-26**, sixteen phases
 (§119–§133, with §124.5 inserted), each closed on the user's read; this
 file is archived as `archive/post-118-roadmap.md`. The close's last step,
-133f, is that archive, and its read is the user's (◐ below), with
+133f, is that archive, read and signed by the user the same day, with
 133e's.
 The spec holds the user's intent and four signed
 decisions ([round-8.5-spec.md](round-8.5-spec.md)). The round opened with
@@ -481,7 +481,7 @@ caps on what loads at start; a guard against home paths. WORKLOG §132.
 - ☑ **132h7 — the probe run** (`stop`).
 - ☑ **132i — the close** (`stop`). Read 2026-10-25; the home-path guard added.
 
-## Phase 133 — the re-cut
+## Phase 133 — the re-cut ✅ (closed 2026-10-26)
 
 Rounds 9 and 10 re-cut into smaller rounds with smaller phases, in a
 planning session with the user, which holds the close's re-read of the
@@ -493,5 +493,5 @@ Cursor. Exit: META-ROADMAP's exit for the round.
 - ☑ **133b — the re-read of Rounds 9 and 10 against HEAD** (`batch`, read at 133c's stop). Read clear 2026-10-26.
 - ☑ **133c — the user's additions, sized like the table's rows** (`stop`). N1 to N28, three experiments; closed 2026-10-26.
 - ☑ **133d — the re-cut, in tranches** (`stop`). Signed 2026-10-26: 17 rounds, 9 to 25 (the old 11 and 12 as 24 and 25), the TODO rows placed by round, a Watches section.
-- ◐ **133e — META-ROADMAP and TODO rewritten to it** (`batch`, read at 133f's stop). Built 2026-10-26; the placement check PASS with five planted controls failing.
-- ◐ **133f — the close and the archive** (`stop`). Built 2026-10-26, the read is the user's: the archive (`post-118-*`, the spec, the census, the rules, the session reports, the scratchpad), Round 9 opened at §134 with its charter only, the Cursor. Tranche 2 signed 2026-10-26: one line to `process/session-end.md`. Tranche 1 signed 2026-10-26: A-36's last three members deleted (`dd274fdd`); the unread leads, B-18, B-19 and the reduced-motion check placed in TODO; T-55 ticked.
+- ☑ **133e — META-ROADMAP and TODO rewritten to it** (`batch`, read at 133f's stop). Read 2026-10-26 (the user: "The read looks great"). Built 2026-10-26; the placement check PASS with five planted controls failing.
+- ☑ **133f — the close and the archive** (`stop`). Read 2026-10-26 (the user: "Signed!"; built at `050023a9`): the archive (`post-118-*`, the spec, the census, the rules, the session reports, the scratchpad), Round 9 opened at §134 with its charter only, the Cursor. Tranche 2 signed 2026-10-26: one line to `process/session-end.md`. Tranche 1 signed 2026-10-26: A-36's last three members deleted (`dd274fdd`); the unread leads, B-18, B-19 and the reduced-motion check placed in TODO; T-55 ticked.

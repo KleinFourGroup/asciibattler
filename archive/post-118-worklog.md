@@ -22265,7 +22265,7 @@ scratchpad archive with the sweep's other dispositions; the distress
 entry stays in the friction log for the user's welfare read. Next,
 tranche 3: 133e's read, with the archive as built.
 
-### 133f — the archive and the Cursor (2026-10-26, session 19020674) — ◐ built, the read is the user's
+### 133f — the archive and the Cursor (2026-10-26, session 19020674) — READ ✅
 
 By `process/planning.md` "Round close", after tranches 1 and 2.
 
@@ -22337,3 +22337,14 @@ user with tranche 3:
   noted call through 2026-10-25. The lean: the re-run is served by that
   listing and is not run again; the halving lines filed since (four, each
   stopped by its guard) are tranche 2's.
+
+**The read** (the user, 2026-10-26, on tranche 3: "The read looks great,
+Claude! 😁 Signed!"). That covers 133e's `batch` read, the archive as
+built, and the four leans: no upload at this close, Round 9's release
+carrying §129's bumps and A-36's deletions; Round 9's charter standing as
+written; no playtest now; the shell audit's re-run served by 132i's
+listing. The archived roadmap ticks 133e and 133f and its status line;
+META-ROADMAP's heading says every phase is user-signed and its CLOSED
+paragraph, like `archive/closed-rounds.md`'s, no longer waits on a read;
+the Cursor has no open mark and says the kickoff starts in a fresh
+session. **Round 8.5 is closed.**

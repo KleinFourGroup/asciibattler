@@ -635,7 +635,7 @@ re-audited Round 8.5 and wrote the notes under Rounds 9 to 12. Archives:
 
 ---
 
-## Round 8.5 — Housekeeping ✅ CLOSED 2026-10-26
+## Round 8.5 — Housekeeping ✅ CLOSED 2026-10-26 (every phase user-signed)
 
 _(Inserted 2026-09-27, after the Round 7.5 close, user-signed: the user
 raised a broader codebase review, and the tone audit's source-comment
@@ -773,8 +773,8 @@ undone without its entry read; the permanent gates never relaxed; no
 balance numbers move.
 
 **CLOSED 2026-10-26** — sixteen phases (§119–§133, with §124.5 the
-screens inserted), each closed on the user's read; the close's last step,
-the archive, awaits its read as this is written. The exit met, clause by
+screens inserted), each closed on the user's read, the close's last step
+included. The exit met, clause by
 clause (133f): the census's 162 rows each have an outcome, four of them
 placed at the close (A-36's last three members deleted; B-12's and the
 sim-and-run leads, B-18 and B-19 to TODO under Rounds 15, 19 and 10);

@@ -246,8 +246,10 @@ What a session writes at its end, at the trigger or otherwise, is in
   surface, fix before refactoring. A documented no-op is an acceptable
   outcome.
 - Naming: an inserted round takes the `.5` number ("Round 7.5"). Round
-  numbers are identities and are never renumbered. The phase counter §N is
-  the durable ordering key; `<phase><letter>` is the step address.
+  numbers are identities and are not renumbered; the one exception, §133's
+  re-cut on 2026-10-26, is mapped in META-ROADMAP "How to read this". The
+  phase counter §N is the durable ordering key; `<phase><letter>` is the
+  step address.
 
 ## The scratchpad sweep
 

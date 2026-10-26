@@ -161,7 +161,7 @@ Color + bloomIntensity per instance are instanced attributes so a single draw ca
 
 **Post-processing:** `EffectComposer` chain — RenderPass → saturation-clamp → bloom (UnrealBloomPass with a max-channel high-pass) → scanlines → OutputPass. CRT curvature and chromatic aberration are future hooks (drop-in additions).
 
-**Camera:** Orthographic, pitched 45° down and turned 45° about the vertical, so the board reads as a diamond (Round 7.5, spec D1; shipped at 107d). Parallel rays make a world vertical draw as a screen vertical on every tile, so a billboard stands upright wherever it is, and the far rows don't shrink: the smallest glyph at fit measured about 1.28× the old perspective camera's (§105). Yaw 0 is out: a pitched board then projects to a rectangle and reads as top-down against upright glyphs. The view is fixed for players: no rotation, pan or zoom. **Fit is the only production view** (spec D7): the whole board framed at any aspect. Scroll mode stays dev-only (Ctrl+Alt+C), and a windowed view, with the minimap and the drag, wheel and touch pan it needs, belongs to the round that builds mobile, its consumer. Yaw and glyph scale are Round 11 accessibility candidates, not settings yet.
+**Camera:** Orthographic, pitched 45° down and turned 45° about the vertical, so the board reads as a diamond (Round 7.5, spec D1; shipped at 107d). Parallel rays make a world vertical draw as a screen vertical on every tile, so a billboard stands upright wherever it is, and the far rows don't shrink: the smallest glyph at fit measured about 1.28× the old perspective camera's (§105). Yaw 0 is out: a pitched board then projects to a rectangle and reads as top-down against upright glyphs. The view is fixed for players: no rotation, pan or zoom. **Fit is the only production view** (spec D7): the whole board framed at any aspect. Scroll mode stays dev-only (Ctrl+Alt+C), and a windowed view, with the minimap and the drag, wheel and touch pan it needs, belongs to the round that builds mobile, its consumer. Yaw and glyph scale are Round 24 accessibility candidates, not settings yet.
 
 ## Input accessibility (78e, user-signed 2026-08-14; extended §100, 2026-09-17)
 
@@ -539,7 +539,7 @@ A mark fades with its glyph: out with a death, in with a reinforcement.
 It stays on the ground when its glyph lifts or hops (the next paragraph).
 
 **Elevation on the board — the requirement a lifted unit must satisfy
-(§108, spec D6; signed 2026-09-25).** No unit leaves the ground yet. Round 9's flyer is the
+(§108, spec D6; signed 2026-09-25).** No unit leaves the ground yet. Round 20's flyer is the
 first consumer, and until then the explorer's posed flyer (`pose-flyer`)
 is the proof.
 

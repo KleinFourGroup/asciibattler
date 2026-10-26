@@ -7,7 +7,8 @@ comes. `DESIGN.md` says *what* we're building; `ARCHITECTURE.md` says *how the
 code is shaped*; `ROADMAP.md` is the *current* in-flight round; this file is
 the *meta-order* across the rounds still to come.
 
-**Status:** Locked 2026-08-21 at the post-Cluster-5 planning session.
+**Status:** Locked 2026-08-21 at the post-Cluster-5 planning session; the
+old Rounds 9 and 10 re-cut into Rounds 9 to 23 on 2026-10-26 (§133).
 **Supersedes** [archive/post-x-meta-roadmap.md](archive/post-x-meta-roadmap.md)
 (the six-cluster plan, 2026-06-22 → 2026-08-21 — Clusters 1–5 complete; its
 "Cluster 6 — Meta & Ship" and "§Interstitials" sections are dissolved into
@@ -29,6 +30,17 @@ Rounds 6–12 below; older docs that cite "META-ROADMAP §Interstitials" or
 - The **Coverage map** at the bottom shows where every carried item landed —
   the old Cluster-6 scope, the §80 `plans/` docs, the TODO watch items, and the
   2026-08-21 feature list. Nothing was dropped; deferrals are named.
+- **The one renumbering.** At §133 (2026-10-26) the old Rounds 9 and 10
+  were re-cut into Rounds 9 to 23, and the rounds after them renumbered,
+  for legibility (the user's call). A reference dated before then to
+  Rounds 9 to 12 names an old round:
+
+  | Old round | New rounds |
+  |---|---|
+  | 9 — Extensions | 9 to 20, by item (the Coverage map) |
+  | 10 — Act 3 | 9 to 23, by item: the act design in 9, the acts in 10 and 21 to 23 |
+  | 11 — Onboarding & Feel | 24 |
+  | 12 — Ship | 25 |
 
 ## The ordering principles (carried from v1, one added)
 
@@ -57,10 +69,23 @@ every amendment re-runs the full board; paired same-seed deltas govern.
  7.5 The Board ───┤  ✅ CLOSED 2026-09-27 — the projection spike · ortho · pitch 45 · yaw 45 · the ground mark as the team channel · the elevation clauses · the anchor rules 17 → 14 (§105–§109)
  8. Foundations ──┤  ✅ CLOSED 2026-10-11 — the shells · the recorder · the probe kit · the store + the build ID · the run journal · save/load · the menu + settings · Escalation + the unlocks · the itch page OPEN at 0.1.0 (§110–§118 + §117.5, §117.75)
  8.5 Housekeeping ┤  NEXT — the oracle map → the census → deletions per subsystem, byte-identical → the source-comment rewrite · the TODO pass  (inserted 2026-09-27)
- 9. Extensions ───┤  the combat / run-hook / traversal / footprint seams
-10. Act 3 ────────┤  the third sector + every orphaned content item
-11. Onboarding & Feel ─┤  tutorial · music · achievements · run summary
-12. Ship ─────────┘  Electron + Steamworks · build pipeline · gauntlet #2
+ 9. The frame ────┤  the act design · the board's guards · damage as a range, a trial
+10. Act 1 ────────┤  the wilds: ground fauna · the scripted run · the multi-act sheet
+11. The roster ───┤  kits · power by rarity · Mars in three · bandits out of the draft
+12. Push, pull ───┤  forced movement · the teleport · the cavalier · seven units
+13. The unit kit ─┤  lifesteal · specials · global reach · `extends` and its reskins
+14. Neutrals ─────┤  the split · `affects` as flags · totems · the aura healer · camp levels
+15. The split ────┤  `Run.ts` and `World.ts`, byte-identical
+16. The turn ─────┤  fatigue · retreat · optional deploy · injuries · a won turn's reward
+17. Deck ─────────┤  deck triggers · three daemons · the port shelf · bit sinks
+18. Events ───────┤  event → battle → resume · camp events · ability grants · XP · event art
+19. The ground ───┤  traversal profiles · moving 2×2s · ice · mud · swarms
+20. The air ──────┤  the second plane · the lift · reach by layer · flyers · the dragon
+21. Act 2 ────────┤  the realm in chaos · deserters · the faction leader · dialogue
+22. Act 3 ────────┤  the plague · the dark wizard · act-scoped stock
+23. Act 4 ────────┤  the secret act · unlocks · Escalation's levers · the bot's check
+24. Onboarding & Feel ─┤  tutorial · music · achievements · run summary
+25. Ship ─────────┘  Electron + Steamworks · build pipeline · gauntlet #2
 ```
 
 Dependency edges the order satisfies:
@@ -69,10 +94,12 @@ Dependency edges the order satisfies:
 - The UI audit sets idioms the menu/settings/tutorial build on; i18n's string
   layer must exist before the audit's per-surface pass (touch each file once) ⇒ 7 before 8, i18n first inside 7.
 - Mid-run save makes act-2/3 playtesting possible without replaying act 1 ⇒ Foundations before Content.
-- Nine of the 2026-08-21 feature items are mechanisms (effect-op vocabulary,
-  run hooks, traversal, footprint commit) that act-3 content would be authored
-  against ⇒ Extensions before Act 3 (principle #1, exactly the C1/C2 shape).
-- The tutorial is authored against FINAL act-1 content + audited idioms ⇒ Onboarding after Act 3 and after Idioms.
+- The seams (the effect-op vocabulary, run hooks, traversal, footprints)
+  come before the content authored against them, and each seam round
+  authors its consumers into the acts already live ⇒ act 1 on built
+  mechanisms first (10), the seam rounds (12 to 20), then acts 2 to 4
+  (principle #1; the re-cut, 2026-10-26).
+- The tutorial is authored against act 1 as last tuned + audited idioms ⇒ Onboarding (24) after the last round that re-reads act 1 (23) and after Idioms.
 - Ship is last by definition; telemetry tier 1 is pulled forward to Foundations because round-8/10 playtests want it.
 
 **Signed this session (2026-08-21), standing for every round below:**
@@ -87,12 +114,14 @@ Dependency edges the order satisfies:
   Steam release, because an unsigned EXE is a hard download to ask of a
   stranger. The Electron build stays internal until Steam, so the browser
   matrix it collapses is live until then.
-- **The finished run = THREE acts.**
+- **The finished run = THREE acts,** and a secret fourth of about three
+  hops behind an unlock (amended 2026-10-26 at §133, the user's act
+  outline).
 - **i18n is IN** — a string layer + locale files + a config-prose convention,
   retrofit before any further content is authored.
 - **Save invalidation policy: reject-stale until 1.0.** A save from another
   version is discarded with a message; no migrations. Serialized-shape bumps in
-  Rounds 9–10 therefore stay cheap. One build-time `BUILD_ID` (semver + commit)
+  Rounds 9 to 23 therefore stay cheap. One build-time `BUILD_ID` (semver + commit)
   is shared by the store, the saves, and the telemetry traces.
 - **The §80 `plans/` docs are REVIEWED and signed** with one amendment: the
   tutorial is *deterministic board, reactive callouts* — a pinned seed
@@ -101,6 +130,10 @@ Dependency edges the order satisfies:
   sequence-triggered, and **no control is ever disabled**.
 - **Flight and the marine share ONE mechanism** — a per-unit `traversal`
   profile — and the Phase-M flight lock is re-audited at that phase's step zero.
+  Amended 2026-10-26 at §133: flight adds a second occupancy plane, so a
+  flyer may share a tile with a ground unit, if a render spike reads well
+  (the lock as signed is the fallback); the profile lands in Round 19 and
+  the plane in Round 20.
 - **Ice becomes genuinely faster via real <1 tile costs** (the gotcha-#34
   heuristic swap), not a status — so the planner PREFERS ice (a highway with
   an accuracy tax), a legible wager.
@@ -741,323 +774,623 @@ balance numbers move.
 
 ---
 
-## Round 9 — Extensions
+## Rounds 9 to 23 — the re-cut
 
-_(What Round 8 built that this round has to respect, from its close's
-re-audit, 2026-10-11; the kickoff audits each against the code. Each Run
-bump below rejects players' saved runs at the upload that carries it (the
-release policy, §Round 8). A new `RunCommand` needs its rows in the chaos
-driver's `LEGAL_IN` and the kit's `PHASE_ROWS`; a new phase needs a row in
-the resume test's gate table and is a Run bump with no new field. A page
-added to a shipped event re-draws the rest of every run that visits it
-(gotcha #141). A new status needs a symbol and a colour under the
-colourblind gate. The board has an Escalation axis, and the signed sheet's
-arbitrated rows reproduce only under the v4 prior table.)_
+_(Cut at §133 on 2026-10-26 from the old Rounds 9 (Extensions) and 10 (Act
+3) and the user's additions; every round signed (WORKLOG §133, tranches 1
+to 3). The old rounds' text is in git at `5ab97513`. Row ids in the scope
+lists, such as C6 or N12, are the re-cut's tables (WORKLOG §133, 133b and
+133c), which hold each item's premise against the code with its file and
+line. What every round below respects, from Round 8's close: each Run bump
+rejects players' saved runs at the upload that carries it (the release
+policy, §Round 8), and a World bump rejects none, since only the Run is
+saved for players. A new `RunCommand` needs its rows in the chaos driver's
+`LEGAL_IN` and the kit's `PHASE_ROWS`; a new phase needs a row in the
+resume test's gate table and is a Run bump with no new field. A page added
+to a shipped event re-draws the rest of every run that visits it (gotcha
+#141). A new status needs a symbol and a colour under the colourblind
+gate. Removing or renaming a shipped id (a daemon, character, packet,
+event, sector, port-stock entry or camp def) makes a saved run unreadable,
+so it takes a Run bump; adding one is free. Every new archetype takes an
+atlas cell, and a draftable one a prior-table row and the rarity protocol,
+since draft pools and ports are run-wide. The board has an Escalation
+axis, and the signed sheet's arbitrated rows reproduce only under the v4
+prior table.)_
 
-**Charter:** the engine seams the third act needs, designed once with all the
-2026-08-21 consumers known — the C1/C2 shape again, on a now-mature core. Every
-item below was code-reality-audited at the planning session
-(`archive/post-83-worklog.md` §Post-C5 planning); sizes are the audit's. _(The flyer's presentation, the
-render side of a walking N×N and the atlas pre-step were added 2026-09-26
-at the Round 7.5 close, user-signed: `archive/post-104-worklog.md` §The
-Round 7.5 close, C1.)_
-
-**Pre-step, at the first phase that needs a new glyph: the atlas resize**
-(moved from Round 10, 2026-09-26). **Moot unless the round needs more
-than 17 new glyphs:** 124j-post took 16 unused non-unit glyphs out on
-2026-10-18, so the atlas uses 31 of its 48 cells (5 non-unit + 26
-distinct unit glyphs, counted by `GLYPHS.length`), and the five consumers
-below fit (WORKLOG §124, "124j-post — step zero, the signs and the
-proof"). As written before: the atlas used 47 of its 48 cells (21
-non-unit glyphs + 26 distinct unit glyphs, counted), and this round's exit
-ships a consumer per seam (a vampire, a special, a marine, a flyer, a
-walking 2×2): two new glyphs overflow it. The grid bump is ~5 lines,
-triple-guarded. Do it once.
-
-**Early in the round: a scripted run for content work** (the Round 8.5 TODO pass, 2026-10-14, user-signed; TODO "Round 9"). Finer control of what a run loads as content ramps
-up: a chain of encounters or boards, an event chain end to end (the
-event resume below is its first case), a port's stock. Each forcing
-dial takes one value for the whole run today, none takes a list, and a
-forced id is not saved. A shape for the kickoff: one list of per-node
-entries on `RunConfig`, of which today's single-valued dials are cases,
-so the URL's 17 parameters shrink as control grows. Its first consumers
-are this round's own: each seam's one consumer, checked on a chosen
-board at a chosen hop.
-
-**In scope — combat & effects**
-
-- **Resolved-damage return + lifesteal.** `applyDamage` returns a bare boolean;
-  no op can read a prior op's resolved damage. Widen the return, accumulate
-  into `FireScratch`, add a `lifesteal` op (ability-native — a vampire
-  archetype needs it) AND a `healActor{fraction}` arm on `BattleRule` (~15
-  lines — the `dealHit` trigger already carries resolved damage) for
-  daemon/packet riders. No bump.
-- **Specials** (a stronger ability, priority over strikes, cooldown ≫
-  duration): `priority` exists and dash already proves the cooldown/duration
-  decoupling. Close the three gaps: a `self`-target **self-buff propose arm**
-  (~10 lines; today `self` only knows move/summon), the silent self-`heal`
-  no-op, and — optionally — a context score gate for "fire only when it
-  matters." Ties to the ability-grant channel below.
-- **Camp-aware aura `affects`** (`'enemies'` exists and is test-pinned but is
-  pure team-inequality — a player debuff aura reaches passive camps): the
-  documented ~10-line widening.
-- **The neutral team split in two, as a trial** (census B-02, the user's
-  candidate; moved here at Round 8.5's 122f, 2026-10-15, user-signed).
-  Camp members on a team of their own, walls and cover keeping `neutral`.
-  Round 8.5 listed which question each site asks (WORKLOG §122, 122f): 26
-  ask whether a unit is scenery, 10 whether it is a camp member, 18
-  whether it is any neutral, and 17 lines plus `affectsMatch` compare two
-  units' teams. At seven of those a camp member meets a wall or rubble and
-  treats it as its own side today (`MovementBehavior`'s yield probe and
-  panic-flee swap, `blockedAlly`, `movement.ts`'s role-order pass, the
-  nearest-victim scan and `affectsMatch`, `lowestWoundedAlly`); a clean
-  split changes them, which this round may do and Round 8.5 could not.
-  Step zero: whether a run reaches each of the seven. Decided beside
-  camp-aware `affects`. Its bar is written before the trial; the user's
-  pre-registration carries (lines may grow if it reads better; census
-  B-02). `team` is in every unit of a World snapshot and on `unit:died`.
-  `isActiveNeutral`, read by its own test alone since 122f, is kept for
-  this trial to decide (signed at 122m).
-- **Cavalier** (blitz + hit on arrival): `proposeSelfMove` hardcodes
-  `targetId:-1`, so a `damage` op after a move has no target — a post-move
-  target re-resolve. Everything else is a dash clone + mobility.
-- **Forced movement and a teleport** (added 2026-10-12 at the Round 8.5
-  census, user-signed; not audited or sized). Attacks that knock their
-  target back or pull it in, and an ability that teleports its caster.
-  The `move` op's `knockback` and `pull` modes and its `cells` field
-  were declared for the first two in Cluster 1 and deleted unbuilt in
-  Round 8.5 (census A-05, A-07), so the seam is designed here with its
-  consumer. A push is a directional shove (§35c's backstop is the
-  relocation it wraps, `archive/post-34-roadmap.md:411`), and its
-  distance is a number of its own, not the ability's range. A teleport is
-  the dash's move with another rule for choosing the landing. The kickoff
-  audits both against the occupancy core and says whether each ships in
-  this round or waits for a Round 10 consumer.
-- **Fatigue — the design round** (`fatiguePerStack` is 0; H7's power-scale was
-  a placeholder). Asymmetric by construction and that's fine — the player's
-  hand is a deck, the enemy's "deck" is the wave grammar. The question is only
-  *what does rotating your hand buy you*: visible in-fight debuffs
-  (mobility/speed, not the invisible `power` meta-stat), a deck-side cost (a
-  fielded card to the BOTTOM of the draw pile / skips a draw — the StS exhaust
-  idea), or a deployment toll. **Free-form; exit = a playtest verdict; no
-  pre-commitment.** (2026-09-02: the casualty experiment re-targets the
-  `Fatigued` seam to starting HP — −10%/stack, cap 50% — and reads it on
-  its own paired arm at §92; this round inherits whatever that decided.)
-- **Retreat** (written 2026-09-02 at the casualty-experiment spec): a
-  pre-turn withdrawal stance that ends the wave early — coherent ONLY
-  under the casualty chip rule (under survivors, withdrawing leaves more
-  survivors to chip you). ⚠ The user's anti-exploit constraint: the
-  withdrawal is physically walked to the spawn band + despawned, or gated
-  behind an unlock timer (~30 s), or both — "field a strong unit, kill
-  one, retreat" must not be a valid line, though guerrilla play should be
-  directionally legal. The objective system's `hold`/`atWill` stances are
-  the seam.
-- **Optional deploy** (2026-09-02): bench a drawn card — today Cull is the
-  player's only exposure lever, and under casualties exposure = fielded
-  power. Sibling of retreat; the pre-turn screen already owns the hand.
-- **The port shelf guarantee** (2026-09-02; the user's "rarity" itch,
-  reframed): a role tag on `PacketDef` (heal / buff / utility) + a forced
-  slot in `rollPortStock` (the Portunus forced-tier precedent; the recruit
-  offer's melee+ranged guarantee is the shape) so a workhorse packet is
-  ALWAYS stocked. Weights bias, they don't guarantee — tiers come later,
-  as weighting only, if ever. Moves the shelf's draw shape → the board.
-- **Injuries** (2026-09-02): fallen units return wounded for the next
-  fight — the fatigue seam's run-scoped cousin; a design round if the
-  casualty rule is KEPT and the pool alone feels too abstract.
-
-**In scope — run layer**
-
-- **Deck-event daemon triggers.** The three `deck:*` events are
-  "cue-not-truth" presentation events with zero hook consumers. New trigger
-  domain (`cardDrawn` / `cardDiscarded` / `deckReshuffled` / `handRedrawn`),
-  legality-matrix rows, fire sites in `drawCard`/`discardCard`, a 4th `daemon`
-  RNG site + a serialized per-draw counter if any hook is chance-gated (**Run
-  bump**), plus an auto-apply `empowerRandom` op (`grantEmpowers` only queues
-  player-spent budget).
-- **The ability-grant channel** (packets/events granting a unit an ability —
-  typically an aura — for an encounter). Abilities are fixed at FOUR spawn
-  sites from the catalog; `encounterEffects` carries stat-keyed
-  `StatusEffect`s only. `UnitTemplate.abilities?` + an `encounterAbilities`
-  store on Run (**Run bump**) stamped at `beginTurn`, the four sites union it,
-  a `grantAbility` packet/event op. World already round-trips ability ids.
-- **XP / level-up rewards.** `REWARD_ENTRY_KINDS` has no XP; `bankXpAwards`
-  (Run.ts) is the single chokepoint rest nodes already feed. A `grantXp
-  {amount | levels}` entry kind + event op + packet op routed there (promotions
-  surface at the next gate — the staggered screen works unchanged); a new
-  `'levelup'` occurrence SITE (keys are permanent). **Decision point:**
-  targeting — "all roster" / "random slot" in v1; a unit picker is a UI item.
-- **Event → battle → resume.** `resolveEventNext` nulls the cursor before BOTH
-  terminals. `resumePage?` on `start-encounter` (+ the reachability BFS + the
-  superRefine), a `pendingEventResume` field (**Run bump**), re-entry at the
-  top of `advancePastBattle` — **BEFORE the recruit/sector gates** (signed:
-  the resume page is the outcome page), editor round-trip. Harness/walker
-  blast radius is small (visit counting already safe).
-- **Archetype `extends`** (reskins): no inheritance today — a reskin is a
-  38-leaf duplicate. A preprocess-merge field; the seven-place registration
-  checklist (units · prices · fuzz-strategies strict record · redraw-fisher
-  strict record · `Recruitment.test` EXCLUDED · glyph · `REQUIRED_UNIT_IDS`)
-  becomes a documented checklist + a guard where one is missing.
-
-**In scope — spatial**
-
-- **Traversal** (ONE mechanism: the marine AND flight). Passability is global
-  (`TILE_DEFS` hardcoded in `TileGrid.ts`); deep water is commented as the
-  declared-inert marine seam; the flight seam is two inert fields
-  (`layer` and the one-member plane union; `ignoresTerrain` was deleted
-  at §121, census A-04) with `planeOf`
-  ignoring the unit and `blocksFlight`/`targetsLayer` nonexistent. Because the
-  Phase-M lock signed NO co-location, "air" is not a second occupancy plane —
-  **flight is a traversal profile** (everything cost 1 except `blocksFlight`),
-  the marine is another (deep water passable). A `traversal` field on
-  `UnitDef` + `tileCostFor(unit, kind)` substituted at the ONE `CostFn` site
-  (`movement.ts`) — **and the add-a-consumer sweep of the ~8 gates that read
-  `tileGrid.costAt` directly** (the 75j2 rule). `targetsLayer` ships default
-  `both`. Falcons = the existing `summon` op.
-  **⚠ Step zero: re-audit the Phase-M flight lock against everything that
-  moved since** — camps + per-faction hostility + the pull (ground melee
-  ordered at a hovering target), N×N footprints (`unitDistance` for the
-  meleeable-adjacent rule), auras (same plane ⇒ flyers receive them — wanted?),
-  LOS/half-cover (ignore? grant?), `minRange` kiting, the §45 vacancy-ETA
-  queues + swap/sidestep (a flyer must path around a queue, never join it),
-  the catapult release gate, and the objective system (an unreachable flyer
-  over chasm = the fleeing-enemy tell). No-co-location is expected to
-  survive; the attack matrix is the likeliest revisit. Drift gates NEVER
-  relax; baselines re-pin on the deliberate change (PATHING.md append).
-- **The flyer's presentation**, built to DESIGN "Elevation on the board"
-  (handed on by 7.5). No production path lifts a glyph, and the dev posed
-  flyer's shape does not carry over: it writes the lift into the sprite
-  position (`src/dev/boardPanel/posed.ts`), a 1×1 mark follows the sprite
-  position (`BattleRenderer.updateGroundMarks`), and camera-up has a
-  horizontal part at pitch 45, so a lift done that way drags the mark off
-  its tile (about 0.32 of a tile at a lift of 0.45, derived). The animator
-  also writes whole positions on every move. So the lift is a channel kept
-  apart from the ground point the mark reads. Also owed: what the bars,
-  hitsplats and pick box do under a lift; clause 2's 15 % pinned headless
-  (only the geometry CLI measures it, and the dev dial defaults to 1.0, the
-  lift known to land on a neighbour); the float (TODO); and, at step zero,
-  a flyer and its mark over a chasm and over deep water, never read (a mark
-  1.2 down may be hidden by nearer terrain, which would break clause 3;
-  inferred).
-- **Ice <1 costs** (signed above): `minCost × Chebyshev` with `minCost`
-  computed per grid at build (1 on any board without ice ⇒ zero change
-  elsewhere), `stepDurationTicks` follows. Same phase, same `CostFn` site.
-- **Mud, a rework of unknown shape** (added 2026-10-13 at the Round 8.5
-  census, at the user's word; not designed, audited or sized). The user:
-  "Mud isn't fun to play with, but I haven't taken the time to really
-  figure out why." Today mud is the costliest passable tile (4), takes 12
-  off the accuracy of a unit standing in it and poisons on entry
-  (`TILE_DEFS`, `TileGrid.ts`); the switch on the poison was deleted in
-  Round 8.5 with the behaviour kept (census A-21). Nothing is committed
-  here but that a change is coming, and its first step is finding out by
-  play what is not fun. It sits with the tile-cost work because traversal
-  changes which units cross mud at all; the kickoff says whether it
-  belongs in this round.
-- **Moving N×N footprints** (non-draftable, encounter-only, layout-legal):
-  A* is footprint-correct and the renderer already lerps a footprint walk.
-  The 1×1-blind parts: `destinationBlocked` (one cell), `claimCell` (corner
-  only), `spawnTeam` + overflow spawn (no fit check — only the camp drip uses
-  `anchorFootprint`), sidestep/swap hard-`return null` on N>1 (a decision:
-  big units never swap, or yield rules). Layout legality = spawn-region fit
-  through `anchorFootprint`. No bump. The render side has its own 1×1-blind
-  parts (audited 2026-09-26): an N×N body's mark is fixed at its spawn
-  footprint (`BattleRenderer`'s mark spec is set once), and an enemy's pick
-  box is not scaled by its footprint (a destructible's is). The slab anchor
-  itself is recomputed on every step.
-
-**Riders** (the Round 8.5 TODO pass, 2026-10-14, user-signed; TODO "Round 9"). Before the closing board: the roster table's
-coverage guard and its compaction, `box-drive.sh`'s mixed queues, and
-the kit and parity watches (the priest's breach, the wall, power
-diversity by rarity, the AoE-status enemies' retune, the five kits that
-price negative when given), power diversity landing before the board
-because it moves every burn a turn and Round 10 authors against it.
-With the flyer's presentation, the renderer's position reconciliation.
-With XP rewards, the reward ledger's index pin and a `reward:resolved`
-event. With the ability-grant channel, a queued unit's seeded effects
-in a battle's snapshot (census F-1). Beside Retreat, a won turn's
-reward shape. In the first phase, `FX_REGISTRY`'s coverage guard. In
-the bump window, power's level-up draw and its growth key, which moves
-the recruit stream.
-
-**Why this order:** combat/effects first (no serialized-shape changes, fast
-to land), run layer second (the three Run bumps land in one window — the
-bump-economics note from the C5 spec, now under reject-stale), spatial third
-(the highest-risk items, with the flight re-audit as their step zero).
-**Depends on:** Round 8 (reject-stale signed; save/load shipped so the bumps
-are exercised by the chaos driver), Round 8.5 (the seams are designed on
-the cleaned core) and Round 7.5 (the flyer's PRESENTATION
-is built to DESIGN's "Elevation on the board" requirement, written and
-proven on a render-only fixture there so the projection is not re-opened
-here). **Risk:** high (the C2-class spatial
-work). **Decision points:** named per item above. **Exit:** every seam has a
-headless test AND one shipped consumer (a vampire, a special, a marine, a
-flyer, a walking 2×2 in one encounter) — seams without a consumer are the C2
-"flight" pattern we're closing, not repeating. **Closes with a board re-run.**
-**Scope guards:** no act-3 content beyond the one consumer per seam; no
-per-unit objectives; no aura stacking policy; no co-location; no draftable
-multi-tile units.
+**How these rounds run** (signed in tranche 1). Each round ends in an
+upload with something a player can meet, skipped only when nothing a
+player sees changed. Each seam round authors its consumers into the live
+acts' pools, so its release has them in play, and ships each seam with a
+headless test, its planted failure and a consumer in play. A round that
+changes combat, movement or the economy closes with a board, read as
+paired same-seed deltas against the round before; each act's bands are
+re-anchored in the round that lands the act.
 
 ---
 
-## Round 10 — Act 3 (Content)
+## Round 9 — The frame and the damage trial
 
-_(From the Round 8 close's re-audit, 2026-10-11: this round also owns
-Escalation's rule levers (more elites, a boss's extra trick, a tool taken
-away), which the Round 8 spec parked here (D8), and the read of level 3,
-fewer bits, which waits on bit sinks (TODO "Round 10"). The unlock
-mapping hangs on `progress.bestWin` or on a new, permanently named field of
-that section; an unlock reaches a run through the snapshot or a dial, and a
-dialled run's win is not recorded. Removing a daemon, character or boss id
-makes a save unreadable with no bump.)_
-
-**Charter:** the third sector and every orphaned content item — the first
-round whose job is simply *more game*, on the engine Rounds 1–9 finished.
+**Charter:** the four acts written down as a spec, the board's instruments
+made sound, then damage as a range tried against hit or miss as a
+pre-registered trial, in the casualty experiment's shape.
 
 **In scope**
 
-- ~~**Pre-step: the atlas resize**~~ — moved to Round 9's pre-step
-  (2026-09-26): that round's consumers need the glyphs first.
-- **The finale design round FIRST:** what the third sector IS (the identity
-  arc "sectors shade darker" has no ending written), its theme (volcanic /
-  barren / tundra pools exist unconsumed by any sector), its bosses, what the
-  run's ending is. A spec, before any JSON.
-- **Sector 3** + its encounters/bosses/layouts/events/camps, authored
-  locale-keyed from day one.
-- **The orphans:** the rifleman-class archetypes (the §67 deferral) · the
-  §76f four as ENEMIES (shipped draftable-only) · the volcanic camp resident ·
-  the camp level fork (per-act variants vs a camp-side level budget — measured
-  by the board + camp probe before any mechanism signs) · event-gated camp
-  encounters (slaver-pen / hostage — open wiring question: can an encounter
-  fit-filter reach a layout absent from every sector pool?) · the event
-  `art?`/fx seam's first consumers · **bit sinks** (the §83e "dead-currency
-  wart") · the §49 shrink flow's missing trigger content · act-3 daemons +
-  packets (incl. the Round-9 consumers: deck-trigger daemons, ability-grant
-  packets, XP rewards) · fauna · a cavalier · a marine · a falconer · reskins
-  via `extends`.
-- **Unlock content mapping** (what Round 8's mechanism gates).
-- Closes with **the sheet EXTENDED** (act-3 refs; three-act wall/reach bands;
-  the rarity protocol on every new archetype).
+- **The act design** (A6, N20), a spec before any JSON: each act's theme,
+  enemies, bosses and length in hops; the plague's cause; the ending, and
+  what a win is (act 3's boss or act 4's); act 4's unlock in outline. The
+  user's outline: act 1 mainly fauna with some bandits; act 2 a realm in
+  chaos (bandits, deserters, a faction's leader as its boss), in the
+  1920s register DESIGN names for the period archetypes; act 3 against
+  whatever causes the plague, a dark wizard its boss; a secret act 4 of
+  about three hops with no branching, against a demon lord. Four themes
+  are unused by any sector: barren, volcanic, tundra, desert.
+- **The board's instruments:** the roster table's coverage guard (C13) and
+  its compaction, measured before it is built (C14); `box-drive.sh`'s
+  mixed queues (C15); `FX_REGISTRY`'s coverage guard (R18); the action
+  classes deleted at Y5c, still described as live in DESIGN, ARCHITECTURE
+  and gotchas #95, #97 and #109 (R17).
+- **Damage as a range, a trial** (the user's, at §133): an evadable strike
+  deals a draw between 0 and its damage, with the hit chance as the mean
+  fraction, in place of hit or miss. A config switch; the roll taken on
+  the damage after defense, which keeps today's mean; the range's
+  distributions as its arms (one draw a strike keeps `combatRng`'s shape;
+  a two-parameter family makes the spread a dial); what bleed, blind and
+  the two daemons that hook a hit do when every strike lands; the bot's
+  sensors that read a hit chance; the MISS splat and `unit:missed`; paired
+  boards against hit or miss; the user's play; a bar written before. The
+  arithmetic is in WORKLOG §133 ("totems, and the first experiment").
+- **The rarity stars' tap on touch** (R22).
+- **At the close:** the no-counts trial's read (R9) and the keep test over
+  the lines §132 added.
 
-**Riders** (the Round 8.5 TODO pass, 2026-10-14, user-signed; TODO "Round 10"). The Idol of Dis Pater's `--grant` read at n=80,
-after the tithe is rounded on its award, since a read before would be of
-an arm about to change. The mapgen tool's empty-camp-pool hint, with the
-volcanic resident. Ability descriptions, written with the act's new
-abilities. The three deep-end cost residuals, when the extended sheet
-touches those rows. Rounded plates for organic scenery, with fauna,
-or dropped if none is authored. And whether any layout takes a
-`minHop`: the hop-gating lever is built and no layout uses it.
-
-**Depends on:** Round 9 (every mechanism above) + Round 7 (locale-keyed
-authoring). **Risk:** medium (content is cheap per item; the three-act
-balance extension is the expensive part). **Decision points:** the finale;
-how many hops per act at three acts (11/11/? — the run-length question);
-whether act 3 changes the hop economics. **Exit:** a three-act run playable
-end to end; the extended sheet signed.
-**Scope guards:** no new mechanisms — anything that needs one goes back to a
-Round-9 sibling phase, explicitly.
+**Why first:** instruments before the reads that depend on them, and a
+rule change before anything is balanced on it. **Risk:** medium; the
+switch keeps a rollback cheap. **Decision points:** the bar; the
+distribution; the spec's open questions. **Exit:** the spec signed; each
+guard with its planted failure; the trial kept or rolled back on its bar
+and the user's play. **Release:** the damage feel, if kept. **Scope
+guards:** no new unit, no act content.
 
 ---
 
-## Round 11 — Onboarding & Feel
+## Round 10 — Act 1, the wilds
+
+**Charter:** a first act of beasts and bandits on mechanisms that exist,
+with the two shipped sectors moved to act 2's place in the same release.
+
+**In scope**
+
+- **The scripted run** (R2): one list of per-node entries on `RunConfig`,
+  of which today's single-valued dials (`layout`, `encounter`, `event`,
+  `firstNode`) are cases, so the URL's 17 parameters shrink as control
+  grows: a chain of encounters or boards, an event chain end to end, a
+  port's stock. A forced id is saved since Round 8 (the slot keeps the
+  dials as text, and `Run.fromJSON` applies them), so entries keyed by
+  position with a URL form need no save work. Folded in: `--sector-hops`
+  (R12; the CLI forwards any flag named as a URL parameter, so
+  `--sectorHops` parses already, and the hyphenated spelling and a help
+  line are left) and a warning when a forced encounter matches no node
+  (R13). First used to author this act.
+- **The ground fauna** (A17, N19): wolf, giant rat, fox, puma and tiger,
+  enemy-only 1×1 melee archetypes, in encounters and camps; bandits as
+  enemies.
+- **Act 1's sector** (A7's share): encounters, layouts, events and a boss,
+  locale-keyed; a tree as plain scenery if the layouts want one (its
+  flight rule is round 20's).
+- **The run's shape:** act 1, then the two shipped sectors in act 2's
+  place until round 21 reworks them.
+- **The sheet's multi-act tooling** (A23's tooling half): the sheet is
+  two-act shaped today, one seam band and a wall named for act 2; a seam
+  column a sector and a wall band an act, then act 1's bands.
+- **The atlas resize** (S1): 31 of the 48 cells are used and the rounds
+  ahead name more new units than the 17 free; about five lines,
+  triple-guarded (gotcha #33).
+
+**Depends on:** round 9 (the spec). **Risk:** medium: a third sector
+lengthens the run and moves every band, and a run saved before it needs
+its resume checked or a Run bump (inferred). **Decision points:** act 1's
+hops (A24's length half); the act 1 boss. **Exit:** a run from act 1 to
+the deep end's boss, playable end to end; act 1's bands signed.
+**Release:** a new first act. **Scope guards:** no flyer, swimmer, 2×2 or
+swarm (rounds 19 and 20).
+
+---
+
+## Round 11 — The roster
+
+**Charter:** the shipped roster balanced on the trial's arm, the Idol of
+Mars split into three, and bandits out of the draft.
+
+**In scope**
+
+- **Power by rarity** (C18): 1/1/1/2 to 1/1/2/3 or 1/2/3/4, the enemy
+  pools re-anchored behind it, since it moves every burn a turn. Power's
+  level-up draw and its growth key (R19) in the same re-baseline: taking
+  the key out moves five run streams.
+- **The kit watches** (C20: officer, bandit, mercenary, halberdier,
+  stormcaller); the priest's parity (C16); the area-status enemies'
+  retune (C19); the blind fix (C12), the kiter's case a stop.
+- **Mars as three one-stat idols** (N24): strength, ranged and magic, in
+  place of one that empowers all three; a prior-table rebuild.
+- **Bandits not draftable** (N28).
+- **Dis Pater:** the `--grant` read at n=80 (A31), on the tithe as built,
+  rounded once on a turn's total (the user's answer at §133), with his
+  sentence rewritten to it (A28).
+- **Ability descriptions** (A33): a `description` on the ability schema
+  and a line on the card, so each later round writes its abilities' text
+  as it authors them.
+- **The wall watch** (C17), read on this board.
+
+**Why here:** after the trial, whose arm sets the numbers, and before the
+seam rounds tune new units against this roster. **Risk:** low-medium
+(config and box time). **Decision points:** power's scale; the kiter under
+blind; each kit change; the idols' sizes. **Exit:** the board read and
+signed; the prior table rebuilt. **Release:** three idols, reworked units,
+ability descriptions. **Save:** a Run bump (`mars` removed). **Scope
+guards:** no new mechanism but the description field.
+
+---
+
+## Round 12 — Push, pull and blink
+
+**Charter:** attacks that move their target or their caster, designed once
+with their consumers.
+
+**In scope**
+
+- **Forced movement, designed first** (C6), a stop: a push is a
+  directional shove whose distance is a number of its own, not the
+  ability's range; landings over chasm and water; in-flight moves and
+  claims (gotcha #113). The `move` op's `knockback` and `pull` modes were
+  declared in Cluster 1 and deleted unbuilt in Round 8.5, so the seam is
+  designed here with its consumers. Then knockback from a point, a pull
+  toward the caster, and a teleport landing beside its target (the dash's
+  move with another rule for the landing); `World.shove`, called by its
+  own test alone, used or retired.
+- **The cavalier's hit after its move** (C5): `proposeSelfMove` gives the
+  move `targetId: -1`, so a damage op after it needs its target resolved
+  again.
+- **A caster-anchored area that leaves out its caster** (N3): a flag for
+  `allies` and `all`, since `enemies` leaves the caster out already.
+- **The dash's visual:** a trail or blink-flash on `unit:dashed`, which
+  the teleport's blink shares.
+- **Consumers,** each in the live acts' pools: the grenadier (N1), the
+  telekinetic (N2), the adventurer's pull special (N4), the ninja (N5),
+  the blade whirlwind (N27), the banshee's self-centred burst (N3), a
+  cavalier (A18).
+
+**Depends on:** round 11's roster. **Risk:** medium-high (the occupancy
+core). **Decision points:** the design stop; which new units are
+draftable. **Exit:** each seam with a headless test and its planted
+failure; the consumers in play; the board. **Release:** seven units and
+abilities. **Save:** a World bump if a push captures a cell at cast
+(inferred). **Scope guards:** no 2×2 body is pushed until round 19.
+
+---
+
+## Round 13 — The unit kit
+
+**Charter:** lifesteal on a unit and for a team, specials that act on
+their caster, reach across the whole board, and archetypes that extend
+another.
+
+**In scope**
+
+- **The resolved-damage return and `lifesteal`** (C1): `applyDamage`
+  returns a bare boolean, so no op can read a prior op's damage; widen it,
+  accumulate into `FireScratch`, add the op. Its consumer, the vampire
+  (N11), a melee unit that heals on hit.
+- **`healActor`** (C1): a battle rule's effect that heals the unit that
+  dealt a hit by a fraction of its damage (the `dealHit` trigger carries
+  it), with the user's two variants: a lifesteal idol for the run and a
+  packet for one fight.
+- **The specials' two gaps** (C2): a `self`-target self-buff arm, and the
+  self-heal that does nothing. The score gate is dropped (the user, at
+  §133): a condition is added only where an ability looks broken without
+  one.
+- **Global reach** for abilities and auras (N18): a selector or a flag,
+  not a large radius (a radius builds its cells on every fire, an aura's
+  every tick); a global stun or heal special as its consumer.
+- **`extends`** (R7): a preprocess merge, the editor's round trip, and the
+  seven places a new archetype is registered (units, prices, the fuzz
+  strategies' strict record, the redraw-fisher's strict record,
+  `Recruitment.test`'s EXCLUDED, the glyph, `REQUIRED_UNIT_IDS`) as a
+  checklist with a guard where one is missing. Its reskins (A21): the
+  soldier (N17), the conscript (N26) and the commissar (N25, a speed
+  status under the colourblind gate).
+- **`knownAbilityIds`'s last reader** (U6), the archetype editor.
+
+**Depends on:** round 12. **Risk:** medium. **Decision points:** the
+idol's and packet's names and numbers; the conscript's appeal; who
+carries the global special. **Exit:** as round 12's. **Release:** four
+units (the vampire, soldier, conscript and commissar), a global special,
+an idol and a packet. **Save:** a Run bump and a World bump (`healActor`
+changes the fingerprinted `BattleRuleEffect`).
+
+---
+
+## Round 14 — Neutrals
+
+**Charter:** the neutral team split into the four kinds the game now needs
+(the player's units, the enemy's, camp members, and scenery, inert or
+carrying an ability), `affects` as flags, and the totems and the aura
+healer that use them.
+
+**In scope**
+
+- **The neutral split, a trial** (C4): Round 8.5 listed which question
+  each site asks (WORKLOG §122, 122f): 26 ask whether a unit is scenery,
+  10 whether it is a camp member, 18 whether it is any neutral, and 17
+  lines plus `affectsMatch` compare two units' teams; at seven a camp
+  member treats a wall or rubble as its own side today. Step zero re-takes
+  the sites; the bar is written before; the user's pre-registration
+  carries (census B-02); `isActiveNeutral` is decided here.
+- **`affects` as flags** (C3, N6): allies, neutrals and hostiles, where
+  today it is one of `enemies`, `allies` and `all`, by team alone; a
+  neutral is a camp member whose camp is not hostile to the caster's
+  team; through every reader and the editors.
+- **Totems** (N23): scenery carrying an ability, placed in the layout
+  editor, immobile, destructible, not counted toward a battle's end, its
+  side set where it is placed; first, whether a unit's own target scan
+  picks one or only an order does. A healing totem, and a global one that
+  heals its side alone (round 13's global aura).
+- **The aura healer** (N6): a second healer whose aura sustains
+  `rejuvenate` on allies and neutrals; a sustained status keeps its tick
+  cadence (`sustainStatus`).
+- **The camp level fork** (A11): per-act variants against a camp-side
+  level budget, the board and the camp probe read before a mechanism.
+- **The camp-anchor revert** (C21), kept or cut beside `affects`.
+
+**Depends on:** round 13 (a global aura for a global totem). **Risk:**
+medium-high: a unit's team is read in the sim, the render, the UI and the
+audio. **Decision points:** the trial's bar; a totem's side; camp levels
+per act or a budget. **Exit:** the split kept over its bar or reverted;
+totems and the aura healer in play; the board. **Release:** totem fights,
+the aura healer, camps by level. **Save:** a World bump (`team` on every
+unit).
+
+---
+
+## Round 15 — The split
+
+**Charter:** `Run.ts` (4,025 lines) and `World.ts` (2,432) split into
+parts a person can walk through, with no behaviour change, before rounds
+16 to 18 build on `Run.ts`. A split that helps a reader moves a phase's
+state and its share of the save into a second object, which this round
+allows.
+
+**In scope:** the split (U5), its first candidates the event phase, whose
+six fields are its own, and the deck; §123's comment-pass leads (U4)
+where they land in the files it touches. **Proof:** the journal corpus and
+the fuzz diff, byte-identical, with a declared mapping if the save's shape
+moves, and their planted controls (`process/oracles.md`, fitted to its
+size, and this one is large).
+
+**Risk:** medium (wide, but proven). **Decision points:** how far
+(`Run.ts` alone, or `World.ts` too); where the boundaries go. **Exit:**
+the proofs byte-identical with their controls. **Release:** none, the one
+round with nothing for a player. **Save:** a Run bump only if the shape
+moves.
+
+---
+
+## Round 16 — The turn
+
+**Charter:** what a player decides around a turn under the casualty rule,
+each a design round whose exit is a playtest verdict.
+
+**In scope**
+
+- **Fatigue** (C7; `fatiguePerStack` is 0): what rotating the hand buys,
+  whether visible in-fight debuffs (mobility or speed, not the hidden
+  `power`), a deck-side cost (a fielded card to the bottom of the draw
+  pile, or a skipped draw) or a deployment toll. The casualty experiment
+  re-targeted the `Fatigued` seam to starting health (−10 % a stack,
+  capped at 50 %) and read it at §92; this round inherits what that
+  decided.
+- **Retreat** (C8): a pre-turn stance that ends the wave early, coherent
+  only under the casualty rule. The user's constraint: the withdrawal is
+  walked to the spawn band and despawned, or gated behind a timer (about
+  30 s), or both, so "field a strong unit, kill one, retreat" is not a
+  valid line while guerrilla play stays legal. The objective system's
+  `hold` and `atWill` stances are the seam; a new turn-end reason.
+- **Optional deploy** (C9): bench a drawn card, since under casualties
+  exposure is fielded power; the pre-turn screen owns the hand.
+- **Injuries** (C11): fallen units return wounded for the next fight, on
+  `pendingEncounterEffects` unless they outlast a fight.
+- **A won turn's reward** (C22): a partial refund on a decisive win, or
+  the enemy paying survivors on a loss, through the `poolHealth` portion,
+  the feel re-read first.
+- Each new command takes its chaos-driver and probe-kit rows and a bot
+  decision (gotcha #128).
+
+**Depends on:** round 15. **Risk:** medium-high (design, and a balance
+that moves every turn). **Decision points:** each design, a stop;
+retreat's exploit guard. **Exit:** each a playtest verdict; what is kept
+with its headless tests and the board. **Release:** the turn's new
+choices. **Save:** a Run bump and a World bump (retreat's turn-end reason
+and objective).
+
+---
+
+## Round 17 — Deck and daemons
+
+**Charter:** daemons that hook the deck, and the economy's spending side.
+
+**In scope**
+
+- **Deck-event triggers** (R3): `cardDrawn`, `cardDiscarded`,
+  `deckReshuffled` and `handRedrawn` as a trigger domain, from the three
+  `deck:*` events that are cues alone today; their legality rows and fire
+  sites in `drawCard` and `discardCard`; a site id on the `daemon` key;
+  whether the encounter-start shuffle counts (it emits no
+  `deck:reshuffled` today); a serialized per-draw counter if any hook is
+  chance-gated.
+- **A daemon draw op** (N13), guarded on its chain (the extra card is
+  drawn too) and on the hand's cap of 10.
+- **The user's three daemons** (N13, N14, N15): an extra draw when a named
+  unit is drawn; a small heal on each shuffle; more morale for a smaller
+  hand, through a `poolMax` run stat, healed by what it adds when taken
+  (20/40 becomes 25/45) and losing as much when it leaves, clamped so the
+  loss never ends a run.
+- **The port shelf guarantee** (C10): a role tag on `PacketDef` (heal,
+  buff, utility) and a forced slot in the port's stock, so a workhorse
+  packet is always stocked; weights bias, they don't guarantee.
+- **The shrink trigger** (A15): a daemon that shrinks the cache, kept out
+  of ports or paired with a boon, since ports stock every unowned daemon.
+- **Bit sinks** (A14), designed first: content gated on `bitsAtLeast`, or
+  a service (a paid rest, a reroll) as a `RunCommand`.
+- **Escalation 3's read** (A2, with its watch A30), on this board, with
+  exported journals if any exist by then.
+
+**Depends on:** round 15. **Risk:** medium. **Decision points:** the
+sinks; any chance-gated hook. **Exit:** the daemons and the shelf in play
+with their headless tests; the board. **Release:** three daemons, the
+port's shelf, new ways to spend bits. **Save:** a Run bump if a hook is
+chance-gated.
+
+---
+
+## Round 18 — Events and rewards
+
+**Charter:** events that start a fight and pick up after it, and rewards
+that grant abilities and XP, authored as events.
+
+**In scope**
+
+- **Event, battle, resume** (R6): `resolveEventNext` nulls the cursor
+  before both terminals today. `resumePage` on `start-encounter`, with
+  the reachability and termination checks; a `pendingEventResume` Run
+  field; re-entry at the top of `advancePastBattle`, before the recruit
+  and sector gates (signed: the resume page is the outcome page); the
+  editor's round trip. A fight from a resumed page needs a fight counter,
+  since a fight's streams are keyed by sector, node and turn, or the
+  schema forbids one.
+- **Event-gated camp encounters** (A12): a layout named on the event's
+  terminal, since today an event names an encounter alone and the layout
+  roll throws when none fits, and a boot guard.
+- **The ability-grant channel** (R4): `UnitTemplate.abilities`, an
+  `encounterAbilities` store on the Run stamped at `beginTurn`, unioned
+  where units spawn (every path goes through `World.wireSpawned`), and a
+  `grantAbility` op; with a queued unit's seeded effects kept in a
+  battle's snapshot (census F-1, R24).
+- **XP rewards** (R5): a `grantXp` entry kind and ops routed through
+  `bankXpAwards`, a new `levelup` occurrence site, and a promotion route
+  outside fights and rests (`handleDismissPromotion` throws there today);
+  with the reward ledger's index pin (R20) and a `reward:resolved` event
+  (R21).
+- **The event screen on `run:cacheChanged`** (R23).
+- **The event `art` reader** (A13), what art is decided first.
+- **The grants authored as events** (N16).
+
+**Depends on:** round 15. **Risk:** medium. **Decision points:** whether a
+resumed page can fight; XP's targeting; what event art is. **Exit:** each
+seam with its headless test and planted failure; the events in play.
+**Release:** fights inside events, camp events, granted abilities, XP,
+event art. **Save:** Run bumps (the resume, the XP portion, the template
+field) and a World bump (F-1 with the grant).
+
+---
+
+## Round 19 — The ground
+
+**Charter:** how a body crosses the board on the ground: a traversal
+profile per archetype (what each tile costs it) and movement correct for
+bodies wider than a tile, built through the movement sites they share,
+with water, ice and mud and the bodies that use them. Both change the same
+one-cell tests of a tile (`destinationBlocked`, the sidestep, a step's
+duration, the flee, the two wanders, `nearestFreeCells`), which is why
+they share a round (principle #2).
+
+**In scope**
+
+- **The traversal profile on the one plane** (S3): passability is global
+  today (`TILE_DEFS` in `TileGrid.ts`). A `traversal` field and
+  `tileCostFor(unit, kind)` at the `CostFn` site, carried on
+  `PathCostContext` through its three builders; the direct
+  `tileGrid.costAt` reads; the bot's `passable` reads; and a rule for a
+  tile's effects under a profile. Designed with the flyer's row in it, so
+  round 20 adds a plane, not a new shape. The default profile is
+  byte-identical by the fuzz diff and the pathing pins; drift gates never
+  relax (PATHING).
+- **Moving N×N, the sim** (S8): A* is footprint-correct; the one-cell
+  sites are `destinationBlocked`, the claim, the spawn and overflow (no
+  fit check), the swaps (null on a footprint over 1), the sidestep, the
+  collision check, the leap, both wanders, the flee, `nearestFreeCells`
+  and the healer's commit check; a decision: big bodies never swap or
+  sidestep, or yield rules. Built footprint-correct throughout, so the
+  half-tile grid stays possible. A pushed 2×2 decided with it.
+- **Moving N×N, the render** (S9): the mark is fixed at the spawn
+  footprint, an enemy's pick box and a combatant's health bar are not
+  scaled by its footprint.
+- **A guard that a draftable unit is 1×1** (S11), in place of the pin S8
+  loosens.
+- **Ice under 1** (S6): `minCost × Chebyshev` in the heuristic, `minCost`
+  per grid (1 on a board without ice), `stepDurationTicks` following, and
+  the arrival bound that assumes every step takes at least a step's ticks.
+  The planner then prefers ice, a highway with an accuracy tax.
+- **Mud reworked** (S7): the user's word, "Mud isn't fun to play with,
+  but I haven't taken the time to really figure out why"; today cost 4,
+  −12 accuracy and poison on entry, with its switch deleted in Round 8.5.
+  Play first, then a dev dial for the trial.
+- **Swarms, plan A** (the user's, at §133): a small body drawn smaller on
+  a whole tile; a swarm as one body drawn as a cluster whose damage falls
+  with its health.
+- **Consumers,** each in the live acts' pools: the crab and a marine
+  (N19, A19), the bear (N10), the giant (N21), a swarm.
+
+**Depends on:** round 18. **Risk:** high: the movement core under the
+drift gates. **Decision points:** the yield rule; which cell governs a
+body's cost and tile effects; mud's shape; the swarm's damage rule.
+**Exit:** each seam with a headless test and its planted failure (a marine
+crosses deep water and a ground unit is refused; a walking 2×2 under the
+overlap detector, with a one-cell `destinationBlocked` planted); the
+consumers in play; the board. **Release:** the crab and the marine, ice as
+a highway, mud reworked, the bear, the giant, swarms. **Save:** none
+predicted (a profile and a footprint come from the def); a World bump if
+a claim gains a field. **Scope guards:** no second plane and no lift
+(round 20); no draftable 2×2. If the round runs long, mud is the piece
+that moves: it needs the profile, not the footprint.
+
+---
+
+## Round 20 — The air
+
+**Charter:** flight: a second occupancy plane, the flyer's presentation,
+reach by layer, and the flyers.
+
+**In scope**
+
+- **The render spike first:** a posed flyer over a ground unit, two
+  glyphs and two marks on one tile, for the user's eye; the flight lock as
+  signed (no co-location) is the fallback.
+- **The lock re-audited** (S2) against co-location across planes, and
+  against everything that moved since it was signed: camps and their
+  hostility, N×N `unitDistance`, auras, sight and half cover, `minRange`
+  kiting, the queues with the swap and sidestep, the catapult's release
+  gate, the objective system.
+- **The plane:** `planeOf` choosing by the unit, path blockers and
+  `destinationBlocked` per plane, claims (they carry `plane` already), the
+  overlap detector per plane, a tile's effects under a flyer.
+- **Reach by layer** (N12), in place of `targetsLayer`: a per-ability
+  change of reach against a flyer, so melee hits a flyer above it.
+- **The flyer's presentation** (S4), to DESIGN "Elevation on the board":
+  the lift as a channel apart from the ground point the mark reads, since
+  the animator writes whole positions and a lift written into the sprite
+  drags the mark off its tile; the ten position readers each choosing
+  ground or lifted; clause 2's 15 % pinned headless, a lift of 1.0 its
+  failing control; the mark over chasm and deep water. Then the
+  renderer's reconciliation, its cheap tier (S5), and the float (S10: the
+  lift kept and the bob dropped under reduced motion, a phase a unit).
+- **The tall tree** with `blocksFlight` (N7), and rounded plates for it
+  (A35).
+- **Consumers,** each in the live acts' pools: the eagle (N19), the
+  falcon and the falconer (N8, A20; the falcon through `summon`), and the
+  dragon (N9), a 2×2 flyer, where both seams meet.
+
+**Depends on:** round 19 (the profile and the footprint). **Risk:** high:
+a second plane in the occupancy core, and the projection. **Decision
+points:** the spike's verdict; the lift and the float, by the user's eye;
+reach by layer's default; whether the tree blocks sight. **Exit:** as
+round 19's, with the lift's pin and its control; the board. **Release:**
+the eagle, the falcon and falconer, tall trees, the dragon. **Save:** a
+World bump if a unit's plane is kept per instance (inferred). **Scope
+guards:** no draftable 2×2.
+
+---
+
+## Round 21 — Act 2, the realm in chaos
+
+**Charter:** the two shipped sectors reworked into one second act, a realm
+in chaos in the warlord-era register (bandits, deserters, a faction's
+leader as its boss), and lines of dialogue for bosses.
+
+**In scope**
+
+- **Act 2's sector from the shipped two** (A7's share): encounters,
+  layouts, events and camps, at the length the spec set.
+- **The rioter, gunslinger, halberdier and officer** in normal and elite
+  fights (A9); today they fight in the two act-2 bosses alone.
+- **The rifle-armed archetypes as the deserters** (A8), enemy-only unless
+  signed draftable.
+- **The faction leader's fight.**
+- **Dialogue** (N22): a locale-keyed `lines` field on an archetype and a
+  render overlay over the glyph, at moments the renderer hears or at
+  random; render-only, so no board and no stream; the leader the first to
+  speak.
+- **`minHop` on a layout** where the act wants it (A26).
+- **Act 2's bands,** re-anchored, with the deep-end cost residuals (A34)
+  on that board.
+
+**Depends on:** round 10 (act 1 and the sheet's multi-act tooling).
+**Risk:** medium: a shipped boss, event or sector id removed or renamed
+makes a saved run unreadable. **Decision points:** what of the two
+sectors is kept; the leader's fight; whether the deserters are draftable.
+**Exit:** a run from act 1 through act 2's boss, playable; act 2's bands
+signed. **Release:** act 2. **Save:** a Run bump if a shipped id goes.
+
+---
+
+## Round 22 — Act 3, the plague
+
+**Charter:** a third act against whatever causes the plague, with the dark
+wizard as its boss, and stock that can be held to an act.
+
+**In scope**
+
+- **Act 3's sector** (A7's share), its theme from the spec; if volcanic,
+  the volcanic camp resident (A10), whose pool ships empty, and the
+  mapgen tool's empty-pool hint (A32) with it, or the hint dropped.
+- **The plague's enemies, and the wizard.**
+- **Act-scoped stock** (A16): ports and draft pools draw from the whole
+  catalog today, so an "act 3" daemon, packet or draftable would be
+  offered in act 1. Ports and pools by act, each item a prior-table row,
+  then act 3's daemons and packets on it.
+- **Act 3's bands.**
+
+**Depends on:** round 21. **Risk:** medium: the scoping re-draws port
+stock. **Decision points:** the wizard's kit; what is held to act 3.
+**Exit:** a run through act 3's boss, playable; act 3's bands signed.
+**Release:** act 3. **Save:** none predicted for the content; a Run bump
+if the scope is saved per run (inferred).
+
+---
+
+## Round 23 — Act 4 and a run's frame
+
+**Charter:** the secret fourth act behind an unlock, the unlock mapping,
+Escalation's rule levers with per-act hop economics, and the bot's check
+over the whole run.
+
+**In scope**
+
+- **Act 4:** about three hops with no branching, the demon lord, and a
+  sector-map edge taken only when unlocked, since an edge is `from` and
+  `to` alone.
+- **The unlock mapping** (A22), act 4 first. What it builds on (A3):
+  `progress` is lenient and a new field's name is permanent; `bestWin` is
+  the highest level won per character; a dialled run's win is not
+  recorded; unlocks apply at the character's confirm.
+- **A win** as the spec defines it, with the credits.
+- **Escalation's rule levers** (A1): more elites, a boss's extra trick, a
+  tool taken away; with per-act node-map parameters (A24's economy half),
+  one seam, since elite, port and event chances are one global block
+  today.
+- **The bot's check after the content** (A27), on the four-act board, and
+  act 4's bands.
+
+**Depends on:** rounds 10 to 22. **Risk:** medium. **Decision points:**
+what unlocks act 4; which tool a level takes away; what "working as
+intended" means for the bot. **Exit:** a run through all four acts with
+act 4 unlocked; the bot's check read; every act's bands signed.
+**Release:** the secret act, unlocks, Escalation's new levels. **Save:** a
+new permanent `progress` field; a Run bump if an unlock reaches the run
+by snapshot.
+
+---
+
+## Round 24 — Onboarding & Feel
 
 _(From the Round 8 close's re-audit, 2026-10-11. Built already: the
 credits and the licence file (116j), and of the run summary the seed line,
@@ -1097,12 +1430,12 @@ content and audited idioms.
   explorer's patches, and a production yaw needs the slab re-stamp on a view
   change, which is DEV-only today.
 - **The final global feel/SFX sweep** (catapult hold-fire creak · launch
-  creak · dash VFX · the "queued" stance tell · the fleeing-enemy tell · the
+  creak · the "queued" stance tell · the fleeing-enemy tell · the
   stalled-battle draw prompt · sparkle placement · the movement polish, then
   the hop reopened once · the rally X as a terrain mark — the whole TODO
   feel pile, dispositioned in one pass).
 
-**Riders** (the Round 8.5 TODO pass, 2026-10-14, user-signed; TODO "Round 11"). First, ahead of the tutorial, whose callouts
+**Riders** (the Round 8.5 TODO pass, 2026-10-14, user-signed; TODO "Round 24"). First, ahead of the tutorial, whose callouts
 point at the screens: the layout rework (a window smaller than
 1280×720, the battle's unit cards over the board, 150 % text at 720p),
 sized at the kickoff; players' reports may bring it forward as a `.5`
@@ -1114,7 +1447,7 @@ key's label on a non-US keyboard. With the run summary, an export of a
 run in progress. Text size at the default, asked at each round's
 playtest until then.
 
-**Depends on:** Round 10 (tutorial against final act 1) + Round 8 (the store).
+**Depends on:** Round 23 (the tutorial against act 1 as last tuned) + Round 8 (the store).
 **Risk:** low-medium (render/UI-only; music assets are the unknown-length
 tail). **Decision points:** the music sourcing route; achievement rewards
 cosmetic vs gating. **Exit:** a new player reaches the act-1 boss unprompted;
@@ -1123,7 +1456,7 @@ the feel pile is empty or explicitly deferred.
 
 ---
 
-## Round 12 — Ship
+## Round 25 — Ship
 
 _(From the Round 8 close's re-audit, 2026-10-11. The Electron shell exists
 as a development shell (`shell/electron/`, `npm run shell`): no packaging,
@@ -1161,12 +1494,12 @@ config change; only finished runs are exported.)_
 - Store-page assets · the Pages build as the demo channel · the final deploy
   story (hand-upload retires or is formalized).
 
-**Riders** (the Round 8.5 TODO pass, 2026-10-14, user-signed; TODO "Round 12"). With the store-page assets, the recorder's
+**Riders** (the Round 8.5 TODO pass, 2026-10-14, user-signed; TODO "Round 25"). With the store-page assets, the recorder's
 three open items. With the browser matrix, the device pixel ratio's cap
 and the failure plate's three (a shader that fails to compile, the
 battle unseen while a lost context is waited for, a long error the
 keyboard can't scroll). Which run dials a shipped build answers (the
-rest of that work is Round 9's scripted run). A decision point: which
+rest of that work is Round 10's scripted run). A decision point: which
 languages, if any, at the Steam release.
 
 **Depends on:** everything. **Decision points:** Deck/gamepad; the web
@@ -1202,39 +1535,44 @@ records an achievement on a clean machine.
 | Telemetry tier 1 (export + build id) | plans/telemetry.md | 8 |
 | The public web channel (itch.io alpha) · the browser smoke | 7.5 close | 8 |
 | The codebase review (the census · deletions per subsystem) · the source-comment rewrite | 2026-09-27 (the user) / the tone audit (TODO) | 8.5 |
-| Atlas resize (the pre-step, moved from 10) | #13 / 7.5 close | 9 |
-| Lifesteal · specials · camp-aware auras · cavalier · fatigue design | #1 #4 #3 #14 #9 | 9 |
-| Forced movement (knockback, pull) · a teleport | the Round 8.5 census, 2026-10-12 (the user) | 9 |
-| Mud, a rework of unknown shape | the Round 8.5 census, 2026-10-13 (the user) | 9 |
-| The neutral team split in two, as a trial | the Round 8.5 census, B-02 (the user); placed at 122f, 2026-10-15 | 9 |
-| Deck-event daemons · ability-grant channel · XP rewards · event resume · `extends` | #2 #6 #19 #7 #10 | 9 |
-| Traversal (marine + flight + `targetsLayer`) · the flyer's presentation · ice <1 · moving N×N (+ its render side) | #11 #12 #15 #5 / 7.5 hand-offs | 9 |
-| Finale design · sector 3 · the orphans · bit sinks · fauna · unlock mapping | C5 deferrals | 10 |
-| Tutorial · music · achievements · the rest of the run summary · feel sweep · an easier setting (the credits were built at 116j) | plans/* / TODO / Round 8 spec D8 | 11 |
+| Atlas resize (the pre-step, moved from the old 10) | #13 / 7.5 close | 10 |
+| Lifesteal · specials · camp-aware auras · cavalier · fatigue design | #1 #4 #3 #14 #9 | 13 · 13 · 14 · 12 · 16 |
+| Forced movement (knockback, pull) · a teleport | the Round 8.5 census, 2026-10-12 (the user) | 12 |
+| Mud, a rework of unknown shape | the Round 8.5 census, 2026-10-13 (the user) | 19 |
+| The neutral team split in two, as a trial | the Round 8.5 census, B-02 (the user); placed at 122f, 2026-10-15 | 14 |
+| Deck-event daemons · ability-grant channel · XP rewards · event resume · `extends` | #2 #6 #19 #7 #10 | 17 · 18 · 18 · 18 · 13 |
+| Traversal (marine + flight + `targetsLayer`) · the flyer's presentation · ice <1 · moving N×N (+ its render side) | #11 #12 #15 #5 / 7.5 hand-offs | 19 (profiles) and 20 (the plane) · 20 · 19 · 19 |
+| Finale design · sector 3 · the orphans · bit sinks · fauna · unlock mapping | C5 deferrals | 9 (the act design) · 10, 21 to 23 (the acts) · by item · 17 · 10, 19, 20 · 23 |
+| Tutorial · music · achievements · the rest of the run summary · feel sweep · an easier setting (the credits were built at 116j) | plans/* / TODO / Round 8 spec D8 | 24 |
 | The UI sweep (§117.5) · the rest gate (§117.75), inserted and built | Round 8 | 8 |
 | The oracle map · the TODO pass over Round 8's riders · the shell-quoting audit | Round 8 close | 8.5 |
-| Escalation's rule levers · level 3's read against bit sinks | Round 8 spec D8 / 118e | 10 |
-| The end of no-migrations at 1.0 · the shell's packaging, instance lock and store writes · Chrome proper and Safari | Round 8 spec / Round 8 close | 12 |
-| Glyph scale · yaw (the accessibility dials) · the movement polish + the hop · the rally X as a terrain mark | 7.5 hand-offs / TODO | 11 |
-| Electron + Steamworks · pipeline · Deck call · toolchain bump · pooling · browser matrix · human gauntlet #2 | v1 C6 / TODO | 12 |
-| `--sector-hops` in the run-config tool · chebyshev unify · `pauseAtTurnGates` watch · Mercury watch · runOne/walker watch · `--poll-ceiling` · mapgen empty-pool hint | TODO | placed at the Round 8.5 TODO pass: 9 (the scripted run) · 8.5 (census B-17) · dropped · dropped · 8.5, a lead for §125 (census B-14) · superseded 2026-08-26 · 10 |
-| A scripted run for content work | the Round 8.5 TODO pass, 2026-10-13 (the user) | 9 |
-| A check of the bot after the content rounds | the Round 8.5 TODO pass, 2026-10-13 (the user: "probably after the content rounds") | placed at Round 10's close |
-| Every other open TODO item | the Round 8.5 TODO pass (`round-8.5-census.md` section 5) | 8.5 → 12, by TODO's sections |
+| Escalation's rule levers · level 3's read against bit sinks | Round 8 spec D8 / 118e | 23 · 17 |
+| The end of no-migrations at 1.0 · the shell's packaging, instance lock and store writes · Chrome proper and Safari | Round 8 spec / Round 8 close | 25 |
+| Glyph scale · yaw (the accessibility dials) · the movement polish + the hop · the rally X as a terrain mark | 7.5 hand-offs / TODO | 24 |
+| Electron + Steamworks · pipeline · Deck call · toolchain bump · pooling · browser matrix · human gauntlet #2 | v1 C6 / TODO | 25 |
+| `--sector-hops` in the run-config tool · chebyshev unify · `pauseAtTurnGates` watch · Mercury watch · runOne/walker watch · `--poll-ceiling` · mapgen empty-pool hint | TODO | placed at the Round 8.5 TODO pass, re-placed at §133: 10 (the scripted run) · 8.5 (census B-17) · dropped · dropped · 8.5, a lead for §125 (census B-14) · superseded 2026-08-26 · 22 |
+| A scripted run for content work | the Round 8.5 TODO pass, 2026-10-13 (the user) | 10 |
+| A check of the bot after the content rounds | the Round 8.5 TODO pass, 2026-10-13 (the user: "probably after the content rounds") | 23 |
+| The user's additions: new units and abilities, three daemons, totems, dialogue, the four acts (N1 to N28) | §133, 133c (the user) | 10 to 23, by item |
+| Damage as a range, a trial | §133, 133c (the user) | 9 |
+| Euclidean distance · the half-tile grid | §133, 133c (the user) | TODO "Watches" |
+| The split of `Run.ts` and `World.ts` · §123's comment-pass leads | TODO, not yet placed until §133 | 15 |
+| Every other open TODO item | the Round 8.5 TODO pass (`round-8.5-census.md` section 5), re-placed at §133 (WORKLOG §133, tranche 3) | 8.5 → 25, by TODO's sections |
 
 ## Explicitly deferred / out (signed)
 
 - **Synergies/traits** — OUT (the C4 call; daemons are the channel).
 - **Per-unit objectives** — out (a sim-model change with no consumer).
-- **Aura stacking policy · constitution auras · co-location for flyers ·
-  draftable multi-tile units · the anti-air attack matrix** — out until a
-  consumer names them.
+- **Aura stacking policy · constitution auras · draftable multi-tile
+  units** — out until a consumer names them. (Co-location for flyers and
+  reach by layer, which the anti-air attack matrix was, are in Round 20
+  since §133, behind its render spike.)
 - **Telemetry tier 2 (an ingest server)** — only on demonstrated tier-1 loss.
 - **Translations beyond English** — the layer ships; content does not.
-  Which languages, if any, at the Steam release is a Round 12 decision
+  Which languages, if any, at the Steam release is a Round 25 decision
   point (the Round 8.5 TODO pass, 2026-10-14).
 - **Camera rotation · CRT curvature · chromatic aberration** — hooks only.
-  (A player-ROTATABLE camera; a fixed yaw chosen in settings is Round 11's
+  (A player-ROTATABLE camera; a fixed yaw chosen in settings is Round 24's
   question.)
 - **Mobile** (the windowed view, the minimap, drag / wheel / touch pan, the
   phone-width map legend) — out until it can be playtested (2026-09-26: no

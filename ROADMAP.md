@@ -489,5 +489,5 @@ Cursor. Exit: META-ROADMAP's exit for the round.
 - ☑ **133b — the re-read of Rounds 9 and 10 against HEAD** (`batch`, read at 133c's stop). Read clear 2026-10-26.
 - ☑ **133c — the user's additions, sized like the table's rows** (`stop`). N1 to N28, three experiments; closed 2026-10-26.
 - ☑ **133d — the re-cut, in tranches** (`stop`). Signed 2026-10-26: 17 rounds, 9 to 25 (the old 11 and 12 as 24 and 25), the TODO rows placed by round, a Watches section.
-- ☐ **133e — META-ROADMAP and TODO rewritten to it** (`batch`, read at 133f's stop).
+- ◐ **133e — META-ROADMAP and TODO rewritten to it** (`batch`, read at 133f's stop). Built 2026-10-26; the placement check PASS with five planted controls failing.
 - ☐ **133f — the close and the archive** (`stop`).

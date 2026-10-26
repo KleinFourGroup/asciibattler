@@ -22055,3 +22055,53 @@ By round: 9 takes 8 of the old Round 9's 30, 10 three, 11 seven, 14 one,
 
 **Signed** (the user, 2026-10-26: "Fully signed again, Claude! 😁"), the
 four new calls with it. 133d is done.
+
+### 133e — META-ROADMAP and TODO rewritten to the re-cut (2026-10-26, session 19020674)
+
+- *META-ROADMAP.* The old Rounds 9 and 10 (in git at `5ab97513`) are
+  replaced by a header note for the new rounds and Rounds 9 to 23, each in
+  a round's parts, from the signed tranches, with the old rounds' detail
+  carried to the item it belongs to. The old 11 and 12 are renamed 24 and
+  25, with their TODO pointers and the tutorial's dependency (now round
+  23) re-pointed and the dash's visual out of 24's feel sweep. In the
+  header: the status line, the renumbering's map in "How to read this",
+  the sequence, the dependency edges, and three signed standing lines
+  amended (three acts and a secret fourth; bumps cheap in Rounds 9 to 23;
+  flight as a second plane behind the render spike). The Coverage map's
+  rows re-pointed and four added; "Explicitly deferred" moves co-location
+  and the anti-air matrix into Round 20.
+- *Filled in where a tranche left a part blank,* for 133f's read: the
+  exits of Rounds 17 and 18 (the seam rule) and "Depends on: round 15" for
+  both, whose charter names them; Round 11's scope guard as "no new
+  mechanism but the description field".
+- *TODO.* 85 open rows to 83, each moved whole by a script that checks
+  each row's opening first: a section a round with a row, "Watches", and
+  "Not yet placed" as the inbox. Closed as ✅ lines under §128 to §133: the
+  re-cut, the tithe, the forced id's kind rule, 122o's leads. Rewritten:
+  Dis Pater's sentence (A28), Escalation 3's watch (A30), the harness
+  feedback's pointer (U1), the scripted run's fold and its Round 25
+  clause (R2), what is left of `--sector-hops` (R12); five rows' round
+  numbers.
+- *The live lines naming Rounds 9 to 12,* by a search outside the
+  archive, the WORKLOG, `retro/` and the census: re-pointed where they
+  name a plan (ARCHITECTURE two, DESIGN two, HANDOFF one,
+  `shell/electron/main.mjs` one); left where they mean the next round
+  (`process/planning.md` three, `process/welfare-and-efficacy.md`,
+  `scripts/friction-scan.mjs`, BALANCE's "Round 9 on") or are history in
+  closed text (META-ROADMAP's Rounds 6 to 8.5, ROADMAP, BALANCE's 88e
+  line), which the map resolves. `process/planning.md`'s naming rule
+  records the one renumbering.
+- *The check* (`scratch/133/recut-check.mjs`): the 121 ids of 133b's and
+  133c's tables, read from this file, each named in exactly the rounds
+  its placement says (A7, A24 and N19 split by part), none named in a
+  round it is not placed in; seven items without an id by a phrase; every
+  open TODO row under a round or "Watches" matched to one placement whose
+  round names it. PASS. Its controls, on copies: an id dropped from its
+  round, an id named in a second round, a TODO row under the wrong round,
+  a table row with no placement, a watch row lost; each FAIL with its own
+  line.
+
+The read (`batch`, at 133f's stop): META-ROADMAP's Rounds 9 to 25 and
+TODO's sections. Wrong looks like an item in no round, a row under a
+round whose charter does not name it, or a round saying something its
+tranche did not sign.

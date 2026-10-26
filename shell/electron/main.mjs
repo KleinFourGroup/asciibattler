@@ -118,7 +118,7 @@ protocol.registerSchemesAsPrivileged([
 // takes `app.requestSingleInstanceLock()`. The probe and record runners each
 // pass their own --profile and must stay able to run beside a playing
 // instance; whether Electron's lock is per userData is unchecked (TODO,
-// "Round 12").
+// "Round 25").
 const storeFile = () => join(app.getPath('userData'), 'store.json');
 
 ipcMain.on('shell-store:read', (event) => {

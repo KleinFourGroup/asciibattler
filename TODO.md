@@ -4,7 +4,9 @@ Small follow-ups that aren't roadmap steps. Add things here when they're worth f
 
 **Completion convention (2026-07-06):** a completed item collapses to a single ✅ line + a pointer (commit hash, doc §, or "git history") *in the commit that lands it* — the full diagnosis lives in git history and the run-logs, not here.
 
-**One section a round (the Round 8.5 TODO pass, signed 2026-10-14).** Each
+**One section a round (the Round 8.5 TODO pass, signed 2026-10-14; re-placed
+at §133's re-cut, 2026-10-26, WORKLOG §133, tranche 3: a round with no row
+has no section, and a row with a trigger and no round is under "Watches").** Each
 open item sits under the round it was given, with the groups META-ROADMAP
 names; which round and why is the item's row in
 [round-8.5-census.md](round-8.5-census.md) section 5 (T-nn). A new item goes
@@ -124,26 +126,13 @@ to §133 say which phase takes each row.
 
 - ✅ **Two lines of the smoke were not read** — read at 128c in both browsers' storage inspectors: Firefox kept our keys 24 days, one foreign key; Edge's storage was empty before the day (WORKLOG §128, 128c).
 
-- [ ] **Rounds 9 and 10, re-cut into smaller rounds with smaller phases**
-  (the user, 2026-10-22, at §127's close: "I think that they need to be
-  recombined and chopped up into more, smaller rounds, with smaller phases
-  in turn"). Round 9's charter is 257 lines of META-ROADMAP with 21 items
-  in scope besides the atlas pre-step, the scripted run and the riders,
-  then 24 open rows in this file and 11 census items; Round 8's section,
-  its close notes included, is 190 lines, and the round took 11 phases.
-  Round 10 opens with the design round for a whole act. A phase has
-  drifted too: about 8 WORKLOG entries a phase in Round 7, 12 in 7.5, 16
-  in 8 and 26 in 8.5 (§124.5 ran eight sessions, §126 five), while an
-  entry's size held (median 2.7 to 2.9 KB since Round 7). Raised with it:
-  the itch build updates only at a round close; rounds that each build a
-  seam with its act-3 content meet ordering principle #1 (each seam
-  designed once with its consumers in view), which the finale's design
-  round, moved first, might answer; and a phase's size set at its cut
-  (one or two sessions, say). A planning session of its own, with the
-  close's re-read of the next charter. WORKLOG reached 975 KB (Round 8's
-  669, Round 7's 321, by the same count); archiving each phase at its
-  close is shelved until the re-cut, since smaller rounds may keep it
-  under the Read tool's 256 KB on their own.
+- ✅ **Rounds 9 and 10, re-cut into smaller rounds with smaller phases** — Rounds 9 to 23, the old 11 and 12 renumbered 24 and 25, this file's rows placed by round (META-ROADMAP; WORKLOG §133, 133d and 133e).
+
+- ✅ **Round a tithe's bits on the award, not on each kill** — built since 47f: a turn's tally is rounded once, which the user confirmed is the intent (WORKLOG §133, tranche 2c).
+
+- ✅ **`forcedEncounterId` fields only at a node of its own kind** — stated in `RunConfig`'s comment on the field since 123m; closed at §133, tranche 3.
+
+- ✅ **122o's seven deletion leads** — six deleted at 123l; `World.shove` is in Round 12's scope (WORKLOG §133, tranche 3).
 
 - ✅ **Round-scoped rules, and a close that deletes as well as promotes** — `ROUND-RULES.md`, archived at each round close; the close keeps a line the round added only if it did something; a bar for a new rule or guard (`process/planning.md`; WORKLOG §132, 132e). Round 8.5's own list is 132f's.
 
@@ -153,9 +142,10 @@ to §133 say which phase takes each row.
 
 - ✅ **Dev-toolchain `npm audit` debt** — 10 at §129's kickoff, 0 at 129f (WORKLOG §129).
 
-## Round 9 — Extensions
 
-META-ROADMAP §"Round 9 — Extensions" names each group.
+## Round 9 — The frame and the damage trial
+
+META-ROADMAP §"Round 9 — The frame and the damage trial" names each row's place.
 
 ### At the round's close
 
@@ -177,46 +167,8 @@ META-ROADMAP §"Round 9 — Extensions" names each group.
   500k that did not hand off (`friction-scan`'s `peak` column). Keep the
   silence, or bring the counts back, on what those show.
 
-### When perf work comes up
+### The board's instruments
 
-- [ ] **A home for a performance number** (the probe's scenario 15, WORKLOG
-  §132, "132h7 — the probe run, scored"). AGENTS "Where things go" sends
-  measurements to a domain run-log, BALANCE.md or PATHING.md, and a frame
-  cost or a render number belongs to neither. The user picks its home when
-  the work that measures one is cut.
-
-### Early: a scripted run for content work
-
-- [ ] **A scripted run for content work** (the user, 2026-10-13, at the
-  Round 8.5 TODO pass; census T-93). Finer control of what a run loads as
-  content ramps up: "an event chain from end to end in one run", "a
-  specific chain of encounters or layouts", "to override a shop's
-  inventory". Each forcing dial takes one value for the whole run
-  (`layout`, `encounter`, `event`, `firstNode`; `src/run/RunConfig.ts`),
-  none takes a list, nothing sets a port's stock, and a forced id is not
-  saved, so a loaded run goes back to normal selection. A shape for the
-  kickoff: one list of per-node entries on `RunConfig`, of which those four
-  dials are cases, so the 17 URL parameters (census 1.5) shrink as control
-  grows. The three items below fold into it. Round 12 keeps one clause:
-  which dials a shipped build answers.
-
-- [ ] **`--sector-hops` in the run-config tool.** 68b plumbed
-  the two-act dial through the fuzz CLI's run/search/sweep (+ shard
-  children); the run-config tool (`tools/run-config/cli.ts` `--hops`)
-  still speaks `hopCount` only. Cheap adoption when the tool is next
-  touched; the fuzz CLI covers all measurement needs meanwhile. Noted
-  2026-07-27; its sweep-GUI half closed with the page at 127a.
-
-- [ ] **The encounter dial warns when a forced id matches ZERO nodes** (papercut #25, §102) — `--encounter` / `?encounter=` forces only nodes of a matching KIND and says nothing when that is none; ~8 pane round-trips and one mislabelled oracle shape. One warning line in the CLI + a console warn in the URL path.
-
-- [ ] **`forcedEncounterId` fields only at a node of its own kind** and
-  otherwise falls through to normal selection with no warning (117a: a
-  test read another pool, 19 for 22). A line in the `RunConfig` comment,
-  or a warning on a DEV page.
-
-### Before the closing board
-
-- [ ] **A blinded ranged unit strikes past its acquisition range.** Under `atWill`, blind sets `targetId` null when nothing is within its `acquisitionRange` (1), and `Targeting.currentTarget` then falls back to `findTarget`, so the abilities still fire out to the attack range. A probe in a worktree: a blinded archer fired at an enemy 3 cells away (WORKLOG §122, 122o batch 6). The tests pin only a melee unit. **The user's lean (2026-10-15), pending testing:** blind means wander and strike only within the acquisition range, so `currentTarget` skips the fallback for a blinded unit as it does for a confused one. **The catch to weigh first:** ten abilities ship a `minRangeCells` floor (nine at 2, one at 4), and a unit with a floor above 1 can't fire at a target 1 cell away, so under that rule a blinded kiter can't attack at all while blind lasts; a plain archer still hits what is adjacent. Decide whether that full shutdown is intended and pin it either way. The tests: a blinded archer holds fire at 3 cells and fires at 1; the kiter's case as decided; then a board re-run, since blind (the luminant's `light_ray`) gets stronger. A behaviour change, so the round's scope guards rule it out of Round 8.5; placed here at §122's close, since it needs the board.
 - [ ] **A coverage guard for `roster-table.json`** — the derived-artifact
       registry's named next guard (BALANCE §"The derived-artifact
       registry"): the prior-table tripwire's twin, config-derived over
@@ -228,64 +180,17 @@ META-ROADMAP §"Round 9 — Extensions" names each group.
 
 - [ ] **`box-drive.sh`: one artifact KIND per cohort** — a mixed queue (a shadow batch + a search) HELD its box on the second fetch because `--artifact` is cohort-wide (92g). Either refuse mixed queues up front or accept a per-line `# artifact=<file>` override.
 
-- [ ] **The PRIEST parity breach** (the 94h signing, 2026-09-08 — BALANCE §94h): +14.2 over the soldier on the deploy shape, +10.0 on regen (92h +5.0 / +5.9; the ±5 principle). Healing pays more when fights last three turns and the dead are booked (the casualty rule + the 94b openers). A kit/price question for Round 7 (the §94 charter excluded archetype changes); the gambler reads +6.7 / −1.6.
+- [ ] **The action classes deleted at Y5c are still described as live**
+  (found at 130d): DESIGN.md's Combat paragraph ("`AttackAction` resolves
+  at action-start"), ARCHITECTURE's tree at the crit roll
+  (`AttackAction.start`), and gotchas #95, #97 and #109 (#8's link was
+  re-pointed at `EffectAction` at 130d). Each is rewritten against
+  `src/sim/effects/EffectAction.ts` after reading it, or the gotcha
+  becomes a tombstone.
 
-- [ ] **The wall watch at the §94 config** (94h, user-signed HOLD): the deploy walk's boss wall 0.459 vs the signed 30–35 and the isolated bosses −11 pt (King 0.483 · Queen 0.458) with the bosses UNCHANGED since 92d — the roster arrives weaker under casualties. A roster-strength lever (power diversity by rarity, the kit watches) before any band move; re-read on the next full board.
+- [ ] **FX_REGISTRY's own coverage gap** (§104 call 5, out of that phase's scope guard): its boot asserts check authored keys RESOLVE, not coverage — an ability with no `fx`, or a `*_tick` status key with no `sound`, passes silently. The §104 shape fits: every tick key carries a `sound` or sits on an explicit visual-only list, pinned in `fxRegistry.test.ts`.
 
-- [ ] **Power diversity by rarity** (verdict item 4): 1/1/1/2 → 1/1/2/3 or 1/2/3/4 — a pool re-anchor rides behind it (every burn/turn moves); Round 9, after the §94 signing.
-
-- [ ] **The AoE-status enemies — the RETUNE half** (range / cooldown / duration; "really annoying"): board work, carried to **Round 9** with the kit watches (Round 7's no-board guard).
-
-- [ ] **Kit watches from the 94f price-book re-read on prior v4** (BALANCE §"The rarity verification protocol" step 3: a negative recruit row at FREE acquisition is a KIT question, not a price one — WORKLOG §94f): **officer** (−42 recruit / −36 port-buy, the worst row in the book) · **bandit** (−24 / −25, the weakest common) · **mercenary** (−15 / −10, the soldier's starter body) · **halberdier** (−16 recruit; port n=8 unreadable) · **stormcaller** (−2.8 — a legendary that does not pay at free acquisition under casualties). Round 7 idiom / Round 9 candidates; the §94 charter's "NOT doing: archetype changes" held. The dispositions taken at 94f: gunslinger common → uncommon (+28 / +27 at the cheapest price) · healer base 30 → 32 · everything else HOLD.
-
-### With a seam the round builds
-
-- [ ] **The camp-anchor revert, kept or cut.** `World.clearResolvedObjectives`
-  reverts an engage order on a tile that is a camp's anchor once the camp is
-  cleared. Its one producer, the enemy pull's tile order, was retired at
-  §75j2; a player's manual engage on an anchor cell still reaches it, so
-  cutting it changes what that order does, and Round 8.5 changes no
-  behaviour. Decide beside "Camp-aware aura `affects`", which reworks how
-  camps and teams meet. Pinned by `camps.economy.test.ts`, "a tile order
-  parked on a camp anchor". From §122's kickoff (WORKLOG §122).
-- [ ] **Renderer position-reconciliation sweep (self-heal + REPORT sprite/sim
-  desyncs).** The 56e labyrinth desync (a sprite resting tiles from its
-  logical cell, fixed at 56e-pre2 via `unit:swapAborted`) showed the failure
-  class exists: the renderer maintains derived position state via
-  event-driven lerps with NO reconciliation, so any missed/unhonored slide
-  desyncs a sprite until its next absolute-target move. The cheap tier:
-  each frame, any sprite with NO active animator entry whose position
-  disagrees with its unit's logical cell beyond an epsilon gets the §36c
-  settle-lerp — plus a DEV-mode `console.warn` naming the unit and offset,
-  which turns unreproducible one-glimpse sightings into logged data (the
-  user's "several tiles off" report couldn't be confirmed at 1-cell-per-
-  failure; a warn would have named the real offset). Guard: only reconcile
-  when the animator holds nothing for the handle (never fight a lunge/
-  shove/slide). The full tier — sprite pos = authoritative base derived
-  from sim position + transient offset envelopes (derive-don't-cache for
-  the render layer) — makes desync impossible by construction but is a
-  real SpriteAnimator/BattleRenderer rework in the eyeball-only layer;
-  size it only if the warn ever fires after 56e-pre2. Filed 2026-07-15
-  (user question at the 56e-pre2 diagnosis).
-
-- [ ] **Round 9: flyers float** (the user at §108's stop 2: "some sort of
-  floating animation (maybe just a simple sine wave?)"). What DESIGN's
-  "Elevation on the board" already asks of it: the bob's highest point
-  keeps clause 2 (about 15 % of a neighbour's ink at most; the lift of
-  0.45 measured 13 %, so a small amplitude or a lower base lift), and the
-  mark stays still on the tile. Also: a phase per unit, so a flock doesn't
-  bob in unison; under reduced motion the lift stays and the bob goes; and
-  a read on whether the bar and hitsplats bob with the glyph.
-
-- [ ] **Pin the Reward ledger's index mapping headless** (101e) — `RewardScreen.resolve` maps a ledger row onto its engine index (the un-taken rows before it) and is proven by ONE pane walk (four out-of-order accepts incl. a swap; WORKLOG §101e). Lift the mapping + the identity sync into a pure function beside the screen and pin it the `pressable.test.ts` way: out-of-order accepts, a no-op accept (full cache, no swap slot) leaves the row pending, a mismatched live offer rebuilds.
-
-- [ ] **A `reward:resolved` bus event.** The Run emits nothing when a
-  reward portion resolves, so the reward screen follows the live offer by
-  asking every frame (114g-post, `RewardScene.tick`), where the port, event
-  and pre-turn screens repaint from bus events. An event from the Run (in
-  `src/core/events.ts`, ARCHITECTURE's table and the sound registry) would
-  let this screen do the same, and could carry the pickup sound, so a clip
-  replayed from a journal would have it.
+### A fix for the first release
 
 - [ ] **The rarity stars take the tap inside a card that is a control.**
   `buildUnitCard` gives the star run's tooltip the long-press only when the
@@ -298,6 +203,168 @@ META-ROADMAP §"Round 9 — Extensions" names each group.
   pre-turn's run takes the long-press. Touch only; desktop is untouched. A
   behaviour change, so out of Round 8.5. Found at 124.5h's batch 7
   (WORKLOG §124.5); placed here by the user, 2026-10-19.
+
+## Round 10 — Act 1, the wilds
+
+META-ROADMAP §"Round 10 — Act 1, the wilds" names each row's place.
+
+### The scripted run
+
+- [ ] **A scripted run for content work** (the user, 2026-10-13, at the
+  Round 8.5 TODO pass; census T-93). Finer control of what a run loads as
+  content ramps up: "an event chain from end to end in one run", "a
+  specific chain of encounters or layouts", "to override a shop's
+  inventory". Each forcing dial takes one value for the whole run
+  (`layout`, `encounter`, `event`, `firstNode`; `src/run/RunConfig.ts`),
+  none takes a list, nothing sets a port's stock, and a forced id is not
+  saved, so a loaded run goes back to normal selection. A shape for the
+  kickoff: one list of per-node entries on `RunConfig`, of which those four
+  dials are cases, so the 17 URL parameters (census 1.5) shrink as control
+  grows. The two items below fold into it. Round 25 keeps one clause:
+  which dials a shipped build answers.
+
+- [ ] **`--sector-hops` in the run-config tool.** 68b plumbed
+  the two-act dial through the fuzz CLI's run/search/sweep (+ shard
+  children); the run-config tool (`tools/run-config/cli.ts` `--hops`)
+  still speaks `hopCount` only. Cheap adoption when the tool is next
+  touched; the fuzz CLI covers all measurement needs meanwhile. Noted
+  2026-07-27; its sweep-GUI half closed with the page at 127a. The CLI forwards any flag
+  named as a URL parameter (`RUN_CONFIG_KEYS`), so `--sectorHops` parses
+  already (§133); the hyphenated spelling and a help line are left.
+
+- [ ] **The encounter dial warns when a forced id matches ZERO nodes** (papercut #25, §102) — `--encounter` / `?encounter=` forces only nodes of a matching KIND and says nothing when that is none; ~8 pane round-trips and one mislabelled oracle shape. One warning line in the CLI + a console warn in the URL path.
+
+## Round 11 — The roster
+
+META-ROADMAP §"Round 11 — The roster" names each row's place.
+
+### Before the closing board
+
+- [ ] **A blinded ranged unit strikes past its acquisition range.** Under `atWill`, blind sets `targetId` null when nothing is within its `acquisitionRange` (1), and `Targeting.currentTarget` then falls back to `findTarget`, so the abilities still fire out to the attack range. A probe in a worktree: a blinded archer fired at an enemy 3 cells away (WORKLOG §122, 122o batch 6). The tests pin only a melee unit. **The user's lean (2026-10-15), pending testing:** blind means wander and strike only within the acquisition range, so `currentTarget` skips the fallback for a blinded unit as it does for a confused one. **The catch to weigh first:** ten abilities ship a `minRangeCells` floor (nine at 2, one at 4), and a unit with a floor above 1 can't fire at a target 1 cell away, so under that rule a blinded kiter can't attack at all while blind lasts; a plain archer still hits what is adjacent. Decide whether that full shutdown is intended and pin it either way. The tests: a blinded archer holds fire at 3 cells and fires at 1; the kiter's case as decided; then a board re-run, since blind (the luminant's `light_ray`) gets stronger. A behaviour change, so the round's scope guards rule it out of Round 8.5; placed here at §122's close, since it needs the board.
+
+- [ ] **The PRIEST parity breach** (the 94h signing, 2026-09-08 — BALANCE §94h): +14.2 over the soldier on the deploy shape, +10.0 on regen (92h +5.0 / +5.9; the ±5 principle). Healing pays more when fights last three turns and the dead are booked (the casualty rule + the 94b openers). A kit/price question for Round 7 (the §94 charter excluded archetype changes); the gambler reads +6.7 / −1.6.
+
+- [ ] **The wall watch at the §94 config** (94h, user-signed HOLD): the deploy walk's boss wall 0.459 vs the signed 30–35 and the isolated bosses −11 pt (King 0.483 · Queen 0.458) with the bosses UNCHANGED since 92d — the roster arrives weaker under casualties. A roster-strength lever (power diversity by rarity, the kit watches) before any band move; re-read on the next full board.
+
+- [ ] **Power diversity by rarity** (verdict item 4): 1/1/1/2 → 1/1/2/3 or 1/2/3/4 — a pool re-anchor rides behind it (every burn/turn moves); Round 11, after the §94 signing.
+
+- [ ] **The AoE-status enemies — the RETUNE half** (range / cooldown / duration; "really annoying"): board work, carried to **Round 11** with the kit watches (Round 7's no-board guard).
+
+- [ ] **Kit watches from the 94f price-book re-read on prior v4** (BALANCE §"The rarity verification protocol" step 3: a negative recruit row at FREE acquisition is a KIT question, not a price one — WORKLOG §94f): **officer** (−42 recruit / −36 port-buy, the worst row in the book) · **bandit** (−24 / −25, the weakest common) · **mercenary** (−15 / −10, the soldier's starter body) · **halberdier** (−16 recruit; port n=8 unreadable) · **stormcaller** (−2.8 — a legendary that does not pay at free acquisition under casualties). Round 7 idiom / Round 11 candidates; the §94 charter's "NOT doing: archetype changes" held. The dispositions taken at 94f: gunslinger common → uncommon (+28 / +27 at the cheapest price) · healer base 30 → 32 · everything else HOLD.
+
+- [ ] **Power's level-up draw and its growth key.** `growthRates.power`
+  is 0 on every unit and is meant to stay 0, and a recruit's level-up
+  still draws for it (`src/sim/leveling.ts:66`). Taking the key out
+  re-draws every recruit's level-ups, so it goes, with the eleventh
+  draw, in a round that accepts the stream moving and re-runs the board.
+
+### Dis Pater
+
+- [ ] **Dis Pater's sentence, against the tithe as built** (117e's watch,
+  rewritten at §133). The tithe is tallied raw in the World and rounded
+  once on a turn's total, which the user confirmed is the intent
+  (2026-10-26), so at Escalation 3 to 5 (a bits lever of 0.75) one kill in
+  a turn pays 2 and two pay 3: "each kill tithes 2 bits" holds for a
+  one-kill turn alone. Reword it with the `--grant` read below, and reread
+  it whenever level 3's lever is retuned.
+
+- [ ] **The Dis Pater `--grant` read at n=80.** Both reads on the
+      daemonized miner are thin site-causal pairs (the v3 shadow −11.25
+      at n=55; the 88d3 live decline margin +4.3 at n≈18) — exactly the
+      stream-perturbation-dominated shape WORKLOG §85g6c warned about —
+      yet the user picks him every run. The standing rarity protocol's
+      tool for a thin row is the paired same-seed `--grant` arm at the
+      n=80 floor (the 88b cohort shape, ~40 min box): a FREE endowment
+      read that answers "is holding him net-negative" without the
+      site-causal confound. Candidate mechanism if it holds: the tithe
+      funds MORE bot shopping, and port purchases price negative on
+      average (88b). Rides the §89 amendment cohort or its own line.
+
+### Ability descriptions
+
+- [ ] **Ability DESCRIPTION text (the name half is done).** Ability display *names* shipped at Yb (`AbilityDef.name`, required — the §61g audit found this already live); what remains is descriptive flavor text: a `description` on the ability config surfaced on the card ability rows ("Whip — long reach, rarely misses"). Cosmetic; surfaced at I6.
+
+## Round 12 — Push, pull and blink
+
+META-ROADMAP §"Round 12 — Push, pull and blink" names each row's place.
+
+- [ ] **Dash VFX (afterimage / trail / blink-flash).** N1's rogue dash currently reads as a fast slide (the `unit:moved` lerp over the ~5-tick motion window) + the `dash.wav` whoosh — no dedicated visual. The first-class **`unit:dashed`** event ([events.ts](src/core/events.ts), emitted by the effect interpreter's dash ([interpreter.ts](src/sim/effects/interpreter.ts)), carries `from`/`to`/`durationTicks`) is the ready hook: a BattleScene/BattleRenderer subscriber can draw a motion trail / afterimage / blink-flash on the leap. Folds into the deferred L/M status-VFX presentation pass. Surfaced at N1.
+
+## Round 13 — The unit kit
+
+META-ROADMAP §"Round 13 — The unit kit" names each row's place.
+
+- [ ] **`knownAbilityIds` has one reader left, the archetype editor.**
+  The unit catalog stopped calling it at the load cycle's fix, so no
+  test reaches it. The editor could read `Object.keys(ABILITY_DEFS)` and
+  the function go, which would order the editor's ability list by the
+  catalog instead of the registry (WORKLOG §123, "The reach-diff over
+  the seven").
+
+## Round 14 — Neutrals
+
+META-ROADMAP §"Round 14 — Neutrals" names each row's place.
+
+- [ ] **The camp-anchor revert, kept or cut.** `World.clearResolvedObjectives`
+  reverts an engage order on a tile that is a camp's anchor once the camp is
+  cleared. Its one producer, the enemy pull's tile order, was retired at
+  §75j2; a player's manual engage on an anchor cell still reaches it, so
+  cutting it changes what that order does, and Round 8.5 changes no
+  behaviour. Decide beside "Camp-aware aura `affects`", which reworks how
+  camps and teams meet. Pinned by `camps.economy.test.ts`, "a tile order
+  parked on a camp anchor". From §122's kickoff (WORKLOG §122).
+
+## Round 15 — The split
+
+META-ROADMAP §"Round 15 — The split" names each row's place.
+
+- [ ] **Split `Run.ts` and `World.ts`.** The two longest files in `src`
+  (4,025 and 2,423 lines at `943c7cff`) are too long for a person to walk
+  through in reasonable time (the user, closing B-15 for Round 8.5). Not as
+  moves under widened access: 123n's count found every group of `Run.ts`'s
+  methods reaching private state another group owns, so a split that
+  helps a reader moves a phase's state and its share of the save with it,
+  a second object, which needs a round whose charter allows one. Its
+  candidates: the event phase, whose six fields are its own, and the deck.
+  `World.ts` was not counted (WORKLOG §123, "123n"; the script is under
+  `scratch/123n/`, on that machine only).
+
+- [ ] **§123's comment-pass leads, placed at its close.** The "Leads,
+  not built" under WORKLOG §123's batches 1, 3, 4a, 4c and 4d (a field
+  only its test reads, checks a loader or `fromJSON` could make, a stale line
+  in gotcha #111, the event dial reaching later sectors' roots), and
+  123n's three lookups of the active event. The ones a later phase owns
+  are in "The close of §123".
+
+## Round 16 — The turn
+
+META-ROADMAP §"Round 16 — The turn" names each row's place.
+
+- [ ] **A won-turn reward shape** (the user's §93 verdict item 3): under casualties a decisive win still books your own dead — candidates: a partial refund on a decisive win, or the enemy paying survivors on a loss (the surcharge machinery mixes rules per turn already). After the post-turn ledger screen lands (§94), re-read the feel before building.
+
+## Round 17 — Deck and daemons
+
+META-ROADMAP §"Round 17 — Deck and daemons" names each row's place.
+
+- [ ] **WATCH: Escalation 3 (bits −25%) reads no harder on the board's
+  arm** (118e; BALANCE 2026-10-10). Kept by the user as an economy step:
+  the arm bought less and lost no depth, and how real players spend is
+  unknown. Read again with level 3's read on this round's board, after the bit
+  sinks, with exported journals (purchases a run, by level) if any exist.
+
+## Round 18 — Events and rewards
+
+META-ROADMAP §"Round 18 — Events and rewards" names each row's place.
+
+- [ ] **Pin the Reward ledger's index mapping headless** (101e) — `RewardScreen.resolve` maps a ledger row onto its engine index (the un-taken rows before it) and is proven by ONE pane walk (four out-of-order accepts incl. a swap; WORKLOG §101e). Lift the mapping + the identity sync into a pure function beside the screen and pin it the `pressable.test.ts` way: out-of-order accepts, a no-op accept (full cache, no swap slot) leaves the row pending, a mismatched live offer rebuilds.
+
+- [ ] **A `reward:resolved` bus event.** The Run emits nothing when a
+  reward portion resolves, so the reward screen follows the live offer by
+  asking every frame (114g-post, `RewardScene.tick`), where the port, event
+  and pre-turn screens repaint from bus events. An event from the Run (in
+  `src/core/events.ts`, ARCHITECTURE's table and the sound registry) would
+  let this screen do the same, and could carry the pickup sound, so a clip
+  replayed from a journal would have it.
 
 - [ ] **The event screen doesn't render again on `run:cacheChanged`.**
   `EventScreen` listens for `event:pageChanged` and `run:bitsChanged`
@@ -318,80 +385,50 @@ META-ROADMAP §"Round 9 — Extensions" names each group.
   `spawnFromQueue` reads it; only the bot's look-ahead copies a battle
   that way. Census F-1; `scratch/120f/queue-effects.ts` shows it.
 
-- [ ] **A won-turn reward shape** (the user's §93 verdict item 3): under casualties a decisive win still books your own dead — candidates: a partial refund on a decisive win, or the enemy paying survivors on a loss (the surcharge machinery mixes rules per turn already). After the post-turn ledger screen lands (§94), re-read the feel before building.
+## Round 20 — The air
 
-### The first phase, and the bump window
+META-ROADMAP §"Round 20 — The air" names each row's place.
 
-- [ ] **TypeScript 7, held at 6.0.3 at §129** (signed 2026-10-23). The
-  7.0.2 package's root exports a version stub and its compiler API sits
-  under `unstable/`, which eight of our files would need (one in `src`,
-  `src/i18n/literalScan.ts`, behind a permanent gate); typescript-eslint
-  8.72 takes TypeScript `<6.1.0`. Look again at a round's first phase:
-  when typescript-eslint takes 7 and the API leaves `unstable/`, it is a
-  step of its own, release notes first. The typecheck took 10.5 s warm
-  on 6.0.3 (WORKLOG §129, "The kickoff").
+- [ ] **Renderer position-reconciliation sweep (self-heal + REPORT sprite/sim
+  desyncs).** The 56e labyrinth desync (a sprite resting tiles from its
+  logical cell, fixed at 56e-pre2 via `unit:swapAborted`) showed the failure
+  class exists: the renderer maintains derived position state via
+  event-driven lerps with NO reconciliation, so any missed/unhonored slide
+  desyncs a sprite until its next absolute-target move. The cheap tier:
+  each frame, any sprite with NO active animator entry whose position
+  disagrees with its unit's logical cell beyond an epsilon gets the §36c
+  settle-lerp — plus a DEV-mode `console.warn` naming the unit and offset,
+  which turns unreproducible one-glimpse sightings into logged data (the
+  user's "several tiles off" report couldn't be confirmed at 1-cell-per-
+  failure; a warn would have named the real offset). Guard: only reconcile
+  when the animator holds nothing for the handle (never fight a lunge/
+  shove/slide). The full tier — sprite pos = authoritative base derived
+  from sim position + transient offset envelopes (derive-don't-cache for
+  the render layer) — makes desync impossible by construction but is a
+  real SpriteAnimator/BattleRenderer rework in the eyeball-only layer;
+  size it only if the warn ever fires after 56e-pre2. Filed 2026-07-15
+  (user question at the 56e-pre2 diagnosis).
 
-- [ ] **`reach-diff` across a toolchain change** (§130's call 4). A V8 or
-  transform change starts a statement a line away, so `reach-diff` refuses
-  a pair of readings from two toolchains; `scratch/129/reach-common.mjs`
-  compared what both count at 129h. The next toolchain bump (TypeScript 7
-  above) decides whether it becomes a mode of `npm run oracle`
-  (WORKLOG §129, "The close of §129").
+- [ ] **Flyers float** (the user at §108's stop 2: "some sort of
+  floating animation (maybe just a simple sine wave?)"). What DESIGN's
+  "Elevation on the board" already asks of it: the bob's highest point
+  keeps clause 2 (about 15 % of a neighbour's ink at most; the lift of
+  0.45 measured 13 %, so a small amplitude or a lower base lift), and the
+  mark stays still on the tile. Also: a phase per unit, so a flock doesn't
+  bob in unison; under reduced motion the lift stays and the bob goes; and
+  a read on whether the bar and hitsplats bob with the glyph.
 
-- [ ] **The action classes deleted at Y5c are still described as live**
-  (found at 130d): DESIGN.md's Combat paragraph ("`AttackAction` resolves
-  at action-start"), ARCHITECTURE's tree at the crit roll
-  (`AttackAction.start`), and gotchas #95, #97 and #109 (#8's link was
-  re-pointed at `EffectAction` at 130d). Each is rewritten against
-  `src/sim/effects/EffectAction.ts` after reading it, or the gotcha
-  becomes a tombstone.
+- [ ] **Rounded plates for organic scenery** (the user at §108's stop 1, 2026-09-25: future trees, where rounding "might thematically fit for 'organic' scenery"). The rounding exists: `MarkStyle.plateCorner` and the shader's rounded square (`terrainMarks.glsl` `plateShape`), with the explorer's `plateCorner` dial kept through 108f to try it. Today it is one global uniform; trees beside square-plated walls need it per mark (a spare field in the mark's texels). Square stays the default: the dashes did the walls' job, and rubble read as a tie. A large radius drifts toward the player's circle (the spec's caveat).
 
-- [ ] **FX_REGISTRY's own coverage gap** (§104 call 5, out of that phase's scope guard): its boot asserts check authored keys RESOLVE, not coverage — an ability with no `fx`, or a `*_tick` status key with no `sound`, passes silently. The §104 shape fits: every tick key carries a `sound` or sits on an explicit visual-only list, pinned in `fxRegistry.test.ts`.
+## Round 21 — Act 2, the realm in chaos
 
-- [ ] **Power's level-up draw and its growth key.** `growthRates.power`
-  is 0 on every unit and is meant to stay 0, and a recruit's level-up
-  still draws for it (`src/sim/leveling.ts:66`). Taking the key out
-  re-draws every recruit's level-ups, so it goes, with the eleventh
-  draw, in a round that accepts the stream moving and re-runs the board.
+META-ROADMAP §"Round 21 — Act 2, the realm in chaos" names each row's place.
 
-## Round 10 — Act 3
+- [ ] **The three deep-end cost residuals** (the 94c re-read, 2026-09-07 — BALANCE §94c re-read): infernalColumn 10.6 · miscreants 10.2 · ronin-vs-mages 10.6 cost/instance against the 1.5 × normal-mean line (9.3), in band on TURNS. A bite property (cost/turn 3.2–3.3 vs 2.1) that predates 94b and the pool cannot close; the lever is the COUNT factor on those three waves (column hand×1.2 · miscreants hand×1.5 · mages hand×1.3 — fewer bodies at the same kill throughput = the same burn, less bite; level is already ×1.0 / ×1.25). One config commit + a six-arm re-read (~3.4 h) whenever those rows are next touched; not a §94 blocker (the config froze over it, user-signed).
 
-META-ROADMAP §"Round 10 — Act 3" names each group.
+## Round 22 — Act 3, the plague
 
-### Escalation 3, the tithe and Dis Pater
-
-- [ ] **WATCH: the Idol of Dis Pater's sentence holds at Escalation 3 by
-  rounding** (117e, step zero). "Each kill tithes 2 bits" is an earn of 2,
-  and the bits lever at 0.75 makes it 1.5, which rounds to 2. A bits
-  lever under 0.75 makes the sentence false, so whoever retunes level 3
-  at §118's board rereads it. By arithmetic, not by a run.
-
-- [ ] **Round a tithe's bits on the award, not on each kill** (the user,
-  2026-10-10, at 118e's read; after the itch release). Each earn is
-  rounded on its own, so the bits lever at 0.75 leaves a 2-bit tithe at 2
-  and Escalation 3 to 5 skip the richest economy. Rounding the total a
-  turn or a battle awards would let the lever reach it. A sim change: it
-  moves the board, and the daemon's sentence wants a look with it.
-
-- [ ] **WATCH: Escalation 3 (bits −25%) reads no harder on the board's
-  arm** (118e; BALANCE 2026-10-10). Kept by the user as an economy step:
-  the arm bought less and lost no depth, and how real players spend is
-  unknown. Reopen with exported journals (purchases a run, by level) and
-  with the item above.
-
-- [ ] **The Dis Pater `--grant` read at n=80.** Both reads on the
-      daemonized miner are thin site-causal pairs (the v3 shadow −11.25
-      at n=55; the 88d3 live decline margin +4.3 at n≈18) — exactly the
-      stream-perturbation-dominated shape WORKLOG §85g6c warned about —
-      yet the user picks him every run. The standing rarity protocol's
-      tool for a thin row is the paired same-seed `--grant` arm at the
-      n=80 floor (the 88b cohort shape, ~40 min box): a FREE endowment
-      read that answers "is holding him net-negative" without the
-      site-causal confound. Candidate mechanism if it holds: the tithe
-      funds MORE bot shopping, and port purchases price negative on
-      average (88b). Rides the §89 amendment cohort or its own line.
-
-### With the act's content and its sheet
+META-ROADMAP §"Round 22 — Act 3, the plague" names each row's place.
 
 - [ ] **Mapgen tool: empty-camp-pool hint.** §81c field report
   (2026-08-17): the user spent five minutes rerolling VOLCANIC maps
@@ -399,15 +436,9 @@ META-ROADMAP §"Round 10 — Act 3" names each group.
   of UI (grey the Camps stat or badge the theme select "no camps")
   saves the next person the hunt. Dev-tool-only, trivial.
 
-- [ ] **Ability DESCRIPTION text (the name half is done).** Ability display *names* shipped at Yb (`AbilityDef.name`, required — the §61g audit found this already live); what remains is descriptive flavor text: a `description` on the ability config surfaced on the card ability rows ("Whip — long reach, rarely misses"). Cosmetic; surfaced at I6.
+## Round 24 — Onboarding & Feel
 
-- [ ] **The three deep-end cost residuals** (the 94c re-read, 2026-09-07 — BALANCE §94c re-read): infernalColumn 10.6 · miscreants 10.2 · ronin-vs-mages 10.6 cost/instance against the 1.5 × normal-mean line (9.3), in band on TURNS. A bite property (cost/turn 3.2–3.3 vs 2.1) that predates 94b and the pool cannot close; the lever is the COUNT factor on those three waves (column hand×1.2 · miscreants hand×1.5 · mages hand×1.3 — fewer bodies at the same kill throughput = the same burn, less bite; level is already ×1.0 / ×1.25). One config commit + a six-arm re-read (~3.4 h) whenever those rows are next touched; not a §94 blocker (the config froze over it, user-signed).
-
-- [ ] **Rounded plates for organic scenery** (the user at §108's stop 1, 2026-09-25: future trees, where rounding "might thematically fit for 'organic' scenery"). The rounding exists: `MarkStyle.plateCorner` and the shader's rounded square (`terrainMarks.glsl` `plateShape`), with the explorer's `plateCorner` dial kept through 108f to try it. Today it is one global uniform; trees beside square-plated walls need it per mark (a spare field in the mark's texels). Square stays the default: the dashes did the walls' job, and rubble read as a tie. A large radius drifts toward the player's circle (the spec's caveat).
-
-## Round 11 — Onboarding & Feel
-
-META-ROADMAP §"Round 11 — Onboarding & Feel" names each group.
+META-ROADMAP §"Round 24 — Onboarding & Feel" names each group (the old Round 11).
 
 ### First: the layout rework (players' reports may bring it forward as a `.5` round)
 
@@ -455,8 +486,6 @@ META-ROADMAP §"Round 11 — Onboarding & Feel" names each group.
   round material.
 
 - [ ] **Catapult LAUNCH creak (the F3 launch/impact split — optional tail).** F3 moved the projectile *launch* to the `release` phase (~12 ticks before impact), so the loose is silent and only the impact crash sounds. The seam is now trivial: the `catapult_launch` fx key already exists (projectile-only) — just author a launch "creak/thunk/FWOMP" sound (a `scripts/gen-sfx.mjs` recipe would do it) + add it to that key + register the `SoundKey`. Lower priority — the impact crash carries the weight. *(Same optional opportunity for the mage bolt's `release` "fwoosh," but `magicboom` at impact already reads right.)*
-
-- [ ] **Dash VFX (afterimage / trail / blink-flash).** N1's rogue dash currently reads as a fast slide (the `unit:moved` lerp over the ~5-tick motion window) + the `dash.wav` whoosh — no dedicated visual. The first-class **`unit:dashed`** event ([events.ts](src/core/events.ts), emitted by the effect interpreter's dash ([interpreter.ts](src/sim/effects/interpreter.ts)), carries `from`/`to`/`durationTicks`) is the ready hook: a BattleScene/BattleRenderer subscriber can draw a motion trail / afterimage / blink-flash on the leap. Folds into the deferred L/M status-VFX presentation pass. Surfaced at N1.
 
 - [ ] **Renderer "queued/waiting" stance — the §44/§46 ship-feel deferral.** Units now WAIT on purpose (§44b's first-class `WaitAction`; §45b queues) and the seam for showing it was planted deliberately: the `unit:waited` event (event-only, [WaitAction.ts](src/sim/actions/WaitAction.ts)) fires once per deliberate hold. A subtle render tell (dim pulse, stance glyph tint, whatever reads at a glance) would let a player SEE "this unit is queueing, not stuck" — the §46 decision point deferred it as pure ship-feel polish. Render-only; no sim/snapshot impact. Natural home: any Cluster-3+ polish rider or the pre-launch pass. Filed at the §46c close-out (2026-07-06).
 
@@ -548,9 +577,9 @@ META-ROADMAP §"Round 11 — Onboarding & Feel" names each group.
 
 ### The board's accessibility dials
 
-- [ ] **Round 11: the glyph scale as an ACCESSIBILITY dial** (the §105 verdict, 2026-09-22) — the user read 105e's `scale` dial as a tie ("all pretty legible") and asked whether it becomes a player setting. 105e already threads a scale through the mirror pick and the two unit lifts from `src/dev` (units only, walls stay one tile); a shipped version is that threading moved into production + a settings row. Pose it with Round 11's accessibility list, not before.
+- [ ] **The glyph scale as an ACCESSIBILITY dial** (the §105 verdict, 2026-09-22) — the user read 105e's `scale` dial as a tie ("all pretty legible") and asked whether it becomes a player setting. 105e already threads a scale through the mirror pick and the two unit lifts from `src/dev` (units only, walls stay one tile); a shipped version is that threading moved into production + a settings row. Pose it with Round 11's accessibility list, not before.
 
-- [ ] **Round 11: yaw as a PLAYER setting — decide WITH a reason** (the §105 verdict, 2026-09-22) — structurally safe under ortho (world-up projects to screen-up at any yaw; the fit, picks, sort and post are camera-generic; the N×N anchor must be yaw-parametric anyway), but every eyeball read would be multiplied by the range's ends. §106 art-directs at ONE value; expose only if a real need appears (a MIRRORED yaw for reading direction is free — [−45, −30]). `archive/post-104-worklog.md` §"THE VERDICT".
+- [ ] **Yaw as a PLAYER setting — decide WITH a reason** (the §105 verdict, 2026-09-22) — structurally safe under ortho (world-up projects to screen-up at any yaw; the fit, picks, sort and post are camera-generic; the N×N anchor must be yaw-parametric anyway), but every eyeball read would be multiplied by the range's ends. §106 art-directs at ONE value; expose only if a real need appears (a MIRRORED yaw for reading direction is free — [−45, −30]). `archive/post-104-worklog.md` §"THE VERDICT".
 
 - [ ] **The overlays trail a camera move by one frame** (found at 112b's
   step zero). The loop moves the bars and badges inside `onFrame`, and
@@ -559,7 +588,7 @@ META-ROADMAP §"Round 11 — Onboarding & Feel" names each group.
   in the pane, a yaw change put a bar at x = 0, then at its place a frame
   later. Invisible at 60 fps while fit is the only shipped view; it would
   show as bars lagging the board under a moving camera (scroll-mode
-  panning today, a player-facing yaw in Round 11). The likely fix is
+  panning today, a player-facing yaw in Round 24). The likely fix is
   `camera.updateMatrixWorld()` in `Renderer.start`'s loop before
   `onFrame`, as the probe kit's `frame()` does (`src/dev/probe/index.ts`).
 
@@ -597,9 +626,10 @@ META-ROADMAP §"Round 11 — Onboarding & Feel" names each group.
   it at the round's playtest (was any text too small; did anyone change
   Text size).
 
-## Round 12 — Ship
 
-META-ROADMAP §"Round 12 — Ship" names each group.
+## Round 25 — Ship
+
+META-ROADMAP §"Round 25 — Ship" names each group (the old Round 12).
 
 ### The shell, packaged
 
@@ -716,20 +746,26 @@ META-ROADMAP §"Round 12 — Ship" names each group.
   stale-translation marks, the translators' credits), which only tests
   call today.
 
-## Not yet placed
 
-- [ ] **A watch on the harness feedback the user sent** (the Cursor's
-  rider until 132h2). Four messages to the Claude Code team: on
-  2026-09-20 the silent-turn reminder's timing and wording, and the
-  keep-going guidance having no project override
-  (`scratch/claude-code-feedback-1-reminder.txt`, `-2-pauses.txt`); on
-  2026-09-27 the settings override never reaching the app's sessions
-  (`-3-env.txt`); on 2026-10-23 the Bash tool halving backslashes
-  (`-4-backslashes.txt`). If a release documents
-  `CLAUDE_CODE_SILENT_TURN_REMINDER*` or changes either behaviour, correct
-  CLAUDE.md's "The silent-turn reminder" and "Editing", and the backslash
-  note's `MEASURED_ON` in the mod. The retired reword's evidence is in
-  `archive/post-104-worklog.md` §"The Round 7.5 close".
+## Watches
+
+Rows with a trigger and no round (§133, tranche 3). Each names what reopens it.
+
+- [ ] **TypeScript 7, held at 6.0.3 at §129** (signed 2026-10-23). The
+  7.0.2 package's root exports a version stub and its compiler API sits
+  under `unstable/`, which eight of our files would need (one in `src`,
+  `src/i18n/literalScan.ts`, behind a permanent gate); typescript-eslint
+  8.72 takes TypeScript `<6.1.0`. Look again at a round's first phase:
+  when typescript-eslint takes 7 and the API leaves `unstable/`, it is a
+  step of its own, release notes first. The typecheck took 10.5 s warm
+  on 6.0.3 (WORKLOG §129, "The kickoff").
+
+- [ ] **`reach-diff` across a toolchain change** (§130's call 4). A V8 or
+  transform change starts a statement a line away, so `reach-diff` refuses
+  a pair of readings from two toolchains; `scratch/129/reach-common.mjs`
+  compared what both count at 129h. The next toolchain bump (TypeScript 7
+  above) decides whether it becomes a mode of `npm run oracle`
+  (WORKLOG §129, "The close of §129").
 
 - [ ] **nvm for Windows 2, at the next Node switch** (deferred at §129's
   129i, the user's call, 2026-10-23). 2.x needs no admin for `nvm use`,
@@ -740,33 +776,40 @@ META-ROADMAP §"Round 12 — Ship" names each group.
   up first, Node held at one version across the swap (WORKLOG §129,
   "129i, step zero").
 
-- [ ] **122o's seven deletion leads, placed at 123l.** `World.shove`
-  stays for Round 9. `sidestepWhenBlocked`, `GenStats.connected`,
-  `GeneratedTerrain`'s tile arrays, the spawn checks, the `weakest`
-  strategy and `advance`'s leap branch are deleted (WORKLOG §123, "123l —
-  the re-skim" and "123l's rows, built").
+- [ ] **A watch on the harness feedback the user sent** (the Cursor's
+  rider until 132h2). Four messages to the Claude Code team: on
+  2026-09-20 the silent-turn reminder's timing and wording, and the
+  keep-going guidance having no project override
+  (`scratch/claude-code-feedback-1-reminder.txt`, `-2-pauses.txt`); on
+  2026-09-27 the settings override never reaching the app's sessions
+  (`-3-env.txt`); on 2026-10-23 the Bash tool halving backslashes
+  (`-4-backslashes.txt`). If a release documents
+  `CLAUDE_CODE_SILENT_TURN_REMINDER*` or changes either behaviour, correct
+  CLAUDE.md's "The silent-turn reminder", `process/shell-and-windows.md`'s
+  "Editing", and the backslash
+  note's `MEASURED_ON` in the mod. The retired reword's evidence is in
+  `archive/post-104-worklog.md` §"The Round 7.5 close".
 
-- [ ] **§123's comment-pass leads, placed at its close.** The "Leads,
-  not built" under WORKLOG §123's batches 1, 3, 4a, 4c and 4d (a field
-  only its test reads, checks a loader or `fromJSON` could make, a stale line
-  in gotcha #111, the event dial reaching later sectors' roots), and
-  123n's three lookups of the active event. The ones a later phase owns
-  are in "The close of §123".
+- [ ] **A home for a performance number** (the probe's scenario 15, WORKLOG
+  §132, "132h7 — the probe run, scored"). AGENTS "Where things go" sends
+  measurements to a domain run-log, BALANCE.md or PATHING.md, and a frame
+  cost or a render number belongs to neither. The user picks its home when
+  the work that measures one is cut.
 
-- [ ] **Split `Run.ts` and `World.ts`.** The two longest files in `src`
-  (4,025 and 2,423 lines at `943c7cff`) are too long for a person to walk
-  through in reasonable time (the user, closing B-15 for Round 8.5). Not as
-  moves under widened access: 123n's count found every group of `Run.ts`'s
-  methods reaching private state another group owns, so a split that
-  helps a reader moves a phase's state and its share of the save with it,
-  a second object, which needs a round whose charter allows one. Its
-  candidates: the event phase, whose six fields are its own, and the deck.
-  `World.ts` was not counted (WORKLOG §123, "123n"; the script is under
-  `scratch/123n/`, on that machine only).
+- [ ] **Euclidean distance in place of the chessboard's, on players'
+  reports** (the user at §133, 133c). Most players come from autobattler
+  searches, and a roguelike's diagonal may not read to them; it waits for a
+  report that shows it.
 
-- [ ] **`knownAbilityIds` has one reader left, the archetype editor.**
-  The unit catalog stopped calling it at the load cycle's fix, so no
-  test reaches it. The editor could read `Object.keys(ABILITY_DEFS)` and
-  the function go, which would order the editor's ability list by the
-  catalog instead of the registry (WORKLOG §123, "The reach-diff over
-  the seven").
+- [ ] **The half-tile grid, if Round 19's swarms do not feel right** (the
+  user at §133, 133c). A sim grid at twice the resolution, for small
+  creatures and swarms; plan A, built first, is a small body drawn smaller
+  on a whole tile and a swarm as one body drawn as a cluster. Its costs,
+  read at 133c: movement correct for every footprint, every distance
+  authored in cells converted, the movement protocol and the drift
+  baselines re-pinned, and the sim's cost under the bot's look-ahead
+  (WORKLOG §133, "the experiments").
+
+## Not yet placed
+
+The inbox for a new row until the next pass places it.

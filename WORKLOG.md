@@ -21337,3 +21337,65 @@ a third, and a secret fourth.
 - Warlord-era China (1916 to 1928) is the 1920s register DESIGN already
   names for the period archetypes (`DESIGN.md:129`), the gunslinger, the
   officer and the Generalissimo among them.
+
+### 133c — totems, and the first experiment: damage as a range (2026-10-26, session d3325476)
+
+**Totems** (the user): "I'd honestly been imagining them as scenery units
+with an ability, since I'd been imagining them as something placed in the
+layout editor. Making them neutrals that don't move makes more sense,
+though we wouldn't want them counting as camps. I think this all ties into
+the neutral split." So C4 designs four kinds of unit, not three: the
+player's, the enemy's, camp members, and scenery, inert or carrying an
+ability. Relative to a neutral carrier, "hostiles" names no team (a totem
+fights nobody), so a totem that heals one side has its side set where the
+layout places it, or an `affects` flag that names a side.
+`isCombatTargetable` lets a destructible neutral be hit
+(`effects/targeting.ts:78-83`); whether a unit's own target scan picks
+one, or only an order does, was not read, and the "focus down the totems
+first" fight rests on it. Whether a totem counts toward a battle's end is
+the call left (the session's lean: it does not).
+
+**The experiment** (the user): "We introduced misses into combat to add
+some unpredictability in low-unit fights. Accuracy going from 75% to 80% is
+pretty much invisible to the human eye, however. I propose switching
+attacks to instead have a [0..max attack] damage range, with expected
+value max attack times precision. The average DPS works out the same, and
+that 5% increase hopefully works out to a more visible change in the
+damage numbers."
+
+*The code under it.* A strike authored `evadable` draws once on
+`combatRng` against `hitChanceFor` (`World.applyDamage`):
+`clamp(accuracy + 0.02 × precision − 0.02 × evasion, 0.1, 1.0)`
+(`src/sim/stats.ts:88-93`, `config/stats.json:8-11`), the tiles moving
+precision and evasion; a hit deals `max(minDamage 1, raw − defense)`
+(`World.dealDamage`). Twelve abilities' damage is evadable (sword, club,
+katana, whip, bow, gambit_strike, cleaver, light_ray, ghoul_claw, pistol,
+halberd, cane); the area attacks are authored `evadable: false` and never
+miss. A status rides a landed hit only (`applyDamage`'s doc: the
+`applyStatus` op reads its return), which matters for `cleaver`'s bleed
+and `light_ray`'s blind; `dealHit` and `takeHit` fire on a hit only, and
+two shipped daemons' rules hook a hit (`config/daemons.json`, two
+`dealHit`).
+
+*The arithmetic* (`scratch/133/dist.mjs`, one uniform draw `U`, the
+damage fraction `X = U^k` with `k = (1 − p)/p`, so its mean is `p`; its
+control, `p` 0.5, gives mean 0.4998 and variance 0.0833 against 0.5 and
+1/12):
+- At `p` 0.75 a hit's spread falls from 0.433 of the damage (hit or miss)
+  to 0.194; at 0.6 from 0.490 to 0.262. Fights get steadier, the opposite
+  of why misses came in. A family with a second parameter (a Beta) makes
+  the spread a dial, at the cost of more than one draw a strike.
+- Rolled before defense, the mean drops: raw 10 against defense 4 at 0.75
+  is 4.5 today and 3.66 with the roll first. Rolled on the damage after
+  defense it is 4.5 (4.52 rounded to whole points).
+- To tell 75 % from 80 % at two standard errors takes about 121 hits a
+  side with the range and about 600 with hit or miss: five times sooner,
+  and still not one hit.
+
+*What else moves:* the MISS splat and `unit:missed` go; bleed, blind and
+the two hit hooks fire on every strike unless their chance takes `p`;
+the bot's sensors that read a hit chance; and the whole signed sheet,
+since it is the combat core. One draw a strike keeps `combatRng`'s shape
+(inferred). The shape it would take, as the session put it to him: the
+casualty experiment's, a config switch, paired same-seed boards, a bar
+written before, and his play.

@@ -21219,3 +21219,42 @@ static"): a special outranks the strikes whenever it is off cooldown, so a
 big area fires at one target and a self-heal fires at full health; the
 gate would let a special fire only when its situation scores high enough,
 such as three enemies in the area or health under half.
+
+### 133c — the user's answers on lifesteal, the gate, reach and morale (2026-10-26, session d3325476)
+
+- *Lifesteal:* "we'll definitely want some variant of those two vampirism
+  examples", the daemon's run-wide one and the packet's for a fight, the
+  names and details at the time. `healActor` has its consumers.
+- *The specials' gate:* "I think we might drop that. I feel like units
+  doing suboptimal things is part of the autobattler genre. (Early itch
+  analytics: most of our engagement is from autobattler searches, not
+  strategy or roguelike or deckbuilding.)" He asked whether a gate would
+  have to be hard-coded, as he took the heal's restraint to be. By the
+  code: the heal holds fire at full health because its selector,
+  `lowestHpAlly`, skips a unit at full health (`lowestWoundedAlly`,
+  `Targeting.ts`); the JSON names the selector and the rule is written
+  once in code. A caster-anchored area holds fire with no victim in it
+  (`proposeCasterAnchoredBlast`, `propose.ts`, `victims.length === 0`). A
+  threshold would be one more field on a selector read at that line, so a
+  gate is expressible in the definitions. The session's lean, put to him:
+  drop the gate, keep C2's two gaps (the self-buff arm, the self-heal that
+  does nothing), and add a condition only when an ability looks broken
+  without one.
+- *Reach by layer:* "-1 range does give melee units a targetable tile,
+  kinda: the tile that the unit itself is occupying. This is assuming
+  that we opt to allow unit collisions when in different layers, and
+  would end with melee units being restricted to attacking fliers directly
+  above them". That reverses the flight lock's Q2 (no co-location) and
+  answers its Q3 fork with it: a flyer over a wall holds the wall's cell
+  on another plane. The occupancy core was built for a second plane: the
+  invariant is one unit per cell per plane, and `planeOf` is the one place
+  a plane is chosen (`occupancy.ts:22-27`, `:70-76`); the detector counts
+  per plane (`findOverlappingCells`). Movement's path blockers are built
+  from `world.units` with no plane test (`movement.ts:106-109`), so the
+  sites S3 lists each take one. The session's lean, put to him: a render
+  spike first, a posed flyer over a ground unit for his eye, since two
+  glyphs and two ground marks on one tile are the unknown; the fallback is
+  the lock as signed.
+- *Max morale:* "I was assuming it gives a corresponding heal--20/40 would
+  become 25/45". A daemon can leave a run by the event op `removeDaemon`
+  (`src/config/events.ts:95`), so losing it is the reverse case to decide.

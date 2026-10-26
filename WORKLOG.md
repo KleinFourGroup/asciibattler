@@ -21835,8 +21835,9 @@ flee's `passable` (`positioning.ts:255-262`), the blind wander
 (`MovementBehavior.ts:272-281`), the camp wander
 (`CampWanderBehavior.ts:104-113`) and `nearestFreeCells`
 (`actingPosition.ts:151`, by the search alone). A profile needs the unit
-at each of them and a 2×2 its cells, so the ordering principle "work on
-one core in one round" puts both in one round. The proposal: round 19 the
+at each of them and a 2×2 its cells, so ordering principle 2, "Cluster
+work that touches the same core" (META-ROADMAP), puts both in one round.
+The proposal: round 19 the
 ground (profiles on the one plane, with water, ice and mud; footprints,
 with the bear and the giant; swarms), round 20 the air (the second plane,
 the lift, the flyers, and the dragon where the two meet). It also builds

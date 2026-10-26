@@ -21513,3 +21513,70 @@ items, risk, dependencies and exit; where each TODO row goes.
 
 In all 73.6 to 102.85 phases over 17 rounds (16 without the split), up
 from 133b's 52.6 to 81.35 by the additions. Tranche 2 fills each round.
+
+### 133d, tranche 1: the user's two changes, and the order revised (2026-10-26, session d3325476)
+
+The user: "I knew it was going to be a long road, so that looks solid. I
+think the big change I would suggest is that we make sure that we're
+still getting releases out to the itch version regularly, with accessible
+content rather than just notes in the changelog. Does that change
+anything in the ordering that you'd recommend? Also, let's just go ahead
+and renumber these. I feel like it's necessary for legibility. Even if
+it'll break some past references." And on 133b: "133b looked good!", so
+133b is read.
+
+**Renumbering.** The new rounds take integers from 9, and the old Rounds
+11 (Onboarding & Feel) and 12 (Ship) follow them. Outside the archive,
+the WORKLOG, `retro/` and the census, 70 lines name Rounds 9 to 12 (a
+search for "Round 9" to "Round 12"): META-ROADMAP 33, TODO 19, ROADMAP 3,
+`process/planning.md` 3, DESIGN, BALANCE and ARCHITECTURE 2 each,
+HANDOFF, `process/welfare-and-efficacy.md`, `shell/electron/main.mjs` and
+`scripts/friction-scan.mjs` one each. "From Round 9" in `process/` still
+means the next round. 133e re-points the live lines, puts the old-to-new
+map in META-ROADMAP for the archive's references, and amends
+`process/planning.md`'s "Round numbers are identities and are never
+renumbered" to record this one renumbering.
+
+**The order, revised for a release a round with something to play.**
+1. *Act 1 moves to the second round,* as a ground-fauna act: the 1×1
+   melee fauna and bandits as enemies need no new seam, and the shipped
+   two sectors move to act 2's place with it. The eagle, the crab, the
+   bear and the swarms join it as their seams land. Act 1 is tuned more
+   than once (each later board re-reads it), the cost of principle #1
+   bent; the act design in round 9 keeps the re-authoring small.
+2. *Each seam round authors its consumers into the live acts' pools,* so
+   its release has them in play.
+3. *The frame shrinks and joins the damage trial,* so the first release
+   carries the trial's feel; the scripted run moves to act 1's round, its
+   first consumer, with the sheet's multi-act tooling.
+4. *The four-act sheet round dissolves:* each act's bands are re-anchored
+   in the round that lands it, and the bot's check rides act 4's. The
+   three watches it held ride the board of the round they belong to
+   (level 3's read with the bit sinks, Dis Pater's `--grant` with the
+   roster, the deep-end residuals with act 2).
+5. *The roster's round carries the three idols and the bandits,* so its
+   release has new things to meet.
+6. *The split* is the one round with nothing for a player; it is signed
+   in or out now, since the numbers follow it.
+
+| round | theme | its release | phases |
+|---|---|---|---|
+| 9 | the frame and the damage trial | the damage feel, if kept | 6.25-7.25 |
+| 10 | act 1, the wilds: ground fauna, the scripted run, the sheet's tooling | a new first act | 6.45-6.95 |
+| 11 | the roster: kits, the priest, the area retune, Mars in three, bandits, the blind fix, power by rarity | three idols, reworked units | 4.75-5.25 |
+| 12 | push, pull and blink | the grenadier, telekinetic, ninja, the adventurer's pull, the blade whirlwind, the banshee's burst, the cavalier | 4.25-6.25 |
+| 13 | the unit kit | the vampire, lifesteal for the team, global specials, the soldier, conscript, commissar | 4.5-5 |
+| 14 | neutrals | totems, the aura healer, camps by level | 4.25-6.25 |
+| (15) | the split of `Run.ts` and `World.ts`, if signed | none | 3-5 |
+| 16 | the turn | retreat, optional deploy, fatigue, injuries, a won-turn reward | 5.5-7 |
+| 17 | deck and daemons | three deck daemons, the port shelf, bit sinks | 3.5-6 |
+| 18 | events and rewards | fights inside events, camp events, granted abilities, XP, event art | 6.5-7 |
+| 19 | traversal: flight and water | the eagle, falcon and falconer, the crab, tall trees | 6.25-8.5 |
+| 20 | the ground | ice as a highway, mud reworked, bear, giant, dragon, swarms | 5-6.5 |
+| 21 | act 2, the realm in chaos | act 2 | 4.5-5 |
+| 22 | act 3, the plague | act 3 | 3-6 |
+| 23 | act 4 and a run's frame | the secret act, unlocks | 4-7 |
+| 24, 25 | Onboarding & Feel, then Ship (the old 11 and 12; 23 and 24 without the split) | | |
+
+In all 71.7 to 94.95 phases (`scratch/133/rounds2.mjs`), the three
+watches not counted. Round 19 is the largest and may split in tranche 2.

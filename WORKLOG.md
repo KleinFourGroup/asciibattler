@@ -21684,3 +21684,95 @@ global special. *Exit:* as round 12's. *Release:* four units (the
 vampire, soldier, conscript, commissar), a global special, an idol and a
 packet. *Save:* a Run bump and a World bump (`healActor` changes the
 fingerprinted `BattleRuleEffect`).
+
+**Signed** (the user, 2026-10-26: "Those look great! 😁 Signed!").
+
+### 133d, tranche 2b: rounds 14 to 18, put to the user (2026-10-26, session d3325476)
+
+One check from 133c settled first: an aura can sustain a ticking status.
+`sustainStatus` applies the status once through `applyStatusEffect`, then
+tops up its lifetime and leaves its periodic cursor (`World.ts`, read),
+so a sustained `rejuvenate` heals at its cadence.
+
+**Round 14 — Neutrals.** *Charter:* the neutral team split into the four
+kinds the game now needs (the player's units, the enemy's, camp members,
+and scenery, inert or carrying an ability), with `affects` as flags, and
+the totems and the aura healer that use them. *In scope:* the neutral
+split as a trial (C4: its sites re-taken first, its bar written before,
+the user's pre-registration carrying, `isActiveNeutral` decided);
+`affects` as flags, allies, neutrals and hostiles, a neutral being a
+camp member whose camp is not hostile to the caster's team, through
+every reader and the editors (C3, N6); totems (N23): scenery carrying an
+ability, placed in the layout editor, immobile, destructible, not counted
+toward a battle's end, their side set where they are placed, and first
+whether a unit's own target scan picks one or only an order does; the
+aura healer (N6, a sustained `rejuvenate`); the camp level fork (A11, the
+board and the camp probe before a mechanism); the camp-anchor revert
+(C21). *Depends on:* round 13 (a global aura for a global totem).
+*Risk:* medium-high: a unit's team is read in the sim, the render, the UI
+and the audio. *Decision points:* the trial's bar; a totem's side; camp
+levels per act or a budget. *Exit:* the split kept over its bar or
+reverted; totems and the aura healer in play; the board. *Release:* totem
+fights, the aura healer, camps by level. *Save:* a World bump (`team` on
+every unit).
+
+**Round 15 — The split.** *Charter:* `Run.ts` (4,025 lines) and
+`World.ts` (2,432) split into parts a person can walk through, with no
+behaviour change, before rounds 16 to 18 build on `Run.ts`. A split that
+helps a reader moves a phase's state and its share of the save into a
+second object, which this round's charter allows (TODO's row). *In
+scope:* the split (U5), its candidates the event phase, whose six fields
+are its own, and the deck; §123's comment-pass leads (U4) where they land
+in the files it touches. *Proof:* the journal corpus and the fuzz diff,
+byte-identical, with a declared mapping if the save's shape moves, and
+their planted controls (`process/oracles.md`: fitted to its size, and
+this one is large). *Risk:* medium (wide, but proven). *Decision points:*
+how far (`Run.ts` alone, or `World.ts` too) and where the boundaries go.
+*Exit:* the proofs byte-identical with their controls. *Release:* none.
+*Save:* a Run bump only if the shape moves.
+
+**Round 16 — The turn.** *Charter:* what a player decides around a turn
+under the casualty rule, each a design round whose exit is a playtest
+verdict. *In scope:* fatigue (C7: what rotating the hand buys); retreat
+(C8: the anti-exploit constraint, the walk to the spawn band, a turn-end
+reason); optional deploy (C9: a drawn card benched); injuries (C11, on
+`pendingEncounterEffects` unless they outlast a fight); a won turn's
+reward (C22, through the `poolHealth` portion). Each new command takes
+its chaos-driver and probe-kit rows and a bot decision (gotcha #128).
+*Depends on:* round 15. *Risk:* medium-high (design, and a balance that
+moves every turn). *Decision points:* each design, a stop; retreat's
+exploit guard. *Exit:* each a playtest verdict; what is kept with its
+headless tests and the board. *Release:* the turn's new choices. *Save:*
+a Run bump and a World bump (retreat's turn-end reason and objective).
+
+**Round 17 — Deck and daemons.** *Charter:* daemons that hook the deck,
+and the economy's spending side. *In scope:* deck-event triggers (R3:
+drawn, discarded, reshuffled, redrawn; their legality rows and fire
+sites; a site id on the `daemon` key; whether the encounter-start
+shuffle counts); a daemon draw op with guards on its chain and the hand's
+cap (N13); the three daemons (N13 to N15), the third with a `poolMax`
+run stat, its heal on taking and its symmetric loss; the port shelf
+guarantee (C10: role tags, a forced slot on `portStock`); the shrink
+trigger (A15, a curse kept out of ports or paired with a boon); bit
+sinks (A14, design first); level 3's read on this board (A2). *Risk:*
+medium. *Decision points:* the sinks; any chance-gated hook (a
+serialized counter). *Release:* three daemons, the port's shelf, new
+ways to spend bits. *Save:* a Run bump if a hook is chance-gated.
+
+**Round 18 — Events and rewards.** *Charter:* events that start a fight
+and pick up after it, and rewards that grant abilities and XP, authored
+as events. *In scope:* event, battle, resume (R6: `resumePage`, a Run
+field, the reachability and termination checks, re-entry before the
+recruit and sector gates; a fight from a resumed page needs a fight
+counter, or the schema forbids one); event-gated camp encounters (A12: a
+layout on the terminal and a boot guard); the ability-grant channel (R4,
+with census F-1, R24); XP rewards (R5: an entry kind, a `levelup` site,
+a promotion route outside fights and rests) with the ledger pin (R20)
+and `reward:resolved` (R21); the event screen on `run:cacheChanged`
+(R23); the event `art` reader (A13, what art is decided first); the
+grants authored as events (N16). A page added to a shipped event
+re-draws its runs (gotcha #141). *Risk:* medium. *Decision points:*
+whether a resumed page can fight; XP's targeting; what event art is.
+*Release:* fights inside events, camp events, granted abilities, XP,
+event art. *Save:* Run bumps (the resume, the XP portion, the template
+field) and a World bump (F-1 with the grant).

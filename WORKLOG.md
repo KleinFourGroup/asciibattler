@@ -21258,3 +21258,82 @@ such as three enemies in the area or health under half.
 - *Max morale:* "I was assuming it gives a corresponding heal--20/40 would
   become 25/45". A daemon can leave a run by the event op `removeDaemon`
   (`src/config/events.ts:95`), so losing it is the reverse case to decide.
+
+**Signed** (the user, 2026-10-26: "Signing all of those! 😁"): the
+specials' gate dropped, C2's two gaps kept, a condition added only where
+an ability looks broken without one; a render spike for a flyer over a
+ground unit before the sim work of co-location across planes, the lock as
+signed its fallback; a morale daemon lost returns the pool by what it
+gave, clamped so the loss never ends a run.
+
+### 133c — the user's additions, the third batch (2026-10-26, session d3325476)
+
+**His ideas, in his words where they are his:**
+
+- "Global reach abilities": "a special that inflicts a global stun, or a
+  alternately a global heal", composing with the `affects` flags, "the
+  same option for auras too."
+- Fauna, "all 1x1 melees": wolf, (giant) rat, eagle, fox, puma, tiger,
+  crab, "...You get the idea".
+- The acts: "Act 1: mainly fighting fauna, with some bandits thrown in.
+  Act 2: Split between current act 1 / act 2. Realm in chaos, bandits,
+  deserters, boss fight is with one of the factions leaders. Somehow I
+  keep drifting towards warlord era China for inspiration. Act 3: Fighting
+  whatever is causing the plague. Final boss is some sort of dark wizard,
+  etc. Secret Act 4: Kill some sort of demon lord. Not a full act;
+  probably like 3 hops with no branching. Still working on unlock
+  mechanism."
+- A 2×2 giant.
+- Dialogue: "Unit archetypes can have lines of dialogue that occasionally
+  pop up over their heads during combat. Nothing extensive or interactive;
+  just a bit of flavor text. Mainly a thing for bosses."
+- Totems: "A totem with a healing aura", and "one with a global healing
+  aura keyed only to hostiles, which would lead to a fight where you have
+  to focus down the totems first".
+- "Idol of Mars feels too strong. I'd like to split it up into smaller
+  ones that buff just one of strength, range, and magic."
+- "Commisar. An officer, but buffs speed, not mobility." "Conscript. A bit
+  weaker than a mercenary; need to figure out what the appeal is."
+- "blade whirlwind. Melee self-centered AoE."
+- "I'm inclined to make bandits non-draftable. They just kinda don't have
+  any purpose."
+
+**What they need, by the code read this turn** (`config/statuses.json`,
+the Mars daemon, the characters' rosters, `AuraSchema`, the aura pass,
+`isCombatTargetable`, the catapult's stats):
+
+| id | addition | what it needs | rows | new part | phases | board | kind |
+|---|---|---|---|---|---|---|---|
+| N18 | global reach | an area's `radius` and an aura's are integers (`schema.ts:224`, `:360`), so a global one is a selector or a flag, not a large radius (a radius of 99 builds its cells on every fire, and an aura every tick); `frozen` is already a stun (`preventsAttack`, `preventsMove`) and `rejuvenate` a heal over time | N6, C2 | S-M | 0.5 | yes | mechanism |
+| N19 | the fauna | enemy-only 1×1 melee archetypes, content; the eagle is a flyer (S3), and the crab could be the marine | A17, S3 | S each | 1 for the set | yes | content |
+| N20 | the four acts | the finale's design (A6) mostly answered; a new act 1, today's two sectors folded into act 2, a new act 3, and a secret act 4 of about three hops behind an unlock | A6, A7, A22, A23, A24 | below | below | the sheet re-anchored | design, content, mechanism |
+| N21 | the giant | a 2×2 walker | S8, S9 | S | 0 on S8 | yes | content |
+| N22 | dialogue | a locale-keyed `lines` field on an archetype and a render overlay over the glyph, shown at moments the renderer hears (a spawn, a kill, low health) or at random; render-only, so no board and no stream (ESLint bans `Math.random()` in `sim`, `run` and `bot` only) | — | M | 1 | no | mechanism, UI, content |
+| N23 | totems | a static unit with an aura: the aura pass runs any living carrier's aura and skips only inert neutrals as receivers (`World.ts`, `applyAuraStatuses`), so a carrier can be scenery; a neutral carrier's `affects: 'enemies'` reaches both teams, so a totem healing the enemy alone is an enemy-team unit or N6's flags; no unit is immobile today (the catapult is slow, mobility -14); whether a totem must die for the battle to end is a call | N6, N18 | M | 1 | yes | mechanism, content |
+| N24 | Mars split in three | `mars` grants one empower a turn of +8 to strength, ranged and magic at once; three daemons of one stat each are content; each new acquirable takes a prior-table row and re-draws every port's daemon slots, and removing `mars` makes a saved run holding it unreadable (a Run bump under reject-stale) | — | S + a prior rebuild | 0.5 | yes | content, balance |
+| N25 | the commissar | the officer with a speed aura: `inspire` sustains `inspired`, mobility +2; a new status with a speed mod needs a symbol and a colour under the colourblind gate; through `extends` (R7) | R7 | S | 0.25 | yes | content |
+| N26 | the conscript | a weaker mercenary through `extends`; its appeal is a design call (a price, a count) | R7 | S | 0.25 | yes | content, design |
+| N27 | the blade whirlwind | the built caster-anchored area with a damage op, as a special | C2, the built nova | S | 0.25 | yes | content |
+| N28 | bandits not draftable | `draftable: false` on `bandit` (a common today; no character starts with one: the soldier, the priest and the gambler start with mercenaries, archers, and the gambler a ronin and a rogue); the draft pools change, so every run's recruit and port draws move; the kit watches read the bandit as the weakest common | C20 | S | 0.25 | yes | content, balance |
+
+**The atlas.** Counting one glyph a new unit, the additions so far name
+21 (the grenadier, the telekinetic, the ninja, the aura healer, the tree,
+the falcon, the dragon, the bear, the vampire, the falconer, seven fauna,
+the giant, a totem, the commissar, the conscript), against 17 free cells,
+before the bosses of acts 2 to 4; the soldier can share the mercenary's.
+So S1, the atlas resize (about five lines, triple-guarded), is back in.
+
+**The acts, against the plan.** Round 10 was "sector 3 after the two
+shipped"; this is a new first act, the shipped two folded into the second,
+a third, and a secret fourth.
+- Today's encounters move to act 2's place in the run, so their hop and
+  level context moves with them, and the signed sheet (one seam band, a
+  wall named for act 2) is re-anchored for every act, not extended.
+- Act 1 becomes fauna, which the tutorial (Round 11) is authored against.
+- A secret act needs a sector edge taken only when unlocked, and a call
+  on what a win is (act 3's boss, or act 4's); a sector-map edge is
+  `from` and `to` alone (`src/config/sectorMap.ts:33-36`), and the unlock
+  mapping becomes this act's.
+- Warlord-era China (1916 to 1928) is the 1920s register DESIGN already
+  names for the period archetypes (`DESIGN.md:129`), the gunslinger, the
+  officer and the Generalissimo among them.

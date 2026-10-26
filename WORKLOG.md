@@ -21171,3 +21171,51 @@ ability grant, XP rewards, `extends`). Every new archetype takes an atlas
 cell (17 free) and, if draftable, a prior-table row.
 
 133c stays open: the user is still reading.
+
+### 133c — the user's additions, the second batch (2026-10-25, session d3325476)
+
+**His answers to the seams still without a consumer:**
+
+- The vampire: "a melee unit that does life steal on hit", fleshed out at
+  the time. C1's `lifesteal` op is its seam.
+- `healActor`, the daemon and packet half of lifesteal: he asked to be
+  reminded what it is (below).
+- `targetsLayer`: "superseded by a layer-specific targeting specification,
+  so we can do things like reduce reach when attacking flying units. The
+  initial default pass would probably be by one for everything."
+- The specials' gate: "I don't remember what fire only when it matters was
+  supposed to mean" (below).
+- Deck triggers: "A daemon that draws an extra unit every time another
+  specific unit (TBD) is drawn"; "Another that gives a small heal every
+  time the roster is shuffled"; "Another that gives a max morale boost for
+  decreasing default hand size by one."
+- The ability grant and XP rewards: "Both of the grants will likely be
+  used by events, to be authored."
+- `extends`: "a 'soldier' that's the same as a mercenary, just when the
+  latter isn't thematically appropriate."
+
+**What they need, by the code read this turn** (the daemon schema's op
+kinds, `RUN_STAT_KEYS`, `config/deck.json`, `config/characters.json`, the
+locale's word for the pool):
+
+| id | addition | what it needs | rows | new part | phases | kind |
+|---|---|---|---|---|---|---|
+| N11 | the vampire | C1's `lifesteal` op on a melee kit | C1 | S, a new archetype | 0.5 on C1 | content |
+| N12 | reach by layer | a per-ability reach change against a flyer, in place of `targetsLayer`'s three values; a default of minus one leaves every reach-1 melee unit unable to hit a flyer, against the flight lock's Q4 ("everyone hits everyone, including adjacent ground melee", `archive/post-34-roadmap.md:1352-1354`) | S2, S3 | S-M in targeting and the bot's reach | 0.5 with S3 | mechanism, design |
+| N13 | a draw on a draw | a `cardDrawn` trigger filtered by archetype, and a draw op, which no daemon has (its ops: `grantRedraws`, `grantEmpowers`, `gainBits`, `healPool`, `applyStatus`, `src/config/daemons.ts:65-87`); a guard on the chain (the extra card is drawn too) and on `maxHandSize` 10 | R3 | S-M op + content | 0.5 on R3 | mechanism, content |
+| N14 | a heal on a shuffle | a `deckReshuffled` trigger and the shipped `healPool` op; the encounter-start shuffle emits no `deck:reshuffled` today (the run sweep, R3), so whether it counts is a call | R3 | S content | 0 on R3 | content |
+| N15 | more morale for a smaller hand | not a deck trigger: a modifier daemon. `drawAmount` is a run stat (base `handSize` 6, `config/deck.json:2`); the pool's maximum, which the player reads as morale (`locales/en/ui.json:13-17`), is not one (`RUN_STAT_KEYS`, `src/run/runStats.ts:21-32`). A `poolMax` key, and a call on whether taking the daemon mid-run fills the new room | — | S mechanism + content | 0.5 | mechanism, content |
+| N16 | grants by events | event ops for the ability grant and for XP; an XP grant on an event node meets `handleDismissPromotion`'s throw outside an encounter or a rest (`Run.ts:3241-3244`), so the route R5 needs is this consumer's | R4, R5 | the events, content | 0 on R4, R5 | content |
+| N17 | the soldier | the mercenary through `extends`; "soldier" is also a character's id, "The Soldier" (`config/characters.json`), in another namespace | R7 | S | 0 on R7 | content |
+
+**The two reminders, as given to him.** `healActor` (META-ROADMAP Round 9,
+C1): a battle rule's effect that heals the unit that dealt a hit by a
+fraction of the damage it did, beside the two effects rules have today,
+`gainBits` and `applyStatus` (`battleRules.ts:53-61`). A daemon would make
+it run-wide ("your units heal 20 % of damage dealt") and a packet one
+fight; the `dealHit` trigger already carries the damage. The specials'
+gate (the post-C5 audit, `archive/post-83-worklog.md:77-80`: "priority is
+static"): a special outranks the strikes whenever it is off cooldown, so a
+big area fires at one target and a self-heal fires at full health; the
+gate would let a special fire only when its situation scores high enough,
+such as three enemies in the area or health under half.

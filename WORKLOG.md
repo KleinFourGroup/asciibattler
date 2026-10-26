@@ -22256,3 +22256,11 @@ The proposals:
 3. The two once-only entries to the round's scratchpad archive, with no
    rule: neither recurred.
 4. The distress entry: the user's read; nothing to sign.
+
+**The read, tranche 2** (the user, 2026-10-26: "Signing all of those,
+Claude! 😁"). Built: `process/session-end.md`, "The next session", gains
+the line on a brief whose stop waits on the user's answer. The known
+traps take no rule. The two once-only entries go to the round's
+scratchpad archive with the sweep's other dispositions; the distress
+entry stays in the friction log for the user's welfare read. Next,
+tranche 3: 133e's read, with the archive as built.

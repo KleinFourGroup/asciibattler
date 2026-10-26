@@ -37,7 +37,10 @@ the commit and the Cursor's NEXT line are its hand-off.
 
 When there is a next step, offer it as a card. The brief names the phase,
 the step to start and the hand-off entry, and restates nothing that AGENTS,
-the Cursor or the entry already holds, so it is about a line long.
+the Cursor or the entry already holds, so it is about a line long. When a
+stop waits on the user's answer, the brief says the new session puts the
+stop again, since a session started from a card opens on its brief alone
+and the answer can come only in its second turn.
 
 - **Session cards** (Claude Code). Offer the next session with `start_session`,
   `initiation: "own_initiative"`, `context: "fresh"`, `use_worktree: false`

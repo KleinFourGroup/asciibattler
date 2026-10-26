@@ -21817,3 +21817,162 @@ to 13).
 **Files the next session needs.** `scratch/133/sweep-*.md`, the 100 rows'
 evidence; `scratch/133/rounds2.mjs`, the signed order's sums, row by row;
 `scratch/133/dist.mjs`, the damage range's arithmetic with its control.
+
+### 133d, tranche 2c: rounds 19 to 23, put to the user (2026-10-26, session 19020674)
+
+Tranche 2b is still with the user, who answers it here; 2c is put beside
+it so both can be answered in one turn.
+
+**Rounds 19 and 20 re-sorted, a change to tranche 1's signed order.**
+Tranche 1 put traversal (profiles, flight and water) in round 19 and the
+ground (ice, mud, the moving 2×2s) in round 20. The traversal profile and
+the moving footprint change the same lines. Of the ten direct
+`tileGrid.costAt(` reads in `src` (a search, this session), seven are
+one-cell tests of a tile with no unit in the test, which the 2×2 must
+widen as well: `destinationBlocked` (`World.ts:1386-1393`), the sidestep
+(`movement.ts:586-596`), a step's duration (`movement.ts:644-650`), the
+flee's `passable` (`positioning.ts:255-262`), the blind wander
+(`MovementBehavior.ts:272-281`), the camp wander
+(`CampWanderBehavior.ts:104-113`) and `nearestFreeCells`
+(`actingPosition.ts:151`, by the search alone). A profile needs the unit
+at each of them and a 2×2 its cells, so the ordering principle "work on
+one core in one round" puts both in one round. The proposal: round 19 the
+ground (profiles on the one plane, with water, ice and mud; footprints,
+with the bear and the giant; swarms), round 20 the air (the second plane,
+the lift, the flyers, and the dragon where the two meet). It also builds
+the profile on its simplest consumer, a swimmer on one plane with no
+render work, before the plane and the lift go on it. Round 12's guard,
+"no 2×2 body is pushed until round 20", becomes round 19's.
+
+**Round 19 — The ground.** *Charter:* how a body crosses the board on the
+ground: a traversal profile per archetype (what each tile costs it) and
+movement correct for bodies wider than a tile, built through the sites
+they share, with water, ice and mud and the bodies that use them. *In
+scope:* the profile on the one plane (S3): a `traversal` field and
+`tileCostFor(unit, kind)` at the `CostFn` site, carried on
+`PathCostContext` through its three builders, the direct `costAt` reads,
+the bot's `passable` reads, and a rule for tile effects under a profile,
+designed with the flyer's row in it so round 20 adds a plane, not a new
+shape; moving N×N in the sim (S8: the one-cell sites, the spawn fit, big
+bodies never swap or sidestep or yield rules, built footprint-correct
+throughout so the half-tile grid stays possible, 133c) and its render
+(S9: the mark, the pick box, the health bar); a guard that a draftable
+unit is 1×1 (S11) in place of the pin S8 loosens; ice under 1 (S6:
+`minCost` in the heuristic, and the arrival bound it breaks); mud
+reworked (S7: the user's play first, then a dev dial, since the switch is
+gone); swarms as plan A (133c: a small body drawn smaller on a whole
+tile, a swarm one body drawn as a cluster whose damage falls with its
+health); a pushed 2×2 decided. Consumers: the crab and a marine (N19,
+A19), the bear (N10), the giant (N21) and a swarm, each in the live
+acts' pools. *Depends on:* round 18. *Risk:* high: the movement core
+under the drift gates (PATHING's standing rules), the default profile
+byte-identical by the fuzz diff and the pathing pins. *Decision points:*
+the yield rule; which cell governs a body's cost and tile effects; mud's
+shape; the swarm's damage rule. *Exit:* each seam with a headless test
+and its planted failure (a marine crosses deep water and a ground unit is
+refused; a walking 2×2 under the overlap detector with a one-cell
+`destinationBlocked` planted); the consumers in play; the board.
+*Release:* the crab and the marine, ice as a highway, mud reworked, the
+bear, the giant, swarms. *Save:* none predicted (a profile and a
+footprint come from the def); a World bump if a claim gains a field.
+*Scope guards:* no second plane and no lift (round 20); no draftable
+2×2. If it runs long, mud is the piece that can move: it needs the
+profile, not the footprint.
+
+**Round 20 — The air.** *Charter:* flight: a second occupancy plane, the
+flyer's presentation, reach by layer, and the flyers. *In scope:* the
+render spike first, a posed flyer over a ground unit for the user's eye,
+the flight lock as signed its fallback (133c); the lock re-audited (S2)
+against co-location across planes; the plane: `planeOf` choosing by the
+unit, path blockers and `destinationBlocked` per plane, claims (which
+carry `plane` already), the overlap detector per plane, tile effects
+under a flyer; reach by layer (N12) in place of `targetsLayer`; the
+flyer's presentation (S4: the lift as a channel apart from the ground
+point, the ten position readers each choosing ground or lifted, clause
+2's 15 % pinned headless with a lift of 1.0 as its failing control, the
+mark over chasm and deep water), the reconciliation's cheap tier after it
+(S5) and the float (S10, the lift kept and the bob dropped under reduced
+motion); the tall tree with `blocksFlight` (N7) and rounded plates for it
+(A35). Consumers: the eagle (N19), the falcon and the falconer (N8, A20),
+and the dragon (N9, a 2×2 flyer), each in the live acts' pools.
+*Depends on:* round 19. *Risk:* high: a second plane in the occupancy
+core, and the projection. *Decision points:* the spike's verdict; the
+lift and the float, by the user's eye; reach by layer's default; whether
+the tree blocks sight. *Exit:* as round 19's, with the lift's pin and its
+control; the board. *Release:* the eagle, the falcon and falconer, tall
+trees, the dragon. *Save:* a World bump if a unit's plane is kept per
+instance (inferred). *Scope guards:* no draftable 2×2.
+
+**Round 21 — Act 2, the realm in chaos.** *Charter:* the two shipped
+sectors reworked into one second act, a realm in chaos in the
+warlord-era register (bandits, deserters, a faction's leader as its
+boss), and lines of dialogue for bosses. *In scope:* act 2's sector from
+the shipped two (A7's share: encounters, layouts, events and camps, at
+the length the spec set); the §76f four in normal and elite fights (A9);
+the rifle-armed archetypes (A8) as the deserters, enemy-only unless
+signed draftable (then each a prior-table row and the rarity protocol);
+the faction leader's fight; dialogue (N22: a locale-keyed `lines` field
+and a render overlay, the leader the first to speak); `minHop` on a
+layout where the act wants it (A26); act 2's bands re-anchored, with the
+deep-end cost residuals (A34) on that board. *Depends on:* round 10 (act
+1 and the sheet's multi-act tooling). *Risk:* medium: a shipped boss,
+event or sector id removed or renamed makes a saved run unreadable (A4).
+*Decision points:* what of the two sectors is kept; the leader's fight;
+whether the deserters are draftable. *Exit:* a run from act 1 through act
+2's boss, playable; act 2's bands signed. *Release:* act 2. *Save:* a Run
+bump if a shipped id goes.
+
+**Round 22 — Act 3, the plague.** *Charter:* a third act against
+whatever causes the plague, with the dark wizard as its boss, and stock
+that can be held to an act. *In scope:* act 3's sector (A7's share, its
+theme from the spec; the volcanic camp resident, A10, if it takes
+volcanic, and the mapgen hint, A32, with it or dropped); the plague's
+enemies and the wizard; act-scoped stock (A16: ports and draft pools by
+act, the mechanism under "act-3" daemons, packets and draftables, each
+item a prior-table row) and act 3's daemons and packets on it; act 3's
+bands. *Depends on:* round 21. *Risk:* medium: the scoping re-draws port
+stock. *Decision points:* the wizard's kit; what is held to act 3.
+*Exit:* a run through act 3's boss, playable; act 3's bands signed.
+*Release:* act 3. *Save:* none predicted for the content; a Run bump if
+the scope is saved per run (inferred).
+
+**Round 23 — Act 4 and a run's frame.** *Charter:* the secret fourth act
+behind an unlock, the unlock mapping, Escalation's rule levers with
+per-act hop economics, and the bot's check over the whole run. *In
+scope:* act 4 (about three hops with no branching, the demon lord, a
+sector-map edge taken only when unlocked, since an edge is `from` and
+`to` alone); the unlock mapping (A22, act 4 first; A3's facts: a new
+`progress` field is permanent, a dialled run's win is not recorded); a
+win as the spec defines it, with the credits; Escalation's rule levers
+(A1: more elites, a boss's extra trick, a tool taken away) and per-act
+node-map parameters (A24's economy half), one seam; the bot's check after
+the content (A27) on the four-act board; act 4's bands. *Depends on:*
+rounds 10 to 22. *Risk:* medium. *Decision points:* what unlocks act 4;
+which tool a level takes away; what "working as intended" means for the
+bot. *Exit:* a run through all four acts with act 4 unlocked; the bot's
+check read; every act's bands signed. *Release:* the secret act, unlocks,
+Escalation's new levels. *Save:* a new permanent `progress` field; a Run
+bump if an unlock reaches the run by snapshot.
+
+**Rounds 24 and 25:** Onboarding & Feel (the old 11) and Ship (the old
+12), their text moving with them. One premise moves: the tutorial's
+"Round 10 (tutorial against final act 1)" becomes round 23, since act 1
+is re-read on each board after round 10.
+
+**The sums** (`scratch/133/rounds3.mjs`): round 19 6.5 to 8 phases, 20
+4.75 to 8, 21 4.5 to 6, 22 3 to 5, 23 4 to 6; rounds 19 to 23 22.75 to
+33, the same as tranche 1's (A29 and A33 out; A24's economy, A34, A35
+and the crab in); 71.7 to 94.95 in all, unchanged.
+
+**Two more, put with it.**
+- *Ability descriptions (A33):* tranche 1's sums put them in act 3, where
+  the rider was written ("written with the act's new abilities"). The
+  lean: round 11, so the schema field and the card row land before
+  rounds 12 and 13 add most of the new abilities, and each round after
+  writes its abilities' text as it authors them. A change to signed round
+  11, 0 to 1 phase.
+- *The tithe (A29),* asked again: rounding once on a turn's total, so two
+  kills at Escalation 3 pay 3 bits. If that is what "on the award" meant,
+  A29 closes as built and Dis Pater's `--grant` read runs in round 11; if
+  the award is the encounter, A29 is a Run bump and goes in round 11
+  before that read, not in round 23 where tranche 1's sums had it.

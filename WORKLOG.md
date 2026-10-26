@@ -21580,3 +21580,107 @@ renumbered" to record this one renumbering.
 
 In all 71.7 to 94.95 phases (`scratch/133/rounds2.mjs`), the three
 watches not counted. Round 19 is the largest and may split in tranche 2.
+
+**Signed** (the user, 2026-10-26: "Oh I'm really feeling that now,
+Claude! 😁 We'll keep the split; signed in full!"): the revised order,
+the renumbering, and the split as round 15. Onboarding & Feel is round
+24 and Ship round 25.
+
+### 133d, tranche 2a: rounds 9 to 13, put to the user (2026-10-26, session d3325476)
+
+Tranche 2 in three parts (9 to 13, 14 to 18, 19 to 23), each round in
+META-ROADMAP's parts. Row ids are 133b's and 133c's. A round with a board
+reads it as paired same-seed deltas against the round before (tranche 1,
+call 5).
+
+**Round 9 — The frame and the damage trial.** *Charter:* the four acts
+written down as a spec, the board's instruments made sound, then damage
+as a range tried against hit or miss as a pre-registered trial, in the
+casualty experiment's shape. *In scope:* the act design (A6 with N20's
+open questions: each act's theme, enemies, bosses and length in hops,
+the plague's cause, the ending, what a win is, act 4's unlock in
+outline); the roster table's guard (C13), its compaction measured before
+it is built (C14), `box-drive.sh`'s mixed queues (C15), `FX_REGISTRY`'s
+coverage guard (R18), the deleted action classes in seven docs (R17);
+the trial: a config switch, the roll taken after defense, the range's
+distributions as arms, what bleed, blind and the two hit-hooking daemons
+do under it, the bot's sensors and the hitsplat, paired boards against
+hit or miss, the user's play, a bar written before. At the close: the
+no-counts trial's read (R9) and the keep test over §132's lines. *Why
+first:* instruments before the reads, and a rule change before anything
+is balanced on it. *Risk:* medium; the switch keeps a rollback cheap.
+*Decision points:* the bar; the distribution; the spec's open questions.
+*Exit:* the spec signed; each guard with its planted failure; the trial
+kept or rolled back on its bar and the user's play. *Release:* the
+damage feel, if kept. *Scope guards:* no new unit, no act content.
+
+**Round 10 — Act 1, the wilds.** *Charter:* a first act of beasts and
+bandits on mechanisms that exist, with the two shipped sectors moved to
+act 2's place in the same release. *In scope:* the scripted run (R2,
+with R12 and R13 folded in and R14 closed), first used to author this
+act; the 1×1 melee fauna (N19: wolf, giant rat, fox, puma, tiger),
+enemy-only, in encounters and camps; bandits as enemies; act 1's sector
+(encounters, layouts, events, a boss, locale-keyed), a tree as plain
+scenery if the layouts want one (its flight rule is round 19's); the
+run's shape, act 1 then the two shipped sectors until round 21 reworks
+them; the sheet's multi-act tooling (A23's tooling: a seam column a
+sector, a wall band an act) and act 1's bands; the atlas resize (S1).
+*Depends on:* round 9. *Risk:* medium: a third sector lengthens the run
+and moves every band, and a run saved before it needs its resume
+checked or a Run bump (inferred). *Decision points:* act 1's hops (A24's
+length half); the act 1 boss. *Exit:* a run from act 1 to the deep end's
+boss, playable end to end; act 1's bands signed. *Release:* a new first
+act. *Scope guards:* no flyer, swimmer, 2×2 or swarm (rounds 19, 20).
+
+**Round 11 — The roster.** *Charter:* the shipped roster balanced on the
+trial's arm, the Idol of Mars split into three, and bandits out of the
+draft. *In scope:* power by rarity (C18), with the enemy pools
+re-anchored behind it; the kit watches (C20: officer, bandit, mercenary,
+halberdier, stormcaller); the priest's parity (C16); the area-status
+enemies' retune (C19); the blind fix (C12), the kiter's case a stop;
+power's level-up draw and its growth key (R19), one re-baseline with
+C18 since five streams move; Mars as three one-stat idols (N24, a
+prior-table rebuild); bandits not draftable (N28); Dis Pater's `--grant`
+read (A31) if the tithe stays as built; the wall watch (C17) read on this
+board. *Why here:* after the trial, whose arm sets the numbers, and
+before the seam rounds tune new units against this roster. *Risk:*
+low-medium (config and box time). *Decision points:* power's scale
+(1/1/2/3 or 1/2/3/4); the kiter under blind; each kit change; the idols'
+sizes. *Exit:* the board read and signed; the prior table rebuilt.
+*Release:* three idols, reworked units. *Save:* a Run bump (`mars`
+removed). *Scope guards:* no new mechanism.
+
+**Round 12 — Push, pull and blink.** *Charter:* attacks that move their
+target or their caster, designed once with their consumers. *In scope:*
+forced movement's design, a stop (direction, a distance of its own,
+landings over chasm and water, in-flight moves and claims, gotcha #113),
+then knockback from a point, pull toward the caster and a teleport
+landing beside its target (C6), `World.shove` used or retired; the
+cavalier's hit after its move (C5); the caster flag on a caster-anchored
+area (N3). Consumers: the grenadier (N1), the telekinetic (N2), the
+adventurer's pull special (N4), the ninja (N5), the blade whirlwind
+(N27), the banshee's self-centred burst (N3), a cavalier (A18), each
+in the live acts' pools. *Depends on:* round 11's roster. *Risk:*
+medium-high (the occupancy core). *Decision points:* the design stop;
+which new units are draftable (each takes a prior-table row and the
+rarity protocol). *Exit:* each seam with a headless test and its planted
+failure; the consumers in play; the board. *Release:* seven units and
+abilities. *Save:* a World bump if a push captures a cell at cast
+(inferred). *Scope guards:* no 2×2 body is pushed until round 20.
+
+**Round 13 — The unit kit.** *Charter:* lifesteal on a unit and for a
+team, specials that act on their caster, reach across the whole board,
+and archetypes that extend another. *In scope:* the resolved-damage
+return and `lifesteal` (C1) with the vampire (N11); `healActor` (C1) with
+a lifesteal idol and packet, his two variants; the specials' two gaps
+(C2); global reach for abilities and auras (N18), with a global stun or
+heal special as its consumer; `extends` (R7: the merge, the editor's
+round trip, the checklist and its guard) with the soldier (N17), the
+conscript (N26) and the commissar (N25, a speed status under the
+colourblind gate); `knownAbilityIds`'s last reader (U6) with the editor.
+*Depends on:* round 12. *Risk:* medium. *Decision points:* the idol's
+and packet's names and numbers; the conscript's appeal; who carries the
+global special. *Exit:* as round 12's. *Release:* four units (the
+vampire, soldier, conscript, commissar), a global special, an idol and a
+packet. *Save:* a Run bump and a World bump (`healActor` changes the
+fingerprinted `BattleRuleEffect`).

@@ -21,7 +21,7 @@ trap 'rc=$?; if [ "$rc" -ne 0 ]; then echo "[pre-commit] FAILED (exit $rc). If t
 # path in a string. The set is derived here, at commit time, so a new
 # doc-reading test joins it with no edit; a test that reads a doc only through
 # a helper module would be missed (none did when a run-time trace of the suite
-# was held against this set, WORKLOG §132, 132a). Typecheck has nothing to
+# was held against this set, archive/post-118-worklog.md §132, 132a). Typecheck has nothing to
 # check in such a commit.
 STAGED=$(git diff --cached --name-only)
 if [ -n "$STAGED" ] && ! printf '%s\n' "$STAGED" | grep -qvE '\.md$|^retro/papercuts\.jsonl$'; then

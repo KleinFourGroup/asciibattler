@@ -1,6 +1,6 @@
 // The Bash tool's backslash halving, and the note a halved command earns.
 //
-// Measured on Claude Code 2.1.308 (WORKLOG §130, 130e): before bash reads a
+// Measured on Claude Code 2.1.308 (archive/post-118-worklog.md §130, 130e): before bash reads a
 // command, the Bash tool halves each run of backslashes, rounding up, unless a
 // double quote follows the run, which keeps it whole; the transcript and the
 // tool's input hold the command as written. Bash then applies its own rules,

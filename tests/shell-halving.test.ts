@@ -1,5 +1,5 @@
 // The backslash note's model (.claude/skills/context-meter/hooks/halving.ts)
-// held to the cases measured on Claude Code 2.1.308 (WORKLOG §130, 130e): a run
+// held to the cases measured on Claude Code 2.1.308 (archive/post-118-worklog.md §130, 130e): a run
 // of backslashes halves, rounding up, unless a double quote follows it, and
 // the note fires only where bash's reading changed.
 import { describe, expect, it } from 'vitest';

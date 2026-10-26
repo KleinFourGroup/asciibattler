@@ -5,126 +5,126 @@ Small follow-ups that aren't roadmap steps. Add things here when they're worth f
 **Completion convention (2026-07-06):** a completed item collapses to a single ✅ line + a pointer (commit hash, doc §, or "git history") *in the commit that lands it* — the full diagnosis lives in git history and the run-logs, not here.
 
 **One section a round (the Round 8.5 TODO pass, signed 2026-10-14; re-placed
-at §133's re-cut, 2026-10-26, WORKLOG §133, tranche 3: a round with no row
+at §133's re-cut, 2026-10-26, `archive/post-118-worklog.md` §133, tranche 3: a round with no row
 has no section, and a row with a trigger and no round is under "Watches").** Each
 open item sits under the round it was given, with the groups META-ROADMAP
 names; which round and why is the item's row in
-[round-8.5-census.md](round-8.5-census.md) section 5 (T-nn). A new item goes
+[round-8.5-census.md](archive/round-8.5-census.md) section 5 (T-nn). A new item goes
 under the round it is filed for, or under "Not yet placed" until the next
 pass. The items ticked before the pass, and the fifteen it found done or
 dropped, are in git at `cdd5c81`.
 
-## Round 8.5 — Housekeeping (this round)
+## Round 8.5 — Housekeeping (closed 2026-10-26)
 
-By phase, as ROADMAP §121 to §129 has them. The census rows that are not
+By phase, as `archive/post-118-roadmap.md` §121 to §129 has them. The census rows that are not
 TODO items (list A's deletions, list B's trials) are in
-[round-8.5-census.md](round-8.5-census.md), not here.
+[round-8.5-census.md](archive/round-8.5-census.md), not here.
 
 ### Every phase: the comment pass
 
-- ✅ **Rewrite the phase codes out of `src/` code comments** — `src`'s step codes 6,376 → 0 by `npm run oracle -- comment-codes`, held by `tests/comment-codes.test.ts`; its comment words 234,033 → 189,570; `tests` and `tools` keep theirs, by §125's decision point (WORKLOG §121 to §127; §133, 133f).
+- ✅ **Rewrite the phase codes out of `src/` code comments** — `src`'s step codes 6,376 → 0 by `npm run oracle -- comment-codes`, held by `tests/comment-codes.test.ts`; its comment words 234,033 → 189,570; `tests` and `tools` keep theirs, by §125's decision point (`archive/post-118-worklog.md` §121 to §127; §133, 133f).
 
 ### §122 sim
 
-- ✅ **Unify the duplicated `chebyshev` helpers.** The four private copies import `movement.ts`'s alias of `occupancy.ts`'s `distanceBetween` (census B-17; WORKLOG §122, 122j).
+- ✅ **Unify the duplicated `chebyshev` helpers.** The four private copies import `movement.ts`'s alias of `occupancy.ts`'s `distanceBetween` (census B-17; `archive/post-118-worklog.md` §122, 122j).
 
 ### §123 run
 
-- ✅ **A loaded run can miss a field the class defaults.** `Run.test.ts` holds a loaded run's own properties to a constructed one's; `fromJSON` sets `pauseAtTurnGates` (census F-2; WORKLOG §123, 123k).
+- ✅ **A loaded run can miss a field the class defaults.** `Run.test.ts` holds a loaded run's own properties to a constructed one's; `fromJSON` sets `pauseAtTurnGates` (census F-2; `archive/post-118-worklog.md` §123, 123k).
 
 ### §124 and §124.5 render and UI
 
 §124, the board, closed 2026-10-18, and §124.5, the screens, 2026-10-20;
-every item below is done (WORKLOG §124, "The close of §124"; WORKLOG
+every item below is done (`archive/post-118-worklog.md` §124, "The close of §124"; WORKLOG
 §124.5, "The close of §124.5").
 
-- ✅ **A third copy of the neutral-target rule, a lead for the kickoff.** `ObjectiveController` calls `validNeutralObjectiveTarget`, kept as a trial on a truth table (WORKLOG §124.5, 124.5f).
+- ✅ **A third copy of the neutral-target rule, a lead for the kickoff.** `ObjectiveController` calls `validNeutralObjectiveTarget`, kept as a trial on a truth table (`archive/post-118-worklog.md` §124.5, 124.5f).
 
-- ✅ **The ability line overstates three units' damage.** The card's damage and heal numbers come from the sim's own functions, under a pin over the catalog (WORKLOG §124.5, 124.5e).
+- ✅ **The ability line overstates three units' damage.** The card's damage and heal numbers come from the sim's own functions, under a pin over the catalog (`archive/post-118-worklog.md` §124.5, 124.5e).
 
-- ✅ **`damageStatFor` and the catalog's `damageStat` have no reader that runs.** Both deleted, with the editor's line and the tests that called them; gotchas #94 and #114 corrected (WORKLOG §124.5, 124.5g-post3).
+- ✅ **`damageStatFor` and the catalog's `damageStat` have no reader that runs.** Both deleted, with the editor's line and the tests that called them; gotchas #94 and #114 corrected (`archive/post-118-worklog.md` §124.5, 124.5g-post3).
 
-- ✅ **The dev load key's console lines still give the map-only rule.** They give `devLoadRun`'s rule, and `toggleGrayscaleAudit` has no `force` (WORKLOG §124.5, 124.5d).
+- ✅ **The dev load key's console lines still give the map-only rule.** They give `devLoadRun`'s rule, and `toggleGrayscaleAudit` has no `force` (`archive/post-118-worklog.md` §124.5, 124.5d).
 
-- ✅ **The battle HUD's enemy notch can show the next wave's bound.** In battle `Run.previewPoolsAtRisk` reads the fielded wave; `Run.test.ts` pins it on seed 2 (WORKLOG §124, 124g).
+- ✅ **The battle HUD's enemy notch can show the next wave's bound.** In battle `Run.previewPoolsAtRisk` reads the fielded wave; `Run.test.ts` pins it on seed 2 (`archive/post-118-worklog.md` §124, 124g).
 
-- ✅ **The page drive does not notice a phase whose scene never mounts.** `drive` refuses a phase whose scene is not on screen (`PHASE_SCENES`); the rest's map swap removed fails it (WORKLOG §124, 124a).
+- ✅ **The page drive does not notice a phase whose scene never mounts.** `drive` refuses a phase whose scene is not on screen (`PHASE_SCENES`); the rest's map swap removed fails it (`archive/post-118-worklog.md` §124, 124a).
 
-- ✅ **The probe runner's edges.** `--arg-file`, `--build` with `--dist`, the report's shape in `probe-cli.mjs`'s header, and `until: 'turn-outcome'` stopping as the battle ends (WORKLOG §124, 124b).
+- ✅ **The probe runner's edges.** `--arg-file`, `--build` with `--dist`, the report's shape in `probe-cli.mjs`'s header, and `until: 'turn-outcome'` stopping as the battle ends (`archive/post-118-worklog.md` §124, 124b).
 
-- ✅ **`UnitCard.ts` re-exports `UnitRarity` with no reader.** The re-export is out; every importer reads `config/units`, and the build's bytes are unchanged (WORKLOG §124.5, 124.5h-post).
+- ✅ **`UnitCard.ts` re-exports `UnitRarity` with no reader.** The re-export is out; every importer reads `config/units`, and the build's bytes are unchanged (`archive/post-118-worklog.md` §124.5, 124.5h-post).
 
 ### §126 tests
 
 - ✅ **A guard against an import cycle through `config/units`.**
   `tests/units-cycle.test.ts`, on the shared walker, fails on any path
-  back (WORKLOG §126, 126h).
+  back (`archive/post-118-worklog.md` §126, 126h).
 
 - ✅ **A test that loops until a command takes effect never returns once
   the command stops taking effect.** Every loop that waits on a tick or a
   command counts its tries, in tests, `tests`' instruments and `src`'s
-  replay loops; TESTING's "Bounded steps" (WORKLOG §126, 126e).
+  replay loops; TESTING's "Bounded steps" (`archive/post-118-worklog.md` §126, 126e).
 
 - ✅ **Three tests time out at 5 s when anything runs beside the suite.**
   The chaos seeds and four slower default-limit tests carry 15 s, each
-  with its reason; `store-guard` keeps 30 s (WORKLOG §126, 126f).
+  with its reason; `store-guard` keeps 30 s (`archive/post-118-worklog.md` §126, 126f).
 
 - ✅ **Ten sites spawn an encounter on a World of their own.** All ten
   build it with `battleWorld` now, the stormcaller fixture's grid
-  corrected to the 12×12 it ran on (WORKLOG §126, 126k).
+  corrected to the 12×12 it ran on (`archive/post-118-worklog.md` §126, 126k).
 
 - ✅ **Nothing notices the rollout walker buying nothing at a port.**
   `arbitratedStrategy.test.ts` walks a clone of its funded dock under the
-  overlay and reads a purchase land (WORKLOG §126, 126i).
+  overlay and reads a purchase land (`archive/post-118-worklog.md` §126, 126i).
 
 - ✅ **The step-code ceiling guards test titles too.** `comment-codes` counts
   the codes in `it`, `test` and `describe` titles, and `comment-strip` masks
-  a title's words (WORKLOG §126, 126n).
+  a title's words (`archive/post-118-worklog.md` §126, 126n).
 
-- ✅ **Pin ARCHITECTURE's event catalog against `events.ts`.** `eventSounds.test.ts` holds the catalog's rows to the interface's keys, with a self-check (WORKLOG §126, 126g).
+- ✅ **Pin ARCHITECTURE's event catalog against `events.ts`.** `eventSounds.test.ts` holds the catalog's rows to the interface's keys, with a self-check (`archive/post-118-worklog.md` §126, 126g).
 
-- ✅ **Pin `ui.css`'s `--font-mono` against `FONT_STACK`.** `font-coverage.test.ts` holds the sheet's chain to `FONT_STACK` and a generic tail (WORKLOG §126, 126g).
+- ✅ **Pin `ui.css`'s `--font-mono` against `FONT_STACK`.** `font-coverage.test.ts` holds the sheet's chain to `FONT_STACK` and a generic tail (`archive/post-118-worklog.md` §126, 126g).
 
 ### §127 tools
 
-- ✅ **A guard on the context readings** — closed unbuilt: every recorded slip was caught by read-back before its commit, and the guard's inputs are harness internals (WORKLOG §127, the kickoff).
+- ✅ **A guard on the context readings** — closed unbuilt: every recorded slip was caught by read-back before its commit, and the guard's inputs are harness internals (`archive/post-118-worklog.md` §127, the kickoff).
 
-- ✅ **`comment-length` takes any path** — a file or a folder, in the repo or out of it (`sourcesAt`, WORKLOG §127, 127d).
+- ✅ **`comment-length` takes any path** — a file or a folder, in the repo or out of it (`sourcesAt`, `archive/post-118-worklog.md` §127, 127d).
 
-- ✅ **`comment-strip` proves a file with a held comment** — named apart with its held comments, its code proven with every comment out and controlled (WORKLOG §127, 127e).
+- ✅ **`comment-strip` proves a file with a held comment** — named apart with its held comments, its code proven with every comment out and controlled (`archive/post-118-worklog.md` §127, 127e).
 
 ### §128 to §133, the close
 
-Split at §128's kickoff (2026-10-23); ROADMAP's entries for §128 and §130
-to §133 say which phase takes each row.
+Split at §128's kickoff (2026-10-23); `archive/post-118-roadmap.md`'s entries for §128
+and §130 to §133 say which phase takes each row.
 
-- ✅ **DESIGN's "Out of scope" list names as backlog what has since been built** — seven lines struck with their phases; synergies and the camera's line stay, each with why (WORKLOG §130, 130d).
+- ✅ **DESIGN's "Out of scope" list names as backlog what has since been built** — seven lines struck with their phases; synergies and the camera's line stay, each with why (`archive/post-118-worklog.md` §130, 130d).
 
-- ✅ **Dead links in the docs** — the five fixed, and `tests/docs.test.ts` checks every relative link outside `archive/`, whose misses are left (WORKLOG §130, 130d).
+- ✅ **Dead links in the docs** — the five fixed, and `tests/docs.test.ts` checks every relative link outside `archive/`, whose misses are left (`archive/post-118-worklog.md` §130, 130d).
 
-- ✅ **`phase-stats`: a commit-TYPE fix column beside the word-match ratio** — `fixT%`; Round 8's 9 `fix` commits by git, 9 by the tool (WORKLOG §130, 130c).
+- ✅ **`phase-stats`: a commit-TYPE fix column beside the word-match ratio** — `fixT%`; Round 8's 9 `fix` commits by git, 9 by the tool (`archive/post-118-worklog.md` §130, 130c).
 
-- ✅ **`phase-stats` under `--since`** — `.5` and `.75` phases kept, a word scope's step read from its subject, the rest placed in the phase in flight; Round 8's 200 commits by git from §110's kickoff to the close, 200 by the tool (WORKLOG §130, 130c).
+- ✅ **`phase-stats` under `--since`** — `.5` and `.75` phases kept, a word scope's step read from its subject, the rest placed in the phase in flight; Round 8's 200 commits by git from §110's kickoff to the close, 200 by the tool (`archive/post-118-worklog.md` §130, 130c).
 
-- ✅ **The friction log is a tracked file** — the six dirty checks leave out its path (`TREE_PATHSPEC` in `scripts/build-id.mjs`), in place of a spool (WORKLOG §130, 130a).
+- ✅ **The friction log is a tracked file** — the six dirty checks leave out its path (`TREE_PATHSPEC` in `scripts/build-id.mjs`), in place of a spool (`archive/post-118-worklog.md` §130, 130a).
 
-- ✅ **Two lines of the smoke were not read** — read at 128c in both browsers' storage inspectors: Firefox kept our keys 24 days, one foreign key; Edge's storage was empty before the day (WORKLOG §128, 128c).
+- ✅ **Two lines of the smoke were not read** — read at 128c in both browsers' storage inspectors: Firefox kept our keys 24 days, one foreign key; Edge's storage was empty before the day (`archive/post-118-worklog.md` §128, 128c).
 
-- ✅ **Rounds 9 and 10, re-cut into smaller rounds with smaller phases** — Rounds 9 to 23, the old 11 and 12 renumbered 24 and 25, this file's rows placed by round (META-ROADMAP; WORKLOG §133, 133d and 133e).
+- ✅ **Rounds 9 and 10, re-cut into smaller rounds with smaller phases** — Rounds 9 to 23, the old 11 and 12 renumbered 24 and 25, this file's rows placed by round (META-ROADMAP; `archive/post-118-worklog.md` §133, 133d and 133e).
 
-- ✅ **Round a tithe's bits on the award, not on each kill** — built since 47f: a turn's tally is rounded once, which the user confirmed is the intent (WORKLOG §133, tranche 2c).
+- ✅ **Round a tithe's bits on the award, not on each kill** — built since 47f: a turn's tally is rounded once, which the user confirmed is the intent (`archive/post-118-worklog.md` §133, tranche 2c).
 
 - ✅ **`forcedEncounterId` fields only at a node of its own kind** — stated in `RunConfig`'s comment on the field since 123m; closed at §133, tranche 3.
 
-- ✅ **122o's seven deletion leads** — six deleted at 123l; `World.shove` is in Round 12's scope (WORKLOG §133, tranche 3).
+- ✅ **122o's seven deletion leads** — six deleted at 123l; `World.shove` is in Round 12's scope (`archive/post-118-worklog.md` §133, tranche 3).
 
-- ✅ **Round-scoped rules, and a close that deletes as well as promotes** — `ROUND-RULES.md`, archived at each round close; the close keeps a line the round added only if it did something; a bar for a new rule or guard (`process/planning.md`; WORKLOG §132, 132e). Round 8.5's own list is 132f's.
+- ✅ **Round-scoped rules, and a close that deletes as well as promotes** — `ROUND-RULES.md`, archived at each round close; the close keeps a line the round added only if it did something; a bar for a new rule or guard (`process/planning.md`; `archive/post-118-worklog.md` §132, 132e). Round 8.5's own list is 132f's.
 
-- ✅ **A deletion's proof once ROUND-RULES' rule lapses** — `process/oracles.md` "Behaviour-equivalence refactors": fitted to the deletion's size and risk, in the user's words from 132h1 (WORKLOG §133, 133a).
+- ✅ **A deletion's proof once ROUND-RULES' rule lapses** — `process/oracles.md` "Behaviour-equivalence refactors": fitted to the deletion's size and risk, in the user's words from 132h1 (`archive/post-118-worklog.md` §133, 133a).
 
 ### §129 the dependency phase
 
-- ✅ **Dev-toolchain `npm audit` debt** — 10 at §129's kickoff, 0 at 129f (WORKLOG §129).
+- ✅ **Dev-toolchain `npm audit` debt** — 10 at §129's kickoff, 0 at 129f (`archive/post-118-worklog.md` §129).
 
 
 ## Round 9 — The frame and the damage trial
@@ -134,7 +134,7 @@ META-ROADMAP §"Round 9 — The frame and the damage trial" names each row's pla
 ### At the round's close
 
 - [ ] **The keep test over the lines §132 added** (signed at 133a,
-  2026-10-25; WORKLOG §133, 133a). From `c08f4a72` to `f0e5f3c5`, AGENTS,
+  2026-10-25; `archive/post-118-worklog.md` §133, 133a). From `c08f4a72` to `f0e5f3c5`, AGENTS,
   CLAUDE.md and `process/` took the router, the caps, `session-end.md`,
   `shell-and-windows.md` and `browser-pane-recipes.md`, mostly moved
   text, signed in the week they landed, so no round has used them. At
@@ -143,7 +143,7 @@ META-ROADMAP §"Round 9 — The frame and the damage trial" names each row's pla
   written against stopped (`process/planning.md`, "Round close").
 
 - [ ] **Read the trial of no context counts below 500k** (signed at 132g,
-  tranche 1, item 4; WORKLOG §132, "132g, tranche 1 signed"). The
+  tranche 1, item 4; `archive/post-118-worklog.md` §132, "132g, tranche 1 signed"). The
   context meter says nothing below the hand-off trigger, and no doc asks a
   session to read or record its context. Its measure, written before it
   started: lines in the friction log or the reports that name context
@@ -186,7 +186,7 @@ META-ROADMAP §"Round 9 — The frame and the damage trial" names each row's pla
   take the long-press for that reason. So since 98b, whose entry says the
   pre-turn's run takes the long-press. Touch only; desktop is untouched. A
   behaviour change, so out of Round 8.5. Found at 124.5h's batch 7
-  (WORKLOG §124.5); placed here by the user, 2026-10-19.
+  (`archive/post-118-worklog.md` §124.5); placed here by the user, 2026-10-19.
 
 ## Round 10 — Act 1, the wilds
 
@@ -231,7 +231,7 @@ META-ROADMAP §"Round 10 — Act 1, the wilds" names each row's place.
   move only when no editor rule can meet a moved one at one specificity,
   and showing that two never meet on one element takes the editors'
   markup and the classes their code sets, which no named oracle reads
-  (WORKLOG §127, 127c and 127f).
+  (`archive/post-118-worklog.md` §127, 127c and 127f).
 
 ## Round 11 — The roster
 
@@ -239,7 +239,7 @@ META-ROADMAP §"Round 11 — The roster" names each row's place.
 
 ### Before the closing board
 
-- [ ] **A blinded ranged unit strikes past its acquisition range.** Under `atWill`, blind sets `targetId` null when nothing is within its `acquisitionRange` (1), and `Targeting.currentTarget` then falls back to `findTarget`, so the abilities still fire out to the attack range. A probe in a worktree: a blinded archer fired at an enemy 3 cells away (WORKLOG §122, 122o batch 6). The tests pin only a melee unit. **The user's lean (2026-10-15), pending testing:** blind means wander and strike only within the acquisition range, so `currentTarget` skips the fallback for a blinded unit as it does for a confused one. **The catch to weigh first:** ten abilities ship a `minRangeCells` floor (nine at 2, one at 4), and a unit with a floor above 1 can't fire at a target 1 cell away, so under that rule a blinded kiter can't attack at all while blind lasts; a plain archer still hits what is adjacent. Decide whether that full shutdown is intended and pin it either way. The tests: a blinded archer holds fire at 3 cells and fires at 1; the kiter's case as decided; then a board re-run, since blind (the luminant's `light_ray`) gets stronger. A behaviour change, so the round's scope guards rule it out of Round 8.5; placed here at §122's close, since it needs the board.
+- [ ] **A blinded ranged unit strikes past its acquisition range.** Under `atWill`, blind sets `targetId` null when nothing is within its `acquisitionRange` (1), and `Targeting.currentTarget` then falls back to `findTarget`, so the abilities still fire out to the attack range. A probe in a worktree: a blinded archer fired at an enemy 3 cells away (`archive/post-118-worklog.md` §122, 122o batch 6). The tests pin only a melee unit. **The user's lean (2026-10-15), pending testing:** blind means wander and strike only within the acquisition range, so `currentTarget` skips the fallback for a blinded unit as it does for a confused one. **The catch to weigh first:** ten abilities ship a `minRangeCells` floor (nine at 2, one at 4), and a unit with a floor above 1 can't fire at a target 1 cell away, so under that rule a blinded kiter can't attack at all while blind lasts; a plain archer still hits what is adjacent. Decide whether that full shutdown is intended and pin it either way. The tests: a blinded archer holds fire at 3 cells and fires at 1; the kiter's case as decided; then a board re-run, since blind (the luminant's `light_ray`) gets stronger. A behaviour change, so the round's scope guards rule it out of Round 8.5; placed here at §122's close, since it needs the board.
 
 - [ ] **The PRIEST parity breach** (the 94h signing, 2026-09-08 — BALANCE §94h): +14.2 over the soldier on the deploy shape, +10.0 on regen (92h +5.0 / +5.9; the ±5 principle). Healing pays more when fights last three turns and the dead are booked (the casualty rule + the 94b openers). A kit/price question for Round 7 (the §94 charter excluded archetype changes); the gambler reads +6.7 / −1.6.
 
@@ -297,7 +297,7 @@ META-ROADMAP §"Round 13 — The unit kit" names each row's place.
   The unit catalog stopped calling it at the load cycle's fix, so no
   test reaches it. The editor could read `Object.keys(ABILITY_DEFS)` and
   the function go, which would order the editor's ability list by the
-  catalog instead of the registry (WORKLOG §123, "The reach-diff over
+  catalog instead of the registry (`archive/post-118-worklog.md` §123, "The reach-diff over
   the seven").
 
 ## Round 14 — Neutrals
@@ -311,7 +311,7 @@ META-ROADMAP §"Round 14 — Neutrals" names each row's place.
   cutting it changes what that order does, and Round 8.5 changes no
   behaviour. Decide beside "Camp-aware aura `affects`", which reworks how
   camps and teams meet. Pinned by `camps.economy.test.ts`, "a tile order
-  parked on a camp anchor". From §122's kickoff (WORKLOG §122).
+  parked on a camp anchor". From §122's kickoff (`archive/post-118-worklog.md` §122).
 
 ## Round 15 — The split
 
@@ -325,11 +325,11 @@ META-ROADMAP §"Round 15 — The split" names each row's place.
   helps a reader moves a phase's state and its share of the save with it,
   a second object, which needs a round whose charter allows one. Its
   candidates: the event phase, whose six fields are its own, and the deck.
-  `World.ts` was not counted (WORKLOG §123, "123n"; the script is under
+  `World.ts` was not counted (`archive/post-118-worklog.md` §123, "123n"; the script is under
   `scratch/123n/`, on that machine only).
 
 - [ ] **§123's comment-pass leads, placed at its close.** The "Leads,
-  not built" under WORKLOG §123's batches 1, 3, 4a, 4c and 4d (a field
+  not built" under `archive/post-118-worklog.md` §123's batches 1, 3, 4a, 4c and 4d (a field
   only its test reads, checks a loader or `fromJSON` could make, a stale line
   in gotcha #111, the event dial reaching later sectors' roots), and
   123n's three lookups of the active event. The ones a later phase owns
@@ -389,7 +389,7 @@ META-ROADMAP §"Round 18 — Events and rewards" names each row's place.
   subscription beside the other two, and a pane check of where keyboard
   focus lands after the redraw, which rebuilds the choice buttons. A
   behaviour change, so out of Round 8.5. Found at 124.5h's batch 8
-  (WORKLOG §124.5); placed here by the user, 2026-10-20.
+  (`archive/post-118-worklog.md` §124.5); placed here by the user, 2026-10-20.
 
 - [ ] **A battle's snapshot drops a queued unit's seeded effects.**
   `World.toJSON` leaves `effects` out of each queued spawn template and
@@ -406,7 +406,7 @@ META-ROADMAP §"Round 19 — The ground" names each row's place.
   neutrals' footprints and the tiles' passability. Here because the
   traversal profile rewrites the bot's `passable` reads: one function both
   call, built with the profile or before it. Proof: the fuzz diff, with
-  `sensors.test.ts`'s choke tests (WORKLOG §125, 125j).
+  `sensors.test.ts`'s choke tests (`archive/post-118-worklog.md` §125, 125j).
 
 ## Round 20 — The air
 
@@ -590,7 +590,7 @@ META-ROADMAP §"Round 24 — Onboarding & Feel" names each group (the old Round 
   it stays whole for about 190 ms over a screen that is fading out, and
   a pinned one stays over an overlay opened from its own trigger (the
   sector map) until Esc. Measured 2026-10-13 in an offscreen window
-  (WORKLOG §120, "The question, measured"; `scratch/120e/tooltip-swap.js`
+  (`archive/post-118-worklog.md` §120, "The question, measured"; `scratch/120e/tooltip-swap.js`
   under the probe runner). The wiring: `closeTooltip()` where a screen's
   fade starts (`fadeOutAndRemove`, `src/ui/fade.ts`) when
   `openTooltipTrigger()` is inside the leaving element, and where an
@@ -790,14 +790,14 @@ Rows with a trigger and no round (§133, tranche 3). Each names what reopens it.
   8.72 takes TypeScript `<6.1.0`. Look again at a round's first phase:
   when typescript-eslint takes 7 and the API leaves `unstable/`, it is a
   step of its own, release notes first. The typecheck took 10.5 s warm
-  on 6.0.3 (WORKLOG §129, "The kickoff").
+  on 6.0.3 (`archive/post-118-worklog.md` §129, "The kickoff").
 
 - [ ] **`reach-diff` across a toolchain change** (§130's call 4). A V8 or
   transform change starts a statement a line away, so `reach-diff` refuses
   a pair of readings from two toolchains; `scratch/129/reach-common.mjs`
   compared what both count at 129h. The next toolchain bump (TypeScript 7
   above) decides whether it becomes a mode of `npm run oracle`
-  (WORKLOG §129, "The close of §129").
+  (`archive/post-118-worklog.md` §129, "The close of §129").
 
 - [ ] **nvm for Windows 2, at the next Node switch** (deferred at §129's
   129i, the user's call, 2026-10-23). 2.x needs no admin for `nvm use`,
@@ -805,7 +805,7 @@ Rows with a trigger and no round (§133, tranche 3). Each names what reopens it.
   per-user install, so the move takes one admin cleanup, and no rollback
   is documented. Then: the stable 2.x of that day, in link mode (a
   junction, no shim process in front of `node`), `%APPDATA%\nvm` backed
-  up first, Node held at one version across the swap (WORKLOG §129,
+  up first, Node held at one version across the swap (`archive/post-118-worklog.md` §129,
   "129i, step zero").
 
 - [ ] **A watch on the harness feedback the user sent** (the Cursor's
@@ -840,7 +840,7 @@ Rows with a trigger and no round (§133, tranche 3). Each names what reopens it.
   read at 133c: movement correct for every footprint, every distance
   authored in cells converted, the movement protocol and the drift
   baselines re-pinned, and the sim's cost under the bot's look-ahead
-  (WORKLOG §133, "the experiments").
+  (`archive/post-118-worklog.md` §133, "the experiments").
 
 ## Not yet placed
 

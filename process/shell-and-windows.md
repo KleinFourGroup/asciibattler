@@ -47,7 +47,7 @@ Claude Code's own tools.
   unless a double quote follows it, inside single quotes and a quoted
   heredoc too, while the transcript shows the command as written; the
   PowerShell tool passes them whole (measured 2026-10-23, Claude Code
-  2.1.308; WORKLOG §130, 130e). The context meter's mod adds a backslash
+  2.1.308; `../archive/post-118-worklog.md` §130, 130e). The context meter's mod adds a backslash
   note to a Bash result whose reading the halving changed, with what bash
   got; the command has run by then.
 - **Bash calls.** A command whose first line reads stdin (a bare

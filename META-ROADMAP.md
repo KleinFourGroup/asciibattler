@@ -68,7 +68,7 @@ every amendment re-runs the full board; paired same-seed deltas govern.
  7. Idioms ───────┤  ✅ CLOSED 2026-09-20 — i18n · the shells · the live bar · tooltips · color / motion / input / layout · the idiom reference SIGNED · the sound registry (§95–§104 + §96.5)
  7.5 The Board ───┤  ✅ CLOSED 2026-09-27 — the projection spike · ortho · pitch 45 · yaw 45 · the ground mark as the team channel · the elevation clauses · the anchor rules 17 → 14 (§105–§109)
  8. Foundations ──┤  ✅ CLOSED 2026-10-11 — the shells · the recorder · the probe kit · the store + the build ID · the run journal · save/load · the menu + settings · Escalation + the unlocks · the itch page OPEN at 0.1.0 (§110–§118 + §117.5, §117.75)
- 8.5 Housekeeping ┤  NEXT — the oracle map → the census → deletions per subsystem, byte-identical → the source-comment rewrite · the TODO pass  (inserted 2026-09-27)
+ 8.5 Housekeeping ┤  ✅ CLOSED 2026-10-26 — the oracle map · the census · deletions per subsystem, byte-identical · the comment pass · 0.1.1 · the dependency phase · AGENTS as a router · the re-cut (§119–§133 + §124.5)
  9. The frame ────┤  the act design · the board's guards · damage as a range, a trial
 10. Act 1 ────────┤  the wilds: ground fauna · the scripted run · the multi-act sheet
 11. The roster ───┤  kits · power by rarity · Mars in three · bandits out of the draft
@@ -635,7 +635,7 @@ re-audited Round 8.5 and wrote the notes under Rounds 9 to 12. Archives:
 
 ---
 
-## Round 8.5 — Housekeeping
+## Round 8.5 — Housekeeping ✅ CLOSED 2026-10-26
 
 _(Inserted 2026-09-27, after the Round 7.5 close, user-signed: the user
 raised a broader codebase review, and the tone audit's source-comment
@@ -651,7 +651,7 @@ _(Amended 2026-10-11 at the kickoff, user-signed: reshaping is let in by
 trial beside the deletions, a second form of byte identity covers a change
 that renames what is stored, the oracle map gains two proofs, and the
 comment pass aims at length. The user's intent, verbatim, and the four
-signed decisions: `round-8.5-spec.md`.)_
+signed decisions: `archive/round-8.5-spec.md`.)_
 
 **Charter:** less code with the same behaviour, before Round 9 builds its
 seams on the core, and a code base "in a more approachable format than
@@ -693,13 +693,13 @@ documented no-op is an acceptable outcome.
   candidate is checked against GOTCHAS before it is listed, and the user
   signs the list before anything is deleted. Its first step is a drawn
   sample of planted breaks, so that what the proofs notice is measured
-  and not assumed (signed 2026-10-12; ROADMAP §120).
+  and not assumed (signed 2026-10-12; `archive/post-118-roadmap.md` §120).
 - **The deletions, one subsystem per phase** (sim · run · render and UI ·
   the bot and fuzz instruments · tests), each followed by that
   subsystem's comment pass. Sized at the census's close (2026-10-14,
   user-signed): a phase for the dials goes first, a phase for the tools
-  after the five, then the close and the dependency phase; ROADMAP §121
-  to §129. Within a subsystem the signed deletions come
+  after the five, then the close and the dependency phase;
+  `archive/post-118-roadmap.md` §121 to §129. Within a subsystem the signed deletions come
   first, then its trials, then one re-skim for what the changes exposed.
 - **The source-comment rewrite** (the tone audit's TODO, 2026-09-23): the
   phase codes rewritten out of `src/` comments under AGENTS "Voice",
@@ -723,7 +723,7 @@ documented no-op is an acceptable outcome.
   Vitest 5) as its own step with the release notes read first. The state
   on that day: WORKLOG "The close of §119".
 - **The TODO pass:** every open rider is done, dropped or given a round.
-  Listed and signed at §120 (`round-8.5-census.md` section 5, 2026-10-14):
+  Listed and signed at §120 (`archive/round-8.5-census.md` section 5, 2026-10-14):
   of 97 open items, 5 were done, 16 are this round's, 66 went to Rounds
   9 to 12 and 10 were dropped. TODO has one section a round since; this
   round's section is done by the phases.
@@ -767,19 +767,51 @@ goes to the user with a board re-run; a save-format bump for a slimmed
 snapshot is not one, and neither is a change that renames what is stored
 when it is byte-identical after its declared mapping back to the old
 names; two display fixes, the battle HUD's enemy notch and the ability
-line's damage, are signed exceptions, 2026-10-17, WORKLOG §124); no new
+line's damage, are signed exceptions, 2026-10-17, `archive/post-118-worklog.md` §124); no new
 abstractions; no gotcha
 undone without its entry read; the permanent gates never relaxed; no
 balance numbers move.
+
+**CLOSED 2026-10-26** — sixteen phases (§119–§133, with §124.5 the
+screens inserted), each closed on the user's read; the close's last step,
+the archive, awaits its read as this is written. The exit met, clause by
+clause (133f): the census's 162 rows each have an outcome, four of them
+placed at the close (A-36's last three members deleted; B-12's and the
+sim-and-run leads, B-18 and B-19 to TODO under Rounds 15, 19 and 10);
+every trial kept over its bar or reverted, and recorded; every deletion in
+sim, run and config byte-identical under the corpus and the fuzz diff, by
+the phases' records (§121 to §125), not re-run at the close; the comment
+pass under its oracle, `src`'s step codes 6,376 → 0, held by
+`tests/comment-codes.test.ts`, with `tests` and `tools` keeping theirs
+(§125's decision point); the TODO pass at §120, re-placed by round at
+§133; the shell-quoting audit at 130e, whose tripwire fired once (a false
+sentence in a record, from a halved grep), its hook settled at §132 as
+the context meter's note. The output, by `comment-length` at `5d2cdaf`
+and at the close: `src`'s code lines 37,475 → 36,791 and its comment
+words 234,033 → 189,570. **Against the charter:** the split of `Run.ts`
+and `World.ts` went to a round of its own (Round 15), since a split a
+reader gains from moves state and its share of the save; two display
+fixes were signed exceptions (§124). The scope guards held: no snapshot
+bump (World v36 and Run v49 at the kickoff's tree and at the close), no
+gotcha added (141 at both), and no balance number moved, by the phases'
+records.
+Outside the charter, each signed as it came: the build `0.1.1` (§128,
+uploaded 2026-10-23), the dependency phase (§129), the docs and
+instruments pass (§130), the reads (§131), the process review that made
+AGENTS a router to `process/` (§132), and the re-cut of the old Rounds 9
+and 10 into Rounds 9 to 23 (§133). Archives:
+`archive/post-118-roadmap.md` + `-worklog.md` + `round-8.5-spec.md` +
+`round-8.5-census.md` + `round-8.5-rules.md` + `sessions-round-8.5.md`
++ `retro-scratchpad-round-8.5.md`.
 
 ---
 
 ## Rounds 9 to 23 — the re-cut
 
 _(Cut at §133 on 2026-10-26 from the old Rounds 9 (Extensions) and 10 (Act
-3) and the user's additions; every round signed (WORKLOG §133, tranches 1
+3) and the user's additions; every round signed (`archive/post-118-worklog.md` §133, tranches 1
 to 3). The old rounds' text is in git at `5ab97513`. Row ids in the scope
-lists, such as C6 or N12, are the re-cut's tables (WORKLOG §133, 133b and
+lists, such as C6 or N12, are the re-cut's tables (`archive/post-118-worklog.md` §133, 133b and
 133c), which hold each item's premise against the code with its file and
 line. What every round below respects, from Round 8's close: each Run bump
 rejects players' saved runs at the upload that carries it (the release
@@ -839,7 +871,7 @@ pre-registered trial, in the casualty experiment's shape.
   the two daemons that hook a hit do when every strike lands; the bot's
   sensors that read a hit chance; the MISS splat and `unit:missed`; paired
   boards against hit or miss; the user's play; a bar written before. The
-  arithmetic is in WORKLOG §133 ("totems, and the first experiment").
+  arithmetic is in `archive/post-118-worklog.md` §133 ("totems, and the first experiment").
 - **The rarity stars' tap on touch** (R22).
 - **At the close:** the no-counts trial's read (R9) and the keep test over
   the lines §132 added.
@@ -1020,7 +1052,7 @@ healer that use them.
 **In scope**
 
 - **The neutral split, a trial** (C4): Round 8.5 listed which question
-  each site asks (WORKLOG §122, 122f): 26 ask whether a unit is scenery,
+  each site asks (`archive/post-118-worklog.md` §122, 122f): 26 ask whether a unit is scenery,
   10 whether it is a camp member, 18 whether it is any neutral, and 17
   lines plus `affectsMatch` compare two units' teams; at seven a camp
   member treats a wall or rubble as its own side today. Step zero re-takes
@@ -1557,7 +1589,7 @@ records an achievement on a clean machine.
 | Damage as a range, a trial | §133, 133c (the user) | 9 |
 | Euclidean distance · the half-tile grid | §133, 133c (the user) | TODO "Watches" |
 | The split of `Run.ts` and `World.ts` · §123's comment-pass leads | TODO, not yet placed until §133 | 15 |
-| Every other open TODO item | the Round 8.5 TODO pass (`round-8.5-census.md` section 5), re-placed at §133 (WORKLOG §133, tranche 3) | 8.5 → 25, by TODO's sections |
+| Every other open TODO item | the Round 8.5 TODO pass (`archive/round-8.5-census.md` section 5), re-placed at §133 (`archive/post-118-worklog.md` §133, tranche 3) | 8.5 → 25, by TODO's sections |
 
 ## Explicitly deferred / out (signed)
 

@@ -12,12 +12,12 @@ authoring vocabulary kept as a class (A-16), nine rows for deletion
 item by item (A-21 was added at the read). §120's list of what the
 round may delete or try, each candidate with its evidence and the proof
 that covers it ([round-8.5-spec.md](round-8.5-spec.md) D1;
-[ROADMAP.md](ROADMAP.md) §120). The user signs it before anything is
+[ROADMAP.md](post-118-roadmap.md) §120). The user signs it before anything is
 deleted. Section 1, the dials, was written at 120c on 2026-10-12 and its
 read closed on 2026-10-13. The later steps add their sections in this
 format.
 How each number was counted, and what was checked and what was not, is in
-[WORKLOG.md](WORKLOG.md) §120. **Section 6, the tests by test, was
+[WORKLOG.md](post-118-worklog.md) §120. **Section 6, the tests by test, was
 written at 126b and signed at 126c's stop, 2026-10-21** (WORKLOG §126).
 
 ## The format
@@ -2111,11 +2111,11 @@ taking 5.7's leftovers as leaned** (2026-10-14). 5.7's reduced-motion
 check was not done by the round's close and is a Round 24 row in TODO
 (133f). Every
 open item of
-[TODO.md](TODO.md), each with a proposed fate. Nothing here is done by
+[TODO.md](../TODO.md), each with a proposed fate. Nothing here is done by
 this step: the kickoff's seventh call left the doing to the phases. A
 row is **T-nn**, numbered in the file's order, with its line in TODO as
 the file stood at `cdd5c81`. How the list was counted and what was
-checked is in [WORKLOG.md](WORKLOG.md) §120, 120g.
+checked is in [WORKLOG.md](post-118-worklog.md) §120, 120g.
 
 A row's **fate** is one of:
 

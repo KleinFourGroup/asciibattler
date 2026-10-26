@@ -54,26 +54,13 @@ eleventh run, at the Round 8 close — promoted: the shell facts in place of
 the Shell rule and the revised standing decisions to AGENTS, two CLAUDE.md
 lines, a dozen `process/` lines, one TESTING pattern and five TODO riders) →
 [archive/retro-scratchpad-round-8.md](../archive/retro-scratchpad-round-8.md);
+the Round-8.5 (Housekeeping, §119–§133) backlog was swept 2026-10-24 (the
+twelfth run, at 132f — promoted: the tranche shape for a stop's reads to
+`process/planning.md`; one entry archived; the papercuts after it read at
+133f, promoting one line to `process/session-end.md`) →
+[archive/retro-scratchpad-round-8.5.md](../archive/retro-scratchpad-round-8.5.md);
 the MVP-era entries had earlier fed [post-mvp-review.md](post-mvp-review.md).
 
 ---
 
-_(The post-§118 entries start here — Round 8.5, Housekeeping.)_
-
-- **A stop that hands over more than one read opens with the tranches,
-  not the whole** (2026-10-13, 120h, session 462d21b3). The stop's
-  report put two census sections' findings, eight drops, nine phases
-  and eight calls in one message, and the user's reply was to ask for
-  smaller tranches. The earlier reads of this phase (120c, 120d, 120e)
-  had each gone in tranches too, after the fact. A stop with more than
-  one section to sign could say what was built in a few lines, list the
-  tranches, and put only the first. → Promoted to `process/planning.md`
-  "Reads: the terms" at 132f (2026-10-24).
-- **A blind read is sized for a reader, not for the measurement**
-  (2026-10-15, 122n, session 6677fa11). The fan-out pilot handed the user
-  two 940-line diffs of eight files to compare blind, sized so the arms'
-  costs and checks would mean something; the user could read them only
-  by spot checks. The comparison a person can hold is a handful of
-  paired excerpts, the same comment from each arm side by side, drawn
-  before the read; the whole diffs stay for the instruments. → Archived
-  with the round at 132f (2026-10-24): once.
+_(The post-§133 entries start here — Round 9, the frame and the damage trial.)_

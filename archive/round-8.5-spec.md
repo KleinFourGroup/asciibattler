@@ -6,10 +6,10 @@ a whole that evening, once the user had read it ("I have now, and it's
 (retroactively) signed!"). The intent and the candidates are the user's,
 verbatim; D1 to D4 are the session's wording of what was signed. What the
 Open section lists was settled at §119's shape-lock, as each item says.
-The charter is [META-ROADMAP.md](META-ROADMAP.md) §"Round 8.5 —
+The charter is [META-ROADMAP.md](../META-ROADMAP.md) §"Round 8.5 —
 Housekeeping", amended the same day; the record is
-[WORKLOG.md](WORKLOG.md) "Kickoff — Round 8.5"; the plan is
-[ROADMAP.md](ROADMAP.md).
+[WORKLOG.md](post-118-worklog.md) "Kickoff — Round 8.5"; the plan is
+[ROADMAP.md](post-118-roadmap.md).
 
 ## Intent (the user's words, 2026-10-11)
 
@@ -153,12 +153,12 @@ comment-stripped before/after diff with a failing control.
   update my priors on Haiku's capabilities! Or maybe I just overestimated
   how complex this code base was. Probably both. Signing all of your
   leans, Claude!" At the close it runs eleven questions, three runs, two
-  trees ([WORKLOG.md](WORKLOG.md) §119, 119f).
+  trees ([WORKLOG.md](post-118-worklog.md) §119, 119f).
 - **§119's decisions:** the tool-only replay flag, which reverses §114's
   choice; whether the journal corpus is tracked or re-recorded from its
   seeds; the chaos census's other eight command kinds. Resolved at the
   shape-lock (2026-10-11): the flag confirmed, the corpus tracked, the
-  eight left until the census wants them ([ROADMAP.md](ROADMAP.md) §119).
+  eight left until the census wants them ([ROADMAP.md](post-118-roadmap.md) §119).
 - The candidate list is not exhaustive, and the round's size is known only
   after the census.
 
@@ -166,6 +166,6 @@ comment-stripped before/after diff with a failing control.
 
 The Round 8 close's five answers (8.5 is next; the save format may bump,
 more than once; the oracle map comes first; a TODO pass; the Pages site
-retired): [archive/post-109-worklog.md](archive/post-109-worklog.md) "118j
+retired): [archive/post-109-worklog.md](post-109-worklog.md) "118j
 — the round close", C1. Nothing has come from the itch page (the user,
 2026-10-11).

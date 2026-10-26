@@ -21776,3 +21776,44 @@ whether a resumed page can fight; XP's targeting; what event art is.
 *Release:* fights inside events, camp events, granted abilities, XP,
 event art. *Save:* Run bumps (the resume, the XP portion, the template
 field) and a World bump (F-1 with the grant).
+
+### The hand-off after 133d's tranche 2b (2026-10-26, session d3325476)
+
+Past the trigger at the commit of tranche 2b (`5a742f9b`; the mod's line
+read 504,805).
+
+**Done.** 133a signed and built; 133b read clear; 133c closed (N1 to N28,
+the three experiments, each sized in its entry); 133d's tranche 1 signed
+(the order revised for a release a round, the renumbering, the split as
+round 15, Onboarding & Feel 24, Ship 25) and tranche 2a signed (rounds 9
+to 13).
+
+**Open.**
+- *Tranche 2b* (rounds 14 to 18, the entry above) is with the user,
+  unanswered.
+- *Tranche 2c:* rounds 19 to 23 from tranche 1's table: 19 traversal,
+  flight and water (6.25 to 8.5 phases, the largest; it may split, the
+  flyer's presentation the likely cut); 20 the ground; 21 to 23 the acts,
+  with the four-act sheet dissolved into them (tranche 1, point 4) and the
+  bot's check in 23; a line each for 24 and 25, whose text moves with
+  them.
+- *Tranche 3:* where each TODO row goes: the open rows under Round 8.5
+  (the comment pass is the exit check's, the re-cut 133e's), 9, 10, 11,
+  12 and "Not yet placed", by the rounds above; the rows 133b found
+  built or moot (R12, R14, U3, A9, A28); the watches outside the rounds
+  (TypeScript 7, nvm 2, the harness feedback, Euclidean distance on
+  players' reports, the half-tile grid if the swarm does not feel right).
+- *A call asked and not answered:* the tithe (A29). At 133b's stop the
+  user was asked whether rounding once on a turn's total is what he meant
+  by "on the award"; no answer came. Dis Pater's `--grant` read (A31,
+  round 11) rests on it.
+- *133e and 133f* as cut. 133e also carries: the old-to-new round map in
+  META-ROADMAP, the 70 live lines that name Rounds 9 to 12 (tranche 1's
+  revised entry lists them by file), `process/planning.md`'s naming rule
+  amended for this one renumbering, and the script check that every item
+  of the old Rounds 9 and 10 and every N row lands in exactly one round,
+  with a planted miss.
+
+**Files the next session needs.** `scratch/133/sweep-*.md`, the 100 rows'
+evidence; `scratch/133/rounds2.mjs`, the signed order's sums, row by row;
+`scratch/133/dist.mjs`, the damage range's arithmetic with its control.

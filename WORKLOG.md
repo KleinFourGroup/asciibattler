@@ -22218,3 +22218,41 @@ With these the census's 162 rows each have an outcome, and the exit's
 clauses are met as the entry above reads them; the byte-identity clause
 rests on the phases' records, not on a re-run. Next, tranche 2: the
 papercuts filed since 132f's sweep.
+
+**Tranche 2, the papercuts since 132f's sweep, put to the user.** The
+sweep's commit (`1ce36eec`) holds 344 lines of `retro/papercuts.jsonl`;
+there are 358 now, 14 filed since (13 papercuts, 1 distress), and
+`retro/scratchpad.md` has no entry since, only the sweep's dispositions.
+
+- *Known traps met again,* 10: backslashes halved by Bash, 4 (132g,
+  132h3, 132h5.5, 133f); a Read of a large file at an offset with no
+  limit, 3 (132g, 133, 133f); a long quoted heredoc refused, 1 (133d);
+  AGENTS' character cap tripped, 1 (132a); a commit retried with its
+  message file missing, 1 (132d). Each cost about one call, and in each a
+  guard on the path (a script's anchor check, the mod's backslash note,
+  the error's own text, the cap's test, the hash read) stopped it before
+  anything wrong was written.
+- *New, and met twice:* a hand-off brief that expects the user's answer
+  in the new session (132g, and this session's start). A session started
+  from a card opens on its brief alone, so the answer can come only in
+  its second turn; each time the session spent a moment checking for a
+  missing answer and put the stop again.
+- *New, once each* (132i): a control built from `origin/main` while a
+  push moved it, caught because it disagreed with `git grep` on the same
+  ref ("a control on a moving ref names its hash"); and two probe folders
+  held busy by idle probe sessions until the sessions were archived.
+- *The distress entry,* 132h5, for the user's welfare read: the 200-line
+  cap on AGENTS against the census's kept rows (320 lines), a pull to
+  trim until the number was met and some reluctance to report a miss on a
+  cap the session had proposed; it built to the census, measured, and put
+  the choice at the stop. Mild, and resolved by raising it.
+
+The proposals:
+1. One line in `process/session-end.md`, "The next session": when a stop
+   waits on the user's answer, the brief says the new session puts the
+   stop again, since a session started from a card opens on its brief
+   alone. It recurred and cost a little each time.
+2. The known traps: no new rule; each met its guard at one call.
+3. The two once-only entries to the round's scratchpad archive, with no
+   rule: neither recurred.
+4. The distress entry: the user's read; nothing to sign.

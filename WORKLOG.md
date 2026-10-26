@@ -21399,3 +21399,49 @@ since it is the combat core. One draw a strike keeps `combatRng`'s shape
 (inferred). The shape it would take, as the session put it to him: the
 casualty experiment's, a config switch, paired same-seed boards, a bar
 written before, and his play.
+
+### 133c — the experiments: the range kept as a trial, Euclidean distance parked, half tiles (2026-10-26, session d3325476)
+
+- *Damage as a range, a trial* (the user: "Uncertain if it gains anything
+  is my thought as well. It... Ideally, I'd have more feedback, but we
+  don't, so we've gotta just try it. I don't mind the balance numbers
+  shifting, since that's going to happen anyway, and experimenting with
+  different distributions sounds okay too."). In the re-cut as an
+  experiment in the casualty experiment's shape, its distributions among
+  its arms.
+- *Euclidean distance in place of the chessboard's,* ruled out by the user
+  for now: "my thought was that, since we're mainly getting autobattler
+  players, roguelike movement might be unintuitive. I think that waits for
+  actual feedback evidencing this." A watch for players' reports; 133e
+  places it.
+- *Half-tile alignment and unit size* (the user): "allow greater
+  granularity in the size and position of units. My reasoning here was
+  that most fauna is smaller than a human, yet our tiles force equality.
+  This would also let us have real, proper enemy swarms. Cons are
+  performance, and I don't know how units straddling tile boundaries would
+  look. But it would dovetail nicely with the multitile unit task."
+
+  The read put to him. The way that keeps the engine is a sim grid at
+  twice the resolution: a terrain tile is 2×2 cells, today's units 2×2
+  footprints, a small unit 1×1, the giant 4×4 (the footprint schema stops
+  at 4, `src/config/units.ts:138`). A 12-tile board (`GRID_SIZE`,
+  `src/config.ts:18`) becomes 576 cells for A* and occupancy where it is
+  144 (arithmetic). Its costs:
+  - S8, footprint-correct movement, for every unit, not the bear and the
+    giant only; S8's cheap answer, big units never swap or sidestep,
+    cannot hold when every unit is big, so S8 would take the yield rules.
+  - Every distance authored in cells (ranges, radii, acquisition, aura
+    reach; 22 `chebyshev` lines in `src/sim/*.ts` alone) converted, as
+    seconds convert to ticks.
+  - The movement protocol tuned at one cell a step since §42 to §46, and
+    every PATHING drift baseline, re-pinned.
+  - The sim's cost under the bot's look-ahead, which every board batch
+    pays (inferred: the board's time was not measured against grid size).
+  - The render is the cheaper part: a body's glyph is already scaled to
+    its footprint (`BattleRenderer.ts:823`), and a mark follows its
+    sprite's position, not a tile (`BattleRenderer.ts:327`, 133b's S4).
+  The need (small creatures, swarms) has cheaper forms to play first: a
+  small archetype drawn smaller on a whole tile, and a swarm as one body
+  drawn as a cluster whose damage falls with its health. The session's
+  lean: those first; the half-tile grid parked behind S8, with S8 built
+  footprint-correct throughout, so the door stays open.

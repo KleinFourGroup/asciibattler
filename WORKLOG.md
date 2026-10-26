@@ -21108,3 +21108,66 @@ sector 3, the extended sheet and the splitting of `Run.ts` and `World.ts`.
 The read (`batch`, at 133c's stop): the table and the seven points above.
 Wrong looks like a row whose premise a search of its named file
 contradicts, or an item of either charter with no row.
+
+### 133c — the user's additions, the first batch (2026-10-25, session d3325476)
+
+The user asked first for the seams with no consumer, to see where his
+ideas fit; the session listed them in three groups (planned with none,
+planned with a placeholder, built and unused). One the list missed: an
+area anchored on its caster is built (`anchor: 'caster'`,
+`effects/schema.ts:225`; proposed by `proposeCasterAnchoredBlast`,
+`propose.ts:228`; ranged by `engagementReach`, `archetypes.ts:42`) and
+tested on synthetic defs only, "No shipped def authors `anchor:'caster'`"
+(`propose.test.ts:501`).
+
+**His consumers, in his words where they are his:**
+
+- Knockback, for two new units: "A grenadier unit. Throws a grenade,
+  which causes all units near where it lands to be knocked back by a tile
+  or two"; and "A telekinetic unit, which fires an AoE burst centered on
+  itself that does knockback". With it: "I was also thinking of reworking
+  some units like banshees to work via self-centered AoE, so we might
+  need a way to specify AoE that ignores its caster."
+- Pull: "a special attack for the preexisting adventurer unit."
+- The teleport: "a ninja unit that teleports to its target. An
+  'upgraded' rogue, per se."
+- Camp-aware auras: "a general toggle system to say if an aura affects
+  allies, neutrals, and hostiles", for "a second healer unit that works
+  via aura, that affects both allies and neutrals (until / unless you
+  attack the camp, since it then goes hostile). It's a way to make it
+  harder for enemies to engage camps."
+- `blocksFlight`: "a tall tree static."
+- Flyers: "A falcon, the falconer's summon" and "A dragon, a 2x2 flier."
+- "a bear being a 2x2 walker."
+
+**Sized like 133b's rows** (the code read this turn: the archetype ids
+and kits in `config/units.json`, the area defs in `config/abilities.json`,
+the AoE schema, `resolveAreaVictims`, `affectsMatch`, the statuses and
+`CampInstance.hostileTo`):
+
+| id | addition | what it needs | rows it consumes | new part | phases | board | kind |
+|---|---|---|---|---|---|---|---|
+| N1 | the grenadier | a thrown area as `molotov`'s (`anchor: 'targetCell'`), knockback away from the landing cell | C6 | S, a new archetype | 0.5 on C6 | yes | content |
+| N2 | the telekinetic | the built caster-anchored area, knockback away from the caster | C6, the built nova | S, a new archetype | 0.5 on C6 | yes | content |
+| N3 | an area that leaves out its caster; the banshee to a self-centred burst | `resolveAreaVictims` filters by team alone (`targeting.ts:133-143`), so `affects: 'enemies'` already leaves the caster out; a flag matters for `allies` or `all` only. `wail` is `anchor: 'targetCell'` today; the banshee fights in camps and as an enemy | the built nova | S (a flag); the rework is a change to a shipped unit | 0.5 | yes | mechanism, content |
+| N4 | the adventurer's pull | the adventurer ships (uncommon, `whip`); a special as C2 has it, pulling as C6's pull | C2, C6 | S, a kit change to a draftable | 0.5 on C2 and C6 | yes, its price row too | content |
+| N5 | the ninja | the teleport landing beside its target; the rogue ships (`gambit_strike`, `dash`); a landing taken after a wind-up needs a claim (gotcha #113) | C6's teleport, maybe R7 | S-M, a new archetype | 0.5-1 | yes | content |
+| N6 | the aura healer | `affects` as flags (allies, neutrals, hostiles) where today it is one of `enemies`, `allies`, `all` and team-only (`targeting.ts:60-69`); "neutrals" read as camp members whose camp's `hostileTo` lacks the caster's team (`World.ts:168-178`); the healing a status the aura sustains, as `rejuvenate`'s tick (that an aura can sustain a ticking status is not checked) | C3, beside C4 | M (the flags through every `affects` reader and the editors) + S content | 1 | yes | mechanism, content |
+| N7 | the tall tree | a scenery unit as the wall is, with `blocksFlight` (unbuilt); whether it blocks sight is a call; it is the organic scenery A35's rounded plates waited for | S2, S3, A35 | S def + layouts | 0.25 on S3 | with layouts that place it | content |
+| N8 | the falcon | a 1×1 flyer, summoned by the falconer (`summon` is built) | S3, S4, A20 | S | 0 on S3 | yes | content |
+| N9 | the dragon | a 2×2 flyer: flight and a moving 2×2 at once, and the flyer's lift on a body anchored to its slab | S3, S4, S8, S9 | M, the two seams' meeting; non-draftable under the scope guard | 0.5-1 after both | yes | content, mechanism |
+| N10 | the bear | a 2×2 walker, fauna | S8, S9, A17 | S | 0 on S8 | yes | content |
+
+**What it changes.** Forced movement and the teleport go from no
+consumer to four (N1, N2, N4, N5), and the built caster-anchored area
+gets its first two (N2, N3). Camp-aware `affects` gets one, and its shape
+moves from a widening to a set of flags (N6). `blocksFlight` gets the
+tree, and the rounded plates their organic scenery (N7). Round 9's exit
+placeholders now have names: the flyer (the falcon, the dragon), the
+walking 2×2 (the bear, the dragon). Still without a consumer: lifesteal's
+vampire (a placeholder), `healActor`'s daemons and packets, `targetsLayer`,
+the specials' score gate, and the run layer's four (deck triggers, the
+ability grant, XP rewards, `extends`). Every new archetype takes an atlas
+cell (17 free) and, if draftable, a prior-table row.
+
+133c stays open: the user is still reading.

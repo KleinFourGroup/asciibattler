@@ -21445,3 +21445,71 @@ written before, and his play.
   drawn as a cluster whose damage falls with its health. The session's
   lean: those first; the half-tile grid parked behind S8, with S8 built
   footprint-correct throughout, so the door stays open.
+
+  **Signed** (the user: "A multi-glyph 'unit' almost certainly solves the
+  need before we have to resort to doubling the resolution. ... That'll be
+  plan A, and only if it's not feeling right do we try out the double grid
+  resolution."). 133c closed: "That's it for now, Claude!"
+
+### 133d, tranche 1: the shape, put to the user (2026-10-26, session d3325476)
+
+Three tranches, as cut: the shape (this one); the rounds, each with its
+items, risk, dependencies and exit; where each TODO row goes.
+
+**The calls.**
+1. *Naming:* the new rounds are Round 9A, 9B and on, absorbing the old
+   Rounds 9 and 10; Rounds 11 and 12 keep their numbers (round numbers
+   are identities, `process/planning.md` "Round close"). Decimals were
+   weighed: 9.5 would read as an inserted round.
+2. *The order, by the ordering principles* (META-ROADMAP): instruments
+   first (9A); the damage trial, a rule change, before anything is
+   balanced on it, then the roster balanced on the arm kept (9B, 9C);
+   the seams before the content authored against them, each seam round
+   shipping the consumers the user named at 133c (Round 9's exit rule,
+   kept); work on one core in one round; the acts in order; the four-act
+   sheet last.
+3. *The act design* is 9A's first phase, not a round: 133c answered most
+   of it. The phase writes it as a spec with what is left: each act's
+   theme, the plague's cause, the ending, hops per act, act 4's unlock,
+   what a win is.
+4. *Every upload is a playable run:* the shipped two sectors move to act
+   2's place in the round that lands the fauna act, and each act round
+   adds to a whole run.
+5. *Boards:* each round that changes combat, movement or the economy
+   closes with a board (the standing rule), read as paired same-seed
+   deltas against the round before; the bands re-anchored once, at the
+   last round. Most of the rounds run one.
+6. *Uploads:* one a round, skipped when nothing a player sees changed; a
+   round with a Run bump rejects saved runs once, at its upload.
+7. *The split of `Run.ts` and `World.ts`:* a round of its own before the
+   turn, deck and event rounds, which all edit `Run.ts` (the session's
+   lean), or later, or not at all.
+8. *Watches outside the rounds,* in TODO: TypeScript 7, nvm 2, the harness
+   feedback, Euclidean distance on players' reports, and the half-tile
+   grid if the swarm does not feel right.
+
+**The skeleton** (phases summed from 133b's and 133c's estimates by
+`scratch/133/rounds.mjs`; "new" rows are the session's):
+
+| round | theme | phases |
+|---|---|---|
+| 9A | the frame: the act design, the scripted run, the board's tooling and guards | 5.1 |
+| 9B | the damage trial, with power diversity in its re-baseline | 4.5-5.5 |
+| 9C | the roster's balance: the kits, the priest, the area retune, Mars split, bandits, the blind fix, power's draw | 3.75-4.25 |
+| 9D | push, pull and blink: forced movement, the teleport, the cavalier, and their units | 4.25-6.25 |
+| 9E | the unit kit: lifesteal both ways, specials' gaps, global reach, `extends` and its three | 4.5-5 |
+| 9F | neutrals: the split, `affects` flags, totems, the aura healer, the camp level fork | 4.25-6.25 |
+| (9F.5) | the split of `Run.ts` and `World.ts`, if signed | 3-5 |
+| 9G | the turn: fatigue, retreat, optional deploy, injuries, a won-turn reward | 5.5-7 |
+| 9H | deck and daemons: deck triggers and the three daemons, the port shelf, the shrink trigger, bit sinks | 3.5-6 |
+| 9I | events and rewards: the resume, event-gated camps, the ability grant, XP, their riders, the art reader | 6.5-7 |
+| 9J | traversal: the render spike, co-location, profiles, reach by layer, the tree, ice, mud | 6.25-7.75 |
+| 9K | bodies: the flyer's lift, falcon and falconer, moving 2×2s, bear, giant, dragon, swarms | 5-7.25 |
+| 9L | act 1, the wilds: the fauna act; the shipped two to act 2's place | 4-5.5 |
+| 9M | act 2, the realm in chaos: its rework, the faction leader, deserters, dialogue | 4.5-5 |
+| 9N | act 3, the plague: the dark wizard, act-scoped stock | 3-6 |
+| 9O | act 4 and a run's frame: the secret act, unlocks, a win, Escalation's levers, hops | 3-7 |
+| 9P | the four-act sheet: the bands re-anchored, the bot's check, the watches | 3-7 |
+
+In all 73.6 to 102.85 phases over 17 rounds (16 without the split), up
+from 133b's 52.6 to 81.35 by the additions. Tranche 2 fills each round.

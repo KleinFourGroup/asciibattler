@@ -487,7 +487,7 @@ Cursor. Exit: META-ROADMAP's exit for the round.
 
 - ☑ **133a — the round's rules at the close** (`stop`). Signed 2026-10-25: the comment style to ARCHITECTURE, a deletion's proof to `oracles.md`, the rest lapse at 133f.
 - ◐ **133b — the re-read of Rounds 9 and 10 against HEAD** (`batch`, read at 133c's stop).
-- ☐ **133c — the user's additions, sized like the table's rows** (`stop`).
+- ☑ **133c — the user's additions, sized like the table's rows** (`stop`). N1 to N28, three experiments; closed 2026-10-26.
 - ☐ **133d — the re-cut, in tranches** (`stop`).
 - ☐ **133e — META-ROADMAP and TODO rewritten to it** (`batch`, read at 133f's stop).
 - ☐ **133f — the close and the archive** (`stop`).

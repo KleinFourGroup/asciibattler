@@ -2105,10 +2105,11 @@ pre-registration in its row).
 
 ## 5. The TODO pass's list (120g)
 
-Written 2026-10-13 and read at 120h, in tranches. **Signed so far: 5.2,
-5.3** (T-97 held for list B's tranche)**, 5.4, 5.5 and 5.6: every row,
-T-97 at list B's tranche.** 5.7's leftovers and 5.9's ninth and tenth calls are still to
-read. Every
+Written 2026-10-13 and read at 120h, in tranches. **Signed: every row of
+5.2 to 5.6, T-97 at list B's tranche, and 5.9's ten calls, the tenth
+taking 5.7's leftovers as leaned** (2026-10-14). 5.7's reduced-motion
+check was not done by the round's close and is a Round 24 row in TODO
+(133f). Every
 open item of
 [TODO.md](TODO.md), each with a proposed fate. Nothing here is done by
 this step: the kickoff's seventh call left the doing to the phases. A

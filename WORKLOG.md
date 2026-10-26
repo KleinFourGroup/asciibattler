@@ -22183,3 +22183,38 @@ held by `tests/comment-codes.test.ts`. The suite 3,678 at the kickoff,
 4. T-55 ticked; section 5's status line corrected before the census moves.
 5. The reduced-motion check: asked whether it was done; if not, a row
    under Round 24, beside the board's accessibility dials.
+
+**The read, tranche 1** (the user, 2026-10-26: "Signing all of those! 😁
+And no, I didn't do the reduced motion check; I'm not able to now, so 24
+sounds good! 👍"). Built:
+
+- *A-36's three members,* deleted at `dd274fdd`. `Keybindings.rebind()`
+  went, and its three tests now rebind through a helper that takes the
+  settings screen's path (`overridesWith`, then `setOverrides`), so they
+  pin what the screen does. `PlaybackSpeed.label` went with its four
+  assertions, its `t` import and its one string, `playback.paused` in
+  `locales/en/ui.json`, which no tracked file outside `archive/` names
+  now (`git grep`). `TraceRecorder.dispose()` went with its test and the
+  unsubscribe list only it read; the four subscriptions stand for the
+  page's life, as A-28's renderers do. ARCHITECTURE's Keybindings line
+  drops `rebind`. The row's proofs: `npm run typecheck` clean, with
+  `noUnusedLocals` on; `npm test` 3,741 passed in 259 files, one fewer
+  than at the kickoff of this stop (the dispose test), by hand and again
+  by the hook; the page drive, one `--build` of the working tree and two
+  launches on it, seed 6 with `hops=2&firstNode=rest` ending in defeat
+  with `e9cbf755` and `6956a4f2`, seed 7 at four hops complete after 9
+  battles with `d6012bc8` and `064ce09d`, each its known answer, and in
+  each console only the two known warnings.
+- *TODO:* the comment pass's row (T-55) ticked; the unread leads as one
+  row under Round 15, with `RunConfig.ts`'s parse folded into Round 10's
+  scripted-run row; B-19 under Round 10 in a group of its own, "The
+  editors"; B-18 under a new Round 19 section; the reduced-motion check
+  under Round 24's accessibility dials.
+- *The census's section 5 status line* now says what 5.9 records: every
+  call answered, the tenth taking 5.7's leftovers as leaned, and the
+  reduced-motion check placed in Round 24.
+
+With these the census's 162 rows each have an outcome, and the exit's
+clauses are met as the entry above reads them; the byte-identity clause
+rests on the phases' records, not on a re-run. Next, tranche 2: the
+papercuts filed since 132f's sweep.

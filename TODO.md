@@ -22,23 +22,7 @@ TODO items (list A's deletions, list B's trials) are in
 
 ### Every phase: the comment pass
 
-- [ ] **Rewrite the phase codes out of `src/` code comments** under the
-  AGENTS "Voice" rule: 1,991 `§`-codes across 262 files (the 48
-  `gotcha #N` refs stay). Comments only, proven by a comment-stripped
-  before/after diff with a failing control. Timing: **Round 8.5
-  (Housekeeping)**, per file in the deletion pass's touch (META-ROADMAP
-  §Round 8.5, signed 2026-09-27). The first timing, after 106e and before
-  the first build phase, lapsed when §107–§109 edited the render files.
-  `archive/post-104-worklog.md` "The new-model tone audit". The aim is
-  wider since the 8.5 kickoff (2026-10-11, user-signed): the comments'
-  length, with the codes as the part that can be counted
-  (`round-8.5-spec.md`, D4). Measured 2026-10-12 by a written rule: the
-  live count is `npm run oracle -- comment-codes`, held by
-  `tests/comment-codes.test.ts`, and the proof is `npm run oracle --
-  comment-strip <ref>` (WORKLOG §119, 119e). `tests` and `tools` hold
-  2,497 more by the same rule and are outside the ceiling; whether the
-  pass takes them is decided once its outcome on `src` is seen (the user,
-  2026-10-12).
+- ✅ **Rewrite the phase codes out of `src/` code comments** — `src`'s step codes 6,376 → 0 by `npm run oracle -- comment-codes`, held by `tests/comment-codes.test.ts`; its comment words 234,033 → 189,570; `tests` and `tools` keep theirs, by §125's decision point (WORKLOG §121 to §127; §133, 133f).
 
 ### §122 sim
 
@@ -220,8 +204,10 @@ META-ROADMAP §"Round 10 — Act 1, the wilds" names each row's place.
   saved, so a loaded run goes back to normal selection. A shape for the
   kickoff: one list of per-node entries on `RunConfig`, of which those four
   dials are cases, so the 17 URL parameters (census 1.5) shrink as control
-  grows. The two items below fold into it. Round 25 keeps one clause:
-  which dials a shipped build answers.
+  grows. The two items below fold into it, and so does `RunConfig.ts`'s
+  parse, which the census found written two or three times (one of the
+  unread leads under Round 15). Round 25 keeps one clause: which dials a
+  shipped build answers.
 
 - [ ] **`--sector-hops` in the run-config tool.** 68b plumbed
   the two-act dial through the fuzz CLI's run/search/sweep (+ shard
@@ -233,6 +219,19 @@ META-ROADMAP §"Round 10 — Act 1, the wilds" names each row's place.
   already (§133); the hyphenated spelling and a help line are left.
 
 - [ ] **The encounter dial warns when a forced id matches ZERO nodes** (papercut #25, §102) — `--encounter` / `?encounter=` forces only nodes of a matching KIND and says nothing when that is none; ~8 pane round-trips and one mislabelled oracle shape. One warning line in the CLI + a console warn in the URL path.
+
+### The editors
+
+- [ ] **The rules every editor's sheet repeats** (census B-19, a lead).
+  The validation list, the hints, `.row`, `.workspace`, `.edit-pane,
+  .side-pane` and `button.primary:disabled` are in all eleven config
+  editors' sheets, about 630 lines that could move into
+  `tools/editor-base.css`. Here because this round is the first to author
+  content through the editors. No proof today: `css-compare` passes the
+  move only when no editor rule can meet a moved one at one specificity,
+  and showing that two never meet on one element takes the editors'
+  markup and the classes their code sets, which no named oracle reads
+  (WORKLOG §127, 127c and 127f).
 
 ## Round 11 — The roster
 
@@ -336,6 +335,18 @@ META-ROADMAP §"Round 15 — The split" names each row's place.
   123n's three lookups of the active event. The ones a later phase owns
   are in "The close of §123".
 
+- [ ] **The census's unread leads** (census B-12 and "Sim and run",
+  signed "left to each phase's kickoff", and no kickoff of §121 to §123
+  took or dropped them; found at 133f). Near-duplicate runs the finder
+  listed, none opened beyond its first line: `layouts.ts`'s one
+  validation block written three times; the shared tails of the `camps`,
+  `encounters`, `layouts`, `sectors` and `events` loaders, and of
+  `abilities` and `statuses`; four loaders typing their schema by a
+  hand-written interface that repeats each key; `actingPosition.ts`'s two
+  searches; the stat fold in `runStats` and `statusEffects`; and
+  `terrainGen`. Each is a reshaping under the corpus and the fuzz diff.
+  `RunConfig.ts`'s parse, the sixth, is Round 10's scripted run.
+
 ## Round 16 — The turn
 
 META-ROADMAP §"Round 16 — The turn" names each row's place.
@@ -384,6 +395,18 @@ META-ROADMAP §"Round 18 — Events and rewards" names each row's place.
   `World.toJSON` leaves `effects` out of each queued spawn template and
   `spawnFromQueue` reads it; only the bot's look-ahead copies a battle
   that way. Census F-1; `scratch/120f/queue-effects.ts` shows it.
+
+## Round 19 — The ground
+
+META-ROADMAP §"Round 19 — The ground" names each row's place.
+
+- [ ] **The bot's passability mask, built twice** (census B-18, a trial).
+  `chokeCells` and `armyMinCut` (`src/bot/sensors.ts`) each build the same
+  mask of the cells an army can cross, about twelve lines, from the inert
+  neutrals' footprints and the tiles' passability. Here because the
+  traversal profile rewrites the bot's `passable` reads: one function both
+  call, built with the profile or before it. Proof: the fuzz diff, with
+  `sensors.test.ts`'s choke tests (WORKLOG §125, 125j).
 
 ## Round 20 — The air
 
@@ -591,6 +614,15 @@ META-ROADMAP §"Round 24 — Onboarding & Feel" names each group (the old Round 
   panning today, a player-facing yaw in Round 24). The likely fix is
   `camera.updateMatrixWorld()` in `Renderer.start`'s loop before
   `onFrame`, as the probe kit's `frame()` does (`src/dev/probe/index.ts`).
+
+- [ ] **The OS's reduced-motion setting, never followed live.** With the
+  motion setting left to follow the system, the game reads
+  `prefers-reduced-motion` (`src/render/motion.ts`), and only the
+  resolution is pinned: the pane cannot emulate the query, and the dev
+  key Ctrl+Alt+A sets the override instead. The check, a minute of the
+  user's: Windows' "Animation effects" off, then a battle, where nothing
+  should sway, fly or shake (census 5.7, L322; not done by Round 8.5's
+  close, 2026-10-26).
 
 ### The tutorial, the run summary, text size
 

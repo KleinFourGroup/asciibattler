@@ -91,12 +91,4 @@ describe('TraceRecorder', () => {
     }
     expect(traces.map((t) => t.encounter.worldSeed)).toEqual([10, 20]);
   });
-
-  it('dispose unsubscribes — later battles are not recorded', () => {
-    const { bus, traces, recorder } = setup();
-    recorder.dispose();
-    bus.emit('battle:started', { worldSeed: 1, encounter: makeEncounter(1) });
-    bus.emit('battle:ended', { winner: 'player', xpAwards: [] });
-    expect(traces).toEqual([]);
-  });
 });

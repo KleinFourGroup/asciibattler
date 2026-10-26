@@ -1,7 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { PlaybackSpeed } from './PlaybackSpeed';
 import type { SpeedStep } from '../config/playback';
-import { t } from '../i18n/ui';
 
 // Mechanic test — explicit literal steps, never the shipped config (the
 // balance-proof rule's converse: primitive/mechanic tests pin literals).
@@ -19,7 +18,6 @@ describe('PlaybackSpeed', () => {
     expect(p.current).toBe(1);
     expect(p.selectedSpeed).toBe(1);
     expect(p.isPaused).toBe(false);
-    expect(p.label).toBe('1×');
   });
 
   it('exposes the enabled steps ascending (filtering disabled)', () => {
@@ -32,16 +30,14 @@ describe('PlaybackSpeed', () => {
     expect(p.steps).toEqual([0.5, 1, 3]);
   });
 
-  it('selects a speed by value and reflects it in current + label', () => {
+  it('selects a speed by value and reflects it in current', () => {
     const p = new PlaybackSpeed(STEPS);
     expect(p.setSpeed(2)).toBe(true);
     expect(p.current).toBe(2);
     expect(p.selectedSpeed).toBe(2);
-    expect(p.label).toBe('2×');
 
     expect(p.setSpeed(0.5)).toBe(true);
     expect(p.current).toBe(0.5);
-    expect(p.label).toBe('0.5×');
   });
 
   it('ignores a disabled / unknown speed (no-op, returns false)', () => {
@@ -62,7 +58,6 @@ describe('PlaybackSpeed', () => {
     expect(p.isPaused).toBe(true);
     expect(p.current).toBe(0); // sim parks
     expect(p.selectedSpeed).toBe(3); // selection survives
-    expect(p.label).toBe(t('playback.paused')); // the table's word, not restated
   });
 
   it('resumes at the prior speed on unpause', () => {

@@ -28,7 +28,6 @@
  */
 
 import { PLAYBACK, type SpeedStep } from '../config/playback';
-import { t } from '../i18n/ui';
 
 /** The home speed a fresh controller (and `resume()` without a prior pick)
  *  starts at — the config schema guarantees an enabled step with this value. */
@@ -143,10 +142,5 @@ export class PlaybackSpeed {
   /** Resume at the selected speed. Always valid — "not paused" needs no flag. */
   resume(): void {
     this.paused = false;
-  }
-
-  /** Compact label for the current state, e.g. `"2×"` or `"Paused"`. */
-  get label(): string {
-    return this.paused ? t('playback.paused') : `${this.selected}×`;
   }
 }

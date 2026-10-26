@@ -230,19 +230,6 @@ export class Keybindings {
     return next === null ? null : overridesOf(this.defaults, next);
   }
 
-  /**
-   * Rebind an action at runtime, by the swap rule. False for a key no action
-   * can take (`isBindable`), with nothing changed. Subscribers re-route
-   * automatically (dispatch resolves the code live per keydown), so nothing
-   * re-subscribes.
-   */
-  rebind(action: KeybindAction, code: string): boolean {
-    const next = withRebind(this.bindings(), action, code);
-    if (next === null) return false;
-    this.replace(next);
-    return true;
-  }
-
   /** Take the stored overrides: the defaults with these over them
    *  (`resolveBindings`). An empty set is the defaults. */
   setOverrides(overrides: Readonly<Record<string, string>>): void {

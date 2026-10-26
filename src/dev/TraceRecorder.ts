@@ -57,43 +57,33 @@ export class TraceRecorder {
     lastTick: number;
   } | null = null;
 
-  private readonly unsubscribes: (() => void)[];
-
   constructor(
     bus: EventBus<GameEvents>,
     private readonly onTrace: (trace: BattleTrace) => void,
   ) {
-    this.unsubscribes = [
-      bus.on('battle:started', ({ encounter }) => {
-        // Deep-copied: the Run replaces its currentEncounter across turns,
-        // and the trace must pin the encounter as it was at record time.
-        this.open = { encounter: structuredClone(encounter), commands: [], lastTick: 0 };
-      }),
-      bus.on('command:applied', (applied) => {
-        this.open?.commands.push(applied);
-      }),
-      bus.on('tick', ({ tick }) => {
-        if (this.open) this.open.lastTick = tick;
-      }),
-      bus.on('battle:ended', ({ winner }) => {
-        if (!this.open) return;
-        const trace: BattleTrace = {
-          version: 1,
-          configHash: configHash(),
-          encounter: this.open.encounter,
-          commands: this.open.commands,
-          outcome: { winner, ticks: this.open.lastTick },
-        };
-        this.open = null;
-        this.onTrace(trace);
-      }),
-    ];
-  }
-
-  /** Unsubscribe from the bus and drop any open (unfinished) trace. */
-  dispose(): void {
-    for (const unsubscribe of this.unsubscribes) unsubscribe();
-    this.unsubscribes.length = 0;
-    this.open = null;
+    // Built once for the life of the page, so nothing unsubscribes.
+    bus.on('battle:started', ({ encounter }) => {
+      // Deep-copied: the Run replaces its currentEncounter across turns,
+      // and the trace must pin the encounter as it was at record time.
+      this.open = { encounter: structuredClone(encounter), commands: [], lastTick: 0 };
+    });
+    bus.on('command:applied', (applied) => {
+      this.open?.commands.push(applied);
+    });
+    bus.on('tick', ({ tick }) => {
+      if (this.open) this.open.lastTick = tick;
+    });
+    bus.on('battle:ended', ({ winner }) => {
+      if (!this.open) return;
+      const trace: BattleTrace = {
+        version: 1,
+        configHash: configHash(),
+        encounter: this.open.encounter,
+        commands: this.open.commands,
+        outcome: { winner, ticks: this.open.lastTick },
+      };
+      this.open = null;
+      this.onTrace(trace);
+    });
   }
 }

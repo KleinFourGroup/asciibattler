@@ -48,6 +48,16 @@ function keyEvent(
   };
 }
 
+/** Put `action` on `code` the way the settings screen does: store what
+ *  `overridesWith` says and hand it back through `setOverrides`. False for a
+ *  key no action can take, with nothing changed. */
+function rebind(kb: Keybindings, action: KeybindAction, code: string): boolean {
+  const overrides = kb.overridesWith(action, code);
+  if (overrides === null) return false;
+  kb.setOverrides(overrides);
+  return true;
+}
+
 describe('Keybindings', () => {
   it('resolves the code bound to each action', () => {
     const kb = new Keybindings(DEFAULTS);
@@ -129,7 +139,7 @@ describe('Keybindings', () => {
     kb.on('engageObjective', fire);
 
     // The old key no longer triggers it...
-    kb.rebind('engageObjective', 'KeyP');
+    rebind(kb, 'engageObjective', 'KeyP');
     const old = keyEvent('KeyE');
     kb.handleKeyDown(old.event);
     expect(fire).not.toHaveBeenCalled();
@@ -238,10 +248,10 @@ describe('the key rules', () => {
     const kb = new Keybindings(DEFAULTS);
     const heard = vi.fn();
     const off = kb.onChange(heard);
-    expect(kb.rebind('togglePause', 'KeyF')).toBe(true);
+    expect(rebind(kb, 'togglePause', 'KeyF')).toBe(true);
     expect(kb.codeFor('focusObjective')).toBe('Space');
     expect(kb.labelFor('togglePause')).toBe('F');
-    expect(kb.rebind('togglePause', 'Escape')).toBe(false);
+    expect(rebind(kb, 'togglePause', 'Escape')).toBe(false);
     expect(kb.codeFor('togglePause')).toBe('KeyF');
     expect(heard).toHaveBeenCalledTimes(1);
     off();
@@ -255,7 +265,7 @@ describe('the key rules', () => {
     const focus = vi.fn();
     kb.on('togglePause', pause);
     kb.on('focusObjective', focus);
-    kb.rebind('togglePause', 'KeyF');
+    rebind(kb, 'togglePause', 'KeyF');
     kb.handleKeyDown(keyEvent('KeyF').event);
     expect([pause.mock.calls.length, focus.mock.calls.length]).toEqual([1, 0]);
     kb.handleKeyDown(keyEvent('Space').event);

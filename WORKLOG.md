@@ -22105,3 +22105,81 @@ The read (`batch`, at 133f's stop): META-ROADMAP's Rounds 9 to 25 and
 TODO's sections. Wrong looks like an item in no round, a row under a
 round whose charter does not name it, or a round saying something its
 tranche did not sign.
+
+### 133f — the exit check, put to the user (2026-10-26, session 19020674)
+
+The stop in three tranches, by `process/planning.md` "Reads: the terms":
+the exit's gaps (this entry, put first, since the round is marked closed
+on its exit), then the papercuts filed since 132f's sweep, then 133e's
+read with the archive as built.
+
+**The round's output** (§131's call 6), by `npm run oracle --
+comment-length` on `src`, `tests` and `tools` at `5d2cdaf`, the kickoff's
+pre-flight tree, whose code is the Round 8 close's, and at `77831683`:
+
+| | files | code lines | comment lines | comment words | words a code line |
+|---|---|---|---|---|---|
+| `src`, not tests | 294 → 287 | 37,475 → 36,791 | 26,861 → 21,597 | 234,033 → 189,570 | 6.25 → 5.15 |
+| `src`, tests | 181 → 177 | 37,666 → 36,817 | 4,926 → 4,735 | 51,617 → 48,747 | 1.37 → 1.32 |
+| `tests`, instruments | 72 → 94 | 13,865 → 16,369 | 6,059 → 6,599 | 51,888 → 57,397 | 3.74 → 3.51 |
+| `tests`, tests | 135 → 142 | 17,103 → 18,019 | 3,588 → 3,691 | 33,604 → 34,894 | 1.96 → 1.94 |
+| `tools` | 49 → 48 | 16,500 → 15,151 | 2,542 → 2,505 | 20,861 → 20,581 | 1.26 → 1.36 |
+
+`src` lost 684 code lines and 19 % of its comment words; `tests` grew by
+the oracle map's instruments; `tools` lost the sweep page. Step codes in
+`src`'s comments and test titles: 0 by `npm run oracle -- comment-codes`,
+held by `tests/comment-codes.test.ts`. The suite 3,678 at the kickoff,
+3,742 in 259 files now (`npm test` at `77831683`, green).
+
+**The exit, by clause** (META-ROADMAP §Round 8.5).
+- *The census dispositioned.* A read-only subagent matched the census's
+  162 rows to their records by id; this session re-read each gap it
+  named. 158 have an outcome. The four that do not:
+  - *A-36,* signed for deletion item by item (census 3.3): the trigger
+    registry went at 123b, but `Keybindings.rebind()`,
+    `PlaybackSpeed.label` and `TraceRecorder.dispose()` are still in the
+    code (`src/ui/Keybindings.ts:239`, `src/ui/PlaybackSpeed.ts:149`,
+    `src/dev/TraceRecorder.ts:94`), called by their own tests alone; the
+    settings screen goes through `overridesWith()`
+    (`SettingsOverlay.ts:579-584`). ROADMAP's 123b line ticks A-36 whole.
+  - *B-12's config-loader leads* and *the "Sim and run" leads*
+    (`actingPosition.ts`'s two searches, `RunConfig.ts`'s parse, the stat
+    fold in `runStats` and `statusEffects`, `terrainGen`), signed "left to
+    each phase's kickoff": no entry of §121 to §123 names them (a search
+    for B-12 finds its signing and §124.5's screens' line alone).
+  - *B-18,* the bot's passability mask built twice, and *B-19,* the
+    editors' shared rules: each signed "for a later round", and no round,
+    TODO row or coverage row holds either now; 133d's tranche 3 placed
+    TODO's rows and missed them.
+- *Each trial kept or reverted, and recorded:* every B row has its verdict
+  (the subagent's list, with B-02 now Round 14's), but for B-18 and B-19
+  above.
+- *Every deletion in sim, run and config byte-identical under the corpus
+  and the fuzz diff:* by the phases' records (§121 to §125); not re-run
+  here.
+- *The comment pass under its oracle:* `src` at 0, as above; `tests` and
+  `tools` keep theirs (§125's decision point). TODO's row (the census's
+  T-55) is still open.
+- *The TODO pass:* §120, re-placed at 133d's tranche 3.
+- *The shell-quoting audit:* 130e, read 2026-10-23.
+- *Two loose ends:* the census's section 5 status line still says 5.7 and
+  5.9's last calls are "still to read", where 5.9 records all ten
+  answered (census 2108-2111 against 2838-2841); and 5.7's leftover, the
+  OS's reduced-motion query as the user's one-minute check, has no record
+  of being done.
+
+**The proposals, put to the user.**
+1. A-36's three members deleted now, before the archive, with the row's
+   proofs (the type check, the suite, the page drive); or carried to Round
+   9 as a TODO row. The lean: now, since the row is signed and the exit
+   rests on it.
+2. The unread leads as one TODO row under Round 15, the round whose
+   charter is reshaping under byte-identity proofs, with `RunConfig.ts`'s
+   parse named for Round 10's scripted run, which rewrites that parse.
+3. B-18 under Round 19, whose traversal profile rewrites the bot's
+   passability reads in `sensors.ts`; B-19 under Round 10, the first round
+   to author content through the editors (its row's own reason), still a
+   lead with no proof today.
+4. T-55 ticked; section 5's status line corrected before the census moves.
+5. The reduced-motion check: asked whether it was done; if not, a row
+   under Round 24, beside the board's accessibility dials.

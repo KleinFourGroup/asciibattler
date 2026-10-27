@@ -167,7 +167,7 @@ META-ROADMAP §"Round 9 — The frame and the damage trial" names each row's pla
   `src/sim/effects/EffectAction.ts` after reading it, or the gotcha
   becomes a tombstone.
 
-- [ ] **FX_REGISTRY's own coverage gap** (§104 call 5, out of that phase's scope guard): its boot asserts check authored keys RESOLVE, not coverage — an ability with no `fx`, or a `*_tick` status key with no `sound`, passes silently. The §104 shape fits: every tick key carries a `sound` or sits on an explicit visual-only list, pinned in `fxRegistry.test.ts`.
+- ✅ **FX_REGISTRY's own coverage gap** — `fxRegistry.test.ts`, "coverage": every ability authors `fx` or is listed with its reason (four), every periodic status's tick has a key with a sound or is listed (none) (WORKLOG §135, 135d).
 
 ### A fix for the first release
 

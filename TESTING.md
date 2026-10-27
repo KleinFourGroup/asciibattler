@@ -21,7 +21,7 @@ Never relaxed. Pin history per round lives in the archived worklogs.
 - `tests/nodemap-metrics.test.ts` (the signed 77c sheet at n=500)
 - `src/audio/eventSounds.test.ts` (every bus event has a sound or a silent reason)
 - `src/audio/AudioPlayer.test.ts` (every sound key has a file, every file a key)
-- `src/render/fxRegistry.test.ts` (a projectile launch has travel time)
+- `src/render/fxRegistry.test.ts` (a projectile launch has travel time; every ability authors `fx` and every periodic tick a sound, or is listed with its reason)
 - `tests/font-coverage.test.ts` (the UI glyph inventory, fallback coverage, the line-box pin)
 - `tests/ui-focus.test.ts` (every `:hover` has its `:focus-visible` twin)
 - `tests/ui-motion.test.ts` (every animation has its reduced-motion twin)

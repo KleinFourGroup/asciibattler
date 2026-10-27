@@ -321,3 +321,31 @@ signed!"): the cut and its reads as put.
   close, not built, since it happened once.
 - BALANCE's fresh-derive recipe says the fetch checks the search line's
   own artifact.
+
+### 135d — `FX_REGISTRY`'s coverage guard (2026-10-27)
+
+- In `src/render/fxRegistry.test.ts`, "coverage": every ability authors an
+  `fx` block or is on `ABILITIES_WITHOUT_FX` with its reason, and every
+  periodic status names a `ticked` key whose descriptor has a `sound`, or
+  that key is on `SILENT_TICKS`; a list entry the catalog no longer needs
+  fails. The four listed, with the reasons read in the code: heal_ally
+  (drawn and heard off `unit:healed`, `BattleRenderer.ts:279`,
+  `eventSounds.ts:74`), dash (the move's slide and `unit:dashed`'s
+  whoosh, `eventSounds.ts:77`; its VFX a Round 12 TODO row),
+  chain_lightning (its arcs off the chain event as `chain_arc`), inspire
+  (the aura renderer). The moment a status ticks on is `ticked`
+  (`config/statuses.json`), not `tick`; the four periodic statuses' keys
+  all carry a sound, so `SILENT_TICKS` is empty.
+- Slightly wider than the cut's line, inside its intent: a periodic status
+  with no `ticked` key at all counts as a silent tick, since it would show
+  and sound nothing either.
+- *Planted failures:* one synthetic catalog holds each gap (an unlisted
+  ability, a stale list entry, a tick whose key has no sound, a periodic
+  status with no key, a stale silent entry), and a second call shows the
+  lists clear what they name. A control on the real catalog: the sword's
+  `fx` removed from `config/abilities.json` fails the coverage test
+  (`unlisted: ["sword"]`) and the melee-key test beside it; restored, `git
+  diff` empty.
+- *Checks:* the fx tests 32 passed; `npm run typecheck` clean after one
+  fix (the status parameter's `fx` needed `| undefined` under
+  `exactOptionalPropertyTypes`).

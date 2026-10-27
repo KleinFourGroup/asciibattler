@@ -90,6 +90,81 @@ describe('fxRegistry — 28 behavior-status overlays', () => {
   });
 });
 
+/**
+ * The coverage guard. The boot asserts check that an authored key resolves;
+ * this checks that nothing goes unauthored: an ability with no `fx` block,
+ * or a periodic status whose tick shows or sounds nothing, fails unless it
+ * is on a list below with its reason, and an entry the catalog no longer
+ * needs fails too.
+ */
+const ABILITIES_WITHOUT_FX: ReadonlyMap<string, string> = new Map([
+  ['heal_ally', 'its heal is drawn and heard off unit:healed (the number, the healtick)'],
+  ['dash', 'the leap is the move slide and the unit:dashed whoosh; a dash VFX is a TODO row'],
+  ['chain_lightning', 'its arcs fire off the chain event, as chain_arc'],
+  ['inspire', 'an aura: the ring and the wavefront are the aura renderer'],
+]);
+/** Ticked keys that are visual only, each with its reason. None today. */
+const SILENT_TICKS: ReadonlyMap<string, string> = new Map();
+
+function fxCoverageGaps(
+  abilities: Record<string, { id: string; fx?: unknown }>,
+  statuses: Record<string, { id: string; periodic?: unknown; fx?: { ticked?: string | undefined } | undefined }>,
+  withoutFx: ReadonlyMap<string, string>,
+  silentTicks: ReadonlyMap<string, string>,
+) {
+  const noFx = Object.values(abilities).filter((d) => d.fx === undefined).map((d) => d.id);
+  const ticks = Object.values(statuses).filter((s) => s.periodic !== undefined);
+  return {
+    unlisted: noFx.filter((id) => !withoutFx.has(id)).sort(),
+    staleListed: [...withoutFx.keys()].filter((id) => !noFx.includes(id)).sort(),
+    silentTicks: ticks
+      .filter((s) => {
+        const key = s.fx?.ticked;
+        return key === undefined || (fxDescriptor(key)?.sound === undefined && !silentTicks.has(key));
+      })
+      .map((s) => s.id)
+      .sort(),
+    staleSilent: [...silentTicks.keys()]
+      .filter((key) => !ticks.some((s) => s.fx?.ticked === key) || fxDescriptor(key)?.sound !== undefined)
+      .sort(),
+  };
+}
+
+describe('fxRegistry — coverage', () => {
+  it('every ability authors fx or is listed, every periodic tick has a key and a sound or is listed', () => {
+    expect(fxCoverageGaps(ABILITY_DEFS, STATUS_DEFS, ABILITIES_WITHOUT_FX, SILENT_TICKS)).toEqual({
+      unlisted: [],
+      staleListed: [],
+      silentTicks: [],
+      staleSilent: [],
+    });
+  });
+
+  it('is not vacuous: the catalogs hold abilities with fx and periodic statuses', () => {
+    expect(Object.values(ABILITY_DEFS).filter((d) => d.fx !== undefined).length).toBeGreaterThan(10);
+    expect(Object.values(STATUS_DEFS).filter((s) => s.periodic !== undefined).length).toBeGreaterThan(1);
+  });
+
+  it('catches each planted gap', () => {
+    const abilities = { a: { id: 'a', fx: {} }, b: { id: 'b' }, c: { id: 'c', fx: {} } };
+    const statuses = {
+      loud: { id: 'loud', periodic: {}, fx: { ticked: 'burn_tick' } },
+      mute: { id: 'mute', periodic: {}, fx: { ticked: 'frozen_active' } },
+      blank: { id: 'blank', periodic: {} },
+      still: { id: 'still', fx: { ticked: 'bleed_tick' } },
+    };
+    expect(fxCoverageGaps(abilities, statuses, new Map([['c', 'has fx now']]), new Map([['poison_tick', 'unused']]))).toEqual({
+      unlisted: ['b'],
+      staleListed: ['c'],
+      silentTicks: ['blank', 'mute'],
+      staleSilent: ['poison_tick'],
+    });
+    expect(
+      fxCoverageGaps(abilities, statuses, new Map([['b', 'why']]), new Map([['frozen_active', 'why']])).silentTicks,
+    ).toEqual(['blank']);
+  });
+});
+
 describe('fxRegistry — boot assert', () => {
   it('passes for the shipped ability catalog (every fx key resolves)', () => {
     expect(() => assertFxKeysResolve(ABILITY_DEFS)).not.toThrow();

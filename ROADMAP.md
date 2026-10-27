@@ -53,7 +53,8 @@ The cut, signed 2026-10-27 (WORKLOG §135, "The kickoff's audit"):
   tables; the sampler refuses a sector mismatch at launch.
 - ☑ **135c — `box-drive.sh` takes mixed queues** (`none`). Each batch
   checks its own artifact; `--plan` shows them before a box.
-- ☐ **135d — `FX_REGISTRY`'s coverage guard** (`none`).
+- ☑ **135d — `FX_REGISTRY`'s coverage guard** (`none`). Four abilities
+  listed with reasons; every periodic tick sounds.
 - ☐ **135e — the deleted action classes out of the docs** (`none`).
 - ☐ **135f — the rarity stars take the long-press inside a control**
   (`batch`).

@@ -396,3 +396,41 @@ interpreter.
   ARCHITECTURE's `actions/` line and #8 (a search of the tracked docs
   outside the archive).
 - *Checks:* the interpreter tests 35 passed.
+- *A prediction missed:* the cut said 135e would not fire the fuzz smoke;
+  the restored pin is a `src/sim/` test, so it did (553 passed).
+
+### 135f — the rarity stars take the long-press inside a control (2026-10-27)
+
+- *Step zero:* the hand's cards are controls only while a packet is armed
+  or a grant is active (`PreTurnScreen.ts:702`, `selectable`), and the card
+  list's only while it picks (`picking`), so the fix passes those, not
+  `true`: `renderHandCard` takes `selectable` and builds with `clickable:
+  selectable`, and the card list builds with `clickable: picking`. Both
+  sites drop the class they added after the build, since `buildUnitCard`
+  adds it for a clickable card (`UnitCard.ts:196-199`).
+- *The oracle changed, and is flagged:* the cut named a headless pin, but
+  no test can build a DOM (Vitest runs with `environment: 'node'`,
+  `vite.config.ts:187`; no DOM library is installed, a search of
+  `node_modules`; no test file sets another environment, a search for
+  `vitest-environment`). Adding one is a dependency, outside the cut. The
+  proof is the Browser pane's read of the star run's `data-tooltip-touch`
+  (`tooltip.ts:209`), which the route sets, in four states on the dev build
+  `0.1.1+0f5f3dc-dirty-dev`, seed 6, the soldier:
+  - the first pre-turn screen, the empower grant active: 6 cards, all
+    clickable, stars `press`;
+  - the grant passed (`passGrant`): 0 clickable, stars `tap`, the control;
+  - a Hype packet put in the cache and its chip clicked, armed: 6
+    clickable, stars `press`;
+  - the port's removal picker (the stock rolled, `port:entered` emitted,
+    "Choose" clicked): 10 cards clickable, stars `press`; the same modal
+    opened without a selection: 0 clickable, stars `tap`, the control.
+  The console's errors were the pane's resource cache
+  (`ERR_CACHE_READ_FAILURE`, `ERR_CACHE_OPERATION_NOT_SUPPORTED`), none
+  from a script. What a tap does on a touch screen is the user's read.
+- *The read* (`batch`, at 135g): on a touch screen, `?seed=6&character=soldier`;
+  on the first pre-turn screen, while the soldier's empower grant is up,
+  tap a card's rarity stars: the tier's tooltip opens and the card is not
+  picked. Then at the port at hop 3, "Strike a unit", Choose, and tap the
+  stars in the picker: the same. Wrong looks like the card toggling or
+  the tooltip never opening.
+- `npm run typecheck` clean.

@@ -719,13 +719,12 @@ export class PreTurnScreen extends Screen {
     this.enterPositions = null;
     const enteringNodes: HTMLElement[] = [];
     this.hand.forEach((unit, pos) => {
-      const card = renderHandCard(unit, this.empowerStacks[pos] ?? []);
+      const card = renderHandCard(unit, this.empowerStacks[pos] ?? [], selectable);
       if (entering === 'all' || (entering !== null && entering.has(pos))) {
         card.classList.add('preturn-card-enter');
         enteringNodes.push(card);
       }
       if (selectable) {
-        card.classList.add('unit-card--clickable');
         if (this.selected.has(pos)) card.classList.add('is-selected');
         // A keyboard route (role=button, Enter and Space, src/ui/
         // pressable.ts); the hand re-renders on every pick, so the toggle's
@@ -966,10 +965,19 @@ export class PreTurnScreen extends Screen {
  *  hand shows the same stats, abilities and XP bar as the roster's cards. A
  *  buffed card (its roster slot carries buffs) stacks one `▲` chip per buff
  *  key in the badge corner, each with its own key and mods (the payload's
- *  per-key `EmpowerStackView` list). The selection's classes and click are
- *  the caller's. */
-function renderHandCard(unit: UnitTemplate, stacks: readonly EmpowerStackView[]): HTMLDivElement {
-  const { el } = buildUnitCard(unitCardFromTemplate(unit), { mode: 'full', skin: 'preturn' });
+ *  per-key `EmpowerStackView` list). A `selectable` card is built as a
+ *  control, so its rarity stars take the long-press and a tap is the pick;
+ *  the selection's state and click are the caller's. */
+function renderHandCard(
+  unit: UnitTemplate,
+  stacks: readonly EmpowerStackView[],
+  selectable: boolean,
+): HTMLDivElement {
+  const { el } = buildUnitCard(unitCardFromTemplate(unit), {
+    mode: 'full',
+    skin: 'preturn',
+    clickable: selectable,
+  });
 
   if (stacks.length > 0) {
     const badge = document.createElement('div');

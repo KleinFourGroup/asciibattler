@@ -99,12 +99,14 @@ export class CardListModal {
       grid.appendChild(empty);
     } else {
       for (const { unit, sourceIndex } of orderRosterWithIndices(units, opts?.order)) {
+        // A picker's card is a control, so its rarity stars take the
+        // long-press and a tap is the pick.
         const { el } = buildUnitCard(unitCardFromTemplate(unit), {
           mode: 'full',
           skin: 'roster',
+          clickable: picking,
         });
         if (picking) {
-          el.classList.add('unit-card--clickable');
           cardEls.set(sourceIndex, el);
           // The keyboard route (role=button, Enter and Space,
           // pressable.ts); a toggle, so `aria-pressed` tracks `is-selected`

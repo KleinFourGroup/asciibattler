@@ -168,8 +168,8 @@ function defaultShowAbilities(skin: UnitCardSkin): boolean {
 }
 
 /** Whether a skin is clickable by default: recruit's, whose click is the
- *  pick. The pre-turn hand and the roster's picker add their click and its
- *  class after the build. */
+ *  pick. The pre-turn hand and the roster's picker pass `clickable` when
+ *  their cards are controls, and add the click after the build. */
 function defaultClickable(skin: UnitCardSkin): boolean {
   return skin === 'recruit';
 }

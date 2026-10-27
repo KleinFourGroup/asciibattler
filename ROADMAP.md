@@ -57,8 +57,8 @@ The cut, signed 2026-10-27 (WORKLOG §135, "The kickoff's audit"):
   listed with reasons; every periodic tick sounds.
 - ☑ **135e — the deleted action classes out of the docs** (`none`). Seven
   passages rewritten, none retired; #109's lost pin restored.
-- ☐ **135f — the rarity stars take the long-press inside a control**
-  (`batch`).
+- ◐ **135f — the rarity stars take the long-press inside a control**
+  (`batch`). Built and read in the pane; the touch read is 135g's.
 - ☐ **135g — the phase's close** (`stop`).
 
 ## Phase 136 — the trial's switch and arms, headless

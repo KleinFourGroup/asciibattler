@@ -83,3 +83,27 @@ closed-form mean within 0.0004 of the sampled one at six settings; 0.194
 at the proposal's setting, 133c's figure). The table is the spec's.
 `Math.pow` with a fractional exponent is already in the sim's path
 (`src/sim/xp.ts:17`), so the draw adds no new kind of float operation.
+
+### Tranche 2 answered in part; the follow-ups on defense and true misses (2026-10-27)
+
+The user's answers and two follow-ups are in the spec's "The trial",
+with `scratch/134/defense.mjs`'s numbers. Read for them at HEAD:
+`World.dealDamage` deals `max(STATS.minDamage, rawDamage − defense)`, both
+integers (`src/sim/World.ts:702-711`; `minDamage` 1 in
+`config/stats.json`); `applyDamage` takes the crit, drawn by the op before
+it, then the hit roll, so `combatRng`'s order per strike is crit, then
+hit, and a miss discards the crit (`:766-768`, `:803-804`); a miss fires
+`dealMiss` and `evade`, and no config entry hooks either (a search of
+`config/`); raw damage is the op's `might` plus its scaling stat
+(`src/sim/effects/resolveScalars.ts:41`); base defense runs 0 to 6 across
+the archetypes.
+
+**A correction to 133c:** three shipped rules hook a hit, not two. 133c
+counted the daemons' (Laverna, bits on a rogue's hit; Fortuna,
+`emboldened` on a crit), and the Venom packet injects one more for an
+encounter, poison on every hit (`config/packets.json`).
+
+**Put to the user:** the mixture as a third arm, since at `s` 0.5 it
+matches `b` 0.25 on spread and visibility and differs in shape alone; the
+session's lean is three arms, with the board run on the arm the user's
+play picks, before the keep.

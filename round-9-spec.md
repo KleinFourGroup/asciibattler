@@ -163,8 +163,48 @@ spread, and the two aims sit at its two ends. At a hit chance of 0.75:
 The last column is 133c's measure with each arm's own spread, so it
 reads 103 and 556 where 133c, using one spread for both, had 121 and
 about 600. The rest of the trial's decision points (the distribution as
-built; bleed, blind and the two hit-hooking daemons; the bot's sensors;
-the MISS splat) are the trial phase's kickoff.
+built; bleed, blind and the three hit hooks, the Laverna and Fortuna
+daemons and the Venom packet; the bot's sensors; the MISS splat) are the
+trial phase's kickoff.
+
+**Answered** (2026-10-27): "My first read would indeed be to test 0.25
+and 1. I also don't think that we need a full blind trial. We're just
+experimenting here 😁 Agreed with your lean on keep versus roll back?"
+So: two arms, `b` 0.25 and `b` 1, against hit or miss, played labelled;
+the user's play decides keep or roll back, and the board vetoes only a
+broken game, against lines written before the trial. The last sentence's
+question mark was read as agreement and said so.
+
+The user's two follow-ups, answered by `scratch/134/defense.mjs` (its
+controls: the exact rounded mean against a sampled one, 2.2780 and
+2.2787; the mixture's against a sampled one, 4.5359 and 4.5339; hit or
+miss's spread, 0.433, and the proposal's, 0.194, recovered at the
+mixture's two ends):
+
+> 1. How is this interacting with defense?
+> 2. Is there any distribution that keeps some odds a full-on miss? I
+>    know it's technically possible here, but very unlikely, right?
+
+- *Defense:* the roll scales the damage after defense, `D = max(1, raw −
+  defense)`, so defense subtracts as today and the mean is today's but for
+  rounding to whole points. At a hit chance of 0.75 the rounded mean is
+  within 1 % of today's at `D` 6 and over (4.52 against 4.50), and 1 to 4
+  % over at `D` 2 and 3; at `D` 1, the minimum damage against heavy armour,
+  it is 0.781 (`b` 0.25) and 0.875 (`b` 1) against today's 0.75. A strike
+  can land for 0: at `D` 6, 5.1 % of strikes at `b` 0.25 and 0.1 % at `b`
+  1; at `D` 1, 21.9 % and 12.5 %. The rounding is a call for the trial
+  phase.
+- *True misses:* a mixture on the same one uniform. Below `m` it misses;
+  above, the rest of the uniform feeds the range, its mean raised to `p /
+  (1 − m)`, so the whole mean stays `p`. With `m = s (1 − p)`, `s` is the
+  share of today's misses kept: 0 the pure range, 1 hit or miss exactly.
+  At `b` 1 and 0.75: `s` 0.25 misses 6.3 % with a spread of 0.250; `s` 0.5
+  misses 12.5 % with 0.306, about `b` 0.25's spread (0.308) and
+  visibility (278 hits against 266) in another shape: clean misses and
+  steady hits, where `b` 0.25 smears the low strikes. It keeps the MISS
+  splat, `unit:missed` and the miss triggers, and the hit hooks fire on
+  87.5 % of strikes rather than 75 % (today) or 100 % (the pure range).
+  Whether it joins the arms is put to the user.
 
 ### The kickoff's own (tranche 3)
 

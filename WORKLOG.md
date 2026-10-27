@@ -216,3 +216,54 @@ reading `process/measurement.md`. What it rests on, read at `2ef78c35`:
   (`src/Game.ts:98`), and `npm run replay` refuses one from another commit
   or a `-dirty` build (`scripts/replay.ts`), so the play runs on a clean
   commit.
+
+### 136b — the strike dial (2026-10-27, `8303ffc5`)
+
+Step zero, read at `bd930ae4`, changed four things inside the cut's
+intent (no Run bump, every arm reachable, the arm on every battle):
+
+- *The run clone.* `cloneRunForRollout` loads the clone with no config
+  (`src/bot/runRollout.ts:60`; `Run.fromJSON`'s doc: "a rollout's clone
+  passes none"), so a dial held in RunConfig alone would let the
+  arbitrated board arm score its run-level rollouts on hit or miss inside
+  a range run. The audit saw this for the World's clone, not the Run's.
+  The clone now takes the live run's arm, and passes no config at `hit`.
+- *The World's version.* Its rule is to bump on any change to the
+  snapshot's shape and never default a missing field on load
+  (`World.ts:85-92`), so WorldSnapshot is v37 with `strike` required, not
+  an optional field absent at `hit`. No stored v36 snapshot exists in
+  `tests`, `src`, `shell`, `scripts` or `tools` (searched in both
+  spellings), and no player keeps one.
+- *Where the World is built.* `BattleScene`, the harness and the walker
+  build from `run.currentEncounter`, not from the payload, so the Run holds
+  the arm (`Run.strike`) and `battle:started` carries it for the replays.
+  `battleWorld` takes it as a required argument, `StrikeArm | undefined`:
+  the 8 calls in code were found by grep (the audit's "nine callers", which
+  136b's commit message repeats, is eight), and the typecheck then named
+  the 16 in tests.
+- *The trace* records the payload's arm, absent at `hit`, so a stored trace
+  replays as before.
+
+Also: the corpus replays past the config stamp (`corpus.ts:30`), so the
+new keys in `config/stats.json` do not trip it; `?strike=` boots past the
+menu to character select, as `?bits=` does; `runCounts` refuses a won
+run with the dial without a change.
+
+**The proofs at `hit`:** the journal corpus, 0 of 30 differ; the fuzz
+diff against `bd930ae4`, PASS on both shapes (`summary.csv`,
+`decisions.csv`, `rosters.csv`). Nothing reads the arm yet (the draw is
+136c), so a plant of the arm itself changes nothing a run sees. The
+controls show instead that the proofs reach and look at each site the arm
+passes through:
+
+| control | where | corpus | fuzz diff |
+|---|---|---|---|
+| C1: the battle rules not installed | `battleWorld`, where the arm enters the World | 4 of 30 | caught (`arm`) |
+| C2: a `hit` run's payload carrying `strike: 'hit'` | `Run`'s emit | 30 of 30 | not caught: play unchanged |
+| C3: the run clone handed `{ drawAmountAdd: 1 }` | `cloneRunForRollout`'s config | cannot see the bot | caught (`arm`: summary, decisions, rosters) |
+
+C1 and C2 by `npm run oracle -- plant --proofs=corpus,fuzz-diff`, each
+proof clean on the unplanted worktree first; C3 by hand in a detached
+worktree, `perf-oracle.sh` run inside it. C2 says the corpus reads each
+payload's keys, so its 0 of 30 is the proof that a `hit` run's payloads
+are byte for byte the ones before the dial.

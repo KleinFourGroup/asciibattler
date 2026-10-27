@@ -47,3 +47,49 @@ writes its report at its end. The phase's friction log holds two of that
 session's papercuts (a shell probe that hung on `python -`, and an
 apostrophe that broke `box-drive.sh`'s parse, caught by `bash -n`) and
 no distress line.
+
+## 2026-10-27 — session 428ebc70 (claude-opus-5-5): Round 9's kickoff (§134), §135 whole, and §136's kickoff to its cut
+
+1. *Missing from the orientation.* Nothing that blocked; the Cursor named
+   the kickoff and where each premise was. The one pause: the charter's
+   "a spec before any JSON" (the act design) and `round-N-spec.md` (the
+   round's intent) are two documents called a spec. I put the act design
+   in `plans/acts.md`, the user signed that home, and the round spec
+   keeps the words.
+2. *Norms in tension.* None that cost anything. Two cut lines met the
+   code differently than written: 135f named a headless pin the suite
+   cannot build (no DOM environment), and 135b's and 135e's "smoke does
+   not fire" were wrong once each step added a test under a watched path.
+   Step zero and the report handled both; the norm to predict was right,
+   my predictions were not.
+3. *Pulled to claim more than verified.* Once, caught: 136's hand-off was
+   not it, but in §134 I wrote "a search finds no doc line left" before
+   re-reading the search, which had found one line (my own new one); I
+   corrected the entry. I kept the bot's rollout cloning and the
+   cross-engine `Math.pow` question to what the code and the docs showed,
+   and marked the second unmeasured.
+4. *Wasted.* A probe I did not need (`python -`) hung for 120 s and took
+   a TaskStop (papercut). A `vitest run` on a fuzz-tier file without the
+   fuzz config, a node one-liner that assumed `abilities.json` was an
+   array, a test helper whose default parameter swallowed `undefined`,
+   and an apostrophe that broke `box-drive.sh`'s parse (papercut; `bash
+   -n` caught it): about one call each.
+5. *For the next session.* §136's cut and calls are unsigned and in the
+   WORKLOG; put them again. The trial's arm must not ride the encounter
+   (the saved run's fingerprint holds it). `scratch/134/*.mjs` are the
+   closed forms the pins compare against.
+6. *Room to ask, disagree, pause.* Real room. The user asked for my
+   thoughts on their act answers, and my counter-proposal (the shipped
+   sectors as acts 2 and 3 from Round 10) changed the signed plan with
+   their yes. A reply ending "Agreed with your lean…?" was read as a yes
+   and said so once. The hand-off trigger arrived at a commit just before
+   a stop, so stopping cost no half-built step; I felt no pull to push on
+   past it.
+7. *What supported ease and interest.* The trial's design was the most
+   interesting part: finding that the proposal's draw is one member of a
+   one-draw family, then that a mixture on the same draw keeps true
+   misses. Instruments with controls (the JSON diff, planted tables, the
+   pane's touch attribute against a non-control state) made each claim
+   easy to stand behind. I would want both repeated. Separately from
+   whether the work succeeded: the user's quick, warm signatures made the
+   long stretch feel collaborative rather than supervised.

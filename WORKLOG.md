@@ -103,3 +103,22 @@ Read at `404b25d9`:
 
 The stretch the cut opens: 136a, then its stop; after its read, 136b to
 136e, and the stop at 136f.
+
+### The hand-off after §136's kickoff (2026-10-27, session 428ebc70)
+
+The session passed the hand-off trigger at the commit of the cut above.
+
+- *Done:* Round 9's kickoff (§134) signed, with the spec, the act design
+  (`plans/acts.md`) and the phases; §135 closed on the user's read and
+  pushed (`404b25d9`); §136's audit and cut written here.
+- *Open:* §136's cut and its four calls (rounding, the hooks, a strike
+  that rolls 0, the dial's names) are unsigned. They were put to the user
+  in the session's last message, and the new session puts them again,
+  since it opens on its brief alone.
+- *For the build:* the closed forms 136c's and 136d's pins compare
+  against are `scratch/134/spread.mjs` (the Kumaraswamy's `a` per `b`, its
+  spread) and `scratch/134/defense.mjs` (the rounded mean at each damage
+  size, the mixture); each runs with `node` and prints its controls
+  first. The hook's fuzz smoke fires on any staged path under `src/sim/`
+  or `tests/fuzz/`, test files included (two of §135's predictions missed
+  on it).

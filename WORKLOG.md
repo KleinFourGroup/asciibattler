@@ -151,3 +151,87 @@ phase's cut. Each Round 9 item re-read at `26d5bcea` against 133b's row:
 
 The phases, drafted from these, are put to the user in the turn's message;
 the ROADMAP takes them once signed.
+
+### The spec and the phases signed (2026-10-27)
+
+The user: "Fully signed, Claude! 😁", covering the six phases as put and
+the spec signed with the plague's cause open. ROADMAP holds §134 ticked
+and §135 to §139; the spec's status line says SIGNED.
+
+## Phase 135 — the board's instruments, and the stars' tap
+
+### The kickoff's audit, and the cut put to the user (2026-10-27)
+
+The premises are tranche 3's above; two more were read for the cut.
+
+- *The roster table's size is its formatting.* Stored, it is 4,616,747
+  bytes on 288,689 lines, written by `JSON.stringify(table, null, 2)`
+  (`tests/fuzz/roster/cli.ts:93`); the same data minified is 1,667,215
+  bytes, 36 % (a parse and re-stringify, this turn). The rows are already
+  deduplicated with a count (133b), so the TODO row's per-bucket
+  distributions would save little more than the formatting does, and
+  would change what a sampled draw draws: a whole roster.
+- *The table keys a sector by its position, not its id:* a bucket is
+  `character|sector|hop` with the sector an index (`gambler|0|1`;
+  `rosterTable.ts:71`, `:76`). Round 10 puts act 1 at index 0, so the
+  buckets measured in The Start would be read for act 1 with nothing to
+  say so. An unknown bucket throws (`rosterTable.ts:23`); a bucket that
+  changed meaning does not.
+
+**The cut** (each step's smoke, save and stream predictions in its line;
+no step bumps a snapshot or adds a stream):
+
+- **135a — the roster table written a row a line, with the sector ids it
+  was built over** (C14; `none`). The builder writes one row per line; the
+  table is re-serialized from its own parse, not rebuilt (the 94h CSVs are
+  box output; step zero checks for them), and its provenance gains the
+  sector ids of 94h's run, `the-start` and `the-deep-end`. Exit: the
+  parsed table equal to today's but for that field, by `npm run oracle`'s
+  parsed diff with a planted changed row failing it; the file about 38 %
+  of today's bytes (predicted). The per-bucket distributions are not
+  built. Smoke fires (`tests/fuzz/`).
+- **135b — the roster table's coverage guard** (C13; `none`). Beside its
+  twin, `tests/prior-table-coverage.test.ts`, with the twin's PENDING
+  acknowledgments, so a new archetype or sector is acknowledged rather
+  than blocking the hook until a box rebuilds the table: every draftable
+  archetype has a row or a PENDING line; every archetype in the table
+  exists; every bucket names a shipped character and a hop inside its
+  sector's length; the provenance's sector ids are the shipped walk's.
+  Planted failures: a missing archetype, a stale one, a changed sector
+  list, each failing it. BALANCE's registry row says v3 and names the
+  guard. Smoke does not fire.
+- **135c — `box-drive.sh` takes mixed queues** (C15; `none`). Step zero
+  reads which artifact each kind of batch writes (`summary.csv`, and
+  `best-strategy.json` for `--search`). Each line's artifact is taken from
+  its own arguments, `--artifact` stays as an override, and a `--plan`
+  flag prints each batch with the artifact its fetch will check and exits
+  before a box is made. Oracle: `--plan` on a planted mixed queue names
+  both artifacts, and with `--artifact=summary.csv` names one for both;
+  the outputs in this file. No box is launched. Smoke does not fire.
+- **135d — `FX_REGISTRY`'s coverage guard** (R18; `none`). In
+  `fxRegistry.test.ts`: every ability carries `fx` or is on an explicit
+  list (heal_ally, dash, chain_lightning, inspire), and every list entry
+  still lacks one; every `*_tick` key carries a `sound` or is on an
+  explicit visual-only list, empty today. Planted failures: an ability
+  without `fx` off the list, and a tick key without a sound. Smoke does
+  not fire.
+- **135e — the deleted action classes out of the docs** (R17; `none`).
+  DESIGN's Combat paragraph (line 69), ARCHITECTURE's line 165, and
+  gotchas #19, #93, #95, #97 and #109, each rewritten against
+  `EffectAction` and the interpreter after reading them, or made a
+  tombstone; #109's retreat timing read against `effects/reposition.ts`
+  first. Before §136, which rewrites the Combat paragraph's to-hit roll.
+  Smoke does not fire.
+- **135f — the rarity stars take the long-press inside a control** (R22;
+  `batch`). `clickable: true` on the pre-turn card and `clickable:
+  picking` in the card list, with a headless pin that the stars take the
+  long-press route in both. Read script: on a touch screen, tap a card's
+  rarity stars in the pre-turn hand and in a port's crew picker; the
+  tier's tooltip opens and the card is not picked; wrong looks like the
+  card toggling. Reachable at any battle's pre-turn screen, and at a port
+  on a seed named at the build. Smoke does not fire.
+- **135g — the phase's close** (`stop`): the report, 135f's read, the
+  phase closed by `process/planning.md` "Phase close".
+
+The stretch the cut opens: 135a to 135f are built without a stop, and the
+session stops at 135g.

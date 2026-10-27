@@ -1,10 +1,12 @@
 # Round 9 Spec — The frame and the damage trial
 
-**Status: DRAFT, unsigned** (2026-10-27, the §134 kickoff). The intent is
-the user's, verbatim, from §133, where the round was cut. What was signed
-before the kickoff is listed with its date. The Open section is what the
-kickoff and the round still have to settle, with the session's leans
-marked as leans. The charter is [META-ROADMAP.md](META-ROADMAP.md)
+**Status: SIGNED 2026-10-27** ("Fully signed, Claude! 😁", with the
+round's phases), the plague's cause and act 4's condition left open as
+the user's, for Rounds 22 and 23, which need them (plans/acts.md). The
+intent is the user's, verbatim, from §133, where the round was cut. What
+was signed before the kickoff is listed with its date. The Open section
+is what the round still has to settle, with the session's leans marked
+as leans. The charter is [META-ROADMAP.md](META-ROADMAP.md)
 §"Round 9 — The frame and the damage trial"; the record is
 [WORKLOG.md](WORKLOG.md) "Kickoff — Round 9"; the plan is
 [ROADMAP.md](ROADMAP.md) §134.

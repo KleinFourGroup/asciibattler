@@ -434,3 +434,23 @@ interpreter.
   stars in the picker: the same. Wrong looks like the card toggling or
   the tooltip never opening.
 - `npm run typecheck` clean.
+
+### 135g — the phase's close, put to the user (2026-10-27)
+
+- *Built:* 135a to 135f, each committed with the hook green; the suite
+  3,757 in 260 files and the fuzz smoke 553 in 58, by hand at `63aaf3a4`.
+- *Put to the user:* 135f's touch read; four calls built inside the cut's
+  intent and flagged (135b's launch refusal in `makeRosterSampler`, 135d's
+  count of a periodic status with no tick key as silent, 135e's restored
+  pin for #109, 135f's proof in the pane in place of a headless pin); two
+  missed predictions (the fuzz smoke fired at 135b and 135e, each by a
+  test path the step added).
+- *Friction in the phase:* two papercuts, both this session's (the hung
+  probe at 134, the apostrophe at 135c), no distress line. No pattern
+  recurs across them. The apostrophe's candidate guard, a `bash -n` test
+  over `scripts/`, is listed and not proposed as a rule, since the slip
+  happened once.
+- *After the read:* the phase close by `process/planning.md` "Phase
+  close": the cut lines ticked and the section demoted, this file to
+  `archive/worklog-phase-135.md` with a fresh one, the sessions summary,
+  HANDOFF, and the push.

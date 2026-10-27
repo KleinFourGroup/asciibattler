@@ -78,11 +78,12 @@ The cut, signed 2026-10-27 (no step adds an RNG stream):
   World v37 by its convention, and the run clone takes the arm (WORKLOG).
 - ☑ **136c — the range's draw** (`none`). `3e35aa85`: pinned through
   `applyDamage` against a quadrature; a planted wrong `a` caught (WORKLOG).
-- ☐ **136d — the mixture** (`none`). Its misses on the same uniform, the
-  zeros among them; pinned the same way.
-- ☐ **136e — a 0 is a miss, and the hooks ride every strike that deals
-  damage** (`none`). Planted: a hook on a 0, a 0 that turns a camp.
-- ☐ **136f — the phase's close** (`stop`).
+- ☑ **136d — the mixture** (`none`). `c3295d38`: pinned the same way,
+  with the share of misses; a planted miss share caught (WORKLOG).
+- ☑ **136e — a 0 is a miss, and the hooks ride every strike that deals
+  damage** (`none`). `c3af910f`: pins only (136c built it); both plants
+  caught (WORKLOG).
+- ◐ **136f — the phase's close** (`stop`). Put to the user 2026-10-27.
 
 ## Phase 137 — the trial on screen
 

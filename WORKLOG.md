@@ -303,3 +303,89 @@ mean. The code's solver is never called by the expectation.
 **At `hit`:** the journal corpus, 0 of 30 differ; the fuzz diff against
 `0ed33cdc`, PASS on both shapes. `applyDamage`'s refactor (`missStrike`,
 `afterDefense`) is covered by both.
+
+### 136d — the mixture (2026-10-27, `c3295d38`)
+
+The whole misses sit below `m = s·(1 − p)` on the strike's uniform, as
+the spec reads ("Below `m` it misses"); the rest, rescaled, feeds the
+share at the mean `p / (1 − m)`. A whole miss draws once.
+
+The pin extends 136c's: `mix`'s mean, spread and share of misses (whole
+misses plus rounded zeros) against the quadrature in every cell; the
+spec's 12.5 % whole misses at p 0.75 and 6 damage; and two in-test
+controls it must tell, a 10 % wrong `a` (by the spread and mean) and 0.4
+of the misses kept for 0.5 (by the share of misses, whose four standard
+errors at 80,000 strikes are 0.006 against a 0.04 difference). The code
+plant, `--op=sign` on `World.ts:844` (`1 − p` to `1 + p` in the miss
+share): caught by the suite, in `strike.test.ts`.
+
+**At `hit`:** the journal corpus, 0 of 30 differ; the fuzz diff against
+`6a7aad0d`, PASS on both shapes.
+
+### 136e — what rides a range strike (2026-10-27, `c3af910f`)
+
+No code: 136c already sends a strike that rounds to 0 down the miss path,
+which is where the signed rule puts it, so a status, `dealHit` (the hook
+the daemons' rules and the Venom packet register on) and a camp's turn
+ride exactly the strikes that deal damage. The step is the pins, on every
+range arm at 1 damage after defense, where zeros are common:
+
+- `dealHit` fires on every strike that deals damage, with its damage, and
+  on no other; `dealMiss` and `evade` on each 0 (`strike.test.ts`);
+- a status op after the damage op rides exactly the damaging strikes
+  (`interpreter.test.ts`, on `range-1`);
+- a camp turns on a damaging strike and never on a 0, over first strikes
+  on fresh worlds until five of each (`strike.test.ts`).
+
+**The controls** (by hand in a detached worktree of `c3af910f`, the two
+files run clean first, 52 passed): `damage === 0` made `damage < 0` in
+`applyDamage`, so a 0 lands as a 0-damage hit. Five tests failed: the
+status pin and the `dealHit` pin (a hook on a 0), the camp pin (a 0 that
+turns a camp), and 136c's and 136d's miss shares.
+
+### The phase's exit, read at `c3af910f`
+
+- *The switch off byte-identical, with a failing control:* 136b, 136c and
+  136d each held the corpus at 0 of 30 and the fuzz diff at PASS; the
+  controls are in each entry.
+- *Each arm's mean and spread pinned against a derivation the code does
+  not consult:* 136c and 136d, with their planted controls.
+- *Every arm reachable by the dial:* the fuzz command line on each arm,
+  8 seeds at 4 hops, gave four different `summary.csv`s, `--strike=hit`
+  gave the bytes no flag gives (`bccbcfa55405` both), and `--strike=range-2`
+  was refused with the arm list; wall time 12.2 to 12.5 s an arm, one run
+  each, so no cost was seen (not a benchmark). In the page, the probe
+  runner (`scratch/136/strike-probe.js`, a hidden Electron window, build
+  `c3af910-dirty`) drove seed 7 to its first battle and read the live
+  World's arm: `range-1` and `mix` from their dials, `hit` with none.
+  `BattleScene`, which no headless proof loads, is that path.
+
+### §136's close, put to the user (2026-10-27)
+
+**Built, each read `none`:** the dial and its path to every World (136b),
+the range's draw (136c), the mixture (136d), and the pins on what rides a
+strike (136e). Changes made inside the cut's intent and flagged: the run
+clone takes the live arm; WorldSnapshot v37 with `strike` required; the
+Run holds the arm because three builders read the Run, not the event; the
+trace keeps the arm; `--strike` as its own fuzz flag (flagged at 136a);
+the zero-as-miss built in 136c rather than 136e, since that is how a 0
+resolves.
+
+**Not verified:** anything on screen (§137: a range strike's number, a 0's
+MISS, the readouts); the journal's replay across engines (the bar's hold,
+§138); any board number on an arm (§138); the bot on a range arm (no bot
+change, by the scope guard); Firefox.
+
+**The friction read.** The phase filed two lines (136a, 136b), no
+`distress`:
+
+- *A known trap met twice:* `python` here is the Store alias, which waits,
+  and a needless call to it hung the Bash tool for its full 120 s at §134
+  (session 428ebc70) and again at 136b (this session), each about two
+  minutes and a TaskStop. `process/shell-and-windows.md` says nothing of
+  it. A candidate guard for the user: one line there, "`python` and
+  `python3` on this machine are the Store's alias and wait; use `node`".
+- *An audit's claim carried through a hand-off:* the fuzz CLI's forwarding
+  (136a, about six calls), with "nine callers" (eight) and the run clone's
+  config (136b) found the same way. Step zero caught each before a build
+  rested on it, so this is the rule working; listed and left.

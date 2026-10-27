@@ -62,10 +62,9 @@ no distress line.
    not fire" were wrong once each step added a test under a watched path.
    Step zero and the report handled both; the norm to predict was right,
    my predictions were not.
-3. *Pulled to claim more than verified.* Once, caught: 136's hand-off was
-   not it, but in §134 I wrote "a search finds no doc line left" before
-   re-reading the search, which had found one line (my own new one); I
-   corrected the entry. I kept the bot's rollout cloning and the
+3. *Pulled to claim more than verified.* Once, caught: in §134 I wrote "a
+   search finds no doc line left" before re-reading the search, which had
+   found one line (my own new one); I corrected the entry. I kept the bot's rollout cloning and the
    cross-engine `Math.pow` question to what the code and the docs showed,
    and marked the second unmeasured.
 4. *Wasted.* A probe I did not need (`python -`) hung for 120 s and took

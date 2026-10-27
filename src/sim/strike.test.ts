@@ -242,6 +242,58 @@ describe('the mixture through applyDamage', () => {
   });
 });
 
+describe('what rides a range strike: damage, and never a 0', () => {
+  it('dealHit fires on every strike that deals damage and on no other; a 0 fires dealMiss and evade', () => {
+    for (const arm of ['range-0.25', 'range-1', 'mix'] as const) {
+      // 4 against defense 6 leaves 1, where zeros are common.
+      const { world, attacker, target } = duel(arm, 6, 136);
+      const hits: number[] = [];
+      let dealMisses = 0;
+      let evades = 0;
+      world.registerTrigger('dealHit', ({ damage }) => hits.push(damage));
+      world.registerTrigger('dealMiss', () => dealMisses++);
+      world.registerTrigger('evade', () => evades++);
+      const landed: number[] = [];
+      for (let i = 0; i < 4000; i++) {
+        target.currentHp = 1_000_000;
+        world.applyDamage(attacker.id, target, 4, { crit: false, evadable: true, accuracy: 0.6 });
+        landed.push(1_000_000 - target.currentHp);
+      }
+      const zeros = landed.filter((x) => x === 0).length;
+      expect(hits, arm).toEqual(landed.filter((x) => x > 0));
+      expect(dealMisses, arm).toBe(zeros);
+      expect(evades, arm).toBe(zeros);
+      expect(zeros, arm).toBeGreaterThan(0);
+      expect(hits.length, arm).toBeGreaterThan(0);
+    }
+  });
+
+  it('a camp turns on a strike that deals damage, and never on a 0', () => {
+    let zeros = 0;
+    let damaging = 0;
+    for (let seed = 1; seed < 400 && (zeros < 5 || damaging < 5); seed++) {
+      const world = new World(new EventBus<GameEvents>(), new RNG(1), 12, 12, undefined, new RNG(seed));
+      world.setStrike('range-1');
+      world.installCamps(
+        [{ id: 1, defId: 'bandit-squatters', anchor: { x: 3, y: 0 }, hostileTo: new Set(), pending: [], killedBy: null }],
+        new RNG(31),
+      );
+      const stats = (def: number): UnitStats => ({ ...ARCHETYPE_CONFIG.mercenary.baseStats, defense: def, precision: 0, evasion: 0 });
+      const attacker = new Unit({ id: 1, team: 'player', archetype: 'mercenary', glyph: 'M', stats: stats(0), derived: deriveStats(stats(0), 1), position: { x: 1, y: 0 } });
+      const member = new Unit({ id: 2, team: 'neutral', archetype: 'mercenary', glyph: 'M', stats: stats(6), derived: deriveStats(stats(6), 1), position: { x: 3, y: 0 }, campId: 1 });
+      world.placeUnits(attacker, member);
+      const before = member.currentHp;
+      world.applyDamage(attacker.id, member, 4, { crit: false, evadable: true, accuracy: 0.6 });
+      const dealt = before - member.currentHp;
+      expect(world.campHostileTo(1, 'player'), `seed ${seed}, dealt ${dealt}`).toBe(dealt > 0);
+      if (dealt > 0) damaging++;
+      else zeros++;
+    }
+    expect(zeros).toBeGreaterThanOrEqual(5);
+    expect(damaging).toBeGreaterThanOrEqual(5);
+  });
+});
+
 describe('the draw', () => {
   it('lands the whole damage at a hit chance of 1, as hit or miss always hits there', () => {
     for (const u of [0, 0.3, 0.999]) expect(strikeShare(u, 1, 0.25)).toBe(1);

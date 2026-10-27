@@ -235,3 +235,27 @@ no step bumps a snapshot or adds a stream):
 
 The stretch the cut opens: 135a to 135f are built without a stop, and the
 session stops at 135g.
+
+**Signed** (the user, 2026-10-27: "That looks great, Claude! 😁 Fully
+signed!"): the cut and its reads as put.
+
+### 135a — the roster table a row a line, with its sector ids (2026-10-27)
+
+- *Step zero:* the 94h sources are box output and not rebuilt from; the
+  sector map has no commit since the table's measurement head (`git log
+  4d3fa22..HEAD -- config/sector-map.json`, empty), so the ids the 94h
+  run walked are the shipped map's.
+- *The proof:* `npm run oracle -- json-diff` of the table before and after
+  finds one difference, `added provenance.sectors` (`["the-start",
+  "the-deep-end"]`); the control, the after-table with one row's `n`
+  raised by one, finds two, the added field and `changed
+  rows.gambler|0|1[].n`. The file is 1,773,061 bytes on 15,138 lines,
+  against 4,616,750 on 288,689: 38.4 %, the 38 % predicted.
+- The builder writes the format (`serializeRosterTable`), with a test
+  that it parses back to the table and holds one line a composition; the
+  sector ids come from `sectorPositions`, which throws on a map where a
+  position names more than one sector (tested on three such maps).
+  `scratch/135a/` holds the one-off rewrite, the before-table and the
+  planted copy.
+- *Checks:* the roster tests 17 passed under the fuzz config (14 before);
+  `npm run typecheck` clean.

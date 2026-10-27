@@ -61,6 +61,11 @@ export interface RosterProvenance {
   readonly builtAt: string;
   /** The sidecars swept — repo-root-relative, forward slashes. */
   readonly sources: readonly string[];
+  /** The sector ids by position, the index a bucket key names, from the
+   *  sector map at the build (`sectorPositions`). A key keeps its index when
+   *  the map changes, so this is what tells a reader which sector a bucket
+   *  was measured in. */
+  readonly sectors: readonly string[];
   readonly note?: string;
 }
 
@@ -77,6 +82,54 @@ export interface RosterTable {
  *  key is always the (sector, hop) pair — never bare hop. */
 export function rosterKeyOf(character: string, sector: number, hop: number): string {
   return `${character}|${sector}|${hop}`;
+}
+
+/** The sector ids a run walks, by position: the provenance's `sectors`.
+ *  Only a map that is one chain of nodes with one candidate each gives a
+ *  position one sector, so any other map throws rather than record a
+ *  position that names several. */
+export function sectorPositions(map: {
+  readonly nodes: readonly { readonly id: string; readonly sectors: readonly string[] }[];
+  readonly edges: readonly { readonly from: string; readonly to: string }[];
+  readonly sources: readonly string[];
+}): string[] {
+  if (map.sources.length !== 1) {
+    throw new Error(`roster:table: the sector map has ${map.sources.length} sources — a position would name several sectors`);
+  }
+  const ids: string[] = [];
+  let nodeId: string | undefined = map.sources[0];
+  while (nodeId !== undefined) {
+    const node = map.nodes.find((n) => n.id === nodeId);
+    if (node === undefined || node.sectors.length !== 1) {
+      throw new Error(`roster:table: sector-map node '${nodeId}' has ${node?.sectors.length ?? 0} candidates — a position would name several sectors`);
+    }
+    ids.push(node.sectors[0]!);
+    const next = map.edges.filter((e) => e.from === nodeId);
+    if (next.length > 1) {
+      throw new Error(`roster:table: sector-map node '${nodeId}' branches — a position would name several sectors`);
+    }
+    nodeId = next[0]?.to;
+  }
+  return ids;
+}
+
+/** The table as committed: JSON with one row a line, so the file is about
+ *  a third of a pretty-printed one and a rebuild diffs by composition.
+ *  `JSON.parse` of it equals the table. */
+export function serializeRosterTable(table: RosterTable): string {
+  const indent = (text: string, by: string): string => text.split('\n').join(`\n${by}`);
+  const buckets = Object.entries(table.rows).map(
+    ([key, rows]) =>
+      `    ${JSON.stringify(key)}: [\n` + rows.map((r) => `      ${JSON.stringify(r)}`).join(',\n') + '\n    ]',
+  );
+  return (
+    '{\n' +
+    `  "provenance": ${indent(JSON.stringify(table.provenance, null, 2), '  ')},\n` +
+    `  "battles": ${JSON.stringify(table.battles)},\n` +
+    '  "rows": {\n' +
+    buckets.join(',\n') +
+    '\n  }\n}\n'
+  );
 }
 
 const CSV_HEADER = 'seed,strategy,character,sector,hop,archetypes,levels';

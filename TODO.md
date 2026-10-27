@@ -160,7 +160,7 @@ META-ROADMAP §"Round 9 — The frame and the damage trial" names each row's pla
       the builder loud-throws on unknown archetypes but membership drift
       is silent until the next `--roster=sampled` read.
 
-- [ ] **Compact `roster-table.json`** — v2 (92h) is 4.7 MB / 21,519 raw rows against v1's 1.1 MB; the `--roster=sampled` reader needs per-(character, sector, hop) distributions, not rows — store those (a builder change + a format bump), and the coverage twin of the prior tripwire (the Round 6 rider above) lands with it.
+- ✅ **Compact `roster-table.json`** — written a row a line, 4,616,750 → 1,773,061 bytes, with the sector ids by position in its provenance; the per-bucket distributions not built, since the rows were already deduplicated and a sampled draw draws a whole roster (WORKLOG §135, 135a).
 
 - [ ] **`box-drive.sh`: one artifact KIND per cohort** — a mixed queue (a shadow batch + a search) HELD its box on the second fetch because `--artifact` is cohort-wide (92g). Either refuse mixed queues up front or accept a per-line `# artifact=<file>` override.
 

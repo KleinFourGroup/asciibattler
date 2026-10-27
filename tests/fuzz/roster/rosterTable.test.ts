@@ -21,6 +21,8 @@ import {
   resolveMeasurementHead,
   rosterKeyOf,
   sampleRoster,
+  sectorPositions,
+  serializeRosterTable,
   type RosterCsvRow,
   type RosterProvenance,
   type RosterTable,
@@ -32,6 +34,7 @@ const PROV: RosterProvenance = {
   buildHead: 'abc1234',
   builtAt: '2026-08-30T00:00:00.000Z',
   sources: ['tests/fuzz/output/fixture/rosters.csv'],
+  sectors: ['the-start', 'the-deep-end'],
 };
 
 const csvRow = (over: Partial<RosterCsvRow> = {}): RosterCsvRow => ({
@@ -120,11 +123,52 @@ describe('buildRosterTable', () => {
     expect(JSON.stringify(a)).toBe(JSON.stringify(b));
   });
 
+  it('is committed a row a line, and parses back to the table', () => {
+    const table = buildRosterTable(
+      [csvRow(), csvRow(), csvRow({ levels: [6, 5] }), csvRow({ hop: 2 }), csvRow({ character: 'priest' })],
+      { ...PROV, note: 'fixture' },
+    );
+    const text = serializeRosterTable(table);
+    expect(JSON.parse(text)).toEqual(table);
+    const rowLines = text.split('\n').filter((l) => l.trimStart().startsWith('{"archetypes"'));
+    expect(rowLines).toHaveLength(4); // the four compositions, one line each
+    expect(text.endsWith('}\n')).toBe(true);
+  });
+
   it('refuses an empty build and an unknown archetype', () => {
     expect(() => buildRosterTable([], PROV)).toThrowError(/0 roster rows/);
     expect(() =>
       buildRosterTable([csvRow({ archetypes: ['gremlin', A[0]!], levels: [5, 5] })], PROV),
     ).toThrowError(/unknown archetype 'gremlin'/);
+  });
+});
+
+describe('sectorPositions', () => {
+  const chain = {
+    nodes: [
+      { id: 'a', sectors: ['first'] },
+      { id: 'b', sectors: ['second'] },
+    ],
+    edges: [{ from: 'a', to: 'b' }],
+    sources: ['a'],
+  };
+
+  it('reads a chain of one-candidate nodes as its sector ids in order', () => {
+    expect(sectorPositions(chain)).toEqual(['first', 'second']);
+  });
+
+  it('throws on a map where a position would name more than one sector', () => {
+    expect(() => sectorPositions({ ...chain, nodes: [chain.nodes[0]!, { id: 'b', sectors: ['x', 'y'] }] })).toThrow(
+      /candidates/,
+    );
+    expect(() =>
+      sectorPositions({
+        ...chain,
+        nodes: [...chain.nodes, { id: 'c', sectors: ['third'] }],
+        edges: [...chain.edges, { from: 'a', to: 'c' }],
+      }),
+    ).toThrow(/branches/);
+    expect(() => sectorPositions({ ...chain, sources: ['a', 'b'] })).toThrow(/sources/);
   });
 });
 

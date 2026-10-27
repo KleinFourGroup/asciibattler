@@ -45,6 +45,17 @@ compaction built with the sampled rosters unchanged, or recorded as a
 no-op; the docs true to the code; the tap read on touch by the user.
 **Scope guards:** no sim change; no board run.
 
+The cut, signed 2026-10-27 (WORKLOG §135, "The kickoff's audit"):
+
+- ☐ **135a — the roster table a row a line, with its sector ids** (`none`).
+- ☐ **135b — the roster table's coverage guard** (`none`).
+- ☐ **135c — `box-drive.sh` takes mixed queues** (`none`).
+- ☐ **135d — `FX_REGISTRY`'s coverage guard** (`none`).
+- ☐ **135e — the deleted action classes out of the docs** (`none`).
+- ☐ **135f — the rarity stars take the long-press inside a control**
+  (`batch`).
+- ☐ **135g — the phase's close** (`stop`).
+
 ## Phase 136 — the trial's switch and arms, headless
 
 **Charter:** the bar written first; then the config switch, the range's

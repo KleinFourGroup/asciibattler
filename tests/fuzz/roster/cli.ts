@@ -19,6 +19,7 @@
 import { execSync } from 'node:child_process';
 import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
+import { SECTOR_MAP } from '../../../src/config/sectorMap';
 import { readBatchManifest } from '../manifest';
 import {
   ROSTER_TABLE_PATH,
@@ -26,6 +27,8 @@ import {
   parseRostersCsv,
   renderRosterTable,
   resolveMeasurementHead,
+  sectorPositions,
+  serializeRosterTable,
   type RosterCsvRow,
 } from './rosterTable';
 
@@ -88,9 +91,10 @@ function main(): void {
     buildHead,
     builtAt: new Date().toISOString(),
     sources,
+    sectors: sectorPositions(SECTOR_MAP),
     ...(note !== undefined ? { note } : {}),
   });
-  writeFileSync(out, JSON.stringify(table, null, 2) + '\n');
+  writeFileSync(out, serializeRosterTable(table));
   process.stdout.write(renderRosterTable(table));
   process.stdout.write(`Wrote ${out} (${rows.length} rows read)\n`);
 }

@@ -106,4 +106,48 @@ encounter, poison on every hit (`config/packets.json`).
 **Put to the user:** the mixture as a third arm, since at `s` 0.5 it
 matches `b` 0.25 on spread and visibility and differs in shape alone; the
 session's lean is three arms, with the board run on the arm the user's
-play picks, before the keep.
+play picks, before the keep. Signed ("Let's add it! 😁"); the spec has it.
+
+### Tranche 3: the charter's premises at HEAD (2026-10-27)
+
+The user asked whether the ROADMAP comes before the first phase's plan;
+it does (`process/planning.md` "The artifacts" and "Phase kickoff"): the
+round's phases with their durable parts are signed first, then the first
+phase's cut. Each Round 9 item re-read at `26d5bcea` against 133b's row:
+
+- *C13 holds:* no coverage test for `tests/fuzz/board/roster-table.json`,
+  whose readers are `tests/fuzz/roster/cli.ts` and `rosterTable.ts` (a
+  search of `src`, `tests` and `tools`); the twin to copy,
+  `tests/prior-table-coverage.test.ts`, is there.
+- *C14:* the table is still the v3 of 94h (its `provenance`, build head
+  `4d3fa22`), 4,616,750 bytes, as 133b read; its rows were not re-counted.
+- *C15 holds:* one `--artifact` for the cohort (`scripts/box-drive.sh:23-29`,
+  `:50`).
+- *R17 holds:* `DESIGN.md:69`, `ARCHITECTURE.md:165`, and gotchas #19, #93,
+  #95, #97 and #109 still name `AttackAction` or `GambitStrikeAction`;
+  `src/sim/actions/` holds the move, spawn, swap and wait actions. DESIGN's
+  line 69 is also the Combat paragraph the trial rewrites, since it
+  describes the to-hit roll.
+- *R18 holds:* `assertFxKeysResolve` and `assertStatusFxKeysResolve` check
+  resolution only (`src/render/fxRegistry.ts:291`, `:309`); 4 of 24
+  abilities ship no `fx` (heal_ally, dash, chain_lightning, inspire).
+- *R22 holds:* the stars' route follows `defaultClickable`
+  (`src/ui/UnitCard.ts:173`, `:196`); the pre-turn card
+  (`PreTurnScreen.ts:972`) and the card list (`CardListModal.ts:102`) are
+  built without `clickable`.
+- *The trial:* an evadable strike draws once, after the op's crit draw
+  (`World.ts:803-804`); `unit:missed` is heard by the battle renderer's
+  splat (`BattleRenderer.ts:249`, `:1136`) and the sound map
+  (`src/audio/eventSounds.ts:120`), and the journal corpus lists it; the UI
+  shows a hit chance twice, the ability detail's "% hit"
+  (`src/ui/abilityDetail.ts:108`) and the promotion delta's dodge share
+  from evasion (`src/ui/promotionDelta.ts:74-75`).
+- *The bot reads no hit chance:* a search of `src/bot`, the `.ts` files
+  under `tests/fuzz` and `tools` for `hitChance`, `evasion`, `precision`
+  and `accuracy` finds only the editors' authoring fields
+  (`tools/archetype-editor`, `tools/attack-editor`, `tools/layout-editor`),
+  so the charter's "the bot's sensors that read a hit chance" names
+  nothing at HEAD.
+
+The phases, drafted from these, are put to the user in the turn's message;
+the ROADMAP takes them once signed.

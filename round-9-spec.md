@@ -204,7 +204,11 @@ mixture's two ends):
   steady hits, where `b` 0.25 smears the low strikes. It keeps the MISS
   splat, `unit:missed` and the miss triggers, and the hit hooks fire on
   87.5 % of strikes rather than 75 % (today) or 100 % (the pure range).
-  Whether it joins the arms is put to the user.
+
+**The third arm** (the user, 2026-10-27: "Let's add it! 😁"): the mixture
+at `b` 1 and `s` 0.5 joins the arms. So three, `b` 0.25, `b` 1, and `b` 1
+with half of today's misses kept, against hit or miss; the veto board
+runs on the arm the user's play picks, before the keep.
 
 ### The kickoff's own (tranche 3)
 

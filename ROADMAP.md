@@ -11,7 +11,7 @@ plan: [archive/post-118-roadmap.md](archive/post-118-roadmap.md) (Round
 8.5) with its worklog, spec and census beside it; before it
 [archive/post-109-roadmap.md](archive/post-109-roadmap.md) (Round 8).
 
-**Status: §135 closed 2026-10-27; §136's kickoff is next.** The spec is [round-9-spec.md](round-9-spec.md); the act
+**Status: §136's cut signed 2026-10-27; 136a is in progress.** The spec is [round-9-spec.md](round-9-spec.md); the act
 design it asked for is [plans/acts.md](plans/acts.md). The charter is
 META-ROADMAP §"Round 9 — The frame and the damage trial"; the premises
 re-read at HEAD are `archive/worklog-phase-135.md` "Kickoff — Round 9", tranche 3.
@@ -59,14 +59,30 @@ today's misses kept, against hit or miss ([round-9-spec.md](round-9-spec.md)
 "The trial"). **Why here:** a rule change before anything is balanced on
 it, and headless before render, so the eye reads only what is visual.
 **Risk:** medium; the switch keeps a rollback cheap. **Decision points:**
-the bar; the rounding at small damage (at `D` 1 the rounded mean is 0.875
-against 0.75); what bleed, blind and the three hit hooks (Laverna,
-Fortuna, Venom) do when every strike lands. **Exit:** the switch off
+the bar; ✅ DECIDED the rounding at small damage: by chance, the fraction
+as its odds, so the mean is exact at every damage; ✅ DECIDED bleed, blind
+and the three hit hooks: they ride every strike that deals damage, and a
+strike that deals 0 is a miss (WORKLOG §136, "The cut signed"). **Exit:** the switch off
 byte-identical under the corpus and the fuzz diff, with a failing
 control; each arm's mean and spread pinned against a derivation the code
 does not consult; every arm reachable by the dial. **Scope guards:**
 non-evadable strikes keep their fixed damage; no bot change (it reads no
 hit chance, `archive/worklog-phase-135.md`, tranche 3).
+
+The cut, signed 2026-10-27 (no step adds an RNG stream):
+
+- ☐ **136a — the bar** (`stop`). The play protocol and the veto lines for
+  §138's board, in the spec before any arm exists. Docs only.
+- ☐ **136b — the `strike` dial, the off arm byte-identical** (`none`).
+  `hit`, `range-0.25`, `range-1`, `mix`; absent from the World's snapshot
+  at `hit`. Smoke fires.
+- ☐ **136c — the range's draw** (`none`). The Kumaraswamy's inverse, its
+  `a` per hit chance, rounded by chance; pinned against the closed form.
+- ☐ **136d — the mixture** (`none`). Its misses on the same uniform, the
+  zeros among them; pinned the same way.
+- ☐ **136e — a 0 is a miss, and the hooks ride every strike that deals
+  damage** (`none`). Planted: a hook on a 0, a 0 that turns a camp.
+- ☐ **136f — the phase's close** (`stop`).
 
 ## Phase 137 — the trial on screen
 
@@ -74,8 +90,8 @@ hit chance, `archive/worklog-phase-135.md`, tranche 3).
 mixture's MISS, the two hit-chance readouts (the ability detail's "%
 hit", the promotion delta's dodge share), and the miss's sound. **Why
 here:** after the switch, so only the visual part waits on the user's
-eye. **Risk:** low. **Decision points:** what a 0 shows; the readouts'
-wording. **Exit:** each arm readable in play, by the dial. **Scope
+eye. **Risk:** low. **Decision points:** ✅ DECIDED what a 0 shows: a
+MISS, since a 0 is a miss (§136); the readouts' wording. **Exit:** each arm readable in play, by the dial. **Scope
 guards:** the hit-or-miss arm's screen unchanged.
 
 ## Phase 138 — the user's play and the keep

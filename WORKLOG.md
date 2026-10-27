@@ -122,3 +122,67 @@ The session passed the hand-off trigger at the commit of the cut above.
   first. The hook's fuzz smoke fires on any staged path under `src/sim/`
   or `tests/fuzz/`, test files included (two of §135's predictions missed
   on it).
+
+### The cut signed (2026-10-27)
+
+Put again at `63b3a57a`, where nothing under `src/`, `tests/` or `config/`
+differs from `404b25d9`; the audit's citations hold. The re-read found
+three things the calls touch:
+
+- A camp turns on any strike that reaches `World.dealDamage`, with no
+  check on the damage (`World.ts:717`), so "no camp turns on a 0" is a new
+  rule in the code.
+- `applyDamage`'s return is what lets a status ride a landed hit
+  (`World.ts:776`), so the hooks' call decides what it means on a range
+  arm.
+- The crit is drawn before the strike's uniform and scales the damage
+  before defense, so a crit that rolls low lands under an ordinary hit.
+
+The user's answers:
+
+1. Rounding: "I'm a tad confused here, Claude 😅 Can you elaborate a bit
+   more?" Explained: nearest rounding turns every roll of a half or more
+   into the full point, so at `D` 1 and `b` 1 armour lets through 0.875 a
+   strike against today's 0.75; by chance keeps 0.75, at the price of a
+   second draw on a range strike, on `combatRng`.
+2. The hooks: "I'm actually okay giving these the buff, Claude! I think
+   that we want things to be reasonably comprehensible to players; the
+   rule to keep the rates the same reads as too opaque to me." The
+   session's lean, today's rate off the strongest share, kept the trial's
+   read clean; the user's reason is about the rule a player would learn,
+   which is what the trial tests.
+3. A strike that rolls 0: "this makes me think that we should change the
+   rounding to not allow a hit of zero; once again, that feels like it'll
+   read weird to players, no?" Two ways were put: a floor of 1, which
+   lets every strike through at `D` 1 (1.0 against 0.75, a quarter of
+   what armour stops); or a 0 is a miss (MISS, the miss's sound, no hooks,
+   no camp), the mean exact. The second, with 2, makes one rule: a strike
+   that deals damage is a hit and carries its hooks, a strike that deals
+   nothing is a miss. It also removes the case the two first leans made
+   together: at `D` 1, `b` 1 and a hit chance of 0.75, 15.75 % of the
+   strikes that carried a hook rounded to 0 (sampled 0.1575, against the
+   closed form `0.25^(4/3)`, 0.1575).
+4. The dial: "Those sound fine to me, Claude!"
+
+The crit: no special case, so a crit that rolls 0 is a miss, as a miss
+discards the crit today. Signed with the rest: "Signing all of those
+leans and the revised cut, Claude! 😁"
+
+Under the signed rules, by `scratch/136/zeromiss.mjs` (a sampler, a
+million strikes a cell; its control, `a` 3.0000 at `b` 1 and a mean of
+0.75, and its nearest-rounding rows read 0.782, 0.875 and 0.051 where
+`defense.mjs` reads 0.781, 0.875 and 0.051), at a hit chance of 0.75, the share of strikes that miss, and
+so the share that carries a hook:
+
+| arm | `D` 1 | `D` 2 | `D` 3 | `D` 6 |
+|---|---|---|---|---|
+| `range-0.25` | 25.0 % | 11.7 % | 8.3 % | 4.9 % |
+| `range-1` | 25.0 % | 3.1 % | 0.9 % | 0.1 % |
+| `mix` | 25.0 % | 12.7 % | 12.6 % | 12.5 % |
+
+Every cell's mean is the hit chance's share of `D` within 0.002, and at
+`D` 1 each arm is today's hit or miss. The cut changes in two steps: 136d
+counts the zeros among the mixture's misses, and 136e is "a 0 is a miss,
+and the hooks ride every strike that deals damage", its controls a hook
+on a 0 and a 0 that turns a camp. §137's "what a 0 shows" is answered: a
+MISS.

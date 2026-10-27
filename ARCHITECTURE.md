@@ -162,7 +162,7 @@ src/
     statusReadout.ts         # §32c: readUnitStatuses — pure projection of effects[] → per-status display facts (name/kind/stacks/remaining/durationFraction/potencyPerSec); feeds the board pip-strip + card row (sim truth only; color lives render-side)
     triggers.ts              # K1: TriggerContextMap (combat: dealHit/takeHit/dealMiss/evade/kill/death/spawn) + generic TriggerDispatcher<M,O> (shared by World + Run)
     stats.ts                 # deriveStats / inertDerived / ZERO_STATS + damage/heal/range/cadence helpers
-                             # — pure functions; crit RNG rolls happen at AttackAction.start; K1: unit-taking helpers read effectiveStats
+                             # — pure functions; the crit is rolled as a damage op fires (effects/interpreter.ts); K1: unit-taking helpers read effectiveStats
     leveling.ts              # E3: simulateLevelUps (player rolls) + scaleStats (enemies, deterministic)
     xp.ts                    # E4: xpToNext curve + computeXpAwards + displayLevel
     TileGrid.ts              # Tile kinds: floor | shallow_water | chasm | fire | healing

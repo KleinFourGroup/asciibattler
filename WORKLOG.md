@@ -349,3 +349,50 @@ signed!"): the cut and its reads as put.
 - *Checks:* the fx tests 32 passed; `npm run typecheck` clean after one
   fix (the status parameter's `fx` needed `| undefined` under
   `exactOptionalPropertyTypes`).
+
+### 135e — the deleted action classes out of the docs (2026-10-27)
+
+Each passage was rewritten against the code read for it; none became a
+tombstone, since each one's rule still holds under the effect
+interpreter.
+
+- *DESIGN's Combat paragraph:* an ability's `EffectAction` fires its ops;
+  a damage op rolls the crit from the chance taken at cast
+  (`resolveDamageScalars`, `effects/resolveScalars.ts:41-42`) as it fires
+  (`effects/interpreter.ts`, `executeDamage`), then calls
+  `World.applyDamage`, whose to-hit roll uses the op's accuracy, the
+  attacker's precision and the target's evasion. §136 rewrites the same
+  paragraph's to-hit roll.
+- *ARCHITECTURE's `stats.ts` line:* the crit is rolled as a damage op
+  fires.
+- *#19:* the two phases hold (`World.fromJSON`: bare units, then
+  `createAction` per active action); no `fromData` reads the world today
+  (`EffectAction.fromData` takes `_world` unused; the registry's move,
+  spawn and swap builders take none), so the gotcha now says the order is
+  for the action that will.
+- *#93* was staler than its row said: `UnitDerived` is `maxHp`,
+  `moveCooldownTicks` and `attackRange` (`deriveStats`), cadence and the
+  crit chance are per ability (`attackCooldownTicksFor`, `critChanceFor`),
+  and the stat block has eleven fields (`src/sim/Unit.ts:66`), not seven
+  with an `endurance`. Its "two reads to fix on the day stats mutate" are
+  replaced by `effectiveStats` (K1), which that day brought.
+- *#95:* combatRng's consumers named as the damage op's crit roll and
+  `applyDamage`'s to-hit roll; the fork is still `rng.fork()` at
+  construction (`World.ts:434`).
+- *#97:* the stored data is `EffectActionData.ops`' cast-time scalars;
+  `unit:attacked` is emitted in `src` by `World.applyDamage` alone, with
+  two test fixtures (`EventBus.test.ts:124`, `tests/pathing/metrics.test.ts:220`).
+- *#109:* the rule holds in the `move` op's `retreat` mode
+  (`interpreter.ts`, `durationTicks = max(1, min(moveTicks,
+  ctx.remainingTicks))`), with `remainingTicks` from
+  `EffectAction.fireOpsAt`. Its pin did not: the gotcha named
+  `GambitStrikeAction.test`'s case, deleted with the class, and no test
+  asserted the slide's length (a search of the effects and sim tests for
+  `durationTicks`). **Built and flagged:** a pin in `interpreter.test.ts`
+  (4 busy ticks left slide 4; more than the move's cooldown slide the
+  cooldown; 0 slides 1). Its control: the interpreter planted with the
+  naive `max(1, moveTicks)` fails it; restored, `git diff` empty.
+- The remaining mentions of the old classes in the live docs are history,
+  ARCHITECTURE's `actions/` line and #8 (a search of the tracked docs
+  outside the archive).
+- *Checks:* the interpreter tests 35 passed.

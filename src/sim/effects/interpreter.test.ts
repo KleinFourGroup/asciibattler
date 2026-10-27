@@ -282,6 +282,26 @@ describe('executeOp — move', () => {
     expect(events.map((e) => e.name)).toEqual(['unit:moved']);
   });
 
+  // Gotcha #109: the slide takes the action's busy ticks left, not a whole
+  // move cooldown, or the next action's lerp cuts its tail off.
+  it("retreat: the slide takes the busy ticks left, capped at the move's cooldown", () => {
+    const slide = (remainingTicks: number): number => {
+      const { world, events } = setup();
+      const caster = makeUnit('player', { x: 5, y: 5 });
+      world.placeUnits(caster);
+      executeOp(
+        { kind: 'move', mode: 'retreat' },
+        ctx({ caster, world, resolution: { moveDest: { x: 4, y: 5 } }, remainingTicks }),
+      );
+      return (events[0]!.payload as GameEvents['unit:moved']).durationTicks;
+    };
+    const moveTicks = makeUnit('player', { x: 0, y: 0 }).derived.moveCooldownTicks;
+    expect(moveTicks).toBeGreaterThan(4);
+    expect(slide(4)).toBe(4);
+    expect(slide(moveTicks + 10)).toBe(moveTicks);
+    expect(slide(0)).toBe(1);
+  });
+
   it('retreat: holds (no move, no event) when boxed in', () => {
     const { world, events } = setup();
     const caster = makeUnit('player', { x: 0, y: 0 }); // corner; anchor adjacent

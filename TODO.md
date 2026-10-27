@@ -159,13 +159,7 @@ META-ROADMAP §"Round 9 — The frame and the damage trial" names each row's pla
 
 - ✅ **`box-drive.sh`: one artifact KIND per cohort** — each batch's fetch checks its own artifact (a `--search` line `best-strategy.json`, others `summary.csv`), `--artifact` an override, and `--plan` prints them before any box (WORKLOG §135, 135c).
 
-- [ ] **The action classes deleted at Y5c are still described as live**
-  (found at 130d): DESIGN.md's Combat paragraph ("`AttackAction` resolves
-  at action-start"), ARCHITECTURE's tree at the crit roll
-  (`AttackAction.start`), and gotchas #95, #97 and #109 (#8's link was
-  re-pointed at `EffectAction` at 130d). Each is rewritten against
-  `src/sim/effects/EffectAction.ts` after reading it, or the gotcha
-  becomes a tombstone.
+- ✅ **The action classes deleted at Y5c are still described as live** — DESIGN's Combat paragraph, ARCHITECTURE's stats line and gotchas #19, #93, #95, #97 and #109 rewritten against the effect interpreter, none retired; #109's pin restored (WORKLOG §135, 135e).
 
 - ✅ **FX_REGISTRY's own coverage gap** — `fxRegistry.test.ts`, "coverage": every ability authors `fx` or is listed with its reason (four), every periodic status's tick has a key with a sound or is listed (none) (WORKLOG §135, 135d).
 

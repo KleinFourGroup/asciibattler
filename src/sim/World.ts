@@ -78,6 +78,7 @@ import type { SpawnRegion } from './layouts';
 import { ZERO_STATS, deriveStats, hitChanceFor, inertDerived } from './stats';
 import { computeXpAwards } from './xp';
 import { STATS, isStrikeArm, type StrikeArm } from '../config/stats';
+import { roundByChance, strikeShare } from './strike';
 import { LEVELING } from '../config/leveling';
 import { NEUTRAL_DEFS, ALL_UNIT_DEFS } from '../config/units';
 import { getCamp } from '../config/camps';
@@ -90,6 +91,15 @@ import { getCamp } from '../config/camps';
  * `WorldSnapshot`'s shape or to what one of its fields means.
  */
 const WORLD_SCHEMA_VERSION = 37;
+
+/**
+ * A hit's damage after the target's defense: `max(minDamage, rawDamage −
+ * defense)`, or `rawDamage` when the hit bypasses defense. Both operands are
+ * integers, so the result is too.
+ */
+function afterDefense(target: Unit, rawDamage: number, bypassDefense: boolean): number {
+  return bypassDefense ? rawDamage : Math.max(STATS.minDamage, rawDamage - target.effectiveStats.defense);
+}
 
 /** The maxHp of a neutral whose def has no `hp` (indestructible), so its unit
  *  is alive and blocks pathing and line of sight. Never a damage target:
@@ -719,9 +729,7 @@ export class World {
     rawDamage: number,
     opts: { bypassDefense: boolean },
   ): number {
-    const final = opts.bypassDefense
-      ? rawDamage
-      : Math.max(STATS.minDamage, rawDamage - target.effectiveStats.defense);
+    const final = afterDefense(target, rawDamage, opts.bypassDefense);
     target.currentHp -= final;
     if (attacker) this.recordDamage(attacker.id, target, final);
     // Here, so a blast's splash and a tick with a living source count too: a
@@ -785,10 +793,15 @@ export class World {
    *   `accuracy` (`hitChanceFor`). Without `evadable` or `accuracy`, or with
    *   the attacker gone, the hit lands and nothing is drawn. A miss emits
    *   `unit:missed`, fires `dealMiss` and `evade`, and touches no HP.
+   *   On a strike arm other than `hit` the same draw picks the share of the
+   *   damage after defense that lands (`./strike.ts`), and a second draw
+   *   rounds it; a strike that rounds to 0 is a miss, so a camp turns and a
+   *   status rides only on damage.
    * - `bypassDefense` — passed to `dealDamage`.
    *
    * Returns whether the hit landed: false only on a miss. The `applyStatus`
-   * op reads it, so a status rides a landed hit only.
+   * op reads it, so a status rides a landed hit only. The `combatRng` order
+   * is the crit, the strike's draw, then on a range arm the rounding's.
    */
   applyDamage(
     attackerId: number,
@@ -798,6 +811,10 @@ export class World {
   ): boolean {
     // Looked up once, for the roll and the triggers; the lookup draws nothing.
     const attacker = this.findUnit(attackerId);
+    // A range strike settles defense itself, since its share is of what
+    // defense leaves; then the damage it lands goes in unmitigated.
+    let damage = rawDamage;
+    let bypassDefense = opts.bypassDefense ?? false;
     if (opts.evadable && opts.accuracy !== undefined) {
       // With the attacker gone the hit lands, rather than drawing against no
       // precision.
@@ -815,18 +832,19 @@ export class World {
           target.effectiveStats.evasion +
           (this.tileGrid.defAt(target.position).evasionMod ?? 0);
         const hitChance = hitChanceFor(opts.accuracy, precision, evasion);
-        if (this.combatRng.next() >= hitChance) {
-          this.emit('unit:missed', { attackerId, targetId: target.id });
-          // The attacker's side of a miss, then the dodger's.
-          this.fireTrigger('dealMiss', { attacker, target });
-          this.fireTrigger('evade', { target, attacker });
-          return false;
+        const roll = this.combatRng.next();
+        if (this.strike === 'hit') {
+          if (roll >= hitChance) return this.missStrike(attacker, target);
+        } else {
+          const arm = STATS.strikeArms[this.strike];
+          const share = strikeShare(roll, hitChance, arm.b);
+          damage = roundByChance(share * afterDefense(target, rawDamage, bypassDefense), this.combatRng.next());
+          if (damage === 0) return this.missStrike(attacker, target);
+          bypassDefense = true;
         }
       }
     }
-    const final = this.dealDamage(attacker, target, rawDamage, {
-      bypassDefense: opts.bypassDefense ?? false,
-    });
+    const final = this.dealDamage(attacker, target, damage, { bypassDefense });
     this.emit('unit:attacked', {
       attackerId,
       targetId: target.id,
@@ -842,6 +860,15 @@ export class World {
       if (target.currentHp <= 0) this.fireTrigger('kill', { attacker, victim: target });
     }
     return true;
+  }
+
+  /** A strike that missed: `unit:missed`, then the attacker's side of the
+   *  miss and the dodger's. No HP moves. */
+  private missStrike(attacker: Unit, target: Unit): false {
+    this.emit('unit:missed', { attackerId: attacker.id, targetId: target.id });
+    this.fireTrigger('dealMiss', { attacker, target });
+    this.fireTrigger('evade', { target, attacker });
+    return false;
   }
 
   /** Test-only read of the damage ledger. */

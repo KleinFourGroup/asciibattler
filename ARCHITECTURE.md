@@ -112,7 +112,7 @@ src/
     prices.ts                #   50a/f: the port price book — PricesSchema + assertPriceRefs (draftable coverage + packet/daemon key refs) + the PURE *For price cores (unitPriceFor/packetPriceFor/daemonPriceFor/sellPriceFor; PRICES-bound wrappers delegate — one formula for the game AND the 50f editor preview) — config/prices.json
     camps.ts                 #   75a: the camp catalog (CampDef: id/name/description + leashRadius + units[{archetype,count,level}] + rewards[EncounterRewardRef]) + CampsSchema (exported for the 75i editor's byte-faithful formatter) + the TWO boot asserts: assertCampRewardRefs (reward-table refs resolve — the assertEncounterRewardRefs sibling) + assertLayoutCampRefs (layout camp placements name real camps) — config/camps.json. 75j: the ⭐ CONTINUOUS-VALUE reward rule (always-on camps pay bits/packets ONLY — never a run-defining reward; spec §Camps)
     stats.ts                 #   E1: hpPerConstitution, crit cap + mult, base move cooldown;
-                             #   GP1: per-axis mobility/speed CdPerStat + MinCdScale (I1: agility→speed); GP2: minDamage floor
+                             #   GP1: per-axis mobility/speed CdPerStat + MinCdScale (I1: agility→speed); GP2: minDamage floor; 136b: strikeArms (the damage trial's arms, `b` and `missesKept` each, keyed by dial value) + StrikeArm / STRIKE_ARMS / isStrikeArm
     sim.ts                   #   E5: targeting + pathfinding knobs (retarget, occupiedCellPenalty, healer*); the mid-battle spawn lockout (spawnDurationSeconds); the objective leash (rangedLeashCells)
     playback.ts              #   I3/Q1: speed steps {value,enabled}[] (0.5/1/2/3) + pauseEnabled; render-only (pause = speed 0)
     configHash.ts            #   53b (in src/dev until §114): fnv1a fingerprint over the RAW config/*.json registry, all of it (plain JSON imports — tsx-compatible, NOT import.meta.glob); the stamp a battle trace and a run journal are refused on; drift-guard test walks config/
@@ -139,6 +139,7 @@ src/
                              #      + unit:attacked emit + subtractive defense mitigation); tile damage bypasses it
                              # I2/I6: applyDamage(evadable, accuracy) rolls accuracy-vs-evasion to-hit off combatRng (crit→miss order);
                              #     a miss emits unit:missed + 0 dmg. Only single-target strikes opt in; AoE/catapult/tile unmissable
+                             # 136c: on a strike arm other than hit, the same draw picks the share of the damage after defense that lands (strike.ts), a second draw rounds it by chance, and a 0 takes the miss path (missStrike)
                              # K1: applyDamage reads effectiveStats (prc/eva/def) + fires dealHit/takeHit/dealMiss/evade/kill triggers (post-resolution)
                              # 47f: installBattleRules (once per battle; data serialized, handlers re-registered on fromJSON)
                              #      + tallies {bits} (battle-earned run resources → the battle:ended payload, settled by Run.gainBits)
@@ -162,6 +163,7 @@ src/
     statusBehavior.ts        # 28: behaviorFlags — the def-resolve fold turning a unit's effects[] into merged AI overrides (frozen/blind/panic/confusion) the selector/movement/targeting consumers read
     statusReadout.ts         # §32c: readUnitStatuses — pure projection of effects[] → per-status display facts (name/kind/stacks/remaining/durationFraction/potencyPerSec); feeds the board pip-strip + card row (sim truth only; color lives render-side)
     triggers.ts              # K1: TriggerContextMap (combat: dealHit/takeHit/dealMiss/evade/kill/death/spawn) + generic TriggerDispatcher<M,O> (shared by World + Run)
+    strike.ts                # 136c: the damage trial's draw — strikeShare (the Kumaraswamy inverse on the strike's uniform, `a` bisected on the ln-Γ mean and cached per hit chance and `b`), roundByChance; pinned through applyDamage by strike.test.ts against a quadrature that never calls it
     stats.ts                 # deriveStats / inertDerived / ZERO_STATS + damage/heal/range/cadence helpers
                              # — pure functions; the crit is rolled as a damage op fires (effects/interpreter.ts); K1: unit-taking helpers read effectiveStats
     leveling.ts              # E3: simulateLevelUps (player rolls) + scaleStats (enemies, deterministic)

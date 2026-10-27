@@ -51,7 +51,8 @@ The cut, signed 2026-10-27 (WORKLOG §135, "The kickoff's audit"):
   4.6 MB to 1.8 MB, one added field by json-diff.
 - ☑ **135b — the roster table's coverage guard** (`none`). Six planted
   tables; the sampler refuses a sector mismatch at launch.
-- ☐ **135c — `box-drive.sh` takes mixed queues** (`none`).
+- ☑ **135c — `box-drive.sh` takes mixed queues** (`none`). Each batch
+  checks its own artifact; `--plan` shows them before a box.
 - ☐ **135d — `FX_REGISTRY`'s coverage guard** (`none`).
 - ☐ **135e — the deleted action classes out of the docs** (`none`).
 - ☐ **135f — the rarity stars take the long-press inside a control**

@@ -291,3 +291,33 @@ signed!"): the cut and its reads as put.
   name the guard.
 - *Checks:* the guard 12 passed; the roster tests 18 passed under the fuzz
   config; `npm run typecheck` clean.
+- *A prediction missed:* the cut said 135b's commit would not fire the
+  fuzz smoke; the launch check put `tests/fuzz/roster/` in it, so it did
+  (553 passed).
+
+### 135c — `box-drive.sh` takes mixed queues (2026-10-27)
+
+- *Step zero:* a `--search` batch writes `best-strategy.json` and
+  `search-results.csv` and no `summary.csv` (`tests/fuzz/commands/search.ts:316`,
+  `:322`; the CLI returns after the search, `tests/fuzz/cli.ts:196-198`);
+  a run batch writes `summary.csv` (`tests/fuzz/commands/run.ts:444`,
+  `parallel.ts:177`).
+- Each batch's fetch now checks its own artifact (`artifact_for`: a line
+  holding `--search` checks `best-strategy.json`, every other line
+  `summary.csv`); `--artifact=<file>` names one file for every batch, as
+  before; `--plan` prints each batch with its artifact and exits before
+  the pre-flight and the box.
+- *The oracle* (`scratch/135c/mixed.queue`, a shadow batch, a search with
+  a trailing comment, and a priest batch): `--plan` names `summary.csv`,
+  `best-strategy.json`, `summary.csv`; with `--artifact=summary.csv` it
+  names `summary.csv` three times; the inline form `--plan -- --search
+  --count=10` names `best-strategy.json`. No box was launched.
+- *A slip caught by `bash -n`:* the cohort line first read
+  `${ARTIFACT:-each batch's own}`, and the apostrophe opened a quote
+  inside the expansion, so the script failed to parse below that line;
+  `--plan` worked only because it exits before bash reaches it. The
+  committed script at HEAD parses (`bash -n`, exit 0), and so does the
+  fixed one. No test runs `bash -n` over `scripts/`; listed for the
+  close, not built, since it happened once.
+- BALANCE's fresh-derive recipe says the fetch checks the search line's
+  own artifact.

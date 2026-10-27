@@ -157,7 +157,7 @@ META-ROADMAP §"Round 9 — The frame and the damage trial" names each row's pla
 
 - ✅ **Compact `roster-table.json`** — written a row a line, 4,616,750 → 1,773,061 bytes, with the sector ids by position in its provenance; the per-bucket distributions not built, since the rows were already deduplicated and a sampled draw draws a whole roster (WORKLOG §135, 135a).
 
-- [ ] **`box-drive.sh`: one artifact KIND per cohort** — a mixed queue (a shadow batch + a search) HELD its box on the second fetch because `--artifact` is cohort-wide (92g). Either refuse mixed queues up front or accept a per-line `# artifact=<file>` override.
+- ✅ **`box-drive.sh`: one artifact KIND per cohort** — each batch's fetch checks its own artifact (a `--search` line `best-strategy.json`, others `summary.csv`), `--artifact` an override, and `--plan` prints them before any box (WORKLOG §135, 135c).
 
 - [ ] **The action classes deleted at Y5c are still described as live**
   (found at 130d): DESIGN.md's Combat paragraph ("`AttackAction` resolves

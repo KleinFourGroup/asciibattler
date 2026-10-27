@@ -20,13 +20,16 @@
 #     launch has fired.
 #
 # Usage:
-#   scripts/box-drive.sh <queue-file> [--poll=900] [--est-hours=N] [--artifact=summary.csv]
+#   scripts/box-drive.sh <queue-file> [--poll=900] [--est-hours=N] [--artifact=<file>] [--plan]
 #   scripts/box-drive.sh [flags] -- <fuzz args…>       # single-batch shorthand
 #
 #   Queue file: one batch per line = its fuzz args; blank lines and
-#   #-comments are skipped. --artifact names the file that must be
-#   non-empty in the fetched batch for stand-down to proceed (default
-#   summary.csv; a search cohort passes --artifact=best-strategy.json).
+#   #-comments are skipped. Each fetched batch must hold a non-empty
+#   artifact for stand-down to proceed: by default the batch's own, so a
+#   queue may mix kinds (a `--search` line writes best-strategy.json,
+#   every other line summary.csv); --artifact=<file> names one file for
+#   every batch instead. --plan prints each batch with the artifact its
+#   fetch will check, and exits before the pre-flight and the box.
 #   --est-hours arms the 68h in-flight hatch: past 2× the estimate the
 #   driver flags loudly every poll (still polling — killing is a human
 #   call, and determinism makes a restart free).
@@ -34,7 +37,8 @@ set -uo pipefail
 
 POLL=900
 EST_HOURS=""
-ARTIFACT=summary.csv
+ARTIFACT=""
+PLAN=""
 QUEUE_FILE=""
 INLINE_ARGS=""
 
@@ -48,6 +52,7 @@ while [ $# -gt 0 ]; do
     --poll=*) POLL=${1#--poll=} ;;
     --est-hours=*) EST_HOURS=${1#--est-hours=} ;;
     --artifact=*) ARTIFACT=${1#--artifact=} ;;
+    --plan) PLAN=1 ;;
     --)
       shift
       [ $# -ge 1 ] || usage
@@ -90,6 +95,29 @@ else
   fi
 fi
 
+# The artifact a batch's fetch must find: --artifact for every batch when
+# given, else the batch's own (a search writes best-strategy.json and no
+# summary.csv, tests/fuzz/commands/search.ts).
+artifact_for() {
+  if [ -n "$ARTIFACT" ]; then
+    echo "$ARTIFACT"
+    return
+  fi
+  case " $1 " in
+    *" --search "*) echo best-strategy.json ;;
+    *) echo summary.csv ;;
+  esac
+}
+
+if [ -n "$PLAN" ]; then
+  N=0
+  for LINE in "${QUEUE[@]}"; do
+    N=$((N + 1))
+    echo "batch $N/${#QUEUE[@]}: $(artifact_for "$LINE") <- $LINE"
+  done
+  exit 0
+fi
+
 # --- pre-flight: push-before-launch, and pin the cohort HEAD -----------------
 # The friction log is left out of both dirty checks (scripts/build-id.mjs,
 # TREE_PATHSPEC, says why).
@@ -107,7 +135,7 @@ if [ "$COHORT_HEAD" != "$ORIGIN_MAIN" ]; then
   echo "[$(ts)] REFUSED: HEAD ${COHORT_HEAD:0:7} != origin/main ${ORIGIN_MAIN:0:7} — push (or pull) first" >&2
   exit 1
 fi
-echo "[$(ts)] cohort HEAD ${COHORT_HEAD:0:7} · ${#QUEUE[@]} batch(es) · poll ${POLL}s · artifact $ARTIFACT${EST_HOURS:+ · est ${EST_HOURS}h}"
+echo "[$(ts)] cohort HEAD ${COHORT_HEAD:0:7} · ${#QUEUE[@]} batch(es) · poll ${POLL}s · artifact ${ARTIFACT:-per batch}${EST_HOURS:+ · est ${EST_HOURS}h}"
 
 # --- create the box ----------------------------------------------------------
 echo "[$(ts)] creating the box"
@@ -176,6 +204,7 @@ for LINE in "${QUEUE[@]}"; do
   echo "$FETCH_OUT"
 
   DEST="output/box-batches/$BATCH_ID"
+  BATCH_ARTIFACT=$(artifact_for "$LINE")
   if ! echo "$FETCH_OUT" | grep -q 'fetched →'; then
     hold "batch $BATCH_ID: no 'fetched →' line"
   fi
@@ -183,10 +212,10 @@ for LINE in "${QUEUE[@]}"; do
   if [ "$EXIT_CODE" != "0" ]; then
     hold "batch $BATCH_ID: exit-code=$EXIT_CODE"
   fi
-  if [ ! -s "$DEST/$ARTIFACT" ]; then
-    hold "batch $BATCH_ID: $ARTIFACT missing/empty in $DEST"
+  if [ ! -s "$DEST/$BATCH_ARTIFACT" ]; then
+    hold "batch $BATCH_ID: $BATCH_ARTIFACT missing/empty in $DEST"
   fi
-  echo "[$(ts)] batch $N/${#QUEUE[@]} verified: exit 0, $ARTIFACT present → $DEST"
+  echo "[$(ts)] batch $N/${#QUEUE[@]} verified: exit 0, $BATCH_ARTIFACT present → $DEST"
   FETCHED+=("$DEST")
 done
 

@@ -139,7 +139,7 @@ src/
                              #      + unit:attacked emit + subtractive defense mitigation); tile damage bypasses it
                              # I2/I6: applyDamage(evadable, accuracy) rolls accuracy-vs-evasion to-hit off combatRng (crit→miss order);
                              #     a miss emits unit:missed + 0 dmg. Only single-target strikes opt in; AoE/catapult/tile unmissable
-                             # 136c: on a strike arm other than hit, the same draw picks the share of the damage after defense that lands (strike.ts), a second draw rounds it by chance, and a 0 takes the miss path (missStrike)
+                             # 136c: on a strike arm other than hit, the same draw (136d: first keeping the arm's missesKept share of hit or miss's misses whole, below m = s·(1 − p)) picks the share of the damage after defense that lands (strike.ts), a second draw rounds it by chance, and a 0 takes the miss path (missStrike)
                              # K1: applyDamage reads effectiveStats (prc/eva/def) + fires dealHit/takeHit/dealMiss/evade/kill triggers (post-resolution)
                              # 47f: installBattleRules (once per battle; data serialized, handlers re-registered on fromJSON)
                              #      + tallies {bits} (battle-earned run resources → the battle:ended payload, settled by Run.gainBits)

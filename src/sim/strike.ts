@@ -14,6 +14,11 @@
  * second draw, so the mean is exact at every damage size; a strike that
  * rounds to 0 is a miss.
  *
+ * An arm that keeps misses (`missesKept`, `s`) misses whole on the
+ * uniform's lowest `m = s·(1 − p)`, and feeds the rest, rescaled, to the
+ * share at the mean `p / (1 − m)`, so the strike's mean is still `p`. At
+ * `s` 1 that is hit or miss.
+ *
  * The math uses `Math.pow`, `Math.exp` and `Math.log`, whose last bits the
  * determinism contract does not fix across engines; a run is the same on
  * one engine.

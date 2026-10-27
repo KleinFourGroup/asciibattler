@@ -793,10 +793,11 @@ export class World {
    *   `accuracy` (`hitChanceFor`). Without `evadable` or `accuracy`, or with
    *   the attacker gone, the hit lands and nothing is drawn. A miss emits
    *   `unit:missed`, fires `dealMiss` and `evade`, and touches no HP.
-   *   On a strike arm other than `hit` the same draw picks the share of the
-   *   damage after defense that lands (`./strike.ts`), and a second draw
-   *   rounds it; a strike that rounds to 0 is a miss, so a camp turns and a
-   *   status rides only on damage.
+   *   On a strike arm other than `hit` the same draw first keeps the arm's
+   *   share of hit or miss's misses whole (`missesKept`), then picks the
+   *   share of the damage after defense that lands (`./strike.ts`), and a
+   *   second draw rounds it; a strike that rounds to 0 is a miss, so a camp
+   *   turns and a status rides only on damage.
    * - `bypassDefense` — passed to `dealDamage`.
    *
    * Returns whether the hit landed: false only on a miss. The `applyStatus`
@@ -836,8 +837,13 @@ export class World {
         if (this.strike === 'hit') {
           if (roll >= hitChance) return this.missStrike(attacker, target);
         } else {
+          // The arm's whole misses are the draws under `kept`; the rest of
+          // the uniform feeds the range, its mean raised so the strike's
+          // mean stays the hit chance.
           const arm = STATS.strikeArms[this.strike];
-          const share = strikeShare(roll, hitChance, arm.b);
+          const kept = arm.missesKept * (1 - hitChance);
+          if (roll < kept) return this.missStrike(attacker, target);
+          const share = strikeShare((roll - kept) / (1 - kept), hitChance / (1 - kept), arm.b);
           damage = roundByChance(share * afterDefense(target, rawDamage, bypassDefense), this.combatRng.next());
           if (damage === 0) return this.missStrike(attacker, target);
           bypassDefense = true;

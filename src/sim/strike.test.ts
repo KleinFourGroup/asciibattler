@@ -182,6 +182,66 @@ describe('the range arms through applyDamage', () => {
   });
 });
 
+describe('the mixture through applyDamage', () => {
+  const { b, missesKept } = STATS.strikeArms.mix;
+  /** Whole misses on `m = s·(1 − p)` of strikes, and the range at the mean
+   *  `p / (1 − m)` on the rest: the landed damage's mean and spread, and
+   *  the share of strikes that miss, rounded zeros included. */
+  function expectedMix(p: number, d: number, s = missesKept, aScale = 1) {
+    const m = s * (1 - p);
+    const a = quadA(p / (1 - m), b) * aScale;
+    const r = expected(a, b, d);
+    const m1 = (1 - m) * r.mean;
+    const m2 = (1 - m) * (r.sd ** 2 + r.mean ** 2);
+    let zeros = 0;
+    for (let i = 0; i < GRID; i++) zeros += Math.max(0, 1 - inverse((i + 0.5) / GRID, a, b) * d);
+    return { mean: m1, sd: Math.sqrt(m2 - m1 * m1), misses: m + (1 - m) * (zeros / GRID) };
+  }
+  const missesNear = (misses: number, want: number) =>
+    Math.abs(misses / N - want) <= 4 * Math.sqrt((want * (1 - want)) / N);
+
+  it("mix: the landed damage's mean is p·D, its spread the mixture's, and its misses m and the zeros", () => {
+    for (const p of CHANCES) {
+      for (const [raw, def, d] of SIZES) {
+        const want = expectedMix(p, d);
+        expect(want.mean).toBeCloseTo(p * d, 3);
+        const { landed, misses } = strikes('mix', p, raw, def, N);
+        const where = `p ${p}, D ${d}: mean ${meanOf(landed)}, sd ${sdOf(landed)}, misses ${misses / N}`;
+        expect(near(landed, want), where).toBe(true);
+        expect(missesNear(misses, want.misses), where).toBe(true);
+      }
+    }
+  });
+
+  it("mix: the spec's numbers at p 0.75 and 6 damage, 12.5 % whole misses", () => {
+    const { misses } = strikes('mix', 0.75, 6, 0, N);
+    expect(missesNear(misses, expectedMix(0.75, 6).misses)).toBe(true);
+    expect(Math.abs(misses / N - 0.125)).toBeLessThan(0.006);
+  });
+
+  it('mix: the pin tells a 10 % wrong a, and 0.4 of the misses kept for 0.5', () => {
+    const p = 0.6;
+    const [raw, def, d] = SIZES[2]!;
+    const { landed, misses } = strikes('mix', p, raw, def, N);
+    expect(near(landed, expectedMix(p, d))).toBe(true);
+    expect(near(landed, expectedMix(p, d, missesKept, 1.1))).toBe(false);
+    expect(missesNear(misses, expectedMix(p, d).misses)).toBe(true);
+    expect(missesNear(misses, expectedMix(p, d, 0.4).misses)).toBe(false);
+  });
+
+  it('a whole miss draws once, since nothing is rounded', () => {
+    const m = missesKept * (1 - 0.6);
+    let seed = 1;
+    while (new RNG(seed).next() >= m) seed++;
+    const { world, attacker, target, missed } = duel('mix', 0, seed);
+    world.applyDamage(attacker.id, target, 8, { crit: false, evadable: true, accuracy: 0.6 });
+    expect(missed).toHaveLength(1);
+    const twin = new RNG(seed);
+    twin.next();
+    expect(world.toJSON().combatRng).toEqual(twin.toJSON());
+  });
+});
+
 describe('the draw', () => {
   it('lands the whole damage at a hit chance of 1, as hit or miss always hits there', () => {
     for (const u of [0, 0.3, 0.999]) expect(strikeShare(u, 1, 0.25)).toBe(1);

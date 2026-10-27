@@ -206,11 +206,78 @@ mixture's two ends):
   steady hits, where `b` 0.25 smears the low strikes. It keeps the MISS
   splat, `unit:missed` and the miss triggers, and the hit hooks fire on
   87.5 % of strikes rather than 75 % (today) or 100 % (the pure range).
+  (The pure range's 100 % was before §136's cut made a strike that deals
+  0 a miss: 88 to 100 % by arm and damage, WORKLOG §136, "The cut
+  signed".)
 
 **The third arm** (the user, 2026-10-27: "Let's add it! 😁"): the mixture
 at `b` 1 and `s` 0.5 joins the arms. So three, `b` 0.25, `b` 1, and `b` 1
 with half of today's misses kept, against hit or miss; the veto board
 runs on the arm the user's play picks, before the keep.
+
+### The bar (136a, put to the user 2026-10-27)
+
+Written before any arm exists. The arms are the `strike` dial's: `hit`,
+`range-0.25`, `range-1` and `mix`, under the rules signed at §136's cut (a
+strike that deals 0 is a miss, rounding by chance, the hooks on every
+strike that deals damage). The user's play decides; the board can veto
+only a broken game, by the lines below, or hold the keep for a bug.
+
+**The play, which decides.**
+
+- The user plays two runs on each range arm and one on `hit`, labelled,
+  through act 1's boss or to the run's end, more on any arm they are torn
+  on; any character, any order, at Escalation level 0 (a dialled run's
+  win is not counted for Escalation). The build is a clean commit, so each
+  run's journal replays: the game records every run's journal, and `npm
+  run replay` refuses one from a `-dirty` build.
+- Per arm, the user's words on the trial's two aims and on reading it:
+  does a precision change show in the damage numbers; do small fights
+  turn in ways that feel fair; do a strike's number and a MISS read at a
+  glance.
+- Then the pick: one range arm, or none, which rolls the trial back. The
+  session files the words and the pick in the WORKLOG before the board
+  runs.
+
+**The board, which can veto.** On the pick, after the pick is filed.
+
+- *Its shape* is §118e's: `arb-deploy` (act 1, `--hops=11`) and
+  `arb-walk-deploy` (two acts), the soldier, Escalation level 0, seeds 1
+  to 120, run for the pick and for `hit` (`--strike=…`, a fuzz flag 136b
+  adds beside the URL dial, since the fuzz CLI refuses a flag it does not
+  name) at one HEAD in one box cohort (`process/measurement.md`).
+- *The comparator* is `hit` at that HEAD, paired on the seed. §118e's
+  level 0 (act 1 won 83 of 120; two acts won 26 and reached act 2 in 83;
+  recovered from its raw `summary.csv` at 136a, 28 + 55 and 7 + 19) is
+  reported beside it, not compared against, since the events changed
+  after its HEAD (`config/events.json` at `ff1d8111` and `5e4dcd5e`).
+- *Reported, never a line:* each row's paired table by where the run
+  ended (less deep / the same / deeper, the two-sided sign test, §118e's
+  method), and the pick's `--report` on the two rows. A WARN or FAIL
+  against the signed sheet is Round 11's retune, since the sheet was
+  signed under hit or miss.
+
+**The veto line.** The pick vetoes itself if, on either row, it wins
+fewer runs than `hit` by more than §118e measured from level 0 to level
+2: 32 of 120 on act 1 (83 to 51) and 13 of 120 on two acts (26 to 13).
+That is a level 0 harder than two of Escalation's steps, and level 0 has
+no easier step to fall back to. Easier is reported, not a line: the
+ladder already sells harder games, and Round 11 retunes on the arm kept.
+A veto sends the pick back to the user: another range arm, with its own
+board, or the roll back.
+
+**What holds the keep for a fix,** a bug and not the arm:
+
+- a run on the pick that ends `hang` or `aborted` where its `hit` twin
+  does not (§118e's level 0 had none in 240 runs: every outcome
+  `complete` or `defeat`);
+- a journal of a range-arm run from the user's browser that diverges
+  under `npm run replay` where a `hit` run's journal from the same build
+  replays. That is the audit's open question on `Math.pow` across
+  engines. A save resumes from the Run, so no player meets it, but a
+  player's bug report would not replay.
+
+Each is fixed and its board or replay run again before the keep.
 
 ### The kickoff's own (tranche 3)
 

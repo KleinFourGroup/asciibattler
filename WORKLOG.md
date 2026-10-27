@@ -186,3 +186,33 @@ counts the zeros among the mixture's misses, and 136e is "a 0 is a miss,
 and the hooks ride every strike that deals damage", its controls a hook
 on a 0 and a 0 that turns a camp. §137's "what a 0 shows" is answered: a
 MISS.
+
+### 136a — the bar (2026-10-27)
+
+The bar is [round-9-spec.md](round-9-spec.md) "The bar", written after
+reading `process/measurement.md`. What it rests on, read at `2ef78c35`:
+
+- *§118e's level 0, from the raw CSVs:* `output/box-batches/20261010-*-987b0cb/summary.csv`,
+  told apart by each batch's `manifest.json` argv, give act 1 28 + 55 =
+  83 complete of 120, and two acts 7 + 19 = 26 complete with 28 + 55 = 83
+  clearing a sector; level 2 gives 20 + 31 = 51 and 4 + 9 = 13. BALANCE's
+  table says the same. Every outcome across the 24 batches is `complete`
+  or `defeat`, and no `hangLayout` is set; the harness can also write
+  `hang` and `aborted` (`tests/fuzz/harness.test.ts:137`).
+- *The comparator is `hit` at HEAD, not §118e's rows:* `config/events.json`
+  changed after `987b0cb` (`ff1d8111` and `5e4dcd5e`, the user's event
+  edits), so the off arm need not reproduce 83 and 26. §118e's rows are
+  reported beside it, and its level 0 to level 2 drop sets the veto's
+  size.
+- *The box's arm path, a correction to the audit:* the audit said the
+  fuzz CLI forwards any flag named as a URL parameter. That forwarding is
+  the run-config CLI's (`tools/run-config/cli.ts:31`, `:55`, §133's
+  record); the fuzz CLI throws `Unknown flag` on any flag it does not name
+  (`tests/fuzz/commands/args.ts:448-450`) and wires each dial by hand, as
+  `--escalation` is (`tests/fuzz/commands/run.ts:224-232`). So 136b adds a
+  `--strike` flag beside the URL dial. It is inside the cut's intent (every
+  arm reachable by the dial, on the box too) and is flagged at 136a's stop.
+- *The journals:* the game records every run's journal
+  (`src/Game.ts:98`), and `npm run replay` refuses one from another commit
+  or a `-dirty` build (`scripts/replay.ts`), so the play runs on a clean
+  commit.

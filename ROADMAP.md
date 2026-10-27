@@ -71,11 +71,12 @@ hit chance, `archive/worklog-phase-135.md`, tranche 3).
 
 The cut, signed 2026-10-27 (no step adds an RNG stream):
 
-- ☐ **136a — the bar** (`stop`). The play protocol and the veto lines for
+- ◐ **136a — the bar** (`stop`). The play protocol and the veto lines for
   §138's board, in the spec before any arm exists. Docs only.
 - ☐ **136b — the `strike` dial, the off arm byte-identical** (`none`).
   `hit`, `range-0.25`, `range-1`, `mix`; absent from the World's snapshot
-  at `hit`. Smoke fires.
+  at `hit`; a `--strike` fuzz flag too, since the fuzz CLI names each
+  flag (WORKLOG §136, 136a). Smoke fires.
 - ☐ **136c — the range's draw** (`none`). The Kumaraswamy's inverse, its
   `a` per hit chance, rounded by chance; pinned against the closed form.
 - ☐ **136d — the mixture** (`none`). Its misses on the same uniform, the

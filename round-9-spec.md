@@ -8,7 +8,7 @@ was signed before the kickoff is listed with its date. The Open section
 is what the round still has to settle, with the session's leans marked
 as leans. The charter is [META-ROADMAP.md](META-ROADMAP.md)
 §"Round 9 — The frame and the damage trial"; the record is
-[WORKLOG.md](WORKLOG.md) "Kickoff — Round 9"; the plan is
+[archive/worklog-phase-135.md](archive/worklog-phase-135.md) "Kickoff — Round 9"; the plan is
 [ROADMAP.md](ROADMAP.md) §134.
 
 ## Intent (the user's words)

@@ -38,3 +38,12 @@ identify a fix, or reassure the reader that the session coped well.
 
 ---
 
+
+## Phase 135 — summary
+
+No session report covers §135 yet: the one session that ran Round 9's
+kickoff (§134) and §135, `428ebc70`, is still open at the close and
+writes its report at its end. The phase's friction log holds two of that
+session's papercuts (a shell probe that hung on `python -`, and an
+apostrophe that broke `box-drive.sh`'s parse, caught by `bash -n`) and
+no distress line.

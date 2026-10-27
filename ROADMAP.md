@@ -11,16 +11,15 @@ plan: [archive/post-118-roadmap.md](archive/post-118-roadmap.md) (Round
 8.5) with its worklog, spec and census beside it; before it
 [archive/post-109-roadmap.md](archive/post-109-roadmap.md) (Round 8).
 
-**Status: the spec and the phases signed 2026-10-27; §135's cut is put
-to the user.** The spec is [round-9-spec.md](round-9-spec.md); the act
+**Status: §135 closed 2026-10-27; §136's kickoff is next.** The spec is [round-9-spec.md](round-9-spec.md); the act
 design it asked for is [plans/acts.md](plans/acts.md). The charter is
 META-ROADMAP §"Round 9 — The frame and the damage trial"; the premises
-re-read at HEAD are WORKLOG "Kickoff — Round 9", tranche 3.
+re-read at HEAD are `archive/worklog-phase-135.md` "Kickoff — Round 9", tranche 3.
 
 ## Phase 134 — the kickoff
 
 The spec, the act design, the charter against the code, and the phases,
-each signed by the user (WORKLOG "Kickoff — Round 9").
+each signed by the user (`archive/worklog-phase-135.md`, "Kickoff — Round 9").
 
 - ☑ **The spec** — signed 2026-10-27, the plague's cause and act 4's
   condition left open as the user's, for the rounds that need them (22
@@ -29,23 +28,12 @@ each signed by the user (WORKLOG "Kickoff — Round 9").
   sectors become acts 2 and 3 from Round 10.
 - ☑ **The phases** — §135 to §139 below.
 
-## Phase 135 — the board's instruments, and the stars' tap
+## Phase 135 — the board's instruments, and the stars' tap ✅ (closed 2026-10-27)
 
-**Charter:** the guards and the tool the trial's board rests on, before
-that board: the roster table's coverage guard (C13), its compaction
-measured before it is built (C14), `box-drive.sh`'s mixed queues (C15),
-`FX_REGISTRY`'s coverage guard (R18); the deleted action classes still
-described in the docs (R17); and the rarity stars' tap on touch (R22).
-**Why first:** the trial's board reads the roster table and runs through
-`box-drive.sh` (ordering principle #5), and DESIGN's Combat paragraph,
-which R17 corrects, is the one the trial rewrites. **Risk:** low.
-**Decision points:** whether the compaction is built, on its
-measurement. **Exit:** each guard with its planted failure; the
-compaction built with the sampled rosters unchanged, or recorded as a
-no-op; the docs true to the code; the tap read on touch by the user.
-**Scope guards:** no sim change; no board run.
-
-The cut, signed 2026-10-27 (WORKLOG §135, "The kickoff's audit"):
+The roster table written a row a line with its sector ids, and guarded;
+`box-drive.sh` takes mixed queues; every ability's fx guarded; the
+deleted action classes out of the docs; the stars' tap on touch. Each
+step's record is `archive/worklog-phase-135.md`.
 
 - ☑ **135a — the roster table a row a line, with its sector ids** (`none`).
   4.6 MB to 1.8 MB, one added field by json-diff.
@@ -57,9 +45,9 @@ The cut, signed 2026-10-27 (WORKLOG §135, "The kickoff's audit"):
   listed with reasons; every periodic tick sounds.
 - ☑ **135e — the deleted action classes out of the docs** (`none`). Seven
   passages rewritten, none retired; #109's lost pin restored.
-- ◐ **135f — the rarity stars take the long-press inside a control**
-  (`batch`). Built and read in the pane; the touch read is 135g's.
-- ☐ **135g — the phase's close** (`stop`).
+- ☑ **135f — the rarity stars take the long-press inside a control**
+  (`batch`). The pane read the route; the user read the tap on touch.
+- ☑ **135g — the phase's close** (`stop`). Read and signed 2026-10-27.
 
 ## Phase 136 — the trial's switch and arms, headless
 
@@ -78,7 +66,7 @@ byte-identical under the corpus and the fuzz diff, with a failing
 control; each arm's mean and spread pinned against a derivation the code
 does not consult; every arm reachable by the dial. **Scope guards:**
 non-evadable strikes keep their fixed damage; no bot change (it reads no
-hit chance, WORKLOG tranche 3).
+hit chance, `archive/worklog-phase-135.md`, tranche 3).
 
 ## Phase 137 — the trial on screen
 

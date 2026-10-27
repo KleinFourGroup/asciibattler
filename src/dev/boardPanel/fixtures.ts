@@ -118,6 +118,7 @@ export const RUN_DIAL_KEYS = [
   'character',
   'bits',
   'escalation',
+  'strike',
 ] as const;
 
 /**

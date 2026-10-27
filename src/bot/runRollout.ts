@@ -56,6 +56,10 @@ export function cloneRunForRollout(live: Run, rolloutSeed: number): RunRolloutCl
   // and a byte-identical clone.
   wire.streamRoot = deriveSeed(rolloutSeed, 'rolloutRoot');
 
+  // The strike arm is a config input the snapshot does not carry, so the
+  // clone takes the live run's; at `hit` it passes no config, as before the
+  // dial.
   const bus = new EventBus<GameEvents>();
-  return { run: Run.fromJSON(wire, bus), bus };
+  const config = live.strike === 'hit' ? undefined : { strike: live.strike };
+  return { run: Run.fromJSON(wire, bus, config), bus };
 }

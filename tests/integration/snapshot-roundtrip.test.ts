@@ -1140,7 +1140,7 @@ describe('§91a1 — the fallen-power ledger round-trip (WorldSnapshot v36)', ()
   it('serializes fallenPower and round-trips byte-faithful', () => {
     const { world, fallen } = ledgerWire();
     const wire = JSON.parse(JSON.stringify(world.toJSON())) as ReturnType<World['toJSON']>;
-    expect(wire.schemaVersion).toBe(36);
+    expect(wire.schemaVersion).toBe(37);
     expect(wire.fallenPower).toEqual({ player: fallen, enemy: 0 });
     const restored = World.fromJSON(wire, new EventBus<GameEvents>());
     expect(JSON.stringify(restored.toJSON())).toBe(JSON.stringify(world.toJSON()));

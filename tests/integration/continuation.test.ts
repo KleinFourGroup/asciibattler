@@ -26,8 +26,8 @@ type Step = { readonly command: RunCommand } | 'fight';
 function table(): { bus: EventBus<GameEvents>; fight: () => void } {
   const bus = new EventBus<GameEvents>();
   let world: World | null = null;
-  bus.on('battle:started', ({ encounter }) => {
-    world = battleWorld(bus, encounter);
+  bus.on('battle:started', ({ encounter, strike }) => {
+    world = battleWorld(bus, encounter, strike);
     spawnEncounter(world, encounter);
   });
   const fight = (): void => {

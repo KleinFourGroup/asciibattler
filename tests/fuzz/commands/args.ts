@@ -165,6 +165,12 @@ export interface CliArgs {
   // runConfig wiring consumes and range-checks it; other modes ignore it per
   // the flags-are-global grammar note above.
   escalation?: number;
+  // The strike dial (`--strike=<arm>`): exposes the RunConfig `strike` arm
+  // to RUN MODE ONLY; `hit` is the same run as no flag. Legal with
+  // --arbitrate: a rollout's run clone takes the live run's arm
+  // (`cloneRunForRollout`). Run mode's runConfig wiring checks the arm;
+  // other modes ignore it per the flags-are-global grammar note above.
+  strike?: string;
   // 72e — the node-scatter probe dials (`--elite-chance=<0..1>` /
   // `--port-chance=<0..1>`): expose the RunConfig eliteChance/portChance
   // overrides to RUN MODE ONLY (the forced-shape decision-grade reads —
@@ -344,6 +350,9 @@ export function parseArgs(argv: readonly string[]): CliArgs {
         break;
       case '--escalation':
         if (v !== undefined) args.escalation = Number(v);
+        break;
+      case '--strike':
+        if (v !== undefined) args.strike = v;
         break;
       case '--elite-chance':
         if (v !== undefined) args.eliteChance = Number(v);

@@ -58,7 +58,7 @@ function runStormcallerBattle(seed: number): {
     ],
   };
 
-  const world = battleWorld(bus, encounter);
+  const world = battleWorld(bus, encounter, 'hit');
   spawnEncounter(world, encounter);
 
   const caster = world.units.find((u) => u.team === 'player' && u.archetype === 'stormcaller');

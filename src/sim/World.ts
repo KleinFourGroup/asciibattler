@@ -77,7 +77,7 @@ const HEALING_STATUS = statusDef('rejuvenate');
 import type { SpawnRegion } from './layouts';
 import { ZERO_STATS, deriveStats, hitChanceFor, inertDerived } from './stats';
 import { computeXpAwards } from './xp';
-import { STATS } from '../config/stats';
+import { STATS, isStrikeArm, type StrikeArm } from '../config/stats';
 import { LEVELING } from '../config/leveling';
 import { NEUTRAL_DEFS, ALL_UNIT_DEFS } from '../config/units';
 import { getCamp } from '../config/camps';
@@ -89,7 +89,7 @@ import { getCamp } from '../config/camps';
  * a side's fallen power under-charged). Bump it with any change to
  * `WorldSnapshot`'s shape or to what one of its fields means.
  */
-const WORLD_SCHEMA_VERSION = 36;
+const WORLD_SCHEMA_VERSION = 37;
 
 /** The maxHp of a neutral whose def has no `hp` (indestructible), so its unit
  *  is alive and blocks pathing and line of sight. Never a damage target:
@@ -225,6 +225,7 @@ export interface WorldSnapshot {
   pendingChainHops: PendingChainHop[];
   claims: Claim[];
   battleRules: BattleRule[];
+  strike: StrikeArm;
   tallies: { bits: number };
   fallenPower: { player: number; enemy: number };
   /** In ascending instance id, so the image doesn't depend on the map's
@@ -309,6 +310,14 @@ export class World {
    * the handlers again from it.
    */
   private battleRules: readonly BattleRule[] = [];
+
+  /**
+   * How the battle's evadable strikes resolve: `hit`, hit or miss, or an arm
+   * of `STATS.strikeArms`. The run's, set once a battle by `setStrike`
+   * (`battleWorld`), and carried by the snapshot, so a rollout's clone plays
+   * the live battle's arm.
+   */
+  private strike: StrikeArm = 'hit';
 
   /**
    * The run resources the battle earns: the battle rules add to it,
@@ -498,6 +507,11 @@ export class World {
     assertBattleRuleStatusRefs(rules);
     this.battleRules = rules;
     registerBattleRules(this, rules);
+  }
+
+  /** Sets the battle's strike arm (`battleWorld`, or `fromJSON`). */
+  setStrike(arm: StrikeArm): void {
+    this.strike = arm;
   }
 
   /**
@@ -2229,6 +2243,7 @@ export class World {
       // The rules are fixed for the battle, so they are shared; the tally and
       // the fallen power are live, so they are copied.
       battleRules: this.battleRules.slice(),
+      strike: this.strike,
       tallies: { ...this.tallies },
       fallenPower: { ...this.fallenPower },
       // `hostileTo` in `QUEUE_TEAMS`' order, so the image doesn't depend on
@@ -2357,6 +2372,12 @@ export class World {
 
     // Installing the rules registers their handlers again.
     world.installBattleRules(snap.battleRules);
+    // An arm the config no longer holds would resolve strikes some other
+    // way than the battle saved did, so it is refused here.
+    if (!isStrikeArm(snap.strike)) {
+      throw new Error(`World.fromJSON: unknown strike arm '${String(snap.strike)}'`);
+    }
+    world.setStrike(snap.strike);
     world.tallies.bits = snap.tallies.bits;
     // The dead are gone from `units`, so their power comes back from the
     // snapshot alone.

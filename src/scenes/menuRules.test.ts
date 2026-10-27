@@ -32,6 +32,7 @@ const A_VALUE_PER_DIAL: Record<string, string> = {
   character: 'soldier',
   bits: '0',
   escalation: '1',
+  strike: 'range-1',
 };
 
 describe('when the menu boots', () => {

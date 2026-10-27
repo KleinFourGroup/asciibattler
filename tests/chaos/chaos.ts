@@ -149,8 +149,8 @@ export function chaosRun(options: ChaosOptions): ChaosResult {
     },
   );
   let world: World | null = null;
-  bus.on('battle:started', ({ encounter }) => {
-    world = battleWorld(bus, encounter);
+  bus.on('battle:started', ({ encounter, strike }) => {
+    world = battleWorld(bus, encounter, strike);
     spawnEncounter(world, encounter);
   });
 

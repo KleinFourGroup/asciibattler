@@ -50,7 +50,7 @@ function runRogueBattle(seed: number): {
     enemyTeam: [rollUnit('archer', new RNG(seed + 10))],
   };
 
-  const world = battleWorld(bus, encounter);
+  const world = battleWorld(bus, encounter, 'hit');
   spawnEncounter(world, encounter);
 
   const rogue = world.units.find((u) => u.team === 'player' && u.archetype === 'rogue');

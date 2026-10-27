@@ -14,6 +14,7 @@ import type { FuzzStrategy } from '../Strategy';
 import type { RunResult, HarnessOptions } from '../harness';
 import { parseRunConfig, type RosterEntry } from '../../../src/run/RunConfig';
 import { ESCALATION_MAX, isEscalationLevel } from '../../../src/config/escalation';
+import { STRIKE_ARMS, isStrikeArm, type StrikeArm } from '../../../src/config/stats';
 import {
   makeStrategy,
   makeDefaultStrategies,
@@ -105,6 +106,7 @@ export type RunModeArgs = Pick<
   | 'kTelemetry'
   | 'drawAdd'
   | 'escalation'
+  | 'strike'
   | 'eliteChance'
   | 'portChance'
   | 'eventChance'
@@ -189,6 +191,7 @@ export function runRunCli(args: RunModeArgs): void {
     firstNodeKind?: 'elite' | 'event';
     drawAmountAdd?: number;
     escalation?: number;
+    strike?: StrikeArm;
     eliteChance?: number;
     portChance?: number;
     eventChance?: number;
@@ -230,6 +233,15 @@ export function runRunCli(args: RunModeArgs): void {
       bail(`--escalation must be a level, 0 to ${ESCALATION_MAX} (got ${args.escalation})`);
     }
     if (args.escalation > 0) runConfig.escalation = args.escalation;
+  }
+  // `--strike=<arm>` rides the RunConfig arm; an arm the config does not
+  // hold is a flag typo worth failing loudly on. `hit` sets nothing, so
+  // `--strike=hit` is the run no flag gives, byte for byte.
+  if (args.strike !== undefined) {
+    if (!isStrikeArm(args.strike)) {
+      bail(`--strike must be one of ${STRIKE_ARMS.join(', ')} (got ${args.strike})`);
+    }
+    if (args.strike !== 'hit') runConfig.strike = args.strike;
   }
   // 72e — the node-scatter probe dials ride the RunConfig overrides (a
   // probability; anything outside [0, 1] is a flag typo worth failing

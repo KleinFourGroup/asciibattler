@@ -29,6 +29,7 @@ import type { RewardPortion } from '../run/rewards';
 import type { Theme } from '../sim/layouts';
 import type { EncounterKind } from '../config/encounters';
 import type { UseContext } from '../config/packets';
+import type { StrikeArm } from '../config/stats';
 
 /** What moved the run-wide player pool (`run:poolChanged.reason`). */
 export type PoolChangeReason = 'chip' | 'heal' | 'damage' | 'rest' | 'seam';
@@ -41,9 +42,11 @@ export interface GameEvents extends Record<string, unknown> {
    * layout, grid, teams, battle rules), so this event, the `command:applied`
    * stream and the outcome make a replayable trace; the trace and journal
    * recorders begin on it. Only Run emits it, and no sim or run code reads
-   * `encounter`.
+   * `encounter`. `strike` is the run's arm (`RunConfig.strike`), present
+   * only off `hit`, so whoever builds the battle's World passes it on
+   * (`battleWorld`).
    */
-  'battle:started': { worldSeed: number; encounter: BattleEncounter };
+  'battle:started': { worldSeed: number; encounter: BattleEncounter; strike?: StrikeArm };
   /**
    * Emitted once per battle by `World.emitBattleEnded`, whoever won.
    * `xpAwards` holds one entry per player unit with a roster slot, survivor

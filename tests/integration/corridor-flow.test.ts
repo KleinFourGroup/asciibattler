@@ -64,7 +64,7 @@ describe('E5: corridor flow (target stickiness, no thrash)', () => {
           playerTeam: team(),
           enemyTeam: team(),
         };
-        const world = battleWorld(bus, encounter);
+        const world = battleWorld(bus, encounter, 'hit');
         spawnEncounter(world, encounter);
 
         // Count committed-target changes per player unit across the battle.

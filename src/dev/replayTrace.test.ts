@@ -84,7 +84,7 @@ function driveLive(encounter: BattleEncounter): {
   new TraceRecorder(bus, (t) => traces.push(t));
 
   bus.emit('battle:started', { worldSeed: encounter.worldSeed, encounter });
-  const world = battleWorld(bus, encounter);
+  const world = battleWorld(bus, encounter, 'hit');
   spawnEncounter(world, encounter);
 
   const enemyId = world.units.find((u) => u.team === 'enemy')?.id;
@@ -144,7 +144,7 @@ describe('replayTrace (the fidelity keystone)', () => {
     const traces: BattleTrace[] = [];
     new TraceRecorder(bus, (t) => traces.push(t));
     bus.emit('battle:started', { worldSeed: encounter.worldSeed, encounter });
-    const world = battleWorld(bus, encounter);
+    const world = battleWorld(bus, encounter, 'hit');
     spawnEncounter(world, encounter);
     for (let n = 0; n < MAX_TURN_TICKS && !world.ended; n++) tickTurn(world);
     expect(world.ended, 'the turn ran past its cap').toBe(true);

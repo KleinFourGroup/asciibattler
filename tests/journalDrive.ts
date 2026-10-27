@@ -97,8 +97,8 @@ export function driveRun(options: DriveOptions): DriveResult {
             journal = closed;
             closes++;
           });
-    bus.on('battle:started', ({ encounter }) => {
-      world = battleWorld(bus, encounter);
+    bus.on('battle:started', ({ encounter, strike }) => {
+      world = battleWorld(bus, encounter, strike);
       spawnEncounter(world, encounter);
     });
     return { bus, recorder };

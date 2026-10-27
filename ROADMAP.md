@@ -47,8 +47,10 @@ no-op; the docs true to the code; the tap read on touch by the user.
 
 The cut, signed 2026-10-27 (WORKLOG §135, "The kickoff's audit"):
 
-- ☐ **135a — the roster table a row a line, with its sector ids** (`none`).
-- ☐ **135b — the roster table's coverage guard** (`none`).
+- ☑ **135a — the roster table a row a line, with its sector ids** (`none`).
+  4.6 MB to 1.8 MB, one added field by json-diff.
+- ☑ **135b — the roster table's coverage guard** (`none`). Six planted
+  tables; the sampler refuses a sector mismatch at launch.
 - ☐ **135c — `box-drive.sh` takes mixed queues** (`none`).
 - ☐ **135d — `FX_REGISTRY`'s coverage guard** (`none`).
 - ☐ **135e — the deleted action classes out of the docs** (`none`).

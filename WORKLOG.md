@@ -259,3 +259,35 @@ signed!"): the cut and its reads as put.
   planted copy.
 - *Checks:* the roster tests 17 passed under the fuzz config (14 before);
   `npm run typecheck` clean.
+
+### 135b — the roster table's coverage guard (2026-10-27)
+
+- `tests/roster-table-coverage.test.ts`, the prior tripwire's twin, with
+  its PENDING acknowledgments (empty today): every draftable archetype in
+  a recorded roster; no archetype the catalog dropped; every bucket a
+  shipped character, a sector position the map walks and a hop under that
+  sector's length; the provenance's sector ids equal to the map's walk.
+  Its expectations are read from `config/sector-map.json` and
+  `config/sectors.json` directly, not through the builder's
+  `sectorPositions`.
+- *The planted failures are permanent:* the checks are one function, run
+  on the committed table and on six planted tables (a missing archetype
+  and its acknowledgment, a dropped one, three bad buckets, a new first
+  sector with and without its acknowledgment, a table with no sector ids,
+  three unneeded acknowledgments). One planted case first failed on the
+  test's own helper, whose default parameter turned "no sector ids" back
+  into the default list; fixed with a `null` sentinel. A control on the
+  real file: the committed table with `the-deep-end` renamed in its
+  provenance fails the sector test alone; restored, `git diff` empty.
+- *Built and flagged, inside the cut's intent:* `makeRosterSampler` also
+  refuses, at launch, a table whose sector ids differ from the map's walk,
+  so a `--roster=sampled` read cannot take one sector's rows for another
+  even while the guard carries an acknowledgment; tested with a map that
+  adds a first sector.
+- *Landing note* (TODO, Round 10, "The board"): act 1 takes position 0, so
+  from the commit that adds it the guard fails and the sampler refuses
+  until a board cohort rebuilds the table; the guard takes a `sectors`
+  PENDING line meanwhile. BALANCE's registry row and TESTING's gate list
+  name the guard.
+- *Checks:* the guard 12 passed; the roster tests 18 passed under the fuzz
+  config; `npm run typecheck` clean.

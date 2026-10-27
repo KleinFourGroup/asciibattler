@@ -153,12 +153,7 @@ META-ROADMAP §"Round 9 — The frame and the damage trial" names each row's pla
 
 ### The board's instruments
 
-- [ ] **A coverage guard for `roster-table.json`** — the derived-artifact
-      registry's named next guard (BALANCE §"The derived-artifact
-      registry"): the prior-table tripwire's twin, config-derived over
-      the draftable set × the recorded (character, sector, hop) cells;
-      the builder loud-throws on unknown archetypes but membership drift
-      is silent until the next `--roster=sampled` read.
+- ✅ **A coverage guard for `roster-table.json`** — `tests/roster-table-coverage.test.ts`, with the sector ids by position and a launch-time refusal in `makeRosterSampler` (WORKLOG §135, 135b).
 
 - ✅ **Compact `roster-table.json`** — written a row a line, 4,616,750 → 1,773,061 bytes, with the sector ids by position in its provenance; the per-bucket distributions not built, since the rows were already deduplicated and a sampled draw draws a whole roster (WORKLOG §135, 135a).
 
@@ -191,6 +186,15 @@ META-ROADMAP §"Round 9 — The frame and the damage trial" names each row's pla
 ## Round 10 — Act 1, the wilds
 
 META-ROADMAP §"Round 10 — Act 1, the wilds" names each row's place.
+
+### The board
+
+- [ ] **Rebuild the roster table once act 1 is in the map.** A bucket
+  key holds a sector's position, and act 1 takes position 0, so from the
+  commit that adds it `tests/roster-table-coverage.test.ts` fails and
+  `makeRosterSampler` refuses the table until a board cohort rebuilds it;
+  until then the guard takes a `sectors` PENDING line with that reason
+  (WORKLOG §135, 135b).
 
 ### The scripted run
 

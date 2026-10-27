@@ -26,6 +26,7 @@
 
 import { readFileSync } from 'node:fs';
 import { deriveRng } from '../../../src/core/RNG';
+import { SECTOR_MAP } from '../../../src/config/sectorMap';
 import { ALL_ARCHETYPES, type Archetype } from '../../../src/sim/archetypes';
 import type { RosterEntry } from '../../../src/run/RunConfig';
 
@@ -304,7 +305,17 @@ export function makeRosterSampler(
   character: string,
   sector: number,
   hop: number,
+  map: Parameters<typeof sectorPositions>[0] = SECTOR_MAP,
 ): (seed: number) => RosterEntry[] {
+  // A bucket key holds a sector's position, so a table built over other
+  // sectors would be read for the wrong one: refused here, at launch.
+  const walk = sectorPositions(map);
+  if (JSON.stringify(table.provenance.sectors ?? null) !== JSON.stringify(walk)) {
+    throw new Error(
+      `roster:table: built over sectors ${JSON.stringify(table.provenance.sectors ?? null)}, but the map walks ` +
+        `${JSON.stringify(walk)} — rebuild it with \`npm run roster:table -- <batch dirs>\``,
+    );
+  }
   // Launch-time bucket check (throws the same loud error a draw would).
   sampleRoster(table, character, sector, hop, { int: () => 0 });
   return (seed: number) => sampleRoster(table, character, sector, hop, deriveRng(seed, 'rosterSample'));

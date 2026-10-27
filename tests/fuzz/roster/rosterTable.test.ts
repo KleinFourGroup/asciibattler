@@ -239,6 +239,23 @@ describe('sampleRoster / makeRosterSampler', () => {
     expect(() => makeRosterSampler(table, 'priest', 0, 1)).toThrowError(/NONE \(characters: soldier\)/);
   });
 
+  it('refuses at launch a table built over other sectors than the map walks', () => {
+    const moved = {
+      nodes: [
+        { id: 'new', sectors: ['new-first'] },
+        { id: 'start', sectors: ['the-start'] },
+        { id: 'deep', sectors: ['the-deep-end'] },
+      ],
+      edges: [
+        { from: 'new', to: 'start' },
+        { from: 'start', to: 'deep' },
+      ],
+      sources: ['new'],
+    };
+    expect(() => makeRosterSampler(table, 'soldier', 0, 1, moved)).toThrowError(/built over sectors .*the map walks/);
+    expect(() => makeRosterSampler(table, 'soldier', 0, 1)).not.toThrow();
+  });
+
   it('loadRosterTable throws loud on a missing file (never a silent natural-roster run)', () => {
     expect(() => loadRosterTable('tests/fuzz/output/no-such-roster-table.json')).toThrowError(
       /cannot read .*roster-table\.json.*npm run roster:table/,

@@ -30,6 +30,7 @@ Never relaxed. Pin history per round lives in the archived worklogs.
 - `src/render/statusDisplay.test.ts` (every buff key has a colour)
 - `src/sim/terrainGen.test.ts` (per-theme tiles)
 - `tests/prior-table-coverage.test.ts` (the derived-artifact tripwire)
+- `tests/roster-table-coverage.test.ts` (its twin for the roster table: the catalog, the buckets, the sector ids by position)
 - `src/config/packets.test.ts` (no run-duration packet)
 - `tests/fuzz/roster/rosterTable.test.ts` + `tests/fuzz/commands/sampledRosterArg.test.ts` (the roster table and sampled mode)
 - `tests/docs.test.ts` (the doc caps, the links, the filing text's hash, no home-folder path in a tracked file)

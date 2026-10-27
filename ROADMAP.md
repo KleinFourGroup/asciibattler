@@ -76,8 +76,8 @@ The cut, signed 2026-10-27 (no step adds an RNG stream):
 - ☑ **136b — the `strike` dial, the off arm byte-identical** (`none`).
   `8303ffc5`: corpus 0 of 30, fuzz diff PASS, three controls caught;
   World v37 by its convention, and the run clone takes the arm (WORKLOG).
-- ☐ **136c — the range's draw** (`none`). The Kumaraswamy's inverse, its
-  `a` per hit chance, rounded by chance; pinned against the closed form.
+- ☑ **136c — the range's draw** (`none`). `3e35aa85`: pinned through
+  `applyDamage` against a quadrature; a planted wrong `a` caught (WORKLOG).
 - ☐ **136d — the mixture** (`none`). Its misses on the same uniform, the
   zeros among them; pinned the same way.
 - ☐ **136e — a 0 is a miss, and the hooks ride every strike that deals

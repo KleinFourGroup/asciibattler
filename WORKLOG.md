@@ -267,3 +267,39 @@ proof clean on the unplanted worktree first; C3 by hand in a detached
 worktree, `perf-oracle.sh` run inside it. C2 says the corpus reads each
 payload's keys, so its 0 of 30 is the proof that a `hit` run's payloads
 are byte for byte the ones before the dial.
+
+### 136c — the range's draw (2026-10-27, `3e35aa85`)
+
+`src/sim/strike.ts` holds the draw: the share is the Kumaraswamy's inverse
+on the strike's uniform, `a` bisected on the closed-form mean (ln Γ by
+Lanczos) and cached per hit chance and `b`; the share times the damage
+after defense is rounded by chance on a second draw. A strike that rounds
+to 0 takes the miss path already, since that is how a 0 resolves; 136e
+pins what rides it. A hit chance of 1 lands the whole damage.
+
+**The pin** (`src/sim/strike.test.ts`) drives `applyDamage` on a seeded
+`combatRng`, 80,000 strikes a cell, at hit chances 0.3, 0.6 and 0.85 and
+damage after defense 1, 3 and 8, and holds the landed damage's mean to
+four standard errors and its spread to 4 % of what a midpoint quadrature
+of the spec's inverse gives, with `a` bisected on the quadrature's own
+mean. The code's solver is never called by the expectation.
+
+- *Known answer first:* on `hit` the instrument reads p·D and D·√(p(1 − p))
+  in every cell.
+- *Its resolution:* at 20,000 strikes a 10 % wrong `a` at `b` 0.25 moved
+  the mean 0.101 of 8 damage against four standard errors of 0.088, and
+  the in-test control failed to tell it; at 80,000 the bound is 0.044, and
+  the control tells it on both arms (`scratch/136/sens.mjs`, repeated in
+  the test's comment).
+- *The code plant:* `npm run oracle -- plant --at=src/sim/strike.ts:40
+  --op=bump` (the solver's mean, `1 + 1/a` to `2 + 1/a`): the suite
+  caught it, in `strike.test.ts` alone; the corpus did not, which is
+  right, since a `hit` run never calls the solver.
+- *The draws:* a range strike takes two from `combatRng` (the strike, its
+  rounding) and `hit` one, pinned against a twin stream.
+- *At 1 damage after defense* the misses are 1 − p of strikes on both arms,
+  the zero-as-miss table's 25 % at p 0.75.
+
+**At `hit`:** the journal corpus, 0 of 30 differ; the fuzz diff against
+`0ed33cdc`, PASS on both shapes. `applyDamage`'s refactor (`missStrike`,
+`afterDefense`) is covered by both.

@@ -215,9 +215,9 @@ at `b` 1 and `s` 0.5 joins the arms. So three, `b` 0.25, `b` 1, and `b` 1
 with half of today's misses kept, against hit or miss; the veto board
 runs on the arm the user's play picks, before the keep.
 
-### The bar (136a, put to the user 2026-10-27)
+### The bar (136a, SIGNED 2026-10-27)
 
-Written before any arm exists. The arms are the `strike` dial's: `hit`,
+Signed as written: "Signed, Claude! 😁". Written before any arm exists. The arms are the `strike` dial's: `hit`,
 `range-0.25`, `range-1` and `mix`, under the rules signed at §136's cut (a
 strike that deals 0 is a miss, rounding by chance, the hooks on every
 strike that deals damage). The user's play decides; the board can veto

@@ -889,7 +889,7 @@ guards:** no new unit, no act content.
 ## Round 10 — Act 1, the wilds
 
 **Charter:** a first act of beasts and bandits on mechanisms that exist,
-with the two shipped sectors moved to act 2's place in the same release.
+with the two shipped sectors as acts 2 and 3 in the same release.
 
 **In scope**
 
@@ -907,11 +907,15 @@ with the two shipped sectors moved to act 2's place in the same release.
 - **The ground fauna** (A17, N19): wolf, giant rat, fox, puma and tiger,
   enemy-only 1×1 melee archetypes, in encounters and camps; bandits as
   enemies.
-- **Act 1's sector** (A7's share): encounters, layouts, events and a boss,
-  locale-keyed; a tree as plain scenery if the layouts want one (its
-  flight rule is round 20's).
-- **The run's shape:** act 1, then the two shipped sectors in act 2's
-  place until round 21 reworks them.
+- **Act 1's sector** (A7's share): encounters, layouts and events,
+  locale-keyed, 11 hops on grassland, and two bosses: a bear, 1×1 until
+  round 20 grows it under the same id, and the Bandit King from The
+  Start; a tree as plain scenery if the layouts want one (its flight rule
+  is round 20's).
+- **The run's shape** ([plans/acts.md](plans/acts.md)): act 1, then The
+  Start as act 2 and The Deep End as act 3 until rounds 21 and 22 rework
+  them, with the Generalissimo and the Witch Hunt moved to The Start and
+  the Bandit Queen to The Deep End as the dark wizard's stand-in.
 - **The sheet's multi-act tooling** (A23's tooling half): the sheet is
   two-act shaped today, one seam band and a wall named for act 2; a seam
   column a sector and a wall band an act, then act 1's bands.
@@ -921,8 +925,10 @@ with the two shipped sectors moved to act 2's place in the same release.
 
 **Depends on:** round 9 (the spec). **Risk:** medium: a third sector
 lengthens the run and moves every band, and a run saved before it needs
-its resume checked or a Run bump (inferred). **Decision points:** act 1's
-hops (A24's length half); the act 1 boss. **Exit:** a run from act 1 to
+its resume checked or a Run bump (inferred); each moved boss is re-read at
+its new place in the run. **Decision points:** whether The Start takes
+act 2's barren theme (a lean in the plan); act 1's hops and bosses are
+the plan's. **Exit:** a run from act 1 to
 the deep end's boss, playable end to end; act 1's bands signed.
 **Release:** a new first act. **Scope guards:** no flyer, swimmer, 2×2 or
 swarm (rounds 19 and 20).
@@ -1334,14 +1340,15 @@ guards:** no draftable 2×2.
 
 ## Round 21 — Act 2, the realm in chaos
 
-**Charter:** the two shipped sectors reworked into one second act, a realm
-in chaos in the warlord-era register (bandits, deserters, a faction's
-leader as its boss), and lines of dialogue for bosses.
+**Charter:** The Start reworked into the second act, a realm in chaos in
+the warlord-era register (bandits, deserters, a faction's leader as its
+boss), and lines of dialogue for bosses.
 
 **In scope**
 
-- **Act 2's sector from the shipped two** (A7's share): encounters,
-  layouts, events and camps, at the length the spec set.
+- **Act 2's sector from The Start** (A7's share), with The Deep End's
+  human half ([plans/acts.md](plans/acts.md)): encounters, layouts,
+  events and camps, at the length the spec set.
 - **The rioter, gunslinger, halberdier and officer** in normal and elite
   fights (A9); today they fight in the two act-2 bosses alone.
 - **The rifle-armed archetypes as the deserters** (A8), enemy-only unless
@@ -1357,8 +1364,8 @@ leader as its boss), and lines of dialogue for bosses.
 
 **Depends on:** round 10 (act 1 and the sheet's multi-act tooling).
 **Risk:** medium: a shipped boss, event or sector id removed or renamed
-makes a saved run unreadable. **Decision points:** what of the two
-sectors is kept; the leader's fight; whether the deserters are draftable.
+makes a saved run unreadable. **Decision points:** what of The Start is
+kept; the leader's fight; whether the deserters are draftable.
 **Exit:** a run from act 1 through act 2's boss, playable; act 2's bands
 signed. **Release:** act 2. **Save:** a Run bump if a shipped id goes.
 
@@ -1371,10 +1378,12 @@ wizard as its boss, and stock that can be held to an act.
 
 **In scope**
 
-- **Act 3's sector** (A7's share), its theme from the spec; if volcanic,
+- **Act 3's sector from The Deep End** (A7's share), its theme from the
+  spec ([plans/acts.md](plans/acts.md)); if volcanic,
   the volcanic camp resident (A10), whose pool ships empty, and the
   mapgen tool's empty-pool hint (A32) with it, or the hint dropped.
-- **The plague's enemies, and the wizard.**
+- **The plague's enemies, and the wizard,** in the Bandit Queen's place
+  as act 3's boss.
 - **Act-scoped stock** (A16): ports and draft pools draw from the whole
   catalog today, so an "act 3" daemon, packet or draftable would be
   offered in act 1. Ports and pools by act, each item a prior-table row,
@@ -1404,7 +1413,9 @@ over the whole run.
   `progress` is lenient and a new field's name is permanent; `bestWin` is
   the highest level won per character; a dialled run's win is not
   recorded; unlocks apply at the character's confirm.
-- **A win** as the spec defines it, with the credits.
+- **A win** as the spec defines it, with the credits: act 3's boss, with
+  act 4 offered after it as a choice and its boss a second record, so
+  the win is recorded apart from the run's end.
 - **Escalation's rule levers** (A1): more elites, a boss's extra trick, a
   tool taken away; with per-act node-map parameters (A24's economy half),
   one seam, since elite, port and event chances are one global block
@@ -1413,12 +1424,13 @@ over the whole run.
   act 4's bands.
 
 **Depends on:** rounds 10 to 22. **Risk:** medium. **Decision points:**
-what unlocks act 4; which tool a level takes away; what "working as
+what unlocks act 4 (a condition met during a run, the plan's; which
+one); which tool a level takes away; what "working as
 intended" means for the bot. **Exit:** a run through all four acts with
 act 4 unlocked; the bot's check read; every act's bands signed.
 **Release:** the secret act, unlocks, Escalation's new levels. **Save:** a
-new permanent `progress` field; a Run bump if an unlock reaches the run
-by snapshot.
+new permanent `progress` field; a Run bump for act 4's condition, which a
+run holds.
 
 ---
 

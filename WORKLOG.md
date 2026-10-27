@@ -45,3 +45,41 @@ rests on the act design, so its answers can come at any point in the
 round; Round 10 needs them first (act 1's hops and boss, the themes).
 Tranche 2 is what keeping the trial would look like; tranche 3 the
 premises at HEAD and the first phase's cut.
+
+### Tranche 1 answered; the act design in plans/acts.md (2026-10-27)
+
+The user answered in two turns; the words are the spec's "The act design,
+answered". Between them the session read two premises: a wave's level
+budget is a factor of the roster's mean or median level
+(`src/config/encounters.ts`, `LevelBudgetSchema`; the bosses' `mean`
+factors), so a longer run does not outrun the enemies, and the level cap
+is 20 (`config/leveling.json`); barren's camp pool is grassland's, and its
+ground swaps mud for sand with a few more hills (`config/terrain.json`).
+
+**The change to the re-cut's shape.** The session put two readings of the
+Queen's move (the finished design only, or from Round 10, the three
+sectors as acts 1 to 3 at once) with the second as its lean; the user
+agreed. So from Round 10 The Start is act 2 and The Deep End act 3, with
+the Bandit King moved to act 1, the Generalissimo and the Witch Hunt to
+The Start, and the Queen to The Deep End; Rounds 21 and 22 each rework
+one shipped sector where Round 21 merged two. META-ROADMAP's Rounds 10,
+21, 22 and 23 are re-pointed: Round 10's charter, its act-1 and run-shape
+bullets, risk and decision points; Round 21's charter, its sector bullet
+and decision point; Round 22's sector and wizard bullets; Round 23's win,
+its unlock decision point and its save line. A search of the tracked
+docs for "act 2's place", "shipped two" and "two shipped", outside the
+archive, finds one line, Round 10's new charter (code comments that say
+"shipped two-sector" describe today's map and stand).
+
+**Unanswered leans, kept as leans in the plan:** acts 2 to 4's themes
+(barren, swamp, volcanic), The Start to barren in Round 10, and act 4's
+condition findable only after a first win.
+
+**For tranche 2,** `scratch/134/spread.mjs`: the proposal's `U^k` is the
+Kumaraswamy distribution with `b` 1, so a spread dial needs no second
+draw a strike, which 133c had assumed a two-parameter family would. Its
+controls passed (the uniform at `p` 0.5 and `b` 1, variance 0.0833; the
+closed-form mean within 0.0004 of the sampled one at six settings; 0.194
+at the proposal's setting, 133c's figure). The table is the spec's.
+`Math.pow` with a fractional exponent is already in the sim's path
+(`src/sim/xp.ts:17`), so the draw adds no new kind of float operation.

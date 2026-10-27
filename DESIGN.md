@@ -125,7 +125,9 @@ heritage, modernized with synthwave neon), and the run layer's vocabulary —
 the run reads as a voyage through a machine. The nautical resonance ("port,"
 sector charts as sea maps) is a deliberate pun, kept. Sectors shade darker as
 the run goes: act 1 is mundane brigand country, act 2 ("The Deep End," swamp)
-turns occult — the cosmic-horror *mood* without period technology. Named
+turns occult — the cosmic-horror *mood* without period technology. That is
+the shipped run; the four acts it is being built toward, from Round 10, are
+[plans/acts.md](plans/acts.md). Named
 deferrals: 1920s-register archetypes (riflemen etc.) are Cluster-5 sector-
 identity content, not a rider; the Roman daemon naming keeps fading out.
 Rationale: WORKLOG §67-shape-lock.

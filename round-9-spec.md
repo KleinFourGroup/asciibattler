@@ -98,67 +98,73 @@ them at 133b and the user signed them with the round.
 The trial's and the instruments' premises are re-checked at HEAD before
 the first phase's cut (tranche 3).
 
+## The act design, answered (2026-10-27)
+
+Tranche 1 put eight questions with the session's leans; the user answered
+in two turns. The design as answered is [plans/acts.md](plans/acts.md),
+its home from now on; this section keeps the words.
+
+> 1. For now, it's one sector per act. I intend to flesh that out later.
+>    Act 1 definitely stays grassland for now, at least.
+> 2. I think that we stay at 11 for now, actually. I'm okay with a longer
+>    run.
+> 3. My thought is that we just create a placeholder 1x1 bear 😂 There
+>    should still be some bandits, so Bandit King might also move up.
+>    Generalissimo is a faction leader who goes to Act 2, yes... Maybe
+>    Bandit Queen goes to Act 3 as a temporary "dark wizard" stand-in?
+> 4. Signed.
+
+The session's reply on 3 put two readings of the Queen's move: in the
+finished design only, or from Round 10, where the run already has three
+sectors and they could be acts 1 to 3 at once (The Start as act 2 with the
+Generalissimo and the Witch Hunt, The Deep End as act 3 with the Queen).
+The lean was the second, a change to the re-cut's signed shape ("the two
+shipped sectors in act 2's place until Round 21").
+
+> Yes, Claude, agreeing with your lean on the queen!
+>
+> 5. I'm still figuring it out, but I love that virus pun! 😁
+> 6. Agreed!
+> 7. c was what I was thinking too; I'm just still thinking about what,
+>    exactly, it should be 😂
+> 8. That sounds good to me!
+
+So 4, 6 and 8 sign the leans as put; 7 signs (c), a condition met during
+a run, with the condition still open; 5 stays open. Two leans had no
+answer and stay leans in the plan: act 2 to 4's themes (barren, swamp,
+volcanic), with The Start moved to barren in Round 10; and act 4's
+condition findable only after a first win.
+
 ## Open
-
-### The act design (tranche 1, put to the user 2026-10-27)
-
-1. **Each act's theme.** One sector per act, or candidates per act (the
-   map already picks among a node's candidates; each is a full sector of
-   content). *Lean:* one sector an act for now; act 1 grassland, act 2
-   barren, act 3 swamp, act 4 volcanic, with tundra and desert left for
-   candidates later. Until Round 21 reworks the shipped two, a run would
-   be grassland, grassland, swamp.
-2. **Hops per act, and so a run's length.** Today 22 hops. Acts 1 to 3 at
-   11 each make 33 to act 3's boss, half again as long; at 9, 27; at 8,
-   24. From Round 10 to Round 21 the run is act 1 plus the shipped 22.
-   The time a hop takes in play is not measured here. *Lean:* about 9 an
-   act.
-3. **Bosses.** Act 2's faction leader, act 3's dark wizard and act 4's
-   demon lord are the outline's. Open: act 1's boss (Round 10's decision
-   point, under its scope guard of no 2×2, so the bear cannot be it yet);
-   whether the Generalissimo is act 2's leader; one boss an act or a pool
-   of two as today. *Lean:* act 1 an alpha beast with its pack, 1×1 for
-   now; the Generalissimo as the leader; a pool of two where the content
-   allows.
-4. **The enemies' split.** *Lean:* the Deep End's plague and occult
-   encounters go to act 3 when act 3 lands, and act 2 keeps the human
-   half (bandits, deserters, the period archetypes); act 4's are new.
-5. **The plague's cause, and the arc.** Open; the user's to write. *One
-   reading, offered:* the dark wizard spreads the plague, and the demon
-   lord is what he spread it for, so the secret act answers "why". The
-   terminal frame has a pun ready: a plague in a machine is a virus, and
-   a demon lord sits beside the daemons the player carries.
-6. **The ending, and what a win is.** (a) A win is act 3's boss; act 4,
-   when open, is offered after it as a choice, losing there does not undo
-   the win, and its boss is a second record. (b) With act 4 open the run
-   goes on to it, and only its boss wins. (a) needs the win recorded
-   apart from the run's end, which one event does today, and a choice at
-   act 3's end; (b) needs only the gated edge, but makes finding the
-   secret act a harder run. *Lean:* (a), with the credits after the first
-   win.
-7. **Act 4's unlock, in outline.** The user is still working on it. (a)
-   Any first win opens it, or (b) a win at some Escalation level or with
-   each character: both read `bestWin` and cost nothing in the run. (c) A
-   condition met during a run, found or done in acts 1 to 3: a Run field
-   (a Run bump) and content. *Lean:* (c), gated by (a), since "secret"
-   reads as found rather than handed out.
-8. **Where the act design lives.** The round's spec is archived at the
-   close, and Rounds 10 and 21 to 23 build on the design. *Lean:*
-   `plans/acts.md`, beside the tutorial and music plans; DESIGN.md's
-   Aesthetic paragraph (act 1 brigand country, act 2 the Deep End)
-   describes the shipped game, gains a pointer now and is rewritten when
-   Round 10 ships act 1.
 
 ### The trial (tranche 2)
 
-What keeping it would look like: the bar is a decision point, and it rests
-on what the trial is for. The user's intent names two aims, precision made
-visible and unpredictability in small fights; by 133c's arithmetic a
-single draw a strike makes a hit's spread smaller (0.433 of the damage to
-0.194 at a hit chance of 0.75), steadier fights, and a two-parameter
-family makes the spread a dial. The rest of the trial's decision points
-(the distribution; bleed, blind and the two hit-hooking daemons; the bot's
-sensors; the MISS splat) are the trial phase's kickoff.
+What keeping it would look like. The bar is a decision point, and it
+rests on what the trial is for: the user's intent names two aims,
+precision made visible and unpredictability in small fights.
+
+By `scratch/134/spread.mjs` (its controls: the uniform's mean and
+variance, the closed-form mean against a sampled one at every setting,
+and 133c's 0.194 at the proposal's setting), the proposal's draw, `U^k`,
+is one member of a family with a second parameter that needs no second
+draw: the Kumaraswamy's inverse, `(1 − (1 − U)^(1/b))^(1/a)`, one uniform
+a strike, with `a` solved so the mean stays the hit chance. `b` is the
+spread, and the two aims sit at its two ends. At a hit chance of 0.75:
+
+| `b` | a hit's spread (of its damage) | strikes under a tenth of their damage | hits a side to tell 0.75 from 0.80 |
+|---|---|---|---|
+| hit or miss, today | 0.433 | 25 % (the misses) | 556 |
+| 0.1 | 0.373 | 15 % | 399 |
+| 0.25 | 0.308 | 6 % | 266 |
+| 0.5 | 0.249 | 1 % | 171 |
+| 1, the proposal | 0.194 | 0.1 % | 103 |
+| 2 | 0.149 | 0 | 61 |
+
+The last column is 133c's measure with each arm's own spread, so it
+reads 103 and 556 where 133c, using one spread for both, had 121 and
+about 600. The rest of the trial's decision points (the distribution as
+built; bleed, blind and the two hit-hooking daemons; the bot's sensors;
+the MISS splat) are the trial phase's kickoff.
 
 ### The kickoff's own (tranche 3)
 

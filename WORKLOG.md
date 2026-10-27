@@ -25,6 +25,23 @@ close left for the user's read.
 
 ## Kickoff — Round 9 (The frame and the damage trial)
 
-_(Still to land here: the spec, the charter against the code, and the
-first phase's cut with its reads. Charter + decision points:
-META-ROADMAP §Round 9.)_
+### The spec drafted, tranche 1 put to the user (2026-10-27)
+
+The user opened the kickoff: "It's time to kick off phase 9 of our game!
+We've gotta write the detailed spec, right?"
+
+[round-9-spec.md](round-9-spec.md) is drafted from the record, unsigned:
+the user's words on the acts, the trial, who plays and releases, from
+§133; what was signed before the kickoff; the code under the act
+questions; and the Open section in three tranches. The code was read at
+`8e4ef58b` for the act questions only (the sector map's schema and
+shipped graph, the sectors' lengths and themes, the boss and plague
+encounters' text, the win at `run:victory`, `progress`'s one field); the
+trial's and the instruments' premises are tranche 3's, before the cut.
+
+Tranche 1, the act design's eight questions with the session's leans, is
+put to the user as the spec's Open lists them. Nothing else in Round 9
+rests on the act design, so its answers can come at any point in the
+round; Round 10 needs them first (act 1's hops and boss, the themes).
+Tranche 2 is what keeping the trial would look like; tranche 3 the
+premises at HEAD and the first phase's cut.

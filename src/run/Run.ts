@@ -83,7 +83,6 @@ import {
   type DifficultyMultipliers,
 } from '../config/difficulty';
 import { ESCALATION_MAX, isEscalationLevel, withEscalation } from '../config/escalation';
-import type { StrikeArm } from '../config/stats';
 import { getEncounter, type Encounter, type EncounterKind } from '../config/encounters';
 import { resolveWave, type WaveContext } from './encounters/wave';
 import { waveForTurn, type WaveCursor, type EncounterState } from './encounters/sequencer';
@@ -593,10 +592,6 @@ export class Run {
    *  `effectiveRunStats` as one more `drawAmount` add; 0 adds no modifier,
    *  so the fold's no-modifier path holds. */
   private readonly drawAmountAdd: number;
-  /** How the run's evadable strikes resolve (`RunConfig.strike`), handed to
-   *  each battle on `battle:started`. A config input, not saved: a load takes
-   *  it from its config, a rollout's clone from the live run. */
-  readonly strike: StrikeArm;
   /** The sector map the run walks: `RunConfig.sectorMap`, for tests, else
    *  the shipped `SECTOR_MAP`. */
   private sectorMap: SectorMap;
@@ -834,7 +829,6 @@ export class Run {
     this.rootStampedByDial = inputs.rootStampedByDial;
     this.passIsFinal = inputs.passIsFinal;
     this.drawAmountAdd = inputs.drawAmountAdd;
-    this.strike = inputs.strike;
     // The Escalation level: unset is 0, off. A level off the ladder is a
     // caller's mistake and throws; the URL parser drops one before it gets
     // here. Pure of RNG, and at level 0 the multipliers are the resolved ones
@@ -2444,14 +2438,8 @@ export class Run {
     };
     this.currentEncounter = battleEncounter;
     // The whole fixture rides the payload, for the trace recorder and the
-    // journal's replay. The arm rides it off `hit` only, so a hit-or-miss
-    // run's payloads are the ones it had before the dial.
-    this.bus.emit(
-      'battle:started',
-      this.strike === 'hit'
-        ? { worldSeed, encounter: battleEncounter }
-        : { worldSeed, encounter: battleEncounter, strike: this.strike },
-    );
+    // journal's replay.
+    this.bus.emit('battle:started', { worldSeed, encounter: battleEncounter });
   }
 
   /**
@@ -3731,7 +3719,6 @@ export class Run {
     m.rootStampedByDial = inputs.rootStampedByDial;
     m.passIsFinal = inputs.passIsFinal;
     m.drawAmountAdd = inputs.drawAmountAdd;
-    m.strike = inputs.strike;
     // The level is the snapshot's, whatever the config says (a rollout's
     // clone loads with none), and the multipliers derive from it over the
     // config's overrides. A level off the ladder rejects, as an unknown
@@ -3979,7 +3966,6 @@ interface RunInputs {
   readonly rootStampedByDial: boolean;
   readonly passIsFinal: boolean;
   readonly drawAmountAdd: number;
-  readonly strike: StrikeArm;
   readonly difficultyMultipliers: DifficultyMultipliers;
 }
 
@@ -4005,7 +3991,6 @@ function resolveRunInputs(config: RunConfig | undefined): RunInputs {
     rootStampedByDial: config?.firstNodeKind === 'event',
     passIsFinal: config?.passIsFinal ?? DECK.grantQueue.passIsFinal,
     drawAmountAdd: config?.drawAmountAdd ?? 0,
-    strike: config?.strike ?? 'hit',
     difficultyMultipliers: resolveDifficultyMultipliers({
       waveSize: config?.waveSizeMultiplier,
       levelBudget: config?.levelBudgetMultiplier,

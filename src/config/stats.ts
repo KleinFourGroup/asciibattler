@@ -28,7 +28,7 @@
  *
  * Mitigation and to-hit:
  * - `minDamage` — the floor under defense: a confirmed hit lands
- *   `max(minDamage, rawDamage − defense)` (`World.dealDamage`), so high
+ *   `max(minDamage, rawDamage − defense)` (`World.applyDamage`), so high
  *   defense never fully negates an attack. Environmental damage (fire,
  *   chasm) is not mitigated and never sees it.
  * - `hitChancePerPrecision`, `dodgeChancePerEvasion`, `hitChanceFloor`,
@@ -41,24 +41,10 @@
  *   floor keeps a low-precision unit from being shut out by a high-evasion
  *   target. A tile's accuracy and evasion mods fold into the same roll
  *   (`TileDef`, `src/sim/TileGrid.ts`).
- *
- * The strike's arms, the damage trial's (the `strike` dial in `RunConfig`):
- * - `strikeArms` — every arm but `hit`, hit or miss, which is the default,
- *   keyed by its dial value. On an arm a strike lands a share of its damage
- *   after defense, drawn so the strike's mean is the hit chance's share.
- *   `b` is the Kumaraswamy's second parameter: a smaller `b` spreads the
- *   shares wider. `missesKept` is the share of hit or miss's misses the arm
- *   keeps whole, from 0 to 1, where 1 is hit or miss; the range above them
- *   is raised so the mean holds.
  */
 
 import { z } from 'zod';
 import statsJson from '../../config/stats.json';
-
-const StrikeArmSchema = z.object({
-  b: z.number().positive(),
-  missesKept: z.number().min(0).max(1),
-});
 
 const StatsSchema = z.object({
   hpPerConstitution: z.number().positive(),
@@ -75,26 +61,8 @@ const StatsSchema = z.object({
   speedCdPerStat: z.number().nonnegative(),
   mobilityMinCdScale: z.number().min(0).max(1),
   speedMinCdScale: z.number().min(0).max(1),
-  strikeArms: z.object({
-    'range-0.25': StrikeArmSchema,
-    'range-1': StrikeArmSchema,
-    mix: StrikeArmSchema,
-  }),
 });
 
 type StatsConfig = z.infer<typeof StatsSchema>;
 
 export const STATS: StatsConfig = StatsSchema.parse(statsJson);
-
-/** A value of the `strike` dial: `hit`, or an arm `strikeArms` holds. */
-export type StrikeArm = 'hit' | keyof StatsConfig['strikeArms'];
-
-/** Every value of the `strike` dial, `hit` first. */
-export const STRIKE_ARMS: readonly StrikeArm[] = [
-  'hit',
-  ...(Object.keys(STATS.strikeArms) as (keyof StatsConfig['strikeArms'])[]),
-];
-
-export function isStrikeArm(value: string): value is StrikeArm {
-  return (STRIKE_ARMS as readonly string[]).includes(value);
-}

@@ -12,10 +12,5 @@
   "mobilityCdPerStat": 0.075,
   "speedCdPerStat": 0.05,
   "mobilityMinCdScale": 0.3,
-  "speedMinCdScale": 0.4,
-  "strikeArms": {
-    "range-0.25": { "b": 0.25, "missesKept": 0 },
-    "range-1": { "b": 1, "missesKept": 0 },
-    "mix": { "b": 1, "missesKept": 0.5 }
-  }
+  "speedMinCdScale": 0.4
 }

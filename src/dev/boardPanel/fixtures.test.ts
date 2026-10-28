@@ -209,7 +209,7 @@ describe('the poses', () => {
     r.dispatch({ kind: 'enterNode', nodeId: r.nodeMap.rootId });
     r.dispatch({ kind: 'advanceTurn' });
     const e = r.currentEncounter!;
-    const world = battleWorld(new EventBus<GameEvents>(), e, r.strike);
+    const world = battleWorld(new EventBus<GameEvents>(), e);
     spawnEncounter(world, e);
     const taken = new Set<string>();
     for (const unit of world.units) {

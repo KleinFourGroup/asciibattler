@@ -40,10 +40,6 @@
  *   # the level is in the run's snapshot and a rollout clone plays at it. The
  *   # paired read is the same seeds at two levels:
  *   npm run fuzz -- --count=20 --escalation=2
- *   # --strike=<arm> resolves every evadable strike by that arm of the damage
- *   # trial (run mode only; hit = hit or miss, the run no flag gives). Legal
- *   # with --arbitrate, since a rollout clone takes the live run's arm:
- *   npm run fuzz -- --count=20 --strike=range-1
  *   npm run fuzz -- --layout=junctionAmbush --per-hop   # force ONE layout (clean full sample)
  *   npm run fuzz -- --layout=procedural --per-hop       # force PROCEDURAL maps every battle (M6 isolate)
  *

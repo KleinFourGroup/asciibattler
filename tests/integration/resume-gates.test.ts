@@ -69,8 +69,8 @@ interface Arrival {
 function arrivals(seed: number, dials: string): Arrival[] {
   const bus = new EventBus<GameEvents>();
   let world: World | null = null;
-  bus.on('battle:started', ({ encounter, strike }) => {
-    world = battleWorld(bus, encounter, strike);
+  bus.on('battle:started', ({ encounter }) => {
+    world = battleWorld(bus, encounter);
     spawnEncounter(world, encounter);
   });
   const emitted = listen(bus);
@@ -199,8 +199,8 @@ describe("115e — the strip's input is the turn:resolved before it", () => {
   it('on every pre-turn screen of a seeded drive', () => {
     const bus = new EventBus<GameEvents>();
     let world: World | null = null;
-    bus.on('battle:started', ({ encounter, strike }) => {
-      world = battleWorld(bus, encounter, strike);
+    bus.on('battle:started', ({ encounter }) => {
+      world = battleWorld(bus, encounter);
       spawnEncounter(world, encounter);
     });
     const resolved: GameEvents['turn:resolved'][] = [];

@@ -189,8 +189,8 @@ function replaySegment(
       : new TappedBus((name, payload) => onEvent(index, name, payload));
   let world: World | null = null;
   let winner: GameEvents['battle:ended']['winner'] | null = null;
-  bus.on('battle:started', ({ encounter, strike }) => {
-    world = battleWorld(bus, encounter, strike);
+  bus.on('battle:started', ({ encounter }) => {
+    world = battleWorld(bus, encounter);
     spawnEncounter(world, encounter);
     winner = null;
   });

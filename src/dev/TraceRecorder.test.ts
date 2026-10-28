@@ -52,16 +52,6 @@ describe('TraceRecorder', () => {
     expect(trace.outcome).toEqual({ winner: 'player', ticks: 3 });
   });
 
-  it("keeps the payload's strike arm, and writes no `strike` key at `hit`", () => {
-    const { bus, traces } = setup();
-    bus.emit('battle:started', { worldSeed: 5, encounter: makeEncounter(5), strike: 'mix' });
-    bus.emit('battle:ended', { winner: 'player', xpAwards: [] });
-    bus.emit('battle:started', { worldSeed: 6, encounter: makeEncounter(6) });
-    bus.emit('battle:ended', { winner: 'player', xpAwards: [] });
-    expect(traces.map((t) => t.strike)).toEqual(['mix', undefined]);
-    expect('strike' in traces[1]!).toBe(false);
-  });
-
   it('pins the encounter at record time (a later mutation of the source object is invisible)', () => {
     const { bus, traces } = setup();
     const encounter = makeEncounter(7);

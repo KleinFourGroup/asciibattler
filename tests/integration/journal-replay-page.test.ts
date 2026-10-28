@@ -55,8 +55,8 @@ class StandInGame {
       () => (clock += 10),
       (journal) => (this.finished = journal),
     );
-    this.bus.on('battle:started', ({ encounter, strike }) => {
-      const world = battleWorld(this.bus, encounter, strike);
+    this.bus.on('battle:started', ({ encounter }) => {
+      const world = battleWorld(this.bus, encounter);
       spawnEncounter(world, encounter);
       const countdown = { active: true };
       this.parkedFrames = 2;

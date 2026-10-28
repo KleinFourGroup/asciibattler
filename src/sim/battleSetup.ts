@@ -25,7 +25,6 @@ import { World, type CampInstance, type CampPendingUnit } from './World';
 import { secondsToTicks } from '../config';
 import { getCamp } from '../config/camps';
 import { HEALTH } from '../config/health';
-import type { StrikeArm } from '../config/stats';
 import { createMovementBehavior } from './behaviors/registry';
 import type { Team, UnitTemplate } from './Unit';
 import type { BattleEncounter } from '../run/Run';
@@ -316,23 +315,13 @@ export function spawnEncounter(world: World, encounter: BattleEncounter): void {
 
 /**
  * A turn's World, as every driver of a run builds it on `battle:started`:
- * on the encounter's seed and grid, with the turn's battle rules installed
- * and the run's strike arm set. The caller spawns the teams next
- * (`spawnEncounter`, or BattleScene by hand), once anything its
- * `unit:spawned` handlers read is set.
- *
- * `strike` is the payload's own, or the run's (`Run.strike`), and undefined
- * is `hit`. It is not optional, so a caller that builds a World says where
- * its arm comes from.
+ * on the encounter's seed and grid, with the turn's battle rules installed.
+ * The caller spawns the teams next (`spawnEncounter`, or BattleScene by
+ * hand), once anything its `unit:spawned` handlers read is set.
  */
-export function battleWorld(
-  bus: EventBus<GameEvents>,
-  encounter: BattleEncounter,
-  strike: StrikeArm | undefined,
-): World {
+export function battleWorld(bus: EventBus<GameEvents>, encounter: BattleEncounter): World {
   const world = new World(bus, new RNG(encounter.worldSeed), encounter.gridW, encounter.gridH);
   world.installBattleRules(encounter.battleRules ?? []);
-  world.setStrike(strike ?? 'hit');
   return world;
 }
 

@@ -383,30 +383,6 @@ describe('executeOp — applyStatus (status-on-hit)', () => {
     expect(has(target)).toBe(true);
   });
 
-  it('on a range strike arm the status rides exactly the strikes that deal damage, never a 0', () => {
-    const { world } = setup();
-    world.setStrike('range-1');
-    const caster = makeUnit('player', { x: 0, y: 0 });
-    // 10 against defense 9 leaves 1, where zeros are common.
-    const target = makeUnit('enemy', { x: 1, y: 0 }, { defense: 9 });
-    world.placeUnits(caster, target);
-    let landed = 0;
-    let zeros = 0;
-    for (let i = 0; i < 400; i++) {
-      target.effects.length = 0;
-      target.currentHp = target.derived.maxHp;
-      const shared = ctx({ caster, world, target, resolution: { baseDamage: 10, critChance: 0 } });
-      executeOp(dmgOp({ evadable: true, accuracy: 0.6 }), shared);
-      const dealt = target.derived.maxHp - target.currentHp;
-      executeOp(statusOp(), shared);
-      expect(has(target), `fire ${i}, dealt ${dealt}`).toBe(dealt > 0);
-      if (dealt > 0) landed++;
-      else zeros++;
-    }
-    expect(landed).toBeGreaterThan(0);
-    expect(zeros).toBeGreaterThan(0);
-  });
-
   it('an aoe applier lands on every victim in the blast (non-evadable → no miss)', () => {
     const aoe: TargetSelector = { kind: 'aoe', shape: 'square', radius: 1, anchor: 'targetCell', affects: 'enemies', ringMultiplier: 0.5 };
     const { world } = setup();

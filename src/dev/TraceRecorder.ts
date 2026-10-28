@@ -28,7 +28,6 @@ import type { EventBus } from '../core/EventBus';
 import type { GameEvents } from '../core/events';
 import type { BattleEncounter } from '../run/Run';
 import { configHash } from '../config/configHash';
-import type { StrikeArm } from '../config/stats';
 
 /** One applied command, exactly as `command:applied` carried it. */
 interface RecordedCommand {
@@ -43,9 +42,6 @@ export interface BattleTrace {
   readonly configHash: string;
   /** The self-contained battle fixture (deep-copied at `battle:started`). */
   readonly encounter: BattleEncounter;
-  /** The run's strike arm, as `battle:started` carried it: absent at `hit`,
-   *  so a trace from before the dial reads as one. */
-  readonly strike?: StrikeArm;
   readonly commands: readonly RecordedCommand[];
   readonly outcome: {
     readonly winner: GameEvents['battle:ended']['winner'];
@@ -57,7 +53,6 @@ export interface BattleTrace {
 export class TraceRecorder {
   private open: {
     encounter: BattleEncounter;
-    strike: StrikeArm | undefined;
     commands: RecordedCommand[];
     lastTick: number;
   } | null = null;
@@ -67,10 +62,10 @@ export class TraceRecorder {
     private readonly onTrace: (trace: BattleTrace) => void,
   ) {
     // Built once for the life of the page, so nothing unsubscribes.
-    bus.on('battle:started', ({ encounter, strike }) => {
+    bus.on('battle:started', ({ encounter }) => {
       // Deep-copied: the Run replaces its currentEncounter across turns,
       // and the trace must pin the encounter as it was at record time.
-      this.open = { encounter: structuredClone(encounter), strike, commands: [], lastTick: 0 };
+      this.open = { encounter: structuredClone(encounter), commands: [], lastTick: 0 };
     });
     bus.on('command:applied', (applied) => {
       this.open?.commands.push(applied);
@@ -84,7 +79,6 @@ export class TraceRecorder {
         version: 1,
         configHash: configHash(),
         encounter: this.open.encounter,
-        ...(this.open.strike === undefined ? {} : { strike: this.open.strike }),
         commands: this.open.commands,
         outcome: { winner, ticks: this.open.lastTick },
       };

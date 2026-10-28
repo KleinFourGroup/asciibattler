@@ -83,7 +83,7 @@ export function replayTrace(
   }
 
   const { encounter } = trace;
-  const world = battleWorld(bus, encounter, trace.strike);
+  const world = battleWorld(bus, encounter);
   spawnEncounter(world, encounter);
 
   const byTick = new Map<number, WorldCommand[]>();

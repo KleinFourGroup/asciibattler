@@ -86,7 +86,7 @@ export class BattleScene implements Scene {
       throw new Error('BattleScene.mount: no Run encounter');
     }
 
-    this.world = battleWorld(ctx.bus, encounter, run.strike);
+    this.world = battleWorld(ctx.bus, encounter);
     this.clock = new Clock(TICK_RATE, () => {
       const w = this.world;
       if (w && !w.ended) tickTurn(w);

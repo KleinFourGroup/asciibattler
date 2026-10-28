@@ -50,8 +50,7 @@ export function measureLayout(layoutId: string | null, seed: number): MovementMe
     playerTeam: team(),
     enemyTeam: team(),
   };
-  // Movement metrics only; the strike's arm never moves a unit.
-  const world = battleWorld(bus, encounter, 'hit');
+  const world = battleWorld(bus, encounter);
   spawnEncounter(world, encounter);
 
   const collector = new MovementMetricsCollector(world, bus);

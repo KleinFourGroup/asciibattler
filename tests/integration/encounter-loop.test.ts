@@ -23,7 +23,7 @@ import { Run, type BattleEncounter } from '../../src/run/Run';
 
 /** Build a World for one turn as every driver does. */
 function buildWorld(enc: BattleEncounter, bus: EventBus<GameEvents>): World {
-  const world = battleWorld(bus, enc, 'hit');
+  const world = battleWorld(bus, enc);
   spawnEncounter(world, enc);
   return world;
 }

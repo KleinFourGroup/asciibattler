@@ -50,7 +50,7 @@ function runMageBattle(seed: number): {
     ],
   };
 
-  const world = battleWorld(bus, encounter, 'hit');
+  const world = battleWorld(bus, encounter);
   spawnEncounter(world, encounter);
 
   const mage = world.units.find((u) => u.team === 'player' && u.archetype === 'mage');

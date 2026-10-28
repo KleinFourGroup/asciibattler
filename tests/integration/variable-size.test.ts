@@ -65,7 +65,7 @@ function runBattle(seed: number, side: number): { world: World; ticks: number } 
     playerTeam,
     enemyTeam,
   };
-  const world = battleWorld(bus, encounter, 'hit');
+  const world = battleWorld(bus, encounter);
   spawnEncounter(world, encounter);
 
   let ticks = 0;

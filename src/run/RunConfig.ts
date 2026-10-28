@@ -23,7 +23,6 @@ import { daemonById, type DaemonConfig } from '../config/daemons';
 import { characterById, type CharacterConfig } from '../config/characters';
 import { ENCOUNTER_IDS } from '../config/encounters';
 import { ESCALATION_MAX } from '../config/escalation';
-import { isStrikeArm, type StrikeArm } from '../config/stats';
 import type { SectorMap } from '../config/sectorMap';
 import { EVENT_IDS, type EventDef } from '../config/events';
 
@@ -194,15 +193,6 @@ export interface RunConfig {
    */
   readonly escalation?: number;
   /**
-   * How an evadable strike resolves: `hit`, hit or miss, which unset means,
-   * or an arm of `strikeArms` in `config/stats.json`. Read at each battle's
-   * start, which hands it to the World, so a load takes it from the config
-   * and a rollout's clone from the live run (`cloneRunForRollout`). URL
-   * form: `strike=range-1`; `hit` and an unknown value parse to nothing. The
-   * fuzz flag is `--strike=<arm>` (run mode).
-   */
-  readonly strike?: StrikeArm;
-  /**
    * The run's starting bits; unset, `startingBits` in
    * `config/difficulty.json`. Draws nothing; the constructor floors it at
    * 0. URL form: `bits=100`.
@@ -278,7 +268,6 @@ export const RUN_CONFIG_PARAMS = {
   character: 'character',
   bits: 'bits',
   escalation: 'escalation',
-  strike: 'strike',
 } as const;
 
 type MutableRunConfig = { -readonly [K in keyof RunConfig]: RunConfig[K] };
@@ -409,10 +398,6 @@ export function parseRunConfig(params: URLSearchParams): RunConfig {
   // parses to nothing and a page carrying it alone is a plain boot.
   const escalation = parsePositiveInt(params.get(RUN_CONFIG_PARAMS.escalation));
   if (escalation !== undefined && escalation <= ESCALATION_MAX) config.escalation = escalation;
-  // An arm of the dial other than `hit`, which parses to nothing as
-  // `escalation=0` does; an unknown value is dropped as for `layout=`.
-  const strike = params.get(RUN_CONFIG_PARAMS.strike)?.trim().toLowerCase();
-  if (strike !== undefined && strike !== 'hit' && isStrikeArm(strike)) config.strike = strike;
   return config;
 }
 
@@ -478,10 +463,6 @@ export function runConfigToQueryString(config: RunConfig): string {
   // dials it had before the ladder.
   if (config.escalation !== undefined && config.escalation > 0) {
     params.set(RUN_CONFIG_PARAMS.escalation, String(config.escalation));
-  }
-  // `hit` is spelled by no dial, as level 0 is.
-  if (config.strike !== undefined && config.strike !== 'hit') {
-    params.set(RUN_CONFIG_PARAMS.strike, config.strike);
   }
   return params.toString();
 }

@@ -105,7 +105,7 @@ function runHeadlessBattle(seed: number, scenario: Scenario): { world: World; ti
     playerTeam,
     enemyTeam,
   };
-  const world = battleWorld(bus, encounter, 'hit');
+  const world = battleWorld(bus, encounter);
   spawnEncounter(world, encounter);
 
   let ticks = 0;

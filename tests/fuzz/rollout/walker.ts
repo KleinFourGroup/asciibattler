@@ -180,9 +180,9 @@ export function walkToHorizon(clone: RunRolloutClone, options: WalkOptions): Wal
   let battlesEnded = 0;
   let totalTicks = 0;
 
-  bus.on('battle:started', ({ worldSeed, strike }) => {
+  bus.on('battle:started', ({ worldSeed }) => {
     const encounter = run.currentEncounter!;
-    const world = battleWorld(bus, encounter, strike);
+    const world = battleWorld(bus, encounter);
     currentWorld = world;
     // Fresh driver per battle (the harness contract — bookkeeping never
     // leaks across battles); the searcher's CRN stream forks off the

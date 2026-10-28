@@ -506,9 +506,9 @@ function runOneInner(
   // battle-plan state, never Run state (no snapshot bump).
   let raidNextBattle = false;
 
-  bus.on('battle:started', ({ worldSeed, strike }) => {
+  bus.on('battle:started', ({ worldSeed }) => {
     const encounter = run.currentEncounter!;
-    currentWorld = battleWorld(bus, encounter, strike);
+    currentWorld = battleWorld(bus, encounter);
     currentObjRng = objectiveActive ? new RNG(worldSeed).fork() : null;
     currentCoverage = coverageActive
       ? new CoverageObjectiveDriver(new RNG(worldSeed).fork())

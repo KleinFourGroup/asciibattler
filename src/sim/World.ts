@@ -77,8 +77,7 @@ const HEALING_STATUS = statusDef('rejuvenate');
 import type { SpawnRegion } from './layouts';
 import { ZERO_STATS, deriveStats, hitChanceFor, inertDerived } from './stats';
 import { computeXpAwards } from './xp';
-import { STATS, isStrikeArm, type StrikeArm } from '../config/stats';
-import { roundByChance, strikeShare } from './strike';
+import { STATS } from '../config/stats';
 import { LEVELING } from '../config/leveling';
 import { NEUTRAL_DEFS, ALL_UNIT_DEFS } from '../config/units';
 import { getCamp } from '../config/camps';
@@ -90,16 +89,7 @@ import { getCamp } from '../config/camps';
  * a side's fallen power under-charged). Bump it with any change to
  * `WorldSnapshot`'s shape or to what one of its fields means.
  */
-const WORLD_SCHEMA_VERSION = 37;
-
-/**
- * A hit's damage after the target's defense: `max(minDamage, rawDamage −
- * defense)`, or `rawDamage` when the hit bypasses defense. Both operands are
- * integers, so the result is too.
- */
-function afterDefense(target: Unit, rawDamage: number, bypassDefense: boolean): number {
-  return bypassDefense ? rawDamage : Math.max(STATS.minDamage, rawDamage - target.effectiveStats.defense);
-}
+const WORLD_SCHEMA_VERSION = 38;
 
 /** The maxHp of a neutral whose def has no `hp` (indestructible), so its unit
  *  is alive and blocks pathing and line of sight. Never a damage target:
@@ -235,7 +225,6 @@ export interface WorldSnapshot {
   pendingChainHops: PendingChainHop[];
   claims: Claim[];
   battleRules: BattleRule[];
-  strike: StrikeArm;
   tallies: { bits: number };
   fallenPower: { player: number; enemy: number };
   /** In ascending instance id, so the image doesn't depend on the map's
@@ -320,14 +309,6 @@ export class World {
    * the handlers again from it.
    */
   private battleRules: readonly BattleRule[] = [];
-
-  /**
-   * How the battle's evadable strikes resolve: `hit`, hit or miss, or an arm
-   * of `STATS.strikeArms`. The run's, set once a battle by `setStrike`
-   * (`battleWorld`), and carried by the snapshot, so a rollout's clone plays
-   * the live battle's arm.
-   */
-  private strike: StrikeArm = 'hit';
 
   /**
    * The run resources the battle earns: the battle rules add to it,
@@ -517,11 +498,6 @@ export class World {
     assertBattleRuleStatusRefs(rules);
     this.battleRules = rules;
     registerBattleRules(this, rules);
-  }
-
-  /** Sets the battle's strike arm (`battleWorld`, or `fromJSON`). */
-  setStrike(arm: StrikeArm): void {
-    this.strike = arm;
   }
 
   /**
@@ -729,7 +705,9 @@ export class World {
     rawDamage: number,
     opts: { bypassDefense: boolean },
   ): number {
-    const final = afterDefense(target, rawDamage, opts.bypassDefense);
+    const final = opts.bypassDefense
+      ? rawDamage
+      : Math.max(STATS.minDamage, rawDamage - target.effectiveStats.defense);
     target.currentHp -= final;
     if (attacker) this.recordDamage(attacker.id, target, final);
     // Here, so a blast's splash and a tick with a living source count too: a
@@ -793,16 +771,10 @@ export class World {
    *   `accuracy` (`hitChanceFor`). Without `evadable` or `accuracy`, or with
    *   the attacker gone, the hit lands and nothing is drawn. A miss emits
    *   `unit:missed`, fires `dealMiss` and `evade`, and touches no HP.
-   *   On a strike arm other than `hit` the same draw first keeps the arm's
-   *   share of hit or miss's misses whole (`missesKept`), then picks the
-   *   share of the damage after defense that lands (`./strike.ts`), and a
-   *   second draw rounds it; a strike that rounds to 0 is a miss, so a camp
-   *   turns and a status rides only on damage.
    * - `bypassDefense` — passed to `dealDamage`.
    *
    * Returns whether the hit landed: false only on a miss. The `applyStatus`
-   * op reads it, so a status rides a landed hit only. The `combatRng` order
-   * is the crit, the strike's draw, then on a range arm the rounding's.
+   * op reads it, so a status rides a landed hit only.
    */
   applyDamage(
     attackerId: number,
@@ -812,10 +784,6 @@ export class World {
   ): boolean {
     // Looked up once, for the roll and the triggers; the lookup draws nothing.
     const attacker = this.findUnit(attackerId);
-    // A range strike settles defense itself, since its share is of what
-    // defense leaves; then the damage it lands goes in unmitigated.
-    let damage = rawDamage;
-    let bypassDefense = opts.bypassDefense ?? false;
     if (opts.evadable && opts.accuracy !== undefined) {
       // With the attacker gone the hit lands, rather than drawing against no
       // precision.
@@ -833,24 +801,18 @@ export class World {
           target.effectiveStats.evasion +
           (this.tileGrid.defAt(target.position).evasionMod ?? 0);
         const hitChance = hitChanceFor(opts.accuracy, precision, evasion);
-        const roll = this.combatRng.next();
-        if (this.strike === 'hit') {
-          if (roll >= hitChance) return this.missStrike(attacker, target);
-        } else {
-          // The arm's whole misses are the draws under `kept`; the rest of
-          // the uniform feeds the range, its mean raised so the strike's
-          // mean stays the hit chance.
-          const arm = STATS.strikeArms[this.strike];
-          const kept = arm.missesKept * (1 - hitChance);
-          if (roll < kept) return this.missStrike(attacker, target);
-          const share = strikeShare((roll - kept) / (1 - kept), hitChance / (1 - kept), arm.b);
-          damage = roundByChance(share * afterDefense(target, rawDamage, bypassDefense), this.combatRng.next());
-          if (damage === 0) return this.missStrike(attacker, target);
-          bypassDefense = true;
+        if (this.combatRng.next() >= hitChance) {
+          this.emit('unit:missed', { attackerId, targetId: target.id });
+          // The attacker's side of a miss, then the dodger's.
+          this.fireTrigger('dealMiss', { attacker, target });
+          this.fireTrigger('evade', { target, attacker });
+          return false;
         }
       }
     }
-    const final = this.dealDamage(attacker, target, damage, { bypassDefense });
+    const final = this.dealDamage(attacker, target, rawDamage, {
+      bypassDefense: opts.bypassDefense ?? false,
+    });
     this.emit('unit:attacked', {
       attackerId,
       targetId: target.id,
@@ -866,15 +828,6 @@ export class World {
       if (target.currentHp <= 0) this.fireTrigger('kill', { attacker, victim: target });
     }
     return true;
-  }
-
-  /** A strike that missed: `unit:missed`, then the attacker's side of the
-   *  miss and the dodger's. No HP moves. */
-  private missStrike(attacker: Unit, target: Unit): false {
-    this.emit('unit:missed', { attackerId: attacker.id, targetId: target.id });
-    this.fireTrigger('dealMiss', { attacker, target });
-    this.fireTrigger('evade', { target, attacker });
-    return false;
   }
 
   /** Test-only read of the damage ledger. */
@@ -2276,7 +2229,6 @@ export class World {
       // The rules are fixed for the battle, so they are shared; the tally and
       // the fallen power are live, so they are copied.
       battleRules: this.battleRules.slice(),
-      strike: this.strike,
       tallies: { ...this.tallies },
       fallenPower: { ...this.fallenPower },
       // `hostileTo` in `QUEUE_TEAMS`' order, so the image doesn't depend on
@@ -2405,12 +2357,6 @@ export class World {
 
     // Installing the rules registers their handlers again.
     world.installBattleRules(snap.battleRules);
-    // An arm the config no longer holds would resolve strikes some other
-    // way than the battle saved did, so it is refused here.
-    if (!isStrikeArm(snap.strike)) {
-      throw new Error(`World.fromJSON: unknown strike arm '${String(snap.strike)}'`);
-    }
-    world.setStrike(snap.strike);
     world.tallies.bits = snap.tallies.bits;
     // The dead are gone from `units`, so their power comes back from the
     // snapshot alone.

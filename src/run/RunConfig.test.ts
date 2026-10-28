@@ -192,25 +192,6 @@ describe('RunConfig parsing', () => {
     expect(runConfigToQueryString({})).toBe('');
   });
 
-  it('parses `strike=` as an arm of the dial, any case', () => {
-    expect(cfg('strike=range-1').strike).toBe('range-1');
-    expect(cfg('strike=RANGE-0.25').strike).toBe('range-0.25');
-    expect(cfg('strike=mix').strike).toBe('mix');
-  });
-
-  it('drops an arm the config does not hold, and `hit`, which no dial says', () => {
-    for (const raw of ['hit', 'range', 'range-2', '']) {
-      expect(cfg(`strike=${raw}`).strike, raw).toBeUndefined();
-    }
-    expect(cfg('strike=hit')).toEqual({});
-  });
-
-  it('round-trips the arm through the query string, and spells `hit` with no dial', () => {
-    const original = cfg('strike=mix&seed=7');
-    expect(parseRunConfig(new URLSearchParams(runConfigToQueryString(original)))).toEqual(original);
-    expect(runConfigToQueryString({ strike: 'hit' })).toBe('');
-  });
-
   it('parses `encounter=` against the live catalog', () => {
     const id = ENCOUNTER_IDS[0]!;
     expect(cfg(`encounter=${id}`).forcedEncounterId).toBe(id);

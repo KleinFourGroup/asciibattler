@@ -48,7 +48,7 @@ function runHealerBattle(seed: number): { resolved: boolean; healerCast: boolean
     ],
   };
 
-  const world = battleWorld(bus, encounter, 'hit');
+  const world = battleWorld(bus, encounter);
   spawnEncounter(world, encounter);
 
   const healer = world.units.find((u) => u.team === 'player' && u.archetype === 'healer');

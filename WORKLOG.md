@@ -305,3 +305,112 @@ gathered here so the next session need not re-derive it:
 Tools no doc names: `scratch/137c/` (`convert.mjs` wrote the config;
 `sweep.ts`, `drivesweep.ts` and `chaossweep.ts` re-pick a seeded test's
 seed; `winrate.ts` counts a bot's wins), `scratch/137a/pool.mjs`.
+
+### §137's close, put to the user (2026-10-28, session fc66283a)
+
+**Built, each read `none`:** the rates re-measured (137a, BALANCE.md's
+run log, 2026-10-28, the second entry), §136 reverted byte-identically
+(137b, `0ea2d292`), and every strike landing at the converted numbers
+(137c, `d50e23f1`), with 137c-post from this close's exit read (below).
+Changes inside the cut's intent, flagged in 137c's entry: three UI
+strings out, two identity pins rewritten to pin what is left, the miss
+path's shape (no `missStrike`; `applyDamage` always returns true), and
+five seeded drives re-picked.
+
+**The phase's exit, read at `66d744a9`:**
+
+- *The two stats, `accuracy` and the tile mods gone from code and
+  config.* `git grep -i` for `precision`, `evasion`, `accuracy`,
+  `hitChance` and `dodgeChance` over src, config, locales, tools, tests,
+  scripts and the shell scripts, without `tests/fuzz/output/` and GLSL,
+  finds 21 lines in seven files: the absence assertions, the
+  schema-version comments, the era-bound gauntlet fixture, and two other senses of "precision" (a
+  shader comment, a CSV's decimals). Control: a planted `// evasion` in
+  `environment.ts` was reported; restored.
+- *Sentences the change made false that 137c's terms missed.* A wider
+  search, for "to-hit", "dodge" and "miss", found seven: `World.ts`'s
+  to-hit roll beside the HP path, `environment.ts`'s and `movement.ts`'s
+  tile to-hit modifiers, the tools index's to-hit preview, `ui.css`'s
+  promotion dodge row, `rngStreams.ts`'s combat stream "(crits and
+  misses)", and the hitsplat guide's "misses are the most frequent".
+  Fixed as 137c-post (`66d744a9`), comments and the guide only. The
+  sentences left are conditional ("a miss plays it too") or the idle
+  path's own.
+- *The idle miss path, a landing note on each piece:* `evadable`
+  (`schema.ts:98`), `unit:missed` (`events.ts:242`), the MISS splat
+  (`BattleRenderer.ts:1131`) and its sound (`eventSounds.ts:120`),
+  `dealMiss` and `evade` (`triggers.ts:20`), with the seam in
+  `applyDamage` (`World.ts:780`) and the gate's scratch
+  (`interpreter.ts:33`).
+- *The converted numbers pinned against a derivation the code does not
+  consult:* `tests/strike-conversion.test.ts` passes, 4 tests.
+  Control: the halberd's might planted at 5 failed it, naming
+  `abilities:halberd.might`; restored by `git checkout`.
+
+**Not verified:** anything a player would judge by eye or feel (the
+screen after the plain removals is §138's read; the pane showed only
+that nothing broke); the balance beyond 137c's first look (§139's board);
+Firefox; a journal recorded in the page replayed under Node on the new
+rule.
+
+**Rows on a rounding boundary, for §139:** the prodigy's strength (its
+rate 53.7 % ± 7.2 on 190 strikes; 2 at the point estimate, 3 above about
+55 %), the cane's might (2 × 0.2405 = 0.481, so 0), and the healer's and
+rioter's defense (1 × 0.4882 = 0.488, so 0).
+
+**For §139's kickoff:** the bot's vectors lost two terms (signed); the
+riders fire on every strike (signed, left); the corpus's victories fell
+from 10 to 3 of 30 while two bots over 100 seeds and the seeded drive did
+not drop (137c).
+
+**The friction read.** The phase filed four lines: three of session
+9ad4b394's (137b, 137b/c, and a `distress` line at 137c) and one of
+this session's (137d). One more,
+37c3d345's at 136f (a piped commit), was filed after §136's summary and
+no close has read it. The reports read: 9ad4b394's.
+
+- *The hook tests the working tree, not the commit* (recurred, with a
+  cost; a candidate guard): 137b/c (9ad4b394: a finished step's record
+  waited for the next step's code, so the history shows it out of order;
+  no time lost), 121b (f8bbd64e: a staged deletion went into a commit
+  the hook passed on the working tree, an unbuildable commit, redone
+  with a soft reset), and 118a (14b2f59d: an unstaged BALANCE paragraph
+  failed a tests-only commit, one hook run). 9ad4b394's report says
+  nothing writes it down; a search of AGENTS, CLAUDE, TESTING,
+  `process/` and the hook for "working tree", "staged" and "unstaged"
+  finds no line that says so. **The candidate:** the hook prints the
+  tracked files whose working copy differs from the index before it
+  runs ("the run tests these; the commit does not hold them"). It stops
+  nothing. It would have shown 121b's and 118a's files; 137b/c's
+  session knew and paid in ordering.
+- *An absence claimed from a search narrower than the claim* (recurred;
+  caught each time by a guard already on the path): 137b (a version pin
+  searched for in two named files; the hook found a third, one hook
+  run) and 137c (the absence search's terms; this close found the seven
+  sentences). Before them, 124j and 125k. AGENTS "Evidence" names the
+  rule, and the hook and the close's exit read caught both. Listed and
+  left.
+- *A stray first line that reads stdin* (recurred, with a cost that
+  grew; the candidate guard put again): 137d (this session: a background
+  commit opened with a stray `cat >` line and waited; a Monitor on its
+  exit line expired after 15 minutes, a TaskStop ended it), 136b
+  (37c3d345) and 134 (428ebc70), each a `python3 -` with no script, about
+  two minutes each, and 124.5h (d8214ecc, an empty `python3` heredoc).
+  `process/shell-and-windows.md` "Bash calls" names it, and the last three
+  slips came after that line. At §136's close a hook that refuses such a call before
+  it runs was offered and not taken up at two minutes a slip. **The new
+  fact:** in the background the tool's 2-minute timeout does not apply, so
+  the wait ends only when something checks. **The candidate:** a Claude
+  Code `PreToolUse` hook on Bash that refuses a command whose first line
+  is a bare `cat >`, a `python3 -`/`py -`/`node -` with no heredoc on it,
+  or an empty heredoc, and says why.
+- *A pipeline's exit code hid a failure* (136f, 37c3d345: a commit
+  piped to `tail` and chained to a push; the hook's failure let the push
+  run; one retry, harmless). `process/shell-and-windows.md` names it
+  ("a pipeline reports the exit code of its last command"). A known
+  trap, met once in this window; listed and left.
+- The `distress` line (137c) is quoted to the user in full at this stop.
+  The reader's interpretation, labelled as such: question 3 of the last
+  three session reports (428ebc70, 37c3d345, 9ad4b394) each names a pull
+  to claim before checking; two were checked before a claim, and one
+  (an inherited diagnosis) got through and was corrected at 136f.

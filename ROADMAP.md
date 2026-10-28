@@ -11,7 +11,7 @@ plan: [archive/post-118-roadmap.md](archive/post-118-roadmap.md) (Round
 8.5) with its worklog, spec and census beside it; before it
 [archive/post-109-roadmap.md](archive/post-109-roadmap.md) (Round 8).
 
-**Status: §137 built; its close, 137d, is a stop.** The spec is [round-9-spec.md](round-9-spec.md); the act
+**Status: §137 built; its close, 137d, put to the user (a stop).** The spec is [round-9-spec.md](round-9-spec.md); the act
 design it asked for is [plans/acts.md](plans/acts.md). The charter is
 META-ROADMAP §"Round 9 — The frame and the misses"; the premises
 re-read at HEAD are `archive/worklog-phase-135.md` "Kickoff — Round 9", tranche 3.
@@ -104,7 +104,9 @@ _The cut, signed 2026-10-28 with its five calls (WORKLOG §137):_
   corpus 0 of 30, fuzz diff PASS, three controls caught.
 - ☑ **137c — every strike lands, at the converted numbers** (`none`). The
   conversion pinned by `tests/strike-conversion.test.ts`; corpus re-recorded.
-- ☐ **137d — the phase's close** (`stop`).
+- ☑ **137c-post — seven sentences 137c made false** (`none`). `66d744a9`;
+  found by the close's exit read (WORKLOG §137).
+- ◐ **137d — the phase's close** (`stop`). Put to the user 2026-10-28.
 
 ## Phase 138 — the screen after the misses
 

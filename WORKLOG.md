@@ -166,3 +166,30 @@ and the 0.5 control, read as at §136.
   swing; the four under −9 % are the small strikes (the ghoul, the
   bandit, the gunslinger, the officer at 1 to 2 points), where half a
   point is the step.
+
+### 137b — §136 reverted (2026-10-28, `0ea2d292`)
+
+Step zero: the code of §136's four commits, `git diff c3af910f
+8303ffc5~1` without HANDOFF, ROADMAP and WORKLOG, applies to `cec3ae99`
+cleanly (`git apply --check`); the docs after it are history and stay.
+ARCHITECTURE's hunks came back with the code. The World's version moved
+forward to 38, not back to 36, and two tests pin it
+(`snapshot-roundtrip.test.ts` and `spawn-overflow.test.ts`; the first
+commit attempt failed the hook on the second, which my search had
+missed). The search for the dial's names (`StrikeArm`, `setStrike`,
+`strikeShare`, `--strike` and the arm values) over the tree outside the
+records finds none, and at `cec3ae99` it finds them in five files. The
+counts fell by the deleted tests: 3757 main in 260 files, 553 smoke in 58.
+
+**The proofs:** the journal corpus, 0 of 30 differ; the fuzz diff
+(`perf-oracle.sh` against `cec3ae99`), PASS on both shapes. The controls,
+each proof clean on the unplanted tree first:
+
+| control | where | corpus | fuzz diff |
+|---|---|---|---|
+| C1: the hit roll negated | `World.ts:804`, the restored roll | 30 of 30 | caught, both shapes |
+| C2: defense added, not subtracted | `World.ts:710`, the restored mitigation | 30 of 30 | caught, both shapes |
+| C3: the rollout clone handed `{ drawAmountAdd: 1 }` | `runRollout.ts:60`, where 136b passed the arm | cannot see the bot | caught (`arm`: summary, decisions, rosters) |
+
+C1 and C2 by `npm run oracle -- plant --proofs=corpus,fuzz-diff`; C3 by
+hand in a detached worktree (`scratch/137b-c3.sh`), as at 136b.

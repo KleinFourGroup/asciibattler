@@ -11,8 +11,7 @@ plan: [archive/post-118-roadmap.md](archive/post-118-roadmap.md) (Round
 8.5) with its worklog, spec and census beside it; before it
 [archive/post-109-roadmap.md](archive/post-109-roadmap.md) (Round 8).
 
-**Status: §136 closed 2026-10-28, the trial rolled back and §137 to §140
-re-cut; §137's kickoff is next.** The spec is [round-9-spec.md](round-9-spec.md); the act
+**Status: §137's cut signed 2026-10-28; 137a is next.** The spec is [round-9-spec.md](round-9-spec.md); the act
 design it asked for is [plans/acts.md](plans/acts.md). The charter is
 META-ROADMAP §"Round 9 — The frame and the misses"; the premises
 re-read at HEAD are `archive/worklog-phase-135.md` "Kickoff — Round 9", tranche 3.
@@ -85,9 +84,10 @@ references out here as plain removals; §138 finishes the screen.
 before the screen. **Risk:** medium: every battle and every level-up
 draw re-baselines once (the pins, the corpus, the fuzz baselines); a Run
 bump (the roster's units carry their stats) and a World bump.
-**Decision points:** the rates re-measured with more seeds for the thin
-rows; a unit whose stat feeds both a dodgeable and an unmissable ability,
-if step zero finds one. **Exit:** the two stats, `accuracy` and the
+**Decision points:** ✅ DECIDED 2026-10-28 — the rates re-measured at
+400 seeds a bot (137a); no unit's stat feeds both kinds; the rounding,
+defense by the pooled rate, the buffs converted, the riders and the
+bot's two keys as the kickoff leaned (WORKLOG §137). **Exit:** the two stats, `accuracy` and the
 terrain's modifiers gone from code and config; the idle miss path kept
 with a landing note on each piece (`evadable`, `unit:missed`, the MISS
 splat and its sound, the `evade` and `dealMiss` triggers); the converted
@@ -95,6 +95,13 @@ numbers pinned against a derivation from the measured rates and the old
 config that the code does not consult. **Scope guards:** no cadence
 change; no retune by taste (Round 11's); no dodge (Round 13's); no bot
 change.
+
+_The cut, signed 2026-10-28 with its five calls (WORKLOG §137):_
+
+- ☐ **137a — the hit rates re-measured, 400 seeds a bot** (`none`).
+- ☐ **137b — §136 reverted, byte-identical** (`none`).
+- ☐ **137c — every strike lands, at the converted numbers** (`none`).
+- ☐ **137d — the phase's close** (`stop`).
 
 ## Phase 138 — the screen after the misses
 

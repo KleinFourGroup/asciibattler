@@ -130,3 +130,14 @@ buffs converted at the pooled rate, `emboldened`'s +1 left; the riders
 left for §139's board, with no chance added, since a chance is a roll;
 the bot's two keys dropped with nothing else changed, §139's kickoff to
 decide whether its board separates the bot's share.
+
+### The cut signed (2026-10-28)
+
+"Fully signing all of your leans, Claude! 😁" The cut as written, with
+the five calls at the leans: rule C; defense times the pooled rate,
+rounded; the buffs converted at the pooled rate (+8 strength and ranged
+to +4, magic left at +8, +4 defense to +2, `emboldened`'s +1 left); the
+riders left for §139 with no chance added; the bot's two keys dropped and
+nothing else. And the scope lean: 137c fixes the sentences the change
+makes false, and DESIGN's Combat paragraph and stat list stay §138's.
+The stretch: 137a to 137c, then the stop at 137d.

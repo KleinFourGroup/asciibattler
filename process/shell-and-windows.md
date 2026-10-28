@@ -26,8 +26,12 @@ Claude Code's own tools.
   failing `expect()` prints on the first try.
 - Put scratch probes in real `.ts` files (`.mts` outside the repo, where
   `tsx` reads `.ts` as CommonJS); an inline `npx tsx -e` can hang at
-  spawn on Windows with no output. Throwaways go in your scratch directory:
-  files under `tests/fuzz/output/` are typechecked by the pre-commit hook.
+  spawn on Windows with no output. Throwaways go in your scratch directory.
+- **Git's variables.** An absolute `GIT_DIR` or `GIT_INDEX_FILE` in the
+  environment sends every git command beneath it to that repository, from
+  any folder: a test that builds its own repository wrote this one's
+  `core.worktree` and rewrote its index that way (2026-10-28). The
+  pre-commit hook's copy is a checkout of its own for that reason.
 - If `:5173` is taken, Vite silently falls back to `:5174`. Vite's child
   Node processes survive `taskkill` on the parent; check with
   `Get-NetTCPConnection -LocalPort 5173`.

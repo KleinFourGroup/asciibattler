@@ -12,9 +12,33 @@
 
 set -e
 
+REPO=$(pwd)
+COPY=
+
 # A failure says what to do with it at the moment it happens, rather than in a
-# doc read beforehand (AGENTS "Pre-commit").
-trap 'rc=$?; if [ "$rc" -ne 0 ]; then echo "[pre-commit] FAILED (exit $rc). If the failure is in a file you did not touch: a small fix goes in a commit of its own and is presented to the user; a large one is talked through first."; fi' EXIT
+# doc read beforehand (AGENTS "Pre-commit"). A copy made below is removed on
+# the way out, pass or fail.
+trap 'rc=$?; if [ -n "$COPY" ]; then cd "$REPO"; node "$REPO/scripts/commit-copy.mjs" remove "$COPY" || echo "[pre-commit] the copy at $COPY was left in place"; fi; if [ "$rc" -ne 0 ]; then echo "[pre-commit] FAILED (exit $rc). If the failure is in a file you did not touch: a small fix goes in a commit of its own and is presented to the user; a large one is talked through first."; fi' EXIT
+
+# The checks read the commit, not the working tree. Git runs this hook in the
+# working tree, which also holds whatever is unstaged or untracked; when it
+# holds anything the commit does not, every check below runs in a copy of the
+# staged files instead (scripts/commit-copy.mjs), with git pointed at this
+# checkout, so an unstaged fix cannot pass a broken commit and unstaged work
+# cannot fail a sound one. With nothing outside the commit, the working tree
+# is the commit and the checks run here.
+OUTSIDE=$({ git diff --name-only; git ls-files --others --exclude-standard; } | sort -u)
+if [ -n "$OUTSIDE" ]; then
+  echo "[pre-commit] the working tree holds $(printf '%s\n' "$OUTSIDE" | wc -l | tr -d ' ') file(s) the commit does not:"
+  printf '%s\n' "$OUTSIDE" | head -10 | sed 's/^/  /'
+  echo "[pre-commit] -> checking the commit itself, in a copy of the staged files"
+  COPY=$(node scripts/commit-copy.mjs make)
+  # The copy is a checkout of its own, which git finds from there. A GIT_DIR
+  # or GIT_INDEX_FILE left in the environment would send every git command a
+  # check runs, a test's own `git init` included, to this checkout instead.
+  unset GIT_DIR GIT_WORK_TREE GIT_INDEX_FILE
+  cd "$COPY"
+fi
 
 # A commit of docs alone (every staged path a .md file, or the friction log)
 # runs only the tests that read docs: the test files whose code names a .md

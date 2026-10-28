@@ -478,3 +478,101 @@ group or an `if`.
   mod's README).
 - `process/shell-and-windows.md` "Bash calls" corrected: the line said a
   bare `cat > file` always waits out the timeout.
+
+### The hook checks the commit (2026-10-28, session fc66283a)
+
+The user asked for the root cause of the hook testing the working tree and
+the incidents so far, then signed the option put: "Let's do D!"
+
+**The root cause.** Git runs the pre-commit hook in the working tree and
+leaves the commit to the hook to isolate; ours never did. Since its first
+version (`ba8ca946`, 2026-07-06) it picked what to run from the staged
+paths and ran it on the files on disk: the commit plus every unstaged edit,
+untracked file, and ignored scratch inside a folder the type-check reads.
+The tree differs from the commit by design here: a commit per logical
+change stages part of the tree, records are drafted ahead of their
+commit, probes sit under `tests/fuzz/output/`, and the checkout is shared
+with other sessions and the user.
+
+**The incidents.**
+
+| when | session | kind | what | cost |
+|---|---|---|---|---|
+| 2026-08-18 | 29344ba7 | false red | a scratch probe under the ignored `tests/fuzz/output/` failed the type-check of a docs commit | one hook run; not filed |
+| 2026-10-10 | 14b2f59d (118a) | false red | an unstaged BALANCE.md paragraph tripped its cap on a tests-only commit | one hook run |
+| 2026-10-14 | f8bbd64e (121b-pre) | false green | a deletion staged by `git rm` went into a tools commit while the importer's fix sat unstaged; the tree built, the commit did not | undone with a soft reset before a push |
+| 2026-10-26 | 19020674 (133f) | inverse | the dead-link test lists docs by `git ls-files`, so an unstaged fresh ROADMAP.md was outside its view and a planted control passed | three calls |
+| 2026-10-28 | 9ad4b394 (137b/c) | blocked | a finished step's record could not be committed beside the next step's half-made code | the order of two commits |
+
+- *The transcripts* (`scratch/137d/hook-scan.mjs`, 210 sessions, 1,634
+  commits): 93 hook failures show in a result; two came from content
+  outside the commit (the false reds above), and the rest named what the
+  commit changed or broke, or the store-guard test's load timeout. One soft
+  reset in all of them, 121b's.
+- *The commits made beside unstaged code:* 18, a floor (a status read
+  precedes only 929 of the commits) and loose (one checked by hand held its
+  file after all). `scratch/137d/tree-check.mjs` type-checked each one's
+  own tree against its parent's in a detached worktree: no commit brought a
+  type error in. Control: a dangling commit of HEAD without
+  `src/sim/environment.ts` gave 19 new errors. Not run: the suite on those
+  trees.
+
+**Step zero, and the damage it did.** The first spike ran the hook's
+checks in a plain copy of the index with `GIT_DIR`, `GIT_WORK_TREE` and
+`GIT_INDEX_FILE` exported as absolute paths to this checkout. The
+type-check took 11 s, the suite 60 s (against 44 to 53 s in the checkout)
+and the smoke 102 s (98 s), 553 passing. One test failed, and found the
+flaw: `tests/build-id.test.ts` builds a repository of its own in a temp
+folder, and with those variables set its `git init` wrote `core.worktree`
+into this checkout's `.git/config`, its `git add .` rewrote this
+checkout's index to its three files, and its `git commit` ran our hook,
+which failed, so nothing landed. `git status` here then refused. Repaired
+at once: `core.worktree` unset, the index rebuilt from HEAD with `git
+read-tree` (nothing had been staged since `bcbcacb1`), the damaged files
+kept in the session's scratchpad; filed. The hook's own run never had
+this, since git hands a hook relative values that resolve in a test's own
+folder.
+
+**Built, inside the signed intent and flagged:**
+
+- *The copy is a checkout of its own.* `scripts/commit-copy.mjs make`
+  adds a detached linked worktree at HEAD under the OS temp folder, sets
+  its own index to the entries of the index being committed (`git ls-files
+  --stage` piped to `update-index --index-info`), writes the files and
+  joins `node_modules` by a junction; the hook unsets git's variables and
+  runs every check there, so git inside finds the copy by its usual
+  search. `remove` takes the junction out first, checks the checkout's
+  `node_modules`, then removes the worktree and prunes.
+- *The gate:* `git diff --name-only` and `git ls-files --others
+  --exclude-standard`, so unstaged and untracked files; the hook lists up
+  to ten and says it is checking the commit itself. With nothing outside,
+  the checks run in the checkout as before.
+- *`tsconfig.json` excludes `tests/fuzz/output` and
+  `tests/gauntlet/output`,* both ignored, so the type-check reads no
+  ignored scratch on either path (nine probes sat there); nothing tracked
+  lives in either.
+- AGENTS "Pre-commit", HANDOFF's pre-flight and
+  `process/shell-and-windows.md` say so; the shell doc's line that
+  `tests/fuzz/output/` is type-checked is gone, and a fact line on git's
+  variables replaces it.
+
+**The controls** (`scratch/137d/controls.sh`, a scratch clone with the
+new hook committed and `node_modules` joined, so nothing here could reach
+this checkout):
+
+| control | the tree | old hook | new hook |
+|---|---|---|---|
+| C1, the false green | a staged file imports a helper that is only untracked | exit 0, 3766 tests, 74 s | exit 2 in 16 s: `Cannot find module './helper'`, the helper named as outside the commit |
+| C2, the false red | a sound staged file beside an untracked broken one | exit 2 in 12 s on the broken file | exit 0, 3766 tests, 89 s |
+| C3, a real `git commit` of C2's tree | | | exit 0 in 92 s; after it the clone holds one worktree, nothing staged, no `core.worktree`, and an index of 1,089 entries, HEAD's |
+| D, a docs-only commit (`controls2.sh`) | a staged TODO line beside a broken, unstaged `environment.ts` | | exit 0 in 25 s through the copy, the 131 doc tests |
+| E, `git commit -- <path>` (git's temporary index) | a sound change to that path beside an untracked broken file | | exit 0 in 81 s through the copy; the commit holds the new content |
+
+No copy was left in the temp folder after any of them, each clone ended
+with one worktree, nothing staged and its index equal to HEAD's, and the
+real `node_modules` was intact when each clone came out.
+
+**Not verified:** the smoke through the new copy (it ran only in the first
+spike's copy, 553 passing); the cost beyond one run each (81 to 92 s for
+the full path against 74 s in place, 25 s for docs alone against about
+15 s); a platform other than Windows.

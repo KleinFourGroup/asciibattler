@@ -234,7 +234,9 @@ however full its context.
 
 The versioned hook [.githooks/pre-commit](.githooks/pre-commit) runs
 `npm run typecheck` and `npm test` before every commit, and the fuzz smoke
-when sim paths are staged; a failing hook means the tree needs fixing.
+when sim paths are staged, on the commit itself: when the tree holds
+anything unstaged or untracked, on a copy of the staged files. A failing
+hook means the commit needs fixing.
 It doesn't run lint or
 prettier; leave formatting drift in files you didn't touch. When it
 fails, its last line says what to do with a failure in a file you didn't

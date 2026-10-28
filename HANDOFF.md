@@ -95,7 +95,8 @@ npm run typecheck
 The gate itself is in **[AGENTS.md](AGENTS.md)** "Pre-commit"; the
 toolchain's versions are in `package.json`. The versioned pre-commit hook runs `npm run typecheck` and
 `npm test`, plus `npm run fuzz:smoke` when sim/run/core/config paths are staged,
-and only the tests that read docs when docs alone are staged.
+and only the tests that read docs when docs alone are staged, each on a copy of the staged files when the
+working tree holds anything the commit does not (`scripts/commit-copy.mjs`).
 
 ## Existing memories
 

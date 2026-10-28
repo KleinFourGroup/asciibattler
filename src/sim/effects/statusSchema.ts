@@ -105,8 +105,6 @@ const STAT_KEYS = [
   'magic',
   'luck',
   'defense',
-  'precision',
-  'evasion',
   'speed',
   'mobility',
   'power',

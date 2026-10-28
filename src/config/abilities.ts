@@ -49,8 +49,8 @@ export function abilityDef(id: string): AbilityDef {
 /**
  * The first `damage` op of an ability, or undefined when it has none (a pure
  * heal or a movement verb): a typed read for the archetype editor and the
- * tests, which key off the damage profile (`might`, `accuracy`, `critBase`,
- * and the evadable and critable gates).
+ * tests, which key off the damage profile (`might`, `critBase`, and the
+ * evadable and critable gates).
  */
 export function damageOpOf(id: string): DamageOp | undefined {
   const entry = abilityDef(id).effects.find((e) => e.op.kind === 'damage');

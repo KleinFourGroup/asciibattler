@@ -28,14 +28,11 @@ the [layout editor](../layout-editor/).
   invalid. (Validates **per entry** — the whole-config `z.record` would silently
   strip an entry that fails structural checks.)
 - **Live derived-stat preview.** maxHp, crit, move + per-ability attack cadence,
-  to-hit, dodge, and attack/heal power — all computed by the **real** game
-  functions (`deriveStats`, `hitChanceFor`, `attackCooldownTicksFor`,
-  `scaleStats`), never reimplemented, so they match combat exactly.
+  and attack/heal power — all computed by the **real** game functions
+  (`deriveStats`, `attackCooldownTicksFor`, `scaleStats`), never
+  reimplemented, so they match combat exactly.
   - **Level dial** previews where the growth rates land a unit deeper into a run
     (deterministic expected-growth path).
-  - **vs EVA / vs PRC** set a reference opponent so the dodge identities are
-    tunable by feel — at the I1 uniform `precision == evasion == 5` every unit
-    sits at the `hitChanceBase` to-hit; spread them and watch it move.
   - Per-ability output reads each verb's `scaling` off its op (the post-Y source
     of truth), so the numbers are correct for **any** archetype — a freshly
     created one included — and status riders / chain / summon verbs are named.

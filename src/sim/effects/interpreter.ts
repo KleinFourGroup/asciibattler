@@ -7,9 +7,8 @@
  * The scalars captured at cast (the base damage, the crit chance, the heal
  * amount, the move's cell, a status's magnitude and duration, a summon's level)
  * arrive on the `OpResolution`, so a charged spell lands with the caster's
- * cast-time stats. The structural params (`evadable`, `accuracy`, the area's
- * shape, `affects` and ring, the move mode) are read off the def when the op
- * fires.
+ * cast-time stats. The structural params (the area's shape, `affects` and
+ * ring, the move mode) are read off the def when the op fires.
  */
 
 import type { GridCoord } from '../../core/types';
@@ -31,11 +30,14 @@ import { behaviorFlags } from '../statusBehavior';
  * misses: the targets a damage op on this boundary missed, so an `applyStatus`
  * on the same phase skips them and a status lands only on a hit.
  *
- * It records misses rather than hits because damage that cannot be evaded (no
- * shipped area op is `evadable`) and a ring cell that rounds to 0 never roll to
- * hit, so they are never missed: an area status lands on everyone the blast
- * covered, and only an evaded strike drops its rider. A dead or fizzled target
- * is left out by `applyStatus`'s own alive check.
+ * Every strike lands today, so it stays empty. Landing note for the dodge
+ * planned as a passive special (Round 13): `World.applyDamage` returns false
+ * for a dodged strike, and the damage op records it here. It records misses
+ * rather than hits because damage that cannot be evaded (no shipped area op
+ * is `evadable`) and a ring cell that rounds to 0 are never missed: an area
+ * status lands on everyone the blast covered, and only a dodged strike drops
+ * its rider. A dead or fizzled target is left out by `applyStatus`'s own
+ * alive check.
  */
 interface FireScratch {
   /** The unit ids a damage op on this boundary missed. */
@@ -165,8 +167,6 @@ function executeDamage(
       if (damage <= 0) continue; // a ring cell that rounds to 0
       const landed = world.applyDamage(caster.id, victim, damage, {
         crit,
-        evadable: op.evadable,
-        accuracy: op.accuracy,
         bypassDefense: op.bypassDefense,
       });
       if (!landed) ctx.fireScratch.missed.add(victim.id); // for applyStatus
@@ -185,8 +185,6 @@ function executeDamage(
     if (damage <= 0) return;
     const landed = world.applyDamage(caster.id, target!, damage, {
       crit,
-      evadable: op.evadable,
-      accuracy: op.accuracy,
       bypassDefense: op.bypassDefense,
     });
     if (!landed) ctx.fireScratch.missed.add(target!.id); // for applyStatus
@@ -199,8 +197,6 @@ function executeDamage(
   const damage = Math.round(baseDamage * (crit ? STATS.critMult : 1));
   const landed = world.applyDamage(caster.id, target, damage, {
     crit,
-    evadable: op.evadable,
-    accuracy: op.accuracy,
     bypassDefense: op.bypassDefense,
   });
   if (!landed) ctx.fireScratch.missed.add(target.id); // for applyStatus

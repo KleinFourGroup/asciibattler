@@ -39,7 +39,7 @@ describe('buildRefusal: which builds a journal is accepted from', () => {
 
 describe('replayText: the tool over a recorded journal', () => {
   const recorded = driveRun({
-    start: { kind: 'seed', seed: 7, dials: 'hops=3&character=soldier' },
+    start: { kind: 'seed', seed: 5, dials: 'hops=3&character=soldier' },
     plants: replayPlants(),
   });
   const base = asFile(recorded.journal);
@@ -54,7 +54,7 @@ describe('replayText: the tool over a recorded journal', () => {
     const { code, lines } = replayText(text(journal()), TREE);
     expect(code).toBe(0);
     expect(lines[0]).toBe(
-      `segment 0: build ${GOOD}-dev, config ${base.segments[0]!.configHash}, seed 7 (hops=3&character=soldier), ` +
+      `segment 0: build ${GOOD}-dev, config ${base.segments[0]!.configHash}, seed 5 (hops=3&character=soldier), ` +
         `${base.segments[0]!.entries.length} entries`,
     );
     expect(lines[1]).toBe(

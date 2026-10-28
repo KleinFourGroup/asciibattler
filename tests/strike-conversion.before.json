@@ -1,0 +1,455 @@
+{
+  "about": "The numbers the hit roll was balanced on, frozen at a042bf2c (config/), and each unit's hit rate in play under it (BALANCE.md's run log, 2026-10-28, 400 seeds a bot). tests/strike-conversion.test.ts derives the converted config from these; nothing in src reads this file.",
+  "rates": {
+    "rogue": {
+      "weapon": "gambit_strike",
+      "rate": 0.8109,
+      "strikes": 13353
+    },
+    "luminant": {
+      "weapon": "light_ray",
+      "rate": 0.6959,
+      "strikes": 632
+    },
+    "archer": {
+      "weapon": "bow",
+      "rate": 0.684,
+      "strikes": 182155
+    },
+    "adventurer": {
+      "weapon": "whip",
+      "rate": 0.6462,
+      "strikes": 8852
+    },
+    "reaver": {
+      "weapon": "cleaver",
+      "rate": 0.5969,
+      "strikes": 4963
+    },
+    "ronin": {
+      "weapon": "katana",
+      "rate": 0.5475,
+      "strikes": 24000
+    },
+    "prodigy": {
+      "weapon": "sword",
+      "rate": 0.537,
+      "strikes": 190
+    },
+    "mercenary": {
+      "weapon": "sword",
+      "rate": 0.5235,
+      "strikes": 282149
+    },
+    "halberdier": {
+      "weapon": "halberd",
+      "rate": 0.5003,
+      "strikes": 3103
+    },
+    "ghoul": {
+      "weapon": "ghoul_claw",
+      "rate": 0.4402,
+      "strikes": 24782
+    },
+    "bandit": {
+      "weapon": "club",
+      "rate": 0.293,
+      "strikes": 251267
+    },
+    "gunslinger": {
+      "weapon": "pistol",
+      "rate": 0.292,
+      "strikes": 11202
+    },
+    "officer": {
+      "weapon": "cane",
+      "rate": 0.2405,
+      "strikes": 4151
+    }
+  },
+  "pooledRate": 0.4882,
+  "units": {
+    "mercenary": {
+      "base": {
+        "strength": 6,
+        "ranged": 0,
+        "defense": 4
+      },
+      "growth": {
+        "strength": 0.4,
+        "ranged": 0,
+        "defense": 0.2
+      }
+    },
+    "adventurer": {
+      "base": {
+        "strength": 6,
+        "ranged": 0,
+        "defense": 2
+      },
+      "growth": {
+        "strength": 0.4,
+        "ranged": 0,
+        "defense": 0.1
+      }
+    },
+    "ronin": {
+      "base": {
+        "strength": 7,
+        "ranged": 0,
+        "defense": 4
+      },
+      "growth": {
+        "strength": 0.45,
+        "ranged": 0,
+        "defense": 0.15
+      }
+    },
+    "bandit": {
+      "base": {
+        "strength": 6,
+        "ranged": 0,
+        "defense": 4
+      },
+      "growth": {
+        "strength": 0.2,
+        "ranged": 0,
+        "defense": 0.1
+      }
+    },
+    "archer": {
+      "base": {
+        "strength": 0,
+        "ranged": 6,
+        "defense": 3
+      },
+      "growth": {
+        "strength": 0,
+        "ranged": 0.35,
+        "defense": 0.1
+      }
+    },
+    "rogue": {
+      "base": {
+        "strength": 5,
+        "ranged": 0,
+        "defense": 2
+      },
+      "growth": {
+        "strength": 0.25,
+        "ranged": 0,
+        "defense": 0.1
+      }
+    },
+    "healer": {
+      "base": {
+        "strength": 0,
+        "ranged": 0,
+        "defense": 1
+      },
+      "growth": {
+        "strength": 0,
+        "ranged": 0,
+        "defense": 0.2
+      }
+    },
+    "mage": {
+      "base": {
+        "strength": 0,
+        "ranged": 0,
+        "defense": 0
+      },
+      "growth": {
+        "strength": 0,
+        "ranged": 0,
+        "defense": 0.3
+      }
+    },
+    "catapult": {
+      "base": {
+        "strength": 0,
+        "ranged": 10,
+        "defense": 5
+      },
+      "growth": {
+        "strength": 0,
+        "ranged": 0.3,
+        "defense": 0.2
+      }
+    },
+    "reaver": {
+      "base": {
+        "strength": 8,
+        "ranged": 0,
+        "defense": 4
+      },
+      "growth": {
+        "strength": 0.55,
+        "ranged": 0,
+        "defense": 0.2
+      }
+    },
+    "corrupter": {
+      "base": {
+        "strength": 0,
+        "ranged": 0,
+        "defense": 2
+      },
+      "growth": {
+        "strength": 0,
+        "ranged": 0,
+        "defense": 0.3
+      }
+    },
+    "ice_mage": {
+      "base": {
+        "strength": 0,
+        "ranged": 6,
+        "defense": 3
+      },
+      "growth": {
+        "strength": 0,
+        "ranged": 0.35,
+        "defense": 0.1
+      }
+    },
+    "warlock": {
+      "base": {
+        "strength": 0,
+        "ranged": 0,
+        "defense": 0
+      },
+      "growth": {
+        "strength": 0,
+        "ranged": 0,
+        "defense": 0.3
+      }
+    },
+    "luminant": {
+      "base": {
+        "strength": 0,
+        "ranged": 6,
+        "defense": 3
+      },
+      "growth": {
+        "strength": 0,
+        "ranged": 0.35,
+        "defense": 0.1
+      }
+    },
+    "banshee": {
+      "base": {
+        "strength": 0,
+        "ranged": 0,
+        "defense": 0
+      },
+      "growth": {
+        "strength": 0,
+        "ranged": 0,
+        "defense": 0.3
+      }
+    },
+    "stormcaller": {
+      "base": {
+        "strength": 0,
+        "ranged": 0,
+        "defense": 0
+      },
+      "growth": {
+        "strength": 0,
+        "ranged": 0,
+        "defense": 0.3
+      }
+    },
+    "shaman": {
+      "base": {
+        "strength": 0,
+        "ranged": 0,
+        "defense": 5
+      },
+      "growth": {
+        "strength": 0,
+        "ranged": 0,
+        "defense": 0.2
+      }
+    },
+    "ghoul": {
+      "base": {
+        "strength": 3,
+        "ranged": 0,
+        "defense": 2
+      },
+      "growth": {
+        "strength": 0.2,
+        "ranged": 0,
+        "defense": 0.1
+      }
+    },
+    "prodigy": {
+      "base": {
+        "strength": 5,
+        "ranged": 0,
+        "defense": 2
+      },
+      "growth": {
+        "strength": 0.65,
+        "ranged": 0,
+        "defense": 0.45
+      }
+    },
+    "rioter": {
+      "base": {
+        "strength": 0,
+        "ranged": 0,
+        "defense": 1
+      },
+      "growth": {
+        "strength": 0,
+        "ranged": 0,
+        "defense": 0.1
+      }
+    },
+    "gunslinger": {
+      "base": {
+        "strength": 0,
+        "ranged": 6,
+        "defense": 2
+      },
+      "growth": {
+        "strength": 0,
+        "ranged": 0.35,
+        "defense": 0.1
+      }
+    },
+    "halberdier": {
+      "base": {
+        "strength": 6,
+        "ranged": 0,
+        "defense": 6
+      },
+      "growth": {
+        "strength": 0.5,
+        "ranged": 0,
+        "defense": 0.35
+      }
+    },
+    "officer": {
+      "base": {
+        "strength": 3,
+        "ranged": 0,
+        "defense": 3
+      },
+      "growth": {
+        "strength": 0.25,
+        "ranged": 0,
+        "defense": 0.2
+      }
+    }
+  },
+  "weapons": {
+    "sword": {
+      "scaling": "strength",
+      "might": 5
+    },
+    "club": {
+      "scaling": "strength",
+      "might": 2
+    },
+    "katana": {
+      "scaling": "strength",
+      "might": 4
+    },
+    "whip": {
+      "scaling": "strength",
+      "might": 3
+    },
+    "bow": {
+      "scaling": "ranged",
+      "might": 4
+    },
+    "gambit_strike": {
+      "scaling": "strength",
+      "might": 1
+    },
+    "cleaver": {
+      "scaling": "strength",
+      "might": 4
+    },
+    "light_ray": {
+      "scaling": "ranged",
+      "might": 3
+    },
+    "ghoul_claw": {
+      "scaling": "strength",
+      "might": 2
+    },
+    "pistol": {
+      "scaling": "ranged",
+      "might": 2
+    },
+    "halberd": {
+      "scaling": "strength",
+      "might": 8
+    },
+    "cane": {
+      "scaling": "strength",
+      "might": 2
+    }
+  },
+  "buffs": {
+    "packets/hype": {
+      "strength": {
+        "add": 8
+      },
+      "ranged": {
+        "add": 8
+      },
+      "magic": {
+        "add": 8
+      }
+    },
+    "packets/shield": {
+      "defense": {
+        "add": 4
+      }
+    },
+    "packets/overclock": {
+      "strength": {
+        "add": 8
+      },
+      "ranged": {
+        "add": 8
+      },
+      "magic": {
+        "add": 8
+      }
+    },
+    "daemons/mars": {
+      "strength": {
+        "add": 8
+      },
+      "ranged": {
+        "add": 8
+      },
+      "magic": {
+        "add": 8
+      }
+    },
+    "daemons/minerva": {
+      "defense": {
+        "add": 4
+      }
+    },
+    "statuses/emboldened": {
+      "strength": {
+        "add": 1
+      },
+      "ranged": {
+        "add": 1
+      },
+      "magic": {
+        "add": 1
+      }
+    }
+  }
+}

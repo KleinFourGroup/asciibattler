@@ -16,7 +16,7 @@ import { TEST_BUILD, asFile, bytes, driveRun } from '../journalDrive';
 // their segments start from the whole snapshot; the others resume from the
 // saved hash and replay on from the segment before.
 
-const START = { kind: 'seed', seed: 2, dials: 'sectorHops=2&character=soldier' } as const;
+const START = { kind: 'seed', seed: 9, dials: 'sectorHops=2&character=soldier' } as const;
 const OTHER_BUILD = '0.0.0+other';
 /** The gates the tab is closed at, and the build the next page is on. */
 const RELOADS = new Map<number, string>([
@@ -28,10 +28,10 @@ const RELOADS = new Map<number, string>([
 ]);
 
 describe('115d — the journal across a load', () => {
-  const straight = driveRun({ start: START, choiceSeed: 2 });
+  const straight = driveRun({ start: START, choiceSeed: 9 });
   const across = driveRun({
     start: START,
-    choiceSeed: 2,
+    choiceSeed: 9,
     reloadAt: (gate) => {
       const build = RELOADS.get(gate);
       return build === undefined ? null : { build };

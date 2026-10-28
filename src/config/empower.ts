@@ -12,7 +12,7 @@
 import { z } from 'zod';
 import type { MergePolicy, StatKey, StatMod, StatusEffect } from '../sim/statusEffects';
 
-/** The eleven stats, as zod keys for the buff's `mods` record: any subset,
+/** The nine stats, as zod keys for the buff's `mods` record: any subset,
  *  each key a real stat. The `satisfies` pins it to `StatKey`, so a stat
  *  rename breaks the build here rather than orphaning a config key. */
 const STAT_KEYS = [
@@ -22,8 +22,6 @@ const STAT_KEYS = [
   'magic',
   'luck',
   'defense',
-  'precision',
-  'evasion',
   'speed',
   'mobility',
   'power',

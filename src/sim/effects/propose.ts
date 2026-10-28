@@ -8,7 +8,7 @@
  * magnitude and duration, a summon's level) are captured here off the caster's
  * stats as they are now, and carried on the `OpResolution` to impact, so a
  * charged spell lands with its cast-time stats, not its impact-time ones. The
- * op's structural params (`evadable`, `accuracy`, the move mode) are read off
+ * op's structural params (the move mode, the area's shape) are read off
  * the def when it fires.
  */
 

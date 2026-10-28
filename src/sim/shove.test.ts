@@ -20,7 +20,7 @@ import type { Team, UnitStats } from './Unit';
 
 const BASE: UnitStats = {
   constitution: 100, strength: 0, ranged: 0, magic: 0, luck: 0, defense: 0,
-  precision: 0, evasion: 0, speed: 0, mobility: 0, power: 1,
+  speed: 0, mobility: 0, power: 1,
 };
 
 function setup(gridW = 12, gridH = 12) {

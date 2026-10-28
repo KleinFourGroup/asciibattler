@@ -308,7 +308,7 @@ describe('decideObjectiveCommand (the no-thrash gate)', () => {
 
 describe('proclivity JSON + flag parsing', () => {
   it('round-trips a stat proclivity through JSON → parse', () => {
-    const p = { kind: 'stat', select: 'lowest', stat: 'evasion' } as const;
+    const p = { kind: 'stat', select: 'lowest', stat: 'defense' } as const;
     expect(parseProclivity(JSON.parse(JSON.stringify(p)))).toEqual(p);
   });
 
@@ -325,7 +325,7 @@ describe('proclivity JSON + flag parsing', () => {
   });
 
   it('labels each inline form as the flag that parses to it', () => {
-    for (const flag of ['none', 'random', 'hp:highest', 'stat:evasion:lowest', 'archetype:mage']) {
+    for (const flag of ['none', 'random', 'hp:highest', 'stat:defense:lowest', 'archetype:mage']) {
       expect(proclivityLabel(parseObjectiveFlag(flag))).toBe(flag);
     }
   });

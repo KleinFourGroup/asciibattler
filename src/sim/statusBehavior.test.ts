@@ -25,7 +25,7 @@ const FIXTURES = {
     merge: 'refresh',
     periodic: {
       everySeconds: 1,
-      op: { kind: 'damage' as const, scaling: 'none' as const, might: 1, accuracy: 1, critBase: 0, critable: false, evadable: false, bypassDefense: true },
+      op: { kind: 'damage' as const, scaling: 'none' as const, might: 1, critBase: 0, critable: false, evadable: false, bypassDefense: true },
     },
   },
 } as const;

@@ -117,7 +117,7 @@ export const SILENT_EVENTS: Readonly<
   'unit:shoved': 'bookkeeping',
   // The swing or whoosh rides `action:phase`, so a miss plays it too.
   'unit:attacked': 'fxChannel',
-  'unit:missed': 'fxChannel',
+  'unit:missed': 'fxChannel', // idle until there is a dodge, kept for it
   'unit:chained': 'fxChannel', // `chain_arc`, per hop
 
   'status:applied': 'bookkeeping',

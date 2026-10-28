@@ -75,7 +75,7 @@ import { isReservedSwapPartner, preFlipSwap } from './actions/SwapAction';
 const FIRE_STATUS = statusDef('burn');
 const HEALING_STATUS = statusDef('rejuvenate');
 import type { SpawnRegion } from './layouts';
-import { ZERO_STATS, deriveStats, hitChanceFor, inertDerived } from './stats';
+import { ZERO_STATS, deriveStats, inertDerived } from './stats';
 import { computeXpAwards } from './xp';
 import { STATS } from '../config/stats';
 import { LEVELING } from '../config/leveling';
@@ -89,7 +89,7 @@ import { getCamp } from '../config/camps';
  * a side's fallen power under-charged). Bump it with any change to
  * `WorldSnapshot`'s shape or to what one of its fields means.
  */
-const WORLD_SCHEMA_VERSION = 38;
+const WORLD_SCHEMA_VERSION = 39;
 
 /** The maxHp of a neutral whose def has no `hp` (indestructible), so its unit
  *  is alive and blocks pathing and line of sight. Never a damage target:
@@ -758,58 +758,31 @@ export class World {
   }
 
   /**
-   * Applies a strike: the to-hit roll, then `dealDamage`, the event and the
-   * combat triggers. The damage op calls it with `rawDamage` already scaled
-   * by the crit and a blast's ring, and decides whether a unit is hit at all;
-   * this only resolves the hit.
+   * Applies a strike: `dealDamage`, the event and the combat triggers. Every
+   * strike lands; nothing is drawn here. The damage op calls it with
+   * `rawDamage` already scaled by the crit and a blast's ring, and decides
+   * whether a unit is hit at all.
    *
-   * - `crit` — the rolled flag, carried to `unit:attacked`. The op draws the
-   *   crit before calling, so the `combatRng` order is crit, then hit; a miss
-   *   discards the crit.
-   * - `evadable` — rolls to hit against the attacker's precision and the
-   *   target's evasion, each moved by the tile it stands on, from the op's
-   *   `accuracy` (`hitChanceFor`). Without `evadable` or `accuracy`, or with
-   *   the attacker gone, the hit lands and nothing is drawn. A miss emits
-   *   `unit:missed`, fires `dealMiss` and `evade`, and touches no HP.
+   * - `crit` — the flag the op rolled, carried to `unit:attacked`.
    * - `bypassDefense` — passed to `dealDamage`.
    *
-   * Returns whether the hit landed: false only on a miss. The `applyStatus`
-   * op reads it, so a status rides a landed hit only.
+   * Returns true. The `applyStatus` op reads it, so a status rides only a
+   * strike that lands, which is every strike until there is a dodge.
    */
   applyDamage(
     attackerId: number,
     target: Unit,
     rawDamage: number,
-    opts: { crit: boolean; evadable?: boolean; accuracy?: number; bypassDefense?: boolean },
+    opts: { crit: boolean; bypassDefense?: boolean },
   ): boolean {
-    // Looked up once, for the roll and the triggers; the lookup draws nothing.
+    // Looked up once, for the triggers; the lookup draws nothing.
     const attacker = this.findUnit(attackerId);
-    if (opts.evadable && opts.accuracy !== undefined) {
-      // With the attacker gone the hit lands, rather than drawing against no
-      // precision.
-      if (attacker) {
-        // The tiles each unit stands on, read live: the attacker's
-        // `accuracyMod` moves its precision (water, ice and mud lower it), the
-        // target's `evasionMod` its evasion (hills raise it, sand lowers it).
-        // Only where each stands counts, not the tiles a shot crosses. Only the
-        // threshold moves, never the draw, and `hitChanceFor`'s clamp covers a
-        // precision pushed below 0 or a stacked evasion.
-        const precision =
-          attacker.effectiveStats.precision +
-          (this.tileGrid.defAt(attacker.position).accuracyMod ?? 0);
-        const evasion =
-          target.effectiveStats.evasion +
-          (this.tileGrid.defAt(target.position).evasionMod ?? 0);
-        const hitChance = hitChanceFor(opts.accuracy, precision, evasion);
-        if (this.combatRng.next() >= hitChance) {
-          this.emit('unit:missed', { attackerId, targetId: target.id });
-          // The attacker's side of a miss, then the dodger's.
-          this.fireTrigger('dealMiss', { attacker, target });
-          this.fireTrigger('evade', { target, attacker });
-          return false;
-        }
-      }
-    }
+    // Landing note for the dodge planned as a passive special (Round 13): it
+    // decides here, for a strike whose op is authored `evadable`, before any
+    // HP moves. A dodged strike emits `unit:missed`, fires `dealMiss` (the
+    // attacker's side) then `evade` (the dodger's), and returns false, so
+    // the `applyStatus` op lays nothing. Each of those is kept, idle, for it;
+    // a dodge that draws takes `combatRng` after the crit's draw.
     const final = this.dealDamage(attacker, target, rawDamage, {
       bypassDefense: opts.bypassDefense ?? false,
     });

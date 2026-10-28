@@ -17,7 +17,7 @@
  *     (Validates PER ENTRY rather than the whole-config `z.record`, which would
  *     silently strip a new, not-yet-referenced key.)
  *  2. **Live derived-stat preview** (combatants) via the REAL game functions
- *     (`deriveStats`, `hitChanceFor`, `attackCooldownTicksFor`, `scaleStats`,
+ *     (`deriveStats`, `attackCooldownTicksFor`, `scaleStats`,
  *     `scalingStatValue`), so the numbers are correct for ANY archetype,
  *     including a freshly-created one.
  *  3. **Save to disk** via the dev-only `/__save-config` endpoint. Copy / Download
@@ -61,7 +61,6 @@ import {
   attackCooldownTicksFor,
   critChanceFor,
   deriveStats,
-  hitChanceFor,
 } from '../../src/sim/stats';
 import { scalingStatValue } from '../../src/sim/effects/resolveScalars';
 import { scaleStats } from '../../src/sim/leveling';
@@ -103,15 +102,7 @@ const SCALING_LABEL: Record<string, string> = {
 let working: Record<string, UnitDef> = structuredClone(ALL_UNIT_DEFS);
 let activeKey: ArchetypeKey = Object.keys(working)[0]!;
 let previewLevel = 1;
-let refPrecision = 5;
-let refEvasion = 5;
 let lastValid = true;
-
-// I6 — reference base hit chance for the incoming attacker in the "this unit
-// evades" preview line. Accuracy is per-WEAPON now (no global base), so the
-// dodge calc assumes a generic attacker at this accuracy; a real attacker's
-// weapon may differ. The per-ability rows below show each weapon's own accuracy.
-const REF_ACCURACY = 0.6;
 
 // ---- DOM ----
 const editorRoot = mustQuery<HTMLElement>('#editor-root');
@@ -147,8 +138,6 @@ const atlasEl = mustQuery<HTMLParagraphElement>('#atlas');
 const validationEl = mustQuery<HTMLUListElement>('#validation');
 const exportEl = mustQuery<HTMLTextAreaElement>('#export');
 const previewLevelEl = mustQuery<HTMLInputElement>('#preview-level');
-const refPrecisionEl = mustQuery<HTMLInputElement>('#ref-precision');
-const refEvasionEl = mustQuery<HTMLInputElement>('#ref-evasion');
 const saveBtn = mustQuery<HTMLButtonElement>('#save-btn');
 const revertBtn = mustQuery<HTMLButtonElement>('#revert-btn');
 const saveStatusEl = mustQuery<HTMLParagraphElement>('#save-status');
@@ -341,16 +330,6 @@ function attachPreviewControls(): void {
   previewLevelEl.addEventListener('input', () => {
     const n = Number.parseInt(previewLevelEl.value, 10);
     previewLevel = Number.isFinite(n) && n >= 1 ? n : 1;
-    refreshPreview();
-  });
-  refPrecisionEl.addEventListener('input', () => {
-    const n = Number.parseInt(refPrecisionEl.value, 10);
-    refPrecision = Number.isFinite(n) ? n : 0;
-    refreshPreview();
-  });
-  refEvasionEl.addEventListener('input', () => {
-    const n = Number.parseInt(refEvasionEl.value, 10);
-    refEvasion = Number.isFinite(n) ? n : 0;
     refreshPreview();
   });
 }
@@ -587,13 +566,9 @@ function refreshPreview(): void {
   addPreview('Stats @ Lv ' + previewLevel, STAT_ORDER.map((k) => `${STAT_LABELS[k]} ${stats[k]}`).join('  '));
   addPreview('Max HP', String(derived.maxHp));
   addPreview('Range', hasAbilities ? String(range) : '— (no ability)');
-  addPreview(
-    `Dodge vs PRC ${refPrecision}`,
-    `${pct(1 - hitChanceFor(REF_ACCURACY, refPrecision, stats.evasion))} (this unit evades a base-${pct(REF_ACCURACY)} attacker)`,
-  );
   addPreview('Move cadence', cadence(derived.moveCooldownTicks));
-  // I6 — combat profile is PER-ABILITY (might / accuracy / critBase + the
-  // evadable/critable gates), computed by the REAL game helpers. Reads the
+  // I6 — combat profile is PER-ABILITY (might / critBase + the critable
+  // gate), computed by the REAL game helpers. Reads the
   // output stat off the op's `scaling` (the post-Y source of truth) instead of a
   // per-archetype switch, so the numbers are correct for any archetype, new ones
   // included.
@@ -603,12 +578,12 @@ function refreshPreview(): void {
 }
 
 /** The per-ability preview line: the resolved output (damage/heal via the op's
- *  own scaling), to-hit / crit, and any status rider — robust for any archetype. */
+ *  own scaling), crit, and any status rider — robust for any archetype. */
 function abilityOutputLine(id: string, stats: UnitStats): string {
   const def = abilityDef(id);
   const kinds = def.effects.map((e) => e.op.kind);
 
-  // A self-target reposition (the dash): no damage/to-hit; flat motion + cooldown
+  // A self-target reposition (the dash): no damage; flat motion + cooldown
   // (the motion window is the timeline's authored seconds).
   if (def.target.kind === 'self' && kinds.includes('move')) {
     const motionSeconds = def.timeline.reduce((s, p) => s + (p.seconds === 'fill' ? 0 : p.seconds), 0);
@@ -632,11 +607,6 @@ function abilityOutputLine(id: string, stats: UnitStats): string {
   const statusIds = def.effects.flatMap((e) => (e.op.kind === 'applyStatus' ? [e.op.statusId] : []));
   const parts = [`${head} · rng ${def.rangeCells} · ${cadence(ticks)}`];
   if (damageOp) {
-    parts.push(
-      damageOp.evadable
-        ? `to-hit ${pct(hitChanceFor(damageOp.accuracy, stats.precision, refEvasion))} vs EVA ${refEvasion}`
-        : 'unmissable',
-    );
     if (damageOp.critable) parts.push(`crit ${pct(critChanceFor(damageOp.critBase, stats.luck))} (×${STATS.critMult})`);
   }
   if (statusIds.length) parts.push(`applies ${statusIds.join('/')}`);

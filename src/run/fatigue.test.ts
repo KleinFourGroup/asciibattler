@@ -15,8 +15,6 @@ function withConstitution(constitution: number, power = 10): UnitStats {
     magic: 0,
     luck: 0,
     defense: 0,
-    precision: 0,
-    evasion: 0,
     speed: 0,
     mobility: 0,
     power,

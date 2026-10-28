@@ -7,7 +7,6 @@ import {
   attackCooldownTicksFor,
   critChanceFor,
   deriveStats,
-  hitChanceFor,
 } from '../sim/stats';
 import { ticksToSeconds } from '../config';
 import type { UnitStats } from '../sim/Unit';
@@ -16,7 +15,7 @@ import { t } from '../i18n/ui';
 /**
  * The promotion derived-delta lines. Balance-proof by construction:
  * every expected number runs THROUGH the same sim helpers the builder uses
- * (deriveStats / hitChanceFor / critChanceFor / attackCooldownTicksFor), so
+ * (deriveStats / critChanceFor / attackCooldownTicksFor), so
  * config re-tunes can't strand a hand-computed literal. Structure (labels,
  * only-if-changed, the → arrow) is what's pinned.
  */
@@ -43,13 +42,6 @@ describe('promotionDeltaParts (derived deltas, only-if-changed)', () => {
     );
   });
 
-  it('an evasion gain shows the Dodge delta (vs the 0.6-accuracy reference attacker)', () => {
-    const grown = bump({ evasion: base.evasion + 2 });
-    const lines = promotionDeltaParts(base, grown, 'mercenary');
-    const dodge = (s: UnitStats) => Math.round((1 - hitChanceFor(0.6, 0, s.evasion)) * 100);
-    expect(lines).toContain(`${t('promotion.delta.dodge')} ${dodge(base)}% → ${dodge(grown)}%`);
-  });
-
   it('a mobility gain shows the Move cadence delta in seconds', () => {
     const grown = bump({ mobility: base.mobility + 2 });
     const lines = promotionDeltaParts(base, grown, 'mercenary');
@@ -67,17 +59,14 @@ describe('promotionDeltaParts (derived deltas, only-if-changed)', () => {
     expect(sword).toContain(`${might + base.strength} dmg → ${might + grown.strength} dmg`);
   });
 
-  it('precision/luck gains show hit/crit deltas through the real sim curves', () => {
+  it('a luck gain shows the crit delta through the real sim curve', () => {
     const op = damageOpOf('sword')!;
-    expect(op.evadable).toBe(true); // pin the shipped profile the test rides on
-    expect(op.critable).toBe(true);
-    const grown = bump({ precision: base.precision + 3, luck: base.luck + 3 });
+    expect(op.critable).toBe(true); // pin the shipped profile the test rides on
+    const grown = bump({ luck: base.luck + 3 });
     const line = promotionDeltaParts(base, grown, 'mercenary').find((l) =>
       l.startsWith(`${abilityDef('sword').name}:`),
     )!;
-    const hit = (s: UnitStats) => Math.round(hitChanceFor(op.accuracy, s.precision, 0) * 100);
     const crit = (s: UnitStats) => Math.round(critChanceFor(op.critBase, s.luck) * 100);
-    expect(line).toContain(`${hit(base)}% hit → ${hit(grown)}% hit`);
     expect(line).toContain(`${crit(base)}% crit → ${crit(grown)}% crit`);
   });
 
@@ -99,11 +88,9 @@ describe('promotionDeltaParts (derived deltas, only-if-changed)', () => {
     const grown = bump({
       constitution: base.constitution + 3,
       strength: base.strength + 3,
-      precision: base.precision + 3,
       luck: base.luck + 3,
       speed: base.speed + 3,
       mobility: base.mobility + 3,
-      evasion: base.evasion + 3,
     });
     for (const line of promotionDeltaParts(base, grown, 'mercenary')) {
       expect(line).not.toContain('rng');

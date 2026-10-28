@@ -29,7 +29,7 @@ import type { GameEvents } from '../core/events';
 
 const BASE: UnitStats = {
   constitution: 100, strength: 0, ranged: 0, magic: 0, luck: 0, defense: 0,
-  precision: 0, evasion: 0, speed: 0, mobility: 0, power: 1,
+  speed: 0, mobility: 0, power: 1,
 };
 
 const freshWorld = (): World => new World(new EventBus<GameEvents>(), new RNG(1));

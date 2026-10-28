@@ -1,8 +1,7 @@
 /**
  * The promotion card's derived lines. The `+N` stat chips say what grew;
  * these say what the points bought: one `before → after` row per derived
- * value that visibly changed (Max HP, dodge, move cadence, each ability's
- * output). Pure, so the wording is tested headless; the DOM is
+ * value that visibly changed (Max HP, move cadence, each ability's output). Pure, so the wording is tested headless; the DOM is
  * PromotionScreen's.
  *
  * Only a change the display shows emits a line: values are formatted first
@@ -17,11 +16,6 @@
  * N`, riders, auras) compare equal and drop out, and an op kind the detail
  * builder learns needs no code here. The speed-scaled cadence, which the
  * card shows in its own column, is diffed beside them.
- *
- * The references match the card the block sits on: hit runs against a
- * target with 0 evasion (`abilityDetailParts`'s), and dodge is against an
- * attacker of base accuracy `REF_ACCURACY` and 0 precision (the archetype
- * editor's reference attacker, whose precision there is a dial).
  */
 
 import type { Archetype, UnitStats } from '../sim/Unit';
@@ -29,17 +23,8 @@ import { abilityIdsForArchetype } from '../sim/archetypes';
 import { abilityDef } from '../config/abilities';
 import { t } from '../i18n/ui';
 import { abilityDetailParts } from './abilityDetail';
-import { attackCooldownTicksFor, deriveStats, hitChanceFor } from '../sim/stats';
+import { attackCooldownTicksFor, deriveStats } from '../sim/stats';
 import { ticksToSeconds } from '../config';
-
-/** The reference attacker's base accuracy for the dodge line, the archetype
- *  editor's: accuracy is per weapon, so dodge needs some attacker to be
- *  defined against. */
-const REF_ACCURACY = 0.6;
-
-function pct(x: number): string {
-  return `${Math.round(x * 100)}%`;
-}
 
 function secs(ticks: number): string {
   return `${ticksToSeconds(ticks).toFixed(2)}s`;
@@ -67,12 +52,6 @@ export function promotionDeltaParts(
     t('promotion.delta.maxHp'),
     String(oldDerived.maxHp),
     String(newDerived.maxHp),
-  );
-  pushChanged(
-    lines,
-    t('promotion.delta.dodge'),
-    pct(1 - hitChanceFor(REF_ACCURACY, 0, oldStats.evasion)),
-    pct(1 - hitChanceFor(REF_ACCURACY, 0, newStats.evasion)),
   );
   pushChanged(
     lines,

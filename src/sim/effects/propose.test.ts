@@ -27,7 +27,7 @@ import type { GridCoord } from '../../core/types';
 
 const STATS: UnitStats = {
   constitution: 30, strength: 8, ranged: 14, magic: 10, luck: 3, defense: 0,
-  precision: 5, evasion: 5, speed: 5, mobility: 5, power: 1,
+  speed: 5, mobility: 5, power: 1,
 };
 
 interface MakeOpts {
@@ -508,7 +508,7 @@ describe('the caster-anchored blast propose arm (aoe anchor:caster)', () => {
       orphanPolicy: 'commit-at-cast', priority: 10,
       effects: [{
         phase: 'impact',
-        op: { kind: 'damage', scaling: 'strength', might: 3, accuracy: 0.6, critBase: 0, critable: true, evadable: false, bypassDefense: false },
+        op: { kind: 'damage', scaling: 'strength', might: 3, critBase: 0, critable: true, evadable: false, bypassDefense: false },
       }],
       ...over,
     });

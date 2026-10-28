@@ -109,25 +109,23 @@ describe('A2 round-trip: World', () => {
     );
   });
 
-  it('I1: a live snapshot carries `speed`/`precision`/`evasion` (not `agility`); a pre-I1 version is rejected', () => {
-    // I1 reverted agility→speed and added precision/evasion to UnitStats, bumping
-    // WORLD_SCHEMA_VERSION (18→19). Stats round-trip as a whole object by key, so
-    // a v18 save carries an `agility`-keyed, dodge-less block; the version check
-    // must reject it outright.
+  it('a live snapshot carries `speed` and no `precision`, `evasion` or `agility`; the prior version is rejected', () => {
+    // Stats round-trip as a whole object by key. I1 renamed agility to speed
+    // and added precision and evasion (WORLD_SCHEMA_VERSION 18→19); Round 9
+    // deleted the two with the hit roll (38→39), so a v38 snapshot carries a
+    // block with them and the version check must reject it outright.
     const { world } = freshBattle(54321);
     const wire = JSON.parse(JSON.stringify(world.toJSON()));
     expect(wire.units[0].stats).toHaveProperty('speed');
-    expect(wire.units[0].stats).toHaveProperty('precision');
-    expect(wire.units[0].stats).toHaveProperty('evasion');
+    expect(wire.units[0].stats).not.toHaveProperty('precision');
+    expect(wire.units[0].stats).not.toHaveProperty('evasion');
     expect(wire.units[0].stats).not.toHaveProperty('agility');
 
-    // A current-version snapshot restores cleanly and preserves the dodge stats.
+    // A current-version snapshot restores cleanly.
     const restored = World.fromJSON(wire, new EventBus<GameEvents>());
     expect(restored.units[0]!.stats.speed).toBe(world.units[0]!.stats.speed);
-    expect(restored.units[0]!.stats.precision).toBe(world.units[0]!.stats.precision);
-    expect(restored.units[0]!.stats.evasion).toBe(world.units[0]!.stats.evasion);
 
-    // A snapshot stamped with the PRIOR version (a pre-I1 save) throws.
+    // A snapshot stamped with the PRIOR version throws.
     const stale = { ...wire, schemaVersion: wire.schemaVersion - 1 };
     expect(() => World.fromJSON(stale, new EventBus<GameEvents>())).toThrow(
       /unsupported schema version/,
@@ -272,7 +270,7 @@ describe('A2 round-trip: World', () => {
       op: {
         kind: 'chain', maxJumps: 3, rangeCells: 3, falloff: 0.6, hopDelaySeconds: 0.1,
         ops: [
-          { kind: 'damage', scaling: 'magic', might: 0, accuracy: 0.6, critBase: 0, critable: false, evadable: false, bypassDefense: false },
+          { kind: 'damage', scaling: 'magic', might: 0, critBase: 0, critable: false, evadable: false, bypassDefense: false },
         ],
       },
       resolution: { chainOps: [{ baseDamage: 12, critChance: 0 }] },
@@ -760,17 +758,17 @@ describe('A2 round-trip: Run', () => {
     );
   });
 
-  it('I1: roster templates carry the reverted/added stat keys; a pre-I1 Run snapshot is rejected', () => {
+  it('roster templates carry `speed` and no `precision`, `evasion` or `agility`; the prior Run version is rejected', () => {
     // The roster's leveled stat blocks (team: UnitTemplate[]) live in the Run
-    // save, so I1's agility→speed revert + precision/evasion adds bumped
-    // RUN_SCHEMA_VERSION (9→10) too. A v9 save carries the old `agility`-keyed,
-    // dodge-less block → reject.
+    // save, so I1's agility→speed revert and precision/evasion adds bumped
+    // RUN_SCHEMA_VERSION (9→10), and Round 9's deletion of the two (49→50).
+    // A v49 save carries them → reject.
     const run = new Run(2026, new EventBus<GameEvents>());
     const wire = JSON.parse(JSON.stringify(run.toJSON()));
     expect(wire.team.length).toBeGreaterThan(0);
     expect(wire.team[0].stats).toHaveProperty('speed');
-    expect(wire.team[0].stats).toHaveProperty('precision');
-    expect(wire.team[0].stats).toHaveProperty('evasion');
+    expect(wire.team[0].stats).not.toHaveProperty('precision');
+    expect(wire.team[0].stats).not.toHaveProperty('evasion');
     expect(wire.team[0].stats).not.toHaveProperty('agility');
 
     expect(() => Run.fromJSON(wire, new EventBus<GameEvents>())).not.toThrow();
@@ -1140,7 +1138,7 @@ describe('§91a1 — the fallen-power ledger round-trip (WorldSnapshot v36)', ()
   it('serializes fallenPower and round-trips byte-faithful', () => {
     const { world, fallen } = ledgerWire();
     const wire = JSON.parse(JSON.stringify(world.toJSON())) as ReturnType<World['toJSON']>;
-    expect(wire.schemaVersion).toBe(38);
+    expect(wire.schemaVersion).toBe(39);
     expect(wire.fallenPower).toEqual({ player: fallen, enemy: 0 });
     const restored = World.fromJSON(wire, new EventBus<GameEvents>());
     expect(JSON.stringify(restored.toJSON())).toBe(JSON.stringify(world.toJSON()));

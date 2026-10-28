@@ -20,7 +20,7 @@ import { EffectAction } from './EffectAction';
 
 const BASE_STATS: UnitStats = {
   constitution: 100, strength: 0, ranged: 0, magic: 0, luck: 0, defense: 0,
-  precision: 0, evasion: 0, speed: 0, mobility: 0, power: 1,
+  speed: 0, mobility: 0, power: 1,
 };
 
 let nextId = 1;
@@ -35,7 +35,7 @@ function world(): World {
   return new World(new EventBus<GameEvents>(), new RNG(1));
 }
 
-const DMG = { kind: 'damage', scaling: 'strength', might: 0, accuracy: 0.6, critBase: 0, critable: false, evadable: false, bypassDefense: false } as const;
+const DMG = { kind: 'damage', scaling: 'strength', might: 0, critBase: 0, critable: false, evadable: false, bypassDefense: false } as const;
 
 const strikeDef: AbilityDef = parseAbilityDef({
   id: 'sword', name: 'Sword', cooldownSeconds: 1.5, rangeCells: 1, target: { kind: 'enemyInRange' },

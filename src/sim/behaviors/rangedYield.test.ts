@@ -57,7 +57,7 @@ function build(specs: Spec[], b: EventBus<GameEvents> = bus()) {
 
 /** A neutral wall body (only team + position matter to the movement code). */
 const WALL_STATS: UnitStats = {
-  constitution: 20, strength: 0, ranged: 0, magic: 0, luck: 0, defense: 0, precision: 5, evasion: 5, speed: 5, mobility: 5, power: 1,
+  constitution: 20, strength: 0, ranged: 0, magic: 0, luck: 0, defense: 0, speed: 5, mobility: 5, power: 1,
 };
 let nextWallId = 9000;
 function addWalls(world: World, cells: Array<{ x: number; y: number }>) {

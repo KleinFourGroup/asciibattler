@@ -68,7 +68,6 @@ describe('DoT / HoT content shape', () => {
       expect(op.bypassDefense).toBe(true);
       expect(op.evadable).toBe(false);
       expect(op.critable).toBe(false);
-      expect(op.accuracy).toBe(1);
       expect(op.critBase).toBe(0);
     },
   );
@@ -139,7 +138,6 @@ function applyStatusAbility(statusId: string): AbilityDef {
           kind: 'damage',
           scaling: 'strength',
           might: 5,
-          accuracy: 0.6,
           critBase: 0.05,
           critable: true,
           evadable: true,
@@ -163,7 +161,6 @@ function burnDef(): StatusDef {
         kind: 'damage',
         scaling: 'none',
         might: 1,
-        accuracy: 1,
         critBase: 0,
         critable: false,
         evadable: false,
@@ -194,7 +191,6 @@ describe('assertStatusRefsResolve', () => {
             kind: 'damage',
             scaling: 'strength',
             might: 5,
-            accuracy: 0.6,
             critBase: 0.05,
             critable: true,
             evadable: true,

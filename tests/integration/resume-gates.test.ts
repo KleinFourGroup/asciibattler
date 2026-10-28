@@ -116,7 +116,7 @@ function resumed(save: string, config: RunConfig): Emitted[] {
 // about fifteen battles; no short run met a port, so one full-length run is
 // here for that gate.
 const RUNS: ReadonlyArray<readonly [number, string]> = [
-  [2, 'sectorHops=2&character=soldier'],
+  [9, 'sectorHops=2&character=soldier'],
   [1, 'sectorHops=2&character=soldier'],
   [1, 'character=soldier'],
 ];
@@ -218,9 +218,9 @@ describe("115e — the strip's input is the turn:resolved before it", () => {
       expect(p.lastTurn).toEqual({ winner: before.winner, reason: before.reason, fallen: before.fallen.thisTurn });
       compared++;
     });
-    const run = new Run(2, bus, parseRunConfig(new URLSearchParams('sectorHops=2&character=soldier')));
+    const run = new Run(9, bus, parseRunConfig(new URLSearchParams('sectorHops=2&character=soldier')));
     run.pauseAtTurnGates = true;
-    const pick = pickerFor('seeded', 2);
+    const pick = pickerFor('seeded', 9);
     for (let sent = 0; sent < 5000; sent++) {
       const step = PHASE_ROWS[run.phase](run, pick);
       if (step === 'end') break;

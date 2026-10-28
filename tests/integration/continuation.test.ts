@@ -117,7 +117,7 @@ function continued(
 // `sectorHops=2` run clears a sector in about fifteen battles; the port
 // needs a full-length run), with dials and without.
 const RUNS: ReadonlyArray<readonly [number, string]> = [
-  [2, 'sectorHops=2&character=soldier'],
+  [9, 'sectorHops=2&character=soldier'],
   [1, 'sectorHops=2&character=soldier'],
   [1, 'character=soldier'],
   [7, 'hops=3&layout=procedural&character=priest'],

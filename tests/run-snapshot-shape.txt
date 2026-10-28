@@ -2,7 +2,7 @@
 # tests/save-fingerprint.test.ts holds this file against the types: a change of
 # shape fails until RUN_SCHEMA_VERSION is bumped and this file is re-pinned with
 #   npm run save:fingerprint
-RUN_SCHEMA_VERSION 49
+RUN_SCHEMA_VERSION 50
 
 RunSnapshot = {
   activeEvent: null | { eventId: string; pageId: string }
@@ -118,7 +118,7 @@ FallenRecord = {
   turn: number
 }
 
-GrantEffect = { budget: number; buff: { key: string; merge: MergePolicy; mods: { constitution?: StatMod | undefined; defense?: StatMod | undefined; evasion?: StatMod | undefined; luck?: StatMod | undefined; magic?: StatMod | undefined; mobility?: StatMod | undefined; power?: StatMod | undefined; precision?: StatMod | undefined; ranged?: StatMod | undefined; speed?: StatMod | undefined; strength?: StatMod | undefined } }; kind: "empower" } | { budget: number; kind: "redraw"; maxCards: number }
+GrantEffect = { budget: number; buff: { key: string; merge: MergePolicy; mods: { constitution?: StatMod | undefined; defense?: StatMod | undefined; luck?: StatMod | undefined; magic?: StatMod | undefined; mobility?: StatMod | undefined; power?: StatMod | undefined; ranged?: StatMod | undefined; speed?: StatMod | undefined; strength?: StatMod | undefined } }; kind: "empower" } | { budget: number; kind: "redraw"; maxCards: number }
 
 InjectedRule = {
   rule: BattleRule
@@ -210,7 +210,7 @@ StatusEffect = {
   lifetime: EffectLifetime
   magnitude: number
   merge: MergePolicy
-  mods: { constitution?: StatMod | undefined; defense?: StatMod | undefined; evasion?: StatMod | undefined; luck?: StatMod | undefined; magic?: StatMod | undefined; mobility?: StatMod | undefined; power?: StatMod | undefined; precision?: StatMod | undefined; ranged?: StatMod | undefined; speed?: StatMod | undefined; strength?: StatMod | undefined }
+  mods: { constitution?: StatMod | undefined; defense?: StatMod | undefined; luck?: StatMod | undefined; magic?: StatMod | undefined; mobility?: StatMod | undefined; power?: StatMod | undefined; ranged?: StatMod | undefined; speed?: StatMod | undefined; strength?: StatMod | undefined }
   nextTickAt?: number | undefined
   sourceUnitId?: null | number | undefined
 }
@@ -229,12 +229,10 @@ TurnGrants = Array<TurnGrant>
 UnitStats = {
   constitution: number
   defense: number
-  evasion: number
   luck: number
   magic: number
   mobility: number
   power: number
-  precision: number
   ranged: number
   speed: number
   strength: number

@@ -16,8 +16,6 @@ function base(overrides: Partial<UnitStats> = {}): UnitStats {
     magic: 6,
     luck: 3,
     defense: 2,
-    precision: 5,
-    evasion: 5,
     speed: 5,
     mobility: 3,
     power: 10,

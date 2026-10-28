@@ -91,16 +91,19 @@ export const ScalarOrScaledSchema = z.union([z.number(), ScaledValueSchema]);
 
 /**
  * `damage`, through `World.applyDamage`. The interpreter applies the crit
- * factor, rolling the crit on `combatRng`, and hands the to-hit roll to
- * `applyDamage` when the op is `evadable`. `accuracy` is read only when
- * `evadable`, `critBase` only when `critable`. `bypassDefense` skips the
- * defense mitigation, as the status DoTs do; every ability's damage takes it.
+ * factor, rolling the crit on `combatRng`; every strike lands. `critBase` is
+ * read only when `critable`. `bypassDefense` skips the defense mitigation,
+ * as the status DoTs do; every ability's damage takes it.
+ *
+ * `evadable` is read by nothing today. Landing note for the dodge planned as
+ * a passive special (Round 13): it marks the strikes a dodge may stop, the
+ * single-target weapons, as against blasts, spells and ticks, and
+ * `World.applyDamage` is where it decides.
  */
 const DamageOpSchema = z.object({
   kind: z.literal('damage'),
   scaling: DamageScalingSchema,
   might: z.number().nonnegative(),
-  accuracy: z.number().min(0).max(1),
   critBase: z.number().min(0).max(1),
   critable: z.boolean(),
   evadable: z.boolean(),

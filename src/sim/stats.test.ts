@@ -25,7 +25,6 @@ import { createAbility } from './abilities/registry';
 import {
   critChanceFor,
   deriveStats,
-  hitChanceFor,
   inertDerived,
   attackCooldownTicksFor,
 } from './stats';
@@ -42,8 +41,6 @@ const TEMPLATE: UnitStats = {
   magic: 0,
   luck: 3,
   defense: 0,
-  precision: 5,
-  evasion: 5,
   speed: 5,
   mobility: 2,
   power: 1,
@@ -85,65 +82,6 @@ describe('critChanceFor — per-ability crit (balance-proof off config/stats.jso
     // critBase 0 the new helper must equal it for every luck.
     for (const luck of [0, 3, 12, 50, 99]) {
       expect(critChanceFor(0, luck)).toBe(Math.min(STATS.critCap, luck * STATS.critPerLuck));
-    }
-  });
-});
-
-describe('hitChanceFor — dodge to-hit (balance-proof off config/stats.json)', () => {
-  // Accuracy is the firing weapon's per-ability base (no global
-  // hitChanceBase). hitChanceFor is a primitive, so these mechanic
-  // tests pass an explicit accuracy literal rather than reading the JSON.
-  const ACC = 0.6;
-
-  it('equal precision and evasion cancel to exactly the weapon accuracy', () => {
-    // With prc == eva the terms cancel: the unit sits at the weapon's
-    // accuracy.
-    for (const s of [0, 5, 12, 40]) {
-      expect(hitChanceFor(ACC, s, s)).toBeCloseTo(ACC, 10);
-    }
-  });
-
-  it('matches the subtractive formula in the unclamped middle band', () => {
-    // Pick prc/eva spreads small enough that the result stays strictly inside
-    // (floor, cap), so the clamp is inert and the raw formula is what's tested.
-    for (const [prc, eva] of [
-      [8, 5],
-      [5, 8],
-      [10, 2],
-      [3, 9],
-    ] as const) {
-      const expected =
-        ACC + prc * STATS.hitChancePerPrecision - eva * STATS.dodgeChancePerEvasion;
-      expect(hitChanceFor(ACC, prc, eva)).toBeCloseTo(expected, 10);
-    }
-  });
-
-  it('a higher weapon accuracy raises the hit chance (the per-weapon base lever)', () => {
-    expect(hitChanceFor(0.85, 5, 5)).toBeGreaterThan(hitChanceFor(0.4, 5, 5));
-  });
-
-  it('is monotonic: more precision never lowers, more evasion never raises hit chance', () => {
-    expect(hitChanceFor(ACC, 20, 5)).toBeGreaterThanOrEqual(hitChanceFor(ACC, 5, 5));
-    expect(hitChanceFor(ACC, 5, 20)).toBeLessThanOrEqual(hitChanceFor(ACC, 5, 5));
-  });
-
-  it('clamps to the floor when evasion overwhelms precision (chip still pokes through)', () => {
-    // A wildly evasive target vs a low-precision attacker bottoms out at the
-    // floor, never 0 — the whiff analogue of the minDamage floor.
-    expect(hitChanceFor(ACC, 0, 99)).toBe(STATS.hitChanceFloor);
-  });
-
-  it('clamps to the cap when precision overwhelms evasion', () => {
-    expect(hitChanceFor(ACC, 99, 0)).toBe(STATS.hitChanceCap);
-  });
-
-  it('always returns a probability within [floor, cap]', () => {
-    for (const prc of [0, 5, 25, 99]) {
-      for (const eva of [0, 5, 25, 99]) {
-        const p = hitChanceFor(ACC, prc, eva);
-        expect(p).toBeGreaterThanOrEqual(STATS.hitChanceFloor);
-        expect(p).toBeLessThanOrEqual(STATS.hitChanceCap);
-      }
     }
   });
 });

@@ -134,8 +134,6 @@ describe('EventBus', () => {
       magic: 1,
       luck: 1,
       defense: 1,
-      precision: 1,
-      evasion: 1,
       speed: 1,
       mobility: 1,
       power: 1,

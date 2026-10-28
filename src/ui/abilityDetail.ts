@@ -13,7 +13,7 @@
 import type { UnitStats } from '../sim/Unit';
 import type { AbilityDef, EffectOp } from '../sim/effects/schema';
 import { abilityDef } from '../config/abilities';
-import { hitChanceFor, critChanceFor } from '../sim/stats';
+import { critChanceFor } from '../sim/stats';
 import { resolveDamageScalars, resolveHealAmount } from '../sim/effects/resolveScalars';
 
 export function abilityDetailParts(id: string, stats: UnitStats): string[] {
@@ -44,13 +44,10 @@ export function abilityDetailPartsForDef(def: AbilityDef, stats: UnitStats): str
     parts.push(`${resolveHealAmount(healOp, stats)} heal`, `reach ${def.rangeCells}`);
   } else if (damageOp) {
     parts.push(`${resolveDamageScalars(damageOp, stats).baseDamage} dmg`, `reach ${def.rangeCells}`);
-    // The weapon's profile, derived as the damage number is (the op's base
-    // and the unit's stat): hit runs the sim's `hitChanceFor` with this
-    // unit's precision against a target with 0 evasion (as the damage
-    // ignores the target's defense); crit runs `critChanceFor` with its luck,
-    // which is exact, having no target term. Both keep the sim's floors and
-    // caps.
-    pushHitCrit(parts, damageOp, stats);
+    // The weapon's crit, derived as the damage number is (the op's base and
+    // the unit's stat): `critChanceFor` with its luck, which is exact, having
+    // no target term, and keeps the sim's cap.
+    pushCrit(parts, damageOp, stats);
   } else if (chainOp) {
     // A chain's damage is nested in its inner ops (the chain arcs and
     // applies them per hop), so `opOf(def, 'damage')` finds none; the inner
@@ -58,9 +55,8 @@ export function abilityDetailPartsForDef(def: AbilityDef, stats: UnitStats): str
     const inner = chainOp.ops.find((o) => o.kind === 'damage');
     if (inner && inner.kind === 'damage') {
       parts.push(`${resolveDamageScalars(inner, stats).baseDamage} dmg`);
-      // The inner strike carries the same profile, derived the same way
-      // (gated on its flags, so an unmissable strike adds no hit chance).
-      pushHitCrit(parts, inner, stats);
+      // The inner strike's crit, derived the same way (gated on its flag).
+      pushCrit(parts, inner, stats);
     }
     parts.push(`chains ${chainOp.maxJumps}`, `reach ${def.rangeCells}`);
   } else if (summonOp) {
@@ -97,16 +93,8 @@ export function abilityDetailPartsForDef(def: AbilityDef, stats: UnitStats): str
   return parts;
 }
 
-/** The derived hit and crit chances of one damage op (the damage branch
- *  gives the 0-evasion target's reason). */
-function pushHitCrit(
-  parts: string[],
-  op: { evadable: boolean; accuracy: number; critable: boolean; critBase: number },
-  stats: UnitStats,
-): void {
-  if (op.evadable) {
-    parts.push(`${Math.round(hitChanceFor(op.accuracy, stats.precision, 0) * 100)}% hit`);
-  }
+/** The derived crit chance of one damage op. */
+function pushCrit(parts: string[], op: { critable: boolean; critBase: number }, stats: UnitStats): void {
   if (op.critable) {
     parts.push(`${Math.round(critChanceFor(op.critBase, stats.luck) * 100)}% crit`);
   }

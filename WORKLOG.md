@@ -193,3 +193,87 @@ each proof clean on the unplanted tree first:
 
 C1 and C2 by `npm run oracle -- plant --proofs=corpus,fuzz-diff`; C3 by
 hand in a detached worktree (`scratch/137b-c3.sh`), as at 136b.
+
+### 137c — every strike lands, at the converted numbers (2026-10-28)
+
+**The numbers**, written by `scratch/137c/convert.mjs` from 137a's rates
+(rule C; a weapon's might, its unit's stat, today's mean a swing):
+the rogue 1 + 4 (4.87), the luminant 2 + 4 (6.26), the archer 3 + 4
+(6.84), the adventurer 2 + 4 (5.82), the reaver 2 + 5 (7.16), the ronin
+2 + 4 (6.02), the prodigy 3 + 2 (5.37), the mercenary 3 + 3 (5.76), the
+halberdier 4 + 3 (7.00), the ghoul 1 + 1 (2.20), the bandit 1 + 1 (2.34),
+the gunslinger 1 + 1 (2.34), the officer 0 + 1 (1.20). Defense times
+0.4882; the buffs +4 strength and ranged with magic at +8, +2 defense,
+`emboldened`'s +1 left. Three values sit within 0.02 of a rounding tie:
+the cane's might (0.481, so 0) and the healer's and rioter's defense
+(0.488, so 0).
+
+**Step zero, inside the cut's intent and flagged:**
+
+- *The miss path.* The revert left the miss inline in `applyDamage`, so
+  there is no `missStrike` to keep (an unused private method fails
+  `noUnusedLocals`). The landing note sits at the seam; `applyDamage`
+  still returns a boolean, always true, so the idle `applyStatus` gate
+  keeps its contract, and a test pins the gate by recording a miss on the
+  scratch directly.
+- *Three UI strings out:* `stat.precision`, `stat.evasion` and
+  `promotion.delta.dodge`, since the key-scan pin fails an orphan. The
+  buff descriptions follow their numbers ("+4 STR / RNG, +8 MAG", "+2
+  DEF"), re-extracted to `locales/en`.
+- *Two identity pins the conversion breaks by design:* the cane was the
+  pistol's might twin (now 0 against 1, each scaled by its wielder's
+  rate), and the pistol's "wilder than the bow" was its accuracy. Both
+  tests now pin what is left (cadence, reach, might below the bow's).
+- *The bot's vectors:* the two keys out of seven files (two configs, five
+  fixtures), as signed.
+- *The roll's own tests* became tests that every strike lands: no draw,
+  the full damage and the ledger, the same on every pair of passable
+  tiles, and a strike op drawing only its crit. The `hitChanceFor` and
+  terrain-mod tests and the precision/evasion leveling block are gone.
+- *Seeded drives that moved* were re-picked to reach what they pinned:
+  the chaos driver's procedural slot 3 → 5 (it stopped declining a reward
+  and empowering a unit; 5 is the shortest of 40 that does both); the
+  `sectorHops=2` soldier runs of the continuation, resume and
+  journal-across-loads tests 2 → 9 (seed 2 no longer clears a sector; 9
+  completes, the quickest of five that do); the journal tool's seed 7 → 5
+  (7 now loses; the line pins "victory"). The corpus census gains
+  `buyPortUnit` (18 of 21 kinds).
+
+**The proofs:**
+
+- Typecheck clean; `npm test` 3736 in 261 files; the smoke 553 in 58; the
+  corpus re-recorded by `--record` (all 30 journals and the baseline
+  changed), its 34 tests green and 0 of 30 after.
+- *The conversion pin,* `tests/strike-conversion.test.ts`, derives every
+  converted number, and holds every other strength, ranged, defense and
+  buff value to its frozen one, from `strike-conversion.before.json`
+  (today's numbers at `a042bf2c` and 137a's rates), which nothing in `src`
+  reads. Control: the halberd's might planted at 5 failed it, naming the
+  key; restored from my copy.
+- *The absence search* (`precision`, `evasion`, `accuracy`, the tile mods,
+  `hitChance`, `dodgeChance` over src, config, locales, tools, tests,
+  scripts and shell, without GLSL, the archived outputs under
+  `tests/fuzz/output/`, the era-bound gauntlet fixture and the journals):
+  493 hits at `14fb7e0a`; now only the absence assertions, the version
+  comments and two other senses of "precision" (a shader comment, a CSV's
+  decimals). The re-recorded journals carry none.
+- *The pane* (`dev-preview`, seed 9, soldier, driven by `__probe.drive`):
+  the promotion and recruit screens show eight stats with POW above, no
+  PRC or EVA, no NaN or "undefined"; the cards' ability rows read "8 dmg ·
+  reach 1 · 27% crit", with no hit chance (the same read finds the crit
+  parts). Console errors: only the pane's resource-cache failures.
+
+**A first look at the balance (not the board, which is §139's):** the
+corpus's 30 runs now end 3 victories to 27 defeats, against 10 to 20.
+The fuzz harness on seeds 1000–1099, at `0ea2d292` and on this tree:
+`greedy` never completes on either (act 2 on 3 and 5 seeds, 1,479 and
+1,581 battles); the deploy vector `92c2-winner` completes 3 and 5, act 2
+on 18 and 18, 1,902 and 1,959 battles. The seeded drive with
+`sectorHops=2`, seeds 1–20: 5 completions on both trees, sector clears 16
+and 14. So the corpus's drop is its seeds', not a broad one, on what was
+measured; §139's board is the read.
+
+**The RNG:** no stream added. `combatRng` lost the hit draw and each
+rolled level-up two draws, so every battle and level-up moved, as the cut
+predicted. Tools: `scratch/137c/` (convert, sweep, drivesweep,
+chaossweep, winrate); the comparison worktree of `0ea2d292` was removed.

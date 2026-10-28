@@ -11,7 +11,7 @@
     {
       "id": "hype",
       "name": "Hype",
-      "description": "Hype up one drawn card: +8 STR / RNG / MAG for the encounter.",
+      "description": "Hype up one drawn card: +4 STR / RNG, +8 MAG for the encounter.",
       "usableIn": ["preTurn"],
       "target": "unit",
       "effect": {
@@ -19,8 +19,8 @@
         "buff": {
           "key": "hyped",
           "mods": {
-            "strength": { "add": 8 },
-            "ranged": { "add": 8 },
+            "strength": { "add": 4 },
+            "ranged": { "add": 4 },
             "magic": { "add": 8 }
           },
           "merge": "add"
@@ -31,7 +31,7 @@
     {
       "id": "shield",
       "name": "Shield",
-      "description": "Raise a shield on one drawn card: +4 DEF for the encounter.",
+      "description": "Raise a shield on one drawn card: +2 DEF for the encounter.",
       "usableIn": ["preTurn"],
       "target": "unit",
       "effect": {
@@ -39,7 +39,7 @@
         "buff": {
           "key": "shielded",
           "mods": {
-            "defense": { "add": 4 }
+            "defense": { "add": 2 }
           },
           "merge": "add"
         },
@@ -72,7 +72,7 @@
     {
       "id": "overclock",
       "name": "Overclock",
-      "description": "Overclock a roster unit: +8 STR / RNG / MAG for the next encounter.",
+      "description": "Overclock a roster unit: +4 STR / RNG, +8 MAG for the next encounter.",
       "usableIn": ["outOfBattle"],
       "target": "unit",
       "effect": {
@@ -80,8 +80,8 @@
         "buff": {
           "key": "overclocked",
           "mods": {
-            "strength": { "add": 8 },
-            "ranged": { "add": 8 },
+            "strength": { "add": 4 },
+            "ranged": { "add": 4 },
             "magic": { "add": 8 }
           },
           "merge": "add"

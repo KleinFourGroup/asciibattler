@@ -11,11 +11,15 @@
  *
  * Each trigger is named from its subject's side: `dealHit` is the attacker
  * landing a blow and `takeHit` the target taking it; `dealMiss` and `evade`
- * are the two sides of an evaded strike.
+ * are the two sides of a dodged strike.
  *
  * The shipped rules handle `dealHit` and `kill`. No shipped code registers on
  * `spawn`, `takeHit`, `dealMiss`, `evade` or `death`: they are fire points
  * kept for the content that will handle them, not dead code to delete.
+ * Nothing fires `dealMiss` or `evade` today, since every strike lands.
+ * Landing note for the dodge planned as a passive special (Round 13):
+ * `World.applyDamage` fires them, `dealMiss` then `evade`, for a dodged
+ * strike.
  *
  * Handlers are not snapshotted. A World's come from its battle rules, which
  * the snapshot carries and `World.fromJSON` installs again.
@@ -35,9 +39,11 @@ export interface TriggerContextMap {
   dealHit: { attacker: Unit; target: Unit; damage: number; crit: boolean };
   /** The target took a landed hit. */
   takeHit: { target: Unit; attacker: Unit; damage: number; crit: boolean };
-  /** The attacker's evadable strike was dodged; no HP moved. */
+  /** The attacker's evadable strike was dodged; no HP moved. Unfired until
+   *  there is a dodge. */
   dealMiss: { attacker: Unit; target: Unit };
-  /** The target evaded an evadable strike. */
+  /** The target dodged an evadable strike. Unfired until there is a
+   *  dodge. */
   evade: { target: Unit; attacker: Unit };
   /** The attacker's hit took the victim to 0 HP or below. */
   kill: { attacker: Unit; victim: Unit };

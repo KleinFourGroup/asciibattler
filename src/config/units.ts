@@ -5,9 +5,9 @@
  *
  * A combatant gives its display name, glyph, abilities (ids checked against
  * the ability catalog), base stats, growth rates and targeting.
- * - `baseStats` — the eleven stats in canonical order: the direct-combat
- *   stats (constitution, strength, ranged, magic, luck, defense), then
- *   precision and evasion, the cadence stats speed and mobility, and power.
+ * - `baseStats` — the nine stats in canonical order: the direct-combat
+ *   stats (constitution, strength, ranged, magic, luck, defense), then the
+ *   cadence stats speed and mobility, and power.
  *   `STAT_CAP` catches typos and is not a design limit.
  * - `growthRates` — per stat, 0 to 1: the chance the stat rises by 1 on one
  *   simulated level-up of a player's recruit (`simulateLevelUps`), and the
@@ -54,10 +54,6 @@ const BaseStatsSchema = z.object({
   luck: z.number().int().nonnegative().max(STAT_CAP),
   // Flat subtractive mitigation; 0 is no armour.
   defense: z.number().int().nonnegative().max(STAT_CAP),
-  // The attacker's precision against the defender's evasion feeds the hit
-  // roll in `World.applyDamage`.
-  precision: z.number().int().nonnegative().max(STAT_CAP),
-  evasion: z.number().int().nonnegative().max(STAT_CAP),
   // Attack cadence.
   speed: z.number().int().nonnegative().max(STAT_CAP),
   // Signed, unlike the rest: 0 is the base move cooldown, positive is
@@ -76,8 +72,6 @@ const GrowthRatesSchema = z.object({
   magic: z.number().min(0).max(1),
   luck: z.number().min(0).max(1),
   defense: z.number().min(0).max(1),
-  precision: z.number().min(0).max(1),
-  evasion: z.number().min(0).max(1),
   speed: z.number().min(0).max(1),
   mobility: z.number().min(0).max(1),
   power: z.number().min(0).max(1),

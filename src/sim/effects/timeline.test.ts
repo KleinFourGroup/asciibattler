@@ -24,7 +24,6 @@ const damageOp = (scaling: string) => ({
   kind: 'damage',
   scaling,
   might: 1,
-  accuracy: 0.6,
   critBase: 0,
   critable: false,
   evadable: false,

@@ -299,11 +299,6 @@ function buildStats(s: SceneUnit, archetype: 'mercenary' | 'archer'): UnitStats 
     // explicit `attackDamage` assertions (the spread would otherwise carry the
     // archetype's defense: melee 4 / ranged 2).
     defense: 0,
-    // Likewise isolate from the dodge to-hit roll: max precision pins the
-    // strike's hit chance at the cap (always lands), so a whiff can't perturb
-    // the exact attack-count / cadence assertions. To-hit is exercised in its
-    // own World.applyDamage + stats tests, not here.
-    precision: 100,
     strength: s.attackDamage ?? baseStats.strength,
     ranged: s.attackDamage ?? baseStats.ranged,
   };
@@ -376,7 +371,7 @@ class TestStrike implements Action {
   ) {}
   start(unit: Unit, world: World): void {
     if (this.target.currentHp <= 0) return;
-    world.applyDamage(unit.id, this.target, this.damage, { crit: false, evadable: false });
+    world.applyDamage(unit.id, this.target, this.damage, { crit: false });
   }
   toData(): { targetId: number; damage: number } {
     return { targetId: this.target.id, damage: this.damage };

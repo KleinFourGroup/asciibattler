@@ -28,7 +28,6 @@ function validBurnDef(): unknown {
         kind: 'damage',
         scaling: 'none',
         might: 1,
-        accuracy: 1,
         critBase: 0,
         critable: false,
         evadable: false,

@@ -237,13 +237,14 @@ export interface GameEvents extends Record<string, unknown> {
     crit: boolean;
   };
   /**
-   * A strike rolled to hit in `World.applyDamage` and missed: the target's
-   * `evasion` beat the attacker's `precision`. No HP moved, no damage was
-   * recorded and no crit applies, which is why it is not a `unit:attacked`
-   * for 0. Only a damage op authored `evadable` can miss; any other, and
-   * a tile's damage, never emits this. The swing and its sound ride
-   * `action:phase`, which fires on a hit and a miss alike, so the renderer
-   * keys only the "Miss" hitsplat off this event.
+   * A strike that did not land: no HP moved, no damage was recorded and no
+   * crit applies, which is why it is not a `unit:attacked` for 0. Nothing
+   * emits it today, since every strike lands. Landing note for the dodge
+   * planned as a passive special (Round 13): `World.applyDamage` emits it for
+   * a dodged strike, only for a damage op authored `evadable`, and the
+   * renderer's "Miss" hitsplat and its sound are kept for it. The swing and
+   * its sound ride `action:phase`, which fires either way, so the renderer
+   * keys only the hitsplat off this event.
    */
   'unit:missed': { attackerId: number; targetId: number };
   /**

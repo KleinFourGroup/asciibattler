@@ -32,14 +32,15 @@ export type TileKind =
 
 /**
  * A tile kind's surface properties: movement cost and passability
- * (pathfinding), to-hit mods (`World.applyDamage`), and status hooks on
- * entering (`World.applyTileEnterEffects`). The statuses sustained while
+ * (pathfinding), and status hooks on entering
+ * (`World.applyTileEnterEffects`). The statuses sustained while
  * standing on `fire` (burn) and `healing` (rejuvenate) are not here: they are
  * keyed by kind in `World.applyTileStatuses`.
  *
  * Never serialized (a snapshot holds only the `TileKind` string, see
- * `TileGridSnapshot`), so adding a kind or tuning a mod never bumps a
- * snapshot.
+ * `TileGridSnapshot`), so adding a kind or tuning a cost never bumps a
+ * snapshot. A tile has no combat effect; terrain's are planned to return as
+ * defense and speed modifiers (TODO.md, Round 19).
  */
 interface TileDef {
   /**
@@ -57,16 +58,6 @@ interface TileDef {
    * every shipped entry keeps the two in agreement.
    */
   passable: boolean;
-  /**
-   * Added to the defender's evasion when it is struck while standing on this
-   * tile; positive is harder to hit. Absent = 0.
-   */
-  evasionMod?: number;
-  /**
-   * Added to the attacker's precision when it attacks from this tile;
-   * negative is clumsier footing. Absent = 0.
-   */
-  accuracyMod?: number;
   /** Status id applied to a unit when it enters the tile. Absent = none. */
   statusOnEnter?: string;
   /** Status id removed from a unit when it enters the tile. Absent = none. */
@@ -75,34 +66,30 @@ interface TileDef {
 
 /**
  * The shipped tile table. Of the costs only their order matters, above the
- * floor of 1 (see `cost`). A mod point moves the to-hit chance by 0.02
- * (`hitChancePerPrecision`, `dodgeChancePerEvasion` in `config/stats.json`),
- * so -10 is -20% to hit.
+ * floor of 1 (see `cost`).
  *
- * - `shallow_water` — slow; wading costs accuracy, and entering douses burn.
+ * - `shallow_water` — slow, and entering douses burn.
  * - `chasm` — impassable (gotcha #73). Line of sight checks units only
  *   (`LineOfSight.ts`), so a chasm never blocks a shot.
  * - `fire`, `healing` — floor cost; standing on one sustains a status (see
  *   `TileDef`).
- * - `deep_water` — impassable like chasm, and douses burn. No combat mod,
- *   since nothing stands on it.
- * - `hills` — slow, and high ground is harder to hit.
- * - `ice` — floor cost, and slick footing costs accuracy.
- * - `sand` — slow, and exposed footing is easier to hit.
- * - `mud` — the slowest passable tile; it costs accuracy and poisons on
- *   entering.
+ * - `deep_water` — impassable like chasm, and douses burn.
+ * - `hills` — slow.
+ * - `ice` — floor cost.
+ * - `sand` — slow.
+ * - `mud` — the slowest passable tile; it poisons on entering.
  */
 export const TILE_DEFS: Record<TileKind, TileDef> = {
   floor: { cost: 1, passable: true },
-  shallow_water: { cost: 2, passable: true, accuracyMod: -10, statusRemovedOnEnter: 'burn' },
+  shallow_water: { cost: 2, passable: true, statusRemovedOnEnter: 'burn' },
   chasm: { cost: Infinity, passable: false },
   fire: { cost: 1, passable: true },
   healing: { cost: 1, passable: true },
   deep_water: { cost: Infinity, passable: false, statusRemovedOnEnter: 'burn' },
-  hills: { cost: 3, passable: true, evasionMod: 8 },
-  ice: { cost: 1, passable: true, accuracyMod: -12 },
-  sand: { cost: 2, passable: true, evasionMod: -6 },
-  mud: { cost: 4, passable: true, accuracyMod: -12, statusOnEnter: 'poison' },
+  hills: { cost: 3, passable: true },
+  ice: { cost: 1, passable: true },
+  sand: { cost: 2, passable: true },
+  mud: { cost: 4, passable: true, statusOnEnter: 'poison' },
 };
 
 /** The `TileDef` governing a kind. Keyed lookup — total over `TileKind`. */

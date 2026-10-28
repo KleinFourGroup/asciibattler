@@ -73,12 +73,6 @@ export interface UnitStats {
    *  after the crit (`World.dealDamage`); damage with `bypassDefense` skips
    *  it. Read raw, with no derived layer. At least 0. */
   readonly defense: number;
-  /** Raises the chance this unit's evadable hits land, against the target's
-   *  `evasion` (`hitChanceFor`, rolled in `World.applyDamage`). At least 0. */
-  readonly precision: number;
-  /** Lowers the chance an evadable hit on this unit lands, against the
-   *  attacker's `precision`. At least 0. */
-  readonly evasion: number;
   /** The attack cadence: higher is faster swings, shots and casts, through
    *  `attackCooldownTicksFor` on each ability's cooldown. At least 0. */
   readonly speed: number;

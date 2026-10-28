@@ -7,15 +7,16 @@ import { ABILITY_DEFS, abilityDef, damageOpOf, healOpOf } from './abilities';
  * Loader contract: the shipped `config/abilities.json` parses, every entry is
  * keyed by its own id, and the accessor throws loudly on an unknown id.
  *
- * Structural pins, on the `AbilityDef` shape: WHICH verbs roll to-hit, WHICH
- * can crit, that the heal carries no combat profile, and the weapons' ids
- * (below). They pin STRUCTURE — not the by-feel might/accuracy/critBase
+ * Structural pins, on the `AbilityDef` shape: WHICH verbs are evadable (kept
+ * for a dodge; every strike lands today), WHICH can crit, that the heal
+ * carries no combat profile, and the weapons' ids (below). They pin
+ * STRUCTURE — not the by-feel might/critBase
  * VALUES (tuned in the editor and, per BALANCE.md, deliberately not
  * pinned). The numeric formulas are mechanic-pinned with
  * explicit literals in `src/sim/stats.test.ts`.
  */
 
-// Single-target damage verbs: roll precision-vs-evasion to-hit + can crit. The
+// Single-target damage verbs: evadable + can crit. The
 // four melee weapons (sword/club/katana/whip, split from the old `melee_strike`),
 // the `bow` (renamed `ranged_shot`), and the rogue's `gambit_strike`.
 const BASIC_STRIKES = ['sword', 'club', 'katana', 'whip', 'bow', 'gambit_strike'];
@@ -62,8 +63,6 @@ describe('abilities catalog — combat profile + verb shapes', () => {
       const op = damageOpOf(id);
       expect(op, `${id} has a damage op`).toBeDefined();
       expect(op!.might, `${id}.might`).toBeGreaterThanOrEqual(0);
-      expect(op!.accuracy, `${id}.accuracy ≥ 0`).toBeGreaterThanOrEqual(0);
-      expect(op!.accuracy, `${id}.accuracy ≤ 1`).toBeLessThanOrEqual(1);
       expect(op!.critBase, `${id}.critBase ≥ 0`).toBeGreaterThanOrEqual(0);
       expect(op!.critBase, `${id}.critBase ≤ 1`).toBeLessThanOrEqual(1);
       expect(typeof op!.evadable, `${id}.evadable`).toBe('boolean');
@@ -75,8 +74,8 @@ describe('abilities catalog — combat profile + verb shapes', () => {
     for (const id of HEAL_ABILITIES) {
       expect(abilityDef(id).target.kind).toBe('lowestHpAlly');
       expect(healOpOf(id), `${id} has a heal op`).toBeDefined();
-      // A heal never rolls to-hit/crit: it has no damage op at all (so no
-      // accuracy/critBase/evadable/critable to accidentally grow).
+      // A heal never rolls a crit: it has no damage op at all (so no
+      // critBase/evadable/critable to accidentally grow).
       expect(damageOpOf(id), `${id} has no damage op`).toBeUndefined();
     }
   });
@@ -172,7 +171,7 @@ describe('status-on-hit afflicters', () => {
 });
 
 // The stat-identity weapons. Structural identity pins only (never the
-// by-feel might/accuracy/cooldown VALUES, which are design numbers); each
+// by-feel might/cooldown VALUES, which are design numbers); each
 // weapon's IDENTITY is expressed as a RELATION to its
 // reference def, derived from live config, so a design-round retune that keeps
 // the identity keeps the test green.
@@ -188,7 +187,7 @@ describe('the stat-identity weapons', () => {
     expect(dmg.critable).toBe(true); // crit is universal, unmissable or not
   });
 
-  it("pistol owns the miss-heavy identity: faster, weaker, and wilder than the bow", () => {
+  it('pistol is faster and weaker than the bow', () => {
     const pistol = abilityDef('pistol');
     const bow = abilityDef('bow');
     expect(pistol.cooldownSeconds).toBeLessThan(bow.cooldownSeconds);
@@ -196,12 +195,6 @@ describe('the stat-identity weapons', () => {
     const b = damageOpOf('bow')!;
     expect(p.scaling).toBe('ranged');
     expect(p.might).toBeLessThan(b.might);
-    expect(p.accuracy).toBeLessThan(b.accuracy);
-    // The wildest authored accuracy in the catalog — nothing sprays harder.
-    for (const id of Object.keys(ABILITY_DEFS)) {
-      const dmg = damageOpOf(id);
-      if (dmg?.evadable) expect(p.accuracy, `pistol ≤ ${id}`).toBeLessThanOrEqual(dmg.accuracy);
-    }
     expect(p.evadable && p.critable).toBe(true);
   });
 
@@ -215,7 +208,7 @@ describe('the stat-identity weapons', () => {
     expect(h.might).toBeGreaterThan(damageOpOf('sword')!.might);
   });
 
-  it("cane is the pistol's melee twin (same spray profile, strength at reach 1)", () => {
+  it("cane is the pistol's melee twin (same cadence, strength at reach 1)", () => {
     const cane = abilityDef('cane');
     const pistol = abilityDef('pistol');
     expect(cane.rangeCells).toBe(1);
@@ -223,7 +216,8 @@ describe('the stat-identity weapons', () => {
     const c = damageOpOf('cane')!;
     const p = damageOpOf('pistol')!;
     expect(c.scaling).toBe('strength');
-    expect(c.accuracy).toBe(p.accuracy);
-    expect(c.might).toBe(p.might);
+    // The mights differ since each was scaled by its wielder's hit rate when
+    // the roll went (officer 24 %, gunslinger 29 %).
+    expect(c.might).toBeLessThanOrEqual(p.might);
   });
 });

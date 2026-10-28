@@ -1131,7 +1131,7 @@ export class BattleRenderer {
    * A single-target strike was dodged: float "Miss" over the target instead
    * of a number. No HP refresh: a miss changes no HP. The swing rides
    * `action:phase`, which fires on a hit and a miss alike, so this floats
-   * only the word.
+   * only the word. Idle until there is a dodge, kept for it (`unit:missed`).
    */
   private onUnitMissed = ({ targetId }: GameEvents['unit:missed']): void => {
     this.spawnHitsplat(targetId, t('hitsplat.miss'), 'miss');

@@ -4,7 +4,7 @@ import { rollUnit } from '../sim/archetypes';
 import { abilityDetailParts, abilityDetailPartsForDef } from './abilityDetail';
 import { ABILITY_DEFS, damageOpOf } from '../config/abilities';
 import { parseAbilityDef } from '../sim/effects/schema';
-import { hitChanceFor, critChanceFor } from '../sim/stats';
+import { critChanceFor } from '../sim/stats';
 import type { Archetype, UnitStats } from '../sim/Unit';
 import { UNIT_DEFS } from '../config/units';
 import abilitiesJson from '../../config/abilities.json';
@@ -54,20 +54,17 @@ describe('abilityDetailParts (every op kind renders a non-blank detail)', () => 
     expect(partsFor('rogue', 'dash').join(' · ')).toContain('dash');
   });
 
-  it('hit/crit derive from the UNIT (precision/luck fold in, the damage-number convention)', () => {
-    // Expectations run THROUGH the same sim helpers the readout uses
-    // (balance-proof: no hand-computed arithmetic; floors/caps inherited).
+  it('crit derives from the UNIT (luck folds in, the damage-number convention), and no hit chance shows', () => {
+    // Expectations run THROUGH the same sim helper the readout uses
+    // (balance-proof: no hand-computed arithmetic; the cap inherited).
     const op = damageOpOf('sword')!;
-    expect(op.evadable).toBe(true); // pin the shipped profile the test rides on
-    expect(op.critable).toBe(true);
+    expect(op.critable).toBe(true); // pin the shipped profile the test rides on
     const base = rollUnit('mercenary', new RNG(1)).stats;
-    const sharp = { ...base, precision: base.precision + 3, luck: base.luck + 3 };
-    for (const stats of [base, sharp]) {
+    const lucky = { ...base, luck: base.luck + 3 };
+    for (const stats of [base, lucky]) {
       const text = abilityDetailParts('sword', stats).join(' · ');
-      expect(text).toContain(
-        `${Math.round(hitChanceFor(op.accuracy, stats.precision, 0) * 100)}% hit`,
-      );
       expect(text).toContain(`${Math.round(critChanceFor(op.critBase, stats.luck) * 100)}% crit`);
+      expect(text).not.toContain('hit');
     }
   });
 

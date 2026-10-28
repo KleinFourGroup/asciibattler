@@ -27,7 +27,6 @@ function dmgOp(might: number, bypassDefense: boolean) {
     kind: 'damage' as const,
     scaling: 'none' as const,
     might,
-    accuracy: 1,
     critBase: 0,
     critable: false,
     evadable: false,

@@ -5,16 +5,14 @@ import { EventBus } from '../core/EventBus';
 import { RNG } from '../core/RNG';
 import { ARCHETYPE_CONFIG } from './archetypes';
 import { rollUnit } from './archetypes';
-import { deriveStats, hitChanceFor } from './stats';
-import { STATS } from '../config/stats';
+import { deriveStats } from './stats';
 import type { GameEvents } from '../core/events';
 import type { TriggerContextMap } from './triggers';
 
 /**
- * The World fires combat/lifecycle triggers (`dealHit`/`takeHit`/
- * `dealMiss`/`evade`/`kill`/`death`/`spawn`) to registered handlers. These
- * mirror World.test.ts's `evadeDuel` harness: a 2-unit duel with an explicitly-seeded
- * `combatRng` so the to-hit roll is controllable.
+ * The World fires combat/lifecycle triggers (`dealHit`/`takeHit`/`kill`/
+ * `death`/`spawn`) to registered handlers, on a 2-unit duel. `dealMiss` and
+ * `evade` stay unfired until there is a dodge: every strike lands.
  */
 
 function mkUnit(id: number, team: Team, over: Partial<UnitStats>, x: number): Unit {
@@ -32,19 +30,10 @@ function mkUnit(id: number, team: Team, over: Partial<UnitStats>, x: number): Un
 
 function duel(combatSeed: number): { world: World; attacker: Unit; target: Unit } {
   const world = new World(new EventBus<GameEvents>(), new RNG(1), 12, 12, undefined, new RNG(combatSeed));
-  const attacker = mkUnit(1, 'player', { precision: 0, evasion: 0 }, 0);
-  const target = mkUnit(2, 'enemy', { precision: 0, evasion: 0 }, 1);
+  const attacker = mkUnit(1, 'player', {}, 0);
+  const target = mkUnit(2, 'enemy', {}, 1);
   world.placeUnits(attacker, target);
   return { world, attacker, target };
-}
-
-/** Smallest seed whose first combatRng draw clears `hitChance` (a guaranteed
- *  miss). Deterministic search, not a hand-computed value. */
-function seedThatMisses(hitChance: number): number {
-  for (let s = 1; s < 100_000; s++) {
-    if (new RNG(s).next() >= hitChance) return s;
-  }
-  throw new Error('no missing seed found');
 }
 
 describe('World trigger dispatch', () => {
@@ -59,8 +48,7 @@ describe('World trigger dispatch', () => {
       expect(ctx.crit).toBe(false);
     });
     world.registerTrigger('dealHit', () => order.push('b'));
-    // Unmissable strike → a guaranteed hit, no combatRng dependence.
-    world.applyDamage(attacker.id, target, 10, { crit: false, evadable: false });
+    world.applyDamage(attacker.id, target, 10, { crit: false });
     expect(order).toEqual(['a', 'b']);
   });
 
@@ -70,7 +58,7 @@ describe('World trigger dispatch', () => {
     const take = vi.fn();
     world.registerTrigger('dealHit', deal);
     world.registerTrigger('takeHit', take);
-    world.applyDamage(attacker.id, target, 8, { crit: true, evadable: false });
+    world.applyDamage(attacker.id, target, 8, { crit: true });
     expect(deal).toHaveBeenCalledTimes(1);
     expect(take).toHaveBeenCalledTimes(1);
     const takeCtx = take.mock.calls[0]![0] as TriggerContextMap['takeHit'];
@@ -79,33 +67,21 @@ describe('World trigger dispatch', () => {
     expect(takeCtx.crit).toBe(true);
   });
 
-  it('fires dealMiss + evade on an evaded strike (and not dealHit/takeHit)', () => {
-    const floor = hitChanceFor(0.6, 0, 99);
-    expect(floor).toBe(STATS.hitChanceFloor);
-    const world = new World(
-      new EventBus<GameEvents>(),
-      new RNG(1),
-      12,
-      12,
-      undefined,
-      new RNG(seedThatMisses(floor)),
-    );
-    const attacker = mkUnit(1, 'player', { precision: 0, evasion: 0 }, 0);
-    const target = mkUnit(2, 'enemy', { precision: 0, evasion: 99 }, 1);
-    world.placeUnits(attacker, target);
-    const dealMiss = vi.fn();
-    const evade = vi.fn();
-    const dealHit = vi.fn();
-    world.registerTrigger('dealMiss', dealMiss);
-    world.registerTrigger('evade', evade);
-    world.registerTrigger('dealHit', dealHit);
-    world.applyDamage(attacker.id, target, 10, { crit: false, evadable: true, accuracy: 0.6 });
-    expect(dealMiss).toHaveBeenCalledTimes(1);
-    expect(evade).toHaveBeenCalledTimes(1);
-    expect(dealHit).not.toHaveBeenCalled();
-    const evadeCtx = evade.mock.calls[0]![0] as TriggerContextMap['evade'];
-    expect(evadeCtx.target).toBe(target); // the dodger is the subject
-    expect(evadeCtx.attacker).toBe(attacker);
+  it('every strike lands: no draw, dealHit and takeHit, and never dealMiss or evade', () => {
+    const { world, attacker, target } = duel(7);
+    const fired: string[] = [];
+    for (const name of ['dealHit', 'takeHit', 'dealMiss', 'evade'] as const) {
+      world.registerTrigger(name, () => fired.push(name));
+    }
+    const before = JSON.stringify(world.combatRng.toJSON());
+    for (let i = 0; i < 20; i++) {
+      expect(world.applyDamage(attacker.id, target, 1, { crit: false })).toBe(true);
+    }
+    expect(JSON.stringify(world.combatRng.toJSON())).toBe(before);
+    expect(fired.filter((n) => n === 'dealHit')).toHaveLength(20);
+    expect(fired.filter((n) => n === 'takeHit')).toHaveLength(20);
+    expect(fired).not.toContain('dealMiss');
+    expect(fired).not.toContain('evade');
   });
 
   it('fires kill when the blow is lethal (after dealHit/takeHit)', () => {
@@ -113,7 +89,7 @@ describe('World trigger dispatch', () => {
     const kill = vi.fn();
     world.registerTrigger('kill', kill);
     target.currentHp = 5;
-    world.applyDamage(attacker.id, target, 10, { crit: false, evadable: false });
+    world.applyDamage(attacker.id, target, 10, { crit: false });
     expect(kill).toHaveBeenCalledTimes(1);
     const ctx = kill.mock.calls[0]![0] as TriggerContextMap['kill'];
     expect(ctx.attacker).toBe(attacker);
@@ -125,7 +101,7 @@ describe('World trigger dispatch', () => {
     const kill = vi.fn();
     world.registerTrigger('kill', kill);
     target.currentHp = 100;
-    world.applyDamage(attacker.id, target, 10, { crit: false, evadable: false });
+    world.applyDamage(attacker.id, target, 10, { crit: false });
     expect(kill).not.toHaveBeenCalled();
   });
 
@@ -157,36 +133,8 @@ describe('World trigger dispatch', () => {
     const { world, attacker, target } = duel(7);
     const hp = target.currentHp;
     expect(() =>
-      world.applyDamage(attacker.id, target, 10, { crit: false, evadable: false }),
+      world.applyDamage(attacker.id, target, 10, { crit: false }),
     ).not.toThrow();
     expect(target.currentHp).toBe(hp - 10);
-  });
-
-  it('end-to-end: an on-evade handler applying a +speed effect buffs the dodger', () => {
-    const floor = hitChanceFor(0.6, 0, 99);
-    const world = new World(
-      new EventBus<GameEvents>(),
-      new RNG(1),
-      12,
-      12,
-      undefined,
-      new RNG(seedThatMisses(floor)),
-    );
-    const attacker = mkUnit(1, 'player', { precision: 0, evasion: 0 }, 0);
-    const target = mkUnit(2, 'enemy', { precision: 0, evasion: 99, speed: 5 }, 1);
-    world.placeUnits(attacker, target);
-    // The L dodge-buff, in miniature: on evade, the dodger gains +1 speed.
-    world.registerTrigger('evade', (ctx) => {
-      ctx.target.addEffect({
-        key: 'nimble',
-        magnitude: 1,
-        mods: { speed: { add: 1 } },
-        lifetime: { kind: 'ticks', expiresAtTick: world.currentTick + 200 },
-        merge: 'add',
-      });
-    });
-    expect(target.effectiveStats.speed).toBe(5);
-    world.applyDamage(attacker.id, target, 10, { crit: false, evadable: true, accuracy: 0.6 });
-    expect(target.effectiveStats.speed).toBe(6);
   });
 });

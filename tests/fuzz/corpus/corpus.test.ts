@@ -34,12 +34,14 @@ describe('the journal corpus', () => {
     const changed = new Set(
       reaches.flatMap((r) => Object.entries(r.commands).flatMap(([kind, [, n]]) => (n > 0 ? [kind] : []))),
     );
-    // Written from the recording of 2026-10-11: 17 of the 21 kinds. The four
-    // missing are port trades no seed of the survey's grid completes.
+    // Written from the recording of 2026-10-28, when every strike began to
+    // land: 18 of the 21 kinds. The three missing are port trades no seed of
+    // the survey's grid completes.
     expect([...changed].sort()).toEqual([
       'acceptReward',
       'advanceTurn',
       'buyPortPacket',
+      'buyPortUnit',
       'chooseEventOption',
       'chooseRecruit',
       'chooseRestOption',

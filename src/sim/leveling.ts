@@ -17,7 +17,7 @@ import type { RNG } from '../core/RNG';
 import type { UnitStats } from './Unit';
 import type { GrowthRates } from '../config/units';
 
-// The canonical stat order (combat, then dodge, then cadence, then meta): the
+// The canonical stat order (combat, then cadence, then meta): the
 // order of the level-up draws and of the card's stat rows (`STAT_LABELS`), so
 // the two read alike. Reordering it moves every level-up roll; snapshots key
 // stats by name, so they are unaffected.
@@ -28,8 +28,6 @@ const STAT_KEYS: readonly (keyof UnitStats & keyof GrowthRates)[] = [
   'magic',
   'luck',
   'defense',
-  'precision',
-  'evasion',
   'speed',
   'mobility',
   'power',
@@ -61,8 +59,6 @@ export function simulateLevelUps(
     magic: out.magic,
     luck: out.luck,
     defense: out.defense,
-    precision: out.precision,
-    evasion: out.evasion,
     speed: out.speed,
     mobility: out.mobility,
     power: out.power,
@@ -81,8 +77,6 @@ export function scaleStats(base: UnitStats, growth: GrowthRates, n: number): Uni
     magic: base.magic + Math.round(growth.magic * n),
     luck: base.luck + Math.round(growth.luck * n),
     defense: base.defense + Math.round(growth.defense * n),
-    precision: base.precision + Math.round(growth.precision * n),
-    evasion: base.evasion + Math.round(growth.evasion * n),
     speed: base.speed + Math.round(growth.speed * n),
     mobility: base.mobility + Math.round(growth.mobility * n),
     power: base.power + Math.round(growth.power * n),

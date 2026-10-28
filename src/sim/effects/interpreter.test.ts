@@ -20,7 +20,7 @@ import { secondsToTicks } from '../../config';
 
 const BASE_STATS: UnitStats = {
   constitution: 100, strength: 0, ranged: 0, magic: 0, luck: 0, defense: 0,
-  precision: 0, evasion: 0, speed: 0, mobility: 0, power: 1,
+  speed: 0, mobility: 0, power: 1,
 };
 
 let nextId = 1;
@@ -57,7 +57,7 @@ function ctx(over: Partial<OpFireContext> & Pick<OpFireContext, 'caster' | 'worl
 }
 
 const dmgOp = (o: Partial<Extract<EffectOp, { kind: 'damage' }>> = {}): EffectOp => ({
-  kind: 'damage', scaling: 'strength', might: 0, accuracy: 0.6, critBase: 0,
+  kind: 'damage', scaling: 'strength', might: 0, critBase: 0,
   critable: false, evadable: false, bypassDefense: false, ...o,
 });
 
@@ -93,26 +93,24 @@ describe('executeOp — damage (single-target)', () => {
     expect(events).toHaveLength(0);
   });
 
-  it('evadable: a guaranteed-evasion target takes no damage but emits unit:missed (crit rolled first, then discarded)', () => {
+  it('evadable: the strike lands, drawing only the crit (no to-hit roll)', () => {
     const { world, events } = setup();
     const caster = makeUnit('player', { x: 0, y: 0 });
-    // Huge evasion floors the hit chance; with critChance 1 the crit is rolled
-    // first (draw #1) and then DISCARDED by the miss (draw #2) — the ordering.
-    const target = makeUnit('enemy', { x: 1, y: 0 }, { evasion: 1000 });
+    const target = makeUnit('enemy', { x: 1, y: 0 });
     world.placeUnits(caster, target);
+    const next = world.combatRng.next.bind(world.combatRng);
+    let draws = 0;
+    world.combatRng.next = () => {
+      draws++;
+      return next();
+    };
     executeOp(
-      dmgOp({ evadable: true, accuracy: 0 }),
+      dmgOp({ evadable: true }),
       ctx({ caster, world, target, resolution: { baseDamage: 10, critChance: 1 } }),
     );
-    // Either hit or miss is deterministic for the seed; assert the miss path's
-    // invariant if it missed, else the hit path — but with accuracy 0 + 1000
-    // evasion the chance is the floor, and we assert whichever fired is consistent.
-    const fired = events[0]!.name;
-    if (fired === 'unit:missed') {
-      expect(target.currentHp).toBe(target.derived.maxHp); // no damage on a miss
-    } else {
-      expect(fired).toBe('unit:attacked');
-    }
+    expect(draws).toBe(1); // the crit's
+    expect(events.map((e) => e.name)).toEqual(['unit:attacked']);
+    expect(target.currentHp).toBeLessThan(target.derived.maxHp);
   });
 });
 
@@ -356,18 +354,18 @@ describe('executeOp — applyStatus (status-on-hit)', () => {
     expect(has(target)).toBe(false);
   });
 
-  it('the gate skips a target the same-fire damage op MISSED (shared scratch)', () => {
+  it('the gate skips a target recorded as missed on the shared scratch (kept for a dodge)', () => {
+    // Every strike lands today, so no damage op records a miss; the gate is
+    // kept for the dodge planned as a passive special, and pinned here by
+    // recording one directly.
     const { world } = setup();
     const caster = makeUnit('player', { x: 0, y: 0 });
-    const target = makeUnit('enemy', { x: 1, y: 0 }, { evasion: 1000 });
+    const target = makeUnit('enemy', { x: 1, y: 0 });
     world.placeUnits(caster, target);
-    world.combatRng.next = () => 0.99; // crit roll fails, then the miss roll whiffs
-    const shared = ctx({ caster, world, target, resolution: { baseDamage: 10, critChance: 0 } });
-    executeOp(dmgOp({ evadable: true, accuracy: 0.6 }), shared);
-    expect(shared.fireScratch.missed.has(target.id)).toBe(true); // the damage op recorded the miss
+    const shared = ctx({ caster, world, target });
+    shared.fireScratch.missed.add(target.id);
     executeOp(statusOp(), shared); // same scratch → gated out
     expect(has(target)).toBe(false);
-    expect(target.currentHp).toBe(target.derived.maxHp); // untouched + unstatused
   });
 
   it('the gate applies when the same-fire damage op LANDS (shared scratch)', () => {
@@ -377,7 +375,7 @@ describe('executeOp — applyStatus (status-on-hit)', () => {
     world.placeUnits(caster, target);
     world.combatRng.next = () => 0; // no crit; the hit lands
     const shared = ctx({ caster, world, target, resolution: { baseDamage: 5, critChance: 0 } });
-    executeOp(dmgOp({ evadable: true, accuracy: 0.6 }), shared);
+    executeOp(dmgOp({ evadable: true }), shared);
     expect(shared.fireScratch.missed.size).toBe(0);
     executeOp(statusOp(), shared);
     expect(has(target)).toBe(true);
@@ -417,7 +415,7 @@ describe('executeOp — chain', () => {
   // A pure-magic, non-evadable inner bolt (no crit, no defense interaction at
   // defense 0) so the per-hop damage is exactly baseDamage × falloff^jump.
   const innerDmg: EffectOp = {
-    kind: 'damage', scaling: 'magic', might: 0, accuracy: 0.6, critBase: 0,
+    kind: 'damage', scaling: 'magic', might: 0, critBase: 0,
     critable: false, evadable: false, bypassDefense: false,
   };
   // `hopDelaySeconds: 0` = the synchronous resolve (every hop on the call tick),
@@ -577,7 +575,7 @@ describe('executeOp — chain', () => {
 
 describe('executeOp — chain (deferred per-hop timing)', () => {
   const innerDmg: EffectOp = {
-    kind: 'damage', scaling: 'magic', might: 0, accuracy: 0.6, critBase: 0,
+    kind: 'damage', scaling: 'magic', might: 0, critBase: 0,
     critable: false, evadable: false, bypassDefense: false,
   };
   const hp = (u: Unit) => u.derived.maxHp - u.currentHp;

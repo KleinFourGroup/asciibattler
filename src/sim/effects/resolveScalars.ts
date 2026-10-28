@@ -6,7 +6,7 @@
  *
  * The damage and heal kernels read only the caster's `UnitStats`: the op's
  * `scaling` stat, and `luck` for the crit. The op's structural params
- * (`evadable`, `accuracy`, the move mode) and the target are not inputs. What
+ * (the move mode, the area's shape) and the target are not inputs. What
  * they capture at cast is carried unchanged to impact.
  */
 

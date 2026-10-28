@@ -26,21 +26,13 @@
  * - `critMult` — a crit's damage multiplier, rounded after
  *   (`round(baseDamage × critMult)`).
  *
- * Mitigation and to-hit:
- * - `minDamage` — the floor under defense: a confirmed hit lands
+ * Mitigation:
+ * - `minDamage` — the floor under defense: a strike lands
  *   `max(minDamage, rawDamage − defense)` (`World.applyDamage`), so high
  *   defense never fully negates an attack. Environmental damage (fire,
  *   chasm) is not mitigated and never sees it.
- * - `hitChancePerPrecision`, `dodgeChancePerEvasion`, `hitChanceFloor`,
- *   `hitChanceCap` — a strike's hit chance (`hitChanceFor`) is
- *   `clamp(accuracy + precision × hitChancePerPrecision − evasion ×
- *   dodgeChancePerEvasion, floor, cap)`, where `accuracy` is the ability's
- *   own, so a precise bow and a wild club differ before stats. It is rolled
- *   against `combatRng` in `World.applyDamage`, and only for a damage op
- *   authored `evadable`; area and environmental damage cannot miss. The
- *   floor keeps a low-precision unit from being shut out by a high-evasion
- *   target. A tile's accuracy and evasion mods fold into the same roll
- *   (`TileDef`, `src/sim/TileGrid.ts`).
+ *
+ * Every strike lands: there is no to-hit roll.
  */
 
 import { z } from 'zod';
@@ -53,10 +45,6 @@ const StatsSchema = z.object({
   critCap: z.number().min(0).max(1),
   critMult: z.number().min(1),
   minDamage: z.number().int().nonnegative(),
-  hitChancePerPrecision: z.number().nonnegative(),
-  dodgeChancePerEvasion: z.number().nonnegative(),
-  hitChanceFloor: z.number().min(0).max(1),
-  hitChanceCap: z.number().min(0).max(1),
   mobilityCdPerStat: z.number().nonnegative(),
   speedCdPerStat: z.number().nonnegative(),
   mobilityMinCdScale: z.number().min(0).max(1),

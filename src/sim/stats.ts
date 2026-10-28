@@ -77,23 +77,6 @@ export function inertDerived(maxHp: number): UnitDerived {
 }
 
 /**
- * The chance a damage op authored `evadable` hits, rolled once on `combatRng` in
- * `World.applyDamage`. The ability's `accuracy` is the base; the attacker's
- * `precision` raises it and the target's `evasion` lowers it (subtractive, as in
- * Fire Emblem), clamped to the configured floor and cap. With equal precision
- * and evasion the two terms cancel and the hit sits at the ability's `accuracy`.
- * The floor keeps a weak attacker from being shut out by an evasive target, as
- * `minDamage` keeps a hit from doing nothing. Pure.
- */
-export function hitChanceFor(accuracy: number, precision: number, evasion: number): number {
-  const raw =
-    accuracy +
-    precision * STATS.hitChancePerPrecision -
-    evasion * STATS.dodgeChancePerEvasion;
-  return Math.min(STATS.hitChanceCap, Math.max(STATS.hitChanceFloor, raw));
-}
-
-/**
  * The crit chance of a `critable` damage op: its `critBase` plus the wielder's
  * `luck × critPerLuck`, clamped to `[0, critCap]`. Pure; the damage op rolls
  * `combatRng` against it once. A damage op that is not `critable` has a chance
@@ -124,8 +107,6 @@ export const ZERO_STATS: UnitStats = Object.freeze({
   magic: 0,
   luck: 0,
   defense: 0,
-  precision: 0,
-  evasion: 0,
   speed: 0,
   mobility: 0,
   power: 0,

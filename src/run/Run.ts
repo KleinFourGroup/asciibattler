@@ -280,7 +280,7 @@ export interface BattleEncounter {
  * `RunPhase` included, fails `npm test` until this number moves
  * (`tests/save-fingerprint.test.ts`, then `npm run save:fingerprint`).
  */
-export const RUN_SCHEMA_VERSION = 49;
+export const RUN_SCHEMA_VERSION = 50;
 
 /**
  * One row of the fallen ledger: a combatant that fell, where and when.

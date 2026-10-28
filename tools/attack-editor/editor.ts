@@ -97,7 +97,7 @@ function defaultTarget(kind: TargetKind): TargetSelector {
 function defaultOp(kind: OpKind): EffectOp {
   switch (kind) {
     case 'damage':
-      return { kind: 'damage', scaling: 'strength', might: 1, accuracy: 0.6, critBase: 0, critable: true, evadable: true, bypassDefense: false };
+      return { kind: 'damage', scaling: 'strength', might: 1, critBase: 0, critable: true, evadable: true, bypassDefense: false };
     case 'heal':
       return { kind: 'heal', scaling: 'magic', might: 0 };
     case 'move':
@@ -532,7 +532,6 @@ function renderOp(host: HTMLElement, op: EffectOp, ctx: OpCtx): void {
     case 'damage':
       selectField(body, 'Scaling', DAMAGE_SCALING, op.scaling, (v) => (op.scaling = v as typeof op.scaling));
       numberField(body, 'Might', op.might, 0, (v) => (op.might = v), true);
-      numberField(body, 'Accuracy', op.accuracy, 0, (v) => (op.accuracy = v), true);
       numberField(body, 'Crit base', op.critBase, 0, (v) => (op.critBase = v), true);
       checkboxField(body, 'Critable', op.critable, (v) => (op.critable = v));
       checkboxField(body, 'Evadable', op.evadable, (v) => (op.evadable = v));
@@ -687,8 +686,6 @@ function sampleStats(): UnitStats {
     magic: sample.magic,
     luck: sample.luck,
     defense: 0,
-    precision: 0,
-    evasion: 0,
     speed: sample.speed,
     mobility: 0,
     power: 0,
@@ -732,7 +729,6 @@ function outlineDamage(
   const hit = Math.round(baseDamage * falloff);
   const flags: string[] = [];
   if (op.bypassDefense) flags.push('bypass def');
-  flags.push(op.evadable ? `acc ${pct(op.accuracy)}` : 'unmissable');
   let out = `${hit} dmg`;
   if (op.critable && critChance > 0) {
     out += ` · crit ${pct(critChance)} → ${Math.round(baseDamage * falloff * STATS.critMult)}`;

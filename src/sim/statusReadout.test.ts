@@ -18,7 +18,7 @@ const DEFS: Record<string, StatusDef> = {
     merge: 'add',
     periodic: {
       everySeconds: 1,
-      op: { kind: 'damage', scaling: 'none', might: 2, accuracy: 1, critBase: 0, critable: false, evadable: false, bypassDefense: true },
+      op: { kind: 'damage', scaling: 'none', might: 2, critBase: 0, critable: false, evadable: false, bypassDefense: true },
     },
   },
   rejuvenate: {

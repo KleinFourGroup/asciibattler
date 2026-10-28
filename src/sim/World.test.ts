@@ -14,7 +14,7 @@ import { rollUnit } from './archetypes';
 import { spawnWall } from './environment';
 import { secondsToTicks } from '../config';
 import { statusDef } from '../config/statuses';
-import { ZERO_STATS, deriveStats, hitChanceFor } from './stats';
+import { ZERO_STATS, deriveStats } from './stats';
 import { ARCHETYPE_CONFIG } from './archetypes';
 import { STATS } from '../config/stats';
 import { TILE_DEFS, type TileKind } from './TileGrid';
@@ -630,16 +630,11 @@ describe('World.applyDamage — defense mitigation', () => {
   });
 });
 
-describe('World.applyDamage — dodge hit/miss roll', () => {
-  // A 2-unit duel where the attacker's precision and the target's evasion are
-  // explicit, and the World's `combatRng` is seeded directly (the 6th ctor arg)
-  // so the to-hit draw is controllable. Captures BOTH the hit and miss event
-  // channels.
-  function evadeDuel(opts: {
-    attackerPrecision: number;
-    targetEvasion: number;
-    combatSeed: number;
-  }): {
+describe('World.applyDamage — every strike lands', () => {
+  // A 2-unit duel with the World's `combatRng` seeded directly (the 6th ctor
+  // arg), the attacker and target able to stand on any tile. Captures both the
+  // hit and miss event channels.
+  function duel(opts: { combatSeed: number; attackerTile?: TileKind; targetTile?: TileKind }): {
     world: World;
     attacker: Unit;
     target: Unit;
@@ -647,20 +642,13 @@ describe('World.applyDamage — dodge hit/miss roll', () => {
     misses: GameEvents['unit:missed'][];
   } {
     const bus = new EventBus<GameEvents>();
-    // rng (run stream) is fixed; the combatRng we care about is seeded explicitly.
     const world = new World(bus, new RNG(1), 12, 12, undefined, new RNG(opts.combatSeed));
     const attacks: GameEvents['unit:attacked'][] = [];
     const misses: GameEvents['unit:missed'][] = [];
     bus.on('unit:attacked', (p) => attacks.push(p));
     bus.on('unit:missed', (p) => misses.push(p));
-
-    const mk = (id: number, team: Team, precision: number, evasion: number, x: number): Unit => {
-      const stats: UnitStats = {
-        ...ARCHETYPE_CONFIG.mercenary.baseStats,
-        defense: 0, // isolate the to-hit roll from the defense mitigation
-        precision,
-        evasion,
-      };
+    const mk = (id: number, team: Team, x: number): Unit => {
+      const stats: UnitStats = { ...ARCHETYPE_CONFIG.mercenary.baseStats, defense: 0 };
       return new Unit({
         id,
         team,
@@ -671,360 +659,67 @@ describe('World.applyDamage — dodge hit/miss roll', () => {
         position: { x, y: 0 },
       });
     };
-    const attacker = mk(1, 'player', opts.attackerPrecision, 0, 0);
-    const target = mk(2, 'enemy', 0, opts.targetEvasion, 1);
-    world.placeUnits(attacker, target);
-    return { world, attacker, target, attacks, misses };
-  }
-
-  /** Smallest seed whose FIRST combatRng draw is ≥ `threshold` — i.e. a seed
-   *  that MISSES when the hit chance equals `threshold`. Deterministic search,
-   *  not a hand-computed mulberry32 value. */
-  function seedThatMisses(hitChance: number): number {
-    for (let s = 1; s < 100_000; s++) {
-      if (new RNG(s).next() >= hitChance) return s;
-    }
-    throw new Error('no missing seed found');
-  }
-
-  it('a miss deals 0: no HP mutation, no XP-ledger entry, a unit:missed (not unit:attacked)', () => {
-    // Evasion 99 vs precision 0 floors the hit chance; a seed whose first draw
-    // clears that floor is a guaranteed miss.
-    const floor = hitChanceFor(0.6, 0, 99);
-    expect(floor).toBe(STATS.hitChanceFloor);
-    const { world, attacker, target, attacks, misses } = evadeDuel({
-      attackerPrecision: 0,
-      targetEvasion: 99,
-      combatSeed: seedThatMisses(floor),
-    });
-    const hpBefore = target.currentHp;
-    world.applyDamage(attacker.id, target, 10, { crit: false, evadable: true, accuracy: 0.6 });
-    expect(misses).toEqual([{ attackerId: attacker.id, targetId: target.id }]);
-    expect(attacks).toHaveLength(0);
-    expect(target.currentHp).toBe(hpBefore);
-    expect(world.damageDealtBy(attacker.id)).toBe(0);
-  });
-
-  it('a hit lands normally: precision at the cap always connects regardless of seed', () => {
-    // precision 100 vs evasion 0 → hit chance clamps to the cap (1.0); the roll
-    // (always < 1) can never reach it, so the strike lands on every seed.
-    expect(hitChanceFor(0.6, 100, 0)).toBe(STATS.hitChanceCap);
-    const { world, attacker, target, attacks, misses } = evadeDuel({
-      attackerPrecision: 100,
-      targetEvasion: 0,
-      combatSeed: 7,
-    });
-    const hpBefore = target.currentHp;
-    world.applyDamage(attacker.id, target, 10, { crit: false, evadable: true, accuracy: 0.6 });
-    expect(misses).toHaveLength(0);
-    expect(attacks).toHaveLength(1);
-    expect(attacks[0]!.damage).toBe(10);
-    expect(target.currentHp).toBe(hpBefore - 10);
-    expect(world.damageDealtBy(attacker.id)).toBe(10);
-  });
-
-  it('an evadable strike draws exactly one combatRng value (the to-hit roll)', () => {
-    const { world, attacker, target } = evadeDuel({
-      attackerPrecision: 100, // cap → hit, but the roll is still drawn
-      targetEvasion: 0,
-      combatSeed: 7,
-    });
-    const before = world.combatRng.toJSON().state;
-    world.applyDamage(attacker.id, target, 10, { crit: false, evadable: true, accuracy: 0.6 });
-    const sib = RNG.fromJSON({ state: before });
-    sib.next(); // exactly one draw
-    expect(world.combatRng.toJSON().state).toBe(sib.toJSON().state);
-  });
-
-  it('a NON-evadable hit (mage AoE / catapult / env path) is unmissable AND draws no combatRng', () => {
-    // Same floor-the-hit-chance setup that guaranteed a miss above — but with
-    // evadable omitted the chokepoint never rolls: the damage lands and the
-    // combatRng stream is untouched.
-    const { world, attacker, target, attacks, misses } = evadeDuel({
-      attackerPrecision: 0,
-      targetEvasion: 99,
-      combatSeed: seedThatMisses(hitChanceFor(0.6, 0, 99)),
-    });
-    const before = world.combatRng.toJSON().state;
-    const hpBefore = target.currentHp;
-    world.applyDamage(attacker.id, target, 10, { crit: false, evadable: false });
-    expect(world.combatRng.toJSON().state).toBe(before); // no draw
-    expect(misses).toHaveLength(0);
-    expect(attacks).toHaveLength(1);
-    expect(target.currentHp).toBe(hpBefore - 10);
-  });
-
-  it('is deterministic per seed: the same combatSeed reproduces the same hit/miss', () => {
-    const outcome = (seed: number): 'hit' | 'miss' => {
-      const d = evadeDuel({ attackerPrecision: 5, targetEvasion: 5, combatSeed: seed }); // 0.6 band
-      d.world.applyDamage(d.attacker.id, d.target, 10, { crit: false, evadable: true, accuracy: 0.6 });
-      return d.misses.length ? 'miss' : 'hit';
-    };
-    for (const seed of [3, 11, 29, 101]) {
-      expect(outcome(seed)).toBe(outcome(seed));
-    }
-  });
-
-  it('rolls crit BEFORE the to-hit miss (combatRng order: crit → miss)', () => {
-    // The crit is drawn by the strike's damage op (EffectAction → executeDamage),
-    // the miss in applyDamage — so the stream order is crit, then miss. Find a
-    // seed where the two draws straddle the crit threshold AND the second draw is
-    // a HIT, so the crit flag is observable and DIFFERS from what a reversed
-    // (miss-first) order would give.
-    const critChance = 0.4;
-    const hitChance = hitChanceFor(0.6, 5, 5); // 0.6, mid-band (the strike op's accuracy)
-    let seed = -1;
-    let expectedCrit = false;
-    for (let s = 1; s < 1_000_000; s++) {
-      const r = new RNG(s);
-      const d1 = r.next(); // crit roll under the real (crit-first) order
-      const d2 = r.next(); // to-hit roll under the real order
-      if (d2 < hitChance && (d1 < critChance) !== (d2 < critChance)) {
-        seed = s;
-        expectedCrit = d1 < critChance;
-        break;
-      }
-    }
-    expect(seed).toBeGreaterThan(0);
-
-    const { world, attacker, target, attacks, misses } = evadeDuel({
-      attackerPrecision: 5,
-      targetEvasion: 5,
-      combatSeed: seed,
-    });
-    const before = world.combatRng.toJSON().state;
-    // A strike: a single-target damage op (evadable, accuracy
-    // 0.6) fires in EffectAction.start → executeDamage, which draws crit then
-    // calls applyDamage (the miss roll): crit, then miss.
-    const strikeDef = parseAbilityDef({
-      id: 'sword', name: 'Sword', cooldownSeconds: 1.5, rangeCells: 1, target: { kind: 'enemyInRange' },
-      timeline: [{ phase: 'impact', seconds: 0 }, { phase: 'recovery', seconds: 'fill' }],
-      orphanPolicy: 'commit-at-cast', priority: 10,
-      effects: [{ phase: 'impact', op: { kind: 'damage', scaling: 'strength', might: 0, accuracy: 0.6, critBase: 0, critable: true, evadable: true, bypassDefense: false } }],
-    });
-    const strike = new EffectAction(strikeDef, { targetId: target.id, ops: [{ baseDamage: 10, critChance }] });
-    const strikePhases = resolvePhases(strikeDef, 0);
-    world.seatActiveAction(attacker, { action: strike, startTick: 0, finishTick: totalTicks(strikePhases), phases: strikePhases });
-    strike.start(attacker, world);
-
-    // Exactly two draws consumed (crit + miss), in that order.
-    const sib = RNG.fromJSON({ state: before });
-    sib.next();
-    sib.next();
-    expect(world.combatRng.toJSON().state).toBe(sib.toJSON().state);
-    // It HIT (the 2nd draw was the to-hit roll), and the crit flag came from the
-    // 1st draw — a reversed order would have produced the opposite crit flag.
-    expect(misses).toHaveLength(0);
-    expect(attacks).toHaveLength(1);
-    expect(attacks[0]!.crit).toBe(expectedCrit);
-  });
-});
-
-describe('World.applyDamage — tile to-hit fold', () => {
-  // The water penalty lives in the TileDef table as
-  // `shallow_water.accuracyMod`. WATER_PENALTY is its magnitude, derived from
-  // the table (balance-proof — never hardcoded), so the assertions track the
-  // shipped value automatically.
-  const WATER_PENALTY = -(TILE_DEFS.shallow_water.accuracyMod ?? 0);
-  // The `evadeDuel` shape, but the test can seat either unit on a water tile. The
-  // attacker's precision is pinned to WATER_PENALTY, so its EFFECTIVE precision
-  // while wading is exactly 0 — the assertions hold for any penalty value,
-  // deriving the thresholds from the table (balance-proof).
-  function wadeDuel(opts: {
-    attackerOnWater?: boolean;
-    targetOnWater?: boolean;
-    combatSeed: number;
-  }): {
-    world: World;
-    attacker: Unit;
-    target: Unit;
-    attacks: GameEvents['unit:attacked'][];
-    misses: GameEvents['unit:missed'][];
-  } {
-    const bus = new EventBus<GameEvents>();
-    const world = new World(bus, new RNG(1), 12, 12, undefined, new RNG(opts.combatSeed));
-    const attacks: GameEvents['unit:attacked'][] = [];
-    const misses: GameEvents['unit:missed'][] = [];
-    bus.on('unit:attacked', (p) => attacks.push(p));
-    bus.on('unit:missed', (p) => misses.push(p));
-
-    const mk = (id: number, team: Team, precision: number, x: number): Unit => {
-      const stats: UnitStats = {
-        ...ARCHETYPE_CONFIG.mercenary.baseStats,
-        defense: 0, // isolate the to-hit roll from the defense mitigation
-        precision,
-        evasion: 0,
-      };
-      return new Unit({
-        id,
-        team,
-        archetype: 'mercenary',
-        glyph: 'M',
-        stats,
-        derived: deriveStats(stats, 1),
-        position: { x, y: 0 },
-      });
-    };
-    // attackerPrecision = penalty → effective precision 0 while wading.
-    const attacker = mk(1, 'player', WATER_PENALTY, 0);
-    const target = mk(2, 'enemy', 0, 1);
-    if (opts.attackerOnWater) world.tileGrid.setKind({ x: 0, y: 0 }, 'shallow_water');
-    if (opts.targetOnWater) world.tileGrid.setKind({ x: 1, y: 0 }, 'shallow_water');
-    world.placeUnits(attacker, target);
-    return { world, attacker, target, attacks, misses };
-  }
-
-  /** Smallest seed whose FIRST combatRng draw lands in `[lo, hi)` — a draw that
-   *  HITS when the hit chance is `hi` but MISSES when it is `lo`. */
-  function seedInWindow(lo: number, hi: number): number {
-    for (let s = 1; s < 1_000_000; s++) {
-      const d = new RNG(s).next();
-      if (d >= lo && d < hi) return s;
-    }
-    throw new Error(`no seed with first draw in [${lo}, ${hi})`);
-  }
-
-  // Dry-ground hit chance (precision = penalty) vs the wading chance (effective
-  // precision 0). The mechanic is only meaningful when the penalty is positive.
-  const dry = hitChanceFor(0.6, WATER_PENALTY, 0);
-  const wet = hitChanceFor(0.6, 0, 0);
-
-  it('the configured penalty lowers a wader’s to-hit chance', () => {
-    expect(WATER_PENALTY).toBeGreaterThan(0);
-    expect(dry).toBeGreaterThan(wet);
-  });
-
-  it('a strike that lands on dry ground MISSES when the attacker is wading', () => {
-    const seed = seedInWindow(wet, dry);
-
-    const onLand = wadeDuel({ combatSeed: seed });
-    onLand.world.applyDamage(onLand.attacker.id, onLand.target, 10, {
-      crit: false,
-      evadable: true,
-      accuracy: 0.6,
-    });
-    expect(onLand.misses).toHaveLength(0);
-    expect(onLand.attacks).toHaveLength(1);
-
-    const wading = wadeDuel({ attackerOnWater: true, combatSeed: seed });
-    wading.world.applyDamage(wading.attacker.id, wading.target, 10, {
-      crit: false,
-      evadable: true,
-      accuracy: 0.6,
-    });
-    expect(wading.misses).toHaveLength(1);
-    expect(wading.attacks).toHaveLength(0);
-  });
-
-  it('the penalty is occupant-ATTACKER only: a target standing in water is hit no differently', () => {
-    // Same seed/threshold as the land case; only the TARGET wades. The attacker
-    // is dry, so its precision is undocked → identical outcome to dry ground.
-    const seed = seedInWindow(wet, dry);
-    const d = wadeDuel({ targetOnWater: true, combatSeed: seed });
-    d.world.applyDamage(d.attacker.id, d.target, 10, { crit: false, evadable: true, accuracy: 0.6 });
-    expect(d.misses).toHaveLength(0);
-    expect(d.attacks).toHaveLength(1);
-  });
-
-  it('an unmissable strike from water ignores the penalty (no combatRng draw)', () => {
-    const seed = seedInWindow(wet, dry);
-    const d = wadeDuel({ attackerOnWater: true, combatSeed: seed });
-    const before = d.world.combatRng.toJSON().state;
-    d.world.applyDamage(d.attacker.id, d.target, 10, { crit: false, evadable: false });
-    expect(d.world.combatRng.toJSON().state).toBe(before); // no draw
-    expect(d.misses).toHaveLength(0);
-    expect(d.attacks).toHaveLength(1);
-  });
-
-  // The general fold: ATTACKER's tile `accuracyMod` + DEFENDER's tile
-  // `evasionMod`, both read from the table. Each test pins the seed to the
-  // window between the floor-ground and on-tile hit chances (derived from the
-  // table mod), so it asserts the fold flips a HIT into a MISS (or vice-versa).
-  function tileDuel(opts: {
-    attackerTile?: TileKind;
-    targetTile?: TileKind;
-    attackerPrecision: number;
-    targetEvasion: number;
-    combatSeed: number;
-  }): {
-    world: World;
-    attacker: Unit;
-    target: Unit;
-    attacks: GameEvents['unit:attacked'][];
-    misses: GameEvents['unit:missed'][];
-  } {
-    const bus = new EventBus<GameEvents>();
-    const world = new World(bus, new RNG(1), 12, 12, undefined, new RNG(opts.combatSeed));
-    const attacks: GameEvents['unit:attacked'][] = [];
-    const misses: GameEvents['unit:missed'][] = [];
-    bus.on('unit:attacked', (p) => attacks.push(p));
-    bus.on('unit:missed', (p) => misses.push(p));
-    const mk = (id: number, team: Team, precision: number, evasion: number, x: number): Unit =>
-      new Unit({
-        id, team, archetype: 'mercenary', glyph: 'M',
-        stats: { ...ARCHETYPE_CONFIG.mercenary.baseStats, defense: 0, precision, evasion },
-        derived: deriveStats({ ...ARCHETYPE_CONFIG.mercenary.baseStats, defense: 0, precision, evasion }, 1),
-        position: { x, y: 0 },
-      });
-    const attacker = mk(1, 'player', opts.attackerPrecision, 0, 0);
-    const target = mk(2, 'enemy', 0, opts.targetEvasion, 1);
+    const attacker = mk(1, 'player', 0);
+    const target = mk(2, 'enemy', 1);
     if (opts.attackerTile) world.tileGrid.setKind({ x: 0, y: 0 }, opts.attackerTile);
     if (opts.targetTile) world.tileGrid.setKind({ x: 1, y: 0 }, opts.targetTile);
     world.placeUnits(attacker, target);
     return { world, attacker, target, attacks, misses };
   }
 
-  it('ICE docks the ATTACKER’s accuracy (a dry-ground hit MISSES from ice)', () => {
-    const penalty = -(TILE_DEFS.ice.accuracyMod ?? 0);
-    expect(penalty).toBeGreaterThan(0);
-    // Pin precision = penalty so effective precision on ice is exactly 0.
-    const onGround = hitChanceFor(0.6, penalty, 0);
-    const onIce = hitChanceFor(0.6, 0, 0);
-    const seed = seedInWindow(onIce, onGround);
-
-    const dry = tileDuel({ attackerPrecision: penalty, targetEvasion: 0, combatSeed: seed });
-    dry.world.applyDamage(dry.attacker.id, dry.target, 10, { crit: false, evadable: true, accuracy: 0.6 });
-    expect(dry.attacks).toHaveLength(1);
-
-    const slip = tileDuel({ attackerTile: 'ice', attackerPrecision: penalty, targetEvasion: 0, combatSeed: seed });
-    slip.world.applyDamage(slip.attacker.id, slip.target, 10, { crit: false, evadable: true, accuracy: 0.6 });
-    expect(slip.misses).toHaveLength(1);
-    expect(slip.attacks).toHaveLength(0);
+  it('a strike lands in full and draws nothing: unit:attacked, the HP and the ledger, no unit:missed', () => {
+    for (const seed of [3, 7, 11, 29, 101]) {
+      const { world, attacker, target, attacks, misses } = duel({ combatSeed: seed });
+      const before = world.combatRng.toJSON().state;
+      const hpBefore = target.currentHp;
+      expect(world.applyDamage(attacker.id, target, 10, { crit: false })).toBe(true);
+      expect(world.combatRng.toJSON().state).toBe(before);
+      expect(misses).toHaveLength(0);
+      expect(attacks).toEqual([{ attackerId: attacker.id, targetId: target.id, damage: 10, crit: false }]);
+      expect(target.currentHp).toBe(hpBefore - 10);
+      expect(world.damageDealtBy(attacker.id)).toBe(10);
+    }
   });
 
-  it('HILLS raise the DEFENDER’s evasion (a ground hit MISSES the high-ground target)', () => {
-    const bonus = TILE_DEFS.hills.evasionMod ?? 0;
-    expect(bonus).toBeGreaterThan(0);
-    const onGround = hitChanceFor(0.6, 0, 0);
-    const onHills = hitChanceFor(0.6, 0, bonus);
-    const seed = seedInWindow(onHills, onGround); // hits at onGround, misses at onHills
-
-    const ground = tileDuel({ attackerPrecision: 0, targetEvasion: 0, combatSeed: seed });
-    ground.world.applyDamage(ground.attacker.id, ground.target, 10, { crit: false, evadable: true, accuracy: 0.6 });
-    expect(ground.attacks).toHaveLength(1);
-
-    const high = tileDuel({ targetTile: 'hills', attackerPrecision: 0, targetEvasion: 0, combatSeed: seed });
-    high.world.applyDamage(high.attacker.id, high.target, 10, { crit: false, evadable: true, accuracy: 0.6 });
-    expect(high.misses).toHaveLength(1);
-    expect(high.attacks).toHaveLength(0);
+  it('a tile changes no strike: from and onto every passable kind, the same damage and no draw', () => {
+    const passable = (Object.keys(TILE_DEFS) as TileKind[]).filter((k) => TILE_DEFS[k].passable);
+    expect(passable.length).toBeGreaterThan(1);
+    for (const attackerTile of passable) {
+      for (const targetTile of passable) {
+        const { world, attacker, target, attacks } = duel({ combatSeed: 7, attackerTile, targetTile });
+        const before = world.combatRng.toJSON().state;
+        world.applyDamage(attacker.id, target, 10, { crit: false });
+        expect(world.combatRng.toJSON().state, `${attackerTile} → ${targetTile}`).toBe(before);
+        expect(attacks.map((p) => p.damage), `${attackerTile} → ${targetTile}`).toEqual([10]);
+      }
+    }
   });
 
-  it('SAND lowers the DEFENDER’s evasion (a ground miss HITS the exposed target)', () => {
-    const penalty = -(TILE_DEFS.sand.evasionMod ?? 0);
-    expect(penalty).toBeGreaterThan(0);
-    // Target carries `penalty` base evasion, so on sand its effective evasion is 0.
-    const onGround = hitChanceFor(0.6, 0, penalty);
-    const onSand = hitChanceFor(0.6, 0, 0);
-    const seed = seedInWindow(onGround, onSand); // misses at onGround, hits at onSand
+  it('an evadable strike op draws once, its crit, and the crit flag comes from that draw', () => {
+    const critChance = 0.4;
+    const { world, attacker, target, attacks, misses } = duel({ combatSeed: 7 });
+    const before = world.combatRng.toJSON().state;
+    const expectedCrit = RNG.fromJSON({ state: before }).next() < critChance;
+    // A strike: a single-target damage op authored evadable fires in
+    // EffectAction.start → executeDamage, which draws the crit and calls
+    // applyDamage.
+    const strikeDef = parseAbilityDef({
+      id: 'sword', name: 'Sword', cooldownSeconds: 1.5, rangeCells: 1, target: { kind: 'enemyInRange' },
+      timeline: [{ phase: 'impact', seconds: 0 }, { phase: 'recovery', seconds: 'fill' }],
+      orphanPolicy: 'commit-at-cast', priority: 10,
+      effects: [{ phase: 'impact', op: { kind: 'damage', scaling: 'strength', might: 0, critBase: 0, critable: true, evadable: true, bypassDefense: false } }],
+    });
+    const strike = new EffectAction(strikeDef, { targetId: target.id, ops: [{ baseDamage: 10, critChance }] });
+    const strikePhases = resolvePhases(strikeDef, 0);
+    world.seatActiveAction(attacker, { action: strike, startTick: 0, finishTick: totalTicks(strikePhases), phases: strikePhases });
+    strike.start(attacker, world);
 
-    const ground = tileDuel({ attackerPrecision: 0, targetEvasion: penalty, combatSeed: seed });
-    ground.world.applyDamage(ground.attacker.id, ground.target, 10, { crit: false, evadable: true, accuracy: 0.6 });
-    expect(ground.misses).toHaveLength(1);
-
-    const exposed = tileDuel({ targetTile: 'sand', attackerPrecision: 0, targetEvasion: penalty, combatSeed: seed });
-    exposed.world.applyDamage(exposed.attacker.id, exposed.target, 10, { crit: false, evadable: true, accuracy: 0.6 });
-    expect(exposed.attacks).toHaveLength(1);
-    expect(exposed.misses).toHaveLength(0);
+    const sib = RNG.fromJSON({ state: before });
+    sib.next(); // exactly one draw
+    expect(world.combatRng.toJSON().state).toBe(sib.toJSON().state);
+    expect(misses).toHaveLength(0);
+    expect(attacks).toHaveLength(1);
+    expect(attacks[0]!.crit).toBe(expectedCrit);
   });
 });
 

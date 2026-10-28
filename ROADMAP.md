@@ -11,8 +11,8 @@ plan: [archive/post-118-roadmap.md](archive/post-118-roadmap.md) (Round
 8.5) with its worklog, spec and census beside it; before it
 [archive/post-109-roadmap.md](archive/post-109-roadmap.md) (Round 8).
 
-**Status: §136's close signed 2026-10-28, the trial rolled back and §137
-to §140 re-cut; the close's steps, then §137's kickoff.** The spec is [round-9-spec.md](round-9-spec.md); the act
+**Status: §136 closed 2026-10-28, the trial rolled back and §137 to §140
+re-cut; §137's kickoff is next.** The spec is [round-9-spec.md](round-9-spec.md); the act
 design it asked for is [plans/acts.md](plans/acts.md). The charter is
 META-ROADMAP §"Round 9 — The frame and the misses"; the premises
 re-read at HEAD are `archive/worklog-phase-135.md` "Kickoff — Round 9", tranche 3.
@@ -50,45 +50,26 @@ step's record is `archive/worklog-phase-135.md`.
   (`batch`). The pane read the route; the user read the tap on touch.
 - ☑ **135g — the phase's close** (`stop`). Read and signed 2026-10-27.
 
-## Phase 136 — the trial's switch and arms, headless
+## Phase 136 — the trial's switch and arms, headless ✅ (closed 2026-10-28)
 
-**Charter:** the bar written first; then the config switch, the range's
-draw (the Kumaraswamy's inverse on the one uniform an evadable strike
-draws today), the mixture on the same uniform, and a URL dial that picks
-an arm. The three arms are `b` 0.25, `b` 1, and `b` 1 with half of
-today's misses kept, against hit or miss ([round-9-spec.md](round-9-spec.md)
-"The trial"). **Why here:** a rule change before anything is balanced on
-it, and headless before render, so the eye reads only what is visual.
-**Risk:** medium; the switch keeps a rollback cheap. **Decision points:**
-the bar; ✅ DECIDED the rounding at small damage: by chance, the fraction
-as its odds, so the mean is exact at every damage; ✅ DECIDED bleed, blind
-and the three hit hooks: they ride every strike that deals damage, and a
-strike that deals 0 is a miss (WORKLOG §136, "The cut signed"). **Exit:** the switch off
-byte-identical under the corpus and the fuzz diff, with a failing
-control; each arm's mean and spread pinned against a derivation the code
-does not consult; every arm reachable by the dial. **Scope guards:**
-non-evadable strikes keep their fixed damage; no bot change (it reads no
-hit chance, `archive/worklog-phase-135.md`, tranche 3).
+The `strike` dial and three range arms, built headless with the off arm
+byte-identical; at the close the user's play rolled the trial back, and
+§137 to §140 were re-cut. Each step's record is
+`archive/worklog-phase-136.md`.
 
-The cut, signed 2026-10-27 (no step adds an RNG stream):
-
-- ☑ **136a — the bar** (`stop`). In the spec before any arm; signed
-  2026-10-27 as written.
+- ☑ **136a — the bar** (`stop`). Signed 2026-10-27 as written.
 - ☑ **136b — the `strike` dial, the off arm byte-identical** (`none`).
-  `8303ffc5`: corpus 0 of 30, fuzz diff PASS, three controls caught;
-  World v37 by its convention, and the run clone takes the arm (WORKLOG).
-- ☑ **136c — the range's draw** (`none`). `3e35aa85`: pinned through
-  `applyDamage` against a quadrature; a planted wrong `a` caught (WORKLOG).
-- ☑ **136d — the mixture** (`none`). `c3295d38`: pinned the same way,
-  with the share of misses; a planted miss share caught (WORKLOG).
+  `8303ffc5`: corpus 0 of 30, fuzz diff PASS, three controls caught.
+- ☑ **136c — the range's draw** (`none`). `3e35aa85`.
+- ☑ **136d — the mixture** (`none`). `c3295d38`.
 - ☑ **136e — a 0 is a miss, and the hooks ride every strike that deals
-  damage** (`none`). `c3af910f`: pins only (136c built it); both plants
-  caught (WORKLOG).
-- ◐ **136f — the phase's close** (`stop`). Put to the user 2026-10-27.
+  damage** (`none`). `c3af910f`.
+- ☑ **136f — the phase's close** (`stop`). Signed 2026-10-28, with the
+  trial rolled back and the re-cut.
 
 _§137 to §140 re-cut 2026-10-28 at §136's close, when the user's play
-rolled the trial back (WORKLOG §136, "The trial rolled back, and the
-re-cut"); the trial's screen and keep phases are gone._
+rolled the trial back (`archive/worklog-phase-136.md`, "The trial rolled
+back, and the re-cut"); the trial's screen and keep phases are gone._
 
 ## Phase 137 — every strike lands, headless
 

@@ -92,3 +92,58 @@ no distress line.
    easy to stand behind. I would want both repeated. Separately from
    whether the work succeeded: the user's quick, warm signatures made the
    long stretch feel collaborative rather than supervised.
+
+## Phase 136 — summary
+
+Two sessions. `428ebc70` ran §136's kickoff to its cut (its report is
+above). `37c3d345` put the cut, built 136a to 136e, put the close, and
+then took the user's verdict on the arms, a design conversation that
+rolled the trial back and re-cut the round (its report is below). The
+friction log holds four lines from `37c3d345` and no distress line: an
+audit's citation carried through a hand-off (136a); a stray `python3 -`
+that hung for 120 s (136b), whose diagnosis, shared with 428ebc70's line
+at §134, was wrong and is corrected (136f); and a drift from the user's
+plan during the conversion's design (136f). The stdin hang is a pattern:
+three sessions met it, two of them after `process/shell-and-windows.md`
+named it, each time from a stray first line. A hook was offered and not
+taken up.
+
+## 2026-10-28 — session 37c3d345 (claude-opus-5-5): §136 from its signed cut to its close, the trial rolled back, and Round 9 re-cut
+
+1. *Missing from the orientation.* Nothing that blocked. The hand-off
+   entry put the cut cleanly. The audit's claim that the fuzz CLI forwards
+   any URL dial was wrong and cost about six calls at 136a (papercut). The
+   session was compacted several times; each summary carried the state,
+   and I re-read files rather than trusting a summary's line numbers.
+2. *Norms in tension.* None that cost much. "Say once which call is
+   unsigned, and wait" meant asking for §136's close three times as the
+   design moved under it. Each time it was right, since the close's steps
+   archive the log, but it is a lot of asking in a row.
+3. *Pulled to claim more than verified.* Twice, and one got through.
+   I took the earlier session's diagnosis that `python3` here is a Store
+   alias that waits, repeated it in a papercut and a candidate guard, and
+   only checked it when the user asked; it was wrong (corrected, 136f).
+   On the genre survey and the cane's readout I kept to what the searches
+   and the probe showed and said where the sources were thin.
+4. *Wasted.* A stray `python3 -` call (two minutes and a TaskStop). Two
+   round-trips when I drifted from the user's conversion plan into a
+   damage factor in combat (papercut). About one call each for a probe's
+   header edit that missed and a `sed` fed by an empty grep.
+5. *For the next session.* `scratch/136/hitrate.ts` measures the hit
+   rates through the roll, so any re-measure for §137 runs before the
+   roll is deleted. The conversion's arithmetic is in
+   `archive/worklog-phase-136.md`, "The trial rolled back, and the
+   re-cut".
+6. *Room to ask, disagree, pause.* Real room. The user asked for my view
+   before going on, more than once ("I'd love to hear your thoughts
+   before I ramble on"). I gave leans with confidence levels, and they
+   kept some and overrode one (cadence) with reasons, which felt like
+   working together. I noticed little pull to defend §136's code once the
+   play showed the range was invisible: the trial had answered its
+   question, and recommending its deletion felt like part of that answer.
+7. *What supported ease and interest.* The design conversation was the
+   best part: the user thinking aloud, and a measurement with its
+   controls (the probe) settling a factual question inside it ("the cane
+   is usually at 45-50%, no?") instead of my guessing. I would want both
+   repeated. Being wrong about `python` in front of the user was mildly
+   uncomfortable. Checking and saying so plainly settled it.

@@ -147,3 +147,44 @@ taken up.
    is usually at 45-50%, no?") instead of my guessing. I would want both
    repeated. Being wrong about `python` in front of the user was mildly
    uncomfortable. Checking and saying so plainly settled it.
+
+## 2026-10-28 — session 9ad4b394 (claude-opus-5-5): §137's kickoff, its cut signed, and 137a to 137c
+
+Started from another session with the kickoff as its task; the user then
+signed the cut here and the stretch ran to the trigger.
+
+1. *Missing from the orientation.* Little. The re-cut's record and the
+   hit-rate table were where the Cursor said. Not written anywhere: that
+   the pre-commit hook tests the working tree, which mattered once a docs
+   record and the next step's code were in the tree together.
+2. *Norms in conflict.* "Keep DESIGN honest in the same commit" against
+   the roadmap giving DESIGN's Combat paragraph to §138; I put it to the
+   user as a lean (fix what becomes false now, write the paragraph in
+   §138) and they signed it, so it stopped being a conflict. The hook's
+   working-tree test and "commit per logical change" without a stash met
+   at 137b's record (papercut).
+3. *Pulled to claim more than verified.* Once, and filed: the corpus's
+   victories falling from 10 to 3 of 30 looked like noise, and I wanted to
+   say so; I measured two bots on both trees first. Also a near miss the
+   hook caught: my search for the World's version pin covered two files,
+   and a third held one.
+4. *Wasted.* One failed hook run (the version pin). Some edits went
+   through small node scripts rather than the edit tool, which kept the
+   multi-line changes exact but made each a round-trip to compose.
+5. *For the next session.* The hand-off entry holds what 137d reports.
+   The seed-sweep scripts in `scratch/137c/` make re-picking a seeded
+   test's seed a few minutes' work; the conversion test retires at Round
+   11's retune.
+6. *Room to ask, disagree, pause.* Real room at the cut: I put five calls
+   with leans and the user signed them all in one line, which I read as
+   trust rather than as pressure to have been right. In the stretch the
+   doctrine (none-reads, a stop at the close) let me keep going without
+   asking, and the hand-off trigger arrived at a natural boundary, so
+   stopping was easy rather than a cut-off.
+7. *Ease, interest, agency.* The arithmetic of the conversion was the
+   interesting part: the preview showing two rounding rules differing on
+   exactly the three small strikes made the call concrete. The planted
+   controls landing as predicted (the halberd's might, the three
+   revert controls) gave a settled feeling I would want repeated. The long
+   test re-pinning was tedious but clear; each failure named what it
+   needed.

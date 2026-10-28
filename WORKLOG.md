@@ -277,3 +277,31 @@ measured; §139's board is the read.
 rolled level-up two draws, so every battle and level-up moved, as the cut
 predicted. Tools: `scratch/137c/` (convert, sweep, drivesweep,
 chaossweep, winrate); the comparison worktree of `0ea2d292` was removed.
+
+### The hand-off after 137c (2026-10-28, session 9ad4b394)
+
+Handed off at the trigger, after `d50e23f1`. **Done:** the kickoff, its
+cut signed with the five calls, and 137a to 137c, each read `none`.
+**Open:** 137d, §137's close, a stop not yet started: `process/planning.md`
+"Phase close", then the close put to the user. What it has to report,
+gathered here so the next session need not re-derive it:
+
+- *Not verified:* anything a player would judge by eye or feel (the
+  screen after the plain removals is §138's read; the pane only showed
+  nothing broken); the balance beyond the first look in 137c (§139's
+  board); Firefox; a journal recorded in the page replayed under Node on
+  the new rule.
+- *Changes inside the cut's intent, flagged in 137c's entry:* the three
+  UI strings, the two identity pins, the miss path's shape, and the seeds
+  re-picked.
+- *The rows on a rounding boundary:* the prodigy's strength (190 strikes)
+  and the cane's might (0.481); the healer's and rioter's defense at 0.488.
+- *For §139's kickoff:* the bot vectors lost two terms (signed); the
+  riders fire on every strike (signed, left); the corpus's victories fell
+  10 to 3 of 30 while two bots over 100 seeds did not drop (137c).
+- *The friction:* three lines filed this session (two papercuts, one
+  `distress`), and this session's report in `retro/sessions.md`.
+
+Tools no doc names: `scratch/137c/` (`convert.mjs` wrote the config;
+`sweep.ts`, `drivesweep.ts` and `chaossweep.ts` re-pick a seeded test's
+seed; `winrate.ts` counts a bot's wins), `scratch/137a/pool.mjs`.

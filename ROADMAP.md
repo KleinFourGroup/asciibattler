@@ -11,7 +11,7 @@ plan: [archive/post-118-roadmap.md](archive/post-118-roadmap.md) (Round
 8.5) with its worklog, spec and census beside it; before it
 [archive/post-109-roadmap.md](archive/post-109-roadmap.md) (Round 8).
 
-**Status: §137's cut signed 2026-10-28; 137a is next.** The spec is [round-9-spec.md](round-9-spec.md); the act
+**Status: §137 in its stretch; 137b is next.** The spec is [round-9-spec.md](round-9-spec.md); the act
 design it asked for is [plans/acts.md](plans/acts.md). The charter is
 META-ROADMAP §"Round 9 — The frame and the misses"; the premises
 re-read at HEAD are `archive/worklog-phase-135.md` "Kickoff — Round 9", tranche 3.
@@ -98,7 +98,8 @@ change.
 
 _The cut, signed 2026-10-28 with its five calls (WORKLOG §137):_
 
-- ☐ **137a — the hit rates re-measured, 400 seeds a bot** (`none`).
+- ☑ **137a — the hit rates re-measured, 400 seeds a bot** (`none`).
+  810,799 strikes, every strike 48.82 %; BALANCE.md, 2026-10-28.
 - ☐ **137b — §136 reverted, byte-identical** (`none`).
 - ☐ **137c — every strike lands, at the converted numbers** (`none`).
 - ☐ **137d — the phase's close** (`stop`).

@@ -141,3 +141,28 @@ riders left for §139 with no chance added; the bot's two keys dropped and
 nothing else. And the scope lean: 137c fixes the sentences the change
 makes false, and DESIGN's Combat paragraph and stat list stay §138's.
 The stretch: 137a to 137c, then the stop at 137d.
+
+### 137a — the hit rates re-measured (2026-10-28)
+
+The table is BALANCE.md's run log, 2026-10-28, the second entry: 400
+seeds a bot, 810,799 strikes, every strike 48.82 %. The runs took 347 s
+and 505 s against the cut's ten minutes a bot. The checks, the bus count
+and the 0.5 control, read as at §136.
+
+- *Three rows moved outside the first measurement's intervals:* the
+  officer, 40.2 % to 24.0 % (the first had 219 strikes); the halberdier,
+  41.7 % to 50.0 %; the rogue, 77.4 % to 81.1 %. The first 40 seeds are
+  inside these 400, so the first table was a small sample of this one.
+- *The prodigy stays thin,* 190 strikes at 53.7 % ± 7.2: a legendary,
+  rare in a run. Its converted strength is 2 at the point estimate and 3
+  above about 55 %, so it sits on a rounding boundary; by the cut it is
+  not measured further.
+- *What moved from the kickoff's preview* under rule C: the halberd's
+  might 3 to 4 (its strike 7, today's mean 7.00), the cane's 1 to 0 (the
+  officer's strike 1, today's 1.20), and growths by 0.01 to 0.04. Defense
+  times 0.4882 gives the same bases (the odd ones still round down) and
+  growths up by 0.01 on six units; the buffs are the same (+4, +2, +1
+  left). Each base strike lands within −17 % to +4 % of today's mean a
+  swing; the four under −9 % are the small strikes (the ghoul, the
+  bandit, the gunslinger, the officer at 1 to 2 points), where half a
+  point is the step.

@@ -4926,3 +4926,38 @@ deltas. The pre-X H7c→O log lives at
   → 40.2 %). The rows under about 250 strikes are wide; §137 re-measures
   them. Outputs (ignored, this machine): `scratch/136/out/`. Detail:
   WORKLOG §136, "The trial rolled back, and the re-cut".
+- **2026-10-28 — each dodgeable weapon's hit rate in play, re-measured at
+  400 seeds a bot** (137a; the input to 137c's conversion, which deletes
+  the roll). At `a042bf2c`, the frozen config, default run config, seeds
+  1000–1399 on `greedy` (6,119 battles, 347 s) and `pure-random` (6,072,
+  505 s), run one at a time on this machine. The same probe as the entry
+  above, `scratch/136/hitrate.ts`, unchanged; its seeds include that
+  entry's 40. Its checks: the misses it counts equal the bus's
+  `unit:missed` (208,128 and 206,865), and `CONTROL=1` on 4 seeds reads
+  the rows over 600 strikes at 49.9 to 51.4 %, the same reading as
+  before. Pooled by `scratch/137a/pool.mjs`, which reproduces the entry
+  above from its outputs within 0.1 point. Pooled over both bots, ± two
+  standard errors:
+
+  | unit · weapon | accuracy | strikes | hit rate |
+  |---|---|---|---|
+  | rogue · gambit | 0.85 | 13,353 | 81.1 % ± 0.7 |
+  | luminant · light ray | 0.70 | 632 | 69.6 % ± 3.7 |
+  | archer · bow | 0.70 | 182,155 | 68.4 % ± 0.2 |
+  | adventurer · whip | 0.70 | 8,852 | 64.6 % ± 1.0 |
+  | reaver · cleaver | 0.65 | 4,963 | 59.7 % ± 1.4 |
+  | ronin · katana | 0.60 | 24,000 | 54.7 % ± 0.6 |
+  | prodigy · sword | 0.60 | 190 | 53.7 % ± 7.2 |
+  | mercenary · sword | 0.60 | 282,149 | 52.4 % ± 0.2 |
+  | halberdier · halberd | 0.55 | 3,103 | 50.0 % ± 1.8 |
+  | ghoul · claw | 0.60 | 24,782 | 44.0 % ± 0.6 |
+  | bandit · club | 0.40 | 251,267 | 29.3 % ± 0.2 |
+  | gunslinger · pistol | 0.35 | 11,202 | 29.2 % ± 0.9 |
+  | officer · cane | 0.35 | 4,151 | 24.0 % ± 1.3 |
+
+  Over every strike, 48.82 %. Three rows moved outside the old entry's
+  intervals: the officer (40.2 % on 219 strikes to 24.0 %), the
+  halberdier (41.7 % to 50.0 %) and the rogue (77.4 % to 81.1 %). The
+  prodigy, a legendary, stays thin at 190 strikes; by the cut, a thin row
+  is not measured further. Outputs (ignored, this machine):
+  `scratch/137a/out/`. Detail: WORKLOG §137, 137a.

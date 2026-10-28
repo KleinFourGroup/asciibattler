@@ -1,4 +1,4 @@
-# ROADMAP — Round 9 (The frame and the damage trial), post-§133
+# ROADMAP — Round 9 (The frame and the misses), post-§133
 
 The active PLAN (it stays a plan for its whole life). The macro order is
 [META-ROADMAP.md](META-ROADMAP.md) (Round 8.5 Housekeeping ✅ CLOSED
@@ -11,9 +11,10 @@ plan: [archive/post-118-roadmap.md](archive/post-118-roadmap.md) (Round
 8.5) with its worklog, spec and census beside it; before it
 [archive/post-109-roadmap.md](archive/post-109-roadmap.md) (Round 8).
 
-**Status: §136's cut signed 2026-10-27; 136a is in progress.** The spec is [round-9-spec.md](round-9-spec.md); the act
+**Status: §136's close signed 2026-10-28, the trial rolled back and §137
+to §140 re-cut; the close's steps, then §137's kickoff.** The spec is [round-9-spec.md](round-9-spec.md); the act
 design it asked for is [plans/acts.md](plans/acts.md). The charter is
-META-ROADMAP §"Round 9 — The frame and the damage trial"; the premises
+META-ROADMAP §"Round 9 — The frame and the misses"; the premises
 re-read at HEAD are `archive/worklog-phase-135.md` "Kickoff — Round 9", tranche 3.
 
 ## Phase 134 — the kickoff
@@ -85,33 +86,61 @@ The cut, signed 2026-10-27 (no step adds an RNG stream):
   caught (WORKLOG).
 - ◐ **136f — the phase's close** (`stop`). Put to the user 2026-10-27.
 
-## Phase 137 — the trial on screen
+_§137 to §140 re-cut 2026-10-28 at §136's close, when the user's play
+rolled the trial back (WORKLOG §136, "The trial rolled back, and the
+re-cut"); the trial's screen and keep phases are gone._
 
-**Charter:** what each arm shows: a strike that lands for 0, the
-mixture's MISS, the two hit-chance readouts (the ability detail's "%
-hit", the promotion delta's dodge share), and the miss's sound. **Why
-here:** after the switch, so only the visual part waits on the user's
-eye. **Risk:** low. **Decision points:** ✅ DECIDED what a 0 shows: a
-MISS, since a 0 is a miss (§136); the readouts' wording. **Exit:** each arm readable in play, by the dial. **Scope
-guards:** the hit-or-miss arm's screen unchanged.
+## Phase 137 — every strike lands, headless
 
-## Phase 138 — the user's play and the keep
+**Charter:** the hit roll deleted, with precision and evasion, each
+ability's `accuracy`, terrain's two combat modifiers, and §136's arms
+and `strike` dial; then the conversion in config: each dodgeable
+weapon's might and its unit's strength or ranged (base and growth)
+scaled by the unit's hit rate in play (BALANCE.md's run log,
+2026-10-28), and defense (base and growth) halved, in whole numbers. The
+formula in play is today's without the roll. The type forces the UI's
+references out here as plain removals; §138 finishes the screen.
+**Why here:** a rule change before anything is balanced on it, headless
+before the screen. **Risk:** medium: every battle and every level-up
+draw re-baselines once (the pins, the corpus, the fuzz baselines); a Run
+bump (the roster's units carry their stats) and a World bump.
+**Decision points:** the rates re-measured with more seeds for the thin
+rows; a unit whose stat feeds both a dodgeable and an unmissable ability,
+if step zero finds one. **Exit:** the two stats, `accuracy` and the
+terrain's modifiers gone from code and config; the idle miss path kept
+with a landing note on each piece (`evadable`, `unit:missed`, the MISS
+splat and its sound, the `evade` and `dealMiss` triggers); the converted
+numbers pinned against a derivation from the measured rates and the old
+config that the code does not consult. **Scope guards:** no cadence
+change; no retune by taste (Round 11's); no dodge (Round 13's); no bot
+change.
 
-**Charter:** the user plays the three arms and hit or miss, labelled, and
-picks one; the veto board runs on the pick, paired same-seed against hit
-or miss, against the bar's lines, and doubles as the round's closing
-board; then the trial is kept or rolled back. **Why here:** the play and
-the board need the switch and the screen. **Risk:** medium: the board is
-a box batch, and the arms move the signed sheet's numbers.
-**Decision points:** the pick; keep or roll back; the default if kept.
-**Exit:** the trial kept or rolled back on its bar and the user's play,
-and DESIGN's Combat paragraph says which. **Scope guards:** no roster
-retune (Round 11's, on the arm kept).
+## Phase 138 — the screen after the misses
 
-## Phase 139 — the close
+**Charter:** the card's eight stats, the promotion and the ability detail
+without hit or dodge, the archetype editor's dials, the locale strings,
+and DESIGN's Combat paragraph and stat list. **Why here:** after the
+rule, so the eye reads only what is visual. **Risk:** low. **Decision
+points:** none known. **Exit:** each surface read in play. **Scope
+guards:** the idle miss path untouched.
+
+## Phase 139 — the board and the user's play
+
+**Charter:** the round's closing board, read as paired same-seed deltas
+against the round before; the user plays the converted game; a converted
+number moves only where the board or the play shows "roughly equivalent"
+missed. **Why here:** the board and the play need the rule and the
+screen. **Risk:** medium: a box batch, and the conversion moves the
+signed sheet's numbers, the spells and the catapult against halved
+defense by design. **Decision points:** what "roughly equivalent" holds
+to; a re-pin of the sheet. **Exit:** the board read and the user's play
+recorded; DESIGN's Combat paragraph matches the game. **Scope guards:**
+no retune by taste (Round 11's).
+
+## Phase 140 — the close
 
 **Charter:** the no-counts trial's read (R9), the keep test over the
-lines §132 added, and the round close: the upload, carrying the damage
-feel if kept with §129's bumps and A-36's deletions. **Risk:** low.
+lines §132 added, and the round close: the upload, carrying every strike
+landing with §129's bumps and A-36's deletions. **Risk:** low.
 **Decision points:** the upload; each rule kept or deleted. **Exit:** the
 round closed by `process/planning.md` "Round close".

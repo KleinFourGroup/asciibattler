@@ -1,13 +1,17 @@
-# Round 9 Spec — The frame and the damage trial
+# Round 9 Spec — The frame and the misses
 
 **Status: SIGNED 2026-10-27** ("Fully signed, Claude! 😁", with the
 round's phases), the plague's cause and act 4's condition left open as
-the user's, for Rounds 22 and 23, which need them (plans/acts.md). The
-intent is the user's, verbatim, from §133, where the round was cut. What
+the user's, for Rounds 22 and 23, which need them (plans/acts.md).
+**Re-cut 2026-10-28 at §136's close:** the damage trial rolled back, and
+every strike lands, with precision and evasion deleted (the verdict and
+what replaces it, below). The
+intent is the user's, verbatim, from §133, where the round was cut, and
+from §136's close. What
 was signed before the kickoff is listed with its date. The Open section
 is what the round still has to settle, with the session's leans marked
 as leans. The charter is [META-ROADMAP.md](META-ROADMAP.md)
-§"Round 9 — The frame and the damage trial"; the record is
+§"Round 9 — The frame and the misses"; the record is
 [archive/worklog-phase-135.md](archive/worklog-phase-135.md) "Kickoff — Round 9"; the plan is
 [ROADMAP.md](ROADMAP.md) §134.
 
@@ -42,6 +46,44 @@ And on running it as a trial:
 > have more feedback, but we don't, so we've gotta just try it. I don't
 > mind the balance numbers shifting, since that's going to happen anyway,
 > and experimenting with different distributions sounds okay too.
+
+**The trial's verdict** (2026-10-28, §136's close, after playing the
+arms by the dial):
+
+> I can barely tell the difference between these 😅 I can see the miss
+> proportion fall, and I can nebulously see that damage is in the
+> "consistent chip" range, but... Most combat involves way too many
+> combatants at once to figure out who's damaging what. The range just
+> feels... invisible. Which means that the precision level ups also still
+> feel pretty invisible.
+
+> So I'm confident rolling back the trial as it stands as well. It...
+> It's not working 😅 I feel like your question is a key part: randomness
+> comes in from the build, from card draw, from level ups, from pathing
+> even. When I judged that randomness needed to be added, we had two unit
+> types. Now the number will soon be in the dozens. And special attacks
+> will give even more diversity.
+
+**What replaces it** (the same day; WORKLOG §136, "The trial rolled
+back, and the re-cut"):
+
+> Evasion and precision both go. Dodge is now a passive special ability.
+> Honestly, it doesn't even need to be a 1 in n ability; a regular % might
+> be fine. It might also be nice to be composable with daemons. Maybe not,
+> though. That can all be sorted out when we get to implementing
+> specials.
+
+> I don't think we want cadence to be decreased. The current rates feel
+> good. Yes, this will buff armor, and we'll probably have to trim defense
+> bases and growth, but we're due for a major rebalance Regardless. Also,
+> remember that we want the weapon recalibration to take into account the
+> missing average precision minus evasion
+
+> What we're trying to do is get new weapon mights so that unit DPS (and
+> thus balance) is at least roughly equivalent.
+
+> Terrain modifiers: signed, but we'll want a to do to add effects back,
+> probably defense and speed modifiers.
 
 **Who plays** (2026-10-26, 133c, on the specials' gate): "I feel like
 units doing suboptimal things is part of the autobattler genre. (Early
@@ -141,6 +183,9 @@ condition findable only after a first win.
 
 ### The trial (tranche 2)
 
+*Rolled back 2026-10-28 by the user's play (Intent, "The trial's
+verdict"); this section and the bar below are kept as the record.*
+
 What keeping it would look like. The bar is a decision point, and it
 rests on what the trial is for: the user's intent names two aims,
 precision made visible and unpredictability in small fights.
@@ -216,6 +261,9 @@ with half of today's misses kept, against hit or miss; the veto board
 runs on the arm the user's play picks, before the keep.
 
 ### The bar (136a, SIGNED 2026-10-27)
+
+*Answered 2026-10-28 by the user's play: no range arm, so the trial
+rolled back; the board was not run.*
 
 Signed as written: "Signed, Claude! 😁". Written before any arm exists. The arms are the `strike` dial's: `hit`,
 `range-0.25`, `range-1` and `mix`, under the rules signed at §136's cut (a

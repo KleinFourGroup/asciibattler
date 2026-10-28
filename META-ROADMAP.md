@@ -8,7 +8,9 @@ code is shaped*; `ROADMAP.md` is the *current* in-flight round; this file is
 the *meta-order* across the rounds still to come.
 
 **Status:** Locked 2026-08-21 at the post-Cluster-5 planning session; the
-old Rounds 9 and 10 re-cut into Rounds 9 to 23 on 2026-10-26 (§133).
+old Rounds 9 and 10 re-cut into Rounds 9 to 23 on 2026-10-26 (§133);
+Round 9's damage trial rolled back and replaced on 2026-10-28 (§136's
+close), no round renumbered.
 **Supersedes** [archive/post-x-meta-roadmap.md](archive/post-x-meta-roadmap.md)
 (the six-cluster plan, 2026-06-22 → 2026-08-21 — Clusters 1–5 complete; its
 "Cluster 6 — Meta & Ship" and "§Interstitials" sections are dissolved into
@@ -69,7 +71,7 @@ every amendment re-runs the full board; paired same-seed deltas govern.
  7.5 The Board ───┤  ✅ CLOSED 2026-09-27 — the projection spike · ortho · pitch 45 · yaw 45 · the ground mark as the team channel · the elevation clauses · the anchor rules 17 → 14 (§105–§109)
  8. Foundations ──┤  ✅ CLOSED 2026-10-11 — the shells · the recorder · the probe kit · the store + the build ID · the run journal · save/load · the menu + settings · Escalation + the unlocks · the itch page OPEN at 0.1.0 (§110–§118 + §117.5, §117.75)
  8.5 Housekeeping ┤  ✅ CLOSED 2026-10-26 — the oracle map · the census · deletions per subsystem, byte-identical · the comment pass · 0.1.1 · the dependency phase · AGENTS as a router · the re-cut (§119–§133 + §124.5)
- 9. The frame ────┤  the act design · the board's guards · damage as a range, a trial
+ 9. The frame ────┤  the act design · the board's guards · every strike lands, precision and evasion out
 10. Act 1 ────────┤  the wilds: ground fauna · the scripted run · the multi-act sheet
 11. The roster ───┤  kits · power by rarity · Mars in three · bandits out of the draft
 12. Push, pull ───┤  forced movement · the teleport · the cavalier · seven units
@@ -840,11 +842,14 @@ re-anchored in the round that lands the act.
 
 ---
 
-## Round 9 — The frame and the damage trial
+## Round 9 — The frame and the misses
 
 **Charter:** the four acts written down as a spec, the board's instruments
-made sound, then damage as a range tried against hit or miss as a
-pre-registered trial, in the casualty experiment's shape.
+made sound, then every strike lands: the hit roll, precision and evasion
+deleted, with each unit's damage per second kept roughly where it is by
+new numbers in the config. _(Re-cut 2026-10-28 at §136's close, when the
+user's play rolled back the damage trial that held this place; WORKLOG
+§136, "The trial rolled back, and the re-cut".)_
 
 **In scope**
 
@@ -862,27 +867,38 @@ pre-registered trial, in the casualty experiment's shape.
   mixed queues (C15); `FX_REGISTRY`'s coverage guard (R18); the action
   classes deleted at Y5c, still described as live in DESIGN, ARCHITECTURE
   and gotchas #95, #97 and #109 (R17).
-- **Damage as a range, a trial** (the user's, at §133): an evadable strike
-  deals a draw between 0 and its damage, with the hit chance as the mean
-  fraction, in place of hit or miss. A config switch; the roll taken on
-  the damage after defense, which keeps today's mean; the range's
-  distributions as its arms (one draw a strike keeps `combatRng`'s shape;
-  a two-parameter family makes the spread a dial); what bleed, blind and
-  the two daemons that hook a hit do when every strike lands; the bot's
-  sensors that read a hit chance; the MISS splat and `unit:missed`; paired
-  boards against hit or miss; the user's play; a bar written before. The
-  arithmetic is in `archive/post-118-worklog.md` §133 ("totems, and the first experiment").
+- **Damage as a range, a trial** (the user's, at §133): built headless
+  at §136 (a switch, three arms and a URL dial) and rolled back by the
+  user's play at its close; its code is deleted, not kept as a switch.
+- **Every strike lands** (the user's, at §136's close): the hit roll
+  deleted, with precision and evasion (bases, growth, the card's rows),
+  each ability's `accuracy`, and terrain's two combat modifiers (water,
+  ice and mud on the attacker; hills and sand on the defender). Crit
+  stays a roll, and cadence stays as it is. The conversion is numbers in
+  the config, with no factor in combat: each dodgeable weapon's might and
+  its unit's strength or ranged (base and growth) scaled by the unit's
+  hit rate measured in play (BALANCE.md's run log, 2026-10-28), since
+  the unit's stat is most of a strike's damage, and defense (base and
+  growth) halved, since every swing now pays it. The miss path stays
+  idle for Round 13's dodge: `evadable`, `unit:missed`, the MISS splat
+  and its sound, and the `evade` and `dealMiss` triggers.
 - **The rarity stars' tap on touch** (R22).
 - **At the close:** the no-counts trial's read (R9) and the keep test over
   the lines §132 added.
 
 **Why first:** instruments before the reads that depend on them, and a
-rule change before anything is balanced on it. **Risk:** medium; the
-switch keeps a rollback cheap. **Decision points:** the bar; the
-distribution; the spec's open questions. **Exit:** the spec signed; each
-guard with its planted failure; the trial kept or rolled back on its bar
-and the user's play. **Release:** the damage feel, if kept. **Scope
-guards:** no new unit, no act content.
+rule change before anything is balanced on it. **Risk:** medium: every
+battle and every level-up draw re-baselines once, and the snapshots bump
+(a Run bump, since the roster's units carry their stats). **Decision
+points:** what "roughly equivalent" holds to on the board; a re-pin of
+the sheet. **Exit:** the spec signed; each guard with its planted
+failure; the two stats, `accuracy` and the terrain's modifiers gone from
+code, config and screen; the converted numbers pinned against a
+derivation the code does not consult; the board read as paired deltas
+against the round before, and the user's play. **Release:** every strike
+lands, and eight stats on the card. **Scope guards:** no new unit, no act
+content; no retune by taste (Round 11's), no dodge (Round 13's), no
+cadence change.
 
 ---
 
@@ -937,11 +953,18 @@ swarm (rounds 19 and 20).
 
 ## Round 11 — The roster
 
-**Charter:** the shipped roster balanced on the trial's arm, the Idol of
-Mars split into three, and bandits out of the draft.
+**Charter:** the shipped roster balanced, by taste, on every strike
+landing, the Idol of Mars split into three, and bandits out of the draft.
 
 **In scope**
 
+- **The weapons and defense after the misses** (the user's, at §136's
+  close: "we're due for a major rebalance"): Round 9's mechanical
+  conversion retuned by taste: each weapon's might and cadence (snipers
+  slow and heavy), the units' strength and ranged, and defense's bases
+  and growth; the spells and the catapult against the halved defense.
+  The adventurer, the rogue and the rioter play without their dodge until
+  round 13.
 - **Power by rarity** (C18): 1/1/1/2 to 1/1/2/3 or 1/2/3/4, the enemy
   pools re-anchored behind it, since it moves every burn a turn. Power's
   level-up draw and its growth key (R19) in the same re-baseline: taking
@@ -960,8 +983,8 @@ Mars split into three, and bandits out of the draft.
   as it authors them.
 - **The wall watch** (C17), read on this board.
 
-**Why here:** after the trial, whose arm sets the numbers, and before the
-seam rounds tune new units against this roster. **Risk:** low-medium
+**Why here:** after Round 9's rule change, whose conversion it tunes, and
+before the seam rounds tune new units against this roster. **Risk:** low-medium
 (config and box time). **Decision points:** power's scale; the kiter under
 blind; each kit change; the idols' sizes. **Exit:** the board read and
 signed; the prior table rebuilt. **Release:** three idols, reworked units,
@@ -1010,11 +1033,18 @@ abilities. **Save:** a World bump if a push captures a cell at cast
 ## Round 13 — The unit kit
 
 **Charter:** lifesteal on a unit and for a team, specials that act on
-their caster, reach across the whole board, and archetypes that extend
-another.
+their caster, dodge as a passive special, reach across the whole board,
+and archetypes that extend another.
 
 **In scope**
 
+- **Dodge as a passive special** (the user's, at §136's close: "Dodge is
+  now a passive special ability"): on the units that want it (the
+  adventurer, the rogue, perhaps the ninja), it takes an incoming strike
+  that Round 9 left `evadable`. Its consumers are the idle miss path
+  Round 9 kept: `unit:missed`, the MISS splat and its sound, and the
+  `evade` and `dealMiss` triggers. A timer is the wrong recharge, since
+  two fixed cadences can stay in phase and shut a slow attacker out.
 - **The resolved-damage return and `lifesteal`** (C1): `applyDamage`
   returns a bare boolean, so no op can read a prior op's damage; widen it,
   accumulate into `FireScratch`, add the op. Its consumer, the vampire
@@ -1040,6 +1070,8 @@ another.
 - **`knownAbilityIds`'s last reader** (U6), the archetype editor.
 
 **Depends on:** round 12. **Risk:** medium. **Decision points:** the
+dodge's shape (a counted share or a plain chance, "a regular % might be
+fine") and whether a daemon can grant it; the
 idol's and packet's names and numbers; the conscript's appeal; who
 carries the global special. **Exit:** as round 12's. **Release:** four
 units (the vampire, soldier, conscript and commissar), a global special,
@@ -1267,11 +1299,17 @@ they share a round (principle #2).
 - **Ice under 1** (S6): `minCost × Chebyshev` in the heuristic, `minCost`
   per grid (1 on a board without ice), `stepDurationTicks` following, and
   the arrival bound that assumes every step takes at least a step's ticks.
-  The planner then prefers ice, a highway with an accuracy tax.
+  The planner then prefers ice, a highway (its accuracy tax went with
+  the misses in Round 9).
 - **Mud reworked** (S7): the user's word, "Mud isn't fun to play with,
-  but I haven't taken the time to really figure out why"; today cost 4,
-  −12 accuracy and poison on entry, with its switch deleted in Round 8.5.
-  Play first, then a dev dial for the trial.
+  but I haven't taken the time to really figure out why"; today cost 4
+  and poison on entry (its −12 accuracy went with the misses in Round
+  9), with its switch deleted in Round 8.5. Play first, then a dev dial
+  for the trial.
+- **Terrain's combat effects back** (the user's, at §136's close:
+  "probably defense and speed modifiers"; TODO, Round 19): water, ice,
+  mud, hills and sand lost theirs with precision and evasion in Round 9,
+  so they are designed here with ice and mud.
 - **Swarms, plan A** (the user's, at §133): a small body drawn smaller on
   a whole tile; a swarm as one body drawn as a cluster whose damage falls
   with its health.
@@ -1598,7 +1636,8 @@ records an achievement on a clean machine.
 | A scripted run for content work | the Round 8.5 TODO pass, 2026-10-13 (the user) | 10 |
 | A check of the bot after the content rounds | the Round 8.5 TODO pass, 2026-10-13 (the user: "probably after the content rounds") | 23 |
 | The user's additions: new units and abilities, three daemons, totems, dialogue, the four acts (N1 to N28) | §133, 133c (the user) | 10 to 23, by item |
-| Damage as a range, a trial | §133, 133c (the user) | 9 |
+| Damage as a range, a trial: rolled back; every strike lands, precision and evasion deleted, in its place | §133, 133c; §136's close, 2026-10-28 (the user) | 9 |
+| Dodge as a passive special · terrain's combat effects back | §136's close, 2026-10-28 (the user) | 13 · 19 |
 | Euclidean distance · the half-tile grid | §133, 133c (the user) | TODO "Watches" |
 | The split of `Run.ts` and `World.ts` · §123's comment-pass leads | TODO, not yet placed until §133 | 15 |
 | Every other open TODO item | the Round 8.5 TODO pass (`archive/round-8.5-census.md` section 5), re-placed at §133 (`archive/post-118-worklog.md` §133, tranche 3) | 8.5 → 25, by TODO's sections |

@@ -389,3 +389,96 @@ change, by the scope guard); Firefox.
   (136a, about six calls), with "nine callers" (eight) and the run clone's
   config (136b) found the same way. Step zero caught each before a build
   rested on it, so this is the rule working; listed and left.
+
+### The trial rolled back, and the re-cut (2026-10-28)
+
+Signed with §136's close: "Yes, that matches, Claude! 😁". The user's
+words are in [round-9-spec.md](round-9-spec.md), "Intent".
+
+**The verdict.** The user played the arms by the dial and could barely
+tell them apart: with many combatants nobody can see who is damaging
+whom, so the range reads as invisible, and so do precision's level-ups.
+Their reasoning: misses were added when the game had two unit types, and
+the randomness they were for now comes from the build, the draws, the
+level-ups and pathing. The spec's own table predicted the result: telling
+0.75 from 0.80 takes about 103 hits from one unit on `range-1` and 556 on
+hit or miss ("The trial", tranche 2).
+
+**The options put, smallest first:** roll back only; hit or miss made
+rare and streak-proof (accuracy near 0.9, a pseudo-random distribution as
+Dota 2 uses for evasion); no misses, evasion a counted dodge; no misses
+and no evasion, dodging as a guard; fully deterministic combat, crit a
+counter too. The user struck the first (the second beats it) and the last
+(crit stays a roll). A guard on a timer shuts a slow attacker out of a
+one-on-one, since two fixed cadences can stay in phase; a count of
+strikes cannot. The genre survey was thin, mostly fan sources: crowd
+auto-battlers keep damage fixed and roll targets (Hearthstone
+Battlegrounds, Super Auto Pets), and per-strike rolls show up where one
+fighter faces one (Backpack Battles, Loop Hero, The Bazaar's crits).
+
+**Signed:**
+
+- The trial rolled back; §136's code deleted, not kept as a switch.
+- Precision and evasion deleted, and the hit roll with them: every
+  strike lands. Crit stays a roll.
+- Dodge returns as a passive special in Round 13; its shape (a counted
+  share or a plain chance) and whether daemons grant it are decided there.
+- Cadence unchanged: the user overrode my lean to divide each cooldown by
+  its accuracy ("The current rates feel good"). The conversion is new
+  numbers in the config with no factor in combat, to keep each unit's
+  damage per second roughly where it is, from each unit's real hit rate,
+  precision minus evasion included.
+- Terrain's two combat modifiers deleted with the stats (`TileGrid.ts`:
+  shallow water −10, ice and mud −12 on the attacker's precision; hills +8
+  and sand −6 on the defender's evasion). Only `World.applyDamage` reads
+  them and no player text names them. Their effects come back later,
+  probably as defense and speed modifiers (TODO, Round 19).
+- The miss path kept idle for Round 13's dodge, each piece with a landing
+  note: `evadable`, `unit:missed`, the MISS splat and its sound, and the
+  `evade` and `dealMiss` triggers.
+- No renumbering: the balance stays roughly where it is, so act 1 still
+  comes before the roster round.
+
+**What the conversion rests on.**
+
+- Each unit's hit rate in play is BALANCE.md's run log, 2026-10-28. The
+  cane lands 40 %; the ability detail shows 43 % and up because it
+  computes against a target with 0 evasion (`abilityDetail.ts:108`), and
+  real targets carry about 5. Over all 81,776 strikes, 47.7 %.
+- New mights alone cannot keep it: a strike's damage is the might plus
+  the unit's strength or ranged (`resolveScalars.ts:41`), and the stat is
+  most of it. The mercenary's sword, 5 + 6 = 11 at 52 %, averages about
+  5.7 a swing, less than the strength alone, so the might would be −0.3;
+  every dodgeable weapon but the bow needs a negative might (the club
+  −3.7, the pistol −3.6, the cane −1). So the might and the unit's
+  strength or ranged, base and growth, each scale by the unit's rate.
+- With every strike landing, defense bites every swing: a swing averages
+  `h·(raw − d)` today and `h·raw − d` converted, so defense, base and
+  growth, is halved (the average rate is about one half). Worked: the
+  sword against 4 defense, 3.6 today and 4 converted (3 + 3 − 2); the
+  club against 4, 1.2 today and 1 converted (1 + 2 − 2). Spells and the
+  catapult meet the halved defense with their damage unchanged, the one
+  designed move; the round's board reads it.
+- A stat scales only where it feeds a dodgeable weapon (the catapult's
+  ranged feeds an unmissable shot); §137's step zero looks for a unit
+  whose stat feeds both kinds.
+- Strength level-ups get rarer, and each is worth a full point a swing
+  instead of about half.
+
+**Rejected on the way:** dividing cooldowns by accuracy (exact on every
+rate per second, but it slows the tempo the user likes); a damage factor
+in combat, before or after defense. The second was my drift from the
+plan, which is config numbers and today's formula without the roll; the
+user had to restate it.
+
+**The friction read, corrected.** The close's candidate guard rested on
+a wrong diagnosis. `py`, `python` and `python3` here are the Python
+Install Manager's aliases over a real Python 3.14.6, and `python3
+--version` and a heredoc into `python3 -` return at once (2026-10-28).
+What hung at §134 and 136b was Python reading its script from stdin with
+none given, which `process/shell-and-windows.md`'s "Bash calls" line
+already names. The candidate is withdrawn. Both slips came after that
+line was written (2026-10-24), each a stray first line a doc cannot
+catch, so a hook that refuses such a call before it runs was offered;
+the user did not take it up, and each slip cost about two minutes. The
+correction is filed.

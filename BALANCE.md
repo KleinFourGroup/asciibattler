@@ -4892,3 +4892,37 @@ deltas. The pre-X H7c→O log lives at
   `scratch/118e-ladder/` (the queue's maker, `pool.mjs`, `spend.mjs`,
   the twelve pooled cells, `result.txt`, `level0-report.txt`). Detail:
   WORKLOG §118e.
+- **2026-10-28 — each dodgeable weapon's hit rate in play, under hit or
+  miss** (§136's close; the input to §137's conversion, which deletes the
+  roll). At `d11299b6`, the frozen config, default run config, seeds
+  1000–1039 on `greedy` (609 battles) and `pure-random` (581).
+  `scratch/136/hitrate.ts` wraps `World.applyDamage` and `missStrike`,
+  observing only, and counts each evadable strike by its attacker's
+  archetype and the strike's base accuracy. Its checks: the misses it
+  counts equal the bus's `unit:missed` (21,898 and 20,899), and with
+  `CONTROL=1` (hit chance floor = cap = 0.5, 4 seeds) the rows over 600
+  strikes read 49.9 to 51.4 % (the ronin's 103 strikes, 43.7 %, within
+  two standard errors). Pooled over both bots, ± two standard errors:
+
+  | unit · weapon | accuracy | strikes | hit rate |
+  |---|---|---|---|
+  | rogue · gambit | 0.85 | 1,158 | 77.4 % ± 2.5 |
+  | luminant · light ray | 0.70 | 76 | 71.1 % ± 10.4 |
+  | archer · bow | 0.70 | 18,038 | 67.1 % ± 0.7 |
+  | adventurer · whip | 0.70 | 706 | 62.2 % ± 3.7 |
+  | reaver · cleaver | 0.65 | 652 | 56.6 % ± 3.9 |
+  | ronin · katana | 0.60 | 2,557 | 55.8 % ± 2.0 |
+  | prodigy · sword | 0.60 | 153 | 53.6 % ± 8.1 |
+  | mercenary · sword | 0.60 | 27,306 | 51.9 % ± 0.6 |
+  | ghoul · claw | 0.60 | 2,534 | 42.8 % ± 2.0 |
+  | halberdier · halberd | 0.55 | 230 | 41.7 % ± 6.5 |
+  | officer · cane | 0.35 | 219 | 40.2 % ± 6.6 |
+  | gunslinger · pistol | 0.35 | 2,098 | 29.7 % ± 2.0 |
+  | bandit · club | 0.40 | 26,049 | 28.9 % ± 0.6 |
+
+  Over every strike, 47.7 %. The rate folds in the attacker's precision
+  against its targets' evasion, its levels and the tiles, so it sits off
+  the weapon's accuracy either way (the club 0.40 → 28.9 %, the cane 0.35
+  → 40.2 %). The rows under about 250 strikes are wide; §137 re-measures
+  them. Outputs (ignored, this machine): `scratch/136/out/`. Detail:
+  WORKLOG §136, "The trial rolled back, and the re-cut".

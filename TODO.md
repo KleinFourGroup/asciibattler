@@ -127,9 +127,9 @@ and §130 to §133 say which phase takes each row.
 - ✅ **Dev-toolchain `npm audit` debt** — 10 at §129's kickoff, 0 at 129f (`archive/post-118-worklog.md` §129).
 
 
-## Round 9 — The frame and the damage trial
+## Round 9 — The frame and the misses
 
-META-ROADMAP §"Round 9 — The frame and the damage trial" names each row's place.
+META-ROADMAP §"Round 9 — The frame and the misses" names each row's place.
 
 ### At the round's close
 
@@ -395,6 +395,15 @@ META-ROADMAP §"Round 19 — The ground" names each row's place.
   traversal profile rewrites the bot's `passable` reads: one function both
   call, built with the profile or before it. Proof: the fuzz diff, with
   `sensors.test.ts`'s choke tests (`archive/post-118-worklog.md` §125, 125j).
+
+- [ ] **Terrain's combat effects back** (the user, at §136's close,
+  2026-10-28: "we'll want a to do to add effects back, probably defense
+  and speed modifiers"). Round 9 deletes the five tiles' precision and
+  evasion modifiers with the stats (shallow water −10, ice and mud −12 on
+  the attacker; hills +8 and sand −6 on the defender, in
+  `src/sim/TileGrid.ts`'s tile table). Designed with ice and mud, which
+  this round reworks (WORKLOG §136, "The trial rolled back, and the
+  re-cut").
 
 ## Round 20 — The air
 

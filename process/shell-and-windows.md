@@ -50,9 +50,18 @@ Claude Code's own tools.
   2.1.308; `../archive/post-118-worklog.md` §130, 130e). The context meter's mod adds a backslash
   note to a Bash result whose reading the halving changed, with what bash
   got; the command has run by then.
-- **Bash calls.** A command whose first line reads stdin (a bare
-  `cat > file`, an empty heredoc) waits out the tool's timeout, and
-  nothing after it runs. A process spawn costs about 0.2 s in Git Bash
+- **Bash calls.** The Bash tool runs most commands with stdin on
+  `/dev/null`, where a bare `cat > file` writes an empty file and moves
+  on. A command holding a heredoc, and some others, reaches the shell
+  through a pipe the tool never closes: a step there that reads stdin
+  swallows the rest of the script and waits for good, past `timeout`, and
+  the tool's limit only moves it to the background, so `TaskStop` it.
+  `python` and `python3` wait on an empty script (`-` with nothing fed,
+  or an empty heredoc) wherever stdin points; a heredoc with a body runs
+  (measured 2026-10-28, Claude Code 2.1.309;
+  `../archive/worklog-phase-137.md`, "The stdin hangs, traced"). The
+  context meter's mod refuses such a command before it runs, naming the
+  line. A process spawn costs about 0.2 s in Git Bash
   here, so a loop over hundreds of files passes the 2-minute limit; one
   node script over `git ls-files` does it in about a second.
 - **Subagents.** A subagent's transcript is under

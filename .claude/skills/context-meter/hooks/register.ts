@@ -1,6 +1,19 @@
 import type { EngineInterface, Register } from 'claude-code'
 import { halvingNote } from './halving.ts'
 import { HAND_OFF_AT, commitIn, landed, pastTrigger } from './handoff.ts'
+import { type Stall, stdinRefusal, stdinStall } from './stdin.ts'
+
+// A step that reads stdin with nothing to feed it can wait for good
+// (stdin.ts has the model), so the command is refused before it runs. A fault
+// in the model lets the command run: a guard that broke every Bash call would
+// cost more than the stall it guards against.
+function stallIn(command: string): Stall | undefined {
+  try {
+    return stdinStall(command)
+  } catch {
+    return undefined
+  }
+}
 
 // The reading is the input tokens the last response was answered over, so it
 // trails the live window by that response's output and any tool results since.
@@ -28,9 +41,15 @@ export const register: Register = on => {
     result: await reading($),
   }))
 
-  on('tool.call', { tool: 'Bash' }, async ($, e, next) =>
-    withHalvingNote($, e.command, await withHandOff($, e.command, () => next(e))),
-  )
+  on('tool.call', { tool: 'Bash' }, async ($, e, next) => {
+    const stall = stallIn(e.command)
+    if (stall !== undefined) {
+      $.ui.log(`stdin guard: refused line ${stall.line}, which reads stdin with nothing to feed it`)
+      return { deny: stdinRefusal(stall) }
+    }
+
+    return withHalvingNote($, e.command, await withHandOff($, e.command, () => next(e)))
+  })
   on('tool.call', { tool: 'PowerShell' }, ($, e, next) =>
     withHandOff($, e.command, () => next(e)),
   )

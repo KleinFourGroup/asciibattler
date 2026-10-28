@@ -414,3 +414,67 @@ no close has read it. The reports read: 9ad4b394's.
   three session reports (428ebc70, 37c3d345, 9ad4b394) each names a pull
   to claim before checking; two were checked before a claim, and one
   (an inherited diagnosis) got through and was corrected at 136f.
+
+### The stdin hangs, traced (2026-10-28, session fc66283a)
+
+The close signed: "Okay, Claude, signing that close; let's talk through
+the guards." The user took the stray stdin line first and asked why it
+had begun happening a lot, and whether it had only gone unreported.
+
+**The read.** `scratch/137d/stdin-scan.mjs` and `guard-scan.mjs` over the
+210 retained transcripts, 16,997 main-chain Bash calls, 2026-07-20 to
+10-28:
+
+- *Eleven stray `cat >` lines, all harmless,* 2026-08-04 to 10-26,
+  under claude-fable-5, fable-5-1 and opus-5-5; none of those calls
+  waited.
+- *Ten hangs, all from 09-30 on:* three stray `cat` lines (bcd08e32 10-19,
+  39f28ef9 10-24, fc66283a 10-28) and seven "try Python, fall back to
+  node" openings with an empty heredoc or no script (f74660ed 09-30,
+  462d21b3 10-14, 854d0fbd 10-16, 60a71867 10-17, d8214ecc 10-19,
+  428ebc70 and 37c3d345 10-27). Six were filed; the four unfiled are the
+  first four.
+- *The probes* (this session, Claude Code 2.1.309): a call with no
+  heredoc, foreground or background, gets stdin on `/dev/null`, and a
+  stray `cat > file` returns at once. A call holding a heredoc gets
+  `pipe:[0]`, and the `cat` swallowed the rest of the script and waited
+  past `timeout 5` until `TaskStop`; one call with no heredoc, a quoted
+  node script with escaped quotes, got a pipe too. `python3 -` waited
+  with stdin on `/dev/null` and with an empty heredoc, and ran a heredoc
+  with a body. A stray line on an unset variable's path cannot wait:
+  `/` is `C:\Program Files\Git\`, so the redirect is refused and `cat`
+  never runs.
+- *Corrections.* The close's friction read above counted four instances;
+  the transcripts hold ten hangs, six filed. And I told the user the
+  Python hangs began with the Python Install Manager's aliases (dated
+  2026-10-12); f74660ed's `python -` hung on 09-30, before them. What the
+  Python hangs share is the empty script.
+- *Not settled:* which commands get a pipe beyond those with a heredoc;
+  whether that is new (no stray line before 10-14 sat in a heredoc
+  command, so the transcripts cannot show it); whether the stray line
+  became more frequent (two to four per 1,000 calls a week, too few to
+  tell).
+
+**The guard, signed on its false positives.** "Let's definitely correct
+that! 👍 Does the guard risk any false positives? If not, let's build it!
+😁" Over the 16,997 calls the matcher refuses 27: the ten hangs, the
+eleven harmless stray lines (each a leftover that wrote a stray empty
+file) and six of this session's probes of the trap. None is a command
+doing its intended work, and the matcher never threw. By design it lets
+through an empty heredoc into `cat`, which makes an empty file and
+returns, and anything inside quotes, a heredoc's body, `$( )`, a loop, a
+group or an `if`.
+
+- Built: the model `hooks/stdin.ts` in the context meter's mod, the
+  refusal in its Bash hook (a fault in the model lets the command run),
+  and `tests/shell-stdin.test.ts`, 30 cases from the transcripts. The
+  controls: pipes ignored failed 3 cases; heredoc bodies not skipped
+  failed 2.
+- `claude plugin validate` passes, reading the Bash hook. A type-check
+  against the 2.1.309 declarations passes the edited files; that check,
+  stricter than the repo's (`noUncheckedIndexedAccess`), also reports two
+  errors in `handoff.ts`, which this change does not touch.
+- Not verified live: an edit to the mod loads in a fresh session (the
+  mod's README).
+- `process/shell-and-windows.md` "Bash calls" corrected: the line said a
+  bare `cat > file` always waits out the timeout.

@@ -38,4 +38,5 @@ user for the reading.
   `%APPDATA%\Claude\claude-code\<version>\<build>\`.
 - The backslash note's model, `hooks/halving.ts`, is also held by
   `tests/shell-halving.test.ts` and type-checked by the repo's own
-  typecheck.
+  typecheck. So is the stdin guard's, `hooks/stdin.ts`, by
+  `tests/shell-stdin.test.ts`.

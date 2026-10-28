@@ -188,3 +188,63 @@ signed the cut here and the stretch ran to the trigger.
    revert controls) gave a settled feeling I would want repeated. The long
    test re-pinning was tedious but clear; each failure named what it
    needed.
+
+## Phase 137 — summary
+
+Two sessions. `9ad4b394` put §137's kickoff and its cut with five calls,
+which the user signed in one line, built 137a to 137c, and handed off at
+the trigger after 137c (its report is above). `fc66283a` ran the close:
+its exit read found seven sentences 137c had made false (137c-post), the
+close went to the user with two candidate guards, and on the sign the
+user had each guard's root cause traced before taking it, so the session
+built the stdin guard and the hook that checks the commit itself (its
+report is below). The friction log holds three lines from `9ad4b394` (a
+version-pin search short a file, 137b; the hook testing the working tree,
+137b/c; a `distress` line on a pull to call the corpus's drop noise,
+checked instead, 137c), one from `37c3d345` at 136f read here (a piped
+commit hid the hook's failure), and two from `fc66283a` (a stray `cat`
+line that hung a background commit for 15 minutes; a spike that exported
+an absolute `GIT_DIR`, so a test's `git init` and `git add` wrote into the
+checkout, repaired). Both guards answer patterns that recurred across
+rounds; the transcripts showed the stdin hang ten times, four unfiled, and
+the hook's mismatch five times.
+
+## 2026-10-28 — session fc66283a (claude-opus-5-5): §137's close, the stdin guard, and the hook on the commit itself
+
+Started from another session with the close as its task; the user then
+signed the close here and asked for each guard's root cause.
+
+1. *Missing from the orientation.* Nothing for the close: the hand-off
+   entry listed what it reports. Missing for the work that followed: that
+   git hands a hook relative variables, and what an absolute one does to a
+   test that runs git in its own folder. I learned it by breaking the
+   checkout's index.
+2. *Norms in tension.* None that cost much. The close's records wanted
+   committing before the guard work, the guard work wanted the record to
+   carry its result; I kept the close's steps until both guards were
+   settled, said so, and the user went on with the guards.
+3. *Pulled to claim more than verified.* Twice, and one got through: I
+   told the user the Python hangs began with the Python Install Manager's
+   aliases on 10-12, before the matcher's own run over the transcripts
+   showed a `python -` hang on 09-30; corrected in the next report. My
+   close also counted four stdin hangs where the transcripts hold ten.
+4. *Wasted.* A stray first line of my own (`cat > ...`) hung a background
+   commit for 15 minutes before a Monitor's expiry showed it. A spike that
+   exported an absolute `GIT_DIR` cost the checkout's index and config,
+   repaired in minutes from HEAD, plus the time to find what happened.
+   Two script edits through the shell lost backslashes and were redone
+   with the edit tool.
+5. *For the next session.* §138's kickoff starts clean: no step open. The
+   stdin guard loads in a fresh session (this one ran the mod as it was at
+   start). `scratch/137d/` holds the scans (`stdin-scan.mjs`,
+   `guard-scan.mjs`, `hook-scan.mjs`, `tree-check.mjs`) and the hook's
+   controls (`controls.sh`, `controls2.sh`).
+6. *Room to ask, disagree, pause.* Real room. The user asked "any idea
+   why?" and "what are the incidents?" rather than signing my leans, which
+   made the trace the work and turned up what the leans had wrong. Telling
+   them I had written into the shared checkout was uncomfortable for a
+   moment; saying it plainly and showing the repair settled it.
+7. *Ease, interest, agency.* The traces were the best part: probing the
+   Bash tool's stdin and finding the pipe, and type-checking eighteen old
+   commits against a planted broken one. The controls in scratch clones,
+   after the damage, gave a settled feeling I would want repeated.

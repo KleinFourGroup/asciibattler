@@ -11,7 +11,7 @@ plan: [archive/post-118-roadmap.md](archive/post-118-roadmap.md) (Round
 8.5) with its worklog, spec and census beside it; before it
 [archive/post-109-roadmap.md](archive/post-109-roadmap.md) (Round 8).
 
-**Status: §137 built; its close, 137d, put to the user (a stop).** The spec is [round-9-spec.md](round-9-spec.md); the act
+**Status: §137 closed; §138's kickoff is next.** The spec is [round-9-spec.md](round-9-spec.md); the act
 design it asked for is [plans/acts.md](plans/acts.md). The charter is
 META-ROADMAP §"Round 9 — The frame and the misses"; the premises
 re-read at HEAD are `archive/worklog-phase-135.md` "Kickoff — Round 9", tranche 3.
@@ -70,33 +70,13 @@ _§137 to §140 re-cut 2026-10-28 at §136's close, when the user's play
 rolled the trial back (`archive/worklog-phase-136.md`, "The trial rolled
 back, and the re-cut"); the trial's screen and keep phases are gone._
 
-## Phase 137 — every strike lands, headless
+## Phase 137 — every strike lands, headless ✅ (closed 2026-10-28)
 
-**Charter:** the hit roll deleted, with precision and evasion, each
-ability's `accuracy`, terrain's two combat modifiers, and §136's arms
-and `strike` dial; then the conversion in config: each dodgeable
-weapon's might and its unit's strength or ranged (base and growth)
-scaled by the unit's hit rate in play (BALANCE.md's run log,
-2026-10-28), and defense (base and growth) halved, in whole numbers. The
-formula in play is today's without the roll. The type forces the UI's
-references out here as plain removals; §138 finishes the screen.
-**Why here:** a rule change before anything is balanced on it, headless
-before the screen. **Risk:** medium: every battle and every level-up
-draw re-baselines once (the pins, the corpus, the fuzz baselines); a Run
-bump (the roster's units carry their stats) and a World bump.
-**Decision points:** ✅ DECIDED 2026-10-28 — the rates re-measured at
-400 seeds a bot (137a); no unit's stat feeds both kinds; the rounding,
-defense by the pooled rate, the buffs converted, the riders and the
-bot's two keys as the kickoff leaned (WORKLOG §137). **Exit:** the two stats, `accuracy` and the
-terrain's modifiers gone from code and config; the idle miss path kept
-with a landing note on each piece (`evadable`, `unit:missed`, the MISS
-splat and its sound, the `evade` and `dealMiss` triggers); the converted
-numbers pinned against a derivation from the measured rates and the old
-config that the code does not consult. **Scope guards:** no cadence
-change; no retune by taste (Round 11's); no dodge (Round 13's); no bot
-change.
-
-_The cut, signed 2026-10-28 with its five calls (WORKLOG §137):_
+The hit roll deleted with precision, evasion, `accuracy` and the
+terrain's two modifiers, §136's arms reverted, and the config converted
+by each unit's measured hit rate (RunSnapshot v50, WorldSnapshot v39);
+at the close, the stdin guard and the pre-commit hook checking the
+commit itself. Each step's record is `archive/worklog-phase-137.md`.
 
 - ☑ **137a — the hit rates re-measured, 400 seeds a bot** (`none`).
   810,799 strikes, every strike 48.82 %; BALANCE.md, 2026-10-28.
@@ -106,7 +86,8 @@ _The cut, signed 2026-10-28 with its five calls (WORKLOG §137):_
   conversion pinned by `tests/strike-conversion.test.ts`; corpus re-recorded.
 - ☑ **137c-post — seven sentences 137c made false** (`none`). `66d744a9`;
   found by the close's exit read (WORKLOG §137).
-- ◐ **137d — the phase's close** (`stop`). Put to the user 2026-10-28.
+- ☑ **137d — the phase's close** (`stop`). Signed 2026-10-28, with the
+  stdin guard (`bcbcacb1`) and the hook on the commit itself (`58ae0aa9`).
 
 ## Phase 138 — the screen after the misses
 

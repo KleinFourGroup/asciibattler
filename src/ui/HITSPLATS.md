@@ -20,8 +20,9 @@ You don't need to know CSS going in — copy a value, tweak it, save, look.
 2. Edit `src/ui/ui.css`, change a value, **save**. The page refreshes itself
    (no rebuild, no restart).
 3. **You have to be in a battle to see a hitsplat.** Pick a map node and start
-   the turn — the splats appear as units trade blows. (Plain damage numbers and
-   misses are the most frequent, so those show up fastest.)
+   the turn — the splats appear as units trade blows. (Plain damage numbers
+   are the most frequent, so those show up fastest. Every strike lands, so
+   the Miss does not show in play until there is a dodge.)
 
 If a change doesn't seem to take, hard-refresh the page (`Ctrl+Shift+R`).
 
@@ -39,7 +40,7 @@ everything else from the base.
 | crit | a critical hit | `.hitsplat--crit` |
 | heal | an ability's heal, or a rejuvenate tick (`+N`) | `.hitsplat--heal` |
 | burn / bleed / poison | a DoT tick (`~5` / `‡5` / `☠5`) | `.hitsplat--burn`, `--bleed`, `--poison` — **the colour is NOT here**: the overlay sets it inline from the status table (`statusColor` in `src/render/statusDisplay.ts`, the same hue as the unit's status pip); the prefix glyph is `HITSPLAT_PREFIX` in `src/render/fxRegistry.ts`, which reads a DoT's from the same table (its status's symbol, the one over its pip). The CSS rule carries only an amber fallback colour. |
-| **miss** | a dodged strike ("Miss") | `.hitsplat--miss` |
+| **miss** | a dodged strike ("Miss"); none until there is a dodge | `.hitsplat--miss` |
 
 Two gotchas worth knowing up front:
 

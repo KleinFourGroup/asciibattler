@@ -642,8 +642,7 @@ export function moveProposal(
  * A step's duration, its lockout and its render slide: the base scaled by
  * the tile cost of entering `dest` (`TILE_DEFS`' `cost`, 1 on floor),
  * rounded to whole ticks, so a unit wades as slowly as A* prices the tile.
- * A committed destination is passable, so the cost is finite. A tile's
- * to-hit modifiers are applied in `World.applyDamage`.
+ * A committed destination is passable, so the cost is finite.
  */
 export function stepDurationTicks(world: World, dest: GridCoord, base: number): number {
   return Math.round(base * world.tileGrid.costAt(dest));

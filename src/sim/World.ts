@@ -688,8 +688,8 @@ export class World {
    * The one place HP falls: `defense` mitigation, the HP change, the XP
    * ledger, and the camp's hostility and kill credit. Every source of damage
    * comes here, a strike through `applyDamage` and a damage-over-time tick
-   * from `applyPeriodicEffects`. The to-hit roll, the events and the combat
-   * triggers stay with the callers, since each source has its own (a strike
+   * from `applyPeriodicEffects`. The events and the combat triggers stay
+   * with the callers, since each source has its own (a strike
    * emits `unit:attacked` and fires `dealHit`, `takeHit` and `kill`; a tick
    * emits `status:ticked`).
    *

@@ -53,7 +53,7 @@ export const RNG_STREAM_KEYS = [
   'enemyPull', // (worldSeed) — the roll for an enemy camp pull; the world seed makes it
   //              one per turn
   'combat', // () root = the rollout seed — a battle clone's replacement combat stream
-  //           (crits and misses). A battle forks its own off the world seed (`World`)
+  //           (crits). A battle forks its own off the world seed (`World`)
   // --- the bot and fuzz harness's arbitration (root = the run seed); harness
   //     streams, never serialized ---
   'arbDriver', // () — the run-layer arbitration driver's paired stream

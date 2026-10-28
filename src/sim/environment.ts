@@ -5,7 +5,7 @@
  * `world.units` and therefore in every pathing blocker list, with no
  * separate blocker grid, and it snapshots and rehydrates as any unit does.
  *
- * A tile's properties (its cost, its to-hit modifiers, its statuses) are on
+ * A tile's properties (its cost, its statuses) are on
  * `TileGrid`, not here.
  */
 

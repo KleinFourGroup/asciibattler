@@ -1209,7 +1209,7 @@ body {
 }
 
 /* The derived lines (`promotionDeltaParts`): one row per derived value that
-   visibly changed (Max HP, dodge, move cadence, each ability's output),
+   visibly changed (Max HP, move cadence, each ability's output),
    revealed as the card's last beat. `visibility`, not `display`, gates the
    reveal, so the block holds its height from the moment the card lands: a
    block that appeared at the last beat would grow the card and re-centre

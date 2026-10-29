@@ -288,3 +288,36 @@ trees"); here, what they say against the bar.
 
 Tools: `scratch/139/board.mjs` (the read, with its self-checks) and
 `merge.mjs` (each tree's stages pooled for `--report`).
+
+### 139d — the stop, signed (2026-10-29)
+
+Put to the user: the board's read beside their play, and four calls.
+"Signing all of your calls, Claude! 😁 That's really interesting and
+surprising. I genuinely don't have a good guess as to why. Maybe it's
+the enemy defense being halved, making the level budget difference more
+pronounced?" Signed at the leans: 139b's numbers stand; the mercenary
+stays at 3 + 3 (+9.5 %, its fights not harder on the board, normal in
+play); the two-act crossing is tested as 139e, the old game with 137c's
+vector on the box; no number moves in this phase, and if the crossing is
+the game's it goes to Round 11's retune as a named rider, with the deep
+boss's wall below its band. 139e's read was not declared at the stop, so
+it is a stop.
+
+- *Step zero for 139e.* The old tree's loader takes a vector only with
+  every stat key (a strict schema), so 137c's vector goes in with
+  precision and evasion at 0. Its `total` term still sums the two stats
+  (10 to 16 of a unit's 32 to 69 at the old base), and only code at the
+  old commit could drop them: the cohort separates the two weights, not
+  that residue. The file reaches the box by `--carry` (139e-pre), not by
+  a commit to main, where today's loader would refuse it.
+- *The user's idea, estimated from config and the board's rosters (not
+  measured).* Under rule C every attacker pays 0.488 of the defense it
+  meets, where it used to pay its own hit rate, so the gap grows with
+  defense, and defense grows with level. But it grows slowly (0.1 to 0.3
+  a level on the old tree for all but the prodigy and the halberdier,
+  half that now), and the player's mean level is 6.5 in act 1 and 9.2 in
+  act 2 on the old game and the moves alike, with enemy levels 1.0 to
+  1.34 times it: about 3 levels, so about a point of old defense or less
+  between the acts. For the archer ((0.69 − 0.488) of it) that is 0.05 to
+  0.2 damage a swing, 1 to 4 %. If the cohort finds the crossing is the
+  game's, a swing read split by act tests the idea directly.

@@ -33,7 +33,9 @@ describe('113a — the build ID', () => {
     expect(() => commitStamp(repo, noGit)).toThrow('not a git repository');
   });
 
-  it('reads a tree whose only change is the friction log as clean, and any other change as dirty', () => {
+  // About twenty git processes: about 1 s alone, and 12 s once beside the
+  // whole suite, which failed the default 5 s with nothing wrong.
+  it('reads a tree whose only change is the friction log as clean, and any other change as dirty', { timeout: 15_000 }, () => {
     // A planted pair in a real repository, since the pathspec is git's to
     // apply and a fake git would only echo it.
     const tree = mkdtempSync(join(tmpdir(), 'build-id-'));

@@ -11,7 +11,7 @@ plan: [archive/post-118-roadmap.md](archive/post-118-roadmap.md) (Round
 8.5) with its worklog, spec and census beside it; before it
 [archive/post-109-roadmap.md](archive/post-109-roadmap.md) (Round 8).
 
-**Status: §137 closed; §138's kickoff is next.** The spec is [round-9-spec.md](round-9-spec.md); the act
+**Status: §138's cut signed 2026-10-29; 138a is next.** The spec is [round-9-spec.md](round-9-spec.md); the act
 design it asked for is [plans/acts.md](plans/acts.md). The charter is
 META-ROADMAP §"Round 9 — The frame and the misses"; the premises
 re-read at HEAD are `archive/worklog-phase-135.md` "Kickoff — Round 9", tranche 3.
@@ -97,6 +97,16 @@ and DESIGN's Combat paragraph and stat list. **Why here:** after the
 rule, so the eye reads only what is visual. **Risk:** low. **Decision
 points:** none known. **Exit:** each surface read in play. **Scope
 guards:** the idle miss path untouched.
+
+The kickoff's audit found 137c's plain removals already cover the
+charter's code surfaces (WORKLOG §138, "The kickoff's audit, and the cut
+put to the user"); the cut was signed 2026-10-29 with the lean.
+
+- ☐ **138a — DESIGN's stat list and Combat paragraph, as the game is**
+  (`none`). A plain rewrite, the history out; each number checked
+  against `config/`.
+- ☐ **138b — the surfaces read in play, and the phase's close** (`stop`).
+  Five reads by the script in WORKLOG §138; a finding lands as a `-post`.
 
 ## Phase 139 — the board and the user's play
 

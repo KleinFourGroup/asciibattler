@@ -159,3 +159,9 @@ worklogs, since these are the passages a session reads before touching
 combat; the other arm fixes only the false sentences and keeps the
 history. Either way the rest of the block stays: the "Archetypes for MVP"
 list and the E1/E3 line are history and not false.
+
+### The cut signed (2026-10-29)
+
+"Fully signed with your leans, Claude! 😁" The cut as written, with 138a
+the plain rewrite and the rest of DESIGN's stat block left. The stretch:
+138a, then the stop at 138b.

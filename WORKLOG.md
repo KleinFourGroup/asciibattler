@@ -165,3 +165,39 @@ list and the E1/E3 line are history and not false.
 "Fully signed with your leans, Claude! 😁" The cut as written, with 138a
 the plain rewrite and the rest of DESIGN's stat block left. The stretch:
 138a, then the stop at 138b.
+
+### 138a — DESIGN's stat list and Combat paragraph (2026-10-29)
+
+The stat list is one bullet a stat for the nine, `power` among them
+pointing to the encounter loop, each saying what the stat does without the
+phase history; the conversion and the idle miss path are said once, after
+the Combat paragraph; the Stat identity paragraph's two sentences fixed.
+
+**Step zero, inside the cut's intent and flagged:** the rewrite found four
+more sentences in the two passages that were false before §137, and
+dropped or corrected each: `defense` "applied to the post-cover number"
+(half cover blocks paths and lets shots through, and nothing in `src/sim`
+scales damage by it); "environmental fire/chasm damage is unmitigated" (a
+chasm is impassable and deals nothing; what skips defense is a
+damage-over-time tick, burn, bleed and poison each `bypassDefense` in
+`config/statuses.json`); `mobility`'s heavy unit "around −7" (the catapult
+and the shaman are −14 since the bases doubled); and its floor "at
+mobility 8+" (by the knobs, `1 − m × 0.075` reaches 0.3 at about 9.3; the
+claim is dropped, not restated). `magic` named two abilities; it now
+names what it feeds.
+
+**Each claim against the config** (one-off reads, printed and compared,
+no instrument kept): every damage op's `scaling` and `critable` from
+`config/abilities.json` (eighteen, all critable; nine on `strength`, four
+on `ranged`, two on `magic`, three on `none`); `speedScaled` defaults
+true and only the dash sets it false; the three luck durations are the
+hex's confusion, the wail's panic and the molotov's burn, each capped;
+`heal_ally` scales on `magic` and is the healer's one ability; burn, bleed
+and poison are not critable and bypass defense, the first pinned in
+`src/config/statuses.test.ts:70`; defense bases 0 to 3, the halberdier
+alone at 3; mobility −14 to 6; power 1, the three legendaries 2, growth 0,
+and `power` an optional field of a wave entry (`src/config/encounters.ts:97`);
+the four §76f units draftable by the schema's default and fielded in the
+Generalissimo's and the Witch Hunt's waves only. Every combatant is 1×1
+(only the 2×2 and 3×3 rubble is larger), so "Units: single-tile" stands.
+No link in the repo, outside the archives, names the renamed passages.

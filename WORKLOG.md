@@ -169,3 +169,26 @@ written; the mercenary left at 3 + 3 and read at 139d; a fresh cohort of
 the old game as the comparator, §118e's level 0 beside; the bot's share
 not separated; no re-pin of the sheet in this phase. The stretch: 139a to
 139c, then the stop at 139d.
+
+### 139a — the box at a pushed older commit (2026-10-29)
+
+Step zero: as the audit read, `box-batch.sh` pulled main on the box and
+held it to the local HEAD, and `box-drive.sh` refused any HEAD but
+origin/main's tip and called its sibling scripts as `scripts/…` from the
+working tree. Built: `box-batch.sh` refuses, before any ssh, a commit
+origin/main does not hold, and the box fetches and checks out that commit
+by its sha in place of the pull; `box-drive.sh` takes a HEAD origin/main
+holds, says how far behind the tip it is, and calls `box-launch.sh` and
+`box-batch.sh` from its own directory, so it can be run by its path from a
+detached worktree; `process/measurement.md` says how.
+
+**The check**, without a box: copies of the two scripts beside a stub
+`box-launch.sh` that prints and fails, so a pre-flight that wrongly
+passes reaches the stub and not Hetzner, run from two worktrees. From an
+unpushed commit (`e888b91d`, local only then): `box-drive.sh` refused
+("not on origin/main") without calling the stub, and `box-batch.sh`
+refused before ssh. From `a042bf2c`, 19 commits behind the tip:
+`box-drive.sh` passed its pre-flight and called the stub's create, and
+`box-batch.sh` got past its guard to ssh (refused by the dummy host). Not
+yet seen: the box's own checkout of an older commit; 139c's first launch
+from the old tree shows it in the fetched manifest's `head`.

@@ -12,8 +12,11 @@
 # sentinel + a non-empty artifact are the only completion signals).
 #
 # Mechanized guards (previously remembered, now enforced):
-#   - push-before-launch: refuses a dirty tree or HEAD != origin/main
-#     up front (the 68f lesson — the box pulls to local HEAD at launch).
+#   - push-before-launch: refuses a dirty tree, or a HEAD origin/main does
+#     not hold, up front (the 68f lesson — the box checks out the local
+#     HEAD from GitHub at launch). A HEAD behind main's tip is a cohort at an
+#     older commit: run this script by its path from a detached worktree at
+#     that commit; it calls its sibling scripts from its own directory.
 #   - ONE HEAD PER COHORT: re-checks HEAD + tree before EVERY launch and
 #     refuses on a flip, instead of silently rerunning the rest of the
 #     queue at the new HEAD. No commits, no doc edits, until the last
@@ -35,6 +38,9 @@
 #   call, and determinism makes a restart free).
 set -uo pipefail
 
+# The sibling scripts, from this script's own directory rather than the
+# working tree's, which may be a worktree at an older commit.
+SCRIPTS=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 POLL=900
 EST_HOURS=""
 ARTIFACT=""
@@ -131,15 +137,17 @@ if ! git fetch -q origin; then
 fi
 COHORT_HEAD=$(git rev-parse HEAD)
 ORIGIN_MAIN=$(git rev-parse origin/main)
-if [ "$COHORT_HEAD" != "$ORIGIN_MAIN" ]; then
-  echo "[$(ts)] REFUSED: HEAD ${COHORT_HEAD:0:7} != origin/main ${ORIGIN_MAIN:0:7} — push (or pull) first" >&2
+if ! git merge-base --is-ancestor "$COHORT_HEAD" origin/main; then
+  echo "[$(ts)] REFUSED: HEAD ${COHORT_HEAD:0:7} is not on origin/main (${ORIGIN_MAIN:0:7}) — push first" >&2
   exit 1
 fi
-echo "[$(ts)] cohort HEAD ${COHORT_HEAD:0:7} · ${#QUEUE[@]} batch(es) · poll ${POLL}s · artifact ${ARTIFACT:-per batch}${EST_HOURS:+ · est ${EST_HOURS}h}"
+BEHIND=""
+[ "$COHORT_HEAD" = "$ORIGIN_MAIN" ] || BEHIND=" · $(git rev-list --count "$COHORT_HEAD..origin/main") commit(s) behind main's tip"
+echo "[$(ts)] cohort HEAD ${COHORT_HEAD:0:7}${BEHIND} · ${#QUEUE[@]} batch(es) · poll ${POLL}s · artifact ${ARTIFACT:-per batch}${EST_HOURS:+ · est ${EST_HOURS}h}"
 
 # --- create the box ----------------------------------------------------------
 echo "[$(ts)] creating the box"
-CREATE_OUT=$(bash scripts/box-launch.sh create 2>&1 | tail -5)
+CREATE_OUT=$(bash "$SCRIPTS/box-launch.sh" create 2>&1 | tail -5)
 echo "$CREATE_OUT"
 BOX=$(echo "$CREATE_OUT" | grep -oE 'root@[0-9.]+' | tail -1)
 BOXNAME=$(echo "$CREATE_OUT" | grep -oE 'abox-[0-9-]+' | tail -1)
@@ -171,7 +179,7 @@ for LINE in "${QUEUE[@]}"; do
 
   read -r -a ARGS <<< "$LINE"
   echo "[$(ts)] batch $N/${#QUEUE[@]}: launching — ${ARGS[*]}"
-  LAUNCH_OUT=$(bash scripts/box-batch.sh "$BOX" launch -- "${ARGS[@]}" 2>&1)
+  LAUNCH_OUT=$(bash "$SCRIPTS/box-batch.sh" "$BOX" launch -- "${ARGS[@]}" 2>&1)
   echo "$LAUNCH_OUT"
   BATCH_ID=$(echo "$LAUNCH_OUT" | grep -oE 'launched [0-9]{8}-[0-9]{6}-[0-9a-f]+' | awk '{print $2}')
   if [ -z "$BATCH_ID" ]; then
@@ -182,7 +190,7 @@ for LINE in "${QUEUE[@]}"; do
   START=$(date +%s)
   while true; do
     sleep "$POLL"
-    STATUS=$(bash scripts/box-batch.sh "$BOX" status "$BATCH_ID" 2>&1 | head -1)
+    STATUS=$(bash "$SCRIPTS/box-batch.sh" "$BOX" status "$BATCH_ID" 2>&1 | head -1)
     ELAPSED=$(( ($(date +%s) - START) / 60 ))
     echo "[$(ts)] +${ELAPSED}m: $STATUS"
     echo "$STATUS" | grep -q 'DONE' && break
@@ -193,10 +201,10 @@ for LINE in "${QUEUE[@]}"; do
   done
 
   echo "[$(ts)] batch $BATCH_ID DONE — fetching"
-  FETCH_OUT=$(bash scripts/box-batch.sh "$BOX" fetch "$BATCH_ID" 2>&1) || {
+  FETCH_OUT=$(bash "$SCRIPTS/box-batch.sh" "$BOX" fetch "$BATCH_ID" 2>&1) || {
     echo "$FETCH_OUT"
     sleep 60
-    FETCH_OUT=$(bash scripts/box-batch.sh "$BOX" fetch "$BATCH_ID" 2>&1) || {
+    FETCH_OUT=$(bash "$SCRIPTS/box-batch.sh" "$BOX" fetch "$BATCH_ID" 2>&1) || {
       echo "$FETCH_OUT"
       hold "batch $BATCH_ID: FETCH FAILED TWICE"
     }
@@ -221,6 +229,6 @@ done
 
 # --- stand down --------------------------------------------------------------
 echo "[$(ts)] queue drained (${#FETCHED[@]}/${#QUEUE[@]} verified) — standing the box down"
-bash scripts/box-launch.sh destroy "$BOXNAME" 2>&1 | tail -2
+bash "$SCRIPTS/box-launch.sh" destroy "$BOXNAME" 2>&1 | tail -2
 echo "[$(ts)] cohort complete at ${COHORT_HEAD:0:7}:"
 printf '  %s\n' "${FETCHED[@]}"

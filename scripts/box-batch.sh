@@ -73,6 +73,17 @@ launch() {
   fi
   local local_head id
   local_head=$(git rev-parse HEAD)
+  # The box checks this commit out from GitHub, so origin/main must hold it:
+  # at its tip, or behind it for a cohort run from a detached worktree at an
+  # older commit.
+  if ! git fetch -q origin; then
+    echo "PARITY FAIL: git fetch failed — can't check that ${local_head:0:7} is pushed" >&2
+    exit 1
+  fi
+  if ! git merge-base --is-ancestor "$local_head" origin/main; then
+    echo "PARITY FAIL: ${local_head:0:7} is not on origin/main — push it first" >&2
+    exit 1
+  fi
   id=$(date -u +%Y%m%d-%H%M%S)-$(git rev-parse --short HEAD)
 
   # The --jobs parity test, before a batch that splits its seeds across
@@ -97,7 +108,12 @@ set -euo pipefail
 repo=$1 local_head=$2 id=$3 fuzz_args=$4
 cd "$repo"
 lock_before=$(sha256sum package-lock.json)
-git pull -q
+# The local tree's commit, by its sha, so a cohort can run behind main's tip.
+git fetch -q origin
+if ! git checkout -q --detach "$local_head"; then
+  echo "PARITY FAIL: the box cannot check out ${local_head:0:7} — push it first" >&2
+  exit 42
+fi
 # The parity guard, box half: the batch output is a pure function of (commit,
 # toolchain) — never launch on a HEAD that isn't the local one.
 head=$(git rev-parse HEAD)

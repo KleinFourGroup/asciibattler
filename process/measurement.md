@@ -52,9 +52,15 @@ Boxes are created on demand and destroyed after use.
 ## One HEAD per cohort
 
 - Commit and push before launching a driver, never mid-flight. The box
-  pulls to local HEAD at every launch, and the parity gate refuses a batch
-  after a local HEAD change. Pushing for a box run is pre-authorized
-  (AGENTS "Working with the user").
+  checks out the local HEAD's commit from GitHub at every launch, and the
+  parity gate refuses a commit origin/main does not hold. Pushing for a box
+  run is pre-authorized (AGENTS "Working with the user").
+- A cohort at an older commit (the game before a change, as a comparator)
+  runs from a detached worktree at that commit with a `node_modules`
+  junction: call `bash <repo>/scripts/box-drive.sh` by its path from inside
+  the worktree, so today's scripts drive it. Its batches land in the
+  worktree's `output/box-batches/`, and before a `--jobs` batch the parity
+  test runs there, at that commit.
 - Before a local batch with `--jobs`, run `npm run fuzz:jobs-parity` once
   at its HEAD. The test that holds a `--jobs` batch byte-identical to a
   serial one is off the per-commit smoke; the hook runs it only when

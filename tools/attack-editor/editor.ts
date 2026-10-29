@@ -727,13 +727,11 @@ function outlineDamage(
 ): string {
   const { baseDamage, critChance } = resolveDamageScalars(op, stats);
   const hit = Math.round(baseDamage * falloff);
-  const flags: string[] = [];
-  if (op.bypassDefense) flags.push('bypass def');
   let out = `${hit} dmg`;
   if (op.critable && critChance > 0) {
     out += ` · crit ${pct(critChance)} → ${Math.round(baseDamage * falloff * STATS.critMult)}`;
   }
-  return `${out} · ${flags.join(', ')}`;
+  return op.bypassDefense ? `${out} · bypass def` : out;
 }
 
 /** An applyStatus op resolved to its status name + the §31 resolved magnitude /

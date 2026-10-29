@@ -105,6 +105,9 @@ put to the user"); the cut was signed 2026-10-29 with the lean.
 - ☑ **138a — DESIGN's stat list and Combat paragraph, as the game is**
   (`none`). Four more false sentences found and fixed; each claim read
   against `config/` (WORKLOG §138).
+- ☑ **138b-pre — the attack editor's damage outline without a dangling
+  separator** (`none`). 137c's removal left its flags empty; found at
+  138b's step zero (WORKLOG §138).
 - ☐ **138b — the surfaces read in play, and the phase's close** (`stop`).
   Five reads by the script in WORKLOG §138; a finding lands as a `-post`.
 

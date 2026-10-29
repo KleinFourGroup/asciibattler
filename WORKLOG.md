@@ -201,3 +201,16 @@ the four §76f units draftable by the schema's default and fielded in the
 Generalissimo's and the Witch Hunt's waves only. Every combatant is 1×1
 (only the 2×2 and 3×3 rubble is larger), so "Units: single-tile" stands.
 No link in the repo, outside the archives, names the renamed passages.
+
+### 138b-pre — the attack editor's damage outline (2026-10-29)
+
+Found at 138b's step zero in the pane: the attack editor's outline of a
+damage op read "8 dmg · crit 10% → 16 ·". Its flags list held "acc N%"
+or "unmissable" for every op until 137c took that entry out, so in the
+usual case it was empty and the join left a separator with nothing after
+it. The outline now ends at the crit and adds "· bypass def" only for an
+op marked so. No test reads it (the function is private to a module that
+touches the DOM when it loads), so the pane is the instrument: before the
+fix the trailing "·" (the control), after it "8 dmg · crit 10% → 16", and
+with Bypass defense ticked "8 dmg · crit 10% → 16 · bypass def", the box
+unticked after. Tools only; no player sees it.

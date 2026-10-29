@@ -248,3 +248,43 @@ the derivation and the new check. Typecheck clean; `npm test` 3768 in
 Tools: `scratch/139/` (`setbase.mjs` sets a base by id and reads it back;
 `drift.ts` reads River's drift over a seed window; `compare.mjs` takes
 the trees to compare and `--pool`).
+
+### 139c — the board on three trees (2026-10-29)
+
+The numbers are BALANCE.md's run log (2026-10-29, "the board on three
+trees"); here, what they say against the bar.
+
+- *139a's box half:* each of the twelve batches' manifests names its
+  cohort's commit with a clean tree, two cohorts (the old game and rule
+  C) behind main's tip and launched from detached worktrees.
+- *Act 1 holds.* Rule C wins as many as the old game and the moves 3
+  fewer, inside the line of 11, and neither is told apart (p 1.000).
+- *Two acts cross the line.* Rule C wins 23 more and the moves 28 more,
+  against a line of 7, each told apart from the old game (p 0.029 and
+  0.003). The control works: the board sees a miss of rule C's size on
+  this row. The moves are not told apart from rule C on either row (p
+  0.678, 0.885), so 139b's moves did not move the board; what it sees
+  on two acts is not carried by the converted strikes, which the swing
+  read put back within reach of their old swings (inference from the two
+  reads together).
+- *Where:* the player takes 27 to 38 % less pool damage in act 2's
+  elites and bosses, 46 and 41 % less in act 1's bandit fights (the
+  highwaymen, the deserters) and 59 % more against the ronin and the
+  mages; act 1's bosses move 6 % either way. The deep boss's wall goes from 0.579 to 0.200 against its
+  band of 30–35, from above it to below it. No encounter's two standard
+  errors can be read: the board writes means only.
+- *Not separated, by the signed call:* the bot's share. Rule C and the
+  moves carry 137c's deploy vector (its precision and evasion weights
+  dropped), the old game the old one. Untested candidates besides it:
+  the spells and the catapult against halved defense, the conversion's
+  designed gain (the ronin and the mages is a fight of mages, and it got
+  harder); and the chance taken out of every strike, which favours
+  whichever side is ahead (a hypothesis, not measured).
+- *The user's play* (139d's half, read before the board, on `e6fdd8c2`
+  by the four encounter URLs: three mercenary fights and the
+  highwaymen): "Reads are done, then, and they feel much more normal
+  now, across the board! 😁" The play and the board agree on act 1; the
+  play did not reach act 2, where the board moved.
+
+Tools: `scratch/139/board.mjs` (the read, with its self-checks) and
+`merge.mjs` (each tree's stages pooled for `--report`).

@@ -5049,3 +5049,86 @@ deltas. The pre-X H7c→O log lives at
   battle 66.5, 52.8 and 56.4. Outputs (ignored, this machine):
   `scratch/139/out/d1-*.txt`; the pooled table by
   `scratch/139/compare.mjs 1000 old d1 --pool`. Detail: WORKLOG §139, 139b.
+- **2026-10-29 — the board on three trees** (§139c). §118e's two rows,
+  `arb-deploy` (act 1, `--hops=11`) and `arb-walk-deploy` (two acts,
+  `--per-encounter`), the arm as it ships, soldier, level 0, seeds 1 to
+  120 in two stages (40 and 80), at the old game (`a042bf2c`), rule C
+  (`ca97b9fc`, the commit before 139b) and 139b's moves (`e6fdd8c2`):
+  three `box-drive.sh` cohorts on `cpx42`, 3 h 32 min of box, every
+  batch exit 0 and its manifest's head its cohort's. §118e's level 0
+  (`987b0cb`) beside. Each tree's runs won, and the port buys a run:
+
+  | tree | act 1: won | buys | two acts: won | reached act 2 | buys |
+  |---|---|---|---|---|---|
+  | §118e level 0 | 83 | 1.67 | 26 | 83 | 3.52 |
+  | old game | 83 | 1.67 | 24 | 83 | 3.56 |
+  | rule C | 83 | 1.54 | 47 | 83 | 3.38 |
+  | 139b's moves | 80 | 1.55 | 52 | 80 | 3.34 |
+
+  Paired on the seed by depth (won, then sectors cleared, then the final
+  hop): seeds that ended less deep / the same / deeper, the two-sided
+  exact sign test, and the change in wins against the bar signed at the
+  kickoff (within one Escalation step of the old game: 11 of 120 on act
+  1, 7 on two acts):
+
+  | pair | act 1 | wins | two acts | wins |
+  |---|---|---|---|---|
+  | moves vs old | 20 / 80 / 20, p 1.000 | −3, inside | 26 / 41 / 53, p 0.003 | **+28, outside** |
+  | rule C vs old | 18 / 84 / 18, p 1.000 | 0, inside | 28 / 44 / 48, p 0.029 | **+23, outside** |
+  | moves vs rule C | 13 / 97 / 10, p 0.678 | −3 | 25 / 72 / 23, p 0.885 | +5 |
+  | old vs §118e level 0 | 1 / 118 / 1, p 1.000 | 0 | 7 / 111 / 2, p 0.180 | −2 |
+
+  The control: rule C is told apart from the old game on two acts, so
+  the board sees a miss of its size there, and 139b's moves are not told
+  apart from rule C on either row. Rule C and the moves carry 137c's bot
+  vector (the deploy vector's precision and evasion weights dropped) and
+  the old game the old one, so their rows against the old game carry
+  that change too; the moves against rule C are free of it.
+
+  Each encounter's pool damage taken per instance on the two-act row
+  (instances in brackets), old / rule C / moves, and the moves' change:
+
+  | encounter | act, kind | old | rule C | moves | moves' change |
+  |---|---|---|---|---|---|
+  | bandit-king | 1, boss | 16.0 (61) | 15.5 (60) | 15.0 (57) | −6 % |
+  | banditQueen | 1, boss | 20.9 (49) | 22.3 (51) | 22.2 (53) | +6 % |
+  | brigand-champions | 1, elite | 14.8 (26) | 11.3 (27) | 10.6 (26) | −28 % |
+  | warband-vanguard | 1, elite | 12.4 (35) | 14.0 (33) | 12.3 (37) | −1 % |
+  | brigands | 1, normal | 7.3 (55) | 6.0 (56) | 5.5 (58) | −25 % |
+  | deserters | 1, normal | 4.7 (56) | 1.8 (57) | 2.8 (58) | −41 % |
+  | highwaymen | 1, normal | 4.3 (66) | 1.5 (68) | 2.4 (65) | −46 % |
+  | ronin-vs-mages | 1, normal | 10.3 (80) | 16.5 (76) | 16.3 (76) | +59 % |
+  | adventurer-with-guards | 1 and 2, normal | 6.1 (134) | 5.3 (134) | 5.2 (134) | −15 % |
+  | artillery | 1 and 2, normal | 5.4 (115) | 4.2 (109) | 4.8 (113) | −11 % |
+  | generalissimo | 2, boss | 20.8 (29) | 16.7 (32) | 15.0 (32) | −28 % |
+  | witch-hunt | 2, boss | 19.3 (28) | 13.9 (35) | 14.2 (33) | −27 % |
+  | darkMagicPosse | 2, elite | 22.4 (27) | 13.7 (28) | 13.9 (24) | −38 % |
+  | plagueSpreaders | 2, elite | 22.5 (17) | 16.6 (18) | 16.2 (20) | −28 % |
+  | elementalTrio | 2, normal | 6.3 (94) | 6.0 (86) | 6.0 (85) | −5 % |
+  | infernalColumn | 2, normal | 10.2 (19) | 10.6 (14) | 10.2 (19) | 0 % |
+  | miscreants | 2, normal | 9.3 (18) | 11.0 (21) | 8.9 (21) | −5 % |
+  | plagueDoctors | 2, normal | 10.1 (71) | 9.0 (72) | 9.3 (71) | −8 % |
+  | plagueVictims | 2, normal | 0.5 (72) | 0.6 (65) | 0.8 (69) | +50 % |
+
+  The board writes each encounter's means only, so the bar's two
+  standard errors cannot be read from these files. The rosters' mix on
+  the two-act row hardly moves: archers and mercenaries are 78.6 to 79.7 %
+  of the slots on every tree, and no other archetype moves by more than
+  1.1 points (the healer 2.9 to 4.0 %, the rogue 0.6 to 1.3 %, the
+  gunslinger 1.4 to 0.8 %).
+
+  **Against the sheet** (`balance:board --report
+  --only=arb-deploy,arb-walk-deploy` on each pooled tree, a partial board
+  and never a signing; integrity PASS, 0 FAIL on each): the old game
+  WARNs on the two the level 0 did, the boss wall 0.579 against 30–35 and
+  the walk's win 0.200 against 26–35. Rule C has 5 WARN: the boss wall
+  0.299, the win 0.392, reach 0.558 against 40–50, the seam 18.1 against
+  16–18, act 1's bank 75.0 against 43–73. The moves have 4: the boss wall
+  0.200, the win 0.433, reach 0.542, act 1's bank 73.7. The deep boss's
+  wall goes from above its band on the old game to below it on the
+  moves. **Artifacts** (ignored, this machine):
+  `output/box-batches/20261029-*`, the pooled trees and their reports in
+  `output/board-runs/139c-{old,C,D}/`, `scratch/139/board-drive.log`,
+  and the read by `scratch/139/board.mjs` (its self-checks: the pairing
+  and the sign test on known answers, and §118e's level 0 recovered from
+  its archive). Detail: WORKLOG §139, 139c.

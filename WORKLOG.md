@@ -156,3 +156,16 @@ after its archers, rogues and adventurers come down; a fresh cohort of
 the old game as the comparator, §118e's level 0 beside; the bot's share
 not separated; no re-pin of the sheet in this phase (Round 11's retune
 re-pins it). The stretch: 139a to 139c, then the stop at 139d.
+
+### The cut signed (2026-10-29)
+
+"That sounds reasonable, Claude! 😁 My read missed just how much stronger
+rogues were now. So no formula changes; just tweaking the stats until the
+numbers look closer. I'm happy to sign everything, then! 😁" The cut as
+written, with the seven calls at the leans: the strikes brought back in
+this phase; whole points on the units' stats by the swing read, with rule
+D's arithmetic only as the start and no formula change; the bar as
+written; the mercenary left at 3 + 3 and read at 139d; a fresh cohort of
+the old game as the comparator, §118e's level 0 beside; the bot's share
+not separated; no re-pin of the sheet in this phase. The stretch: 139a to
+139c, then the stop at 139d.

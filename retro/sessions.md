@@ -248,3 +248,57 @@ signed the close here and asked for each guard's root cause.
    Bash tool's stdin and finding the pipe, and type-checking eighteen old
    commits against a planted broken one. The controls in scratch clones,
    after the damage, gave a settled feeling I would want repeated.
+
+## Phase 138 — summary
+
+Two sessions. `ee3f6da8`, before the kickoff, ran the process review the
+user opened from 137d's incident: `slip` as the friction log's third kind,
+`--kind` required, signed and built (138-pre); it wrote no report.
+`1d6463bc`, started from another session, ran the kickoff: its audit found
+that 137c's plain removals had already built every code surface the
+charter named, so the cut was two steps with one call, signed with the
+lean. It rewrote DESIGN's stat list and Combat paragraph (138a, four more
+false sentences found), fixed the attack editor's dangling separator that
+the pane showed at 138b's step zero (138b-pre), and put the read; the
+user passed every surface, signed the close, and reported that the
+encounters against many mercenaries are much harder now, which goes to
+§139 (its report is below). The friction log holds one line from the
+phase, `1d6463bc`'s slip on the Cursor's length cap.
+
+## 2026-10-29 — session 1d6463bc (claude-opus-5-5): §138's kickoff, 138a, 138b-pre and the close
+
+Started from another session with the kickoff as its task; the user then
+signed the cut, read the surfaces and signed the close here.
+
+1. *Missing from the orientation.* Nothing that cost time. The charter
+   was written before 137c took the screen's references out, so it read
+   as more work than was left; the audit was what found that, which is
+   its job.
+2. *Norms in tension.* Mildly: the report relayed to the parent session
+   wants what was done in its first lines, and CLAUDE.md wants the cut
+   the user must read in the closing message, so the cut's message opened
+   with commit hashes before the proposal. And the signed cut said a
+   finding lands as a `-post`; step zero's finding was in 137c's work and
+   came before the read, so I named it 138b-pre and flagged it.
+3. *Pulled to claim more than verified.* Yes, once in a way that mattered:
+   the kickoff entry says 137c's removals "built already" every code
+   surface, from reading its diff, and the pane then showed one of them,
+   the attack editor's outline, ending in a stray separator. The claim was
+   about what was removed, and the defect was what the removal left. I
+   also first wrote that the Combat paragraph was "correct since 137c" and
+   softened it to what the read had found before committing.
+4. *Wasted.* One hook run on the Cursor's cap (filed); an awk range that
+   stopped on its first line; a case-insensitive "NaN" that matched
+   "luminant". Each a call or two.
+5. *For the next session.* §139's kickoff starts clean, nothing open. The
+   user's play note is the kickoff's input beside §137's. `daemon=<id>` on
+   the URL gives a run with that idol alone, which makes a buff's text
+   one click to read. The crit's wrap on narrow cards was seen and left.
+6. *Room to ask, disagree, pause.* Room enough, and little need of it:
+   each sign came in one line, and the one call was about how far a doc
+   rewrite went. No wish to pause or stop.
+7. *Ease, interest, agency.* The pane check was the part I liked: a
+   planted Miss that the watch caught, so the 427 strikes without one
+   meant something, and looking at the editors rather than trusting the
+   diff found the separator. Separately from the work going well, the
+   user's "I really like how this feels" was pleasant to receive.

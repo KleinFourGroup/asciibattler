@@ -11,7 +11,7 @@ plan: [archive/post-118-roadmap.md](archive/post-118-roadmap.md) (Round
 8.5) with its worklog, spec and census beside it; before it
 [archive/post-109-roadmap.md](archive/post-109-roadmap.md) (Round 8).
 
-**Status: §138's close put to the user 2026-10-29; the read and the sign are next.** The spec is [round-9-spec.md](round-9-spec.md); the act
+**Status: §138 closed; §139's kickoff is next.** The spec is [round-9-spec.md](round-9-spec.md); the act
 design it asked for is [plans/acts.md](plans/acts.md). The charter is
 META-ROADMAP §"Round 9 — The frame and the misses"; the premises
 re-read at HEAD are `archive/worklog-phase-135.md` "Kickoff — Round 9", tranche 3.
@@ -89,27 +89,20 @@ commit itself. Each step's record is `archive/worklog-phase-137.md`.
 - ☑ **137d — the phase's close** (`stop`). Signed 2026-10-28, with the
   stdin guard (`bcbcacb1`) and the hook on the commit itself (`58ae0aa9`).
 
-## Phase 138 — the screen after the misses
+## Phase 138 — the screen after the misses ✅ (closed 2026-10-29)
 
-**Charter:** the card's eight stats, the promotion and the ability detail
-without hit or dodge, the archetype editor's dials, the locale strings,
-and DESIGN's Combat paragraph and stat list. **Why here:** after the
-rule, so the eye reads only what is visual. **Risk:** low. **Decision
-points:** none known. **Exit:** each surface read in play. **Scope
-guards:** the idle miss path untouched.
-
-The kickoff's audit found 137c's plain removals already cover the
-charter's code surfaces (WORKLOG §138, "The kickoff's audit, and the cut
-put to the user"); the cut was signed 2026-10-29 with the lean.
+137c's plain removals had built the screen already; DESIGN's stat list
+and Combat paragraph rewritten as the game is, the attack editor's
+outline fixed, and each surface read in play. Each step's record is
+`archive/worklog-phase-138.md`.
 
 - ☑ **138a — DESIGN's stat list and Combat paragraph, as the game is**
-  (`none`). Four more false sentences found and fixed; each claim read
-  against `config/` (WORKLOG §138).
+  (`none`). `42f94563`; four more false sentences found and fixed.
 - ☑ **138b-pre — the attack editor's damage outline without a dangling
-  separator** (`none`). 137c's removal left its flags empty; found at
-  138b's step zero (WORKLOG §138).
-- ☐ **138b — the surfaces read in play, and the phase's close** (`stop`).
-  Five reads by the script in WORKLOG §138; a finding lands as a `-post`.
+  separator** (`none`). `e17d071a`; found at 138b's step zero.
+- ☑ **138b — the surfaces read in play, and the phase's close** (`stop`).
+  Signed 2026-10-29: every read passed; mercenary-heavy encounters much
+  harder now, for §139.
 
 ## Phase 139 — the board and the user's play
 

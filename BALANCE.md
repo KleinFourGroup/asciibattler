@@ -5018,3 +5018,34 @@ deltas. The pre-X H7c→O log lives at
   137c's check compared each base strike with the old mean before
   defense, which this term does not reach. Outputs (ignored, this
   machine): `scratch/139/out/`. Detail: WORKLOG §139, the kickoff.
+- **2026-10-29 — the swing read on 139b's moves** (the entry above's
+  probe, seeds and bots, on 139b's config: the rogue's, the adventurer's
+  and the ghoul's strength, the luminant's and the archer's ranged a point
+  down, the bandit's strength and the gunslinger's ranged a point up).
+  Each unit pooled over its sides and both bots; the old tree, 137c's
+  conversion (rule C) and the moves:
+
+  | unit | old: damage a swing | rule C | moved | rule C's change | the moves' change |
+  |---|---|---|---|---|---|
+  | rogue | 3.79 | 5.54 | 4.25 | +46.1 % | +12.0 % |
+  | archer | 5.98 | 7.13 | 5.99 | +19.2 % | +0.2 % |
+  | adventurer | 5.86 | 6.77 | 5.68 | +15.6 % | −3.0 % |
+  | reaver | 7.17 | 7.84 | 7.87 | +9.3 % | +9.8 % |
+  | mercenary | 5.28 | 5.79 | 5.78 | +9.7 % | +9.5 % |
+  | ronin | 8.56 | 8.91 | 8.84 | +4.2 % | +3.4 % |
+  | ghoul | 0.92 | 1.19 | 1.02 | +30.3 % | +11.7 % |
+  | officer | 0.96 | 1.09 | 1.06 | +13.9 % | +11.1 % |
+  | gunslinger | 2.15 | 1.76 | 2.38 | −17.9 % | +10.9 % |
+  | bandit | 1.43 | 1.07 | 1.29 | −25.0 % | −9.6 % |
+
+  Rows of at least 1,000 swings on every tree. Under it: the halberdier
+  +1.6 % (910 swings moved), the luminant −4.5 % (247), the prodigy
+  −17.6 % (87). **By the bar signed at the kickoff** (within ±10 %, or at
+  the nearer whole point with no base strike under 1): the rogue's next
+  point down is about −21 % (predicted from its crit share, not run), the ghoul's and the officer's would be a
+  strike of 0, and the gunslinger's other point is the −17.9 %; the
+  prodigy is too thin to place and keeps rule C's numbers. Over every
+  converted swing, 4.12 old, 4.54 rule C, 4.31 moved (+4.6 %); swings a
+  battle 66.5, 52.8 and 56.4. Outputs (ignored, this machine):
+  `scratch/139/out/d1-*.txt`; the pooled table by
+  `scratch/139/compare.mjs 1000 old d1 --pool`. Detail: WORKLOG §139, 139b.

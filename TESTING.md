@@ -78,7 +78,7 @@ If the renderer ever grows pure-logic helpers (e.g. atlas UV computation), those
   same bytes. A failure names its seed and writes its journal under
   `output/chaos/`. Four seeds run on every `npm test` (`chaos.test.ts`). It is
   a crash and invariant instrument, never a balance input.
-- **The journal corpus:** `npm run corpus` replays 30 stored run journals
+- **The journal corpus:** `npm run corpus` replays 32 stored run journals
   (`tests/fuzz/corpus/`) and holds each against what it reached when it was
   recorded: a digest of every event of every battle, the end's hash, and
   which commands changed the run in which phases. It is the proof that a
@@ -92,7 +92,8 @@ If the renderer ever grows pure-logic helpers (e.g. atlas UV computation), those
   with its plants (the smoke's script leaves the file out), on a change
   that claims to leave behaviour alone. `corpus.ts` says when the baseline may be
   retaken (`--rebaseline`, `--record`) and what has to be shown first. Its
-  reach has limits: four port trades never change a run in it, and a
+  reach has limits: two port trades (buying a daemon, selling a packet)
+  never change a run in it, and a
   changed number shows only on the runs that meet it (a rest healing half
   instead of a quarter diverged 3 of the 30).
 - **The path-by-path proofs:** `npm run oracle -- json-diff <before>
@@ -285,7 +286,7 @@ suite both missed, so what those two miss, the pre-commit hook misses;
 and with every hit dealing one more the smoke failed in one file of 65,
 the corpus's own test.
 
-**By part.** "Corpus" is `npm run corpus` (30 journals, run by hand: the
+**By part.** "Corpus" is `npm run corpus` (32 journals, run by hand: the
 pre-commit hook does not run it); "fuzz diff" is
 `bash scripts/perf-oracle.sh [ref]`; "build compare" is
 `npm run oracle -- build-hash [ref]`.
@@ -416,9 +417,8 @@ pre-commit hook does not run it); "fuzz diff" is
   listed; `tests/save-fingerprint.test.ts` holds the version bump.
 
 **What has no proof today:** a reshaping of code that only draws; the
-four port trades no stored run completes
-(buying a unit, buying a daemon, selling a packet, paying to remove a
-unit); the tools' pages, but for their stylesheets' cascade, and the
+two port trades no stored run completes
+(buying a daemon, selling a packet); the tools' pages, but for their stylesheets' cascade, and the
 build scripts; the lines neither the
 corpus nor the fuzz diff runs, a tenth of `src/sim` and a quarter of
 `src/run`. A candidate that lands in one of these names the suite, or

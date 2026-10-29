@@ -104,6 +104,11 @@ export const CORPUS: readonly CorpusRow[] = [
   chaos(1, 'character=gambler&bits=300'),
   chaos(2, 'character=gambler&bits=300'),
   chaos(5, 'character=gambler&bits=300'),
+  // Chosen from `--survey=12` when the strikes moved (2026-10-29) and the
+  // rows above stopped buying at a port: a packet bought, and a unit bought
+  // and one paid off.
+  chaos(12),
+  chaos(8, 'character=gambler&bits=300'),
 ];
 
 const HERE = dirname(fileURLToPath(import.meta.url));

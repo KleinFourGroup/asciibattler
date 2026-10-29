@@ -11,7 +11,7 @@ plan: [archive/post-118-roadmap.md](archive/post-118-roadmap.md) (Round
 8.5) with its worklog, spec and census beside it; before it
 [archive/post-109-roadmap.md](archive/post-109-roadmap.md) (Round 8).
 
-**Status: §139's cut signed; 139b is next.** The spec is [round-9-spec.md](round-9-spec.md); the act
+**Status: §139's cut signed; 139c is next.** The spec is [round-9-spec.md](round-9-spec.md); the act
 design it asked for is [plans/acts.md](plans/acts.md). The charter is
 META-ROADMAP §"Round 9 — The frame and the misses"; the premises
 re-read at HEAD are `archive/worklog-phase-135.md` "Kickoff — Round 9", tranche 3.
@@ -124,8 +124,11 @@ standard errors; no re-pin of the sheet in this phase (WORKLOG §139).
 
 - ☑ **139a — the box runs a pushed commit behind main's tip** (`none`).
   Both guards refuse an unpushed commit; the box's checkout read at 139c.
-- ☐ **139b — each converted strike back within reach of its old swing,
-  by whole points** (`none`).
+- ☑ **139b-pre — the build ID's repository plant takes 15 s** (`none`).
+  A load timeout in two of four full runs; found at 139b.
+- ☑ **139b — each converted strike back within reach of its old swing,
+  by whole points** (`none`). Seven bases a point; the River drift gate
+  re-expressed as a twenty-seed lean, user-signed (WORKLOG §139).
 - ☐ **139c — the board, three trees** (`none`; read at 139d).
 - ☐ **139d — the board read and the user's play** (`stop`).
 - ☐ **139e — what 139d signs** (cut at 139d, read with it).

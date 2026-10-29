@@ -98,19 +98,20 @@ describe('115c — the chaos driver', () => {
       'leavePort',
       'passGrant',
       'passRecruit',
+      'redrawCards',
+      'usePacket',
     ]);
     // The driver's blind side on these four seeds. The journal corpus
-    // (tests/fuzz/corpus) reaches `buyPortPacket`, `dismissSectorCleared`,
-    // `redrawCards` and `usePacket`; nothing stored reaches the other four.
+    // (tests/fuzz/corpus) reaches `buyPortPacket`, `buyPortUnit`,
+    // `dismissSectorCleared` and `payToRemoveUnit`; nothing stored reaches
+    // the other two.
     expect(KINDS.filter((kind) => !changesTheRun(kind)).sort()).toEqual([
       'buyPortDaemon',
       'buyPortPacket',
       'buyPortUnit',
       'dismissSectorCleared',
       'payToRemoveUnit',
-      'redrawCards',
       'sellPacket',
-      'usePacket',
     ]);
   });
 

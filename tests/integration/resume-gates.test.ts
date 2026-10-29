@@ -116,7 +116,7 @@ function resumed(save: string, config: RunConfig): Emitted[] {
 // about fifteen battles; no short run met a port, so one full-length run is
 // here for that gate.
 const RUNS: ReadonlyArray<readonly [number, string]> = [
-  [9, 'sectorHops=2&character=soldier'],
+  [4, 'sectorHops=2&character=soldier'],
   [1, 'sectorHops=2&character=soldier'],
   [1, 'character=soldier'],
 ];

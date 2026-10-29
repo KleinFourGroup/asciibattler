@@ -192,3 +192,59 @@ refused before ssh. From `a042bf2c`, 19 commits behind the tip:
 `box-batch.sh` got past its guard to ssh (refused by the dummy host). Not
 yet seen: the box's own checkout of an older commit; 139c's first launch
 from the old tree shows it in the fetched manifest's `head`.
+
+### 139b — the strikes back by whole points (2026-10-29)
+
+**The moves**, placed by the swing read (BALANCE.md's run log,
+2026-10-29, the third entry): the rogue's, the adventurer's and the
+ghoul's strength, the luminant's and the archer's ranged a point down,
+the bandit's strength and the gunslinger's ranged a point up, the seven
+the kickoff predicted. One pass placed them: every unit of at least 1,000
+swings sits within ±10 % of the roll's damage a swing, or at its nearer
+whole point (the rogue +12.0 %, the ghoul +11.7 %, the officer +11.1 %,
+the gunslinger +10.9 %). The mercenary, the reaver and the ronin were
+inside the band and did not move (+9.5 %, +9.8 %, +3.4 %); the prodigy
+(87 swings, −17.6 %) is too thin to place. Over every converted swing,
++4.6 % against the roll's (rule C's +10.2 %). Written into the
+conversion pin's `DEPARTURES`, with a check that each one moves a base
+strength or ranged by whole points and keeps the strike at 1 or more;
+the hand-worked spot checks now read the rules without the departures.
+DESIGN's conversion paragraph says the moves.
+
+**The proofs:** the pin passes, 5 tests; the archer's ranged planted back
+at 4 failed it, naming the key, and a ghoul departure of −1 failed both
+the derivation and the new check. Typecheck clean; `npm test` 3768 in
+262 files; the smoke 553 in 58, untouched; the corpus re-recorded by
+`--record`, 0 of 32 after, its test 36.
+
+**Step zero's findings, inside the cut's intent and flagged:**
+
+- *The River drift gate tripped* (seed 100's player 2.516 against 2.5),
+  with movement untouched; the user signed its re-expression as a
+  twenty-seed lean ("I ran a few tests of my own, Claude, and can confirm
+  that I'm not seeing any visible drift, so I'm on-board with your
+  proposal!"). The reading, the gate and its control are PATHING.md's
+  139b entry. The first control, the sidestep's tie always clockwise,
+  moved nothing on River; the dropped straight-line tie-break tripped the
+  new gate (+1.86 / −1.53).
+- *Seeded drives that moved:* the continuation and resume tests'
+  completing `sectorHops=2` soldier run, seed 9 to 4 (9 no longer
+  completes; 4, 11, 16 and 18 do, 4 the quickest at 14 battles; the
+  journal-across-loads test still passes on 9 and keeps it); the chaos
+  census gains `redrawCards` and `usePacket` on its four seeds.
+- *The corpus lost its port purchases* on re-recording (16 of 21 kinds,
+  none at a port), so two rows joined it from `--survey=12`: chaos 12
+  (a packet bought) and chaos 8 as the gambler with 300 bits (a unit
+  bought and one paid off, the first stored run to pay to remove one).
+  19 of 21 kinds now, buying a daemon and selling a packet the two
+  missing; TESTING.md's counts and limits follow. The corpus ends 5
+  victories in 32 (3 of 30 at rule C, 10 of 30 under the roll).
+- *A timeout under load:* the build-ID test's repository plant (about
+  twenty git processes, about 1 s alone) timed out at 5 s in two of four
+  full runs, once at 12 s, in a file 139b does not touch; it takes the 15
+  s the suite's other near-5 s tests carry, in a commit of its own
+  (139b-pre, `ca97b9fc`).
+
+Tools: `scratch/139/` (`setbase.mjs` sets a base by id and reads it back;
+`drift.ts` reads River's drift over a seed window; `compare.mjs` takes
+the trees to compare and `--pool`).

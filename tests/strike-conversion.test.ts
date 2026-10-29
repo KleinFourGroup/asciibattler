@@ -22,6 +22,14 @@
  * Every other number the conversion could touch is held to its frozen value.
  * A later signed change to a converted number goes in `DEPARTURES` with where
  * it was signed; the retune of Round 11 retires this file.
+ *
+ * The defense rule above makes every swing pay the pooled rate's share of
+ * the target's defense, where a swing under the roll paid its attacker's own,
+ * so units that had hit often struck harder than before and units that had
+ * hit rarely struck softer. The departures move a unit's base strength or
+ * ranged by whole points until its damage a swing in play sits within a
+ * tenth of the roll's, or at the nearer whole point, with no base strike
+ * under 1 (BALANCE.md's run log, 2026-10-29, both entries).
  */
 
 import { describe, expect, it } from 'vitest';
@@ -48,14 +56,28 @@ const DAEMONS = read('config/daemons.json');
 const STATUSES = read('config/statuses.json');
 
 /** Signed moves of a converted number after the conversion, as
- *  `'<file>:<path>': value`, each with where it was signed. None yet. */
-const DEPARTURES: Record<string, number> = {};
+ *  `'<file>:<path>': value`, each with where it was signed. */
+const DEPARTURES: Record<string, number> = {
+  // Signed at §139's kickoff (2026-10-29), placed by the swing read, 139b.
+  'units:rogue.baseStats.strength': 3,
+  'units:luminant.baseStats.ranged': 3,
+  'units:archer.baseStats.ranged': 3,
+  'units:adventurer.baseStats.strength': 3,
+  'units:ghoul.baseStats.strength': 0,
+  'units:bandit.baseStats.strength': 2,
+  'units:gunslinger.baseStats.ranged': 2,
+};
 
 const round2 = (x: number): number => Math.round(x * 100) / 100;
 const P = BEFORE.pooledRate;
 
-/** The expected config, from the frozen numbers and the rates alone. */
+/** The expected config: the rules' numbers with the departures over them. */
 function derive(): Record<string, number> {
+  return { ...deriveRules(), ...DEPARTURES };
+}
+
+/** The rules' numbers, from the frozen numbers and the rates alone. */
+function deriveRules(): Record<string, number> {
   const out: Record<string, number> = {};
   const pooled: Record<string, { hits: number; strikes: number }> = {};
   for (const { weapon, rate, strikes } of Object.values(BEFORE.rates)) {
@@ -88,7 +110,7 @@ function derive(): Record<string, number> {
       out[`buffs:${key}.${stat}`] = scales ? Math.round(add * P) : add;
     }
   }
-  return { ...out, ...DEPARTURES };
+  return out;
 }
 
 /** The shipped config, read raw at the same keys. */
@@ -133,15 +155,28 @@ describe('the conversion from the hit roll (every strike lands)', () => {
     expect(shipped(Object.keys(expected))).toEqual(expected);
   });
 
-  it('spot checks worked by hand: the mercenary 3 + 3, the bandit 1 + 1, defense 4 to 2, a buff 8 to 4', () => {
-    expect(expected['abilities:sword.might']).toBe(3);
-    expect(expected['units:mercenary.baseStats.strength']).toBe(3);
-    expect(expected['abilities:club.might']).toBe(1);
-    expect(expected['units:bandit.baseStats.strength']).toBe(1);
-    expect(expected['units:mercenary.baseStats.defense']).toBe(2);
-    expect(expected['buffs:packets/hype.strength']).toBe(4);
-    expect(expected['buffs:packets/hype.magic']).toBe(8);
-    expect(expected['buffs:statuses/emboldened.strength']).toBe(1);
+  it('spot checks of the rules worked by hand: the mercenary 3 + 3, the bandit 1 + 1, defense 4 to 2, a buff 8 to 4', () => {
+    const rules = deriveRules();
+    expect(rules['abilities:sword.might']).toBe(3);
+    expect(rules['units:mercenary.baseStats.strength']).toBe(3);
+    expect(rules['abilities:club.might']).toBe(1);
+    expect(rules['units:bandit.baseStats.strength']).toBe(1);
+    expect(rules['units:mercenary.baseStats.defense']).toBe(2);
+    expect(rules['buffs:packets/hype.strength']).toBe(4);
+    expect(rules['buffs:packets/hype.magic']).toBe(8);
+    expect(rules['buffs:statuses/emboldened.strength']).toBe(1);
+  });
+
+  it('each departure moves a base strength or ranged the rules derive, by whole points, and keeps the strike at 1 or more', () => {
+    const rules = deriveRules();
+    for (const [key, value] of Object.entries(DEPARTURES)) {
+      expect(key, key).toMatch(/^units:\w+\.baseStats\.(strength|ranged)$/);
+      expect(rules, key).toHaveProperty([key]);
+      expect(Number.isInteger(value) && value !== rules[key], key).toBe(true);
+      const [, unit] = /^units:(\w+)\./.exec(key)!;
+      const { weapon } = BEFORE.rates[unit!]!;
+      expect(rules[`abilities:${weapon}.might`]! + value, key).toBeGreaterThanOrEqual(1);
+    }
   });
 
   it('nothing carries a precision, an evasion or an accuracy any more', () => {

@@ -60,7 +60,10 @@ Boxes are created on demand and destroyed after use.
   junction: call `bash <repo>/scripts/box-drive.sh` by its path from inside
   the worktree, so today's scripts drive it. Its batches land in the
   worktree's `output/box-batches/`, and before a `--jobs` batch the parity
-  test runs there, at that commit.
+  test runs there, at that commit. An input that commit cannot hold (a
+  strategy file its loader reads) goes by `--carry=<file>`, and the queue
+  names it at `/root/carry/<its name>`; the batch keeps its bytes in
+  `carry/`.
 - Before a local batch with `--jobs`, run `npm run fuzz:jobs-parity` once
   at its HEAD. The test that holds a `--jobs` batch byte-identical to a
   serial one is off the per-commit smoke; the hook runs it only when

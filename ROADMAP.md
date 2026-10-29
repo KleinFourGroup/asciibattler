@@ -11,7 +11,7 @@ plan: [archive/post-118-roadmap.md](archive/post-118-roadmap.md) (Round
 8.5) with its worklog, spec and census beside it; before it
 [archive/post-109-roadmap.md](archive/post-109-roadmap.md) (Round 8).
 
-**Status: §139's 139d signed; 139e-pre is next.** The spec is [round-9-spec.md](round-9-spec.md); the act
+**Status: §139's 139d signed; 139e's cohort is next.** The spec is [round-9-spec.md](round-9-spec.md); the act
 design it asked for is [plans/acts.md](plans/acts.md). The charter is
 META-ROADMAP §"Round 9 — The frame and the misses"; the premises
 re-read at HEAD are `archive/worklog-phase-135.md` "Kickoff — Round 9", tranche 3.
@@ -135,7 +135,7 @@ standard errors; no re-pin of the sheet in this phase (WORKLOG §139).
 - ☑ **139d — the board read and the user's play** (`stop`). Signed: 139b's
   numbers stand, the mercenary stays, the crossing tested as 139e, no
   number moves this phase (WORKLOG §139).
-- ☐ **139e-pre — the box carries one file** (`none`). `--carry=<file>` on
+- ☑ **139e-pre — the box carries one file** (`none`). `--carry=<file>` on
   `box-batch.sh` and `box-drive.sh`: the file onto the box outside its
   checkout, its bytes and sha256 into the batch's folder. Exit: a missing
   carry refused before any box (planted); the fetched batch holds the

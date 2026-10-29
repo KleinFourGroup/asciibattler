@@ -23,7 +23,7 @@
 #     launch has fired.
 #
 # Usage:
-#   scripts/box-drive.sh <queue-file> [--poll=900] [--est-hours=N] [--artifact=<file>] [--plan]
+#   scripts/box-drive.sh <queue-file> [--poll=900] [--est-hours=N] [--artifact=<file>] [--carry=<file>] [--plan]
 #   scripts/box-drive.sh [flags] -- <fuzz args…>       # single-batch shorthand
 #
 #   Queue file: one batch per line = its fuzz args; blank lines and
@@ -33,6 +33,9 @@
 #   every other line summary.csv); --artifact=<file> names one file for
 #   every batch instead. --plan prints each batch with the artifact its
 #   fetch will check, and exits before the pre-flight and the box.
+#   --carry=<file> hands one local file to every launch (box-batch.sh says
+#   where it lands); like HEAD, it is one per cohort, so a change to its
+#   bytes mid-queue holds.
 #   --est-hours arms the 68h in-flight hatch: past 2× the estimate the
 #   driver flags loudly every poll (still polling — killing is a human
 #   call, and determinism makes a restart free).
@@ -44,6 +47,7 @@ SCRIPTS=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 POLL=900
 EST_HOURS=""
 ARTIFACT=""
+CARRY=""
 PLAN=""
 QUEUE_FILE=""
 INLINE_ARGS=""
@@ -58,6 +62,7 @@ while [ $# -gt 0 ]; do
     --poll=*) POLL=${1#--poll=} ;;
     --est-hours=*) EST_HOURS=${1#--est-hours=} ;;
     --artifact=*) ARTIFACT=${1#--artifact=} ;;
+    --carry=*) CARRY=${1#--carry=} ;;
     --plan) PLAN=1 ;;
     --)
       shift
@@ -114,6 +119,13 @@ artifact_for() {
     *) echo summary.csv ;;
   esac
 }
+
+CARRY_SUM=""
+if [ -n "$CARRY" ]; then
+  [ -f "$CARRY" ] || { echo "no such carry file: $CARRY" >&2; exit 1; }
+  CARRY_SUM=$(sha256sum "$CARRY" | cut -d' ' -f1)
+  echo "carry: $CARRY (sha256 ${CARRY_SUM:0:8})"
+fi
 
 if [ -n "$PLAN" ]; then
   N=0
@@ -176,10 +188,13 @@ for LINE in "${QUEUE[@]}"; do
   if [ "$(git rev-parse HEAD)" != "$COHORT_HEAD" ]; then
     hold "batch $N/${#QUEUE[@]}: HEAD flipped off cohort ${COHORT_HEAD:0:7} mid-queue"
   fi
+  if [ -n "$CARRY" ] && [ "$(sha256sum "$CARRY" 2>/dev/null | cut -d' ' -f1)" != "$CARRY_SUM" ]; then
+    hold "batch $N/${#QUEUE[@]}: the carry file changed mid-cohort"
+  fi
 
   read -r -a ARGS <<< "$LINE"
   echo "[$(ts)] batch $N/${#QUEUE[@]}: launching — ${ARGS[*]}"
-  LAUNCH_OUT=$(bash "$SCRIPTS/box-batch.sh" "$BOX" launch -- "${ARGS[@]}" 2>&1)
+  LAUNCH_OUT=$(bash "$SCRIPTS/box-batch.sh" "$BOX" launch ${CARRY:+"--carry=$CARRY"} -- "${ARGS[@]}" 2>&1)
   echo "$LAUNCH_OUT"
   BATCH_ID=$(echo "$LAUNCH_OUT" | grep -oE 'launched [0-9]{8}-[0-9]{6}-[0-9a-f]+' | awk '{print $2}')
   if [ -z "$BATCH_ID" ]; then

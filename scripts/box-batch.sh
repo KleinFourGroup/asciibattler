@@ -11,13 +11,19 @@
 # (the box dies at round close) and multiple boxes may run at once.
 #
 # Usage:
-#   scripts/box-batch.sh <user@host> launch -- <fuzz args…>   # detach a batch, print its id
+#   scripts/box-batch.sh <user@host> launch [--carry=<file>] -- <fuzz args…>   # detach a batch, print its id
 #   scripts/box-batch.sh <user@host> status [batch-id]        # one short poll (default: latest batch)
 #   scripts/box-batch.sh <user@host> fetch  [batch-id]        # pull a FINISHED batch → output/box-batches/<id>/
 #   scripts/box-batch.sh <user@host> kill                     # abort the running batch (sentinel still lands)
-#   scripts/box-batch.sh <user@host> run    -- <fuzz args…>   # launch + poll loop + fetch (in-session batches)
+#   scripts/box-batch.sh <user@host> run    [--carry=<file>] -- <fuzz args…>   # launch + poll loop + fetch (in-session batches)
 #
 #   scripts/box-batch.sh root@<ip> run -- --count=120 --scripts --jobs=8
+#
+# --carry takes one local file the commit does not hold (a strategy file an
+# old commit's loader can read, say) to /root/carry/<its name> on the box,
+# beside the checkout so the box's tree stays clean; the fuzz args name it
+# there. Its bytes go into the batch's carry/ folder, which the fetch brings
+# back, and a launch without --carry leaves no earlier file behind.
 #
 # Parity is wrapper-to-wrapper: `fetch` prints sha256(summary.csv) (first 8
 # chars as the short form) — compare that against another wrapper fetch or a
@@ -25,6 +31,7 @@
 set -euo pipefail
 
 REPO_DIR=/root/asciibattler
+CARRY_DIR=/root/carry
 SSH_OPTS=(-o BatchMode=yes -o ConnectTimeout=10)
 
 usage() {
@@ -40,8 +47,17 @@ shift 2
 # launch/run take the fuzz args after `--`; status/fetch take an optional id.
 FUZZ_ARGS=""
 BATCH_ID=""
+CARRY=""
 case "$CMD" in
   launch | run)
+    case "${1:-}" in
+      --carry=*)
+        CARRY=${1#--carry=}
+        shift
+        # Before anything else, so a missing file never reaches a box.
+        [ -f "$CARRY" ] || { echo "CARRY FAIL: no such file: $CARRY" >&2; exit 1; }
+        ;;
+    esac
     [ "${1:-}" = "--" ] || usage
     shift
     [ $# -ge 1 ] || usage
@@ -103,9 +119,19 @@ launch() {
       ;;
   esac
 
-  box "$REPO_DIR" "$local_head" "$id" "$FUZZ_ARGS" <<'REMOTE'
+  local carry_name="" carry_sum=""
+  if [ -n "$CARRY" ]; then
+    carry_name=$(basename "$CARRY")
+    carry_sum=$(sha256sum "$CARRY" | cut -d' ' -f1)
+    scp -q "${SSH_OPTS[@]}" "$CARRY" "$BOX:$CARRY_DIR-incoming" || {
+      echo "CARRY FAIL: could not copy $CARRY to the box" >&2
+      exit 1
+    }
+  fi
+
+  box "$REPO_DIR" "$local_head" "$id" "$FUZZ_ARGS" "$CARRY_DIR" "$carry_name" "$carry_sum" <<'REMOTE'
 set -euo pipefail
-repo=$1 local_head=$2 id=$3 fuzz_args=$4
+repo=$1 local_head=$2 id=$3 fuzz_args=$4 carry_dir=$5 carry_name=$6 carry_sum=$7
 cd "$repo"
 lock_before=$(sha256sum package-lock.json)
 # The local tree's commit, by its sha, so a cohort can run behind main's tip.
@@ -128,6 +154,17 @@ fi
 bdir=output/batches/$id
 mkdir -p "$bdir"
 printf '%s\n' "$fuzz_args" > "$bdir/args"
+rm -rf "$carry_dir"
+if [ -n "$carry_name" ]; then
+  mkdir -p "$carry_dir" "$bdir/carry"
+  mv "$carry_dir-incoming" "$carry_dir/$carry_name"
+  if [ "$(sha256sum "$carry_dir/$carry_name" | cut -d' ' -f1)" != "$carry_sum" ]; then
+    echo "CARRY FAIL: $carry_name reached the box with another sha256" >&2
+    exit 43
+  fi
+  cp "$carry_dir/$carry_name" "$bdir/carry/"
+  echo "carried $carry_name (sha256 ${carry_sum:0:8}) → $carry_dir/$carry_name"
+fi
 nohup bash -c "npm run fuzz -- $fuzz_args --out=$bdir; echo \$? > $bdir/exit-code" \
   > "$bdir/batch.log" 2>&1 < /dev/null &
 echo "launched $id (box pid $!) at ${head:0:7}"

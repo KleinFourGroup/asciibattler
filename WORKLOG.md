@@ -321,3 +321,16 @@ it is a stop.
   between the acts. For the archer ((0.69 − 0.488) of it) that is 0.05 to
   0.2 damage a swing, 1 to 4 %. If the cohort finds the crossing is the
   game's, a swing read split by act tests the idea directly.
+
+### 139e-pre — the box carries one file (2026-10-29)
+
+`--carry=<file>` on `box-batch.sh` and `box-drive.sh` (the scripts'
+headers and `process/measurement.md` say how). Its plants: a missing
+carry refused by `box-batch.sh` at an unroutable address in 0.28 s,
+before any ssh, and by `box-drive.sh --plan`; the real file passes the
+plan with its sha256. The box half reads at 139e's first fetch: the
+batch's `carry/` holds the bytes. The carried vector is the old tree's
+`92c2-winner.json` with precision and evasion at 0 (sha256 `4ecb8421`,
+`scratch/139/92c2-winner-137c.json`); it differs from 137c's file only
+by those two lines, and the old tree's loader takes it and refuses it
+with a key planted out.

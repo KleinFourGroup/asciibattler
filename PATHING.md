@@ -546,7 +546,9 @@ change; gates must survive every re-baseline):
 - openField / riverFork: per-team |mean lateral drift| ≤ 0.5;
 - shipped river (seeds 100–102, real battles): per-team-seed |lat drift|
   ≤ 2.5, and net dx sign-MIXED across the six team-seeds (the
-  everyone-drains-left signature stays dead).
+  everyone-drains-left signature stays dead). *Since 139b (2026-10-29,
+  user-signed) the drift bound is each team's mean over seeds 100–119,
+  within ±1.5; the entry at the end of this file says why.*
 
 A future change (§45 included) that trips a gate has re-introduced a
 systematic bias — fix the change, never relax the gate.
@@ -1402,3 +1404,45 @@ the §56d entry's tables stay the READ reference — deltas here:
   probe arms give back part of the 56d gain (40.0/40.8 → 33.3/30.8,
   ~42% seed churn, soft significance; greedy flat; 0 hangs); verdict
   rides the user's 56e close.
+
+---
+
+## 139b — the River drift gate reads a team's lean over twenty seeds — 2026-10-29
+
+**What tripped.** 139b moved seven units' base strength or ranged by a
+point (BALANCE.md's run log, 2026-10-29), among them the archer's, and
+the archer is one of the two units in the River gate's battles. The gate
+read seed 100's player at |lat drift| 2.516 against its 2.5 bound. No
+movement code changed.
+
+**The read** (`scratch/139/drift.ts`, `measureLayout('river', seed)` as
+the gate calls it, seeds 100–199, on 139b's config and on the config
+before it): each team-seed's lateral drift.
+
+| config | mean \|lat\| | p90 | max | team-seeds over 2.5 | player's mean (± 2 se) | enemy's mean (± 2 se) | 3-seed windows that trip a 2.5 bound |
+|---|---|---|---|---|---|---|---|
+| before 139b | 0.82 | 1.59 | 3.33 | 4 of 200 | +0.70 ± 0.18 | −0.52 ± 0.14 | 9 of 98 |
+| 139b | 0.87 | 1.80 | 3.88 | 6 of 200 | +0.72 ± 0.21 | −0.44 ± 0.15 | 11 of 98 |
+
+The two configs' leans agree, and seed 100's player moved from −0.90 to
+−2.52, against its team's usual sign. A per-battle bound on three seeds
+trips on about one window in ten with movement untouched, so it reads
+the noise more than the bias it guards, a whole team leaning one way
+(3.4 to 4.1 on every seed before §43).
+
+**The gate now** (user-signed: "I ran a few tests of my own, Claude, and
+can confirm that I'm not seeing any visible drift, so I'm on-board with
+your proposal!"): each team's mean lateral drift over seeds 100–119
+within ±1.5. The twenty-seed means read +0.66 / −0.54 before 139b and
++0.63 / −0.35 after, and no twenty consecutive seeds of the hundred pass
+1.01 on either config. The sign-mixed and first-contact gates still read
+seeds 100–102, out of the same pass; the twenty battles take about 0.15 s
+in the test.
+
+**Its control.** The pathfinder's straight-line tie-break dropped (the
+cross term times 0, `popLowestFIdx`): the twenty-seed means read +1.86 /
+−1.53, and the new gate failed, with the fixture gates (4.0 and 2.25
+against 0.5) and the sign gate; the old per-seed bound would have caught
+it too (3.59 on seed 102). A first plant, the sidestep's tie always
+clockwise, moved nothing on River (+0.63 / −0.34) and is no control for
+either gate. Both restored from copies; `git diff src/` empty after.

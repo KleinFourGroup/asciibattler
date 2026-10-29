@@ -23,9 +23,9 @@ import { measureLayout } from './capture';
  *     for a new funnel: the pre-fix readings were 4.00 on the fixtures and
  *     3.4–4.1 on shipped river.)
  *
- * The shipped-river gate runs three real battles (~seconds each) — kept to
- * the one map the round was called on (the user's original "walks left on
- * River" report).
+ * The shipped-river gates run twenty real battles (about a second each) —
+ * kept to the one map the round was called on (the user's original "walks
+ * left on River" report).
  */
 
 describe('§43c drift gates — symmetric fixtures (seed-invariant)', () => {
@@ -95,26 +95,30 @@ describe('§45d close-out gates — standoff churn mass (seed-invariant)', () =>
   });
 });
 
-describe('§43c drift gates — shipped River (real battles, seeds 100–102)', () => {
-  // One measurement pass shared by both gates (three real battles).
-  const SEEDS = [100, 101, 102] as const;
+describe('§43c drift gates — shipped River (real battles, seeds 100–119)', () => {
+  // One measurement pass shared by the gates: twenty real battles, of which
+  // the sign and first-contact gates read the first three.
+  const SEEDS = Array.from({ length: 20 }, (_, i) => 100 + i);
   let runs: { seed: number; m: ReturnType<typeof measureLayout> }[] | null = null;
-  const measure = () => (runs ??= SEEDS.map((seed) => ({ seed, m: measureLayout('river', seed) })));
+  const measureAll = () => (runs ??= SEEDS.map((seed) => ({ seed, m: measureLayout('river', seed) })));
+  const measure = () => measureAll().slice(0, 3);
 
   it(
-    'per-seed, per-team |mean lateral drift| stays bounded (≤ 2.5)',
+    "each team's mean lateral drift over the twenty seeds stays within ±1.5 (no team leans)",
     () => {
-      // Pre-fix worst case: 3.44 / −4.14 (a whole team leaning one way).
-      // Post-§43 readings sit ≤ 1.11; the slack above that is combat noise
-      // headroom, not license.
-      for (const { seed, m } of measure()) {
-        for (const team of ['player', 'enemy'] as const) {
-          const drift = Math.abs(m.teams[team].meanNetLateralDrift);
-          expect(drift, `river seed ${seed} ${team} |lat drift|`).toBeLessThanOrEqual(2.5);
-        }
+      // The bias is a whole team leaning one way: before the drift fixes
+      // every seed read 3.4 to 4.1. One battle's drift is mostly combat noise
+      // (a few team-seeds in a hundred pass 2.5 with movement untouched), so
+      // the gate reads each team's mean, where a lean shows and the noise
+      // averages out: the twenty-seed means sit within about ±1 since the
+      // fixes. The slack above that is noise headroom, not license.
+      for (const team of ['player', 'enemy'] as const) {
+        const drifts = measureAll().map(({ m }) => m.teams[team].meanNetLateralDrift);
+        const lean = drifts.reduce((a, b) => a + b, 0) / drifts.length;
+        expect(Math.abs(lean), `river ${team} mean lateral drift, seeds 100–119`).toBeLessThanOrEqual(1.5);
       }
     },
-    120_000,
+    300_000,
   );
 
   it(

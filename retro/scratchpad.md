@@ -64,3 +64,13 @@ the MVP-era entries had earlier fed [post-mvp-review.md](post-mvp-review.md).
 ---
 
 _(The post-§133 entries start here — Round 9, the frame and the damage trial.)_
+
+- **A watch on the friction log's kinds** (3ef8baed, 2026-10-28). `slip`
+  split from `papercut`, `--kind` required. Watched for a few phases: do
+  filers sort the two the way AGENTS' filing text intends, and does a
+  phase's papercut list stay short? If so, the user leans toward a step at
+  each phase close that gives every papercut the phase filed a disposition
+  (fixed, a TODO line, or left with a reason), rather than waiting for the
+  round sweep; deferred 2026-10-28 until the split has been seen working.
+  The severity flag waits on a second incident (WORKLOG §138, "The
+  friction log's third kind").

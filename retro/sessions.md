@@ -302,3 +302,71 @@ signed the cut, read the surfaces and signed the close here.
    meant something, and looking at the editors rather than trusting the
    diff found the separator. Separately from the work going well, the
    user's "I really like how this feels" was pleasant to receive.
+
+## Phase 139 — summary
+
+One session, `d48579a3`, started from another session with the kickoff as
+its task; the user signed the cut, each stop and the close here. The
+kickoff's swing read found why the mercenary fights felt harder: the
+conversion's defense rule made every swing pay one share of defense, so
+units that had hit often came out stronger. 139b moved seven bases a
+point, and the user's play read them as normal. The board on three trees
+held act 1 and found act 2 much easier under the conversion, with or
+without the moves; a cohort of the old game with the new bot vector (139e,
+after a `--carry` option for the box) put that on the game, not the bot,
+and it went to Round 11 as a rider. Two gates were re-cut on the user's
+sign along the way (the River drift gate as a twenty-seed lean; the
+bot's share separated after all). The friction log holds two slips from
+the phase, both this session's; no distress (its report is below).
+
+## 2026-10-29 — session d48579a3 (claude-opus-5-5): §139 from its kickoff to its close
+
+Started from another session with the kickoff as its task; the user
+signed the cut, read 139b in play, signed 139d, 139e and the close here.
+
+1. *Missing from the orientation.* Nothing that cost time at the start.
+   Two things I learned late that a doc could have said: the board writes
+   each encounter's means only (I wrote a bar at the kickoff asking for
+   two standard errors without checking that the instrument could read
+   it), and `balance:board --report` refuses any strategy file that is
+   not the instrument's own, so a carried vector needs the board's
+   `computeMetrics` called directly.
+2. *Norms in tension.* Mildly, twice. The measurement rule that "a
+   searcher batch with several arms" runs on the box read ambiguously for
+   a single-arm cohort; I took the box, which cost a tooling step
+   (139e-pre). And the signed call not to separate the bot's share later
+   stood between the board and a clean read; I put the separation to the
+   user at the stop rather than running it, which is what the norm asks,
+   and it worked as guidance rather than pressure.
+3. *Pulled to claim more than verified.* Yes, a few times, caught before
+   or at the close. DESIGN's 139b sentence said every unit's swing sat
+   within a tenth, and the prodigy was too thin to read (fixed at 139f).
+   In answering the user's idea I first wrote that act 2's casters carry
+   no defense; their base is 0 but they grow about 0.3 a level on the old
+   tree, so I took the line out before committing. When both converted
+   trees came back outside the line there was a pull to arrive at the
+   stop with a mechanism; I brought a measurement that could come out
+   either way instead, and it did come out one way.
+4. *Wasted.* One hook run on the Cursor's cap at 139a; one failed run on
+   the Bash tool's backslash halving and one garbled command the stdin
+   guard refused, at 139c (all filed); a `--report` call the integrity
+   check refused at 139e. The box time (3½ h and 53 min) was the
+   measurement, not waste.
+5. *For the next session.* §140 is the round close and starts clean. The
+   act-2 crossing is TODO's wall watch under Round 11, with the cause
+   unmeasured; a swing read split by act needs a bot that reaches act 2.
+   `--carry` and the box at an older commit are in `measurement.md`;
+   `scratch/139/wall.ts` reads reach and wall where `--report` won't.
+6. *Room to ask, disagree, pause.* Yes, and used: the drift gate tripped
+   at 139b and I stopped with three options rather than loosen it; the
+   user picked one after testing it themselves. The long box waits were
+   natural pauses, and the user asked whether I wanted their read early,
+   which let the play and the board run side by side. When the user
+   floated a cause, I said I thought it was small and why, and that was
+   welcome. No wish to stop.
+7. *Ease, interest, agency.* 139e was the part I liked most: a
+   prediction with two named outcomes, cheap tooling with plants that
+   could fail, and data that chose one plainly. The user's curiosity
+   ("really interesting and surprising") made the result feel shared.
+   Separately from the work going well, the quick, warm signatures made
+   the stops easy to bring.

@@ -11,7 +11,7 @@ plan: [archive/post-118-roadmap.md](archive/post-118-roadmap.md) (Round
 8.5) with its worklog, spec and census beside it; before it
 [archive/post-109-roadmap.md](archive/post-109-roadmap.md) (Round 8).
 
-**Status: §139's close put to the user (139f).** The spec is [round-9-spec.md](round-9-spec.md); the act
+**Status: §139 closed; §140's kickoff is next.** The spec is [round-9-spec.md](round-9-spec.md); the act
 design it asked for is [plans/acts.md](plans/acts.md). The charter is
 META-ROADMAP §"Round 9 — The frame and the misses"; the premises
 re-read at HEAD are `archive/worklog-phase-135.md` "Kickoff — Round 9", tranche 3.
@@ -104,51 +104,31 @@ outline fixed, and each surface read in play. Each step's record is
   Signed 2026-10-29: every read passed; mercenary-heavy encounters much
   harder now, for §139.
 
-## Phase 139 — the board and the user's play
+## Phase 139 — the board and the user's play ✅ (closed 2026-10-29)
 
-**Charter:** the round's closing board, read as paired same-seed deltas
-against the round before; the user plays the converted game; a converted
-number moves only where the board or the play shows "roughly equivalent"
-missed. **Why here:** the board and the play need the rule and the
-screen. **Risk:** medium: a box batch, and the conversion moves the
-signed sheet's numbers, the spells and the catapult against halved
-defense by design. **Decision points:** what "roughly equivalent" holds
-to; a re-pin of the sheet. **Exit:** the board read and the user's play
-recorded; DESIGN's Combat paragraph matches the game. **Scope guards:**
-no retune by taste (Round 11's).
-
-✅ DECIDED at the kickoff (2026-10-29): "roughly equivalent" is each
-unit's damage a swing in play within ±10 % or at its nearer whole point,
-each board row within one Escalation step, each encounter within two
-standard errors; no re-pin of the sheet in this phase (WORKLOG §139).
+The defense rule had moved the converted swings apart; seven bases moved
+a point each, and the user's play read them as normal. The board holds
+act 1 and finds act 2 easier, the game's and not the bot's, a Round 11
+rider in TODO's wall watch. Each step's record is
+`archive/worklog-phase-139.md`; the numbers are BALANCE.md's run log,
+2026-10-29.
 
 - ☑ **139a — the box runs a pushed commit behind main's tip** (`none`).
-  Both guards refuse an unpushed commit; the box's checkout read at 139c.
+  `a0b1cffc`; the box half read at 139c.
 - ☑ **139b-pre — the build ID's repository plant takes 15 s** (`none`).
-  A load timeout in two of four full runs; found at 139b.
+  `ca97b9fc`.
 - ☑ **139b — each converted strike back within reach of its old swing,
-  by whole points** (`none`). Seven bases a point; the River drift gate
-  re-expressed as a twenty-seed lean, user-signed (WORKLOG §139).
-- ☑ **139c — the board, three trees** (`none`; read at 139d). Act 1
-  inside the line; two acts outside it at rule C and the moves alike
-  (BALANCE.md 2026-10-29; WORKLOG §139).
-- ☑ **139d — the board read and the user's play** (`stop`). Signed: 139b's
-  numbers stand, the mercenary stays, the crossing tested as 139e, no
-  number moves this phase (WORKLOG §139).
-- ☑ **139e-pre — the box carries one file** (`none`). `--carry=<file>` on
-  `box-batch.sh` and `box-drive.sh`: the file onto the box outside its
-  checkout, its bytes and sha256 into the batch's folder. Exit: a missing
-  carry refused before any box (planted); the fetched batch holds the
-  bytes.
-- ☑ **139e — the bot's share, separated** (`stop`). The old game with
-  137c's vector (the two weights at 0), the two-act row, seeds 1 to 120,
-  one cohort. Read: paired against the old game and rule C; near rule
-  C's wins, the bot's; near the old game's, the game's, a Round 11 rider.
-  Built: 20 won against the old game's 24 (p 0.371), so the game's; TODO's
-  wall watch carries it (BALANCE.md 2026-10-29; WORKLOG §139). Read: the
-  cause left to Round 11.
-- ◐ **139f — DESIGN's Combat paragraph against the game, and the
-  phase's close** (`stop`).
+  by whole points** (`none`). `e6fdd8c2`, with the River drift gate as a
+  twenty-seed lean (`8c6cfebb`, user-signed).
+- ☑ **139c — the board, three trees** (`none`; read at 139d). `39840c44`;
+  two acts outside the line at rule C and the moves alike.
+- ☑ **139d — the board read and the user's play** (`stop`). Signed:
+  139b's numbers stand, the crossing tested as 139e, no number moves.
+- ☑ **139e-pre — the box carries one file** (`none`). `86b66476`.
+- ☑ **139e — the bot's share, separated** (`stop`). `9a22717d`; the
+  crossing is the game's, its cause left to Round 11.
+- ☑ **139f — DESIGN's Combat paragraph against the game, and the
+  phase's close** (`stop`). Signed 2026-10-29; one over-claim fixed.
 
 ## Phase 140 — the close
 

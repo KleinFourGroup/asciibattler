@@ -334,3 +334,23 @@ batch's `carry/` holds the bytes. The carried vector is the old tree's
 `scratch/139/92c2-winner-137c.json`); it differs from 137c's file only
 by those two lines, and the old tree's loader takes it and refuses it
 with a key planted out.
+
+### 139e — the bot's share, separated (2026-10-29)
+
+The numbers are BALANCE.md's run log (2026-10-29, "the old game with
+137c's bot vector").
+
+- *139e-pre's box half:* both batches hold the carried file in `carry/`,
+  byte-identical to the local one (sha256 `4ecb8421`), and the launch
+  logged it arriving with that sum; the manifests are clean at
+  `a042bf2c`.
+- *The crossing is the game's.* The old game with 137c's vector wins 20
+  of 120 on two acts, not told apart from the old game's 24 (p 0.371),
+  and 27 and 32 fewer than rule C and the moves (p 0.001 each); its wall
+  is 0.630 against the old game's 0.579. Dropping the two weights does
+  not move the bot; the residue in its `total` term is the part not
+  tested, and it would have to carry the whole crossing alone.
+- *By the call signed at 139d*, no number moves in this phase: the
+  crossing goes to Round 11 as a named rider, which TODO's wall watch
+  now is (the deep-end wall from above its band to below it, with this
+  phase's numbers). Its cause is not measured.

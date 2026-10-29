@@ -11,7 +11,7 @@ plan: [archive/post-118-roadmap.md](archive/post-118-roadmap.md) (Round
 8.5) with its worklog, spec and census beside it; before it
 [archive/post-109-roadmap.md](archive/post-109-roadmap.md) (Round 8).
 
-**Status: §139's 139d signed; 139e's cohort is next.** The spec is [round-9-spec.md](round-9-spec.md); the act
+**Status: §139 at the stop at 139e.** The spec is [round-9-spec.md](round-9-spec.md); the act
 design it asked for is [plans/acts.md](plans/acts.md). The charter is
 META-ROADMAP §"Round 9 — The frame and the misses"; the premises
 re-read at HEAD are `archive/worklog-phase-135.md` "Kickoff — Round 9", tranche 3.
@@ -140,10 +140,12 @@ standard errors; no re-pin of the sheet in this phase (WORKLOG §139).
   checkout, its bytes and sha256 into the batch's folder. Exit: a missing
   carry refused before any box (planted); the fetched batch holds the
   bytes.
-- ☐ **139e — the bot's share, separated** (`stop`). The old game with
+- ◐ **139e — the bot's share, separated** (`stop`). The old game with
   137c's vector (the two weights at 0), the two-act row, seeds 1 to 120,
   one cohort. Read: paired against the old game and rule C; near rule
   C's wins, the bot's; near the old game's, the game's, a Round 11 rider.
+  Built: 20 won against the old game's 24 (p 0.371), so the game's; TODO's
+  wall watch carries it (BALANCE.md 2026-10-29; WORKLOG §139).
 - ☐ **139f — DESIGN's Combat paragraph against the game, and the
   phase's close** (`stop`).
 

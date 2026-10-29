@@ -5132,3 +5132,32 @@ deltas. The pre-X H7c→O log lives at
   and the read by `scratch/139/board.mjs` (its self-checks: the pairing
   and the sign test on known answers, and §118e's level 0 recovered from
   its archive). Detail: WORKLOG §139, 139c.
+- **2026-10-29 — the old game with 137c's bot vector** (§139e). The
+  two-act row as above (seeds 1 to 120, 40 and 80) at `a042bf2c`, with
+  the strategy file carried to the box (`--carry`): the old tree's
+  `92c2-winner.json` with its precision and evasion weights at 0 (sha256
+  `4ecb8421`; its `total` term still sums the two stats, which only code
+  at the old commit could drop). One cohort on `cpx42`, 53 min of box,
+  both batches exit 0, each holding the carried bytes.
+
+  | tree | two acts: won | reached act 2 | reach | wall |
+  |---|---|---|---|---|
+  | old game | 24 | 83 | 0.475 | 0.579 |
+  | old game, 137c's vector | 20 | 82 | 0.450 | 0.630 |
+  | rule C | 47 | 83 | 0.558 | 0.299 |
+  | 139b's moves | 52 | 80 | 0.542 | 0.200 |
+
+  Paired on the seed as above: against the old game 26 / 75 / 19, p
+  0.371, wins −4; against rule C 55 / 40 / 25, p 0.001, −27; against the
+  moves 57 / 36 / 27, p 0.001, −32. The vector does not carry the
+  crossing: the old game with it stays with the old game, and the
+  conversion's trees stay apart from both. Its encounters track the old
+  game's (the highwaymen 0 %, the deserters +1 %, the ronin and the mages
+  +1 %, act 2's bosses −12 % and −7 %). `--report` refuses the cohort
+  (its strategy is not the instrument's arm), so reach and wall come
+  from the board's own `computeMetrics`, which reads the three 139c trees
+  as their reports did. **Artifacts** (ignored, this machine):
+  `output/box-batches/20261029-21*-a042bf2c/`,
+  `output/board-runs/139e-V/`, `scratch/139/vector-drive.log`,
+  `vector.queue`, and the read by `scratch/139/vector.mjs` and
+  `wall.ts`. Detail: WORKLOG §139, 139e.

@@ -4961,3 +4961,60 @@ deltas. The pre-X H7c→O log lives at
   prodigy, a legendary, stays thin at 190 strikes; by the cut, a thin row
   is not measured further. Outputs (ignored, this machine):
   `scratch/137a/out/`. Detail: WORKLOG §137, 137a.
+- **2026-10-29 — each converted unit's damage a swing in play, before
+  and after every strike landed** (§139's kickoff). At `a042bf2c` (the
+  frozen config under hit or miss, 137a's commit) and `7bd65732` (137c's
+  conversion), default run config, seeds 1000–1199 on `greedy` and
+  `pure-random`, one run at a time on this machine (about 4 minutes
+  each). `scratch/139/swing.ts` runs unchanged on both trees: it wraps
+  `World.applyDamage`, observing only, and for each call by one of the
+  thirteen converted units (each carries one damage ability; a status
+  tick does not come through it) adds the `unit:attacked` damage emitted
+  inside the call, so a miss counts 0 on the old tree; it keeps the
+  attacker's side, its crits and the target's defense. Its check: the
+  calls with no `unit:attacked` equal the bus's `unit:missed` on the old
+  tree (105,083 and 104,250) and are 0 at `7bd65732`. Pooled over both
+  bots by `scratch/139/compare.mjs`; the rows with at least 1,000 swings
+  on both trees (neutral is the camps' wild units):
+
+  | unit · side | old: swings · hit · damage a swing · target's defense | converted: swings · damage a swing · target's defense | change |
+  |---|---|---|---|
+  | rogue · enemy | 4,286 · 0.802 · 3.74 · 5.00 | 3,603 · 5.44 · 2.30 | +46 % |
+  | rogue · player | 2,988 · 0.808 · 3.87 · 4.61 | 2,418 · 5.69 · 2.06 | +47 % |
+  | archer · enemy | 20,727 · 0.688 · 6.06 · 4.38 | 17,355 · 7.11 · 2.08 | +17 % |
+  | archer · player | 70,708 · 0.687 · 5.97 · 4.29 | 58,821 · 7.15 · 1.91 | +20 % |
+  | adventurer · player | 3,106 · 0.643 · 5.57 · 4.69 | 3,272 · 6.56 · 2.03 | +18 % |
+  | reaver · enemy | 1,119 · 0.567 · 6.81 · 4.71 | 1,412 · 7.77 · 2.27 | +14 % |
+  | reaver · player | 1,929 · 0.589 · 7.38 · 4.52 | 1,777 · 7.90 · 2.05 | +7 % |
+  | ronin · enemy | 8,940 · 0.549 · 8.47 · 4.42 | 7,916 · 9.00 · 2.14 | +6 % |
+  | ronin · player | 2,695 · 0.553 · 8.85 · 4.55 | 2,353 · 8.61 · 1.99 | −3 % |
+  | mercenary · enemy | 22,839 · 0.514 · 5.08 · 4.59 | 20,171 · 5.61 · 2.23 | +10 % |
+  | mercenary · player | 118,646 · 0.528 · 5.32 · 4.34 | 104,183 · 5.83 · 1.95 | +10 % |
+  | ghoul · enemy | 4,572 · 0.503 · 1.12 · 4.96 | 3,354 · 1.35 · 2.13 | +21 % |
+  | ghoul · neutral | 3,510 · 0.327 · 0.62 · 4.38 | 2,855 · 1.06 · 1.92 | +71 % |
+  | ghoul · player | 6,129 · 0.509 · 0.94 · 4.38 | 4,454 · 1.16 · 1.96 | +24 % |
+  | officer · player | 2,001 · 0.249 · 0.95 · 4.45 | 2,307 · 1.09 · 1.93 | +15 % |
+  | gunslinger · player | 5,006 · 0.300 · 2.15 · 4.36 | 5,598 · 1.76 · 1.97 | −18 % |
+  | bandit · enemy | 124,600 · 0.297 · 1.42 · 4.61 | 101,364 · 1.07 · 2.19 | −25 % |
+  | bandit · neutral | 1,884 · 0.347 · 1.56 · 3.89 | 3,307 · 1.11 · 1.81 | −29 % |
+  | bandit · player | 2,118 · 0.312 · 1.63 · 4.64 | 1,784 · 1.16 · 2.06 | −29 % |
+
+  The thinner rows read the same way: the adventurer as an enemy +17 %
+  (1,343 and 843 swings), the luminant +18 % (326 and 256), the
+  halberdier as the player's 0 % (1,589 and 882); the prodigy, the
+  officer's and the gunslinger's enemy rows and the halberdier's hold
+  under 170 swings. Over every converted swing, 4.12 a swing before and
+  4.54 after (+10 %), and 66.5 swings a battle before and 52.8 after, so
+  battles end sooner. **The read:** 15 of the 19 rows sit outside ±10 %,
+  by the attacker's old hit rate. A swing averaged `h·(raw − d)` under the
+  roll; 137c set the strike to about `h·raw` and every target's defense to
+  `0.488·d`, so a swing now pays the pooled rate's share of the defense it
+  meets, not its attacker's. Above the pooled rate a unit pays less
+  defense than before (the rogue paid about 3.9 of the 4.8 it met, now
+  about 2.2), below it more (the bandit paid about 1.4 of 4.6, now 2.2, so its
+  strike of 2 sits on the floor of 1). The floor moved too: a swing now
+  deals at least 1 where a hit did, so the units whose strikes sit on it
+  (the ghoul, the officer) rose by about the inverse of their old rate.
+  137c's check compared each base strike with the old mean before
+  defense, which this term does not reach. Outputs (ignored, this
+  machine): `scratch/139/out/`. Detail: WORKLOG §139, the kickoff.

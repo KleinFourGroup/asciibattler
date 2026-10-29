@@ -354,3 +354,38 @@ The numbers are BALANCE.md's run log (2026-10-29, "the old game with
   crossing goes to Round 11 as a named rider, which TODO's wall watch
   now is (the deep-end wall from above its band to below it, with this
   phase's numbers). Its cause is not measured.
+
+The read signed (2026-10-29): "Signing your lean, Claude! 😁" The cause
+is left to Round 11's retune, where it matters for choosing a lever; the
+swing read split by act is in the rider.
+
+### 139f — DESIGN against the game, and the close put to the user (2026-10-29)
+
+- *Step zero, DESIGN's Battle mechanics against config and the pin.*
+  §139 moved config numbers only, so the Combat paragraph's code claims
+  are 138a's, untouched. The stat list's defense line holds (0 to 3, the
+  halberdier 3, the healer and four of the casters 0). The conversion
+  paragraph's 139b sentence said every unit's swing sat within a tenth;
+  the prodigy (87 swings) was too thin to place and kept rule C's
+  numbers, so it now says "where enough swings were measured to read it".
+  DESIGN states no board outcome, so the act-2 finding stays in BALANCE
+  and TODO's rider.
+- *Not verified in §139:* the act-2 gap's cause; act 2 in the user's play
+  (their read was act 1's fights); each encounter's two standard errors
+  (the board writes means only); the residue in the old bot's `total`
+  term.
+- *The friction read.* §139 filed two slips, both this session's, and no
+  `distress`. Patterns, with instances:
+  - The Cursor's 3,900 cap met at the commit: three sessions running
+    (136f, a papercut; 138 and 139a, slips), one hook run each, 12 to 55
+    s. Recurred and cost, so a candidate for the user: the hook could run
+    `tests/docs.test.ts` before the full suite and stop there. The
+    session's lean is to leave it: the docs test is the guard and caught
+    each one, and the most a reorder saves is about 40 s a time.
+  - The Bash tool's backslash halving: 20 filings since Round 7, the
+    latest at 139c (one failed run). The harness note named it after the
+    fact, and `process/shell-and-windows.md` already says to write
+    scripts with the Write tool. Recurred and cost; the lean is to leave
+    it to the round close's sweep, which reads the log by trap.
+  - The stdin guard refusing a garbled command: once, before it ran, at
+    no cost. Listed and left.

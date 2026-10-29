@@ -214,3 +214,62 @@ touches the DOM when it loads), so the pane is the instrument: before the
 fix the trailing "·" (the control), after it "8 dmg · crit 10% → 16", and
 with Bypass defense ticked "8 dmg · crit 10% → 16 · bypass def", the box
 unticked after. Tools only; no player sees it.
+
+### §138's close, put to the user (2026-10-29, session 1d6463bc)
+
+**Built, each read `none`:** DESIGN's stat list and Combat paragraph
+(138a, `42f94563`), with four more false sentences found and fixed, and
+the attack editor's outline (138b-pre, `e17d071a`), found at 138b's step
+zero.
+
+**138b's step zero, in the pane** (`dev-preview`, the build
+`42f9456`, clean; seed 9, the soldier, by `__probe.drive` with its seeded
+picks; Chromium at 800×600):
+
+- *The pre-turn hand:* six full cards, POW alone above eight stats in two
+  columns (CON STR / RNG MAG / LCK DEF / SPD MOB); the ability rows
+  "Sword 7 dmg · reach 1 · 9% crit 0.90s", "Bow 8 dmg · reach 3 · 8% crit
+  1.50s". The page's text holds no NaN, "undefined", PRC, EVA, "% hit" or
+  Dodge. The Idol of Mars line reads "+4 STR / RNG, +8 MAG for the
+  encounter".
+- *Battles:* a bus recorder and a DOM watch over seven battles counted 427
+  `unit:attacked`, 25 of them crits, 427 hitsplats, and no `unit:missed`
+  and no Miss splat. Control: one `unit:missed` emitted by hand in a
+  battle gave one splat reading "Miss", so the watch sees one.
+- *The promotion* (after the first encounter, five battles): two
+  mercenaries, chips CON +1 and DEF +1, CON +1 and MOB +1, the lines "Max
+  HP 25 → 26", "Max HP 26 → 27", "Move cadence 0.55s → 0.50s"; no Dodge
+  line.
+- *The recruit offer:* three cards, the same grid; "Gambit 8 dmg · reach
+  1 · 27% crit 0.50s", "Dash dash 2 10.00s", "Sword 7 dmg · reach 1 · 10%
+  crit", "Whip 7 dmg · reach 1 · 13% crit". *The roster list:* eleven
+  cards, the same.
+- *A buff:* Mars spent on the hand's first card put "▲ HONED" on it,
+  whose tooltip reads "◈ Idol of Mars — +4 STR · +4 RNG · +8 MAG"; with
+  `&daemon=minerva` the run holds Minerva alone, and both its line and the
+  tooltip read "+2 DEF" (this one read at `e17d071`, after 138b-pre).
+- *The editors:* the archetype editor's preview has the Level dial alone
+  and the lines Stats, Max HP, Range, Move cadence, each ability ("6 dmg
+  (3 + 3 STR) · rng 1 · every 1.05s … · crit 8% (×2)"), Immune to; the
+  attack editor's damage op has Scaling, Might, Crit base, Critable,
+  Evadable and Bypass defense; the layout editor's legend gives each tile
+  its cost (and the mud its poison), its hint no to-hit.
+- *Console errors:* only the pane's resource-cache failures, as at 137c.
+- *Seen and left for the user's eye:* on these narrow cards at 800×600
+  the ability row wraps, and the break can fall between a crit's number
+  and its word ("27%" / "crit"); on the pre-turn hand the wrapped line
+  sits under the hand's bottom edge. The row was longer before 137c, so
+  the wrap is not new; a no-break space in each part would keep a number
+  with its word.
+
+**Not verified:** anything by the user's eye (the read below), Firefox,
+the text sizes above 100 % (TODO's 150 % item has the promotion screen
+scrolling 66px at 117.5e, and the promotion card is two rows shorter
+now), the touch routes.
+
+**The friction read.** The phase filed one line, this session's slip at
+the kickoff (the Cursor's 3900-character cap). The same cap failed 136f's
+commit (37c3d345), whose cost was the piped exit code's, filed then. Each
+time the cap is a guard on the path and caught it for one hook run; listed
+and left. No `distress` line; no session report from the phase before
+this session's (the 138-pre session, ee3f6da8, wrote none).

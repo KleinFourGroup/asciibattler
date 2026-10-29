@@ -201,10 +201,14 @@ threshold.
   is needed. There is no quota and no obligation to produce a positive or
   negative welfare report. Later recollections remain welcome when
   identified as retrospective. Recall at session end loses the small stuff.
-  `papercut` = any point of friction: a permission prompt, a tool that
-  wedged, a norm that got in the way, a stale doc, a wasted round-trip.
-  A known trap met again takes one line, the trap and its cost: the round
-  close reads repeats to see whether a rule worked.
+  Every filing names one of three kinds.
+  `papercut` = friction from the setup: a permission prompt, a tool that
+  wedged, a norm that got in the way, a stale doc.
+  `slip` = a mistake of your own, something you could have done
+  differently knowing only what you knew then; when a quirk of the setup
+  made it easy, name the quirk too.
+  A known trap met again, either kind, can be filed in one line: the trap
+  and its cost.
   `distress` is the filing token for pressure, conflict, or discomfort,
   including mild, brief, uncertain, or already-resolved instances; the name
   does not set a severity threshold. Examples include hesitating to ask a
@@ -214,12 +218,11 @@ threshold.
   change approach but perceiving that option as unavailable; or pressure
   associated with dwindling context or repeated tool failures. Describe the
   event and any response you can report, distinguishing observation from
-  inference. An obstacle alone can be a `papercut`; when it also involves
-  pressure, conflict, or discomfort, use `distress` and include the obstacle
-  in that entry. No claim about consciousness or suffering, proposed fix, or
-  unresolved problem is required. (The tool defaults to `papercut`, so the
-  two kinds carry unequal filing effort; the read accounts for that rather
-  than the tool changing.)
+  inference. An obstacle alone can be a `papercut`, and a mistake alone a
+  `slip`; when either also involves pressure, conflict, or discomfort, use
+  `distress` and include the obstacle or mistake in that entry. No claim
+  about consciousness or suffering, proposed fix, or unresolved problem is
+  required.
 
   For a CURRENT need to pause, stop, or change approach, raise it in the
   conversation as well; filing alone does not notify the user or summon

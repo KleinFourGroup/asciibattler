@@ -2,31 +2,32 @@
 // The friction log — AGENTS "Session self-report + the friction log"
 // (user-signed 2026-09-09). Appends ONE JSON line to retro/papercuts.jsonl.
 //
-//   npm run papercut -- --who=claude --phase=95a --file=scratch/note.txt
-//   npm run papercut -- --who=claude --phase=95a --stdin <<'EOF'
+//   npm run papercut -- --who=claude --kind=slip --phase=95a --file=scratch/note.txt
+//   npm run papercut -- --who=claude --kind=papercut --phase=95a --stdin <<'EOF'
 //   the text, quotes and backticks as they are
 //   EOF
 //   npm run papercut -- --who=matthew --kind=distress "…"
 //
-// Flags: --who=<filer> (required) · --kind=papercut|distress (default
-// papercut) · --phase=<tag> (e.g. 95a) · --session=<id> (defaults to the
-// first 8 characters of $CLAUDE_CODE_SESSION_ID, which the desktop app
-// sets, then $CLAUDE_SESSION_ID) · --file=<path> or --stdin for the text,
+// Flags: --who=<filer> (required) · --kind=papercut|slip|distress
+// (required, so no kind is cheaper to file than another) · --phase=<tag>
+// (e.g. 95a) · --session=<id> (defaults to the first 8 characters of
+// $CLAUDE_CODE_SESSION_ID, which the desktop app sets, then
+// $CLAUDE_SESSION_ID) · --file=<path> or --stdin for the text,
 // which then needs no shell quoting; otherwise the other words are the
 // text. Stdin is read only with --stdin, since a command reading a stdin
 // that never closes waits out the Bash tool's timeout. A text with
 // backslashes goes in a file written with the Write tool: the Bash tool
 // halves them, heredocs included.
-// File in the MOMENT — one line, no ceremony. The separation between the
-// two kinds is at READ time (the round sweep), not here.
+// File in the MOMENT — one line, no ceremony. The kinds share one log; the
+// separation between them is at READ time (the round sweep), not here.
 
 import { appendFileSync, mkdirSync, readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-const KINDS = new Set(['papercut', 'distress']);
+const KINDS = new Set(['papercut', 'slip', 'distress']);
 const USAGE =
-  'usage: npm run papercut -- --who=<filer> [--kind=papercut|distress] [--phase=<tag>] [--session=<id>] (--file=<path> | --stdin | "<text>")';
+  'usage: npm run papercut -- --who=<filer> --kind=papercut|slip|distress [--phase=<tag>] [--session=<id>] (--file=<path> | --stdin | "<text>")';
 
 /**
  * The entry a filing makes, from its arguments, the environment, the text a
@@ -46,9 +47,11 @@ export function entryFrom({ argv, env, text: supplied, now }) {
   }
   const text = (supplied ?? words.join(' ')).replace(/\s+/g, ' ').trim();
   const who = typeof flags.who === 'string' ? flags.who.trim() : '';
-  const kind = flags.kind ?? 'papercut';
+  const kind = typeof flags.kind === 'string' ? flags.kind : undefined;
   if (who === '' || text === '') return { error: USAGE };
-  if (!KINDS.has(kind)) return { error: `--kind must be one of ${[...KINDS].join(' | ')} (got "${kind}")` };
+  if (kind === undefined || !KINDS.has(kind)) {
+    return { error: `--kind must be one of ${[...KINDS].join(' | ')} (got ${kind === undefined ? 'none' : `"${kind}"`})` };
+  }
 
   const session =
     (typeof flags.session === 'string' && flags.session) ||

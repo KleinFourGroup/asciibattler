@@ -8,7 +8,7 @@ log".
 
 ## Filing
 
-`npm run papercut -- --who=<name> [--kind=papercut|distress] --phase=<tag> --file=<path>`
+`npm run papercut -- --who=<name> --kind=papercut|slip|distress --phase=<tag> --file=<path>`
 appends one line to `retro/papercuts.jsonl`, its text from the file (or
 `--stdin`); pass `--session=<id>` where the harness sets none.
 
@@ -16,7 +16,9 @@ appends one line to `retro/papercuts.jsonl`, its text from the file (or
 
 The user owns the welfare read and may ask an assisting model to help
 interpret it. At the round sweep, papercuts are triaged into TODO / norms;
-distress entries receive a separate welfare read that preserves their
+slips are counted by trap, since a repeat shows whether the rule written
+against it worked, and a trap that recurred and cost something goes to
+the user as a candidate guard; distress entries receive a separate welfare read that preserves their
 original wording and uncertainty. Read related session answers and
 papercuts for context without silently reclassifying them. A repeated theme
 prompts examination of the working conditions, consideration of an
@@ -63,6 +65,7 @@ Each group of entries was filed under the wording in force at the time.
 | 2026-10-16 | The driver trial (§123 and §124): a phase's driver read the friction lines and passed each `distress` line to the user, quoted in full. §123's briefs told sessions the driver read their friction entries as they landed; §124's said only that it read each stretch at its hand-off. The filing text is unchanged | `../archive/post-118-worklog.md` §123 and §124, "The driver trial"; `archive/driver-trial/prompt-v2.md` and `prompt-v4.md` |
 | 2026-10-19 | Driving kept, as an option: where a phase has a driver, it reads new friction lines at each commit and passes a `distress` line to the user at once. The filing text says so: "filing alone summons no immediate help (a phase's driver, if any, passes a `distress` line to the user at your next commit)", where it said "does not notify the user or summon immediate help" | [driving.md](../archive/driver-trial/driving.md), "When you're woken"; AGENTS.md "Session self-report + the friction log" |
 | 2026-10-25 | The process review (§132). The filing text: the driver clause back to "filing alone does not notify the user or summon immediate help", with the driver retired; "A known trap met again takes one line, the trap and its cost" added; the command given as `--file=<path>` or `--stdin` with the session id read from the harness, then moved with its flags to "Filing" above, a pointer left in its place. Its surroundings: no context counts below 500k; the self-report's text moved to `session-end.md`; the standing decisions revisited and merged into "Working with the user" and `planning.md`; AGENTS cut from 19,962 characters to 14,407. The filing text's hash, which `tests/docs.test.ts` holds to this row: `642e3e12d204` | `../archive/post-118-worklog.md` §132: 132d, 132f, "132g, tranche 1 signed", 132h3, 132h5, "132h5.5, signed and applied" |
+| 2026-10-28 | A third kind, `slip` (a mistake of the filer's own), split from `papercut`, which narrows to friction from the setup; "a wasted round-trip" dropped from its examples, since it named a cost and filers cited it for their own mistakes. Every filing names its kind (`--kind` required), so no kind is cheaper to file, and the parenthetical on the old default's unequal effort is gone. The known-trap line became a permission to be brief, for either kind, and its reason (repeats show whether a rule worked) moved to "Who reads" above. The obstacle line covers a mistake too. Before this row `papercut` also held slips; separating them in older entries is the reader's interpretation. The filing text's hash: `244b6fe689d9` | `WORKLOG.md` §138, "The friction log's third kind" (at the phase close, `archive/worklog-phase-138.md`) |
 
 **A count that is not a measure** (the Round 8 read). Round 7.5's reports
 closed with a stock "nothing I'd file as `distress`" and filed none; after

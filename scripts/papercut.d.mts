@@ -2,7 +2,7 @@
 export interface PapercutEntry {
   readonly ts: string;
   readonly who: string;
-  readonly kind: 'papercut' | 'distress';
+  readonly kind: 'papercut' | 'slip' | 'distress';
   readonly session?: string;
   readonly phase?: string;
   readonly text: string;

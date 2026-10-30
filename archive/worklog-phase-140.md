@@ -489,3 +489,7 @@ By `process/planning.md` "Round close" and "Phase close":
 - *The playtest:* 140c's smoke, as signed at 140a. *The audit round:*
   none, as signed at 140a, since no cluster closed.
 - *Not yet:* the push, at the user's read of this step.
+
+**140f signed** (the user: "That looks great, Claude! 😁 Signed!"):
+Round 9 closed 2026-10-30 with no open mark, 140a to 140f each read as
+cut. `main` pushed at the sign.

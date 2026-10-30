@@ -11,8 +11,8 @@ plan: [archive/post-118-roadmap.md](archive/post-118-roadmap.md) (Round
 8.5) with its worklog, spec and census beside it; before it
 [archive/post-109-roadmap.md](archive/post-109-roadmap.md) (Round 8).
 
-**Status: Round 9 closed by §140; its last step, 140f, the archive,
-awaiting the user's read (2026-10-30)** (`archive/worklog-phase-140.md`). The spec is
+**Status: Round 9 closed 2026-10-30 by §140, its last step, 140f,
+signed by the user** (`archive/worklog-phase-140.md`). The spec is
 [round-9-spec.md](round-9-spec.md), beside this file; the act design it
 asked for is [plans/acts.md](../plans/acts.md). The charter is
 META-ROADMAP §"Round 9 — The frame and the misses".
@@ -131,7 +131,7 @@ rider in TODO's wall watch. Each step's record is
 - ☑ **139f — DESIGN's Combat paragraph against the game, and the
   phase's close** (`stop`). Signed 2026-10-29; one over-claim fixed.
 
-## Phase 140 — the close
+## Phase 140 — the close ✅ (closed 2026-10-30)
 
 Round 9's exit read by clause, Round 10's charter amended by one line,
 `0.2.0` uploaded, the process read in two tranches (the silence kept, two
@@ -150,5 +150,5 @@ archive. Each step's record is `archive/worklog-phase-140.md`.
   the scratchpad** (`stop`). Signed 2026-10-30 in two tranches.
 - ☑ **140e — the list built as signed** (`none`). The rule docs' diff
   read against the list.
-- ◐ **140f — the archive and the round's close** (`stop`). Built
-  2026-10-30, its read the user's.
+- ☑ **140f — the archive and the round's close** (`stop`). Signed
+  2026-10-30.

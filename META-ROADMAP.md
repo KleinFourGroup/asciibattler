@@ -901,8 +901,7 @@ content; no retune by taste (Round 11's), no dodge (Round 13's), no
 cadence change.
 
 **CLOSED 2026-10-30** — seven phases (§134–§140), each closed on the
-user's read, the close's last step, the archive, awaiting its read as
-this is written. The exit met, clause by clause (140a): the spec signed
+user's read, the close's last step included. The exit met, clause by clause (140a): the spec signed
 2026-10-27, the plague's cause and act 4's condition left open, with the
 act design in [plans/acts.md](plans/acts.md); each guard with its planted
 failure (the roster table's six planted tables, `FX_REGISTRY`'s synthetic

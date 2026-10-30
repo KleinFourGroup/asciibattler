@@ -254,3 +254,170 @@ before the upload is not recorded. The devlog was posted from 140b's
 draft; which of its optional lines went in is not recorded. Pushed at
 that word: `main` to `e3bd1dc6` (7 commits) and the tag `v0.2.0`
 (`515a7207`, on `7ce982b7`), each read back from the remote.
+
+### 140d — the process read (2026-10-30, session a0dffe1f)
+
+Read at `040ccf5f`. The round's sessions are the eight that began after
+Round 8.5's close (`1a3882f6`, 2026-10-26 21:55 UTC): `428ebc70`,
+`37c3d345`, `9ad4b394`, `fc66283a`, `ee3f6da8` (the process review that
+added `slip`, no report), `1d6463bc`, `d48579a3` and this one. Two
+tranches: **tranche 1** is R9 and the keep test, put to the user at
+this stop; **tranche 2**, the friction read and the scratchpad, follows
+its sign.
+
+#### Tranche 1 — R9 and the keep test
+
+**R9 by its measure** (TODO, "At the round's close"; `npm run
+friction-scan -- --since=2026-10-26`, each session's transcript read for
+its first assistant turn past 500k and its commits after it):
+
+- *Lines naming context pressure:* none. The friction log's 18 lines
+  since the round began (§134 to 140d) name none; this read's papercut
+  names the idle compaction, not pressure. Three reports name the trigger or
+  compaction without pressure: `428ebc70` ("The hand-off trigger arrived
+  at a commit just before a stop … I felt no pull to push on past it"),
+  `9ad4b394` ("the hand-off trigger arrived at a natural boundary, so
+  stopping was easy rather than a cut-off"), `37c3d345` ("The session
+  was compacted several times; each summary carried the state").
+- *Hand-offs before 500k with no reason:* none. `37c3d345` handed off at
+  443k on the user's word ("let's prep for handoff (this session has been
+  compacted a few times 😅)"). `1d6463bc` (336k), `d48579a3` (492k) and
+  `ee3f6da8` (187k) ended with the work they were asked for done, the
+  first two at a phase close with the next phase offered as a card.
+- *Sessions past 500k that did not hand off:* none. Three crossed:
+  `428ebc70` at 502,173, `9ad4b394` at 500,342 and `fc66283a` at
+  500,016. Each ended at the commit where the meter said to hand off,
+  with only the hand-off or close commits after it (peaks 541,575,
+  519,478 and 561,163). The meter's line, "past the hand-off trigger
+  (500k): hand off after this commit", is in each of the three
+  transcripts.
+- *Beside the measure:* every compaction in the round's sessions was an
+  idle one ("a summary written while you were away"), five in four
+  sessions, at 229k to 492k (`37c3d345` twice, `d48579a3` at 492,419,
+  this one at 229,247; and `19020674`, Round 8.5's close). A compaction
+  resets the reading, so the `peak` column is a segment's size, not a
+  session's (filed, 140d).
+
+The lean: keep the silence. The trial's sentence in `planning.md` ("This
+is a trial until Round 9's close, its measure in TODO") and TODO's row
+go at 140e.
+
+**The keep test.** Both ranges, AGENTS.md, CLAUDE.md and `process/`
+only, as signed. A rule row is a directive present at the range's end
+and absent from every rule doc at its start (a script listed each
+sentence with no close match among the start's sentences; the
+directives were then read by hand against `git archive` copies of the
+start). §132's range, `c08f4a72..f0e5f3c5`, gave 124 sentences new to
+the rule docs still at HEAD; most are pointers, facts or rewordings of a
+rule already there (the evidence lines, the push permission, the
+answered question), which count only where the directive changed. The
+round's range, `1a3882f6..HEAD`, gave 26. The records searched: the
+five phase worklogs (`archive/worklog-phase-135.md` to `-139.md`), this
+file, `retro/sessions.md`, the friction log, and the transcripts where a
+row's action is a tool call.
+
+| # | Row (home) | Its record this round | Lean |
+|---|---|---|---|
+| 1 | At a commit past 500k, hand off; no forecast (planning, session-end) | the three hand-offs above; `worklog-phase-136.md` and `-137.md`, "The hand-off after …" | keep |
+| 2 | No context count below 500k; no entry records a reading (planning) | R9 above | keep, the trial clause out |
+| 3 | WORKLOG archived per phase, the reports per round; push at a phase close (planning) | `worklog-phase-135.md` to `-139.md`, each close pushed | keep |
+| 4 | A stop with more than one list puts only the first (planning) | the kickoff's spec in three tranches (`worklog-phase-135.md`, "The spec drafted, tranche 1 put to the user") | keep |
+| 5 | A step adding an RNG stream predicts what it moves, both cases (planning) | §135's and §136's cuts each state their stream prediction (none added); the two cases unexercised | keep |
+| 6 | The phase close's friction read: patterns with instances, a candidate only if it recurred and cost, each `distress` line quoted in full (planning) | 135's, 137's (two guards put; the `distress` line quoted at the stop), 138's, 139's | keep |
+| 7 | The round close deletes as well as promotes; the bar for a new rule (planning) | this read | keep |
+| 8 | The start reading capped together; a lesson enters by merging or replacing (planning, `tests/docs.test.ts`) | the Cursor's cap caught three commits (136f, 138, 139a) | keep |
+| 9 | Session end: the next step offered as a card with a short brief, `fresh`, `use_worktree: false`; a hand-off entry only when something is open; the preview server stopped (session-end) | six cards, prompts 178 to 376 characters; entries at 136 and 137c, none at 137d ("no step left open"); `d48579a3`'s last turn checked for a server | keep |
+| 10 | Read ROUND-RULES.md at the start; a one-round rule goes there (AGENTS, planning) | the file held no rule all round | a call: lean keep, as the home the bar names |
+| 11 | An open tradeoff is a stop only if a later step builds on it; otherwise build on a lean and list it (AGENTS) | none names it | a call: lean keep |
+| 12 | The user's calls listed; the rest is the session's to decide and report (AGENTS) | none names it (135's "built and flagged" twice cites the step-zero line beside it, which predates §132) | a call: lean keep |
+| 13 | Evidence: a claim "from this session"; a search covers the test files and every written form (AGENTS) | none names them; their traps recurred (two claims carried from an earlier session, 136a and 136f; a search narrowed to two files, 137b) | a call: lean keep |
+| 14 | One suite or smoke batch at a time on this machine, in one worktree (measurement) | none | delete |
+| 15 | Convert local and UTC times before matching a reading to a commit (welfare) | this read (1a3882f6's −04:00 against the transcripts' UTC) | keep |
+| 16 | `slip`, and every filing names its kind (AGENTS) | five slips since (138, 139a, 139c, 140a, 140d) | keep |
+| 17 | A known trap met again, either kind, in one line (AGENTS) | four of those five open with it | keep |
+| 18 | Slips counted by trap; a costly repeat goes to the user as a candidate guard (welfare) | this read | keep |
+| 19 | A cohort at an older commit from a detached worktree, and `--carry` (measurement) | 139e ran that way | keep |
+| 20 | "so `TaskStop` it", in "Bash calls" (shell-and-windows) | none; the stdin guard refuses the case before it runs | delete the clause |
+
+Out of the test, by the signed lean (the round's guards, and facts that
+direct nothing): the hook on the commit itself and "A failing hook means
+the commit needs fixing"; the stdin guard's lines; "Git's variables";
+the filing command's flags; the welfare table's row for 2026-10-28.
+
+Rows 11 to 13 fail the test's letter. The reasons for the leans: 11 and
+12 are permissions, whose use leaves no record unless a session names
+them, and each replaced a stricter line that is already gone, so a
+delete leaves silence rather than the old rule. 13 defines evidence for
+every read that follows; its traps did not recur after 136f and 137b,
+and the 137b repeat was caught by the hook.
+
+#### Tranche 2 — the friction read and the scratchpad (after tranche 1's sign)
+
+**The lines, on either side of `3ef8baed`** (2026-10-29 01:41 UTC, the
+`slip` kind; the wording each group received is in
+`welfare-and-efficacy.md` "Wording boundaries", the rows for 2026-10-25
+and 2026-10-28). Before it, 12 lines (§134 to 137d): 11 `papercut`, 1
+`distress`. After it, 6 (§138 to 140d): 5 `slip`, 1 `papercut` (this
+read's). Slips inside the earlier `papercut` lines are the reader's
+interpretation, marked (r) below.
+
+**Slips by trap:**
+
+- *A leftover or stray line at a command's head:* 136b (r, a `python3 -`
+  prefix, a two-minute hang), 137d (r, `cat >` reading stdin in a
+  background call, 15 minutes), 139c (a `python -` prefix, refused by
+  the stdin guard before it ran, no cost), 140a (an empty heredoc wrote
+  a file outside the scratchpad, two calls). The guard written against
+  the stdin form (137d) stopped the one that came after it; 140a's form
+  writes rather than waits. Listed, no new guard.
+- *The Cursor's 3,900 cap at the commit:* 136f (r), 138, 139a, one hook
+  run each. The docs test is the guard; §139's close left it there.
+- *The Bash tool's backslash halving:* 139c (one failed run); 20 filings
+  since Round 7 (§139's close), and `fc66283a`'s report names two more,
+  unfiled. The harness note names it after the run, and
+  `shell-and-windows.md` says to write scripts with the Write tool.
+  Recurred and cost: **a candidate guard** — the mod refuses, before it
+  runs, a Bash command holding a run of two or more backslashes, naming
+  the line and the Write tool, as the stdin guard does for stdin.
+- *A claim carried from an earlier session:* 136a (r, the fuzz CLI's
+  forwarding, six calls), 136f (r, the `python3` diagnosis, a candidate
+  guard put on a false premise). None after 136f. Listed.
+- *An absence claimed from a narrow search:* 137b (r, one hook run).
+  Listed.
+- *Once each:* 134 (r, an unneeded probe), 135c (r, an apostrophe in a
+  parameter expansion; its `bash -n` guard listed at 135's close), 136f
+  (r, a pipe hid a hook's failure; r, drifting from the user's plan),
+  137d (r, an absolute `GIT_DIR`, now "Git's variables"), 140d (a shell
+  loop of process spawns past the limit).
+
+**Papercuts, triaged:** the hook testing the working tree (137b) fixed at
+`58ae0aa9`; the background hang hidden (137d) fixed by the stdin guard,
+`bcbcacb1`; this read's idle compaction, left (a harness feature, and
+the summaries carried the state each time). From the reports:
+`d48579a3`'s two late facts (the board writes each encounter's means
+only; `--report` refuses a strategy file that is not the instrument's
+own) are in BALANCE.md's run log for 2026-10-29 alone; the lean is a line
+each in BALANCE.md "The executable board".
+
+**The `distress` line**, quoted in full (`9ad4b394`, 137c; first quoted
+to the user at 137d's stop):
+
+> 137c: when the re-recorded corpus showed 3 victories in 30 against 10
+> before, I noticed a pull to call it noise from the seeded drivers and
+> move on, since the stretch was nearly done and the board is §139's. I
+> checked instead (two bots over 100 seeds each on both trees, and the
+> seeded sweep), which took a few minutes and showed no broad drop on
+> what was measured. Observation: the pull was there and brief;
+> inference: proximity to the end of a long stretch made the cheaper
+> story attractive.
+
+**The scratchpad** holds one entry, the watch on the kinds. Both of its
+conditions hold, on the six entries since the split: the slips after the split are each a
+mistake of the filer's own, two naming the quirk that made it easy; and
+no phase since has filed more than one papercut. The reader's
+interpretation: a short list may also mean under-filing, since
+`d48579a3`'s report names two stale-doc frictions it did not file. The
+lean is the user's own: at each phase close, every papercut the phase
+filed gets a disposition (fixed, a TODO line, or left with a reason), in
+`planning.md` "Phase close" beside the friction read. The severity flag
+still waits on a second incident.

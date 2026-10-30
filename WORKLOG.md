@@ -925,3 +925,35 @@ In the pane, the chain URL on the same driven route: orange-mob at hop
 7, and cadre-3 once, at hop 9.
 
 The two warning gaps are TODO rows under Round 10, "The scripted run".
+
+*The close, put to the user.* §142's exit, by clause: the user's three
+cases and a start at act 2 each in one URL, each with a headless test and
+its planted failure (142d to 142f, and 142h-post for the chain), and each
+played (above); the old dials' tests green unchanged (142c, 142d); a run
+with no script unchanged, the corpus 0 of 32 at every step from 142c.
+The scope guards held: no content, no Run field, no board row.
+
+*Not verified in §142:* the boss fight on a scripted hop 11 (the driven
+run lost at hop 4; the forewarning stands for it); act 2 driven to its
+boss in the pane (142f's headless test plays it to `complete`); any of
+the four URLs in Firefox before the user's play.
+
+*The friction read.* §141 and §142 filed one papercut and three slips,
+and no `distress`. Patterns, with instances:
+- *The Cursor's 3,900 cap at the commit:* 140e and 142b since §140's
+  read (136f, 138, 139a before), 142b at four commit attempts. Recurred
+  and cost; the docs test caught each before it landed, and §139's and
+  §140's closes left it there. The lean is to leave it again: its
+  message gives the length, and the cost is in trimming a clause at a
+  time.
+- *The Bash tool's backslash halving:* two scripts in session c15dd076
+  (142d's regex and an escaped newline; its report and 142d's entry, not
+  filed), each caught before anything ran on it. The guard was built at
+  142a and seen refusing live at 142h. Listed.
+- *Once each:* a JSON `\u` escape decoded before the shell saw it
+  (142c); background subagents a turn could not wait on (141); a pane
+  value read across a `go()` reload (142h). Listed and left.
+
+*Dispositions.* 141's papercut, the background agents: left, one
+instance, its remedy (a foreground launch or a narrower brief) the
+session's to choose.

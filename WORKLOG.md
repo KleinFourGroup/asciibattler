@@ -618,3 +618,11 @@ where respecting eligibility would show a chain only as far as the picks
 take it; a port's unit at the port's base level rather than `roster=`'s
 level 1; the warnings in the console, since a line on screen would be UI
 work beyond the cut.
+
+### 142b signed, and act 1's title (2026-10-30)
+
+The user: "Signing everything, Claude! 😁 The grammar looks great!", over
+the draft above with its leans as drafted, and 142a's measure line.
+Act 1's title is The Periphery ("I agree that periphery is still
+better"); The Outer Ring is kept in plans/acts.md for an alternate act
+("let's keep that idea in mind for when we add alternate acts!").

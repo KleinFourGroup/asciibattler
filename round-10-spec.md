@@ -135,14 +135,13 @@ takes the shipped sectors' shape. The script is written inline in the
 URL. The titles and a forest theme went on the session's reads (WORKLOG
 §141), answered the same day (WORKLOG §142): act 1 a forest and The
 Start barren, signed; The Start's title The Fragments; act 1's title
-open, since The Root is the user's for act 4, with the user's lean The
-Periphery.
+The Periphery, since The Root is the user's for act 4.
 
 ### Tranche 2 (each at its phase's kickoff)
 
 - *§144:* the beasts' glyphs and the tree's, a taste stop with each
   drawn; new attacks or the shipped melee ones.
-- *§145:* act 1's title (the user's lean, The Periphery). The save, The
-  Start's theme and title, the boon, act 1's size and its text are
-  answered above.
+- *§145:* answered: act 1's title is The Periphery (2026-10-30, "I agree
+  that periphery is still better"), and the save, The Start's theme and
+  title, the boon, act 1's size and its text are answered above.
 - *§146:* the box's size and cost.

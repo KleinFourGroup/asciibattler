@@ -13,7 +13,7 @@ session's, not signed; *open* is still the user's.
 | | Act 1 — the wilds | Act 2 — the realm in chaos | Act 3 — the plague | Act 4 — the secret act |
 |---|---|---|---|---|
 | Sector | a new one (Round 10) | The Start, reworked in Round 21 | The Deep End, reworked in Round 22 | a new one (Round 23) |
-| Title | *open;* the user's lean, The Periphery | The Fragments (the id `start` stays) | The Deep End | The Root ("Root cause of the plague + root account") |
+| Title | The Periphery | The Fragments (the id `start` stays) | The Deep End | The Root ("Root cause of the plague + root account") |
 | Theme | forest, a new theme with a tree (signed 2026-10-30) | barren (signed 2026-10-30) | *lean:* swamp, The Deep End's | *lean:* volcanic |
 | Hops | 11 | 11 | 11 | about 3, no branching |
 | Enemies | ground fauna (wolf, giant rat, fox, puma, tiger; the eagle and the crab with traversal, Round 19), and some bandits | bandits, deserters (the rifle-armed archetypes), the period archetypes (rioter, gunslinger, halberdier, officer), in the warlord-era register | the plague's and the occult's | new |
@@ -21,6 +21,9 @@ session's, not signed; *open* is still the user's.
 
 - **One sector an act** for now; candidate sectors per act come later
   (the sector map already picks one of a node's candidates on arrival).
+  A title kept for one: *The Outer Ring*, x86's ring 3, the least
+  trusted, so a run climbs to The Root (the user, 2026-10-30: "let's
+  keep that idea in mind for when we add alternate acts").
 - **The enemies' split:** The Deep End's plague and occult encounters
   stay in act 3, and its human half moves to act 2, in the reworks of
   Rounds 21 and 22.

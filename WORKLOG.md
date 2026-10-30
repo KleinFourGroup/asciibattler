@@ -241,3 +241,16 @@ every converted number changed.
 
 **Not verified:** Firefox and Edge, the itch frame, a battle in this
 build, sound by ear: 140c.
+
+### 140c — the smoke and the upload (2026-10-30, the user's)
+
+The user uploaded `asciibattler-0.2.0_7ce982b.zip` and read the smoke as
+the session listed it (in Firefox and Edge: the build ID, the stale
+message on a run saved by `0.1.1`, a new run, a battle with sound and no
+miss, eight stats on a card): "the new version is up, the checks are
+green, and the devlog is posted!" Those reads stand on the user's word;
+the session saw no report of them, and whether a `0.1.1` run was started
+before the upload is not recorded. The devlog was posted from 140b's
+draft; which of its optional lines went in is not recorded. Pushed at
+that word: `main` to `e3bd1dc6` (7 commits) and the tag `v0.2.0`
+(`515a7207`, on `7ce982b7`), each read back from the remote.

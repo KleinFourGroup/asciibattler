@@ -13,9 +13,9 @@ its spec, its per-phase worklogs (`archive/worklog-phase-135.md` to
 [archive/post-118-roadmap.md](archive/post-118-roadmap.md) (Round 8.5).
 
 **Status: Round 9 closed 2026-10-30; Round 10's kickoff, at §141, is
-next.** The kickoff checks the charter's premises against the code and
-cuts the phases with their reads for the user to sign
-(`process/planning.md`). The charter, the decision points, the exit and
+put to the user, unsigned:** the audit and the phases §142 to §147 are in
+WORKLOG §141, the draft spec in [round-10-spec.md](round-10-spec.md); the
+phases enter here once signed (`process/planning.md`). The charter, the decision points, the exit and
 the scope guards are in META-ROADMAP §"Round 10 — Act 1, the wilds",
 with the roster table's rebuild added to its scope at Round 9's close;
 its premises were read at HEAD then (`archive/worklog-phase-140.md`,

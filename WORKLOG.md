@@ -201,3 +201,43 @@ leans. Round 10's charter takes the roster table's rebuild into its scope
 (META-ROADMAP §"Round 10"); B-19 stays a TODO lead; `--escalation`'s help
 line joins the `--sector-hops` row; 140c's smoke is the round's playtest;
 no audit round.
+
+### 140b — `0.2.0`, the tag and the zip (2026-10-30, session a0dffe1f)
+
+**Built.** `npm version 0.2.0 --no-git-tag-version` changed `package.json`
+and the lock file; the commit `7ce982b7` and the annotated tag `v0.2.0`
+were made by hand, as at `0.1.1`. Neither is pushed. The commit's hook ran
+the full suite: 3768 tests in 262 files, green, typecheck clean, the smoke
+skipped (no sim path staged). `node scripts/itch-zip.mjs` on the clean
+tree: `asciibattler-0.2.0_7ce982b.zip`, build ID `0.2.0+7ce982b`, 32
+entries, 1,253,241 bytes (`0.1.1`'s: 32 and 1,243,915), the build's hash
+`4ececf91…d9ecf014`. `--check` against the build, run on its own, exit 0;
+the control, `0.1.1`'s zip against this build, exit 1, naming its hash
+`bf1f9189…393390d0`, the one 128b recorded.
+
+**In the pane** (Chromium, `itch-preview` over `output/itch/current`):
+`<html data-build>` and the menu's corner read `0.2.0+7ce982b`; JetBrains
+Mono and DejaVu Sans Mono loaded; `__probe`, `__game` and `__diag`
+undefined; one inline script and one module bundle; the menu with New
+run, Settings, Credits and the seed field. The console's errors were nine
+`ERR_CACHE_*` loads, the kind 128b saw and did not chase.
+
+**The stale save, from `0.1.1` itself** in place of a hand-written slot:
+`0.1.1`'s build served on the same origin, a run started with the
+soldier, and its save read back as `asciibattler:run`, 5,255 characters,
+`schemaVersion` 49, stamped `0.1.1+7baa695`. With `0.2.0` served again
+(its hash re-read over `current/`), the menu said "This run was saved by
+an older version of the game and can't be continued. Your settings and
+unlocks are kept.", offered no Continue, and left the slot's 5,255
+characters as they were. The control: a new run in `0.2.0` saved at
+`schemaVersion` 50, the refused run's journal moved to
+`asciibattler:journals` (277 characters, both builds named), and after a
+reload the menu offered Continue with no message.
+
+**The changelog** for the itch page, drafted for the user to post:
+`scratch/140b/changelog.md` (off git). It names the conversion's rule,
+not the seven moved bases, since a player compares against `0.1.1`, where
+every converted number changed.
+
+**Not verified:** Firefox and Edge, the itch frame, a battle in this
+build, sound by ear: 140c.

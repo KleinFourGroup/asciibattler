@@ -10,7 +10,7 @@ import { daemonPrice, packetPrice, unitPrice } from '../config/prices';
 import { PHASE_ROWS, frontierOf } from '../dev/probe/drive';
 import { avgTeamLevel } from './Recruitment';
 import { Run } from './Run';
-import type { RunConfig } from './RunConfig';
+import { parseRunConfig, type RunConfig } from './RunConfig';
 import type { ScriptEntry } from './RunScript';
 
 const HOPS = 11;
@@ -209,6 +209,80 @@ describe('a port\'s stock', () => {
     expect(() => runOf(1, { script: [{ hop: 2, port: [{ kind: 'packet', id: 'no-such' }] }] })).toThrow(
       /no such packet good/,
     );
+  });
+});
+
+describe('the starting act', () => {
+  it('act 2 alone, on today\'s map, is The Deep End', () => {
+    const { run, bus } = runOf(4, { startAct: 2 });
+    expect(run.currentSectorId).toBe('the-deep-end');
+    expect(run.currentSectorTitle).toBe('The Deep End');
+    // With `hopCount` the act is played alone: its boss ends the run.
+    enterHop(run, bus, HOPS);
+    bus.emit('battle:ended', {
+      winner: 'player',
+      xpAwards: [],
+      survivorPower: { player: 1_000, enemy: 0 },
+      fallenPower: { player: 0, enemy: 1_000 },
+    });
+    for (let step = 0; step < 50 && run.phase !== 'complete'; step++) {
+      const row = PHASE_ROWS[run.phase](run, () => 0);
+      if (row === 'end' || row === 'fight') break;
+      run.dispatch(row.command);
+    }
+    expect(run.phase).toBe('complete');
+    // The control: the same seed from act 1 is The Start.
+    expect(runOf(4).run.currentSectorId).toBe('the-start');
+  });
+
+  it('is the act a full walk reaches: the same map, at the same sector index', () => {
+    const bus = new EventBus<GameEvents>();
+    const full = new Run(6, bus, { sectorHops: 7 });
+    // Walk act 1 through its boss to the gate, then into act 2.
+    enterHop(full, bus, 7);
+    for (let step = 0; step < 100 && full.phase !== 'sectorCleared'; step++) {
+      const row = PHASE_ROWS[full.phase](full, () => 0);
+      if (row === 'end') break;
+      if (row === 'fight') {
+        bus.emit('battle:ended', {
+          winner: 'player',
+          xpAwards: [],
+          survivorPower: { player: 1_000, enemy: 0 },
+          fallenPower: { player: 0, enemy: 1_000 },
+        });
+      } else full.dispatch(row.command);
+    }
+    expect(full.phase).toBe('sectorCleared');
+    const started = new Run(6, new EventBus<GameEvents>(), { sectorHops: 7, startAct: 2 });
+    expect(started.currentSectorId).toBe(full.currentSectorId);
+    expect(started.nodeMap).toEqual(full.nodeMap);
+    expect(started.bossForewarning).toEqual(full.bossForewarning);
+    expect(started.toJSON().sectorIndex).toBe(full.toJSON().sectorIndex);
+    // The control: act 1's map on the same seed is another.
+    expect(new Run(6, new EventBus<GameEvents>(), { sectorHops: 7 }).nodeMap).not.toEqual(started.nodeMap);
+  });
+
+  it('a clone from its snapshot stays in the act', () => {
+    const { run } = runOf(4, { startAct: 2 });
+    const clone = Run.fromJSON(run.toJSON(), new EventBus<GameEvents>());
+    expect(clone.currentSectorId).toBe('the-deep-end');
+    expect(JSON.stringify(clone.toJSON())).toBe(JSON.stringify(run.toJSON()));
+  });
+
+  it('a bare numbered hop is in the starting act', () => {
+    const { run } = runOf(4, { startAct: 2, script: [{ hop: 1, kind: 'elite' }] });
+    expect(kindsOnHop(run, 1)).toEqual(['elite']);
+    expect(runOf(4, { startAct: 2, script: [{ act: 1, hop: 1, kind: 'elite' }] }).run.scriptWarnings).toEqual([
+      'script: 1.1:elite never applies: the run does not play act 1',
+    ]);
+  });
+
+  it('an act past the map\'s end is refused, and the URL drops it with a warning', () => {
+    expect(() => runOf(4, { startAct: 3 })).toThrow(/startAct=3 is past the sector map's end/);
+    const config = parseRunConfig(new URLSearchParams('act=3&hops=11'));
+    expect(config.startAct).toBeUndefined();
+    expect(config.scriptWarnings).toEqual(['act: dropped "3": the map has no such act']);
+    expect(parseRunConfig(new URLSearchParams('act=2')).startAct).toBe(2);
   });
 });
 

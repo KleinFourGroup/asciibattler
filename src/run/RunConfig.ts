@@ -37,6 +37,8 @@ import {
 } from './RunScript';
 import { packetById } from '../config/packets';
 import { PRICES } from '../config/prices';
+import { SECTOR_MAP } from '../config/sectorMap';
+import { sectorsAtAct } from './sectorWalk';
 
 /** One starting-roster slot: an archetype at a level (at least 1, capped). */
 export interface RosterEntry {
@@ -130,7 +132,18 @@ export interface RunConfig {
    */
   readonly script?: readonly ScriptEntry[];
   /**
-   * What the URL parse dropped from `script=`, one line each; the run
+   * The act the run opens at, from 1: the sector walk's Nth sector, entered
+   * at the sector index a full walk has there, so its map, its boss and every
+   * stream keyed to it are a full walk's. With `hopCount` that act is played
+   * alone; without, the walk goes on to the map's end. A bare numbered hop
+   * in the script is in this act. It is spent at construction, and the
+   * snapshot holds where the run is, so a rollout clone stays in the act. An
+   * act past the map's end throws. URL form: `act=2`, one past the shipped
+   * map's end dropped with a warning.
+   */
+  readonly startAct?: number;
+  /**
+   * What the URL parse dropped from `script=` and `act=`, one line each; the run
    * reports them with its own (`Run.scriptWarnings`). Not a dial: no URL
    * form writes it back.
    */
@@ -294,6 +307,7 @@ export const RUN_CONFIG_PARAMS = {
   firstNode: 'firstNode',
   event: 'event',
   script: 'script',
+  act: 'act',
   width: 'width',
   daemon: 'daemon',
   character: 'character',
@@ -423,11 +437,12 @@ type MutableScriptEntry = { -readonly [K in keyof ScriptEntry]: ScriptEntry[K] }
  * unknown id or no meaning, a kind on a starred address, and an entry that
  * contradicts the dials or the entries kept before it (`scriptConflicts`).
  * `dials` are the old dials' entries, which a script entry may not
- * contradict either.
+ * contradict either; `startAct` is the act a bare hop is in.
  */
 export function parseScript(
   raw: string | null,
   dials: readonly ScriptEntry[],
+  startAct = 1,
 ): { entries: ScriptEntry[]; warnings: string[] } {
   const entries: ScriptEntry[] = [];
   const warnings: string[] = [];
@@ -480,9 +495,9 @@ export function parseScript(
       warnings.push(`script: dropped "${text}": nothing left to set`);
       continue;
     }
-    // The act= dial (the starting act) is not read yet, so a bare hop is act 1's.
-    const before = scriptConflicts([...dials, ...entries], 1, encounterKind);
-    const after = scriptConflicts([...dials, ...entries, entry], 1, encounterKind);
+    // A bare hop is in the starting act, as at the run's own check.
+    const before = scriptConflicts([...dials, ...entries], startAct, encounterKind);
+    const after = scriptConflicts([...dials, ...entries, entry], startAct, encounterKind);
     if (after.length > before.length) {
       warnings.push(`script: dropped "${text}": ${after.slice(before.length).join('; ')}`);
       continue;
@@ -536,10 +551,20 @@ export function parseRunConfig(params: URLSearchParams): RunConfig {
   }
   const forcedEventId = parseEvent(params.get(RUN_CONFIG_PARAMS.event));
   if (forcedEventId !== undefined) config.forcedEventId = forcedEventId;
-  // The script after the dials, so an entry that contradicts one drops.
-  const script = parseScript(params.get(RUN_CONFIG_PARAMS.script), dialEntries(config));
+  // The starting act, then the script after the dials, so an entry that
+  // contradicts one drops and a bare hop is in the starting act.
+  const warnings: string[] = [];
+  const actRaw = params.get(RUN_CONFIG_PARAMS.act);
+  const startAct = parsePositiveInt(actRaw);
+  if (startAct !== undefined && sectorsAtAct(SECTOR_MAP, startAct).length > 0) {
+    config.startAct = startAct;
+  } else if (actRaw !== null) {
+    warnings.push(`act: dropped "${actRaw}": the map has no such act`);
+  }
+  const script = parseScript(params.get(RUN_CONFIG_PARAMS.script), dialEntries(config), config.startAct ?? 1);
   if (script.entries.length > 0) config.script = script.entries;
-  if (script.warnings.length > 0) config.scriptWarnings = script.warnings;
+  warnings.push(...script.warnings);
+  if (warnings.length > 0) config.scriptWarnings = warnings;
   const mapMaxWidth = parsePositiveInt(params.get(RUN_CONFIG_PARAMS.width));
   if (mapMaxWidth !== undefined) config.mapMaxWidth = mapMaxWidth;
   const daemon = parseDaemon(params.get(RUN_CONFIG_PARAMS.daemon));
@@ -605,6 +630,9 @@ export function runConfigToQueryString(config: RunConfig): string {
   // back as it always did.
   if (config.script !== undefined && config.script.length > 0) {
     params.set(RUN_CONFIG_PARAMS.script, scriptToString(config.script));
+  }
+  if (config.startAct !== undefined) {
+    params.set(RUN_CONFIG_PARAMS.act, String(config.startAct));
   }
   if (config.mapMaxWidth !== undefined) {
     params.set(RUN_CONFIG_PARAMS.width, String(config.mapMaxWidth));

@@ -28,6 +28,7 @@ const A_VALUE_PER_DIAL: Record<string, string> = {
   firstNode: 'elite',
   event: EVENT_IDS[0]!,
   script: '3:rest',
+  act: '2',
   width: '3',
   daemon: 'none',
   character: 'soldier',

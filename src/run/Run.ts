@@ -865,19 +865,26 @@ export class Run {
     this.difficultyMultipliers = withEscalation(inputs.difficultyMultipliers, escalation);
     // The sector pick, the node map and the boss pick each draw on their
     // own sector-keyed stream, so a change to one's draws moves no other.
-    const start = pickStartSector(this.sectorMap, this.streamRng('sector', 0));
+    // A starting act past the first walks the picks a full walk makes up to
+    // it, each on its own index, and the run enters that sector at the index
+    // a full walk has there, so the act is the one a full walk reaches.
+    let start = pickStartSector(this.sectorMap, this.streamRng('sector', 0));
+    for (let index = 1; index < this.startAct; index++) {
+      start = pickNextSector(this.sectorMap, start.sectorNodeId, this.streamRng('sector', index));
+    }
+    this.sectorIndex = this.startAct - 1;
     this.currentSectorNodeId = start.sectorNodeId;
     this.currentSectorId = start.sectorId;
     // The first-node dial reaches the map through the script (`stampScript`),
     // so the generator takes the config without it.
     this.nodeMap = generateNodeMap(
-      this.streamRng('nodemap', 0),
+      this.streamRng('nodemap', this.sectorIndex),
       withoutFirstNode(config),
       this.currentSectorLength(),
     );
     this.stampScript();
     // The sector's boss, picked now so it can be shown ahead.
-    const bossRoll = this.rollBossForSector(this.streamRng('boss', 0));
+    const bossRoll = this.rollBossForSector(this.streamRng('boss', this.sectorIndex));
     this.bossEncounterId = bossRoll.bossEncounterId;
     this.bossEncounterMap = bossRoll.bossEncounterMap;
     const teamRng = this.streamRng('team');
@@ -4221,11 +4228,15 @@ function resolveRunInputs(config: RunConfig | undefined): RunInputs {
   const eventCatalog = config?.eventCatalog ?? EVENTS;
   const sectorMap = config?.sectorMap ?? SECTOR_MAP;
   // The forcing dials are checked as they always were, then enter the script
-  // as its cases, before its own entries; the run starts in act 1.
+  // as its cases, before its own entries. The starting act must be one a
+  // walk of the map reaches.
   checkForcedLayoutId(config?.forcedLayoutId);
   checkForcedEncounterId(config?.forcedEncounterId);
   checkForcedEventId(config?.forcedEventId, eventCatalog);
-  const startAct = 1;
+  const startAct = config?.startAct ?? 1;
+  if (!Number.isInteger(startAct) || startAct < 1 || sectorsAtAct(sectorMap, startAct).length === 0) {
+    throw new Error(`Run: startAct=${String(startAct)} is past the sector map's end`);
+  }
   const script = [...dialEntries(config), ...(config?.script ?? [])];
   const unplayed = checkScript(script, config, sectorMap, startAct, eventCatalog);
   const inputs: RunInputs = {

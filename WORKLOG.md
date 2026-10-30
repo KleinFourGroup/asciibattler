@@ -748,3 +748,38 @@ A first try at that last control, the stocked rogue joining the team,
 passed. One level-3 unit doesn't move the team's rounded average, which
 is all the later roll reads of the team, so that leak was invisible to
 the test, not caught by it.
+
+### 142f — the starting act (2026-10-30)
+
+*Built.* `RunConfig.startAct` and `act=`. The constructor walks the
+sector picks a full walk makes up to the act, each on its own `'sector'`
+index (a one-candidate pick draws nothing), and enters that sector at
+the index a full walk has there, with the node map and the boss drawn on
+that index. A bare numbered hop of the script is in the starting act,
+at construction and in the parse. An act no walk of the map reaches
+throws at construction; the URL parse drops one past the shipped map's
+end with a warning. No Run field: the act is spent at construction, and
+the snapshot already holds the sector index and the sector and node ids.
+
+*Evidence.* The corpus: 0 of 32 differ. The scripted-run tests, 22 of
+22:
+- `act=2` with `hops=11` is The Deep End, played to `complete` at its
+  boss, where the same seed from act 1 is The Start;
+- a run started at act 2 has the map, the boss warning and the sector
+  index of a full walk on the same seed that reached act 2 through act
+  1's boss;
+- a clone from its snapshot is in The Deep End, its save byte-identical;
+- a bare hop lands in act 2, and an act-1 entry never applies;
+- act 3 refused, and dropped from the URL with its warning.
+
+Three planted failures, each on the live file and restored:
+- the map drawn on act 1's index fails the full-walk test;
+- the sector index left at 0 fails it and the bare-hop test;
+- an act past the end let through fails the refusal.
+
+The first try of the full-walk test used 3-hop acts, and the
+act-1-index plant passed it: a map under 4 hops has one middle hop and
+no rest, elite, port or event node, so every stream draws the same map.
+With 7-hop acts the plant fails.
+
+The three URL-dial censuses take `act` as they took `script` at 142d.

@@ -114,6 +114,7 @@ export const RUN_DIAL_KEYS = [
   'firstNode',
   'event',
   'script',
+  'act',
   'width',
   'daemon',
   'character',

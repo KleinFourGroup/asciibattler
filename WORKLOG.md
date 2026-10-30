@@ -195,3 +195,9 @@ sheet was not re-pinned, by 139's cut; Round 11's retune re-pins it.
    build's.
 3. *The audit round:* none, since no cluster closed; Round 8.5's close
    made the same call.
+
+**140a signed** (the user: "Signed as well"): the three calls at the
+leans. Round 10's charter takes the roster table's rebuild into its scope
+(META-ROADMAP §"Round 10"); B-19 stays a TODO lead; `--escalation`'s help
+line joins the `--sector-hops` row; 140c's smoke is the round's playtest;
+no audit round.

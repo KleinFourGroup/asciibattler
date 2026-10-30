@@ -11,7 +11,7 @@ plan: [archive/post-118-roadmap.md](archive/post-118-roadmap.md) (Round
 8.5) with its worklog, spec and census beside it; before it
 [archive/post-109-roadmap.md](archive/post-109-roadmap.md) (Round 8).
 
-**Status: §140, 140a put to the user** (WORKLOG §140). The spec is [round-9-spec.md](round-9-spec.md); the act
+**Status: §140, 140a signed; 140b next** (WORKLOG §140). The spec is [round-9-spec.md](round-9-spec.md); the act
 design it asked for is [plans/acts.md](plans/acts.md). The charter is
 META-ROADMAP §"Round 9 — The frame and the misses"; the premises
 re-read at HEAD are `archive/worklog-phase-135.md` "Kickoff — Round 9", tranche 3.
@@ -140,7 +140,7 @@ round closed by `process/planning.md` "Round close".
 
 Cut signed 2026-10-30 with its four leans (WORKLOG §140).
 
-- ◐ **140a — the round's exit by clause, and Round 10's charter against
+- ☑ **140a — the round's exit by clause, and Round 10's charter against
   the code** (`stop`).
 - ☐ **140b — `0.2.0`, the tag and the zip** (`none`).
 - ☐ **140c — the smoke and the upload** (`stop`, the user's).

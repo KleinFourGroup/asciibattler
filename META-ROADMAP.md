@@ -938,6 +938,11 @@ with the two shipped sectors as acts 2 and 3 in the same release.
 - **The atlas resize** (S1): 31 of the 48 cells are used and the rounds
   ahead name more new units than the 17 free; about five lines,
   triple-guarded (gotcha #33).
+- **The roster table rebuilt** once act 1 is in the map: a bucket key
+  holds a sector's position, so from the commit that adds act 1 the
+  table's coverage guard fails and the board's sampler refuses it until a
+  cohort rebuilds it, and act 1's bands wait on that (TODO; added at
+  Round 9's close, 140a).
 
 **Depends on:** round 9 (the spec). **Risk:** medium: a third sector
 lengthens the run and moves every band, and a run saved before it needs

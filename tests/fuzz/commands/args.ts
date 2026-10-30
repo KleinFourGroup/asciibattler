@@ -28,7 +28,8 @@ import type { FuzzStrategy } from '../Strategy';
 import type { InnerTier } from '../rollout/walker';
 import { makeArbitratedStrategy, type ArbitratedConfig } from '../rollout/arbitratedStrategy';
 import { loadPriorTable, priorFoldValues, priorFoldValuesBySite } from '../prior/priorTable';
-import { FORCE_PROCEDURAL } from '../../../src/run/RunConfig';
+import { FORCE_PROCEDURAL, parseRunConfig } from '../../../src/run/RunConfig';
+import { entryToString, type ScriptEntry } from '../../../src/run/RunScript';
 import { LAYOUT_IDS } from '../../../src/sim/layouts';
 import { ENCOUNTER_IDS } from '../../../src/config/encounters';
 import { daemonById } from '../../../src/config/daemons';
@@ -92,6 +93,11 @@ export interface CliArgs {
   tier?: string;
   hops?: number;
   sectorHops?: number;
+  // 142g — the scripted run (RunConfig.script, the URL's `script=` text) and
+  // the act the run starts at (RunConfig.startAct, `act=`), run mode only.
+  // The flag is `--run-script`, apart from `--scripts`, the bot's.
+  runScript?: string;
+  act?: number;
   // 68b — the kind-agnostic grant list (comma-separated daemon/packet/unit
   // ids), run mode only: the paired marginal-value instrument's WITH arm.
   grant?: string;
@@ -333,6 +339,12 @@ export function parseArgs(argv: readonly string[]): CliArgs {
         // the DAG still sinks); --hops stays the single-sector probe.
         args.sectorHops = Number(v);
         break;
+      case '--run-script':
+        if (v !== undefined) args.runScript = v;
+        break;
+      case '--act':
+        args.act = Number(v);
+        break;
       case '--grant':
         if (v !== undefined) args.grant = v;
         break;
@@ -462,6 +474,12 @@ export function parseArgs(argv: readonly string[]): CliArgs {
   if (args.grant !== undefined && (args.search || args.balanceSweep)) {
     throw new Error('--grant is not supported in --search/--balance-sweep (run mode only)');
   }
+  // 142g — the scripted run is run-mode-only on the same discipline, and is
+  // read loudly: a part the URL parse would drop fails here.
+  if ((args.runScript !== undefined || args.act !== undefined) && (args.search || args.balanceSweep || args.evalShard)) {
+    throw new Error('--run-script and --act are not supported in --search/--balance-sweep (run mode only)');
+  }
+  scriptFromArgs(args);
   // §55 pre-gate — --scripts is run-mode-only until a mode needs it: a search
   // or sweep silently ignoring it would measure the OLD bot under a flag that
   // claims otherwise. Support lands mode-by-mode, deliberately.
@@ -597,6 +615,25 @@ export function parseArgs(argv: readonly string[]): CliArgs {
     if (set.length > 0) {
       throw new Error(
         `--arbitrate is refused with ${set.join(', ')}: rollout clones drop every RunConfig probe dial (Run.fromJSON), so arbitration would judge candidates against futures the dialed run cannot have (WORKLOG §85-pre finding 4; the 84b refusal class)`,
+      );
+    }
+    // 142g — of the scripted run, a clone keeps the starting act (spent at
+    // construction, its place in the snapshot) and the kinds stamped on the
+    // starting act's map, which rides the snapshot as --first-node's stamp
+    // does. Every other entry is applied at a node or at a later act's
+    // entry, which a clone, loading with no config, does without.
+    const { script, startAct } = scriptFromArgs(args);
+    const dropped = (script ?? []).filter(
+      (e) =>
+        e.encounter !== undefined ||
+        e.layout !== undefined ||
+        e.event !== undefined ||
+        e.port !== undefined ||
+        (e.act ?? startAct ?? 1) !== (startAct ?? 1),
+    );
+    if (dropped.length > 0) {
+      throw new Error(
+        `--arbitrate is refused with --run-script entries ${dropped.map(entryToString).join(';')}: a rollout clone loads with no config, so it keeps only the starting act and the kinds stamped in it`,
       );
     }
   }
@@ -752,6 +789,31 @@ export function layoutFromArgs(args: Pick<CliArgs, 'layout'>): string | undefine
     bail(`Unknown layout: ${args.layout} (choices: ${LAYOUT_IDS.join(', ')}, ${FORCE_PROCEDURAL})`);
   }
   return args.layout;
+}
+
+/**
+ * 142g — resolve + VALIDATE `--run-script` and `--act` into a RunConfig's
+ * `script` and `startAct`, through the URL parse (`parseRunConfig`), so the
+ * fuzz CLI and the browser read one grammar. Loud where the URL is lenient:
+ * any part the parse drops throws, naming it. A contradiction with the
+ * other dials, or a hop past an act's end, throws at the Run's construction.
+ */
+export function scriptFromArgs(args: Pick<CliArgs, 'runScript' | 'act'>): {
+  script?: readonly ScriptEntry[];
+  startAct?: number;
+} {
+  if (args.runScript === undefined && args.act === undefined) return {};
+  const params = new URLSearchParams();
+  if (args.runScript !== undefined) params.set('script', args.runScript);
+  if (args.act !== undefined) params.set('act', String(args.act));
+  const config = parseRunConfig(params);
+  if (config.scriptWarnings !== undefined) {
+    throw new Error(`--run-script / --act: ${config.scriptWarnings.join('; ')}`);
+  }
+  return {
+    ...(config.script !== undefined ? { script: config.script } : {}),
+    ...(config.startAct !== undefined ? { startAct: config.startAct } : {}),
+  };
 }
 
 /** X2 — resolve + VALIDATE the `--encounter` flag into a `forcedEncounterId` (a

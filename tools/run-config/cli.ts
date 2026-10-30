@@ -11,14 +11,18 @@
  *   npm run run-config -- --hops=1 --no-run        # just print the launch URL
  *   npm run run-config -- --seed=42 --strategy=greedy # headless drive strategy
  *
- * The run-config flags (--seed / --hops / --roster / --layout / --width)
- * reuse the URL param names AND `parseRunConfig`'s validation, so the CLI and
+ * The run-config flags (every URL parameter, `--help` lists them) reuse the
+ * URL param names AND `parseRunConfig`'s validation, so the CLI and
  * the browser describe runs identically — one source of truth. Invalid values
  * are dropped exactly as the browser drops them. Argument parsing is minimal;
  * this is a dev tool, not a published CLI.
  */
 
+import { EventBus } from '../../src/core/EventBus';
+import type { GameEvents } from '../../src/core/events';
+import { Run } from '../../src/run/Run';
 import { runOne } from '../../tests/fuzz/harness';
+import { helpText, hyphenated } from './help';
 import { makeStrategy, STRATEGY_NAMES } from '../../tests/fuzz/strategies/registry';
 import {
   parseRunConfig,
@@ -29,6 +33,7 @@ import {
 
 const BASE_URL = 'http://localhost:5173/';
 const RUN_CONFIG_KEYS = new Set<string>(Object.values(RUN_CONFIG_PARAMS));
+const BY_HYPHENATED = new Map<string, string>(Object.values(RUN_CONFIG_PARAMS).map((k) => [hyphenated(k), k]));
 
 interface CliArgs {
   config: RunConfig;
@@ -51,9 +56,11 @@ function parseArgs(argv: readonly string[]): CliArgs {
   for (const raw of argv) {
     const [flag, value] = splitFlag(raw);
     if (!flag.startsWith('--')) throw new Error(`Unexpected argument: ${raw}`);
-    const key = flag.slice(2);
+    const name = flag.slice(2);
+    // A URL name, or its hyphenated spelling (`--sector-hops` for `sectorHops`).
+    const key = RUN_CONFIG_KEYS.has(name) ? name : (BY_HYPHENATED.get(name) ?? name);
     if (RUN_CONFIG_KEYS.has(key)) {
-      if (value === undefined) throw new Error(`Flag --${key} needs a value (use --${key}=...)`);
+      if (value === undefined) throw new Error(`Flag --${name} needs a value (use --${name}=...)`);
       params.set(key, value);
     } else if (key === 'strategy') {
       if (value !== undefined) strategy = value;
@@ -70,32 +77,7 @@ function parseArgs(argv: readonly string[]): CliArgs {
 }
 
 function printHelp(): void {
-  process.stdout.write(
-    [
-      'run-config — build a RunConfig launch URL and drive a quick headless run.',
-      '',
-      'Flags:',
-      '  --seed=N         run seed (default: Date.now())',
-      '  --hops=N         total hops incl. root + terminal (>=2 to be playable; 2 = one battle)',
-      '  --roster=LIST    archetype[:level],...  e.g. rogue:3,healer:2,mercenary',
-      '  --layout=ID      force every battle onto a named layout',
-      '  --encounter=ID   force the authored encounter at every kind-matching node',
-      '                   (53d; pair with --layout to pin the whole board — a gauntlet cell)',
-      '  --firstNode=KIND make the first node an elite, an event or a rest',
-      '  --event=ID       force every event node to open this event (an events.json id;',
-      '                   pair with --firstNode=event to open a run on it)',
-      '  --width=N        middle-hop max width',
-      '  --daemon=ID      force the run daemon (a catalog id, or `none` = daemon-less;',
-      '                   default = the character daemon — 63c retired the roll)',
-      '  --character=ID   the starting character (a characters.json id; default soldier)',
-      '  --bits=N         starting bits balance (nonnegative; default config/difficulty.json)',
-      '  --strategy=NAME  headless drive strategy from the G5 menu (default: pure-random);',
-      '                   e.g. greedy | recruit:mage | stat:constitution | path:rest',
-      '  --no-run         print the launch URL only; skip the headless run',
-      '  --help           show this help',
-      '',
-    ].join('\n'),
-  );
+  process.stdout.write(helpText());
 }
 
 function main(): void {
@@ -119,7 +101,18 @@ function main(): void {
     );
   }
 
-  const query = runConfigToQueryString(config);
+  // The script's warnings, the parse's drops and the construction's own, as
+  // the browser's console has them; a refusal throws here, before any run.
+  for (const line of new Run(seed, new EventBus<GameEvents>(), config).scriptWarnings) {
+    process.stderr.write(`warning: ${line}\n`);
+  }
+
+  // The query as a person would type it (`script=3:rest`, not `3%3Arest`),
+  // where that reads back as the same config, which the catalogs' ids allow.
+  const encoded = runConfigToQueryString(config);
+  const readable = decodeURIComponent(encoded);
+  const same = (q: string): string => JSON.stringify(parseRunConfig(new URLSearchParams(q)));
+  const query = same(readable) === same(encoded) ? readable : encoded;
   process.stdout.write(`Launch URL:  ${BASE_URL}${query ? `?${query}` : ''}\n`);
 
   if (!args.run) return;

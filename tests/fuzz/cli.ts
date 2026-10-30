@@ -27,6 +27,13 @@
  *   # --jobs shard children); it SUPPRESSES the preset/tier's own hopCount.
  *   npm run fuzz -- --sector-hops=4   # 4+4-hop start→deep-end runs
  *   npm run fuzz -- --search --sector-hops=4 --jobs=8
+ *   # 142g — the scripted run, run mode only: --run-script takes the URL's
+ *   # script= text (RunConfig.script), --act=N opens the run at the walk's Nth
+ *   # act; with --hops that act is played alone. Read loudly: a part the URL
+ *   # would drop fails. --arbitrate keeps only --act and the kinds stamped in
+ *   # the starting act, since a rollout clone loads with no config:
+ *   npm run fuzz -- --count=40 --hops=11 --act=2 --arbitrate   # act 2 alone
+ *   npm run fuzz -- --count=10 --hops=11 --run-script="3:encounter=brigands;6:port=rogue:3/mars"
  *
  *   # 68b — --grant=<id>[,<id>…] hands the run items FREE at construction (any
  *   # daemon / packet / unit-archetype id; unknown ids bail loud; run mode only).

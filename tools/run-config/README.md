@@ -41,11 +41,13 @@ npm run run-config -- --hops=1 --no-run
 npm run run-config -- --seed=42 --strategy=greedy
 ```
 
-Flags: `--seed`, `--hops`, `--roster` (`archetype[:level],…`), `--layout`,
-`--width`, `--strategy` (any G5-menu entry — `pure-random` | `greedy` |
-`recruit:<archetype>` | `stat:<stat>` | `path:battle` | `path:rest`),
-`--no-run`, `--help`. The strategy menu is the shared registry in
-`tests/fuzz/strategies/registry.ts`.
+Flags: every URL parameter by its URL name (`--sectorHops`, or hyphenated,
+`--sector-hops`), and the tool's own `--strategy`, `--no-run` and
+`--help`; `npm run run-config -- --help` lists them, from
+`tools/run-config/help.ts`, which a test holds to `RUN_CONFIG_PARAMS`. The
+strategy menu is the shared registry in `tests/fuzz/strategies/registry.ts`.
+A script's warnings go to stderr, and the launch URL is printed readable
+(`script=3:rest`) where that parses the same.
 
 The run-config flags reuse the **same param names and validation** as the
 browser URL (`src/run/RunConfig.ts`), so a CLI invocation and a browser launch

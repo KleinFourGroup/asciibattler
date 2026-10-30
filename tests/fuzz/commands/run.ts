@@ -71,8 +71,10 @@ import {
   searcherFromArgs,
   arbitratedWrapFromArgs,
   range,
+  scriptFromArgs,
   type CliArgs,
 } from './args';
+import type { ScriptEntry } from '../../../src/run/RunScript';
 
 export type RunModeArgs = Pick<
   CliArgs,
@@ -90,6 +92,8 @@ export type RunModeArgs = Pick<
   | 'firstNode'
   | 'hops'
   | 'sectorHops'
+  | 'runScript'
+  | 'act'
   | 'roster'
   | 'objective'
   | 'redraw'
@@ -193,8 +197,15 @@ export function runRunCli(args: RunModeArgs): void {
     portChance?: number;
     eventChance?: number;
     grants?: readonly string[];
+    script?: readonly ScriptEntry[];
+    startAct?: number;
   } = {};
   if (args.hops !== undefined) runConfig.hopCount = args.hops;
+  // 142g — the scripted run and its starting act, read loudly (parseArgs has
+  // already failed on any part the URL parse would drop).
+  const scripted = scriptFromArgs(args);
+  if (scripted.script !== undefined) runConfig.script = scripted.script;
+  if (scripted.startAct !== undefined) runConfig.startAct = scripted.startAct;
   // 67c — the shortened full-walk dial (mutually exclusive with --hops; Run
   // throws loud on both, so no silent precedence here either).
   if (args.sectorHops !== undefined) runConfig.sectorHops = args.sectorHops;

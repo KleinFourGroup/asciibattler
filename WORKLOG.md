@@ -783,3 +783,53 @@ no rest, elite, port or event node, so every stream draws the same map.
 With 7-hop acts the plant fails.
 
 The three URL-dial censuses take `act` as they took `script` at 142d.
+
+### 142g — the CLIs (2026-10-30)
+
+*Step zero.* The run-config CLI already forwarded every URL parameter by
+its URL name (`tools/run-config/cli.ts`, `RUN_CONFIG_KEYS`), so
+`--script=`, `--act=` and `--sectorHops=` parsed. Its help was a
+hand-written list naming 11 of the 13 parameters it had before this
+phase, not `sectorHops` or `escalation`; there are 15 now. The fuzz CLI has a
+`--scripts` flag of its own, the bot's nominator scripts, so its flag
+for the run's script is `--run-script`, one character away from neither
+(a lean, for the stop).
+
+*Built.*
+- **The run-config CLI:**
+  - it takes each camelCase parameter's hyphenated spelling
+    (`--sector-hops`, `--first-node`);
+  - its help comes from `tools/run-config/help.ts`, one line per
+    parameter in a table keyed by `RUN_CONFIG_PARAMS`, so a new
+    parameter fails typecheck until it has its line;
+  - it prints a script's warnings to stderr, building the run once
+    first, so a refusal throws before any headless run;
+  - it prints the launch URL readable (`script=3:rest`) where that reads
+    back as the same config.
+- **The fuzz CLI:** `--run-script` and `--act` in run mode, read through
+  `parseRunConfig` and loud on any part it would drop. Refused in
+  search, sweep and shard-eval modes, as `--grant` is. With
+  `--arbitrate`, refused unless every entry is a kind in the starting
+  act.
+
+*Evidence.* `tests/run-config-help.test.ts`, 3 of 3: every parameter
+named once, read off the printed text, and its control, a help with the
+`--escalation` line removed, failing the check. `runScriptArg.test.ts`,
+4 of 4:
+- the flags read as the URL reads them;
+- a dropped part fails, and so does a search mode;
+- `--arbitrate` passes `--act` and the starting act's kinds, and its
+  control refuses an encounter, a starred layout and a later act's kind,
+  each by name.
+
+By hand:
+- `npm run run-config -- --sector-hops=4 --seed=1 --no-run` printed
+  `?seed=1&sectorHops=4`.
+- A script with an unknown encounter printed both drops as warnings,
+  and the readable URL.
+- `npm run fuzz -- --count=2 --hops=11 --act=2 --run-script="3:rest"`
+  ran two runs. Their traces name The Deep End's `plagueVictims` and its
+  boss the Generalissimo, so the batch played act 2.
+
+*Not done:* the run-config CLI's headless run doesn't print the warnings
+raised mid-run, since `runOne` builds its own bus.

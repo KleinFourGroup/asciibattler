@@ -27,7 +27,8 @@ export function commitIn(command: string): { dir?: string } | undefined {
     return undefined
   }
 
-  const dirs = [...m[1].matchAll(DIR)].map(d => d[1].replace(/^(["'])(.*)\1$/, '$2'))
+  // Both groups always take part in a match; `?? ''` only satisfies the type.
+  const dirs = [...(m[1] ?? '').matchAll(DIR)].map(d => (d[1] ?? '').replace(/^(["'])(.*)\1$/, '$2'))
   return dirs.length === 0 ? {} : { dir: dirs[dirs.length - 1] }
 }
 

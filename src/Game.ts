@@ -477,6 +477,9 @@ export class Game implements RunDispatcher {
       this.recordWin();
       this.swap(new GameOverScene('complete'));
     });
+    // A run script's warning raised mid-run; the ones from its construction
+    // are printed where it is built (`createRun`).
+    this.bus.on('script:warning', (e) => console.warn(`[dev] ${e.text}`)); // i18n-ok: a dev console line, never rendered
     // The between-sector screen. The payload carries both sectors' titles
     // and the pool before and after the seam's floor raised it.
     this.bus.on('sector:cleared', (e) =>
@@ -980,6 +983,7 @@ export class Game implements RunDispatcher {
     const dials = this.runDials;
     this.journaling((recorder) => recorder.open({ kind: 'seed', seed, dials }, () => run.toJSON()));
     this.finishedJournal = null;
+    for (const line of run.scriptWarnings) console.warn(`[dev] ${line}`); // i18n-ok: a dev console line, never rendered
     if (this.runConfig.startingRoster) {
       const desc = this.runConfig.startingRoster
         .map((e) => (e.level > 1 ? `${e.archetype} Lv${e.level}` : e.archetype)) // i18n-ok: a dev console line, never rendered

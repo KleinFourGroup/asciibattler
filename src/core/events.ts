@@ -464,6 +464,14 @@ export interface GameEvents extends Record<string, unknown> {
   'event:entered': { nodeId: number; eventId: string };
 
   /**
+   * The run's script will not do something it says, raised after
+   * construction: an act's map gives an entry no place, or the route took a
+   * hop's layout past its fight (`Run.scriptWarnings` has the ones before).
+   * Game prints it to the console; nothing draws on it.
+   */
+  'script:warning': { text: string };
+
+  /**
    * The event's cursor moved to another page (a choice whose `next` is a
    * page id). The event screen re-renders off it. A terminal choice emits
    * nothing here: a return to the map is silent, and starting an encounter

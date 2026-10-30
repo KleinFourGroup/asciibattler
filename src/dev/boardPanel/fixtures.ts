@@ -113,6 +113,7 @@ export const RUN_DIAL_KEYS = [
   'encounter',
   'firstNode',
   'event',
+  'script',
   'width',
   'daemon',
   'character',

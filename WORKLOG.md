@@ -659,3 +659,57 @@ not, since its one hop is the boss and the boss wins either way.
 entry winning in either order. The corpus carries no `encounter=` or
 `event=` journal; those two cases rest on their unchanged tests in
 `Run.test.ts`.
+
+### 142d — the per-hop entries (2026-10-30)
+
+*Step zero.* `GameEvents` takes any key (an index signature), and the
+sound table's coverage pin (`eventSounds.test.ts`) holds every declared
+event to a cue or a silent reason, so a new event costs a line in each.
+The parse went into `RunConfig.ts` beside its id checks, since
+`RunScript.ts` importing `FORCE_PROCEDURAL` from it would be a cycle.
+
+*Built.* `RunConfig.script` and `script=`, parsed by `parseScript` and
+written back by `scriptToString`, with the old dials writing back their
+own names. A numbered hop's kind, named or implied by its encounter or
+event, is stamped on every node of the hop at its act's entry
+(`stampScript`, `NodeMap.stampHopKind`); on the boss's hop it is ignored
+and warns. A numbered hop's event always opens, its fight roll drawn and
+set aside. Construction refuses a contradiction, a numbered hop past
+every length its act can have (`sectorsAtAct`), a boss encounter away
+from its act's last hop, and an unknown id (with the dials' messages).
+The warnings: the parse's drops, an entry for an act the run doesn't
+play, a starred encounter or event the act's map has no node for (R13),
+and a numbered layout on a hop the route crossed at a rest or a port.
+They are `Run.scriptWarnings`, and each one raised after construction is
+also a `script:warning` event, which `Game` prints to the console.
+
+*Not done:* a numbered layout on a hop crossed at an event node doesn't
+warn, since the event can still start a fight there.
+
+*Evidence.* `RunScript.test.ts` and `scriptedRun.test.ts`, 36 of 36:
+- the list, the parse (the worked URLs, every drop named), its inverse,
+  and every old URL form round-tripping with no `script=` written back;
+- in a live run, each entry against a control on the same seed without
+  it: a kind, an encounter, a layout, an event that opens where the
+  starred one fights, the refusals and the warnings.
+
+`RunConfig.test.ts` is unchanged and green. Four planted failures, each
+applied to the live file and restored byte for byte:
+- `stampHopKind` stamping nothing fails 5 of 13;
+- a scripted event still fighting fails the event test;
+- `scriptAt` reading one hop short fails 3;
+- the past-the-end refusal disabled fails its test.
+
+The corpus: 0 of 32 differ. *Not verified in a browser* until 142h's
+URLs.
+
+*A slip on the way:* a regex written through a Bash heredoc reached the
+file halved, the case 142a's guard refuses once it loads; the edit went
+through the Edit tool instead, and nothing ran on the halved text.
+
+The hook's full suite found three censuses of the URL dials, each built
+to fail until a new dial is named in it: the menu's boot rule
+(`menuRules.test.ts`), the win record's refusals (`progress.test.ts`,
+where `runCounts` already refuses any dial but the character and the
+level, so a scripted win is not recorded), and the board panel's
+restated keys (`boardPanel/fixtures.ts`). Each takes `script`.

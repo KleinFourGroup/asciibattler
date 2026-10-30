@@ -886,3 +886,18 @@ export function stampRootKind(map: NodeMap, kind: NodeKind): NodeMap {
     nodes: map.nodes.map((n) => (n.id === map.rootId ? { ...n, kind } : n)),
   };
 }
+
+/**
+ * Re-kind every node on one hop of a finished map (`hops[hop]`, from 0 at
+ * the root), for a scripted hop. Like `stampRootKind` it draws nothing and
+ * touches neither the structure nor another hop's nodes, and the boss's hop
+ * is left as it is. At hop 0 it is `stampRootKind`.
+ */
+export function stampHopKind(map: NodeMap, hop: number, kind: NodeKind): NodeMap {
+  const ids = new Set(map.hops[hop] ?? []);
+  if (ids.size === 0 || ids.has(map.terminalId)) return map;
+  return {
+    ...map,
+    nodes: map.nodes.map((n) => (ids.has(n.id) ? { ...n, kind } : n)),
+  };
+}

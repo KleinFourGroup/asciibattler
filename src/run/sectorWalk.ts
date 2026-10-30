@@ -88,6 +88,21 @@ export function pickNextSector(map: SectorMap, fromNodeId: string, rng: RNG): Se
 }
 
 /**
+ * The sectors a walk can be in at its `act`th sector, from 1: a source's at
+ * act 1, then each step's successors', a sink ending its walk. Empty past
+ * the map's longest walk. Draws nothing; a script's addresses are checked
+ * against these sectors' lengths.
+ */
+export function sectorsAtAct(map: SectorMap, act: number): string[] {
+  let nodes: readonly string[] = map.sources;
+  for (let i = 1; i < act; i++) {
+    const from = new Set(nodes.filter((id) => !isSectorSink(map, id)));
+    nodes = [...new Set(map.edges.filter((e) => from.has(e.from)).map((e) => e.to))];
+  }
+  return [...new Set(nodes.flatMap((id) => nodeSectors(map, id)))];
+}
+
+/**
  * The shortest remaining path from `fromNodeId` to any sink, in node
  * entries: each successor node on the path adds the length of its shortest
  * sector (`lengthOf`, the least over the node's sectors), and the current

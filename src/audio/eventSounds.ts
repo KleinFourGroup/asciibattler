@@ -136,6 +136,7 @@ export const SILENT_EVENTS: Readonly<
   'run:packetUsed': 'candidate',
   'port:entered': 'candidate',
   'event:entered': 'candidate',
+  'script:warning': 'bookkeeping', // a dev console line
   'event:pageChanged': 'bookkeeping',
   'rest:entered': 'candidate',
   'reward:offered': 'candidate',

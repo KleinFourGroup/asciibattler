@@ -13,7 +13,7 @@ its spec, its per-phase worklogs (`archive/worklog-phase-135.md` to
 [archive/post-118-roadmap.md](archive/post-118-roadmap.md) (Round 8.5).
 
 **Status: §142, the scripted run, cut signed 2026-10-30; 142a built;
-142b's grammar signed; 142c built; 142d next.** The spec is [round-10-spec.md](round-10-spec.md), its tranche 2
+142b's grammar signed; 142c and 142d built; 142e next.** The spec is [round-10-spec.md](round-10-spec.md), its tranche 2
 answered at the kickoffs of §144 to §146. The charter, the decision
 points, the exit and the scope guards are in META-ROADMAP §"Round 10 —
 Act 1, the wilds", with the roster table's rebuild added to its scope at
@@ -59,8 +59,8 @@ is WORKLOG §142.
   2026-10-30 with its leans.
 - ☑ **142c — the list, with the old dials as cases** (`none`). Corpus
   0 of 32, its planted misparse 2 of 32.
-- ☐ **142d — the per-hop entries** (`none`), with the zero-match
-  warning.
+- ☑ **142d — the per-hop entries** (`none`), with the zero-match
+  warning. 36 tests with four planted failures; corpus 0 of 32.
 - ☐ **142e — a port's stock** (`none`).
 - ☐ **142f — the starting act** (`none`).
 - ☐ **142g — the CLIs** (`none`).

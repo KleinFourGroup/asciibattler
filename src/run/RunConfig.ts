@@ -21,10 +21,19 @@ import { LAYOUT_IDS } from '../sim/layouts';
 import { LEVELING } from '../config/leveling';
 import { daemonById, type DaemonConfig } from '../config/daemons';
 import { characterById, type CharacterConfig } from '../config/characters';
-import { ENCOUNTER_IDS } from '../config/encounters';
+import { ENCOUNTER_IDS, getEncounter } from '../config/encounters';
 import { ESCALATION_MAX } from '../config/escalation';
 import type { SectorMap } from '../config/sectorMap';
 import { EVENT_IDS, type EventDef } from '../config/events';
+import {
+  SCRIPT_KINDS,
+  dialEntries,
+  scriptConflicts,
+  scriptToString,
+  type EncounterKindOf,
+  type ScriptEntry,
+  type ScriptKind,
+} from './RunScript';
 
 /** One starting-roster slot: an archetype at a level (at least 1, capped). */
 export interface RosterEntry {
@@ -105,6 +114,23 @@ export interface RunConfig {
    * is dropped.
    */
   readonly forcedEventId?: string;
+  /**
+   * The run's script (`RunScript.ts`): per-hop entries, each an address and
+   * what it sets there, of which the four dials above are cases. A numbered
+   * hop's entry stamps its kind on the hop's nodes and holds there; a starred
+   * one applies wherever its kind fits, as the dials do. Checked at
+   * construction: a contradiction, or a numbered hop past its act's end,
+   * throws. URL form: `script=3:event=cadre-1;6:encounter=brigands,layout=river`
+   * (`;` between entries, `:` after the address, `,` between items), an
+   * entry the parse can't read dropped with a warning.
+   */
+  readonly script?: readonly ScriptEntry[];
+  /**
+   * What the URL parse dropped from `script=`, one line each; the run
+   * reports them with its own (`Run.scriptWarnings`). Not a dial: no URL
+   * form writes it back.
+   */
+  readonly scriptWarnings?: readonly string[];
   /**
    * Replace the event catalog, for headless tests. Its defs live in memory
    * only: a save taken mid-event under it is rejected by a load that does
@@ -263,6 +289,7 @@ export const RUN_CONFIG_PARAMS = {
   encounter: 'encounter',
   firstNode: 'firstNode',
   event: 'event',
+  script: 'script',
   width: 'width',
   daemon: 'daemon',
   character: 'character',
@@ -340,6 +367,84 @@ function parseEvent(raw: string | null): string | undefined {
   return EVENT_IDS.includes(token) ? token : undefined;
 }
 
+const encounterKind: EncounterKindOf = (id) => getEncounter(id)?.kind;
+
+/** An entry's address: a hop, `act.hop`, `*` or `act.*`, each number 1 up. */
+const ADDRESS = /^(?:(\d+)\.)?(\d+|\*)$/;
+
+type MutableScriptEntry = { -readonly [K in keyof ScriptEntry]: ScriptEntry[K] };
+
+/**
+ * `script=`'s value as entries (the grammar is `RunConfig.script`'s), with
+ * a warning for each part dropped: an address it can't read, an item with an
+ * unknown id or no meaning, a kind on a starred address, and an entry that
+ * contradicts the dials or the entries kept before it (`scriptConflicts`).
+ * `dials` are the old dials' entries, which a script entry may not
+ * contradict either.
+ */
+export function parseScript(
+  raw: string | null,
+  dials: readonly ScriptEntry[],
+): { entries: ScriptEntry[]; warnings: string[] } {
+  const entries: ScriptEntry[] = [];
+  const warnings: string[] = [];
+  if (!raw) return { entries, warnings };
+  for (const text of raw.split(';').map((t) => t.trim())) {
+    if (text === '') continue;
+    const colon = text.indexOf(':');
+    const address = ADDRESS.exec(colon < 0 ? '' : text.slice(0, colon).trim());
+    const act = address?.[1] === undefined ? undefined : Number(address[1]);
+    const hopText = address?.[2];
+    const hop = hopText === undefined ? undefined : hopText === '*' ? 'all' : Number(hopText);
+    if (hop === undefined || hop === 0 || act === 0) {
+      warnings.push(`script: dropped "${text}": no address (a hop, act.hop, * or act.*, from 1) before a ":"`);
+      continue;
+    }
+    const entry: MutableScriptEntry = { hop };
+    if (act !== undefined) entry.act = act;
+    for (const item of text.slice(colon + 1).split(',').map((t) => t.trim())) {
+      if (item === '') continue;
+      const eq = item.indexOf('=');
+      const name = eq < 0 ? item : item.slice(0, eq);
+      const value = eq < 0 ? null : item.slice(eq + 1);
+      const drop = (why: string): void => {
+        warnings.push(`script: dropped "${item}" from "${text}": ${why}`);
+      };
+      if (eq < 0 && (SCRIPT_KINDS as readonly string[]).includes(name)) {
+        if (hop === 'all') drop('a kind needs a numbered hop');
+        else entry.kind = name as ScriptKind;
+      } else if (name === 'encounter') {
+        const id = parseEncounter(value);
+        if (id === undefined) drop('no such encounter');
+        else entry.encounter = id;
+      } else if (name === 'layout') {
+        const id = parseLayout(value);
+        if (id === undefined) drop('no such layout');
+        else entry.layout = id;
+      } else if (name === 'event') {
+        const id = parseEvent(value);
+        if (id === undefined) drop('no such event');
+        else entry.event = id;
+      } else {
+        drop('not a kind (battle, elite, event, rest, port) or an item (encounter=, layout=, event=)');
+      }
+    }
+    if (Object.keys(entry).every((k) => k === 'act' || k === 'hop')) {
+      warnings.push(`script: dropped "${text}": nothing left to set`);
+      continue;
+    }
+    // The act= dial (the starting act) is not read yet, so a bare hop is act 1's.
+    const before = scriptConflicts([...dials, ...entries], 1, encounterKind);
+    const after = scriptConflicts([...dials, ...entries, entry], 1, encounterKind);
+    if (after.length > before.length) {
+      warnings.push(`script: dropped "${text}": ${after.slice(before.length).join('; ')}`);
+      continue;
+    }
+    entries.push(entry);
+  }
+  return { entries, warnings };
+}
+
 /** `none` is null (no daemon), a catalog id that daemon, and anything else,
  *  absent or unknown, undefined: no override, so the character's daemon. */
 function parseDaemon(raw: string | null): DaemonConfig | null | undefined {
@@ -384,6 +489,10 @@ export function parseRunConfig(params: URLSearchParams): RunConfig {
   }
   const forcedEventId = parseEvent(params.get(RUN_CONFIG_PARAMS.event));
   if (forcedEventId !== undefined) config.forcedEventId = forcedEventId;
+  // The script after the dials, so an entry that contradicts one drops.
+  const script = parseScript(params.get(RUN_CONFIG_PARAMS.script), dialEntries(config));
+  if (script.entries.length > 0) config.script = script.entries;
+  if (script.warnings.length > 0) config.scriptWarnings = script.warnings;
   const mapMaxWidth = parsePositiveInt(params.get(RUN_CONFIG_PARAMS.width));
   if (mapMaxWidth !== undefined) config.mapMaxWidth = mapMaxWidth;
   const daemon = parseDaemon(params.get(RUN_CONFIG_PARAMS.daemon));
@@ -444,6 +553,11 @@ export function runConfigToQueryString(config: RunConfig): string {
   }
   if (config.forcedEventId !== undefined) {
     params.set(RUN_CONFIG_PARAMS.event, config.forcedEventId);
+  }
+  // The dials above keep their own names, so a URL without a script writes
+  // back as it always did.
+  if (config.script !== undefined && config.script.length > 0) {
+    params.set(RUN_CONFIG_PARAMS.script, scriptToString(config.script));
   }
   if (config.mapMaxWidth !== undefined) {
     params.set(RUN_CONFIG_PARAMS.width, String(config.mapMaxWidth));

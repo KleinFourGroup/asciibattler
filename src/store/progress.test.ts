@@ -229,6 +229,7 @@ describe('whether a won run is recorded', () => {
     encounter: ENCOUNTER_IDS[0]!,
     firstNode: 'elite',
     event: EVENT_IDS[0]!,
+    script: '3:rest',
     width: '3',
     daemon: 'none',
     character: 'soldier',
@@ -245,7 +246,7 @@ describe('whether a won run is recorded', () => {
       expect(dials, dial).toContain(`${dial}=`);
       if (!runCounts(dials, dial === 'escalation' ? 1 : 0, 5)) refused.push(dial);
     }
-    expect(refused).toEqual(['seed', 'hops', 'sectorHops', 'roster', 'layout', 'encounter', 'firstNode', 'event', 'width', 'daemon', 'bits']);
+    expect(refused).toEqual(['seed', 'hops', 'sectorHops', 'roster', 'layout', 'encounter', 'firstNode', 'event', 'script', 'width', 'daemon', 'bits']);
   });
 
   it('refuses a parameter that is no run dial', () => {

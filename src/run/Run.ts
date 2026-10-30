@@ -31,12 +31,30 @@ import { RNG, deriveRng } from '../core/RNG';
 import type { RngStreamKey } from '../core/rngStreams';
 import type { UnitTemplate } from '../sim/Unit';
 import { rollUnit } from '../sim/archetypes';
-import { generate as generateNodeMap, stampRootKind, PRE_ROOT_NODE_ID, type NodeMap, type NodeKind } from './NodeMap';
-import { dialEntries, scriptItem, scriptKind, type ScriptEntry, type ScriptItem } from './RunScript';
+import {
+  generate as generateNodeMap,
+  stampHopKind,
+  stampRootKind,
+  PRE_ROOT_NODE_ID,
+  type NodeMap,
+  type NodeKind,
+} from './NodeMap';
+import {
+  addressOf,
+  dialEntries,
+  entryToString,
+  hopKind,
+  scriptConflicts,
+  scriptItem,
+  scriptedEvent,
+  type EncounterKindOf,
+  type ScriptEntry,
+  type ScriptItem,
+} from './RunScript';
 import { FORCE_PROCEDURAL, sectorAdvanceConfig, type RunConfig } from './RunConfig';
 import { getSector, eventPoolAtHop, type SectorDef } from '../config/sectors';
 import { SECTOR_MAP, type SectorMap } from '../config/sectorMap';
-import { pickStartSector, pickNextSector, isSectorSink, remainingSectorHops } from './sectorWalk';
+import { pickStartSector, pickNextSector, isSectorSink, remainingSectorHops, sectorsAtAct } from './sectorWalk';
 import { avgTeamLevel, rollOffer, recruitLevelBonus, draftPoolsFor } from './Recruitment';
 import {
   characterById,
@@ -760,6 +778,18 @@ export class Run {
    * and event they hold. An item no entry sets is the sector's own draw.
    */
   private readonly script: readonly ScriptEntry[];
+  /** The act the run starts in, from 1, where a bare numbered hop is. */
+  private readonly startAct: number;
+  /**
+   * What the script will not do, one line each: the URL parse's drops, an
+   * entry for an act the run never plays, and, from each act's entry, an
+   * entry the act's map gives no place (`stampScript`). Not saved; a load
+   * starts from its config's. Each line raised after construction is also
+   * emitted as `script:warning`.
+   */
+  private scriptWarningLines: string[];
+  /** Whether construction is over, so a new warning is emitted too. */
+  private warningsLive = false;
 
   /**
    * The run's difficulty multipliers, resolved at construction and again on
@@ -812,6 +842,8 @@ export class Run {
     const inputs = resolveRunInputs(config);
     this.sectorMap = inputs.sectorMap;
     this.script = inputs.script;
+    this.startAct = inputs.startAct;
+    this.scriptWarningLines = [...inputs.scriptWarnings];
     this.eventCatalog = inputs.eventCatalog;
     this.singleSectorRun = inputs.singleSectorRun;
     this.sectorHopsOverride = inputs.sectorHopsOverride;
@@ -834,14 +866,14 @@ export class Run {
     const start = pickStartSector(this.sectorMap, this.streamRng('sector', 0));
     this.currentSectorNodeId = start.sectorNodeId;
     this.currentSectorId = start.sectorId;
-    // The first-node dial reaches the map through the script (`stampRoot`),
+    // The first-node dial reaches the map through the script (`stampScript`),
     // so the generator takes the config without it.
     this.nodeMap = generateNodeMap(
       this.streamRng('nodemap', 0),
       withoutFirstNode(config),
       this.currentSectorLength(),
     );
-    this.stampRoot();
+    this.stampScript();
     // The sector's boss, picked now so it can be shown ahead.
     const bossRoll = this.rollBossForSector(this.streamRng('boss', 0));
     this.bossEncounterId = bossRoll.bossEncounterId;
@@ -892,7 +924,19 @@ export class Run {
     this.currentNodeId = PRE_ROOT_NODE_ID;
     this.visitedNodes = new Set<number>();
     this.subscribe();
+    // A warning from here on is emitted as it is raised; the ones before are
+    // the caller's to read (`scriptWarnings`).
+    this.warningsLive = true;
     bus.emit('run:started', { seed });
+  }
+
+  /**
+   * What the script will not do, one line each, from the URL parse's drops
+   * on: `Game` prints them to the console after construction, and each one
+   * raised later as its `script:warning`.
+   */
+  get scriptWarnings(): readonly string[] {
+    return this.scriptWarningLines;
   }
 
   /**
@@ -1137,6 +1181,20 @@ export class Run {
     }
     this.currentNodeId = nodeId;
 
+    // A numbered hop's layout is the board of the hop's fight; a rest or a
+    // port holds none, so the route took the hop past it.
+    const kind = this.kindOf(nodeId);
+    if (kind === 'rest' || kind === 'port') {
+      const hop = this.currentHop + 1;
+      const act = this.sectorIndex + 1;
+      const layout = this.script.find(
+        (e) => e.hop === hop && (e.act ?? this.startAct) === act && e.layout !== undefined,
+      );
+      if (layout !== undefined) {
+        this.warnScript(`script: act ${act}, hop ${hop}: layout=${layout.layout} has no fight here (a ${kind})`);
+      }
+    }
+
     if (this.kindOf(nodeId) === 'rest') {
       // No counter moves here or in the option's handler, so a rest leaves
       // every other draw of the run where it was. A level-up it gives draws
@@ -1203,7 +1261,10 @@ export class Run {
     // whether or not a page opens.
     const entryRng = this.streamRng('event', this.eventStep++);
     const roll = entryRng.next();
-    const combatResolved = roll < this.effectiveEventCombatChance() && !fromStartingPool;
+    // A numbered hop's scripted event always opens: the roll is drawn and set
+    // aside, as on a starting-events root, so no other draw moves.
+    const scripted = scriptedEvent(this.script, this.sectorIndex + 1, this.currentHop + 1, this.startAct);
+    const combatResolved = roll < this.effectiveEventCombatChance() && !fromStartingPool && !scripted;
     const eventDef = combatResolved ? null : this.rollEventForNode(fromStartingPool, entryRng);
     if (eventDef === null) {
       this.phase = 'battle';
@@ -1757,27 +1818,54 @@ export class Run {
    * count of sectors entered.
    */
   private scriptAt(item: ScriptItem, hop: number): string | undefined {
-    return scriptItem(this.script, item, this.sectorIndex + 1, hop + 1);
+    return scriptItem(this.script, item, this.sectorIndex + 1, hop + 1, this.startAct);
+  }
+
+  /** A script warning: kept, and once construction is over emitted. */
+  private warnScript(text: string): void {
+    this.scriptWarningLines.push(text);
+    if (this.warningsLive) this.bus.emit('script:warning', { text });
   }
 
   /**
-   * Kind the active act's freshly drawn root, with no draw: the script's
-   * kind for it when an entry gives one, the first-node dial's among them,
-   * and otherwise the sector's starting events' stamp. Both sector entries
-   * call it, the constructor and `advanceSector`.
+   * Kind the active act's freshly drawn map, with no draw: each numbered
+   * hop the script gives a kind (`hopKind`; the first-node dial's root among
+   * them) has it stamped on every node, and a root it gives none takes the
+   * sector's starting events' stamp. Both sector entries call it, the
+   * constructor and `advanceSector`. Then the act's warnings: a kind on the
+   * boss's hop, which keeps the boss, and a starred encounter or event this
+   * map has no node for.
    */
-  private stampRoot(): void {
-    const kind = scriptKind(this.script, this.sectorIndex + 1, 1);
-    if (kind === undefined) {
-      this.stampStartingEventRoot();
-    } else {
-      this.nodeMap = stampRootKind(this.nodeMap, kind);
+  private stampScript(): void {
+    const act = this.sectorIndex + 1;
+    const last = this.nodeMap.hops.length;
+    for (let hop = 1; hop <= last; hop++) {
+      const kind = hopKind(this.script, act, hop, this.startAct, encounterKindOf);
+      if (kind === undefined) {
+        if (hop === 1) this.stampStartingEventRoot();
+      } else if (hop === last) {
+        this.warnScript(`script: act ${act}, hop ${hop}: the ${kind} is ignored on the boss's hop`);
+      } else {
+        this.nodeMap = stampHopKind(this.nodeMap, hop - 1, kind);
+      }
+    }
+    for (const e of this.script) {
+      if (e.hop !== 'all' || (e.act !== undefined && e.act !== act)) continue;
+      const kinds = new Set(this.nodeMap.nodes.map((n) => n.kind));
+      const fits = e.encounter === undefined ? undefined : encounterKindOf(e.encounter);
+      const wants = fits === 'normal' ? 'battle' : fits;
+      if (wants !== undefined && !kinds.has(wants)) {
+        this.warnScript(`script: act ${act}: ${addressOf(e)}:encounter=${e.encounter} finds no ${wants} node`);
+      }
+      if (e.event !== undefined && !kinds.has('event')) {
+        this.warnScript(`script: act ${act}: ${addressOf(e)}:event=${e.event} finds no event node`);
+      }
     }
   }
 
   /**
    * Make the active sector's root an `event` node when the sector has
-   * `startingEvents`, with no draw (`stampRootKind`). `stampRoot` skips it
+   * `startingEvents`, with no draw (`stampRootKind`). `stampScript` skips it
    * when the script kinds the root.
    */
   private stampStartingEventRoot(): void {
@@ -3141,11 +3229,12 @@ export class Run {
       this.sectorScatterConfig,
       this.currentSectorLength(),
     );
-    // The new root's kind: the script's for this act, else the sector's
-    // `startingEvents` stamp. The first-node dial is the starting act's, so
-    // it shapes only the first sector's map, though its flag still sends a
-    // later root's event to the regular pool (`enterEventNode`).
-    this.stampRoot();
+    // The new map's kinds: the script's for this act, and the root's
+    // `startingEvents` stamp where the script gives the root none. The
+    // first-node dial is the starting act's, so it shapes only the first
+    // sector's map, though its flag still sends a later root's event to the
+    // regular pool (`enterEventNode`).
+    this.stampScript();
     // The boss is the sector's, rolled again at each entry for its warning.
     const bossRoll = this.rollBossForSector(this.streamRng('boss', this.sectorIndex));
     this.bossEncounterId = bossRoll.bossEncounterId;
@@ -3696,6 +3785,9 @@ export class Run {
       bus: EventBus<GameEvents>;
       subscriptions: Array<() => void>;
       script: readonly ScriptEntry[];
+      startAct: number;
+      scriptWarningLines: string[];
+      warningsLive: boolean;
       singleSectorRun: boolean;
       sectorHopsOverride: number | undefined;
       sectorScatterConfig: RunConfig | undefined;
@@ -3724,6 +3816,9 @@ export class Run {
     const inputs = resolveRunInputs(config);
     m.sectorMap = inputs.sectorMap;
     m.script = inputs.script;
+    m.startAct = inputs.startAct;
+    m.scriptWarningLines = [...inputs.scriptWarnings];
+    m.warningsLive = false;
     m.eventCatalog = inputs.eventCatalog;
     m.singleSectorRun = inputs.singleSectorRun;
     m.sectorHopsOverride = inputs.sectorHopsOverride;
@@ -3915,6 +4010,7 @@ export class Run {
     m.clearedSector = snap.clearedSector === null ? null : { ...snap.clearedSector };
     m.lastTurn = snap.lastTurn === null ? null : { ...snap.lastTurn };
     run['subscribe']();
+    m.warningsLive = true;
     return run;
   }
 }
@@ -3961,12 +4057,76 @@ function checkForcedEventId(id: string | undefined, catalog: readonly EventDef[]
 
 /**
  * A config for the node-map generator with `firstNodeKind` taken out, since
- * the first-node dial reaches the map through the script (`Run.stampRoot`).
+ * the first-node dial reaches the map through the script (`Run.stampScript`).
  */
 function withoutFirstNode(config: RunConfig | undefined): RunConfig | undefined {
   if (config?.firstNodeKind === undefined) return config;
   const { firstNodeKind: _stamped, ...rest } = config;
   return rest;
+}
+
+const encounterKindOf: EncounterKindOf = (id) => getEncounter(id)?.kind;
+
+/**
+ * The lengths an act can have, in hops: under `hopCount` the starting act's
+ * alone, since the probe plays no other; otherwise `sectorHops`, or the own
+ * length of each sector a walk can be in there (`sectorsAtAct`). Empty for an
+ * act the run never plays.
+ */
+function actLengths(
+  config: RunConfig | undefined,
+  sectorMap: SectorMap,
+  startAct: number,
+  act: number,
+): number[] {
+  if (act < startAct) return [];
+  if (config?.hopCount !== undefined) return act === startAct ? [config.hopCount] : [];
+  const sectors = sectorsAtAct(sectorMap, act);
+  return [...new Set(sectors.map((id) => config?.sectorHops ?? getSector(id)?.length ?? 0))];
+}
+
+/**
+ * Check the script against the catalogs and the run's acts, as the forcing
+ * dials are checked: an unknown id, a contradiction (`scriptConflicts`), a
+ * numbered hop past every length its act can have, or a boss encounter away
+ * from its act's last hop throws. An entry for an act the run never plays
+ * only warns; the warnings come back.
+ */
+function checkScript(
+  script: readonly ScriptEntry[],
+  config: RunConfig | undefined,
+  sectorMap: SectorMap,
+  startAct: number,
+  eventCatalog: readonly EventDef[],
+): string[] {
+  for (const e of script) {
+    checkForcedLayoutId(e.layout);
+    checkForcedEncounterId(e.encounter);
+    checkForcedEventId(e.event, eventCatalog);
+  }
+  const problems = scriptConflicts(script, startAct, encounterKindOf);
+  if (problems.length > 0) throw new Error(`Run: the script contradicts itself: ${problems.join('; ')}`);
+  const warnings: string[] = [];
+  for (const e of script) {
+    if (e.hop === 'all' && e.act === undefined) continue;
+    const act = e.act ?? startAct;
+    const lengths = actLengths(config, sectorMap, startAct, act);
+    if (lengths.length === 0) {
+      warnings.push(`script: ${entryToString(e)} never applies: the run does not play act ${act}`);
+      continue;
+    }
+    if (e.hop === 'all') continue;
+    const longest = Math.max(...lengths);
+    if (e.hop > longest) {
+      throw new Error(`Run: script entry ${entryToString(e)} is past act ${act}'s end (${longest} hops)`);
+    }
+    if (e.encounter !== undefined && encounterKindOf(e.encounter) === 'boss' && !lengths.includes(e.hop)) {
+      throw new Error(
+        `Run: script entry ${entryToString(e)}: a boss encounter goes only on its act's last hop (${lengths.join(' or ')})`,
+      );
+    }
+  }
+  return warnings;
 }
 
 /** The config inputs a Run reads after construction. A snapshot does not
@@ -3975,6 +4135,8 @@ function withoutFirstNode(config: RunConfig | undefined): RunConfig | undefined 
 interface RunInputs {
   readonly sectorMap: SectorMap;
   readonly script: readonly ScriptEntry[];
+  readonly startAct: number;
+  readonly scriptWarnings: readonly string[];
   readonly eventCatalog: readonly EventDef[];
   readonly singleSectorRun: boolean;
   readonly sectorHopsOverride: number | undefined;
@@ -3995,20 +4157,27 @@ interface RunInputs {
  */
 function resolveRunInputs(config: RunConfig | undefined): RunInputs {
   const eventCatalog = config?.eventCatalog ?? EVENTS;
+  const sectorMap = config?.sectorMap ?? SECTOR_MAP;
   // The forcing dials are checked as they always were, then enter the script
-  // as its cases; the run starts in act 1.
+  // as its cases, before its own entries; the run starts in act 1.
   checkForcedLayoutId(config?.forcedLayoutId);
   checkForcedEncounterId(config?.forcedEncounterId);
   checkForcedEventId(config?.forcedEventId, eventCatalog);
-  const script = dialEntries(config, 1);
+  const startAct = 1;
+  const script = [...dialEntries(config), ...(config?.script ?? [])];
+  const unplayed = checkScript(script, config, sectorMap, startAct, eventCatalog);
   const inputs: RunInputs = {
-    sectorMap: config?.sectorMap ?? SECTOR_MAP,
+    sectorMap,
     script,
+    startAct,
+    scriptWarnings: [...(config?.scriptWarnings ?? []), ...unplayed],
     eventCatalog,
     singleSectorRun: config?.hopCount !== undefined,
     sectorHopsOverride: config?.sectorHops,
     sectorScatterConfig: sectorAdvanceConfig(config),
-    rootStampedByDial: scriptKind(script, 1, 1) === 'event',
+    // The dial's own stamp, a root given the bare kind; a root holding a
+    // named event opens it whatever pool it would draw from.
+    rootStampedByDial: script.some((e) => e.hop === 1 && (e.act ?? startAct) === startAct && e.kind === 'event'),
     passIsFinal: config?.passIsFinal ?? DECK.grantQueue.passIsFinal,
     drawAmountAdd: config?.drawAmountAdd ?? 0,
     difficultyMultipliers: resolveDifficultyMultipliers({

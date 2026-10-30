@@ -108,6 +108,33 @@ reasons.
    it is how the board reads one act alone and how acts 2 and 3 are
    played without the hops before them.
 
+### Tranche 2, answered in part (2026-10-30)
+
+The user, to the list put after the sign:
+
+> 1. Yes, I was planning on writing the new events (which might take
+>    some time) and the unit flavor (which should be quick).
+> 2. Do you have any ideas for a name that meets our tech double
+>    meanings? Barring that, I'd been mentally thinking of the new act 1
+>    as the hinterlands, but... Well, I'm open to ideas! The old act 1
+>    would then become... I don't have any good ideas yet, actually 😅
+> 3. We'll move it, changing it to "beasts and bandits," and I'll author
+>    new starting events for the other acts.
+> 4. Barren works as a starting point, but what do you think about
+>    adding a "forest" theme?
+> 5. Agreed.
+> 6. Agreed.
+> 7. Agreed with your lean!
+
+So: the user writes act 1's events and the beasts' flavour text, and a
+starting event for The Start and for The Deep End; the session drafts
+the encounters' names and descriptions for the user to edit (a lean the
+answer did not cover). The boon moves to act 1's root, its line reading
+"beasts and bandits". RunSnapshot v50 stays, with the node ids. Act 1
+takes the shipped sectors' shape. The script is written inline in the
+URL. Open: the two titles, and a forest theme, on the session's reads
+in WORKLOG §142's kickoff.
+
 ### Tranche 2 (each at its phase's kickoff)
 
 - *§144:* the beasts' glyphs, a taste stop with each drawn; new attacks

@@ -12,8 +12,8 @@ its spec, its per-phase worklogs (`archive/worklog-phase-135.md` to
 `-140.md`) and its session reports beside it; before it
 [archive/post-118-roadmap.md](archive/post-118-roadmap.md) (Round 8.5).
 
-**Status: §141, the kickoff, signed 2026-10-30; §142's kickoff is
-next.** The spec is [round-10-spec.md](round-10-spec.md), its tranche 2
+**Status: §141, the kickoff, signed 2026-10-30; §142's cut is put to
+the user, unsigned (WORKLOG §142), and enters below once signed.** The spec is [round-10-spec.md](round-10-spec.md), its tranche 2
 answered at the kickoffs of §144 to §146. The charter, the decision
 points, the exit and the scope guards are in META-ROADMAP §"Round 10 —
 Act 1, the wilds", with the roster table's rebuild added to its scope at

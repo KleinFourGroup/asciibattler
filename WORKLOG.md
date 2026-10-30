@@ -307,3 +307,129 @@ scripted-run bullet names the starting act; the spec's status line says
 SIGNED. The user asked what else to firm up before the build; the
 answer lists tranche 2's calls with their leans, none of which §142 or
 §143 rests on.
+
+### Tranche 2 answered in part; the titles and a forest theme (2026-10-30)
+
+The words are the spec's "Tranche 2, answered in part". Settled: the
+user writes act 1's events, the beasts' flavour and a starting event for
+each of acts 2 and 3; the boon moves to act 1 as "beasts and bandits";
+RunSnapshot v50 and the node ids stay; act 1 takes the shipped sectors'
+shape; the script is inline in the URL. The encounters' text was not
+covered, so the lean stands: the session drafts it and the user edits.
+Since the user's writing runs beside the build, §145 can put act 1 in the
+map on the shared events and the boon, with each of the user's events
+joining the pool as it is written, before `0.3.0`; §142's script is the
+user's tool for playing an event chain end to end.
+
+**The titles, the session's ideas** (the user asked for names with the
+game's computing double meaning). A title is display text; the ids stay,
+since a renamed id breaks a saved run (§141's audit). The screens read
+"{title} is behind you" and "Next: {title}", and "sector" is already a
+player-facing word ("Sector Cleared", "Sector map").
+- Act 1: *The Root*, the session's pick: a file system's root, where
+  every path begins and the run does too, and the wild's roots, which a
+  forest makes literal. "root" is also the code's word for a sector
+  map's first node, a clash in the docs only, since no screen says it.
+  *The Boot Sector*: a disk's first sector, read as a machine starts,
+  the cleanest pun and the weakest wild. *The Sticks*: the back country
+  and a memory stick.
+- Act 2, The Start's title: *The Bad Sectors*, the session's pick: a
+  disk's damaged, unreadable sectors and the badlands, a lawless barren
+  country, for a realm coming apart. *The Fragments*: a fragmented disk
+  and the warlord era's fragmented realm. *The Partition* was dropped for
+  its history.
+
+**A forest theme, measured at HEAD.** A theme is an enum value with a
+palette, a `themeTiles` entry the parse requires, and a camp pool
+(`src/config/layouts.ts:107-130`, `TerrainRenderer.topColorFor`,
+`config/terrain.json`); `theme` is in the RunSnapshot, where adding a
+value breaks no save and renaming one does. Nothing draws a tree today:
+a theme changes tile colours and tile kinds (hills, mud, sand, ice,
+water, fire), and the procedural map's solid cover comes out as wall and
+half-cover cells (`proceduralMap.ts:417-426`) spawned as `#` and `╥`. So
+a forest that reads as one needs a tree: a plain scenery body that
+blocks movement and sight as a wall does, drawn where a forest board's
+cover would put a wall. Swapping the body leaves the draws alone
+(predicted, not measured). The charter already allows a tree as plain
+scenery; a flyer over it is Round 20's. The cost: the tree, one atlas
+cell (38 of 48 with the beasts), in §144 with its glyph in the same
+taste stop; the theme, its palette, its tiles and a camp pool for the
+fauna camps in §145. Authored layouts keep their own themes, so act 1
+looks like a forest on its procedural boards and on any layout authored
+as forest. Trees with rules of their own (half cover, slowing, sight
+only) would be a new mechanism, outside the round. *The session's
+preference:* forest for act 1, the beasts' home, which changes
+plans/acts.md's grassland for act 1 (the user's call); The Start to
+barren still, for act 2's register, though with act 1 a forest a run no
+longer opens grassland twice either way.
+
+## Phase 142 — the scripted run
+
+### The kickoff's audit, and the cut put to the user (2026-10-30, session c15dd076)
+
+§141's audit read the dials, the port's stock, the start and the CLI's
+help at `9e1b7c48`; read here as well, at `c172ea33`:
+
+- *`--arbitrate` refuses the probe dials.* The fuzz CLI refuses it with
+  `--encounter`, `--layout` and `--draw-add`, and with the scatter
+  chances on a multi-sector shape, since a rollout clone loads with no
+  config and drops every probe dial (`tests/fuzz/commands/args.ts:571-598`);
+  `--hops` stays legal. A script entry that shapes the run after
+  construction is such a dial. The starting act is spent at construction
+  and its result is in the snapshot (the sector index and the sector and
+  node ids), so a clone keeps it, as it keeps the Escalation level. The
+  board's arbitrated act rows (§143) need only the starting act.
+- *The fuzz CLI has flags of its own* for these dials, checked loudly
+  (`layoutFromArgs`, `encounterFromArgs`, `args.ts:749-775`), where the
+  URL parse drops an unknown id; the run-config CLI forwards any
+  `RUN_CONFIG_PARAMS` name (`tools/run-config/cli.ts:55`).
+- *The guard's seam.* The mod's Bash hook runs the stdin refusal before
+  the command (`.claude/skills/context-meter/hooks/register.ts:44-48`) and
+  the halving note after it (`:95-108`), on `halving.ts`'s model of
+  bash's reading; the twins are `tests/shell-stdin.test.ts` and
+  `tests/shell-halving.test.ts`.
+
+**The cut.** No snapshot bump (the scope guard); no new stream key; a
+stocked port skips its two stock streams, which are keyed per port, so
+it moves no other draw (predicted); the fuzz smoke fires at 142c to
+142g, and the parity test at 142g, which stages `tests/fuzz/`; no batch;
+no count re-recorded.
+
+- **142a — the backslash guard** (`none`). The mod refuses, before it
+  runs, a Bash command that the halving makes bash read differently,
+  naming the line and the Write tool, as the stdin guard does. *Exit:* a
+  planted halved command refused; a run before a double quote, a single
+  backslash and a PowerShell call pass; `process/shell-and-windows.md`
+  and the mod's README say so. One commit; no smoke.
+- **142b — the grammar** (`stop`). The entry list's shape and its inline
+  URL form, with the user's three cases and a start at act 2 as worked
+  URLs, each old dial written as a case, and which entries `--arbitrate`
+  refuses. *Exit:* signed. Docs only.
+- **142c — the list, with the old dials as cases** (`none`). `RunConfig`
+  holds the list; `layout`, `encounter`, `event` and `firstNode` parse
+  into it and mean what they meant. *Exit:* the old dials' tests
+  unchanged and green; every old URL form round-trips through the parse
+  and its inverse; the corpus at its baseline, 32 of 32, with a planted
+  misparse caught.
+- **142d — the per-hop entries** (`none`): a hop's kind, encounter,
+  layout and event, with the zero-match warning (R13). *Exit:* each with
+  a headless test and its planted failure; an entry past its sector's end
+  refused at construction; an entry that never applies warns.
+- **142e — a port's stock** (`none`). *Exit:* a stocked port offers
+  exactly its entry at the price book's prices, with its planted failure;
+  an unstocked port's draws unchanged.
+- **142f — the starting act** (`none`). A run opens at the walk's Nth
+  sector, at the sector index a full walk has there, and with `hops`
+  plays that act alone. *Exit:* on today's map, act 2 alone is The Deep
+  End; an act past the map's end refused; a clone from its snapshot stays
+  in that act.
+- **142g — the CLIs** (`none`). *Exit:* the run-config help lists every
+  URL parameter, by a test derived from `RUN_CONFIG_PARAMS` with a planted
+  omission failing; `--sector-hops` parses; the fuzz CLI takes the
+  script and refuses with `--arbitrate` the entries a clone drops.
+- **142h — the phase's close** (`stop`). The user plays four URLs: an
+  event chain end to end, a chain of encounters and layouts, a stocked
+  port, a start at act 2. Wrong looks like a node that ignores its entry,
+  or a run that opens in the wrong act or with the wrong sector's pools.
+
+The stretch the cut opens: 142a, then the stop at 142b.

@@ -107,3 +107,9 @@ Read at `ded47a49`:
   `archive/closed-rounds.md`; the Cursor at Round 10's kickoff; pushed.
 
 No snapshot bump, no RNG stream, no number moved.
+
+**Signed** (the user: "Signing the cut and all of those leans"): the cut
+as put, with its four calls at the leans: `0.2.0`; the upload (140b,
+140c) before the process read, after 140a; the keep test over the rule
+docs only, the round's guards out of it; an itch changelog drafted at
+140b.

@@ -833,3 +833,36 @@ By hand:
 
 *Not done:* the run-config CLI's headless run doesn't print the warnings
 raised mid-run, since `runOne` builds its own bus.
+
+### The hand-off after 142g (2026-10-30)
+
+*Done:* 142a to 142g, each committed and recorded above (`0043f298` to
+`dfefa56c`). The session handed off at the trigger, read after 142g's
+commit.
+
+*Open: 142h, the stop.* The user plays four URLs. Step zero is the
+session's: open each in the Browser pane and check it does what it says
+before putting it. The drafts, on today's map, each with
+`character=soldier` so a run starts on load:
+- an event chain end to end:
+  `?character=soldier&seed=7&script=3:event=cadre-1;6:event=cadre-2;9:event=cadre-3`;
+- a chain of encounters and layouts:
+  `?character=soldier&seed=7&script=2:encounter=brigands,layout=river;4:encounter=brigand-champions,layout=labyrinth;11:encounter=bandit-king,layout=isthmus`;
+- a stocked port (the Soldier owns Mars, so the daemon is Minerva):
+  `?character=soldier&seed=7&script=2:port=rogue:3/healer/overclock/venom/minerva`;
+- a start at act 2: `?character=soldier&seed=7&act=2`, and with
+  `&hops=11` act 2 alone.
+
+Wrong looks like a node that ignores its entry, or a run that opens in
+the wrong act or with the wrong sector's pools. The console prints any
+warning as `[dev] script: …`.
+
+*For the stop, besides the play:*
+- `--run-script` is the fuzz flag's name, apart from `--scripts`.
+- The warnings' two gaps: a numbered layout crossed at an event node
+  doesn't warn, and the run-config CLI's headless run doesn't print the
+  warnings raised mid-run.
+- `RunConfig.script` arrived with 142d rather than 142c.
+- The backslash guard's refusal is unseen live: a fresh session loads
+  the edited mod, so a planted halved command (a single-quoted run of
+  two backslashes) should be refused there before it runs.

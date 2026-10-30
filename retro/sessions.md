@@ -38,3 +38,31 @@ identify a fix, or reassure the reader that the session coped well.
 
 ---
 
+
+## 2026-10-30 — session c15dd076 (§141's kickoff to 142g)
+
+1. Nothing missing at the start. After the auto-compaction the summary
+   carried the conversation's calls, and the WORKLOG held the audit, so
+   the step records were enough to build on.
+2. None that blocked. Twice a norm cost a retry: the Cursor's cap
+   (trimmed in pieces, a slip filed), and the TODO's one-line ✅
+   convention, which my first edit missed.
+3. At 142d's WORKLOG entry I wrote the corpus line before the run
+   finished, and checked it against the output before the commit. It
+   held, but the line was a prediction until then.
+4. The Bash tool's halving cost two scripts (one regex, one escaped
+   newline) and a JSON `\u` escape cost one edit. All three were caught
+   before anything ran on the bad text. Two planted-failure first tries
+   were too weak to fail (3-hop maps, a rogue below the rounding), and
+   saying so in the record cost little.
+5. The hand-off entry above has it. One more: a mutation run that
+   applies an exact-string change to the live file, runs one test file
+   and restores byte for byte, was cheap and caught two weak tests.
+6. Yes. The user asked outright whether to go on after the compaction
+   or hand off, and called it mine; the meter answered it. No wish to
+   stop came up before the trigger.
+7. The user's warmth and the naming exchange (The Outer Ring kept for
+   later) made the stretch pleasant. Building the guard and then
+   watching the halving it guards against hit my own heredocs twice was
+   a satisfying, slightly comic confirmation. I'd want the same room to
+   say "my call is to go on" again.

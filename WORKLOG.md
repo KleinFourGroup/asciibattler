@@ -113,3 +113,85 @@ as put, with its four calls at the leans: `0.2.0`; the upload (140b,
 140c) before the process read, after 140a; the keep test over the rule
 docs only, the round's guards out of it; an itch changelog drafted at
 140b.
+
+### 140a — the round's exit by clause, and Round 10's charter against the code (2026-10-30, session a0dffe1f)
+
+Read at `3599b187`. Each search below has a control: the same pattern at
+`1a3882f6`, Round 8.5's close, where the thing existed.
+
+**Round 9's exit (META-ROADMAP §"Round 9"), by clause:**
+
+| Clause | Holds? | Evidence |
+|---|---|---|
+| The spec signed | yes | 2026-10-27, the plague's cause and act 4's condition left open (`archive/worklog-phase-135.md`, "The spec and the phases signed") |
+| Each guard with its planted failure | yes | the roster table's: six planted tables, run on every test (135b); `FX_REGISTRY`'s: a synthetic catalog with each gap, and a control, the sword's `fx` removed, failing (135d) |
+| The two stats, `accuracy` and the terrain's modifiers gone from code, config and screen | yes | `evasionMod`, `accuracyMod`, `hitChancePerPrecision`, `dodgeChancePerEvasion`: 0 files at HEAD under `src`, `config`, `locales`, `tools` and `scripts`, 8 at `1a3882f6`; `precision`, `evasion`, `accuracy` only as GLSL statements and test comments (the kickoff's audit); the locale strings lost `stat.precision`, `stat.evasion` and `promotion.delta.dodge`; the screen read in play at 138b |
+| The converted numbers pinned against a derivation the code does not consult | yes | `tests/strike-conversion.test.ts` reads `strike-conversion.before.json` (frozen at `a042bf2c`) and the measured rates, with 139b's moves in its `DEPARTURES` |
+| The board as paired deltas against the round before, and the user's play | yes | three trees paired on the seed (BALANCE.md, 2026-10-29, "the board on three trees"), the old game at `a042bf2c` as the comparator; the user's play at 139d. That the old game plays as `0.1.1` does rests on the records' byte-identity proofs (133f's deletions, 136b's off arm, 137b's revert), not re-run |
+
+**The release line:** every strike lands; eight stats on the card, POW
+above them, read in play at 138b (`archive/worklog-phase-138.md`).
+
+**The scope guards:**
+
+- *No new unit:* the ids of `units.json` (30), `abilities.json` (24),
+  `packets.json` (8) and `daemons.json` (11) are the same at
+  `1a3882f6` and at HEAD.
+- *No act content:* `encounters.json`, `sectors.json`,
+  `sector-map.json`, `events.json`, `layouts.json` and `camps.json` are
+  unchanged since `1a3882f6`.
+- *No retune by taste:* the config moved twice, by 137c's conversion
+  (pinned above) and 139b's seven points by the swing read under a bar
+  written before it; both signed.
+- *No dodge:* no file under `src/sim` or `src/run` but tests names
+  `'unit:missed'`; at `1a3882f6`, `World.ts:805` emitted it.
+- *No cadence change:* no changed config line names a cooldown, a
+  cadence or a duration in seconds; the six sim lines that do are
+  comments and #109's pin restored at 135e
+  (`src/sim/effects/interpreter.test.ts:285`).
+
+**The decision points:** "roughly equivalent" held to one Escalation step
+of the old game's wins; act 1 inside it, two acts outside, signed at 139d
+as the game's (139e) and left to Round 11's retune as a TODO rider. The
+sheet was not re-pinned, by 139's cut; Round 11's retune re-pins it.
+
+**Round 10's charter at HEAD** (META-ROADMAP §"Round 10"):
+
+- *The scripted run:* `RunConfig`'s dials `layout`, `encounter`,
+  `firstNode` and `event` are single ids (`src/run/RunConfig.ts:262`).
+  The 17 URL parameters are the census's count over the whole game;
+  `RUN_CONFIG_PARAMS` holds 13. A saved run keeps its dials as query text
+  and `runSlot.ts:68` parses them back into `Run.fromJSON`. The CLI takes
+  any flag named in `RUN_CONFIG_PARAMS` (`tools/run-config/cli.ts:55`),
+  so `--sectorHops` parses and `--sector-hops` does not; the help lists
+  neither, nor `--escalation`. No warning when a forced encounter matches
+  no node.
+- *The fauna:* none of wolf, rat, fox, puma, tiger or bear is a unit;
+  `bandit` is.
+- *The run's shape:* The Start (grassland, 11 hops) holds the Bandit King
+  and the Bandit Queen as bosses, The Deep End (swamp, 11) the
+  Generalissimo and the Witch Hunt, so the moves are still to make. Act 1
+  is grassland in `plans/acts.md`, the reason for the lean that The Start
+  takes barren; barren, tundra and volcanic are layout themes already.
+- *The sheet:* `tests/fuzz/board/signed-sheet.json` holds one
+  `seamPoolFraction` and a `deepEndWallTarget`, two-act shaped as
+  written.
+- *The atlas:* 31 glyphs against `ATLAS_CELL_BUDGET` 48.
+- *Not in the charter, in TODO under Round 10:* the roster table's
+  rebuild, which 135b's guard makes a precondition: from the commit that
+  adds act 1, `tests/roster-table-coverage.test.ts` fails and
+  `makeRosterSampler` refuses the table until a board cohort rebuilds it,
+  so act 1's bands, the round's exit, wait on it. And B-19, the editors'
+  repeated sheet rules, a lead with no oracle yet.
+
+**The calls, with the session's leans:**
+
+1. *Round 10's charter* stands, with one line added to its scope: the
+   roster table rebuilt once act 1 is in the map, the guard's PENDING
+   line until then. B-19 stays a TODO lead, unnamed in the charter,
+   since it has no proof. `--escalation`'s help line joins R12's row.
+2. *The playtest:* 140c's smoke is the round's playtest. The user played
+   the converted game at 139b's numbers at 139d, and those are the
+   build's.
+3. *The audit round:* none, since no cluster closed; Round 8.5's close
+   made the same call.

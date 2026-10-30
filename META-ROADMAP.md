@@ -955,10 +955,10 @@ with the two shipped sectors as acts 2 and 3 in the same release.
   enemy-only 1×1 melee archetypes, in encounters and camps; bandits as
   enemies.
 - **Act 1's sector** (A7's share): encounters, layouts and events,
-  locale-keyed, 11 hops on grassland, and two bosses: a bear, 1×1 until
-  round 20 grows it under the same id, and the Bandit King from The
-  Start; a tree as plain scenery if the layouts want one (its flight rule
-  is round 20's).
+  locale-keyed, 11 hops on a new forest theme (signed at the kickoff,
+  for grassland), and two bosses: a bear, 1×1 until round 20 grows it
+  under the same id, and the Bandit King from The Start; a tree as plain
+  scenery, the forest's cover (its flight rule is round 20's).
 - **The run's shape** ([plans/acts.md](plans/acts.md)): act 1, then The
   Start as act 2 and The Deep End as act 3 until rounds 21 and 22 rework
   them, with the Generalissimo and the Witch Hunt moved to The Start and

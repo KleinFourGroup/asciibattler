@@ -13,7 +13,8 @@ session's, not signed; *open* is still the user's.
 | | Act 1 — the wilds | Act 2 — the realm in chaos | Act 3 — the plague | Act 4 — the secret act |
 |---|---|---|---|---|
 | Sector | a new one (Round 10) | The Start, reworked in Round 21 | The Deep End, reworked in Round 22 | a new one (Round 23) |
-| Theme | grassland | *lean:* barren | *lean:* swamp, The Deep End's | *lean:* volcanic |
+| Title | *open;* the user's lean, The Periphery | The Fragments (the id `start` stays) | The Deep End | The Root ("Root cause of the plague + root account") |
+| Theme | forest, a new theme with a tree (signed 2026-10-30) | barren (signed 2026-10-30) | *lean:* swamp, The Deep End's | *lean:* volcanic |
 | Hops | 11 | 11 | 11 | about 3, no branching |
 | Enemies | ground fauna (wolf, giant rat, fox, puma, tiger; the eagle and the crab with traversal, Round 19), and some bandits | bandits, deserters (the rifle-armed archetypes), the period archetypes (rioter, gunslinger, halberdier, officer), in the warlord-era register | the plague's and the occult's | new |
 | Bosses | a bear, 1×1 until moving 2×2s land (Round 20), when it grows under the same id; the Bandit King, from The Start | the Generalissimo, a faction's leader, and the Witch Hunt, both from The Deep End | the dark wizard; until it is built, the Bandit Queen stands in, from The Start | a demon lord |
@@ -35,11 +36,13 @@ Round 10 adds act 1 before the two shipped sectors, so a run already has
 three: they are acts 1 to 3 from that release, with the bosses moved as
 the table says (the King to act 1; the Generalissimo and the Witch Hunt
 to The Start; the Queen to The Deep End). Each moved boss is re-read on
-Round 10's board at its new place in the run. *Lean, unanswered:* The
-Start takes act 2's barren theme in Round 10, so a run does not open
-grassland twice; barren's camp pool is grassland's, and its ground swaps
-mud for sand with a few more hills, so The Start's procedural boards
-redraw.
+Round 10's board at its new place in the run. Act 1 is a forest, a new
+theme whose procedural cover is drawn as trees, plain scenery that blocks
+as a wall does; authored layouts keep their own themes (signed
+2026-10-30, `WORKLOG.md` §141 and §142). The Start takes act 2's barren
+theme in Round 10 (signed the same day); barren's camp pool is
+grassland's, and its ground swaps mud for sand with a few more hills, so
+The Start's procedural boards redraw.
 
 ## The run's frame
 

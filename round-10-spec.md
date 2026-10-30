@@ -132,21 +132,17 @@ the encounters' names and descriptions for the user to edit (a lean the
 answer did not cover). The boon moves to act 1's root, its line reading
 "beasts and bandits". RunSnapshot v50 stays, with the node ids. Act 1
 takes the shipped sectors' shape. The script is written inline in the
-URL. Open: the two titles, and a forest theme, on the session's reads
-in WORKLOG §142's kickoff.
+URL. The titles and a forest theme went on the session's reads (WORKLOG
+§141), answered the same day (WORKLOG §142): act 1 a forest and The
+Start barren, signed; The Start's title The Fragments; act 1's title
+open, since The Root is the user's for act 4, with the user's lean The
+Periphery.
 
 ### Tranche 2 (each at its phase's kickoff)
 
-- *§144:* the beasts' glyphs, a taste stop with each drawn; new attacks
-  or the shipped melee ones.
-- *§145:* the save (*lean:* RunSnapshot v50 kept, the node ids `start`
-  and `deep-end` kept, a resume test across the map change); The Start's
-  theme (*lean:* barren, plans/acts.md's, which also keeps its bandit
-  camps); the titles (*lean:* act 1 "The Wilds"; whether The Start keeps
-  its title as act 2 is the user's); the boon, `sector-1-start` (*lean:*
-  to act 1's root, its id kept, its "rife with bandits" line the user's
-  to keep or change); act 1's size (*lean:* the shipped sectors' shape,
-  six normal encounters, two elites, two bosses, two fauna camps, the
-  shared layouts and events) and who writes its text (*lean:* the
-  session drafts and the user signs).
+- *§144:* the beasts' glyphs and the tree's, a taste stop with each
+  drawn; new attacks or the shipped melee ones.
+- *§145:* act 1's title (the user's lean, The Periphery). The save, The
+  Start's theme and title, the boon, act 1's size and its text are
+  answered above.
 - *§146:* the box's size and cost.

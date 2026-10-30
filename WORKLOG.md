@@ -433,3 +433,25 @@ no count re-recorded.
   or a run that opens in the wrong act or with the wrong sector's pools.
 
 The stretch the cut opens: 142a, then the stop at 142b.
+
+### The cut signed, the forest signed, act 2's title (2026-10-30)
+
+The user: "I also like that cut for 142." ROADMAP §142 holds the steps.
+
+- **The forest:** "we're on the same page completely!😁 Signed!", on the
+  read in §141: act 1 is a forest, a new theme with a tree as plain
+  scenery, and The Start takes barren. The tree enters in §144, its glyph
+  in the beasts' taste stop; the theme, its palette, its tiles and the
+  fauna camps' pool in §145. plans/acts.md's theme row says so.
+- **Act 2's title:** The Fragments ("I really like the fragments,
+  actually! Let's do it!"). Display text only; the id `start` stays.
+- **Act 1's title, open.** The Root is taken: it is the user's title for
+  act 4 ("Root cause of the plague + root account"), now in
+  plans/acts.md. The Sticks reads American to the user. The user's lean
+  is *The Periphery*, asking for a pun on it. The session's read: the
+  word carries one as it stands, since peripherals are the devices at a
+  computer's edge, outside its core, as the wild is the realm's edge;
+  the one alternative offered is *The Outer Ring*, x86's ring 3, the
+  least-trusted, so that with act 4 The Root and the difficulty ladder
+  named Escalation a run reads as a privilege escalation. The title is
+  needed by §145.

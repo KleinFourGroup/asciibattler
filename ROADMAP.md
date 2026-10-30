@@ -12,8 +12,8 @@ its spec, its per-phase worklogs (`archive/worklog-phase-135.md` to
 `-140.md`) and its session reports beside it; before it
 [archive/post-118-roadmap.md](archive/post-118-roadmap.md) (Round 8.5).
 
-**Status: §141, the kickoff, signed 2026-10-30; §142's cut is put to
-the user, unsigned (WORKLOG §142), and enters below once signed.** The spec is [round-10-spec.md](round-10-spec.md), its tranche 2
+**Status: §142, the scripted run, cut signed 2026-10-30; 142a next,
+then the stop at 142b.** The spec is [round-10-spec.md](round-10-spec.md), its tranche 2
 answered at the kickoffs of §144 to §146. The charter, the decision
 points, the exit and the scope guards are in META-ROADMAP §"Round 10 —
 Act 1, the wilds", with the roster table's rebuild added to its scope at
@@ -48,6 +48,20 @@ act 2 each in one URL, each with a headless test and its planted failure;
 the old dials' tests green unchanged; a run with no script unchanged (the
 corpus at its baseline). **Scope guards:** no content; no Run field, since
 the script rides the saved query text; no board row changed.
+
+The cut, signed 2026-10-30, with its predictions and each step's exit,
+is WORKLOG §142.
+
+- ☐ **142a — the backslash guard** (`none`).
+- ☐ **142b — the grammar** (`stop`): the entry list and its inline URL
+  form, worked on the user's three cases and a start at act 2.
+- ☐ **142c — the list, with the old dials as cases** (`none`).
+- ☐ **142d — the per-hop entries** (`none`), with the zero-match
+  warning.
+- ☐ **142e — a port's stock** (`none`).
+- ☐ **142f — the starting act** (`none`).
+- ☐ **142g — the CLIs** (`none`).
+- ☐ **142h — the phase's close** (`stop`): the user plays four URLs.
 
 ## Phase 143 — the board's acts (signed 2026-10-30)
 

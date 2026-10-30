@@ -51,9 +51,15 @@ Claude Code's own tools.
   unless a double quote follows it, inside single quotes and a quoted
   heredoc too, while the transcript shows the command as written; the
   PowerShell tool passes them whole (measured 2026-10-23, Claude Code
-  2.1.308; `../archive/post-118-worklog.md` §130, 130e). The context meter's mod adds a backslash
-  note to a Bash result whose reading the halving changed, with what bash
-  got; the command has run by then.
+  2.1.308, `../archive/post-118-worklog.md` §130, 130e; again 2026-10-30,
+  2.1.309, `../WORKLOG.md` §142, 142a). The context meter's mod refuses,
+  before it runs, a Bash command whose reading the halving changes,
+  showing each such line as written and as bash would get it; send the
+  text through a file the Write tool writes, or the command through the
+  PowerShell tool. A run a double quote follows, or a pair in double
+  quotes before a character that keeps a backslash (`"\\."`), reads the
+  same and passes. To measure the halving again, make the command's first
+  line `# halving: measure`: it runs, and the result notes what bash got.
 - **Bash calls.** The Bash tool runs most commands with stdin on
   `/dev/null`, where a bare `cat > file` writes an empty file and moves
   on. A command holding a heredoc, and some others, reaches the shell

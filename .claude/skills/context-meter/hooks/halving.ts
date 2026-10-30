@@ -1,13 +1,15 @@
-// The Bash tool's backslash halving, and the note a halved command earns.
+// The Bash tool's backslash halving, the refusal a halved command earns, and
+// the note a command that measures the halving gets.
 //
-// Measured on Claude Code 2.1.308 (archive/post-118-worklog.md §130, 130e): before bash reads a
+// Measured on Claude Code 2.1.308 (archive/post-118-worklog.md §130, 130e) and
+// again on 2.1.309 (WORKLOG.md §142, 142a): before bash reads a
 // command, the Bash tool halves each run of backslashes, rounding up, unless a
 // double quote follows the run, which keeps it whole; the transcript and the
 // tool's input hold the command as written. Bash then applies its own rules,
 // so a halved run can leave bash's reading unchanged (`"\\."` reads `\.`
-// either way). The note goes out only when the reading changed, line by line,
-// as the round's shell audit (`scratch/130/shell-audit.mjs`) cards a call;
-// this file is that audit's model, ported.
+// either way). The refusal goes out only when the reading changed, line by
+// line, as the round's shell audit (`scratch/130/shell-audit.mjs`) cards a
+// call; this file is that audit's model, ported.
 
 const BS = '\\';
 
@@ -124,21 +126,51 @@ export function changedLines(cmd: string): ChangedLine[] {
   return pairs;
 }
 
-const MEASURED_ON = '2.1.308';
+const MEASURED_ON = '2.1.309';
 const clip = (s: string): string => (s.length > 160 ? `${s.slice(0, 157)}...` : s);
 
-/** The note for a command whose reading the halving changed, or undefined. */
+/**
+ * The first line of a command that measures the halving again: the guard
+ * lets it run, and the note says what bash got. A harness fix would make the
+ * model wrong, and only a halved command run through the Bash tool shows it.
+ */
+export const MEASURE_LINE = '# halving: measure';
+
+export const measuring = (cmd: string): boolean => cmd.trimStart().startsWith(MEASURE_LINE);
+
+const lines = (n: number): string => (n === 1 ? 'a line' : `${n} lines`);
+
+// Up to three changed lines, each as written and as bash reads it.
+function shown(pairs: ChangedLine[], read: string): string[] {
+  const label = `bash ${read}:`.padEnd('as written:'.length);
+  const out = pairs
+    .slice(0, 3)
+    .flatMap((p) => [`  as written: ${clip(p.meant.trimStart())}`, `  ${label} ${clip(p.got.trimStart())}`]);
+  return pairs.length > 3 ? [...out, `  (and ${pairs.length - 3} more changed lines)`] : out;
+}
+
+const halves = (version: string): string =>
+  `Bash tool halves a run of backslashes that no double quote follows (measured on Claude Code ${MEASURED_ON}; this session runs ${version})`;
+
+/** The refusal for a command whose reading the halving changes, or undefined. */
+export function halvingRefusal(cmd: string, version: string): string | undefined {
+  if (measuring(cmd)) return undefined;
+  const pairs = changedLines(cmd);
+  if (pairs.length === 0) return undefined;
+  return [
+    `Backslash guard: refused before it ran. The ${halves(version)}, so bash would read ${lines(pairs.length)} of this command differently from how it was written:`,
+    ...shown(pairs, 'gets'),
+    'Write the text with the Write tool and pass bash the file, or run the command with the PowerShell tool; both pass backslashes whole. (process/shell-and-windows.md, "Editing")',
+  ].join('\n');
+}
+
+/** The note for a command that measures the halving, when its reading changed, or undefined. */
 export function halvingNote(cmd: string, version: string): string | undefined {
   const pairs = changedLines(cmd);
   if (pairs.length === 0) return undefined;
-  const shown = pairs
-    .slice(0, 3)
-    .flatMap((p) => [`  as written: ${clip(p.meant.trimStart())}`, `  bash got:   ${clip(p.got.trimStart())}`]);
-  const more = pairs.length > 3 ? [`  (and ${pairs.length - 3} more changed lines)`] : [];
   return [
-    `Backslash note: the Bash tool halves a run of backslashes that no double quote follows (measured on Claude Code ${MEASURED_ON}; this session runs ${version}), so bash read ${pairs.length === 1 ? 'a line' : `${pairs.length} lines`} of this command differently from how it was written:`,
-    ...shown,
-    ...more,
+    `Backslash note: the ${halves(version)}, so bash read ${lines(pairs.length)} of this command differently from how it was written:`,
+    ...shown(pairs, 'got'),
     'A file written with the Write tool, or the PowerShell tool, passes backslashes whole.',
   ].join('\n');
 }

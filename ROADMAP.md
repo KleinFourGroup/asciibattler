@@ -12,8 +12,8 @@ its spec, its per-phase worklogs (`archive/worklog-phase-135.md` to
 `-140.md`) and its session reports beside it; before it
 [archive/post-118-roadmap.md](archive/post-118-roadmap.md) (Round 8.5).
 
-**Status: §142, the scripted run, cut signed 2026-10-30; 142a next,
-then the stop at 142b.** The spec is [round-10-spec.md](round-10-spec.md), its tranche 2
+**Status: §142, the scripted run, cut signed 2026-10-30; 142a built;
+142b, the grammar, next, a stop.** The spec is [round-10-spec.md](round-10-spec.md), its tranche 2
 answered at the kickoffs of §144 to §146. The charter, the decision
 points, the exit and the scope guards are in META-ROADMAP §"Round 10 —
 Act 1, the wilds", with the roster table's rebuild added to its scope at
@@ -52,7 +52,8 @@ the script rides the saved query text; no board row changed.
 The cut, signed 2026-10-30, with its predictions and each step's exit,
 is WORKLOG §142.
 
-- ☐ **142a — the backslash guard** (`none`).
+- ☑ **142a — the backslash guard** (`none`). The halving re-measured on
+  2.1.309; the refusal unseen live until a session loads the edit.
 - ☐ **142b — the grammar** (`stop`): the entry list and its inline URL
   form, worked on the user's three cases and a start at act 2.
 - ☐ **142c — the list, with the old dials as cases** (`none`).

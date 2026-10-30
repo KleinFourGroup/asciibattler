@@ -1,5 +1,5 @@
 import type { EngineInterface, Register } from 'claude-code'
-import { halvingNote } from './halving.ts'
+import { halvingNote, halvingRefusal } from './halving.ts'
 import { HAND_OFF_AT, commitIn, landed, pastTrigger } from './handoff.ts'
 import { type Stall, stdinRefusal, stdinStall } from './stdin.ts'
 
@@ -10,6 +10,18 @@ import { type Stall, stdinRefusal, stdinStall } from './stdin.ts'
 function stallIn(command: string): Stall | undefined {
   try {
     return stdinStall(command)
+  } catch {
+    return undefined
+  }
+}
+
+// A command whose reading the Bash tool's halving changes is refused before it
+// runs (halving.ts has the model), and the PowerShell tool, which passes
+// backslashes whole, is not looked at. A fault in the model, or in reading the
+// version the refusal names, lets the command run, as the stdin guard's does.
+async function halvedIn($: EngineInterface, command: string): Promise<string | undefined> {
+  try {
+    return halvingRefusal(command, (await $.session.version()).version)
   } catch {
     return undefined
   }
@@ -46,6 +58,12 @@ export const register: Register = on => {
     if (stall !== undefined) {
       $.ui.log(`stdin guard: refused line ${stall.line}, which reads stdin with nothing to feed it`)
       return { deny: stdinRefusal(stall) }
+    }
+
+    const halved = await halvedIn($, e.command)
+    if (halved !== undefined) {
+      $.ui.log('backslash guard: refused a command bash would read differently from how it was written')
+      return { deny: halved }
     }
 
     return withHalvingNote($, e.command, await withHandOff($, e.command, () => next(e)))
@@ -94,8 +112,9 @@ async function head($: EngineInterface, dir: string | undefined): Promise<string
 
 // The command ran as the Bash tool halved it; when bash read it differently
 // from how it was written, the result says so (halving.ts has the model).
-// A note, never a refusal: a harness fix would make the model wrong, and a
-// wrong note costs less than a refused correct command.
+// Past the guard, that is a command that measures the halving, whose first
+// line is halving.ts's MEASURE_LINE: a harness fix would make the model
+// wrong, and the note is how a session sees it.
 async function withHalvingNote<R extends { deny?: string; context?: readonly string[] }>(
   $: EngineInterface,
   command: string,

@@ -36,7 +36,12 @@ user for the reading.
   passed it).
 - The CLI is not on PATH here; it is the app's bundled `claude.exe` under
   `%APPDATA%\Claude\claude-code\<version>\<build>\`.
-- The backslash note's model, `hooks/halving.ts`, is also held by
+- The backslash guard's model, `hooks/halving.ts`, is also held by
   `tests/shell-halving.test.ts` and type-checked by the repo's own
   typecheck. So is the stdin guard's, `hooks/stdin.ts`, by
-  `tests/shell-stdin.test.ts`.
+  `tests/shell-stdin.test.ts`. `hooks/register.ts` imports the engine's
+  types, so only the scratch tsconfig above checks it.
+- **Measuring the halving again.** The backslash guard refuses a halved
+  command, so the halving can't be seen through it. A command whose first
+  line is `# halving: measure` runs, and the backslash note says what bash
+  got (`process/shell-and-windows.md`, "Editing").

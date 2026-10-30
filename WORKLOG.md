@@ -455,3 +455,43 @@ The user: "I also like that cut for 142." ROADMAP §142 holds the steps.
   least-trusted, so that with act 4 The Root and the difficulty ladder
   named Escalation a run reads as a privilege escalation. The title is
   needed by §145.
+
+### 142a — the backslash guard (2026-10-30)
+
+*Step zero, the halving on Claude Code 2.1.309.* Four commands through
+the Bash tool, read back with `od -c` and `wc -c`: a single-quoted run of
+four reached bash as two, a run of three as two (rounding up), a quoted
+heredoc's run of four as two, and a run of four a double quote follows
+stayed whole. Each of the four rules 130e measured on 2.1.308 holds, and
+the mod's note fired on each halved line with what bash got. The guard's
+premise stands.
+
+*Built.* `halving.ts` gives `halvingRefusal`, which refuses where
+`changedLines` finds a line bash would read differently, so a run a
+double quote follows and a double-quoted pair that reads the same (`"\\."`)
+pass, as the cut's exit has it, where the TODO's first wording (any run
+of two) would have refused them. The hook refuses in the Bash handler
+after the stdin guard; the PowerShell handler is untouched. A fault in
+the model, or in reading the version, lets the command run.
+
+*A lean, for the stop:* a command whose first line is `# halving:
+measure` runs with the note. With every halved command refused, the
+halving could no longer be seen, and a harness fix (the user reported the
+halving on 2026-10-23) would leave the guard refusing correct commands
+with no way to tell. The refusal doesn't mention the measure line, so it
+isn't a reflex way around the guard; the README and
+`process/shell-and-windows.md` do.
+
+*Evidence.* `tests/shell-halving.test.ts`, 13 of 13: four shapes refused
+(a single-quoted pair, a run of three, a quoted heredoc, a pair in a bare
+word), four passed (a run a double quote follows, a double-quoted pair
+that reads the same, one backslash, none), the refusal's text, and the
+measure line, which counts only as the first line. Two failing controls,
+each on a copy: a guard that refuses nothing fails 6 of 13, and one that
+refuses any run of two (the TODO's wording) fails the two cases that read
+the same. `register.ts` type-checks against the engine's declarations
+(2.1.309, the scratch tsconfig the README names), with a planted
+`deny: 42` caught. *Not verified:* the refusal live in the harness, since
+an edit to the mod loads in a fresh session (the README, "Loading"); the
+PowerShell clause rests on reading the handler, which calls only the
+hand-off check.

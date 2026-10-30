@@ -210,15 +210,7 @@ META-ROADMAP §"Round 10 — Act 1, the wilds" names each row's place.
 
 ### The shell
 
-- [ ] **The backslash guard** (signed at Round 9's close, 140d). The Bash
-  tool halves a run of backslashes, and about 20 filings since Round 7
-  name it, the latest at 139c; the mod's note comes after the command has
-  run. The guard: the context meter's mod refuses, before it runs, a Bash
-  command holding a run of two or more backslashes, naming the line and
-  the Write tool, as the stdin guard does for stdin
-  (`process/shell-and-windows.md`, "Editing"). Step zero: the halving
-  measured again on the Claude Code of the day, since the user reported
-  it to the Claude Code team on 2026-10-23 (the feedback watch, below).
+- ✅ **The backslash guard** — the context meter's mod refuses, before it runs, a Bash command whose reading the halving changes; the halving measured again on 2.1.309 (ROADMAP §142, 142a; WORKLOG §142).
 
 ## Round 11 — The roster
 

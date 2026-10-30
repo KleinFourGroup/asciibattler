@@ -297,3 +297,13 @@ in this order; and the starting act in the scripted run's scope, lean
 yes. **Tranche 2**, each at its phase's kickoff: the glyphs and the
 attacks (§144); the save, The Start's theme, the titles, the boon, and
 act 1's size and authorship (§145); the box (§146).
+
+### The spec and the phases signed (2026-10-30)
+
+The user: "That looks great to me, Claude! Signed!", covering tranche 1:
+the spec, §142 to §147 in the order put, and the starting act in §142's
+scope. ROADMAP holds §141 ticked and §142 to §147; META-ROADMAP's
+scripted-run bullet names the starting act; the spec's status line says
+SIGNED. The user asked what else to firm up before the build; the
+answer lists tranche 2's calls with their leans, none of which §142 or
+§143 rests on.

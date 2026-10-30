@@ -942,7 +942,9 @@ with the two shipped sectors as acts 2 and 3 in the same release.
   of which today's single-valued dials (`layout`, `encounter`, `event`,
   `firstNode`) are cases, so the URL's 17 parameters shrink as control
   grows: a chain of encounters or boards, an event chain end to end, a
-  port's stock. A forced id is saved since Round 8 (the slot keeps the
+  port's stock, and the act a run starts at (added at the kickoff, since
+  from act 1's commit every single-sector probe reads act 1; WORKLOG
+  §141). A forced id is saved since Round 8 (the slot keeps the
   dials as text, and `Run.fromJSON` applies them), so entries keyed by
   position with a URL form need no save work. Folded in: `--sector-hops`
   (R12; the CLI forwards any flag named as a URL parameter, so

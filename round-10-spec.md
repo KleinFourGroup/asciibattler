@@ -1,6 +1,8 @@
 # Round 10 Spec — Act 1, the wilds
 
-**Status: DRAFT 2026-10-30, unsigned.** The intent is the user's,
+**Status: SIGNED 2026-10-30** ("That looks great to me, Claude!
+Signed!"), with the phases §142 to §147 and the scripted run's starting
+act; tranche 2 stays open for the phases that need it. The intent is the user's,
 verbatim, from §133, where the round was cut, from Round 9's kickoff,
 where the act design was answered, and from the TODO pass of 2026-10-13.
 What was signed before the kickoff is listed with its date. The Open

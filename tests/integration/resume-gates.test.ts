@@ -241,10 +241,8 @@ describe('115a — Run.fromJSON(snapshot, bus, config?): the config inputs', () 
   // Every input the run reads after construction, by its field name.
   const INPUTS = [
     'sectorMap',
-    'forcedLayoutId',
-    'forcedEncounterId',
+    'script',
     'eventCatalog',
-    'forcedEventId',
     'singleSectorRun',
     'sectorHopsOverride',
     'sectorScatterConfig',

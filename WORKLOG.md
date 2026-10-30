@@ -626,3 +626,36 @@ the draft above with its leans as drafted, and 142a's measure line.
 Act 1's title is The Periphery ("I agree that periphery is still
 better"); The Outer Ring is kept in plans/acts.md for an alternate act
 ("let's keep that idea in mind for when we add alternate acts!").
+
+### 142c — the list, with the old dials as cases (2026-10-30)
+
+*Step zero.* The old dials' tests assert the fields themselves
+(`parseRunConfig('layout=river').forcedLayoutId`, and `new Run(..., {
+forcedEncounterId })` in `Run.test.ts`), so the four fields stay on
+`RunConfig` as the code's names for their cases. The list is what the
+Run reads: `src/run/RunScript.ts`'s entries, the four fields folded in
+by `dialEntries`, with every forced item read through `scriptItem` and
+the root's kind through `scriptKind`. `RunConfig.script` and the
+`script=` URL form come with the per-hop entries in 142d, where the parse
+changes, so the URL parse is untouched here. A deviation in order from
+the cut's wording ("RunConfig holds the list"), not in intent.
+
+*Built.* `Run.forcedLayoutId`, `forcedEncounterId` and `forcedEventId`
+are gone for `Run.script`; `scriptAt(item, hop)` reads an item at a hop
+of the active act (the count of sectors entered, from 1), and
+`stampRoot` kinds each act's root at both sector entries, the first-node
+dial's stamp included, so the generator takes the config without
+`firstNodeKind` (`withoutFirstNode`). The checks of the three ids throw
+the messages they threw. One test names the Run's private inputs
+(`resume-gates.test.ts`, 115a) and takes `script` for the three names.
+
+*Evidence.* The suite green (`src/run`, `tests/integration`: 932, before
+the hook's full run). The corpus: 0 of 32 differ. Its control, the
+first-node entry planted at hop 2: 2 of 32 differ, `player-5` (hops 2,
+`firstNode=event`) and `player-6` (hops 2, `firstNode=rest`), as
+predicted before the run, and `player-8` (hops 1, `firstNode=elite`)
+not, since its one hop is the boss and the boss wins either way.
+`RunScript.test.ts`, 5 of 5: the dials as entries, and the most specific
+entry winning in either order. The corpus carries no `encounter=` or
+`event=` journal; those two cases rest on their unchanged tests in
+`Run.test.ts`.

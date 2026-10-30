@@ -32,6 +32,7 @@ import type { RngStreamKey } from '../core/rngStreams';
 import type { UnitTemplate } from '../sim/Unit';
 import { rollUnit } from '../sim/archetypes';
 import { generate as generateNodeMap, stampRootKind, PRE_ROOT_NODE_ID, type NodeMap, type NodeKind } from './NodeMap';
+import { dialEntries, scriptItem, scriptKind, type ScriptEntry, type ScriptItem } from './RunScript';
 import { FORCE_PROCEDURAL, sectorAdvanceConfig, type RunConfig } from './RunConfig';
 import { getSector, eventPoolAtHop, type SectorDef } from '../config/sectors';
 import { SECTOR_MAP, type SectorMap } from '../config/sectorMap';
@@ -554,8 +555,6 @@ export class Run {
    *  it does every dial below that the snapshot does not hold (`RunConfig`'s
    *  header says which a save keeps). */
   private readonly eventCatalog: readonly EventDef[];
-  /** The forced event (`RunConfig.forcedEventId`), checked at construction. */
-  private readonly forcedEventId: string | null;
   /** Whether the root's `event` kind was stamped by the dial
    *  (`firstNodeKind: 'event'`) rather than by the sector's starting events.
    *  A dial-stamped root draws from the regular event pool, so the dial
@@ -756,18 +755,11 @@ export class Run {
   readonly visitedNodes: Set<number>;
 
   /**
-   * The forced layout (`RunConfig.forcedLayoutId`): every battle's board is
-   * this layout, or with `FORCE_PROCEDURAL` a fresh procedural board, in
-   * place of the sector pool's roll; `null` for the roll.
+   * The run's script (`RunScript.ts`), the forcing dials among its entries,
+   * checked at construction: what each act's hops are, which encounter, board
+   * and event they hold. An item no entry sets is the sector's own draw.
    */
-  private readonly forcedLayoutId: string | null;
-
-  /**
-   * The forced encounter (`RunConfig.forcedEncounterId`), taken at every
-   * node whose kind matches its own (`selectEncounter`); `null` for the
-   * sector pool's draw.
-   */
-  private readonly forcedEncounterId: string | null;
+  private readonly script: readonly ScriptEntry[];
 
   /**
    * The run's difficulty multipliers, resolved at construction and again on
@@ -819,10 +811,8 @@ export class Run {
     // boss pick below reads the forced ids.
     const inputs = resolveRunInputs(config);
     this.sectorMap = inputs.sectorMap;
-    this.forcedLayoutId = inputs.forcedLayoutId;
-    this.forcedEncounterId = inputs.forcedEncounterId;
+    this.script = inputs.script;
     this.eventCatalog = inputs.eventCatalog;
-    this.forcedEventId = inputs.forcedEventId;
     this.singleSectorRun = inputs.singleSectorRun;
     this.sectorHopsOverride = inputs.sectorHopsOverride;
     this.sectorScatterConfig = inputs.sectorScatterConfig;
@@ -844,11 +834,14 @@ export class Run {
     const start = pickStartSector(this.sectorMap, this.streamRng('sector', 0));
     this.currentSectorNodeId = start.sectorNodeId;
     this.currentSectorId = start.sectorId;
-    this.nodeMap = generateNodeMap(this.streamRng('nodemap', 0), config, this.currentSectorLength());
-    // The sector's starting events stamp the root `event`, with no draw;
-    // the `firstNodeKind` dial wins when set, and its root draws from the
-    // regular pool (`rootStampedByDial`).
-    if (config?.firstNodeKind === undefined) this.stampStartingEventRoot();
+    // The first-node dial reaches the map through the script (`stampRoot`),
+    // so the generator takes the config without it.
+    this.nodeMap = generateNodeMap(
+      this.streamRng('nodemap', 0),
+      withoutFirstNode(config),
+      this.currentSectorLength(),
+    );
+    this.stampRoot();
     // The sector's boss, picked now so it can be shown ahead.
     const bossRoll = this.rollBossForSector(this.streamRng('boss', 0));
     this.bossEncounterId = bossRoll.bossEncounterId;
@@ -1240,10 +1233,11 @@ export class Run {
    * survives, which returns `null` and the caller makes the node a fight.
    */
   private rollEventForNode(fromStartingPool: boolean, entryRng: RNG): EventDef | null {
-    if (this.forcedEventId !== null) {
-      const forced = this.eventCatalog.find((e) => e.id === this.forcedEventId);
+    const forcedId = this.scriptAt('event', this.currentHop);
+    if (forcedId !== undefined) {
+      const forced = this.eventCatalog.find((e) => e.id === forcedId);
       if (forced === undefined) {
-        throw new Error(`Run: forcedEventId '${this.forcedEventId}' left the catalog mid-run`);
+        throw new Error(`Run: forced event '${forcedId}' left the catalog mid-run`);
       }
       return forced;
     }
@@ -1687,11 +1681,11 @@ export class Run {
         { hop: this.currentHop, nodeKind: this.kindOf(this.currentNodeId) },
         mapRng,
         getEncounter,
-        eventForcedEncounterId ?? this.forcedEncounterId ?? undefined,
+        eventForcedEncounterId ?? this.scriptAt('encounter', this.currentHop),
       );
       this.selectedEncounter = selection.encounter;
       // The board's draws follow the selection's on the same stream.
-      this.encounterMap = this.buildEncounterMap(selection.layoutId, mapRng);
+      this.encounterMap = this.buildEncounterMap(selection.layoutId, this.currentHop, mapRng);
     }
     // Both branches set the encounter: the enemy's pool fills from it, and
     // its waves start from the top.
@@ -1748,19 +1742,43 @@ export class Run {
       { hop: bossHop, nodeKind: 'boss' },
       sectorRng,
       getEncounter,
-      this.forcedEncounterId ?? undefined,
+      this.scriptAt('encounter', bossHop),
     );
     return {
       bossEncounterId: selection.encounter.id,
-      bossEncounterMap: this.buildEncounterMap(selection.layoutId, sectorRng),
+      bossEncounterMap: this.buildEncounterMap(selection.layoutId, bossHop, sectorRng),
     };
   }
 
   /**
+   * The script's item at a hop of the active act (`RunScript.ts`), or
+   * undefined for the sector's own draw. `hop` is the Run's, from 0 at the
+   * root; the script counts acts and hops from 1, and the active act is the
+   * count of sectors entered.
+   */
+  private scriptAt(item: ScriptItem, hop: number): string | undefined {
+    return scriptItem(this.script, item, this.sectorIndex + 1, hop + 1);
+  }
+
+  /**
+   * Kind the active act's freshly drawn root, with no draw: the script's
+   * kind for it when an entry gives one, the first-node dial's among them,
+   * and otherwise the sector's starting events' stamp. Both sector entries
+   * call it, the constructor and `advanceSector`.
+   */
+  private stampRoot(): void {
+    const kind = scriptKind(this.script, this.sectorIndex + 1, 1);
+    if (kind === undefined) {
+      this.stampStartingEventRoot();
+    } else {
+      this.nodeMap = stampRootKind(this.nodeMap, kind);
+    }
+  }
+
+  /**
    * Make the active sector's root an `event` node when the sector has
-   * `startingEvents`, with no draw (`stampRootKind`). The constructor skips
-   * it when the `firstNodeKind` dial is set; `advanceSector` always calls
-   * it, since that dial shapes the first sector only.
+   * `startingEvents`, with no draw (`stampRootKind`). `stampRoot` skips it
+   * when the script kinds the root.
    */
   private stampStartingEventRoot(): void {
     if (this.currentSector().startingEvents.length > 0) {
@@ -1850,24 +1868,22 @@ export class Run {
   }
 
   /**
-   * Build the encounter's battlefield for `selectedLayoutId`, which
-   * `selectEncounter` picked from the sector's layout pool at the hop, kept
-   * to the encounter's fit (`null` is procedural). The terrain seed and the
-   * procedural side are drawn on every branch, the forced-layout dial
+   * Build the encounter's battlefield at `hop` for `selectedLayoutId`,
+   * which `selectEncounter` picked from the sector's layout pool at the hop,
+   * kept to the encounter's fit (`null` is procedural). The terrain seed and
+   * the procedural side are drawn on every branch, a forced layout's
    * included (gotcha #49). A procedural board takes the sector's theme, and
    * a hand-authored layout its own.
    */
-  private buildEncounterMap(selectedLayoutId: string | null, mapRng: RNG): EncounterMap {
+  private buildEncounterMap(selectedLayoutId: string | null, hop: number, mapRng: RNG): EncounterMap {
     const sector = this.currentSector();
     const terrainSeed = Math.floor(mapRng.next() * 0x1_0000_0000);
-    // `forcedLayoutId`: `null` takes the selection's, `FORCE_PROCEDURAL` a
-    // procedural board, and any other id that layout.
+    // The script's layout, the `forcedLayoutId` dial's among them: none takes
+    // the selection's, `FORCE_PROCEDURAL` a procedural board, and any other
+    // id that layout.
+    const forced = this.scriptAt('layout', hop);
     const layoutId =
-      this.forcedLayoutId === null
-        ? selectedLayoutId
-        : this.forcedLayoutId === FORCE_PROCEDURAL
-          ? null
-          : this.forcedLayoutId;
+      forced === undefined ? selectedLayoutId : forced === FORCE_PROCEDURAL ? null : forced;
     const proceduralSide = rollProceduralSide(mapRng);
     const { gridW, gridH } = layoutId === null
       ? { gridW: proceduralSide, gridH: proceduralSide }
@@ -3125,11 +3141,11 @@ export class Run {
       this.sectorScatterConfig,
       this.currentSectorLength(),
     );
-    // The new root's `startingEvents` stamp. The scatter dials passed here
-    // leave out `firstNodeKind`, so the dial shapes only the first sector's
-    // map, though its flag still sends a later root's event to the regular
-    // pool (`enterEventNode`).
-    this.stampStartingEventRoot();
+    // The new root's kind: the script's for this act, else the sector's
+    // `startingEvents` stamp. The first-node dial is the starting act's, so
+    // it shapes only the first sector's map, though its flag still sends a
+    // later root's event to the regular pool (`enterEventNode`).
+    this.stampRoot();
     // The boss is the sector's, rolled again at each entry for its warning.
     const bossRoll = this.rollBossForSector(this.streamRng('boss', this.sectorIndex));
     this.bossEncounterId = bossRoll.bossEncounterId;
@@ -3679,8 +3695,7 @@ export class Run {
     type Mut = { -readonly [K in keyof Run]: Run[K] } & {
       bus: EventBus<GameEvents>;
       subscriptions: Array<() => void>;
-      forcedLayoutId: string | null;
-      forcedEncounterId: string | null;
+      script: readonly ScriptEntry[];
       singleSectorRun: boolean;
       sectorHopsOverride: number | undefined;
       sectorScatterConfig: RunConfig | undefined;
@@ -3694,7 +3709,6 @@ export class Run {
       eventFlags: Record<string, EventFlagValue>;
       pendingRewardOverride: readonly EncounterRewardRef[] | null;
       eventCatalog: readonly EventDef[];
-      forcedEventId: string | null;
       rootStampedByDial: boolean;
       // The private occurrence counters; `streamRoot` is public.
       sectorIndex: number;
@@ -3709,10 +3723,8 @@ export class Run {
     // The config's inputs, resolved as the constructor resolves them.
     const inputs = resolveRunInputs(config);
     m.sectorMap = inputs.sectorMap;
-    m.forcedLayoutId = inputs.forcedLayoutId;
-    m.forcedEncounterId = inputs.forcedEncounterId;
+    m.script = inputs.script;
     m.eventCatalog = inputs.eventCatalog;
-    m.forcedEventId = inputs.forcedEventId;
     m.singleSectorRun = inputs.singleSectorRun;
     m.sectorHopsOverride = inputs.sectorHopsOverride;
     m.sectorScatterConfig = inputs.sectorScatterConfig;
@@ -3910,32 +3922,29 @@ export class Run {
 /**
  * Check a `RunConfig.forcedLayoutId` against the layout library when the
  * inputs resolve, at construction and on a load, so a mistyped id throws at
- * the run's start rather than at its first battle. Absent is null (the
- * normal roll); `FORCE_PROCEDURAL` passes through, a procedural map every
+ * the run's start rather than at its first battle. Absent passes (the
+ * normal roll), and so does `FORCE_PROCEDURAL`, a procedural map every
  * battle.
  */
-function resolveForcedLayoutId(id: string | undefined): string | null {
-  if (id === undefined) return null;
-  if (id === FORCE_PROCEDURAL) return FORCE_PROCEDURAL;
+function checkForcedLayoutId(id: string | undefined): void {
+  if (id === undefined || id === FORCE_PROCEDURAL) return;
   if (!LAYOUT_IDS.includes(id)) {
     throw new Error(`Run: unknown forcedLayoutId="${id}" (not in LAYOUT_IDS)`);
   }
-  return id;
 }
 
 /**
  * Check a `RunConfig.forcedEncounterId` against the encounter catalog when
  * the inputs resolve, so a mistyped id throws at the run's start rather
- * than inside a selection. Absent is null (the sector's pools). The fuzz
+ * than inside a selection. Absent passes (the sector's pools). The fuzz
  * harness's `--encounter=<id>` and the URL dial set it, to fight one
  * encounter at every node of its kind.
  */
-function resolveForcedEncounterId(id: string | undefined): string | null {
-  if (id === undefined) return null;
+function checkForcedEncounterId(id: string | undefined): void {
+  if (id === undefined) return;
   if (getEncounter(id) === undefined) {
     throw new Error(`Run: unknown forcedEncounterId="${id}" (not in the encounter catalog)`);
   }
-  return id;
 }
 
 /**
@@ -3943,12 +3952,21 @@ function resolveForcedEncounterId(id: string | undefined): string | null {
  * the inputs resolve. The run's catalog, not the shipped one, so a test
  * with a bespoke `eventCatalog` can force its own events.
  */
-function resolveForcedEventId(id: string | undefined, catalog: readonly EventDef[]): string | null {
-  if (id === undefined) return null;
+function checkForcedEventId(id: string | undefined, catalog: readonly EventDef[]): void {
+  if (id === undefined) return;
   if (!catalog.some((e) => e.id === id)) {
     throw new Error(`Run: unknown forcedEventId="${id}" (not in the event catalog)`);
   }
-  return id;
+}
+
+/**
+ * A config for the node-map generator with `firstNodeKind` taken out, since
+ * the first-node dial reaches the map through the script (`Run.stampRoot`).
+ */
+function withoutFirstNode(config: RunConfig | undefined): RunConfig | undefined {
+  if (config?.firstNodeKind === undefined) return config;
+  const { firstNodeKind: _stamped, ...rest } = config;
+  return rest;
 }
 
 /** The config inputs a Run reads after construction. A snapshot does not
@@ -3956,10 +3974,8 @@ function resolveForcedEventId(id: string | undefined, catalog: readonly EventDef
  *  run slot builds from the save's dials. */
 interface RunInputs {
   readonly sectorMap: SectorMap;
-  readonly forcedLayoutId: string | null;
-  readonly forcedEncounterId: string | null;
+  readonly script: readonly ScriptEntry[];
   readonly eventCatalog: readonly EventDef[];
-  readonly forcedEventId: string | null;
   readonly singleSectorRun: boolean;
   readonly sectorHopsOverride: number | undefined;
   readonly sectorScatterConfig: RunConfig | undefined;
@@ -3979,16 +3995,20 @@ interface RunInputs {
  */
 function resolveRunInputs(config: RunConfig | undefined): RunInputs {
   const eventCatalog = config?.eventCatalog ?? EVENTS;
+  // The forcing dials are checked as they always were, then enter the script
+  // as its cases; the run starts in act 1.
+  checkForcedLayoutId(config?.forcedLayoutId);
+  checkForcedEncounterId(config?.forcedEncounterId);
+  checkForcedEventId(config?.forcedEventId, eventCatalog);
+  const script = dialEntries(config, 1);
   const inputs: RunInputs = {
     sectorMap: config?.sectorMap ?? SECTOR_MAP,
-    forcedLayoutId: resolveForcedLayoutId(config?.forcedLayoutId),
-    forcedEncounterId: resolveForcedEncounterId(config?.forcedEncounterId),
+    script,
     eventCatalog,
-    forcedEventId: resolveForcedEventId(config?.forcedEventId, eventCatalog),
     singleSectorRun: config?.hopCount !== undefined,
     sectorHopsOverride: config?.sectorHops,
     sectorScatterConfig: sectorAdvanceConfig(config),
-    rootStampedByDial: config?.firstNodeKind === 'event',
+    rootStampedByDial: scriptKind(script, 1, 1) === 'event',
     passIsFinal: config?.passIsFinal ?? DECK.grantQueue.passIsFinal,
     drawAmountAdd: config?.drawAmountAdd ?? 0,
     difficultyMultipliers: resolveDifficultyMultipliers({

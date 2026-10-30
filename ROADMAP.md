@@ -11,7 +11,7 @@ plan: [archive/post-118-roadmap.md](archive/post-118-roadmap.md) (Round
 8.5) with its worklog, spec and census beside it; before it
 [archive/post-109-roadmap.md](archive/post-109-roadmap.md) (Round 8).
 
-**Status: §140, 140d signed; 140e, the list built, next** (WORKLOG §140). The spec is [round-9-spec.md](round-9-spec.md); the act
+**Status: §140, 140e built; 140f, the archive and the round's close, next** (WORKLOG §140). The spec is [round-9-spec.md](round-9-spec.md); the act
 design it asked for is [plans/acts.md](plans/acts.md). The charter is
 META-ROADMAP §"Round 9 — The frame and the misses"; the premises
 re-read at HEAD are `archive/worklog-phase-135.md` "Kickoff — Round 9", tranche 3.
@@ -149,5 +149,6 @@ Cut signed 2026-10-30 with its four leans (WORKLOG §140).
 - ☑ **140d — the process read: R9, the keep test, the friction lines,
   the scratchpad** (`stop`). Signed 2026-10-30 in two tranches: the
   silence kept, two rule lines deleted, one guard to Round 10's TODO.
-- ☐ **140e — the list built as signed** (`none`).
+- ☑ **140e — the list built as signed** (`none`). The rule docs'
+  diff read against the list.
 - ☐ **140f — the archive and the round's close** (`stop`).

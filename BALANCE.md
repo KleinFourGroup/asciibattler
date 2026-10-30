@@ -189,7 +189,8 @@ remember: [tests/fuzz/board/signed-sheet.json](tests/fuzz/board/signed-sheet.jso
   (⚠ the full board is ~5 searcher batches — prefer the box).
 - `npm run balance:board -- --report` — diff every summary.csv vs the sheet:
   **FAIL** = a signed-band breach · **WARN** = reference drift (an observed
-  §60e value ± tolerance, not a verdict) · exit 1 on any FAIL.
+  §60e value ± tolerance, not a verdict) · exit 1 on any FAIL. The files hold
+  means only; a cohort off the instrument's arm is refused (use `computeMetrics`).
 
 **The amendment rule executes**: "every fix re-runs the full board" (§54e)
 means `--plan` → the box → `--report` stamped with HEAD + batch id into

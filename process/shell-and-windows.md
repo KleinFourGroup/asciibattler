@@ -59,7 +59,7 @@ Claude Code's own tools.
   on. A command holding a heredoc, and some others, reaches the shell
   through a pipe the tool never closes: a step there that reads stdin
   swallows the rest of the script and waits for good, past `timeout`, and
-  the tool's limit only moves it to the background, so `TaskStop` it.
+  the tool's limit only moves it to the background.
   `python` and `python3` wait on an empty script (`-` with nothing fed,
   or an empty heredoc) wherever stdin points; a heredoc with a body runs
   (measured 2026-10-28, Claude Code 2.1.309;

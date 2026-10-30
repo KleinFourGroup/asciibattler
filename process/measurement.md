@@ -18,9 +18,6 @@ quality.
 - Take an arm's estimate from a run that survives, or from several seeds.
   The first run to return is the shortest: one that dies at hop 6 says
   nothing about runs that go two acts.
-- On this machine, run one suite or smoke batch at a time, in one
-  worktree: a run holds 7 to 8 GB of the machine's 32, and the user's
-  browser shares the rest (measured 2026-10-12, `../archive/post-118-worklog.md` §120, 120a).
 
 ## The measurement box
 

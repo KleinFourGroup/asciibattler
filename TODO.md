@@ -133,23 +133,9 @@ META-ROADMAP §"Round 9 — The frame and the misses" names each row's place.
 
 ### At the round's close
 
-- [ ] **The keep test over the lines §132 added** (signed at 133a,
-  2026-10-25; `archive/post-118-worklog.md` §133, 133a). From `c08f4a72` to `f0e5f3c5`, AGENTS,
-  CLAUDE.md and `process/` took the router, the caps, `session-end.md`,
-  `shell-and-windows.md` and `browser-pane-recipes.md`, mostly moved
-  text, signed in the week they landed, so no round has used them. At
-  this round's close, list each rule they added and keep it only if a
-  session's record names it as the reason for an action, or a slip it was
-  written against stopped (`process/planning.md`, "Round close").
+- ✅ **The keep test over the lines §132 added** — 20 rule rows over both ranges, two deleted, the rest kept on their records or the user's call (WORKLOG §140, 140d).
 
-- [ ] **Read the trial of no context counts below 500k** (signed at 132g,
-  tranche 1, item 4; `archive/post-118-worklog.md` §132, "132g, tranche 1 signed"). The
-  context meter says nothing below the hand-off trigger, and no doc asks a
-  session to read or record its context. Its measure, written before it
-  started: lines in the friction log or the reports that name context
-  pressure; hand-offs before 500k with no reason given; any session past
-  500k that did not hand off (`friction-scan`'s `peak` column). Keep the
-  silence, or bring the counts back, on what those show.
+- ✅ **Read the trial of no context counts below 500k** — the silence kept: no line names context pressure, no hand-off before 500k without a reason, and each session past it handed off (WORKLOG §140, 140d).
 
 ### The board's instruments
 
@@ -221,6 +207,18 @@ META-ROADMAP §"Round 10 — Act 1, the wilds" names each row's place.
   and showing that two never meet on one element takes the editors'
   markup and the classes their code sets, which no named oracle reads
   (`archive/post-118-worklog.md` §127, 127c and 127f).
+
+### The shell
+
+- [ ] **The backslash guard** (signed at Round 9's close, 140d). The Bash
+  tool halves a run of backslashes, and about 20 filings since Round 7
+  name it, the latest at 139c; the mod's note comes after the command has
+  run. The guard: the context meter's mod refuses, before it runs, a Bash
+  command holding a run of two or more backslashes, naming the line and
+  the Write tool, as the stdin guard does for stdin
+  (`process/shell-and-windows.md`, "Editing"). Step zero: the halving
+  measured again on the Claude Code of the day, since the user reported
+  it to the Claude Code team on 2026-10-23 (the feedback watch, below).
 
 ## Round 11 — The roster
 
@@ -805,6 +803,13 @@ Rows with a trigger and no round (§133, tranche 3). Each names what reopens it.
   junction, no shim process in front of `node`), `%APPDATA%\nvm` backed
   up first, Node held at one version across the swap (`archive/post-118-worklog.md` §129,
   "129i, step zero").
+
+- [ ] **A severity flag for the friction log** (the user, 2026-10-28;
+  `archive/worklog-phase-138.md`, "The friction log's third kind"). Not
+  built while there has been one incident (137d's absolute `GIT_DIR`).
+  Reopens on a second: then a yes/no `--incident` with a concrete test
+  (damaged, or put at risk, something outside the step's own work: the
+  checkout's git state, pushed history, the box, the user's files).
 
 - [ ] **A watch on the harness feedback the user sent** (the Cursor's
   rider until 132h2). Four messages to the Claude Code team: on

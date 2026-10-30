@@ -437,3 +437,34 @@ compaction left; the board's two facts into BALANCE.md "The executable
 board"; the per-phase papercut disposition into `planning.md` "Phase
 close", the scratchpad's entry so promoted; the severity flag a TODO
 watch. 140d read and ticked.
+
+### 140e — the list built as signed (2026-10-30, session a0dffe1f)
+
+**Built**, by the signed list:
+
+- Deleted: `measurement.md`'s "one suite or smoke batch at a time" bullet
+  (#14); "so `TaskStop` it" from `shell-and-windows.md` "Bash calls"
+  (#20).
+- R9: the trial's sentence out of `planning.md` "Context: the hand-off
+  trigger"; TODO's two "At the round's close" rows ticked.
+- Promoted: each papercut a phase files gets a disposition at its close
+  (`planning.md` "Phase close"), with `welfare-and-efficacy.md` "Who
+  reads" brought to match; the board's two facts into BALANCE.md "The
+  executable board", folded into the `--report` bullet, since the
+  header's 700-line cap (`tests/docs.test.ts`) refused two bullets of
+  their own at 704 (one hook run; filed).
+- TODO: the backslash guard under Round 10, "The shell"; the severity
+  flag under Watches.
+- *Built and flagged, inside the intent:* the `peak` column's meaning
+  after a compaction, in `planning.md` and the `friction-scan` line of
+  `welfare-and-efficacy.md`, since R9 found it a segment's figure and
+  both lines called it a session's size.
+
+**The oracle**, the rule docs' word diff (`git diff --word-diff`
+over AGENTS.md, CLAUDE.md, `process/` and BALANCE.md) read against that
+list: three deletions, one bullet added and one extended, three
+rewordings, and nothing else;
+AGENTS.md and CLAUDE.md untouched, so the filing text's hash and the
+start reading's cap do not move. The docs tests at the commit, by the
+hook. The filing text is unchanged, so no wording boundary is recorded;
+the disposition step changes only how a phase close reads papercuts.

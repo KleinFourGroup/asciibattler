@@ -15,7 +15,9 @@ appends one line to `retro/papercuts.jsonl`, its text from the file (or
 ## Who reads, and what a read produces
 
 The user owns the welfare read and may ask an assisting model to help
-interpret it. At the round sweep, papercuts are triaged into TODO / norms;
+interpret it. Each phase close gives every papercut the phase filed a
+disposition (planning.md "Phase close"); at the round sweep, those left
+open are triaged into TODO / norms;
 slips are counted by trap, since a repeat shows whether the rule written
 against it worked, and a trap that recurred and cost something goes to
 the user as a candidate guard; distress entries receive a separate welfare read that preserves their
@@ -91,7 +93,8 @@ entries say, and compare rounds by that.
   tool calls, flagged tool errors and denials, the harness's silent-turn
   reminders and their wording, output tokens, the peak context (the
   figure the context meter reads, and the only record of a session's size
-  from Round 9), the wall span, and the
+  from Round 9; a compaction resets it, so after one it is the largest
+  segment's), the wall span, and the
   Browser pane, probe-kit and probe-runner calls (built for the kit's
   criteria, META-ROADMAP §Round 8, which were counted and retired at that
   round's close; the header says how each is matched). It prints

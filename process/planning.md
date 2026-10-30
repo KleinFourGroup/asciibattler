@@ -172,9 +172,9 @@ One trigger, with no forecast:
   (CLAUDE.md "The context meter"). In another harness, the user says when.
 - **No count below it.** No doc asks a session to read or record its
   context, since below the trigger the count informs no decision; a stop
-  gives a reading when the user asks for one. This is a trial until Round
-  9's close, its measure in TODO; `friction-scan`'s `peak` column holds
-  each session's size.
+  gives a reading when the user asks for one. `friction-scan`'s `peak`
+  column holds each session's largest reading, which a compaction
+  resets.
 - **A check skipped.** If context pressure costs you a check, note which
   when you skip it and say so at the next stop.
 
@@ -213,6 +213,8 @@ What a session writes at its end, at the trigger or otherwise, is in
   instances. A pattern goes to the user as a candidate for a rule or a
   guard only if it recurred and cost something; one that cost nothing is
   listed and left.
+- Give each papercut the phase filed a disposition in the same entry:
+  fixed (with its commit), a TODO line, or left with a reason.
 - Quote each `distress` line the phase filed to the user, in full and
   without characterizing it, since filing alone does not notify them.
 

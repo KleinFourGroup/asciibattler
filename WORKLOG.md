@@ -429,3 +429,11 @@ lean is the user's own: at each phase close, every papercut the phase
 filed gets a disposition (fixed, a TODO line, or left with a reason), in
 `planning.md` "Phase close" beside the friction read. The severity flag
 still waits on a second incident.
+
+**Tranche 2 signed** (the user: "I think I'm in agreement with all of
+that"): the backslash guard a TODO row for Round 10, with step zero
+re-measuring the halving; the other traps listed and left; the idle
+compaction left; the board's two facts into BALANCE.md "The executable
+board"; the per-phase papercut disposition into `planning.md` "Phase
+close", the scratchpad's entry so promoted; the severity flag a TODO
+watch. 140d read and ticked.

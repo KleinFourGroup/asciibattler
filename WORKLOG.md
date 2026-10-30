@@ -495,3 +495,126 @@ the same. `register.ts` type-checks against the engine's declarations
 an edit to the mod loads in a fresh session (the README, "Loading"); the
 PowerShell clause rests on reading the handler, which calls only the
 hand-off check.
+
+### 142b — the grammar, put to the user (2026-10-30)
+
+*Step zero.* Read at `fe20cac4`:
+- Today's four dials are run-wide filters. `layout=` forces every
+  fight's board, the boss's included (`Run.buildEncounterMap`,
+  `rollBossForSector`). `encounter=` forces every node of the
+  encounter's kind. `event=` replaces every event node's pick, after the
+  roll that can make the node a fight (`Run.enterEventNode`).
+  `firstNode=` stamps the first sector's root. A load passes the saved
+  query's config to `fromJSON` (`resolveRunInputs`), and a clone passes
+  none.
+- The fight roll is on the `'event'` stream at the run-wide `eventStep`,
+  which moves whether a page opens or not, and a forced event's pick
+  draws nothing. So a named event can skip the fight with no other draw
+  moved.
+- A port rolls its stock on the `'portStock'` and `'portPrice'` streams,
+  both keyed to the node. The shipped slots are 5 units, 5 packets and
+  2 daemons (`config/prices.json`).
+- Every catalog id is letters, digits and hyphens. In a query,
+  `URLSearchParams` reads `+` as a space; `; : , = * . /` survive, and a
+  value carrying them round-trips through `set` and `toString`
+  (percent-encoded, as `roster=`'s `:` and `,` already are).
+- `cadre-1` sets `cadre:read`, which `cadre-2` needs, and `cadre-2` sets
+  `cadre:arson`, which `cadre-3` needs: a three-event chain in the
+  shipped catalog.
+
+*The draft.* One new parameter, `script=`, a list of entries, and one
+for the starting act, `act=`. The old dial names stay and parse into the
+same list.
+
+```
+script  = entry *(";" entry)
+entry   = address ":" item *("," item)
+address = hop | act "." hop | "*" | act ".*"
+item    = kind | "encounter=" id | "layout=" (id | "procedural")
+        | "event=" id | "port=" good *("/" good)
+kind    = "battle" | "elite" | "event" | "rest" | "port"
+good    = daemon-id | packet-id | archetype [":" level]
+```
+
+- **Addresses.** Hops count from 1, the act's first node, to its last,
+  the boss. A bare hop is in the act the run starts in, so
+  `firstNode=`'s "the first sector's root" stays `1`; `2.5` is act 2's
+  fifth hop; `*` is every hop of every act; `2.*` is every hop of act 2.
+  A numbered address past its act's end is refused at construction.
+- **A numbered hop's entry is a script; a starred one is a filter**, as
+  the old dials are.
+  - A kind stamps every node on the hop, after the map is drawn, so the
+    stamp draws nothing. On an act's last hop it is ignored and warns,
+    the boss winning as it wins over `firstNode=` on a one-hop run today.
+  - `encounter=` stamps the hop with the encounter's kind and fights it
+    there. A boss encounter goes only on an act's last hop, and there it
+    is the act's boss.
+  - `event=` stamps the hop `event` and opens that event, with no fight
+    (the roll is drawn and set aside), past its eligibility as `event=`
+    is today.
+  - `port=` stamps the hop `port` and stocks it with exactly the goods
+    named.
+  - `layout=` stamps nothing: it is the board of whatever fight the hop
+    holds.
+  - A starred entry stamps nothing and applies where the kind fits, so
+    `*:encounter=X` is today's `encounter=X`; a kind needs a numbered hop.
+  - A numbered entry beats a starred one for the same item. Two entries
+    on one hop merge, and a conflict (`3:rest,encounter=brigands`, or
+    one item twice) is refused.
+- **A port's goods.** Each id resolves as a daemon, a packet or an
+  archetype, in that order, as `grants` does. A unit with no `:level`
+  takes the port's base level (the team's average, with no bonus roll).
+  Prices are the price book's, with no jitter. More goods of a kind than
+  the shipped slots are refused, and an owned daemon is left out at
+  docking, as a rolled stock leaves it out.
+- **`act=N`** opens the run at the walk's Nth act, at the sector index a
+  full walk has there. With `hops=` that act is played alone; without,
+  the run walks on to the map's end.
+- **Dropped and warned.** The parse drops what it can check (an unknown
+  id, an act past the shipped map's end) and names each drop in a
+  warning, as `layout=` drops an unknown id, but out loud. An entry that
+  never applies warns when that is known: at its act's entry, where the
+  map has no node it fits (the R13 warning), or at its hop, where the
+  route held no fight for a `layout=`. Warnings go to the browser's
+  console and the CLIs' output.
+- **Writing back.** `runConfigToQueryString` writes an old dial's case in
+  its old form and the rest as `script=`, so every save and journal
+  reads back byte-identical.
+
+*The old dials as cases.*
+
+| Today | As a script |
+|---|---|
+| `layout=river` | `script=*:layout=river` |
+| `encounter=artillery` | `script=*:encounter=artillery` |
+| `event=mines` | `script=*:event=mines` (the fight roll stands) |
+| `firstNode=elite` (or `event`, `rest`) | `script=1:elite` |
+| `firstNode=event&event=mines` | `script=1:event;*:event=mines` |
+
+*The worked URLs* (today's map; act 2 is The Deep End until §145):
+- An event chain end to end:
+  `?seed=7&script=3:event=cadre-1;6:event=cadre-2;9:event=cadre-3`.
+- A chain of encounters and layouts:
+  `?seed=7&script=2:encounter=brigands,layout=river;4:encounter=brigand-champions,layout=labyrinth;7:encounter=deserters,layout=procedural;11:encounter=bandit-king,layout=isthmus`.
+  Hop 4 becomes an elite hop, since `brigand-champions` is an elite.
+- A stocked port:
+  `?seed=7&script=2:port=rogue:3/healer/overclock/venom/mars`.
+- A start at act 2: `?seed=7&act=2`, which walks on to the run's end;
+  `?seed=7&act=2&hops=11` plays act 2 alone, and
+  `?act=2&script=1:elite,encounter=plagueSpreaders` puts an elite on act
+  2's root.
+
+*`--arbitrate`* refuses every entry but `act=` and the kinds stamped in
+the act the run starts in. That act's map is drawn at construction and
+rides the snapshot, so a clone keeps its stamps, as it keeps
+`--first-node`'s today. Every other entry is applied at a node or at a
+later act's entry, which a clone, loading with no config, does without
+the script. So `--first-node` stays legal, and `--encounter` and
+`--layout` stay refused.
+
+*Leans, the user's to change:* the separators; a bare hop in the
+starting act; a named event that always opens, past its eligibility,
+where respecting eligibility would show a chain only as far as the picks
+take it; a port's unit at the port's base level rather than `roster=`'s
+level 1; the warnings in the console, since a line on screen would be UI
+work beyond the cut.

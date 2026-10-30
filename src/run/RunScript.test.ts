@@ -9,6 +9,7 @@ import { parseRunConfig, parseScript, runConfigToQueryString } from './RunConfig
 import {
   dialEntries,
   hopKind,
+  placedEvents,
   scriptConflicts,
   scriptItem,
   scriptToString,
@@ -83,6 +84,17 @@ describe('the kind a numbered hop is given', () => {
   it('a named event always opens only on a numbered hop', () => {
     expect(scriptedEvent([{ hop: 3, event: 'mines' }], 1, 3, 1)).toBe(true);
     expect(scriptedEvent([{ hop: 'all', event: 'mines' }], 1, 3, 1)).toBe(false);
+  });
+
+  it('the pool loses a numbered hop\'s event, in any act, and keeps a starred one', () => {
+    const placed = placedEvents([
+      { hop: 3, event: 'cadre-1' },
+      { act: 2, hop: 4, event: 'cadre-2' },
+      { hop: 'all', event: 'mines' },
+      { act: 2, hop: 'all', event: 'hostage-trio' },
+      { hop: 5, kind: 'event' },
+    ]);
+    expect([...placed].sort()).toEqual(['cadre-1', 'cadre-2']);
   });
 });
 

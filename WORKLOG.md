@@ -866,3 +866,62 @@ warning as `[dev] script: …`.
 - The backslash guard's refusal is unseen live: a fresh session loads
   the edited mod, so a planted halved command (a single-quoted run of
   two backslashes) should be refused there before it runs.
+
+### 142h — the user's play, and a placed event out of the pool (2026-10-30, session f9760262)
+
+*Step zero, the four URLs in the Browser pane* (`dev-preview`, at
+`701c2989`), each read through `__game.run` and driven by
+`__probe.drive`:
+- *The event chain.* Hops 3, 6 and 9 all events; cadre-1 opened at hop
+  3 and cadre-2 at hop 6, the flags set in order. **A finding:** with
+  `cadre:arson` set, the unscripted event node at hop 7 dealt cadre-3
+  from the pool, and the scripted cadre-3 opened again at hop 9. A
+  numbered event opened past its eligibility, as signed, but stayed in
+  the pool, so a laid-out chain could open early or twice.
+- *The encounters and layouts.* Brigands on River at hop 2, every hop-4
+  node an elite and Brigand Champions on Labyrinth there; the boss
+  forewarned as The Bandit King on Isthmus. The control, seed 7 with no
+  script: a mixed hop 4 and The Bandit Queen? on Junction Ambush. The
+  driven run lost at hop 4's elite (the driver plays no cards), so the
+  boss fight rests on the forewarning, which `beginEncounter` takes as
+  the fight.
+- *The stocked port.* Hop 2 all ports, offering exactly the rogue at 3
+  (28 bits), the healer at the team's level 5 (39), Overclock (9), Venom
+  (15) and Minerva (35): each price the raw `config/prices.json` with no
+  jitter (25 × 1.05², 32 × 1.05⁴). The port screen showed them.
+- *Act 2.* The Deep End at sector index 1, its boss The Witch Hunt on
+  River; the first fights' encounters (adventurer-with-guards,
+  plagueDoctors, artillery) all in its pools, plagueDoctors in its
+  alone. With `&hops=11` the same map and boss: The Deep End is the
+  shipped map's only sink, so the two URLs differ only once a third act
+  exists.
+- A planted `script=3:encounter=nope` printed its two drops as
+  `[dev] script: …` at warn level.
+- *The backslash guard, live:* a single-quoted `a\\b` refused before it
+  ran, with both readings of the line and the two ways round.
+
+*The user:* "All of those reads passed! 😁". The calls: the placed
+event out of the pool, "Let's build it now!"; `--run-script`, "Signed!";
+the warnings' two gaps as TODO rows, "Sounds good to me!"; `RunConfig.script`
+arriving at 142d, "Nah, that's fine 😁".
+
+*Built (142h-post).* `placedEvents` (RunScript.ts) is the set of events
+the numbered hops name, in any act; `rollEventForNode` drops them from
+the pool, the starting pool included, so each opens at its hop alone. A
+starred event is a filter and stays. The pick still makes its one draw,
+so only the pick's result moves, and only in a run whose script places
+an event.
+
+*Evidence.* `scriptedRun.test.ts`, "opens at its hop and nowhere else":
+a seed whose unscripted hop-2 event deals cadre-1 from the pool, and the
+same seed with cadre-1 placed at hop 4, where hop 2 deals another and
+hop 4 opens cadre-1. Written first, it failed on the unchanged code
+(`expected 'cadre-1' not to be 'cadre-1'`). `RunScript.test.ts` pins the
+set (numbered in any act; starred and kind-only left out); its plant, a
+starred event counted as placed, fails it, the file restored byte for
+byte. Both files 48 of 48. The corpus: 0 of 32 differ; it holds no
+`script=` journal, so that shows unscripted runs untouched, not the fix.
+In the pane, the chain URL on the same driven route: orange-mob at hop
+7, and cadre-3 once, at hop 9.
+
+The two warning gaps are TODO rows under Round 10, "The scripted run".

@@ -11,7 +11,8 @@
  * Acts count from 1, as the sector walk enters them, and hops from 1, an
  * act's root, to its last, the boss. A numbered hop's entry is a script: its
  * kind (given, or implied by its encounter, event or port stock) is stamped
- * on every node of the hop, a named event there always opens, and a stock
+ * on every node of the hop, a named event there always opens (and opens
+ * nowhere else, since the pool never deals it), and a stock
  * is the port's whole offer. A starred entry (`hop: 'all'`) is a filter, as
  * the old dials are: it stamps nothing and applies where the kind fits.
  * Pure: nothing here draws.
@@ -177,6 +178,15 @@ export function scriptedEvent(
   startAct: number,
 ): boolean {
   return onHop(entries, act, hop, startAct).some((e) => e.event !== undefined);
+}
+
+/**
+ * The events the numbered hops name. Each opens at its hop and nowhere else,
+ * so the event pool never deals one, before its hop or after; a starred
+ * event is a filter and stays in the pool.
+ */
+export function placedEvents(entries: readonly ScriptEntry[]): ReadonlySet<string> {
+  return new Set(entries.flatMap((e) => (e.hop !== 'all' && e.event !== undefined ? [e.event] : [])));
 }
 
 /** An entry's address as the URL spells it: `3`, `2.5`, `*`, `2.*`. */

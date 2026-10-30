@@ -44,6 +44,7 @@ import {
   dialEntries,
   entryToString,
   hopKind,
+  placedEvents,
   scriptConflicts,
   scriptItem,
   scriptPort,
@@ -1299,7 +1300,8 @@ export class Run {
    * resolve. Pool entries open at their hop (`minHop`), resolve against the
    * run's catalog (an entry a bespoke `eventCatalog` lacks is skipped; the
    * sector loader checks the shipped one), drop an event already visited
-   * unless it is `repeatable`, and keep those whose `eligibility` holds.
+   * unless it is `repeatable` and one a numbered hop of the script places
+   * (`placedEvents`), and keep those whose `eligibility` holds.
    * One draw over the survivors, weight 1 when absent and a single survivor
    * included (`pickWeightedOneDraw` above); none when forced or when none
    * survives, which returns `null` and the caller makes the node a fight.
@@ -1317,10 +1319,14 @@ export class Run {
     const pool = fromStartingPool
       ? sector.startingEvents.filter((e) => (e.minHop ?? 0) <= this.currentHop)
       : eventPoolAtHop(sector, this.currentHop);
+    const placed = placedEvents(this.script);
     const eligible: Array<{ def: EventDef; weight: number }> = [];
     for (const entry of pool) {
       const def = this.eventCatalog.find((e) => e.id === entry.eventId);
       if (def === undefined) continue;
+      // A placed event opens at its hop alone, so a chain the script lays out
+      // doesn't also open early, or twice, wherever its flag makes it eligible.
+      if (placed.has(def.id)) continue;
       // Once a run: an event whose `visited:` flag is set drops out unless
       // it is `repeatable`, with `flagSet`'s reading of a flag. A forced
       // event, returned above, is never filtered.

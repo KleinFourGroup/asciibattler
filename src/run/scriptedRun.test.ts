@@ -141,6 +141,27 @@ describe('a numbered hop\'s event', () => {
     expect(run.phase).toBe('event');
     expect(run.activeEvent?.eventId).toBe('cadre-1');
   });
+
+  // A seed where hop 2's event node, an unscripted one, deals cadre-1 from
+  // the pool.
+  function dealingSeed(): number {
+    for (let seed = 1; seed < 400; seed++) {
+      const { run, bus } = runOf(seed, { script: [{ hop: 2, kind: 'event' }] });
+      enterHop(run, bus, 2);
+      if (run.activeEvent?.eventId === 'cadre-1') return seed;
+    }
+    throw new Error('no seed in 400 deals cadre-1 at hop 2');
+  }
+
+  it('opens at its hop and nowhere else: the pool never deals it', () => {
+    const seed = dealingSeed();
+    const { run, bus } = runOf(seed, { script: [{ hop: 2, kind: 'event' }, { hop: 4, event: 'cadre-1' }] });
+    enterHop(run, bus, 2);
+    expect(run.phase).toBe('event');
+    expect(run.activeEvent?.eventId).not.toBe('cadre-1');
+    enterHop(run, bus, 4);
+    expect(run.activeEvent?.eventId).toBe('cadre-1');
+  });
 });
 
 describe('a port\'s stock', () => {

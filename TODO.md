@@ -187,6 +187,22 @@ META-ROADMAP §"Round 10 — Act 1, the wilds" names each row's place.
 
 - ✅ **The encounter dial warns when a forced id matches ZERO nodes** — the run warns at each act's entry (`Run.scriptWarnings`, `script:warning`), the browser's console and the run-config CLI print it (ROADMAP §142, 142d and 142g).
 
+- [ ] **A numbered layout crossed at an event node doesn't warn.** The
+  route can cross a hop that `layout=` names at an event node whose page
+  ends without a fight, and nothing says the layout went unused. It
+  can't warn at the node's entry, since the event can still start a
+  fight there; a warning at the event's return to the map, with no fight
+  on the hop, would cover it (`Run.ts`, beside the rest and port warning
+  at entry; WORKLOG §142, 142d and 142h).
+
+- [ ] **The run-config CLI's headless run doesn't print mid-run
+  warnings.** It prints the warnings raised at construction, but
+  `runOne` (`tests/fuzz/harness.ts`) builds its own bus, so a
+  `script:warning` raised during the headless run (a layout crossed at a
+  rest, an owned daemon left out of a stock) goes unheard. The CLI
+  (`tools/run-config/cli.ts`) needs that bus, or a listener passed in
+  (WORKLOG §142, 142g and 142h).
+
 ### The editors
 
 - [ ] **The rules every editor's sheet repeats** (census B-19, a lead).

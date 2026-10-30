@@ -127,7 +127,7 @@ and §130 to §133 say which phase takes each row.
 - ✅ **Dev-toolchain `npm audit` debt** — 10 at §129's kickoff, 0 at 129f (`archive/post-118-worklog.md` §129).
 
 
-## Round 9 — The frame and the misses
+## Round 9 — The frame and the misses (closed 2026-10-30)
 
 META-ROADMAP §"Round 9 — The frame and the misses" names each row's place.
 

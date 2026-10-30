@@ -71,7 +71,7 @@ every amendment re-runs the full board; paired same-seed deltas govern.
  7.5 The Board ───┤  ✅ CLOSED 2026-09-27 — the projection spike · ortho · pitch 45 · yaw 45 · the ground mark as the team channel · the elevation clauses · the anchor rules 17 → 14 (§105–§109)
  8. Foundations ──┤  ✅ CLOSED 2026-10-11 — the shells · the recorder · the probe kit · the store + the build ID · the run journal · save/load · the menu + settings · Escalation + the unlocks · the itch page OPEN at 0.1.0 (§110–§118 + §117.5, §117.75)
  8.5 Housekeeping ┤  ✅ CLOSED 2026-10-26 — the oracle map · the census · deletions per subsystem, byte-identical · the comment pass · 0.1.1 · the dependency phase · AGENTS as a router · the re-cut (§119–§133 + §124.5)
- 9. The frame ────┤  the act design · the board's guards · every strike lands, precision and evasion out
+ 9. The frame ────┤  ✅ CLOSED 2026-10-30 — the act design · the board's guards · every strike lands, precision and evasion out · 0.2.0 (§134–§140)
 10. Act 1 ────────┤  the wilds: ground fauna · the scripted run · the multi-act sheet
 11. The roster ───┤  kits · power by rarity · Mars in three · bandits out of the draft
 12. Push, pull ───┤  forced movement · the teleport · the cavalier · seven units
@@ -842,7 +842,7 @@ re-anchored in the round that lands the act.
 
 ---
 
-## Round 9 — The frame and the misses
+## Round 9 — The frame and the misses ✅ CLOSED 2026-10-30
 
 **Charter:** the four acts written down as a spec, the board's instruments
 made sound, then every strike lands: the hit roll, precision and evasion
@@ -899,6 +899,36 @@ against the round before, and the user's play. **Release:** every strike
 lands, and eight stats on the card. **Scope guards:** no new unit, no act
 content; no retune by taste (Round 11's), no dodge (Round 13's), no
 cadence change.
+
+**CLOSED 2026-10-30** — seven phases (§134–§140), each closed on the
+user's read, the close's last step, the archive, awaiting its read as
+this is written. The exit met, clause by clause (140a): the spec signed
+2026-10-27, the plague's cause and act 4's condition left open, with the
+act design in [plans/acts.md](plans/acts.md); each guard with its planted
+failure (the roster table's six planted tables, `FX_REGISTRY`'s synthetic
+catalog and its control); precision, evasion, `accuracy` and the
+terrain's two modifiers gone from code, config and screen; the converted
+numbers pinned by `tests/strike-conversion.test.ts` against a frozen
+before-file and the measured rates; the board on three trees paired on
+the seed against the old game, and the user's play. The release, `0.2.0`,
+uploaded 2026-10-30: every strike lands, and eight stats on the card.
+**Against the charter:** the damage trial was built headless (§136) and
+rolled back by the user's play at its close, and the round re-cut to
+every strike landing; seven bases moved a point each (139b) to bring the
+converted swings back, under a bar written before it; act 2 came out
+easier under the conversion, the game's and not the bot's (139e), a
+Round 11 rider. The scope guards held (140a): no new unit, no act
+content, no retune by taste, no dodge, no cadence change; World v36 →
+v39 and Run v49 → v50; no gotcha added (141 at both ends, five rewritten
+at 135e). Outside the charter, each signed as it came: the stdin guard
+and the pre-commit hook checking the commit itself (137d), the friction
+log's `slip` kind (138-pre), the box at a pushed older commit and
+`--carry` (139a, 139e-pre). At the close: R9 kept the silence below
+500k, the keep test deleted two rule lines and kept the rest, and the
+backslash guard went to Round 10's TODO (140d). Archives:
+`archive/post-133-roadmap.md` + `worklog-phase-135.md` to `-140.md` +
+`round-9-spec.md` + `round-9-rules.md` + `sessions-round-9.md` +
+`retro-scratchpad-round-9.md`.
 
 ---
 

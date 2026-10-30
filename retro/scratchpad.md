@@ -59,18 +59,12 @@ twelfth run, at 132f — promoted: the tranche shape for a stop's reads to
 `process/planning.md`; one entry archived; the papercuts after it read at
 133f, promoting one line to `process/session-end.md`) →
 [archive/retro-scratchpad-round-8.5.md](../archive/retro-scratchpad-round-8.5.md);
+the Round-9 (The frame and the misses, §134–§140) backlog was swept
+2026-10-30 (the thirteenth run, at 140d — promoted: the per-phase papercut
+disposition to `process/planning.md`; the severity flag to a TODO watch) →
+[archive/retro-scratchpad-round-9.md](../archive/retro-scratchpad-round-9.md);
 the MVP-era entries had earlier fed [post-mvp-review.md](post-mvp-review.md).
 
 ---
 
-_(The post-§133 entries start here — Round 9, the frame and the damage trial.)_
-
-- **A watch on the friction log's kinds** (3ef8baed, 2026-10-28). `slip`
-  split from `papercut`, `--kind` required. Watched for a few phases: do
-  filers sort the two the way AGENTS' filing text intends, and does a
-  phase's papercut list stay short? If so, the user leans toward a step at
-  each phase close that gives every papercut the phase filed a disposition
-  (fixed, a TODO line, or left with a reason), rather than waiting for the
-  round sweep; deferred 2026-10-28 until the split has been seen working.
-  The severity flag waits on a second incident (WORKLOG §138, "The
-  friction log's third kind").
+_(The post-§140 entries start here — Round 10, Act 1, the wilds.)_

@@ -3,7 +3,7 @@
 The finished run's four acts: what each is, what a win is, and how the
 secret act opens. Answered by the user at Round 9's kickoff (2026-10-27,
 §134), from the outline in `archive/post-118-worklog.md` §133 (133c's
-third batch); the user's words are in [round-9-spec.md](../round-9-spec.md)
+third batch); the user's words are in [round-9-spec.md](../archive/round-9-spec.md)
 "The act design, answered". Rounds 10, 21, 22 and 23 build it
 ([META-ROADMAP.md](../META-ROADMAP.md)). A line marked *lean* is the
 session's, not signed; *open* is still the user's.

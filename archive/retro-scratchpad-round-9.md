@@ -1,0 +1,78 @@
+# Scratchpad — rolling notes on process, decisions, gotchas
+
+Running notebook of "things worth talking about" — drop short observations here
+as you build. **Swept at every round/cluster boundary** by the distillation
+ritual (AGENTS.md §"The planning stack"): each entry gets **promoted** (to
+AGENTS / GOTCHAS / TESTING / TODO) or **archived** with the round's docs, so
+this file holds only undistilled observations from the current round. Keep
+entries short; link commits; group by theme.
+
+Prior eras: the MVP→H7 backlog was swept 2026-07-06 (the ritual's first run) →
+[archive/retro-scratchpad-mvp-to-h7.md](../archive/retro-scratchpad-mvp-to-h7.md);
+the process-audit + Cluster-3 backlog was swept 2026-07-11 (the second run, at
+the micro-round kickoff) →
+[archive/retro-scratchpad-cluster-3.md](../archive/retro-scratchpad-cluster-3.md);
+the micro-round backlog was swept 2026-07-21 (the third run, at the Cluster-4
+kickoff) →
+[archive/retro-scratchpad-micro-round.md](../archive/retro-scratchpad-micro-round.md);
+the Cluster-4 backlog was swept 2026-07-29 (the fourth run, at the 68h round
+close) →
+[archive/retro-scratchpad-cluster-4.md](../archive/retro-scratchpad-cluster-4.md);
+the rollout-arbitration-interstitial backlog was swept 2026-08-04 (the fifth
+run, at the 72f round close) →
+[archive/retro-scratchpad-rollout-arbitration.md](../archive/retro-scratchpad-rollout-arbitration.md);
+the Cluster-5 backlog was swept 2026-08-21 (the sixth run, at the §83g
+cluster close) →
+[archive/retro-scratchpad-cluster-5.md](../archive/retro-scratchpad-cluster-5.md);
+the Round-6 (Instruments) backlog was swept 2026-09-02 (the seventh run, at
+the 88e round close — promoted: six norms to AGENTS [the macro-plan code
+audit · count-the-shape-before-timing + profile-between-levers · the
+paired-bench warm-leg/subshell rule · verify-the-tree-died after any kill +
+no `pgrep` in Git Bash · poll scales to batch size · adversarial review +
+a read-only verifying peer], one caveat to BALANCE [exact zeros = an
+instrument smell]) →
+[archive/retro-scratchpad-round-6.md](../archive/retro-scratchpad-round-6.md);
+the casualty-experiment (§89–§94) backlog was swept 2026-09-08 (the eighth
+run, at the §94i close — promoted: five norms to AGENTS [the worktree build
+under a cohort · Write/Edit for quote-bearing text · self-check a reader +
+pool by script · pre-sign the chain · a knob pin through the resolver + the
+first live read of an inert-by-design mechanism]) →
+[archive/retro-scratchpad-casualty-experiment.md](../archive/retro-scratchpad-casualty-experiment.md);
+the Round-7 (Idioms, §95–§104) backlog was swept 2026-09-20 (the ninth run,
+at the Round 7 close — promoted: ten AGENTS amendments, gotchas #137–#138,
+one TESTING pattern, five HANDOFF pane tips, six TODO riders, and the
+docs-cap off-by-one; the same close's welfare read added the standing
+decisions and "Reads are cut, not improvised") →
+[archive/retro-scratchpad-round-7.md](../archive/retro-scratchpad-round-7.md);
+the Round-7.5 (The Board, §105–§109) backlog was swept 2026-09-27 (the
+tenth run, at the Round 7.5 close — promoted: the step-zero nuance and the
+narrowed Shell rule to AGENTS, four `process/` lines, a TODO guard, and the
+pane probe kit into Round 8's charter) →
+[archive/retro-scratchpad-round-7.5.md](../archive/retro-scratchpad-round-7.5.md);
+the Round-8 (Foundations, §110–§118) backlog was swept 2026-10-11 (the
+eleventh run, at the Round 8 close — promoted: the shell facts in place of
+the Shell rule and the revised standing decisions to AGENTS, two CLAUDE.md
+lines, a dozen `process/` lines, one TESTING pattern and five TODO riders) →
+[archive/retro-scratchpad-round-8.md](../archive/retro-scratchpad-round-8.md);
+the Round-8.5 (Housekeeping, §119–§133) backlog was swept 2026-10-24 (the
+twelfth run, at 132f — promoted: the tranche shape for a stop's reads to
+`process/planning.md`; one entry archived; the papercuts after it read at
+133f, promoting one line to `process/session-end.md`) →
+[archive/retro-scratchpad-round-8.5.md](../archive/retro-scratchpad-round-8.5.md);
+the MVP-era entries had earlier fed [post-mvp-review.md](post-mvp-review.md).
+
+---
+
+_(The post-§133 entries start here — Round 9, the frame and the damage trial.)_
+
+- **A watch on the friction log's kinds** (3ef8baed, 2026-10-28). `slip`
+  split from `papercut`, `--kind` required. Watched for a few phases: do
+  filers sort the two the way AGENTS' filing text intends, and does a
+  phase's papercut list stay short? If so, the user leans toward a step at
+  each phase close that gives every papercut the phase filed a disposition
+  (fixed, a TODO line, or left with a reason), rather than waiting for the
+  round sweep; deferred 2026-10-28 until the split has been seen working.
+  The severity flag waits on a second incident (WORKLOG §138, "The
+  friction log's third kind"). → Both conditions held at the round sweep
+  (140d): promoted to `process/planning.md` "Phase close" at 140e
+  (2026-10-30); the severity flag to TODO's Watches.

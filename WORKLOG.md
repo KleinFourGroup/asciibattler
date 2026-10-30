@@ -351,6 +351,14 @@ delete leaves silence rather than the old rule. 13 defines evidence for
 every read that follows; its traps did not recur after 136f and 137b,
 and the 137b repeat was caught by the hook.
 
+**Tranche 1 signed** (the user: "Signing all of those leans"): R9 keeps
+the silence; the keep test's 20 rows at their leans, so #14 and #20's
+clause are deleted at 140e and the four calls (#10 to #13) are kept. On
+the compactions, the user's word: idle compaction is a new Claude Code
+default, which compacts a session before its cache goes cold; they had
+worked to avoid compaction until now, are trying it informally, and
+have seen no bad outcome after one so far.
+
 #### Tranche 2 — the friction read and the scratchpad (after tranche 1's sign)
 
 **The lines, on either side of `3ef8baed`** (2026-10-29 01:41 UTC, the

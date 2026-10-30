@@ -10,10 +10,11 @@
  *
  * Acts count from 1, as the sector walk enters them, and hops from 1, an
  * act's root, to its last, the boss. A numbered hop's entry is a script: its
- * kind (given, or implied by its encounter or event) is stamped on every
- * node of the hop, and a named event there always opens. A starred entry
- * (`hop: 'all'`) is a filter, as the old dials are: it stamps nothing and
- * applies where the kind fits. Pure: nothing here draws.
+ * kind (given, or implied by its encounter, event or port stock) is stamped
+ * on every node of the hop, a named event there always opens, and a stock
+ * is the port's whole offer. A starred entry (`hop: 'all'`) is a filter, as
+ * the old dials are: it stamps nothing and applies where the kind fits.
+ * Pure: nothing here draws.
  */
 import type { RunConfig } from './RunConfig';
 
@@ -26,6 +27,15 @@ export const SCRIPT_KINDS: readonly ScriptKind[] = ['battle', 'elite', 'event', 
 export type ScriptItem = 'encounter' | 'layout' | 'event';
 
 export const SCRIPT_ITEMS: readonly ScriptItem[] = ['encounter', 'layout', 'event'];
+
+/**
+ * One good a port's stock names: a unit at a level (absent, the port's base
+ * level, the team's average), a packet or a daemon, by catalog id.
+ */
+export type PortGood =
+  | { readonly kind: 'unit'; readonly archetype: string; readonly level?: number }
+  | { readonly kind: 'packet'; readonly id: string }
+  | { readonly kind: 'daemon'; readonly id: string };
 
 export interface ScriptEntry {
   /**
@@ -42,6 +52,8 @@ export interface ScriptEntry {
   readonly layout?: string;
   /** An event id, opened at an event node there. */
   readonly event?: string;
+  /** A port's whole stock, in place of its roll, at the price book's prices. */
+  readonly port?: readonly PortGood[];
 }
 
 /** An encounter's kind by id, or undefined for an id the catalog lacks. */
@@ -90,6 +102,22 @@ const onHop = (
   startAct: number,
 ): ScriptEntry[] => entries.filter((e) => e.hop === hop && actOf(e, startAct) === act);
 
+/** The most specific entry covering the address that `sets` holds for. */
+function mostSpecific(
+  entries: readonly ScriptEntry[],
+  sets: (e: ScriptEntry) => boolean,
+  act: number,
+  hop: number,
+  startAct: number,
+): ScriptEntry | undefined {
+  let best: ScriptEntry | undefined;
+  for (const e of entries) {
+    if (!sets(e) || !covers(e, act, hop, startAct)) continue;
+    if (best === undefined || rank(e) > rank(best)) best = e;
+  }
+  return best;
+}
+
 /** The item the most specific entry covering the address sets, or undefined. */
 export function scriptItem(
   entries: readonly ScriptEntry[],
@@ -98,12 +126,17 @@ export function scriptItem(
   hop: number,
   startAct: number,
 ): string | undefined {
-  let best: ScriptEntry | undefined;
-  for (const e of entries) {
-    if (e[item] === undefined || !covers(e, act, hop, startAct)) continue;
-    if (best === undefined || rank(e) > rank(best)) best = e;
-  }
-  return best?.[item];
+  return mostSpecific(entries, (e) => e[item] !== undefined, act, hop, startAct)?.[item];
+}
+
+/** The stock the most specific entry covering the address gives a port, or undefined. */
+export function scriptPort(
+  entries: readonly ScriptEntry[],
+  act: number,
+  hop: number,
+  startAct: number,
+): readonly PortGood[] | undefined {
+  return mostSpecific(entries, (e) => e.port !== undefined, act, hop, startAct)?.port;
 }
 
 /**
@@ -128,6 +161,7 @@ function impliedKinds(entries: readonly ScriptEntry[], encounterKind: EncounterK
   for (const e of entries) {
     if (e.kind !== undefined) kinds.push(e.kind);
     if (e.event !== undefined) kinds.push('event');
+    if (e.port !== undefined) kinds.push('port');
     const k = e.encounter === undefined ? undefined : encounterKind(e.encounter);
     if (k === 'normal') kinds.push('battle');
     if (k === 'elite') kinds.push('elite');
@@ -171,7 +205,7 @@ export function scriptConflicts(
       problems.push(`${addressOf(e)}: a kind (${e.kind}) needs a numbered hop`);
     }
     const items = seen.get(key(e)) ?? new Set<string>();
-    for (const item of SCRIPT_ITEMS) {
+    for (const item of [...SCRIPT_ITEMS, 'port'] as const) {
       if (e[item] === undefined) continue;
       if (items.has(item)) problems.push(`${addressOf(e)}: ${item} is set twice`);
       items.add(item);
@@ -198,7 +232,14 @@ export function entryToString(e: ScriptEntry): string {
     const value = e[item];
     if (value !== undefined) items.push(`${item}=${value}`);
   }
+  if (e.port !== undefined) items.push(`port=${e.port.map(goodToString).join('/')}`);
   return `${addressOf(e)}:${items.join(',')}`;
+}
+
+/** A port's good as `port=` spells it: an id, a unit's with `:level` when set. */
+export function goodToString(g: PortGood): string {
+  if (g.kind !== 'unit') return g.id;
+  return g.level === undefined ? g.archetype : `${g.archetype}:${g.level}`;
 }
 
 /** The list as `script=`'s value, the inverse of `parseScript`. */

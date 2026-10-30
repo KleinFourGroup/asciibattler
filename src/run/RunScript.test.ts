@@ -142,10 +142,33 @@ describe('the URL form', () => {
       'script: dropped "encounter=no-such" from "3:encounter=no-such,layout=river": no such encounter',
       'script: dropped "elite" from "*:elite": a kind needs a numbered hop',
       'script: dropped "*:elite": nothing left to set',
-      'script: dropped "sing" from "4:sing": not a kind (battle, elite, event, rest, port) or an item (encounter=, layout=, event=)',
+      'script: dropped "sing" from "4:sing": not a kind (battle, elite, event, rest, port) or an item (encounter=, layout=, event=, port=)',
       'script: dropped "4:sing": nothing left to set',
       'script: dropped "5:rest,encounter=brigands": 5: two kinds (rest, battle)',
     ]);
+  });
+
+  it('parses a port\'s goods, each resolved as a daemon, a packet or an archetype', () => {
+    expect(parseScript('2:port=rogue:3/healer/overclock/venom/mars', []).entries).toEqual([
+      {
+        hop: 2,
+        port: [
+          { kind: 'unit', archetype: 'rogue', level: 3 },
+          { kind: 'unit', archetype: 'healer' },
+          { kind: 'packet', id: 'overclock' },
+          { kind: 'packet', id: 'venom' },
+          { kind: 'daemon', id: 'mars' },
+        ],
+      },
+    ]);
+    const { entries, warnings } = parseScript('3:port=rogue/rogue/rogue/rogue/rogue/rogue/mars:2/nobody', []);
+    expect(entries).toEqual([{ hop: 3, port: Array.from({ length: 5 }, () => ({ kind: 'unit', archetype: 'rogue' })) }]);
+    expect(warnings).toEqual([
+      'script: dropped "port=rogue/rogue/rogue/rogue/rogue/rogue/mars:2/nobody" from "3:port=rogue/rogue/rogue/rogue/rogue/rogue/mars:2/nobody": port good "rogue": a port holds 5 of its kind',
+      'script: dropped "port=rogue/rogue/rogue/rogue/rogue/rogue/mars:2/nobody" from "3:port=rogue/rogue/rogue/rogue/rogue/rogue/mars:2/nobody": port good "mars:2": only a unit takes a level',
+      'script: dropped "port=rogue/rogue/rogue/rogue/rogue/rogue/mars:2/nobody" from "3:port=rogue/rogue/rogue/rogue/rogue/rogue/mars:2/nobody": port good "nobody" is no daemon, packet or archetype',
+    ]);
+    expect(hopKind(parseScript('2:port=mars', []).entries, 1, 2, 1, kindOf)).toBe('port');
   });
 
   it('drops an entry that contradicts an old dial', () => {
@@ -156,7 +179,8 @@ describe('the URL form', () => {
   });
 
   it('writes back what it parsed', () => {
-    const text = '3:rest;2.4:elite,encounter=brigand-champions,layout=river;*:event=mines;2.*:layout=procedural';
+    const text =
+      '3:rest;2.4:elite,encounter=brigand-champions,layout=river;*:event=mines;2.*:layout=procedural;5:port=rogue:3/healer/patch/mars';
     const entries = parseScript(text, []).entries;
     expect(scriptToString(entries)).toBe(text);
     expect(parseScript(scriptToString(entries), []).entries).toEqual(entries);

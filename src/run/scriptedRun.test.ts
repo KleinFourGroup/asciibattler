@@ -6,7 +6,9 @@ import { describe, expect, it } from 'vitest';
 import { EventBus } from '../core/EventBus';
 import type { GameEvents } from '../core/events';
 import { getEncounter } from '../config/encounters';
+import { daemonPrice, packetPrice, unitPrice } from '../config/prices';
 import { PHASE_ROWS, frontierOf } from '../dev/probe/drive';
+import { avgTeamLevel } from './Recruitment';
 import { Run } from './Run';
 import type { RunConfig } from './RunConfig';
 import type { ScriptEntry } from './RunScript';
@@ -138,6 +140,75 @@ describe('a numbered hop\'s event', () => {
     enterHop(run, bus, 2);
     expect(run.phase).toBe('event');
     expect(run.activeEvent?.eventId).toBe('cadre-1');
+  });
+});
+
+describe('a port\'s stock', () => {
+  const stocked: ScriptEntry = {
+    hop: 2,
+    port: [
+      { kind: 'unit', archetype: 'rogue', level: 3 },
+      { kind: 'unit', archetype: 'healer' },
+      { kind: 'packet', id: 'overclock' },
+      { kind: 'packet', id: 'venom' },
+      { kind: 'daemon', id: 'minerva' },
+    ],
+  };
+
+  it('offers exactly its goods, at the price book\'s prices', () => {
+    const { run, bus } = runOf(11, { script: [stocked] });
+    expect(kindsOnHop(run, 2).every((k) => k === 'port')).toBe(true);
+    enterHop(run, bus, 2);
+    expect(run.phase).toBe('port');
+    const base = Math.round(avgTeamLevel(run.team));
+    const stock = run.portStock!;
+    expect(stock.units.map((u) => [u.template.archetype, u.template.level, u.price])).toEqual([
+      ['rogue', 3, unitPrice('rogue', 3)],
+      ['healer', base, unitPrice('healer', base)],
+    ]);
+    expect(stock.packets.map((p) => [p.packetId, p.price])).toEqual([
+      ['overclock', packetPrice('overclock')],
+      ['venom', packetPrice('venom')],
+    ]);
+    expect(stock.daemons.map((d) => [d.daemonId, d.price])).toEqual([['minerva', daemonPrice('minerva')]]);
+    // The control: the same port without the stock rolls its own.
+    const plain = runOf(11, { script: [{ hop: 2, kind: 'port' }] });
+    enterHop(plain.run, plain.bus, 2);
+    expect(plain.run.portStock).not.toEqual(stock);
+  });
+
+  it('leaves another port\'s roll as it was', () => {
+    const later: ScriptEntry = { hop: 4, kind: 'port' };
+    const a = runOf(11, { script: [stocked, later] });
+    const b = runOf(11, { script: [{ hop: 2, kind: 'port' }, later] });
+    enterHop(a.run, a.bus, 4);
+    enterHop(b.run, b.bus, 4);
+    expect(a.run.phase).toBe('port');
+    expect(a.run.portStock).toEqual(b.run.portStock);
+  });
+
+  it('leaves out a daemon the run owns, with a warning', () => {
+    // The Soldier starts with Mars.
+    const { run, bus } = runOf(11, {
+      script: [{ hop: 2, port: [{ kind: 'daemon', id: 'mars' }, { kind: 'daemon', id: 'minerva' }] }],
+    });
+    const heard: string[] = [];
+    bus.on('script:warning', (e) => heard.push(e.text));
+    enterHop(run, bus, 2);
+    expect(run.portStock!.daemons.map((d) => d.daemonId)).toEqual(['minerva']);
+    expect(heard).toEqual(["script: act 1, hop 2: port's mars is left out, since the run owns it"]);
+  });
+
+  it('refuses more goods of a kind than the slots, and an unknown good', () => {
+    const units = (n: number): ScriptEntry => ({
+      hop: 2,
+      port: Array.from({ length: n }, () => ({ kind: 'unit', archetype: 'rogue' }) as const),
+    });
+    expect(() => runOf(1, { script: [units(5)] })).not.toThrow();
+    expect(() => runOf(1, { script: [units(6)] })).toThrow(/a port holds 5 goods of the unit kind/);
+    expect(() => runOf(1, { script: [{ hop: 2, port: [{ kind: 'packet', id: 'no-such' }] }] })).toThrow(
+      /no such packet good/,
+    );
   });
 });
 

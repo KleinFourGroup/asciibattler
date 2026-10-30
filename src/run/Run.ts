@@ -46,8 +46,10 @@ import {
   hopKind,
   scriptConflicts,
   scriptItem,
+  scriptPort,
   scriptedEvent,
   type EncounterKindOf,
+  type PortGood,
   type ScriptEntry,
   type ScriptItem,
 } from './RunScript';
@@ -1205,8 +1207,10 @@ export class Run {
     }
     if (this.kindOf(nodeId) === 'port') {
       this.phase = 'port';
-      // The stock is rolled once, on entry, and saved with the run.
-      this.portStock = this.rollPortStock(nodeId);
+      // The stock is rolled once, on entry, and saved with the run; a
+      // script's stock for the port takes the roll's place.
+      const stock = scriptPort(this.script, this.sectorIndex + 1, this.currentHop + 1, this.startAct);
+      this.portStock = stock === undefined ? this.rollPortStock(nodeId) : this.stockPort(nodeId, stock);
       this.bus.emit('port:entered', { nodeId });
       return;
     }
@@ -1625,6 +1629,37 @@ export class Run {
   }
 
   /**
+   * A script's stock for a port (`RunScript.ts`): exactly its goods, at the
+   * price book's prices with no jitter, in place of `rollPortStock`. Only its
+   * units draw, their level-ups on the port's own `'portStock'` stream, so
+   * no other draw moves. A unit with no level takes the port's base level,
+   * the team's average with no bonus roll. A daemon the run owns is left
+   * out, as the roll leaves it out, and warns.
+   */
+  private stockPort(nodeId: number, goods: readonly PortGood[]): PortStock {
+    const unitRng = this.streamRng('portStock', this.sectorIndex, nodeId);
+    const baseLevel = Math.round(avgTeamLevel(this.team));
+    const owned = new Set(this.daemons.map((d) => d.id));
+    const stock: PortStock = { units: [], packets: [], daemons: [] };
+    for (const good of goods) {
+      if (good.kind === 'unit') {
+        const level = Math.min(LEVELING.levelCap, good.level ?? baseLevel);
+        const template = rollUnit(good.archetype as Archetype, unitRng, level);
+        stock.units.push({ template, price: unitPrice(template.archetype, template.level), sold: false });
+      } else if (good.kind === 'packet') {
+        stock.packets.push({ packetId: good.id, price: packetPrice(good.id), sold: false });
+      } else if (owned.has(good.id)) {
+        this.warnScript(
+          `script: act ${this.sectorIndex + 1}, hop ${this.currentHop + 1}: port's ${good.id} is left out, since the run owns it`,
+        );
+      } else {
+        stock.daemons.push({ daemonId: good.id, price: daemonPrice(good.id), sold: false });
+      }
+    }
+    return stock;
+  }
+
+  /**
    * Buy a stocked unit: pay its price, then add it as a recruit is added
    * (`appendRosterUnit`); the deck takes it at the next encounter's
    * rebuild. A sold slot is a no-op, as is a buy out of phase or unpaid
@@ -1859,6 +1894,9 @@ export class Run {
       }
       if (e.event !== undefined && !kinds.has('event')) {
         this.warnScript(`script: act ${act}: ${addressOf(e)}:event=${e.event} finds no event node`);
+      }
+      if (e.port !== undefined && !kinds.has('port')) {
+        this.warnScript(`script: act ${act}: ${addressOf(e)}:port= finds no port node`);
       }
     }
   }
@@ -4103,6 +4141,7 @@ function checkScript(
     checkForcedLayoutId(e.layout);
     checkForcedEncounterId(e.encounter);
     checkForcedEventId(e.event, eventCatalog);
+    if (e.port !== undefined) checkPortGoods(e);
   }
   const problems = scriptConflicts(script, startAct, encounterKindOf);
   if (problems.length > 0) throw new Error(`Run: the script contradicts itself: ${problems.join('; ')}`);
@@ -4127,6 +4166,29 @@ function checkScript(
     }
   }
   return warnings;
+}
+
+/**
+ * Check a script's port stock as the URL parse does (`parsePortGoods`): each
+ * good in its catalog, a unit's level at least 1, and no more goods of a
+ * kind than the shipped slots (`PRICES.portStock`), else throw.
+ */
+function checkPortGoods(e: ScriptEntry): void {
+  const slots = { unit: PRICES.portStock.units, packet: PRICES.portStock.packets, daemon: PRICES.portStock.daemons };
+  const count = { unit: 0, packet: 0, daemon: 0 };
+  for (const good of e.port ?? []) {
+    const known =
+      good.kind === 'unit'
+        ? (ALL_ARCHETYPES as readonly string[]).includes(good.archetype) &&
+          (good.level === undefined || (Number.isInteger(good.level) && good.level >= 1))
+        : good.kind === 'packet'
+          ? packetById(good.id) !== undefined
+          : daemonById(good.id) !== undefined;
+    if (!known) throw new Error(`Run: script entry ${entryToString(e)}: no such ${good.kind} good`);
+    if (++count[good.kind] > slots[good.kind]) {
+      throw new Error(`Run: script entry ${entryToString(e)}: a port holds ${slots[good.kind]} goods of the ${good.kind} kind`);
+    }
+  }
 }
 
 /** The config inputs a Run reads after construction. A snapshot does not

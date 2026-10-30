@@ -31,9 +31,12 @@ import {
   scriptConflicts,
   scriptToString,
   type EncounterKindOf,
+  type PortGood,
   type ScriptEntry,
   type ScriptKind,
 } from './RunScript';
+import { packetById } from '../config/packets';
+import { PRICES } from '../config/prices';
 
 /** One starting-roster slot: an archetype at a level (at least 1, capped). */
 export interface RosterEntry {
@@ -120,9 +123,10 @@ export interface RunConfig {
    * hop's entry stamps its kind on the hop's nodes and holds there; a starred
    * one applies wherever its kind fits, as the dials do. Checked at
    * construction: a contradiction, or a numbered hop past its act's end,
-   * throws. URL form: `script=3:event=cadre-1;6:encounter=brigands,layout=river`
-   * (`;` between entries, `:` after the address, `,` between items), an
-   * entry the parse can't read dropped with a warning.
+   * throws. URL form: `script=3:event=cadre-1;6:encounter=brigands,layout=river;8:port=rogue:3/overclock/mars`
+   * (`;` between entries, `:` after the address, `,` between items, `/`
+   * between a port's goods), an entry the parse can't read dropped with a
+   * warning.
    */
   readonly script?: readonly ScriptEntry[];
   /**
@@ -369,6 +373,45 @@ function parseEvent(raw: string | null): string | undefined {
 
 const encounterKind: EncounterKindOf = (id) => getEncounter(id)?.kind;
 
+/**
+ * `port=`'s goods, `/` between them: each id a daemon, a packet or an
+ * archetype, in that order (as `grants` resolves), a unit's `:level` clamped
+ * as `roster=`'s is. A good no catalog holds, a level on a daemon or a
+ * packet, and a good past the shipped slots of its kind (`PRICES.portStock`)
+ * are dropped, each through `drop`.
+ */
+export function parsePortGoods(raw: string, drop: (why: string) => void): PortGood[] {
+  const goods: PortGood[] = [];
+  const count = { unit: 0, packet: 0, daemon: 0 };
+  const slots = { unit: PRICES.portStock.units, packet: PRICES.portStock.packets, daemon: PRICES.portStock.daemons };
+  for (const token of raw.split('/').map((t) => t.trim())) {
+    if (token === '') continue;
+    const [idPart, levelPart] = token.split(':');
+    const id = (idPart ?? '').trim();
+    const good: PortGood | undefined =
+      daemonById(id) !== undefined
+        ? { kind: 'daemon', id }
+        : packetById(id) !== undefined
+          ? { kind: 'packet', id }
+          : (ALL_ARCHETYPES as readonly string[]).includes(id.toLowerCase())
+            ? levelPart === undefined
+              ? { kind: 'unit', archetype: id.toLowerCase() }
+              : { kind: 'unit', archetype: id.toLowerCase(), level: clampLevel(parsePositiveInt(levelPart) ?? 1) }
+            : undefined;
+    if (good === undefined) {
+      drop(`port good "${token}" is no daemon, packet or archetype`);
+    } else if (good.kind !== 'unit' && levelPart !== undefined) {
+      drop(`port good "${token}": only a unit takes a level`);
+    } else if (count[good.kind] >= slots[good.kind]) {
+      drop(`port good "${token}": a port holds ${slots[good.kind]} of its kind`);
+    } else {
+      count[good.kind]++;
+      goods.push(good);
+    }
+  }
+  return goods;
+}
+
 /** An entry's address: a hop, `act.hop`, `*` or `act.*`, each number 1 up. */
 const ADDRESS = /^(?:(\d+)\.)?(\d+|\*)$/;
 
@@ -425,8 +468,12 @@ export function parseScript(
         const id = parseEvent(value);
         if (id === undefined) drop('no such event');
         else entry.event = id;
+      } else if (name === 'port') {
+        const port = parsePortGoods(value ?? '', (why) => drop(why));
+        if (port.length === 0) drop('no good it names is in a catalog');
+        else entry.port = port;
       } else {
-        drop('not a kind (battle, elite, event, rest, port) or an item (encounter=, layout=, event=)');
+        drop('not a kind (battle, elite, event, rest, port) or an item (encounter=, layout=, event=, port=)');
       }
     }
     if (Object.keys(entry).every((k) => k === 'act' || k === 'hop')) {

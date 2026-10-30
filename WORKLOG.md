@@ -713,3 +713,38 @@ to fail until a new dial is named in it: the menu's boot rule
 where `runCounts` already refuses any dial but the character and the
 level, so a scripted win is not recorded), and the board panel's
 restated keys (`boardPanel/fixtures.ts`). Each takes `script`.
+
+### 142e — a port's stock (2026-10-30)
+
+*Built.* `port=` takes goods `/` apart, each id resolved as a daemon, a
+packet or an archetype (as `grants` resolves), a unit's `:level` clamped
+as `roster=`'s is. Up to the shipped slots of each kind (5, 5, 2); a
+good past them, a level on a daemon or a packet, and an unknown id are
+dropped and named by the parse, and thrown at construction for a
+code-built script. A numbered `port=` stamps its hop `port`. At docking,
+`Run.stockPort` replaces the roll: exactly the goods, at the price
+book's prices with no jitter, a unit with no level at the port's base
+level (the team's average, no bonus roll). Only the units draw, their
+level-ups on the port's own `'portStock'` stream. An owned daemon is
+left out with a warning, and a starred stock with no port on the act's
+map warns.
+
+*Evidence.* The corpus: 0 of 32 differ. The scripted-run tests, 17 of 17,
+and the list's, 24 of 24:
+- the exact stock and prices, against the same port unstocked;
+- a later unstocked port's roll equal with and without the stock before
+  it;
+- the owned daemon left out, the slot and id refusals, and the parse and
+  its inverse with goods.
+
+Planted failures, each on the live file and restored:
+- the stock ignored fails the two tests that read it;
+- a unit priced one bit off fails the price test;
+- an owned daemon kept fails its test;
+- a stocked port handing the run its daemon fails "leaves another port's
+  roll".
+
+A first try at that last control, the stocked rogue joining the team,
+passed. One level-3 unit doesn't move the team's rounded average, which
+is all the later roll reads of the team, so that leak was invisible to
+the test, not caught by it.

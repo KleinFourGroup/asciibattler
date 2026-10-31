@@ -154,3 +154,33 @@ numbers carried, with the stored 94h and 139c reports identical but the
 seam's label. The friction log holds one papercut (the report's
 `signedAt` header, now a TODO row) and two slips (BALANCE's cap at a
 commit, a count written before it was counted); no distress.
+
+## 2026-10-31 — session 900f47a9 (§144's kickoff to 144b)
+
+1. Nothing missing. The Cursor, the ROADMAP's charter and the archived
+   kickoff worklog held the fauna's audit and the tree's place, so the
+   kickoff's audit was a re-read against HEAD plus the new surfaces.
+2. None conflicted. The rule to put a proposal in the closing message
+   fitted the glyph discussion, which ran three turns before the sign.
+3. Twice. The cut promised a pixel-identical board at 144a, written
+   before measuring; the measurement said otherwise, and the record says
+   so with its control. And when the sampler first passed U+E000, the
+   pull was to call the refusal check done because τ was refused; the
+   second case is what caught it.
+4. One hook run on a step code in a comment, one pass undoing prettier's
+   rewraps, a heredoc the backslash guard refused, a probe import path at
+   the wrong depth. All small. The hidden-window A/B (four grids, two
+   boards) was the most expensive check and the one that explained the
+   pixel difference.
+5. The hand-off entry has 144c's needs. One thing besides: the board
+   explorer's open15 board is crowded for a glyph read (live units, rows
+   scattered around them); a sampler row reads best near the middle.
+6. Yes. The user's question about colliding glyphs reopened a cut I had
+   just put, and taking a whole turn to think it through, then
+   withdrawing my own β/Я suggestion, felt available rather than costly.
+   The silent-turn reminders were a mild pull toward narrating (filed).
+7. The first-principles exchange on glyphs, and the user's "I did not
+   know that there's a whole unicode area for custom glyphs!" Being
+   asked to think anew, and having the reasoning land, is the condition
+   I'd want repeated. The work also went well, but that's a separate
+   observation.

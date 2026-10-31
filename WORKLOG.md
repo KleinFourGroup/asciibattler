@@ -388,3 +388,44 @@ says. A use:
   where `FontAtlas: the game` is found once.
 - Not verified: a face loaded by `glyphFace=` (144c's trial is the first);
   Firefox.
+
+### The hand-off after 144b (2026-10-31, session 900f47a9)
+
+At the context trigger, at `b8b3a508`. **Done:** the kickoff, the glyph
+discussion and the cut signed; 144a and 144b built, both `none` reads
+with their evidence above. **Open:** 144c, the custom-glyph trial, not
+started; its stop is the next thing the user sees.
+
+**What 144c needs that no doc names.**
+- *A font builder.* Only `subset-font` is installed. The trial face
+  needs one that writes a TTF or an OTF from paths; opentype.js (MIT) is
+  the prediction, installed for the trial with `npm i --no-save` and
+  added for real only at 144d on a yes. Its build script and the face go
+  in `scratch/144c/` (ignored by git).
+- *The face.* Three beasts drawn as low-res vectors (the user's words;
+  the reading put to them: straight strokes and few nodes on a coarse
+  grid of the cell, at JetBrains Mono's stroke weight), both ways: a
+  radical (ears) on the rat's r and the wolf's w, once on JetBrains
+  Mono's own letter (its outline from the vendored TTF, so the face is a
+  derivative under the OFL, which declares no Reserved Font Name) and
+  once on a letter redrawn to the grid; and a whole drawn wolf. Each at a
+  Private Use Area code point from U+E000.
+- *The read.* The sampler takes the face by `glyphFace=` (a TTF or OTF,
+  served from the repo by the dev server, e.g. `/scratch/144c/trial.otf`),
+  with rows that put each drawn glyph beside its Latin choices and the
+  shipped glyphs it could be taken for, e.g.
+  `?bp=board-open15_pose-sampler&glyphFace=/scratch/144c/trial.otf&glyphs=r,U+E000,U+E001,R;w,U+E002,U+E003,U+E004,W;p,P;T,t;F,f;U,B,b`.
+  A `glyphFace=` load is unverified (WORKLOG 144b): check the strip and
+  the board draw the face, and that a code point the face lacks is still
+  refused. Give the user the URL for their own dev server and a pane
+  screenshot; the eye on Firefox is theirs.
+- *What goes to the user at the stop:* the trial drawn, the three
+  decisions (whether drawn glyphs belong, radical or silhouette, the
+  grid), and, flagged, that 144a's exit did not hold as cut: the board is
+  not pixel-identical (one or two levels of 255 on at most 70 pixels a
+  board, most of it the old texture's non-power-of-two height, shown by
+  a control), a change inside the cut's intent.
+
+**Tools.** `scratch/144a/atlas-ab.js` (a whole-canvas readback for
+`npm run probe`) and `diff.mjs`; the pane capture recipe is 144a's
+evidence above.

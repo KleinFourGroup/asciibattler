@@ -261,3 +261,16 @@ without an edit. B keeps each ref beside the content it measured, which
 pays once an act has several candidate sectors (plans/acts.md), but this
 round has one sector an act. Under A the wall names a role, not an act;
 the charter's "per act" holds for the seams and the mid-walk walls.
+
+### 143c — arm A signed (2026-10-31)
+
+The user: "Variant sectors per act is pretty far off in the future for
+now, so it sounds to me like A is the better choice, and we'll deal with
+the variants later, when/if they land. Sound reasonable?" The session
+agreed, with the cost named: once an act has several candidate sectors,
+its refs average over whichever sector each seed drew, and a sector key
+under the act is the reshape then. The reply did not take up the four
+leans common to both arms (forced-boss refs keyed by the boss at its
+home act; bands checked only where signed; pacing over the whole walk;
+`--act` written only past act 1), on which 143d builds, so they were put
+once more before 143d starts.

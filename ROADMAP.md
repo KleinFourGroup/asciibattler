@@ -58,7 +58,7 @@ one act alone through the starting act, and the sheet's two-act names
 (`deepEndWallTarget`, `act1WinRefs`) per act. **Why here:** before act 1
 enters the map, today's `--hops=11` rows are the twin a re-pointed row
 must reproduce; after it no twin is left. **Risk:** low-medium.
-**Decision points:** the sheet's per-act shape. **Exit:** on today's map
+**Decision points:** ✅ DECIDED 2026-10-31, the sheet's per-act shape: by act number, the last boss's pair as the terminal's (WORKLOG §143). **Exit:** on today's map
 the re-pointed act-1 rows reproduce the `--hops=11` rows, and a stored
 two-act cohort reports the same numbers under the new parse; each new
 check with its planted failure. **Scope guards:** no band moved; no board

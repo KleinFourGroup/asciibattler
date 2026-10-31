@@ -29,3 +29,16 @@ export function compareWalkPos(a: WalkPos, b: WalkPos): number {
 export function atOrBeyondWalkPos(pos: WalkPos, target: WalkPos): boolean {
   return compareWalkPos(pos, target) >= 0;
 }
+
+/** 143a — a run's walk position at its end, in the frame its battles'
+ *  `sector` uses: a run started at act N counts its sectors from N − 1, so
+ *  its bare `sectorsCleared` (the transitions it made) is not comparable
+ *  with a battle's label. Readers comparing a run against a (sector, hop)
+ *  bucket take the position from here. */
+export function runWalkPos(r: {
+  readonly startAct: number;
+  readonly sectorsCleared: number;
+  readonly finalHopReached: number;
+}): WalkPos {
+  return { sector: r.startAct - 1 + r.sectorsCleared, hop: r.finalHopReached };
+}

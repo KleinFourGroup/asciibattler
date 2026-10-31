@@ -66,7 +66,8 @@ cohort.
 
 The cut, signed 2026-10-31 (WORKLOG §143):
 
-- ☐ **143a — a starting act's battles under the walk's sector** (`none`).
+- ☑ **143a — a starting act's battles under the walk's sector** (`none`):
+  `startAct` on the run's result and `runWalkPos`; per-hop's frame fixed.
 - ☐ **143b — every seam and every act in the summary and its metrics**
   (`none`).
 - ☐ **143c — the sheet's per-act shape** (`stop`, the decision point).

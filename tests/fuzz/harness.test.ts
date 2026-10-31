@@ -58,6 +58,9 @@ const SYNTHETIC_POOLS: Pick<
 import { LAYOUT_IDS } from '../../src/sim/layouts';
 import { HEALTH } from '../../src/config/health';
 import { ENCOUNTERS, getEncounter } from '../../src/config/encounters';
+import { getSector } from '../../src/config/sectors';
+import { SECTOR_MAP } from '../../src/config/sectorMap';
+import { sectorPositions } from './roster/rosterTable';
 import type { RunDecisionRecord } from './rollout/driver';
 import type { RunScoreBreakdown } from './rollout/evaluator';
 import { defaultWalkStrategy } from './rollout/walker';
@@ -250,6 +253,40 @@ describe('fuzz harness', () => {
     expect(chipSectors).toEqual(battleSectors);
   });
 
+  it("a run started at act 2 labels its battles, chips and recruits with the walk's sector (143a)", () => {
+    // The expectation comes from the sector data, not the harness: each
+    // battle's encounter must be in the pool of the sector at its label's
+    // place in the walk. Counted from the starting act, the label reads 0
+    // and names the first sector, whose pool lacks the second's own fights.
+    const walk = sectorPositions(SECTOR_MAP);
+    const poolOf = (place: number): ReadonlySet<string> => {
+      const sector = getSector(walk[place]!)!;
+      return new Set(Object.values(sector.encounters).flat().map((e) => e.encounterId));
+    };
+    const ownToSecond = (id: string): boolean => poolOf(1).has(id) && !poolOf(0).has(id);
+    let result = runOne(1, makeStrategy('greedy')!, { telemetry: true, runConfig: { hopCount: 4, startAct: 2 } });
+    for (let s = 2; s <= 12 && !result.battles.some((b) => ownToSecond(b.encounterId)); s++) {
+      result = runOne(s, makeStrategy('greedy')!, { telemetry: true, runConfig: { hopCount: 4, startAct: 2 } });
+    }
+    // Non-vacuous: a fight only the second sector holds.
+    expect(result.battles.some((b) => ownToSecond(b.encounterId))).toBe(true);
+    for (const b of result.battles) {
+      expect(poolOf(b.sector).has(b.encounterId)).toBe(true);
+      expect(b.sector).toBe(1);
+    }
+    for (const c of result.telemetry!.poolChips) expect(c.sector).toBe(1);
+    for (const r of result.recruits) expect(r.sector).toBe(1);
+    // The transition count stays the run's own: none was made.
+    expect(result.startAct).toBe(2);
+    expect(result.sectorsCleared).toBe(0);
+    // The per-hop funnel reads the run in its battles' frame: it reached
+    // the first hop it fought, and a defeat dies in exactly one bucket.
+    const hops = perHopStats([result]);
+    expect(hops[0]!.runsReached).toBe(1);
+    const died = hops.reduce((a, h) => a + h.runsDied, 0);
+    expect(died).toBe(result.outcome === 'complete' ? 0 : 1);
+  });
+
   it('§90 — poolAtSectorClears records the PRE-floor seam pool; act 2 opens on the floored pool', () => {
     // The seam floor lifts the live pool before `sector:cleared` fires, so a
     // live read at emit time would be a constant `playerHealthMax` under the
@@ -331,6 +368,7 @@ describe('fuzz reporters', () => {
     escalation: 0,
     outcome: 'defeat',
     finalHopReached: 2,
+    startAct: 1,
     sectorsCleared: 0,
     totalTicks: 100,
     finalTeamSize: 3,
@@ -903,6 +941,7 @@ describe('fuzz reporters', () => {
       escalation: 0,
       outcome,
       finalHopReached,
+      startAct: 1,
       sectorsCleared: 0,
       totalTicks: 0,
       finalTeamSize: 5,
@@ -979,6 +1018,7 @@ describe('fuzz reporters', () => {
       escalation: 0,
       outcome,
       finalHopReached,
+      startAct: 1,
       sectorsCleared,
       totalTicks: 0,
       finalTeamSize: 5,
@@ -1044,6 +1084,7 @@ describe('fuzz reporters', () => {
         escalation: 0,
         outcome: 'complete',
         finalHopReached: 2,
+        startAct: 1,
         sectorsCleared: 0,
         totalTicks: 0,
         finalTeamSize: 5,
@@ -1124,6 +1165,7 @@ describe('fuzz reporters', () => {
       escalation: 0,
       outcome: 'defeat',
       finalHopReached: 3,
+      startAct: 1,
       sectorsCleared: 1,
       totalTicks: 0,
       finalTeamSize: 5,
@@ -1185,6 +1227,7 @@ describe('fuzz reporters', () => {
         escalation: 0,
         outcome: 'complete',
         finalHopReached: 2,
+        startAct: 1,
         sectorsCleared: 0,
         totalTicks: 0,
         finalTeamSize: 5,
@@ -1209,6 +1252,7 @@ describe('fuzz reporters', () => {
         escalation: 0,
         outcome: 'complete',
         finalHopReached: 1,
+        startAct: 1,
         sectorsCleared: 0,
         totalTicks: 0,
         finalTeamSize: 5,
@@ -1263,6 +1307,7 @@ describe('fuzz reporters', () => {
         escalation: 0,
         outcome: 'defeat',
         finalHopReached: 2,
+        startAct: 1,
         sectorsCleared: 1,
         totalTicks: 0,
         finalTeamSize: 5,
@@ -1315,6 +1360,7 @@ describe('fuzz reporters', () => {
         escalation: 0,
         outcome: 'complete',
         finalHopReached: 1,
+        startAct: 1,
         sectorsCleared: 0,
         totalTicks: 0,
         finalTeamSize: 5,

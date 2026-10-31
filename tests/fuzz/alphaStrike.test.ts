@@ -45,6 +45,7 @@ function run(
     escalation: 0,
     outcome,
     finalHopReached: 1,
+    startAct: 1,
     sectorsCleared: poolAtSectorClears.length,
     totalTicks: 0,
     finalTeamSize: 5,

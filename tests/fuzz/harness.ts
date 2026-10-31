@@ -54,9 +54,11 @@ import type { RunDecisionRecord } from './rollout/driver';
 export type RunOutcome = 'complete' | 'defeat' | 'hang' | 'aborted';
 
 export interface BattleResult {
-  /** 68e — the 0-based sector ordinal in the walk (counted off `sector:cleared`;
-   *  0 for every single-sector run). Hop numbering resets per sector, so act
-   *  attribution keys on (sector, hop) — never bare hop. */
+  /** 68e — the 0-based sector ordinal in the walk: the starting act less one,
+   *  plus the `sector:cleared` transitions before the battle (0 for a
+   *  single-sector run from act 1, 1 for one started at act 2). Hop numbering
+   *  resets per sector, so act attribution keys on (sector, hop) — never bare
+   *  hop. */
   sector: number;
   hop: number;
   worldSeed: number;
@@ -116,8 +118,9 @@ export interface BattleResult {
 }
 
 export interface RecruitChoice {
-  /** 72b audit (F3) — the act ordinal at recruit time. `hop` is PER-SECTOR
-   *  (gotcha #120); without this an act-2 recruit's hop was act-ambiguous. */
+  /** 72b audit (F3) — the act ordinal at recruit time, counted as a battle's
+   *  `sector` is. `hop` is PER-SECTOR (gotcha #120); without this an act-2
+   *  recruit's hop was act-ambiguous. */
   sector: number;
   hop: number;
   archetype: Archetype;
@@ -141,10 +144,16 @@ export interface RunResult {
    *  transition). Read it together with `sectorsCleared`: the walk position at
    *  death is (sectorsCleared, finalHopReached), lexicographic. */
   finalHopReached: number;
+  /** 143a — the act the run started at (`RunConfig.startAct`, 1 unless set).
+   *  Its walk position at death, in the frame its battles' `sector` uses, is
+   *  `runWalkPos` (walkDepth.ts). */
+  startAct: number;
   /** 68e — `sector:cleared` transitions the run made (0 = died/completed in
-   *  the first sector; a completed two-act walk reads 1 — the sink sector's
-   *  clear is the run completion, not a transition). The finalHop-gap fix:
-   *  act attribution no longer leans on `battlesPlayed`. */
+   *  the sector it started in; a completed two-act walk reads 1 — the sink
+   *  sector's clear is the run completion, not a transition). Counted from
+   *  the starting act, so a run started at act 2 reads 0 here while its
+   *  battles carry sector 1. The finalHop-gap fix: act attribution no longer
+   *  leans on `battlesPlayed`. */
   sectorsCleared: number;
   totalTicks: number;
   finalTeamSize: number;
@@ -462,8 +471,13 @@ function runOneInner(
   const recruits: RecruitChoice[] = [];
   // 68e — the walk ordinal. Incremented on every sector transition (the 67a
   // `sector:cleared` emit fires AFTER the state swap, and always BEFORE the
-  // successor sector's first battle:started), so `sectorsCleared` IS the
-  // 0-based sector index of whatever battle starts next.
+  // successor sector's first battle:started), so `sectorBase +
+  // sectorsCleared` IS the 0-based sector index of whatever battle starts
+  // next. A run started at act N enters the sector a full walk has there, at
+  // index N − 1 (`Run`'s constructor), so its records carry that index: an
+  // act-alone run's battles are keyed as the same act's in a full walk.
+  const startAct = options.runConfig?.startAct ?? 1;
+  const sectorBase = startAct - 1;
   let sectorsCleared = 0;
   // 72b-pre — the pool at each sector seam, in walk order. [0] is THE
   // act-1→act-2 handoff state on the two-act walk (the disentangling
@@ -521,7 +535,7 @@ function runOneInner(
         : null;
     unitTeams = new Map();
     currentBattle = {
-      sector: sectorsCleared,
+      sector: sectorBase + sectorsCleared,
       hop: run.currentHop,
       worldSeed,
       // X2 — the authored encounter id (set in `beginEncounter` before this
@@ -769,6 +783,7 @@ function runOneInner(
         portPurchases,
         packetsFired,
         eventsVisited,
+        startAct,
         sectorsCleared,
         poolAtSectorClears,
         telemetry,
@@ -794,6 +809,7 @@ function runOneInner(
             portPurchases,
             packetsFired,
             eventsVisited,
+            startAct,
             sectorsCleared,
             poolAtSectorClears,
             telemetry,
@@ -976,6 +992,7 @@ function runOneInner(
             portPurchases,
             packetsFired,
             eventsVisited,
+            startAct,
             sectorsCleared,
             poolAtSectorClears,
             telemetry,
@@ -1076,7 +1093,7 @@ function runOneInner(
         const pick = offer[idx]!;
         run.dispatch({ kind: 'chooseRecruit', unitTemplate: pick });
         recruits.push({
-          sector: sectorsCleared,
+          sector: sectorBase + sectorsCleared,
           hop: run.currentHop,
           archetype: pick.archetype,
           teamSizeAfter: run.team.length,
@@ -1100,6 +1117,7 @@ function runOneInner(
     portPurchases,
     packetsFired,
     eventsVisited,
+    startAct,
     sectorsCleared,
     poolAtSectorClears,
     telemetry,
@@ -1146,6 +1164,7 @@ function finalize(
   portPurchases: number,
   packetsFired: number,
   eventsVisited: number,
+  startAct: number,
   sectorsCleared: number,
   poolAtSectorClears: readonly number[],
   telemetry: TelemetryAccumulator | null,
@@ -1165,6 +1184,7 @@ function finalize(
     escalation: run.escalation,
     outcome,
     finalHopReached: run.currentHop,
+    startAct,
     sectorsCleared,
     totalTicks,
     finalTeamSize: run.team.length,
@@ -1191,6 +1211,7 @@ function aborted(
   portPurchases: number,
   packetsFired: number,
   eventsVisited: number,
+  startAct: number,
   sectorsCleared: number,
   poolAtSectorClears: readonly number[],
   telemetry: TelemetryAccumulator | null,
@@ -1207,6 +1228,7 @@ function aborted(
     portPurchases,
     packetsFired,
     eventsVisited,
+    startAct,
     sectorsCleared,
     poolAtSectorClears,
     telemetry,

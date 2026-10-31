@@ -61,6 +61,7 @@ function run(seed: number, chips: readonly PoolChip[] | undefined): RunResult {
     escalation: 0,
     outcome: 'defeat',
     finalHopReached: 1,
+    startAct: 1,
     sectorsCleared: 0,
     totalTicks: 0,
     finalTeamSize: 5,

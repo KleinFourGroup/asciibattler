@@ -18,7 +18,7 @@ import type { BattleResult, RunResult } from './harness';
 import { HEALTH } from '../../src/config/health';
 import { chargeToPlayer, chargeToEnemy } from './telemetry';
 import { getEncounter, type EncounterKind } from '../../src/config/encounters';
-import { atOrBeyondWalkPos } from './walkDepth';
+import { atOrBeyondWalkPos, compareWalkPos, runWalkPos } from './walkDepth';
 
 const CSV_HEADER = [
   'seed',
@@ -831,7 +831,7 @@ export function renderFailureTrace(result: RunResult): string {
   lines.push('');
   lines.push(`- **Outcome:** ${result.outcome}`);
   lines.push(
-    `- **Final hop reached:** ${result.finalHopReached} (sector ${result.sectorsCleared})`,
+    `- **Final hop reached:** ${result.finalHopReached} (sector ${runWalkPos(result).sector})`,
   );
   lines.push(`- **Total ticks:** ${result.totalTicks}`);
   lines.push(`- **Final team size:** ${result.finalTeamSize}`);
@@ -965,12 +965,13 @@ export function perHopStats(results: readonly RunResult[]): HopStats[] {
     .map((bs) => ({ sector: bs[0]!.sector, hop: bs[0]!.hop, bs }))
     .sort((a, b) => a.sector - b.sector || a.hop - b.hop)
     .map(({ sector, hop, bs }) => {
+      // 143a — the run's position in its battles' frame (`runWalkPos`).
       const runsReached = results.filter((r) =>
-        atOrBeyondWalkPos({ sector: r.sectorsCleared, hop: r.finalHopReached }, { sector, hop }),
+        atOrBeyondWalkPos(runWalkPos(r), { sector, hop }),
       ).length;
       const runsDied = results.filter(
         (r) =>
-          r.outcome !== 'complete' && r.sectorsCleared === sector && r.finalHopReached === hop,
+          r.outcome !== 'complete' && compareWalkPos(runWalkPos(r), { sector, hop }) === 0,
       ).length;
       return {
         sector,

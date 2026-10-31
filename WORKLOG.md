@@ -119,3 +119,46 @@ The cut and its reads are signed. The reply did not take up the lean
 given for 143c (the sheet keyed by act number, the forced-boss rows at
 their boss's act, act 1's refs left to go stale at §145), so 143c stays
 the stop it was cut as, with both arms drawn.
+
+### 143a — a starting act's battles under the walk's sector (2026-10-31)
+
+*Step zero.* A battle's `sector` feeds reports only: a grep for `.sector`
+in `tests/fuzz` and `src/bot`, tests aside, finds the CSV writers, the
+reporters, the roster table and `walkDepth.ts`, and no strategy or
+rollout code. The run's own fallen ledger already keys on the sector
+index (`Run.ts:1058`).
+
+*Built.* The harness counts a battle's and a recruit's sector from the
+starting act less one, so a run started at act 2 labels them 1.
+`RunResult` gains `startAct`, and `walkDepth.ts`'s `runWalkPos` gives a
+run's end position in that frame; `perHopStats` and the failure trace's
+header read it. `sectorsCleared` stays the transitions the run made.
+
+*Found on the way.* The first build changed the labels alone, and the
+before/after diff caught `per-hop.csv` reading 0 runs reached on every
+act-2 row. `perHopStats` compared the run's transitions with the
+battle's label, two frames, which is gotcha #127's class; hence
+`runWalkPos`.
+
+*Evidence.*
+- `harness.test.ts`, 39 of 39 under the fuzz config. The new test takes
+  its expectation from the sector data: each battle's encounter must be
+  in the pool of the sector its label names, and the run must meet a
+  fight only the second sector holds. It also wants per-hop reach 1 at
+  the first hop and one death bucket for a defeat. Two planted failures,
+  each restored: the label counted from the act (`sectorBase = 0`) fails
+  it ("expected +0 to be 1"), and so does per-hop's old frame, at
+  `runsReached`.
+- Before and after, 4 seeds on the greedy bot with `--per-encounter
+  --per-hop`, at `723df7a4` and with the change. From act 1
+  (`--hops=11`) and on a 4+4 walk (`--sector-hops=4`, one run crossing),
+  every file is byte-identical but `timings.csv` and `manifest.json`,
+  which hold wall time and the head. From act 2 (`--hops=11 --act=2`),
+  `summary.csv`, `per-encounter.csv` and `pacing.csv` are identical, and
+  `rosters.csv`, `per-hop.csv`, `alpha-strike.csv` and the four failure
+  traces differ in the sector label alone, 0 to 1, each checked by
+  rewriting the before file's label and comparing. The diff's control is
+  the first build's per-hop difference, which it caught.
+- Typecheck clean; eleven `RunResult` fixtures take `startAct: 1`.
+
+*Left for 143b:* `summary.csv` has no starting-act column yet.

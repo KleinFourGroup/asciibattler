@@ -545,3 +545,16 @@ board pixel-identical before and after the atlas grew, and it isn't. The
 board moves by one or two levels of 255 on at most 70 pixels of 921,600,
 most of it from the old texture's 384-px height, not a power of two, as a
 control at HEAD's layout shows (WORKLOG 144a).
+
+### The trial's first two calls signed (2026-10-31)
+
+The user, to the stop: "I'm soliciting feedback, but we're definitely on
+the right track! 😁 I can definitely sign your leans on 1 and 2, at
+least!" Signed: drawn glyphs belong, so the branch after 144c is the yes
+branch (144d our glyph face); and the radical, not the silhouette. Open:
+the third call, the grid (JetBrains Mono's own letter carrying a
+lattice-drawn mark, or letters drawn on the lattice), while the user
+gathers feedback; and 144a's flagged exit, unanswered. 144d rests on the
+third call: it decides whether the face copies JetBrains Mono's outlines
+and so ships under the OFL with its copyright line, and what a glyph
+source in the repo holds.

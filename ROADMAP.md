@@ -90,7 +90,9 @@ trial at 144c says it belongs (risk low-medium then; WORKLOG §144).
 - ◐ **144c — the custom-glyph trial** (`stop`): three beasts drawn as
   low-res vectors, as radicals and as a silhouette, beside the Latin
   choices; built, the rat, the wolf and the bear in a scratch face, put
-  to the user with three leans (WORKLOG 144c).
+  to the user with three leans (WORKLOG 144c). Signed: drawn glyphs
+  belong (the yes branch) and the radical; the grid open (WORKLOG §144,
+  "The trial's first two calls signed").
 - If yes: ☐ **144d** our glyph face (`none`) · ☐ **144e** the seven
   glyphs and the attacks call (`stop`) · ☐ **144f** the beasts and
   their attacks (`batch`) · ☐ **144g** the tree (`none`) · ☐ **144h**

@@ -301,3 +301,45 @@ ROADMAP §144 holds the steps, both branches after 144c. The stretch:
 144a, 144b, then the trial's stop at 144c. The attacks lean (new ones as
 data, named for the beast) was agreed "directionally" at the first put,
 and stays a call at the glyphs' stop.
+
+### 144a — the atlas grown (2026-10-31)
+
+*Step zero.* The grid's only readers are `FontAtlas.ts` (`COLS`, `ROWS`,
+`ATLAS_W`, `ATLAS_H`) and `ATLAS_CELL_BUDGET` in glyphs.ts, by a search
+of `src`, `tests`, `tools` and `shell`. From the live atlas's ink table
+in the pane, only `╥` and `▄` ink a cell edge (the bottom), and the cell
+below each is empty under both grids, so no neighbour's edge was
+predicted to move.
+
+*Built.* `ATLAS_COLS` (16) and `ATLAS_ROWS` (8) in glyphs.ts, the budget
+their product; FontAtlas lays its canvas out on them, and its build
+throw names the grid.
+
+*Evidence.*
+- `FontAtlas.test.ts` pins the grid at 16 × 8 = 128 and the editor's
+  count at 128 and 129; `FontAtlas.budget.test.ts` runs the build's
+  throw on a mocked set of 129 (thrown) and of 128 (past the guard, to
+  the font load). Planted in a worktree: `ATLAS_ROWS` at 6 failed both
+  size pins, and the build guard at `>=` failed the full-grid case.
+- The archetype editor reads "31 / 128 atlas cells used" in the pane.
+- Each of the 31 glyphs' cells in the new 1024 × 512 texture is
+  byte-identical to its cell in HEAD's 512 × 384 one, read from the atlas
+  canvas in the pane.
+- **The board is not pixel-identical, against the cut's exit.** In the
+  hidden window (`npm run probe` with `scratch/144a/atlas-ab.js`,
+  1280 × 720, the countdown parked, shader time held, the whole canvas
+  read back), the new grid moves 39 of 921,600 pixels on `board-quarry`
+  and 70 on `board-open15_pose-row`, each by one level of 255 (one pixel
+  by two). HEAD read the same hash in two launches (`a524ce02`). The
+  cause, by a control: HEAD's layout with only the height grown to 512
+  (8 × 8) moves 74 and 70 pixels, the same size, and 8 × 8 to 16 × 8
+  moves the pose row not at all and the quarry by 35 pixels in one row,
+  by one level. So most of it is HEAD's 384-px height, not a power of
+  two, which made the cells' V coordinates inexact; any taller grid moves
+  it. The one-row residual on the quarry was not traced. In the pane the
+  quarry's hash went `910e1cb6` to `d96fc831`; there HEAD read the same
+  hash across a reload, and a pixel planted in the atlas moved it.
+- Not verified: Firefox; the residual row's source.
+
+`scratch/144a/` keeps the readback probe and its pixel diff
+(`diff.mjs <a.json> <b.json>`).

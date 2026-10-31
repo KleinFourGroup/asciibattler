@@ -2,6 +2,8 @@ import * as THREE from 'three';
 import {
   GLYPHS,
   ATLAS_CELL_BUDGET,
+  ATLAS_COLS,
+  ATLAS_ROWS,
   FULL_GLYPH_INK,
   INK_PAD_PX,
   inkRectFromRgba,
@@ -39,12 +41,11 @@ const CELL_PX = 64;
 /** Font size we draw at — leaves a small margin inside the cell. */
 const FONT_PX = 56;
 
-/** The grid. `COLS * ROWS` must equal `ATLAS_CELL_BUDGET` (glyphs.ts), the
- *  budget the headless test and the archetype editor check against. */
-const COLS = 8;
-const ROWS = 6;
-const ATLAS_W = COLS * CELL_PX; // 512
-const ATLAS_H = ROWS * CELL_PX; // 384
+/** The grid, from glyphs.ts, whose `ATLAS_CELL_BUDGET` is its capacity. */
+const COLS = ATLAS_COLS;
+const ROWS = ATLAS_ROWS;
+const ATLAS_W = COLS * CELL_PX; // 1024
+const ATLAS_H = ROWS * CELL_PX; // 512
 
 /**
  * UV rectangle for one glyph in the atlas, in GL texture space (not canvas
@@ -143,11 +144,10 @@ export class FontAtlas {
     // The unit glyphs come from the catalog, so the set grows as units are
     // authored. Guard the grid loudly: an over-budget count would place
     // glyphs off the canvas (row ≥ ROWS) and render blanks without a word.
-    if (GLYPHS.length > COLS * ROWS) {
+    if (GLYPHS.length > ATLAS_CELL_BUDGET) {
       throw new Error(
-        `FontAtlas: ${GLYPHS.length} glyphs exceed the ${COLS * ROWS}-cell atlas grid ` +
-          `(ATLAS_CELL_BUDGET=${ATLAS_CELL_BUDGET}). Grow COLS/ROWS here + the budget in glyphs.ts, ` +
-          `or trim the unit catalog.`,
+        `FontAtlas: ${GLYPHS.length} glyphs exceed the ${ATLAS_CELL_BUDGET}-cell atlas grid ` +
+          `(${COLS} × ${ROWS}). Grow ATLAS_COLS / ATLAS_ROWS in glyphs.ts, or trim the unit catalog.`,
       );
     }
     // Fetch the faces (the self-hosted subsets' `@font-face` rules in

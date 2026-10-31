@@ -20,12 +20,16 @@
 import { ALL_UNIT_DEFS } from '../config/units';
 
 /**
- * The atlas grid's capacity (FontAtlas's `COLS × ROWS`, 8 × 6): the one budget
- * the headless test and the archetype editor check against. FontAtlas owns
- * the grid and checks the count again at build; a larger set needs both
- * grown.
+ * The atlas grid, `ATLAS_COLS × ATLAS_ROWS` cells, stated once: FontAtlas lays
+ * its canvas out on it, and its capacity is the one budget the headless test,
+ * FontAtlas's build and the archetype editor check against. A larger set
+ * needs only these grown. The build rasterizes the glyphs, not the cells, so
+ * an empty cell costs texture memory alone (16 × 8 cells of 64 px is a
+ * 1024 × 512 texture).
  */
-export const ATLAS_CELL_BUDGET = 48;
+export const ATLAS_COLS = 16;
+export const ATLAS_ROWS = 8;
+export const ATLAS_CELL_BUDGET = ATLAS_COLS * ATLAS_ROWS;
 
 /**
  * The glyphs no catalog unit owns, hand-listed: the sprites' own (`*` for

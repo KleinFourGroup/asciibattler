@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { GLYPHS, ATLAS_CELL_BUDGET } from './glyphs';
+import { GLYPHS, ATLAS_CELL_BUDGET, ATLAS_COLS, ATLAS_ROWS, atlasCellsFor } from './glyphs';
 import { ALL_UNIT_DEFS } from '../config/units';
 
 /**
@@ -36,6 +36,15 @@ describe('FontAtlas glyph coverage', () => {
     // Over budget silently pushes glyphs off-canvas (row ≥ ROWS) — FontAtlas
     // throws at build time, but this catches it headlessly at pre-commit.
     expect(GLYPHS.length).toBeLessThanOrEqual(ATLAS_CELL_BUDGET);
+  });
+
+  it('budgets the 16 × 8 grid, and the editor counts a set one past it as over', () => {
+    expect([ATLAS_COLS, ATLAS_ROWS, ATLAS_CELL_BUDGET]).toEqual([16, 8, 128]);
+    // 123 or 124 distinct glyphs beside the five static ones: the editor's
+    // count, which blocks Save past the budget.
+    const fresh = (n: number): string[] => Array.from({ length: n }, (_, i) => String.fromCodePoint(0x4e00 + i));
+    expect(atlasCellsFor(fresh(123))).toBe(ATLAS_CELL_BUDGET);
+    expect(atlasCellsFor(fresh(124))).toBe(ATLAS_CELL_BUDGET + 1);
   });
 
   it('has no duplicate glyph slots', () => {

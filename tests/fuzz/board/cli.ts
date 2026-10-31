@@ -37,6 +37,7 @@ import {
   evaluateSkillGradient,
   evaluateVerdict,
   parseSummaryCsv,
+  renderActs,
   renderReport,
   renderSkillGradient,
   renderVerdictReport,
@@ -221,6 +222,8 @@ function report(
     renderVerdictReport(verdict) +
     '\n' +
     renderReport(evaluated, board) +
+    '\n' +
+    renderActs(board, metrics) +
     '\n## INSTRUMENT HEALTH — self-checks (never gate the exit code)\n\n' +
     // 86e3 — the skill gradient (random < greedy < ARM on the act-1 shape).
     renderSkillGradient(evaluateSkillGradient(metrics));

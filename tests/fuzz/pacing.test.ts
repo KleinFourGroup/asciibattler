@@ -70,6 +70,7 @@ function run(seed: number, chips: readonly PoolChip[] | undefined): RunResult {
     eventsVisited: 0,
     finalBits: 0,
     poolAtSectorClears: [],
+    sectorBossHops: [],
     finalPool: 20,
     battles: [],
     recruits: [],

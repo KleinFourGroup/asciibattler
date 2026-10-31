@@ -54,6 +54,7 @@ function run(
     eventsVisited: 0,
     finalBits: 0,
     poolAtSectorClears,
+    sectorBossHops: [],
     finalPool: chips?.[chips.length - 1]?.playerPoolAfter ?? POOL_MAX,
     battles: [],
     recruits: [],

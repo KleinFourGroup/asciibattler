@@ -127,6 +127,8 @@ describe('evaluateBoard', () => {
     pacingNormal: 0.5 * (sheet.pacingBands.normal.min + sheet.pacingBands.normal.max),
     pacingElite: 0.5 * (sheet.pacingBands.elite.min + sheet.pacingBands.elite.max),
     pacingBoss: 0.5 * (sheet.pacingBands.boss.min + sheet.pacingBands.boss.max),
+    seams: [],
+    acts: [],
   });
 
   it('an at-reference arb-regen read PASSes every check', () => {
@@ -231,6 +233,8 @@ describe('86e2 — the fail-closed verdict layer (mechanism smoke; the per-class
     pacingNormal: 0.5 * (sheet.pacingBands.normal.min + sheet.pacingBands.normal.max),
     pacingElite: 0.5 * (sheet.pacingBands.elite.min + sheet.pacingBands.elite.max),
     pacingBoss: 0.5 * (sheet.pacingBands.boss.min + sheet.pacingBands.boss.max),
+    seams: [],
+    acts: [],
   });
   const cleanBoardInputs = (): {
     audits: Map<string, InstrumentAudit>;
@@ -364,6 +368,8 @@ describe('86e3 — the skill-gradient health check', () => {
     pacingNormal: 2.9, // 94h-pre — the gradient check reads none of these
     pacingElite: 4.5,
     pacingBoss: 5.75,
+    seams: [],
+    acts: [],
   });
 
   it('a monotone gradient reads ok on both legs, upper = the best act-1 ARM row', () => {
@@ -596,5 +602,101 @@ describe('94h-pre — pacingMetricsOf: the pacing DRIFT metrics off pacing.csv',
       pacingBoss: null,
     });
     expect(pacingMetricsOf('')).toEqual({ pacingNormal: null, pacingElite: null, pacingBoss: null });
+  });
+});
+
+describe('143b — the seams and the acts: per-act reach and walls, a seam per seam', () => {
+  // The base columns the parse needs, then the 143b three. Each row:
+  // outcome, finalHop, sectorsCleared, startAct, the seams, the boss hops.
+  const HEAD =
+    'seed,strategy,outcome,finalHop,sectorsCleared,portPurchases,finalBits,packetsFired,poolAtSectorEnd,startAct,poolAtSectorClears,sectorBossHops';
+  const csvOf = (rows: readonly (readonly [string, number, number, number, string, string])[]): string =>
+    [
+      HEAD,
+      ...rows.map(([outcome, hop, sc, act, clears, bosses], i) =>
+        [i + 1, 's', outcome, hop, sc, 0, 0, 0, clears.split('|')[0] ?? '', act, clears, bosses].join(','),
+      ),
+    ].join('\n');
+  // Three acts whose bosses stand at hops 10, 8 and 10, worked by hand:
+  // act 1: 6 of 8 reach its boss, 1 dies there; act 2: 4 reach, 1 dies;
+  // act 3: 2 reach, 1 dies. Row 7 dies late in act 1, at hop 9, past act
+  // 2's boss hop: it is no arrival there (gotcha #120).
+  const THREE_ACTS = csvOf([
+    ['complete', 10, 2, 1, '20|18', '10|8|10'],
+    ['defeat', 10, 2, 1, '15|12', '10|8|10'],
+    ['defeat', 3, 2, 1, '16|14', '10|8|10'],
+    ['defeat', 8, 1, 1, '22', '10|8'],
+    ['defeat', 4, 1, 1, '10', '10|8'],
+    ['defeat', 10, 0, 1, '', '10'],
+    ['defeat', 9, 0, 1, '', '10'],
+    ['defeat', 2, 0, 1, '', '10'],
+  ]);
+
+  it('reads every act at its own boss, and every seam', () => {
+    const m = computeMetrics(parseSummaryCsv(THREE_ACTS));
+    expect(m.acts).toEqual([
+      { act: 1, bossHop: 10, arrivals: 6, reach: 6 / 8, wall: 1 / 6 },
+      { act: 2, bossHop: 8, arrivals: 4, reach: 4 / 8, wall: 1 / 4 },
+      { act: 3, bossHop: 10, arrivals: 2, reach: 2 / 8, wall: 1 / 2 },
+    ]);
+    expect(m.seams).toEqual([
+      { act: 1, crossed: 5, pool: 83 / 5 },
+      { act: 2, crossed: 3, pool: 44 / 3 },
+    ]);
+  });
+
+  it("the last act's pair is the terminal's, and the first seam is seamPool", () => {
+    const m = computeMetrics(parseSummaryCsv(THREE_ACTS));
+    const last = m.acts[m.acts.length - 1]!;
+    expect(last.reach).toBe(m.terminalReach);
+    expect(last.wall).toBe(m.bossWall);
+    expect(m.seams[0]!.pool).toBe(m.seamPool);
+  });
+
+  it('a run started at act 2 reads as act 2 and on, in a full walk’s numbering', () => {
+    const m = computeMetrics(
+      parseSummaryCsv(
+        csvOf([
+          ['complete', 10, 1, 2, '12', '8|10'],
+          ['defeat', 8, 0, 2, '', '8'],
+        ]),
+      ),
+    );
+    expect(m.acts).toEqual([
+      { act: 2, bossHop: 8, arrivals: 2, reach: 1, wall: 1 / 2 },
+      { act: 3, bossHop: 10, arrivals: 1, reach: 1 / 2, wall: 0 },
+    ]);
+    expect(m.seams).toEqual([{ act: 2, crossed: 1, pool: 12 }]);
+  });
+
+  it('runs that disagree on a boss hop leave that act unread', () => {
+    const m = computeMetrics(
+      parseSummaryCsv(
+        csvOf([
+          ['defeat', 10, 0, 1, '', '10'],
+          ['defeat', 9, 0, 1, '', '9'],
+        ]),
+      ),
+    );
+    expect(m.acts).toEqual([{ act: 1, bossHop: null, arrivals: 0, reach: null, wall: null }]);
+  });
+
+  it('a batch before the columns: act 1 from the old fields, the winners’ act alone', () => {
+    // The module's CSV fixture: one sector, no 143b columns.
+    const rows = parseSummaryCsv(CSV);
+    expect(rows[0]!.startAct).toBe(1);
+    expect(rows[0]!.poolAtSectorClears).toBeNull();
+    expect(rows[0]!.sectorBossHops).toBeNull();
+    const m = computeMetrics(rows.filter((r) => r.strategy === 'scored:59-regen-vector'));
+    expect(m.acts).toEqual([{ act: 1, bossHop: 11, arrivals: 3, reach: m.terminalReach, wall: m.bossWall }]);
+    // A two-act batch before the columns: the seam from poolAtSectorEnd.
+    const oldWalk = [
+      'seed,strategy,outcome,finalHop,sectorsCleared,portPurchases,finalBits,packetsFired,poolAtSectorEnd',
+      '1,s,complete,10,1,0,0,0,17',
+      '2,s,defeat,10,0,0,0,0,',
+    ].join('\n');
+    const w = computeMetrics(parseSummaryCsv(oldWalk));
+    expect(w.seams).toEqual([{ act: 1, crossed: 1, pool: 17 }]);
+    expect(w.acts).toEqual([{ act: 2, bossHop: 10, arrivals: 1, reach: 1 / 2, wall: 0 }]);
   });
 });

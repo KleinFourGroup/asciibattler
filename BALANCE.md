@@ -235,9 +235,9 @@ valid for its stated purpose, opt-in, NEVER a default balance anchor;
 
 ## The board integrity protocol (86e, 2026-08-29, USER-SIGNED)
 
-The executable board's report is a **three-way split** with distinct
-semantics — VERDICT / DRIFT / INSTRUMENT HEALTH — and the board is now
-**fail-closed**: it can (and does) exit non-zero.
+The executable board's report is a **three-way split** — VERDICT / DRIFT
+/ INSTRUMENT HEALTH, with an unchecked PER ACT table after DRIFT (143b) —
+and the board is **fail-closed**: it can (and does) exit non-zero.
 
 - **VERDICT — measurement integrity, gates the exit.** Missing dir ·
   unparseable summary · empty arm-match · n under 40 · duplicate seeds ·

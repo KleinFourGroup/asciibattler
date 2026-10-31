@@ -61,6 +61,7 @@ import { ENCOUNTERS, getEncounter } from '../../src/config/encounters';
 import { getSector } from '../../src/config/sectors';
 import { SECTOR_MAP } from '../../src/config/sectorMap';
 import { sectorPositions } from './roster/rosterTable';
+import { parseSummaryCsv } from './board/board';
 import type { RunDecisionRecord } from './rollout/driver';
 import type { RunScoreBreakdown } from './rollout/evaluator';
 import { defaultWalkStrategy } from './rollout/walker';
@@ -253,6 +254,27 @@ describe('fuzz harness', () => {
     expect(chipSectors).toEqual(battleSectors);
   });
 
+  it("records each entered sector's boss hop, from the map's length (143b)", () => {
+    // The expectation is the dial's: a map of N hops puts its boss at hop
+    // N − 1, and a walk enters one sector more than it clears.
+    const roster = (['mercenary', 'mercenary', 'archer', 'archer', 'healer'] as const).map(
+      (archetype): { archetype: Archetype; level: number } => ({ archetype, level: 15 }),
+    );
+    const walkOf = (seed: number): RunResult =>
+      runOne(seed, makeStrategy('greedy')!, { runConfig: { sectorHops: 3, startingRoster: roster } });
+    let walk = walkOf(1);
+    for (let s = 2; s <= 24 && walk.sectorsCleared < 1; s++) walk = walkOf(s);
+    expect(walk.sectorsCleared).toBeGreaterThanOrEqual(1);
+    expect(walk.sectorBossHops).toEqual(new Array(walk.sectorsCleared + 1).fill(2));
+    const probe = runOne(1, makeStrategy('greedy')!, { runConfig: { hopCount: 5 } });
+    expect(probe.sectorBossHops).toEqual([4]);
+    // The summary writes both lists `|`-joined, and the board reads them back.
+    const [row] = parseSummaryCsv(renderSummaryCsv([walk]));
+    expect(row!.sectorBossHops).toEqual(walk.sectorBossHops);
+    expect(row!.poolAtSectorClears).toEqual(walk.poolAtSectorClears);
+    expect(row!.startAct).toBe(1);
+  });
+
   it("a run started at act 2 labels its battles, chips and recruits with the walk's sector (143a)", () => {
     // The expectation comes from the sector data, not the harness: each
     // battle's encounter must be in the pool of the sector at its label's
@@ -346,9 +368,13 @@ describe('fuzz reporters', () => {
     // 68e — the walk column (the finalHop-gap fix); 72b-pre appended the
     // pool-trajectory columns after it (the append-last rule).
     expect(lines[0]).toContain('sectorsCleared');
-    // §83e appended the camp probe columns after the 72b-pre pool pair.
+    // §83e appended the camp probe columns after the 72b-pre pool pair, and
+    // 143b the per-act three after those.
     expect(
-      lines[0]!.endsWith('poolAtSectorEnd,finalPool,campsSpawned,campKillsPlayer,campKillsEnemy'),
+      lines[0]!.endsWith(
+        'poolAtSectorEnd,finalPool,campsSpawned,campKillsPlayer,campKillsEnemy,' +
+          'startAct,poolAtSectorClears,sectorBossHops',
+      ),
     ).toBe(true);
     // Row count of comma-separated fields must match the header.
     const headerCols = lines[0]!.split(',').length;
@@ -377,6 +403,7 @@ describe('fuzz reporters', () => {
     packetsFired: 0,
     eventsVisited: 0,
     poolAtSectorClears: [],
+    sectorBossHops: [],
     finalPool: 0,
     battles: [],
     recruits: [],
@@ -950,6 +977,7 @@ describe('fuzz reporters', () => {
       eventsVisited: 0,
       finalBits: 0,
       poolAtSectorClears: [],
+      sectorBossHops: [],
       finalPool: 0,
       battles,
       recruits: [],
@@ -1027,6 +1055,7 @@ describe('fuzz reporters', () => {
       eventsVisited: 0,
       finalBits: 0,
       poolAtSectorClears: [],
+      sectorBossHops: [],
       finalPool: 0,
       battles,
       recruits: [],
@@ -1093,6 +1122,7 @@ describe('fuzz reporters', () => {
         eventsVisited: 0,
         finalBits: 0,
         poolAtSectorClears: [],
+        sectorBossHops: [],
         finalPool: 0,
         recruits: [],
         battles: [
@@ -1174,6 +1204,7 @@ describe('fuzz reporters', () => {
       eventsVisited: 0,
       finalBits: 0,
       poolAtSectorClears: [14],
+      sectorBossHops: [],
       finalPool: 0,
       battles: [b(0, 3, 'player'), b(0, 3, 'player'), b(1, 3, 'enemy')],
       recruits: [],
@@ -1236,6 +1267,7 @@ describe('fuzz reporters', () => {
         eventsVisited: 0,
         finalBits: 0,
         poolAtSectorClears: [],
+        sectorBossHops: [],
         finalPool: 0,
         battles: [eb(1, 'enc1', 'player'), eb(1, 'enc1', 'enemy'), eb(2, 'enc2', 'player')],
         recruits: [],
@@ -1261,6 +1293,7 @@ describe('fuzz reporters', () => {
         eventsVisited: 0,
         finalBits: 0,
         poolAtSectorClears: [],
+        sectorBossHops: [],
         finalPool: 0,
         battles: [eb(1, 'enc1', 'player')],
         recruits: [],
@@ -1316,6 +1349,7 @@ describe('fuzz reporters', () => {
         eventsVisited: 0,
         finalBits: 0,
         poolAtSectorClears: [],
+        sectorBossHops: [],
         finalPool: 0,
         battles: [],
         recruits: [],
@@ -1369,6 +1403,7 @@ describe('fuzz reporters', () => {
         eventsVisited: 0,
         finalBits: 0,
         poolAtSectorClears: [],
+        sectorBossHops: [],
         finalPool: 0,
         battles: [eb('enc1')],
         recruits: [],

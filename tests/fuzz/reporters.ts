@@ -54,6 +54,13 @@ const CSV_HEADER = [
   'campsSpawned',
   'campKillsPlayer',
   'campKillsEnemy',
+  // 143b — same append-last rule; the per-act read. The act the run started
+  // at (the frame for `sectorsCleared`), every seam's pre-floor pool and
+  // every entered sector's boss hop, each list `|`-joined in walk order
+  // (`poolAtSectorEnd` above stays the first seam's, for older readers).
+  'startAct',
+  'poolAtSectorClears',
+  'sectorBossHops',
 ].join(',');
 
 export function renderSummaryCsv(results: readonly RunResult[]): string {
@@ -94,6 +101,9 @@ export function renderSummaryCsv(results: readonly RunResult[]): string {
         r.battles.reduce((acc, b) => acc + b.campsSpawned, 0),
         r.battles.reduce((acc, b) => acc + b.campKillsPlayer, 0),
         r.battles.reduce((acc, b) => acc + b.campKillsEnemy, 0),
+        r.startAct,
+        r.poolAtSectorClears.join('|'),
+        r.sectorBossHops.join('|'),
       ].join(','),
     );
   }

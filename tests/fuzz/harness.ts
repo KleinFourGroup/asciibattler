@@ -181,6 +181,10 @@ export interface RunResult {
    *  `poolBefore` — the seam floor lifts the live pool before act 2 opens,
    *  so this is a diagnostic of act-1 attrition, not act 2's entry pool. */
   poolAtSectorClears: readonly number[];
+  /** 143b — the boss's hop in each sector the run entered, in walk order
+   *  (one more entry than `poolAtSectorClears`): the hop at which that act's
+   *  boss stands, so a death there is read without hop arithmetic. */
+  sectorBossHops: readonly number[];
   /** 72b-pre — the run-wide pool at run end: winners' headroom, the
    *  trajectory's terminal sample (0 on pool-exhaustion defeats). */
   finalPool: number;
@@ -488,9 +492,15 @@ function runOneInner(
   // the floor stays recorded"). Under floor 1.0 the live read would be a
   // constant `playerHealthMax`.
   const poolAtSectorClears: number[] = [];
+  // 143b — the boss's hop in each sector the run entered, in walk order: the
+  // map's last hop, read when the map is built (at construction, below, and
+  // here, since the emit follows the new sector's map). A walk read finds act
+  // k's boss from this rather than from the hops runs died at.
+  const sectorBossHops: number[] = [];
   bus.on('sector:cleared', (e) => {
     sectorsCleared++;
     poolAtSectorClears.push(e.poolBefore);
+    sectorBossHops.push(run.nodeMap.hops.length - 1);
   });
   // H7c — opt-in mechanism telemetry. Null (and zero overhead) by default.
   const telemetry = options.telemetry ? new TelemetryAccumulator() : null;
@@ -720,6 +730,7 @@ function runOneInner(
     ...(daemonOverride !== undefined ? { daemon: daemonOverride } : {}),
   };
   const run = new Run(runConfig.seed ?? seed, bus, runConfig);
+  sectorBossHops.push(run.nodeMap.hops.length - 1);
   // L1c3/48f — the arm key is the STARTING daemon (rolled or forced at
   // construction). Read it NOW: reward tables grant daemons mid-run (accepted
   // by the harness's accept-all policy), so end-state `run.daemons` no longer
@@ -786,6 +797,7 @@ function runOneInner(
         startAct,
         sectorsCleared,
         poolAtSectorClears,
+        sectorBossHops,
         telemetry,
       );
     }
@@ -812,6 +824,7 @@ function runOneInner(
             startAct,
             sectorsCleared,
             poolAtSectorClears,
+            sectorBossHops,
             telemetry,
           );
         }
@@ -995,6 +1008,7 @@ function runOneInner(
             startAct,
             sectorsCleared,
             poolAtSectorClears,
+            sectorBossHops,
             telemetry,
           );
         }
@@ -1120,6 +1134,7 @@ function runOneInner(
     startAct,
     sectorsCleared,
     poolAtSectorClears,
+    sectorBossHops,
     telemetry,
   );
 }
@@ -1167,6 +1182,7 @@ function finalize(
   startAct: number,
   sectorsCleared: number,
   poolAtSectorClears: readonly number[],
+  sectorBossHops: readonly number[],
   telemetry: TelemetryAccumulator | null,
 ): RunResult {
   // Fold in the recruit log + final roster composition (player-side, already
@@ -1193,6 +1209,7 @@ function finalize(
     packetsFired,
     eventsVisited,
     poolAtSectorClears,
+    sectorBossHops,
     finalPool: run.playerHealth,
     battles,
     recruits,
@@ -1214,6 +1231,7 @@ function aborted(
   startAct: number,
   sectorsCleared: number,
   poolAtSectorClears: readonly number[],
+  sectorBossHops: readonly number[],
   telemetry: TelemetryAccumulator | null,
 ): RunResult {
   return finalize(
@@ -1231,6 +1249,7 @@ function aborted(
     startAct,
     sectorsCleared,
     poolAtSectorClears,
+    sectorBossHops,
     telemetry,
   );
 }

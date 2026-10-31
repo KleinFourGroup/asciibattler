@@ -37,7 +37,7 @@
 import { readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { atOrBeyondWalkPos } from '../walkDepth';
+import { atOrBeyondWalkPos, compareWalkPos, runWalkPos, type WalkPos } from '../walkDepth';
 import { armSignatureOf, type BatchManifest } from '../manifest';
 import { parsePacingCsv } from '../reporters';
 import { HEALTH } from '../../../src/config/health';
@@ -532,6 +532,32 @@ export interface InstrumentMetrics {
   readonly pacingNormal: number | null;
   readonly pacingElite: number | null;
   readonly pacingBoss: number | null;
+  /** 143b — each seam, named by the act it ends (a full walk's numbering, so
+   *  a run started at act 2 crosses act 2's seam first): the mean pre-floor
+   *  pool over the runs that crossed it. A batch before the columns reads
+   *  its first seam off `poolAtSectorEnd`. */
+  readonly seams: readonly SeamMetric[];
+  /** 143b — each act the batch entered: reach (runs at or past its boss ÷
+   *  runs) and the wall (the runs that died at its boss ÷ those arrivals).
+   *  The boss's hop comes from `sectorBossHops`; a batch before the column
+   *  reads the winners' act alone, at the winners' terminal. The last act's
+   *  pair is `terminalReach` and `bossWall` wherever a run won. */
+  readonly acts: readonly ActMetric[];
+}
+
+export interface SeamMetric {
+  readonly act: number;
+  readonly crossed: number;
+  readonly pool: number;
+}
+
+export interface ActMetric {
+  readonly act: number;
+  /** null when the runs disagree on the act's boss hop (a mixed batch). */
+  readonly bossHop: number | null;
+  readonly arrivals: number;
+  readonly reach: number | null;
+  readonly wall: number | null;
 }
 
 interface SummaryRow {
@@ -548,6 +574,18 @@ interface SummaryRow {
    *  before the 72b-pre columns existed (graceful degradation: the seam
    *  metric reads N/A there instead of the parse throwing). */
   readonly poolAtSectorEnd: number | null;
+  /** 143b — the act the run started at, the frame of `sectorsCleared`; 1 on
+   *  batches before the column. */
+  readonly startAct: number;
+  /** 143b — every seam's pre-floor pool and every entered sector's boss
+   *  hop, in walk order; null on batches before the columns. */
+  readonly poolAtSectorClears: readonly number[] | null;
+  readonly sectorBossHops: readonly number[] | null;
+}
+
+/** A `|`-joined list cell: '' is the empty list. */
+function listCell(cell: string): number[] {
+  return cell === '' ? [] : cell.split('|').map(Number);
 }
 
 /** Parse summary.csv by HEADER NAME (never position — columns append). */
@@ -572,9 +610,16 @@ export function parseSummaryCsv(text: string): SummaryRow[] {
   ];
   // 72b — optional: pre-72b-pre batches don't carry the pool columns.
   const seam = header.indexOf('poolAtSectorEnd');
+  // 143b — optional likewise: batches before 143b carry none of the three.
+  const startAct = header.indexOf('startAct');
+  const clears = header.indexOf('poolAtSectorClears');
+  const bossHops = header.indexOf('sectorBossHops');
   return lines.slice(1).map((line) => {
     const cells = line.split(',');
     const seamCell = seam < 0 ? '' : (cells[seam] ?? '');
+    const cellAt = (i: number): string | null => (i < 0 ? null : (cells[i] ?? ''));
+    const clearsCell = cellAt(clears);
+    const bossHopsCell = cellAt(bossHops);
     return {
       seed: Number(cells[seed]),
       strategy: cells[strategy] ?? '',
@@ -585,6 +630,9 @@ export function parseSummaryCsv(text: string): SummaryRow[] {
       finalBits: Number(cells[bits]),
       packetsFired: Number(cells[fired]),
       poolAtSectorEnd: seamCell === '' ? null : Number(seamCell),
+      startAct: startAct < 0 ? 1 : Number(cells[startAct]),
+      poolAtSectorClears: clearsCell === null ? null : listCell(clearsCell),
+      sectorBossHops: bossHopsCell === null ? null : listCell(bossHopsCell),
     };
   });
 }
@@ -604,6 +652,8 @@ export function computeMetrics(rows: readonly SummaryRow[]): InstrumentMetrics {
       pacingNormal: null,
       pacingElite: null,
       pacingBoss: null,
+      seams: [],
+      acts: [],
     };
   }
   const wins = rows.filter((r) => r.outcome === 'complete');
@@ -651,7 +701,71 @@ export function computeMetrics(rows: readonly SummaryRow[]): InstrumentMetrics {
     pacingNormal: null,
     pacingElite: null,
     pacingBoss: null,
+    seams: seamsOf(rows),
+    acts: actsOf(rows, wins),
   };
+}
+
+/** 143b — a summary row's end position in a full walk's frame (`runWalkPos`,
+ *  gotcha #127): a run started at act N counts its sectors from N − 1. */
+function rowWalkPos(r: SummaryRow): WalkPos {
+  return runWalkPos({ startAct: r.startAct, sectorsCleared: r.sectorsCleared, finalHopReached: r.finalHop });
+}
+
+/** 143b — the mean pre-floor pool at each seam, keyed by the act it ends. */
+function seamsOf(rows: readonly SummaryRow[]): SeamMetric[] {
+  const byAct = new Map<number, { sum: number; crossed: number }>();
+  const add = (act: number, pool: number): void => {
+    const acc = byAct.get(act) ?? { sum: 0, crossed: 0 };
+    byAct.set(act, { sum: acc.sum + pool, crossed: acc.crossed + 1 });
+  };
+  for (const r of rows) {
+    if (r.poolAtSectorClears !== null) {
+      r.poolAtSectorClears.forEach((pool, j) => add(r.startAct + j, pool));
+    } else if (r.poolAtSectorEnd !== null) {
+      add(r.startAct, r.poolAtSectorEnd);
+    }
+  }
+  return [...byAct.entries()]
+    .sort(([a], [b]) => a - b)
+    .map(([act, { sum, crossed }]) => ({ act, crossed, pool: sum / crossed }));
+}
+
+/** 143b — reach and the wall at each entered act's boss. Arrivals are the
+ *  rows at or past the boss's (sector, hop); deaths are the defeats at it.
+ *  A batch without `sectorBossHops` knows one boss, the winners' terminal. */
+function actsOf(rows: readonly SummaryRow[], wins: readonly SummaryRow[]): ActMetric[] {
+  const bossHop = new Map<number, number | null>();
+  for (const r of rows) {
+    r.sectorBossHops?.forEach((hop, j) => {
+      const sector = r.startAct - 1 + j;
+      const seen = bossHop.get(sector);
+      if (seen === undefined) bossHop.set(sector, hop);
+      else if (seen !== hop) bossHop.set(sector, null);
+    });
+  }
+  if (bossHop.size === 0 && wins.length > 0) {
+    const ends = wins.map(rowWalkPos);
+    const deepest = ends.reduce((a, b) => (compareWalkPos(b, a) > 0 ? b : a));
+    bossHop.set(deepest.sector, deepest.hop);
+  }
+  return [...bossHop.entries()]
+    .sort(([a], [b]) => a - b)
+    .map(([sector, hop]): ActMetric => {
+      if (hop === null) return { act: sector + 1, bossHop: null, arrivals: 0, reach: null, wall: null };
+      const boss = { sector, hop };
+      const arrivals = rows.filter((r) => atOrBeyondWalkPos(rowWalkPos(r), boss));
+      const deaths = arrivals.filter(
+        (r) => r.outcome === 'defeat' && compareWalkPos(rowWalkPos(r), boss) === 0,
+      ).length;
+      return {
+        act: sector + 1,
+        bossHop: hop,
+        arrivals: arrivals.length,
+        reach: arrivals.length / rows.length,
+        wall: arrivals.length === 0 ? null : deaths / arrivals.length,
+      };
+    });
 }
 
 /**
@@ -1053,5 +1167,32 @@ export function renderReport(report: BoardReport, board: Board): string {
   }
   lines.push('');
   lines.push(`${report.fails} FAIL (signed-band breaches) · ${report.warns} WARN (reference drift)`);
+  return lines.join('\n') + '\n';
+}
+
+/** 143b — every instrument's seams, reach and walls by act. No check reads
+ *  them yet: the sheet's per-act shape is decided before any band does. */
+export function renderActs(board: Board, metricsById: ReadonlyMap<string, InstrumentMetrics>): string {
+  const lines: string[] = ['## PER ACT — seams, reach and walls (unchecked: no band reads them yet)', ''];
+  const pad = (s: string, w: number): string => s.padEnd(w);
+  const fmt = (v: number | null | undefined, digits: number): string =>
+    v === null || v === undefined ? '—' : v.toFixed(digits);
+  lines.push(
+    `${pad('instrument', 20)}${pad('act', 5)}${pad('boss hop', 10)}${pad('arrivals', 10)}${pad('reach', 8)}${pad('wall', 8)}seam pool (crossed)`,
+  );
+  for (const inst of board.instruments) {
+    const m = metricsById.get(inst.id);
+    if (m === undefined) continue;
+    const acts = new Set([...m.acts.map((a) => a.act), ...m.seams.map((s) => s.act)]);
+    for (const act of [...acts].sort((a, b) => a - b)) {
+      const a = m.acts.find((x) => x.act === act);
+      const s = m.seams.find((x) => x.act === act);
+      lines.push(
+        `${pad(inst.id, 20)}${pad(String(act), 5)}${pad(a?.bossHop == null ? '—' : String(a.bossHop), 10)}` +
+          `${pad(a === undefined ? '—' : String(a.arrivals), 10)}${pad(fmt(a?.reach, 3), 8)}${pad(fmt(a?.wall, 3), 8)}` +
+          (s === undefined ? '—' : `${s.pool.toFixed(2)} (${s.crossed})`),
+      );
+    }
+  }
   return lines.join('\n') + '\n';
 }

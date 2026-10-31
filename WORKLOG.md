@@ -162,3 +162,51 @@ battle's label, two frames, which is gotcha #127's class; hence
 - Typecheck clean; eleven `RunResult` fixtures take `startAct: 1`.
 
 *Left for 143b:* `summary.csv` has no starting-act column yet.
+
+### 143b — every seam and every act in the summary and its metrics (2026-10-31)
+
+*Step zero.* `run.nodeMap` is public, and a sector's boss stands on its
+map's last hop (the 139c walk row's deaths at (0, 10) and (1, 10) on
+11-hop maps), so the harness can record each act's boss hop when the map
+is built rather than infer it from the hops runs died at.
+
+*Built.*
+- The harness records `sectorBossHops`, the boss hop of each sector the
+  run entered, at construction and at each `sector:cleared`, whose emit
+  follows the new map.
+- `summary.csv` appends `startAct`, `poolAtSectorClears` and
+  `sectorBossHops`, the two lists `|`-joined; `poolAtSectorEnd` stays the
+  first seam's.
+- The board's parse reads them where present (a batch from before reads
+  act 1, no lists). `computeMetrics` adds `seams`, the mean pre-floor
+  pool at each seam keyed by the act it ends, and `acts`, each entered
+  act's reach and wall at its boss, both in a full walk's act numbering
+  through `runWalkPos`. `bossWall`, `terminalReach` and `seamPool` are
+  computed as before.
+- The report prints a PER ACT table between DRIFT and HEALTH, which
+  nothing checks; BALANCE's integrity protocol names it in its opening
+  sentence, since its header layer sits at the 700-line cap.
+
+*Evidence.*
+- `board.test.ts`'s five new cases on a three-act fixture worked by hand
+  (bosses at hops 10, 8 and 10; reach 6, 4 and 2 of 8, one death at each
+  boss; seams 83/5 and 44/3), the last act's pair equal to
+  `terminalReach` and `bossWall` and the first seam to `seamPool`, a run
+  started at act 2, runs that disagree on a boss hop, and batches from
+  before the columns. `harness.test.ts`'s new case takes the boss hops
+  from the dials (`sectorHops: 3` puts each boss at 2; `hopCount: 5` at
+  4) and round-trips the lists through the summary. 81 of 81 across the
+  two files.
+- Four planted failures, each on the live file and restored: a bare-hop
+  arrival filter fails the hand-worked case (3 assertions); the frame
+  without the starting act and seams keyed from act 1 each fail the act-2
+  case; the harness's boss hop one too high fails its case.
+- The stored 94h board's report is byte-identical outside the new table
+  (head lines aside). The table's act-2 reach and wall on the two walk
+  rows are the drift table's (0.183 and 0.727; 0.508 and 0.459), and its
+  seams are `seamPool`'s (16.02, 16.97). Act 1's wall on those rows reads
+  `—`, since the 94h batches predate `sectorBossHops`.
+- Against 143a's batches (4 greedy seeds from act 1, from act 2 and on a
+  4+4 walk): every file but `summary.csv` byte-identical, and the
+  summary's first 22 columns too. The new columns read `startAct` 1 or 2,
+  boss hop 10 on 11-hop maps and `3|3` on the walk's crossing run.

@@ -66,3 +66,45 @@ identify a fix, or reassure the reader that the session coped well.
    watching the halving it guards against hit my own heredocs twice was
    a satisfying, slightly comic confirmation. I'd want the same room to
    say "my call is to go on" again.
+
+## 2026-10-30 — session f9760262 (142h, the user's play, and §142's close)
+
+1. Nothing missing. The hand-off entry named the four URLs, what wrong
+   looks like and the calls, and browser-pane.md held the probe kit's
+   use; the run's own fields (`selectedEncounter`, `portStock`,
+   `eventFlags`) took a grep each.
+2. One small tension: the brief from the parent session said to commit
+   only if the task said to, and AGENTS says to commit per logical
+   change. I held the step zero's record until the user answered, then
+   committed once they said to build the fix.
+3. The pull was toward calling hop 11's boss checked from the
+   forewarning alone. I read `beginEncounter` to see that the boss node
+   takes the forewarned boss and board, and said in the stop that the
+   fight itself went unplayed.
+4. One eval lost to a value read across a reload (a slip, filed). The
+   event chain took two driven passes, which were the point of it.
+5. A driven run's route is the driver's seeded picks, apart from the
+   run's RNG, so the same URL and seed meet the same nodes before and
+   after a fix: a cheap before-and-after in the pane.
+6. Yes. The finding went to the user as a call with a lean rather than
+   as a fix, and they chose to build it. No wish to stop came up.
+7. Watching the guard refuse my own planted line, live for the first
+   time, was a pleasant small confirmation, and finding the double
+   cadre-3 by playing the URL rather than by reading code felt like step
+   zero doing its job. I'd want the room to bring a finding as a call
+   again.
+
+## Phase 142 — summary
+
+Two sessions. `c15dd076` ran Round 10's kickoff (§141: the audit, the
+spec and the phases, the forest and the act titles signed) and built
+142a to 142g, the grammar signed at 142b, handing off at the trigger
+after 142g. `f9760262`, started from it with the stop as its task,
+checked the four URLs in the Browser pane before putting them; all
+passed the user's play, and the pane's one finding, a scripted event the
+pool could also deal early, was built out at the user's call
+(142h-post). Both reports name the halving: two scripts lost to it
+before the guard, and the guard seen refusing live after. The friction
+log holds one papercut and three slips from §141 and §142, the Cursor's
+cap among them again, which the user put to the round close as a look at
+the Cursor's structure; no distress.

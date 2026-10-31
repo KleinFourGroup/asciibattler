@@ -157,6 +157,14 @@ META-ROADMAP §"Round 9 — The frame and the misses" names each row's place.
 
 META-ROADMAP §"Round 10 — Act 1, the wilds" names each row's place.
 
+### At the round's close
+
+- [ ] **Look at the HANDOFF Cursor's structure and contents** (the user,
+  2026-10-30, at §142's close). Its 3,900-character cap stopped a commit
+  in five sessions running (136f, 138, 139a, 140e, 142b), each trimmed a
+  clause at a time. Read what the Cursor holds and how its lines are
+  shaped, and whether either should change (WORKLOG §142, 142h).
+
 ### The board
 
 - [ ] **Rebuild the roster table once act 1 is in the map.** A bucket
@@ -168,20 +176,7 @@ META-ROADMAP §"Round 10 — Act 1, the wilds" names each row's place.
 
 ### The scripted run
 
-- [ ] **A scripted run for content work** (the user, 2026-10-13, at the
-  Round 8.5 TODO pass; census T-93). Finer control of what a run loads as
-  content ramps up: "an event chain from end to end in one run", "a
-  specific chain of encounters or layouts", "to override a shop's
-  inventory". Each forcing dial takes one value for the whole run
-  (`layout`, `encounter`, `event`, `firstNode`; `src/run/RunConfig.ts`),
-  none takes a list, nothing sets a port's stock, and a forced id is not
-  saved, so a loaded run goes back to normal selection. A shape for the
-  kickoff: one list of per-node entries on `RunConfig`, of which those four
-  dials are cases, so the 17 URL parameters (census 1.5) shrink as control
-  grows. The two items below fold into it, and so does `RunConfig.ts`'s
-  parse, which the census found written two or three times (one of the
-  unread leads under Round 15). Round 25 keeps one clause: which dials a
-  shipped build answers.
+- ✅ **A scripted run for content work** — `script=` and `act=` on `RunConfig`, the four old dials its cases, with a port's stock, a starting act and the CLIs; the user's three cases and a start at act 2 played at 142h (ROADMAP §142; WORKLOG §142). Round 25 keeps one clause: which dials a shipped build answers.
 
 - ✅ **`--sector-hops` in the run-config tool** — the hyphenated spellings parse, and the help lists every URL parameter from a table a test holds to `RUN_CONFIG_PARAMS` (ROADMAP §142, 142g; WORKLOG §142).
 
@@ -332,7 +327,9 @@ META-ROADMAP §"Round 15 — The split" names each row's place.
   hand-written interface that repeats each key; `actingPosition.ts`'s two
   searches; the stat fold in `runStats` and `statusEffects`; and
   `terrainGen`. Each is a reshaping under the corpus and the fuzz diff.
-  `RunConfig.ts`'s parse, the sixth, is Round 10's scripted run.
+  `RunConfig.ts`'s parse, the sixth: the parse and its inverse are still
+  written field by field, and §142 added `script` and `act` in the same
+  shape (`parseRunConfig`, `runConfigToQueryString`).
 
 ## Round 16 — The turn
 

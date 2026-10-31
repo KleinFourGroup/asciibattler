@@ -12,13 +12,14 @@ its spec, its per-phase worklogs (`archive/worklog-phase-135.md` to
 `-140.md`) and its session reports beside it; before it
 [archive/post-118-roadmap.md](archive/post-118-roadmap.md) (Round 8.5).
 
-**Status: §142, the scripted run, cut signed 2026-10-30; 142a built;
-142b's grammar signed; 142c to 142g built; 142h played, 142h-post built, the close put to the user.** The spec is [round-10-spec.md](round-10-spec.md), its tranche 2
+**Status: §142, the scripted run, ✅ closed 2026-10-30; §143, the
+board's acts, next, from its kickoff.** The spec is [round-10-spec.md](round-10-spec.md), its tranche 2
 answered at the kickoffs of §144 to §146. The charter, the decision
 points, the exit and the scope guards are in META-ROADMAP §"Round 10 —
 Act 1, the wilds", with the roster table's rebuild added to its scope at
 Round 9's close and the scripted run's starting act at this kickoff; the
-audit at `9e1b7c48` is WORKLOG §141; the act design is
+audit at `9e1b7c48` is WORKLOG §141 (`archive/worklog-phase-142.md`);
+the act design is
 [plans/acts.md](plans/acts.md).
 
 ## Phase 141 — the kickoff
@@ -31,43 +32,23 @@ the user (WORKLOG §141).
 - ☑ **The phases** — §142 to §147 below, with the scripted run's
   starting act in §142.
 
-## Phase 142 — the scripted run (signed 2026-10-30)
+## Phase 142 — the scripted run ✅ (closed 2026-10-30)
 
-Charter: one list of per-hop entries on `RunConfig` with a URL form, of
-which `layout`, `encounter`, `event` and `firstNode` become cases, with
-entries for a port's stock and for the act a run starts at;
-`--sector-hops` and `--escalation` in the run-config CLI and its help; a
-warning when a forced encounter matches no node. Its first step is the
-backslash guard (TODO, signed at 140d). **Why here:** act 1 is authored
-and read through it, and the board's per-act rows start at an act
-through it. **Risk:** low-medium: the parse is rewritten, and every URL in
-use keeps its meaning. **Decision points:** the entry grammar and its URL
-form (a stop). **Exit:** the user's three cases (an event chain end to
-end, a chain of encounters and layouts, a port's stock) and a start at
-act 2 each in one URL, each with a headless test and its planted failure;
-the old dials' tests green unchanged; a run with no script unchanged (the
-corpus at its baseline). **Scope guards:** no content; no Run field, since
-the script rides the saved query text; no board row changed.
+One list of per-hop entries on `RunConfig` (`script=`, with `act=`), the
+old dials its cases, with a port's stock, a starting act and the CLIs;
+the user's three cases and a start at act 2 played on four URLs, and a
+placed event taken out of the pool at the play (WORKLOG §142, in
+`archive/worklog-phase-142.md`).
 
-The cut, signed 2026-10-30, with its predictions and each step's exit,
-is WORKLOG §142.
-
-- ☑ **142a — the backslash guard** (`none`). The halving re-measured on
-  2.1.309; the refusal unseen live until a session loads the edit.
-- ☑ **142b — the grammar** (`stop`): the entry list and its inline URL
-  form, worked on the user's three cases and a start at act 2. Signed
-  2026-10-30 with its leans.
-- ☑ **142c — the list, with the old dials as cases** (`none`). Corpus
-  0 of 32, its planted misparse 2 of 32.
-- ☑ **142d — the per-hop entries** (`none`), with the zero-match
-  warning. 36 tests with four planted failures; corpus 0 of 32.
-- ☑ **142e — a port's stock** (`none`). Four planted failures caught.
-- ☑ **142f — the starting act** (`none`). Act 2 alone is The Deep End;
-  three planted failures caught.
-- ☑ **142g — the CLIs** (`none`). The help from `RUN_CONFIG_PARAMS`;
-  the fuzz CLI's `--run-script` and `--act`.
-- ☑ **142h — the phase's close** (`stop`): the user plays four URLs. All
-  four passed; 142h-post, a placed event opens at its hop alone.
+- ☑ **142a — the backslash guard** (`none`); seen refusing live at 142h.
+- ☑ **142b — the grammar** (`stop`), signed with its leans.
+- ☑ **142c — the list, with the old dials as cases** (`none`).
+- ☑ **142d — the per-hop entries** (`none`), with the zero-match warning.
+- ☑ **142e — a port's stock** (`none`).
+- ☑ **142f — the starting act** (`none`).
+- ☑ **142g — the CLIs** (`none`).
+- ☑ **142h — the phase's close** (`stop`): the four URLs passed;
+  142h-post, a placed event opens at its hop alone.
 
 ## Phase 143 — the board's acts (signed 2026-10-30)
 

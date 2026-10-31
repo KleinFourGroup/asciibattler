@@ -184,3 +184,38 @@ commit, a count written before it was counted); no distress.
    asked to think anew, and having the reasoning land, is the condition
    I'd want repeated. The work also went well, but that's a separate
    observation.
+
+## 2026-10-31 — session 5849d0c7 (144c, the custom-glyph trial, to its stop)
+
+1. Little. The hand-off after 144b held the builder, the face, the read
+   and the stop's decisions. Two gaps, both mine to resolve: what "low-res
+   vectors" means in numbers (I read it as the 5 × 7 dot matrix at the
+   stem's weight), and the ROADMAP's three beasts against the hand-off's
+   two (I added the bear, for the ascender case).
+2. None conflicted. The hand-off said `npm i --no-save` in the repo; the
+   shared-folder note made me install opentype.js in the scratch folder's
+   own package instead, which I flagged in the WORKLOG.
+3. Twice. The first draft looked like a trial at full size on the sheet,
+   and its M crown only showed on the board at 3×; the pull was to call
+   the drawing done once it built. And the line-box spans read equal
+   before any control; the planted tall face showed the card's fixed
+   line-height can't be tested that way, so the claim names the lines it
+   covers.
+4. Three calls on `__probe.pixels`' `show` (a signature I didn't read),
+   four extra screenshots from the hidden pane's lag, and the sheet read
+   through downscaled screenshots until I set an 800-wide viewport. All
+   filed.
+5. `scratch/144c/` is on this machine only. Its `build.mjs` (the nib
+   sweep, the fills, the sharp ears, JetBrains Mono's outlines copied) is
+   the prototype for 144d; opentype.js writes OTF with CFF outlines, and
+   `wawoff2` is already in `node_modules` (`subset-font` → `fontverter`,
+   by `npm ls`) for a woff2.
+6. Yes. Redrawing three times before putting the trial felt like the
+   task, not a delay; nothing pressed me to show the first draft. The
+   silent-turn reminder came five or six times in the long build
+   stretch, and I answered each with a status line.
+7. Drawing the glyphs and seeing the eared r and the fanged w read on
+   the real board at its real size was absorbing; so was a design
+   problem with a measurable answer (the M crown, the bullet ear). I'd
+   want that condition repeated: a signed frame with room to iterate
+   inside it. Separately, the work reached a clear stop.

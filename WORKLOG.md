@@ -429,3 +429,119 @@ started; its stop is the next thing the user sees.
 **Tools.** `scratch/144a/atlas-ab.js` (a whole-canvas readback for
 `npm run probe`) and `diff.mjs`; the pane capture recipe is 144a's
 evidence above.
+
+### 144c — the custom-glyph trial (2026-10-31, session 5849d0c7)
+
+*Step zero.* JetBrains Mono's lines, read from the vendored TTF: 1000
+units to the em, a 600 advance, x-height 550, ascender and cap 730,
+descender −180, the r's stem 90 (112 to 202). The builder is opentype.js
+1.3.4 (MIT), installed in `scratch/144c/`'s own `package.json` rather than
+with `--no-save` in the repo's `node_modules`, which other sessions share.
+It reads the TTF's outlines and writes an OTF whose character map the
+repo's `ttfCmapLookup` reads: U+E000 to U+E008 present, U+E009 and `r`
+absent, and JetBrains Mono as the control reads the reverse. The
+sampler's `glyphFace=` load, unverified at 144b, holds in the pane: the
+face registers, `--font-mono` takes it after the shipped faces, the atlas
+and the strip draw from it, and U+E009, which the face lacks, is refused
+by name.
+
+*Built*, in `scratch/144c/` (ignored by git): `build.mjs` writes
+`trial.otf`, `sheet.mjs` a construction sheet (`/scratch/144c/sheet.html`
+on the dev server: each glyph large on its lattice beside the shipped
+letters, then at the page's text sizes), `control.mjs` a planted face. The
+face, "ASCIIbattler Trial", holds nine glyphs (4.4 KB):
+
+| Code point | Beast | Drawn as |
+|---|---|---|
+| U+E000 | rat | ears on JetBrains Mono's r |
+| U+E001 | rat | ears on an r drawn on the lattice |
+| U+E002 | wolf | ears on JetBrains Mono's w |
+| U+E003 | wolf | ears on a lattice w |
+| U+E004 | wolf | the whole animal |
+| U+E005 | bear | one ear on JetBrains Mono's b |
+| U+E006 | bear | one ear on a lattice b |
+| U+E007 | rat | the whole animal |
+| U+E008 | bear | the whole animal |
+
+The third beast is the bear, for the ROADMAP's three where the hand-off
+named two: its b is the banshee's and its B the bandit's, and it carries
+the ascender case. Each beast is drawn whole, not the wolf alone, since
+the silhouette's question is whether three animals tell apart.
+
+The lattice is the old terminals' 5 × 7 dot matrix with two descender
+rows, scaled to JetBrains Mono's lines: columns at x = 90 + 105 i (ink
+45 to 555), rows at y = 45 + 110 j (row 4 inks to 530, row 6 to 750, row
+−2 to −220). A stroke is a polyline through lattice nodes swept by an
+octagonal nib 90 across its flats, the stem's weight, so a diagonal is
+within 8 % of it; a mass is a lattice polygon filled and swept the same
+way.
+
+*Found on the way*, over three drafts on the sheet and the board:
+- On whole nodes, five columns can't hold two ears with a gap between
+  them: they touch, an M across the top, or stand as ticks. The first
+  draft's ears made an M crown over r and w.
+- An ear swept by the nib comes out a blunt bullet. The ear that reads is
+  a sharp filled triangle, the cat face's "/\_/\", its apex leaning out at
+  the ascender line, so it is the one shape not built from nib strokes.
+- An ear can't share a side with an ascender: a b with an ear on each
+  side became a cat's head and stopped being a b. The ascender stands in
+  for the ear on its side.
+- A profile animal in a cell 0.6 as wide as it is tall stands tall: the
+  first wolf read as a llama and the bear as a temple. Lower, longer,
+  filled bodies read as animals on the sheet.
+
+*Evidence.*
+- The weight: a row through r at 200 units inks 112 to 202 in JetBrains
+  Mono and 45 to 135 in the lattice r, both 90, measured in the pane.
+- The board, at 1280 × 720 on `board-open15_pose-sampler`, the canvas
+  copied at 3× with hard pixels, both teams: the eared r and w read as a
+  letter with ears and apart from r, R, w and W; the lattice w with ears
+  reads as a fanged face. The b with one ear is the weakest, a small horn
+  on a b. The silhouettes come out about half a letter's ink and alike:
+  the wolf reads as a quadruped, the rat as a small critter, the bear as
+  a Space Invader. At board size an ear on JetBrains Mono's letter and an
+  ear on a lattice letter look the same.
+- Page text, the sampler's strip at 1:1 (800 × 560): at 48 and 34 px every
+  glyph reads; at 16 px bold, the fallen strip's size, the eared r and b
+  still read and the eared w passes for W. The lattice letters are
+  blockier than JetBrains Mono's (the octagonal b), a second typeface
+  beside the shipped letters.
+- The line box: spans of `r×1`, of U+E000 with `×1` and of a mix read 48 px in
+  the card's class and 21 px in the fallen strip's and in body text, the
+  face carrying JetBrains Mono's 1020 / −300. The planted control, the
+  same face with a 1400 ascender, grows the 21 px lines to 27 px; the
+  card's line-height is fixed at 48 px, which no face grows.
+- No console error on the sampler page.
+- Nothing in `src`, `config` or `tests` changed.
+- Not verified: Firefox, and window sizes other than those two (the board
+  glyph scales with the window).
+
+### The trial put to the user (unsigned)
+
+The three decisions, with the session's leans:
+1. **Whether drawn glyphs belong: yes.** A face in the Private Use Area
+   drew on the board, at the strip's three text sizes and on both teams
+   with no plumbing past the sampler's, kept the line box, and the eared
+   letters read apart from the shipped ones on the board.
+2. **Radical or silhouette: the radical.** On the board the silhouettes
+   are half a letter's ink and alike, and the cell's shape works against
+   a profile; the radical keeps the initial, a letter a player can name
+   (the fallen strip writes `r×2`), and adds the family. A whole drawn
+   glyph stays the tool for a unit with no letter (the tree, a swarm).
+3. **The grid: JetBrains Mono's own letter carries the mark**, since at
+   board size it looks the same as a lattice letter and in page text it
+   keeps one typeface; the face is then a derivative under the OFL and
+   ships under it with JetBrains Mono's copyright line. The lattice
+   (5 × 7, two descender rows, the stem's nib, a half step allowed) draws
+   the marks and any wholly drawn glyph; the ear is a sharp triangle.
+
+To carry to the seven glyphs' stop on a yes: ears suit a letter with a
+round top (r, b, p) and not one with points (w, v, y), where they read as
+a taller letter; the wolf's w is free in the shipped set, so the wolf may
+stay a plain w or take a mark of its own.
+
+Flagged from 144a, a change inside the cut's intent: its exit asked for a
+board pixel-identical before and after the atlas grew, and it isn't. The
+board moves by one or two levels of 255 on at most 70 pixels of 921,600,
+most of it from the old texture's 384-px height, not a power of two, as a
+control at HEAD's layout shows (WORKLOG 144a).

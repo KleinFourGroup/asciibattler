@@ -292,3 +292,12 @@ backup is what is left to plan.
 Predictions as put, with two more: the face changes no shipped glyph,
 since it sits after the two shipped faces in the stack; and the smoke
 fires on neither 144c nor the face (no sim, run, core or config path).
+
+### The cut signed (2026-10-31)
+
+The user, to the amended cut: "Signed! 😁" The cut and its reads are
+signed, with the face of our own in §144's scope on the trial's yes.
+ROADMAP §144 holds the steps, both branches after 144c. The stretch:
+144a, 144b, then the trial's stop at 144c. The attacks lean (new ones as
+data, named for the beast) was agreed "directionally" at the first put,
+and stays a call at the glyphs' stop.

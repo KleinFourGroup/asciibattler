@@ -79,6 +79,24 @@ by URL, its glyph read by the user; the atlas's three guards at the new
 size; the corpus at its baseline. **Scope guards:** no new mechanism, no
 pool entry; no flyer, swimmer, 2×2 or swarm.
 
+The cut, signed 2026-10-31 with a glyph face of our own in scope if the
+trial at 144c says it belongs (risk low-medium then; WORKLOG §144).
+
+- ☐ **144a — the atlas grown (S1)** (`none`): 16 × 8, the grid stated
+  once, the three guards at 128.
+- ☐ **144b — the glyph sampler** (`none`): URL-named glyphs on the board
+  and in page text, a face loaded in DEV.
+- ☐ **144c — the custom-glyph trial** (`stop`): three beasts drawn as
+  low-res vectors, as radicals and as a silhouette, beside the Latin
+  choices.
+- If yes: ☐ **144d** our glyph face (`none`) · ☐ **144e** the seven
+  glyphs and the attacks call (`stop`) · ☐ **144f** the beasts and
+  their attacks (`batch`) · ☐ **144g** the tree (`none`) · ☐ **144h**
+  the close (`stop`).
+- If no: ☐ **144d** the Latin picks and the attacks call (`stop`) ·
+  ☐ **144e** the beasts (`batch`) · ☐ **144f** the tree (`none`) ·
+  ☐ **144g** the close (`stop`).
+
 ## Phase 145 — act 1 and the run's shape (signed 2026-10-30)
 
 Charter: act 1's sector off the map (normal, elite and boss encounters

@@ -64,6 +64,15 @@ two-act cohort reports the same numbers under the new parse; each new
 check with its planted failure. **Scope guards:** no band moved; no board
 cohort.
 
+The cut, signed 2026-10-31 (WORKLOG §143):
+
+- ☐ **143a — a starting act's battles under the walk's sector** (`none`).
+- ☐ **143b — every seam and every act in the summary and its metrics**
+  (`none`).
+- ☐ **143c — the sheet's per-act shape** (`stop`, the decision point).
+- ☐ **143d — the board per act** (`none`).
+- ☐ **143e — the phase's close** (`stop`).
+
 ## Phase 144 — the fauna (signed 2026-10-30)
 
 Charter: the wolf, the giant rat, the fox, the puma, the tiger and the

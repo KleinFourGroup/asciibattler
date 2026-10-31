@@ -111,3 +111,11 @@ pairs by depth, which holds for any count of acts.
 Predictions: no snapshot bump (World v39 and Run v50; nothing serialized
 is touched); no RNG stream; no `src/` touch, so the corpus is not read;
 every commit fires the smoke and the parity test; no box.
+
+### The cut signed (2026-10-31)
+
+The user, to the cut as put: "That all looks great to me, Claude! 😁"
+The cut and its reads are signed. The reply did not take up the lean
+given for 143c (the sheet keyed by act number, the forced-boss rows at
+their boss's act, act 1's refs left to go stale at §145), so 143c stays
+the stop it was cut as, with both arms drawn.

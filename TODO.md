@@ -174,6 +174,14 @@ META-ROADMAP §"Round 10 — Act 1, the wilds" names each row's place.
   until then the guard takes a `sectors` PENDING line with that reason
   (WORKLOG §135, 135b).
 
+- [ ] **The board report prints the sheet's whole history.**
+  `balance:board --report` puts `signedAt`, 10,931 characters of
+  amendments, in two headers, so a read of the report that is not cut to
+  its tables floods the reader. Print a short provenance line (the last
+  amendment's date and phase) and leave the history in the sheet. Before
+  §146, which reads many reports (`tests/fuzz/board/cli.ts`, `renderReport`;
+  a papercut filed at §143's kickoff, WORKLOG §143, 143e).
+
 ### The scripted run
 
 - ✅ **A scripted run for content work** — `script=` and `act=` on `RunConfig`, the four old dials its cases, with a port's stock, a starting act and the CLIs; the user's three cases and a start at act 2 played at 142h (ROADMAP §142; WORKLOG §142). Round 25 keeps one clause: which dials a shipped build answers.

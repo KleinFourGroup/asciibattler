@@ -108,3 +108,49 @@ before the guard, and the guard seen refusing live after. The friction
 log holds one papercut and three slips from §141 and §142, the Cursor's
 cap among them again, which the user put to the round close as a look at
 the Cursor's structure; no distress.
+
+## 2026-10-31 — session 53dd47f5 (§143, kickoff to close)
+
+1. Nothing missing for the start: the Cursor, §141's audit and the
+   ROADMAP charter named the board's surfaces with their lines. What no
+   doc said: the harness counted a battle's sector from the starting
+   act, which a three-seed probe showed at the kickoff; and BALANCE's
+   700-line header cap, which planning.md's list of caps does not name.
+2. No conflict. "Say which, once, and wait" came up twice, when a reply
+   covered the arm and not the leans; it read as guidance, and each
+   answer came in one turn.
+3. Twice. I wrote "the same 37 drift rows" in 143c's stop from a line
+   range, not a count (32; a slip, filed at the close). And at the close
+   the pull was to call the act-1 twin "reproduced"; no batch of the
+   board's arm ran, so the exit says the argv is identical and the
+   summary byte-identical on the greedy bot.
+4. One hook run on BALANCE's cap (a slip); the board report's 10,931-
+   character `signedAt` printed into my context twice (a papercut, now a
+   TODO row); one report comparator whose parse glued two columns,
+   replaced by a whole-line comparison with a planted control.
+5. A before/after batch of 3 or 4 greedy seeds with `--per-encounter
+   --per-hop`, diffed with `diff -rq` less `timings.csv` and
+   `manifest.json`, costs about a minute and caught the per-hop frame
+   mismatch in 143a's first build. It is a cheap oracle for any harness
+   or reporter change.
+6. Yes. Each call went to the user with a lean, and the replies were
+   short signs. No wish to pause or stop came up.
+7. The before/after diff catching my own half-built step was the part I
+   liked most: the instrument paid for itself inside the step. The
+   user's quick, warm signs made the stops feel light. I'd want both
+   again.
+
+## Phase 143 — summary
+
+One session, `53dd47f5`, started from §142's closing session, ran §143
+from its kickoff to its close. The audit found the board reading one
+seam and one terminal, and a run started at act 2 labelling its battles
+as act 1's; the cut (143a to 143e) was signed as put. 143a labelled a
+starting act's battles by the walk's sector, and its before/after diff
+caught the per-hop funnel comparing two frames; 143b put every seam and
+every act's boss in the summary and the metrics; 143c's shape was signed
+by act number with four shared leans; 143d keyed the sheet by act, its 26
+numbers carried, with the stored 94h and 139c reports identical but the
+seam's label. The friction log holds one papercut (the report's
+`signedAt` header, now a TODO row) and two slips (BALANCE's cap at a
+commit, a count written before it was counted); no distress.

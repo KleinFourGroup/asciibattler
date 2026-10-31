@@ -12,8 +12,8 @@ its spec, its per-phase worklogs (`archive/worklog-phase-135.md` to
 `-140.md`) and its session reports beside it; before it
 [archive/post-118-roadmap.md](archive/post-118-roadmap.md) (Round 8.5).
 
-**Status: §142, the scripted run, ✅ closed 2026-10-30; §143, the
-board's acts, next, from its kickoff.** The spec is [round-10-spec.md](round-10-spec.md), its tranche 2
+**Status: §143, the board's acts, ✅ closed 2026-10-31; §144, the
+fauna, next, from its kickoff.** The spec is [round-10-spec.md](round-10-spec.md), its tranche 2
 answered at the kickoffs of §144 to §146. The charter, the decision
 points, the exit and the scope guards are in META-ROADMAP §"Round 10 —
 Act 1, the wilds", with the roster table's rebuild added to its scope at
@@ -50,31 +50,22 @@ placed event taken out of the pool at the play (WORKLOG §142, in
 - ☑ **142h — the phase's close** (`stop`): the four URLs passed;
   142h-post, a placed event opens at its hop alone.
 
-## Phase 143 — the board's acts (signed 2026-10-30)
+## Phase 143 — the board's acts ✅ (closed 2026-10-31)
 
-Charter: the sheet's multi-act tooling (A23's tooling half): a seam per
-seam in `summary.csv`, the wall and reach per act, the act rows reading
-one act alone through the starting act, and the sheet's two-act names
-(`deepEndWallTarget`, `act1WinRefs`) per act. **Why here:** before act 1
-enters the map, today's `--hops=11` rows are the twin a re-pointed row
-must reproduce; after it no twin is left. **Risk:** low-medium.
-**Decision points:** ✅ DECIDED 2026-10-31, the sheet's per-act shape: by act number, the last boss's pair as the terminal's (WORKLOG §143). **Exit:** on today's map
-the re-pointed act-1 rows reproduce the `--hops=11` rows, and a stored
-two-act cohort reports the same numbers under the new parse; each new
-check with its planted failure. **Scope guards:** no band moved; no board
-cohort.
+The board keyed by act: a starting act's battles under the walk's
+sector, every seam and every act's reach and wall in the summary and its
+metrics, the sheet by act number with the last boss's pair as the
+terminal's, and the forced bosses at their home act; no number moved,
+and the stored cohorts report as before (WORKLOG §143, in
+`archive/worklog-phase-143.md`).
 
-The cut, signed 2026-10-31 (WORKLOG §143):
-
-- ☑ **143a — a starting act's battles under the walk's sector** (`none`):
-  `startAct` on the run's result and `runWalkPos`; per-hop's frame fixed.
+- ☑ **143a — a starting act's battles under the walk's sector** (`none`).
 - ☑ **143b — every seam and every act in the summary and its metrics**
-  (`none`): the summary's three columns, `seams` and `acts`, a PER ACT table.
-- ☑ **143c — the sheet's per-act shape** (`stop`, the decision point): arm A,
-  by act number, signed with the four shared leans.
-- ☑ **143d — the board per act** (`none`): the sheet by act, a check per
-  seam and per act, the forced bosses at their home act.
-- ☐ **143e — the phase's close** (`stop`).
+  (`none`).
+- ☑ **143c — the sheet's per-act shape** (`stop`): by act number, with
+  the four shared leans.
+- ☑ **143d — the board per act** (`none`).
+- ☑ **143e — the phase's close** (`stop`), signed.
 
 ## Phase 144 — the fauna (signed 2026-10-30)
 

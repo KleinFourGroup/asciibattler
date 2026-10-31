@@ -22,6 +22,7 @@ import { runLiveBench } from './benchRig';
 import { fixtureSearch } from './fixtures';
 import { BoardPanelView } from './panel';
 import { PosedSet } from './posed';
+import { mountSamplerText, setSamplerPose, type SamplerLoad } from './sampler';
 import { DEFAULT_MARK_STYLE, isDashedPlate, markExtent, markShapeOf } from '../../render/groundMarks';
 import { spriteColorForUnit } from '../../render/spriteColor';
 import {
@@ -72,7 +73,7 @@ export interface BoardPanel {
   };
 }
 
-export function attachBoardPanel(game: Game): BoardPanel {
+export function attachBoardPanel(game: Game, sampler: SamplerLoad | null = null): BoardPanel {
   let dials = parseDials(new URLSearchParams(location.search).get(BOARD_PANEL_PARAM));
   const internals = internalsOf(game);
   const markColour = new THREE.Color();
@@ -85,6 +86,24 @@ export function attachBoardPanel(game: Game): BoardPanel {
   /** N×N bodies re-stood by the last view or battle change. */
   let lastSlabs = 0;
   let fixture: FixtureReport | null = null;
+  // The glyph sampler's rows, for the `sampler` pose, and its page-text rows,
+  // each glyph the atlas holds (a refused one is not in it).
+  const samplerRows = sampler?.spec.rows ?? [];
+  const samplerText = sampler
+    ? mountSamplerText(sampler, (glyph) => {
+        try {
+          internals.sprites.atlas.getGlyphUV(glyph);
+          return true;
+        } catch {
+          return false;
+        }
+      })
+    : null;
+  const applySampler = (): void => {
+    setSamplerPose(dials.pose === 'sampler');
+    if (samplerText) samplerText.style.display = dials.glyphText ? 'flex' : 'none';
+  };
+  applySampler();
 
   const onFrame = (): void => {
     const battle = liveBattleOf(game);
@@ -93,7 +112,7 @@ export function attachBoardPanel(game: Game): BoardPanel {
       // A new battle (or none): the old one took its overlays with it.
       lastBattleRenderer = current;
       posed.clear();
-      if (battle && dials.pose !== 'off') posed.build(battle, dials.pose);
+      if (battle && dials.pose !== 'off') posed.build(battle, dials.pose, samplerRows);
       // Rubble spawns before the camera is re-fitted to this board, and a
       // dialled lens's slide reads the camera's position. Under ortho the
       // re-stand writes the positions the rubble already has.
@@ -155,6 +174,8 @@ export function attachBoardPanel(game: Game): BoardPanel {
     ];
     if (fixture) lines.push(fixture.text);
     if (battle && dials.pose !== 'off') lines.push(posed.where ?? 'pose pending');
+    if (sampler && sampler.refused.length > 0)
+      lines.push(['glyph sampler refused:', ...sampler.refused].join('\n'));
     view.setStatus(lines.join('\n'));
   };
 
@@ -167,9 +188,10 @@ export function attachBoardPanel(game: Game): BoardPanel {
       const battle = liveBattleOf(game);
       if (battle) lastSlabs = seams.restampSlabs(battle);
     }
+    if (key === 'pose' || key === 'glyphText') applySampler();
     if (key === 'pose') {
       const battle = liveBattleOf(game);
-      if (dials.pose !== 'off' && battle) posed.build(battle, dials.pose);
+      if (dials.pose !== 'off' && battle) posed.build(battle, dials.pose, samplerRows);
       else posed.clear();
     }
   };

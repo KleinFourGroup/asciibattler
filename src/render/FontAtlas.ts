@@ -122,6 +122,17 @@ function assertGlyphsCameFromFont(atlasCtx: CanvasRenderingContext2D): void {
   }
 }
 
+/**
+ * Glyphs past the catalog's, for a DEV page's glyph sampler
+ * (src/dev/boardPanel/sampler.ts): drawn after `GLYPHS`, from `stack`. The
+ * sampler passes only glyphs its stack supplies, within the budget's room.
+ * Production passes none, and its atlas is `GLYPHS` alone.
+ */
+export interface AtlasExtras {
+  readonly glyphs: readonly string[];
+  readonly stack: string;
+}
+
 export class FontAtlas {
   readonly texture: THREE.CanvasTexture;
 
@@ -140,13 +151,14 @@ export class FontAtlas {
     this.inkByGlyph = inkByGlyph;
   }
 
-  static async create(): Promise<FontAtlas> {
+  static async create(extras?: AtlasExtras): Promise<FontAtlas> {
     // The unit glyphs come from the catalog, so the set grows as units are
     // authored. Guard the grid loudly: an over-budget count would place
     // glyphs off the canvas (row ≥ ROWS) and render blanks without a word.
-    if (GLYPHS.length > ATLAS_CELL_BUDGET) {
+    const cells = GLYPHS.length + (extras?.glyphs.length ?? 0);
+    if (cells > ATLAS_CELL_BUDGET) {
       throw new Error(
-        `FontAtlas: ${GLYPHS.length} glyphs exceed the ${ATLAS_CELL_BUDGET}-cell atlas grid ` +
+        `FontAtlas: ${cells} glyphs exceed the ${ATLAS_CELL_BUDGET}-cell atlas grid ` +
           `(${COLS} × ${ROWS}). Grow ATLAS_COLS / ATLAS_ROWS in glyphs.ts, or trim the unit catalog.`,
       );
     }
@@ -179,14 +191,19 @@ export class FontAtlas {
     // multiplies into RGB; the atlas's alpha channel carries glyph coverage.
     ctx.clearRect(0, 0, ATLAS_W, ATLAS_H);
     ctx.fillStyle = '#FFFFFF';
-    ctx.font = `${FONT_PX}px ${FONT_STACK}`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
+    // The catalog's glyphs from the shipped faces, then any extras from theirs.
+    const drawn: readonly (readonly [glyph: string, stack: string])[] = [
+      ...GLYPHS.map((g) => [g, FONT_STACK] as const),
+      ...(extras?.glyphs ?? []).map((g) => [g, extras!.stack] as const),
+    ];
     const uvByGlyph = new Map<string, GlyphUV>();
     const inkByGlyph = new Map<string, GlyphInk>();
-    for (let i = 0; i < GLYPHS.length; i++) {
-      const glyph = GLYPHS[i]!;
+    for (let i = 0; i < drawn.length; i++) {
+      const [glyph, stack] = drawn[i]!;
+      ctx.font = `${FONT_PX}px ${stack}`;
       const col = i % COLS;
       const row = Math.floor(i / COLS);
       const cx = col * CELL_PX;

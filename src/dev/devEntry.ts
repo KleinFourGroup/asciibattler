@@ -17,7 +17,9 @@ import { statusDef } from '../config/statuses';
 import type { Game } from '../Game';
 import type { Team } from '../sim/Unit';
 import type { World } from '../sim/World';
+import type { AtlasExtras } from '../render/FontAtlas';
 import { applyBoardFixtureUrl, attachBoardPanel, type BoardPanel } from './boardPanel';
+import { loadSampler, type SamplerLoad } from './boardPanel/sampler';
 import { attachDevKeys } from './devKeys';
 import { plantBootFailure, plantRunFailure } from './failPlant';
 import { installProbe } from './probe';
@@ -34,6 +36,19 @@ import { clearTraces, loadTraces, pushTrace } from './traceStore';
 export function beforeBoot(search: string): void {
   plantBootFailure(search);
   applyBoardFixtureUrl();
+}
+
+/** The glyph sampler's load, kept from the atlas's build for the panel. */
+let sampler: SamplerLoad | null = null;
+
+/**
+ * Before the atlas: the glyph sampler's candidates (`?glyphs=`,
+ * ./boardPanel/sampler.ts), which the atlas draws past the catalog's glyphs
+ * on this page only. Undefined with no `glyphs=`.
+ */
+export async function atlasExtras(search: string): Promise<AtlasExtras | undefined> {
+  sampler = await loadSampler(search);
+  return sampler?.extras;
 }
 
 /** The dev handle: the live Game, and what the console reaches through it. */
@@ -72,7 +87,7 @@ export function installDevHandle(game: Game): void {
   // seams install here, at boot, so a `?bp=` bookmark is live before the
   // first battle stamps a sprite. From the console:
   // `__game.boardPanel.set('cue', 'outline')`.
-  handle.__game.boardPanel = attachBoardPanel(game);
+  handle.__game.boardPanel = attachBoardPanel(game, sampler);
   attachDevKeys(game, handle.__game.boardPanel);
   // `__game.applyStatus(id, target?)` applies a status to the living units
   // of a team in the battle on screen (the enemy by default), or to one

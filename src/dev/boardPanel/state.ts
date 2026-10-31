@@ -140,7 +140,15 @@ export const DIALS = {
     label: 'pose',
     options: ['off', ...POSE_IDS],
     def: 'off',
-    hint: 'row = g ▄ ╥ M a r · clump = centre + near corner + far row · edges = corners + mids · flyer = V over three far neighbours',
+    hint: 'row = g ▄ ╥ M a r · clump = centre + near corner + far row · edges = corners + mids · flyer = V over three far neighbours · sampler = the glyphs= rows (sampler.ts)',
+  },
+  /** The glyph sampler's page-text strip (sampler.ts), shown while the URL
+   *  carries `glyphs=`; off to see the board under it. */
+  glyphText: {
+    kind: 'bool',
+    label: 'sampler text',
+    def: true,
+    hint: "the glyph sampler's strip of cards and fallen runs, along the bottom - off = the board under it",
   },
   /** The fake flyer's camera-up lift, world units. At yaw 45 and pitch 45,
    *  1.0 lands it on its diagonal neighbour: √2 of ground behind it, which

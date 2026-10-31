@@ -85,7 +85,7 @@ trial at 144c says it belongs (risk low-medium then; WORKLOG §144).
 - ☑ **144a — the atlas grown (S1)** (`none`): 16 × 8, the grid stated
   once, the three guards at 128; the board moves by 1–2 levels on ≤ 70
   pixels, from the old non-power-of-two height (WORKLOG 144a).
-- ☐ **144b — the glyph sampler** (`none`): URL-named glyphs on the board
+- ☑ **144b — the glyph sampler** (`none`): URL-named glyphs on the board
   and in page text, a face loaded in DEV.
 - ☐ **144c — the custom-glyph trial** (`stop`): three beasts drawn as
   low-res vectors, as radicals and as a silhouette, beside the Latin

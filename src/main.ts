@@ -22,7 +22,7 @@ import { failure } from './failure';
 import './fonts.css';
 
 import { Game } from './Game';
-import { FontAtlas } from './render/FontAtlas';
+import { FontAtlas, type AtlasExtras } from './render/FontAtlas';
 import { installMotionGate } from './render/motion';
 import { BUILD_ID } from './buildId';
 import { acquireRunLock, type LockManagerLike } from './store/runLock';
@@ -65,13 +65,17 @@ async function boot(): Promise<void> {
   // them. An `if`, not `dev?.…`: the minifier folds this form's test away and
   // leaves `null?.beforeBoot(…)` of the other in every build.
   if (dev) dev.beforeBoot(location.search);
+  // A DEV page's glyph sampler adds its candidates to the atlas (`?glyphs=`);
+  // a production atlas is the catalog's glyphs alone.
+  let extras: AtlasExtras | undefined;
+  if (dev) extras = await dev.atlasExtras(location.search);
 
   // The module pauses here until the font has parsed and the atlas is
   // rasterized. The two-tab lock is asked for beside it, since its answer has
   // to be in hand before the Game, the run slot's writer, exists.
   // `navigator.locks` is missing on a page that isn't a secure context.
   const [fontAtlas, runLock] = await Promise.all([
-    FontAtlas.create(),
+    FontAtlas.create(extras),
     acquireRunLock((navigator as { locks?: LockManagerLike }).locks),
   ]);
 

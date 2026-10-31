@@ -343,3 +343,48 @@ throw names the grid.
 
 `scratch/144a/` keeps the readback probe and its pixel diff
 (`diff.mjs <a.json> <b.json>`).
+
+### 144b — the glyph sampler (2026-10-31)
+
+*Step zero.* The atlas is built once at boot from `GLYPHS`, before the
+Game, and a glyph not in it throws at `addSprite` (gotcha #33), so a
+candidate has to be in the atlas from the build: the dev entry, already
+loaded before the atlas, is the place to read the URL. The board
+explorer's poses take any glyph the atlas holds, on any team.
+
+*Built.* sampler.ts, the `sampler` pose, the `glyphText` dial and
+`FontAtlas.create`'s extras, as ARCHITECTURE's board-explorer line now
+says. A use:
+
+`?bp=board-open15_pose-sampler&glyphs=w,W;p,P;T,t;F,f;U,B,b;q,r,R;n:%23,U+2663,U+2660,U+219F`
+
+*Found on the way.*
+- `URLSearchParams` reads `+` as a space, so `U+E000` arrived as
+  `U E000`; the parse test failed on it, and the sampler reads the raw
+  pair.
+- The first refusal check compared a glyph drawn over `serif` and over
+  `sans-serif`, as the atlas's DEV assert does. It refused τ (Greek, outside
+  the kept blocks), but passed U+E000 with no face loaded: a code point no
+  face has draws one missing-glyph box under either fallback. The sampler
+  now reads the faces' character maps, by font-coverage.test.ts's rule,
+  and refuses both by name. The atlas's own assert has the same blind
+  spot for a catalog glyph no face carries; font-coverage.test.ts covers
+  the catalog, so it is left.
+
+*Evidence.*
+- `sampler.test.ts`, six cases: the grammar, the bad tokens, the room
+  and the dedupe, the shipped `GLYPHS` equal to the catalog's glyphs and
+  the five static ones by `atlasCellsFor`, and the pose's rows and its
+  no-room note.
+- The production path in the pane: the quarry board with no `glyphs=`
+  hashes `d96fc831`, as 144a left it, and every glyph's cell is
+  byte-identical to HEAD's.
+- The sampler in the pane, at the URL above plus `;τ,U+E000`: 32 posed
+  sprites, the strip's card glyphs at 48 px and its fallen runs bold at
+  16 px, the countdown's plate hidden, and τ and U+E000 refused by name
+  on the panel and out of the atlas.
+- `npm run build`: dev-scan clean, and none of `glyphFace`,
+  `ASCIIbattler Sampler`, `bp-sampler`, `atlasExtras` in the bundle,
+  where `FontAtlas: the game` is found once.
+- Not verified: a face loaded by `glyphFace=` (144c's trial is the first);
+  Firefox.

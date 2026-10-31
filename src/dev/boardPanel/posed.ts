@@ -31,6 +31,7 @@ import type { FontAtlas } from '../../render/FontAtlas';
 import { footprintOf } from '../../sim/occupancy';
 import { placePose, type PoseId, type PosedSpec } from './fixtures';
 import type { GameInternals, LiveBattle } from './seams';
+import type { SamplerRow } from './sampler';
 import type { DialState } from './state';
 
 interface PosedMember {
@@ -39,7 +40,8 @@ interface PosedMember {
   readonly ground: THREE.Vector3;
   readonly flies: boolean;
   readonly sprite: SpriteHandle;
-  readonly overlay: UnitOverlayHandle;
+  /** Null for inert scenery, which carries no bar. */
+  readonly overlay: UnitOverlayHandle | null;
 }
 
 export class PosedSet {
@@ -61,7 +63,7 @@ export class PosedSet {
     return this.members;
   }
 
-  build(battle: LiveBattle, pose: PoseId): void {
+  build(battle: LiveBattle, pose: PoseId, sampler: readonly SamplerRow[] = []): void {
     this.clear();
     const { world } = battle;
     const taken = new Set<string>();
@@ -73,18 +75,22 @@ export class PosedSet {
       }
     }
     const notes: string[] = [];
-    const { placements, notes: landed } = placePose(pose, {
-      gridW: world.gridW,
-      gridH: world.gridH,
-      isClear: (x, y) => {
-        const cell = { x, y };
-        return (
-          world.tileGrid.defAt(cell).passable &&
-          !world.tileGrid.kindAt(cell).includes('water') &&
-          !taken.has(`${x},${y}`)
-        );
+    const { placements, notes: landed } = placePose(
+      pose,
+      {
+        gridW: world.gridW,
+        gridH: world.gridH,
+        isClear: (x, y) => {
+          const cell = { x, y };
+          return (
+            world.tileGrid.defAt(cell).passable &&
+            !world.tileGrid.kindAt(cell).includes('water') &&
+            !taken.has(`${x},${y}`)
+          );
+        },
       },
-    });
+      sampler,
+    );
     notes.push(...landed);
     const { sprites, overlays, terrain } = this.internals;
     for (const { spec, cell, flies } of placements) {
@@ -98,8 +104,10 @@ export class PosedSet {
       if (spec.team === 'neutral') sprites.updateSprite(sprite, { bloomIntensity: 0 });
       const overlay = spec.destructible
         ? overlays.addDestructible(1)
-        : overlays.add(spec.team, 1, 1);
-      overlays.updateHp(overlay, spec.hp);
+        : spec.team === 'neutral'
+          ? null
+          : overlays.add(spec.team, 1, 1);
+      if (overlay) overlays.updateHp(overlay, spec.hp);
       this.members.push({ spec, cell, ground, flies, sprite, overlay });
     }
     this.where = notes.join('\n');
@@ -134,10 +142,12 @@ export class PosedSet {
           position: aboveAnchor(m.ground, rise, renderer.camera, this.lifted),
         });
       }
-      overlays.updatePosition(
-        m.overlay,
-        aboveAnchor(m.ground, rise + lift, renderer.camera, this.scratch),
-      );
+      if (m.overlay) {
+        overlays.updatePosition(
+          m.overlay,
+          aboveAnchor(m.ground, rise + lift, renderer.camera, this.scratch),
+        );
+      }
     }
   }
 
@@ -146,7 +156,7 @@ export class PosedSet {
     const { sprites, overlays } = this.internals;
     for (const m of this.members) {
       sprites.removeSprite(m.sprite);
-      overlays.remove(m.overlay);
+      if (m.overlay) overlays.remove(m.overlay);
     }
     this.members = [];
     this.sizedAt = 1;

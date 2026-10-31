@@ -24,6 +24,7 @@
  */
 
 import type { Team } from '../../sim/Unit';
+import type { SamplerRow } from './sampler';
 
 // --- boards ------------------------------------------------------------------
 
@@ -139,7 +140,7 @@ export function fixtureSearch(search: string, board: BoardId | null): string {
 
 // --- poses -------------------------------------------------------------------
 
-export const POSE_IDS = ['row', 'clump', 'edges', 'flyer'] as const;
+export const POSE_IDS = ['row', 'clump', 'edges', 'flyer', 'sampler'] as const;
 export type PoseId = (typeof POSE_IDS)[number];
 
 /** A posed sprite's identity, structurally a `MarkSubject` (render/groundMarks.ts). */
@@ -223,6 +224,17 @@ const EDGE_GLYPHS: readonly (readonly [string, string])[] = [
   ['s', 'shaman'],
 ];
 
+/** A glyph sampler's scenery candidate: inert stone, as a wall stands, with no
+ *  bar. */
+const scenery = (glyph: string): PosedSpec => ({
+  glyph,
+  team: 'neutral',
+  archetype: 'wall',
+  campId: null,
+  hp: 1,
+  destructible: false,
+});
+
 /** The flyer is `V`, as in the geometry tests, and the units behind it `M`. */
 const FLYER = fighter('V', 'player', 'reaver');
 const BEHIND = fighter('M', 'enemy', 'mercenary');
@@ -266,8 +278,13 @@ interface PoseResult {
 }
 
 /** Grid y = 0 is the camera-near row (render `gridToWorld`), as in the
- *  geometry tests. */
-export function placePose(pose: PoseId, board: PoseBoard): PoseResult {
+ *  geometry tests. `sampler` is the glyph sampler's rows (sampler.ts), read by
+ *  that pose alone. */
+export function placePose(
+  pose: PoseId,
+  board: PoseBoard,
+  sampler: readonly SamplerRow[] = [],
+): PoseResult {
   const placements: Placement[] = [];
   const notes: string[] = [];
   const used = new Set<string>();
@@ -327,6 +344,52 @@ export function placePose(pose: PoseId, board: PoseBoard): PoseResult {
         [fighter(glyph, i % 2 === 0 ? 'player' : 'enemy', archetype)],
       );
     });
+  } else if (pose === 'sampler') {
+    // Each sampler row a run on the next clear row, from the middle toward the
+    // camera and then away, centred-out as the row pose is: a candidate row
+    // twice, on the enemy's side and then the player's, a scenery row once.
+    const runs: { name: string; specs: PosedSpec[] }[] = [];
+    sampler.forEach((row, r) => {
+      if (row.scenery) runs.push({ name: `scenery ${r + 1}`, specs: row.glyphs.map(scenery) });
+      else {
+        for (const team of ['enemy', 'player'] as const) {
+          runs.push({
+            name: `${team} ${r + 1}`,
+            specs: row.glyphs.map((g) => fighter(g, team, 'sampler')),
+          });
+        }
+      }
+    });
+    if (runs.length === 0) notes.push('sampler: no glyphs= in the URL');
+    const rows: number[] = [];
+    for (let y = cy; y >= 0; y--) rows.push(y);
+    for (let y = cy + 1; y < board.gridH; y++) rows.push(y);
+    let next = 0;
+    for (const run of runs) {
+      const n = run.specs.length;
+      const start = Math.max(0, Math.floor((board.gridW - n) / 2));
+      let placed = false;
+      while (!placed && next < rows.length) {
+        const y = rows[next++]!;
+        for (let offset = 0; offset <= board.gridW && !placed; offset++) {
+          for (const x0 of offset === 0 ? [start] : [start - offset, start + offset]) {
+            if (x0 < 0 || x0 + n > board.gridW) continue;
+            let fits = true;
+            for (let i = 0; i < n && fits; i++) fits = clear(x0 + i, y);
+            if (!fits) continue;
+            run.specs.forEach((spec, i) => {
+              const cell = { x: x0 + i, y };
+              used.add(`${cell.x},${cell.y}`);
+              placements.push({ spec, cell, flies: false });
+            });
+            notes.push(`${run.name} y=${y}, x=${x0}..${x0 + n - 1}`);
+            placed = true;
+            break;
+          }
+        }
+      }
+      if (!placed) notes.push(`${run.name}: no row left with ${n} dry tiles in a run`);
+    }
   } else if (pose === 'flyer') {
     // The flyer, then the three units in the row behind it (y + 1 is farther):
     // under yaw, "up the screen" lands on a diagonal one, the case a single

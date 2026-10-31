@@ -321,3 +321,55 @@ Claude! 😁 Those all look good to me!"
 
 *A correction.* 143c's stop message said the 94h board reports "the same
 37 drift rows"; it has 32.
+
+### 143e — §143's close, put to the user (2026-10-31)
+
+*The exit, by clause.*
+- *On today's map the re-pointed act-1 rows reproduce the `--hops=11`
+  rows.* Under the signed shape the act-alone rows are act 1's and keep
+  their argv: `--plan` prints all 17 rows byte-identical to its output
+  before 143d, with and without `--jobs`, and at the kickoff
+  `--act=1 --hops=11` wrote the same `summary.csv` as `--hops=11` (3
+  greedy seeds). The rows that move with the map are the forced bosses';
+  on a planted walk with a sector in front they alone take `--act=2`
+  (143d). No batch of the board's own arm ran, by the scope guard.
+- *A stored two-act cohort reports the same numbers under the new
+  parse.* The 94h board and 139c's three trees: VERDICT and DRIFT
+  identical line for line but the seam's label, the tallies as before,
+  a planted value caught (143d); the PER ACT table's act-2 reach and
+  wall and its first seam equal the drift table's (143b).
+- *Each new check with its planted failure.* Ten plants, each failing
+  its test and restored (143a two, 143b four, 143d four), and the report
+  comparison's own control.
+- *The scope guards.* No band moved: the sheet's 26 numbers carried as
+  one multiset. No board cohort: the only batches were local greedy
+  probes of 3 and 4 seeds.
+
+*Not verified in §143:*
+- The new columns from the board's own arm: every batch read here ran
+  the greedy bot. The columns are written by the harness, which every
+  arm shares (inferred, not run).
+- Act 1's wall on a full walk: no batch written since 143b walks two
+  11-hop acts, so the PER ACT table has shown it only by hand (0.273 on
+  139c's moves, the kickoff). A 4+4 greedy walk's crossing run carried
+  `3|3`.
+- Covered after all: the stage merge. `mergeStages.test.ts`, the byte
+  contract between a staged merge and a serial run, passed in the smoke
+  at `141818f8` and `9ea7f658` with the new columns.
+
+*The friction read.* §143 filed one papercut and one slip, and no
+`distress`. Patterns with the last closes:
+- *A docs cap at the commit:* BALANCE's 700-line header at 143b, beside
+  the Cursor's 3,900 cap (142b, and five sessions before it). Recurred
+  and cost, one hook run here; the docs test caught it before it landed.
+  The round close's TODO row reads the Cursor's shape; the lean is to
+  leave BALANCE's cap, since the fit was one sentence folded in.
+- *The Bash tool's backslash halving:* the guard refused one command at
+  143d before it ran (a regex in an inline script). Listed; the guard
+  doing its work.
+- *Once:* the board report's `signedAt` header, 10,931 characters
+  printed in two headers (the papercut).
+
+*Dispositions, leans for the sign.* The `signedAt` papercut: a TODO row
+under Round 10's board, since §146 reads many reports: the report prints
+a short provenance line and leaves the history in the sheet.

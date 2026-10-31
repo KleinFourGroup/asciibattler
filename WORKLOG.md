@@ -210,3 +210,54 @@ is built rather than infer it from the hops runs died at.
   4+4 walk): every file but `summary.csv` byte-identical, and the
   summary's first 22 columns too. The new columns read `startAct` 1 or 2,
   boss hop 10 on 11-hop maps and `3|3` on the walk's crossing run.
+
+### 143c — the sheet's per-act shape, put to the user (2026-10-31)
+
+*Step zero.* The sheet's per-act fields today: `seamPoolFraction` (the
+walk's one seam), `terminalReachTarget` and `deepEndWallTarget` (the last
+boss), `pacingBands` (the whole walk), `act1WinRefs` with the economy
+refs and `fireChannelDelta` (the `--hops=11` rows), and the two forced
+bosses' refs. The sector ids are `the-start` and `the-deep-end`, both 11
+hops; the King and the Queen are in `the-start`'s boss pool, the
+Generalissimo and the Witch Hunt in `the-deep-end`'s (`config/sectors.json`).
+
+*Common to both arms (leans):*
+- The forced-boss refs keyed by the boss, `forcedBossWinRefs`, each row
+  run at the act whose sector's boss pool holds it: both at act 1 today,
+  so the argv is today's; after §145 the King's row stays at act 1 and
+  the Queen's runs at act 3.
+- A seam band per seam and a wall band per act, each checked only where
+  the sheet holds one; the rest print in the PER ACT table, unchecked.
+- `pacingBands` stays one set over the whole walk; the win stays derived
+  from the terminal's reach and wall.
+- A row's `--act` is written only past act 1, so every stored cohort's
+  manifest still matches its arm.
+
+*Arm A, by act number (the lean).* `terminal: { reach, wall }` takes
+`terminalReachTarget` and `deepEndWallTarget`; `seams: { "1": … }` takes
+`seamPoolFraction`; `walls: {}` holds the mid-walk walls, none signed;
+`acts: { "1": … }` takes `act1WinRefs`, the economy refs and the fire
+channel. The 13 act-alone rows are act 1's, from a fresh roster, the one
+act a fresh roster meets. At §145 nothing in the sheet moves: act 1's
+refs and seam 1's band, measured on The Start, check The Periphery and
+WARN until §146 re-pins them; the terminal pair follows the last act.
+
+*Arm B, by sector id.* `sectors: { "the-start": { seam, winRefs, economy,
+fire channel }, "the-deep-end": { wall } }`, with the terminal's reach
+beside them. Each act-alone row names its sector and runs at that
+sector's place in the live map. At §145 nothing in the sheet moves, and
+The Start's 13 rows follow it to act 2 (`--act=2 --hops=11`), The Start
+from a fresh roster, which no player meets; act 1 has no rows or bands
+until §146. The Deep End's wall stays with it at act 3.
+
+*On the 94h board* either arm reports the same 37 drift rows with the
+same values, the labels renamed; the PER ACT table's act-1 walls stay
+unchecked.
+
+*The lean's reasons.* A fresh-roster row means something at act 1 only,
+so those rows belong to the act; the 30–35 wall was signed for the
+terminal (72b), so naming it as the terminal survives the map commit
+without an edit. B keeps each ref beside the content it measured, which
+pays once an act has several candidate sectors (plans/acts.md), but this
+round has one sector an act. Under A the wall names a role, not an act;
+the charter's "per act" holds for the seams and the mid-walk walls.

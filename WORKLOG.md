@@ -558,3 +558,48 @@ gathers feedback; and 144a's flagged exit, unanswered. 144d rests on the
 third call: it decides whether the face copies JetBrains Mono's outlines
 and so ships under the OFL with its copyright line, and what a glyph
 source in the repo holds.
+
+### The grid signed, and the ears spread (2026-10-31)
+
+The user, from the feedback they gathered: "Yes, JetBrains is winning out
+over lattice." Signed: JetBrains Mono's own letter carries the mark, so
+the face is a derivative under the OFL. All three of the trial's calls
+are signed.
+
+The feedback on placement: an ear set over the letter has little room,
+and overlaps a lowercase letter slightly and a capital or a tall letter
+almost entirely. The user's fix: spread the ears outward, at the top of
+the glyph as now, with room between them for the whole letter, which
+makes the glyph wider; they asked whether a monospace font allows it.
+
+*The answer, measured.* A font gives each glyph its own advance width;
+"monospace" is the designer's convention and a flag some programs read,
+and a browser lays text out by each glyph's own advance. Our glyphs sit in
+a face of their own after JetBrains Mono, so ours can be wider with
+nothing shipped touched. The limit is the atlas's 64-px cell, drawn at
+56 px: the glyph is centred on its advance (`textAlign = 'center'`), so
+its ink can be about 1,140 units wide, and by R's measured ink (the
+baseline at 0.266 of the cell, the cap at 0.891) the cell's top is about
+839 units above the baseline in Chrome.
+
+*The prototype*, in the trial face: U+E010 to U+E015, JetBrains Mono's r,
+w, b, f, R and W centred in a 900 advance (1.5 cells), an ear at each top
+corner of the glyph (bases at 500, apexes at 780, at 15–195 and 705–885),
+clear of the letter and at one height for every letter.
+- The atlas: their ink spans 0.109 to 0.891 of the cell's width and
+  reaches 0.953 of its height, unclipped. The ears are the highest ink in
+  the atlas, 59 units under the cell's top.
+- The board, at 1280 × 720 copied at 3×: no letter loses its top, the
+  capitals included. The ears read as two small marks at the corners,
+  horns as much as ears.
+- Page text, the strip at 1:1 (800 × 560): at 48 px the glyph is 43.2 px
+  wide against r's 28.8, the letter whole between the ears; at 16 px bold
+  the spread w reads apart from W, where the ear-over w passed for it; a
+  run `×2 M×1` after the spread r is 72 px against 67.2 after r, 0.3 em
+  longer; line heights unchanged.
+- The glyph rules in `ui.css` (the card's, the compact card's, the fallen
+  strip's) set no width.
+- Not verified: Firefox, whose canvas places the atlas's `middle` baseline
+  by its own rule, so the ears' 59 units of headroom are the thing to
+  check there; and the board's click boxes, which follow the ink and so
+  widen, in a clump.

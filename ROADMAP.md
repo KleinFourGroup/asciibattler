@@ -87,12 +87,14 @@ trial at 144c says it belongs (risk low-medium then; WORKLOG §144).
   pixels, from the old non-power-of-two height (WORKLOG 144a).
 - ☑ **144b — the glyph sampler** (`none`): URL-named glyphs on the board
   and in page text, a face loaded in DEV.
-- ◐ **144c — the custom-glyph trial** (`stop`): three beasts drawn as
+- ☑ **144c — the custom-glyph trial** (`stop`): three beasts drawn as
   low-res vectors, as radicals and as a silhouette, beside the Latin
   choices; built, the rat, the wolf and the bear in a scratch face, put
   to the user with three leans (WORKLOG 144c). Signed: drawn glyphs
-  belong (the yes branch) and the radical; the grid open (WORKLOG §144,
-  "The trial's first two calls signed").
+  belong (the yes branch), the radical, on JetBrains Mono's own letter;
+  the ears spread to the glyph's top corners at a 900 advance, the
+  user's fix from feedback, prototyped (WORKLOG §144, "The grid signed,
+  and the ears spread").
 - If yes: ☐ **144d** our glyph face (`none`) · ☐ **144e** the seven
   glyphs and the attacks call (`stop`) · ☐ **144f** the beasts and
   their attacks (`batch`) · ☐ **144g** the tree (`none`) · ☐ **144h**

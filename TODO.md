@@ -853,3 +853,12 @@ Rows with a trigger and no round (§133, tranche 3). Each names what reopens it.
 ## Not yet placed
 
 The inbox for a new row until the next pass places it.
+
+- [ ] **The redraw-fisher file is refused by its own schema.**
+  `config/redraw-level-fisher.json` names 10 of the 23 archetypes, and
+  `ScoredCardWeightsSchema` is strict over every one, so
+  `npm run fuzz -- --count=1 --redraw=config/redraw-level-fisher.json` throws at
+  `weights.archetype.reaver`; nothing in the suite loads the file. Fill
+  in the missing archetypes at 0 or delete the file, whichever its
+  reader still wants (`tests/fuzz/redrawPolicy.ts:60-64`; WORKLOG §144,
+  the kickoff's audit).

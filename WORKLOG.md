@@ -173,3 +173,122 @@ a retune by taste Round 11's. The names are the charter's (Wolf, Giant
 Rat, Fox, Puma, Tiger, Bear), and the user's flavour lands in §145's
 encounter descriptions, with a unit description line a TODO row for a
 later round. The tree wears stone, as the wall does.
+
+### The colliding glyphs, from first principles (2026-10-31)
+
+The user, to the cut: "directionally I agree with all of this, Claude,
+but let's talk about the colliding glyphs", recalling a standing item to
+support different fonts for them. It is their Phase H feedback ("Add
+support for different fonts. Add support for non-Latin scripts.", over a
+sprite sheet that "clashes with the roguelike aesthetic";
+`archive/phase-h-feedback.md:120-127`), deferred by the post-H roadmap
+until a wave of units collides and again at §79f (2026-08-15,
+`archive/post-72-worklog.md`), where the user accepted deferring the
+style axis. No live TODO row holds it.
+
+The session's first answer, Greek and Cyrillic in the kept blocks with
+β for the bear and Я for the rat, the user declined: "I have very mixed
+feelings about using faux-latin glyphs. I know that it's very annoying
+for people who actually know how to read the scripts", noting that an
+ASCII game's audience is the likelier to read them, and asked to "take a
+step back and think this through anew, from first principles". The
+session withdrew β and Я as the lookalike use the user means.
+
+**The read, from first principles.**
+- *The size.* The later rounds name at least 19 more combatants by name
+  (the grenadier, telekinetic, ninja, cavalier, vampire, soldier,
+  conscript, commissar, aura healer, eagle, falcon, falconer, dragon,
+  crab, marine, giant, a swarm, the dark wizard, the demon lord;
+  META-ROADMAP), before the deserters, the plague's enemies and act 4's.
+  23 Latin letters are free after the beasts, so Latin runs out by about
+  Round 22 with no mnemonic at all.
+- *The channels.* Hue is the team's, and DESIGN rules out hue alone. Size
+  has two or three steps, held for 2×2 bodies and swarms. A second face
+  (the style axis) fails in page text: four screens show a unit's glyph
+  (the card at 48 px, the fallen strip, the reward screen and the cache
+  overlay, by a search for the glyph's readers in `src/ui` and
+  `src/scenes`), and the fallen strip already sets every glyph bold
+  (`ui.css:3339`); it also costs §79f's plumbing. A mark beside the glyph
+  is lost in page text unless each screen draws it. Families on one
+  letter (NetHack's) tell members apart by hue, which this game cannot.
+  So a unit's identity rides one character's shape, the one channel that
+  holds at every size, on the canvas and in the DOM.
+- *The supply.* Latin is honest and short. Every assigned character in
+  another script or a symbol block has readers, so it is honest only for
+  what it means. Unicode's Private Use Area (U+E000 to U+F8FF) assigns
+  nothing: a face of our own there is unlimited, borrowed from no one,
+  and, as characters in a font, taken unchanged by the atlas, the ink
+  measurements, the click boxes and the four screens. JetBrains Mono's
+  OFL declares no Reserved Font Name (§79g), so a face derived from its
+  outlines is allowed under the OFL.
+- *A radical scheme* inside it: a mark that names a family on the unit's
+  initial (ears on the beasts' w, r, f, p, t and b; wings on the flyers),
+  so the rat stays an r and is not the rogue's. Its weak point is page
+  text, where the mark is a few pixels.
+- *A glyph is not an id.* The only saved copy is a pending promotion's
+  (`PromotionInfo.glyph`, `tests/run-snapshot-shape.txt:187`), so a
+  re-glyph later costs no bump.
+
+**The user's calls** (2026-10-31): "I did not know that there's a whole
+unicode area for custom glyphs! That makes things easier." On colour: "I'm
+not against using some color variation either. Though it would be a big
+change, we could always try to make the team color cue be the glow
+color, rather than the glyph color. That's very speculative, though, so
+let's probably shelve that as a backup in case custom glyphs don't
+work." On the scheme: "I like the radical idea also. Though we'll want
+to keep anything low-res vectors, to fit with that old terminal feel."
+On other scripts: "we really don't need them anymore. 😅 Maybe at some
+point we want a CJK glyph for narrative reasons, but I don't have
+anything specific yet."
+
+So: custom glyphs in the Private Use Area, tried before they are built;
+radicals welcome; drawn as low-res vectors. The glow as the team's cue is
+the backup if custom glyphs fail, shelved and not planned. No script
+block is added; a CJK glyph waits for a story that wants one (a CJK
+character is double-width in a monospace cell and needs a face of its
+own, or a drawn glyph in ours).
+
+### The cut amended, put to the user (unsigned)
+
+The change to §144's intent: a glyph face of our own enters the phase
+when the trial at 144c says it belongs, which takes the risk from low to
+low-medium (a new font in the pipeline and a new dev dependency to build
+it, predicted opentype.js, MIT, for the trial to confirm). 144a and
+144b stand; the sampler also draws in page text and can load a face in
+DEV, so a trial face draws without entering the shipped stack.
+
+- **144a — the atlas grown (S1)** (`none`), as put.
+- **144b — the glyph sampler** (`none`), as put, plus a DOM row (a unit
+  card's 48 px and the fallen strip's bold text) and a DEV-loaded face.
+- **144c — the custom-glyph trial** (`stop`). A scratch face
+  (`scratch/144c/`, not shipped) with three beasts drawn as low-res
+  vectors, both ways: a radical on the initial (an eared r and an eared
+  w, on JetBrains Mono's own letter and on one redrawn to the grid) and a
+  whole drawn wolf. Drawn in the sampler on the board and in page text,
+  beside the Latin choices (w, p, T, F, U). The decision that goes back:
+  whether drawn glyphs belong, which way, and the grid.
+
+If the trial says yes:
+- **144d — our glyph face** (`none`). The glyph sources as vector paths
+  on the grid in the repo, a build to a woff2 in the Private Use Area,
+  the face third in the font list with its metrics inside the primary's
+  line, its licence, the coverage guard reading it, and the archetype
+  editor previewing it. Exit: a planted drawn glyph from our face on the
+  board and in the four screens' text; a glyph missing from the face
+  failing the coverage guard; every shipped glyph pixel-identical; the
+  woff2's size reported.
+- **144e — the beasts' and the tree's glyphs** (`stop`): all seven drawn
+  in the face, in the sampler beside what each could be taken for; the
+  user signs each. The attacks call, both arms drawn.
+- **144f — the beasts and their attacks** (`batch`), as 144d was put.
+- **144g — the tree** (`none`), as 144e was put.
+- **144h — the phase's close** (`stop`).
+
+If it says no: **144d** the Latin picks (`stop`, with the attacks call),
+**144e** the beasts (`batch`), **144f** the tree (`none`), **144g** the
+close (`stop`); the shortage returns by about Round 22, and the glow
+backup is what is left to plan.
+
+Predictions as put, with two more: the face changes no shipped glyph,
+since it sits after the two shipped faces in the stack; and the smoke
+fires on neither 144c nor the face (no sim, run, core or config path).

@@ -34,8 +34,8 @@ With `health.seamHealFloor` shipped at 1.0 every act opens on a full
 pool (the casualty experiment's independent-acts frame), so the pool
 crossing the boundary no longer sets act 2's entry state. The column
 (`poolAtSectorEnd`) keeps recording the PRE-floor value — act-1
-attrition, the seam-hazard tail as it was — and the sheet's
-`seamPoolBand` still machine-checks that number; its verdict now reads
+attrition, the seam-hazard tail as it was — and the sheet's seam
+band (`seams`, by act) still checks that number; its verdict now reads
 "how much act 1 cost", not "how act 2 opens". Whether the row stays,
 retires, or re-signs is the §92 lineage draft's call (the sheet is
 user-signed; the field was deliberately left untouched at §90).

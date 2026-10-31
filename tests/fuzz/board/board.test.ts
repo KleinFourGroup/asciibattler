@@ -13,6 +13,9 @@ import {
   evaluateBoard,
   evaluateSkillGradient,
   evaluateVerdict,
+  checkLabel,
+  checkValue,
+  homeActOf,
   loadSignedSheet,
   parseSummaryCsv,
   type BoardInstrument,
@@ -20,6 +23,8 @@ import {
   type InstrumentMetrics,
 } from './board';
 import { HEALTH } from '../../../src/config/health';
+import { SECTOR_MAP } from '../../../src/config/sectorMap';
+import { sectorPositions } from '../roster/rosterTable';
 
 // A summary.csv fixture in the REAL column order (parse is by header name,
 // so a column append never breaks this — that's part of what's pinned).
@@ -115,26 +120,27 @@ describe('evaluateBoard', () => {
     winRate,
     bossWall: 0.32,
     terminalReach: 0.45,
-    seamPool: 0.5 * (sheet.seamPoolFraction.min + sheet.seamPoolFraction.max) * HEALTH.playerHealthMax, // 94h-pre: mid-band, a fraction of max
+    seamPool: 0.5 * (sheet.seams['1']!.min + sheet.seams['1']!.max) * HEALTH.playerHealthMax, // 94h-pre: mid-band, a fraction of max
     // 83f — bank/fires come FROM the sheet too (the 72f fixture hardcoded 70 /
     // 2.9 inside the old bands; the §82-economy re-pin exposed it — the
     // balance-proof rule, applied to every ref the row checks). 85g6d: tx
     // joined the sheet when the fold re-activated the port economy (the
     // hardcoded 0.02 was the same class of stale fixture).
-    transactionRate: sheet.firerTransactionRate,
-    terminalBank: sheet.bankRefs.firer,
-    firesPerRun: sheet.firerFiresPerRun,
+    transactionRate: sheet.acts['1']!.firerTransactionRate,
+    terminalBank: sheet.acts['1']!.bankRefs.firer,
+    firesPerRun: sheet.acts['1']!.firerFiresPerRun,
     pacingNormal: 0.5 * (sheet.pacingBands.normal.min + sheet.pacingBands.normal.max),
     pacingElite: 0.5 * (sheet.pacingBands.elite.min + sheet.pacingBands.elite.max),
     pacingBoss: 0.5 * (sheet.pacingBands.boss.min + sheet.pacingBands.boss.max),
-    seams: [],
+    // 143d — the walk rows check seam 1 off `seams`; the same mid-band pool.
+    seams: [{ act: 1, crossed: 40, pool: 0.5 * (sheet.seams['1']!.min + sheet.seams['1']!.max) * HEALTH.playerHealthMax }],
     acts: [],
   });
 
   it('an at-reference arb-regen read PASSes every check', () => {
     // Balance-proof: the at-reference value comes FROM the sheet, so a
     // legitimate re-sign moves this test with it (the 68f re-sign lesson).
-    const report = evaluateBoard(board, new Map([['arb-regen', metricsAt(sheet.act1WinRefs.soldier.regen)]]));
+    const report = evaluateBoard(board, new Map([['arb-regen', metricsAt(sheet.acts['1']!.winRefs.soldier.regen)]]));
     const regen = report.rows.filter((r) => r.instrument === 'arb-regen');
     expect(regen.length).toBeGreaterThan(0);
     expect(regen.every((r) => r.status === 'PASS')).toBe(true);
@@ -180,11 +186,11 @@ describe('evaluateBoard', () => {
       board,
       new Map([
         ['regen', metricsAt(0.85)],
-        ['fire-ablated', metricsAt(0.85 - sheet.fireChannelDelta)],
+        ['fire-ablated', metricsAt(0.85 - sheet.acts['1']!.fireChannelDelta)],
       ]),
     );
     const delta = withBoth.rows.find((r) => r.instrument === 'fire-channel');
-    expect(delta?.value).toBeCloseTo(sheet.fireChannelDelta);
+    expect(delta?.value).toBeCloseTo(sheet.acts['1']!.fireChannelDelta);
     expect(delta?.status).toBe('PASS');
 
     const missingSide = evaluateBoard(board, new Map([['regen', metricsAt(0.85)]]));
@@ -226,14 +232,14 @@ describe('86e2 — the fail-closed verdict layer (mechanism smoke; the per-class
     winRate: 0.6,
     bossWall: 0.32,
     terminalReach: 0.45,
-    seamPool: 0.5 * (sheet.seamPoolFraction.min + sheet.seamPoolFraction.max) * HEALTH.playerHealthMax,
-    transactionRate: sheet.firerTransactionRate,
-    terminalBank: sheet.bankRefs.firer,
-    firesPerRun: sheet.firerFiresPerRun,
+    seamPool: 0.5 * (sheet.seams['1']!.min + sheet.seams['1']!.max) * HEALTH.playerHealthMax,
+    transactionRate: sheet.acts['1']!.firerTransactionRate,
+    terminalBank: sheet.acts['1']!.bankRefs.firer,
+    firesPerRun: sheet.acts['1']!.firerFiresPerRun,
     pacingNormal: 0.5 * (sheet.pacingBands.normal.min + sheet.pacingBands.normal.max),
     pacingElite: 0.5 * (sheet.pacingBands.elite.min + sheet.pacingBands.elite.max),
     pacingBoss: 0.5 * (sheet.pacingBands.boss.min + sheet.pacingBands.boss.max),
-    seams: [],
+    seams: [{ act: 1, crossed: 40, pool: 0.5 * (sheet.seams['1']!.min + sheet.seams['1']!.max) * HEALTH.playerHealthMax }],
     acts: [],
   });
   const cleanBoardInputs = (): {
@@ -442,9 +448,9 @@ describe('the board definition itself', () => {
   it('the per-character drift refs derive from signed-sheet.json (balance-proof — never hardcoded)', () => {
     const winRefOf = (id: string): { min: number; max: number } | undefined =>
       board.instruments.find((i) => i.id === id)?.checks.find((c) => c.metric === 'winRate');
-    expect(winRefOf('arb-regen')?.min).toBeCloseTo(sheet.act1WinRefs.soldier.regen - 0.08);
-    expect(winRefOf('arb-priest-deploy')?.max).toBeCloseTo(sheet.act1WinRefs.priest.deploy + 0.08);
-    expect(winRefOf('arb-gambler-regen')?.min).toBeCloseTo(sheet.act1WinRefs.gambler.regen - 0.08);
+    expect(winRefOf('arb-regen')?.min).toBeCloseTo(sheet.acts['1']!.winRefs.soldier.regen - 0.08);
+    expect(winRefOf('arb-priest-deploy')?.max).toBeCloseTo(sheet.acts['1']!.winRefs.priest.deploy + 0.08);
+    expect(winRefOf('arb-gambler-regen')?.min).toBeCloseTo(sheet.acts['1']!.winRefs.gambler.regen - 0.08);
   });
 
   it("the gambler rows carry the sheet's parity annotation (balance-proof: whatever gamblerNote says)", () => {
@@ -458,10 +464,10 @@ describe('the board definition itself', () => {
     for (const id of ['arb-walk-regen', 'arb-walk-deploy']) {
       const inst = board.instruments.find((i) => i.id === id)!;
       expect(inst.args).not.toContain('--hops=11');
-      const seam = inst.checks.find((c) => c.metric === 'seamPool')!;
+      const seam = inst.checks.find((c) => c.metric === 'seam' && c.act === 1)!;
       // 94h-pre — a FRACTION of the pool max, derived at verdict time.
-      expect(seam.min).toBeCloseTo(sheet.seamPoolFraction.min * HEALTH.playerHealthMax);
-      expect(seam.max).toBeCloseTo(sheet.seamPoolFraction.max * HEALTH.playerHealthMax);
+      expect(seam.min).toBeCloseTo(sheet.seams['1']!.min * HEALTH.playerHealthMax);
+      expect(seam.max).toBeCloseTo(sheet.seams['1']!.max * HEALTH.playerHealthMax);
       // 94h-pre — the pacing DRIFT read: the walk rows run --per-encounter and
       // carry the three kind bands from the sheet.
       expect(inst.args).toContain('--per-encounter');
@@ -474,16 +480,16 @@ describe('the board definition itself', () => {
       const reach = inst.checks.find((c) => c.metric === 'terminalReach')!;
       // 85g5 — pre55ReachRef retired with the frozen anchor: BOTH twins ride
       // the signed 40–50 target (the deploy twin is freshly re-derived).
-      const reachBand = sheet.terminalReachTarget;
+      const reachBand = sheet.terminal.reach;
       expect(reach.min).toBeCloseTo(reachBand.min);
       expect(reach.max).toBeCloseTo(reachBand.max);
       const wall = inst.checks.find((c) => c.metric === 'bossWall')!;
-      expect(wall.min).toBe(sheet.deepEndWallTarget.min);
+      expect(wall.min).toBe(sheet.terminal.wall.min);
       // The win band is DERIVED from the signed pair — a re-signed reach or
       // wall moves it with the sheet; it is never independently authored.
       const win = inst.checks.find((c) => c.metric === 'winRate')!;
-      expect(win.min).toBeCloseTo(reachBand.min * (1 - sheet.deepEndWallTarget.max));
-      expect(win.max).toBeCloseTo(reachBand.max * (1 - sheet.deepEndWallTarget.min));
+      expect(win.min).toBeCloseTo(reachBand.min * (1 - sheet.terminal.wall.max));
+      expect(win.max).toBeCloseTo(reachBand.max * (1 - sheet.terminal.wall.min));
     }
   });
 
@@ -698,5 +704,87 @@ describe('143b — the seams and the acts: per-act reach and walls, a seam per s
     const w = computeMetrics(parseSummaryCsv(oldWalk));
     expect(w.seams).toEqual([{ act: 1, crossed: 1, pool: 17 }]);
     expect(w.acts).toEqual([{ act: 2, bossHop: 10, arrivals: 1, reach: 1 / 2, wall: 0 }]);
+  });
+});
+
+describe('143d — the board per act: the sheet by act number, the forced bosses at their act', () => {
+  const sheet = loadSignedSheet();
+  const LIVE = sectorPositions(SECTOR_MAP);
+  // A walk with a new sector in front: the shipped two move to acts 2 and 3.
+  const FRONTED = ['the-periphery', ...LIVE];
+  const metrics = (over: Partial<InstrumentMetrics>): InstrumentMetrics => ({
+    runs: 40,
+    winRate: 0.3,
+    bossWall: 0.32,
+    terminalReach: 0.45,
+    seamPool: 17,
+    transactionRate: 0,
+    terminalBank: 0,
+    firesPerRun: 0,
+    pacingNormal: 3,
+    pacingElite: 4.5,
+    pacingBoss: 5.5,
+    seams: [],
+    acts: [],
+    ...over,
+  });
+
+  it("each forced boss's act is its sector's place in the walk", () => {
+    expect(LIVE).toEqual(['the-start', 'the-deep-end']);
+    expect(homeActOf('bandit-king', LIVE)).toBe(1);
+    expect(homeActOf('banditQueen', LIVE)).toBe(1);
+    expect(homeActOf('generalissimo', LIVE)).toBe(2);
+    expect(homeActOf('banditQueen', FRONTED)).toBe(2);
+    expect(() => homeActOf('not-a-boss', LIVE)).toThrow(/0 sectors/);
+    expect(() => homeActOf('bandit-king', ['the-start', 'the-start'])).toThrow(/2 sectors/);
+  });
+
+  it('a sector in front moves the forced-boss rows alone, by --act; act 1 keeps no flag', () => {
+    const live = buildBoard(sheet, LIVE);
+    const fronted = buildBoard(sheet, FRONTED);
+    for (const inst of live.instruments) expect(inst.args.some((a) => a.startsWith('--act'))).toBe(false);
+    for (const inst of fronted.instruments) {
+      const was = live.instruments.find((i) => i.id === inst.id)!;
+      if (inst.id === 'wall-king' || inst.id === 'wall-queen') {
+        expect(inst.args).toEqual([...was.args.slice(0, 2), '--act=2', ...was.args.slice(2)]);
+      } else {
+        expect(inst.args).toEqual(was.args);
+      }
+    }
+  });
+
+  it("act 1's refs alone: a sheet with another act's, or without act 1's, is refused", () => {
+    const act1 = sheet.acts['1']!;
+    expect(() => buildBoard({ ...sheet, acts: { 1: act1, 2: act1 } }, LIVE)).toThrow(/act 1 only/);
+    expect(() => buildBoard({ ...sheet, acts: { 2: act1 } }, LIVE)).toThrow(/act 1 only/);
+  });
+
+  it("a signed wall or seam past act 1 is checked at that act's entry, and reads N/A without one", () => {
+    const board = buildBoard(
+      { ...sheet, seams: { ...sheet.seams, 2: { min: 0.3, max: 0.35 } }, walls: { 2: { min: 0.2, max: 0.3 } } },
+      LIVE,
+    );
+    const walk = board.instruments.find((i) => i.id === 'arb-walk-deploy')!;
+    const wall = walk.checks.find((c) => c.metric === 'actWall')!;
+    const seam2 = walk.checks.find((c) => c.metric === 'seam' && c.act === 2)!;
+    expect(wall.act).toBe(2);
+    expect(checkLabel(wall)).toBe('wall (act 2)');
+    const m = metrics({
+      seams: [
+        { act: 1, crossed: 30, pool: 17 },
+        { act: 2, crossed: 20, pool: 0.32 * HEALTH.playerHealthMax },
+      ],
+      acts: [
+        { act: 1, bossHop: 10, arrivals: 30, reach: 0.75, wall: 0.9 },
+        { act: 2, bossHop: 10, arrivals: 20, reach: 0.5, wall: 0.25 },
+      ],
+    });
+    expect(checkValue(m, wall)).toBe(0.25);
+    expect(checkValue(m, seam2)).toBeCloseTo(0.32 * HEALTH.playerHealthMax);
+    const row = evaluateBoard(board, new Map([['arb-walk-deploy', m]])).rows.find(
+      (r) => r.instrument === 'arb-walk-deploy' && r.metric === 'wall (act 2)',
+    );
+    expect(row?.status).toBe('PASS');
+    expect(checkValue(metrics({}), seam2)).toBeNull();
   });
 });

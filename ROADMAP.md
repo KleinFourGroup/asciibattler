@@ -70,8 +70,10 @@ The cut, signed 2026-10-31 (WORKLOG §143):
   `startAct` on the run's result and `runWalkPos`; per-hop's frame fixed.
 - ☑ **143b — every seam and every act in the summary and its metrics**
   (`none`): the summary's three columns, `seams` and `acts`, a PER ACT table.
-- ☐ **143c — the sheet's per-act shape** (`stop`, the decision point).
-- ☐ **143d — the board per act** (`none`).
+- ☑ **143c — the sheet's per-act shape** (`stop`, the decision point): arm A,
+  by act number, signed with the four shared leans.
+- ☑ **143d — the board per act** (`none`): the sheet by act, a check per
+  seam and per act, the forced bosses at their home act.
 - ☐ **143e — the phase's close** (`stop`).
 
 ## Phase 144 — the fauna (signed 2026-10-30)

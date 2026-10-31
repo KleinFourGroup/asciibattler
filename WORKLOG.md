@@ -274,3 +274,50 @@ leans common to both arms (forced-boss refs keyed by the boss at its
 home act; bands checked only where signed; pacing over the whole walk;
 `--act` written only past act 1), on which 143d builds, so they were put
 once more before 143d starts.
+
+### 143d — the board per act (2026-10-31)
+
+*The leans signed.* The user, to the four leans put again: "They do,
+Claude! 😁 Those all look good to me!"
+
+*Built.*
+- `signed-sheet.json` reshaped by a script that carries each number by
+  reference: `terminal { reach, wall }`, `seams { "1" }`, `walls {}`,
+  `acts { "1": { winRefs, bankRefs, firerFiresPerRun, the two tx refs,
+  fireChannelDelta } }` and `forcedBossWinRefs { bandit-king,
+  banditQueen }`; `pacingBands`, `characterParity` and `gamblerNote`
+  kept, and `signedAt` gains a sentence naming the reshape, no number
+  moved. 26 numbers before and after, the same multiset.
+- `board.ts`: the sheet's type by act. The walk rows check a seam per
+  `seams` entry and a wall per `walls` entry at the check's act
+  (`checkValue`, `checkLabel`), the terminal pair as before, and the win
+  derived from it. Act 1's rows read `acts["1"]`, and a sheet with
+  another act's refs or none for act 1 is refused. The forced-boss rows
+  run at `homeActOf` their boss, the act whose sector's boss pool holds
+  it, with `--act` written only past act 1. `buildBoard` takes the walk,
+  the live map's by default.
+- BALANCE's primer names the seam band by its new place.
+
+*Evidence.*
+- `--plan`, with and without `--jobs=4`: byte-identical to its output at
+  `477a4f6c`, all 17 rows.
+- The stored reports, at `477a4f6c` and now, on 94h (17 instruments) and
+  139c's three trees (`--only=arb-deploy,arb-walk-deploy`): VERDICT and
+  DRIFT identical line for line once the before file's `seamPool` reads
+  `seam (act 1)`. 61 lines and 32 drift rows on 94h, 24 and 11 on each
+  139c tree; the tallies 0 FAIL with 8, 4, 5 and 2 WARN as before. The
+  comparison's control: a planted 16.020 → 16.021 in a copy is caught.
+- `board.test.ts`, 45 of 45. 143d's four cases: each forced boss's act
+  from the boss pools (the King and the Queen 1, the Generalissimo 2, the
+  Queen 2 on a walk with a sector in front; a boss in no pool or in two
+  refused); on that walk only the two forced-boss rows change, by
+  `--act=2`, and on the live walk no row carries the flag; another act's
+  refs refused; a wall and a second seam checked at their act's entry
+  (`wall (act 2)` read at 0.25 where act 1's is 0.9), and N/A without it.
+- Four planted failures on the live file, each restored: `--act` never
+  written; every boss at act 1; an act's wall read off the first entry;
+  another act's refs let through. Each fails its case.
+- Typecheck clean.
+
+*A correction.* 143c's stop message said the 94h board reports "the same
+37 drift rows"; it has 32.

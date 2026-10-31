@@ -41,6 +41,9 @@ import { atOrBeyondWalkPos, compareWalkPos, runWalkPos, type WalkPos } from '../
 import { armSignatureOf, type BatchManifest } from '../manifest';
 import { parsePacingCsv } from '../reporters';
 import { HEALTH } from '../../../src/config/health';
+import { getSector } from '../../../src/config/sectors';
+import { SECTOR_MAP } from '../../../src/config/sectorMap';
+import { sectorPositions } from '../roster/rosterTable';
 
 // ---- the signed sheet (the user-signed artifact, 68d re-signs) ------------
 
@@ -54,37 +57,50 @@ export interface SignedSheet {
   readonly signedAt: string;
   /** The 68d-signed design principle the per-character rows enforce. */
   readonly characterParity: string;
-  /** 72b (user-signed) — the pool at the act-1→act-2 seam, signed at
-   *  measured reality. 94h-pre: a FRACTION of `HEALTH.playerHealthMax`
-   *  (0.40–0.45 — the 15–18 pool-HP band was written at max 20 and stranded
-   *  when 92d doubled it; the board derives the pool-HP band at verdict
-   *  time, so the next pool-max move cannot strand it again). */
-  readonly seamPoolFraction: SheetBand;
-  /** 72b (user-signed) — the fraction of runs that reach the terminal
-   *  (sector-aware arrivals ÷ runs). THE load-bearing target: it sets
-   *  72c's mid-act-2 ambition; signed 40–50 (human overperformance
-   *  argues the conservative side). Win rate DERIVES from this × wall —
-   *  it is never independently signed (the unified band architecture;
-   *  the one-act-era 55–70 band is RETIRED). */
-  readonly terminalReachTarget: SheetBand;
-  /** The 30–35 wall target — RE-SIGNED at 72b for the deep-end terminal
-   *  (the §68g crisis was gotcha #120 contamination). */
-  readonly deepEndWallTarget: SheetBand;
+  /** The last boss's pair, whichever act ends the walk (the sheet is keyed by
+   *  act number since 143d; the terminal is named by its role, so a new act
+   *  in front moves nothing here).
+   *  - `reach` (72b, user-signed): the fraction of runs that reach the
+   *    terminal (sector-aware arrivals ÷ runs). THE load-bearing target;
+   *    signed 40–50 (human overperformance argues the conservative side).
+   *    Win rate DERIVES from it × the wall and is never independently
+   *    signed (the one-act-era 55–70 band is RETIRED).
+   *  - `wall`: the 30–35 target, RE-SIGNED at 72b for the deep-end terminal
+   *    (the §68g crisis was gotcha #120 contamination). */
+  readonly terminal: { readonly reach: SheetBand; readonly wall: SheetBand };
+  /** A band per seam, keyed by the act the seam ends. Each is a FRACTION of
+   *  `HEALTH.playerHealthMax` (94h-pre: the 15–18 pool-HP band was written
+   *  at max 20 and stranded when 92d doubled it; the board derives the
+   *  pool-HP band at verdict time, so the next pool-max move cannot strand
+   *  it again). Seam 1's 0.40–0.45 is 72b's, signed at measured reality. */
+  readonly seams: Readonly<Record<string, SheetBand>>;
+  /** The mid-walk boss walls, keyed by act; none signed yet. */
+  readonly walls: Readonly<Record<string, SheetBand>>;
   /** 94h-pre (user-signed at the §94 shape-lock) — the kind pacing targets as
    *  a DRIFT read on the walk rows: turns per WON instance off the pooled
    *  `pacing.csv` (the walk rows run `--per-encounter`; `--merge-stages`
-   *  pools the file). Normal 2.5–3.25 · elite 4–5 · boss 5–6.5. */
+   *  pools the file), over the whole walk. Normal 2.5–3.25 · elite 4–5 ·
+   *  boss 5–6.5. */
   readonly pacingBands: Readonly<Record<'normal' | 'elite' | 'boss', SheetBand>>;
-  /** Act-1 continuity drift references (68d observed; ±8pt paired noise).
-   *  85g5 (2026-08-26): the `deploy` posture replaces `pre55` — the frozen
-   *  55pre anchor retired with its `pre55ReachRef` workaround when the
-   *  re-derived vector deployed (`85g5-finalist-56.json`); the deploy
-   *  refs carry the last 55pre-anchor values PENDING RE-PIN at the
-   *  re-anchor board run. */
-  readonly act1WinRefs: Readonly<
+  /** The act-alone rows' refs, keyed by act; act 1's only, the act a fresh
+   *  roster meets. */
+  readonly acts: Readonly<Record<string, ActRefs>>;
+  readonly gamblerNote: string;
+  /** The forced-boss rows' win refs (the doctrine arm, regen vector), keyed by
+   *  encounter id; each row runs at the act whose sector's boss pool holds
+   *  its boss (`homeActOf`). */
+  readonly forcedBossWinRefs: Readonly<Record<string, number>>;
+}
+
+/** One act's act-alone refs. */
+export interface ActRefs {
+  /** Continuity drift references (68d observed; ±8pt paired noise). 85g5
+   *  (2026-08-26): the `deploy` posture replaces `pre55` — the frozen 55pre
+   *  anchor retired with its `pre55ReachRef` workaround when the re-derived
+   *  vector deployed. */
+  readonly winRefs: Readonly<
     Record<'soldier' | 'priest' | 'gambler', { readonly regen: number; readonly deploy: number }>
   >;
-  readonly gamblerNote: string;
   readonly bankRefs: { readonly firer: number; readonly shopper: number };
   readonly firerFiresPerRun: number;
   /** 85g6d — the fold re-activates the port economy (tx ≈0 → real
@@ -92,8 +108,6 @@ export interface SignedSheet {
   readonly firerTransactionRate: number;
   readonly shopperTransactionRate: number;
   readonly fireChannelDelta: number;
-  readonly forcedKingWinRegen: number;
-  readonly forcedQueenWinRegen: number;
 }
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -104,7 +118,8 @@ export function loadSignedSheet(path = join(HERE, 'signed-sheet.json')): SignedS
 
 // ---- the board definition -------------------------------------------------
 
-export type MetricKey =
+/** The metrics that are one number per instrument. */
+export type ScalarMetricKey =
   | 'winRate'
   | 'bossWall'
   | 'terminalReach'
@@ -116,8 +131,14 @@ export type MetricKey =
   | 'pacingElite'
   | 'pacingBoss';
 
+/** 143d — `seam` and `actWall` read one act's entry, the check's `act`. */
+export type MetricKey = ScalarMetricKey | 'seam' | 'actWall';
+
 export interface BoardCheck {
   readonly metric: MetricKey;
+  /** The act a `seam` or `actWall` check reads (the seam that ends it, or
+   *  its boss's wall); absent on the scalar metrics. */
+  readonly act?: number;
   /** `signed` = FAIL outside the band; `reference` = WARN outside (drift tell). */
   readonly grade: 'signed' | 'reference';
   readonly min: number;
@@ -140,7 +161,7 @@ export interface BoardInstrument {
 export interface BoardDelta {
   readonly id: string;
   readonly title: string;
-  readonly metric: MetricKey;
+  readonly metric: ScalarMetricKey;
   readonly a: string;
   readonly b: string;
   readonly grade: 'signed' | 'reference';
@@ -194,6 +215,7 @@ function ref(metric: MetricKey, value: number, tol: number, source: string): Boa
 function act1Posture(
   character: 'soldier' | 'priest' | 'gambler',
   posture: 'regen' | 'deploy',
+  refs: ActRefs,
   sheet: SignedSheet,
 ): BoardInstrument {
   const vector = posture === 'regen' ? REGEN : DEPLOY;
@@ -204,22 +226,22 @@ function act1Posture(
   const provisional = character === 'gambler' ? ` [${sheet.gamblerNote}]` : '';
   const winSource = `85g6d fold-baseline re-pin (act-1 arb λ=0.5, n=120 pooled, ±8)${provisional}`;
   const checks: BoardCheck[] = [
-    ref('winRate', sheet.act1WinRefs[character][posture], WIN_TOL, winSource),
+    ref('winRate', refs.winRefs[character][posture], WIN_TOL, winSource),
   ];
   // Plain economy refs ride the SOLDIER rows only (one instrument-pair of
   // numbers, not six): bank/fires at observed, tx ≈0 — the posture
   // dissolution is the arm's structure, not a drift to chase.
   if (character === 'soldier' && posture === 'regen') {
     checks.push(
-      ref('terminalBank', sheet.bankRefs.firer, BANK_TOL, '85g6d re-pin: the fold SPENDS — firer banks ~102 (was ~111 at the λ=0 era)'),
-      ref('firesPerRun', sheet.firerFiresPerRun, 1.0, '83f re-pin: ~1.7 arbitrated fires/run, HELD at 85g6d (1.48 in-band)'),
-      ref('transactionRate', sheet.firerTransactionRate, 0.1, '85g6d re-pin: the fold RE-ACTIVATES the port economy — the firer shops ~25% (the 72f shops-≈never era closed)'),
+      ref('terminalBank', refs.bankRefs.firer, BANK_TOL, '85g6d re-pin: the fold SPENDS — firer banks ~102 (was ~111 at the λ=0 era)'),
+      ref('firesPerRun', refs.firerFiresPerRun, 1.0, '83f re-pin: ~1.7 arbitrated fires/run, HELD at 85g6d (1.48 in-band)'),
+      ref('transactionRate', refs.firerTransactionRate, 0.1, '85g6d re-pin: the fold RE-ACTIVATES the port economy — the firer shops ~25% (the 72f shops-≈never era closed)'),
     );
   }
   if (character === 'soldier' && posture === 'deploy') {
     checks.push(
-      ref('terminalBank', sheet.bankRefs.shopper, BANK_TOL, '85g6d re-pin: the fold SPENDS — the deploy row banks ~70 (was ~90 at the λ=0 era)'),
-      ref('transactionRate', sheet.shopperTransactionRate, 0.1, '85g6d re-pin: the fold shops ~78% on the deploy vector (the 72f shops-≈never era closed)'),
+      ref('terminalBank', refs.bankRefs.shopper, BANK_TOL, '85g6d re-pin: the fold SPENDS — the deploy row banks ~70 (was ~90 at the λ=0 era)'),
+      ref('transactionRate', refs.shopperTransactionRate, 0.1, '85g6d re-pin: the fold shops ~78% on the deploy vector (the 72f shops-≈never era closed)'),
       ref('firesPerRun', 2.0, 1.0, '72f: ~2.0 arbitrated fires/run, HELD at 85g6d (1.77 in-band)'),
     );
   }
@@ -258,12 +280,18 @@ function walkPosture(posture: 'regen' | 'deploy', sheet: SignedSheet): BoardInst
   // deploy twin (the freshly re-derived vector) returns to the SIGNED
   // 40–50 band; a fresh derive that can't live in the signed band is a
   // finding, not a reference to chase.
-  const reachBand = { min: sheet.terminalReachTarget.min, max: sheet.terminalReachTarget.max };
+  const reachBand = { min: sheet.terminal.reach.min, max: sheet.terminal.reach.max };
   // Balance-proof: the derived band moves with the sheet's pair.
   const winDerived = {
-    min: reachBand.min * (1 - sheet.deepEndWallTarget.max),
-    max: reachBand.max * (1 - sheet.deepEndWallTarget.min),
+    min: reachBand.min * (1 - sheet.terminal.wall.max),
+    max: reachBand.max * (1 - sheet.terminal.wall.min),
   };
+  // 143d — a check per signed seam and per signed mid-walk wall, in act
+  // order; an act with no band prints in the PER ACT table unchecked.
+  const byAct = (bands: Readonly<Record<string, SheetBand>>): [number, SheetBand][] =>
+    Object.entries(bands)
+      .map(([act, band]): [number, SheetBand] => [Number(act), band])
+      .sort(([a], [b]) => a - b);
   const reachSource =
     posture === 'deploy'
       ? '72b SIGNED 40–50 — ⚠ the 85g6d fold baseline reads 0.567 ABOVE band: the NAMED overperformance watch (a design-target question, user-signed 2026-08-28; deliberately NOT a per-twin ref — that pattern died with pre55ReachRef)'
@@ -279,21 +307,33 @@ function walkPosture(posture: 'regen' | 'deploy', sheet: SignedSheet): BoardInst
         ? 'arbitrated:scored:59-regen-vector'
         : 'arbitrated:scored:92c2-winner',
     checks: [
-      {
-        metric: 'seamPool',
+      ...byAct(sheet.seams).map(([act, band]): BoardCheck => ({
+        metric: 'seam',
+        act,
         grade: 'reference',
         // 94h-pre — a FRACTION of the pool max, derived at verdict time
         // (balance-proof: a pool-max move moves the band with it).
-        min: sheet.seamPoolFraction.min * HEALTH.playerHealthMax,
-        max: sheet.seamPoolFraction.max * HEALTH.playerHealthMax,
-        source: '94h-pre SIGNED as a fraction 0.40–0.45 of max (the 72f 15–18 pool-HP band at max 20 stranded at 92d; 16.6/40 = 0.415 at 92h, the floor refilling to 1.0 makes the seam the hazard read)',
-      },
+        min: band.min * HEALTH.playerHealthMax,
+        max: band.max * HEALTH.playerHealthMax,
+        source:
+          act === 1
+            ? '94h-pre SIGNED as a fraction 0.40–0.45 of max (the 72f 15–18 pool-HP band at max 20 stranded at 92d; 16.6/40 = 0.415 at 92h, the floor refilling to 1.0 makes the seam the hazard read)'
+            : `the sheet's seam ${act}, a fraction of max`,
+      })),
       ...(['normal', 'elite', 'boss'] as const).map((kind): BoardCheck => ({
         metric: `pacing${kind[0]!.toUpperCase()}${kind.slice(1)}` as MetricKey,
         grade: 'reference',
         min: sheet.pacingBands[kind].min,
         max: sheet.pacingBands[kind].max,
         source: `94h-pre SIGNED (the §94 shape-lock): the user's ${kind} turn target, turns per WON instance off the pooled pacing.csv`,
+      })),
+      ...byAct(sheet.walls).map(([act, band]): BoardCheck => ({
+        metric: 'actWall',
+        act,
+        grade: 'reference',
+        min: band.min,
+        max: band.max,
+        source: `the sheet's act-${act} boss wall`,
       })),
       {
         metric: 'terminalReach',
@@ -305,8 +345,8 @@ function walkPosture(posture: 'regen' | 'deploy', sheet: SignedSheet): BoardInst
       {
         metric: 'bossWall',
         grade: 'reference',
-        min: sheet.deepEndWallTarget.min,
-        max: sheet.deepEndWallTarget.max,
+        min: sheet.terminal.wall.min,
+        max: sheet.terminal.wall.max,
         source: '72b SIGNED 30–35 — IN BAND at the 85g6d fold baseline (0.304/0.324): the 0.438 re-read AND the floor-hugging watch both CLOSED (the §85h fold disposition vindicated)',
       },
       {
@@ -320,7 +360,68 @@ function walkPosture(posture: 'regen' | 'deploy', sheet: SignedSheet): BoardInst
   };
 }
 
-export function buildBoard(sheet: SignedSheet = loadSignedSheet()): Board {
+/** 143d — act 1's refs. Only act 1 has act-alone rows (a fresh roster meets
+ *  no other act), so a sheet with refs for another act is refused until its
+ *  rows are cut. */
+function actOneRefs(sheet: SignedSheet): ActRefs {
+  const others = Object.keys(sheet.acts).filter((act) => act !== '1');
+  const refs = sheet.acts['1'];
+  if (refs === undefined || others.length > 0) {
+    throw new Error(
+      `signed sheet: the board builds act-alone rows for act 1 only, and the sheet holds acts ${JSON.stringify(Object.keys(sheet.acts))}`,
+    );
+  }
+  return refs;
+}
+
+/** 143d — the act whose sector's boss pool holds `encounterId`, by the walk's
+ *  sector ids in order (`sectorPositions`). No sector, or more than one, is a
+ *  board the walk cannot place, and throws. */
+export function homeActOf(encounterId: string, walk: readonly string[]): number {
+  const acts = walk.flatMap((sectorId, i) =>
+    (getSector(sectorId)?.encounters.boss ?? []).some((e) => e.encounterId === encounterId) ? [i + 1] : [],
+  );
+  if (acts.length !== 1) {
+    throw new Error(
+      `board: boss '${encounterId}' is in the boss pool of ${acts.length} sectors of the walk ${JSON.stringify(walk)} (acts ${JSON.stringify(acts)})`,
+    );
+  }
+  return acts[0]!;
+}
+
+/** The starting act's flag, written only past act 1, so a row at act 1 keeps
+ *  the argv every stored cohort's manifest certifies (`armSignatureOf`). */
+function actArgs(act: number): string[] {
+  return act > 1 ? [`--act=${act}`] : [];
+}
+
+/** A forced-boss row: the boss fought at every combat node of its own act,
+ *  that act alone, on the doctrine arm. */
+function forcedBoss(
+  id: string,
+  title: string,
+  encounterId: string,
+  sheet: SignedSheet,
+  walk: readonly string[],
+  source: string,
+): BoardInstrument {
+  const value = sheet.forcedBossWinRefs[encounterId];
+  if (value === undefined) throw new Error(`signed sheet: no forcedBossWinRefs entry for '${encounterId}'`);
+  return {
+    id,
+    title,
+    args: [...ACT1, ...actArgs(homeActOf(encounterId, walk)), '--character=soldier', `--encounter=${encounterId}`, REGEN, ...CONTROL_ARM],
+    strategyRow: 'scored:59-regen-vector',
+    checks: [ref('winRate', value, 0.1, source)],
+  };
+}
+
+/** The board on `walk`, the sector ids a full walk enters in order (the live
+ *  map's by default; tests pass a planted one). */
+export function buildBoard(
+  sheet: SignedSheet = loadSignedSheet(),
+  walk: readonly string[] = sectorPositions(SECTOR_MAP),
+): Board {
   // 72f (user-signed) — THE ARBITRATED DEFAULT: the arb primaries carry the
   // checks; 5 doctrine controls ride checkless for the paired ceiling
   // deltas + the fire channel. 85-pre F3A: the two wall rows moved to the
@@ -330,37 +431,35 @@ export function buildBoard(sheet: SignedSheet = loadSignedSheet()): Board {
   // regen (metric-identical at 72f — the +17.5 "substitution" ceiling
   // explained structurally; BALANCE §72f). The full 11-row doctrine set
   // re-enters at the cluster-5 stress test.
+  const act1 = actOneRefs(sheet);
   const primaries: BoardInstrument[] = [
-    act1Posture('soldier', 'regen', sheet),
-    act1Posture('soldier', 'deploy', sheet),
+    act1Posture('soldier', 'regen', act1, sheet),
+    act1Posture('soldier', 'deploy', act1, sheet),
     // 85-pre F3A (user-signed 2026-08-23) — the wall rows run the DOCTRINE
     // (non-arbitrated) arm: --encounter + --arbitrate is refused since F3
     // (rollout clones drop the forced-encounter dial — every arb decision
     // on these rows was judged against pool-rolled futures; WORKLOG
-    // §85-pre finding 4). The refs below are the ARB-arm 83f pins carried
-    // over: PENDING RE-PIN at the next board run (expect a WARN pair until
-    // then — the arm change moves winRate; boss-wall drift detection never
-    // needed arbitration).
-    {
-      id: 'wall-king',
-      title: 'forced Bandit King (regen vector, doctrine arm)',
-      args: [...ACT1, '--character=soldier', '--encounter=bandit-king', REGEN, ...CONTROL_ARM],
-      strategyRow: 'scored:59-regen-vector',
-      checks: [ref('winRate', sheet.forcedKingWinRegen, 0.1, '85f re-pin (user-signed 2026-08-25): the DOCTRINE-arm n=120 value (King 77.5) — the F3A PENDING closed')],
-    },
-    {
-      id: 'wall-queen',
-      title: 'forced Bandit Queen (regen vector, doctrine arm)',
-      args: [...ACT1, '--character=soldier', '--encounter=banditQueen', REGEN, ...CONTROL_ARM],
-      strategyRow: 'scored:59-regen-vector',
-      checks: [
-        ref('winRate', sheet.forcedQueenWinRegen, 0.1, '85f re-pin (user-signed 2026-08-25): the DOCTRINE-arm n=120 value (Queen 67.5) — the King>Queen order is the durable check'),
-      ],
-    },
-    act1Posture('priest', 'regen', sheet),
-    act1Posture('priest', 'deploy', sheet),
-    act1Posture('gambler', 'regen', sheet),
-    act1Posture('gambler', 'deploy', sheet),
+    // §85-pre finding 4). 143d: each runs at its boss's act in the walk.
+    forcedBoss(
+      'wall-king',
+      'forced Bandit King (regen vector, doctrine arm)',
+      'bandit-king',
+      sheet,
+      walk,
+      '85f re-pin (user-signed 2026-08-25): the DOCTRINE-arm n=120 value (King 77.5) — the F3A PENDING closed',
+    ),
+    forcedBoss(
+      'wall-queen',
+      'forced Bandit Queen (regen vector, doctrine arm)',
+      'banditQueen',
+      sheet,
+      walk,
+      '85f re-pin (user-signed 2026-08-25): the DOCTRINE-arm n=120 value (Queen 67.5) — the King>Queen order is the durable check',
+    ),
+    act1Posture('priest', 'regen', act1, sheet),
+    act1Posture('priest', 'deploy', act1, sheet),
+    act1Posture('gambler', 'regen', act1, sheet),
+    act1Posture('gambler', 'deploy', act1, sheet),
     walkPosture('regen', sheet),
     walkPosture('deploy', sheet),
   ];
@@ -425,8 +524,8 @@ export function buildBoard(sheet: SignedSheet = loadSignedSheet()): Board {
       a: 'regen',
       b: 'fire-ablated',
       grade: 'reference',
-      min: sheet.fireChannelDelta - 0.05,
-      max: sheet.fireChannelDelta + 0.05,
+      min: act1.fireChannelDelta - 0.05,
+      max: act1.fireChannelDelta + 0.05,
       source: '72f re-sign (user, 2026-08-04): +0.10 — the 72c value buffs REPAIRED the channel (was ≈0 at 68f); doctrine-pair definition, the arb arm reads ≈0 by substitution (structural)',
     },
     ...ceilingDeltas,
@@ -807,6 +906,26 @@ export interface BoardReport {
   readonly warns: number;
 }
 
+/** 143d — a check's value: a scalar metric by its key, a seam or an act's
+ *  wall at the check's act (null where the batch has no such entry). */
+export function checkValue(m: InstrumentMetrics, check: Pick<BoardCheck, 'metric' | 'act'>): number | null {
+  switch (check.metric) {
+    case 'seam':
+      return m.seams.find((s) => s.act === check.act)?.pool ?? null;
+    case 'actWall':
+      return m.acts.find((a) => a.act === check.act)?.wall ?? null;
+    default:
+      return m[check.metric];
+  }
+}
+
+/** The report's name for a check's metric. */
+export function checkLabel(check: Pick<BoardCheck, 'metric' | 'act'>): string {
+  if (check.metric === 'seam') return `seam (act ${String(check.act)})`;
+  if (check.metric === 'actWall') return `wall (act ${String(check.act)})`;
+  return check.metric;
+}
+
 function statusFor(
   value: number | null,
   check: Pick<BoardCheck, 'grade' | 'min' | 'max'>,
@@ -831,10 +950,10 @@ export function evaluateBoard(
       continue;
     }
     for (const check of inst.checks) {
-      const value = m[check.metric];
+      const value = checkValue(m, check);
       rows.push({
         instrument: inst.id,
-        metric: check.metric,
+        metric: checkLabel(check),
         value,
         band: `[${check.min.toFixed(2)}, ${check.max.toFixed(2)}]`,
         grade: check.grade,
@@ -1044,8 +1163,8 @@ export function evaluateVerdict(
     // the board checks — fail-closed, never a silent dash in the drift table.
     const m = metricsById.get(inst.id);
     for (const check of inst.checks) {
-      if (m !== undefined && m[check.metric] === null) {
-        fail(inst.id, 'n/a', `checked metric '${check.metric}' is unmeasurable on this batch (N/A)`);
+      if (m !== undefined && checkValue(m, check) === null) {
+        fail(inst.id, 'n/a', `checked metric '${checkLabel(check)}' is unmeasurable on this batch (N/A)`);
       }
     }
     if (rows.length === before) {

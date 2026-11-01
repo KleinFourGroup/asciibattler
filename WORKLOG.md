@@ -209,3 +209,23 @@ on 145a, 145b, 145e, 145f and 145g, not on 145c (UI and locale) or 145d
    Start and The Deep End) join as each is written, a commit each before
    `0.3.0`, without holding §145's close; each one that enters act 1's
    pool re-records the corpus, since it moves act 1's event draws.
+
+### The cut signed in part; the encounters the user's (2026-11-01)
+
+The user, to the cut: "I had ideas for the encounters and am authoring
+them as we speak 😅 Which calls are independent of that?" The answer
+named 145a, 145c, 145d and 145e with their reads and leans 1, 2 and 4 to
+7 as independent, and 145b, 145f to 145h and lean 3 as resting on the
+encounters. The user: "Signing all of those, Claude! 😁 I think I have
+at least a rough first pass on the encounters done. No events yet,
+though 😅"
+
+So 145b becomes the user's encounters, taken in: locale names, the id
+pin, each fought to its end by an `encounter=` URL, guard failures
+reported back. The first pass sits in the working tree, uncommitted, and
+the session's commits leave it unstaged: `wolfpack`, `rats-nest`,
+`rat-hunt`, `poachers` and `canids` (normal, pool 20 each),
+`vermin-lords` and `cats` (elite, 30), and `bear`, "The Divine Bear"
+(boss, 40), read from `config/encounters.json` against HEAD. Five
+normals, two elites and one boss are lean 3's shape, with Brigands and
+the King beside them.

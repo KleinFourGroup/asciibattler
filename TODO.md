@@ -302,6 +302,18 @@ META-ROADMAP §"Round 13 — The unit kit" names each row's place.
 
 META-ROADMAP §"Round 14 — Neutrals" names each row's place.
 
+- [ ] **A forest's own half cover.** On a procedural forest board the
+  windows in the tree lines are the stone half cover `╥`, the one piece
+  of the forest that reads as built (the user, 2026-11-01, at 145e's
+  stop: "eventually think up a slightly more thematic replacement for
+  the half cover"). The cheap route is the trees': a def equal to
+  `half_cover` under a glyph of its own (a bush, a log, a stump), drawn
+  in our glyph face and put where a forest board's window goes by a hash
+  of the cell, so no rule changes and no stream moves
+  (`battleSetup.spawnLayoutNeutrals`, `environment.treeAt`). The glyph
+  is a taste stop. Here with the scenery, though it need not wait for
+  the split (WORKLOG §145, 145e).
+
 - [ ] **The camp-anchor revert, kept or cut.** `World.clearResolvedObjectives`
   reverts an engage order on a tile that is a camp's anchor once the camp is
   cleared. Its one producer, the enemy pull's tile order, was retired at

@@ -364,3 +364,15 @@ Look at the floor, the trees, the broadleaf among the other two, the
 puma's lair (left) and the rat burrow (right). Wrong looks like a tree
 hard to tell from the floor, a tree read as something else, or a camp
 not found.
+
+### 145e signed (2026-11-01)
+
+The user: "Okay, Claude, I think I agree with all of those leans! 😁
+Those forest greens are great, and I like the extra density! Let's make
+a todo, though, to eventually think up a slightly more thematic
+replacement for the half cover. Sound reasonable?" Signed: deep shade to
+moss, the cover at centre 0.35, the windows as half cover, and 145c's
+home, the line on the full card and, with the unit's name, at the head
+of an enemy card's tooltip. The half cover's replacement is a TODO row
+under Round 14, with the trees' route (a def equal to `half_cover` under
+its own glyph, placed by a hash), the glyph a taste stop.

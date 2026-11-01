@@ -111,10 +111,12 @@ The cut, signed in part 2026-11-01 (WORKLOG §145); 145b is the user's.
 - ☑ **145a — the theme in the script** (`none`).
 - ☐ **145b — the user's encounters, taken in** (unsigned; waits on the
   user's first pass).
-- ☐ **145c — a unit's description line** (`batch`); its home put to the
-  user at 145e's stop, since an enemy's only card has no room.
+- ☐ **145c — a unit's description line** (`batch`): on the full card,
+  and with the unit's name at the head of an enemy card's tooltip
+  (re-scoped at 145e's stop, since an enemy's only card has no room).
 - ☑ **145d — the save across the map** (`none`).
-- ◐ **145e — the forest and its camps** (`stop`), put to the user.
+- ☑ **145e — the forest and its camps** (`stop`), signed with its four
+  leans; a forest's own half cover is a TODO.
 - ☐ **145f — act 1's sector, off the map** (unsigned; rests on 145b).
 - ☐ **145g — act 1 in the map** (unsigned; rests on 145b).
 - ☐ **145h — the phase's close** (unsigned).

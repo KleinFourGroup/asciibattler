@@ -769,3 +769,87 @@ lists JetBrains Mono and DejaVu Sans Mono and not the drawn face, a line a
 player sees, left for a later step. `tests/glyph-face.test.ts` is a new
 guard, a derived-artifact tripwire on the path where a source is edited; it
 is not listed among TESTING's permanent gates.
+
+### 144e — the seven glyphs drawn (2026-10-31, session 511bc28b)
+
+*Step zero.* The signed geometry (the ears' triangles at a 900 advance)
+clears the r, f, p, t and b, whose ink starts about 210 units in once
+centred; JetBrains Mono's w inks from 181, so its arms meet the ears'
+inner corners at 195 and the two outlines join. The face's code points stay
+clear of the vendored faces' maps (the guard at gen:font and the pin).
+
+*Built*, in the face (gen:font; 10 glyphs, the woff2 1,652 bytes): the six
+beasts on the shipped ears, two alternatives with round ears, and the tree
+two ways, from two new radicals and two drawings with no letter.
+
+| Code point | Name | For | Drawn as |
+|---|---|---|---|
+| U+E000 | `r.ears` | the giant rat | r with the ears (144d's) |
+| U+E001 | `w.ears` | the wolf | w with the ears |
+| U+E002 | `f.ears` | the fox | f with the ears |
+| U+E003 | `p.ears` | the puma | p with the ears |
+| U+E004 | `t.ears` | the tiger | t with the ears |
+| U+E005 | `b.ears` | the bear | b with the ears |
+| U+E006 | `b.round` | the bear, alternative | b with round ears |
+| U+E007 | `r.round` | the giant rat, alternative | r with round ears |
+| U+E010 | `tree.conifer` | the tree | a conifer: a trunk and three tiers, one outline, 600 wide |
+| U+E011 | `tree.broadleaf` | the tree, alternative | a trunk under an octagonal crown, 600 wide |
+
+`radicals/round-ears.svg` is a dome on the pointed ears' footprint, crowned
+at 735 in five segments; `radicals/conifer.svg` and `broadleaf.svg` are the
+trees. The atlas-room control now expects every glyph that carries the
+ears.
+
+*The read*, in the pane at 1280 × 720 (the sampler on `board-open15`, the
+board copied at 2× with hard pixels; kept in `scratch/144e/`, ignored):
+- On the board, on both teams, each eared glyph reads apart from its letter
+  and its capital: r and R, w and W, f and F, p and P, t and T, b and B.
+  The eared w stands as a w with horns joined to its arms, lower than W.
+- The round ears read as knobs, a letter with two bumps; the pointed ones
+  read as ears.
+- The scenery rows, in stone: the conifer reads as a tree, plainer and
+  larger than ↟ and ♠ beside it; the broadleaf's octagon reads as a stop
+  sign on a pole. The seven-glyph scenery row found no seven dry tiles on
+  the board, so it was read in two rows of four.
+- Page text, the sampler's strip enlarged to 1:1: at 48 px bold every
+  glyph reads; at 12 and 16 px the ears stay visible on all six letters.
+- The radical sheet draws each radical alone and each glyph on its lines
+  beside its letter and capital.
+- Not verified: Firefox.
+
+### 144e put to the user (unsigned)
+
+**The glyphs**, each with a lean:
+1. The wolf, U+E001 (w with the ears). Its ears join its arms; they read
+   as one mark at board size.
+2. The giant rat, U+E000 (pointed ears) over U+E007 (round): the radical
+   names the family, so one ear shape for every beast keeps it one mark; the
+   round ears read as knobs.
+3. The fox, U+E002 (f with the ears).
+4. The puma, U+E003 (p with the ears).
+5. The tiger, U+E004 (t with the ears).
+6. The bear, U+E005 (pointed) over U+E006 (round), the rat's reason; its
+   size is the 2×2 body's job later.
+7. The tree, U+E010 (the conifer) over U+E011 (the broadleaf, which reads
+   as a stop sign).
+
+The width: 900 for the six beasts, the advance of the prototype the user
+signed; 600 for the tree, a text cell. The glyphs left out on the user's
+call leave the face at 144f.
+
+**The attacks call**, both arms (the anchors from the kickoff's lean):
+
+| Beast | Anchor | Arm A: a new attack as data | Arm B: the anchor's shipped attack |
+|---|---|---|---|
+| giant rat | ghoul | Gnaw (the Claw's numbers) | Claw |
+| wolf | bandit | Bite (the Club's) | Club |
+| fox | rogue | Snap (Gambit's strike and retreat) | Gambit |
+| puma | adventurer | Pounce (the Whip's) | Whip |
+| tiger | reaver | Rake (the Cleaver's, bleed included) | Cleaver |
+| bear | halberdier | Maul (the Halberd's might at reach 1) | Halberd (reach 2) |
+
+Arm A is six rows in `config/abilities.json` on ops the engine has, each
+with the shipped swing's FX (the registry's guard covers it) and a locale
+name; no new mechanism. Arm B costs nothing and puts a weapon's name on a
+beast's card ("Cleaver" on the tiger, "Halberd", at reach 2, on the bear).
+Lean: Arm A. The numbers are §146's, a retune by taste Round 11's.

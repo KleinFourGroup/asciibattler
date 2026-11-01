@@ -1,5 +1,14 @@
 {
   "glyphs": [
-    { "codePoint": "U+E000", "name": "r.ears", "letter": "r", "radicals": ["ears"], "width": 900 }
+    { "codePoint": "U+E000", "name": "r.ears", "letter": "r", "radicals": ["ears"], "width": 900 },
+    { "codePoint": "U+E001", "name": "w.ears", "letter": "w", "radicals": ["ears"], "width": 900 },
+    { "codePoint": "U+E002", "name": "f.ears", "letter": "f", "radicals": ["ears"], "width": 900 },
+    { "codePoint": "U+E003", "name": "p.ears", "letter": "p", "radicals": ["ears"], "width": 900 },
+    { "codePoint": "U+E004", "name": "t.ears", "letter": "t", "radicals": ["ears"], "width": 900 },
+    { "codePoint": "U+E005", "name": "b.ears", "letter": "b", "radicals": ["ears"], "width": 900 },
+    { "codePoint": "U+E006", "name": "b.round", "letter": "b", "radicals": ["round-ears"], "width": 900 },
+    { "codePoint": "U+E007", "name": "r.round", "letter": "r", "radicals": ["round-ears"], "width": 900 },
+    { "codePoint": "U+E010", "name": "tree.conifer", "radicals": ["conifer"], "width": 600 },
+    { "codePoint": "U+E011", "name": "tree.broadleaf", "radicals": ["broadleaf"], "width": 600 }
   ]
 }

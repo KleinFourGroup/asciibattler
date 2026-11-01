@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 1320" width="300" height="660">
+  <!-- A conifer, drawn whole on a 600 advance with no letter: a trunk 90
+       wide and three tiers, one outline, its apex at 770 -->
+  <g id="guide" fill="none" stroke-width="4">
+    <rect x="0" y="0" width="600" height="1320" stroke="#555"/>
+    <!-- the atlas cell's top as Chrome draws it, 839 above the baseline: ink above it is clipped on the board -->
+    <line x1="0" x2="600" y1="181" y2="181" stroke="#a44" stroke-dasharray="8 8"/>
+    <line x1="0" x2="600" y1="290" y2="290" stroke="#468"/>
+    <line x1="0" x2="600" y1="470" y2="470" stroke="#468"/>
+    <line x1="0" x2="600" y1="1020" y2="1020" stroke="#a84"/>
+    <line x1="0" x2="600" y1="1200" y2="1200" stroke="#468"/>
+  </g>
+  <path d="M 255 1020 L 345 1020 L 345 880 L 555 880 L 400 660 L 505 660 L 360 460 L 450 460 L 300 250 L 150 460 L 240 460 L 95 660 L 200 660 L 45 880 L 255 880 Z" fill="#000"/>
+</svg>

@@ -264,6 +264,11 @@ describe("the atlas cell's room", () => {
       ...sources,
       radicals: new Map([...sources.radicals, ['ears', tall]]),
     }).font;
-    expect(outsideRoom(glyphFaceBytes(face))).toEqual(['U+E000 r.ears']);
+    // Every glyph that carries the ears, and no other.
+    const eared = parseGlyphTable(sources.table)
+      .filter((r) => r.radicals.includes('ears'))
+      .map((r) => `U+${r.codePoint.toString(16).toUpperCase()} ${r.name}`);
+    expect(eared).toContain('U+E000 r.ears');
+    expect(outsideRoom(glyphFaceBytes(face))).toEqual(eared);
   });
 });

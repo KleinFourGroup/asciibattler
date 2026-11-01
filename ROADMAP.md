@@ -100,7 +100,9 @@ trial at 144c says it belongs (risk low-medium then; WORKLOG §144).
   third in the stack, one glyph (U+E000, the r with ears); every shipped
   glyph pixel-identical, a planted drawn glyph on the board and in the four
   screens, the woff2 1,048 bytes (WORKLOG 144d) ·
-  ☐ **144e** the seven glyphs and the attacks call (`stop`) · ☐ **144f** the beasts and
+  ◐ **144e** the seven glyphs and the attacks call (`stop`): drawn in the
+  face with alternatives for the rat, the bear and the tree, read in the
+  sampler, put to the user with leans and both arms (WORKLOG 144e) · ☐ **144f** the beasts and
   their attacks (`batch`) · ☐ **144g** the tree (`none`) · ☐ **144h**
   the close (`stop`).
 - If no: ☐ **144d** the Latin picks and the attacks call (`stop`) ·

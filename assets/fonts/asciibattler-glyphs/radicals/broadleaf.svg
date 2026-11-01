@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 1320" width="300" height="660">
+  <!-- A broadleaf tree, drawn whole on a 600 advance with no letter: a trunk
+       90 wide under an octagonal crown, one outline, its top at 730 -->
+  <g id="guide" fill="none" stroke-width="4">
+    <rect x="0" y="0" width="600" height="1320" stroke="#555"/>
+    <!-- the atlas cell's top as Chrome draws it, 839 above the baseline: ink above it is clipped on the board -->
+    <line x1="0" x2="600" y1="181" y2="181" stroke="#a44" stroke-dasharray="8 8"/>
+    <line x1="0" x2="600" y1="290" y2="290" stroke="#468"/>
+    <line x1="0" x2="600" y1="470" y2="470" stroke="#468"/>
+    <line x1="0" x2="600" y1="1020" y2="1020" stroke="#a84"/>
+    <line x1="0" x2="600" y1="1200" y2="1200" stroke="#468"/>
+  </g>
+  <path d="M 255 1020 L 345 1020 L 345 810 L 410 810 L 560 660 L 560 440 L 410 290 L 190 290 L 40 440 L 40 660 L 190 810 L 255 810 Z" fill="#000"/>
+</svg>

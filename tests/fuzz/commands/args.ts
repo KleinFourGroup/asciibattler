@@ -628,6 +628,7 @@ export function parseArgs(argv: readonly string[]): CliArgs {
         e.encounter !== undefined ||
         e.layout !== undefined ||
         e.event !== undefined ||
+        e.theme !== undefined ||
         e.port !== undefined ||
         (e.act ?? startAct ?? 1) !== (startAct ?? 1),
     );

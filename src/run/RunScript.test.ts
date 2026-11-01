@@ -140,6 +140,20 @@ describe('the URL form', () => {
       { act: 2, hop: 'all', layout: 'river' },
       { act: 2, hop: 5, kind: 'rest' },
     ]);
+    expect(parseScript('*:layout=procedural,theme=swamp;4:theme=barren', []).entries).toEqual([
+      { hop: 'all', layout: 'procedural', theme: 'swamp' },
+      { hop: 4, theme: 'barren' },
+    ]);
+  });
+
+  it('drops a theme it does not have', () => {
+    const { entries, warnings } = parseScript('*:layout=procedural,theme=jungle;3:theme=Swamp', []);
+    expect(entries).toEqual([{ hop: 'all', layout: 'procedural' }]);
+    expect(warnings).toEqual([
+      'script: dropped "theme=jungle" from "*:layout=procedural,theme=jungle": no such theme (grassland, barren, volcanic, tundra, desert, swamp)',
+      'script: dropped "theme=Swamp" from "3:theme=Swamp": no such theme (grassland, barren, volcanic, tundra, desert, swamp)',
+      'script: dropped "3:theme=Swamp": nothing left to set',
+    ]);
   });
 
   it('drops what it cannot read, naming each drop', () => {
@@ -154,7 +168,7 @@ describe('the URL form', () => {
       'script: dropped "encounter=no-such" from "3:encounter=no-such,layout=river": no such encounter',
       'script: dropped "elite" from "*:elite": a kind needs a numbered hop',
       'script: dropped "*:elite": nothing left to set',
-      'script: dropped "sing" from "4:sing": not a kind (battle, elite, event, rest, port) or an item (encounter=, layout=, event=, port=)',
+      'script: dropped "sing" from "4:sing": not a kind (battle, elite, event, rest, port) or an item (encounter=, layout=, event=, theme=, port=)',
       'script: dropped "4:sing": nothing left to set',
       'script: dropped "5:rest,encounter=brigands": 5: two kinds (rest, battle)',
     ]);
@@ -192,7 +206,7 @@ describe('the URL form', () => {
 
   it('writes back what it parsed', () => {
     const text =
-      '3:rest;2.4:elite,encounter=brigand-champions,layout=river;*:event=mines;2.*:layout=procedural;5:port=rogue:3/healer/patch/mars';
+      '3:rest;2.4:elite,encounter=brigand-champions,layout=river;*:event=mines;2.*:layout=procedural,theme=tundra;5:port=rogue:3/healer/patch/mars';
     const entries = parseScript(text, []).entries;
     expect(scriptToString(entries)).toBe(text);
     expect(parseScript(scriptToString(entries), []).entries).toEqual(entries);

@@ -12,6 +12,11 @@ import { avgTeamLevel } from './Recruitment';
 import { Run } from './Run';
 import { parseRunConfig, type RunConfig } from './RunConfig';
 import type { ScriptEntry } from './RunScript';
+import { battleWorld, spawnEncounter } from '../sim/battleSetup';
+import { isActiveNeutral } from '../sim/Unit';
+import campsJson from '../../config/camps.json';
+import layoutsJson from '../../config/layouts.json';
+import terrainJson from '../../config/terrain.json';
 
 const HOPS = 11;
 
@@ -118,6 +123,54 @@ describe('a numbered hop\'s layout', () => {
     bus.on('script:warning', (e) => heard.push(e.text));
     enterHop(run, bus, 2);
     expect(heard).toEqual(['script: act 1, hop 2: layout=isthmus has no fight here (a rest)']);
+  });
+});
+
+describe('a theme', () => {
+  // The archetypes a theme's camps hold, read from the raw config the
+  // generator's pool comes from.
+  const campArchetypes = (theme: 'grassland' | 'swamp'): Set<string> =>
+    new Set(
+      terrainJson.procedural.camps.pools[theme].flatMap(
+        (ref) => campsJson.find((c) => c.id === ref.campId)!.units.map((u) => u.archetype),
+      ),
+    );
+  /** The camp members a run's hop-2 fight spawns, by the sim's own setup. */
+  const campsOnHop2 = (script: ScriptEntry[]): { theme: string; camps: string[] } => {
+    const { run, bus } = runOf(6, { script: [{ hop: 2, kind: 'battle' }, ...script] });
+    run.pauseAtTurnGates = true;
+    enterHop(run, bus, 2);
+    run.dispatch({ kind: 'advanceTurn' });
+    const e = run.currentEncounter!;
+    const world = battleWorld(new EventBus<GameEvents>(), e);
+    spawnEncounter(world, e);
+    return { theme: e.theme, camps: world.units.filter(isActiveNeutral).map((u) => u.archetype) };
+  };
+
+  it('is a procedural board\'s, its tiles and its camps', () => {
+    const swamp = campsOnHop2([{ hop: 'all', layout: 'procedural', theme: 'swamp' }]);
+    const plain = campsOnHop2([{ hop: 'all', layout: 'procedural' }]);
+    expect(swamp.theme).toBe('swamp');
+    expect(swamp.camps.length).toBeGreaterThan(0);
+    for (const a of swamp.camps) expect(campArchetypes('swamp').has(a), a).toBe(true);
+    // The control: on the same seed, The Start's own theme and its camps.
+    expect(plain.theme).toBe('grassland');
+    expect(plain.camps.length).toBeGreaterThan(0);
+    for (const a of plain.camps) expect(campArchetypes('grassland').has(a), a).toBe(true);
+  });
+
+  it('leaves a layout its own', () => {
+    const { run, bus } = runOf(9, {
+      script: [{ hop: 2, kind: 'battle' }, { hop: 2, layout: 'isthmus', theme: 'swamp' }],
+    });
+    enterHop(run, bus, 2);
+    expect(run.encounterMap?.theme).toBe(layoutsJson.find((l) => l.id === 'isthmus')!.theme);
+  });
+
+  it('refuses one it does not have', () => {
+    expect(() => runOf(1, { script: [{ hop: 'all', theme: 'jungle' as 'swamp' }] })).toThrow(
+      /unknown script theme="jungle"/,
+    );
   });
 });
 

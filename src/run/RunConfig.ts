@@ -17,7 +17,7 @@
  */
 
 import { ALL_ARCHETYPES, type Archetype } from '../sim/archetypes';
-import { LAYOUT_IDS } from '../sim/layouts';
+import { LAYOUT_IDS, THEMES } from '../sim/layouts';
 import { LEVELING } from '../config/leveling';
 import { daemonById, type DaemonConfig } from '../config/daemons';
 import { characterById, type CharacterConfig } from '../config/characters';
@@ -128,7 +128,9 @@ export interface RunConfig {
    * throws. URL form: `script=3:event=cadre-1;6:encounter=brigands,layout=river;8:port=rogue:3/overclock/mars`
    * (`;` between entries, `:` after the address, `,` between items, `/`
    * between a port's goods), an entry the parse can't read dropped with a
-   * warning.
+   * warning. The items are `encounter=`, `layout=`, `event=`, `theme=` (a
+   * procedural board's, one of `THEMES`: `*:layout=procedural,theme=forest`)
+   * and `port=`.
    */
   readonly script?: readonly ScriptEntry[];
   /**
@@ -483,12 +485,16 @@ export function parseScript(
         const id = parseEvent(value);
         if (id === undefined) drop('no such event');
         else entry.event = id;
+      } else if (name === 'theme') {
+        const theme = THEMES.find((t) => t === value?.trim());
+        if (theme === undefined) drop(`no such theme (${THEMES.join(', ')})`);
+        else entry.theme = theme;
       } else if (name === 'port') {
         const port = parsePortGoods(value ?? '', (why) => drop(why));
         if (port.length === 0) drop('no good it names is in a catalog');
         else entry.port = port;
       } else {
-        drop('not a kind (battle, elite, event, rest, port) or an item (encounter=, layout=, event=, port=)');
+        drop('not a kind (battle, elite, event, rest, port) or an item (encounter=, layout=, event=, theme=, port=)');
       }
     }
     if (Object.keys(entry).every((k) => k === 'act' || k === 'hop')) {

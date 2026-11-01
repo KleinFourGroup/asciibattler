@@ -125,7 +125,7 @@ import {
 } from '../config/events';
 import { rollRewards, type RewardPortion } from './rewards';
 import { PRICES, unitPrice, packetPrice, daemonPrice, sellPrice } from '../config/prices';
-import { LAYOUT_IDS, getLayout, type Theme } from '../sim/layouts';
+import { LAYOUT_IDS, THEMES, getLayout, type Theme } from '../sim/layouts';
 import { LEVELING } from '../config/leveling';
 import { xpToNext } from '../sim/xp';
 import { simulateLevelUps } from '../sim/leveling';
@@ -2011,8 +2011,8 @@ export class Run {
    * which `selectEncounter` picked from the sector's layout pool at the hop,
    * kept to the encounter's fit (`null` is procedural). The terrain seed and
    * the procedural side are drawn on every branch, a forced layout's
-   * included (gotcha #49). A procedural board takes the sector's theme, and
-   * a hand-authored layout its own.
+   * included (gotcha #49). A procedural board takes the script's theme at
+   * the hop, else the sector's, and a hand-authored layout its own.
    */
   private buildEncounterMap(selectedLayoutId: string | null, hop: number, mapRng: RNG): EncounterMap {
     const sector = this.currentSector();
@@ -2027,8 +2027,9 @@ export class Run {
     const { gridW, gridH } = layoutId === null
       ? { gridW: proceduralSide, gridH: proceduralSide }
       : layoutDimensions(layoutId);
+    // `checkScript` refuses a theme outside `THEMES`, so the cast holds.
     const theme = layoutId === null
-      ? sector.theme
+      ? ((this.scriptAt('theme', hop) as Theme | undefined) ?? sector.theme)
       : (getLayout(layoutId)?.theme ?? sector.theme);
     return { layoutId, gridW, gridH, terrainSeed, theme };
   }
@@ -4154,6 +4155,9 @@ function checkScript(
     checkForcedLayoutId(e.layout);
     checkForcedEncounterId(e.encounter);
     checkForcedEventId(e.event, eventCatalog);
+    if (e.theme !== undefined && !THEMES.includes(e.theme)) {
+      throw new Error(`Run: unknown script theme="${e.theme}" (not in THEMES)`);
+    }
     if (e.port !== undefined) checkPortGoods(e);
   }
   const problems = scriptConflicts(script, startAct, encounterKindOf);

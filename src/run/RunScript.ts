@@ -17,6 +17,7 @@
  * the old dials are: it stamps nothing and applies where the kind fits.
  * Pure: nothing here draws.
  */
+import type { Theme } from '../config/layouts';
 import type { RunConfig } from './RunConfig';
 
 /** A kind an entry can give a hop's nodes: every node kind but the boss's. */
@@ -25,9 +26,9 @@ export type ScriptKind = 'battle' | 'elite' | 'event' | 'rest' | 'port';
 export const SCRIPT_KINDS: readonly ScriptKind[] = ['battle', 'elite', 'event', 'rest', 'port'];
 
 /** What an entry can set at its address besides the kind. */
-export type ScriptItem = 'encounter' | 'layout' | 'event';
+export type ScriptItem = 'encounter' | 'layout' | 'event' | 'theme';
 
-export const SCRIPT_ITEMS: readonly ScriptItem[] = ['encounter', 'layout', 'event'];
+export const SCRIPT_ITEMS: readonly ScriptItem[] = ['encounter', 'layout', 'event', 'theme'];
 
 /**
  * One good a port's stock names: a unit at a level (absent, the port's base
@@ -53,6 +54,12 @@ export interface ScriptEntry {
   readonly layout?: string;
   /** An event id, opened at an event node there. */
   readonly event?: string;
+  /**
+   * A theme for a procedural board there, its tiles, camps and palette in
+   * place of the sector's; a layout keeps its own. How a sector's boards
+   * are read before the sector is on the map.
+   */
+  readonly theme?: Theme;
   /** A port's whole stock, in place of its roll, at the price book's prices. */
   readonly port?: readonly PortGood[];
 }

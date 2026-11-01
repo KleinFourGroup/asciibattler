@@ -229,3 +229,31 @@ the session's commits leave it unstaged: `wolfpack`, `rats-nest`,
 (boss, 40), read from `config/encounters.json` against HEAD. Five
 normals, two elites and one boss are lean 3's shape, with Brigands and
 the King beside them.
+
+### 145a — the theme in the script (2026-11-01, session 05f22793)
+
+*Step zero.* The script's items are read in one place for a board
+(`Run.buildEncounterMap`, through `scriptAt`), checked at construction
+(`checkScript`), parsed in `parseScript`, and listed for the clone
+refusal in the fuzz CLI (`tests/fuzz/commands/args.ts`), since a rollout
+clone loads with no config. The camps follow the encounter's theme in
+`applyTerrain`, so the theme needs no second reader.
+
+*Built.* `theme` is a fourth item (`ScriptEntry.theme`, a `Theme`):
+on a procedural board the script's theme at the hop, else the sector's;
+a layout keeps its own. The parse drops an unknown or miscased theme
+with a warning that names the six, and the Run refuses one a caller
+built. The `--arbitrate` refusal names a theme entry, as it does a layout.
+
+*Evidence.* `scriptedRun.test.ts`, "a theme": on seed 6, hop 2, under
+`*:layout=procedural,theme=swamp` the board is swamp and its camp
+members are swamp camps' archetypes, read from the raw `terrain.json`
+and `camps.json`; the same seed without the item is grassland with
+grassland's camps (the seed picked by `scratch/145/theme-seeds.ts`, where
+both boards have a camp site). A layout keeps its own theme; an unknown
+theme throws. Planted: the Run reading the sector's theme alone failed
+the first case ("expected 'grassland' to be 'swamp'"); restored, green.
+`RunScript.test.ts`: the parse, the drops and the round trip. In the
+pane, `seed=6&hops=11&character=soldier&script=1:battle;*:layout=procedural,theme=barren`
+opened a barren 15 × 15 procedural board, its banner "Uncharted Ground —
+Barren", with no script warning.

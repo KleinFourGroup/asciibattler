@@ -12,8 +12,8 @@ its spec, its per-phase worklogs (`archive/worklog-phase-135.md` to
 `-140.md`) and its session reports beside it; before it
 [archive/post-118-roadmap.md](archive/post-118-roadmap.md) (Round 8.5).
 
-**Status: §143, the board's acts, ✅ closed 2026-10-31; §144, the
-fauna, next, from its kickoff.** The spec is [round-10-spec.md](round-10-spec.md), its tranche 2
+**Status: §144, the fauna, ✅ closed 2026-11-01; §145, act 1 and the
+run's shape, next, from its kickoff.** The spec is [round-10-spec.md](round-10-spec.md), its tranche 2
 answered at the kickoffs of §144 to §146. The charter, the decision
 points, the exit and the scope guards are in META-ROADMAP §"Round 10 —
 Act 1, the wilds", with the roster table's rebuild added to its scope at
@@ -67,54 +67,26 @@ and the stored cohorts report as before (WORKLOG §143, in
 - ☑ **143d — the board per act** (`none`).
 - ☑ **143e — the phase's close** (`stop`), signed.
 
-## Phase 144 — the fauna (signed 2026-10-30)
+## Phase 144 — the fauna ✅ (closed 2026-11-01)
 
-Charter: the wolf, the giant rat, the fox, the puma, the tiger and the
-placeholder 1×1 bear, enemy-only 1×1 melee archetypes with their
-attacks, glyphs, stats and locale; the atlas grown (S1). **Why here:** the
-units before the encounters that hold them, and a unit in no pool moves
-no shipped run. **Risk:** low. **Decision points:** the glyphs (a taste
-stop); new attacks or the shipped melee ones. **Exit:** each beast in play
-by URL, its glyph read by the user; the atlas's three guards at the new
-size; the corpus at its baseline. **Scope guards:** no new mechanism, no
-pool entry; no flyer, swimmer, 2×2 or swarm.
+The six beasts, enemy-only, each a drawn letter with the ears in our own
+glyph face (ASCIIbattler Glyphs, Private Use Area code points built from
+SVG radicals), on a shipped body's numbers with attacks as data named
+for the animal; three trees played as one; the atlas at 128 cells; the
+corpus held (WORKLOG §144, in `archive/worklog-phase-144.md`).
 
-The cut, signed 2026-10-31 with a glyph face of our own in scope if the
-trial at 144c says it belongs (risk low-medium then; WORKLOG §144).
-
-- ☑ **144a — the atlas grown (S1)** (`none`): 16 × 8, the grid stated
-  once, the three guards at 128; the board moves by 1–2 levels on ≤ 70
-  pixels, from the old non-power-of-two height (WORKLOG 144a), signed.
-- ☑ **144b — the glyph sampler** (`none`): URL-named glyphs on the board
-  and in page text, a face loaded in DEV.
-- ☑ **144c — the custom-glyph trial** (`stop`): three beasts drawn as
-  low-res vectors, as radicals and as a silhouette, beside the Latin
-  choices; built, the rat, the wolf and the bear in a scratch face, put
-  to the user with three leans (WORKLOG 144c). Signed: drawn glyphs
-  belong (the yes branch), the radical, on JetBrains Mono's own letter;
-  the ears spread to the glyph's top corners at a 900 advance, the
-  user's fix from feedback, prototyped (WORKLOG §144, "The grid signed,
-  and the ears spread").
-- If yes: ☑ **144d** our glyph face (`none`): ASCIIbattler Glyphs, built by
-  gen:font from SVG radicals in straight segments and a composition table,
-  third in the stack, one glyph (U+E000, the r with ears); every shipped
-  glyph pixel-identical, a planted drawn glyph on the board and in the four
-  screens, the woff2 1,048 bytes (WORKLOG 144d) ·
-  ☑ **144e** the seven glyphs and the attacks call (`stop`): drawn in the
-  face with alternatives for the rat, the bear and the tree, read in the
-  sampler, put to the user with leans and both arms (WORKLOG 144e).
-  Signed 2026-11-01: the six eared letters, 900 wide; three trees, played
-  as one; Arm A, the fox on the puma's Pounce and the Dash (WORKLOG §144,
-  "144e signed") · ◐ **144f** the beasts and
-  their attacks (`batch`): six enemy-only archetypes, five attacks as
-  data, each beast moving and striking by a `roster=` URL; the corpus
-  holds (WORKLOG 144f) · ☑ **144g** the trees, three, played as one
-  (`none`): each the wall's def under its own glyph, pinned against the
-  wall (WORKLOG 144g) · ◐ **144h** the close (`stop`): put to the user
-  (WORKLOG 144h).
-- If no: ☐ **144d** the Latin picks and the attacks call (`stop`) ·
-  ☐ **144e** the beasts (`batch`) · ☐ **144f** the tree (`none`) ·
-  ☐ **144g** the close (`stop`).
+- ☑ **144a — the atlas grown (S1)** (`none`): 16 × 8; the board's 1–2
+  level pixel change signed.
+- ☑ **144b — the glyph sampler** (`none`).
+- ☑ **144c — the custom-glyph trial** (`stop`): drawn glyphs belong, the
+  radical on JetBrains Mono's own letter, the ears spread.
+- ☑ **144d — our glyph face** (`none`).
+- ☑ **144e — the seven glyphs and the attacks call** (`stop`): the six
+  eared letters, three trees, Arm A with the fox on Pounce and the Dash.
+- ☑ **144f — the beasts and their attacks** (`batch`), read.
+- ☑ **144g — the trees, three, played as one** (`none`).
+- ☑ **144h — the phase's close** (`stop`), signed with its four
+  dispositions.
 
 ## Phase 145 — act 1 and the run's shape (signed 2026-10-30)
 

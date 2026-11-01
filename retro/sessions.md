@@ -266,3 +266,56 @@ template literals) and a Cursor overrun the hook caught, both filed.
    apart on the board was absorbing. I'd want the condition repeated: a
    signed format, a known answer to build against, and room to check it
    properly. Separately, the work reached its stop with the exit proven.
+
+## 2026-11-01 — session d73bee19 (144e's stop signed, 144f, 144g and §144's close)
+
+1. Little. The hand-off after 144e named the stop, the face's edit, the
+   registrations and the reads. Two things it couldn't: a fifth
+   registration, the ability registry, which the suite found at the first
+   run; and that the two editors' formatters take schema-parsed defs.
+2. None conflicted outright. The brief said to open with the stop, and
+   the user's answer held two questions (the trees, the fox) that AGENTS
+   says to answer before the build goes on; I ended that turn on the
+   answers rather than build the signed parts first. It cost a turn and
+   felt right.
+3. Twice, both caught before they landed. The close's first draft gave
+   the friction count as 16 with 5 papercuts before I had counted (15
+   and 4); and the pane doc's new sentence first named a mechanism for
+   the screenshot lag that I hadn't verified, rewritten to what was seen.
+4. One full-suite run failing on the registry, one formatter run on raw
+   JSON, a long heredoc at the close that failed to parse (rewritten with
+   the Edit tool), a hover in battle that showed no card. Small.
+5. The landing note for §145 is at 144g in the archived worklog. Still
+   unread: Firefox, the eared f and t side by side, and the broadleaf
+   among other trees. `scratch/144f/` holds the scripts that wrote the
+   config through the editors' formatters.
+6. Yes. The user's questions were real, and answering the fox's with
+   "you're right" plus one change felt available rather than costly. The
+   silent-turn reminder came about fifteen times; I answered each with a
+   status line (filed as a papercut).
+7. The fox: finding that the user's instinct matched the animal, and that
+   the cleanest build was one shared Pounce with the weakness in the
+   stats, was enjoyable; so was the pane's tally, a check that could have
+   shown a beast standing idle. I'd want questions with a real answer and
+   room to agree or not repeated. Separately, the work reached the close.
+
+## Phase 144 — summary
+
+Four sessions: `900f47a9` (the kickoff, the glyph discussion, the cut,
+144a and 144b), `5849d0c7` (144c's trial and its calls), `511bc28b` (144d's
+face, 144e's drawing) and `d73bee19` (144e's stop signed, 144f, 144g and
+the close). The user turned the colliding glyphs into a first-principles
+question, declined lookalike letters from other scripts, and the phase
+built a face of its own in the Private Use Area instead: radicals drawn
+as straight-segment SVGs on JetBrains Mono's letters, the ears spread to
+the glyph's corners on the user's feedback. The six beasts shipped as
+eared letters on shipped bodies with attacks as data named for the
+animal (the fox on the puma's Pounce and the Dash, the user's correction
+to a strike-and-retreat), with three trees played as one; 144a's exit did
+not hold as cut (one or two levels on at most 70 pixels), signed as
+built. The friction log holds 15 lines: 10 slips, 4 papercuts and one
+`distress`, the silent-turn reminder's pull toward narrating, which every
+session's report names. The shell-edit traps recurred in every session at
+a round trip each; two papercuts were fixed at the close. The reports name
+the first-principles exchange and drawing glyphs that read on the real
+board as the absorbing parts.

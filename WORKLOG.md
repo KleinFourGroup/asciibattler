@@ -338,3 +338,29 @@ opened a 19 × 19 forest board, banner "Uncharted Ground — Forest", with
 a puma's lair and a rat burrow among the trees. The arms drawn in
 `scratch/145e/`: the palette with the cut's cover, the leaf-litter
 palette, the global cover, and the dense cover. Not verified: Firefox.
+
+### 145e put to the user, with 145c's change (unsigned)
+
+The stop holds four calls and a read. The calls, each with its lean:
+1. *The palette:* deep shade to moss (`1-moss-cover-as-cut.jpg`, lean),
+   or shade to leaf litter, green to brown, where the grey trees lose
+   contrast on the lighter tiles (`2-leaf-litter-cover-as-cut.jpg`).
+2. *The cover:* centre 0.35, 30 % more trees (`4-moss-cover-dense.jpg`,
+   lean, built), or the global density with the knob taken out
+   (`3-moss-cover-global.jpg`); the cut's 0.18 is the global's twin.
+3. *The windows* kept as half cover (`╥`) in the tree lines (lean), the
+   only change that keeps no new mechanism.
+4. *145c's home*, a change to the signed step: the line, with the
+   unit's name, at the head of the enemy card's hover tooltip, above the
+   engage and focus hint, and on the full card for any unit that has one
+   (lean); touch players get no route, since a long press there is the
+   focus objective. The other arm: a TODO row, and the flavour waits for
+   a later round's enemy inspect.
+
+*The read*, in the user's own browser, on their working tree (the
+Wolfpack is theirs, uncommitted):
+`?seed=30&hops=11&character=soldier&encounter=wolfpack&script=1:battle;*:layout=procedural,theme=forest`.
+Look at the floor, the trees, the broadleaf among the other two, the
+puma's lair (left) and the rat burrow (right). Wrong looks like a tree
+hard to tell from the floor, a tree read as something else, or a camp
+not found.

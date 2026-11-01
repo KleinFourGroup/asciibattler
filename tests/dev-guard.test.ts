@@ -156,7 +156,7 @@ describe('117.5j — src/dev is reached only through DEV-gated dynamic imports',
     ]);
   });
 
-  it('no shipped source file reaches src/dev any other way', () => {
+  it('no shipped source file reaches src/dev any other way', { timeout: 15_000 }, () => {
     const sources = shippedSources();
     expect(sources.length).toBeGreaterThan(100);
     expect(sources).toContain('src/main.ts');

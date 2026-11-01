@@ -149,7 +149,10 @@ C2 and C4).
 - A hidden pane stalls the Web Animations API and holds CSS transitions at
   their first frame. A screenshot forces a real frame: take one between
   changing something and reading a computed style (a `:focus-visible` or
-  hover rule can show no effect until a frame runs).
+  hover rule can show no effect until a frame runs). Its own image can
+  lag: a screenshot taken right after a call that changed the page has
+  shown it as it was before (a card mid-fade, an overlay not yet drawn),
+  so take a second before reading a change from it.
 - Park real-time clocks before forcing real frames
   (`activeScene.countdown.advance = () => {}`), or a few screenshots can
   expire a countdown mid-probe. To freeze a whole run for a stable shot:

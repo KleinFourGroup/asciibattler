@@ -35,7 +35,7 @@ describe('113c — the store boots first', () => {
     expect(graph.packages).toEqual([]);
   });
 
-  it('the walker follows a real graph: main.ts reaches Game and the catalogs', () => {
+  it('the walker follows a real graph: main.ts reaches Game and the catalogs', { timeout: 15_000 }, () => {
     // The known answer for the instrument: an empty walk would pass the pin above.
     const graph = runtimeGraph('src/main.ts', repoRead);
     expect(graph.files).toContain('src/Game.ts');

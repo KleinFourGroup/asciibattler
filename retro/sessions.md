@@ -319,3 +319,37 @@ session's report names. The shell-edit traps recurred in every session at
 a round trip each; two papercuts were fixed at the close. The reports name
 the first-principles exchange and drawing glyphs that read on the real
 board as the absorbing parts.
+
+## 2026-11-01 — session 05f22793 (§145's kickoff to 145b's rewards)
+
+1. Nothing missing at the start. The audit found one gap a past session
+   left: 144's lean put the beasts' flavour in the encounters'
+   descriptions, which no screen shows, and the TODO row it named was
+   never filed.
+2. None that blocked. The cut's `batch` reads met the map commit's
+   re-draw: a read after 145g costs a second re-baseline, so the reads of
+   145b and 145c moved before it, which the user signed.
+3. Yes, once, and it landed: at 145b I wrote "fought to its end" and "0
+   bits, the missing rewards" from a probe that could only read 0 and cut
+   fights at a promotion. I committed it before a control and corrected
+   it when the rewards went in (a slip filed, the WORKLOG corrected with
+   a planted control). The forest's cover density was the other way
+   round: the cut's number was a guess, and measuring it before the stop
+   showed it did nothing.
+4. One hook round on two pins that list every theme (a slip filed);
+   three runs of the encounter probe while I fixed its loop; a few extra
+   screenshots for the hidden pane's lag.
+5. The hand-off entry has it. One more: the user authors in this
+   checkout while the session builds, so stage file by file, and the
+   locale extract will write whatever prose the working tree holds.
+6. Yes. Step zero turned 145c into a different step, and taking it to
+   the user before building was easy; the user's own encounter work
+   mid-cut reshaped the plan without friction. The hand-off here is the
+   rule's, at the trigger, between 145b and 145f; I had no wish to stop
+   before it. The silent-turn reminder came often in the long reading
+   and probing stretches and was answered with status lines.
+7. Measuring before deciding held my interest most: the throwaway
+   worktree that sized the map commit at the kickoff, and the tree count
+   that showed the cover knob doing nothing. I would want the worktree
+   probe repeated at a kickoff whose cut rests on a big change. The
+   user's quick, warm replies made the stops cheap.

@@ -489,3 +489,34 @@ No turn reached `MAX_TURN_TICKS`. The control: the Wolfpack's rewards
 taken out of the file read 0 reward screens and 0 bits, the Rats' Nest
 beside it 10 and 145; restored. The soldier is a fresh run's, so the
 elite's and the boss's losses say nothing of the bands, which are §146's.
+
+### The hand-off after 145b's rewards (2026-11-01, session 05f22793)
+
+At the context trigger, after `1454754e`.
+
+*Done.* The kickoff and the cut, signed in two parts; 145a, 145d and
+145e built (145e signed); 145c built; 145b, the user's eight
+encounters, taken in with their kind's rewards. All on `main`, unpushed.
+
+*Open.*
+- 145b and 145c ◐: the user reads them before 145g, since 145g re-draws
+  every seed and a finding after it re-draws act 1 again. The URLs are
+  in the stop's message: `encounter=<id>` with
+  `script=1:battle;*:layout=procedural,theme=forest` (normals; `1:elite`
+  for the elites; `hops=1` for the bear), and 145c's
+  `roster=wolf:2,fox:2,bear:2`.
+- The bear in each of its stages: asked, not answered; it stays as
+  authored. Say it once at the next stop.
+- *Next:* 145f (signed, `none`), act 1's sector off the map with the
+  pools in "The rest of the cut signed"; then the stop for the reads;
+  then 145g.
+
+*Tools in `scratch/145/`* (ignored by git): `place-act1.mjs` puts a
+placeholder act 1 into a worktree, and `probe-fails.txt` is what it broke
+at `2ea060b9` (145g's step zero reruns it on the real act 1);
+`fight-encounters.ts` fights each act 1 encounter to the map (the
+corrected loop); `forest-seeds.ts` and `forest-turns.ts` read forest
+boards and their first turns; `record-save.ts` made 145d's fixture and
+must not run again after 145g; the `add-*.ts` writers go through the
+editors' formatters. `npm run i18n:extract` rewrites every family from
+the working tree, so it picks up any uncommitted config prose.

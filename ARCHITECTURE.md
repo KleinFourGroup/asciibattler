@@ -187,7 +187,7 @@ src/
     targetingStrategies.ts   # per-archetype target-pick registry (nearest); Unit.targeting resolved at spawn
     archetypes.ts            # ALL_ARCHETYPES (full catalog) + DRAFTABLE_ARCHETYPES (§29-close draft pool, draftable-flag filtered), rollUnit, glyphForArchetype, targetingForArchetype, range/minRangeForArchetype (O4)
                              # §76c: engagementReach (non-engaging verbs — self leaps, ally-buff blasts, pure auras — are EXCLUDED from derived.attackRange, the in-range-abstain threshold; falls back to max rangeCells for pure-support kits)
-    environment.ts           # spawnWall + spawnHalfCover (D6) — neutral-team env factories
+    environment.ts           # spawnWall + spawnHalfCover + spawnRubble (D6) — neutral-team env factories; TREE_ARCHETYPES, the three trees (tree_conifer, tree_broadleaf, tree_club), each the plain wall's def under its own glyph, placed by no board yet
     terrainGen.ts            # Per-encounter terrain dispatch: procedural (proceduralMap.ts) vs layout library; §81a threads the sector THEME to the procedural path (+ pairs rolled camp sites with the theme's pool)
     proceduralMap.ts         # M6: crossbar+divider+noise map generator + sampleProceduralParams (config→params); §81: the per-theme tile layer (deep-water pool deepening, hills/ice/sand/mud patch fields, volcanic fire scatter — deep water counts in the cap + carves to shallow) + camp-site placement (pair/midBand/rare-free, placed LAST so camp dose never perturbs terrain)
     layouts.ts               # Thin re-export of validated config (LAYOUT_IDS for Run's roll)

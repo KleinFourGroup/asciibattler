@@ -13,9 +13,12 @@ import {
   spawnWall,
   spawnHalfCover,
   spawnRubble,
+  TREE_ARCHETYPES,
 } from './environment';
 import { isCombatTargetable } from './effects/targeting';
-import { cellsOccupiedBy } from './occupancy';
+import { cellKey, cellsOccupiedBy, occupiedCells } from './occupancy';
+import { hasLineOfSight } from './LineOfSight';
+import { collectLosBlockers } from './positioning';
 import { deriveStats } from './stats';
 import { ARCHETYPE_CONFIG } from './archetypes';
 import { ALL_UNIT_DEFS, NEUTRAL_DEFS } from '../config/units';
@@ -388,5 +391,57 @@ describe('rubble (a multi-tile neutral)', () => {
 
     w.applyStatusEffect(rubble, statusDef(allowed), null);
     expect(rubble.effects.some((e) => e.key === allowed), `${allowed} allowed`).toBe(true);
+  });
+});
+
+describe("the trees: one rule, three looks", () => {
+  /** What a scenery def does on the board, read through the sim's own checks:
+   *  the cells movement treats as taken, the line-of-sight blockers, whether
+   *  it can be hit, and which statuses it takes. */
+  function behaviour(archetype: string) {
+    const w = new World(new EventBus<GameEvents>(), new RNG(1));
+    const at = { x: 5, y: 5 };
+    const u = w.spawnEnvironment({ archetype, position: at });
+    const takes = ['burn', 'frozen', 'poison', 'bleed'].filter((s) => {
+      w.applyStatusEffect(u, statusDef(s), null);
+      return u.effects.some((e) => e.key === s);
+    });
+    return {
+      team: u.team,
+      blocksMovement: occupiedCells(w).has(cellKey(at)),
+      sightAcross: hasLineOfSight({ x: 3, y: 5 }, { x: 7, y: 5 }, collectLosBlockers(w)),
+      targetable: isCombatTargetable(u),
+      cells: cellsOccupiedBy(u).length,
+      takes,
+    };
+  }
+
+  it('each tree blocks movement and sight, cannot be hit, and takes burn and frozen, as the wall does', () => {
+    const wall = behaviour(WALL_ARCHETYPE);
+    expect(wall).toEqual({
+      team: 'neutral',
+      blocksMovement: true,
+      sightAcross: false,
+      targetable: false,
+      cells: 1,
+      takes: ['burn', 'frozen'],
+    });
+    for (const id of TREE_ARCHETYPES) expect(behaviour(id), id).toEqual(wall);
+  });
+
+  it('the control: half-cover, which a shot sees through, reads apart from the wall', () => {
+    const cover = behaviour(HALF_COVER_ARCHETYPE);
+    expect(cover.sightAcross).toBe(true);
+    expect(cover).not.toEqual(behaviour(WALL_ARCHETYPE));
+  });
+
+  it("each tree's def is the plain wall's under a glyph of its own", () => {
+    const { glyph: wallGlyph, ...wall } = NEUTRAL_DEFS.wall!;
+    const glyphs = TREE_ARCHETYPES.map((id) => {
+      const { glyph, ...rest } = NEUTRAL_DEFS[id]!;
+      expect(rest, id).toEqual(wall);
+      return glyph;
+    });
+    expect(new Set([...glyphs, wallGlyph]).size).toBe(4);
   });
 });

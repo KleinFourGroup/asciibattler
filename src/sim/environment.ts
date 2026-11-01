@@ -34,6 +34,15 @@ export const WALL_DESTRUCTIBLE_ARCHETYPE = 'wall_destructible';
 export const HALF_COVER_DESTRUCTIBLE_ARCHETYPE = 'half_cover_destructible';
 
 /**
+ * The trees: one rule in three looks. Each def is the plain wall's (no `hp`,
+ * so indestructible; opaque to sight; takes burn and frozen) under its own
+ * glyph, a conifer and a broadleaf drawn in our face and the club suit, so
+ * a player learns "tree" once. No board places one yet; a forest board
+ * places them where a board would put walls, choosing among the three.
+ */
+export const TREE_ARCHETYPES = ['tree_conifer', 'tree_broadleaf', 'tree_club'] as const;
+
+/**
  * Spawns a wall. Given an `hp`, it is destructible: the `wall_destructible`
  * def, with `hp` as its maxHp. Without one, it is the plain `wall`, whose
  * def has no `hp`, so it is indestructible: never targeted, skipped by

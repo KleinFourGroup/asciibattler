@@ -877,5 +877,17 @@
       "mobility": 0.14,
       "power": 0
     }
+  },
+  "tree_conifer": {
+    "glyph": "",
+    "statusSusceptibility": ["burn","frozen"]
+  },
+  "tree_broadleaf": {
+    "glyph": "",
+    "statusSusceptibility": ["burn","frozen"]
+  },
+  "tree_club": {
+    "glyph": "♣",
+    "statusSusceptibility": ["burn","frozen"]
   }
 }

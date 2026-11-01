@@ -257,3 +257,38 @@ the first case ("expected 'grassland' to be 'swamp'"); restored, green.
 pane, `seed=6&hops=11&character=soldier&script=1:battle;*:layout=procedural,theme=barren`
 opened a barren 15 × 15 procedural board, its banner "Uncharted Ground —
 Barren", with no script warning.
+
+### 145c's step zero: the line has no room on an enemy's card (2026-11-01)
+
+The beasts are enemy-only, and an enemy shows only as the battle HUD's
+compact card (`HUD.addCard`, `buildCompactCard`): the glyph, the level,
+the power and an HP bar, no name and no room for a line. Its one text is
+a hover and focus tooltip with the engage and focus hint, with no touch
+route, since a long press there is the focus objective (`HUD.ts`,
+`addCard`). The full card, where a line fits, shows the player's units
+only (the roster, the pre-turn hand, a recruit offer), so a beast reaches
+it only by a dev `roster=`. Nothing else names an enemy on screen: no
+board hover, and `nameForArchetype` is read by the cards, the reward,
+cache and character screens only. So "on the unit card on either side",
+as signed, does not reach the player who meets a beast. The change goes
+to the user at 145e's stop, before 145c is built.
+
+### 145d — the save across the map (2026-11-01, session 05f22793)
+
+*Step zero.* A save is the RunSnapshot as text with the dials as query
+text beside it (`RunConfig`'s header); `Run.fromJSON` checks the schema
+version and no sector id. The continuation check's harness
+(`continuation.test.ts`) plays a loaded run by the probe kit's rows.
+
+*Built.* `tests/integration/save-across-map.v50.json`, recorded on the
+two-act map by `scratch/145/record-save.ts` (seed 3, no dials, every
+fight won outright, saved at the map gate before The Start's fifth hop:
+5,568 bytes, schema 50), and `save-across-map.test.ts`: the fixture is
+v50 and mid-The Start at node `start`; loaded, with every fight won, it
+walks `the-start` then `the-deep-end` and ends `complete`. The fights are
+won outright because the question is the walk; the outcome of a real
+fight would move with The Start's barren boards at 145g.
+
+*Evidence.* Green at HEAD; the control in the test, the save's node
+renamed `nowhere`, throws "node "nowhere" has no successor" at The
+Start's end. TESTING lists it among the integration tests.

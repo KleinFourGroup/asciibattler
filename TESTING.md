@@ -219,6 +219,9 @@ If the renderer ever grows pure-logic helpers (e.g. atlas UV computation), those
     plays as the same run played straight through, byte for byte (115b).
   - `resume-gates.test.ts` — a loaded run's `resume()` re-emits the gate event
     the live run emitted on arriving there (115a).
+  - `save-across-map.test.ts` — a v50 save recorded mid-The Start on the
+    two-act map loads onto the map as it stands and walks to its end
+    (145d); its fixture is never re-recorded.
   - `layout-deadlock.test.ts` — each registered layout resolves within 2000 ticks
     (regression pin for the C1d Labyrinth fix).
   - `variable-size.test.ts` — procedural battles at multiple board sizes (D3).

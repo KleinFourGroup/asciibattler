@@ -124,8 +124,8 @@ defines the term, and is distributed under that licence only.
 
 Copyright 2020 The JetBrains Mono Project Authors
 (https://github.com/JetBrains/JetBrainsMono)
-The radicals, and the glyphs composed from them: copyright 2026 the
-ASCIIbattler project.
+The radicals, and the glyphs composed from them: copyright 2026
+Matthew Kilgore.
 
 Licensed under the SIL Open Font License, Version 1.1, reproduced in full in
 the JetBrains Mono section above.

@@ -41,7 +41,7 @@ export interface GlyphFaceSources {
  *  opens. */
 const COPYRIGHT =
   'Copyright 2020 The JetBrains Mono Project Authors (https://github.com/JetBrains/JetBrainsMono). ' +
-  'The radicals, and the glyphs composed from them: copyright 2026 the ASCIIbattler project.';
+  'The radicals, and the glyphs composed from them: copyright 2026 Matthew Kilgore.';
 const LICENSE =
   'This Font Software is licensed under the SIL Open Font License, Version 1.1. ' +
   'It is a Modified Version of JetBrains Mono.';

@@ -48,9 +48,11 @@ const DEMO_ABILITY_IDS = [
   'inspire',
 ] as const;
 
+const BEAST_ABILITY_IDS = ['gnaw', 'bite', 'pounce', 'rake', 'maul'] as const;
+
 const FACTORIES: Record<string, AbilityFactory> = {
   ...Object.fromEntries(
-    [...MIGRATED_ABILITY_IDS, ...DEMO_ABILITY_IDS].map((id) => [
+    [...MIGRATED_ABILITY_IDS, ...DEMO_ABILITY_IDS, ...BEAST_ABILITY_IDS].map((id) => [
       id,
       () => new EffectAbility(abilityDef(id)),
     ]),

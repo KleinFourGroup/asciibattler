@@ -88,6 +88,8 @@ The config's numbers were converted when the hit roll was deleted, so that each 
 
 **Stat identity (§76e/f):** the prc/eva doctrine of aimers and dodgers went with the two stats in Round 9; a weapon's former aim lives on in its converted `might`. Four §76f archetypes joined the draft pool: **Rioter** `f` (molotov, squishy, luck-flavored) · **Gunslinger** `G` (pistol, archer-shaped) · **Halberdier** `H` (reach-2 wall) · **Officer** `O` (rare support — cane + Inspire, the first composed weapon+aura kit). All four also fight on the enemy side, in the Generalissimo's and the Witch Hunt's waves (`config/encounters.json`).
 
+**The beasts (§144):** act 1's wilds field six enemy-only archetypes (`draftable: false`), each a drawn letter with the ears and each on a shipped body's numbers until §146 bands them: the **Giant Rat** (the ghoul's, Gnaw), the **Wolf** (the bandit's with the adventurer's mobility, Bite), the **Fox** (the rogue's with less strength, Pounce and the Dash), the **Puma** (the adventurer's, Pounce), the **Tiger** (the reaver's, Rake, with bleed) and the **Bear** (the halberdier's, Maul at reach 1). An attack is named for the animal, never a weapon's name, and a shared move is one row: the fox and the puma both Pounce, the fox weaker by its stats.
+
 ## Run structure
 
 **Node map:** A directed acyclic graph generated from the seed. Roughly 7–10 nodes per run, arranged in layered hops (node rows) with branching paths between them. The player begins before the map and **selects the root as their first encounter** (a normal battle node — unless the sector authors a starting event, which stamps the root; The Start does since §74i), then advances one hop at a time, and must reach the single terminal node to complete the run.

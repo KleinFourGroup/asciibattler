@@ -68,6 +68,10 @@ const DEPARTURES: Record<string, number> = {
   'units:gunslinger.baseStats.ranged': 2,
 };
 
+/** Combatants added after the conversion, on numbers copied from the converted
+ *  units they are drawn from, so the frozen inputs have no row for them. */
+const ADDED_AFTER = new Set(['wolf', 'giant_rat', 'fox', 'puma', 'tiger', 'bear']);
+
 const round2 = (x: number): number => Math.round(x * 100) / 100;
 const P = BEFORE.pooledRate;
 
@@ -147,7 +151,7 @@ describe('the conversion from the hit roll (every strike lands)', () => {
   it('the frozen inputs cover the twelve weapons, thirteen wielders and every combatant', () => {
     expect(Object.keys(BEFORE.weapons)).toHaveLength(12);
     expect(Object.keys(BEFORE.rates)).toHaveLength(13);
-    const combatants = Object.keys(UNITS).filter((id) => UNITS[id].baseStats);
+    const combatants = Object.keys(UNITS).filter((id) => UNITS[id].baseStats && !ADDED_AFTER.has(id));
     expect(Object.keys(BEFORE.units).sort()).toEqual(combatants.sort());
   });
 

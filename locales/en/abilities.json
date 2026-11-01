@@ -22,5 +22,10 @@
   "abilities.pistol.name": "Pistol",
   "abilities.halberd.name": "Halberd",
   "abilities.cane.name": "Cane",
-  "abilities.inspire.name": "Inspire"
+  "abilities.inspire.name": "Inspire",
+  "abilities.gnaw.name": "Gnaw",
+  "abilities.bite.name": "Bite",
+  "abilities.pounce.name": "Pounce",
+  "abilities.rake.name": "Rake",
+  "abilities.maul.name": "Maul"
 }

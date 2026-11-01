@@ -21,5 +21,11 @@
   "units.rioter.name": "Rioter",
   "units.gunslinger.name": "Gunslinger",
   "units.halberdier.name": "Halberdier",
-  "units.officer.name": "Officer"
+  "units.officer.name": "Officer",
+  "units.wolf.name": "Wolf",
+  "units.giant_rat.name": "Giant Rat",
+  "units.fox.name": "Fox",
+  "units.puma.name": "Puma",
+  "units.tiger.name": "Tiger",
+  "units.bear.name": "Bear"
 }

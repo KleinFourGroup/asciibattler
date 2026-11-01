@@ -23,7 +23,13 @@
     "halberdier": 0,
     "officer": 0,
     "ghoul": 0,
-    "prodigy": 0
+    "prodigy": 0,
+    "wolf": 0,
+    "giant_rat": 0,
+    "fox": 0,
+    "puma": 0,
+    "tiger": 0,
+    "bear": 0
   },
   "composition": {
     "mercenary": 0,
@@ -48,7 +54,13 @@
     "halberdier": 0,
     "officer": 0,
     "ghoul": 0,
-    "prodigy": 0
+    "prodigy": 0,
+    "wolf": 0,
+    "giant_rat": 0,
+    "fox": 0,
+    "puma": 0,
+    "tiger": 0,
+    "bear": 0
   },
   "compWeight": 0,
   "level": 0,

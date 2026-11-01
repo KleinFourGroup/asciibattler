@@ -677,5 +677,149 @@
     "priority": 0,
     "effects": [],
     "aura": { "radius": 4, "statusId": "inspired", "affects": "allies" }
+  },
+  "gnaw": {
+    "id": "gnaw",
+    "name": "Gnaw",
+    "cooldownSeconds": 1.5,
+    "rangeCells": 1,
+    "target": { "kind": "enemyInRange" },
+    "timeline": [
+      { "phase": "impact", "seconds": 0 },
+      { "phase": "recovery", "seconds": "fill" }
+    ],
+    "orphanPolicy": "commit-at-cast",
+    "priority": 10,
+    "effects": [
+      {
+        "phase": "impact",
+        "op": {
+          "kind": "damage",
+          "scaling": "strength",
+          "might": 1,
+          "critBase": 0,
+          "critable": true,
+          "evadable": true,
+          "bypassDefense": false
+        }
+      }
+    ],
+    "fx": { "impact": "melee_swing" }
+  },
+  "bite": {
+    "id": "bite",
+    "name": "Bite",
+    "cooldownSeconds": 1.5,
+    "rangeCells": 1,
+    "target": { "kind": "enemyInRange" },
+    "timeline": [
+      { "phase": "impact", "seconds": 0 },
+      { "phase": "recovery", "seconds": "fill" }
+    ],
+    "orphanPolicy": "commit-at-cast",
+    "priority": 10,
+    "effects": [
+      {
+        "phase": "impact",
+        "op": {
+          "kind": "damage",
+          "scaling": "strength",
+          "might": 1,
+          "critBase": 0,
+          "critable": true,
+          "evadable": true,
+          "bypassDefense": false
+        }
+      }
+    ],
+    "fx": { "impact": "melee_swing" }
+  },
+  "pounce": {
+    "id": "pounce",
+    "name": "Pounce",
+    "cooldownSeconds": 1.5,
+    "rangeCells": 1,
+    "target": { "kind": "enemyInRange" },
+    "timeline": [
+      { "phase": "impact", "seconds": 0 },
+      { "phase": "recovery", "seconds": "fill" }
+    ],
+    "orphanPolicy": "commit-at-cast",
+    "priority": 10,
+    "effects": [
+      {
+        "phase": "impact",
+        "op": {
+          "kind": "damage",
+          "scaling": "strength",
+          "might": 2,
+          "critBase": 0.05,
+          "critable": true,
+          "evadable": true,
+          "bypassDefense": false
+        }
+      }
+    ],
+    "fx": { "impact": "melee_swing" }
+  },
+  "rake": {
+    "id": "rake",
+    "name": "Rake",
+    "cooldownSeconds": 1.5,
+    "rangeCells": 1,
+    "target": { "kind": "enemyInRange" },
+    "timeline": [
+      { "phase": "impact", "seconds": 0 },
+      { "phase": "recovery", "seconds": "fill" }
+    ],
+    "orphanPolicy": "commit-at-cast",
+    "priority": 10,
+    "effects": [
+      {
+        "phase": "impact",
+        "op": {
+          "kind": "damage",
+          "scaling": "strength",
+          "might": 2,
+          "critBase": 0.05,
+          "critable": true,
+          "evadable": true,
+          "bypassDefense": false
+        }
+      },
+      {
+        "phase": "impact",
+        "op": { "kind": "applyStatus", "statusId": "bleed" }
+      }
+    ],
+    "fx": { "impact": "melee_swing" }
+  },
+  "maul": {
+    "id": "maul",
+    "name": "Maul",
+    "cooldownSeconds": 2,
+    "rangeCells": 1,
+    "target": { "kind": "enemyInRange" },
+    "timeline": [
+      { "phase": "impact", "seconds": 0 },
+      { "phase": "recovery", "seconds": "fill" }
+    ],
+    "orphanPolicy": "commit-at-cast",
+    "priority": 10,
+    "effects": [
+      {
+        "phase": "impact",
+        "op": {
+          "kind": "damage",
+          "scaling": "strength",
+          "might": 4,
+          "critBase": 0.05,
+          "critable": true,
+          "evadable": true,
+          "bypassDefense": false
+        }
+      }
+    ],
+    "fx": { "impact": "melee_swing" }
   }
 }

@@ -105,9 +105,13 @@ trial at 144c says it belongs (risk low-medium then; WORKLOG §144).
   sampler, put to the user with leans and both arms (WORKLOG 144e).
   Signed 2026-11-01: the six eared letters, 900 wide; three trees, played
   as one; Arm A, the fox on the puma's Pounce and the Dash (WORKLOG §144,
-  "144e signed") · ☐ **144f** the beasts and
-  their attacks (`batch`) · ☐ **144g** the trees, three, played as one
-  (`none`) · ☐ **144h** the close (`stop`).
+  "144e signed") · ◐ **144f** the beasts and
+  their attacks (`batch`): six enemy-only archetypes, five attacks as
+  data, each beast moving and striking by a `roster=` URL; the corpus
+  holds (WORKLOG 144f) · ☑ **144g** the trees, three, played as one
+  (`none`): each the wall's def under its own glyph, pinned against the
+  wall (WORKLOG 144g) · ◐ **144h** the close (`stop`): put to the user
+  (WORKLOG 144h).
 - If no: ☐ **144d** the Latin picks and the attacks call (`stop`) ·
   ☐ **144e** the beasts (`batch`) · ☐ **144f** the tree (`none`) ·
   ☐ **144g** the close (`stop`).

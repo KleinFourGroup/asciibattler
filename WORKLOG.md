@@ -931,3 +931,145 @@ answered over two turns.
   my name in for now"), as the credits do: Matthew Kilgore. The credits
   screen lists the drawn face, and `tests/glyph-face.test.ts` joins
   TESTING's permanent gates ("Signing the other two!").
+
+### 144f — the beasts and their attacks (2026-11-01, session d73bee19)
+
+*Step zero.* The kickoff audit's four registrations held (the two records
+in `config/fuzz-strategies.json`, Recruitment's EXCLUDED, the strike
+conversion's combatant list), and a fifth it did not name:
+`src/sim/abilities/registry.ts` lists every ability id, and the catalog
+throws at load until a new id is there, which failed every file that
+builds a World at the first run. The anchors' lines read at HEAD, the
+numbers converted at 137c. Nothing changed what the cut intends.
+
+*Built.*
+- The face at the picks (`c2bbefd7`): U+E006, U+E007 and
+  `round-ears.svg` out, so 8 glyphs and a woff2 of 1,624 bytes; the
+  radicals' copyright line names Matthew Kilgore in the name table,
+  `OFL.txt` and `THIRD-PARTY-LICENSES.txt`. gen:font left the vendored
+  woff2s unchanged (git status).
+- The credits' fonts group lists ASCIIbattler Glyphs under the OFL, and
+  `tests/glyph-face.test.ts` is in TESTING's permanent gates (`0684f1a6`).
+- The beasts (`76232d8c`), appended after the officer, `draftable: false`,
+  no rarity, written through the two editors' formatters
+  (`scratch/144f/add-beasts.ts`), so each config diff is additions only:
+
+| Id | Glyph | Body | Attacks |
+|---|---|---|---|
+| `wolf` | U+E001 | the bandit's, with the adventurer's mobility (6, growth 0.26) | `bite`, the Club's |
+| `giant_rat` | U+E000 | the ghoul's | `gnaw`, the Claw's |
+| `fox` | U+E002 | the rogue's at strength 2 | `pounce` and the shipped `dash` |
+| `puma` | U+E003 | the adventurer's | `pounce`, the Whip's |
+| `tiger` | U+E004 | the reaver's | `rake`, the Cleaver's with bleed |
+| `bear` | U+E005 | the halberdier's | `maul`, the Halberd's at reach 1 |
+
+  Locale names for the six and the five attacks; the five ids in the
+  ability registry, the six in both fuzz-strategy records at 0, in
+  Recruitment's EXCLUDED and in the strike conversion's `ADDED_AFTER`
+  (combatants added after it, on numbers copied from units it converted).
+
+*Evidence.*
+- The suite 3884 in 268 files and the smoke 568 in 59, by the hook;
+  typecheck clean.
+- The corpus: 0 of 32 journals differ, after 144f and again after 144g.
+- In the pane (Chromium, 1024 × 768), `?layout=isthmus&seed=7&character=soldier`
+  with `roster=wolf:2,giant_rat:2,fox:2`, then `roster=puma:2,tiger:2,bear:2`,
+  each driven to its first battle with a bus tally by archetype. Every
+  beast moved and struck: the wolf 8 moves and 5 strikes, the rat 8 and 8,
+  the fox 7 and 8 with a dash, the puma 8 and 3, the tiger 8 and 6 with 6
+  bleeds applied, the bear 8 and 8. Both rosters lost to the hop-1 wave
+  (four bandits and a mercenary).
+- The pre-turn cards name each beast and its attack, no weapon's: Wolf
+  "Bite 3 dmg · reach 1 · 1.05s"; Giant Rat "Gnaw 1 dmg · 1.05s"; Fox
+  "Pounce 4 dmg · 0.85s" and "Dash"; Puma "Pounce 5 dmg · 0.90s"; Tiger
+  "Rake 7 dmg · +bleed · 1.05s"; Bear "Maul 7 dmg · reach 1 · 1.60s". The
+  drawn glyphs show on the board, in the battle's roster strip and on the
+  cards.
+- The credits panel in the pane: "ASCIIbattler Glyphs | SIL Open Font
+  License 1.1" after DejaVu Sans Mono.
+- Not verified: Firefox; how each beast feels in a fight (the read).
+
+### 144g — the trees, three, played as one (2026-11-01, session d73bee19)
+
+*Step zero.* A neutral def with no `hp` and no `blocksLineOfSight: false`
+is the plain wall: indestructible, opaque to sight
+(`collectLosBlockers`), and in every movement blocker set, since those
+are built from `world.units` (`occupiedCells`). ♣ is in DejaVu's shipped
+subset; U+E010 and U+E011 are in our face.
+
+*Built* (`e65dd7ce`). `tree_conifer` (U+E010), `tree_broadleaf` (U+E011)
+and `tree_club` (U+2663), each the wall's def under its own glyph,
+appended after the beasts; `TREE_ARCHETYPES` in `environment.ts` names
+them for the board that places them. The atlas holds 40 glyphs of 128,
+read from `GLYPHS` in the pane after a reload, every beast's and tree's
+among them.
+
+*Evidence.* `environment.test.ts`, three cases: each tree read through
+the sim's own checks (the cells movement treats as taken, the
+line-of-sight blockers, whether it can be hit, which of burn, frozen,
+poison and bleed it takes) equals the wall; half-cover, the control,
+reads apart (sight passes); each tree's def is the wall's but its glyph,
+the four glyphs distinct. Planted: `hp: 10` on `tree_club` failed the
+first and third cases; restored, 23 pass. The suite 3887 and the smoke
+568, by the hook.
+
+*Landing note for §145*, the session's lean put to the user at 144e and
+§145's to cut: a forest board places trees where a board would put walls,
+choosing among the three by a hash of the cell rather than an RNG draw,
+so a board's trees stay put when anything else about it changes. The
+broadleaf alone reads as a stop sign; read it among the other two on the
+first forest board.
+
+### 144h — §144's close, put to the user (2026-11-01, session d73bee19)
+
+*The exit, by clause* (ROADMAP §144's charter).
+- *Each beast in play by URL.* The two `roster=` URLs above, every beast
+  moving and striking (144f).
+- *Its glyph read by the user.* Signed from the sampler at 144e; in play,
+  144f's batch read, at this stop.
+- *The atlas's three guards at the new size.* 128 cells, each guard
+  failing on a planted 129th (144a); 40 used.
+- *The corpus at its baseline.* 0 of 32, after 144f and after 144g.
+- *The scope guards.* No new mechanism: the attacks are data on the
+  engine's ops, the trees are data, and the face entered by the amended
+  cut's sign. No pool entry: all six `draftable: false`, Recruitment's
+  scan, no encounter changed. No flyer, swimmer, 2×2 or swarm.
+- *The cut's predictions.* No snapshot bump (World v39, Run v50; the
+  save-fingerprint pin green); no RNG stream; the smoke fired on 144f and
+  144g and not before; no box. The atlas count was predicted at 38 and is
+  40, for the three trees signed at 144e.
+
+*Not verified in §144:* Firefox anywhere (its canvas places the atlas's
+`middle` baseline by its own rule, so the ears' 59 units of headroom, and
+the page text); the beasts' feel; the fox's and the tiger's eared f and t
+side by side; the broadleaf among other trees (§145's first forest).
+
+*The friction read.* §144 filed 15 lines over four sessions: 10 slips, 4
+papercuts, 1 `distress`. Patterns:
+- *Shell edit text tripping a guard or the shell* (every session):
+  heredoc edit scripts with backslashes refused by the guard (once at
+  144b, twice at 144d), a leftover heredoc line (refused at 144c; at 144f
+  it ran by luck), template literals in a double-quoted `node -e` (144c),
+  and at this close a long heredoc that failed to parse, after 142c's JSON
+  escape. Recurred and cost a round trip each, no damage; the cure is in
+  `process/shell-and-windows.md` (the Write or Edit tool), and the guards
+  caught all but one. Listed, no new guard.
+- *The silent-turn reminder* (every session's report; the `distress`
+  line at 144b, a papercut at 144f): a status line each time, and a mild
+  pull toward narrating. A harness behaviour that CLAUDE.md's note
+  already handles; the round close's welfare read holds it.
+- *The hidden pane's screenshot lag* (144c's papercut, 144d's report, the
+  pre-turn screen at 144f): a screenshot right after a DOM change can show
+  the page as it was. An extra screenshot each time.
+- *A docs cap at the commit*: the Cursor's at 144c, after 142b and 143b;
+  the round close's row on the Cursor's shape holds it.
+- Once each: a probe's import path, a step code in a comment, prettier's
+  rewraps, `__probe.pixels`' signature, a formatter fed raw JSON, the
+  walks' timeouts.
+
+*Dispositions, leans for the sign.* The guard's refusal (144b): left, the
+guard doing its job. The pane's screenshot lag (144c): fixed at the
+close, one sentence in `process/browser-pane.md`. The two import-graph
+walks' 5 s timeouts (144d): fixed at the close, 15 s each, as the other
+slow tests got at 126f. The reminder's count (144f): left, with the
+`distress` line, for the round close's read.

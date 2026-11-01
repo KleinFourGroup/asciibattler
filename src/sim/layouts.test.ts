@@ -215,15 +215,15 @@ describe('the theme names', () => {
     expect(ThemeSchema.safeParse('rock').success).toBe(false); // was → barren
   });
 
-  it('the three new themes resolve, and THEMES carries the full set', () => {
-    for (const t of ['tundra', 'desert', 'swamp'] as const) {
+  it('the newer themes resolve, and THEMES carries the full set', () => {
+    for (const t of ['tundra', 'desert', 'swamp', 'forest'] as const) {
       expect(ThemeSchema.safeParse(t).success).toBe(true);
       expect(THEMES).toContain(t);
     }
     // THEMES (the picker pool) and the schema enum agree — adding a theme to one
     // without the other would silently shrink the procedural/editor pool.
     expect([...THEMES].sort()).toEqual(
-      ['barren', 'desert', 'grassland', 'swamp', 'tundra', 'volcanic'].sort(),
+      ['barren', 'desert', 'forest', 'grassland', 'swamp', 'tundra', 'volcanic'].sort(),
     );
   });
 });

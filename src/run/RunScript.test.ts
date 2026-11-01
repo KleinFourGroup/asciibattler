@@ -150,8 +150,8 @@ describe('the URL form', () => {
     const { entries, warnings } = parseScript('*:layout=procedural,theme=jungle;3:theme=Swamp', []);
     expect(entries).toEqual([{ hop: 'all', layout: 'procedural' }]);
     expect(warnings).toEqual([
-      'script: dropped "theme=jungle" from "*:layout=procedural,theme=jungle": no such theme (grassland, barren, volcanic, tundra, desert, swamp)',
-      'script: dropped "theme=Swamp" from "3:theme=Swamp": no such theme (grassland, barren, volcanic, tundra, desert, swamp)',
+      'script: dropped "theme=jungle" from "*:layout=procedural,theme=jungle": no such theme (grassland, barren, volcanic, tundra, desert, swamp, forest)',
+      'script: dropped "theme=Swamp" from "3:theme=Swamp": no such theme (grassland, barren, volcanic, tundra, desert, swamp, forest)',
       'script: dropped "3:theme=Swamp": nothing left to set',
     ]);
   });

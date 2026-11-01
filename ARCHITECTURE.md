@@ -509,7 +509,7 @@ config/                      # A4: balance JSON source of truth (paired with src
   sectors.json               # T1: sector catalog — TWO since §67 ("The Start" + "The Deep End"); 74e/74i: per-sector `events` pools (both hold the full 12-event slate) + `startingEvents` (The Start opens on sector-1-start — the run-opening boon)
   sector-map.json            # T2: the sector-selection DAG — §67: two chained nodes (start → the-deep-end)
   events.json                # 74a→i: the event catalog — the 3 smoke events + the user-authored ten (§74i: the cadre flag-chain three-parter, the prodigy grant, hostage-trio + its rewardOverride, the sector-1-start boon; cheese-tax ships repeatable: true)
-  camps.json                 # 75a→j: the camp catalog — the signed 5 (bandit-squatters / ghoul-nest / toll-post / …; bits/packet rewards only, the ⭐ continuous-value rule); placements live in layouts.json campSpawns + camps weighted lists (75j: labyrinth ×2 · fetidPond · icebergs · rubbleQuarry)
+  camps.json                 # 75a→j: the camp catalog — the signed 5 (bandit-squatters / ghoul-nest / toll-post / …; bits/packet rewards only, the ⭐ continuous-value rule), and the forest's three beast camps (145e: wolf-den, rat-burrow, puma-lair, in terrain.json's forest pool); placements live in layouts.json campSpawns + camps weighted lists (75j: labyrinth ×2 · fetidPond · icebergs · rubbleQuarry)
   stats.json                 # E1: hpPerConstitution, crit cap/mult, base move cooldown;
                              #     GP1/I1: mobilityCdPerStat/speedCdPerStat + mobilityMinCdScale/speedMinCdScale;
                              #     GP2: minDamage (subtractive-defense floor)

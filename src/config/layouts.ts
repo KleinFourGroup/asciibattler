@@ -103,6 +103,8 @@ export type SpawnAvailability = z.infer<typeof SpawnAvailabilitySchema>;
  * - `tundra` — blue-white snow.
  * - `desert` — warm sand.
  * - `swamp` — murky brown-greens.
+ * - `forest` — a dark forest floor; a procedural forest board's walls are
+ *   trees (`battleSetup.spawnLayoutNeutrals`).
  *
  * `theme` is serialized in the RunSnapshot, so renaming one needs a snapshot
  * bump. To add one, extend `ThemeSchema` and `THEMES`, give it a palette in
@@ -116,6 +118,7 @@ export const ThemeSchema = z.enum([
   'tundra',
   'desert',
   'swamp',
+  'forest',
 ]);
 export type Theme = z.infer<typeof ThemeSchema>;
 /** The themes as a list, for the editors and terrain.json's per-theme
@@ -127,6 +130,7 @@ export const THEMES: readonly Theme[] = [
   'tundra',
   'desert',
   'swamp',
+  'forest',
 ];
 
 export const SpawnRegionSchema = z

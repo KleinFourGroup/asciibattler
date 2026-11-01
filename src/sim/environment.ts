@@ -9,6 +9,7 @@
  * `TileGrid`, not here.
  */
 
+import { fnv1a } from '../core/fnv1a';
 import type { GridCoord } from '../core/types';
 import type { Unit } from './Unit';
 import type { World } from './World';
@@ -37,10 +38,27 @@ export const HALF_COVER_DESTRUCTIBLE_ARCHETYPE = 'half_cover_destructible';
  * The trees: one rule in three looks. Each def is the plain wall's (no `hp`,
  * so indestructible; opaque to sight; takes burn and frozen) under its own
  * glyph, a conifer and a broadleaf drawn in our face and the club suit, so
- * a player learns "tree" once. No board places one yet; a forest board
- * places them where a board would put walls, choosing among the three.
+ * a player learns "tree" once. A procedural forest board puts one where
+ * each of its walls would go (`battleSetup.spawnLayoutNeutrals`).
  */
 export const TREE_ARCHETYPES = ['tree_conifer', 'tree_broadleaf', 'tree_club'] as const;
+export type TreeArchetype = (typeof TREE_ARCHETYPES)[number];
+
+/**
+ * The tree at a cell of a board: one of the three by a hash of the cell and
+ * the board's terrain seed. A hash, not a draw, so placing trees moves no
+ * stream, and a board's trees stay put whatever else about it changes; the
+ * seed in the hash keeps one cell from wearing the same tree on every board.
+ */
+export function treeAt(position: GridCoord, terrainSeed: number): TreeArchetype {
+  const h = parseInt(fnv1a(`${terrainSeed >>> 0}:${position.x},${position.y}`), 16);
+  return TREE_ARCHETYPES[h % TREE_ARCHETYPES.length]!;
+}
+
+/** Spawns a tree, which plays as the plain wall does (above). */
+export function spawnTree(world: World, position: GridCoord, archetype: TreeArchetype): Unit {
+  return world.spawnEnvironment({ archetype, position });
+}
 
 /**
  * Spawns a wall. Given an `hp`, it is destructible: the `wall_destructible`

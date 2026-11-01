@@ -80,6 +80,8 @@ const SymmetryWeightsSchema = z
  * samples in a fixed order).
  * - `poolDensity` — the theme's own pool band, in place of the global one
  *   (a desert keeps sparse oases).
+ * - `coverDensity` — the theme's own solid-cover band, in place of the
+ *   global one (a forest is thicker).
  * - `deepWaterFraction` — the share of the pool band that deepens to
  *   impassable `deep_water`, deepest noise first, so deep centres stay
  *   ringed by shallows; fords and carves never deepen.
@@ -90,6 +92,7 @@ const SymmetryWeightsSchema = z
  */
 const ThemeTilesSchema = z.object({
   poolDensity: RangeSchema.optional(),
+  coverDensity: RangeSchema.optional(),
   deepWaterFraction: RangeSchema.optional(),
   hills: RangeSchema.optional(),
   ice: RangeSchema.optional(),

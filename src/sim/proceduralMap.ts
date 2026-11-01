@@ -154,7 +154,7 @@ const intRange = (rng: RNG, s: RangeSpec): number =>
 /**
  * Draws one encounter's knobs from the envelope, one draw a knob in the
  * order below (`wallCapFraction` is fixed and draws none); then the theme's
- * tile knobs in the order `poolDensity`, `deepWaterFraction`, `hills`,
+ * tile knobs in the order `poolDensity`, `coverDensity`, `deepWaterFraction`, `hills`,
  * `ice`, `sand`, `mud`, `fire`, one draw for each the theme declares (an
  * undeclared knob draws nothing, so the theme's entry fixes its count);
  * then the camp plan, two draws made whatever the pool. Reordering or
@@ -180,6 +180,7 @@ export function sampleProceduralParams(
   const themeCfg: ThemeTilesConfig = cfg.themeTiles[theme];
   const optRange = (s: RangeSpec | undefined): number => (s === undefined ? 0 : range(rng, s));
   const pooled = themeCfg.poolDensity === undefined ? poolDensity : range(rng, themeCfg.poolDensity);
+  const covered = themeCfg.coverDensity === undefined ? coverDensity : range(rng, themeCfg.coverDensity);
   const tiles: ResolvedThemeTiles = {
     deepWaterFraction: optRange(themeCfg.deepWaterFraction),
     hills: optRange(themeCfg.hills),
@@ -205,7 +206,7 @@ export function sampleProceduralParams(
     fordChance,
     crossbarWaver,
     dividers,
-    coverDensity,
+    coverDensity: covered,
     windowChance,
     poolDensity: pooled,
     noiseScale,

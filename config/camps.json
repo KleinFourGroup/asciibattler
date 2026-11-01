@@ -69,5 +69,44 @@
       { "table": "bits-small", "trigger": { "chance": 1 } },
       { "table": "packets-small", "trigger": { "chance": 0.3 } }
     ]
+  },
+  {
+    "id": "wolf-den",
+    "name": "Wolf Den",
+    "description": "A pair of wolves bedded down in the undergrowth.",
+    "leashRadius": 3,
+    "units": [
+      { "archetype": "wolf", "count": 2 }
+    ],
+    "rewards": [
+      { "table": "bits-small", "trigger": { "chance": 1 } },
+      { "table": "packets-small", "trigger": { "chance": 0.3 } }
+    ]
+  },
+  {
+    "id": "rat-burrow",
+    "name": "Rat Burrow",
+    "description": "Giant rats boiling out of a hole in the roots.",
+    "leashRadius": 2,
+    "units": [
+      { "archetype": "giant_rat", "count": 3 }
+    ],
+    "rewards": [
+      { "table": "bits-small", "trigger": { "chance": 1 } },
+      { "table": "packets-small", "trigger": { "chance": 0.3 } }
+    ]
+  },
+  {
+    "id": "puma-lair",
+    "name": "Puma's Lair",
+    "description": "A lone puma, guarding its kill.",
+    "leashRadius": 2,
+    "units": [
+      { "archetype": "puma", "level": 2 }
+    ],
+    "rewards": [
+      { "table": "bits-small", "trigger": { "chance": 1 } },
+      { "table": "packets-small", "trigger": { "chance": 0.3 } }
+    ]
   }
 ]

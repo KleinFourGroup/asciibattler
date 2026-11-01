@@ -292,3 +292,49 @@ fight would move with The Start's barren boards at 145g.
 *Evidence.* Green at HEAD; the control in the test, the save's node
 renamed `nowhere`, throws "node "nowhere" has no successor" at The
 Start's end. TESTING lists it among the integration tests.
+
+### 145e — the forest and its camps (2026-11-01, session 05f22793)
+
+*Step zero.* Nothing in `src` or the fuzz code singles out the plain
+wall by id (a search for `WALL_ARCHETYPE` and `'wall'`), and the renderer
+draws scenery in stone by team (`spriteColor.ts`), so a tree in a wall's
+place plays and draws as 144g pinned. The camp loader checks the
+terrain pools against `camps.json` at import, so the camps entered with
+the forest's pool empty and the pool after.
+
+*Built.* `forest` in `ThemeSchema` and `THEMES`; its palette, deep shade
+to moss; its `themeTiles`, grassland's hills and mud and a
+`coverDensity` of its own (a new optional knob, drawn after the pool
+override and only where a theme declares it); its camp pool, three
+beast camps written through the camp editor's formatter (`wolf-den`, two
+wolves, leash 3; `rat-burrow`, three giant rats, leash 2; `puma-lair`, a
+level-2 puma, leash 2; each the bandit squatters' rewards) and the
+bandit squatters. On a procedural forest board each bare wall is a tree
+(`spawnLayoutNeutrals`'s `treeSeed`, given by `applyTerrain`), picked by
+`treeAt`: FNV-1a of the terrain seed and the cell. The fingerprint
+re-pinned as compatible at v50, as predicted.
+
+*The cover density, measured.* The cut's override (centre 0.18 against
+the global 0.12) left the forest as it was: over the same 40 first-fight
+boards, 13,343 cells, 1,966 trees with it and 1,940 without, 0.147 and
+0.145 a cell, since most trees are the crossbars and dividers and the
+noise cover is a thin slice. At centre 0.35 (0.25 to 0.5): 2,521, 0.189
+a cell, 30 % more. Lean 4 as signed says the forest is denser, so the
+step ships 0.35, a change inside the signed intent, put at the stop with
+the global density drawn beside it. Forty first turns on forest boards at
+0.35 ended inside `MAX_TURN_TICKS`, the user's Wolfpack's and Brigands'
+alike (`scratch/145/forest-turns.ts`).
+
+*Evidence.* `battleSetup.test.ts`, "a procedural forest board": the
+trees spawn with every unit's id, cell and order and every stream as the
+walled board's, the snapshots equal but for the archetype and glyph
+(planted, a draw in `spawnTree` failed it); the game's setup puts trees
+and no wall on a forest board, all three kinds, and walls on a swamp
+board; a board's trees hold when the teams and the world seed change,
+and the same cells take other trees under another terrain seed (planted,
+the seed out of the hash failed it). The corpus: 0 of 32 journals differ.
+In the pane, `seed=30&hops=11&character=soldier&encounter=wolfpack&script=1:battle;*:layout=procedural,theme=forest`
+opened a 19 × 19 forest board, banner "Uncharted Ground — Forest", with
+a puma's lair and a rat burrow among the trees. The arms drawn in
+`scratch/145e/`: the palette with the cut's cover, the leaf-litter
+palette, the global cover, and the dense cover. Not verified: Firefox.

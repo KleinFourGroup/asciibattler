@@ -733,6 +733,10 @@ const FLOOR_PALETTE: Record<Theme, { low: THREE.Color; high: THREE.Color }> = {
     low: new THREE.Color('#28301d'), // dark bog
     high: new THREE.Color('#5e6b39'), // murky olive
   },
+  forest: {
+    low: new THREE.Color('#12241a'), // deep shade
+    high: new THREE.Color('#3d5a2c'), // moss
+  },
 };
 const _waterColor = new THREE.Color('#1F5B7A');
 /** Chasm: near-black, so the pit reads as a void; its depth does most of the

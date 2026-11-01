@@ -2,6 +2,7 @@
 # tests/save-fingerprint.test.ts holds this file against the types: a change of
 # shape fails until RUN_SCHEMA_VERSION is bumped and this file is re-pinned with
 #   npm run save:fingerprint
+# re-pinned without a bump: 145e: forest joins the theme union; a v50 save names no forest, so it parses and loads as before
 RUN_SCHEMA_VERSION 50
 
 RunSnapshot = {
@@ -61,7 +62,7 @@ BattleEncounter = {
   layoutId: null | string
   playerTeam: Array<UnitTemplate>
   terrainSeed: number
-  theme: "barren" | "desert" | "grassland" | "swamp" | "tundra" | "volcanic"
+  theme: "barren" | "desert" | "forest" | "grassland" | "swamp" | "tundra" | "volcanic"
   worldSeed: number
 }
 
@@ -93,7 +94,7 @@ EncounterMap = {
   gridW: number
   layoutId: null | string
   terrainSeed: number
-  theme: "barren" | "desert" | "grassland" | "swamp" | "tundra" | "volcanic"
+  theme: "barren" | "desert" | "forest" | "grassland" | "swamp" | "tundra" | "volcanic"
 }
 
 EncounterRewardRef = {

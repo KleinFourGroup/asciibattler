@@ -43,6 +43,11 @@
         "poolDensity": { "min": 0.12, "max": 0.35, "center": 0.22, "intensity": 0.5 },
         "deepWaterFraction": { "min": 0.2, "max": 0.5, "center": 0.35, "intensity": 0.5 },
         "mud": { "min": 0.06, "max": 0.18, "center": 0.1, "intensity": 0.5 }
+      },
+      "forest": {
+        "coverDensity": { "min": 0.25, "max": 0.5, "center": 0.35, "intensity": 0.5 },
+        "hills": { "min": 0.03, "max": 0.12, "center": 0.06, "intensity": 0.5 },
+        "mud": { "min": 0.02, "max": 0.08, "center": 0.04, "intensity": 0.5 }
       }
     },
     "camps": {
@@ -55,7 +60,13 @@
         "volcanic": [],
         "tundra": [{ "campId": "frost-coven" }],
         "desert": [{ "campId": "bandit-squatters" }, { "campId": "toll-post" }],
-        "swamp": [{ "campId": "ghoul-nest" }, { "campId": "banshee-barrow" }]
+        "swamp": [{ "campId": "ghoul-nest" }, { "campId": "banshee-barrow" }],
+        "forest": [
+          { "campId": "wolf-den" },
+          { "campId": "rat-burrow" },
+          { "campId": "puma-lair" },
+          { "campId": "bandit-squatters" }
+        ]
       }
     }
   }

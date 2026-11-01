@@ -30,7 +30,7 @@ import type { Team, UnitTemplate } from './Unit';
 import type { BattleEncounter } from '../run/Run';
 import { TERRAIN } from '../config/terrain';
 import { generateTerrain, type GeneratedTerrain } from './terrainGen';
-import { spawnHalfCover, spawnRubble, spawnWall } from './environment';
+import { spawnHalfCover, spawnRubble, spawnTree, spawnWall, treeAt } from './environment';
 import type { SpawnRegion, CampRef } from './layouts';
 import { SIM } from '../config/sim';
 
@@ -128,7 +128,10 @@ export function applyTerrain(
   for (const cell of terrain.tileGrid.cells()) {
     world.tileGrid.setKind({ x: cell.x, y: cell.y }, cell.kind);
   }
-  spawnLayoutNeutrals(world, terrain);
+  // A procedural forest board's walls are trees; a layout keeps what it
+  // authored, whatever its theme.
+  const forest = encounter.layoutId === null && encounter.theme === 'forest';
+  spawnLayoutNeutrals(world, terrain, forest ? encounter.terrainSeed : undefined);
   // The world seed, per turn, feeds only the pull's roll; which camps
   // stand stays on the per-encounter terrain seed (`spawnCamps`). A boss
   // board has no pull: the boss's wave defends the pool rather than detour
@@ -273,18 +276,29 @@ function weightedCampRef(refs: readonly CampRef[], rng: RNG): CampRef {
  * from a `generateFromLayout` fixture without registering it in `LAYOUTS`.
  * Walls, then half-cover, then rubble, a fixed order, so two on one cell,
  * which the schema forbids, would fail the same way every time.
+ *
+ * `treeSeed`, given, makes each bare wall a tree (`treeAt` by the cell and
+ * this seed): a procedural forest board's, whose terrain seed it is. A
+ * tree spawns in the wall's turn and draws nothing, so the board's units
+ * and streams are the walled board's but for the archetype.
  */
 export function spawnLayoutNeutrals(
   world: World,
   terrain: Pick<GeneratedTerrain, 'walls' | 'halfCovers' | 'rubble'>,
+  treeSeed?: number,
 ): void {
   // A coord may carry more keys (`hp`, a rubble's `size`); the position is a
   // clean `{x, y}`, so they don't reach `unit.position`, which every
   // snapshot and occupancy query reads.
   for (const coord of terrain.walls) {
+    const position = { x: coord.x, y: coord.y };
     // A coord with `hp` spawns destructible; a bare one, the indestructible
-    // default.
-    spawnWall(world, { x: coord.x, y: coord.y }, coord.hp);
+    // default, or on a forest board a tree.
+    if (treeSeed !== undefined && coord.hp === undefined) {
+      spawnTree(world, position, treeAt(position, treeSeed));
+    } else {
+      spawnWall(world, position, coord.hp);
+    }
   }
   for (const coord of terrain.halfCovers) {
     spawnHalfCover(world, { x: coord.x, y: coord.y }, coord.hp);

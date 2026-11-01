@@ -890,3 +890,44 @@ next session puts the stop again.
   recipe (a worktree served by a temporary `npm --prefix <worktree> run dev`
   entry in `.claude/launch.json`, port 5195, removed after) is 144d's
   evidence.
+
+### 144e signed (2026-11-01, session d73bee19)
+
+The stop put again at the session's start, with 144d's three leans, and
+answered over two turns.
+
+- **The glyphs.** The user: "I agree with those calls for the beasts. The
+  rounded ears don't quite read right." Signed: the wolf U+E001, the giant
+  rat U+E000, the fox U+E002, the puma U+E003, the tiger U+E004 and the bear
+  U+E005, each a letter with the pointed ears. U+E006, U+E007 and
+  `round-ears.svg` leave the face.
+- **The trees: three.** The user floated keeping both drawn trees and the
+  club suit too ("that felt very retro roguelike"), one tree unit each,
+  since "this is the forest theme". The session's answer: yes, played
+  identically (each blocks movement and sight as the wall does, takes burn
+  and frozen, has no hp), so a player learns one rule. The cost here is
+  three neutral rows and their atlas cells, ♣ coming from DejaVu's shipped
+  subset; the choice of tree per tile is §145's, by a hash of the tile
+  rather than a draw, so a board's trees don't move when something else
+  does. The broadleaf alone reads as a stop sign, unread among the others
+  until §145 draws a forest. Signed, with the ids `tree_conifer` (U+E010),
+  `tree_broadleaf` (U+E011) and `tree_club` (U+2663). 144g makes three
+  trees where the cut made one.
+- **The width**: 900 for the beasts, 600 for the drawn trees. "Sounds good!"
+- **The attacks: Arm A, in five new rows.** Signed as put for the rat
+  (Gnaw), the wolf (Bite), the puma (Pounce), the tiger (Rake) and the bear
+  (Maul). The fox's Snap, Gambit's strike and retreat, the user declined:
+  "That's not how foxes actually attack, is it?", leaning to "a slightly
+  weaker pounce + dash". The session's answer: striking and springing back
+  is how mongooses fight snakes and how wolves harry big prey, and the
+  fox's signature is the mousing pounce. Signed: the fox carries the puma's
+  own Pounce and the shipped Dash, its weakness in its stat line (the
+  rogue's, strength 2 against the puma's 3). Its speed, 9 against the
+  puma's 7, makes it weaker per hit and not necessarily per second; the
+  bands are §146's.
+- **The wolf's retreat, a watch**: "if the wolf isn't feeling distinct
+  enough, we'll reconsider giving it the retreat" (TODO, Round 11).
+- **144d's leans.** The face's copyright line names the user ("Let's swap
+  my name in for now"), as the credits do: Matthew Kilgore. The credits
+  screen lists the drawn face, and `tests/glyph-face.test.ts` joins
+  TESTING's permanent gates ("Signing the other two!").

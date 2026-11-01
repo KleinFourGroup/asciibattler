@@ -241,6 +241,14 @@ META-ROADMAP §"Round 11 — The roster" names each row's place.
 
 - [ ] **Kit watches from the 94f price-book re-read on prior v4** (BALANCE §"The rarity verification protocol" step 3: a negative recruit row at FREE acquisition is a KIT question, not a price one — WORKLOG §94f): **officer** (−42 recruit / −36 port-buy, the worst row in the book) · **bandit** (−24 / −25, the weakest common) · **mercenary** (−15 / −10, the soldier's starter body) · **halberdier** (−16 recruit; port n=8 unreadable) · **stormcaller** (−2.8 — a legendary that does not pay at free acquisition under casualties). Round 7 idiom / Round 11 candidates; the §94 charter's "NOT doing: archetype changes" held. The dispositions taken at 94f: gunslinger common → uncommon (+28 / +27 at the cheapest price) · healer base 30 → 32 · everything else HOLD.
 
+- [ ] **The wolf's retreat, if the wolf doesn't feel distinct** (the
+  user, 2026-11-01, at 144e's stop). The wolf ships Bite, the Club's
+  numbers, on the bandit's body with the adventurer's mobility. If it plays
+  as a plain biter beside the other beasts, give it Gambit's retreat
+  (strike, then spring back, as wolves harry big prey), the kit the fox
+  was offered before it took Pounce and Dash (WORKLOG §144, "144e
+  signed").
+
 - [ ] **Power's level-up draw and its growth key.** `growthRates.power`
   is 0 on every unit and is meant to stay 0, and a recruit's level-up
   still draws for it (`src/sim/leveling.ts:66`). Taking the key out

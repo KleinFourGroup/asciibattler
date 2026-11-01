@@ -853,3 +853,40 @@ with the shipped swing's FX (the registry's guard covers it) and a locale
 name; no new mechanism. Arm B costs nothing and puts a weapon's name on a
 beast's card ("Cleaver" on the tiger, "Halberd", at reach 2, on the bear).
 Lean: Arm A. The numbers are §146's, a retune by taste Round 11's.
+
+### The hand-off after 144e (2026-10-31, session 511bc28b)
+
+At the context trigger, at `655188a4`. **Done:** 144d, our glyph face
+(`4ea2339c`), its exit proven; 144e built, the glyphs drawn in the face
+and read in the sampler, and put to the user above with leans and the
+attacks call's two arms. **Open:** 144e's stop, unanswered: the seven
+glyphs (the wolf, rat, fox, puma, tiger, bear and tree, with alternatives
+for the rat, the bear and the tree), the width, and the attacks arm. The
+next session puts the stop again.
+
+**What 144f needs that no doc names.**
+- *The glyphs not picked* leave the face: delete their rows from
+  `glyphs.json` (and a radical no row names, e.g. `round-ears.svg`), then
+  `npm run gen:font`; `tests/glyph-face.test.ts` fails until the woff2 is
+  rebuilt. A glyph is not an id, so moving a code point later costs no bump.
+- *A unit's glyph in `config/units.json`* is the character itself, which
+  JSON and the archetype editor's formatter write literally, invisible in
+  most editors. The editor takes `U+E001` typed into the glyph field. The
+  catalog's glyphs then join the atlas, and the coverage guard reads them
+  against the shipped woff2.
+- *The reads:* the radical sheet at `/tools/glyph-sheet/` and the sampler,
+  e.g. `?bp=board-open15_pose-sampler&glyphs=w,W,U+E001;r,R,U+E000,U+E007;f,F,U+E002;p,P,U+E003;t,T,U+E004;b,B,U+E005,U+E006`,
+  with the scenery in rows of four or fewer
+  (`n:%23,U+2565,U+E010,U+E011;n:U+2663,U+2660,U+219F,U+E010`): open15 had
+  no seven dry tiles in a row. The board reads clearest copied out of the
+  WebGL canvas at 2× with hard pixels (read and render in one call); the
+  pane's screenshot can show the state from one call before.
+  `scratch/144e/` keeps the reads put to the user (ignored by git).
+- *The four registrations and the anchors* are the kickoff audit's (WORKLOG
+  §144, "The kickoff's audit"); the attacks' arms are 144e's table.
+- *The pixel-identity probe* is `scratch/144d/pixels.js` with
+  `scratch/144d/summ.mjs` (board hash, each atlas cell, every element box),
+  run by `npm run probe` in a HEAD worktree and in the tree; the plant
+  recipe (a worktree served by a temporary `npm --prefix <worktree> run dev`
+  entry in `.claude/launch.json`, port 5195, removed after) is 144d's
+  evidence.

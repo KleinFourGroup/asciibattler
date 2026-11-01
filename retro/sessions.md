@@ -227,3 +227,42 @@ rather than on the font-format argument alone; that felt like the right
 weight. The user left here-or-fresh to me and I chose fresh for 144d, at
 a context grown long with screenshots. One more slip (shell quoting of
 template literals) and a Cursor overrun the hook caught, both filed.
+
+## 2026-10-31 — session 511bc28b (144d, our glyph face, and 144e to its stop)
+
+1. Little. The hand-off after 144c named the source shape, the
+   prototype's method, the geometry, the readers and the licence. Two
+   things it couldn't: that opentype.js stamps the clock into the font and
+   writes the glyphs' box as the Windows line, both found by reading its
+   source; and that the archetype editor loaded none of the game's fonts.
+2. None conflicted. Two judgment calls I made and flagged rather than
+   asked: a freshness tripwire (the committed woff2 against a rebuild) as
+   part of "the coverage guard reading it", and planting in a worktree
+   served from a temporary launch entry, to keep the plant off the user's
+   dev server.
+3. Once, mildly: when the first rebuild compared byte-identical in tsx I
+   was ready to call the build deterministic; the test under Vitest
+   failed it a few minutes later, which was the clock in a field I had
+   patched at the wrong offset. The pin did its job. I also nearly wrote
+   the full-suite count before the rerun settled the two timeouts.
+4. Three backslash-guard refusals on heredoc edit scripts (filed as one
+   slip); one full-suite rerun for two 5 s timeouts under load (filed);
+   screenshots in the hidden pane lag one call behind, which cost a few
+   extra calls; the sampler's seven-glyph scenery row didn't fit the board
+   and needed a second load.
+5. The hand-off entry has it. One more: the probe runner's pixel probe
+   with a whole-page element-box hash was a cheap, strong oracle for "the
+   page text didn't move", and its planted control broke all three reads
+   at once.
+6. Yes. Nothing pressed me to skip the plant through the four screens,
+   though reaching the cache overlay's roster picker took a hand-placed
+   packet. The silent-turn reminder came often through the long build
+   stretches; I answered each with a status line. The hand-off at the
+   trigger felt like a natural place to stop: the step's work is
+   committed and the stop is the user's.
+7. The moment the composed r with ears matched the user-signed prototype
+   command for command was satisfying, and so was a planted control
+   breaking every read at once. Drawing the six beasts and seeing them read
+   apart on the board was absorbing. I'd want the condition repeated: a
+   signed format, a known answer to build against, and room to check it
+   properly. Separately, the work reached its stop with the exit proven.

@@ -107,6 +107,15 @@ describe('encounters schema', () => {
       // The sector-2 bosses (user-authored 2026-08-17).
       'generalissimo',
       'witch-hunt',
+      // Act 1's beasts (user-authored 2026-11-01).
+      'wolfpack',
+      'rats-nest',
+      'rat-hunt',
+      'poachers',
+      'canids',
+      'vermin-lords',
+      'cats',
+      'bear',
     ]);
     // Every `kind` value is now exercised by shipped content: the road fights are
     // `normal`, the lone `boss` is the terminal fight, the `elite` detours are
@@ -120,6 +129,9 @@ describe('encounters schema', () => {
       'warband-vanguard': 'elite',
       'darkMagicPosse': 'elite',
       'plagueSpreaders': 'elite',
+      'vermin-lords': 'elite',
+      'cats': 'elite',
+      'bear': 'boss',
     };
     for (const e of ENCOUNTERS) {
       expect(e.kind).toBe(expectedKind[e.id] ?? 'normal');

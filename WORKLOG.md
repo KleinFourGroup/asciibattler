@@ -406,3 +406,41 @@ a Wolfpack wolf's card opened the tooltip "Wolf / Hunts in packs, and is
 never alone for long. / Click / Enter: Engage · …"; a Brigands bandit's
 read "Bandit / Click / Enter: Engage · …", with no line. Not verified:
 Firefox; how the line reads on the card at the user's text size.
+
+### 145b — the user's encounters, taken in (2026-11-01, session 05f22793)
+
+The user: "Take them in". Their eight, as authored, in their working
+tree's `config/encounters.json`, appended after the Witch Hunt:
+
+| Id | Kind | Pool | Waves |
+|---|---|---|---|
+| `wolfpack` | normal | 20 | wolves (mean ×1.25, hand ×1.5) |
+| `rats-nest` | normal | 20 | giant rats (×1.65, ×2) |
+| `rat-hunt` | normal | 20 | a pick: rats (×1.5, ×1.85) or foxes (×1.25, ×1.5) |
+| `poachers` | normal | 20 | foxes, then bandits and archers 1:2, in turn |
+| `canids` | normal | 20 | wolves and foxes 2:1 |
+| `vermin-lords` | elite | 30 | four healers and giant rats at level weight 2 (×1.5, ×2.25) |
+| `cats` | elite | 30 | two tigers and pumas (×1.4, ×1.75) |
+| `bear` | boss | 40 | three stages, each with a bear: rats and foxes; wolves and pumas; tigers |
+
+*Step zero.* They load (the schema, the load-time guards) and match the
+encounter editor's format (its test green on the user's file). Two
+things read off the file, put to the user: none of the eight has
+`rewards`, where every shipped encounter carries its kind's set
+(a normal `bits-small` and `packets-small` at 0.3; an elite
+`bits-large`, `packets-elite` at 0.5 and `daemons`; a boss `bits-boss`,
+`packets-boss` at 0.75 and `daemons`), so a win pays nothing; and each of
+the bear's stages fields a bear, so a bear is in every wave, where the
+King comes in his last stage alone.
+
+*Taken in.* The id pin and the kind pin in `encounters.test.ts`; the
+locale names, extracted at 145c. In no pool, so no run moves.
+
+*Evidence.* Each fought to its end by the sim's turn loop on seeds 1 to
+10, the soldier from a fresh run, a normal at hop 1 by `1:battle`, an
+elite by `1:elite`, the bear as a one-hop run
+(`scratch/145/fight-encounters.ts`): all 80 ended, the player
+surviving each; no turn reached `MAX_TURN_TICKS`; the mean turns from 1.3
+(the Vermin Lords) to 3.1 (Cats!); each wave fielded the archetypes
+written; 0 bits gained in every fight, the missing rewards. The bands
+are §146's.

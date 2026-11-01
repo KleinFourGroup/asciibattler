@@ -830,5 +830,278 @@
         ]
       }
     ]
+  },
+  {
+    "id": "wolfpack",
+    "name": "Wolfpack",
+    "description": "A pack of rabid wolves.",
+    "healthPool": 20,
+    "kind": "normal",
+    "waves": [
+      {
+        "kind": "loop",
+        "repeat": "forever",
+        "body": [
+          {
+            "kind": "wave",
+            "spec": {
+              "levelBudget": { "kind": "mean", "factor": 1.25 },
+              "count": { "kind": "hand", "factor": 1.5 },
+              "units": [
+                { "archetype": "wolf", "count": { "kind": "weight", "weight": 1 }, "level": { "kind": "weight", "weight": 1 } }
+              ]
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "rats-nest",
+    "name": "Rats' Nest",
+    "description": "How are there so many rats here!?",
+    "healthPool": 20,
+    "kind": "normal",
+    "waves": [
+      {
+        "kind": "loop",
+        "repeat": "forever",
+        "body": [
+          {
+            "kind": "wave",
+            "spec": {
+              "levelBudget": { "kind": "mean", "factor": 1.65 },
+              "count": { "kind": "hand", "factor": 2 },
+              "units": [
+                { "archetype": "giant_rat", "count": { "kind": "weight", "weight": 1 }, "level": { "kind": "weight", "weight": 1 } }
+              ]
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "rat-hunt",
+    "name": "The Rat Hunt",
+    "description": "A swarm of rats, being hunted by foxes--and none of them too happy to see you.",
+    "healthPool": 20,
+    "kind": "normal",
+    "waves": [
+      {
+        "kind": "loop",
+        "repeat": "forever",
+        "body": [
+          {
+            "kind": "pick",
+            "options": [
+              {
+                "entry": {
+                  "kind": "wave",
+                  "spec": {
+                    "levelBudget": { "kind": "mean", "factor": 1.5 },
+                    "count": { "kind": "hand", "factor": 1.85 },
+                    "units": [
+                      { "archetype": "giant_rat", "count": { "kind": "weight", "weight": 1 }, "level": { "kind": "weight", "weight": 1 } }
+                    ]
+                  }
+                },
+                "weight": 1
+              },
+              {
+                "entry": {
+                  "kind": "wave",
+                  "spec": {
+                    "levelBudget": { "kind": "mean", "factor": 1.25 },
+                    "count": { "kind": "hand", "factor": 1.5 },
+                    "units": [
+                      { "archetype": "fox", "count": { "kind": "weight", "weight": 1 }, "level": { "kind": "weight", "weight": 1 } }
+                    ]
+                  }
+                },
+                "weight": 1
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "poachers",
+    "name": "Poachers",
+    "description": "Do poachers usually hunt such aggressive foxes?",
+    "healthPool": 20,
+    "kind": "normal",
+    "waves": [
+      {
+        "kind": "loop",
+        "repeat": "forever",
+        "body": [
+          {
+            "kind": "wave",
+            "spec": {
+              "levelBudget": { "kind": "mean", "factor": 1.25 },
+              "count": { "kind": "hand", "factor": 1.5 },
+              "units": [
+                { "archetype": "fox", "count": { "kind": "weight", "weight": 1 }, "level": { "kind": "weight", "weight": 1 } }
+              ]
+            }
+          },
+          {
+            "kind": "wave",
+            "spec": {
+              "levelBudget": { "kind": "mean", "factor": 1.25 },
+              "count": { "kind": "hand", "factor": 1.5 },
+              "units": [
+                { "archetype": "bandit", "count": { "kind": "weight", "weight": 1 }, "level": { "kind": "weight", "weight": 1 } },
+                { "archetype": "archer", "count": { "kind": "weight", "weight": 2 }, "level": { "kind": "weight", "weight": 1 } }
+              ]
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "canids",
+    "name": "Canids",
+    "description": "Foxes and wolves, strangely in harmony.",
+    "healthPool": 20,
+    "kind": "normal",
+    "waves": [
+      {
+        "kind": "loop",
+        "repeat": "forever",
+        "body": [
+          {
+            "kind": "wave",
+            "spec": {
+              "levelBudget": { "kind": "mean", "factor": 1.25 },
+              "count": { "kind": "hand", "factor": 1.5 },
+              "units": [
+                { "archetype": "wolf", "count": { "kind": "weight", "weight": 2 }, "level": { "kind": "weight", "weight": 1 } },
+                { "archetype": "fox", "count": { "kind": "weight", "weight": 1 }, "level": { "kind": "weight", "weight": 1 } }
+              ]
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "vermin-lords",
+    "name": "The Vermin Lords",
+    "description": "A posse of clerics, at one with the rats",
+    "healthPool": 30,
+    "kind": "elite",
+    "waves": [
+      {
+        "kind": "loop",
+        "repeat": "forever",
+        "body": [
+          {
+            "kind": "wave",
+            "spec": {
+              "levelBudget": { "kind": "mean", "factor": 1.5 },
+              "count": { "kind": "hand", "factor": 2.25 },
+              "units": [
+                { "archetype": "healer", "count": { "kind": "fixed", "value": 4 }, "level": { "kind": "weight", "weight": 1 } },
+                { "archetype": "giant_rat", "count": { "kind": "weight", "weight": 1 }, "level": { "kind": "weight", "weight": 2 } }
+              ]
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cats",
+    "name": "Cats!",
+    "description": "These cats don't look to be the singing type...",
+    "healthPool": 30,
+    "kind": "elite",
+    "waves": [
+      {
+        "kind": "loop",
+        "repeat": "forever",
+        "body": [
+          {
+            "kind": "wave",
+            "spec": {
+              "levelBudget": { "kind": "mean", "factor": 1.4 },
+              "count": { "kind": "hand", "factor": 1.75 },
+              "units": [
+                { "archetype": "tiger", "count": { "kind": "fixed", "value": 2 }, "level": { "kind": "weight", "weight": 1 } },
+                { "archetype": "puma", "count": { "kind": "weight", "weight": 1 }, "level": { "kind": "weight", "weight": 1 } }
+              ]
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "bear",
+    "name": "The Divine Bear",
+    "description": "The king of the forest, with all of his many minions",
+    "healthPool": 40,
+    "kind": "boss",
+    "waves": [
+      {
+        "kind": "stages",
+        "stages": [
+          {
+            "until": { "kind": "enemyPoolAtOrBelow", "fraction": 0.67 },
+            "body": [
+              {
+                "kind": "wave",
+                "spec": {
+                  "levelBudget": { "kind": "mean", "factor": 1.45 },
+                  "count": { "kind": "hand", "factor": 1.75 },
+                  "units": [
+                    { "archetype": "bear", "count": { "kind": "fixed", "value": 1 }, "level": { "kind": "weight", "weight": 1 }, "power": 4 },
+                    { "archetype": "giant_rat", "count": { "kind": "weight", "weight": 3 }, "level": { "kind": "weight", "weight": 1 } },
+                    { "archetype": "fox", "count": { "kind": "weight", "weight": 1 }, "level": { "kind": "weight", "weight": 1 } }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "until": { "kind": "enemyPoolAtOrBelow", "fraction": 0.33 },
+            "body": [
+              {
+                "kind": "wave",
+                "spec": {
+                  "levelBudget": { "kind": "mean", "factor": 1.25 },
+                  "count": { "kind": "hand", "factor": 1.5 },
+                  "units": [
+                    { "archetype": "bear", "count": { "kind": "fixed", "value": 1 }, "level": { "kind": "weight", "weight": 1 }, "power": 4 },
+                    { "archetype": "wolf", "count": { "kind": "weight", "weight": 2 }, "level": { "kind": "weight", "weight": 1 } },
+                    { "archetype": "puma", "count": { "kind": "weight", "weight": 1 }, "level": { "kind": "weight", "weight": 1 } }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "body": [
+              {
+                "kind": "wave",
+                "spec": {
+                  "levelBudget": { "kind": "mean", "factor": 1.25 },
+                  "count": { "kind": "hand", "factor": 1.5 },
+                  "units": [
+                    { "archetype": "bear", "count": { "kind": "fixed", "value": 1 }, "level": { "kind": "weight", "weight": 1 }, "power": 4 },
+                    { "archetype": "tiger", "count": { "kind": "weight", "weight": 1 }, "level": { "kind": "weight", "weight": 1 } }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ]
   }
 ]

@@ -17,5 +17,13 @@
   "encounters.miscreants.name": "Miscreants",
   "encounters.plagueSpreaders.name": "Plague Spreaders",
   "encounters.generalissimo.name": "The Generalissimo",
-  "encounters.witch-hunt.name": "The Witch Hunt"
+  "encounters.witch-hunt.name": "The Witch Hunt",
+  "encounters.wolfpack.name": "Wolfpack",
+  "encounters.rats-nest.name": "Rats' Nest",
+  "encounters.rat-hunt.name": "The Rat Hunt",
+  "encounters.poachers.name": "Poachers",
+  "encounters.canids.name": "Canids",
+  "encounters.vermin-lords.name": "The Vermin Lords",
+  "encounters.cats.name": "Cats!",
+  "encounters.bear.name": "The Divine Bear"
 }

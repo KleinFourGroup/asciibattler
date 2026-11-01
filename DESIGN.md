@@ -421,7 +421,10 @@ ends a hint in `[key]` in the amber accent; a line break in content is a
 line. **A tooltip is never the sole channel for information the player
 must act on** (the spec's rule): the compact card reads `LV 5` / `1 POW`
 in a persistent hint, the `▲` empower chip carries its key's name beside
-the triangles, the boss node's copy is on the map banner. Tab stops on
+the triangles, the boss node's copy is on the map banner. An enemy
+card's tooltip leads with the unit's name and, where it has one, its line
+of flavour (the full card shows the line too); neither asks the player to
+act, and the glyph is the unit's identity on the board. Tab stops on
 tooltip-only text live where the player has time to Tab (the pre-turn
 screen, the run-end table); in a battle the CARDS are the tab stops
 (100c2) and the text inside one stays a hover and key read — the

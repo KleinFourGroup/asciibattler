@@ -11,6 +11,7 @@ import { pressable } from './pressable';
 import type { GameEvents } from '../core/events';
 import type { World } from '../sim/World';
 import type { Unit } from '../sim/Unit';
+import { descriptionForArchetype, nameForArchetype } from '../sim/archetypes';
 import { fadeIn, fadeOutAndRemove } from './fade';
 import {
   buildUnitCard,
@@ -799,14 +800,21 @@ export class HUD {
       // focus objective, so a long press can't also be the tooltip, and a tap
       // acts. The tooltip is never the only route: the objective pane
       // carries the same two actions.
+      // The card shows no name, so the tooltip leads with it, and with the
+      // unit's line of flavour where it has one, above the hint.
+      const description = descriptionForArchetype(unit.archetype);
+      const head = [nameForArchetype(unit.archetype), ...(description === undefined ? [] : [description])];
       this.cardTooltips.set(
         unitId,
         attachTooltip(
           handles.el,
-          t('hud.card.targetHint', {
-            engage: t('hud.objective.engage'),
-            focus: t('hud.objective.focus'),
-          }),
+          [
+            ...head,
+            t('hud.card.targetHint', {
+              engage: t('hud.objective.engage'),
+              focus: t('hud.objective.focus'),
+            }),
+          ].join('\n'),
           { touch: 'none' },
         ),
       );

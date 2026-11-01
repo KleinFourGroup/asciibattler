@@ -484,7 +484,7 @@ locales/                     # §95a: the locale SIDECARS — one flat file per 
                              #   95b: + encounters / daemons / packets / characters / sectors / statuses / units / abilities / layouts .json — 133 more (19 · 22 · 16 · 6 · 2 · 10 · 23 · 24 · 11) = 255 in all; camps + the encounter/sector/layout descriptions are editor metadata, never rendered, NOT here
 
 config/                      # A4: balance JSON source of truth (paired with src/config/*.ts)
-  units.json                 # §38 UnitDef catalog (was archetypes.json) — per-unit-kind glyph + baseStats + growthRates + abilities/targeting (E1/E3/§38)
+  units.json                 # §38 UnitDef catalog (was archetypes.json) — per-unit-kind glyph + baseStats + growthRates + abilities/targeting (E1/E3/§38); a combatant's optional `description`, its line of flavour on the full card and an enemy card's tooltip (145c)
   abilities.json             # The AbilityDef catalog — one entry per combat verb (targeting / timeline / effect-ops / damage-heal profile). Y5e consolidated this (was abilityDefs.json) atop the retired legacy AbilityConfig json
   statuses.json              # 27a: the StatusDef catalog (burn/bleed/poison/rejuvenate) — empty until 27c authors content
   difficulty.json            # G4: enemy level-budget knobs + A/B/C presets; startingBits
@@ -524,7 +524,7 @@ tools/                       # Dev-only; not bundled into dist/ (index page at /
   editor-base.css            # the config editors' shared styles (the palette, the page frame, the bar, the cards, the buttons), which each editor's editor.css imports first; the layout editor's sheet does not
   layout-editor/             # C1d.B → D8: layout painter at /tools/layout-editor/ (75i: the camps layer — camp-spawn paint + per-layout weighted camp list)
   run-config/                # G1/G5: short-run CLI + GUI launcher at /tools/run-config/
-  archetype-editor/          # I4: schema-driven units.json editor (live preview + save) at /tools/archetype-editor/; the glyph previewed at 48 px in the game's faces (src/fonts.css, FONT_STACK) with its code point, and a drawn glyph entered as `U+E000`
+  archetype-editor/          # I4: schema-driven units.json editor (live preview + save) at /tools/archetype-editor/; the glyph previewed at 48 px in the game's faces (src/fonts.css, FONT_STACK) with its code point, and a drawn glyph entered as `U+E000`; the optional description (145c)
   attack-editor/             # Cluster 1: abilities.json editor (effect-op tree + live schema validation) at /tools/attack-editor/
   sector-editor/             # T3: sectors.json editor (layout + per-kind encounter pools, weighted-roll preview) at /tools/sector-editor/
   encounter-editor/          # V2: encounters.json editor (visual wave-grammar builder + live resolution preview; 48e adds the rewards-ref panel) at /tools/encounter-editor/

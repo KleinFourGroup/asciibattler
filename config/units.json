@@ -706,6 +706,7 @@
   },
   "wolf": {
     "name": "Wolf",
+    "description": "Hunts in packs, and is never alone for long.",
     "glyph": "",
     "abilities": ["bite"],
     "targeting": "nearest",
@@ -735,6 +736,7 @@
   },
   "giant_rat": {
     "name": "Giant Rat",
+    "description": "Larger than a rat has any right to be.",
     "glyph": "",
     "abilities": ["gnaw"],
     "targeting": "nearest",
@@ -764,6 +766,7 @@
   },
   "fox": {
     "name": "Fox",
+    "description": "Quick, clever, and gone before the swing lands.",
     "glyph": "",
     "abilities": ["pounce","dash"],
     "targeting": "nearest",
@@ -793,6 +796,7 @@
   },
   "puma": {
     "name": "Puma",
+    "description": "Waits in the undergrowth for something to pass.",
     "glyph": "",
     "abilities": ["pounce"],
     "targeting": "nearest",
@@ -822,6 +826,7 @@
   },
   "tiger": {
     "name": "Tiger",
+    "description": "Striped like the shade it hides in.",
     "glyph": "",
     "abilities": ["rake"],
     "targeting": "nearest",
@@ -851,6 +856,7 @@
   },
   "bear": {
     "name": "Bear",
+    "description": "Woken early, and not happy about it.",
     "glyph": "",
     "abilities": ["maul"],
     "targeting": "nearest",

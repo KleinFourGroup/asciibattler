@@ -376,3 +376,33 @@ home, the line on the full card and, with the unit's name, at the head
 of an enemy card's tooltip. The half cover's replacement is a TODO row
 under Round 14, with the trees' route (a def equal to `half_cover` under
 its own glyph, placed by a hash), the glyph a taste stop.
+
+### 145c — a unit's description line (2026-11-01, session 05f22793)
+
+*Step zero.* An optional prose field is one the i18n walker already
+reads (`prose.test.ts`, "skips an absent optional prose field"), so the
+line is a `description` on the combatant's def, extracted to
+`units.<id>.description`. The archetype editor's formatter writes a
+unit's keys in a fixed order, so it needs the key; the tooltip's body
+keeps line breaks (`white-space: pre-line`).
+
+*Built.* `description: prose().optional()` on `CombatantUnitDefSchema`,
+read by `descriptionForArchetype`; the formatter writes it after the
+name, only when set; the editor has a Description field (empty removes
+it). The full card shows the line under its header, dim and italic; an
+enemy card's tooltip leads with the unit's name, then its line where it
+has one, then the engage and focus hint. A line drafted for each beast,
+for the user to rewrite (`scratch/145/add-descriptions.ts`), and the en
+extract regenerated. The extract also wrote the user's encounters' names
+into `locales/en/encounters.json`, left unstaged with their encounters
+for 145b.
+
+*Evidence.* Typecheck clean; the literal pin, the en extract, the
+archetype editor's formatter test, the unit config, the tokens and the
+tooltip tests green. In the pane: with `roster=wolf:2,fox:2,bear:2`, the
+pre-turn hand's three cards carry the bear's, the wolf's and the fox's
+lines under the header; a soldier's hand shows none (0 lines). Hovering
+a Wolfpack wolf's card opened the tooltip "Wolf / Hunts in packs, and is
+never alone for long. / Click / Enter: Engage · …"; a Brigands bandit's
+read "Bandit / Click / Enter: Engage · …", with no line. Not verified:
+Firefox; how the line reads on the card at the user's text size.

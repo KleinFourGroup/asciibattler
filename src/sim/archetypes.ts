@@ -201,6 +201,11 @@ export function nameForArchetype(archetype: UnitArchetype): string {
   return CONFIGS[archetype]?.name ?? archetype;
 }
 
+/** The archetype's line of flavour, or undefined for one with none. */
+export function descriptionForArchetype(archetype: UnitArchetype): string | undefined {
+  return CONFIGS[archetype]?.description;
+}
+
 /**
  * The draftable archetypes of one tier, in the catalog's order. Every tier
  * has a key, empty or not; the recruit sampler (`Recruitment.ts`) rolls a

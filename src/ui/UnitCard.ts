@@ -19,6 +19,7 @@ import type { PromotionInfo } from '../core/events';
 import type { StatusReadout } from '../sim/statusReadout';
 import {
   abilityIdsForArchetype,
+  descriptionForArchetype,
   glyphForArchetype,
   nameForArchetype,
   rarityForArchetype,
@@ -206,6 +207,15 @@ export function buildUnitCard(data: UnitCardData, opts: UnitCardOptions): UnitCa
   // The star run's touch route follows `clickable` (`buildRarityStars`).
   const { headerEl, levelValue } = buildHeader(data, opts.skin, clickable ? 'press' : 'tap');
   card.appendChild(headerEl);
+
+  // The unit's line of flavour, where it has one.
+  const description = descriptionForArchetype(data.archetype);
+  if (description !== undefined) {
+    const line = document.createElement('div');
+    line.className = 'unit-card__description';
+    line.textContent = description;
+    card.appendChild(line);
+  }
 
   const { statsEl, powerRow, statRows } = buildStats(data.stats);
   // POW, the pool stat, sits in its own accented row under the level, above

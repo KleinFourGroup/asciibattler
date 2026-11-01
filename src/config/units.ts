@@ -107,6 +107,10 @@ export const CombatantUnitDefSchema = z.object({
   // The display name. The key stays the id everywhere (serialization, URL
   // params, errors); the UI reads `nameForArchetype`.
   name: prose(),
+  // A line of flavour, optional: on the unit's full card and, under its
+  // name, at the head of an enemy card's tooltip
+  // (`descriptionForArchetype`).
+  description: prose().optional(),
   glyph: z.string().length(1),
   abilities: z.array(AbilityIdSchema).min(1),
   baseStats: BaseStatsSchema,

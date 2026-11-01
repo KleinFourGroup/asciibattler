@@ -27,5 +27,11 @@
   "units.fox.name": "Fox",
   "units.puma.name": "Puma",
   "units.tiger.name": "Tiger",
-  "units.bear.name": "Bear"
+  "units.bear.name": "Bear",
+  "units.wolf.description": "Hunts in packs, and is never alone for long.",
+  "units.giant_rat.description": "Larger than a rat has any right to be.",
+  "units.fox.description": "Quick, clever, and gone before the swing lands.",
+  "units.puma.description": "Waits in the undergrowth for something to pass.",
+  "units.tiger.description": "Striped like the shade it hides in.",
+  "units.bear.description": "Woken early, and not happy about it."
 }

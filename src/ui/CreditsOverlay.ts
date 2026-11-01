@@ -67,6 +67,7 @@ function body(): HTMLDivElement {
     group(t('credits.fonts'), [
       [t('credits.fonts.jetbrains'), t('credits.licence.ofl')],
       [t('credits.fonts.dejavu'), t('credits.licence.vera')],
+      [t('credits.fonts.glyphs'), t('credits.licence.ofl')],
     ]),
     group(t('credits.libraries'), [
       [t('credits.libraries.three'), mit],

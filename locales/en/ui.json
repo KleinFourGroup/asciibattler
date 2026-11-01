@@ -232,6 +232,7 @@
   "credits.fonts": "Fonts",
   "credits.fonts.jetbrains": "JetBrains Mono",
   "credits.fonts.dejavu": "DejaVu Sans Mono",
+  "credits.fonts.glyphs": "ASCIIbattler Glyphs",
   "credits.libraries": "Libraries",
   "credits.libraries.three": "three.js",
   "credits.libraries.simplex-noise": "simplex-noise",

@@ -662,3 +662,110 @@ spread approach and 144a's pixels signed. **Open:** 144d, not started.
   Mono's copyright line, under a name of its own.
 - *The exit as cut*, with one addition: plant a wide glyph, so the four
   screens' text is read at the new width.
+
+### 144d — our glyph face (2026-10-31, session 511bc28b)
+
+*Step zero*, at `28a8871c`. `FACES` has three readers (gen:font,
+font-coverage.test.ts, the sampler), and FontAtlas and the sheet take the
+stack from `FONT_STACK`. The archetype editor loaded no font of the game's:
+its glyph field drew from whatever the OS had, one UTF-16 unit long.
+JetBrains Mono maps seven Private Use Area code points (the Powerline
+U+E0A0–E0A2 and U+E0B0–E0B3) and DejaVu Sans Mono one (U+F6C5); neither
+subset keeps a Private Use Area block, so code points from U+E000 are
+clear. opentype.js 1.3.4 writes a CFF font with the clock in `head`'s
+modified date and the glyphs' box in OS/2's win metrics; a WOFF2 round trip
+sets `head`'s flag bit 11 and recomputes its checksum. The premise held, and
+nothing changed what the cut intends.
+
+*Built.*
+- The sources, in `assets/fonts/asciibattler-glyphs/`: `glyphs.json`, one
+  row per glyph (code point, name, letter, radicals, width);
+  `radicals/ears.svg`, the signed spread ears at 900; `template.svg`, the
+  glyph box with its guides (the letter's slot, the lines, and the atlas
+  cell's top, measured below); `OFL.txt`, JetBrains Mono's licence with its
+  copyright line and ours; a README.
+- `tools/font/`: `radicalSvg.ts` (the format: straight segments, filled, no
+  transform, contours nested and not crossed, each refusal naming the file),
+  `glyphTable.ts`, `glyphFace.ts` (the composer: the letter centred in the
+  width, the primary's line in all three tables, the head's modified date
+  fixed so a rebuild is byte-identical), `wawoff2.d.ts`.
+- gen:font builds the face whole into `asciibattler-glyphs-400.woff2` and
+  writes the third `@font-face`; it refuses a drawn code point a vendored
+  face maps. `FACES` lists the face third (`drawn`), `faceShips` is the one
+  "shipped" rule its three readers share, and `--font-mono` names it.
+- The coverage guard reads the drawn face from its shipped woff2,
+  decompressed, and the line-box pin covers it. `tests/glyph-face.test.ts`
+  holds the format's refusals, the build's, the committed woff2 to a rebuild
+  from the sources table by table, and every glyph's ink to the atlas cell's
+  room.
+- The sampler reads the drawn face by its table, so a shipped drawn glyph
+  needs no `glyphFace=`. The archetype editor previews the glyph at 48 px in
+  the game's faces with its code point, and takes `U+E000` typed. The radical
+  sheet at `/tools/glyph-sheet/`: each radical alone, each glyph composed
+  live from the sources beside the letters it could be taken for, the
+  shipped face in page text, a sampler link.
+- The face's section in `public/THIRD-PARTY-LICENSES.txt`, held by
+  licences.test.ts.
+- Dev dependencies: opentype.js 1.3.4 (MIT; pinned exact, since another
+  version can write other bytes and fail the freshness pin),
+  @types/opentype.js 1.3.8, and wawoff2 2.0.1 (MIT), already installed under
+  subset-font and now named.
+- The face ships one glyph, U+E000 `r.ears`, JetBrains Mono's r centred in
+  900 with the ears. Its outline equals the trial's U+E010, the prototype
+  the user signed, command for command (read with opentype.js). The seven
+  glyphs are 144e's.
+
+*Evidence.*
+- The woff2 is 1,048 bytes (2,712 bytes of OpenType). After gen:font the two
+  vendored woff2s are byte-identical to HEAD's (`cmp`).
+- **Every shipped glyph pixel-identical.** `npm run probe` with
+  `scratch/144d/pixels.js` in a hidden window at 1280 × 720, HEAD (a
+  worktree at `28a8871c`) against this change: on `board-quarry` the board
+  hashes `9424950d` in both, stable across frames, the 31 atlas cells are
+  byte-identical, and so are the page's 358 element boxes; on seed 7's
+  first screen the board hashes `9ecd8d33` in both and its 143 boxes match.
+  HEAD against itself matches. The control, planted in the HEAD worktree
+  (the atlas drawn at 55 px, the sheet's chain with DejaVu first): 31 of 31
+  cells, the board and the boxes all differ.
+- **The planted drawn glyph**, in a worktree served on port 5195: every
+  other combatant (mercenary, ronin, archer, healer, catapult, corrupter,
+  warlock, banshee, shaman, prodigy, gunslinger, officer) given U+E000. All
+  three faces loaded at boot. On the board on both teams beside the rogue's
+  r; the unit card (the promotion screen and the pre-turn hand) at 48 px
+  bold, 43.2 px wide, the 900 advance; the fallen strip on the pre-turn
+  screen, `r ʳʳ ʳʳ` bold at 12 px on a 16 px line; the reward screen's unit
+  title (the hostage-trio rescue, scripted at hop 1), 15.4 px wide against
+  r's 10.6 at 16 px on a 21 px line; the cache overlay's roster picker (an
+  Overclock put in the cache by hand), seven buttons 27 px tall with the
+  drawn glyph or a shipped letter.
+- **A glyph missing from the face fails the guard.** With the plant,
+  font-coverage.test.ts passes 14; with one catalog glyph moved to U+E0FF,
+  which the face lacks, 4 fail, naming U+E0FF and `config/units.json:4`;
+  restored, 14 pass. A permanent case plants U+E0FF beside U+E000.
+- **The atlas cell's room.** U+E000's ink spans 7 to 57 and 17 to 61 of the
+  64-px cell: the ears end 3 px, 59 units, under the cell's top, as 144c
+  measured, so the top is 839 units above the baseline in Chrome. Pinned,
+  with a control (an ear tip at 850 caught).
+- The freshness pin caught a slip of mine: the head patch wrote the modified
+  date at the created date's offset plus eight, over the bounding box, so
+  two builds minutes apart differed. Fixed: created at 20, modified at 28.
+- The radical sheet in the pane: the ears alone, the composed glyph on its
+  lines beside r and R, the shipped face at 48, 34, 16 and 12 px on lines of
+  63, 45, 21 and 16 px. The editor: `U+E000` typed into the adventurer's
+  field became the drawn glyph on Tab, in the field, the preview (43.2 px)
+  and the tab; nothing saved.
+- The suite: 3878 in 268 files, green, typecheck clean. One earlier full
+  run timed out two import-graph walks at 5 s (dev-guard.test.ts and
+  store-boot.test.ts's main.ts walk), which pass alone, the walk in 525 ms,
+  and in the rerun.
+- Not verified: Firefox (its canvas `middle` baseline, so the 839 units of
+  room, and the page text).
+
+*Leans at 144d, for the stop.* The radicals' copyright line reads "the
+ASCIIbattler project": the repository names no copyright holder, and the
+credits name the developer, so the user's name there is theirs to put (one
+line in `glyphFace.ts` and `OFL.txt`, then gen:font). The credits screen
+lists JetBrains Mono and DejaVu Sans Mono and not the drawn face, a line a
+player sees, left for a later step. `tests/glyph-face.test.ts` is a new
+guard, a derived-artifact tripwire on the path where a source is edited; it
+is not listed among TESTING's permanent gates.

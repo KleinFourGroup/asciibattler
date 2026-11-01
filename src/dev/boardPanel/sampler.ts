@@ -17,24 +17,26 @@
  *
  * The candidates join the atlas past the catalog's glyphs (`FontAtlas.create`'s
  * extras), on this page only: the shipped `GLYPHS` never holds them. The
- * stack they are drawn with is the shipped faces', then the loaded face, as a
- * glyph face of our own would sit; the page's `--font-mono` takes the face
- * the same way, so page text draws them too. A candidate neither a shipped
- * face nor the loaded one carries is refused by name, as is one past the
- * atlas's room: coverage is read from the faces' own character maps, by the
- * rule tests/font-coverage.test.ts holds, since a code point no face has
- * draws the same missing-glyph box whatever the fallback, and a test that
- * compares fallbacks passes it. So the loaded face is a TTF or an OTF, whose
- * map can be read.
+ * stack they are drawn with is the shipped faces', then the loaded face; the
+ * page's `--font-mono` takes the face the same way, so page text draws them
+ * too. A glyph the shipped drawn face carries, `U+E000` say, needs no loaded
+ * face. A candidate neither a shipped face nor the loaded one carries is
+ * refused by name, as is one past the atlas's room: coverage is read from
+ * the vendored faces' own character maps and the drawn face's composition
+ * table, by the rule tests/font-coverage.test.ts holds (`faceShips`), since
+ * a code point no face has draws the same missing-glyph box whatever the
+ * fallback, and a test that compares fallbacks passes it. So the loaded face
+ * is a TTF or an OTF, whose map can be read.
  *
  * Parsing is pure and headless-tested (sampler.test.ts); loading and the
  * page-text rows need the DOM.
  */
 
 import { GLYPHS, ATLAS_CELL_BUDGET } from '../../render/glyphs';
-import { FACES, FONT_STACK, PRIMARY_EXCLUDES, subsetCovers } from '../../render/fontSubset';
+import { FACES, FONT_STACK, faceShips } from '../../render/fontSubset';
 import type { AtlasExtras } from '../../render/FontAtlas';
 import { ttfCmapLookup } from '../../../tools/font/ttfCmap';
+import { parseGlyphTable } from '../../../tools/font/glyphTable';
 
 export const SAMPLER_GLYPHS_PARAM = 'glyphs';
 export const SAMPLER_FACE_PARAM = 'glyphFace';
@@ -134,19 +136,26 @@ async function fetchBytes(url: string): Promise<Uint8Array<ArrayBuffer>> {
   return new Uint8Array(await res.arrayBuffer());
 }
 
-/** Whether the shipped subsets carry a code point: inside `SUBSET_RANGES` and
- *  in a vendored source's map, less the primary's `PRIMARY_EXCLUDES`, as
- *  tests/font-coverage.test.ts reads "shipped". */
+/** Whether the shipped faces carry a code point, as
+ *  tests/font-coverage.test.ts reads "shipped": a vendored face by its
+ *  source's map inside `SUBSET_RANGES`, the drawn face by its table. */
 async function shippedLookup(): Promise<(codePoint: number) => boolean> {
   const faces = await Promise.all(
     FACES.map(async (face) => {
-      const has = ttfCmapLookup(await fetchBytes(`/assets/fonts/${face.dir}/${face.source}`));
-      return face.role === 'primary'
-        ? (cp: number): boolean => has(cp) && !PRIMARY_EXCLUDES.includes(cp)
-        : has;
+      const bytes = await fetchBytes(`/assets/fonts/${face.dir}/${face.source}`);
+      let has: (cp: number) => boolean;
+      if (face.role === 'drawn') {
+        const drawn = new Set(
+          parseGlyphTable(JSON.parse(new TextDecoder().decode(bytes))).map((r) => r.codePoint),
+        );
+        has = (cp) => drawn.has(cp);
+      } else {
+        has = ttfCmapLookup(bytes);
+      }
+      return (cp: number): boolean => faceShips(face, has, cp);
     }),
   );
-  return (cp) => subsetCovers(cp) && faces.some((has) => has(cp));
+  return (cp) => faces.some((ships) => ships(cp));
 }
 
 /** What the page's sampler loaded: the atlas's extras, and what it refused. */

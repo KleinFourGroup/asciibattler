@@ -27,8 +27,10 @@
             <div class="field-row">
               <label class="inline">
                 Glyph
-                <input id="glyph" type="text" maxlength="1" autocomplete="off" spellcheck="false" />
+                <input id="glyph" type="text" maxlength="6" autocomplete="off" spellcheck="false" />
               </label>
+              <span id="glyph-preview" class="glyph-preview" aria-hidden="true"></span>
+              <span id="glyph-code" class="sub"></span>
               <label class="inline combatant-only">
                 Name
                 <input id="display-name" type="text" autocomplete="off" spellcheck="false" />
@@ -37,8 +39,10 @@
               <label class="inline combatant-only">Rarity <select id="rarity"></select></label>
             </div>
             <p class="hint">
-              Single character. Unit glyphs auto-register in the font atlas &mdash; no code
-              edit (watch the Font-atlas budget on the right).
+              Single character, or a drawn glyph from our face by its code point
+              (<code>U+E000</code>; assets/fonts/asciibattler-glyphs/). Unit glyphs
+              auto-register in the font atlas &mdash; no code edit (watch the Font-atlas
+              budget on the right).
               <span class="combatant-only"
                 >Draftable = appears in the player's post-victory recruit offer; Rarity = its
                 §61 draft-pool tier (weights in <code>config/recruitment.json</code>).</span

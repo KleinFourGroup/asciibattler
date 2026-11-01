@@ -11,13 +11,18 @@
  * and lifts on someone else's machine, and in the DOM grows a line box with
  * its taller ascent.
  *
- * Two faces: JetBrains Mono is the primary and supplies every glyph it has;
+ * Three faces: JetBrains Mono is the primary and supplies every glyph it has;
  * DejaVu Sans Mono is the one shipped fallback, its subset keeping only what
  * the primary lacks inside SUBSET_RANGES, so a glyph the primary can't paint
  * still comes from a face we ship: the same letterform on every machine, and
  * a line box that never grows (the fallback's ascent and descent, 0.93 / 0.24
  * of the em in hhea and win, sit inside the primary's 1.02 / 0.30, which the
- * guard test pins; its 0.602 advance matches the primary's 0.600 cell). The
+ * guard test pins; its 0.602 advance matches the primary's 0.600 cell). Last
+ * is our own drawn face, ASCIIbattler Glyphs, which gen:font builds whole from
+ * its sources (tools/font/glyphFace.ts): JetBrains Mono letters with radicals
+ * drawn on them, at Private Use Area code points only. The ranges keep no
+ * Private Use Area block and the guard test pins that no vendored face maps
+ * one of its code points, so an earlier face never paints a drawn glyph. The
  * CSS `font-family` chain and
  * the atlas's `ctx.font` both use FONT_STACK, so the DOM and the atlas share
  * one provenance rule.
@@ -69,16 +74,19 @@ export function subsetCovers(codePoint: number): boolean {
  */
 export const PRIMARY_EXCLUDES: readonly number[] = [0x229e, 0x22a0];
 
-/** One shipped face: a vendored source TTF under `assets/fonts/<dir>/`, the
- *  woff2 the generator writes beside it, and the CSS family name. */
-interface ShippedFace {
+/** One shipped face: its source under `assets/fonts/<dir>/`, the woff2 the
+ *  generator writes beside it, and the CSS family name. */
+export interface ShippedFace {
   readonly family: string;
   readonly dir: string;
+  /** A vendored face's upstream TTF, which its subset is cut from; for the
+   *  drawn face, the composition table its build reads. */
   readonly source: string;
   readonly out: string;
   /** `primary` supplies everything it has; a `fallback` keeps only what the
-   *  primary lacks. Exactly one primary, listed first. */
-  readonly role: 'primary' | 'fallback';
+   *  primary lacks; `drawn` is our own face, built whole from its sources.
+   *  Exactly one primary, listed first. */
+  readonly role: 'primary' | 'fallback' | 'drawn';
 }
 
 export const FACES: readonly ShippedFace[] = [
@@ -96,9 +104,34 @@ export const FACES: readonly ShippedFace[] = [
     out: 'dejavu-sans-mono-subset-400.woff2',
     role: 'fallback',
   },
+  {
+    family: 'ASCIIbattler Glyphs',
+    dir: 'asciibattler-glyphs',
+    source: 'glyphs.json',
+    out: 'asciibattler-glyphs-400.woff2',
+    role: 'drawn',
+  },
 ];
+
+/**
+ * Whether `face`'s shipped file carries `codePoint`, given a lookup on its
+ * source's character map: a vendored face's subset keeps what it maps inside
+ * SUBSET_RANGES, the primary less its PRIMARY_EXCLUDES, and the drawn face
+ * ships whole. The generator, the guard test and the glyph sampler each read
+ * "shipped" through this.
+ */
+export function faceShips(
+  face: ShippedFace,
+  has: (codePoint: number) => boolean,
+  codePoint: number,
+): boolean {
+  if (face.role === 'drawn') return has(codePoint);
+  if (!subsetCovers(codePoint) || !has(codePoint)) return false;
+  return face.role !== 'primary' || !PRIMARY_EXCLUDES.includes(codePoint);
+}
 
 /** The font stack every consumer names — the shipped faces, primary first,
  *  each quoted for CSS / canvas `font` strings (`'JetBrains Mono', 'DejaVu
- *  Sans Mono'`). The sheet's `--font-mono` appends the generic tail. */
+ *  Sans Mono', 'ASCIIbattler Glyphs'`). The sheet's `--font-mono` appends the
+ *  generic tail. */
 export const FONT_STACK = FACES.map((face) => `'${face.family}'`).join(', ');

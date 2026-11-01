@@ -1,0 +1,74 @@
+/* The radical sheet. The shared palette and frame are editor-base.css's. */
+@import '../editor-base.css';
+
+h1 {
+  margin: 0;
+  font-size: 18px;
+}
+
+h2 {
+  margin: 20px 0 8px;
+  font-size: 14px;
+  color: var(--accent);
+}
+
+.bar {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+}
+
+.subtitle,
+.hint {
+  color: var(--muted);
+}
+
+.home {
+  margin-left: auto;
+  color: var(--muted);
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+figure {
+  margin: 0;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px;
+}
+
+figure svg {
+  display: block;
+}
+
+/* A radical's file draws dark on light, as an SVG editor shows it. */
+.radical svg {
+  background: #e8ece9;
+}
+
+figcaption {
+  margin-top: 4px;
+  font-size: 11px;
+  color: var(--muted);
+  max-width: 300px;
+}
+
+.err {
+  color: var(--err);
+  white-space: pre-wrap;
+}
+
+/* The game's faces, set by glyph-sheet.ts from FONT_STACK. */
+.text-row {
+  font-family: var(--font-glyphs);
+  color: var(--accent);
+  display: flex;
+  gap: 0.6em;
+  align-items: baseline;
+  margin: 4px 0;
+}

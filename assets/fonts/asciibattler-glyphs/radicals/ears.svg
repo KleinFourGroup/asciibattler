@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 1320" width="450" height="660">
+  <!-- The ears: a sharp triangle at each top corner of a 900-wide glyph,
+       clear of the letter centred between them. Each base sits 500 above
+       the baseline, 180 wide from 15 in from the edge; each apex stands at
+       780, leaning out by 0.22 of the base. -->
+  <g id="guide" fill="none" stroke-width="4">
+    <rect x="0" y="0" width="900" height="1320" stroke="#555"/>
+    <rect x="150" y="0" width="600" height="1320" stroke="#3a6" stroke-dasharray="20 14"/>
+    <text x="450" y="1020" text-anchor="middle" font-family="JetBrains Mono" font-size="1000" fill="#3a6" fill-opacity="0.35" stroke="none">r</text>
+    <!-- the atlas cell's top as Chrome draws it, 839 above the baseline: ink above it is clipped on the board -->
+    <line x1="0" x2="900" y1="181" y2="181" stroke="#a44" stroke-dasharray="8 8"/>
+    <line x1="0" x2="900" y1="290" y2="290" stroke="#468"/>
+    <line x1="0" x2="900" y1="470" y2="470" stroke="#468"/>
+    <line x1="0" x2="900" y1="1020" y2="1020" stroke="#a84"/>
+    <line x1="0" x2="900" y1="1200" y2="1200" stroke="#468"/>
+  </g>
+  <path d="M 15 520 L 195 520 L 55 240 Z" fill="#000"/>
+  <path d="M 885 520 L 705 520 L 845 240 Z" fill="#000"/>
+</svg>

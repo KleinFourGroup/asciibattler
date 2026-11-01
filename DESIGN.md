@@ -155,6 +155,7 @@ The palette is **enforced at art-direction time**, not by the shader. The `COLOR
 - `a` — ranged unit (lowercase, classic roguelike convention)
 - `r` `h` `m` `c` — rogue / healer / mage / catapult (E7)
 - `@` — reserved for the player-protagonist concept post-MVP
+- **Drawn glyphs** (§144, signed 2026-10-31). Where Latin runs short, a unit's glyph is drawn in our own face, ASCIIbattler Glyphs, at a Private Use Area code point, which Unicode assigns to nothing: JetBrains Mono's own letter, the unit's initial, so a player can still name it (the fallen strip writes `r×2`), with a **radical**, a mark that names the family, set at the glyph's top corners clear of the letter, in a glyph widened to make room. The beasts' radical is ears. Radicals are low-res vectors, straight segments only, marks on a terminal's letters rather than a second typeface; a glyph with no letter (scenery, a swarm) is drawn from radicals alone. A unit's identity rides that one character's shape, the channel that holds at every size, on the canvas and in page text. The sources and their build: `assets/fonts/asciibattler-glyphs/README.md`.
 
 Color + bloomIntensity per instance are instanced attributes so a single draw call covers all units of all teams (B1.1 selective bloom renders sprites twice — once at natural color into the main framebuffer, once at `color × bloomIntensity` into a separate bloom buffer that's blurred and additively mixed back in — but both draws share the same per-instance buffers). `bloomIntensity` (default 1.0) is a bloom-buffer multiplier *decoupled from visible color*: 0 = no halo (sprite still visible at natural color), 1 = natural halo (blooms iff color crosses the high-pass threshold), >1 = forced glow. Used for attack flashes, charge-ups, elite tier, etc. Lerping 0↔1 smoothly fades the halo without changing the sprite's visible color — future systems (B3 HP bars going from full-glow to dim as health drops, C2 mage charge windup ramping the halo as the ability spools up) reach for this channel.
 
@@ -680,16 +681,19 @@ column is centred by auto margins, so it then starts at the top, where
 (The spec and the older notes call this "the hysteresis class" / "the
 Y-coordinate hysteresis"; the tooltip is its first member — fixed and out
 of flow, so opening one never shifts the page.) The class has three
-mechanisms and `tabular-nums` is none of them (both
-faces are monospace; it stays on `html, body` as a belt for a future face):
+mechanisms and `tabular-nums` is none of them (the vendored faces are
+monospace and the drawn face has no digits; it stays on `html, body` as a
+belt for a future face):
 
 1. *A fallback glyph grows the line box.* Every non-ASCII codepoint the UI
    can render is inside the SHIPPED subset of a SHIPPED face — JetBrains
-   Mono, then DejaVu Sans Mono, the ONE fallback (`FACES` / `FONT_STACK`,
-   `src/render/fontSubset.ts`); an OS fallback is never the plan. A
-   fallback face must fit INSIDE the primary's line (ascent, descent and
-   normal line ≤ the primary's in hhea, OS/2 typo and OS/2 win) and keep
-   its cell. Both rules are pins in `tests/font-coverage.test.ts`; a glyph
+   Mono, then DejaVu Sans Mono, the ONE fallback, then our drawn face,
+   ASCIIbattler Glyphs, at Private Use Area code points neither of the
+   others maps (`FACES` / `FONT_STACK`, `src/render/fontSubset.ts`); an OS
+   fallback is never the plan. A face after the primary must fit INSIDE
+   the primary's line (ascent, descent and normal line ≤ the primary's in
+   hhea, OS/2 typo and OS/2 win), and a vendored fallback keeps its cell;
+   a drawn glyph may be wider, as the radicals need. Both rules are pins in `tests/font-coverage.test.ts`; a glyph
    the primary draws wrong goes in `PRIMARY_EXCLUDES` (gotcha #136). No
    global `line-height` — browsers round `normal` per font-size, a
    multiplier does not.

@@ -113,6 +113,25 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
 
 
 -------------------------------------------------------------------------------
+ASCIIbattler Glyphs (font)
+-------------------------------------------------------------------------------
+
+The game's own drawn glyphs, in woff2 form, built by scripts/build-font.mjs
+from the sources in assets/fonts/asciibattler-glyphs/. Each glyph copies a
+letter's outline from JetBrains Mono and adds marks drawn for the game, so the
+face is a "Modified Version" of JetBrains Mono as the SIL Open Font License
+defines the term, and is distributed under that licence only.
+
+Copyright 2020 The JetBrains Mono Project Authors
+(https://github.com/JetBrains/JetBrainsMono)
+The radicals, and the glyphs composed from them: copyright 2026 the
+ASCIIbattler project.
+
+Licensed under the SIL Open Font License, Version 1.1, reproduced in full in
+the JetBrains Mono section above.
+
+
+-------------------------------------------------------------------------------
 DejaVu Sans Mono (font)
 -------------------------------------------------------------------------------
 

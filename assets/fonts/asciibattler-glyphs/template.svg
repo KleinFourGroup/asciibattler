@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 1320" width="450" height="660">
+  <!-- The glyph box for a radical, at a 900 advance: copy this file to
+       radicals/<name>.svg, draw the mark outside the guide group, and set the
+       viewBox's width (and the guides') to the glyph's width if it differs.
+       One unit is one font unit; the baseline is 1020 from the top.
+       Straight segments only, filled, no transforms (radicalSvg.ts). -->
+  <g id="guide" fill="none" stroke-width="4">
+    <rect x="0" y="0" width="900" height="1320" stroke="#555"/>
+    <!-- the letter's slot: JetBrains Mono's 600 advance, centred -->
+    <rect x="150" y="0" width="600" height="1320" stroke="#3a6" stroke-dasharray="20 14"/>
+    <text x="450" y="1020" text-anchor="middle" font-family="JetBrains Mono" font-size="1000" fill="#3a6" fill-opacity="0.35" stroke="none">r</text>
+    <!-- the atlas cell's top as Chrome draws it, 839 above the baseline: ink above it is clipped on the board -->
+    <line x1="0" x2="900" y1="181" y2="181" stroke="#a44" stroke-dasharray="8 8"/>
+    <!-- the lines, from the top: ascender and cap (730), x-height (550),
+         baseline (0), descender (-180) -->
+    <line x1="0" x2="900" y1="290" y2="290" stroke="#468"/>
+    <line x1="0" x2="900" y1="470" y2="470" stroke="#468"/>
+    <line x1="0" x2="900" y1="1020" y2="1020" stroke="#a84"/>
+    <line x1="0" x2="900" y1="1200" y2="1200" stroke="#468"/>
+  </g>
+</svg>

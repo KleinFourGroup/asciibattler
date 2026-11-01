@@ -3,9 +3,17 @@ import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, dirname, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { GLYPHS } from '../src/render/glyphs';
-import { subsetCovers, FACES, FONT_STACK, PRIMARY_EXCLUDES } from '../src/render/fontSubset';
+import {
+  subsetCovers,
+  faceShips,
+  FACES,
+  FONT_STACK,
+  PRIMARY_EXCLUDES,
+} from '../src/render/fontSubset';
 import { ttfCmapLookup } from '../tools/font/ttfCmap';
 import { ttfVerticalMetrics } from '../tools/font/ttfMetrics';
+import { parseGlyphTable, PUA_FIRST, PUA_LAST } from '../tools/font/glyphTable';
+import { drawnFaceSources, shippedDrawnFace } from './glyphFaceFiles';
 
 // §79-post — structural guards for the self-hosted font pipeline (§79g).
 //
@@ -23,6 +31,11 @@ import { ttfVerticalMetrics } from '../tools/font/ttfMetrics';
 //      ranges deliberately include PARTIAL upstream blocks, so "in range"
 //      alone doesn't prove a face can supply it. Since §101a the faces are a
 //      UNION (the primary + the one fallback, src/render/fontSubset.ts FACES).
+//
+// The drawn face, our own, is read from its shipped woff2, decompressed: it
+// ships whole, so a code point it maps is shipped, and none of its code
+// points may be mapped by a vendored face, which would paint it first. That
+// the woff2 is the face its sources build is tests/glyph-face.test.ts's pin.
 //
 // §101a — THE UI GLYPH INVENTORY. The §79 pins guard the canvas atlas's
 // GLYPHS only; the DOM UI had meanwhile come to carry 20 codepoints outside
@@ -43,44 +56,65 @@ import { ttfVerticalMetrics } from '../tools/font/ttfMetrics';
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '..');
 
-// The generator's rule, mirrored: the primary reads as LACKING its
-// PRIMARY_EXCLUDES (glyphs it carries but draws wrong — 101a-post), so
-// "shipped" here means what gen:font would actually put in a subset.
+// The generator's rule, shared through faceShips: the primary reads as
+// LACKING its PRIMARY_EXCLUDES (glyphs it carries but draws wrong —
+// 101a-post), so "shipped" here means what gen:font would actually put in a
+// subset, and the drawn face ships whole.
+const drawnBytes = await shippedDrawnFace();
 const faces = FACES.map((face) => {
   const cmapHas = ttfCmapLookup(
-    readFileSync(join(repoRoot, 'assets', 'fonts', face.dir, face.source)),
+    face.role === 'drawn'
+      ? drawnBytes
+      : readFileSync(join(repoRoot, 'assets', 'fonts', face.dir, face.source)),
   );
   const has =
     face.role === 'primary'
       ? (cp: number): boolean => cmapHas(cp) && !PRIMARY_EXCLUDES.includes(cp)
       : cmapHas;
-  return { face, has };
+  return { face, cmapHas, has };
 });
 const someFaceHas = (cp: number): boolean => faces.some((f) => f.has(cp));
-const shipped = (cp: number): boolean => subsetCovers(cp) && someFaceHas(cp);
+const shipped = (cp: number): boolean => faces.some((f) => faceShips(f.face, f.cmapHas, cp));
+const drawn = faces.find((f) => f.face.role === 'drawn')!;
+const vendored = faces.filter((f) => f.face.role !== 'drawn');
 
 const codepointsOf = (glyph: string): number[] => [...glyph].map((ch) => ch.codePointAt(0)!);
+/** A glyph with its code points, since a drawn glyph prints as nothing. */
+const named = (glyph: string): string =>
+  `${glyph} ${codepointsOf(glyph).map((cp) => `U+${cp.toString(16).toUpperCase().padStart(4, '0')}`).join(' ')}`;
 
 describe('font subset coverage (§79-post)', () => {
-  it('every registered glyph falls inside the kept SUBSET_RANGES', () => {
-    const outsideRanges = GLYPHS.filter((g) => !codepointsOf(g).every(subsetCovers));
+  it('every registered glyph falls inside the kept SUBSET_RANGES, or is drawn in our face', () => {
+    const outsideRanges = GLYPHS.filter(
+      (g) => !codepointsOf(g).every((cp) => subsetCovers(cp) || drawn.cmapHas(cp)),
+    ).map(named);
     expect(
       outsideRanges,
-      'widen SUBSET_RANGES (src/render/fontSubset.ts) + `npm run gen:font`',
+      'widen SUBSET_RANGES (src/render/fontSubset.ts) + `npm run gen:font`, or draw it in assets/fonts/asciibattler-glyphs/',
     ).toEqual([]);
   });
 
-  it('a vendored source TTF supplies every registered glyph', () => {
-    const missingFromFont = GLYPHS.filter((g) => !codepointsOf(g).every(someFaceHas));
+  it('a vendored source TTF or the drawn face supplies every registered glyph', () => {
+    const missingFromFont = GLYPHS.filter((g) => !codepointsOf(g).every(someFaceHas)).map(named);
     expect(
       missingFromFont,
       'no shipped face can supply these — pick different glyphs or add a face that has them',
     ).toEqual([]);
   });
 
-  it('lists exactly one primary face, first', () => {
+  it('the control: a unit glyph the drawn face lacks fails both pins, one it draws passes', () => {
+    const planted = [...GLYPHS, '\uE0FF', '\uE000'];
+    expect(drawn.cmapHas(0xe000)).toBe(true);
+    expect(planted.filter((g) => !codepointsOf(g).every((cp) => subsetCovers(cp) || drawn.cmapHas(cp)))).toEqual(['\uE0FF']);
+    expect(planted.filter((g) => !codepointsOf(g).every(someFaceHas))).toEqual(['\uE0FF']);
+    expect(planted.filter((g) => !codepointsOf(g).every(shipped))).toEqual(['\uE0FF']);
+  });
+
+  it('lists exactly one primary face, first, and the drawn face last', () => {
     expect(FACES.filter((f) => f.role === 'primary')).toHaveLength(1);
     expect(FACES[0]?.role).toBe('primary');
+    expect(FACES.filter((f) => f.role === 'drawn')).toHaveLength(1);
+    expect(FACES.at(-1)?.role).toBe('drawn');
   });
 
   it('a fallback face supplies every PRIMARY_EXCLUDES codepoint, inside the ranges', () => {
@@ -104,9 +138,13 @@ describe('font subset coverage (§79-post)', () => {
 // because browsers disagree on which one they read.
 describe('the fallback line box (§101b)', () => {
   const metricsOf = (face: (typeof FACES)[number]) =>
-    ttfVerticalMetrics(readFileSync(join(repoRoot, 'assets', 'fonts', face.dir, face.source)));
+    ttfVerticalMetrics(
+      face.role === 'drawn'
+        ? drawnBytes
+        : readFileSync(join(repoRoot, 'assets', 'fonts', face.dir, face.source)),
+    );
   const primary = metricsOf(FACES.find((f) => f.role === 'primary')!);
-  const fallbacks = FACES.filter((f) => f.role === 'fallback');
+  const fallbacks = FACES.filter((f) => f.role !== 'primary');
 
   it('read real metrics off the primary (the parser or the font drifted otherwise)', () => {
     // JetBrains Mono 2.304: 1.02 / 0.30 in all three tables, a 1.32 line.
@@ -134,6 +172,29 @@ describe('the fallback line box (§101b)', () => {
       expect(over, 'this face would grow every line one of its glyphs lands on').toEqual([]);
     },
   );
+});
+
+describe('the drawn face', () => {
+  // Every code point its shipped woff2 maps, read by a walk of the BMP.
+  const mapped: number[] = [];
+  for (let cp = 0; cp <= 0xffff; cp++) if (drawn.cmapHas(cp)) mapped.push(cp);
+
+  it('maps the Private Use Area alone, and exactly the composition table', () => {
+    // The walk's known answer: the table's first glyph, U+E000.
+    expect(mapped).toContain(0xe000);
+    expect(mapped.filter((cp) => cp < PUA_FIRST || cp > PUA_LAST)).toEqual([]);
+    const table = parseGlyphTable(drawnFaceSources().table).map((r) => r.codePoint);
+    expect(mapped).toEqual([...table].sort((a, b) => a - b));
+  });
+
+  it('draws no code point a vendored face maps, which would paint it first', () => {
+    const shadowed = mapped
+      .filter((cp) => vendored.some((f) => f.cmapHas(cp)))
+      .map((cp) => `U+${cp.toString(16).toUpperCase()}`);
+    expect(shadowed, 'pick a code point no vendored face has').toEqual([]);
+    // The control: JetBrains Mono maps the Powerline glyphs at U+E0A0.
+    expect(vendored.some((f) => f.cmapHas(0xe0a0))).toBe(true);
+  });
 });
 
 // The roots a DOM string can come from. `src/` wholesale (sim / core carry no

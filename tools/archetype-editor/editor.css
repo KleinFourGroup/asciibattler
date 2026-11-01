@@ -41,7 +41,7 @@
   border-radius: 6px;
   padding: 6px 12px;
   cursor: pointer;
-  font-family: inherit;
+  font-family: var(--font-glyphs, inherit);
   font-size: 13px;
 }
 
@@ -121,6 +121,25 @@ input[type='number'] {
   font-family: inherit;
   font-size: 13px;
   padding: 4px 6px;
+}
+
+/* The glyph and its preview, in the game's faces (--font-glyphs, set by
+   editor.ts from FONT_STACK), so a drawn glyph shows as the game draws it. */
+#glyph,
+.glyph-preview {
+  font-family: var(--font-glyphs, inherit);
+}
+
+/* Room for a code point being typed, U+E000. */
+#glyph {
+  width: 7ch;
+}
+
+.glyph-preview {
+  font-size: 48px;
+  line-height: 48px;
+  min-width: 1ch;
+  color: var(--accent);
 }
 
 input[type='text'] {

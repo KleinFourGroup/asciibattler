@@ -39,6 +39,7 @@
  * status surfaces here with no edit.
  */
 
+import '../../src/fonts.css';
 import './editor.css';
 import {
   ALL_UNIT_DEFS,
@@ -65,6 +66,7 @@ import {
 import { scalingStatValue } from '../../src/sim/effects/resolveScalars';
 import { scaleStats } from '../../src/sim/leveling';
 import { atlasCellsFor, ATLAS_CELL_BUDGET } from '../../src/render/glyphs';
+import { FONT_STACK } from '../../src/render/fontSubset';
 import { formatArchetypesJson } from './format';
 
 // Keys are open (a new unit can be created), so the working set is a plain record
@@ -111,6 +113,11 @@ const newBtn = mustQuery<HTMLButtonElement>('#new-btn');
 const deleteBtn = mustQuery<HTMLButtonElement>('#delete-btn');
 const kindBadgeEl = mustQuery<HTMLSpanElement>('#kind-badge');
 const glyphEl = mustQuery<HTMLInputElement>('#glyph');
+const glyphPreviewEl = mustQuery<HTMLSpanElement>('#glyph-preview');
+const glyphCodeEl = mustQuery<HTMLSpanElement>('#glyph-code');
+// The glyph previews draw from the game's own faces (src/fonts.css), so a
+// drawn glyph shows as the game shows it.
+editorRoot.style.setProperty('--font-glyphs', `${FONT_STACK}, ui-monospace, monospace`);
 // §61g — the player-facing display name (required on every combatant).
 const displayNameEl = mustQuery<HTMLInputElement>('#display-name');
 const draftableEl = mustQuery<HTMLInputElement>('#draftable');
@@ -288,10 +295,43 @@ function buildSusceptibilityChecks(): void {
   }
 }
 
+/** The glyph field's text as a glyph: one character, or `U+` and a code
+ *  point's hex, the way to enter a drawn glyph that no keyboard types. Null
+ *  for anything else. */
+function glyphFromField(text: string): string | null {
+  const hex = /^U\+([0-9A-Fa-f]{4,6})$/.exec(text.trim());
+  if (hex) {
+    const cp = parseInt(hex[1]!, 16);
+    return cp <= 0x10ffff ? String.fromCodePoint(cp) : null;
+  }
+  return [...text].length === 1 ? text : null;
+}
+
+/** The large preview beside the field, in the game's faces, and its code point. */
+function refreshGlyphPreview(): void {
+  const glyph = working[activeKey].glyph;
+  glyphPreviewEl.textContent = glyph;
+  glyphCodeEl.textContent = [...glyph]
+    .map((c) => `U+${c.codePointAt(0)!.toString(16).toUpperCase().padStart(4, '0')}`)
+    .join(' ');
+}
+
 function attachIdentity(): void {
   // Glyph is shared by both shapes (a common union field), so no narrow needed.
+  // A `U+` code point being typed waits for the field's change to land.
   glyphEl.addEventListener('input', () => {
-    working[activeKey].glyph = glyphEl.value;
+    const glyph = glyphFromField(glyphEl.value);
+    if (glyph === null && /^U\+/i.test(glyphEl.value.trim())) return;
+    working[activeKey].glyph = glyph ?? glyphEl.value;
+    refreshGlyphPreview();
+    refreshTabs();
+    refreshDerived();
+  });
+  glyphEl.addEventListener('change', () => {
+    const glyph = glyphFromField(glyphEl.value);
+    working[activeKey].glyph = glyph ?? glyphEl.value;
+    if (glyph !== null) glyphEl.value = glyph;
+    refreshGlyphPreview();
     refreshTabs();
     refreshDerived();
   });
@@ -428,6 +468,7 @@ function selectArchetype(key: ArchetypeKey): void {
 function syncForm(): void {
   const a = working[activeKey];
   glyphEl.value = a.glyph;
+  refreshGlyphPreview();
   // §83f2 — immunities are a shared field: sync before the arm split below.
   for (const [id, cb] of immChecks) cb.checked = a.statusImmunities?.includes(id) ?? false;
   const neutral = isNeutralUnitDef(a);

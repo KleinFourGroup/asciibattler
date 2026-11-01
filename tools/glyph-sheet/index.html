@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ASCIIbattler Radical Sheet</title>
+  </head>
+  <body>
+    <main id="editor-root">
+      <header class="bar">
+        <h1>Radical Sheet</h1>
+        <span class="subtitle"
+          >Our drawn face, ASCIIbattler Glyphs · each radical alone · each glyph composed live from
+          <code>assets/fonts/asciibattler-glyphs/</code></span
+        >
+        <a class="home" href="/tools/">← Tools</a>
+      </header>
+      <p class="hint">
+        The radicals and the composed glyphs are built here from the sources, as
+        <code>npm run gen:font</code> builds them, so an edited SVG shows on a reload. The page text
+        and the sampler draw the shipped woff2: run <code>npm run gen:font</code> to see an edit
+        there.
+      </p>
+      <h2>Radicals</h2>
+      <div id="radicals" class="row"></div>
+      <h2>Glyphs, composed</h2>
+      <div id="glyphs" class="row"></div>
+      <h2>The shipped face, in page text</h2>
+      <div id="text"></div>
+      <p class="hint">
+        On the board: <a id="sampler" href="/">the glyph sampler</a>, each glyph beside its letter
+        and capital.
+      </p>
+    </main>
+    <script type="module" src="./glyph-sheet.ts"></script>
+  </body>
+</html>

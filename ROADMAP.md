@@ -95,8 +95,11 @@ trial at 144c says it belongs (risk low-medium then; WORKLOG §144).
   the ears spread to the glyph's top corners at a 900 advance, the
   user's fix from feedback, prototyped (WORKLOG §144, "The grid signed,
   and the ears spread").
-- If yes: ☐ **144d** our glyph face (`none`), its radicals SVG sources in
-  straight segments (WORKLOG §144, "The radicals' format signed") ·
+- If yes: ☑ **144d** our glyph face (`none`): ASCIIbattler Glyphs, built by
+  gen:font from SVG radicals in straight segments and a composition table,
+  third in the stack, one glyph (U+E000, the r with ears); every shipped
+  glyph pixel-identical, a planted drawn glyph on the board and in the four
+  screens, the woff2 1,048 bytes (WORKLOG 144d) ·
   ☐ **144e** the seven glyphs and the attacks call (`stop`) · ☐ **144f** the beasts and
   their attacks (`batch`) · ☐ **144g** the tree (`none`) · ☐ **144h**
   the close (`stop`).

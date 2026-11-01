@@ -73,11 +73,16 @@ describe('116j — the shipped licence file', () => {
     expect(file.replace('Vite contributors', 'Vite contributor')).not.toContain(core);
   });
 
-  it('still holds the two fonts, each with its licence', () => {
+  it('still holds the three fonts, each with its licence', () => {
     const file = text(FILE);
     expect(file).toContain('JetBrains Mono (font)');
     expect(file).toContain('SIL OPEN FONT LICENSE Version 1.1');
     expect(file).toContain('DejaVu Sans Mono (font)');
     expect(file).toContain('Bitstream Vera Fonts Copyright');
+    // Our drawn face is a Modified Version of JetBrains Mono, so its section
+    // carries JetBrains Mono's copyright line under the OFL.
+    const drawn = file.slice(file.indexOf('ASCIIbattler Glyphs (font)'), file.indexOf('DejaVu Sans Mono (font)'));
+    expect(drawn).toContain('Copyright 2020 The JetBrains Mono Project Authors');
+    expect(drawn).toContain('SIL Open Font License, Version 1.1');
   });
 });

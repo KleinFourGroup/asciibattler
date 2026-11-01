@@ -603,3 +603,18 @@ clear of the letter and at one height for every letter.
   by its own rule, so the ears' 59 units of headroom are the thing to
   check there; and the board's click boxes, which follow the ink and so
   widen, in a clump.
+
+### The approach and 144a's pixels signed (2026-10-31)
+
+The user, to the spread prototype: "I think that's it, Claude! 😁 At least
+we can sign this approach going forward." Signed: the radical on
+JetBrains Mono's own letter, the ears at the glyph's top corners clear of
+the letter, the glyph widened to make room; the exact width and each
+beast's glyph are 144e's to sign. And: "signing the pixel change!" 144a's
+exit stands as built, the board moving by one or two levels of 255 on at
+most 70 pixels.
+
+The user asked whether there is tooling to keep the radicals standalone,
+or a script that makes them. The script is `scratch/144c/build.mjs`, on
+this machine only: the ears are two triangles in its code, composed with
+each letter there. The proposal for 144d's sources went back to them.

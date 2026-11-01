@@ -436,11 +436,56 @@ King comes in his last stage alone.
 *Taken in.* The id pin and the kind pin in `encounters.test.ts`; the
 locale names, extracted at 145c. In no pool, so no run moves.
 
-*Evidence.* Each fought to its end by the sim's turn loop on seeds 1 to
-10, the soldier from a fresh run, a normal at hop 1 by `1:battle`, an
-elite by `1:elite`, the bear as a one-hop run
+*Evidence* (overstated; corrected in "The rewards added, and the probe
+corrected", below). Each fought to its end by the sim's turn loop on
+seeds 1 to 10, the soldier from a fresh run, a normal at hop 1 by
+`1:battle`, an elite by `1:elite`, the bear as a one-hop run
 (`scratch/145/fight-encounters.ts`): all 80 ended, the player
 surviving each; no turn reached `MAX_TURN_TICKS`; the mean turns from 1.3
 (the Vermin Lords) to 3.1 (Cats!); each wave fielded the archetypes
 written; 0 bits gained in every fight, the missing rewards. The bands
 are §146's.
+
+### The rest of the cut signed, and the rewards (2026-11-01)
+
+Put to the user: the rewards (lean, each encounter its kind's shipped
+set, before 145g, since a reward is a draw and a later add re-draws act
+1 again); the bear in each stage, as a question of intent; and 145f to
+145h as cut, with 145f's pools (the five normals and Brigands, the two
+elites, the bear's fight and the King; the shared layouts and events; the
+boon as act 1's starting event; no hop gates; every weight 1) and the
+reads of 145b and 145c before 145g. The user: "Oops! 😅 Yes, please add
+the rewards, Claude. And that cut looks great to me, Claude! 😁" The
+reply did not cover the bear's stages; they stay as authored.
+
+### The rewards added, and the probe corrected (2026-11-01, session 05f22793)
+
+*Built.* Each of the eight takes its kind's shipped set, checked against
+the Brigands', the Brigand Champions' and the Bandit King's before the
+write, through the encounter editor's formatter, which first reproduced
+the file as it stood (`scratch/145/add-rewards.ts`): 35 lines added.
+
+*The probe, corrected.* 145b's probe ended a fight at the first screen
+that was not a turn, so a promotion between two turns ended it early, and
+it never took the reward screen, so it read 0 bits with rewards or
+without: its "fought to its end" and its "0 bits, the missing rewards"
+could not have come out otherwise. The missing rewards stood on the file
+(no `rewards` key), not on the probe. Rewritten, a fight ends when the
+run is back on the map or over, every screen between taken. On seeds 1
+to 10 with the rewards:
+
+| Encounter | Won | Turns | Reward screens | Bits |
+|---|---|---|---|---|
+| `wolfpack` | 10 | 3.0 | 10 | 104 |
+| `rats-nest` | 10 | 2.0 | 10 | 145 |
+| `rat-hunt` | 10 | 2.5 | 10 | 107 |
+| `poachers` | 10 | 3.0 | 10 | 104 |
+| `canids` | 10 | 3.0 | 10 | 104 |
+| `vermin-lords` | 10 | 2.9 | 10 | 293 |
+| `cats` | 8 (2 runs lost) | 4.6 | 8 | 217 |
+| `bear` | 9 (1 run lost) | 5.0 | 9 | 275 |
+
+No turn reached `MAX_TURN_TICKS`. The control: the Wolfpack's rewards
+taken out of the file read 0 reward screens and 0 bits, the Rats' Nest
+beside it 10 and 145; restored. The soldier is a fresh run's, so the
+elite's and the boss's losses say nothing of the bands, which are §146's.

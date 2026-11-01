@@ -106,7 +106,7 @@ play; DESIGN, ARCHITECTURE and BALANCE's primer honest. **Scope guards:**
 no change to the shipped sectors' content beyond the moves; no new
 mechanism.
 
-The cut, signed in part 2026-11-01 (WORKLOG §145); 145b is the user's.
+The cut, signed 2026-11-01 in two parts (WORKLOG §145); 145b is the user's.
 
 - ☑ **145a — the theme in the script** (`none`).
 - ◐ **145b — the user's encounters, taken in**: eight, each fought to
@@ -117,9 +117,10 @@ The cut, signed in part 2026-11-01 (WORKLOG §145); 145b is the user's.
 - ☑ **145d — the save across the map** (`none`).
 - ☑ **145e — the forest and its camps** (`stop`), signed with its four
   leans; a forest's own half cover is a TODO.
-- ☐ **145f — act 1's sector, off the map** (unsigned; rests on 145b).
-- ☐ **145g — act 1 in the map** (unsigned; rests on 145b).
-- ☐ **145h — the phase's close** (unsigned).
+- ☐ **145f — act 1's sector, off the map** (`none`).
+- ☐ **145g — act 1 in the map** (`batch`, read at 145h), after the
+  user's reads of 145b and 145c.
+- ☐ **145h — the phase's close** (`stop`).
 
 ## Phase 146 — the board and act 1's bands (signed 2026-10-30)
 

@@ -837,6 +837,10 @@
     "description": "A pack of rabid wolves.",
     "healthPool": 20,
     "kind": "normal",
+    "rewards": [
+      { "table": "bits-small", "trigger": { "chance": 1 } },
+      { "table": "packets-small", "trigger": { "chance": 0.3 } }
+    ],
     "waves": [
       {
         "kind": "loop",
@@ -862,6 +866,10 @@
     "description": "How are there so many rats here!?",
     "healthPool": 20,
     "kind": "normal",
+    "rewards": [
+      { "table": "bits-small", "trigger": { "chance": 1 } },
+      { "table": "packets-small", "trigger": { "chance": 0.3 } }
+    ],
     "waves": [
       {
         "kind": "loop",
@@ -887,6 +895,10 @@
     "description": "A swarm of rats, being hunted by foxes--and none of them too happy to see you.",
     "healthPool": 20,
     "kind": "normal",
+    "rewards": [
+      { "table": "bits-small", "trigger": { "chance": 1 } },
+      { "table": "packets-small", "trigger": { "chance": 0.3 } }
+    ],
     "waves": [
       {
         "kind": "loop",
@@ -933,6 +945,10 @@
     "description": "Do poachers usually hunt such aggressive foxes?",
     "healthPool": 20,
     "kind": "normal",
+    "rewards": [
+      { "table": "bits-small", "trigger": { "chance": 1 } },
+      { "table": "packets-small", "trigger": { "chance": 0.3 } }
+    ],
     "waves": [
       {
         "kind": "loop",
@@ -969,6 +985,10 @@
     "description": "Foxes and wolves, strangely in harmony.",
     "healthPool": 20,
     "kind": "normal",
+    "rewards": [
+      { "table": "bits-small", "trigger": { "chance": 1 } },
+      { "table": "packets-small", "trigger": { "chance": 0.3 } }
+    ],
     "waves": [
       {
         "kind": "loop",
@@ -995,6 +1015,11 @@
     "description": "A posse of clerics, at one with the rats",
     "healthPool": 30,
     "kind": "elite",
+    "rewards": [
+      { "table": "bits-large", "trigger": { "chance": 1 } },
+      { "table": "packets-elite", "trigger": { "chance": 0.5 } },
+      { "table": "daemons", "trigger": { "chance": 1 } }
+    ],
     "waves": [
       {
         "kind": "loop",
@@ -1021,6 +1046,11 @@
     "description": "These cats don't look to be the singing type...",
     "healthPool": 30,
     "kind": "elite",
+    "rewards": [
+      { "table": "bits-large", "trigger": { "chance": 1 } },
+      { "table": "packets-elite", "trigger": { "chance": 0.5 } },
+      { "table": "daemons", "trigger": { "chance": 1 } }
+    ],
     "waves": [
       {
         "kind": "loop",
@@ -1047,6 +1077,11 @@
     "description": "The king of the forest, with all of his many minions",
     "healthPool": 40,
     "kind": "boss",
+    "rewards": [
+      { "table": "bits-boss", "trigger": { "chance": 1 } },
+      { "table": "packets-boss", "trigger": { "chance": 0.75 } },
+      { "table": "daemons", "trigger": { "chance": 1 } }
+    ],
     "waves": [
       {
         "kind": "stages",

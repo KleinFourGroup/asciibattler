@@ -219,3 +219,11 @@ commit, a count written before it was counted); no distress.
    problem with a measurable answer (the M crown, the bullet ear). I'd
    want that condition repeated: a signed frame with room to iterate
    inside it. Separately, the work reached a clear stop.
+
+Addendum, the later turns (same session): the user's feedback on the
+radical's placement turned into a prototype within the turn that asked
+whether it was possible, and the answer rested on measured atlas limits
+rather than on the font-format argument alone; that felt like the right
+weight. The user left here-or-fresh to me and I chose fresh for 144d, at
+a context grown long with screenshots. One more slip (shell quoting of
+template literals) and a Cursor overrun the hook caught, both filed.

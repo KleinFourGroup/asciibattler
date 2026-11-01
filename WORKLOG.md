@@ -618,3 +618,47 @@ The user asked whether there is tooling to keep the radicals standalone,
 or a script that makes them. The script is `scratch/144c/build.mjs`, on
 this machine only: the ears are two triangles in its code, composed with
 each letter there. The proposal for 144d's sources went back to them.
+
+### The radicals' format signed, and the hand-off after 144c (2026-10-31, session 5849d0c7)
+
+The user, to the proposal: "SVG makes sense to me! 😁", and the choice of
+this session or a fresh one left to the session, which hands 144d to a
+fresh one at a long context. **Done:** 144c built, its three calls, the
+spread approach and 144a's pixels signed. **Open:** 144d, not started.
+
+**What 144d needs that no doc names.**
+- *The signed source shape.* A radical is its own SVG file, drawn in
+  place in the glyph box with the letter's slot as a guide, in straight
+  segments only: the build refuses a curve, which keeps the low-res rule
+  (the lattice no longer binds a radical). SVG's y runs down and the
+  font's up, so a template fixes the box (the advance wide, 1320 tall,
+  the baseline 1020 from the top). A beast glyph is one row of data: its
+  code point, its letter, its radicals, its width. A build composes them
+  into the woff2, run as `gen:font` is; a radical sheet in the dev tools,
+  promoted from `scratch/144c/sheet.mjs`, shows each radical alone and
+  each glyph composed, and the sampler keeps the board and page text.
+- *The prototype*, `scratch/144c/build.mjs`, on this machine only: it
+  copies a JetBrains Mono letter's outline from the vendored TTF
+  (opentype.js, `charToGlyph(ch).path.commands`), shifts it by
+  (advance − 600) / 2, and adds the ears as clockwise contours,
+  TrueType's outer direction, which the rasterizers fill nonzero, so an
+  overlap is a union. It writes an OTF with an ascender of 1020 and a
+  descender of −300, JetBrains Mono's line, which kept the DOM line box
+  (a planted 1400 grew it). opentype.js 1.3.4 (MIT) sits in that folder's
+  own package; `wawoff2` is in the repo's `node_modules` already, by
+  `subset-font` → `fontverter`.
+- *The signed approach's geometry*, a lean for 144e to sign per glyph: a
+  900 advance, the letter centred, the ears the triangles (15, 500),
+  (195, 500), (55, 780) and their mirror at 900 − x.
+- *The atlas's room*, measured in Chrome: the 64-px cell, drawn at 56 px,
+  holds ink about 1,140 units wide centred on the advance, from −304 to
+  about 839 units about the baseline. The ears at 780 are the atlas's
+  highest ink; Firefox's canvas `middle` baseline is unmeasured.
+- *Readers.* `ttfCmapLookup` reads a TTF or an OTF, not a woff2, so the
+  coverage guard reads our face's composition table or an intermediate
+  TTF, and the sampler's `glyphFace=` takes the OTF. The face is a
+  derivative of JetBrains Mono under the OFL: it ships the licence text
+  (`assets/fonts/jetbrains-mono/OFL.txt` is the model) and JetBrains
+  Mono's copyright line, under a name of its own.
+- *The exit as cut*, with one addition: plant a wide glyph, so the four
+  screens' text is read at the new width.

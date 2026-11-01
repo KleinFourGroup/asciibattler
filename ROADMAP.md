@@ -95,8 +95,9 @@ trial at 144c says it belongs (risk low-medium then; WORKLOG §144).
   the ears spread to the glyph's top corners at a 900 advance, the
   user's fix from feedback, prototyped (WORKLOG §144, "The grid signed,
   and the ears spread").
-- If yes: ☐ **144d** our glyph face (`none`) · ☐ **144e** the seven
-  glyphs and the attacks call (`stop`) · ☐ **144f** the beasts and
+- If yes: ☐ **144d** our glyph face (`none`), its radicals SVG sources in
+  straight segments (WORKLOG §144, "The radicals' format signed") ·
+  ☐ **144e** the seven glyphs and the attacks call (`stop`) · ☐ **144f** the beasts and
   their attacks (`batch`) · ☐ **144g** the tree (`none`) · ☐ **144h**
   the close (`stop`).
 - If no: ☐ **144d** the Latin picks and the attacks call (`stop`) ·

@@ -109,8 +109,8 @@ mechanism.
 The cut, signed 2026-11-01 in two parts (WORKLOG §145); 145b is the user's.
 
 - ☑ **145a — the theme in the script** (`none`).
-- ◐ **145b — the user's encounters, taken in**: eight, each fought to
-  its end headlessly; read before 145g.
+- ☑ **145b — the user's encounters, taken in**: eight, each fought to
+  its end headlessly; read 2026-11-02, the balance notes to §146.
 - ◐ **145c — a unit's description line** (`batch`): on the full card,
   and with the unit's name at the head of an enemy card's tooltip
   (re-scoped at 145e's stop, since an enemy's only card has no room).

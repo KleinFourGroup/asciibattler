@@ -630,3 +630,25 @@ here. On the sign, a finding lands as a `-post` fix before 145g. For
 `the-periphery`, which the catalog now holds, so its step zero rerun
 keeps only the moves, the theme and the map; The Start's description,
 "Where every run begins", goes false with the node.
+
+### The reads of 145b and 145c (2026-11-02)
+
+The user, in their browser:
+- *145b passed:* "all of my reads passed." Their observations, for
+  §146's bands: the fights tended to the easy end, and those with rats
+  hardly damaged them; foxes were a bigger threat than expected, their
+  dash taking better positions; tigers were brutal, and Cats! felt harder
+  than the boss. Nothing changes here, since the bands are planned, the
+  rats rest on their swarm mechanics and the bear on its size.
+- *The Vermin Lords at the cap:* to §146.
+- *The bear in each stage:* intentional.
+- *The shared events in act 1:* fine for now.
+- *145c, open:* the user asked why the pre-turn cards show the beasts'
+  lines and no other unit's, and found the enemy card's tooltip "a tad
+  cluttered". The answer: the field is on every unit and only the six
+  beasts have lines, since they were act 1's new cast with no text on
+  any screen; and none of the six is draftable, so in play the full
+  card never shows a line, and the pre-turn cards showed them only
+  because the read's `roster=` put beasts on the player's side. The
+  enemy card's tooltip, the one place a player meets the line, is talked
+  through before 145g.

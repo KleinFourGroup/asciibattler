@@ -354,30 +354,41 @@ board as the absorbing parts.
    probe repeated at a kickoff whose cut rests on a big change. The
    user's quick, warm replies made the stops cheap.
 
-## 2026-11-02 — session 2757253f (145f, and the stop for 145b's and 145c's reads)
+## 2026-11-02 — session 2757253f (145f to 145g: act 1's sector, the reads, the tiers, the user's events, act 1 in the map)
 
-A side session started by the one before it, from the hand-off entry.
+A side session started by the one before it, from the hand-off entry;
+after the first stop the user drove it directly, through 145c's
+tooltip, their four events and 145g, to the hand-off trigger.
 
 1. Nothing missing. The hand-off named the step, the pools and the
    tools, and its warning that the locale extract writes whatever prose
    the working tree holds mattered at once: the user had four events in
    progress there.
-2. None that blocked. The user's uncommitted events fail the events
+2. None that blocked. The user's uncommitted events failed the events
    family's extract pin in the working tree, so a plain `npm test` there
-   is red for a reason not mine; the hook's copy and a worktree of HEAD
-   were the clean surfaces.
-3. Mildly, at the batch: "no throw or hang" was met, and the capped
-   Vermin Lords waves could have gone by as the cap working as designed.
-   Asking what stood at the cap turned them into a finding for the
-   user's read.
-4. One hook round on the board test's placeholder id (a slip filed), and
-   three roster tries that did not reproduce the stall from a URL.
-5. The stop's entry has it.
-6. Yes. The task was the step and the stop, both signed, so there was
-   nothing to ask before building; the one judgement call, how far to
-   chase the cap, I stopped when a URL would not reproduce it, which was
-   mine to decide. No wish to pause.
-7. The worktree with only this step's files made the evidence clean
-   without touching the user's work in progress, which I would want
-   again whenever the user authors in the checkout while a session
-   builds.
+   was red for a reason not mine; the hook's copy and a worktree of HEAD
+   were the clean surfaces. At 145g, two pins' own rules could not hold
+   on act 1 as written (the pose host, the replay digest's neutral), and
+   choosing the faithful re-pick over loosening a test took a judgement
+   each, which the WORKLOG records.
+3. Mildly, twice: at 145f's batch, "no throw or hang" was met and the
+   capped Vermin Lords waves could have gone by as the cap working as
+   designed; at 145g, a zero from the pose scan could have been trusted
+   before the scan was run on HEAD's config, where it found the fixture's
+   own seeds. Both times the check came first.
+4. One hook round on the board test's placeholder id (a slip filed);
+   three roster tries that did not reproduce the stall from a URL; a few
+   pane screenshots lost to the hidden pane's lag and a battle that ran on
+   past a pause I had not set; one backslash refusal from the shell
+   guard, rewritten with the Edit tool.
+5. The hand-off entry after 145g has it.
+6. Yes. The user's questions (why only the beasts have lines) were
+   answered before anything was built, and the tiers were built only on
+   their word; the typo fixes in their events were kept to unambiguous
+   slips, with the original saved and the morale-10 trap left to them.
+   No wish to pause; the hand-off comes at the trigger, after a commit.
+7. The re-picks at 145g, each found by a scan with its control, held my
+   interest most; the worktree of HEAD with only the step's files made
+   the evidence clean while the user authored in the checkout, which I
+   would want again. The user's warm, quick replies made each stop
+   cheap.

@@ -801,3 +801,34 @@ End's boss.
 *Left to §146:* the board's tooling still names its full-walk rows
 "two-act" (`board.ts`, `balanceSweep.ts`, the harness's comments), and
 the signed sheet's forced-boss refs were measured at the old acts.
+
+### The hand-off after 145g (2026-11-02, session 2757253f)
+
+At the context trigger, after `be389304`.
+
+*Done.* 145f; the reads of 145b (passed) and 145c (signed, with the
+enemy tooltip in tiers and the editor's Description box); the user's four
+events in act 1's pool; 145g built. All on `main`, unpushed.
+
+*Open.*
+- 145g ◐, read at 145h: the user's play from act 1 to The Deep End's
+  boss.
+- Put to the user and not answered: Burning Tree's "Save the bits,
+  everyone!" (morale at least 10, costs 10, so at exactly 10 it loses the
+  run); its fight's "Leave" label; "After twenty minutes hiking".
+- *Next:* 145h, the phase's close (`stop`): the user's play and the exit
+  by clause (`process/planning.md`, "Phase close").
+- For §146, besides its charter: the user's notes at 145b's read (rats
+  soft, foxes strong, tigers brutal, Cats! harder than the boss); the
+  Vermin Lords' healers at the cap; the board's tooling that still says
+  "two-act"; the forced-boss refs measured at the old acts.
+
+*Tools in `scratch/145/`* (ignored by git), beside the earlier ones:
+`move-act1.ts` made 145g's move and refuses to run again (it checks The
+Start's bosses as the cut found them); `extract-sectors.ts [family]`
+rebuilds one locale family alone; `walk-events.ts` walks every choice of
+named events; `act1-alone.ts` plays act 1 on a one-node map;
+`read-urls.ts` drives URL queries to their fights; `chaos-scan.ts`,
+`chaos-time.ts`, `pose-scan.ts`, `neutral-payloads.ts` and
+`resume-scan.ts` are 145g's re-pick scans. `record-save.ts` still must
+not run again.

@@ -711,7 +711,8 @@ describe('143d — the board per act: the sheet by act number, the forced bosses
   const sheet = loadSignedSheet();
   const LIVE = sectorPositions(SECTOR_MAP);
   // A walk with a new sector in front: the shipped two move to acts 2 and 3.
-  const FRONTED = ['the-periphery', ...LIVE];
+  // Its id names no sector, so the front pools none of the board's bosses.
+  const FRONTED = ['a-sector-in-front', ...LIVE];
   const metrics = (over: Partial<InstrumentMetrics>): InstrumentMetrics => ({
     runs: 40,
     winRate: 0.3,

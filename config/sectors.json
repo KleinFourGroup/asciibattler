@@ -109,5 +109,61 @@
       { "eventId": "hostage-trio" }
     ],
     "startingEvents": []
+  },
+  {
+    "id": "the-periphery",
+    "title": "The Periphery",
+    "description": "The first act: a forest at the edge of things, where beasts roam and bandits live among them.",
+    "length": 11,
+    "theme": "forest",
+    "layouts": [
+      { "layoutId": "procedural", "weight": 2 },
+      { "layoutId": "labyrinth" },
+      { "layoutId": "river" },
+      { "layoutId": "endlessCorridors" },
+      { "layoutId": "junctionAmbush" },
+      { "layoutId": "strafingFunnel" },
+      { "layoutId": "spiralFireLife" },
+      { "layoutId": "isthmus" },
+      { "layoutId": "icebergs" },
+      { "layoutId": "desertFortress" },
+      { "layoutId": "fetidPond" },
+      { "layoutId": "rubbleQuarry" }
+    ],
+    "encounters": {
+      "normal": [
+        { "encounterId": "wolfpack" },
+        { "encounterId": "rats-nest" },
+        { "encounterId": "rat-hunt" },
+        { "encounterId": "poachers" },
+        { "encounterId": "canids" },
+        { "encounterId": "brigands" }
+      ],
+      "elite": [
+        { "encounterId": "vermin-lords" },
+        { "encounterId": "cats" }
+      ],
+      "boss": [
+        { "encounterId": "bear" },
+        { "encounterId": "bandit-king" }
+      ]
+    },
+    "events": [
+      { "eventId": "corrupted-shrine" },
+      { "eventId": "whispering-terminal" },
+      { "eventId": "whispering-terminal-collects" },
+      { "eventId": "silent-mage" },
+      { "eventId": "prodigy" },
+      { "eventId": "mines" },
+      { "eventId": "cheese-tax" },
+      { "eventId": "cadre-1" },
+      { "eventId": "cadre-2" },
+      { "eventId": "cadre-3" },
+      { "eventId": "orange-mob" },
+      { "eventId": "hostage-trio" }
+    ],
+    "startingEvents": [
+      { "eventId": "sector-1-start" }
+    ]
   }
 ]

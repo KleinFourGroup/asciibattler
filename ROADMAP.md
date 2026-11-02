@@ -117,7 +117,8 @@ The cut, signed 2026-11-01 in two parts (WORKLOG §145); 145b is the user's.
 - ☑ **145d — the save across the map** (`none`).
 - ☑ **145e — the forest and its camps** (`stop`), signed with its four
   leans; a forest's own half cover is a TODO.
-- ☐ **145f — act 1's sector, off the map** (`none`).
+- ☑ **145f — act 1's sector, off the map** (`none`): `the-periphery`,
+  on no map node, played alone on a fixture map.
 - ☐ **145g — act 1 in the map** (`batch`, read at 145h), after the
   user's reads of 145b and 145c.
 - ☐ **145h — the phase's close** (`stop`).

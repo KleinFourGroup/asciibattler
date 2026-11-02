@@ -114,6 +114,32 @@ describe('sectors config — the shipped catalog', () => {
     }
   });
 
+  it('ships "The Periphery": forest act one — beasts and Brigands, The Start\'s layouts and events', () => {
+    const act1 = getSector('the-periphery');
+    const start = getSector('the-start')!;
+    expect(act1).toBeDefined();
+    expect(act1!.theme).toBe('forest');
+    expect(act1!.length).toBe(start.length);
+    expect(act1!.layouts).toEqual(start.layouts);
+    expect(act1!.events).toEqual(start.events);
+    // The user's eight encounters, with Brigands shared from The Start and
+    // the King as the second boss; every entry ungated at weight 1.
+    expect(act1!.encounters.normal.map((e) => e.encounterId)).toEqual([
+      'wolfpack',
+      'rats-nest',
+      'rat-hunt',
+      'poachers',
+      'canids',
+      'brigands',
+    ]);
+    expect(act1!.encounters.elite.map((e) => e.encounterId)).toEqual(['vermin-lords', 'cats']);
+    expect(act1!.encounters.boss.map((e) => e.encounterId)).toEqual(['bear', 'bandit-king']);
+    for (const pool of Object.values(act1!.encounters)) {
+      expect(pool.every((e) => e.minHop === undefined && e.weight === undefined)).toBe(true);
+    }
+    expect(act1!.startingEvents.map((e) => e.eventId)).toEqual(['sector-1-start']);
+  });
+
   it('getSector returns undefined for an unknown id', () => {
     expect(getSector('no-such-sector')).toBeUndefined();
   });

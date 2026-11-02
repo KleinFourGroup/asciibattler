@@ -520,3 +520,79 @@ boards and their first turns; `record-save.ts` made 145d's fixture and
 must not run again after 145g; the `add-*.ts` writers go through the
 editors' formatters. `npm run i18n:extract` rewrites every family from
 the working tree, so it picks up any uncommitted config prose.
+
+### 145f — act 1's sector, off the map (2026-11-02, session 2757253f)
+
+*Step zero.* A sector on no map node passes every guard: the map's
+guards check only that a node's candidates exist, the roster table's
+guard walks the map and not the catalog, and the selection coverage
+check runs at load over every sector in the catalog, so act 1's pools
+are checked whether or not a run can reach them. `RunConfig.sectorMap`
+already replaces the map for a headless run, so a fixture map of act 1
+alone needs no new dial. Nothing under `src/` reads the catalog's order,
+but three tests take `SECTOR_IDS[0]` and `[1]` as fixtures, so act 1
+goes last in the file.
+
+*Built.* `the-periphery` appended to `sectors.json` through the sector
+editor's formatter, which first reproduced the file
+(`scratch/145/add-act1.ts`): 11 hops, the forest; The Start's layouts
+(procedural at weight 2) and its 12 events, copied; the normals the
+user's five and Brigands, the elites the Vermin Lords and Cats!, the
+bosses the bear's fight and the King, every entry ungated at weight 1;
+the boon as its starting event, still The Start's too until 145g. Its
+title in `locales/en/sectors.json`, extracted for the sectors family
+alone (`scratch/145/extract-sectors.ts`), since `npm run i18n:extract`
+would also write the user's uncommitted events into the events family.
+A pin in `sectors.test.ts` beside The Start's and The Deep End's
+(planted, a `weight: 2` on Cats! failed it). ARCHITECTURE's catalog
+line, which said two.
+
+*Evidence.* The guards: the sector, selection, map, editor and locale
+tests green, but for the events family's extract, which fails in the
+working tree on the user's uncommitted events and is absent from the
+hook's copy. The batch, on a worktree of HEAD with only this step's
+files (`scratch/145/act1-alone.ts`): act 1 alone on a fixture map of one
+node, source and sink, seeds 1 to 20 under the two baseline strategies
+and the scored one.
+
+| Strategy | Complete | Defeat | Throw · hang | Waves | At the cap | Bosses met |
+|---|---|---|---|---|---|---|
+| pure-random | 6 | 14 | 0 · 0 | 330 | 2 | bear 6, King 6 |
+| greedy | 6 | 14 | 0 · 0 | 346 | 3 | King 9, bear 6 |
+| scored | 7 | 13 | 0 · 0 | 337 | 2 | bear 7, King 6 |
+
+Every boss at hop 10; every act 1 encounter drawn, and every one of the
+12 layouts; 60 to 64 events opened per strategy, 152 to 159 camps. The
+same batch on the working tree read the same numbers. Controls, 5 seeds
+each: the shipped map drew none of the user's eight and 61 to 64 waves
+from outside act 1's pools; a two-hop cap read `aborted` on every run,
+counted as no end. The corpus on the same worktree: 0 of 32 journals
+differ.
+
+*Found.*
+- The waves at the cap are all the Vermin Lords': 7 waves on 4 runs of
+  the 60, on the labyrinth and spiralFireLife, where 145b's probe fought
+  only on procedural forest boards. At the cap only healers stood on
+  their side, 1 to 4, against 1 to 6 of the player's drafted units (a
+  copy of the harness in the worktree, printing the standing units at a
+  cap, on three of the four runs). The cap resolves the turn as a draw,
+  so the run goes on. With a fresh soldier, a lone archer, a lone rioter, or two
+  archers and two mercenaries at the first node, scripted onto the two
+  layouts, 0 of their turns over 10 seeds reached the cap, so no URL
+  shows it yet. The encounter is the user's and the bands §146's; it
+  goes to the user with 145b's read.
+- The shared events start their own fights: `hostage-trio` the Elemental
+  Trio, a Deep End normal, drawn on 1 to 3 of 20 runs; `corrupted-shrine`
+  Deserters; `cadre-2` and `cadre-3` the Plague Victims and the Infernal
+  Column. The Start's runs meet them today, and lean 3 signed the shared
+  events for act 1.
+- With a fresh soldier, `script=1:elite` on seed 1 loses Cats! after 7
+  waves; the read's URLs below use it anyway, since what is read is who
+  comes in which wave.
+- The board places a forced boss by the one sector of the walk whose boss
+  pool holds it (`homeActOf`), so a walk with act 1 in front while the
+  King is still The Start's cannot be built. 145g moves him in the commit
+  that puts act 1 on the map, so no live walk meets it. Its test had used
+  `the-periphery` as the id of a sector in front that named nothing, and
+  threw in the hook's smoke; it now uses an id no sector has (a slip
+  filed).

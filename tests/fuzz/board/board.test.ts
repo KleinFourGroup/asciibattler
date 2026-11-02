@@ -4,6 +4,9 @@
  * everything decision-bearing is here.
  */
 
+import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import {
   BOARD_MIN_N,
@@ -18,6 +21,7 @@ import {
   homeActOf,
   loadSignedSheet,
   parseSummaryCsv,
+  sheetProvenance,
   type BoardInstrument,
   type InstrumentAudit,
   type InstrumentMetrics,
@@ -794,5 +798,33 @@ describe('143d — the board per act: the sheet by act number, the forced bosses
     );
     expect(row?.status).toBe('PASS');
     expect(checkValue(metrics({}), seam2)).toBeNull();
+  });
+});
+
+describe("the report's line for the sheet's history", () => {
+  // The expectation is read off the raw file, not through the loader.
+  const raw = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), 'signed-sheet.json'), 'utf8')) as {
+    signedAt: string;
+  };
+  const separators = raw.signedAt.match(/ ⭑ /g)?.length ?? 0;
+  const lastEntry = raw.signedAt.slice(raw.signedAt.lastIndexOf(' ⭑ ') + 3);
+  const lastTitle = lastEntry.slice(0, lastEntry.indexOf(': '));
+  const secondEntry = raw.signedAt.split(' ⭑ ')[1]!;
+
+  it("names the shipped sheet's count and its last entry, and leaves the history out", () => {
+    const line = sheetProvenance(raw.signedAt);
+    expect(separators).toBeGreaterThan(0);
+    expect(lastTitle.length).toBeGreaterThan(0);
+    expect(line).toContain(`${separators + 1} entries`);
+    expect(line).toContain(`the last ${lastTitle}`);
+    expect(line).not.toContain(secondEntry.slice(0, secondEntry.indexOf(': ')));
+    expect(line.length).toBeLessThan(400);
+  });
+
+  it('one entry, and an entry with no title', () => {
+    expect(sheetProvenance('2026-01-01, §1: the first')).toBe('1 entry: 2026-01-01, §1');
+    expect(sheetProvenance(`a: one ⭑ ${'x'.repeat(150)}`)).toBe(
+      `2 entries, the first a, the last ${'x'.repeat(100)}…; the history is the sheet's signedAt`,
+    );
   });
 });

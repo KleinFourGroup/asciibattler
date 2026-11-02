@@ -110,7 +110,7 @@ export async function runSearchCli(args: SearchModeArgs): Promise<void> {
   // 68b — `--sector-hops` (the 67c shortened-full-walk dial) SUPPRESSES the
   // preset's single-sector hopCount: the two dials are mutually exclusive
   // (parseArgs bails on both flags; Run throws on both fields), and a preset
-  // default must not silently turn a requested two-act read back into a
+  // default must not silently turn a requested read of every act back into a
   // single-sector probe.
   const sectorHops = args.sectorHops;
   const hopCount = sectorHops !== undefined ? undefined : (args.hops ?? preset.hopCount);

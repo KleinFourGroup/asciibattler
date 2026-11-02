@@ -200,3 +200,29 @@ a worktree, so the checkout stays free for the user's authoring.
 The user, to the cut and its six leans as put: "That sounds good to me,
 Claude! 😁 Signed!" The cut goes into ROADMAP §146 as checkboxes; the
 stretch it opens runs 146a to 146c, to the stop at 146d.
+
+### 146a — the board's report and the walk's wording (2026-11-02)
+
+*Built.* `sheetProvenance` in `board.ts`: the line both report headers
+print for the sheet's history, the count of its entries and the first
+and last entries' titles (an entry's text up to its first `: `, the
+entries joined by ` ⭑ `, a convention the field's comment now states).
+All 14 entries have a title by that rule. The board's titles and
+comments, the fuzz CLI's help and the sweep's and search's comments name
+the walk, not two acts.
+
+*Evidence.* Before (a worktree at `ce9cb4ff`) and after, on copies of
+the stored cohorts in `scratch/146/` (since `--report` writes its
+`board-report.txt` into the cohort): `--plan` byte-identical with and
+without `--jobs=4`, the worktree's path normalized, and again after the
+wording; the reports on 94h and 139c's three trees differ in the two
+header lines alone, the first header 10,931 characters of history before
+and one line after. Two cases in `board.test.ts`, the shipped sheet's
+expectation read off the raw file; planted, the line returning the
+history whole fails both, and `board.test.ts` is 44 of 44 restored.
+Typecheck clean.
+
+*Found.* On the three-act map the stored 94h cohort fails integrity on
+both trees: `wall-queen`'s arm now carries `--act=3` and 94h's manifest
+does not. That is 143d's design meeting 145g's map, not 146a; 139c's
+reports, two rows each, pass.

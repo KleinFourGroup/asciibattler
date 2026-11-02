@@ -41,6 +41,7 @@ import {
   renderReport,
   renderSkillGradient,
   renderVerdictReport,
+  sheetProvenance,
   type Board,
   type InstrumentAudit,
   type InstrumentMetrics,
@@ -215,7 +216,7 @@ function report(
   });
   const evaluated = evaluateBoard(board, metrics);
   let text =
-    `BALANCE BOARD — vs the signed sheet (${board.sheet.signedAt})\n\n` +
+    `BALANCE BOARD — vs the signed sheet (${sheetProvenance(board.sheet.signedAt)})\n\n` +
     (partial
       ? `⚠ PARTIAL BOARD (--only=${[...(only ?? [])].join(',')}) — a scoped smoke read, NEVER a signing board\n\n`
       : '') +

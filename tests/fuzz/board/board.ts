@@ -20,14 +20,14 @@
  *   **Post-68d (user-signed 2026-07-27) the whole board is
  *   reference-grade BY DESIGN**: the act-1 rows are DRIFT DETECTORS
  *   pinned at the 68d observed values (±8pt paired noise), and the
- *   DESIGN band lives on the two-act shape — declared 55–70 at 68d, to
+ *   DESIGN band lives on the walk's shape — declared 55–70 at 68d, to
  *   be SIGNED (flipped to `signed` grade) at the post-tuning verify once
  *   §68e/f land. The §60e 60–67 act-1 band is retired with its world.
  *
  * - **Instrument shapes are part of the label** (Protocol v2): the act-1
  *   rows are `--hops=11` (the §60e continuity shape, a bounded
- *   single-sector probe); the `walk-*` rows are the full two-act walk —
- *   the canonical post-67 game. In-sample seeds 1..40, the extended
+ *   single-sector probe); the `walk-*` rows are the full walk of every
+ *   act — the canonical game since 67. In-sample seeds 1..40, the extended
  *   realistic arm, one forced character per instrument. Character parity
  *   is a signed design principle (DESIGN.md §Run structure): the
  *   per-character rows exist to catch parity drift, and the Gambler rows
@@ -53,7 +53,9 @@ export interface SheetBand {
 }
 
 export interface SignedSheet {
-  /** Provenance line printed on every report (who signed, where, when). */
+  /** The sheet's history: one entry per signing or amendment, each opening
+   *  with its title up to the first ': ', joined by ' ⭑ '. A report prints
+   *  `sheetProvenance` of it, not the whole. */
   readonly signedAt: string;
   /** The 68d-signed design principle the per-character rows enforce. */
   readonly characterParity: string;
@@ -114,6 +116,21 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 
 export function loadSignedSheet(path = join(HERE, 'signed-sheet.json')): SignedSheet {
   return JSON.parse(readFileSync(path, 'utf8')) as SignedSheet;
+}
+
+/** The line a report prints for the sheet's history: the count of entries in
+ *  `signedAt` and the first and last entries' titles. The history itself is
+ *  over 10,000 characters and stays in the sheet. */
+export function sheetProvenance(signedAt: string): string {
+  const entries = signedAt.split(' ⭑ ');
+  const title = (entry: string): string => {
+    const end = entry.indexOf(': ');
+    return end >= 0 ? entry.slice(0, end) : entry.length > 100 ? `${entry.slice(0, 100)}…` : entry;
+  };
+  const first = title(entries[0]!);
+  return entries.length === 1
+    ? `1 entry: ${first}`
+    : `${entries.length} entries, the first ${first}, the last ${title(entries[entries.length - 1]!)}; the history is the sheet's signedAt`;
 }
 
 // ---- the board definition -------------------------------------------------
@@ -187,7 +204,7 @@ export interface Board {
 const ARM = ['--searcher', '--audition', '--redraw=level:2', '--empower=level:hi', '--arbitrate', '--prior-lambda=0.5'];
 const CONTROL_ARM = ['--searcher', '--audition', '--redraw=level:2', '--empower=level:hi'];
 const ACT1 = ['--count=40', '--hops=11']; // the §60e continuity shape
-const WALK = ['--count=40']; // the canonical two-act walk (no hop dial)
+const WALK = ['--count=40']; // the canonical walk of every act (no hop dial)
 const REGEN = '--strategy=tests/fuzz/fixtures/59-regen-vector.json';
 /** 85g5 (2026-08-26) — the DEPLOYED searched vector twin: the frozen
  *  55pre anchor is retired; a future re-derive swaps this path only
@@ -267,7 +284,7 @@ function control(
   return { id, title: `${title} (doctrine control)`, args, strategyRow, checks: [] };
 }
 
-/** One two-act walk PRIMARY — the 72b unified-architecture rows on the
+/** One walk PRIMARY — the 72b unified-architecture rows on the
  *  arbitrated default (72f signing): seam re-signed 15–18 at arb reality;
  *  reach + wall held; win DERIVES from reach × (1−wall), never
  *  independently signed. Checks stay REFERENCE grade by the 68d design —
@@ -298,7 +315,7 @@ function walkPosture(posture: 'regen' | 'deploy', sheet: SignedSheet): BoardInst
       : '72b SIGNED 40–50, HELD through the 85g6d fold baseline (0.467)';
   return {
     id: `arb-walk-${posture}`,
-    title: `two-act ${posture} vector (the design-target shape, arbitrated)`,
+    title: `walk ${posture} vector (the design-target shape, arbitrated)`,
     // 94h-pre — the walk rows run --per-encounter so the batch carries
     // pacing.csv (the sheet's pacing DRIFT read; a merged dir pools it).
     args: [...WALK, '--character=soldier', vector, ...ARM, '--per-encounter'],
@@ -467,8 +484,8 @@ export function buildBoard(
     control('regen', 'soldier regen vector', [...ACT1, '--character=soldier', REGEN, ...CONTROL_ARM], 'scored:59-regen-vector'),
     control('deploy', 'soldier deploy vector', [...ACT1, '--character=soldier', DEPLOY, ...CONTROL_ARM], 'scored:92c2-winner'),
     control('fire-ablated', 'the fire-channel ablation', [...ACT1, '--character=soldier', ABLATED, ...CONTROL_ARM], 'scored:60-fire-ablated-vector'),
-    control('walk-regen', 'two-act regen vector', [...WALK, '--character=soldier', REGEN, ...CONTROL_ARM, '--per-encounter'], 'scored:59-regen-vector'),
-    control('walk-deploy', 'two-act deploy vector', [...WALK, '--character=soldier', DEPLOY, ...CONTROL_ARM, '--per-encounter'], 'scored:92c2-winner'),
+    control('walk-regen', 'walk regen vector', [...WALK, '--character=soldier', REGEN, ...CONTROL_ARM, '--per-encounter'], 'scored:59-regen-vector'),
+    control('walk-deploy', 'walk deploy vector', [...WALK, '--character=soldier', DEPLOY, ...CONTROL_ARM, '--per-encounter'], 'scored:92c2-winner'),
   ];
   // 86e3 (decision C, user-signed) — the skill-gradient anchors: the
   // registry's two bare baselines on the act-1 shape (SAME shape as the arb
@@ -1268,7 +1285,7 @@ export function renderVerdictReport(report: VerdictReport): string {
 
 export function renderReport(report: BoardReport, board: Board): string {
   const lines: string[] = [];
-  lines.push(`## DRIFT — reference bands vs the signed sheet (${board.sheet.signedAt})`);
+  lines.push(`## DRIFT — reference bands vs the signed sheet (${sheetProvenance(board.sheet.signedAt)})`);
   lines.push('');
   const pad = (s: string, w: number): string => s.padEnd(w);
   lines.push(

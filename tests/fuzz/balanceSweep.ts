@@ -215,11 +215,11 @@ export interface BalanceSweepConfig {
   readonly hopOverride?: number | undefined;
   /**
    * 68b — the 67c shortened-full-walk dial (`--sector-hops`): every sector's
-   * map is exactly N hops while the DAG still sinks — the cheap TWO-ACT sweep
-   * shape. Mutually exclusive with `hopOverride` (parseArgs bails on both
+   * map is exactly N hops while the DAG still sinks — the cheap sweep shape
+   * of every act. Mutually exclusive with `hopOverride` (parseArgs bails on both
    * flags); when set it also SUPPRESSES the tier's own single-sector
    * `hopCount`, so a preset default can't silently flatten a requested
-   * two-act read back to one sector. Undefined = the tier's normal length.
+   * read of every act back to one sector. Undefined = the tier's normal length.
    */
   readonly sectorHopsOverride?: number | undefined;
   /**
@@ -326,9 +326,9 @@ export function harnessOptionsFor(
   forcedEncounterId?: string,
   sectorHops?: number,
 ): HarnessOptions {
-  // 68b — sectorHops (the two-act dial) suppresses BOTH hop sources: the
+  // 68b — sectorHops (the whole-walk dial) suppresses BOTH hop sources: the
   // dials are exclusive in Run, and the tier's hopCount default must not
-  // silently flatten a requested two-act read.
+  // silently flatten a requested read of every act.
   const hopCount = sectorHops !== undefined ? undefined : (hopOverride ?? preset.hopCount);
   const runConfig: {
     hopCount?: number;

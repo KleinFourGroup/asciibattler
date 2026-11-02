@@ -174,13 +174,7 @@ META-ROADMAP §"Round 10 — Act 1, the wilds" names each row's place.
   until then the guard takes a `sectors` PENDING line with that reason
   (WORKLOG §135, 135b).
 
-- [ ] **The board report prints the sheet's whole history.**
-  `balance:board --report` puts `signedAt`, 10,931 characters of
-  amendments, in two headers, so a read of the report that is not cut to
-  its tables floods the reader. Print a short provenance line (the last
-  amendment's date and phase) and leave the history in the sheet. Before
-  §146, which reads many reports (`tests/fuzz/board/cli.ts`, `renderReport`;
-  a papercut filed at §143's kickoff, WORKLOG §143, 143e).
+- ✅ **The board report prints the sheet's whole history** — both headers print `sheetProvenance`: the count of the sheet's entries and the first and last entries' titles (ROADMAP §146, 146a; WORKLOG §146).
 
 ### The scripted run
 

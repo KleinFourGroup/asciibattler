@@ -22,10 +22,10 @@
  *   npm run fuzz -- --encounter=bandit-king --hops=2 --roster=mercenary:6,archer:6,mage:6 --per-encounter
  *   # 67c — --hops=N is a bounded SINGLE-sector probe (the sector terminal ends the
  *   # run); --sector-hops=N instead shortens EVERY sector's map while still walking
- *   # the full DAG (a cheap two-act read). Mutually exclusive (flag-level bail).
+ *   # the full DAG (a cheap read of every act). Mutually exclusive (flag-level bail).
  *   # 68b — --sector-hops also reaches --search and --balance-sweep (incl. their
  *   # --jobs shard children); it SUPPRESSES the preset/tier's own hopCount.
- *   npm run fuzz -- --sector-hops=4   # 4+4-hop start→deep-end runs
+ *   npm run fuzz -- --sector-hops=4   # 4 hops an act, the whole walk
  *   npm run fuzz -- --search --sector-hops=4 --jobs=8
  *   # 142g — the scripted run, run mode only: --run-script takes the URL's
  *   # script= text (RunConfig.script), --act=N opens the run at the walk's Nth

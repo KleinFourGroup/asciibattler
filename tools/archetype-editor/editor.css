@@ -130,9 +130,23 @@ input[type='number'] {
   font-family: var(--font-glyphs, inherit);
 }
 
-/* Room for a code point being typed, U+E000. */
+/* Room for a code point being typed, U+E000. The name keeps the browser's
+   default width; the description fills its row (below). */
 #glyph {
   width: 7ch;
+  text-align: center;
+}
+
+/* The line of flavour fills its row, wrapping onto a row of its own on a
+   narrow card, so a long line reads whole and never runs past the card. */
+.inline--grow {
+  flex: 1 1 20rem;
+  min-width: 0;
+}
+
+#description {
+  flex: 1;
+  min-width: 0;
 }
 
 .glyph-preview {
@@ -140,11 +154,6 @@ input[type='number'] {
   line-height: 48px;
   min-width: 1ch;
   color: var(--accent);
-}
-
-input[type='text'] {
-  width: 3ch;
-  text-align: center;
 }
 
 input[type='number'] {

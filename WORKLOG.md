@@ -674,3 +674,21 @@ green. In the pane at 800 × 600 (drawn 1:1), seed 1: a Wolfpack wolf's
 tooltip before and after, and a Brigands bandit's after (name, rule,
 hint, no flavour), in `scratch/145c/`. Not verified: Firefox; the user's
 text size.
+
+### 145c signed, and the editor's Description box (2026-11-02, session 2757253f)
+
+The user, of the tiers: "That's looking great, Claude! 😁 One last
+issue: the archetype editor box for the description is only a
+character wide. Otherwise, we're good!" 145c signed.
+
+*The box.* The editor's stylesheet set every text input to `3ch`, a
+rule from its first commit, when the glyph was its only text input; the
+glyph has had its own `7ch` since, and the name and the description
+took the `3ch` (the user's screenshot shows the name cut to "Wo" too).
+The blanket rule is gone, the glyph centred in its own; the name takes
+the browser's default width, and the description's label grows to fill
+its row and the box fills the label, wrapping onto a row of its own on a
+narrow card. In the pane, with the wolf selected: at 1024 px the box ran
+from 123 to 504 px inside a card ending at 519, at 1600 px 482 px wide
+inside a 603 px card, the wolf's line whole in both; the name 199 px.
+Not verified: Firefox.

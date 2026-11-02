@@ -942,7 +942,7 @@
           {
             "id": "leave",
             "label": "Save the bits, everyone!",
-            "condition": { "kind": "poolHealthAtLeast", "amount": 10 },
+            "condition": { "kind": "poolHealthAtLeast", "amount": 11 },
             "outcomes": [
               {
                 "effects": [
@@ -1000,7 +1000,7 @@
         "choices": [
           {
             "id": "leave",
-            "label": "Leave",
+            "label": "Every man for himself!",
             "outcomes": [
               {
                 "next": {
@@ -1231,7 +1231,7 @@
         ]
       },
       "shrine": {
-        "text": "After twenty minutes hiking, the fox spirit deposits you and your men onto the road.  To the side is a small shrine.",
+        "text": "After twenty minutes of hiking, the fox spirit deposits you and your men onto the road.  To the side is a small shrine.",
         "choices": [
           {
             "id": "leave",

@@ -353,3 +353,31 @@ board as the absorbing parts.
    that showed the cover knob doing nothing. I would want the worktree
    probe repeated at a kickoff whose cut rests on a big change. The
    user's quick, warm replies made the stops cheap.
+
+## 2026-11-02 — session 2757253f (145f, and the stop for 145b's and 145c's reads)
+
+A side session started by the one before it, from the hand-off entry.
+
+1. Nothing missing. The hand-off named the step, the pools and the
+   tools, and its warning that the locale extract writes whatever prose
+   the working tree holds mattered at once: the user had four events in
+   progress there.
+2. None that blocked. The user's uncommitted events fail the events
+   family's extract pin in the working tree, so a plain `npm test` there
+   is red for a reason not mine; the hook's copy and a worktree of HEAD
+   were the clean surfaces.
+3. Mildly, at the batch: "no throw or hang" was met, and the capped
+   Vermin Lords waves could have gone by as the cap working as designed.
+   Asking what stood at the cap turned them into a finding for the
+   user's read.
+4. One hook round on the board test's placeholder id (a slip filed), and
+   three roster tries that did not reproduce the stall from a URL.
+5. The stop's entry has it.
+6. Yes. The task was the step and the stop, both signed, so there was
+   nothing to ask before building; the one judgement call, how far to
+   chase the cap, I stopped when a URL would not reproduce it, which was
+   mine to decide. No wish to pause.
+7. The worktree with only this step's files made the evidence clean
+   without touching the user's work in progress, which I would want
+   again whenever the user authors in the checkout while a session
+   builds.

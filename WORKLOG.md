@@ -596,3 +596,37 @@ differ.
   `the-periphery` as the id of a sector in front that named nothing, and
   threw in the hook's smoke; it now uses an id no sector has (a slip
   filed).
+
+### The reads of 145b and 145c, put to the user (unsigned)
+
+After 145f (`4ffacc55`), the stop signed to come before 145g, since 145g
+re-draws every seed and a finding after it re-draws act 1 again.
+
+*145b, the user's encounters*, in the user's browser, each from a fresh
+soldier at the run's first node on a procedural forest board (each
+query driven headlessly to its encounter by name, with the waves as
+written, `scratch/145/read-urls.ts`):
+`?seed=1&hops=11&character=soldier&encounter=wolfpack&script=1:battle;*:layout=procedural,theme=forest`,
+and the same with `rats-nest`, `rat-hunt`, `poachers` and `canids`; the
+elites with `script=1:elite;…`, `vermin-lords` and `cats`; the bear by
+`?seed=1&hops=1&character=soldier&encounter=bear&script=*:layout=procedural,theme=forest`.
+Watch who comes in which wave. Wrong looks like a fight with no beast in
+it, a wave that never ends, or a name that reads off.
+
+*145c, the description line*:
+`?seed=1&hops=11&character=soldier&roster=wolf:2,fox:2,bear:2&encounter=wolfpack&script=1:battle;*:layout=procedural,theme=forest`
+fields a player wolf, fox and bear against the Wolfpack. Their cards
+carry each beast's line under the header; hovering a Wolfpack wolf's
+card shows its name and line above the engage hint. Wrong looks like a
+line cut off, a card grown past its slot, or a line on a unit that has
+none.
+
+*Put with them:* the Vermin Lords' healers at the cap (145f, "Found");
+the bear in each of its three stages, asked at 145b and not answered.
+
+*If the answer comes to another session:* put this stop again from
+here. On the sign, a finding lands as a `-post` fix before 145g. For
+145g: `scratch/145/place-act1.mjs` clones The Start into a placeholder
+`the-periphery`, which the catalog now holds, so its step zero rerun
+keeps only the moves, the theme and the map; The Start's description,
+"Where every run begins", goes false with the node.

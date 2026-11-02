@@ -121,7 +121,11 @@ describe('sectors config — the shipped catalog', () => {
     expect(act1!.theme).toBe('forest');
     expect(act1!.length).toBe(start.length);
     expect(act1!.layouts).toEqual(start.layouts);
-    expect(act1!.events).toEqual(start.events);
+    // The Start's 12 events, then the user's four of the forest.
+    expect(act1!.events).toEqual([
+      ...start.events,
+      ...['burning-tree', 'quiet', 'pitcher-plant', 'fox-hunt'].map((eventId) => ({ eventId })),
+    ]);
     // The user's eight encounters, with Brigands shared from The Start and
     // the King as the second boss; every entry ungated at weight 1.
     expect(act1!.encounters.normal.map((e) => e.encounterId)).toEqual([

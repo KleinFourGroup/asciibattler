@@ -160,7 +160,11 @@
       { "eventId": "cadre-2" },
       { "eventId": "cadre-3" },
       { "eventId": "orange-mob" },
-      { "eventId": "hostage-trio" }
+      { "eventId": "hostage-trio" },
+      { "eventId": "burning-tree" },
+      { "eventId": "quiet" },
+      { "eventId": "pitcher-plant" },
+      { "eventId": "fox-hunt" }
     ],
     "startingEvents": [
       { "eventId": "sector-1-start" }

@@ -692,3 +692,37 @@ narrow card. In the pane, with the wolf selected: at 1024 px the box ran
 from 123 to 504 px inside a card ending at 519, at 1600 px 482 px wide
 inside a 603 px card, the wolf's line whole in both; the name 199 px.
 Not verified: Firefox.
+
+### The user's four events, taken in (2026-11-02, session 2757253f)
+
+The user: "you can go ahead and check and then add in those events!"
+Four, authored in the working tree's `config/events.json`: `burning-tree`
+(Burning Tree), `quiet` (The Quiet Glade), `pitcher-plant` (Pitcher
+Plant) and `fox-hunt` (Fox Hunt). Lean 7 took a commit for each event;
+these four came together, so they are one.
+
+*Checked.* They load (the schema and the loader's guards) and match the
+event editor's format. Every choice walked headlessly, each event opened
+at the run's first node with 100 bits, seeds 1 to 6
+(`scratch/145/walk-events.ts`): every path ends on the map, in its fight
+(the Rats' Nest from Burning Tree's bad chase, Poachers from Fox Hunt's
+march) or with its reward; Burning Tree's chase split 3 and 3 between
+its two outcomes; a fresh run at full morale reads the heals as 0.
+
+*Fixed in the prose*, unambiguous slips only (the user's original kept
+in this session's scratchpad): "in a burst of flames"; "Why, there
+looks"; "the fire points" twice; "filled"; "After half a day's march";
+the gnome's closing quote, `"Shut up!" shrieks`; "Absolute carnage";
+"she leads you on a winding path through the brush"; "You turn to give
+your thanks".
+
+*Put to the user, unchanged:* Burning Tree's "Save the bits, everyone!"
+asks for morale at least 10 and costs 10, and an event's `damagePool`
+ends the run at 0 (`Run.ts`, read, not run), so at exactly 10 the
+choice loses the run; the bad chase's fight is labelled "Leave"; "After
+twenty minutes hiking".
+
+*Added.* The four in act 1's event pool after the 12 shared, ungated at
+weight 1 (`scratch/145/add-act1-events.ts`, through the sector editor's
+formatter); their locale extracted for the events family alone; act 1's
+pin. The corpus: 0 of 32 journals differ, act 1 being on no map node.

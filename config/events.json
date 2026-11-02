@@ -905,5 +905,375 @@
         ]
       }
     }
+  },
+  {
+    "id": "burning-tree",
+    "name": "Burning Tree",
+    "entry": "start",
+    "pages": {
+      "start": {
+        "text": "While making camp for the night, a lightning bolt strikes a tree right next to your tent.  The conifer goes up in a burst of flames.  As your men gather around it, you examine the inferno more closely.",
+        "choices": [
+          {
+            "id": "move-on",
+            "label": "What's that glimmer inside the trunk?",
+            "outcomes": [{ "next": "gold-fire" }]
+          },
+          {
+            "id": "new-choice",
+            "label": "The flames are going against the wind!",
+            "outcomes": [
+              {
+                "effects": [
+                  { "op": "addPacket", "packetId": "patch" },
+                  { "op": "addPacket", "packetId": "hype" },
+                  { "op": "addPacket", "packetId": "surge" }
+                ],
+                "next": "chase-good"
+              },
+              { "next": "chase-bad" }
+            ]
+          }
+        ]
+      },
+      "gold-fire": {
+        "text": "Why, there looks to be a cache of bits hidden in a hollow in the tree's trunk!  A hollow that now looks like a portal to hell, though.",
+        "choices": [
+          {
+            "id": "leave",
+            "label": "Save the bits, everyone!",
+            "condition": { "kind": "poolHealthAtLeast", "amount": 10 },
+            "outcomes": [
+              {
+                "effects": [
+                  { "op": "gainBits", "amount": 50 },
+                  { "op": "damagePool", "amount": 10 }
+                ],
+                "next": "gold-immediate"
+              }
+            ]
+          },
+          {
+            "id": "new-choice",
+            "label": "Let's see what's left after the fire burns down.",
+            "outcomes": [
+              {
+                "effects": [{ "op": "gainBits", "amount": 10 }],
+                "next": "gold-caution"
+              }
+            ]
+          }
+        ]
+      },
+      "gold-immediate": {
+        "text": "Your men throw themselves into the flames, emerging with both third-degree burns and bulging handfuls of bits.",
+        "choices": [
+          {
+            "id": "leave",
+            "label": "Was that worth it?",
+            "outcomes": [{ "next": { "kind": "return-to-map" } }]
+          }
+        ]
+      },
+      "gold-caution": {
+        "text": "Come the morning, you and your men pick through the ashes. You find a few bits, but you find the molten remnants of far more.",
+        "choices": [
+          {
+            "id": "leave",
+            "label": "Alas!  What could have been.",
+            "outcomes": [{ "next": { "kind": "return-to-map" } }]
+          }
+        ]
+      },
+      "chase-good": {
+        "text": "You and your men run in the direction that the fire points.  Soon, you find yourself at the mouth of a cave--and it's filled with packets!",
+        "choices": [
+          {
+            "id": "leave",
+            "label": "What an auspicious omen!",
+            "outcomes": [{ "next": { "kind": "return-to-map" } }]
+          }
+        ]
+      },
+      "chase-bad": {
+        "text": "You and your men run in the direction that the fire points.  Soon, you find yourself in a clearing absolutely teeming with rats!",
+        "choices": [
+          {
+            "id": "leave",
+            "label": "Leave",
+            "outcomes": [
+              {
+                "next": {
+                  "kind": "start-encounter",
+                  "encounterId": "rats-nest"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "quiet",
+    "name": "The Quiet Glade",
+    "entry": "start",
+    "pages": {
+      "start": {
+        "text": "The road on which you're traveling forks in twain, with a sign labeling each path.  One lists the name of the provincial capital; the other simply says, \"The Quiet Glade.\"",
+        "choices": [
+          {
+            "id": "move-on",
+            "label": "The Quiet Glade?  That sounds mysterious!",
+            "outcomes": [{ "next": "quiet1" }]
+          },
+          {
+            "id": "new-choice",
+            "label": "No need for another detour.",
+            "outcomes": [{ "next": "no-fun" }]
+          }
+        ]
+      },
+      "no-fun": {
+        "text": "You continue on your way, like the serious band of adventurers that you are.",
+        "choices": [
+          {
+            "id": "leave",
+            "label": "We're very serious!",
+            "outcomes": [{ "next": { "kind": "return-to-map" } }]
+          }
+        ]
+      },
+      "quiet1": {
+        "text": "After half a day's march, you come upon the promised glade.\n\nIt's quiet.",
+        "choices": [
+          {
+            "id": "leave",
+            "label": "...",
+            "outcomes": [{ "next": "quiet2" }]
+          }
+        ]
+      },
+      "quiet2": {
+        "text": "Very quiet.",
+        "choices": [
+          {
+            "id": "leave",
+            "label": "...",
+            "outcomes": [{ "next": "quiet3" }]
+          }
+        ]
+      },
+      "quiet3": {
+        "text": "So quiet that your internal monologue begins to...",
+        "choices": [
+          {
+            "id": "leave",
+            "label": "...",
+            "outcomes": [{ "next": "quiet4" }]
+          }
+        ]
+      },
+      "quiet4": {
+        "text": "... ... ... ... ....",
+        "choices": [
+          {
+            "id": "leave",
+            "label": "...",
+            "outcomes": [{ "next": "quiet5" }]
+          }
+        ]
+      },
+      "quiet5": {
+        "text": "... ... ... ...!  ... ... ..., ... ... ... ... ....\n\n\"... ... ... ...?\"",
+        "choices": [
+          {
+            "id": "leave",
+            "label": "What?",
+            "condition": { "kind": "bitsAtLeast", "amount": 10 },
+            "outcomes": [
+              {
+                "effects": [
+                  { "op": "spendBits", "amount": 10 },
+                  { "op": "healPool", "amount": 3 }
+                ],
+                "next": "loud"
+              }
+            ]
+          },
+          {
+            "id": "new-choice",
+            "label": "Silently nod",
+            "outcomes": [
+              {
+                "effects": [{ "op": "addDaemon", "daemonId": "cornucopia" }],
+                "next": "quiet6"
+              }
+            ]
+          }
+        ]
+      },
+      "loud": {
+        "text": "\"Shut up!\" shrieks the gnome.  \"This is the Quiet Glade!\"\n\nThe gnome silently heals a few of your men, and silently takes some bits in exchange.  Silently.",
+        "choices": [
+          {
+            "id": "leave",
+            "label": "Let's get out of here.",
+            "outcomes": [{ "next": { "kind": "return-to-map" } }]
+          }
+        ]
+      },
+      "quiet6": {
+        "text": "A daemon quietly appears in the midst of your men.",
+        "choices": [
+          {
+            "id": "leave",
+            "label": "Let's tiptoe onwards!",
+            "outcomes": [{ "next": { "kind": "return-to-map" } }]
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "pitcher-plant",
+    "name": "Pitcher Plant",
+    "entry": "start",
+    "pages": {
+      "start": {
+        "text": "While hacking your way through a particularly dense thicket, you and your men stumble across a giant pitcher plant, with a pair of legs sticking out of its maw.\n\n\"Is somebody there?\" a voice, presumably attached to the legs, asks.  \"Would you mind helping me out of here?  It's going to take me hours, otherwise.\"",
+        "choices": [
+          {
+            "id": "move-on",
+            "label": "Cut him out.",
+            "outcomes": [
+              {
+                "effects": [{ "op": "addPacket", "packetId": "venom" }],
+                "next": "save"
+              }
+            ]
+          },
+          {
+            "id": "new-choice",
+            "label": "Rummage through his pockets!",
+            "outcomes": [
+              {
+                "effects": [{ "op": "gainBits", "amount": 15 }],
+                "next": "thievery"
+              }
+            ]
+          }
+        ]
+      },
+      "save": {
+        "text": "Your men cut the hapless adventurer out with ease.\n\n\"Much obliged,\" he says.  He then hands you a pulpy, green blob.  \"This secretes the plant's digestive enzymes.  I was trying to harvest it; the locals say it's a delicacy.\"\n\nOr maybe they were trying to get him killed.  Before you can point this out, though, the adventurer jogs off.",
+        "choices": [
+          {
+            "id": "leave",
+            "label": "Maybe we can use it to poison our blades.",
+            "outcomes": [{ "next": { "kind": "return-to-map" } }]
+          }
+        ]
+      },
+      "thievery": {
+        "text": "In a mad rush, your men climb up the side of the plant and begin systematically divesting the hapless adventurer of his belongings.\n\n\"Hey, now,\" he protests, \"That's not very sporting!\"\n\nUnfortunately, you don't find much on his person.",
+        "choices": [
+          {
+            "id": "leave",
+            "label": "Aren't adventurers supposed to be rich?",
+            "outcomes": [{ "next": { "kind": "return-to-map" } }]
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "fox-hunt",
+    "name": "Fox Hunt",
+    "entry": "start",
+    "pages": {
+      "start": {
+        "text": "Absolute carnage bars the road ahead, as a party of hunters appears locked in a pitched battle with a pack of foxes!\n\nAs you and your men contemplate what to do, a sly fox spirit emerges from the undergrowth and sidles up to you.  \"For a small fee, I can lead you around this melee,\" she offers.",
+        "choices": [
+          {
+            "id": "move-on",
+            "label": "Take the deal.",
+            "condition": { "kind": "bitsAtLeast", "amount": 5 },
+            "outcomes": [
+              {
+                "effects": [{ "op": "spendBits", "amount": 5 }],
+                "next": "guide"
+              }
+            ]
+          },
+          {
+            "id": "new-choice",
+            "label": "March through the fight.",
+            "outcomes": [
+              {
+                "next": {
+                  "kind": "start-encounter",
+                  "encounterId": "poachers"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "guide": {
+        "text": "You hand a few bits over and fall in line behind the fox spirit, as she leads you on a winding path through the brush.",
+        "choices": [
+          {
+            "id": "leave",
+            "label": "What a tight fit!",
+            "outcomes": [{ "next": "shrine" }]
+          }
+        ]
+      },
+      "shrine": {
+        "text": "After twenty minutes hiking, the fox spirit deposits you and your men onto the road.  To the side is a small shrine.",
+        "choices": [
+          {
+            "id": "leave",
+            "label": "Leave a donation.",
+            "condition": { "kind": "bitsAtLeast", "amount": 5 },
+            "outcomes": [
+              {
+                "effects": [
+                  { "op": "spendBits", "amount": 5 },
+                  { "op": "healPool", "amount": 4 }
+                ],
+                "next": "heal"
+              }
+            ]
+          },
+          {
+            "id": "new-choice",
+            "label": "Get back to your travels.",
+            "outcomes": [{ "next": "advance" }]
+          }
+        ]
+      },
+      "heal": {
+        "text": "You toss a few more bits away, and they land in the shrine's offering bowl.  A warm, calming aura immediately washes over your men.",
+        "choices": [
+          {
+            "id": "leave",
+            "label": "Get back to your travels.",
+            "outcomes": [{ "next": "advance" }]
+          }
+        ]
+      },
+      "advance": {
+        "text": "You turn to give your thanks to the fox spirit, only to find that she's vanished.",
+        "choices": [
+          {
+            "id": "leave",
+            "label": "Onwards, I suppose?",
+            "outcomes": [{ "next": { "kind": "return-to-map" } }]
+          }
+        ]
+      }
+    }
   }
 ]

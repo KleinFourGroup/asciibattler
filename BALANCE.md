@@ -141,9 +141,9 @@ mechanics) and mechanizes the parts of the old protocol that lived in prose.
   such read says so ("Gambler-minus-roster") in its log line.
 - **Run shape**: `--hops=11` is the CONTINUITY shape (the pre-67 full
   length, now a bounded single-sector probe — what the historical numbers
-  mean). The post-67 canonical full game is the two-act walk (11+11);
-  `--sector-hops=N` is the cheap two-act read (N+N). A read's shape is part
-  of its label; never compare across shapes without saying so.
+  mean). The canonical full game is the map's walk (11+11+11 since 145g,
+  11+11 before); `--sector-hops=N` is its cheap read (N per act). A read's
+  shape is part of its label; never compare across shapes without saying so.
 
 ### The consumption contract (§60c, formalized)
 
@@ -687,7 +687,7 @@ re-time mid-sweep).
   per wave, keyed by encounter id; the other two pre-built).
 - `--seed-offset=N` — base the eval seeds past the tuned range (the config-overfit
   holdout); run / search / sweep. *(built — X2c)*
-- `--sector-hops=N` — the N+N two-act read (67c semantics); run / search /
+- `--sector-hops=N` — N hops per act, N+N+N since 145g (67c); run / search /
   sweep incl. `--jobs` shard children; suppresses preset hop counts; excludes
   `--hops` (flag-level bail). *(built — 68b)*
 - `--grant=<id>[,<id>…]` — hand the run any daemon/packet/unit free at

@@ -194,3 +194,9 @@ vector stays its own decision. (3) The read against `0.2.0` from the
 two rows on disk, with no box run at `0.2.0`. (4) No new forced-boss
 rows. (5) The prior table left to Round 11. (6) The cohorts driven from
 a worktree, so the checkout stays free for the user's authoring.
+
+### The cut signed (2026-11-02)
+
+The user, to the cut and its six leans as put: "That sounds good to me,
+Claude! 😁 Signed!" The cut goes into ROADMAP §146 as checkboxes; the
+stretch it opens runs 146a to 146c, to the stop at 146d.

@@ -275,3 +275,30 @@ for about fifteen minutes and no box time; a guard on `npm test` that
 loads every strategy file through `loadWeightsFile` would catch it at the
 commit that adds the archetype. A new guard is the user's call, so it
 goes to 146d.
+
+### 146b — the cohorts launched (2026-11-02)
+
+*Launched* at `d4b2af3a`, pushed, from a detached worktree at
+`../asciibattler-146b` with a `node_modules` junction, so the checkout
+stays free: the board's 25 batches (`scratch/146/146b-board.queue`, made
+from `--plan` by `scratch/146/make-queues.mjs`; line for line 94h's
+queue but the Queen's `--act=3`) on one `cpx42` from 19:29Z, and the
+fresh derive (`146b-derive.queue`, the registry's line) on a second from
+19:30Z, after the first launch had written the parity marker. The
+anchors ran locally in the worktree at the same HEAD, clean manifests:
+pure-random 11 of 40, greedy 11 of 40 (94h: 3 and 3, on The Start).
+`scratch/146/merge.mjs` pools the fetched batches into a board dir by
+each manifest's argv.
+
+*A slip, and its repair.* Removing an earlier worktree (146a's
+before-side) with `git worktree remove` deleted through its junction:
+`.bin` and the `@`-scopes of the checkout's `node_modules` up to
+`@rolldown`, where the user's running dev server held a native binding
+and the removal stopped. `npm install` restored it, the lockfile
+unchanged: every non-optional top-level package present, typecheck
+clean, 3898 tests, 570 smoke, the build. npm left a temp folder,
+`node_modules/@rolldown/.binding-win32-x64-msvc-SJR7XUiS`, which the
+dev server holds. A junction comes out alone with `cmd /c rmdir
+<path>\node_modules`, and only then the worktree; the process docs
+that say to make the junction say nothing of removing it, which goes to
+146d.

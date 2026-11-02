@@ -34,7 +34,7 @@ const PROV: RosterProvenance = {
   buildHead: 'abc1234',
   builtAt: '2026-08-30T00:00:00.000Z',
   sources: ['tests/fuzz/output/fixture/rosters.csv'],
-  sectors: ['the-start', 'the-deep-end'],
+  sectors: ['the-periphery', 'the-start', 'the-deep-end'],
 };
 
 const csvRow = (over: Partial<RosterCsvRow> = {}): RosterCsvRow => ({
@@ -243,11 +243,13 @@ describe('sampleRoster / makeRosterSampler', () => {
     const moved = {
       nodes: [
         { id: 'new', sectors: ['new-first'] },
+        { id: 'periphery', sectors: ['the-periphery'] },
         { id: 'start', sectors: ['the-start'] },
         { id: 'deep', sectors: ['the-deep-end'] },
       ],
       edges: [
-        { from: 'new', to: 'start' },
+        { from: 'new', to: 'periphery' },
+        { from: 'periphery', to: 'start' },
         { from: 'start', to: 'deep' },
       ],
       sources: ['new'],

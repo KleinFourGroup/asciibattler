@@ -14,8 +14,11 @@ import { ChaosFailure, KINDS, chaosRun, type ChaosOptions, type ChaosResult } fr
 // gained pages and its walk went from 0.7 s to 4 s, and seed 31 is the
 // shortest of 40 that keeps the census below whole (WORKLOG §118d). The
 // procedural slot was seed 3 until every strike landed and its walk stopped
-// declining a reward and empowering a unit; seed 5 is the shortest of 40 that
-// does both.
+// declining a reward and empowering a unit, then seed 5 until act 1 went in
+// front and it stopped again; seed 32 is the shortest of 40 that does both.
+// The Gambler's slot was seed 4 until act 1 went in front and its walk grew
+// to 34 battles, 8.7 s alone; seed 3 is the shortest of 40 that redraws,
+// docks at a port and recruits, the last a kind no other slot changes.
 //
 // A seed takes under 1 s alone and up to about 3 s beside the whole suite,
 // which failed the default 5 s under load with nothing wrong. 15 s leaves
@@ -23,10 +26,10 @@ import { ChaosFailure, KINDS, chaosRun, type ChaosOptions, type ChaosResult } fr
 // slower beside the suite, so a walk of 4 s alone takes 13 s or more there.
 const SEED_TIMEOUT_MS = 15_000;
 const EVERY_COMMIT: ReadonlyArray<readonly [number, string]> = [
-  [5, 'hops=3&layout=procedural'],
+  [32, 'hops=3&layout=procedural'],
   [31, ''],
   [6, 'sectorHops=2'],
-  [4, 'character=gambler&bits=300'],
+  [3, 'character=gambler&bits=300'],
 ];
 
 const dir = mkdtempSync(join(tmpdir(), 'chaos-test-'));
@@ -102,9 +105,8 @@ describe('115c — the chaos driver', () => {
       'usePacket',
     ]);
     // The driver's blind side on these four seeds. The journal corpus
-    // (tests/fuzz/corpus) reaches `buyPortPacket`, `buyPortUnit`,
-    // `dismissSectorCleared` and `payToRemoveUnit`; nothing stored reaches
-    // the other two.
+    // (tests/fuzz/corpus) reaches all but `sellPacket`, which nothing
+    // stored reaches.
     expect(KINDS.filter((kind) => !changesTheRun(kind)).sort()).toEqual([
       'buyPortDaemon',
       'buyPortPacket',

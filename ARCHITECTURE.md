@@ -506,8 +506,8 @@ config/                      # A4: balance JSON source of truth (paired with src
   nodemap.json               # hop count + width bands + degree cap + rest knobs (G2/G3)
   terrain.json
   layouts.json
-  sectors.json               # T1: sector catalog — "The Start" + "The Deep End" since §67, and "The Periphery" since 145f (act 1, the forest: the beasts' encounters and Brigands; on no map node yet); 74e/74i: per-sector `events` pools (each holds the full 12-event slate) + `startingEvents` (The Start and The Periphery open on sector-1-start — the run-opening boon)
-  sector-map.json            # T2: the sector-selection DAG — §67: two chained nodes (start → the-deep-end)
+  sectors.json               # T1: sector catalog, in act order — "The Periphery" (act 1, the forest: the beasts' encounters and Brigands, since 145f), "The Fragments" (id the-start, act 2, barren since 145g) and "The Deep End" (act 3); 74e/74i: per-sector `events` pools (each holds the 12 shared events, act 1 the user's four of the forest besides) + `startingEvents` (The Periphery opens on sector-1-start — the run-opening boon)
+  sector-map.json            # T2: the sector-selection DAG — three chained nodes since 145g (periphery → start → deep-end)
   events.json                # 74a→i: the event catalog — the 3 smoke events + the user-authored ten (§74i: the cadre flag-chain three-parter, the prodigy grant, hostage-trio + its rewardOverride, the sector-1-start boon; cheese-tax ships repeatable: true)
   camps.json                 # 75a→j: the camp catalog — the signed 5 (bandit-squatters / ghoul-nest / toll-post / …; bits/packet rewards only, the ⭐ continuous-value rule), and the forest's three beast camps (145e: wolf-den, rat-burrow, puma-lair, in terrain.json's forest pool); placements live in layouts.json campSpawns + camps weighted lists (75j: labyrinth ×2 · fetidPond · icebergs · rubbleQuarry)
   stats.json                 # E1: hpPerConstitution, crit cap/mult, base move cooldown;

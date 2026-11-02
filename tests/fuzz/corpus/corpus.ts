@@ -87,7 +87,8 @@ export const CORPUS: readonly CorpusRow[] = [
   player(5, 'hops=2&firstNode=event'),
   player(6, 'hops=2&firstNode=rest'),
   player(8, 'hops=1&firstNode=elite'),
-  // The chaos driver's every-commit seeds (tests/chaos/chaos.test.ts).
+  // The chaos driver's every-commit seeds as they were when the corpus was
+  // built (tests/chaos/chaos.test.ts holds today's; two have moved since).
   chaos(3, 'hops=3&layout=procedural', true),
   chaos(31),
   chaos(6, 'sectorHops=2'),
@@ -104,11 +105,13 @@ export const CORPUS: readonly CorpusRow[] = [
   chaos(1, 'character=gambler&bits=300'),
   chaos(2, 'character=gambler&bits=300'),
   chaos(5, 'character=gambler&bits=300'),
-  // Chosen from `--survey=12` when the strikes moved (2026-10-29) and the
-  // rows above stopped buying at a port: a packet bought, and a unit bought
-  // and one paid off.
-  chaos(12),
-  chaos(8, 'character=gambler&bits=300'),
+  // A packet bought, a unit bought and one paid off, which the rows above
+  // never do: chosen from `--survey=12` when the strikes moved (2026-10-29),
+  // and again from a survey of 40 when act 1 went in front (2026-11-02) and
+  // those rows stopped trading.
+  chaos(7),
+  chaos(16),
+  chaos(37, 'character=gambler&bits=300'),
 ];
 
 const HERE = dirname(fileURLToPath(import.meta.url));

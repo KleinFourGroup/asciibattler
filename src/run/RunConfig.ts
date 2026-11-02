@@ -70,7 +70,7 @@ export interface RunConfig {
    * The shortened full walk: every sector's map is exactly this many hops,
    * in place of each sector's authored `length` (not a cap), while the walk
    * still goes on to the map's real sink, so `sectorHops: 4` on the shipped
-   * two-sector map is a 4 + 4 hop run in two acts. The cheap shape for a
+   * three-sector map is a 4 + 4 + 4 hop run in three acts. The cheap shape for a
    * multi-sector read. URL form: `sectorHops=4`.
    */
   readonly sectorHops?: number;

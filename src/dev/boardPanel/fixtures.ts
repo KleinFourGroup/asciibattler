@@ -50,13 +50,15 @@ const RUN_BASE =
   'character=soldier&firstNode=elite&roster=mercenary,archer,rogue,healer,mage,catapult';
 
 export const BOARDS: Record<BoardId, BoardFixture> = {
-  // The pose host, at 15×15, the geometry tests' reference size: of the 43
-  // seeds in 1..600 that roll 15×15, none hosts every pose on its measured
-  // spot (a team spawns where the far-row clump goes); seed 91 is the first
-  // of two where that clump is the only thing that moves, pinned by the test.
+  // The pose host, at 15×15, the geometry tests' reference size, on act 2's
+  // board: act 1's forest is too dense, none of its 210 boards in 1..3000
+  // that roll 15×15 keeping the poses' spots clear. No act 2 board hosts every
+  // pose on its measured spot either (a team spawns where the far-row clump
+  // goes); seed 602 is the first of three in 1..3000 where that clump is the
+  // only thing that moves, pinned by the test.
   open15: {
     label: 'procedural 15x15 (the 105a reference size, the pose host)',
-    run: `seed=91&layout=procedural&${RUN_BASE}`,
+    run: `seed=602&act=2&layout=procedural&${RUN_BASE}`,
     park: true,
     expect: { layoutId: null, gridW: 15, gridH: 15 },
   },

@@ -8,7 +8,7 @@ import { EventBus } from '../core/EventBus';
 import { LAYOUT_IDS, THEMES, getLayout } from '../sim/layouts';
 import { getSector, PROCEDURAL_LAYOUT_ID } from '../config/sectors';
 import { getEncounter, ENCOUNTERS } from '../config/encounters';
-import { SectorMapSchema } from '../config/sectorMap';
+import { SECTOR_MAP, SectorMapSchema } from '../config/sectorMap';
 import type { GameEvents } from '../core/events';
 import { ARCHETYPE_CONFIG, DRAFTABLE_BY_TIER } from '../sim/archetypes';
 import { scaleStats } from '../sim/leveling';
@@ -60,6 +60,10 @@ const K_EMPOWER: { empowersPerTurn: number; buff: EmpowerConfig['buff'] } = {
  * their own catalogs; tests about the map's new shape assert the stamp.
  */
 const NO_EVENTS = { eventCatalog: [] as EventDef[] };
+
+/** The sector a shipped run opens on: the shipped map's source node's one
+ *  candidate, read from the map rather than named. */
+const FIRST_SECTOR_ID = SECTOR_MAP.nodes.find((n) => n.id === SECTOR_MAP.sources[0])!.sectors[0]!;
 
 const K_DEFAULT_DAEMON: DaemonConfig = {
   id: 'test-k-defaults',
@@ -599,9 +603,9 @@ describe('Run', () => {
 
     it('procedural encounters inherit the current sector theme', () => {
       // The theme is the SECTOR's, not a per-battle roll: every
-      // procedural board in "The Start" paints that sector's theme. Derive the
-      // expected value from config (never hardcode the authored theme).
-      const sectorTheme = getSector('the-start')!.theme;
+      // procedural board in the run's first sector paints that sector's theme.
+      // Derive the expected value from config (never hardcode the authored theme).
+      const sectorTheme = getSector(FIRST_SECTOR_ID)!.theme;
       let proceduralHits = 0;
       for (let seed = 1; seed <= 200; seed++) {
         const { run } = freshRunWithBus(seed);
@@ -966,11 +970,11 @@ describe('Run', () => {
       const { run } = freshRunWithBus(1);
       const frontier = frontierOf(run);
       run.dispatch({ kind: 'enterNode', nodeId: frontier });
-      // Selection picks one of "The Start"'s pooled encounters — which one is
+      // Selection picks one of the first sector's pooled encounters — which one is
       // seed-dependent; assert it's a real catalog pick, derived from the live
       // pool (not a frozen name list) so new catalog content can't stale this.
       // Wb4 — the fight pool is per-kind; flatten all kinds for the name check.
-      const pool = getSector('the-start')!.encounters;
+      const pool = getSector(FIRST_SECTOR_ID)!.encounters;
       const pooled = [...pool.normal, ...pool.elite, ...pool.boss].map(
         (e) => getEncounter(e.encounterId)!,
       );
@@ -1415,9 +1419,9 @@ describe('Run', () => {
 
     it("the enemy notch in battle is the fielded wave's bound, the one the gate previewed", () => {
       // Read at the battle's start, after `beginTurn` has committed the wave
-      // cursor, a wave rolled again would be the next one. Seed 2's root
+      // cursor, a wave rolled again would be the next one. Seed 6's root
       // encounter loops two waves of different power, which tells them apart.
-      const { run, bus } = freshRunWithBus(2);
+      const { run, bus } = freshRunWithBus(6);
       run.pauseAtTurnGates = true;
       const phase = (): string => run.phase;
       // The bound re-derived from the fielded team, summed here by hand.
@@ -3794,8 +3798,8 @@ describe('Run', () => {
 
     it('opens on a source DAG node + the shipped sector', () => {
       const { run } = freshRunWithBus(1);
-      expect(run.currentSectorId).toBe('the-start');
-      expect(run.currentSectorNodeId).toBe('start'); // the shipped DAG's one source
+      expect(run.currentSectorId).toBe('the-periphery');
+      expect(run.currentSectorNodeId).toBe('periphery'); // the shipped DAG's one source
       expect(run.currentNodeId).toBe(PRE_ROOT_NODE_ID);
     });
 
@@ -3803,24 +3807,31 @@ describe('Run', () => {
       const { run } = freshRunWithBus(1);
       // Available before any node is entered — derived from config, not hardcoded.
       expect(run.currentNodeId).toBe(PRE_ROOT_NODE_ID);
-      expect(run.currentSectorTitle).toBe(getSector('the-start')!.title);
+      expect(run.currentSectorTitle).toBe(getSector('the-periphery')!.title);
     });
 
-    it('the shipped DAG (start → deep-end) gates at the first terminal, completes at the second', () => {
+    it('the shipped DAG (periphery → start → deep-end) gates at the first two terminals, completes at the third', () => {
       const { run, bus } = freshRunWithBus(1);
-      run.currentNodeId = run.nodeMap.terminalId;
-      run.phase = 'battle';
       let victories = 0;
       bus.on('run:victory', () => victories++);
-      winEncounter(bus);
-      // The Start's terminal leads to the sectorCleared gate, then act two.
-      expect(victories).toBe(0);
-      expect(run.phase).toBe('sectorCleared');
-      run.dispatch({ kind: 'dismissSectorCleared' });
-      expect(run.currentSectorNodeId).toBe('deep-end');
+      // Each of the first two acts' terminals leads to the sectorCleared
+      // gate, then the next act.
+      for (const [nodeId, sectorId] of [
+        ['start', 'the-start'],
+        ['deep-end', 'the-deep-end'],
+      ] as const) {
+        run.currentNodeId = run.nodeMap.terminalId;
+        run.phase = 'battle';
+        winEncounter(bus);
+        expect(victories).toBe(0);
+        expect(run.phase).toBe('sectorCleared');
+        run.dispatch({ kind: 'dismissSectorCleared' });
+        expect(run.currentSectorNodeId).toBe(nodeId);
+        expect(run.currentSectorId).toBe(sectorId);
+      }
       expect(run.currentSectorId).toBe('the-deep-end');
       expect(run.currentSectorTitle).toBe(getSector('the-deep-end')!.title);
-      // Clear the second terminal — deep-end IS the sink → the run completes.
+      // Clear the third terminal — deep-end IS the sink → the run completes.
       run.currentNodeId = run.nodeMap.terminalId;
       run.phase = 'battle';
       winEncounter(bus);
@@ -4015,20 +4026,23 @@ describe('Run', () => {
       // No gate, no advance — the probe's terminal IS the run terminal.
       expect(run.phase).toBe('complete');
       expect(victories).toBe(1);
-      expect(run.currentSectorNodeId).toBe('start');
+      expect(run.currentSectorNodeId).toBe('periphery');
     });
 
     it('sectorHops is the shortened FULL-WALK dial: every sector maps to N hops, the DAG still sinks', () => {
       const { run, bus } = freshRunWithBus(1, { sectorHops: 3 });
       expect(run.nodeMap.hops.length).toBe(3); // overrides the authored 11
-      run.currentNodeId = run.nodeMap.terminalId;
-      run.phase = 'battle';
-      winEncounter(bus);
-      // Still walks the DAG: the gate, then act two — ALSO 3 hops.
-      expect(run.phase).toBe('sectorCleared');
-      run.dispatch({ kind: 'dismissSectorCleared' });
-      expect(run.currentSectorId).toBe('the-deep-end');
-      expect(run.nodeMap.hops.length).toBe(3);
+      // Still walks the DAG: each act's terminal, a gate, then the next act —
+      // ALSO 3 hops.
+      for (const sectorId of ['the-start', 'the-deep-end']) {
+        run.currentNodeId = run.nodeMap.terminalId;
+        run.phase = 'battle';
+        winEncounter(bus);
+        expect(run.phase).toBe('sectorCleared');
+        run.dispatch({ kind: 'dismissSectorCleared' });
+        expect(run.currentSectorId).toBe(sectorId);
+        expect(run.nodeMap.hops.length).toBe(3);
+      }
       // And the sink completes as normal.
       run.currentNodeId = run.nodeMap.terminalId;
       run.phase = 'battle';
@@ -6268,12 +6282,12 @@ describe('per-run event repeats', () => {
   });
 
   it('END-TO-END: a SHIPPED run (no dials) opens the authored starting event at the root', () => {
-    // The positive pin: The Start authors `startingEvents`, the root is
+    // The positive pin: the run's first sector authors `startingEvents`, the root is
     // sector-stamped, entry draws
     // from the starting pool and IGNORES the combat-resolve roll — so this
     // holds for EVERY seed, deterministically. Derived, not hardcoded: the
     // expected id comes from the shipped sector config.
-    const startingIds = getSector('the-start')!.startingEvents.map((e) => e.eventId);
+    const startingIds = getSector(FIRST_SECTOR_ID)!.startingEvents.map((e) => e.eventId);
     expect(startingIds.length).toBeGreaterThan(0);
     for (const seed of [1, 2, 3]) {
       const run = new Run(seed, new EventBus<GameEvents>());

@@ -41,7 +41,7 @@ describe('sectors config — the shipped catalog', () => {
     expect(new Set(SECTOR_IDS).size).toBe(SECTOR_IDS.length);
   });
 
-  it('ships "The Start" with the full ungated pool (procedural + every layout)', () => {
+  it('ships "The Start", titled The Fragments, with the full ungated pool (procedural + every layout)', () => {
     const start = getSector('the-start');
     expect(start).toBeDefined();
     const ids = start!.layouts.map((e) => e.layoutId);
@@ -53,8 +53,8 @@ describe('sectors config — the shipped catalog', () => {
     expect(start!.length).toBeGreaterThan(0);
     // The Start's fight pool, split by kind — each list ungated/uniform
     // (filtered by node kind, not hop). The back-half entries
-    // (elementalTrio/plagueDoctors/darkMagicPosse) are The Deep End's: act 1
-    // is brigand country.
+    // (elementalTrio/plagueDoctors/darkMagicPosse) are The Deep End's: The
+    // Start is brigand country.
     expect(start!.encounters.normal.map((e) => e.encounterId)).toEqual([
       'brigands',
       'highwaymen',
@@ -67,10 +67,15 @@ describe('sectors config — the shipped catalog', () => {
       'brigand-champions',
       'warband-vanguard',
     ]);
-    expect(start!.encounters.boss.map((e) => e.encounterId)).toEqual(['bandit-king', 'banditQueen']);
+    // Act 2 since act 1 went in front: barren, its bosses the two that moved
+    // from The Deep End, and no starting event (the boon is act 1's).
+    expect(start!.title).toBe('The Fragments');
+    expect(start!.theme).toBe('barren');
+    expect(start!.encounters.boss.map((e) => e.encounterId)).toEqual(['generalissimo', 'witch-hunt']);
+    expect(start!.startingEvents).toEqual([]);
   });
 
-  it('ships "The Deep End": swamp act two — the occult pool, two signed hop gates', () => {
+  it('ships "The Deep End": swamp act three — the occult pool, two signed hop gates', () => {
     const deep = getSector('the-deep-end');
     expect(deep).toBeDefined();
     expect(deep!.theme).toBe('swamp');
@@ -96,11 +101,8 @@ describe('sectors config — the shipped catalog', () => {
       'plagueSpreaders',
       'darkMagicPosse',
     ]);
-    // The Deep End's own boss pool: the sector-2 bosses (user-authored).
-    expect(deep!.encounters.boss.map((e) => e.encounterId)).toEqual([
-      'generalissimo',
-      'witch-hunt',
-    ]);
+    // The Queen alone, standing in for act 3's dark wizard until it is built.
+    expect(deep!.encounters.boss.map((e) => e.encounterId)).toEqual(['banditQueen']);
     // The gates, signed by the user: the two isolation-pinned defects carry
     // hop gates; everything else stays ungated.
     const gates = new Map(deep!.encounters.normal.map((e) => [e.encounterId, e.minHop]));

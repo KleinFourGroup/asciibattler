@@ -239,6 +239,6 @@ describe('the poses', () => {
   });
 
   it('the control: the seed step zero first picked displaces more than that', () => {
-    expect(displaced(BOARDS.open15.run.replace('seed=91', 'seed=6')).length).toBeGreaterThan(1);
+    expect(displaced(BOARDS.open15.run.replace('seed=602', 'seed=6')).length).toBeGreaterThan(1);
   });
 });

@@ -22,7 +22,7 @@ a number, it's in the wrong place.
 encounter health pool is a bank of hit points that every fight chips.
 The "difficulty" of a fight = how much pool it costs (**pool damage**),
 not whether the skirmish was technically won. The run's overall shape is
-that budget flowing through two acts: how much pool crosses the act
+that budget flowing through the acts: how much pool crosses each act
 boundary (**seam pool**), what fraction of runs make it to the final
 fight (**terminal reach**), and what fraction of those die there (**the
 wall**). Win rate is deliberately DERIVED from reach and wall rather

@@ -217,7 +217,8 @@ describe('fuzz harness', () => {
   });
 
   it('a two-act walk labels battles + chips with the sector ordinal (68e)', () => {
-    // sectorHops: 2 → a 2+2 walk over the shipped start → deep-end chain.
+    // sectorHops: 2 → a 2+2+2 walk over the shipped periphery → start →
+    // deep-end chain.
     // 74b — the seed pin retired: the eventRng stream-append re-rolled every
     // seed's battles and the pinned seed stopped clearing act 1 (even a
     // level-15 roster only clears ~40% of seeds — the act-1 boss bleeds the

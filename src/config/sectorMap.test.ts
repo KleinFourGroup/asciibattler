@@ -4,20 +4,23 @@ import { SECTOR_IDS } from './sectors';
 
 /**
  * The sector-selection meta-DAG schema. The structural block pins the
- * shipped two-node chain; the guard block exercises the four custom validators
+ * shipped three-node chain; the guard block exercises the four custom validators
  * with hand-built fixtures (never the shipped JSON).
  */
 
 const REAL_SECTOR = SECTOR_IDS[0]!; // a definitionally-valid sector id
 
 describe('sector-map config — the shipped DAG', () => {
-  it('parses to the two-node chain: start → deep-end', () => {
-    expect(SECTOR_MAP.nodes.map((n) => n.id)).toEqual(['start', 'deep-end']);
-    expect(SECTOR_MAP.edges).toEqual([{ from: 'start', to: 'deep-end' }]);
-    expect(SECTOR_MAP.sources).toEqual(['start']);
+  it('parses to the three-node chain: periphery → start → deep-end', () => {
+    expect(SECTOR_MAP.nodes.map((n) => n.id)).toEqual(['periphery', 'start', 'deep-end']);
+    expect(SECTOR_MAP.edges).toEqual([
+      { from: 'periphery', to: 'start' },
+      { from: 'start', to: 'deep-end' },
+    ]);
+    expect(SECTOR_MAP.sources).toEqual(['periphery']);
     expect(SECTOR_MAP.sinks).toEqual(['deep-end']);
     // Every candidate sector is real (caught by the schema, asserted here for
-    // legibility) — and both node lists are singletons, so the whole walk is
+    // legibility) — and every node list is a singleton, so the whole walk is
     // zero-entropy (gotcha #111: node-map generation stays unperturbed).
     for (const node of SECTOR_MAP.nodes) {
       expect(node.sectors.length).toBe(1);

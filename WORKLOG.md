@@ -726,3 +726,78 @@ twenty minutes hiking".
 weight 1 (`scratch/145/add-act1-events.ts`, through the sector editor's
 formatter); their locale extracted for the events family alone; act 1's
 pin. The corpus: 0 of 32 journals differ, act 1 being on no map node.
+
+### 145g — act 1 in the map (2026-11-02, session 2757253f)
+
+*Step zero.* The move applied to a worktree of HEAD
+(`scratch/145/move-act1.ts`, through the sector and event editors'
+formatters): 21 main-suite failures and 6 in the smoke, the kickoff's
+probe list plus five; 145d's save across the map passed untouched. None
+changed what the cut intends.
+
+*Built.* The node `periphery` before `start`, its source; the catalog in
+act order; The Start barren and titled The Fragments, its id kept, its
+bosses the Generalissimo and the Witch Hunt, its starting event gone;
+The Deep End's boss the Queen alone; the boon's line "This sector is
+rife with beasts and bandits"; the locale for the sectors and events
+families. No snapshot bump: World v39, Run v50, the fingerprint pin
+green.
+
+*The pins, each by its own rule.*
+- The shipped map's and sectors' pins: the signed moves.
+- `Run.test.ts`: the tests that meant the run's first sector read it
+  from the map's source (`FIRST_SECTOR_ID`); the DAG tests walk three
+  acts; the enemy notch's seed 2 → 6, the first of 30 whose root
+  encounter fields waves of different bounds (most of act 1's normals
+  repeat one wave).
+- `scriptedRun.test.ts`: act 1 is the forest, act 2 The Fragments, and
+  the act past the map's end 4.
+- The board explorer's pose host (`open15`): act 1's forest is too dense,
+  none of its 210 boards in 1..3000 that roll 15 × 15 keeping the poses'
+  spots clear (`scratch/145/pose-scan.ts`; on HEAD's config the scan
+  finds the fixture's seeds 91 and 437, its control). It moved to act 2,
+  seed 602, the first of three in 1..3000.
+- The chaos driver's every-commit seeds: the procedural slot 5 → 32,
+  since 5 stopped declining a reward and empowering a unit; the Gambler's
+  4 → 3, since its walk grew to 34 battles, 8.7 s alone, where the file
+  holds 4 s alone too long beside the suite. 3 is the shortest of 40 that
+  redraws, docks at a port and recruits. The census pin is unchanged:
+  `usePacket`, lost at first, is back (`scratch/145/chaos-scan.ts`).
+- The replay digest's base run, seed 7 → 14: its rename test needs a
+  battle payload naming the neutral team, and act 1's boards have no
+  destructible walls to die, so seeds 1 to 13 meet none in three hops
+  (`scratch/145/neutral-payloads.ts`; HEAD's run had 9).
+- The resume gates' first run, seed 4 → 8, the first of 20 whose
+  `sectorHops=2` run clears three bosses, for the `complete` gate.
+- The board's forced bosses: the King in act 1, the Generalissimo in act
+  2, the Queen in act 3, each one act on behind a sector in front.
+- `hopsRemaining`: after the first clear, the second sector's map and
+  every later one remain.
+- The roster sampler's fixture table, built over the three-act walk; the
+  roster table's guard, the `sectors` PENDING line, cleared by §146's
+  rebuild.
+- A few comments that said two acts (`sectorMap.ts`, `RunConfig.ts`,
+  two tests).
+
+*The corpus.* 32 of 32 journals diverged at their first battle;
+re-recorded (`--record`). The new recording lost three port trades (a
+packet bought, a unit bought, one paid off) and gained a daemon bought,
+so three rows from a survey of 40 seeds (chaos 7, chaos 16, the
+Gambler's 37) replace the two chosen for those trades at the strikes'
+move (chaos 12, the Gambler's 8): 33 journals, 20 of the 21 kinds (only
+selling a packet never changes a run), 0 of 33 differing on replay;
+`corpus.test.ts` green with its plants, 37 tests. TESTING's corpus lines.
+
+*Docs.* DESIGN (the acts' mood, the starting event), ARCHITECTURE (the
+catalog and the map), BALANCE's primer ("the acts"), `plans/acts.md`.
+
+*In the pane* (`seed=8&sectorHops=2&character=soldier`, driven by the
+probe kit): the map opened on "THE PERIPHERY", the King forewarned; the
+boon at the root, The Divine Bear, the gate to The Fragments,
+Highwaymen, the Witch Hunt, the gate to The Deep End, Plague Doctors,
+and The Bandit Queen?, where the run was lost: act 1's root to The Deep
+End's boss.
+
+*Left to §146:* the board's tooling still names its full-walk rows
+"two-act" (`board.ts`, `balanceSweep.ts`, the harness's comments), and
+the signed sheet's forced-boss refs were measured at the old acts.

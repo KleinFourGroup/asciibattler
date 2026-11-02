@@ -1,9 +1,10 @@
 {
   "nodes": [
+    { "id": "periphery", "sectors": ["the-periphery"] },
     { "id": "start", "sectors": ["the-start"] },
     { "id": "deep-end", "sectors": ["the-deep-end"] }
   ],
-  "edges": [{ "from": "start", "to": "deep-end" }],
-  "sources": ["start"],
+  "edges": [{ "from": "periphery", "to": "start" }, { "from": "start", "to": "deep-end" }],
+  "sources": ["periphery"],
   "sinks": ["deep-end"]
 }

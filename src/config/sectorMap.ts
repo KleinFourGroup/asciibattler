@@ -8,8 +8,8 @@
  * clearing that sector's boss it moves to a random successor and one of its
  * sectors, and so on until it clears a sink. The walk is in
  * `src/run/sectorWalk.ts`; this module holds the data and the checks that
- * keep the walk total. The shipped map is two nodes, `start` then
- * `deep-end`, one sector each.
+ * keep the walk total. The shipped map is three nodes, `periphery`, `start`
+ * and `deep-end`, one sector each.
  *
  * Beyond zod's structural checks, the parse refuses:
  * 1. a repeated node id;

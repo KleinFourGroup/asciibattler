@@ -9,8 +9,11 @@ import { asFile, bytes, driveRun, replayPlants } from '../journalDrive';
 // hash, to be handed an end whose hash differs, and to see every event. Each
 // is held here against a plant it must catch.
 
+// The rename test needs a battle payload naming the neutral team: seed 14 is
+// the first whose three hops of act 1 carry one (forest boards have no
+// destructible walls to die, so many seeds' do not).
 const recorded = driveRun({
-  start: { kind: 'seed', seed: 7, dials: 'hops=3&character=soldier' },
+  start: { kind: 'seed', seed: 14, dials: 'hops=3&character=soldier' },
   plants: replayPlants(),
 });
 const base = asFile(recorded.journal);

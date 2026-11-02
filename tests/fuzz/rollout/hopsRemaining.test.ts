@@ -48,8 +48,10 @@ describe('Run.hopsRemaining — post-seam (the walker-driven pin)', () => {
     }
     expect(pinned, 'no seed in the scan cleared the first sector').not.toBeNull();
     expect(pinned!.atClear).toBe(pinned!.expected);
-    // On the shipped linear map the second sector is the sink: exactly its
-    // own (authored-length) map remains.
-    expect(pinned!.atClear).toBe(getSector(SECTOR_MAP.nodes[1]!.sectors[0]!)!.length);
+    // On the shipped linear map, the second sector's whole (authored-length)
+    // map remains, and every sector's after it.
+    expect(pinned!.atClear).toBe(
+      SECTOR_MAP.nodes.slice(1).reduce((n, node) => n + getSector(node.sectors[0]!)!.length, 0),
+    );
   });
 });

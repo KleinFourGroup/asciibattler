@@ -114,9 +114,11 @@ function resumed(save: string, config: RunConfig): Emitted[] {
 
 // Step zero (WORKLOG §115a): a `sectorHops=2` run clears its first sector in
 // about fifteen battles; no short run met a port, so one full-length run is
-// here for that gate.
+// here for that gate. The first run must reach the end of the walk for the
+// `complete` gate: since act 1 went in front that is three bosses, and seed 8
+// is the first of 20 whose run clears them.
 const RUNS: ReadonlyArray<readonly [number, string]> = [
-  [4, 'sectorHops=2&character=soldier'],
+  [8, 'sectorHops=2&character=soldier'],
   [1, 'sectorHops=2&character=soldier'],
   [1, 'character=soldier'],
 ];

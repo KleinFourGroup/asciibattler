@@ -76,7 +76,7 @@ function firstFrontier(run: Run): number {
   return run.nodeMap.rootId;
 }
 
-/** 74i-c — suppress the event catalog: The Start opens on a starting
+/** 74i-c — suppress the event catalog: act 1 opens on a starting
  *  event now, and these tests' subject is the BATTLE loop (an empty
  *  catalog degrades every event entry to the fight — the 74b rule). */
 const NO_EVENTS = { eventCatalog: [] as const };

@@ -731,23 +731,30 @@ describe('143d — the board per act: the sheet by act number, the forced bosses
   });
 
   it("each forced boss's act is its sector's place in the walk", () => {
-    expect(LIVE).toEqual(['the-start', 'the-deep-end']);
+    expect(LIVE).toEqual(['the-periphery', 'the-start', 'the-deep-end']);
     expect(homeActOf('bandit-king', LIVE)).toBe(1);
-    expect(homeActOf('banditQueen', LIVE)).toBe(1);
     expect(homeActOf('generalissimo', LIVE)).toBe(2);
-    expect(homeActOf('banditQueen', FRONTED)).toBe(2);
+    expect(homeActOf('banditQueen', LIVE)).toBe(3);
+    expect(homeActOf('banditQueen', FRONTED)).toBe(4);
     expect(() => homeActOf('not-a-boss', LIVE)).toThrow(/0 sectors/);
-    expect(() => homeActOf('bandit-king', ['the-start', 'the-start'])).toThrow(/2 sectors/);
+    expect(() => homeActOf('generalissimo', ['the-start', 'the-start'])).toThrow(/2 sectors/);
   });
 
   it('a sector in front moves the forced-boss rows alone, by --act; act 1 keeps no flag', () => {
     const live = buildBoard(sheet, LIVE);
     const fronted = buildBoard(sheet, FRONTED);
-    for (const inst of live.instruments) expect(inst.args.some((a) => a.startsWith('--act'))).toBe(false);
+    const actFlag = (args: readonly string[]): string | undefined => args.find((a) => a.startsWith('--act'));
+    // On the live walk the King's row is in act 1, with no flag, and the
+    // Queen's in act 3.
+    for (const inst of live.instruments) {
+      expect(actFlag(inst.args), inst.id).toBe(inst.id === 'wall-queen' ? '--act=3' : undefined);
+    }
     for (const inst of fronted.instruments) {
       const was = live.instruments.find((i) => i.id === inst.id)!;
-      if (inst.id === 'wall-king' || inst.id === 'wall-queen') {
+      if (inst.id === 'wall-king') {
         expect(inst.args).toEqual([...was.args.slice(0, 2), '--act=2', ...was.args.slice(2)]);
+      } else if (inst.id === 'wall-queen') {
+        expect(inst.args).toEqual(was.args.map((a) => (a === '--act=3' ? '--act=4' : a)));
       } else {
         expect(inst.args).toEqual(was.args);
       }

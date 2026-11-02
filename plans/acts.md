@@ -35,7 +35,7 @@ session's, not signed; *open* is still the user's.
 
 ## From Round 10
 
-Round 10 adds act 1 before the two shipped sectors, so a run already has
+Round 10 added act 1 before the two shipped sectors (145g), so a run has
 three: they are acts 1 to 3 from that release, with the bosses moved as
 the table says (the King to act 1; the Generalissimo and the Witch Hunt
 to The Start; the Queen to The Deep End). Each moved boss is re-read on
@@ -50,7 +50,7 @@ The Start's procedural boards redraw.
 ## The run's frame
 
 - **Length:** 33 hops to act 3's boss, about 36 with act 4, against 22
-  today. The costs: a board's runs take about 1.5 times as long (inferred,
+  before Round 10. The costs: a board's runs take about 1.5 times as long (inferred,
   not measured); a full-run playtest takes longer, which the scripted run
   (Round 10) eases by starting at any act; and rosters reach the level cap
   of 20 more often, which no board has read. Enemy strength follows the

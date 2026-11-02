@@ -50,7 +50,12 @@ interface Catalog {
  * An entry is `unit:<archetype>` or `sectors`; an entry that is no longer
  * needed fails (5). Empty while the table covers the catalog.
  */
-const PENDING: ReadonlyMap<string, string> = new Map();
+const PENDING: ReadonlyMap<string, string> = new Map([
+  [
+    'sectors',
+    'act 1 went in front of The Start, so every bucket names the sector a place earlier in the walk; rebuilt from the three-act board cohort',
+  ],
+]);
 
 function readJson<T>(rel: string): T {
   return JSON.parse(readFileSync(join(ROOT, rel), 'utf8')) as T;

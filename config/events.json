@@ -809,7 +809,7 @@
     "entry": "start",
     "pages": {
       "start": {
-        "text": "A wizened old man beckons you over.  \"This sector is rife with bandits.  Take something to help yourself.\"  He gestures at an array of goods that he's splayed on the ground.",
+        "text": "A wizened old man beckons you over.  \"This sector is rife with beasts and bandits.  Take something to help yourself.\"  He gestures at an array of goods that he's splayed on the ground.",
         "choices": [
           {
             "id": "a-pile-of-bits",

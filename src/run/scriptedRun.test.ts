@@ -129,7 +129,7 @@ describe('a numbered hop\'s layout', () => {
 describe('a theme', () => {
   // The archetypes a theme's camps hold, read from the raw config the
   // generator's pool comes from.
-  const campArchetypes = (theme: 'grassland' | 'swamp'): Set<string> =>
+  const campArchetypes = (theme: 'grassland' | 'swamp' | 'forest'): Set<string> =>
     new Set(
       terrainJson.procedural.camps.pools[theme].flatMap(
         (ref) => campsJson.find((c) => c.id === ref.campId)!.units.map((u) => u.archetype),
@@ -153,10 +153,10 @@ describe('a theme', () => {
     expect(swamp.theme).toBe('swamp');
     expect(swamp.camps.length).toBeGreaterThan(0);
     for (const a of swamp.camps) expect(campArchetypes('swamp').has(a), a).toBe(true);
-    // The control: on the same seed, The Start's own theme and its camps.
-    expect(plain.theme).toBe('grassland');
+    // The control: on the same seed, act 1's own theme and its camps.
+    expect(plain.theme).toBe('forest');
     expect(plain.camps.length).toBeGreaterThan(0);
-    for (const a of plain.camps) expect(campArchetypes('grassland').has(a), a).toBe(true);
+    for (const a of plain.camps) expect(campArchetypes('forest').has(a), a).toBe(true);
   });
 
   it('leaves a layout its own', () => {
@@ -287,10 +287,10 @@ describe('a port\'s stock', () => {
 });
 
 describe('the starting act', () => {
-  it('act 2 alone, on today\'s map, is The Deep End', () => {
+  it('act 2 alone, on today\'s map, is The Fragments', () => {
     const { run, bus } = runOf(4, { startAct: 2 });
-    expect(run.currentSectorId).toBe('the-deep-end');
-    expect(run.currentSectorTitle).toBe('The Deep End');
+    expect(run.currentSectorId).toBe('the-start');
+    expect(run.currentSectorTitle).toBe('The Fragments');
     // With `hopCount` the act is played alone: its boss ends the run.
     enterHop(run, bus, HOPS);
     bus.emit('battle:ended', {
@@ -305,8 +305,8 @@ describe('the starting act', () => {
       run.dispatch(row.command);
     }
     expect(run.phase).toBe('complete');
-    // The control: the same seed from act 1 is The Start.
-    expect(runOf(4).run.currentSectorId).toBe('the-start');
+    // The control: the same seed from act 1 is The Periphery.
+    expect(runOf(4).run.currentSectorId).toBe('the-periphery');
   });
 
   it('is the act a full walk reaches: the same map, at the same sector index', () => {
@@ -339,7 +339,7 @@ describe('the starting act', () => {
   it('a clone from its snapshot stays in the act', () => {
     const { run } = runOf(4, { startAct: 2 });
     const clone = Run.fromJSON(run.toJSON(), new EventBus<GameEvents>());
-    expect(clone.currentSectorId).toBe('the-deep-end');
+    expect(clone.currentSectorId).toBe('the-start');
     expect(JSON.stringify(clone.toJSON())).toBe(JSON.stringify(run.toJSON()));
   });
 
@@ -352,11 +352,11 @@ describe('the starting act', () => {
   });
 
   it('an act past the map\'s end is refused, and the URL drops it with a warning', () => {
-    expect(() => runOf(4, { startAct: 3 })).toThrow(/startAct=3 is past the sector map's end/);
-    const config = parseRunConfig(new URLSearchParams('act=3&hops=11'));
+    expect(() => runOf(4, { startAct: 4 })).toThrow(/startAct=4 is past the sector map's end/);
+    const config = parseRunConfig(new URLSearchParams('act=4&hops=11'));
     expect(config.startAct).toBeUndefined();
-    expect(config.scriptWarnings).toEqual(['act: dropped "3": the map has no such act']);
-    expect(parseRunConfig(new URLSearchParams('act=2')).startAct).toBe(2);
+    expect(config.scriptWarnings).toEqual(['act: dropped "4": the map has no such act']);
+    expect(parseRunConfig(new URLSearchParams('act=3')).startAct).toBe(3);
   });
 });
 

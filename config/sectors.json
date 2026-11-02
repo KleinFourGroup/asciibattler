@@ -1,116 +1,5 @@
 [
   {
-    "id": "the-start",
-    "title": "The Start",
-    "description": "Where every run begins. A full spread of battlefields, ungated — the uniform pool the run has always drawn from, now expressed as a sector.",
-    "length": 11,
-    "theme": "grassland",
-    "layouts": [
-      { "layoutId": "procedural", "weight": 2 },
-      { "layoutId": "labyrinth" },
-      { "layoutId": "river" },
-      { "layoutId": "endlessCorridors" },
-      { "layoutId": "junctionAmbush" },
-      { "layoutId": "strafingFunnel" },
-      { "layoutId": "spiralFireLife" },
-      { "layoutId": "isthmus" },
-      { "layoutId": "icebergs" },
-      { "layoutId": "desertFortress" },
-      { "layoutId": "fetidPond" },
-      { "layoutId": "rubbleQuarry" }
-    ],
-    "encounters": {
-      "normal": [
-        { "encounterId": "brigands" },
-        { "encounterId": "highwaymen" },
-        { "encounterId": "deserters" },
-        { "encounterId": "artillery" },
-        { "encounterId": "ronin-vs-mages" },
-        { "encounterId": "adventurer-with-guards" }
-      ],
-      "elite": [
-        { "encounterId": "brigand-champions" },
-        { "encounterId": "warband-vanguard" }
-      ],
-      "boss": [
-        { "encounterId": "bandit-king" },
-        { "encounterId": "banditQueen", "minHop": 0 }
-      ]
-    },
-    "events": [
-      { "eventId": "corrupted-shrine" },
-      { "eventId": "whispering-terminal" },
-      { "eventId": "whispering-terminal-collects" },
-      { "eventId": "silent-mage" },
-      { "eventId": "prodigy" },
-      { "eventId": "mines" },
-      { "eventId": "cheese-tax" },
-      { "eventId": "cadre-1" },
-      { "eventId": "cadre-2" },
-      { "eventId": "cadre-3" },
-      { "eventId": "orange-mob" },
-      { "eventId": "hostage-trio" }
-    ],
-    "startingEvents": [
-      { "eventId": "sector-1-start" }
-    ]
-  },
-  {
-    "id": "the-deep-end",
-    "title": "The Deep End",
-    "description": "Where the charts run out. A drowned, fetid second act — the occult half of the catalog moves in, and the plague has a source.",
-    "length": 11,
-    "theme": "swamp",
-    "layouts": [
-      { "layoutId": "procedural", "weight": 2 },
-      { "layoutId": "labyrinth" },
-      { "layoutId": "river" },
-      { "layoutId": "endlessCorridors" },
-      { "layoutId": "junctionAmbush" },
-      { "layoutId": "strafingFunnel" },
-      { "layoutId": "spiralFireLife" },
-      { "layoutId": "isthmus" },
-      { "layoutId": "icebergs" },
-      { "layoutId": "desertFortress" },
-      { "layoutId": "fetidPond" },
-      { "layoutId": "rubbleQuarry" }
-    ],
-    "encounters": {
-      "normal": [
-        { "encounterId": "infernalColumn", "minHop": 6 },
-        { "encounterId": "plagueVictims" },
-        { "encounterId": "miscreants", "minHop": 3 },
-        { "encounterId": "elementalTrio" },
-        { "encounterId": "plagueDoctors" },
-        { "encounterId": "artillery" },
-        { "encounterId": "adventurer-with-guards" }
-      ],
-      "elite": [
-        { "encounterId": "plagueSpreaders" },
-        { "encounterId": "darkMagicPosse" }
-      ],
-      "boss": [
-        { "encounterId": "generalissimo" },
-        { "encounterId": "witch-hunt" }
-      ]
-    },
-    "events": [
-      { "eventId": "corrupted-shrine" },
-      { "eventId": "whispering-terminal" },
-      { "eventId": "whispering-terminal-collects" },
-      { "eventId": "silent-mage" },
-      { "eventId": "prodigy" },
-      { "eventId": "mines" },
-      { "eventId": "cheese-tax" },
-      { "eventId": "cadre-1" },
-      { "eventId": "cadre-2" },
-      { "eventId": "cadre-3" },
-      { "eventId": "orange-mob" },
-      { "eventId": "hostage-trio" }
-    ],
-    "startingEvents": []
-  },
-  {
     "id": "the-periphery",
     "title": "The Periphery",
     "description": "The first act: a forest at the edge of things, where beasts roam and bandits live among them.",
@@ -169,5 +58,113 @@
     "startingEvents": [
       { "eventId": "sector-1-start" }
     ]
+  },
+  {
+    "id": "the-start",
+    "title": "The Fragments",
+    "description": "The second act: barren ground where the realm has come apart, its warbands and their generals. The id stays the-start, as saves hold it.",
+    "length": 11,
+    "theme": "barren",
+    "layouts": [
+      { "layoutId": "procedural", "weight": 2 },
+      { "layoutId": "labyrinth" },
+      { "layoutId": "river" },
+      { "layoutId": "endlessCorridors" },
+      { "layoutId": "junctionAmbush" },
+      { "layoutId": "strafingFunnel" },
+      { "layoutId": "spiralFireLife" },
+      { "layoutId": "isthmus" },
+      { "layoutId": "icebergs" },
+      { "layoutId": "desertFortress" },
+      { "layoutId": "fetidPond" },
+      { "layoutId": "rubbleQuarry" }
+    ],
+    "encounters": {
+      "normal": [
+        { "encounterId": "brigands" },
+        { "encounterId": "highwaymen" },
+        { "encounterId": "deserters" },
+        { "encounterId": "artillery" },
+        { "encounterId": "ronin-vs-mages" },
+        { "encounterId": "adventurer-with-guards" }
+      ],
+      "elite": [
+        { "encounterId": "brigand-champions" },
+        { "encounterId": "warband-vanguard" }
+      ],
+      "boss": [
+        { "encounterId": "generalissimo" },
+        { "encounterId": "witch-hunt" }
+      ]
+    },
+    "events": [
+      { "eventId": "corrupted-shrine" },
+      { "eventId": "whispering-terminal" },
+      { "eventId": "whispering-terminal-collects" },
+      { "eventId": "silent-mage" },
+      { "eventId": "prodigy" },
+      { "eventId": "mines" },
+      { "eventId": "cheese-tax" },
+      { "eventId": "cadre-1" },
+      { "eventId": "cadre-2" },
+      { "eventId": "cadre-3" },
+      { "eventId": "orange-mob" },
+      { "eventId": "hostage-trio" }
+    ],
+    "startingEvents": []
+  },
+  {
+    "id": "the-deep-end",
+    "title": "The Deep End",
+    "description": "Where the charts run out. A drowned, fetid second act — the occult half of the catalog moves in, and the plague has a source.",
+    "length": 11,
+    "theme": "swamp",
+    "layouts": [
+      { "layoutId": "procedural", "weight": 2 },
+      { "layoutId": "labyrinth" },
+      { "layoutId": "river" },
+      { "layoutId": "endlessCorridors" },
+      { "layoutId": "junctionAmbush" },
+      { "layoutId": "strafingFunnel" },
+      { "layoutId": "spiralFireLife" },
+      { "layoutId": "isthmus" },
+      { "layoutId": "icebergs" },
+      { "layoutId": "desertFortress" },
+      { "layoutId": "fetidPond" },
+      { "layoutId": "rubbleQuarry" }
+    ],
+    "encounters": {
+      "normal": [
+        { "encounterId": "infernalColumn", "minHop": 6 },
+        { "encounterId": "plagueVictims" },
+        { "encounterId": "miscreants", "minHop": 3 },
+        { "encounterId": "elementalTrio" },
+        { "encounterId": "plagueDoctors" },
+        { "encounterId": "artillery" },
+        { "encounterId": "adventurer-with-guards" }
+      ],
+      "elite": [
+        { "encounterId": "plagueSpreaders" },
+        { "encounterId": "darkMagicPosse" }
+      ],
+      "boss": [
+        { "encounterId": "banditQueen" }
+      ]
+    },
+    "events": [
+      { "eventId": "corrupted-shrine" },
+      { "eventId": "whispering-terminal" },
+      { "eventId": "whispering-terminal-collects" },
+      { "eventId": "silent-mage" },
+      { "eventId": "prodigy" },
+      { "eventId": "mines" },
+      { "eventId": "cheese-tax" },
+      { "eventId": "cadre-1" },
+      { "eventId": "cadre-2" },
+      { "eventId": "cadre-3" },
+      { "eventId": "orange-mob" },
+      { "eventId": "hostage-trio" }
+    ],
+    "startingEvents": []
   }
 ]

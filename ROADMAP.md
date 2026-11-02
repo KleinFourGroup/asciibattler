@@ -12,8 +12,8 @@ its spec, its per-phase worklogs (`archive/worklog-phase-135.md` to
 `-140.md`) and its session reports beside it; before it
 [archive/post-118-roadmap.md](archive/post-118-roadmap.md) (Round 8.5).
 
-**Status: §144, the fauna, ✅ closed 2026-11-01; §145, act 1 and the
-run's shape, next, from its kickoff.** The spec is [round-10-spec.md](round-10-spec.md), its tranche 2
+**Status: §145, act 1 and the run's shape, ✅ closed 2026-11-02; §146,
+the board and act 1's bands, next, from its kickoff.** The spec is [round-10-spec.md](round-10-spec.md), its tranche 2
 answered at the kickoffs of §144 to §146. The charter, the decision
 points, the exit and the scope guards are in META-ROADMAP §"Round 10 —
 Act 1, the wilds", with the roster table's rebuild added to its scope at
@@ -88,41 +88,30 @@ corpus held (WORKLOG §144, in `archive/worklog-phase-144.md`).
 - ☑ **144h — the phase's close** (`stop`), signed with its four
   dispositions.
 
-## Phase 145 — act 1 and the run's shape (signed 2026-10-30)
+## Phase 145 — act 1 and the run's shape ✅ (closed 2026-11-02)
 
-Charter: act 1's sector off the map (normal, elite and boss encounters
-with the bear's, layouts, events, fauna camps, locale), each read
-through the forcing dials; then one commit puts it in the map before The
-Start, moves the King to act 1, the Generalissimo and the Witch Hunt to
-The Start and the Queen to The Deep End, moves the boon, sets The Start's
-theme, re-derives or re-picks every seeded pin by its own rule,
-re-records the corpus, and gives the roster table's guard its PENDING
-line. **Why here:** on the scripted run, the board's acts and the fauna.
-**Risk:** medium: every seed re-draws, and the run goes to 33 hops.
-**Decision points:** the save; The Start's theme; the titles; the boon's
-place and line; act 1's size and who writes its text. **Exit:** a run from
-act 1 to The Deep End's boss, playable end to end, read in the user's
-play; DESIGN, ARCHITECTURE and BALANCE's primer honest. **Scope guards:**
-no change to the shipped sectors' content beyond the moves; no new
-mechanism.
-
-The cut, signed 2026-11-01 in two parts (WORKLOG §145); 145b is the user's.
+Act 1, The Periphery, a forest of beasts and bandits, put on the map in
+front of The Start, now act 2 titled The Fragments and barren: the
+user's eight encounters and four events, the forest's trees and camps, a
+unit's description line, the theme as a script item, and the bosses
+moved (the bear's fight and the King in act 1, the Generalissimo and the
+Witch Hunt in act 2, the Queen alone in act 3); every seeded pin
+re-derived or re-picked, the corpus re-recorded at 33 journals, no
+snapshot bump; played by the user from act 1 to The Deep End's boss
+(WORKLOG §145, in `archive/worklog-phase-145.md`).
 
 - ☑ **145a — the theme in the script** (`none`).
 - ☑ **145b — the user's encounters, taken in**: eight, each fought to
-  its end headlessly; read 2026-11-02, the balance notes to §146.
+  its end headlessly; read, the balance notes to §146.
 - ☑ **145c — a unit's description line** (`batch`): on the full card,
-  and with the unit's name at the head of an enemy card's tooltip
-  (re-scoped at 145e's stop, since an enemy's only card has no room);
-  the tooltip in tiers after the user's read; signed 2026-11-02.
+  and at the head of an enemy card's tooltip, in tiers; signed.
 - ☑ **145d — the save across the map** (`none`).
 - ☑ **145e — the forest and its camps** (`stop`), signed with its four
   leans; a forest's own half cover is a TODO.
-- ☑ **145f — act 1's sector, off the map** (`none`): `the-periphery`,
-  on no map node, played alone on a fixture map.
-- ◐ **145g — act 1 in the map** (`batch`, read at 145h): built, with
-  the corpus re-recorded at 33 journals.
-- ☐ **145h — the phase's close** (`stop`).
+- ☑ **145f — act 1's sector, off the map** (`none`).
+- ☑ **145g — act 1 in the map** (`batch`), read in the user's play.
+- ☑ **145h — the phase's close** (`stop`), signed, with the user's three
+  fixes to Burning Tree and Fox Hunt.
 
 ## Phase 146 — the board and act 1's bands (signed 2026-10-30)
 

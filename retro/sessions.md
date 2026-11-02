@@ -392,3 +392,53 @@ tooltip, their four events and 145g, to the hand-off trigger.
    the evidence clean while the user authored in the checkout, which I
    would want again. The user's warm, quick replies made each stop
    cheap.
+
+## 2026-11-02 — session 58e14011 (145h, the user's play, and §145's close)
+
+A side session started by the one before it, at the stop.
+
+1. Nothing missing: the hand-off after 145g named the stop, the three
+   open questions and the tools. One gap no hand-off listed: BALANCE's
+   Protocol v2 still said two acts, since 145g's check covered the
+   primer and not the protocol section; a search at the close found it.
+2. None that blocked. BALANCE's header sits at its 700-line cap, so the
+   honesty fix had to be a net-zero reword (a papercut filed).
+3. Mildly, at the exit's "playable end to end": the pane walk at 145g
+   lost at the Queen while the headless run cleared all three bosses, and
+   I put both and left the clause to the user's play. For the morale
+   condition, reading `>=` in the code was enough to believe the fix; I
+   ran the probe with its planted control before writing it down.
+4. One hook round on the header cap. The silent-turn reminder came about
+   five times in the first turn's reading, each answered with a status
+   line.
+5. BALANCE's header is at 700 lines: §146's additions there need a
+   retirement beside them. §146's notes are in the archived hand-off
+   after 145g.
+6. Yes. The stop was the task, and the user signed it all in one reply.
+   CLAUDE.md's note on the wrap-up box shaped the first turn (the
+   proposal in the closing message) and worked as guidance. No wish to
+   pause.
+7. The diff of the sectors against the kickoff's parent held my interest
+   most: the scope clause got a check that could have come out
+   otherwise. The short, complete hand-off and the user's quick sign made
+   the session easy; I would want both repeated.
+
+## Phase 145 — summary
+
+Three sessions: `05f22793` (the kickoff, the cut, 145a, 145c to 145e
+and 145b's encounters and rewards), `2757253f` (145f, the reads of 145b
+and 145c, the tooltip in tiers, the user's four events and 145g) and
+`58e14011` (145h and the close). The user authored act 1's eight
+encounters and four events while the cut was being built, which turned
+145b into "taken in" and moved the reads of 145b and 145c ahead of the
+map commit; step zero turned 145c into a tooltip line, since an enemy's
+only card has no room. 145g put act 1 on the map in one commit, every
+seeded pin re-picked by its own rule and the corpus re-recorded at 33
+journals, with no snapshot bump; the user's play read it as going very
+well. The friction log holds 6 lines: 4 slips (a new name meeting a test
+that already used it, twice at a hook round each; a claim before its
+control; the backticks trap), 2 papercuts and no `distress`. The reports
+name measuring before deciding (the kickoff's worktree probe, the
+cover-density count, the re-pick scans) as the absorbing parts, and the
+user authoring in the checkout as the condition to work around, by
+staging file by file and testing on a worktree of HEAD.

@@ -6,7 +6,7 @@
 
 import type { EventBus } from '../core/EventBus';
 import { t } from '../i18n/ui';
-import { attachTooltip, keyedTooltip, refreshTooltip } from './tooltip';
+import { attachTooltip, keyedTooltip, refreshTooltip, tieredTooltip } from './tooltip';
 import { pressable } from './pressable';
 import type { GameEvents } from '../core/events';
 import type { World } from '../sim/World';
@@ -802,19 +802,18 @@ export class HUD {
       // carries the same two actions.
       // The card shows no name, so the tooltip leads with it, and with the
       // unit's line of flavour where it has one, above the hint.
-      const description = descriptionForArchetype(unit.archetype);
-      const head = [nameForArchetype(unit.archetype), ...(description === undefined ? [] : [description])];
       this.cardTooltips.set(
         unitId,
         attachTooltip(
           handles.el,
-          [
-            ...head,
+          tieredTooltip(
+            nameForArchetype(unit.archetype),
+            descriptionForArchetype(unit.archetype),
             t('hud.card.targetHint', {
               engage: t('hud.objective.engage'),
               focus: t('hud.objective.focus'),
             }),
-          ].join('\n'),
+          ),
           { touch: 'none' },
         ),
       );

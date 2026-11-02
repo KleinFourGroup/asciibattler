@@ -652,3 +652,25 @@ The user, in their browser:
   because the read's `roster=` put beasts on the player's side. The
   enemy card's tooltip, the one place a player meets the line, is talked
   through before 145g.
+
+### 145c's tooltip in tiers (2026-11-02, session 2757253f)
+
+The user, of the three ways: "let's try the style hierarchy as you
+suggest. I think it'll work, but it's worth checking. Let's also make
+the full card one dormant, as you suggest. And let's log a TODO that I
+need to start writing up one-line summaries at some point." The full
+card is unchanged: its line already shows on no player card in play.
+The TODO row is under Round 11, "Unit descriptions".
+
+*Built.* `tieredTooltip(title, flavour, hint)` beside `keyedTooltip`: a
+div per tier, the flavour left out where the unit has none. The enemy
+card's tooltip uses it. `.tooltip__title` bold; `.tooltip__flavour`
+italic at 0.7 opacity, as the full card's line; `.tooltip__hint` at
+`--text-12` and 0.75 opacity under a rule in the tooltip's green at
+0.35. DESIGN's tooltip sentence.
+
+*Evidence.* Typecheck clean; the token, tooltip, focus and motion pins
+green. In the pane at 800 × 600 (drawn 1:1), seed 1: a Wolfpack wolf's
+tooltip before and after, and a Brigands bandit's after (name, rule,
+hint, no flavour), in `scratch/145c/`. Not verified: Firefox; the user's
+text size.

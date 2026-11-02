@@ -198,6 +198,29 @@ export function keyedTooltip(
   };
 }
 
+/** A tooltip in tiers, for a card: the title (`.tooltip__title`), a line of
+ *  flavour where there is one (`.tooltip__flavour`, dim and italic as on the
+ *  full card), and a hint set apart under a rule (`.tooltip__hint`, smaller
+ *  and dim), so the three don't read as one paragraph. */
+export function tieredTooltip(title: string, flavour: string | undefined, hint: string): () => Node {
+  return () => {
+    const frag = document.createDocumentFragment();
+    const tiers: Array<[string, string | undefined]> = [
+      ['tooltip__title', title],
+      ['tooltip__flavour', flavour],
+      ['tooltip__hint', hint],
+    ];
+    for (const [className, text] of tiers) {
+      if (text === undefined) continue;
+      const line = document.createElement('div');
+      line.className = className;
+      line.textContent = text;
+      frag.appendChild(line);
+    }
+    return frag;
+  };
+}
+
 /** Register `el` as a trigger. Returns the detach (closes it if open). */
 export function attachTooltip(
   el: HTMLElement,

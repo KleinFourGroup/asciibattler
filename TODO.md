@@ -281,6 +281,16 @@ META-ROADMAP §"Round 11 — The roster" names each row's place.
 
 - [ ] **Ability DESCRIPTION text (the name half is done).** Ability display *names* shipped at Yb (`AbilityDef.name`, required — the §61g audit found this already live); what remains is descriptive flavor text: a `description` on the ability config surfaced on the card ability rows ("Whip — long reach, rarely misses"). Cosmetic; surfaced at I6.
 
+### Unit descriptions
+
+- [ ] **A line for every unit, the user's to write.** A unit's
+  `description` (145c) is optional, and only the six beasts have one;
+  none of them is draftable, so in play the full card shows no line and
+  an enemy card's tooltip is the only place one appears. The user writes
+  a one-line summary for each unit in the archetype editor's Description
+  field, as a set, since a line on some player cards and not others reads
+  as uneven. Asked 2026-11-02 (WORKLOG §145, "145c's tooltip in tiers").
+
 ## Round 12 — Push, pull and blink
 
 META-ROADMAP §"Round 12 — Push, pull and blink" names each row's place.

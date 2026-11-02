@@ -424,7 +424,9 @@ in a persistent hint, the `▲` empower chip carries its key's name beside
 the triangles, the boss node's copy is on the map banner. An enemy
 card's tooltip leads with the unit's name and, where it has one, its line
 of flavour (the full card shows the line too); neither asks the player to
-act, and the glyph is the unit's identity on the board. Tab stops on
+act, and the glyph is the unit's identity on the board. It reads in tiers
+(`tieredTooltip`): the name bold, the line dim and italic, the hint smaller
+and dim under a rule. Tab stops on
 tooltip-only text live where the player has time to Tab (the pre-turn
 screen, the run-end table); in a battle the CARDS are the tab stops
 (100c2) and the text inside one stays a hover and key read — the

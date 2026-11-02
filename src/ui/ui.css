@@ -4318,6 +4318,23 @@ body {
 .tooltip__kbd {
   color: var(--color-terminal-amber);
 }
+/* A card's tooltip in tiers (`tieredTooltip`): the name bold, the line of
+   flavour dim and italic as on the full card, the hint smaller and dim under
+   a rule. */
+.tooltip__title {
+  font-weight: 700;
+}
+.tooltip__flavour {
+  font-style: italic;
+  opacity: 0.7;
+}
+.tooltip__hint {
+  margin-top: 5px;
+  padding-top: 5px;
+  border-top: 1px solid rgb(from var(--color-terminal-green) r g b / 0.35);
+  font-size: var(--text-12);
+  opacity: 0.75;
+}
 /* The touch routes: a long-press trigger must not raise the browser's own
    long-press callout / selection; a tap trigger must not double-tap-zoom. */
 [data-tooltip-touch] {

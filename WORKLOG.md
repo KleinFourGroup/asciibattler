@@ -226,3 +226,52 @@ Typecheck clean.
 both trees: `wall-queen`'s arm now carries `--act=3` and 94h's manifest
 does not. That is 143d's design meeting 145g's map, not 146a; 139c's
 reports, two rows each, pass.
+
+### 146b's step zero: the strategy files refused the beasts (2026-11-02)
+
+*Found.* Each of the 17 rows run at one seed locally from `--plan`'s
+argv (`scratch/146/zero/rows.mjs`): the two anchors ran, and the 15
+rows that load a scored strategy file died at parse, a `ZodError` for
+`archetype` and `composition` entries of the wolf, the giant rat, the
+fox, the puma, the tiger and the bear. `parseWeights` holds both
+records exhaustive over `ALL_ARCHETYPES`
+(`tests/fuzz/strategies/scoredWeights.ts`), and 144f joined the six into
+`config/fuzz-strategies.json` but not into the five strategy files under
+`tests/fuzz/fixtures/`, all of which refused
+(`scratch/146/check-fixtures.ts`). This is gotcha #124 met again:
+nothing per-commit loads a fixture, so the first board run after an
+archetype add is where it shows. No board batch could have run since
+144f.
+
+*The join.* By gotcha #124's convention, as 74i-b joined the prodigy:
+each of the five files takes the six beasts at weight 0 in both records,
+appended after the existing keys (`scratch/146/pad-beasts.mjs`; each file
+first checked to round-trip byte for byte through the serializer's
+format, so the diff is the twelve keys alone). All five load after it,
+and all 17 rows ran one seed to its end: the six act-alone arb rows and
+the three act-alone controls on act 1, the forced King's 28 battles
+labelled sector 0 and the forced Queen's 25 sector 2, a walk-regen seed
+won through all three acts.
+
+*Inert, by the code and an oracle.* In these files the two records are
+read for a recruit offer's cards (`strategies/scored.ts:216`) and the
+player's own hand (`empowerPolicy.ts:144`, `redrawPolicy.ts:189`), never
+for an enemy; the objective strategy's archetype weights are its own
+flag's (`--objective`), which no board row passes. The oracle: 92c2's
+vector with the beasts at 0 (the joined file, byte for byte), at six
+nonzero values, and two controls, run at seeds 1 to 3
+(`scratch/146/inert/`). On the doctrine arm, 0 against nonzero:
+`summary.csv` and `rosters.csv` byte-identical; its control, the mage,
+the reaver and the healer at −10, differs (a mage becomes a bandit at
+hop 3). On the arbitrated arm, 0 against nonzero: `summary.csv`,
+`rosters.csv` and `decisions.csv` byte-identical; the same control
+differs in all three. A first control, the
+archer's weight moved by +0.6 and then to −10, was blind on both arms:
+the archers came with the starting roster and none was picked from an
+offer on these seeds, so it could not have shown a difference.
+
+*For the stop.* The miss recurred (76h, now 144f) and was caught here
+for about fifteen minutes and no box time; a guard on `npm test` that
+loads every strategy file through `loadWeightsFile` would catch it at the
+commit that adds the archetype. A new guard is the user's call, so it
+goes to 146d.

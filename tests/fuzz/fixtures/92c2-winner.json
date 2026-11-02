@@ -29,7 +29,13 @@
     "rioter": 0.22052845642901958,
     "gunslinger": -0.6653862036764622,
     "halberdier": 0.9218187981750816,
-    "officer": -1
+    "officer": -1,
+    "wolf": 0,
+    "giant_rat": 0,
+    "fox": 0,
+    "puma": 0,
+    "tiger": 0,
+    "bear": 0
   },
   "composition": {
     "mercenary": -1,
@@ -54,7 +60,13 @@
     "rioter": 0.7205146738793702,
     "gunslinger": 0.026513314619660375,
     "halberdier": -0.7611963078845292,
-    "officer": -0.4531367505900562
+    "officer": -0.4531367505900562,
+    "wolf": 0,
+    "giant_rat": 0,
+    "fox": 0,
+    "puma": 0,
+    "tiger": 0,
+    "bear": 0
   },
   "compWeight": 0.7814401250332594,
   "level": -0.920379172777757,

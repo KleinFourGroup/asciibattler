@@ -140,8 +140,9 @@ recorded for Rounds 21 and 22; the officer's PENDING signed to stand
 Round 10's exit by clause; `0.3.0` by the version rule; the process
 read; the archive; Round 11's charter against the code.
 
-- ☐ **147a — the round's exit by clause, and Round 11's charter against
-  the code** (`stop`).
+- ◐ **147a — the round's exit by clause, and Round 11's charter against
+  the code** (`stop`): the exit met; three charter lines and the exit
+  put with leans.
 - ☐ **147b — `0.3.0`, the tag and the zip** (`none`).
 - ☐ **147c — the smoke, the upload and the playtest** (`stop`, the
   user's).

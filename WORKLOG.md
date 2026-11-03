@@ -183,3 +183,124 @@ rather than carried to Round 11.
 
 Signed: "Fully signed! 😁", over the cut as put and its five leans. The
 stretch it opens runs to 147a's stop.
+
+### 147a — the round's exit by clause, and Round 11's charter against the code (2026-11-03, session c830ad7f)
+
+Read at `d0f557bf`. No file under `src`, `config`, `tests`, `tools` or
+`scripts` has changed since `94cca56f` (146g), so the tree plays 146f's
+config.
+
+**Round 10's exit (META-ROADMAP §"Round 10"), by clause:**
+
+| Clause | Holds? | Evidence |
+|---|---|---|
+| A run from act 1 to The Deep End's boss, playable end to end | yes | the user's play at 145h, act 1 to The Deep End's boss (ROADMAP §145); after 146e's tune the user played act 1, and the whole run is played headlessly: every walk row at 146f runs the three acts, the ARM's deploy row winning 45 of 120 and doctrine's 28 of 40 (BALANCE.md 2026-11-03, "the verify board") |
+| Act 1's bands signed | yes | arm (B) at 146d, the tune at 146e read in the user's play, the re-pin at 146g with act 1's wall signed for the first time (`archive/worklog-phase-146.md`) |
+
+**The release line**, a new first act: The Periphery is the map's
+source (`config/sector-map.json`), forest, 11 hops, the bear and the
+Bandit King its bosses (`config/sectors.json`). It reaches players at
+147c.
+
+**The risk's clauses.** *The save:* no Run bump in the round (Run v50
+and World v39 at `9e1b7c48` and at HEAD); 145d's test, a v50 save
+recorded on the two-act map, passes 3 of 3 at HEAD, its control in the
+test (the save's node renamed throws). *Each moved boss re-read at its
+new place:* on 146f's walk rows, the King and the bear in act 1, the
+Generalissimo and the Witch Hunt in act 2 and the Queen in act 3 (deaths
+by boss in BALANCE's 2026-11-03 entries), with the King and the Queen
+forced at their home acts (0.717, 0.258); acts 2 and 3 recorded, not
+retuned (146g).
+
+**The decision points.** The Start takes barren: decided at §145,
+`the-start` titled The Fragments, theme `barren`. Act 1's hops and
+bosses: the plan's, 11, the bear and the King.
+
+**The scope guard** (no flyer, swimmer, 2×2 or swarm). The nine units
+added since `9e1b7c48` are the six beasts and three trees, none with a
+`footprint` or a `movementBehavior`. Every key a unit def uses at HEAD:
+`abilities`, `autoTarget`, `baseStats`, `blocksLineOfSight`,
+`description`, `draftable`, `footprint`, `glyph`, `growthRates`, `hp`,
+`movementBehavior`, `name`, `rarity`, `retargetOnLosLoss`,
+`statusImmunities`, `statusSusceptibility`, `targeting`; no unit carries
+a layer, and `footprint` is set on `rubble_2x2` and `rubble_3x3` alone,
+both there at `9e1b7c48` (the reader's control: the key it would show
+for a 2×2 unit). The six beasts are 1×1 melee and `draftable: false`.
+
+**Against the charter.** In scope and done: the scripted run (§142), the
+fauna (§144, the bear among them), act 1's sector and the run's shape
+(§145), the sheet's per-act tooling (§143), the atlas at 128 cells
+(144a), the roster table rebuilt (146c, v5 at 146f, the officer
+PENDING). Outside it, each signed as it came: our glyph face in the
+Private Use Area (144c, 144d), a unit's description line (145c), the
+Vermin Lords at the pool lever with act 1's cost to Round 11 (146e), the
+backslash guard (142a), the strategy-fixture guard (`765e1aff`, for
+146b's finding), the junction line (146d). 141 gotchas at both ends.
+
+**Round 11's charter at HEAD** (META-ROADMAP §"Round 11"):
+
+- *The weapons and defense.* The converted numbers are config, pinned by
+  `tests/strike-conversion.test.ts` against its frozen before-file, a
+  later signed change going in its `DEPARTURES`. A retune by taste moves
+  most of them, so whether that test grows a long `DEPARTURES` or retires
+  at the retune is a question for Round 11's kickoff.
+- *Power by rarity.* 1/1/1/2 at HEAD: base power 1 for common, uncommon
+  and rare, 2 for the three legendaries. *Its growth key:* every
+  `growthRates.power` is 0, and `simulateLevelUps` draws for each key in
+  `STAT_KEYS`, power the ninth (`src/sim/leveling.ts`); the TODO row's
+  line pointer was stale and is fixed.
+- *The kit watches.* The five units are in `units.json`; the officer
+  stays PENDING in the roster table's guard (0 of 25,657 ARM rosters).
+- *Bandits not draftable.* One flag, `draftable: false`, which twelve
+  units carry (the ice mage, the warlock, the luminant, the banshee, the
+  ghoul, the prodigy and the six beasts). The prior table's guard flags
+  the change, since a row for an item no longer acquirable is stale; the
+  roster table's does not, since its rule 2 asks only that an archetype
+  exists, and v5 holds 107 of its 25,657 rosters with a bandit, which the
+  board's sampler would go on handing the ARM (the count's control: the
+  reader's total is v5's). And the bandit is a kit watch, a recruit read
+  with nothing to read once he leaves the draft.
+- *The priest's parity.* Inside ±5 on act 1 at 146f (+1.7 regen, +0.8
+  deploy over the soldier); the TODO row keeps it for Round 11's board.
+- *The blind fix.* `Targeting.ts` still gives a blinded unit with nothing
+  inside its acquisition range the fallback target (its comment at
+  `:670`).
+- *Mars.* One daemon, `grantEmpowers` once a turn: +4 strength, +4
+  ranged, +8 magic. Two new daemon ids trip the prior table's guard (an
+  acquirable item without a row), so the exit's rebuild is forced.
+  Whether removing `mars` needs the Run bump the charter names is not
+  read here.
+- *Dis Pater.* The two TODO rows stand as written.
+- *Ability descriptions.* The ability schema has no `description`
+  (`src/config/abilities.ts`); the unit schema has had one since 145c.
+- *The wall watch.* The sheet's terminal pair (reach 0.40 to 0.50, wall
+  0.30 to 0.35) was set for the two-act walk's deep end; on the three-act
+  walk it reads act 3, where 146f has reach 0.475 and 0.117 and wall
+  0.211 and 0.357 (ARM deploy, regen). The TODO row's numbers are the
+  two-act walk's, and act 3 is Round 22's.
+- *The exit, "the board read and signed."* Act 1's are the only act
+  bands the sheet signs (146g); acts 2 and 3 are recorded for Rounds 21
+  and 22. A roster retune moves all three.
+- *In TODO under Round 11, from §146 and this close:* act 1's cost (a
+  per-kind target signed at its kickoff), the arbitration's walk loss and
+  the skill gradient (each before the closing board; the gradient's row
+  written here, lean 4), the officer's PENDING (in the kit watches' row).
+- *Noted:* The Deep End's `description` still calls it the second act.
+  A sector's description is editor metadata, never shown
+  (`src/config/sectors.ts`).
+
+**The calls, with the session's leans:**
+
+1. *Round 11's charter* stands, amended in three lines. The kit watches
+   lose the bandit, whose watch ends with N28. N28 carries the roster
+   table's guard failing on a recorded roster that holds an archetype no
+   longer draftable, since the forgetful path is a board between N28 and
+   the closing board's rebuild. The wall watch is read on Round 11's
+   board, with its TODO row re-read on the three-act walk, and the
+   terminal band's re-set goes to Round 22 with act 3.
+2. *The exit* reads: the board read, act 1's bands re-pinned and signed,
+   acts 2 and 3 recorded for Rounds 21 and 22; the prior table rebuilt.
+3. *The Deep End's description:* a TODO row under Round 22, which
+   rewrites act 3, rather than a config edit in the close.
+4. Settled by the cut: 147c's smoke is the round's playtest. No audit
+   round, since no cluster closed, as at Rounds 8.5 and 9.

@@ -167,12 +167,15 @@ META-ROADMAP §"Round 10 — Act 1, the wilds" names each row's place.
 
 ### The board
 
-- [ ] **Rebuild the roster table once act 1 is in the map.** A bucket
-  key holds a sector's position, and act 1 takes position 0, so from the
-  commit that adds it `tests/roster-table-coverage.test.ts` fails and
-  `makeRosterSampler` refuses the table until a board cohort rebuilds it;
-  until then the guard takes a `sectors` PENDING line with that reason
-  (WORKLOG §135, 135b).
+- ✅ **Rebuild the roster table once act 1 is in the map** — v4 off 146b's board, 52 buckets over the three-act walk; the `sectors` line out (ROADMAP §146, 146c; WORKLOG §146).
+
+- [ ] **The ceiling deltas' label says paired seeds; the arithmetic is
+  pooled.** Each `ceiling-*` delta subtracts the doctrine control's 40
+  runs from the ARM row's 120 (`tests/fuzz/board/board.ts:516`, its
+  `source` line "paired same-seed"). Either compute it on the shared
+  seeds or name it as pooled. At 146b, pooled: −0.117, −0.125, −0.083,
+  −0.358; on the shared seeds 1 to 40: −0.125, −0.100, −0.100, −0.300
+  (WORKLOG §146, 146b).
 
 - ✅ **The board report prints the sheet's whole history** — both headers print `sheetProvenance`: the count of the sheet's entries and the first and last entries' titles (ROADMAP §146, 146a; WORKLOG §146).
 
@@ -229,11 +232,21 @@ META-ROADMAP §"Round 11 — The roster" names each row's place.
 
 - [ ] **The deep-end wall, from above its band to below it.** Under the hit roll the deploy walk's boss wall read 0.459 at the §94 config (94h, user-signed HOLD: a roster-strength lever before any band move) and 0.579 on the old game at 139c, against the signed 30–35. The conversion moved it to 0.200 (139b's numbers; 0.299 at 137c's), and the two-act wins from 24 to 52 of 120, outside §139's line of one Escalation step (7). The old game with 137c's bot vector won 20 with a wall of 0.630 (139e), so the move is the game's, not the bot's. Where: act 2's elites and bosses 27 to 38 % less pool damage, act 1's bandit fights 41 and 46 % less, the ronin and the mages 59 % more; act 1's wins unchanged. Signed at §139: no number moves in Round 9, and the retune takes it. The cause is not measured; the user's idea (every swing pays defense at one pooled rate, a gap that grows with level) estimates at 1 to 4 % of an archer's swing, and a swing read split by act would test it (BALANCE.md 2026-10-29; WORKLOG §139).
 
+- [ ] **The arbitration loses the walk.** The board's doctrine and ARM
+  rows differ in `--arbitrate --prior-lambda=0.5` alone. On the
+  three-act walk at 146b, paired on seeds 1 to 40, doctrine won 12 seeds
+  the ARM lost and the ARM none that doctrine lost (p 0.0005); on act 1
+  alone 5 against 1. 94h read the walk's gap at −0.200 on two acts and
+  named the high-override sites (94g-2's count) as the suspect. The
+  sheet's refs are ARM rows, so they carry the loss. Find where the
+  arbitrated decisions go wrong on a long walk, before the closing board
+  reads the roster (BALANCE.md 2026-11-03; WORKLOG §146, 146d).
+
 - [ ] **Power diversity by rarity** (verdict item 4): 1/1/1/2 → 1/1/2/3 or 1/2/3/4 — a pool re-anchor rides behind it (every burn/turn moves); Round 11, after the §94 signing.
 
 - [ ] **The AoE-status enemies — the RETUNE half** (range / cooldown / duration; "really annoying"): board work, carried to **Round 11** with the kit watches (Round 7's no-board guard).
 
-- [ ] **Kit watches from the 94f price-book re-read on prior v4** (BALANCE §"The rarity verification protocol" step 3: a negative recruit row at FREE acquisition is a KIT question, not a price one — WORKLOG §94f): **officer** (−42 recruit / −36 port-buy, the worst row in the book) · **bandit** (−24 / −25, the weakest common) · **mercenary** (−15 / −10, the soldier's starter body) · **halberdier** (−16 recruit; port n=8 unreadable) · **stormcaller** (−2.8 — a legendary that does not pay at free acquisition under casualties). Round 7 idiom / Round 11 candidates; the §94 charter's "NOT doing: archetype changes" held. The dispositions taken at 94f: gunslinger common → uncommon (+28 / +27 at the cheapest price) · healer base 30 → 32 · everything else HOLD.
+- [ ] **Kit watches from the 94f price-book re-read on prior v4** (BALANCE §"The rarity verification protocol" step 3: a negative recruit row at FREE acquisition is a KIT question, not a price one — WORKLOG §94f): **officer** (−42 recruit / −36 port-buy, the worst row in the book) · **bandit** (−24 / −25, the weakest common) · **mercenary** (−15 / −10, the soldier's starter body) · **halberdier** (−16 recruit; port n=8 unreadable) · **stormcaller** (−2.8 — a legendary that does not pay at free acquisition under casualties). Round 7 idiom / Round 11 candidates; the §94 charter's "NOT doing: archetype changes" held. The dispositions taken at 94f: gunslinger common → uncommon (+28 / +27 at the cheapest price) · healer base 30 → 32 · everything else HOLD. Since rule C the ARM never drafts the officer at all (0 of 23,471 rosters at 146b; the random and greedy anchors still take him), so the roster table's guard holds him PENDING until an ARM row drafts him (WORKLOG §146, 146c).
 
 - [ ] **The wolf's retreat, if the wolf doesn't feel distinct** (the
   user, 2026-11-01, at 144e's stop). The wolf ships Bite, the Club's

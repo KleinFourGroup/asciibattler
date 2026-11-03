@@ -424,3 +424,25 @@ fixture-loading guard for gotcha #124 met a second time (76h, then
 144f), a
 process line on removing a worktree with a junction, the ceiling's
 label (pooled, not paired), and where the arbitration's walk loss goes.
+
+### 146d signed (2026-11-03)
+
+The user, to the put and every lean with it: "Fully signing your leans
+on all of those calls, Claude! 😁" So:
+
+- **Act 1's bands, arm (B).** The targets are the signed turn targets
+  (normal 2.50–3.25, elite 4.00–5.00, boss 5.00–6.50). 146e tunes the
+  four short encounters (the rats' nest, the rat hunt, the Vermin Lords,
+  the bear) toward them by isolation, the Vermin Lords' cap turns read
+  there. The user plays act 1, 146f runs the verify board, and 146g
+  re-pins act 1's refs, wall and seam and the two forced bosses at
+  146f's values, not the old bands.
+- **The officer's PENDING** (146c) stands; his row is the Round 11 kit
+  watch in TODO.
+- **The fixture guard:** a test on `npm test` that loads every strategy
+  fixture through the real loader, with its failing control.
+- **The process line:** `process/measurement.md` says to unlink a
+  worktree's junction before removing it; `oracles.md` points there.
+- **The arbitration's loss on the walk** goes to TODO under Round 11,
+  before the closing board; the ceiling's label to TODO under Round 10's
+  board.

@@ -21,7 +21,8 @@ search behind the absence holds at any size (AGENTS "Evidence").
   catches what tests comparing live code to live code can't, because those
   recompute both sides on the new code.
 - Pin the baseline checkout with `git worktree add --detach <tmp> HEAD` and a
-  `node_modules` junction. Never capture a baseline in the background
+  `node_modules` junction, and unlink the junction before removing it
+  ([measurement.md](measurement.md)). Never capture a baseline in the background
   against the live tree: the CLI compiles imports at run time, so edits
   landing underneath it crash the capture or silently poison it.
 - **A PASS ships with its failing control.** Run the same shapes under a

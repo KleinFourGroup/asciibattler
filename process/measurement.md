@@ -75,6 +75,10 @@ Boxes are created on demand and destroyed after use.
   `node_modules` junction. Build, typecheck, test and smoke there, then land
   the work on `main` as separate commits after the last launch. `git add -N`
   makes new files show up in `git diff`.
+- Remove a worktree with a `node_modules` junction by unlinking the
+  junction first, `cmd /c rmdir <worktree>\node_modules`, and only then
+  `git worktree remove`: on Windows git deletes through a junction, into
+  the checkout's own `node_modules`.
 - Every batch directory carries a `manifest.json` (HEAD, argv, seed window),
   and the balance board refuses unmanifested input. The protocol is
   BALANCE.md "The board integrity protocol"; `--allow-unmanifested` is only

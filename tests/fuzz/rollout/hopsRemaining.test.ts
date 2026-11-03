@@ -28,6 +28,9 @@ describe('Run.hopsRemaining — post-seam (the walker-driven pin)', () => {
       const live = new Run(seed, new EventBus<GameEvents>(), { sectorHops: SECTOR_HOPS });
       const clone = cloneRunForRollout(live, seed + 1);
       clone.bus.on('sector:cleared', () => {
+        // The first clear only: a walk that clears the second sector too
+        // would overwrite it with the remainder after the second.
+        if (pinned !== null) return;
         const run = clone.run;
         // The new sector's whole map is ahead (pre-root), plus whatever the
         // DAG still holds from the NEW node. NB the clone is a wire

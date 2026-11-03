@@ -304,3 +304,11 @@ backslash guard (142a), the strategy-fixture guard (`765e1aff`, for
    rewrites act 3, rather than a config edit in the close.
 4. Settled by the cut: 147c's smoke is the round's playtest. No audit
    round, since no cluster closed, as at Rounds 8.5 and 9.
+
+**147a signed** (the user: "That's looking great, Claude! 😁 Signed!"):
+the three calls at the leans. META-ROADMAP §"Round 11": the kit watches
+without the bandit, N28 with the roster table's guard, the wall watch
+read on its board with the terminal band's re-set at Round 22 (§"Round
+22", act 3's bands), and the exit as put. TODO: the deep-end wall's row
+re-read on the three-act walk, and The Deep End's description a row
+under Round 22.

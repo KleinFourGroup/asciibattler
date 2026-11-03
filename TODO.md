@@ -230,7 +230,7 @@ META-ROADMAP §"Round 11 — The roster" names each row's place.
 
 - [ ] **The PRIEST parity breach** (the 94h signing, 2026-09-08 — BALANCE §94h): +14.2 over the soldier on the deploy shape, +10.0 on regen (92h +5.0 / +5.9; the ±5 principle). Healing pays more when fights last three turns and the dead are booked (the casualty rule + the 94b openers). A kit/price question for Round 7 (the §94 charter excluded archetype changes); the gambler reads +6.7 / −1.6. At 146f, on act 1 (The Periphery), n=120: the priest +1.7 regen · +0.8 deploy over the soldier, inside ±5, and the gambler −2.5 / −1.7 (the 146g sheet); the row stays for Round 11's board, the priest's parity (C16).
 
-- [ ] **The deep-end wall, from above its band to below it.** Under the hit roll the deploy walk's boss wall read 0.459 at the §94 config (94h, user-signed HOLD: a roster-strength lever before any band move) and 0.579 on the old game at 139c, against the signed 30–35. The conversion moved it to 0.200 (139b's numbers; 0.299 at 137c's), and the two-act wins from 24 to 52 of 120, outside §139's line of one Escalation step (7). The old game with 137c's bot vector won 20 with a wall of 0.630 (139e), so the move is the game's, not the bot's. Where: act 2's elites and bosses 27 to 38 % less pool damage, act 1's bandit fights 41 and 46 % less, the ronin and the mages 59 % more; act 1's wins unchanged. Signed at §139: no number moves in Round 9, and the retune takes it. The cause is not measured; the user's idea (every swing pays defense at one pooled rate, a gap that grows with level) estimates at 1 to 4 % of an archer's swing, and a swing read split by act would test it (BALANCE.md 2026-10-29; WORKLOG §139).
+- [ ] **The deep-end wall, from above its band to below it.** Under the hit roll the deploy walk's boss wall read 0.459 at the §94 config (94h, user-signed HOLD: a roster-strength lever before any band move) and 0.579 on the old game at 139c, against the signed 30–35. The conversion moved it to 0.200 (139b's numbers; 0.299 at 137c's), and the two-act wins from 24 to 52 of 120, outside §139's line of one Escalation step (7). The old game with 137c's bot vector won 20 with a wall of 0.630 (139e), so the move is the game's, not the bot's. Where: act 2's elites and bosses 27 to 38 % less pool damage, act 1's bandit fights 41 and 46 % less, the ronin and the mages 59 % more; act 1's wins unchanged. Signed at §139: no number moves in Round 9, and the retune takes it. The cause is not measured; the user's idea (every swing pays defense at one pooled rate, a gap that grows with level) estimates at 1 to 4 % of an archer's swing, and a swing read split by act would test it (BALANCE.md 2026-10-29; WORKLOG §139). Those are the two-act walk's numbers. On the three-act walk the deep end is act 3, which the sheet's terminal pair reads: at 146f its wall 0.211 on deploy and 0.357 on regen, its reach 0.475 and 0.117 (BALANCE.md 2026-11-03). Round 11 reads it on its board; the band's re-set is Round 22's (WORKLOG §147, 147a).
 
 - [ ] **The arbitration loses the walk.** The board's doctrine and ARM
   rows differ in `--arbitrate --prior-lambda=0.5` alone. On the
@@ -522,6 +522,12 @@ META-ROADMAP §"Round 22 — Act 3, the plague" names each row's place.
   hunting for camps — the one theme whose pool ships empty. One line
   of UI (grey the Camps stat or badge the theme select "no camps")
   saves the next person the hunt. Dev-tool-only, trivial.
+
+- [ ] **The Deep End's description calls it the second act.** Its
+  `description` in `config/sectors.json` reads "A drowned, fetid second
+  act"; it is act 3 since §145. Editor metadata only, never shown
+  (`src/config/sectors.ts`), so it is rewritten with act 3 (WORKLOG §147,
+  147a).
 
 ## Round 24 — Onboarding & Feel
 

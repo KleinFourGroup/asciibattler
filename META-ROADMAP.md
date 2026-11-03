@@ -1005,25 +1005,31 @@ landing, the Idol of Mars split into three, and bandits out of the draft.
   pools re-anchored behind it, since it moves every burn a turn. Power's
   level-up draw and its growth key (R19) in the same re-baseline: taking
   the key out moves five run streams.
-- **The kit watches** (C20: officer, bandit, mercenary, halberdier,
-  stormcaller); the priest's parity (C16); the area-status enemies'
+- **The kit watches** (C20: officer, mercenary, halberdier and
+  stormcaller; the bandit's ends with N28); the priest's parity (C16); the area-status enemies'
   retune (C19); the blind fix (C12), the kiter's case a stop.
 - **Mars as three one-stat idols** (N24): strength, ranged and magic, in
   place of one that empowers all three; a prior-table rebuild.
-- **Bandits not draftable** (N28).
+- **Bandits not draftable** (N28), with the roster table's guard failing
+  on a recorded roster that holds an archetype no longer draftable: only
+  the prior table's guard flags the change, and v5 holds 107 of its
+  25,657 rosters with a bandit (147a).
 - **Dis Pater:** the `--grant` read at n=80 (A31), on the tithe as built,
   rounded once on a turn's total (the user's answer at §133), with his
   sentence rewritten to it (A28).
 - **Ability descriptions** (A33): a `description` on the ability schema
   and a line on the card, so each later round writes its abilities' text
   as it authors them.
-- **The wall watch** (C17), read on this board.
+- **The wall watch** (C17), read on this board. On the three-act walk
+  the sheet's terminal pair reads act 3, so its band's re-set goes to
+  Round 22 with act 3's bands (147a).
 
 **Why here:** after Round 9's rule change, whose conversion it tunes, and
 before the seam rounds tune new units against this roster. **Risk:** low-medium
 (config and box time). **Decision points:** power's scale; the kiter under
-blind; each kit change; the idols' sizes. **Exit:** the board read and
-signed; the prior table rebuilt. **Release:** three idols, reworked units,
+blind; each kit change; the idols' sizes. **Exit:** the board read, act
+1's bands re-pinned and signed, acts 2 and 3 recorded for Rounds 21 and
+22 (147a); the prior table rebuilt. **Release:** three idols, reworked units,
 ability descriptions. **Save:** a Run bump (`mars` removed). **Scope
 guards:** no new mechanism but the description field.
 
@@ -1462,7 +1468,8 @@ wizard as its boss, and stock that can be held to an act.
   catalog today, so an "act 3" daemon, packet or draftable would be
   offered in act 1. Ports and pools by act, each item a prior-table row,
   then act 3's daemons and packets on it.
-- **Act 3's bands.**
+- **Act 3's bands**, the sheet's terminal pair among them, which was set
+  for the two-act walk's deep end (147a).
 
 **Depends on:** round 21. **Risk:** medium: the scoping re-draws port
 stock. **Decision points:** the wizard's kit; what is held to act 3.

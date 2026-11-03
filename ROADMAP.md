@@ -13,7 +13,7 @@ its spec, its per-phase worklogs (`archive/worklog-phase-135.md` to
 [archive/post-118-roadmap.md](archive/post-118-roadmap.md) (Round 8.5).
 
 **Status: §146 closed 2026-11-03; §147, the round's close, its cut
-signed 2026-11-03 (WORKLOG §147), 147a next.** The spec is [round-10-spec.md](round-10-spec.md), its tranche 2
+signed 2026-11-03 (WORKLOG §147), 147b next.** The spec is [round-10-spec.md](round-10-spec.md), its tranche 2
 answered at the kickoffs of §144 to §146. The charter, the decision
 points, the exit and the scope guards are in META-ROADMAP §"Round 10 —
 Act 1, the wilds", with the roster table's rebuild added to its scope at
@@ -140,9 +140,9 @@ recorded for Rounds 21 and 22; the officer's PENDING signed to stand
 Round 10's exit by clause; `0.3.0` by the version rule; the process
 read; the archive; Round 11's charter against the code.
 
-- ◐ **147a — the round's exit by clause, and Round 11's charter against
-  the code** (`stop`): the exit met; three charter lines and the exit
-  put with leans.
+- ☑ **147a — the round's exit by clause, and Round 11's charter against
+  the code** (`stop`). Signed 2026-11-03: the exit met; Round 11's
+  charter amended in three lines and its exit.
 - ☐ **147b — `0.3.0`, the tag and the zip** (`none`).
 - ☐ **147c — the smoke, the upload and the playtest** (`stop`, the
   user's).

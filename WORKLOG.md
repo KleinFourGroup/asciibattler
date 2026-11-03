@@ -527,4 +527,6 @@ cost. Nothing schedules it: §146's targets are turns, and BALANCE's
 per-kind cost guide (normal ≈ 3, elite ≈ 6, boss ≈ 10 pool an
 instance) was set at a pool of 20 and is checked in prose only. Put to
 the user with a lean toward Round 11, whose retune moves every fight's
-cost.
+cost. The user: "Round 11 makes sense to me! 😁 And that's feeling
+great now!" (the Vermin Lords). A TODO row under Round 11 holds it,
+with a cost target per kind signed at that round's kickoff.

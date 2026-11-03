@@ -244,6 +244,17 @@ META-ROADMAP §"Round 11 — The roster" names each row's place.
 
 - [ ] **Power diversity by rarity** (verdict item 4): 1/1/1/2 → 1/1/2/3 or 1/2/3/4 — a pool re-anchor rides behind it (every burn/turn moves); Round 11, after the §94 signing.
 
+- [ ] **Act 1's cost, with a per-kind cost target.** §146 tuned act 1
+  to turn targets only, and the rats' nest costs 0.03 pool an instance
+  and the Vermin Lords 1.75 held out (146e), where Cats!, act 1's other
+  elite, costs 18.9 to 21.7 on the board's walk rows (146d). BALANCE's
+  per-kind guide (normal ≈ 3, elite ≈ 6, boss ≈ 10 pool an instance)
+  was set at a pool of 20 and is checked in prose only. The user's
+  call at 146e's stop (2026-11-03): a cost target per kind signed at
+  Round 11's kickoff, on the pool as it is then, and act 1's encounters
+  read against it after the retune moves every fight's cost, the rats'
+  nest and the Vermin Lords first (WORKLOG §146, 146e).
+
 - [ ] **The AoE-status enemies — the RETUNE half** (range / cooldown / duration; "really annoying"): board work, carried to **Round 11** with the kit watches (Round 7's no-board guard).
 
 - [ ] **Kit watches from the 94f price-book re-read on prior v4** (BALANCE §"The rarity verification protocol" step 3: a negative recruit row at FREE acquisition is a KIT question, not a price one — WORKLOG §94f): **officer** (−42 recruit / −36 port-buy, the worst row in the book) · **bandit** (−24 / −25, the weakest common) · **mercenary** (−15 / −10, the soldier's starter body) · **halberdier** (−16 recruit; port n=8 unreadable) · **stormcaller** (−2.8 — a legendary that does not pay at free acquisition under casualties). Round 7 idiom / Round 11 candidates; the §94 charter's "NOT doing: archetype changes" held. The dispositions taken at 94f: gunslinger common → uncommon (+28 / +27 at the cheapest price) · healer base 30 → 32 · everything else HOLD. Since rule C the ARM never drafts the officer at all (0 of 23,471 rosters at 146b; the random and greedy anchors still take him), so the roster table's guard holds him PENDING until an ARM row drafts him (WORKLOG §146, 146c).

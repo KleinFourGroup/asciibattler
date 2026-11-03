@@ -509,3 +509,22 @@ four to five turns; the bear with six, then five, then five beside it,
 about five turns. Wrong looks like a fight that drags with nothing
 happening (a stall), a Vermin Lords fight that reads as a heal-lock, or
 the bear's stages feeling empty.
+
+*The stop, read (2026-11-03).* The user played act 1: "All of those
+are playing decently. I think we do want to go with the change you
+mentioned to vermin lords. That'll play better when we get the aura
+healer, too." So the Vermin Lords take the pool lever in place of the
+wave-size one: the full wave again (hand factor 1.24 → 2.25, fourteen
+bodies at a hand of six) with its pool doubled (`healthPool` 30 → 60),
+the sweep's morale ×2.0 arm baked. Its rows equal that arm's on the
+tuning seeds; held out, 4.95 turns, a cap share of 3.0 % and 1.75 pool
+an instance (BALANCE, 2026-11-03, the Vermin Lords at the pool lever).
+The corpus diverged on 7 of 33 and was re-recorded, 20 of 21 kinds; no
+seeded drive moved (3906 main, 570 smoke, the corpus's 37).
+
+*Asked at the stop:* when the rats' nest and the Vermin Lords get their
+cost. Nothing schedules it: §146's targets are turns, and BALANCE's
+per-kind cost guide (normal ≈ 3, elite ≈ 6, boss ≈ 10 pool an
+instance) was set at a pool of 20 and is checked in prose only. Put to
+the user with a lean toward Round 11, whose retune moves every fight's
+cost.

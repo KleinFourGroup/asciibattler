@@ -5336,3 +5336,21 @@ deltas. The pre-X H7c→O log lives at
   stopped trading and were replaced from a survey of 40 (chaos 15 and
   26 for chaos 7 and the Gambler's 37), 20 of the 21 command kinds
   again. The in-situ read is 146f's board. Detail: WORKLOG §146, 146e.
+- **2026-11-03 — the Vermin Lords at the pool lever** (§146e, the
+  user's call at the stop). The full wave again (hand factor 2.25, four
+  healers and ten rats at a hand of six) with its pool doubled,
+  `healthPool` 30 → 60: the sweep's `enemyMoraleMultiplier` ×2.0 arm,
+  baked. On the tuning seeds the baked config's Vermin Lords rows
+  (`pacing.csv`, `per-encounter.csv`) equal that arm's byte for byte;
+  the rows that differ are the closing boss's, whose pool the run-wide
+  multiplier also doubled. Held out, seeds 5001 to 5040, beside the
+  same seeds' other two waves:
+
+  | wave | turns / won | won | pool / instance | cap share |
+  |---|---|---|---|---|
+  | the old wave (2.25, pool 30) | 2.95 | 40 / 40 | 1.08 | 0.042 |
+  | 146e's (1.24, pool 30) | 4.73 | 40 / 40 | 1.70 | 0.069 |
+  | now (2.25, pool 60) | 4.95 | 40 / 40 | 1.75 | 0.030 |
+
+  In the elite target (4.00–5.00), near its top. The corpus diverged on
+  7 of 33 and was re-recorded: 20 of 21 kinds, 0 of 33 differing.

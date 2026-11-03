@@ -1013,7 +1013,7 @@
     "id": "vermin-lords",
     "name": "The Vermin Lords",
     "description": "A posse of clerics, at one with the rats",
-    "healthPool": 30,
+    "healthPool": 60,
     "kind": "elite",
     "rewards": [
       { "table": "bits-large", "trigger": { "chance": 1 } },
@@ -1029,7 +1029,7 @@
             "kind": "wave",
             "spec": {
               "levelBudget": { "kind": "mean", "factor": 1.5 },
-              "count": { "kind": "hand", "factor": 1.24 },
+              "count": { "kind": "hand", "factor": 2.25 },
               "units": [
                 { "archetype": "healer", "count": { "kind": "fixed", "value": 4 }, "level": { "kind": "weight", "weight": 1 } },
                 { "archetype": "giant_rat", "count": { "kind": "weight", "weight": 1 }, "level": { "kind": "weight", "weight": 2 } }

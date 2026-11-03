@@ -5284,3 +5284,55 @@ deltas. The pre-X H7c→O log lives at
   `--empower` level, seeds from 1001), so its 50.0 % compares with the
   derives on the same line only: 92c1 42.3, 92g 57.7, 94h 42.3, now
   50.0 on a walk one act longer. Detail: WORKLOG §146, 146d.
+- **2026-11-03 — act 1's four short encounters tuned in isolation**
+  (§146e). Each fought alone on a roster drawn from the v4 table
+  (`--roster=sampled:0:5`, the bear `sampled:0:10`), one fight a run at
+  a full pool: the rats' nest and the rat hunt at hop 1 of `--hops=3`
+  with elites, ports and events off, the Vermin Lords as the stamped
+  first node (`--hops=2 --first-node=elite`), the bear alone
+  (`--hops=2`). The board's doctrine player on the deploy vector
+  (`--searcher --audition --redraw=level:2 --empower=level:hi`); its
+  turns on these four match the ARM's on the board within 0.15. The
+  lever is `difficulty.waveSizeMultiplier`, which shrinks a wave's count
+  and keeps its level budget. 40 tuning seeds from 2001
+  (`scratch/146/146e/sweep.sh`), turns per won instance:
+
+  | encounter | ×1.0 | ×0.85 | ×0.7 | ×0.55 | ×0.4 | target |
+  |---|---|---|---|---|---|---|
+  | rats-nest | 2.00 | 2.00 | **3.00** | 3.00 | 4.00 | 2.50–3.25 |
+  | rat-hunt | 2.28 | **3.00** | 3.13 | 4.00 | 5.03 | 2.50–3.25 |
+  | vermin-lords | 2.90 | 3.03 | 3.90 | **4.75** | 5.73 | 4.00–5.00 |
+  | bear | 4.10 | 4.20 | **5.20** | 5.35 | 6.23 | 5.00–6.50 |
+
+  At ×1.0 each sits within 0.25 of the board's in-situ turns (2.00,
+  2.40, 2.88, 4.35 on ARM deploy), the bear the farthest. The Vermin Lords step with their bodies, four
+  healers fixed: 14, 11, 9 (×0.7 and ×0.65), 8 (×0.6, 3.95 turns), 7;
+  their time-cap share on the tuning seeds 6.9, 7.4, 9.0, 9.5, 10.5 %.
+  The pool lever, measured beside it (`enemyMoraleMultiplier` at the full
+  wave): ×1.4 3.03 turns, ×1.5 3.90, ×1.8 4.03, ×2.0 4.90 with a cap
+  share of 6.6 %.
+
+  *Baked* (the bold column) into each wave's hand-count factor, to two
+  places: the rats' nest 2 → 1.4; the rat hunt 1.85 → 1.57 and 1.5 →
+  1.28; the Vermin Lords 2.25 → 1.24; the bear 1.75 → 1.23, 1.5 → 1.05
+  and 1.5 → 1.05. On the tuning seeds the baked config's row for each
+  encounter is byte-identical to its multiplier arm's; the rows that
+  differ are the closing boss's, which the run-wide multiplier also
+  shrank. **Held out**, seeds 5001 to 5040:
+
+  | encounter | turns / won | won | pool / instance | cap share |
+  |---|---|---|---|---|
+  | rats-nest | 3.00 | 40 / 40 | 0.03 | 0 |
+  | rat-hunt | 3.00 | 40 / 40 | 2.38 | 0 |
+  | vermin-lords | 4.73 | 40 / 40 | 1.70 | 0.069 |
+  | bear | 5.26 | 39 / 40 | 11.55 | 0 |
+
+  The old Vermin Lords wave on the same held-out seeds: 2.95 turns, a
+  cap share of 0.042. Pooled over both seed sets the new wave stalls in
+  33 of 379 turns against 13 of 234, Fisher p 0.159: not told apart,
+  and turns within one fight are not independent. The rats' nest costs
+  nothing at any wave size measured (0 to 0.13 pool an instance).
+  The journal corpus diverged on 24 of 33 and was re-recorded; two rows
+  stopped trading and were replaced from a survey of 40 (chaos 15 and
+  26 for chaos 7 and the Gambler's 37), 20 of the 21 command kinds
+  again. The in-situ read is 146f's board. Detail: WORKLOG §146, 146e.

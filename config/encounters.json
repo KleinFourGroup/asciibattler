@@ -879,7 +879,7 @@
             "kind": "wave",
             "spec": {
               "levelBudget": { "kind": "mean", "factor": 1.65 },
-              "count": { "kind": "hand", "factor": 2 },
+              "count": { "kind": "hand", "factor": 1.4 },
               "units": [
                 { "archetype": "giant_rat", "count": { "kind": "weight", "weight": 1 }, "level": { "kind": "weight", "weight": 1 } }
               ]
@@ -912,7 +912,7 @@
                   "kind": "wave",
                   "spec": {
                     "levelBudget": { "kind": "mean", "factor": 1.5 },
-                    "count": { "kind": "hand", "factor": 1.85 },
+                    "count": { "kind": "hand", "factor": 1.57 },
                     "units": [
                       { "archetype": "giant_rat", "count": { "kind": "weight", "weight": 1 }, "level": { "kind": "weight", "weight": 1 } }
                     ]
@@ -925,7 +925,7 @@
                   "kind": "wave",
                   "spec": {
                     "levelBudget": { "kind": "mean", "factor": 1.25 },
-                    "count": { "kind": "hand", "factor": 1.5 },
+                    "count": { "kind": "hand", "factor": 1.28 },
                     "units": [
                       { "archetype": "fox", "count": { "kind": "weight", "weight": 1 }, "level": { "kind": "weight", "weight": 1 } }
                     ]
@@ -1029,7 +1029,7 @@
             "kind": "wave",
             "spec": {
               "levelBudget": { "kind": "mean", "factor": 1.5 },
-              "count": { "kind": "hand", "factor": 2.25 },
+              "count": { "kind": "hand", "factor": 1.24 },
               "units": [
                 { "archetype": "healer", "count": { "kind": "fixed", "value": 4 }, "level": { "kind": "weight", "weight": 1 } },
                 { "archetype": "giant_rat", "count": { "kind": "weight", "weight": 1 }, "level": { "kind": "weight", "weight": 2 } }
@@ -1093,7 +1093,7 @@
                 "kind": "wave",
                 "spec": {
                   "levelBudget": { "kind": "mean", "factor": 1.45 },
-                  "count": { "kind": "hand", "factor": 1.75 },
+                  "count": { "kind": "hand", "factor": 1.23 },
                   "units": [
                     { "archetype": "bear", "count": { "kind": "fixed", "value": 1 }, "level": { "kind": "weight", "weight": 1 }, "power": 4 },
                     { "archetype": "giant_rat", "count": { "kind": "weight", "weight": 3 }, "level": { "kind": "weight", "weight": 1 } },
@@ -1110,7 +1110,7 @@
                 "kind": "wave",
                 "spec": {
                   "levelBudget": { "kind": "mean", "factor": 1.25 },
-                  "count": { "kind": "hand", "factor": 1.5 },
+                  "count": { "kind": "hand", "factor": 1.05 },
                   "units": [
                     { "archetype": "bear", "count": { "kind": "fixed", "value": 1 }, "level": { "kind": "weight", "weight": 1 }, "power": 4 },
                     { "archetype": "wolf", "count": { "kind": "weight", "weight": 2 }, "level": { "kind": "weight", "weight": 1 } },
@@ -1126,7 +1126,7 @@
                 "kind": "wave",
                 "spec": {
                   "levelBudget": { "kind": "mean", "factor": 1.25 },
-                  "count": { "kind": "hand", "factor": 1.5 },
+                  "count": { "kind": "hand", "factor": 1.05 },
                   "units": [
                     { "archetype": "bear", "count": { "kind": "fixed", "value": 1 }, "level": { "kind": "weight", "weight": 1 }, "power": 4 },
                     { "archetype": "tiger", "count": { "kind": "weight", "weight": 1 }, "level": { "kind": "weight", "weight": 1 } }

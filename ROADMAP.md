@@ -13,7 +13,7 @@ its spec, its per-phase worklogs (`archive/worklog-phase-135.md` to
 [archive/post-118-roadmap.md](archive/post-118-roadmap.md) (Round 8.5).
 
 **Status: §146, the board and act 1's bands, cut and signed 2026-11-02;
-146e next.** The spec is [round-10-spec.md](round-10-spec.md), its tranche 2
+146e's stop next, the user's play of act 1.** The spec is [round-10-spec.md](round-10-spec.md), its tranche 2
 answered at the kickoffs of §144 to §146. The charter, the decision
 points, the exit and the scope guards are in META-ROADMAP §"Round 10 —
 Act 1, the wilds", with the roster table's rebuild added to its scope at
@@ -138,9 +138,10 @@ The cut, signed 2026-11-02 with its six leans (WORKLOG §146):
 - ☑ **146d — the board read, and act 1's bands put** (`stop`): signed
   2026-11-03, arm (B), the signed turn targets; with it the fixture
   guard, a process line, two TODO rows (WORKLOG 146d, "146d signed").
-- ☐ **146e — act 1's encounters toward the signed bands** (`stop`): the
+- ◐ **146e — act 1's encounters toward the signed bands** (`stop`): the
   rats' nest, the rat hunt, the Vermin Lords and the bear toward the turn
-  targets; the user plays act 1 before 146f.
+  targets; the user plays act 1 before 146f. Built 2026-11-03, all four
+  in their targets held out; waiting on the user's play (WORKLOG 146e).
 - ☐ **146f — the verify board** (`none`; only after 146e).
 - ☐ **146g — the sheet amended** (`stop`).
 - ☐ **146h — the phase's close** (`stop`).

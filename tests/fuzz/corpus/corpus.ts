@@ -105,13 +105,14 @@ export const CORPUS: readonly CorpusRow[] = [
   chaos(1, 'character=gambler&bits=300'),
   chaos(2, 'character=gambler&bits=300'),
   chaos(5, 'character=gambler&bits=300'),
-  // A packet bought, a unit bought and one paid off, which the rows above
-  // never do: chosen from `--survey=12` when the strikes moved (2026-10-29),
-  // and again from a survey of 40 when act 1 went in front (2026-11-02) and
-  // those rows stopped trading.
-  chaos(7),
+  // A packet and a daemon bought, a unit bought and one paid off, which the
+  // rows above never do: chosen from `--survey=12` when the strikes moved
+  // (2026-10-29), and again from a survey of 40 each time those rows stopped
+  // trading, when act 1 went in front (2026-11-02) and when its waves shrank
+  // (2026-11-03).
+  chaos(15),
   chaos(16),
-  chaos(37, 'character=gambler&bits=300'),
+  chaos(26),
 ];
 
 const HERE = dirname(fileURLToPath(import.meta.url));

@@ -446,3 +446,66 @@ on all of those calls, Claude! 😁" So:
 - **The arbitration's loss on the walk** goes to TODO under Round 11,
   before the closing board; the ceiling's label to TODO under Round 10's
   board.
+
+### 146e — act 1's four short encounters toward the turn targets (2026-11-03)
+
+*Step zero.* The signed lever is the protocol's step 4,
+`difficulty.waveSizeMultiplier` under `--encounter`, baked into the wave
+spec. A wave's level budget is the total across its bodies
+(`src/run/encounters/wave.ts`), so a smaller count with the same budget
+fields fewer, stronger enemies, fewer bodies fall each turn, and the same
+enemy pool lasts more turns: the lever moves turns, as the cut assumes.
+The isolation shapes, each one fight a run on a v4 roster, reproduce the
+board's in-situ turns within 0.25, and the doctrine player's turns
+match the ARM's within 0.15, so doctrine is the isolation player. The
+sweep, the bake and the held-out verify are in BALANCE (2026-11-03, act
+1's four short encounters tuned in isolation).
+
+*Chosen:* the smallest change that lands in the target on the tuning
+seeds: the rats' nest ×0.7, the rat hunt ×0.85, the Vermin Lords ×0.55,
+the bear ×0.7. All four are in their targets on held-out seeds 5001 to
+5040 (3.00, 3.00, 4.73, 5.26). The baked config equals the multiplier on
+each encounter's own row, byte for byte.
+
+*The Vermin Lords' cap turns, read.* Their turns step with their bodies,
+and only 7 (four healers and three rats, at a hand of six) reach the
+elite target. Their stall share rose on the tuning seeds (6.9 % at the
+old wave, 10.5 % at the new) and less on the held-out ones (4.2 % and
+6.9 %); pooled, not told apart (p 0.159). The pool lever, the full wave
+at morale 60, gives 4.90 turns at 6.6 %. Put to the user at the stop as
+an alternative, with the signed lever's version baked.
+
+*Not in the targets:* the rats' nest still costs nothing (0.03 pool an
+instance held out), whatever its size. Turns were the signed target;
+cost is reported.
+
+*The corpus:* 24 of 33 journals diverged and were re-recorded; the
+re-recording left three trades (a packet and a daemon bought, a unit
+paid off) in no row, so chaos 15 and 26 replace chaos 7 and the
+Gambler's 37 from a survey of 40, as at 145g: 20 of 21 kinds, 0 of 33
+differing on replay, `corpus.test.ts` 37 green.
+
+*The seeded drives that moved* (the hook's first run failed 6, which
+the cut's prediction missed; a slip filed), each re-picked by its own
+rule, as at 137c and 145g: seed 9's two-hop soldier run now dies in its
+first fight, act 1's boss, so the journal across a load and the resume
+gates' strip move to seed 8, the quicker of the two of 1 to 20 whose
+run completes (3 and 8; `scratch/146/146e/scans/resume-scan.ts`). The
+chaos census lost three kinds: its procedural slot 32 → 3, the shortest
+of 40 that declines a reward and empowers a unit; the Gambler's 3 → 12,
+the shortest of 40 that redraws, docks at a port and recruits, which
+brings `usePacket` back. The census pin is unchanged
+(`scratch/146/146e/scans/chaos-scan.ts`). The smoke then failed the
+`hopsRemaining` pin, which set its pin at every sector clear: its seed's
+walk now clears the second sector too, so the pin read the remainder
+after the second (11, not 22). It now pins the first clear, in a commit
+of its own (`3566cece`), passing on both configs. The Cursor trimmed
+under its cap.
+
+*The stop:* the user plays act 1 before 146f's verify board. The read
+script: the rats' nest fields about 8 bigger rats and lasts three turns;
+the rat hunt three turns; the Vermin Lords four clerics and three rats,
+four to five turns; the bear with six, then five, then five beside it,
+about five turns. Wrong looks like a fight that drags with nothing
+happening (a stall), a Vermin Lords fight that reads as a heal-lock, or
+the bear's stages feeling empty.

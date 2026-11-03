@@ -116,7 +116,7 @@ function resumed(save: string, config: RunConfig): Emitted[] {
 // about fifteen battles; no short run met a port, so one full-length run is
 // here for that gate. The first run must reach the end of the walk for the
 // `complete` gate: since act 1 went in front that is three bosses, and seed 8
-// is the first of 20 whose run clears them.
+// is the quicker of the two of 20 whose run clears them (3 and 8).
 const RUNS: ReadonlyArray<readonly [number, string]> = [
   [8, 'sectorHops=2&character=soldier'],
   [1, 'sectorHops=2&character=soldier'],
@@ -220,9 +220,9 @@ describe("115e — the strip's input is the turn:resolved before it", () => {
       expect(p.lastTurn).toEqual({ winner: before.winner, reason: before.reason, fallen: before.fallen.thisTurn });
       compared++;
     });
-    const run = new Run(9, bus, parseRunConfig(new URLSearchParams('sectorHops=2&character=soldier')));
+    const run = new Run(8, bus, parseRunConfig(new URLSearchParams('sectorHops=2&character=soldier')));
     run.pauseAtTurnGates = true;
-    const pick = pickerFor('seeded', 9);
+    const pick = pickerFor('seeded', 8);
     for (let sent = 0; sent < 5000; sent++) {
       const step = PHASE_ROWS[run.phase](run, pick);
       if (step === 'end') break;

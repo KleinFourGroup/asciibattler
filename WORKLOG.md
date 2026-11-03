@@ -599,8 +599,8 @@ board's source lines for the re-pinned checks name 146g (the 85g6d and
 the tests derive from it; what changed is the tests' metric fixtures,
 which carried no per-act entry, so act 1's new wall check read N/A and
 failed the verdict closed on six tests (the check live, its control).
-They now carry act 1's wall:  at the sheet's mid-band,
-the CLI test a  cell. On 146f's own board every
+They now carry act 1's wall: `board.test.ts` at the sheet's mid-band,
+the CLI test a `sectorBossHops` cell. On 146f's own board every
 act-1 entry PASSes, 8 WARN; its control, the same sheet on a copy of
 146b's board, WARNs where act 1 moved between the two boards (BALANCE,
 2026-11-03, the sheet amended). Acts 2 and 3's numbers are in the same

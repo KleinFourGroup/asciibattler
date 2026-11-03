@@ -334,3 +334,32 @@ runs from an ARM row's 120, though their source line and the comment at
 `board.ts:516` say paired seeds. On seeds 1 to 40 alone they read
 −0.125, −0.100, −0.100 and −0.300 against the report's −0.117, −0.125,
 −0.083 and −0.358.
+
+### 146c — the roster table rebuilt (2026-11-03)
+
+*The control first:* on the v3 table, `--roster=sampled:2:5 --act=3`
+refuses at launch ("built over sectors ["the-start","the-deep-end"],
+but the map walks ["the-periphery","the-start","the-deep-end"]").
+`npm run roster:table` over the eight ARM rows of
+`output/board-runs/146b/` writes v4: 23,471 battles in 52 buckets
+(predicted at most 55), measured at `d4b2af3a`, the three sectors in its
+provenance. The same draw then loads and plays its seed (exit 0).
+
+*Not predicted:* with the `sectors` line gone, the coverage guard
+failed on the officer, a draftable rare that no roster in the table
+holds. It is offered: the pure-random and greedy anchors hold it in 17
+and 29 roster rows. The ARM stopped drafting it at rule C. The officer
+appears in rows as follows:
+- 94h: 5 to 24 per row.
+- 139c, the old game: 5 per row.
+- 139e, the old game under 137c's bot vector: 9.
+- 139c, rule C (`ca97b9fc`): 0 on both rows.
+- 139c, the moves: 0 on both rows.
+- 146b, every ARM row and every doctrine row: 0.
+
+So the game's change at rule C did it, not the vector. The cut's exit
+named the guard green with no PENDING line. It is green with one:
+`unit:officer`, with that reason and what clears it. That is a change
+inside the step's intent (the table over the three-act walk), so it is
+built and goes to 146d with the read. BALANCE's registry row is at v4.
+Tests: the guard (12) and the table's and the sampled flag's (21).

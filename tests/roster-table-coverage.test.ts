@@ -52,8 +52,8 @@ interface Catalog {
  */
 const PENDING: ReadonlyMap<string, string> = new Map([
   [
-    'sectors',
-    'act 1 went in front of The Start, so every bucket names the sector a place earlier in the walk; rebuilt from the three-act board cohort',
+    'unit:officer',
+    'offered but never drafted by the ARM since rule C (ca97b9fc): 0 of the 23,471 rosters at d4b2af3a, where the pure-random and greedy anchors hold it; clears when an ARM row drafts it',
   ],
 ]);
 

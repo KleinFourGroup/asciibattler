@@ -135,7 +135,9 @@ The cut, signed 2026-11-02 with its six leans (WORKLOG §146):
   2026-11-03, integrity PASS (WORKLOG 146b).
 - ☑ **146c — the roster table rebuilt** (`none`): v4, 52 buckets over
   the three-act walk; the officer acknowledged PENDING (WORKLOG 146c).
-- ☐ **146d — the board read, and act 1's bands put** (`stop`).
+- ◐ **146d — the board read, and act 1's bands put** (`stop`): read and
+  put 2026-11-03, the arms (A) observed and (B) the signed turn targets,
+  waiting on the user (WORKLOG 146d).
 - ☐ **146e — act 1's encounters toward the signed bands** (`stop`; only
   if 146d signs targets act 1 misses).
 - ☐ **146f — the verify board** (`none`; only after 146e).

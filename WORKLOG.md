@@ -363,3 +363,64 @@ named the guard green with no PENDING line. It is green with one:
 inside the step's intent (the table over the three-act walk), so it is
 built and goes to 146d with the read. BALANCE's registry row is at v4.
 Tests: the guard (12) and the table's and the sampled flag's (21).
+
+### 146d — the board read, and act 1's bands put (2026-11-03)
+
+The numbers are in BALANCE (2026-11-02, the board on three acts;
+2026-11-03, act 1 read off the board). What they say:
+
+1. **Act 1 is easier than `0.2.0`'s act 1, and the whole run is not
+   told apart from `0.2.0`'s.** The ARM on the deploy vector clears The
+   Periphery in 99 of 120 against The Start's 80 at `0.2.0` (p 0.007),
+   and wins the three-act run in 44 against the two-act run's 52 (p
+   0.356). Every act-1 ref WARNs high, the King's forced row too (0.733
+   against 0.38–0.58), and the seam into act 2 reads 23.8 and 21.0
+   against 16–18: runs leave act 1 with 53 to 60 % of the pool.
+2. **Act 1's wall is two bosses at 0.12 to 0.29**, the King 0.125 and
+   the bear 0.167 on deploy, 0.292 and 0.250 on regen; on regen the
+   cats are a third wall (15 deaths in 52). The moved bosses, in situ,
+   are not told apart from their `0.2.0` places at this n: the Queen
+   0.377 at act 1 to 0.241 at act 3 (p 0.150), the King 0.175 to 0.125,
+   the Generalissimo 0.219 to 0.250, the Witch Hunt 0.182 to 0.244. On
+   regen the Witch Hunt walls act 2 (16 of 23).
+3. **Act 1's pacing misses the signed turn targets in four of its own
+   encounters**, all short: the rats' nest (2.00 turns, 0.1 to 0.2 pool
+   an instance, a fight that costs nothing), the rat hunt (2.40 and
+   2.36), the Vermin Lords (2.88, an elite that costs 0.8 to 1.5 pool
+   and ends 5 to 8 % of its turns at the time cap, the act's highest
+   and near act 3's stall-prone elites), and the bear (4.35 against
+   5.00–6.50). The cats graze the elite floor on deploy (3.97).
+4. **The arbitration costs the ARM the walk.** Doctrine and ARM differ
+   in `--arbitrate --prior-lambda=0.5` alone; paired on seeds 1 to 40
+   on the walk, 12 seeds won by doctrine alone and 0 by the ARM (p
+   0.0005), where on act 1 alone it is 5 against 1 (p 0.219). 94h
+   read the walk's ceiling at −0.200 on two acts and named the
+   high-override sites as the suspect for Round 7; the walk one act
+   longer makes it −0.300 paired. The refs the sheet holds are the
+   ARM's, so they read the arbitration's losses with the game's.
+5. **The derive** trains at 50.0 % and wins 2 of 6 held-out; its line
+   runs without the board's redraw and empower levels, so it compares
+   only with the earlier derives (94h 42.3 % and 1 of 6, on two acts).
+
+*Acts 2 and 3, recorded for Rounds 21 and 22:* act 2 (The Start, the
+Generalissimo and the Witch Hunt) walls 0.247 on deploy and 0.553 on
+regen, act 3 (The Deep End, the Queen) 0.241 and 0.267, the seam into
+act 3 17.4 and 14.5.
+
+*Put to the user*, in the closing message of the session's turn: act
+1's bands in two arms. (A) Observed: act 1's refs, wall, seam and the
+two forced bosses re-pinned at 146b's values at 146g, no content moved,
+146e and 146f skipped. (B) Targets: the targets are the signed turn
+targets the four short encounters miss. 146e tunes those four by
+isolation with the wave-size and level-budget lever, and the Vermin
+Lords' cap turns are read there. The user plays act 1, 146f runs the
+verify board, and the refs, wall and seam are re-pinned at 146f's
+values rather than the old bands. The lean: (B), since the targets
+are the user's own and two of the four are near no-fights; holding act
+1 to the old act-1 win bands is not proposed. A three-act run's first
+act reading easier than the old first act is the shape, and the whole
+run holds at `0.2.0`'s. With it: the officer's PENDING (146c), a
+fixture-loading guard for gotcha #124 met a second time (76h, then
+144f), a
+process line on removing a worktree with a junction, the ceiling's
+label (pooled, not paired), and where the arbitration's walk loss goes.

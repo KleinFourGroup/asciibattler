@@ -5222,3 +5222,65 @@ deltas. The pre-X H7c→O log lives at
   `output/box-batches/20261102-193047-d4b2af3a/best-strategy.json`,
   `scratch/146/146b-{board,derive}-drive.log`. Detail: WORKLOG §146,
   146b.
+- **2026-11-03 — act 1 read off the board** (§146d), from
+  `output/board-runs/146b/` (the entry above) and 139c's moves tree
+  (`output/board-runs/139c-D/`, `0.2.0`'s game). The seeds do not pair
+  across the two (act 1 took sector index 0), so the comparisons with
+  `0.2.0` are two-sample, Fisher's exact test, two-sided
+  (`scratch/146/fisher.mjs`, self-checked on two known tables).
+
+  *Against `0.2.0`*, the ARM on the deploy vector, n = 120 each: act 1
+  alone won 99 (The Periphery) against 80 (The Start), p 0.007; the
+  whole run won 44 of three acts against 52 of two, p 0.356.
+
+  *Where runs died*, off each defeat's trace (`scratch/146/walls.mjs`,
+  the trace count equal to each row's defeats on all twelve rows read),
+  deaths at each boss against its instances; act 1 of each of the four
+  walk rows dies exactly as its act-alone row:
+
+  | boss | `0.2.0`: act, wall | now: act, ARM deploy | p | now: ARM regen |
+  |---|---|---|---|---|
+  | bandit-king | 1 (The Start), 10 / 57, 0.175 | 1 (The Periphery), 7 / 56, 0.125 | 0.600 | 14 / 48, 0.292 |
+  | bear | — | 1 (The Periphery), 10 / 60, 0.167 | — | 13 / 52, 0.250 |
+  | generalissimo | 2 (The Deep End), 7 / 32, 0.219 | 2 (The Start), 10 / 40, 0.250 | 0.788 | 10 / 24, 0.417 |
+  | witch-hunt | 2 (The Deep End), 6 / 33, 0.182 | 2 (The Start), 11 / 45, 0.244 | 0.587 | 16 / 23, 0.696 |
+  | banditQueen | 1 (The Start), 20 / 53, 0.377 | 3 (The Deep End), 14 / 58, 0.241 | 0.150 | 4 / 15, 0.267 |
+
+  The forced rows (doctrine, the regen vector): the King at act 1, 12
+  deaths of 100 arrivals; the Queen at `--act=3`, 24 of 55, where the
+  run starts cold in act 3, so 65 of 120 die before reaching her. Other
+  deaths in act 1, ARM deploy: the cats 3, the rat hunt 1; ARM regen:
+  the cats 15, five normals 1 each.
+
+  *Act 1 by encounter* on the ARM walk rows, deploy / regen: instances,
+  pool damage per instance, turns per won instance (the signed targets:
+  normal 2.50–3.25, elite 4.00–5.00, boss 5.00–6.50), and the share of
+  turns that ended at the time cap:
+
+  | encounter | kind | instances | pool / instance | turns / won | cap share |
+  |---|---|---|---|---|---|
+  | bandit-king | boss | 56 / 48 | 18.75 / 16.79 | 5.80 / 5.53 | 0 / 0 |
+  | bear | boss | 60 / 52 | 14.03 / 13.77 | **4.35 / 4.34** | 0.004 / 0 |
+  | cats | elite | 34 / 52 | 18.91 / 21.65 | **3.97** / 4.12 | 0.007 / 0 |
+  | vermin-lords | elite | 25 / 37 | 1.52 / 0.84 | **2.88 / 2.86** | **0.083 / 0.047** |
+  | poachers | normal | 74 / 98 | 9.22 / 9.46 | 3.09 / 3.11 | 0.004 / 0 |
+  | brigands (acts 1 and 2) | normal | 142 / 169 | 4.74 / 5.47 | 3.00 / 3.00 | 0 / 0 |
+  | rat-hunt | normal | 58 / 107 | 3.91 / 3.29 | **2.40 / 2.36** | 0 / 0 |
+  | canids | normal | 82 / 95 | 3.11 / 3.55 | 3.00 / 3.00 | 0.004 / 0 |
+  | wolfpack | normal | 54 / 87 | 1.83 / 1.54 | 3.00 / 3.00 | 0 / 0 |
+  | rats-nest | normal | 83 / 118 | 0.10 / 0.21 | **2.00 / 2.00** | 0 / 0 |
+
+  In bold, outside the signed turn targets. The Vermin Lords' cap share
+  is the act's highest and near act 3's plague and dark-magic elites
+  (0.070 to 0.087 on ARM deploy); the whole walk's is 0.008.
+
+  *The arbitration on the walk.* `walk-deploy` and `arb-walk-deploy`
+  differ in `--arbitrate --prior-lambda=0.5` alone. Paired on seeds 1
+  to 40 (`scratch/146/pair.mjs`, its control a row against itself):
+  both won 17, the doctrine row alone 12, the ARM alone 0, neither 11,
+  the exact sign test p 0.0005. On act 1 alone (`deploy` against
+  `arb-deploy`) 5 against 1, p 0.219; on the regen walk 7 against 3, p
+  0.344. **The derive's harness** is not a board row's (no `--redraw` or
+  `--empower` level, seeds from 1001), so its 50.0 % compares with the
+  derives on the same line only: 92c1 42.3, 92g 57.7, 94h 42.3, now
+  50.0 on a walk one act longer. Detail: WORKLOG §146, 146d.

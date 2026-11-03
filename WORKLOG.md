@@ -178,3 +178,8 @@ seeds, and the comment and the WARN's text brought to BALANCE's wording),
 since 146f's gap is noise by BALANCE's own line and the load-bearing leg
 read ok, so 146g's sign stands; a guard signed at 147d built at 147e
 rather than carried to Round 11.
+
+### The cut signed (2026-11-03)
+
+Signed: "Fully signed! 😁", over the cut as put and its five leans. The
+stretch it opens runs to 147a's stop.

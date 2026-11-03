@@ -138,7 +138,8 @@ describe('evaluateBoard', () => {
     pacingBoss: 0.5 * (sheet.pacingBands.boss.min + sheet.pacingBands.boss.max),
     // 143d — the walk rows check seam 1 off `seams`; the same mid-band pool.
     seams: [{ act: 1, crossed: 40, pool: 0.5 * (sheet.seams['1']!.min + sheet.seams['1']!.max) * HEALTH.playerHealthMax }],
-    acts: [],
+    // The walk rows check act 1's wall off `walls` since it was signed; mid-band.
+    acts: [{ act: 1, bossHop: 10, arrivals: 40, reach: 1, wall: 0.5 * (sheet.walls['1']!.min + sheet.walls['1']!.max) }],
   });
 
   it('an at-reference arb-regen read PASSes every check', () => {
@@ -244,7 +245,7 @@ describe('86e2 — the fail-closed verdict layer (mechanism smoke; the per-class
     pacingElite: 0.5 * (sheet.pacingBands.elite.min + sheet.pacingBands.elite.max),
     pacingBoss: 0.5 * (sheet.pacingBands.boss.min + sheet.pacingBands.boss.max),
     seams: [{ act: 1, crossed: 40, pool: 0.5 * (sheet.seams['1']!.min + sheet.seams['1']!.max) * HEALTH.playerHealthMax }],
-    acts: [],
+    acts: [{ act: 1, bossHop: 10, arrivals: 40, reach: 1, wall: 0.5 * (sheet.walls['1']!.min + sheet.walls['1']!.max) }],
   });
   const cleanBoardInputs = (): {
     audits: Map<string, InstrumentAudit>;

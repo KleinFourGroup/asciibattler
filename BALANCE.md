@@ -5413,3 +5413,40 @@ deltas. The pre-X H7c→O log lives at
   against 146b's 11 of 178 (p 1.000): the isolation read's 3.0 % did not
   carry into the walk. The walk's pacing checks pass on both rows. The
   roster table rebuilt from the eight ARM rows as v5 (the registry above).
+- **2026-11-03 — the sheet amended, and acts 2 and 3 recorded**
+  (§146g, user-signed). Act 1's entries re-pinned at the verify board's
+  values: the six act-1 win refs, the banks, the firer's fires, the two
+  transaction rates and the forced King (act 1) and Queen (act 3); seam
+  1 re-signed at 0.475–0.55 of max and act 1's wall signed for the first
+  time at 0.15–0.38, each one band over both walk rows; the fire channel,
+  the terminal pair and the pacing bands unchanged. The values are the
+  sheet's (`tests/fuzz/board/signed-sheet.json`, its 2026-11-03 entry).
+  Read on its own board (`output/board-runs/146f/`): every act-1 entry
+  PASS, 0 FAIL, 8 WARN (146f before the re-pin: 18): the terminal pair
+  and derived win on the walk rows, and the ceilings on regen, deploy
+  and walk-deploy (TODO, Round 11). Its control, the same sheet on a copy
+  of 146b's board: WARN on the priest's two rows and the gambler's
+  deploy row, on the deploy seam (23.8) and wall (0.147), and on the
+  elite and boss pacing (3.80 to 4.96), where act 1 moved between the
+  two boards.
+
+  *Acts 2 and 3 at 146f, Rounds 21 and 22's starting points* (arrivals
+  at the act's boss, reach, wall, the seam out of the act with the runs
+  that crossed it):
+
+  | row | act 2 (The Start) | act 3 (The Deep End) |
+  |---|---|---|
+  | arb-walk-deploy | 84, 0.700, 0.250, 17.43 (63) | 57, 0.475, 0.211 |
+  | arb-walk-regen | 39, 0.325, 0.487, 11.00 (20) | 14, 0.117, 0.357 |
+  | walk-deploy (doctrine) | 36, 0.900, 0.083, 21.24 (33) | 31, 0.775, 0.097 |
+  | walk-regen (doctrine) | 20, 0.500, 0.350, 15.62 (13) | 7, 0.175, 0.286 |
+
+  Deaths at the bosses, ARM deploy / regen: the Generalissimo 8 of 39 /
+  10 of 20, the Witch Hunt 13 of 45 / 9 of 19, the Queen 12 of 57 / 5 of
+  14; the Queen forced at act 3, 0.258 (as at 146b; her row meets none
+  of act 1). Acts 2 and 3's encounters were not retuned. Outside the
+  turn targets, deploy / regen: the adventurer with guards under (2.23 /
+  2.38, a normal of acts 2 and 3), the ronin against the mages over (3.77
+  / 3.61), the infernal column over on deploy (3.31, 13 instances), and
+  act 3's elites under: the plague spreaders 3.85 / 3.40 and, on regen,
+  the dark-magic posse 3.40 (7 and 10 instances).

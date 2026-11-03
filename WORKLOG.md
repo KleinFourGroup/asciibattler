@@ -579,3 +579,29 @@ pool. 4.88 and 4.89 turns, in the elite target.
 
 *For 146g:* act 1's refs, wall and seam and the two forced bosses
 re-pinned at these values, put to the user at the stop.
+
+### 146g — the sheet amended (2026-11-03)
+
+*Put and signed.* The re-pin at 146f's values with three leans, the user:
+"Awesome, Claude! 😁 Signing everything, including your leans!" So: the
+six act-1 win refs, the banks, the firer's fires, the transaction rates
+and the forced King and Queen at 146f's values; seam 1 at 0.475–0.55 of
+max; act 1's wall signed at 0.15–0.38, one band over both walk rows
+(0.337 regen, 0.188 deploy), wide because one band reads both vectors;
+the priest's act-1 parity (+1.7 and +0.8; the put rounded the first to
++1.6 from the rates) added to the sheet's notes and his Round 11 TODO
+row, the row kept open. The terminal pair and the pacing bands held, as
+the cut says.
+
+*Built.* `signed-sheet.json` re-pinned with its history entry; the
+board's source lines for the re-pinned checks name 146g (the 85g6d and
+85f text was stale). Every sheet number is read through the loader and
+the tests derive from it; what changed is the tests' metric fixtures,
+which carried no per-act entry, so act 1's new wall check read N/A and
+failed the verdict closed on six tests (the check live, its control).
+They now carry act 1's wall:  at the sheet's mid-band,
+the CLI test a  cell. On 146f's own board every
+act-1 entry PASSes, 8 WARN; its control, the same sheet on a copy of
+146b's board, WARNs where act 1 moved between the two boards (BALANCE,
+2026-11-03, the sheet amended). Acts 2 and 3's numbers are in the same
+entry as Rounds 21 and 22's starting points.

@@ -74,9 +74,11 @@ export interface SignedSheet {
    *  `HEALTH.playerHealthMax` (94h-pre: the 15–18 pool-HP band was written
    *  at max 20 and stranded when 92d doubled it; the board derives the
    *  pool-HP band at verdict time, so the next pool-max move cannot strand
-   *  it again). Seam 1's 0.40–0.45 is 72b's, signed at measured reality. */
+   *  it again). Seam 1's is signed at measured reality, one band over both
+   *  walk rows. */
   readonly seams: Readonly<Record<string, SheetBand>>;
-  /** The mid-walk boss walls, keyed by act; none signed yet. */
+  /** The mid-walk boss walls, keyed by act, each one band over both walk
+   *  rows; act 1's signed at 146g. */
   readonly walls: Readonly<Record<string, SheetBand>>;
   /** 94h-pre (user-signed at the §94 shape-lock) — the kind pacing targets as
    *  a DRIFT read on the walk rows: turns per WON instance off the pooled
@@ -241,7 +243,7 @@ function act1Posture(
       ? 'arbitrated:scored:59-regen-vector'
       : 'arbitrated:scored:92c2-winner';
   const provisional = character === 'gambler' ? ` [${sheet.gamblerNote}]` : '';
-  const winSource = `85g6d fold-baseline re-pin (act-1 arb λ=0.5, n=120 pooled, ±8)${provisional}`;
+  const winSource = `146g re-pin at the 146f board (act 1, The Periphery, arb λ=0.5, n=120 pooled, ±8)${provisional}`;
   const checks: BoardCheck[] = [
     ref('winRate', refs.winRefs[character][posture], WIN_TOL, winSource),
   ];
@@ -250,15 +252,15 @@ function act1Posture(
   // dissolution is the arm's structure, not a drift to chase.
   if (character === 'soldier' && posture === 'regen') {
     checks.push(
-      ref('terminalBank', refs.bankRefs.firer, BANK_TOL, '85g6d re-pin: the fold SPENDS — firer banks ~102 (was ~111 at the λ=0 era)'),
-      ref('firesPerRun', refs.firerFiresPerRun, 1.0, '83f re-pin: ~1.7 arbitrated fires/run, HELD at 85g6d (1.48 in-band)'),
-      ref('transactionRate', refs.firerTransactionRate, 0.1, '85g6d re-pin: the fold RE-ACTIVATES the port economy — the firer shops ~25% (the 72f shops-≈never era closed)'),
+      ref('terminalBank', refs.bankRefs.firer, BANK_TOL, '146g re-pin at the 146f board: the firer banks ~115 after act 1 (88 at 94h, on The Start)'),
+      ref('firesPerRun', refs.firerFiresPerRun, 1.0, '146g re-pin at the 146f board: ~2.5 arbitrated fires a run'),
+      ref('transactionRate', refs.firerTransactionRate, 0.1, '146g re-pin at the 146f board: the firer shops in ~31% of runs (the port economy re-activated by the fold at 85g6d)'),
     );
   }
   if (character === 'soldier' && posture === 'deploy') {
     checks.push(
-      ref('terminalBank', refs.bankRefs.shopper, BANK_TOL, '85g6d re-pin: the fold SPENDS — the deploy row banks ~70 (was ~90 at the λ=0 era)'),
-      ref('transactionRate', refs.shopperTransactionRate, 0.1, '85g6d re-pin: the fold shops ~78% on the deploy vector (the 72f shops-≈never era closed)'),
+      ref('terminalBank', refs.bankRefs.shopper, BANK_TOL, '146g re-pin at the 146f board: the deploy row banks ~80 after act 1 (58 at 94h, on The Start)'),
+      ref('transactionRate', refs.shopperTransactionRate, 0.1, '146g re-pin at the 146f board: the deploy vector shops in ~88% of runs'),
       ref('firesPerRun', 2.0, 1.0, '72f: ~2.0 arbitrated fires/run, HELD at 85g6d (1.77 in-band)'),
     );
   }
@@ -334,7 +336,7 @@ function walkPosture(posture: 'regen' | 'deploy', sheet: SignedSheet): BoardInst
         max: band.max * HEALTH.playerHealthMax,
         source:
           act === 1
-            ? '94h-pre SIGNED as a fraction 0.40–0.45 of max (the 72f 15–18 pool-HP band at max 20 stranded at 92d; 16.6/40 = 0.415 at 92h, the floor refilling to 1.0 makes the seam the hazard read)'
+            ? '146g SIGNED as a fraction of max at the 146f board, one band over both walk rows (19.9 and 21.0 of 40); a fraction since 94h-pre, so a pool-max move moves the band'
             : `the sheet's seam ${act}, a fraction of max`,
       })),
       ...(['normal', 'elite', 'boss'] as const).map((kind): BoardCheck => ({
@@ -350,7 +352,10 @@ function walkPosture(posture: 'regen' | 'deploy', sheet: SignedSheet): BoardInst
         grade: 'reference',
         min: band.min,
         max: band.max,
-        source: `the sheet's act-${act} boss wall`,
+        source:
+          act === 1
+            ? '146g SIGNED at the 146f board, one band over both walk rows (0.337 regen, 0.188 deploy)'
+            : `the sheet's act-${act} boss wall`,
       })),
       {
         metric: 'terminalReach',
@@ -463,7 +468,7 @@ export function buildBoard(
       'bandit-king',
       sheet,
       walk,
-      '85f re-pin (user-signed 2026-08-25): the DOCTRINE-arm n=120 value (King 77.5) — the F3A PENDING closed',
+      '146g re-pin at the 146f board: the doctrine arm at n=120, the King at act 1',
     ),
     forcedBoss(
       'wall-queen',
@@ -471,7 +476,7 @@ export function buildBoard(
       'banditQueen',
       sheet,
       walk,
-      '85f re-pin (user-signed 2026-08-25): the DOCTRINE-arm n=120 value (Queen 67.5) — the King>Queen order is the durable check',
+      '146g re-pin at the 146f board: the doctrine arm at n=120, the Queen at act 3; the King>Queen order is the durable check',
     ),
     act1Posture('priest', 'regen', act1, sheet),
     act1Posture('priest', 'deploy', act1, sheet),

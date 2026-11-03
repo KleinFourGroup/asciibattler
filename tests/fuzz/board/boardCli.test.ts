@@ -36,8 +36,11 @@ function runReport(dir: string, extra: readonly string[] = []): {
   return { status: r.status, out: `${r.stdout ?? ''}\n${r.stderr ?? ''}` };
 }
 
+// `sectorBossHops` because the walk rows check act 1's wall (a CHECKED null
+// fails the verdict closed), and the wall needs each sector's boss hop: one
+// sector's, at hop 10. Its value is not this test's to pin.
 const HEADER =
-  'seed,strategy,daemon,outcome,finalHop,portPurchases,finalBits,packetsFired,sectorsCleared,poolAtSectorEnd';
+  'seed,strategy,daemon,outcome,finalHop,portPurchases,finalBits,packetsFired,sectorsCleared,poolAtSectorEnd,sectorBossHops';
 
 interface DirOpts {
   seeds?: readonly number[];
@@ -61,7 +64,7 @@ function writeDir(root: string, inst: BoardInstrument, opts: DirOpts = {}): void
   const outcome = opts.outcome ?? ((s: number): string => (s % 2 === 0 ? 'complete' : 'defeat'));
   writeFileSync(
     join(dir, 'summary.csv'),
-    [HEADER, ...seeds.map((s) => `${s},${strategy},mars,${outcome(s)},10,1,100,2,1,16`)].join('\n') +
+    [HEADER, ...seeds.map((s) => `${s},${strategy},mars,${outcome(s)},10,1,100,2,1,16,10`)].join('\n') +
       '\n',
   );
   // 94h-pre — the walk rows check pacing off pacing.csv (a CHECKED null fails

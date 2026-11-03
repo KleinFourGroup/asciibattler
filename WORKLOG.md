@@ -530,3 +530,14 @@ the user with a lean toward Round 11, whose retune moves every fight's
 cost. The user: "Round 11 makes sense to me! 😁 And that's feeling
 great now!" (the Vermin Lords). A TODO row under Round 11 holds it,
 with a cost target per kind signed at that round's kickoff.
+
+### 146f — the verify board launched (2026-11-03)
+
+*Launched* at `3476d272`, pushed, from a detached worktree at
+`../asciibattler-146f` with a `node_modules` junction: the board's 25
+batches on one `cpx42` from 14:20Z (`scratch/146/146f/146f-board.queue`,
+made from `--plan` at that HEAD by `scratch/146/146f/make-queue.mjs`; its
+lines identical to 146b's queue, the anchors' too), the parity test
+green before the first launch. The anchors ran locally in the worktree,
+clean manifests at the same HEAD: pure-random 11 of 40, greedy 7 of 40
+(146b: 11 and 11).

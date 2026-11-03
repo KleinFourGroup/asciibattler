@@ -53,7 +53,7 @@ interface Catalog {
 const PENDING: ReadonlyMap<string, string> = new Map([
   [
     'unit:officer',
-    'offered but never drafted by the ARM since rule C (ca97b9fc): 0 of the 23,471 rosters at d4b2af3a, where the pure-random and greedy anchors hold it; clears when an ARM row drafts it',
+    'offered but never drafted by the ARM since rule C (ca97b9fc): 0 of the 25,657 rosters at 3476d272 and of the 23,471 at d4b2af3a, where the pure-random and greedy anchors hold it; clears when an ARM row drafts it',
   ],
 ]);
 

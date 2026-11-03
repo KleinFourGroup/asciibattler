@@ -541,3 +541,41 @@ lines identical to 146b's queue, the anchors' too), the parity test
 green before the first launch. The anchors ran locally in the worktree,
 clean manifests at the same HEAD: pure-random 11 of 40, greedy 7 of 40
 (146b: 11 and 11).
+
+### 146f — the verify board back (2026-11-03)
+
+The cohort completed at 20:46Z: 25 batches fetched with exit 0 and
+verified, the box destroyed by its driver, `hcloud server list` empty
+after. 6 h 25 min against 146b's 5 h 54 min on the same queue. Pooled
+into `output/board-runs/146f/` beside the anchors, copied into the
+checkout `diff -rq` identical; the worktree removed as
+`process/measurement.md` says, its junction unlinked first, the
+checkout's `node_modules` at 133 entries before and after and `npm ls`
+clean. The numbers are in BALANCE (2026-11-03, the verify board).
+
+*The exit, by clause.* VERDICT: integrity PASS on all 17 rows, 0 FAIL.
+Act 1 in its bands: every act-1 encounter in its signed turn target on
+both ARM walk rows. The table rebuilt from it: v5, 25,657 battles in 52
+buckets; the coverage guard green with the officer still PENDING (0 of
+the ARM rows' rosters, 22 and 38 of the anchors'), his reason and the
+TODO row naming 146f's count; a sampled draw loads and plays.
+
+*What moved.* Act 1 alone is harder for the ARM than at 146b, told apart
+on three of the six act-alone rows (the priest's two, p 0.023 and 0.021,
+and the gambler's deploy row, p 0.003), and its wall rose (0.147 to 0.188
+on deploy, 0.270 to 0.337 on regen), the bear the larger part of it
+(15 of 61 and 22 of 50). That is the tune's shape: act 1's fights last
+longer and the bear's costs 19 to 20 pool an instance against 14. Act
+1 still clears more often than `0.2.0`'s first act (95 against 80 of
+120, p 0.042), and the whole walk is told apart from neither 146b's nor
+`0.2.0`'s. The seam into act 2 came down toward its band (21.0 and 19.9
+against 23.8 and 21.0; the band 16–18) without reaching it. The Queen's
+row, which starts in act 3, ended its 120 seeds as at 146b.
+
+*The Vermin Lords in situ.* Their stall share is 146b's (6.3 % against
+6.2 %, pooled over both walk rows), not the isolation read's 3.0 %: the
+walk's rosters and pools differ from the isolation roster's at a full
+pool. 4.88 and 4.89 turns, in the elite target.
+
+*For 146g:* act 1's refs, wall and seam and the two forced bosses
+re-pinned at these values, put to the user at the stop.

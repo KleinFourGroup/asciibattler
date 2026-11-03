@@ -295,7 +295,7 @@ has someone's attention).
 | Artifact | Measures | Invalidated by | Rebuild recipe | Tripwire |
 |---|---|---|---|---|
 | [tests/fuzz/board/prior-table.json](tests/fuzz/board/prior-table.json) (v5, measured @`4d3fa22` — off the 94h signing board's own shadow leg and committed with the signing, `962c161`, so **that board's arbitrated rows ran under v4**; v4, measured @`7dc07a3` at 92g, is kept as [tests/fuzz/fixtures/prior-table-v4.json](tests/fuzz/fixtures/prior-table-v4.json) and `--prior-table=<file>` hands it back, which is how a later tree reproduces those rows; v3 @`251514d` was the survivors era) | per acquirable item (`daemon:*` · `packet:*` · `unit:*`), the paired long-horizon holding margin under the deployed ARM — the §85 fold input | any acquirable-catalog MEMBERSHIP change (`daemons.json` · `packets.json` · a `units.json` `draftable` flip · a character blacklist); any ARM-semantics change (λ_prior, the walker, the deployed vector — the 85h deployed-semantics rule: measure under what ships); any sim/run change that plausibly moves item values (re-measure at the next amendment board) | the 85g2b shape on the TRAIN bank: `scripts/box-drive.sh <queue>` with the `88d2-prior-v3.queue` line (`--count=120 --seed-offset=1000 --character=soldier --strategy=tests/fuzz/fixtures/59-regen-vector.json` + the ARM + `--shadow-horizon=run --jobs=8`, ~1.5 h box) → `npm run prior:table -- output/box-batches/<id> --note=…` → commit the table with its run-log entry | [tests/prior-table-coverage.test.ts](tests/prior-table-coverage.test.ts): every acquirable id has a row or an explicit PENDING acknowledgment (config-derived; `daemon:mars` = the soldier's start idol, structurally unmeasurable on an all-soldier bank) · no stale rows · PENDING honesty. Rides `npm test`. |
-| [tests/fuzz/board/roster-table.json](tests/fuzz/board/roster-table.json) (v4, measured @`d4b2af3a` — 146c, off §146's board's eight ARM rows on the three-act walk, 23,471 battles in 52 buckets, 2.1 MB; written a row a line since 135a, its provenance naming the sector ids by position, since a bucket key holds a sector's index; the officer acknowledged PENDING, offered but never drafted by the ARM since rule C; v3 @`4d3fa22` was 94h, 21,221 battles in 41 buckets on two acts, v2 @`9c6c60d` was 92h, v1 @`8c47b73` was 87c, survivors era) | per (character, sector, hop) the REALIZED roster distribution under the 8 ARM board rows — the `--roster=sampled` source | any change to recruitment / draft pools / prices / the archetype catalog / the ARM | the 87b capture cohort (the board's 8 ARM rows carry `rosters.csv`) → `npm run roster:table -- <board-dir>` | `tests/roster-table-coverage.test.ts` (135b), the prior tripwire's twin: every draftable archetype in a recorded roster or acknowledged PENDING, no archetype the catalog dropped, every bucket inside the characters and the map, and the sector ids the map walks; `makeRosterSampler` refuses a sector mismatch at launch as well |
+| [tests/fuzz/board/roster-table.json](tests/fuzz/board/roster-table.json) (v5, measured @`3476d272` — 146f, off §146's verify board's eight ARM rows on the three-act walk, 25,657 battles in 52 buckets, 2.2 MB; written a row a line since 135a, its provenance naming the sector ids by position, since a bucket key holds a sector's index; the officer acknowledged PENDING, offered but never drafted by the ARM since rule C; v4 @`d4b2af3a` was 146c, 23,471 battles in 52 buckets, the first on three acts; v3 @`4d3fa22` was 94h, 21,221 battles in 41 buckets on two acts, v2 @`9c6c60d` was 92h, v1 @`8c47b73` was 87c, survivors era) | per (character, sector, hop) the REALIZED roster distribution under the 8 ARM board rows — the `--roster=sampled` source | any change to recruitment / draft pools / prices / the archetype catalog / the ARM | the 87b capture cohort (the board's 8 ARM rows carry `rosters.csv`) → `npm run roster:table -- <board-dir>` | `tests/roster-table-coverage.test.ts` (135b), the prior tripwire's twin: every draftable archetype in a recorded roster or acknowledged PENDING, no archetype the catalog dropped, every bucket inside the characters and the map, and the sector ids the map walks; `makeRosterSampler` refuses a sector mismatch at launch as well |
 | [tests/fuzz/fixtures/85g5-finalist-56.json](tests/fuzz/fixtures/85g5-finalist-56.json) (the DEPLOYED searched vector) | the searched-upper ceiling on the act-1 shape, at derive time | a frozen vector's ceiling DRIFTS with every balance change (the pre55ReachRef lesson, 83f→85g5) | at every amendment/re-pin board, a FRESH `--search` derive as the ceiling READ (the `88d2-derive.queue` line: `--search --refine --searcher --audition --preset=heavy --vectors=96 --seeds=32 --sampler-seed=85 --seed-offset=1000 --jobs=8`, its fetch checking `best-strategy.json`, a search line's own artifact since 135c, ~2.7 h box); DEPLOYING a new vector is its own decision — the 85g5 arbitrated-selection cohort + a sheet re-anchor | the board integrity protocol's fresh-derive requirement (above); no test — a derive is a box run |
 | [tests/fuzz/board/signed-sheet.json](tests/fuzz/board/signed-sheet.json) | NOT derived — the hand-signed refs + bands | — (amended at board runs, user-signed) | — | the board's DRIFT table |
 
@@ -5354,3 +5354,62 @@ deltas. The pre-X H7c→O log lives at
 
   In the elite target (4.00–5.00), near its top. The corpus diverged on
   7 of 33 and was re-recorded: 20 of 21 kinds, 0 of 33 differing.
+- **2026-11-03 — the verify board** (§146f). The full board at
+  `3476d272` (146e's config, the Vermin Lords at the pool lever), 94h's
+  shape as at 146b: 25 batches on one `cpx42`, 14:20Z to 20:46Z (6 h 25
+  min), every batch fetched with exit 0 and verified, the box destroyed
+  by its driver; the anchors local at the same HEAD. Pooled into
+  `output/board-runs/146f/` by `scratch/146/merge.mjs`. Integrity PASS
+  on all 17 rows, 0 FAIL, 18 WARN (146b: 25). The ten checked rows
+  against 146b's, paired on seeds 1 to 120 (`scratch/146/pair.mjs`,
+  the exact sign test):
+
+  | row | 146b | 146f | 146b alone / 146f alone | p |
+  |---|---|---|---|---|
+  | arb-regen | 0.608 | 0.542 | 11 / 3 | 0.057 |
+  | arb-deploy | 0.825 | 0.792 | 9 / 5 | 0.424 |
+  | arb-priest-regen | 0.658 | 0.558 | 18 / 6 | 0.023 |
+  | arb-priest-deploy | 0.883 | 0.800 | 13 / 3 | 0.021 |
+  | arb-gambler-regen | 0.575 | 0.517 | 14 / 7 | 0.189 |
+  | arb-gambler-deploy | 0.867 | 0.775 | 12 / 1 | 0.003 |
+  | wall-king | 0.733 | 0.717 | 4 / 2 | 0.688 |
+  | wall-queen (`--act=3`) | 0.258 | 0.258 | 0 / 0 | 1 |
+  | arb-walk-regen | 0.092 | 0.075 | 7 / 5 | 0.774 |
+  | arb-walk-deploy | 0.367 | 0.375 | 12 / 13 | 1 |
+
+  The doctrine rows, of 40: regen 31 (146b 29), deploy 38 (38),
+  fire-ablated 27 (29), walk-regen 5 (7), walk-deploy 28 (29); the
+  anchors pure-random 11 (11) and greedy 7 (11), the skill gradient's
+  inverted WARN as at 146b. Act 1 alone is harder for the ARM, told
+  apart on three of six rows; the whole walk is not told apart from
+  146b's. The Queen's row starts in act 3 and meets none of act 1's
+  fights: its 120 seeds end as at 146b. Against `0.2.0` (139c's rows):
+  act 1 on deploy 95 of 120 against 80 (Fisher p 0.042), the three-act
+  walk 45 against the two-act run's 52 (p 0.430).
+
+  *Act 1, ARM walk rows, deploy / regen:* the seam into act 2 21.01 /
+  19.91 (146b 23.80 / 21.04; the band 16–18); act 1's wall 0.188 / 0.337
+  (0.147 / 0.270). Deaths by boss: the King 7 of 56 / 11 of 48 (146b 7 of
+  56 / 14 of 48); the bear 15 of 61 / 22 of 50 (10 of 60, Fisher p 0.370
+  / 13 of 52, p 0.060); the cats 2 of 33 / 14 of 51. By encounter, turns
+  per won instance against the signed targets, and pool an instance:
+
+  | encounter | kind | turns / won | target | pool / instance |
+  |---|---|---|---|---|
+  | bandit-king | boss | 5.72 / 5.55 | 5.00–6.50 | 19.11 / 16.06 |
+  | bear | boss | 5.69 / 5.82 | 5.00–6.50 | 19.16 / 20.04 |
+  | cats | elite | 4.09 / 4.36 | 4.00–5.00 | 19.94 / 22.51 |
+  | vermin-lords | elite | 4.88 / 4.89 | 4.00–5.00 | 2.67 / 1.66 |
+  | poachers | normal | 3.11 / 3.04 | 2.50–3.25 | 9.45 / 9.41 |
+  | brigands (acts 1 and 2) | normal | 3.00 / 3.01 | 2.50–3.25 | 5.04 / 5.60 |
+  | rat-hunt | normal | 3.07 / 3.04 | 2.50–3.25 | 4.22 / 3.69 |
+  | canids | normal | 3.00 / 3.00 | 2.50–3.25 | 2.94 / 3.35 |
+  | wolfpack | normal | 3.00 / 3.00 | 2.50–3.25 | 1.84 / 1.58 |
+  | rats-nest | normal | 3.00 / 3.00 | 2.50–3.25 | 0.02 / 0.09 |
+
+  Every act-1 encounter in its turn target on both rows. The bear's
+  longer fight costs more pool (14.0 / 13.8 at 146b). The Vermin Lords'
+  time-cap share in situ, 11 of 117 turns and 8 of 186, pooled 19 of 303
+  against 146b's 11 of 178 (p 1.000): the isolation read's 3.0 % did not
+  carry into the walk. The walk's pacing checks pass on both rows. The
+  roster table rebuilt from the eight ARM rows as v5 (the registry above).

@@ -12,8 +12,8 @@ its spec, its per-phase worklogs (`archive/worklog-phase-135.md` to
 `-140.md`) and its session reports beside it; before it
 [archive/post-118-roadmap.md](archive/post-118-roadmap.md) (Round 8.5).
 
-**Status: §146, the board and act 1's bands, cut and signed 2026-11-02;
-146h next, the phase's close.** The spec is [round-10-spec.md](round-10-spec.md), its tranche 2
+**Status: §146 closed 2026-11-03; §147, the round's close, next,
+its kickoff first.** The spec is [round-10-spec.md](round-10-spec.md), its tranche 2
 answered at the kickoffs of §144 to §146. The charter, the decision
 points, the exit and the scope guards are in META-ROADMAP §"Round 10 —
 Act 1, the wilds", with the roster table's rebuild added to its scope at
@@ -113,42 +113,27 @@ snapshot bump; played by the user from act 1 to The Deep End's boss
 - ☑ **145h — the phase's close** (`stop`), signed, with the user's three
   fixes to Burning Tree and Fox Hunt.
 
-## Phase 146 — the board and act 1's bands (signed 2026-10-30)
+## Phase 146 — the board and act 1's bands ✅ (closed 2026-11-03)
 
-Charter: the roster table rebuilt on the three-act map from a box
-cohort, the board on three acts, act 1's bands set and signed, each moved
-boss read at its new place, and acts 2 and 3 recorded as Rounds 21 and
-22's starting points. **Why here:** the bands rest on the table and the
-tooling. **Risk:** medium: box time (the 94h board was 6.9 h on two
-acts). **Decision points:** act 1's bands; the box's size and cost.
-**Exit:** the coverage guard with no PENDING line; act 1's bands signed;
-the board read against `0.2.0`, paired on the seed where the pairing
-holds. **Scope guards:** no retune by taste (Round 11's); acts 2 and 3
-not re-anchored (Rounds 21 and 22).
+The board on the three-act walk, read against `0.2.0`; act 1's four
+short encounters tuned to the user's turn targets (arm B) and played,
+the Vermin Lords at the pool lever; the verify board, the roster table
+at v5 and the sheet re-pinned at it, act 1's wall signed; acts 2 and 3
+recorded for Rounds 21 and 22; the officer's PENDING signed to stand
+(WORKLOG §146, in `archive/worklog-phase-146.md`).
 
-The cut, signed 2026-11-02 with its six leans (WORKLOG §146):
-
-- ☑ **146a — the board's report and the walk's wording** (`none`):
-  the history as one line; `--plan` and the stored reports unchanged.
-- ☑ **146b — the cohorts on the box** (`none`): the full board and the
-  fresh derive, two `cpx42` boxes, driven from a worktree. Back
-  2026-11-03, integrity PASS (WORKLOG 146b).
-- ☑ **146c — the roster table rebuilt** (`none`): v4, 52 buckets over
-  the three-act walk; the officer acknowledged PENDING (WORKLOG 146c).
-- ☑ **146d — the board read, and act 1's bands put** (`stop`): signed
-  2026-11-03, arm (B), the signed turn targets; with it the fixture
-  guard, a process line, two TODO rows (WORKLOG 146d, "146d signed").
-- ☑ **146e — act 1's encounters toward the signed bands** (`stop`): the
-  rats' nest, the rat hunt, the Vermin Lords and the bear toward the turn
-  targets; the user plays act 1 before 146f. Built 2026-11-03, all four
-  in their targets held out; read in the user's play, the Vermin Lords
-  moved to the pool lever at it (WORKLOG 146e).
-- ☑ **146f — the verify board** (`none`; only after 146e): at `3476d272`,
-  integrity PASS, every act-1 encounter in its turn target, the table at
-  v5 (WORKLOG 146f).
-- ☑ **146g — the sheet amended** (`stop`): signed 2026-11-03 with its
-  three leans; act 1 re-pinned at 146f, its wall signed (WORKLOG 146g).
-- ☐ **146h — the phase's close** (`stop`).
+- ☑ **146a — the board's report and the walk's wording** (`none`).
+- ☑ **146b — the cohorts on the box** (`none`): integrity PASS.
+- ☑ **146c — the roster table rebuilt** (`none`): v4, the officer
+  PENDING.
+- ☑ **146d — the board read, and act 1's bands put** (`stop`): arm (B),
+  with the fixture guard.
+- ☑ **146e — act 1's encounters toward the signed bands** (`stop`): read
+  in the user's play.
+- ☑ **146f — the verify board** (`none`): every act-1 encounter in its
+  turn target; the table at v5.
+- ☑ **146g — the sheet amended** (`stop`), signed with three leans.
+- ☑ **146h — the phase's close** (`stop`), signed.
 
 ## Phase 147 — the close (signed 2026-10-30)
 

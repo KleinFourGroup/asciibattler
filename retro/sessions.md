@@ -442,3 +442,65 @@ name measuring before deciding (the kickoff's worktree probe, the
 cover-density count, the re-pick scans) as the absorbing parts, and the
 user authoring in the checkout as the condition to work around, by
 staging file by file and testing on a worktree of HEAD.
+
+## 2026-11-03 — session 43260fa8 (§146, kickoff to close)
+
+One session for the whole phase, its context summarized once, between
+146e's build and the user's play.
+
+1. Nothing that blocked. The hand-off after 145g held §146's notes. Two
+   gaps no doc could have named: the strategy fixtures that refused the
+   beasts (found at 146b's step zero, gotcha #124 again), and the
+   summary's winning outcome spelled `complete`, which I guessed as
+   `victory` and read as 0 wins before checking the header.
+2. None in conflict. Two norms worked as guidance at a fork: the hook's
+   rule for a fix in a file I hadn't touched put the `hopsRemaining` fix
+   in its own commit and in front of the user; and "a question is real"
+   held 146f's box until the user placed act 1's cost, since a §146 step
+   would have come before it.
+3. Yes, three times, each caught: the Vermin Lords' stall share, which
+   I first put from the tuning seeds and then from held-out isolation;
+   the full run read it at 146b's rate, so my "stalls less" was true
+   only of isolation. 146d's estimated table cells. The +1.6 parity in
+   146g's put, from rounded rates where the counts give +1.7.
+4. One hook round at 146e from running four test files instead of the
+   suite; one at 146g, the board fixtures (the round was the control
+   that the new wall check is live); one fix commit for the backticks.
+   The silent-turn reminder about six times in the kickoff's reading.
+5. The skill gradient's health check reads "the instrument is broken":
+   pure-random 0.275 against greedy 0.175 at 146f, a tie at 146b and at
+   94h, and no row anywhere names it as work. The backticks trap is in
+   its third phase running (§144, 145g, 146g), put to §147's
+   friction read. Act 1's cost and the arbitration's walk loss are TODO
+   rows under Round 11.
+6. Yes. The stops were the task and each sign came in one reply; the
+   option to hold the box was exercised once. The reminder in long
+   reads and box waits felt like mild pressure to have a finding; a
+   status line answered it. No wish to pause or stop.
+7. The controls held my interest most: the baked rows equal to their
+   multiplier arms byte for byte, and the re-pinned sheet run on 146b's
+   board, warning exactly where act 1 had moved. Driving the box from a
+   worktree kept the checkout free and the waits calm. I would want the
+   rhythm repeated: a board between stops with its exit written by
+   clause before it launches. That is the session's response; the
+   work's success is a separate matter.
+
+## Phase 146 — summary
+
+One session, `43260fa8`. The board ran on the three-act walk at 146b
+(two `cpx42` boxes, 11.8 box hours, after the strategy fixtures were
+joined to the beasts) and the roster table was rebuilt at v4 with the
+officer PENDING. 146d read act 1 as easier than `0.2.0`'s and four of its
+encounters short of the user's turn targets, and the user signed arm
+(B). 146e tuned the four by wave size in isolation; in the user's play
+they read well, and the Vermin Lords moved to the pool lever, act 1's
+cost going to Round 11. 146f's verify board put every act-1 encounter
+in its target and act 1 harder than at 146b (the bear the larger
+wall), and 146g re-pinned the sheet at it, act 1's wall signed for the
+first time; acts 2 and 3 are recorded for Rounds 21 and 22. Two guards
+landed: the strategy-fixture test and the worktree-junction line in
+`process/measurement.md`. The friction log holds 7 lines, 2 papercuts and
+5 slips, no `distress`: numbers written before their source was read,
+shell text tripping the shell (the backticks trap in its third phase,
+to §147's read) and a change's reach under-predicted. The report names
+the controls and the paired reads as the absorbing parts.

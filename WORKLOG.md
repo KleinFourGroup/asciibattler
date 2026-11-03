@@ -312,3 +312,46 @@ read on its board with the terminal band's re-set at Round 22 (§"Round
 22", act 3's bands), and the exit as put. TODO: the deep-end wall's row
 re-read on the three-act walk, and The Deep End's description a row
 under Round 22.
+
+### 147b — `0.3.0`, the tag and the zip (2026-11-03, session c830ad7f)
+
+**Built.** `npm version 0.3.0 --no-git-tag-version` changed
+`package.json` and the lock file; the commit `273d587d` and the
+annotated tag `v0.3.0` were made by hand, as at `0.2.0`. Neither is
+pushed. The commit's hook ran the full suite: 3906 tests in 270 files,
+green, typecheck clean, the smoke skipped (no sim path staged).
+`node scripts/itch-zip.mjs` on the clean tree:
+`asciibattler-0.3.0_273d587.zip`, build ID `0.3.0+273d587`, 32 entries,
+1,263,546 bytes (`0.2.0`'s: 32 and 1,253,241), the build's hash
+`74e6ddd3…4d4672ca2`. Its file names are `0.2.0`'s, the two font files'
+content hashes among them; our glyph face, 1,624 bytes, is inlined into
+the stylesheet as a data URL, and `0.2.0`'s stylesheet has no such face.
+`--check` against the build, run on its own, exit 0; the control,
+`0.2.0`'s zip against this build, exit 1, naming `4ececf91…d9ecf014`,
+the hash 140b recorded.
+
+**In the pane** (Chromium, `itch-preview` over `output/itch/current`):
+`<html data-build>` and the menu's corner read `0.3.0+273d587`;
+JetBrains Mono, DejaVu Sans Mono and ASCIIbattler Glyphs loaded
+(`document.fonts`); `__probe`, `__game` and `__diag` undefined; one
+inline script and one module bundle; no console error.
+
+**A run saved by `0.2.0` itself**, in place of 145d's fixture, as 140b
+read `0.1.1`'s. The origin's slot held the run `0.2.0` saved at 140b's
+control, read with `0.2.0`'s build served (its hash re-read over
+`current/`): 5,813 characters, format 50, stamped `0.2.0+7ce982b`, the
+soldier on The Start's map before its first node, the Queen its drawn
+boss. With `0.3.0` served again (its hash re-read), the menu offered
+Continue with no message, and Continue opened The Fragments' map, "Boss:
+The Bandit Queen? — Fetid Pond" (her locale name carries the question
+mark), roster 10, morale 40 / 40. The control: the same slot with its
+format set to 49 gave the stale-save message and no Continue. A new run
+with the soldier opened The Periphery, the bear its boss, saved at
+format 50 and stamped `0.3.0+273d587`. The walk from such a save to
+`complete` is 145d's test, 3 of 3 at 147a.
+
+**The changelog** for the itch page, drafted for the user to post:
+`scratch/147b/changelog.md` (off git).
+
+**Not verified:** Firefox and Edge, the itch frame, a battle in this
+build, sound by ear, the eared glyphs in Firefox: 147c.

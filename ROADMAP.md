@@ -13,7 +13,7 @@ its spec, its per-phase worklogs (`archive/worklog-phase-135.md` to
 [archive/post-118-roadmap.md](archive/post-118-roadmap.md) (Round 8.5).
 
 **Status: §146, the board and act 1's bands, cut and signed 2026-11-02;
-146b next.** The spec is [round-10-spec.md](round-10-spec.md), its tranche 2
+146c next.** The spec is [round-10-spec.md](round-10-spec.md), its tranche 2
 answered at the kickoffs of §144 to §146. The charter, the decision
 points, the exit and the scope guards are in META-ROADMAP §"Round 10 —
 Act 1, the wilds", with the roster table's rebuild added to its scope at
@@ -130,8 +130,9 @@ The cut, signed 2026-11-02 with its six leans (WORKLOG §146):
 
 - ☑ **146a — the board's report and the walk's wording** (`none`):
   the history as one line; `--plan` and the stored reports unchanged.
-- ☐ **146b — the cohorts on the box** (`none`): the full board and the
-  fresh derive, two `cpx42` boxes, driven from a worktree.
+- ☑ **146b — the cohorts on the box** (`none`): the full board and the
+  fresh derive, two `cpx42` boxes, driven from a worktree. Back
+  2026-11-03, integrity PASS (WORKLOG 146b).
 - ☐ **146c — the roster table rebuilt** (`none`).
 - ☐ **146d — the board read, and act 1's bands put** (`stop`).
 - ☐ **146e — act 1's encounters toward the signed bands** (`stop`; only

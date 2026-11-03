@@ -302,3 +302,35 @@ dev server holds. A junction comes out alone with `cmd /c rmdir
 <path>\node_modules`, and only then the worktree; the process docs
 that say to make the junction say nothing of removing it, which goes to
 146d.
+
+### 146b — the board and the derive back (2026-11-03)
+
+Both cohorts completed at 01:22Z, every batch exit 0 and verified, each
+box destroyed by its driver, and `hcloud server list` empty after. The
+board took 5 h 54 min (predicted 5 to 6 h). The derive took 5 h 53 min,
+and its prediction of 3.5 to 4.5 h missed; a likely reason, not
+measured: the heavy preset plays the whole walk, and with act 1 easier
+more of its runs go deep. Box time 11.8 h, about 1.55 at 0.1314 an
+hour, above the lean's 1.10 to 1.40 by the derive's overrun.
+
+`scratch/146/merge.mjs` pooled the 25 batches into 15 rows by each
+manifest's argv (ten merged from two stages, five copied), beside the
+two anchors, in `output/board-runs/146b/`. Its report: integrity PASS on
+all 17, 0 FAIL, 25 WARN; the numbers are in BALANCE (2026-11-02, the
+board on three acts), the read is 146d's. The derive's best vector
+trains at 50.0 % after refinement and wins 2 of 6 held-out (94h: 42.3 %
+and 1 of 6).
+
+The worktree came out as the launch entry says: its junction unlinked
+by `cmd /c rmdir`, the checkout's `node_modules` at 133 entries before
+and after, then `git worktree remove --force`, and `npm ls` clean. The
+batches, the board and the anchors' logs were copied into the
+checkout's `output/` first, `diff -rq` identical. The user deleted
+npm's temp folder once the dev server was stopped; `@rolldown` holds
+the binding alone, at the lockfile's 1.2.15.
+
+A finding for 146d: the four ceiling deltas subtract a control's 40
+runs from an ARM row's 120, though their source line and the comment at
+`board.ts:516` say paired seeds. On seeds 1 to 40 alone they read
+−0.125, −0.100, −0.100 and −0.300 against the report's −0.117, −0.125,
+−0.083 and −0.358.

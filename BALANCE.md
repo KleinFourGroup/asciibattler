@@ -5162,3 +5162,63 @@ deltas. The pre-X H7c→O log lives at
   `output/board-runs/139e-V/`, `scratch/139/vector-drive.log`,
   `vector.queue`, and the read by `scratch/139/vector.mjs` and
   `wall.ts`. Detail: WORKLOG §139, 139e.
+- **2026-11-02 — the board on three acts** (§146b). The board's 17
+  rows at `d4b2af3a` on the walk The Periphery → The Start → The Deep
+  End, act 1 the first: the ten ARM rows at seeds 1 to 120 in two
+  stages (40 and 80), the five doctrine controls at 1 to 40, the anchors
+  at 1 to 40 run locally. 25 batches on one `cpx42` in 5 h 54 min, every
+  batch exit 0. `balance:board --report`: integrity PASS on all 17
+  (head `d4b2af3a`), 0 FAIL, 25 WARN; every band on the sheet is
+  reference-grade, so nothing gates.
+
+  | row | won | the sheet's band |
+  |---|---|---|
+  | arb-regen | 73 / 120, 0.608 | 0.33–0.49 |
+  | arb-deploy | 99 / 120, 0.825 | 0.55–0.70 |
+  | arb-priest-regen | 79 / 120, 0.658 | 0.43–0.59 |
+  | arb-priest-deploy | 106 / 120, 0.883 | 0.69–0.85 |
+  | arb-gambler-regen | 69 / 120, 0.575 | 0.31–0.47 |
+  | arb-gambler-deploy | 104 / 120, 0.867 | 0.61–0.77 |
+  | wall-king (act 1) | 88 / 120, 0.733 | 0.38–0.58 |
+  | wall-queen (`--act=3`) | 31 / 120, 0.258 | 0.36–0.56 |
+  | arb-walk-regen | 11 / 120, 0.092 | 0.26–0.35 |
+  | arb-walk-deploy | 44 / 120, 0.367 | 0.26–0.35 |
+  | regen · deploy · fire-ablated | 29 · 38 · 29 of 40 | — |
+  | walk-regen · walk-deploy | 7 · 29 of 40 | — |
+  | anchor-random · anchor-greedy | 11 · 11 of 40 | — |
+
+  Each act on the walk rows, reach and boss wall, and the pool crossing
+  into the next act (runs crossing in brackets):
+
+  | row | act 1 | act 2 | act 3 | seams 1→2, 2→3 |
+  |---|---|---|---|---|
+  | arb-walk-regen | 0.833, 0.270 | 0.392, 0.553 | 0.125, 0.267 | 21.04 (73), 14.52 (21) |
+  | arb-walk-deploy | 0.967, 0.147 | 0.708, 0.247 | 0.483, 0.241 | 23.80 (99), 17.42 (64) |
+  | walk-regen | 0.900, 0.194 | 0.500, 0.300 | 0.225, 0.222 | 18.79 (29), 11.79 (14) |
+  | walk-deploy | 0.975, 0.026 | 0.900, 0.111 | 0.775, 0.065 | 23.97 (38), 22.50 (32) |
+
+  The rest of the drift table: banks 102.8 against 72.7–102.7 (firer)
+  and 74.5 against 43–73 (shopper); fires 2.46 and 2.68, transactions
+  0.317 and 0.875, all four in band; turns per won instance on the walk
+  rows, all acts pooled, normal 2.83 and 2.86 (band 2.50–3.25), elite 3.80
+  and 3.94 (4.00–5.00), boss 4.96 and 5.38 (5.00–6.50); the fire channel
+  0.000 (regen 29, fire-ablated 29); the ceilings −0.117, −0.125, −0.083
+  and −0.358. The ceiling subtracts the control's 40 runs from the ARM
+  row's 120, though its source line says "paired same-seed"; on seeds 1
+  to 40 alone the four read −0.125, −0.100, −0.100 and −0.300. Every
+  row's inert-class tripwire reads all classes live. The skill gradient's
+  check reads the anchors' tie as INVERTED, as at 94h (3 and 3 of 40).
+
+  **The fresh derive**, the registry's line (`--search --refine
+  --searcher --audition --preset=heavy --vectors=96 --seeds=32
+  --sampler-seed=85 --seed-offset=1000`), its own cohort on a second
+  `cpx42`, 5 h 53 min, exit 0: the best of 96 vectors trains at 42.3 %
+  before refinement and 50.0 % after (13 of 26), and wins 33.3 %
+  held-out (2 of 6). 94h's, on two acts with The Start first: 42.3 %
+  and 16.7 %. The heavy preset plays the whole walk. **Artifacts**
+  (ignored, this machine): the 26 batches,
+  `output/box-batches/2026110{2,3}-*-d4b2af3a/`, the pooled board and its report in
+  `output/board-runs/146b/`, the derive's vector in
+  `output/box-batches/20261102-193047-d4b2af3a/best-strategy.json`,
+  `scratch/146/146b-{board,derive}-drive.log`. Detail: WORKLOG §146,
+  146b.

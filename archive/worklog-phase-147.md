@@ -665,3 +665,28 @@ By `process/planning.md` "Round close" and "Phase close":
   cut. *The audit round:* none, as signed at 147a, since no cluster
   closed.
 - *Not yet:* the push, at the user's read of this step.
+
+### The hand-off after 147f (2026-11-04, session c830ad7f)
+
+The session reached the hand-off trigger at 147f's commit (`a4c33d28`).
+Done: 147a to 147e signed or read, and 147f built as above. Open, for
+the next session to put to the user again, since a session started from
+a card answers only in its second turn:
+
+- *147f's read*: the archive and the round's close as listed above.
+- *The Closed rounds shape*, the user's call: the section grows a line a
+  round and sits at about 7,990 of its 8,000 characters. The session's
+  lean: fold the nine lines before Round 6 (Clusters 1 to 5 and the four
+  interstitials, about 3,600 characters) into one line pointing at
+  `archive/closed-rounds.md`, which holds their paragraphs, so the
+  section keeps one line a round for the rounds a session still meets,
+  with the cap kept; the other arm raises the cap, the user's to set.
+- On the sign: record it here and in `archive/post-140-roadmap.md`
+  (147f ☑, its status "signed by the user"), the Cursor's open ◐ to
+  none, and push `main` (a standing permission at a phase close); then
+  §148, Round 11's kickoff.
+
+Nothing else is half-built. The backticks guard loads in the next
+session: a harmless probe there (a bare backtick pair around `true` in
+double quotes, sent through the Bash tool) should be refused; the
+replay and inspection scripts are in `scratch/147e/`.

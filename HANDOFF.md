@@ -6,7 +6,7 @@ A fresh-session orientation for ASCIIbattler. Read this first; then dive into th
 
 **The ONE home for live status.** Other docs (and the agent memory) point here instead of restating it; when state changes, this section is the single place that updates.
 
-- **NEXT — ROUND 11 (The roster): §148, its kickoff**, once the user reads Round 10's close (147f): the spec, the charter against the code and the phases ([ROADMAP.md](ROADMAP.md) §148; META-ROADMAP §"Round 11 — The roster"). **Open ◐:** 147f.
+- **NEXT — ROUND 11 (The roster): §148, its kickoff**, once the user reads Round 10's close (147f; "The hand-off after 147f" in `archive/worklog-phase-147.md`): the spec, the charter against the code and the phases ([ROADMAP.md](ROADMAP.md) §148; META-ROADMAP §"Round 11 — The roster"). **Open ◐:** 147f.
 - **In flight:** nothing on the box since 2026-11-03.
 - **The public build:** `0.3.0` (`273d587d`, tag `v0.3.0`), uploaded to itch.io on 2026-11-04; the uploads before it are in Closed rounds below.
 - **Snapshots:** WorldSnapshot **v39** (no player keeps one) · RunSnapshot **v50** (a v49 save, `0.1.1`'s, rejects).

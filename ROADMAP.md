@@ -25,3 +25,7 @@ HEAD then (`archive/worklog-phase-147.md`, 147a); its riders are TODO's
 
 The audit and the cut. The phases and their order are the kickoff's to
 cut and the user's to sign.
+
+- ◐ **The spec and the phases** (`stop`): the draft
+  ([round-11-spec.md](round-11-spec.md)) and §149 to §155, at the
+  user's read (WORKLOG §148).

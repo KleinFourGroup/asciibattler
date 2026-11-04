@@ -468,3 +468,57 @@ line beforehand does not head it off.
    five caught before anything was written); a change's reach and a
    docs cap at the commit (the hook caught each, its message naming the
    cure); a tool's interface guessed (one to three calls each).
+
+**Tranche 1 signed** (the user: "Those all seem reasonable, Claude! 😁
+Signed!"): the keep test at the leans (four kept, `# halving: measure`
+deleted from `shell-and-windows.md`, its §142 pointer fixed), the
+backticks guard for 147e, BALANCE's header a Round 11 TODO row, the
+reminder left with CLAUDE.md's note and revisited at Round 11's close,
+the rest listed.
+
+### 147d — tranche 2: the Cursor's structure and contents (2026-11-04, session c830ad7f)
+
+The user's row (TODO, Round 10, "At the round's close", from §142's
+close): the Cursor's 3,900-character cap stopped a commit in five
+sessions in Round 9 (136f, 138, 139a, 140e, 142b) and in three more in
+Round 10 (142b's three refusals, 144c, 146e), each trimmed a clause at a
+time; 144c's was the NEXT line retelling signed calls.
+
+*What it holds*, read at `c4967a0c`, by line (characters):
+
+| Line | Chars | Live status? | Where the rest goes |
+|---|---|---|---|
+| The header sentence | 170 | — | stays |
+| NEXT, with the open ◐ | 378 | yes; the round's spec and phases pointer is the ROADMAP's | the pointer drops |
+| The public build | 510 | the version, commit and tag; the earlier builds and dates are history, and the itch word and three watches (a stranger's finding, frame rate on other machines, the overlay stack) are watches | the earlier uploads are in Closed rounds already; the itch word and the watches a TODO "Watches" row, where no row holds them today |
+| Model id | 344 | the id, and an instruction each session needs at its start | stays, shorter |
+| Last phase | 293 | a pointer | stays, one pointer |
+| Earlier | 142 | no | merged into Last phase |
+| In flight | 535 | "nothing on the box"; the rest (the config's lineage from `d9675b6`, the Escalation ladder, where the board state, the watches and the riders live) changes about once a round | a "The game" bullet in HANDOFF's Current state |
+| Branch / tree | 275 | no: `main` is AGENTS'; the uploaded tag is the public build's line again, and it went stale there at 147c until fixed today; the two history tags are named in `archive/closed-rounds.md` | drops, the tags' clause to the "The game" bullet |
+| Snapshots | 204 | yes | stays, shorter |
+| Tests | 660 | the counts; the hook's timings and the 15 s note are reference | the timings to TESTING.md beside the hook |
+| Last closed round | 197 | no; Closed rounds holds it | drops |
+
+So about two thirds of the Cursor is reference, history, watches or a
+second copy of a fact (the draft below keeps 1,308 of about 3,750
+characters). The shape that lets it go wrong: a line grows by appending (a
+call, its reason, the value before), never by replacing its value.
+
+*The proposal* (147e builds it if signed):
+
+1. **The Cursor, seven lines of live state**, each the current value
+   and a pointer: NEXT with the open ◐, in flight, the public build,
+   snapshots, tests, model id, last phase. Drafted from today's state at
+   1,308 characters against 3,750, the moved parts to the homes in the
+   table.
+2. **The shape, written where the Cursor's rule lives**
+   (`planning.md`, "HANDOFF upkeep", rewriting its first bullet): the
+   Cursor holds those seven lines; a line changes by replacing its
+   value, and a call, its reasons and what came before go to the WORKLOG
+   or Closed rounds. A rewritten rule row, so Round 11's keep test reads
+   it; its bar is the cap's eight refusals over two rounds.
+3. **The cap stays at 3,900.** Lowering it near the new size would hold
+   the shape by the guard, at the cost of refusals again; at 3,900 the
+   shape is held by the rule, and the cap catches drift. Lowering it is
+   the user's call either way.

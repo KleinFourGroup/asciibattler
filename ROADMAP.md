@@ -148,6 +148,6 @@ read; the archive; Round 11's charter against the code.
 - ☑ **147c — the smoke, the upload and the playtest** (`stop`, the
   user's). Read 2026-11-04: uploaded, every read good on the user's
   word; `main` and `v0.3.0` pushed.
-- ◐ **147d — the process read** (`stop`, in tranches): tranche 1 put.
+- ◐ **147d — the process read** (`stop`, in tranches): tranche 1 signed, tranche 2 put.
 - ☐ **147e — the list built as signed** (`none`).
 - ☐ **147f — the archive and the round's close** (`stop`).

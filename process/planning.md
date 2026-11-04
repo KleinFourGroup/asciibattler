@@ -192,6 +192,8 @@ What a session writes at its end, at the trigger or otherwise, is in
   phase to one line and an archive pointer as you close it, not later.
 - Closed rounds hold one line per round in HANDOFF; the condensed paragraph
   is appended to [archive/closed-rounds.md](../archive/closed-rounds.md).
+  When the section passes its cap, fold its oldest lines into its last
+  line, which names the rounds it holds and points at closed-rounds.md.
 - `tests/docs.test.ts` caps HANDOFF, its `Current state`, its Closed
   rounds and its Cursor, which also counts toward the start-of-session
   reading's cap. When a cap trips, demote completed material; raise a cap only

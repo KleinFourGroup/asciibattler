@@ -702,3 +702,26 @@ quotes), with its pointer at `process/shell-and-windows.md`, "Bash
 calls". The control, the same text in single quotes, ran and printed
 the backticks literally. 147e's "Not verified: the refusal live" is
 closed.
+
+### 147f signed (2026-11-04)
+
+The user signed the close as built and the Closed rounds shape at the
+lean, with the sentence.
+
+- *A correction to the hand-off's numbers*, put with the stop: the lines
+  below Round 6 are eight (Clusters 1 to 5 and three interstitials, as
+  HANDOFF's Current state counts them), 3,080 characters. The hand-off's
+  nine and about 3,600 counted the Casualty Experiment too, which came
+  after Round 6 (§89 to 94 against §84 to 88).
+- *The fold:* the eight lines are one, "The first plan", naming the
+  rounds and pointing at `archive/closed-rounds.md` and the first plan's
+  META-ROADMAP. The section went from 7,982 characters to 5,522, the
+  cap kept at 8,000; at 440 to 720 characters a line, about four rounds
+  of room. The cut is the plan's seam: the eight are the first plan's
+  rounds, and Round 6 opens the second.
+- *The sentence:* planning.md's HANDOFF upkeep says that when the
+  section passes its cap, its oldest lines fold into its last line. The
+  section's header and the docs test's comment and failure message
+  name the fold; HANDOFF's Current state no longer says one line each.
+- The Cursor's open ◐ is none, `archive/post-140-roadmap.md` has 147f
+  ☑, and the push follows this commit. Next: §148, Round 11's kickoff.

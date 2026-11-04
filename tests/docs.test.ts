@@ -67,6 +67,8 @@ describe('docs hygiene', () => {
   // leaving. The rule is now ONE LINE per round (the paragraphs live in
   // archive/closed-rounds.md, append-only). Ten rounds ≈ 4.5k chars; the cap
   // leaves room for Rounds 7 → 12 plus their .5 insertions at the same shape.
+  // The lines since grew longer and it tripped at Round 10; when it trips,
+  // the oldest lines fold into the last one (planning.md "HANDOFF upkeep").
   const CLOSED_ROUNDS_MAX_CHARS = 8_000;
 
   it(`HANDOFF.md stays under ${HANDOFF_MAX_LINES} lines`, () => {
@@ -107,7 +109,7 @@ describe('docs hygiene', () => {
     const n = after.slice(0, next === -1 ? after.length : next).join('\n').length;
     expect(
       n,
-      `"## Closed rounds" is ${n} chars. It is ONE LINE per round — a close appends its condensed paragraph to archive/closed-rounds.md and one line here (planning.md "HANDOFF upkeep"), or bump CLOSED_ROUNDS_MAX_CHARS deliberately.`,
+      `"## Closed rounds" is ${n} chars. It is ONE LINE per round — a close appends its condensed paragraph to archive/closed-rounds.md and one line here, and when that passes the cap the oldest lines fold into the last line (planning.md "HANDOFF upkeep"), or bump CLOSED_ROUNDS_MAX_CHARS deliberately.`,
     ).toBeLessThanOrEqual(CLOSED_ROUNDS_MAX_CHARS);
   });
 

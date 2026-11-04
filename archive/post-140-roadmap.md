@@ -12,8 +12,8 @@ its spec, its per-phase worklogs (`archive/worklog-phase-135.md` to
 `-140.md`) and its session reports beside it; before it
 [archive/post-118-roadmap.md](archive/post-118-roadmap.md) (Round 8.5).
 
-**Status: Round 10 closed 2026-11-04 by §147, its last step, 147f, at
-the user's read** (`archive/worklog-phase-147.md`). The spec is
+**Status: Round 10 closed 2026-11-04 by §147, signed by the user**
+(`archive/worklog-phase-147.md`). The spec is
 [round-10-spec.md](round-10-spec.md), beside this file; the act design
 is [plans/acts.md](../plans/acts.md). The charter is META-ROADMAP
 §"Round 10 — Act 1, the wilds".
@@ -153,5 +153,6 @@ step's record is `archive/worklog-phase-147.md`.
 - ☑ **147e — the list built as signed** (`none`). The guard replayed
   over the round's 2,400 Bash commands: the four that lost text and one
   more, nothing else.
-- ◐ **147f — the archive and the round's close** (`stop`): built, at the
-  user's read.
+- ☑ **147f — the archive and the round's close** (`stop`). Signed
+  2026-11-04: the close as built; HANDOFF's Closed rounds folds the first
+  plan's eight lines into one, and planning.md folds at the cap.

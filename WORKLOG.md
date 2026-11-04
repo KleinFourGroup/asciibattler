@@ -522,3 +522,41 @@ call, its reason, the value before), never by replacing its value.
    the shape by the guard, at the cost of refusals again; at 3,900 the
    shape is held by the rule, and the cap catches drift. Lowering it is
    the user's call either way.
+
+*The user's counter* (2026-11-04): the seven-line shape may be a tad
+too restrictive; a pass in the hand-off procedure that removes older or
+no longer relevant information may serve better. The session agreed
+that a fixed list would need a rule change for each new kind of live
+status, and that the hand-off is where a line goes stale; and added
+that a pass asking only whether a line is still relevant keeps the
+misplaced two thirds (the hook's timings, the config's lineage, the
+watches are all still true), so the pass also asks whether another doc
+holds the line.
+
+**Tranche 2 signed, as revised** (the user: "I like it, Claude! 😁
+Let's see how it does over round 11!"): a pass in
+`process/session-end.md`, at each hand-off, reading every Cursor line
+for three things (still true; needed by the next session before
+anything else; held by another doc), fixing what is false, moving what
+has a home to it, deleting history, and returning a line grown by
+appending to its current value; no fixed list, `planning.md`'s "live
+status only" kept as the test; the pass's first run at 147f's rewrite,
+the watches to a TODO row, the lineage to HANDOFF's Current state, the
+hook's timings to TESTING.md; the cap at 3,900. Round 11 is its trial:
+its keep test reads whether the hand-offs used it, and cap refusals in
+Round 11 would say it is not working.
+
+### 147d — tranche 3: the open Round 10 TODO rows (2026-11-04, session c830ad7f)
+
+Four rows under TODO's Round 10 are open, besides the close's own (the
+Cursor's, signed above). Each needs a round before the section closes:
+
+| Row | Lean | Why |
+|---|---|---|
+| The ceiling deltas' label says paired seeds; the arithmetic is pooled | Round 11, "Before the closing board" | the closing board reads the ceilings, and the arbitration's walk loss, its neighbour there, is read through them; a source line or a shared-seed sum |
+| A numbered layout crossed at an event node doesn't warn | Round 18 | its charter is events that start a fight and pick up after it, with a layout named on an event's terminal, the case where a forced layout meets an event node |
+| The run-config CLI's headless run doesn't print mid-run warnings | Round 18 | the same round runs event chains headlessly, where a mid-run `script:warning` is raised |
+| The rules every editor's sheet repeats (census B-19, a lead) | "Watches", its trigger an oracle that shows two editor rules never meet on one element | it has no proof today, as the row says, and it was carried from Round 8.5 into Round 10 without a step taking it; placing it under a round again would carry it again |
+
+The scratchpad holds no Round 10 entry, so its sweep at 147f is the
+header's line alone.

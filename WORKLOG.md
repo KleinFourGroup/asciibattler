@@ -355,3 +355,14 @@ format 50 and stamped `0.3.0+273d587`. The walk from such a save to
 
 **Not verified:** Firefox and Edge, the itch frame, a battle in this
 build, sound by ear, the eared glyphs in Firefox: 147c.
+
+### 147c — the smoke, the upload and the playtest (2026-11-04, the user's)
+
+The user uploaded `asciibattler-0.3.0_273d587.zip` and read the smoke as
+the session listed it (in Firefox and Edge: the build ID, a `0.2.0` run
+continuing into The Fragments if one was on itch, a new run opening The
+Periphery, the eared beasts in a battle, the trees, sound): "Everything
+is uploaded, and all reads are good!" Those reads stand on the user's
+word; the session saw no report of them. Whether a `0.2.0` run was on
+itch to continue, and whether the changelog was posted, are not
+recorded. Pushed at that word, as at 140c: `main` and the tag `v0.3.0`.

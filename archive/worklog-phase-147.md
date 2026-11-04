@@ -690,3 +690,15 @@ Nothing else is half-built. The backticks guard loads in the next
 session: a harmless probe there (a bare backtick pair around `true` in
 double quotes, sent through the Bash tool) should be refused; the
 replay and inspection scripts are in `scratch/147e/`.
+
+### The backticks guard, live (2026-11-04, session 65cfb3a3)
+
+The probe sent through the Bash tool in the next session's first turn,
+`echo "probe` + a backtick pair around `true` + `end"`, was refused
+before it ran: the tool error named the guard, line 1 as written, what
+bash does with the pair, and the routes (the Write or Edit tool, single
+quotes or a quoted heredoc, `$( )`, an escaped backtick in double
+quotes), with its pointer at `process/shell-and-windows.md`, "Bash
+calls". The control, the same text in single quotes, ran and printed
+the backticks literally. 147e's "Not verified: the refusal live" is
+closed.

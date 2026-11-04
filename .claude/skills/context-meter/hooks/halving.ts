@@ -2,7 +2,7 @@
 // the note a command that measures the halving gets.
 //
 // Measured on Claude Code 2.1.308 (archive/post-118-worklog.md §130, 130e) and
-// again on 2.1.309 (WORKLOG.md §142, 142a): before bash reads a
+// again on 2.1.309 (archive/worklog-phase-142.md, 142a): before bash reads a
 // command, the Bash tool halves each run of backslashes, rounding up, unless a
 // double quote follows the run, which keeps it whole; the transcript and the
 // tool's input hold the command as written. Bash then applies its own rules,

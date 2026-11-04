@@ -560,3 +560,65 @@ Cursor's, signed above). Each needs a round before the section closes:
 
 The scratchpad holds no Round 10 entry, so its sweep at 147f is the
 header's line alone.
+
+**Tranche 3 signed** (the user: "Fully signed, Claude! 😁"): the four
+rows at the leans. 147d is read; 147e builds the list.
+
+### 147e — the list built as signed (2026-11-04, session c830ad7f)
+
+**The backticks guard.** `.claude/skills/context-meter/hooks/backticks.ts`
+finds the first backtick bash would run as a command substitution (in a
+bare word, double quotes or an unquoted heredoc's body; not in single
+quotes, `$' '`, a quoted heredoc, a comment or after a backslash), in
+the command as written and, failing that, as bash gets it after the Bash
+tool's halving. `register.ts` refuses such a command after the stdin and
+backslash guards, naming the line, the Write or Edit tool, single quotes
+or a quoted heredoc, and `$( )`; a fault in the model lets the command
+run, as the other two do. `tests/shell-backticks.test.ts`, 24 tests: 11
+on refusals (the round's three slips, 142b's apostrophe, 144c's halved
+form, the refusal's text) and 13 on what passes. The failing control:
+with the double-quote branch's check taken out, 7 of the first 21
+failed; put back, 21 passed.
+
+*Step zero changed the model.* Replayed over the transcripts' 2,395 Bash
+commands since 2026-10-30 (`scratch/147e/replay.ts`), the model as first
+written refused 2 and missed 144c's and 145g's slips. Each wrote its
+backticks escaped behind three backslashes, which bash reads as a
+literal, and the halving cut the run to two, leaving the backtick bare
+(`scratch/147e/show.ts`). The backslash guard's model reads the two
+alike (0 changed lines on 144c's command, `scratch/147e/halving-check.ts`),
+so it let both run. Reading the halved command too, the replay over
+2,400 refuses 5: the four commands that lost text (144c, 145g, and 146g's
+test comment and WORKLOG line) and one at 142b, a single-quoted `node -e`
+whose "142b's" closed the quote and left a code span bare, a real
+substitution no friction line names. None of the other 176 commands
+holding a backtick.
+
+*Type-checked:* `register.ts` and the four files beside it against
+Claude Code 2.1.317's declarations (the plugin-authoring skill's
+`types/claude-code.d.ts`, in the README's scratch tsconfig), exit 0; a
+planted `Found` with its field types swapped, exit 2.
+
+*Not verified:* the refusal live. The README says an edit to the mod
+loads in a fresh session, not in the turn that made it.
+
+**The docs.** `shell-and-windows.md`: the `# halving: measure` sentence
+deleted, its §142 pointer at `archive/worklog-phase-142.md`, and the
+backticks trap with the guard's route in "Bash calls".
+`session-end.md`: the Cursor pass, after the NEXT line's bullet. The
+mod's README: the backticks guard's test beside the other two. Inside
+the signed intent, flagged: `halving.ts`'s header had the same stale
+§142 pointer; the README's measuring note pointed at the deleted
+sentence and now names `MEASURE_LINE`; the ceiling row's `board.ts:516`
+named another line by now and is `ceilingDeltas`.
+
+**TODO.** Round 10's Cursor row ticked, its four open rows placed as
+signed, and the backticks guard a ✅ row under its shell section; Round
+11 gains BALANCE's header (before the closing board) and "At the round's
+close": the Cursor pass's trial and the reminder read again.
+
+*The oracle:* the rule docs' diff read against the signed list, AGENTS.md
+and CLAUDE.md untouched: each change is a signed item or one of the
+pointer fixes flagged above. Two rule rows enter for Round 11's keep
+test (the Cursor pass; the backticks route) and one leaves (`# halving:
+measure`).

@@ -9,7 +9,12 @@ it leaves open, not its size.
 ## Every session
 
 - Bring the HANDOFF Cursor's NEXT line up to date if the status changed,
-  with every open ◐.
+  with every open ◐. Then read each Cursor line for three things: is it
+  still true, does the next session need it before reading anything else,
+  and does another doc already hold it. Fix what is false, move what has a
+  home elsewhere to that home (a pointer can stay), and delete what is
+  history; a line that grew by adding a call and its reasons goes back to
+  its current value.
 - **The session self-report.** At the end of a session (not of a phase:
   phases span sessions and sessions span phases), append a dated entry to
   [retro/sessions.md](../retro/sessions.md) answering the questions in its

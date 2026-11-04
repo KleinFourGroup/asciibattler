@@ -52,14 +52,13 @@ Claude Code's own tools.
   heredoc too, while the transcript shows the command as written; the
   PowerShell tool passes them whole (measured 2026-10-23, Claude Code
   2.1.308, `../archive/post-118-worklog.md` §130, 130e; again 2026-10-30,
-  2.1.309, `../WORKLOG.md` §142, 142a). The context meter's mod refuses,
+  2.1.309, `../archive/worklog-phase-142.md`, 142a). The context meter's mod refuses,
   before it runs, a Bash command whose reading the halving changes,
   showing each such line as written and as bash would get it; send the
   text through a file the Write tool writes, or the command through the
   PowerShell tool. A run a double quote follows, or a pair in double
   quotes before a character that keeps a backslash (`"\\."`), reads the
-  same and passes. To measure the halving again, make the command's first
-  line `# halving: measure`: it runs, and the result notes what bash got.
+  same and passes.
 - **Bash calls.** The Bash tool runs most commands with stdin on
   `/dev/null`, where a bare `cat > file` writes an empty file and moves
   on. A command holding a heredoc, and some others, reaches the shell
@@ -71,7 +70,14 @@ Claude Code's own tools.
   (measured 2026-10-28, Claude Code 2.1.309;
   `../archive/worklog-phase-137.md`, "The stdin hangs, traced"). The
   context meter's mod refuses such a command before it runs, naming the
-  line. A process spawn costs about 0.2 s in Git Bash
+  line. Bash runs the text between two backticks as a command and puts its
+  output in their place, in a bare word, in double quotes and in an
+  unquoted heredoc, so a markdown code span or a JS template literal sent
+  through `node -e "…"` or `git commit -m "…"` is lost; the halving can
+  also leave bare a backtick written escaped behind a run of backslashes.
+  The mod refuses such a command too, naming the line: send the text
+  through the Write or Edit tool, or in single quotes or a quoted heredoc,
+  and write a substitution you mean as `$( )`. A process spawn costs about 0.2 s in Git Bash
   here, so a loop over hundreds of files passes the 2-minute limit; one
   node script over `git ls-files` does it in about a second.
 - **Subagents.** A subagent's transcript is under

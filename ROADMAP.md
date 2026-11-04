@@ -13,7 +13,7 @@ its spec, its per-phase worklogs (`archive/worklog-phase-135.md` to
 [archive/post-118-roadmap.md](archive/post-118-roadmap.md) (Round 8.5).
 
 **Status: §146 closed 2026-11-03; §147, the round's close, its cut
-signed 2026-11-03 (WORKLOG §147), 147d next.** The spec is [round-10-spec.md](round-10-spec.md), its tranche 2
+signed 2026-11-03 (WORKLOG §147), 147f next.** The spec is [round-10-spec.md](round-10-spec.md), its tranche 2
 answered at the kickoffs of §144 to §146. The charter, the decision
 points, the exit and the scope guards are in META-ROADMAP §"Round 10 —
 Act 1, the wilds", with the roster table's rebuild added to its scope at
@@ -148,6 +148,10 @@ read; the archive; Round 11's charter against the code.
 - ☑ **147c — the smoke, the upload and the playtest** (`stop`, the
   user's). Read 2026-11-04: uploaded, every read good on the user's
   word; `main` and `v0.3.0` pushed.
-- ◐ **147d — the process read** (`stop`, in tranches): tranches 1 and 2 signed, tranche 3 put.
-- ☐ **147e — the list built as signed** (`none`).
+- ☑ **147d — the process read** (`stop`, in tranches). Signed
+  2026-11-04 in three: the keep test (one row deleted), the backticks
+  guard, a hand-off pass over the Cursor, the open rows placed.
+- ☑ **147e — the list built as signed** (`none`). The guard replayed
+  over the round's 2,400 Bash commands: the four that lost text and one
+  more, nothing else.
 - ☐ **147f — the archive and the round's close** (`stop`).

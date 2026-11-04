@@ -1,4 +1,5 @@
 import type { EngineInterface, Register } from 'claude-code'
+import { type Found, backtickBashRuns, backticksRefusal } from './backticks.ts'
 import { halvingNote, halvingRefusal } from './halving.ts'
 import { HAND_OFF_AT, commitIn, landed, pastTrigger } from './handoff.ts'
 import { type Stall, stdinRefusal, stdinStall } from './stdin.ts'
@@ -22,6 +23,17 @@ function stallIn(command: string): Stall | undefined {
 async function halvedIn($: EngineInterface, command: string): Promise<string | undefined> {
   try {
     return halvingRefusal(command, (await $.session.version()).version)
+  } catch {
+    return undefined
+  }
+}
+
+// A backtick bash would run as a command substitution is refused before it
+// runs (backticks.ts has the model); a fault in the model lets the command
+// run, as the stdin guard's does.
+function backtickIn(command: string): Found | undefined {
+  try {
+    return backtickBashRuns(command)
   } catch {
     return undefined
   }
@@ -64,6 +76,12 @@ export const register: Register = on => {
     if (halved !== undefined) {
       $.ui.log('backslash guard: refused a command bash would read differently from how it was written')
       return { deny: halved }
+    }
+
+    const backtick = backtickIn(e.command)
+    if (backtick !== undefined) {
+      $.ui.log(`backticks guard: refused line ${backtick.line}, which bash would run as a command substitution`)
+      return { deny: backticksRefusal(backtick) }
     }
 
     return withHalvingNote($, e.command, await withHandOff($, e.command, () => next(e)))

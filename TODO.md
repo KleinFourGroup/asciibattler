@@ -159,23 +159,15 @@ META-ROADMAP §"Round 10 — Act 1, the wilds" names each row's place.
 
 ### At the round's close
 
-- [ ] **Look at the HANDOFF Cursor's structure and contents** (the user,
-  2026-10-30, at §142's close). Its 3,900-character cap stopped a commit
-  in five sessions running (136f, 138, 139a, 140e, 142b), each trimmed a
-  clause at a time. Read what the Cursor holds and how its lines are
-  shaped, and whether either should change (WORKLOG §142, 142h).
+- ✅ **Look at the HANDOFF Cursor's structure and contents** — a pass over every Cursor line at each hand-off in `process/session-end.md`, its first run at the round close's rewrite, the cap at 3,900; Round 11 its trial (ROADMAP §147, 147d and 147e; WORKLOG §147).
+
+At Round 10's close the board's ceiling label went to Round 11, the
+scripted run's two warnings to Round 18 and the editors' shared rules to
+"Watches" (WORKLOG §147, 147d).
 
 ### The board
 
 - ✅ **Rebuild the roster table once act 1 is in the map** — v4 off 146b's board, 52 buckets over the three-act walk; the `sectors` line out (ROADMAP §146, 146c; WORKLOG §146).
-
-- [ ] **The ceiling deltas' label says paired seeds; the arithmetic is
-  pooled.** Each `ceiling-*` delta subtracts the doctrine control's 40
-  runs from the ARM row's 120 (`tests/fuzz/board/board.ts:516`, its
-  `source` line "paired same-seed"). Either compute it on the shared
-  seeds or name it as pooled. At 146b, pooled: −0.117, −0.125, −0.083,
-  −0.358; on the shared seeds 1 to 40: −0.125, −0.100, −0.100, −0.300
-  (WORKLOG §146, 146b).
 
 - ✅ **The board report prints the sheet's whole history** — both headers print `sheetProvenance`: the count of the sheet's entries and the first and last entries' titles (ROADMAP §146, 146a; WORKLOG §146).
 
@@ -187,44 +179,32 @@ META-ROADMAP §"Round 10 — Act 1, the wilds" names each row's place.
 
 - ✅ **The encounter dial warns when a forced id matches ZERO nodes** — the run warns at each act's entry (`Run.scriptWarnings`, `script:warning`), the browser's console and the run-config CLI print it (ROADMAP §142, 142d and 142g).
 
-- [ ] **A numbered layout crossed at an event node doesn't warn.** The
-  route can cross a hop that `layout=` names at an event node whose page
-  ends without a fight, and nothing says the layout went unused. It
-  can't warn at the node's entry, since the event can still start a
-  fight there; a warning at the event's return to the map, with no fight
-  on the hop, would cover it (`Run.ts`, beside the rest and port warning
-  at entry; WORKLOG §142, 142d and 142h).
-
-- [ ] **The run-config CLI's headless run doesn't print mid-run
-  warnings.** It prints the warnings raised at construction, but
-  `runOne` (`tests/fuzz/harness.ts`) builds its own bus, so a
-  `script:warning` raised during the headless run (a layout crossed at a
-  rest, an owned daemon left out of a stock) goes unheard. The CLI
-  (`tools/run-config/cli.ts`) needs that bus, or a listener passed in
-  (WORKLOG §142, 142g and 142h).
-
-### The editors
-
-- [ ] **The rules every editor's sheet repeats** (census B-19, a lead).
-  The validation list, the hints, `.row`, `.workspace`, `.edit-pane,
-  .side-pane` and `button.primary:disabled` are in all eleven config
-  editors' sheets, about 630 lines that could move into
-  `tools/editor-base.css`. Here because this round is the first to author
-  content through the editors. No proof today: `css-compare` passes the
-  move only when no editor rule can meet a moved one at one specificity,
-  and showing that two never meet on one element takes the editors'
-  markup and the classes their code sets, which no named oracle reads
-  (`archive/post-118-worklog.md` §127, 127c and 127f).
-
 ### The shell
 
 - ✅ **The backslash guard** — the context meter's mod refuses, before it runs, a Bash command whose reading the halving changes; the halving measured again on 2.1.309 (ROADMAP §142, 142a; WORKLOG §142).
+
+- ✅ **The backticks guard** — the context meter's mod refuses, before it runs, a Bash command holding a backtick bash would run as a command substitution, as written or after the halving; replayed over the round's 2,400 Bash commands it refuses the four that lost text and one other real substitution, and nothing else (ROADMAP §147, 147e; WORKLOG §147).
 
 ## Round 11 — The roster
 
 META-ROADMAP §"Round 11 — The roster" names each row's place.
 
 ### Before the closing board
+
+- [ ] **BALANCE.md's header at its 700-line cap.** It refused a commit
+  at 140e, 143b and 145h, a hook round each, and every fix above the run
+  log is now a net-zero edit. The retune writes BALANCE most, so before
+  it, read the header for protocol text to demote to an archive, the cap
+  kept (WORKLOG §147, 147d).
+
+- [ ] **The ceiling deltas' label says paired seeds; the arithmetic is
+  pooled.** Each `ceiling-*` delta subtracts the doctrine control's 40
+  runs from the ARM row's 120 (`tests/fuzz/board/board.ts`,
+  `ceilingDeltas`, its `source` line "paired same-seed"). Either compute
+  it on the shared seeds or name it as pooled. At 146b, pooled: −0.117,
+  −0.125, −0.083, −0.358; on the shared seeds 1 to 40: −0.125, −0.100,
+  −0.100, −0.300 (WORKLOG §146, 146b; placed here at Round 10's close,
+  WORKLOG §147, 147d).
 
 - [ ] **A blinded ranged unit strikes past its acquisition range.** Under `atWill`, blind sets `targetId` null when nothing is within its `acquisitionRange` (1), and `Targeting.currentTarget` then falls back to `findTarget`, so the abilities still fire out to the attack range. A probe in a worktree: a blinded archer fired at an enemy 3 cells away (`archive/post-118-worklog.md` §122, 122o batch 6). The tests pin only a melee unit. **The user's lean (2026-10-15), pending testing:** blind means wander and strike only within the acquisition range, so `currentTarget` skips the fallback for a blinded unit as it does for a confused one. **The catch to weigh first:** ten abilities ship a `minRangeCells` floor (nine at 2, one at 4), and a unit with a floor above 1 can't fire at a target 1 cell away, so under that rule a blinded kiter can't attack at all while blind lasts; a plain archer still hits what is adjacent. Decide whether that full shutdown is intended and pin it either way. The tests: a blinded archer holds fire at 3 cells and fires at 1; the kiter's case as decided; then a board re-run, since blind (the luminant's `light_ray`) gets stronger. A behaviour change, so the round's scope guards rule it out of Round 8.5; placed here at §122's close, since it needs the board.
 
@@ -324,6 +304,20 @@ META-ROADMAP §"Round 11 — The roster" names each row's place.
   field, as a set, since a line on some player cards and not others reads
   as uneven. Asked 2026-11-02 (WORKLOG §145, "145c's tooltip in tiers").
 
+### At the round's close
+
+- [ ] **The Cursor's hand-off pass, read as a trial** (signed at Round
+  10's close). Each hand-off reads every Cursor line for still true,
+  needed first and held elsewhere (`process/session-end.md`). The keep
+  test reads whether the round's hand-off records name it, and a Cursor
+  cap refusal in the round says it is not working (WORKLOG §147, 147d).
+
+- [ ] **The silent-turn reminder, read again.** `npm run friction-scan`'s
+  `nudges` over the round's sessions, beside Round 10's 158 over 11
+  sessions and 3,596 tool calls, with the round's filings and reports on
+  it; CLAUDE.md's note stood unchanged at Round 10's close (WORKLOG §147,
+  147d).
+
 ## Round 12 — Push, pull and blink
 
 META-ROADMAP §"Round 12 — Push, pull and blink" names each row's place.
@@ -421,6 +415,24 @@ META-ROADMAP §"Round 17 — Deck and daemons" names each row's place.
 ## Round 18 — Events and rewards
 
 META-ROADMAP §"Round 18 — Events and rewards" names each row's place.
+
+- [ ] **A numbered layout crossed at an event node doesn't warn.** The
+  route can cross a hop that `layout=` names at an event node whose page
+  ends without a fight, and nothing says the layout went unused. It
+  can't warn at the node's entry, since the event can still start a
+  fight there; a warning at the event's return to the map, with no fight
+  on the hop, would cover it (`Run.ts`, beside the rest and port warning
+  at entry; WORKLOG §142, 142d and 142h; placed here at Round 10's close,
+  where events start fights, WORKLOG §147, 147d).
+
+- [ ] **The run-config CLI's headless run doesn't print mid-run
+  warnings.** It prints the warnings raised at construction, but
+  `runOne` (`tests/fuzz/harness.ts`) builds its own bus, so a
+  `script:warning` raised during the headless run (a layout crossed at a
+  rest, an owned daemon left out of a stock) goes unheard. The CLI
+  (`tools/run-config/cli.ts`) needs that bus, or a listener passed in
+  (WORKLOG §142, 142g and 142h; placed here at Round 10's close, WORKLOG
+  §147, 147d).
 
 - [ ] **Pin the Reward ledger's index mapping headless** (101e) — `RewardScreen.resolve` maps a ledger row onto its engine index (the un-taken rows before it) and is proven by ONE pane walk (four out-of-order accepts incl. a swap; WORKLOG §101e). Lift the mapping + the identity sync into a pure function beside the screen and pin it the `pressable.test.ts` way: out-of-order accepts, a no-op accept (full cache, no swap slot) leaves the row pending, a mismatched live offer rebuilds.
 
@@ -918,6 +930,18 @@ Rows with a trigger and no round (§133, tranche 3). Each names what reopens it.
   authored in cells converted, the movement protocol and the drift
   baselines re-pinned, and the sim's cost under the bot's look-ahead
   (`archive/post-118-worklog.md` §133, "the experiments").
+
+- [ ] **The rules every editor's sheet repeats** (census B-19, a lead).
+  The validation list, the hints, `.row`, `.workspace`, `.edit-pane,
+  .side-pane` and `button.primary:disabled` are in all eleven config
+  editors' sheets, about 630 lines that could move into
+  `tools/editor-base.css`. No proof today: `css-compare` passes the move
+  only when no editor rule can meet a moved one at one specificity, and
+  showing that two never meet on one element takes the editors' markup
+  and the classes their code sets, which no named oracle reads
+  (`archive/post-118-worklog.md` §127, 127c and 127f). Reopens when an
+  oracle reads them; carried from Round 8.5 into Round 10 untaken, so
+  made a watch at Round 10's close (WORKLOG §147, 147d).
 
 ## Not yet placed
 

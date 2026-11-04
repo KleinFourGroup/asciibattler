@@ -72,7 +72,7 @@ every amendment re-runs the full board; paired same-seed deltas govern.
  8. Foundations ──┤  ✅ CLOSED 2026-10-11 — the shells · the recorder · the probe kit · the store + the build ID · the run journal · save/load · the menu + settings · Escalation + the unlocks · the itch page OPEN at 0.1.0 (§110–§118 + §117.5, §117.75)
  8.5 Housekeeping ┤  ✅ CLOSED 2026-10-26 — the oracle map · the census · deletions per subsystem, byte-identical · the comment pass · 0.1.1 · the dependency phase · AGENTS as a router · the re-cut (§119–§133 + §124.5)
  9. The frame ────┤  ✅ CLOSED 2026-10-30 — the act design · the board's guards · every strike lands, precision and evasion out · 0.2.0 (§134–§140)
-10. Act 1 ────────┤  the wilds: ground fauna · the scripted run · the multi-act sheet
+10. Act 1 ────────┤  ✅ CLOSED 2026-11-04 — the scripted run · the board by act · six beasts · act 1, The Periphery · act 1's bands · 0.3.0 (§141–§147)
 11. The roster ───┤  kits · power by rarity · Mars in three · bandits out of the draft
 12. Push, pull ───┤  forced movement · the teleport · the cavalier · seven units
 13. The unit kit ─┤  lifesteal · specials · global reach · `extends` and its reskins
@@ -931,7 +931,7 @@ backslash guard went to Round 10's TODO (140d). Archives:
 
 ---
 
-## Round 10 — Act 1, the wilds
+## Round 10 — Act 1, the wilds ✅ CLOSED 2026-11-04
 
 **Charter:** a first act of beasts and bandits on mechanisms that exist,
 with the two shipped sectors as acts 2 and 3 in the same release.
@@ -984,6 +984,30 @@ the plan's. **Exit:** a run from act 1 to
 the deep end's boss, playable end to end; act 1's bands signed.
 **Release:** a new first act. **Scope guards:** no flyer, swimmer, 2×2 or
 swarm (rounds 19 and 20).
+
+**CLOSED 2026-11-04** — seven phases (§141–§147), each closed on the
+user's read, the close's last step included. The exit met, clause by
+clause (147a): a run from act 1 to The Deep End's boss, played by the
+user at 145h and run headlessly by every walk row of 146f's board; act
+1's bands signed at 146d to 146g, act 1's wall signed for the first
+time. The release, `0.3.0`, uploaded 2026-11-04: a new first act, The
+Periphery, with The Start as act 2 (The Fragments, barren) and The Deep
+End as act 3; a run saved by `0.2.0` continues, since the save format
+held. **Against the charter:** our glyph face in the Private Use Area for
+the beasts' eared letters (144c, 144d); a unit's description line
+(145c); act 1's four short encounters tuned to the user's turn targets,
+the Vermin Lords at the pool lever and act 1's cost to Round 11 (146e);
+acts 2 and 3 recorded, not retuned, for Rounds 21 and 22. The scope
+guard held (147a). World v39 and Run v50 at both ends; no gotcha added
+(141 at both ends). Outside the charter, each signed as it came: the
+backslash guard (142a), the strategy-fixture guard (`765e1aff`), the
+worktree junction line (146d). At the close: Round 11's charter amended
+in three lines and its exit (147a); the keep test deleted one rule line
+of five; the backticks guard; a pass over the HANDOFF Cursor at each
+hand-off in place of a fixed shape, Round 11 its trial (147d, 147e).
+Archives: `archive/post-140-roadmap.md` + `worklog-phase-142.md` to
+`-147.md` + `round-10-spec.md` + `round-10-rules.md` +
+`sessions-round-10.md` + `retro-scratchpad-round-10.md`.
 
 ---
 

@@ -72,6 +72,10 @@ If the renderer ever grows pure-logic helpers (e.g. atlas UV computation), those
   The smoke leaves out the `--jobs` parity test, which
   `npm run fuzz:jobs-parity` runs: the hook when `tests/fuzz/` is staged,
   and before a `--jobs` batch (`process/measurement.md`).
+- **The pre-commit hook's time:** about 15 s for docs alone (132a), about
+  45 s for UI, about 3 min when the smoke runs; through its copy of the
+  commit, about 25 s and 90 s. The tests nearest the default 5 s beside
+  the suite carry 15 s since 126f (`archive/post-118-worklog.md` §126).
 - **Chaos sweep:** `npm run chaos -- --seeds=N [--dials=<query>]` plays the
   chaos driver (`tests/chaos/chaos.ts`, 115c) over seeds 1..N: random commands
   of every kind at every gate, legal and illegal, and random battle orders,

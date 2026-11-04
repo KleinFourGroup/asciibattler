@@ -63,8 +63,12 @@ the Round-9 (The frame and the misses, §134–§140) backlog was swept
 2026-10-30 (the thirteenth run, at 140d — promoted: the per-phase papercut
 disposition to `process/planning.md`; the severity flag to a TODO watch) →
 [archive/retro-scratchpad-round-9.md](../archive/retro-scratchpad-round-9.md);
+the Round-10 (Act 1, the wilds, §141–§147) backlog was swept 2026-11-04
+(the fourteenth run, at 147d — no entries; from the friction read: the
+backticks guard and the Cursor's hand-off pass) →
+[archive/retro-scratchpad-round-10.md](../archive/retro-scratchpad-round-10.md);
 the MVP-era entries had earlier fed [post-mvp-review.md](post-mvp-review.md).
 
 ---
 
-_(The post-§140 entries start here — Round 10, Act 1, the wilds.)_
+_(The post-§147 entries start here — Round 11, The roster.)_

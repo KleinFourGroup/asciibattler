@@ -153,7 +153,7 @@ META-ROADMAP §"Round 9 — The frame and the misses" names each row's place.
 
 - ✅ **The rarity stars take the tap inside a card that is a control** — the pre-turn hand and the card list pass `clickable` when their cards are controls, so the stars take the long-press there; the user's touch read is 135g's (WORKLOG §135, 135f).
 
-## Round 10 — Act 1, the wilds
+## Round 10 — Act 1, the wilds (closed 2026-11-04)
 
 META-ROADMAP §"Round 10 — Act 1, the wilds" names each row's place.
 
@@ -942,6 +942,13 @@ Rows with a trigger and no round (§133, tranche 3). Each names what reopens it.
   (`archive/post-118-worklog.md` §127, 127c and 127f). Reopens when an
   oracle reads them; carried from Round 8.5 into Round 10 untaken, so
   made a watch at Round 10's close (WORKLOG §147, 147d).
+
+- [ ] **What players of the itch build report.** By 2026-10-23, the
+  user's word: a handful of players and no comments. A stranger's
+  finding lands here, as do the 7.5 close's two watches, frame rate on
+  other machines and the overlay stack; none is recorded yet. Reopens
+  with a player's report (moved from the HANDOFF Cursor at Round 10's
+  close, WORKLOG §147, 147f).
 
 ## Not yet placed
 

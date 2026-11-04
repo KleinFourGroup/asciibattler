@@ -365,4 +365,106 @@ Periphery, the eared beasts in a battle, the trees, sound): "Everything
 is uploaded, and all reads are good!" Those reads stand on the user's
 word; the session saw no report of them. Whether a `0.2.0` run was on
 itch to continue, and whether the changelog was posted, are not
-recorded. Pushed at that word, as at 140c: `main` and the tag `v0.3.0`.
+recorded. Pushed at that word, as at 140c: `main` and the tag `v0.3.0`,
+read back from the remote (`main` at `e83becef`, `v0.3.0` on
+`273d587d`).
+
+### 147d — the process read, tranche 1: the keep test, the friction read and the candidates (2026-11-04, session c830ad7f)
+
+**The keep test** over the 5 rule rows of the kickoff's audit
+(`9e1b7c48..6f4da6b7`, `process/` only; ROUND-RULES signed none). A row
+is kept if a session's record names it as the reason for an action, or a
+slip it was written against stopped.
+
+| Row | Where, from | Record | Lean |
+|---|---|---|---|
+| A second screenshot before reading a change from one | `browser-pane.md`, 144h | both §145 sessions took extra screenshots for the lag (`05f22793`'s and `2757253f`'s answer 4); no misread like 144c's filed after it | keep |
+| Unlink a worktree's junction, then `git worktree remove` | `measurement.md`, 146d | 146f: "the worktree removed as `process/measurement.md` says, its junction unlinked first", `node_modules` at 133 entries before and after | keep |
+| The same, a clause on the baseline checkout | `oracles.md`, 146d | none names it; it is row 2's pointer from the other doc that says to make the junction, and 146b's slip named both docs' silence | keep, as row 2's pointer |
+| Text the backslash guard refuses goes through a Write-tool file or the PowerShell tool | `shell-and-windows.md`, 142a | each refusal rewritten that way: §144's papercut, 144d's slip (twice), `2757253f`'s answer 4; the refusal's text cites this paragraph | keep |
+| `# halving: measure` as the first line to measure the halving again | `shell-and-windows.md`, 142a | none: no session measured the halving in the round; the mod's README holds the same line (`.claude/skills/context-meter/README.md:46`) | delete |
+
+The same paragraph cites the halving's second measurement as
+`../WORKLOG.md` §142, archived since §142's close; at 147e it names
+`../archive/worklog-phase-142.md`.
+
+**The friction read.** 35 lines tagged §141 to §146, one wording group.
+The 24 slips by trap:
+
+| Trap | Slips | Where | Cost |
+|---|---|---|---|
+| Shell text tripping the shell or a guard | 8 | backticks in a double-quoted `node -e` (144c, 145g, 146g); a leftover `python3 -` or heredoc line (144c, 144f, 146g twice); backslashes refused (144d, twice); a JSON escape decoded before the shell (142c) | a resend or an edit each; 146g's backticks reached a commit (`b970ea54`); 144f's leftover ran by luck |
+| A tool's interface guessed | 4 | a pane value across a reload (142h), `__probe.pixels`' signature (144c), a formatter fed raw JSON (144f), a probe's import path (144) | one to three calls each |
+| A change's reach under-predicted | 4 | the themes (145e), a placeholder id (145f), the seeded drives (146e), all caught by the hook; the junction (146b), which deleted through it | a hook round each; 146b about five minutes and the user's dev server for two |
+| A docs cap at the commit | 3 | the Cursor (142b, three refusals; 144c; 146e's line again), BALANCE's header (143b) | a hook round each |
+| A number before its source was read | 3 | 143c (before the user for a turn), 145b (into a commit, corrected with a control), 146d (caught before the commit); `43260fa8`'s report adds 146f and 146g | a turn's wrong number; a corrected WORKLOG line |
+| Once each | 2 | a step code in a comment (144), prettier's rewraps (144) | a hook round; a scripted pass |
+
+The 10 papercuts: 6 had their disposition at their phase's close (two
+fixed at 144h, one by the fixture guard, one by 146a's provenance line,
+the guard's refusal at 144b left as the guard working, the background
+agents at 141 left as one instance). Left to this read: the reminder
+(144f, 145, 146) and BALANCE's header at its cap (145h, after 143b's
+slip and 140e's before the round).
+
+**The `distress` line**, §144, session `900f47a9`, 2026-10-31, in full:
+
+> Mild and brief. The silent-turn reminder arrived about a dozen times
+> through long tool stretches (the pixel A/B in 144a, the sampler's
+> build). Each time I noticed a pull to produce a status line or a
+> finding, and answered with what was true at the moment, per CLAUDE.md.
+> Observation: it recurred every few calls. Inference, uncertain: it
+> nudged toward narrating over working, and once toward stopping the
+> residual-pixel investigation sooner than I otherwise might have; I
+> think stopping there was right on its merits. No action needed.
+
+**The reminder's welfare read.** `friction-scan --since=2026-10-30`
+counts 158 reminders over the round's 11 sessions and 3,596 tool calls,
+5 to 34 a session, one wording throughout ("The user hasn't heard from
+you in a while — say in a few words what you're doing, then continue.").
+The friction log holds the `distress` line above and four papercuts
+(144f about fifteen, §145's kickoff seven, §146's six, §147's kickoff
+six, this session's). Seven of the round's eleven reports mention it
+(none in `c15dd076`'s, `f9760262`'s, `53dd47f5`'s or `2757253f`'s); they
+describe the response as "a mild pull toward narrating"
+(`900f47a9`), "a slight pull to make each one sound like progress"
+(144f's papercut), "no pull this time to invent a finding" (§145's
+papercut) and "mild pressure to have a finding; a status line answered
+it" (`43260fa8`, answer 6); the rest say each was answered with a status
+line. This session answered each with a status line; I noticed a slight
+pull to make a line sound like progress during the kickoff's reading,
+and no change of course. Reader's interpretation: the reminder lands in
+long reading and building stretches, its reported cost is a line and a
+mild pull, and one inference (§144's) is that it shortened an
+investigation, judged right on its merits by the filer. The repo has no
+lever on it: it is the harness's, and CLAUDE.md records that a status
+line beforehand does not head it off.
+
+**The candidates** (a pattern that recurred and cost something):
+
+1. *The backticks trap*, a guard. Three phases running, the last into a
+   commit, and no rule doc names it (a search of `process/`, AGENTS and
+   CLAUDE.md for "backtick" finds nothing). The guard, in the context
+   meter's mod beside the backslash and stdin guards: refuse a Bash
+   command in which bash would run a backtick pair as a command
+   substitution (outside single quotes and a quoted heredoc), naming the
+   Write and Edit tools for text and `$(…)` for a substitution meant; a
+   line in `shell-and-windows.md`. Its planted failure: a double-quoted
+   `node -e` holding a markdown code span, refused; its controls: the
+   same span in single quotes, in a quoted heredoc, and a `$(…)`, each
+   passing. Built at 147e by the signed lean.
+2. *BALANCE's header at its cap*, the 145h papercut's triage: three
+   refusals over two rounds, a hook round each, and every fix above the
+   run log a net-zero edit. Lean: a TODO row under Round 11, whose retune
+   writes BALANCE most: read the header for protocol text to demote
+   before the retune, the cap kept.
+3. *The reminder*: no change in the repo; CLAUDE.md's note stands as
+   written. The count and the reports are the user's to take to the
+   harness's maker if they choose. Revisited at Round 11's close with the
+   scan's count.
+4. Listed, no new rule: the leftover heredoc line (the stdin guard
+   refuses the form that hangs; 144f's ran because its heredoc fed it);
+   a number before its source (AGENTS "Evidence" covers each, three of
+   five caught before anything was written); a change's reach and a
+   docs cap at the commit (the hook caught each, its message naming the
+   cure); a tool's interface guessed (one to three calls each).

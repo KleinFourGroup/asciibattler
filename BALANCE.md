@@ -456,17 +456,17 @@ keys (`budgetFactor`, `swarmMaxMultiplier`, `enemyArcherRatio`, …) went with
 per-encounter multipliers are the **finer, primary** instrument; fold the global
 multipliers in only if the pool-ratio confound (below) demands it.
 
-## Per-kind target bands — SET at X3, stable since
+## Per-kind target bands — signed 2026-11-05, Round 11's kickoff
 
-Set data-first at X3 (2026-06-21, with the user): **normal ≈ 3 · elite ≈ 6
-(2×) · boss ≈ 10 (~3×)** pool-damage-taken per instance — the per-encounter
-TUNING bands, unchanged since. Context that still applies: an elite has a
-non-elite sibling = optional detour → legitimately harder; a boss is
-climactic + multi-phase (`stages`) → judged across its whole fight. The
-RUN-shape bands (seam / reach / wall / derived win — the §72b architecture)
-live in the signed sheet, machine-checked; these per-encounter bands are
-prose-checked only — promoting them into the sheet is an 83f
-signing-session candidate.
+Pool damage taken per instance, as a share of the player's pool: **normal
+10 % · elite 30 % · boss 50 %** (4 · 12 · 20 at 40), each encounter within
+½× to 1½× its kind's target. Set from act 1's kinds on 146f's walk rows,
+keeping act 1's total, seam and wall (WORKLOG §148); it replaces X3's
+normal ≈ 3 · elite ≈ 6 · boss ≈ 10 at a pool of 20. Act 1 is read against
+it from §153; acts 2 and 3 wait for their rounds. An elite is an optional
+detour, so legitimately harder; a boss is judged across its whole fight
+(`stages`). The RUN-shape bands are the signed sheet's, machine-checked;
+these are prose-checked only (into the sheet: an 83f candidate).
 
 
 ## The rarity verification protocol (standing since §88c, 2026-08-31)

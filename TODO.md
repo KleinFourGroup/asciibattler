@@ -238,16 +238,15 @@ META-ROADMAP §"Round 11 — The roster" names each row's place.
 
 - [ ] **Power diversity by rarity** (verdict item 4): 1/1/1/2 → 1/1/2/3 or 1/2/3/4 — a pool re-anchor rides behind it (every burn/turn moves); Round 11, after the §94 signing.
 
-- [ ] **Act 1's cost, with a per-kind cost target.** §146 tuned act 1
-  to turn targets only, and the rats' nest costs 0.03 pool an instance
-  and the Vermin Lords 1.75 held out (146e), where Cats!, act 1's other
-  elite, costs 18.9 to 21.7 on the board's walk rows (146d). BALANCE's
-  per-kind guide (normal ≈ 3, elite ≈ 6, boss ≈ 10 pool an instance)
-  was set at a pool of 20 and is checked in prose only. The user's
-  call at 146e's stop (2026-11-03): a cost target per kind signed at
-  Round 11's kickoff, on the pool as it is then, and act 1's encounters
-  read against it after the retune moves every fight's cost, the rats'
-  nest and the Vermin Lords first (WORKLOG §146, 146e).
+- [ ] **Act 1's cost, against the per-kind cost target.** §146 tuned
+  act 1 to turn targets only. The target was signed at Round 11's
+  kickoff (2026-11-05): normal 10 %, elite 30 %, boss 50 % of the pool,
+  each fight within ½× to 1½× (BALANCE "Per-kind target bands"; WORKLOG
+  §148). Out of band on 146f's walk rows: the rats' nest (0.02 / 0.09),
+  the wolfpack (1.84 / 1.58), the poachers (9.45 / 9.41), the cats
+  (19.94 / 22.51) and the Vermin Lords (2.67 / 1.66). Read at §153,
+  after the weapons move every fight's cost, the rats' nest and the
+  Vermin Lords first; `scratch/148/kind-cost.mjs` gives the kinds.
 
 - [ ] **The AoE-status enemies — the RETUNE half** (range / cooldown / duration; "really annoying"): board work, carried to **Round 11** with the kit watches (Round 7's no-board guard).
 

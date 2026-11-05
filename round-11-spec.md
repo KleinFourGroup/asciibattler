@@ -164,7 +164,10 @@ reasons.
 
 ### Tranche 2 (after tranche 1's sign, or at its phase's kickoff)
 
-- *This kickoff, after the phases:* act 1's cost target per kind.
+- *This kickoff, after the phases:* act 1's cost target per kind,
+  signed 2026-11-05 at the lean: normal 10 %, elite 30 %, boss 50 % of
+  the pool, each fight within ½× to 1½× (BALANCE "Per-kind target
+  bands").
 - *§149:* abilities past the main attack (cooldown specials, damage over
   time, area attacks per target); a heal-per-second column; the idols as
   a toggle; Escalation as an input; the check against the swing read

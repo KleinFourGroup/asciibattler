@@ -196,3 +196,11 @@ was set at X3 with a pool of 20, in ratios 1 : 2 : 3.3.
 Read at §153 after the weapons, then on the closing board. On the sign,
 the target replaces the X3 guide in BALANCE's "Per-kind target bands",
 and TODO's row points at it.
+
+**Signed** (the user, 2026-11-05: "C sounds good to me, Claude! 😁
+Signing your lean!"): arm (C). BALANCE's "Per-kind target bands" holds
+it in the X3 section's eleven lines, since the header sits at its
+700-line cap; the section's note that promoting the bands into the sheet
+is an 83f candidate is kept in a clause. TODO's Round 11 row names the
+five fights out of band and §153's read. §148's lines are all ticked;
+next, §149's kickoff.

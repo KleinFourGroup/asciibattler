@@ -12,25 +12,22 @@ with its spec, its per-phase worklogs (`archive/worklog-phase-142.md` to
 `-147.md`) and its session reports beside it; before it
 [archive/post-133-roadmap.md](archive/post-133-roadmap.md) (Round 9).
 
-**Status: Round 10 closed 2026-11-04; Round 11's kickoff, at §148, is
-next.** The kickoff checks the charter's premises against the code and
-cuts the phases with their reads for the user to sign
-(`process/planning.md`). The charter, the decision points, the exit and
-the scope guards are in META-ROADMAP §"Round 11 — The roster", amended in
-three lines and its exit at Round 10's close; its premises were read at
-HEAD then (`archive/worklog-phase-147.md`, 147a); its riders are TODO's
-"Round 11".
+**Status: Round 11 under way; §149, the stat sheet, is next.** The spec
+is [round-11-spec.md](round-11-spec.md), signed 2026-11-05. The charter,
+the decision points, the exit and the scope guards are in META-ROADMAP
+§"Round 11 — The roster"; its riders are TODO's "Round 11".
 
-## Phase 148 — the kickoff
+## Phase 148 — the kickoff ✅ (closed 2026-11-05)
 
-The audit and the cut. The phases and their order are the kickoff's to
-cut and the user's to sign.
+The spec, the phases and act 1's cost target, each signed by the user
+(WORKLOG §148).
 
 - ☑ **The spec and the phases** — signed 2026-11-05: the spec
   ([round-11-spec.md](round-11-spec.md)) and §149 to §156 below, with
   the stat sheet added as §149 (WORKLOG §148).
-- ◐ **Act 1's cost target per kind** (`stop`), on the pool as it is now:
-  put to the user (WORKLOG §148).
+- ☑ **Act 1's cost target per kind** — signed 2026-11-05: normal 10 %,
+  elite 30 %, boss 50 % of the pool, each fight within ½× to 1½×
+  (BALANCE "Per-kind target bands").
 
 ## Phase 149 — the stat sheet (signed 2026-11-05)
 

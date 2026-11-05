@@ -27,12 +27,17 @@ import {
   strikePeriodSeconds,
   weaponOf,
 } from '../../tools/stat-sheet/model';
+import { fieldedEnemies, fightWaves, turnsFor } from '../../tools/stat-sheet/enemies';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const raw = (path: string): any => JSON.parse(readFileSync(fileURLToPath(new URL(`../../${path}`, import.meta.url)), 'utf8'));
 const UNITS = raw('config/units.json');
 const ABILITIES = raw('config/abilities.json');
 const STATS = raw('config/stats.json');
+const ENCOUNTERS = raw('config/encounters.json');
+const SECTORS = raw('config/sectors.json');
+const SHEET = raw('tests/fuzz/board/signed-sheet.json');
+const HAND: number = raw('config/deck.json').handSize;
 
 type Stats = Record<string, number>;
 interface RawOp {
@@ -166,5 +171,48 @@ describe('the stat sheet model: a strike', () => {
       );
       expect(caught, variant).toBe(true);
     }
+  });
+});
+
+describe('the stat sheet model: the enemies', () => {
+  it("a fight of a kind is its signed turn band's midpoint, rounded", () => {
+    for (const kind of ['normal', 'elite', 'boss'] as const) {
+      const band = SHEET.pacingBands[kind];
+      expect(turnsFor(kind), kind).toBe(Math.round((band.min + band.max) / 2));
+    }
+  });
+
+  it("the wolfpack's waves: round(factor × hand) bodies, levels summing to round(budget factor × level × hand), at least 1 each", () => {
+    // Worked from the raw file: the wolfpack loops one wave of wolves.
+    const enc = ENCOUNTERS.find((e: { id: string }) => e.id === 'wolfpack');
+    expect(enc.waves[0].kind).toBe('loop');
+    const spec = enc.waves[0].body[0].spec;
+    for (const level of [1, 3, 7]) {
+      const n = Math.round(spec.count.factor * HAND);
+      const budget = Math.round(spec.levelBudget.factor * level * HAND);
+      for (let seed = 1; seed <= 5; seed++) {
+        for (const wave of fightWaves('wolfpack', 'normal', level, seed)) {
+          const levels = wave.map((u) => u.level);
+          expect(wave.length, `L${level} seed ${seed}`).toBe(n);
+          expect(wave.every((u) => u.archetype === 'wolf')).toBe(true);
+          expect(levels.reduce((s, l) => s + l, 0), `L${level} seed ${seed}`).toBe(Math.max(n, budget));
+          expect(Math.max(...levels) - Math.min(...levels)).toBeLessThanOrEqual(1);
+        }
+      }
+    }
+  });
+
+  it("act 1's normals field exactly the archetypes its normal encounters name, shares summing to 1", () => {
+    const sector = SECTORS.find((s: { id: string }) => s.id === 'the-periphery');
+    const named = new Set<string>(
+      sector.encounters.normal.flatMap((entry: { encounterId: string }) =>
+        [...JSON.stringify(ENCOUNTERS.find((e: { id: string }) => e.id === entry.encounterId).waves).matchAll(/"archetype":"([^"]+)"/g)].map(
+          (m) => m[1]!,
+        ),
+      ),
+    );
+    const rows = fieldedEnemies('the-periphery', 'normal', 3, { seeds: 20 });
+    expect(rows.reduce((s, r) => s + r.share, 0)).toBeCloseTo(1, 10);
+    expect(new Set(rows.map((r) => r.archetype))).toEqual(named);
   });
 });

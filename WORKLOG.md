@@ -380,3 +380,30 @@ Built inside the step's intent and flagged: the preview's cadence is
 on the dash cannot be met, since the dash never reaches the line, and
 the preview line sits in the DOM module, which no test imports; the
 check is the script's count above, 0. Typecheck and lint clean.
+
+### 149d — the enemies (2026-11-05)
+
+`tools/stat-sheet/enemies.ts`: `fieldedEnemies(sector, kind, level)`
+plays each encounter of the kind's pool as a fight of the kind's signed
+turn target (the signed sheet's `pacingBands`, the midpoint rounded:
+normal 3, elite 5, boss 6 turns), the enemy pool falling evenly across
+them for the stages; each turn's wave from `waveForTurn` and its units
+from `resolveWave`, for a hand of 6 at the level, over 200 seeds of the
+sheet's own `RNG`. An encounter counts by its pool weight, every entry
+of the kind whatever its `minHop`; each body fielded counts once.
+Escalation's multipliers pass through as options. Built on two leans,
+listed for the stop: the fight's length at the band's midpoint, and
+every pool entry regardless of `minHop`.
+
+Act 1 at level 3, read by `scratch/149/enemies-peek.ts`: the normals
+field foxes, wolves and rats first (the fox at 3, 16.5 %; the wolf at 3,
+16.1 %); the elites rats, pumas and the cats' healer; the bosses' waves
+mercenaries, bandits and beasts. 33 ms for the three kinds.
+
+Three tests added to `tests/tools/stat-sheet.test.ts` (11 in all), worked
+from the raw files: the turns from the signed sheet; the wolfpack's
+waves at levels 1, 3 and 7, each `round(1.5 × 6)` bodies whose levels sum
+to `max(bodies, round(1.25 × level × 6))` within one of each other; act
+1's normals fielding exactly the archetypes its normal encounters name.
+*The failing control:* a hand of 5 failed 1 of 11; the turns floored in
+place of rounded failed 1 of 11; restored byte-identical, 11 of 11.

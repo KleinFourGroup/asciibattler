@@ -55,7 +55,7 @@ The cut, signed 2026-11-05 with its six leans (WORKLOG §149):
 - ☑ **149b — the editor's cadence** (`none`): through `resolveCadenceTicks`; latent, no shipped preview moves.
 - ☐ **149c — the check against play** (`none`; its result in the stop's
   report).
-- ☐ **149d — the enemies** (`none`).
+- ☑ **149d — the enemies** (`none`): through `waveForTurn` and `resolveWave`; two planted mistakes caught.
 - ☐ **149e — the duel, the ranks and the weapons** (`none`).
 - ☐ **149f — the page** (`stop`).
 

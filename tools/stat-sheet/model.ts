@@ -15,12 +15,13 @@
  */
 
 import { TICK_RATE } from '../../src/config';
-import { abilityDef, damageOpOf } from '../../src/config/abilities';
+import { abilityDef, damageOpOf, healOpOf } from '../../src/config/abilities';
 import { STATS } from '../../src/config/stats';
 import { UNIT_DEFS } from '../../src/config/units';
 import { scaledUnit } from '../../src/sim/archetypes';
 import { resolveCadenceTicks } from '../../src/sim/effects/timeline';
-import { resolveDamageScalars } from '../../src/sim/effects/resolveScalars';
+import { resolveDamageScalars, resolveHealAmount } from '../../src/sim/effects/resolveScalars';
+import type { DamageOp } from '../../src/sim/effects/schema';
 import type { UnitStats } from '../../src/sim/Unit';
 
 /** Which way a unit's level-ups are built. */
@@ -62,13 +63,33 @@ export function maxHpOf(stats: UnitStats): number {
   return Math.max(1, STATS.hpPerConstitution * stats.constitution);
 }
 
-/** The unit's weapon: its one ability with a top-level damage op, or
- *  undefined for a unit whose abilities have none: a healer, a summoner, a
- *  pure status, and a chain, whose damage sits inside its `chain` op. */
+/** An ability's strike: its top-level damage op, or a chain's damage op,
+ *  read at the chain's first target (its later jumps are left out). */
+export function strikeOpOf(abilityId: string): DamageOp | undefined {
+  const direct = damageOpOf(abilityId);
+  if (direct) return direct;
+  for (const e of abilityDef(abilityId).effects) {
+    if (e.op.kind !== 'chain') continue;
+    const inner = e.op.ops.find((o) => o.kind === 'damage');
+    if (inner && inner.kind === 'damage') return inner;
+  }
+  return undefined;
+}
+
+/** The unit's weapon: its one ability with a strike, or undefined for a
+ *  unit whose abilities have none: a healer, a summoner, a pure status. */
 export function weaponOf(archetype: string): string | undefined {
   const def = UNIT_DEFS[archetype];
   if (!def) throw new Error(`weaponOf: no combatant '${archetype}'`);
-  return def.abilities.find((id) => damageOpOf(id) !== undefined);
+  return def.abilities.find((id) => strikeOpOf(id) !== undefined);
+}
+
+/** A healer's heal a second: its heal ability's amount (`resolveHealAmount`)
+ *  over its period; 0 for a unit with no heal. */
+export function healPerSecond(archetype: string, stats: UnitStats): number {
+  const id = UNIT_DEFS[archetype]?.abilities.find((a) => healOpOf(a) !== undefined);
+  if (!id) return 0;
+  return resolveHealAmount(healOpOf(id)!, stats) / strikePeriodSeconds(id, stats.speed);
 }
 
 /** Seconds between two strikes of `abilityId` at this speed. */
@@ -86,7 +107,7 @@ export function strikePeriodSeconds(abilityId: string, speed: number): number {
  * multiplier).
  */
 export function expectedStrike(attacker: UnitStats, abilityId: string, targetDefense: number): number {
-  const op = damageOpOf(abilityId);
+  const op = strikeOpOf(abilityId);
   if (!op) return 0;
   const { baseDamage, critChance } = resolveDamageScalars(op, attacker);
   const hit = (raw: number): number =>

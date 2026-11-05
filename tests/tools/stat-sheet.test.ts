@@ -28,6 +28,15 @@ import {
   weaponOf,
 } from '../../tools/stat-sheet/model';
 import { fieldedEnemies, fightWaves, turnsFor } from '../../tools/stat-sheet/enemies';
+import { DotTrack, duel, ranks, timeline, weaponTable } from '../../tools/stat-sheet/duel';
+import { World } from '../../src/sim/World';
+import { Unit } from '../../src/sim/Unit';
+import { EventBus } from '../../src/core/EventBus';
+import { RNG } from '../../src/core/RNG';
+import { deriveStats } from '../../src/sim/stats';
+import { ARCHETYPE_CONFIG } from '../../src/sim/archetypes';
+import { STATUS_DEFS } from '../../src/config/statuses';
+import type { GameEvents } from '../../src/core/events';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const raw = (path: string): any => JSON.parse(readFileSync(fileURLToPath(new URL(`../../${path}`, import.meta.url)), 'utf8'));
@@ -214,5 +223,105 @@ describe('the stat sheet model: the enemies', () => {
     const rows = fieldedEnemies('the-periphery', 'normal', 3, { seeds: 20 });
     expect(rows.reduce((s, r) => s + r.share, 0)).toBeCloseTo(1, 10);
     expect(new Set(rows.map((r) => r.archetype))).toEqual(named);
+  });
+});
+
+/** The sim's own damage-over-time ticks on an inert unit, a tick at a time:
+ *  the status put on before the first tick, and again after `again` ticks
+ *  if given (as `statusPeriodic.test.ts` builds its world). */
+function simDotTicks(statusId: string, ticks: number, again?: number): number[] {
+  const bus = new EventBus<GameEvents>();
+  const world = new World(bus, new RNG(1));
+  const mk = (id: number, team: 'player' | 'enemy', x: number, y: number): Unit => {
+    const stats = { ...ARCHETYPE_CONFIG.mercenary.baseStats, constitution: 999 };
+    const u = new Unit({ id, team, archetype: 'mercenary', glyph: 'M', stats, derived: deriveStats(stats, 1), position: { x, y } });
+    world.placeUnits(u);
+    return u;
+  };
+  const victim = mk(1, 'player', 1, 1);
+  mk(2, 'enemy', 11, 11);
+  let amount = 0;
+  bus.on('status:ticked', (e) => {
+    amount += e.amount;
+  });
+  const out: number[] = [];
+  world.applyStatusEffect(victim, STATUS_DEFS[statusId]!, null);
+  for (let n = 1; n <= ticks; n++) {
+    amount = 0;
+    world.tick();
+    out.push(amount);
+    if (n === again) world.applyStatusEffect(victim, STATUS_DEFS[statusId]!, null);
+  }
+  return out;
+}
+
+function trackDotTicks(statusId: string, ticks: number, again?: number): number[] {
+  const def = STATUS_DEFS[statusId]!;
+  const dur = Math.round(def.durationSeconds * 20);
+  const track = new DotTrack();
+  track.put(statusId, 1, dur, 0);
+  const out: number[] = [];
+  for (let n = 1; n <= ticks; n++) {
+    track.expire(n);
+    out.push(track.tickDamage(n, 0));
+    if (n === again) track.put(statusId, 1, dur, n);
+  }
+  return out;
+}
+
+describe('the stat sheet model: the duel', () => {
+  const DOTS = Object.values(STATUS_DEFS).filter((d) => d.periodic?.op.kind === 'damage').map((d) => d.id);
+
+  it('the damage-over-time ticks match the sim tick for tick, once and re-applied', () => {
+    expect(DOTS.sort()).toEqual(['bleed', 'burn', 'poison']);
+    for (const id of DOTS) {
+      expect(trackDotTicks(id, 240), `${id} once`).toEqual(simDotTicks(id, 240));
+      expect(trackDotTicks(id, 240, 30), `${id} again at 30`).toEqual(simDotTicks(id, 240, 30));
+    }
+    // The count the kickoff left open: a 4 s burn ticking each second.
+    expect(simDotTicks('burn', 240).filter((x) => x > 0)).toHaveLength(3);
+  });
+
+  it('a duel without riders: the k-th strike, from the first tick, kills at k = ceil(hp ÷ strike)', () => {
+    const me = { archetype: 'mercenary', level: 1, stats: statsAt('mercenary', 1, 'player') };
+    const foe = { archetype: 'wolf', level: 1, stats: statsAt('wolf', 1, 'enemy') };
+    const s = workedStrike(me.stats as unknown as Stats, 'sword', foe.stats.defense);
+    const k = Math.ceil(UNITS.wolf.baseStats.constitution / s);
+    const t = timeline(me, foe);
+    expect(t.ttkSeconds).toBeCloseTo((k - 1) * workedPeriodSeconds('sword', me.stats.speed), 10);
+    // With no rider, the duel's damage a second is the standing one.
+    expect(t.dps).toBeCloseTo(s / workedPeriodSeconds('sword', me.stats.speed), 10);
+  });
+
+  it('a duel row reads both ways, its shares summing to 1', () => {
+    const d = duel('mercenary', 3, 'the-periphery', 'normal', { seeds: 20 });
+    expect(d.rows.reduce((s, r) => s + r.share, 0)).toBeCloseTo(1, 10);
+    expect(d.unit.weapon).toBe('sword');
+    expect(d.dpsDealt).toBeGreaterThan(0);
+    expect(d.dpsReceived).toBeGreaterThan(0);
+    expect(duel('healer', 3, 'the-periphery', 'normal', { seeds: 5 }).unit.hps).toBeGreaterThan(0);
+  });
+
+  it('ranks: a share of the group below (ties half), and the value over its mean, worked from the raw file', () => {
+    const draftable = combatants.filter(([, u]) => (u as { draftable?: boolean }).draftable !== false);
+    const values = draftable.map(([, u]) => u.baseStats.strength!);
+    const mean = values.reduce((s, x) => s + x, 0) / values.length;
+    const r = ranks('draftable');
+    for (const [id, u] of draftable) {
+      const v = u.baseStats.strength!;
+      const below = values.filter((x) => x < v).length;
+      const equal = values.filter((x) => x === v).length;
+      expect(r[id]!.base.strength!.percentile, id).toBeCloseTo((below + equal / 2) / values.length, 10);
+      expect(r[id]!.base.strength!.ofMean, id).toBeCloseTo(v / mean, 10);
+    }
+    expect(Object.keys(r).sort()).toEqual(draftable.map(([id]) => id).sort());
+  });
+
+  it('the weapon table: every combatant strike or heal, with its wielders', () => {
+    const table = weaponTable();
+    expect([...table.find((w) => w.id === 'sword')!.wielders].sort()).toEqual(['mercenary', 'prodigy']);
+    expect(table.find((w) => w.id === 'chain_lightning')!.verb).toBe('chain');
+    expect(table.find((w) => w.id === 'heal_ally')!.verb).toBe('heal');
+    for (const { weapon } of cases) expect(table.some((w) => w.id === weapon), weapon).toBe(true);
   });
 });

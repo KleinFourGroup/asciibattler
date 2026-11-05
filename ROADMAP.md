@@ -56,7 +56,7 @@ The cut, signed 2026-11-05 with its six leans (WORKLOG §149):
 - ☑ **149c — the check against play** (`none`): 24 of 24 rows within
   three standard errors; play strikes at 0.15 to 0.36 of the standing rate.
 - ☑ **149d — the enemies** (`none`): through `waveForTurn` and `resolveWave`; two planted mistakes caught.
-- ☐ **149e — the duel, the ranks and the weapons** (`none`).
+- ☑ **149e — the duel, the ranks and the weapons** (`none`): the status ticks pinned against the sim (a 4 s burn ticks 3 times).
 - ☐ **149f — the page** (`stop`).
 
 ## Phase 150 — the board's instruments (signed 2026-11-05)

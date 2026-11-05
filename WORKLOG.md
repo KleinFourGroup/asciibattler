@@ -430,3 +430,43 @@ counts every tick a unit is alive in a World, so it includes the
 approach and any ticks before contact. One slip filed: a crit figure in
 the BALANCE entry written before its source and corrected before the
 commit.
+
+### 149e — the duel, the ranks and the weapons (2026-11-05)
+
+`tools/stat-sheet/duel.ts`: `duel(archetype, level, sector, kind)` sets
+the player's unit (its expected stats, idol buffs as an option) against
+each enemy `fieldedEnemies` gives, both standing in range, as an
+expected-value timeline a tick at a time in the sim's order (statuses
+expire, the strike lands with its damage-over-time riders, the riders
+tick). Each row reads both ways: time to kill and damage a second dealt
+and received; the duel's figures are share-weighted means, with the
+share no side can kill within 120 s. `ranks(group)` places each stat
+and growth among the draftable units or among the enemies, as a
+percentile (ties counted half) and over the group's mean.
+`weaponTable()` lists every strike and heal with its wielders. The
+model gains `strikeOpOf` (a chain's damage op at its first target) and
+`healPerSecond`.
+
+*Inside the intent, flagged:* a duel's damage a second is the damage
+over the strikes made times their period, which with no rider is the
+standing figure exactly (pinned); the first draft's hit points over
+the time to kill made a kill on the first strike, at tick 0,
+unbounded.
+
+*Step zero settled the kickoff's open count:* the sim ticks a 4 s burn
+3 times, not 4 (its expiry runs before the tick's damage). The tests
+pin the timeline's status steps tick for tick against a real `World`
+for the three damage-over-time statuses (burn, bleed, poison), once
+and re-applied mid-way, which also pins bleed's and poison's `add`
+stacking with the anchor kept.
+
+Five tests added (16 in all): the sim pin; a riderless duel's kill at
+the `ceil(hp ÷ strike)`-th strike and its standing damage a second,
+worked from the raw config; a duel's shares and both directions; the
+ranks worked from the raw file; the weapon table. *The failing
+control:* expiry on `>` in place of `>=`, `add` treated as replace,
+and the first strike moved off tick 0 each failed 1 of 16; restored
+byte-identical, 16 of 16. Act 1 at level 3, read by
+`scratch/149/duel-peek.ts`: the mercenary against the normals 5.5
+dealt and 1.8 received a second, kills in 2.9 s and dies in 17.5 s;
+the healer 3.7 healed a second; 48 ms for four duels.

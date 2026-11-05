@@ -72,7 +72,7 @@ sizes one.
 - ☑ **150a — BALANCE's header** (`none`): three Phase X sections to `archive/balance-header.md`, 700 lines to 642.
 - ☑ **150b — the ceiling deltas** (`none`): on the shared seeds, pinned where the sign flips; 146f −0.200, −0.150, −0.075, −0.350.
 - ☑ **150c — the skill gradient's leg** (`none`): an exact sign test on the shared seeds, a tie fine; four recorded boards read ok.
-- ☐ **150d — the arbitration's walk loss** (`stop`): the decision log by site and by hops remaining, as rates by hop; where the loss sits and a fix's scope, or the box run that would tell.
+- ◐ **150d — the arbitration's walk loss** (`stop`): located at the four sites whose null arm is "pass", against rollouts that assume doctrine's play; the fix's scope and a box run at the stop.
 
 ## Phase 151 — the content (signed 2026-11-05)
 

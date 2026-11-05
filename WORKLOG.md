@@ -199,3 +199,88 @@ anchors tied at 0.275 each; `output/board-runs/92h/` reads 0.100 and
 (`output/board-runs/92h-report.txt`) printed the same, ok. So 92h did not
 tie, and the leg had WARNed on 94h, 146b and 146f, not on every board
 since 92h.
+
+### 150d — the arbitration's loss, located (2026-11-05, at its stop)
+
+Read from 146f's rows on this machine (`output/board-runs/146f/`), the
+four ARM rows against their doctrine controls on seeds 1 to 40. The
+scripts: `scratch/150/walk-loss.mjs` (classes, summaries side by side,
+the decision log by site, rollout margins, where the runs part) and
+`scratch/150/by-act.mjs` (the walk rows by act); their output is in
+`scratch/150/out/` (ignored, this machine).
+
+*The premise, corrected by 150b:* the ARM loses act 1 as well (seeds
+doctrine alone won against the ARM alone: 8 to 0 on regen, 6 to 0 on
+deploy, 5 to 2 and 15 to 1 on the walks). Every live decision's rollout
+is one battle long (`horizonBattles: 1`, K = 2) on every shape, so the
+walk's extra hops do not change the horizon a decision sees; the walk
+only has more turns over which a per-turn deficit adds up.
+
+*Where the lost runs end:* at a boss. Act 1 on regen, all 8 at hop 10;
+on deploy 5 of 6; the walk on deploy at act 1's boss 5, act 2's 4 and
+act 3's 3, and three short of a boss (act 1 hop 3, act 2 hop 9, act 3
+hop 8).
+
+*What the ARM does differently, a battle:*
+
+- **Four sites have "pass" as the null arm**: `grant:empower`,
+  `grant:redraw`, `packetFire:preTurn` and `packetFire:outOfBattle`.
+  The ε gate (2σ of the A/A noise, 3.277 and 5.476, signed at 85e) lets
+  through 1.6 to 2.4 % of empower asks, 2.7 to 5.4 % of redraws, 9 to
+  13 % of pre-turn fire asks and at most 1 % of out-of-battle ones. The
+  rollouts read the average challenger above pass at all four, by many
+  standard errors: an empower +0.13 to +0.16 pool a battle (se 0.005 to
+  0.008), a pre-turn fire +0.33 to +0.53 (se 0.014 to 0.024), an
+  out-of-battle fire +0.39 to +0.67; a redraw +0.02 to +0.11, past two
+  standard errors on two rows of four. On 23 to 48 % of these asks the
+  best challenger is positive and under ε. Doctrine, at the same asks, empowers every time (`level:hi` returns
+  a position whenever a grant and a hand exist, `selectEmpowerPosition`),
+  redraws by `level:2` and fires by the base vector.
+- **The rollouts assume doctrine's play.** Every rollout walks the
+  future with the doctrine defaults (`DEFAULT_ROLLOUT_REDRAW` /
+  `_EMPOWER`, `walker.ts`), the base's fires and buy-all at later docks
+  (`walkPolicyOverlay`). The grant site turns the grant walk off for its
+  own decision only. So the ARM judges every node, buy and event against
+  a future where it empowers each turn and fires like doctrine, and then
+  passes those actions live.
+- **The summaries agree.** On the walk on deploy the ARM fires 0.117
+  packets a battle against doctrine's 0.293 and buys at ports 0.10 a
+  battle against 0.21; it ends with 262 bits against 425. On act 1 it
+  buys more than doctrine (1.52 against 0.75 on deploy) and fires less
+  (0.155 against 0.198 a battle), ending with fewer bits (78 against
+  108): packets bought and held.
+- **By class,** the lost seeds sit at the low end on every acting site
+  (empower overrides 0.008 to 0.016 a battle against 0.019 to 0.022 in
+  seeds both won; port buys lower), and on the walk on deploy the lost
+  seeds' pre-turn fire overrides fall in acts 2 and 3 (0.059 and 0.057 a
+  battle against 0.148 and 0.070). These are small counts and can be
+  effect as well as cause.
+- **Where the runs part:** within the first five battles of act 1 in
+  every seed, lost or won alike (`rosters.csv`, the first battle whose
+  fielded hand differs), so the parting point does not tell the lost
+  seeds from the rest.
+
+*What the log cannot tell:* that the pass-null sites cause the loss. The
+lost seeds are where the ARM acted least, which is consistent with a
+per-turn deficit tipping a boss fight, but no per-seed reading separates
+cause from effect once the runs part in the first battles. A paired run
+of the ARM with the change would tell.
+
+*A fix's scope, for the user's call:* the coherence rule the node and
+event sites already follow (the base's pick is the null arm), extended
+to the four pass-null sites: null = doctrine's nominee (`level:hi`'s
+empower, `level:2`'s redraw, the base's fire), challengers = the other
+candidates and pass. The ARM would then act as doctrine does unless a
+challenger beats it by ε. The port site's "stop buying" null is a
+fifth, separate case (its own 85b design), left out of the first cut.
+A change to the ARM moves every ARM row, so taking it as the default
+means a full board, the sheet's ARM refs re-pinned, and the prior table
+and the roster table re-derived (BALANCE's derived-artifact registry);
+all before §152's box reads.
+
+*The box run that would tell:* the nominee null behind a flag (default
+off, the ARM rows byte-identical), on the four ceiling shapes at seeds 1
+to 40, with the four doctrine controls at the same HEAD. At 146f's
+per-run times that is about 6.8 CPU-hours for the four ARM rows and 1.6
+for the controls. Pre-registered read: the four paired ceiling deltas,
+now −0.200, −0.150, −0.075 and −0.350, and the sign counts beside them.

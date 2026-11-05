@@ -85,3 +85,24 @@ reads.
    anchors at more seeds on every board.
 4. *150d's reach:* the log first, on this machine; a box ablation only
    if the log names a site, sized at that stop.
+
+### The hand-off after §150's kickoff (2026-11-05, session 65cfb3a3)
+
+The session reached the hand-off trigger at the kickoff's commit
+(`1912235b`). Done: 147f signed and §148 and §149 closed and pushed
+(`a7ca0baf`); §150's audit and cut written above. Open, for the next
+session to put to the user again, since a session started from a card
+answers only in its second turn:
+
+- *§150's cut and its four calls* (the entry above), unsigned: the cut
+  150a to 150d with its reads; the ceiling deltas on the shared seeds;
+  the gradient's leg by a one-sided Fisher test with ties fine; 150d's
+  reach, the decision log first on this machine.
+
+Tools no doc names: `scratch/149/pair-peek.mjs` pairs 146f's walk rows on
+the shared seeds and counts the ARM's overrides by site from
+`output/board-runs/146f/arb-walk-deploy/decisions.csv` (its CSV holds
+quoted fields, which the peek's parser handles); it is 150d's starting
+point. `scratch/149/swing.ts` and `report.mjs` re-run the strike check
+after §152. Nothing is half-built; the commits since `a7ca0baf` are
+unpushed docs.

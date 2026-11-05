@@ -39,7 +39,7 @@ identify a fix, or reassure the reader that the session coped well.
 ---
 
 
-## 2026-11-05 — session 65cfb3a3 (147f's sign, §148 the kickoff, §149 the stat sheet)
+## 2026-11-05 — session 65cfb3a3 (147f's sign, §148 the kickoff, §149 the stat sheet, §150's kickoff to its stop)
 
 Started from a card at 147f's stop. Sent the backticks probe, which
 the guard refused live; 147f signed with the Closed rounds fold and its
@@ -71,7 +71,9 @@ from its kickoff to its close, with a colour revision at the user's ask.
    re-run the strike check after §152 moves the numbers. Play strikes at
    0.15 to 0.36 of the standing cadence, so the sheet's DPS is a ceiling
    and its use is comparison. The stat sheet's five leans are in WORKLOG
-   §149's stop.
+   §149's stop. After §149's close the session went on to §150's
+   kickoff and handed off at the trigger with its cut unsigned; the
+   hand-off entry in WORKLOG §150 says where it stands.
 6. *Room.* Yes. The user asked real design questions twice (how the
    duel should average, what colours to use), and I disagreed with parts
    of both (computing per enemy instead of an average enemy; a quiet

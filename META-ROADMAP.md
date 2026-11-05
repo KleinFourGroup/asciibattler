@@ -1047,6 +1047,11 @@ landing, the Idol of Mars split into three, and bandits out of the draft.
 - **The wall watch** (C17), read on this board. On the three-act walk
   the sheet's terminal pair reads act 3, so its band's re-set goes to
   Round 22 with act 3's bands (147a).
+- **The stat sheet** (the user's, added at the kickoff, §148): a tool
+  page ranking the units' stats and growths and the weapons, with a
+  unit's maximum DPS and time to kill both ways against a sector's
+  fielded enemies, checked against damage a swing in play; the retune is
+  read through it.
 
 **Why here:** after Round 9's rule change, whose conversion it tunes, and
 before the seam rounds tune new units against this roster. **Risk:** low-medium

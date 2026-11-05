@@ -1,9 +1,11 @@
 # Round 11 Spec — The roster
 
-**Status: DRAFT, put to the user at §148's kickoff (2026-11-04).** The
-intent is the user's, verbatim where it is theirs, from the casualty
-verdict (§93), Round 9's kickoff and the trial's roll-back (§136), the
-re-cut (§133) and the TODO rows placed since. What was signed before the
+**Status: SIGNED 2026-11-05** ("Oh I like how all of that sounds,
+Claude! 😁 Signing everything!"), with the phases §149 to §156, the stat
+sheet added as §149 at the kickoff. The intent is the user's, verbatim
+where it is theirs, from the casualty verdict (§93), Round 9's kickoff
+and the trial's roll-back (§136), the re-cut (§133), the TODO rows placed
+since and this kickoff (§148). What was signed before the
 kickoff is listed with its date. The Open section is what the round still
 has to settle, with the session's leans marked as leans. The charter is
 [META-ROADMAP.md](META-ROADMAP.md) §"Round 11 — The roster"; the record
@@ -23,6 +25,41 @@ is [WORKLOG.md](WORKLOG.md) §148; the plan is [ROADMAP.md](ROADMAP.md).
 
 Round 9 built the mechanical conversion; this round retunes it by taste,
 snipers slow and heavy (the charter's line).
+
+**The stat sheet** (2026-11-04 and 11-05, at this kickoff, WORKLOG
+§148):
+
+> I'd like some extra tooling that helps to quantify how comparatively
+> high and low various unit stats and growths are relative to others,
+> and the same for weapon stats. Something that puts it all together and
+> compares a final unit's DPS versus an "average" enemy would be really
+> nice too.
+
+> given an archetype and a level, and given a target enemy level,
+> construct the first unit with the expected stats of the archetype at
+> that level, and then construct an "average enemy," with stats equal to
+> the expected value of the average base plus the average growth rate,
+> and then do the damage calculations to get an expected DPS versus the
+> expected DPS received.
+
+> 1. We'd ignore range. Assume the attacked unit is in range and not
+>    moving. Thus these are really maximum possible DPS numbers.
+> 2. Oh, the question is what we're taking the average over. Maybe over
+>    units fielded in encounters? Except I'd guess we'd want to split
+>    that up by sector, so that would be another input. 🤔 Ah, but if
+>    we're doing that, rather than input a target enemy level, you may as
+>    well just extrapolate the player unit's level to a full hand and
+>    churn that through the wave calculations...
+
+The session's reply, signed with "I like how all of that sounds": the
+inputs are an archetype, a level and a sector. A full hand at that level
+resolves the sector's waves through the game's own `resolveWave`, since a
+wave's count and level budget follow from the hand. The damage is
+computed against each fielded enemy type and then averaged, because the
+floor of 1 makes damage against an average enemy's stats misread units
+near it. Time to kill is shown both ways beside the DPS. A hand against a
+wave as a team fight stays the sim's question, as a forced-encounter
+run.
 
 **Power by rarity** (2026-09-05, the casualty verdict, item 4,
 `archive/post-88-worklog.md` §93): "More diversity in unit power —
@@ -118,22 +155,26 @@ audit, with its files and lines, is WORKLOG §148. In short:
 The calls, in tranches, with the session's leans; WORKLOG §148 holds the
 reasons.
 
-### Tranche 1 (the kickoff)
+### Tranche 1 (the kickoff), signed 2026-11-05
 
-1. **The spec and the phases:** this draft, and §149 to §155 in the
-   order WORKLOG §148 gives (the board's instruments; the content; the
-   weapons and defense; power and the pools; the kits; the closing
-   board; the close).
+1. **The spec and the phases:** this spec, and §149 to §156 in the
+   order WORKLOG §148 gives (the stat sheet; the board's instruments; the
+   content; the weapons and defense; power and the pools; the kits; the
+   closing board; the close).
 
 ### Tranche 2 (after tranche 1's sign, or at its phase's kickoff)
 
 - *This kickoff, after the phases:* act 1's cost target per kind.
-- *§149:* the arbitration's walk loss: how far to chase it, and the
+- *§149:* abilities past the main attack (cooldown specials, damage over
+  time, area attacks per target); a heal-per-second column; the idols as
+  a toggle; Escalation as an input; the check against the swing read
+  and its tolerance.
+- *§150:* the arbitration's walk loss: how far to chase it, and the
   box's size if a run is needed.
-- *§150:* the idols' provisional sizes; who drafts the abilities' text.
-- *§151:* each weapon's might and cadence and the defense numbers, taste
+- *§151:* the idols' provisional sizes; who drafts the abilities' text.
+- *§152:* each weapon's might and cadence and the defense numbers, taste
   stops, with the user's play.
-- *§152:* power's scale (1/1/2/3 or 1/2/3/4).
-- *§153:* each kit change, the kiter under blind, the idols' sizes, the
+- *§153:* power's scale (1/1/2/3 or 1/2/3/4).
+- *§154:* each kit change, the kiter under blind, the idols' sizes, the
   wolf.
-- *§154:* the box's size and cost.
+- *§155:* the box's size and cost.

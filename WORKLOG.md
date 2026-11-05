@@ -92,3 +92,58 @@ Lords 2.7 / 1.7, and the normals from 9.4 (the poachers) down to 0.02
 *Not split off:* the cards' lines could be their own phase. They ride
 §150 because the text describes an ability's shape, not its numbers, so
 §153's kit changes rarely touch it, and a kit that does changes its line.
+
+### The stat sheet added, and the spec and phases signed (2026-11-04 to 11-05)
+
+The user, at the stop, asked for tooling that ranks the units' stats and
+growths and the weapons' stats against the others, and a unit's DPS
+against an "average" enemy, and asked whether it is a phase (their
+words: [round-11-spec.md](round-11-spec.md), "The stat sheet").
+
+*A phase of its own, first.* No written phase-size rule exists (a
+search of AGENTS.md, `process/`, META-ROADMAP and ROUND-RULES.md). The
+reasons are dependency and evidence. The weapons phase's taste stops are
+read through the sheet, so a wrong number there carries into each call
+signed on it. And the DPS figure is a model of the game's strike rules,
+an instrument that needs a known answer: BALANCE's swing read measured
+damage a swing in play by unit (2026-10-28 and 10-29). First, rather than
+just before the weapons, so the user uses it while the board's
+instruments, the open-ended phase, run, and what it lacks shows up
+before the stops rest on it. The phases became §149 to §156, the rest in
+their order.
+
+*The user's model, and the session's reply.* The user's model: an
+archetype at a level with its expected stats, an average enemy, range
+ignored, so the figures are maximum DPS. The average is over units
+fielded in encounters, split by sector, with the hand's level driving
+the waves in place of a target enemy level. The code bears the last
+point out. A wave's body count is a factor times the hand size, and its
+level budget a factor times the hand's mean level times the hand size,
+split across the bodies (`resolveWave`, pinned in
+`src/run/encounters/brigands.test.ts:58-76`; the brigands' first wave
+`levelBudget` factor 1.38, `config/encounters.json:20`). So an enemy
+level input would let the sheet show fights the game cannot make. The
+session's reply, signed with the phases:
+
+- The inputs are an archetype, a level and a sector; the waves resolve
+  through the game's own code, averaged over seeds since member choice
+  draws.
+- The damage is computed against each enemy type and then averaged.
+  Damage is not linear in defense because of the floor of 1: a strike
+  of 4 against defenses 1 and 5 does 3 and 1, 2 on average, and 1
+  against their average of 3. The units the swing read found on the
+  floor (the bandit, the ghoul, the officer) are where the shortcut
+  misreads.
+- Time to kill both ways beside the DPS, since DPS leaves out hit points.
+- Range ignored flatters melee and undersells ranged units and kiters,
+  whose edge is the swings before contact; the swing read can show the
+  gap per unit.
+- A hand against a wave as a team fight is the sim's question, answered
+  by a forced-encounter run (`npm run run-config -- --roster=... --encounter=ID`),
+  not a formula.
+
+**Signed** (the user, 2026-11-05: "Oh I like how all of that sounds,
+Claude! 😁 Signing everything!"): the spec, the phases §149 to §156 with
+the stat sheet first, and the sheet's shape above. The sheet's open
+questions go to §149's kickoff (the spec's tranche 2). Next: act 1's
+cost target per kind, put to the user.

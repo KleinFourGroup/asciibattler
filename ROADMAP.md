@@ -75,7 +75,7 @@ sizes one.
 - ☑ **150d — the arbitration's walk loss** (`stop`): located at the four sites whose null arm is "pass", against rollouts that assume doctrine's play; signed 2026-11-05, the lean: a flag, then a box cohort, the port site out.
 - ☑ **150e — the nominee null behind a flag** (`none`), inserted at 150d's sign: `--arb-null=nominee`; the dial off, the ARM byte-identical on 10 of 10 artifacts.
 - ☑ **150f — the cohort** (`stop`), inserted at 150d's sign: the ceiling deltas 0.000, +0.025, +0.225, −0.025 (146f −0.200, −0.150, −0.075, −0.350); signed 2026-11-05, the nominee to be the default.
-- ☐ **150g — the nominee the default** (`none`), inserted at 150f's sign: `--arb-null=pass` names the old arm; the default reproduces the cohort's nominee output and `pass` the old ARM's.
+- ☑ **150g — the nominee the default** (`none`), inserted at 150f's sign: the default byte-identical to the nominee capture and `--arb-null=pass` to the old ARM, 10 of 10 each.
 - ☐ **150h — the ARM's board** (`stop`), inserted at 150f's sign: the prior table re-derived under the new ARM and committed, then the full board under it, the roster table from its ARM rows; the sheet's ARM refs re-pinned for the user's signature, no band moved.
 
 ## Phase 151 — the content (signed 2026-11-05)

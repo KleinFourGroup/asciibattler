@@ -224,9 +224,10 @@ export interface CliArgs {
   // run-mode ablation dial (refused with --search).
   campRaid?: string;
   // 150e — the null arm at the grant and fire sites (`--arb-null=pass|nominee`,
-  // default pass): nominee makes the doctrine's own pick the null arm there
-  // and abstaining a challenger (ArbitratedConfig.nullArm). Requires
-  // --arbitrate; a run-mode dial (refused with --search).
+  // default nominee since 150g): nominee makes the doctrine's own pick the
+  // null arm there and abstaining a challenger; pass is the arm before 150g
+  // (ArbitratedConfig.nullArm). Requires --arbitrate; a run-mode dial
+  // (refused with --search).
   arbNull?: string;
   // 84c — the §84 long-horizon shadow instrument (`--shadow-horizon[=run|N]`,
   // bare = 'run'): every sampled arbitrated decision's candidates ALSO walked

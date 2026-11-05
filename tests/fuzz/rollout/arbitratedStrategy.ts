@@ -261,13 +261,16 @@ export interface ArbitratedConfig {
    *  shipping shape). */
   readonly campRaid?: boolean;
   /** 150e — the null arm at the grant and fire sites (`--arb-null`).
-   *  'pass' (the default, the shipping arm): the null arm abstains, so a
-   *  grant passes and a packet stays banked unless a challenger beats
-   *  that by ε. 'nominee': the null arm is the doctrine's own pick, the
-   *  pick every rollout's walk already makes (the empower `level:hi`, the
-   *  redraw `level:2`, the base's fire), and abstaining is a challenger;
-   *  the node and event sites' rule (the base nominates the null arm)
-   *  extended to these four. The port site keeps its own null. */
+   *  'nominee' (the default since 150g): the null arm is the doctrine's own
+   *  pick, the pick every rollout's walk already makes (the empower
+   *  `level:hi`, the redraw `level:2`, the base's fire), and abstaining is
+   *  a challenger; the node and event sites' rule (the base nominates the
+   *  null arm) extended to these four. 'pass', the arm before 150g: the
+   *  null arm abstains, so a grant passes and a packet stays banked unless
+   *  a challenger beats that by ε; with an ε that is a 2σ noise floor, it
+   *  passed most actions its rollouts read as positive and lost to
+   *  doctrine on every ceiling shape (WORKLOG §150, 150d and 150f). The
+   *  port site keeps its own null either way. */
   readonly nullArm?: 'pass' | 'nominee';
   /** Resolution 4's swept exchange rate (default 0 — a board arm). */
   readonly bitsLambda?: number;
@@ -314,7 +317,7 @@ export function makeArbitratedStrategy(
   config: ArbitratedConfig = {},
 ): ArbitratedRunStrategy {
   const base = config.base ?? scoredStrategy('arb-base', DEFAULT_SCORED_WEIGHTS);
-  const nominee = config.nullArm === 'nominee';
+  const nominee = config.nullArm !== 'pass';
   // 85b — the all-rollouts overlay (fires + future docks), composed into
   // EVERY spec via rollout.walkPolicies; sites override per call where a
   // coherence window demands suppression.

@@ -194,8 +194,14 @@ the consumption contract's treadmill BY CONSTRUCTION — a new mechanic is
 consumed because the rollout measures its effect. The hand-written scored
 policies remain the validated CHEAP TIER inside the rollout (the 72f
 direct test: paired Δ exactly 0.000), and decisions.csv is the standing
-decision-grade instrument. Detail: the instrument registry below +
-BALANCE §§69–72f +
+decision-grade instrument. **The null arm is the doctrine's own pick**
+wherever the doctrine acts: the base's node, the nominee event, accepting
+a reward daemon and, since 150g, the empower (`level:hi`), the redraw
+(`level:2`) and the base's fire; a challenger, abstaining included, must
+beat it by ε. With "pass" as the null at those four the ARM lost to
+doctrine on every ceiling shape (2026-11-05); `--arb-null=pass` runs that
+arm. The port site's null stays "stop buying". Detail: the instrument
+registry below + BALANCE §§69–72f +
 [archive/rollout-arbitration-spec.md](archive/rollout-arbitration-spec.md).
 *(The §68 accumulated brief that used to live here was that round's input
 list — consumed by §§69–72; its one still-standing doctrine, noise-vs-bias,

@@ -357,8 +357,9 @@ export function runRunCli(args: RunModeArgs): void {
   const wrapStrategy = arbitratedWrapFromArgs(args, {
     // 85g6a — the campRaid causal-arm dial (validated in args.ts: on|off).
     ...(args.campRaid === 'off' ? { campRaid: false } : {}),
-    // 150e — the null-arm dial (validated in args.ts: pass|nominee).
-    ...(args.arbNull === 'nominee' ? { nullArm: 'nominee' as const } : {}),
+    // 150e — the null-arm dial (validated in args.ts: pass|nominee; the
+    // default nominee since 150g, so only pass changes the arm).
+    ...(args.arbNull === 'pass' ? { nullArm: 'pass' as const } : {}),
     // 84c — the long-horizon shadow instrument (validated in args.ts:
     // 'run' | integer ≥ 1; refused on run-shape probes; sample ≥ 1).
     ...(args.shadowHorizon !== undefined
@@ -378,7 +379,7 @@ export function runRunCli(args: RunModeArgs): void {
       : '';
   const priorNote = args.priorLambda !== undefined ? ` prior-lambda=${args.priorLambda}` : '';
   const campNote = args.campRaid === 'off' ? ' camp-raid=OFF' : '';
-  const nullNote = args.arbNull === 'nominee' ? ' arb-null=NOMINEE' : '';
+  const nullNote = args.arbNull === 'pass' ? ' arb-null=PASS' : '';
   // 85-pre F2, generalized at 85b: the walk-policy overlay composes the
   // BASE's fire policy into EVERY rollout now (not just shadow long
   // walks) — a fire-group-less base (the default vector) composes no

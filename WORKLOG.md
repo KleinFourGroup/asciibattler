@@ -397,3 +397,20 @@ stop brings the sheet's ARM refs re-pinned for the user's signature, no
 band moved. One sizing note for the stop: the registry's "~1.5 h box"
 for the table is two-act era; v5's own batch cost 13.7 CPU-hours, and on
 three acts with the longer nominee runs it will cost more.
+
+### 150g — the nominee the default (2026-11-05)
+
+Built: `ArbitratedConfig.nullArm` defaults to the nominee
+(`config.nullArm !== 'pass'`); the CLI passes only `--arb-null=pass`
+through, the launch line naming `arb-null=PASS`; the board's ARM argv is
+unchanged, so its arm check holds. BALANCE's arbitration section names
+the null arm per site and the pass arm. Four pins of the pass default now
+name `nullArm: 'pass'` (their first run red, as predicted: the redraw and
+empower enumeration pins and two 150e pins); the redraw pin adds the
+default's action and log equal to the nominee's.
+
+*The oracle,* the three shapes of 150e (`scratch/150/oracle.sh`): the
+default on the new code against the 150e `--arb-null=nominee` capture,
+and `--arb-null=pass` against the baseline at `64fed7f8`, each 10 of 10
+artifacts byte-identical; the two arms differ from each other on 10 of 10
+(150e's control), so each comparison could have failed.

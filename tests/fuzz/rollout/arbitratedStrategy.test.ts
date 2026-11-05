@@ -359,7 +359,7 @@ describe('arbitrated packet fires — mechanism pins (injected evaluator)', () =
     expect(banking.pickPacketFire!('preTurn', run, null as never)).toBeNull();
   });
 
-  it('150e — a base that holds leaves the pass null; the default ignores the base\'s fire', () => {
+  it('150e — a base that holds leaves the pass null; the pass arm ignores the base\'s fire', () => {
     const run = atTurnIntro(['hype', 'discard-one']);
     const expected = expectedFireLabels(run, 'preTurn');
     const held = makeArbitratedStrategy(SEED, {
@@ -369,9 +369,13 @@ describe('arbitrated packet fires — mechanism pins (injected evaluator)', () =
     });
     expect(held.pickPacketFire!('preTurn', run, null as never)).toBeNull();
     expect(held.driver.decisions[0]!.labels).toEqual(['null', ...expected]);
-    const shipped = makeArbitratedStrategy(SEED, { base: firing, evaluate: sequenceEvaluator([0, 0, 0]) });
-    expect(shipped.pickPacketFire!('preTurn', run, null as never)).toBeNull();
-    expect(shipped.driver.decisions[0]!.labels).toEqual(['null', ...expected]);
+    const passing = makeArbitratedStrategy(SEED, {
+      base: firing,
+      nullArm: 'pass',
+      evaluate: sequenceEvaluator([0, 0, 0]),
+    });
+    expect(passing.pickPacketFire!('preTurn', run, null as never)).toBeNull();
+    expect(passing.driver.decisions[0]!.labels).toEqual(['null', ...expected]);
   });
 });
 
@@ -549,7 +553,7 @@ describe('arbitrated grants — mechanism pins (injected evaluator)', () => {
     return i;
   };
 
-  it('redraw: level:1/level:2 nominator candidates (deduped), null = pass; site + ε pinned', () => {
+  it('redraw, the pass arm: level:1/level:2 nominator candidates (deduped), null = pass; site + ε pinned', () => {
     const run = grantedTurnIntro();
     const gi = grantIndexOf(run, 'redraw');
     const grant = run.grantViews()[gi]!;
@@ -571,6 +575,7 @@ describe('arbitrated grants — mechanism pins (injected evaluator)', () => {
       expected.push(`redraw level:${cards} [${positions.join(',')}]`);
     }
     const arm = makeArbitratedStrategy(SEED, {
+      nullArm: 'pass',
       evaluate: sequenceEvaluator(Array(expected.length + 1).fill(0)),
     });
     expect(arm.pickGrantAction!(gi, run, null as never)).toBeNull(); // all-tie → pass
@@ -580,7 +585,7 @@ describe('arbitrated grants — mechanism pins (injected evaluator)', () => {
     expect(rec.epsilon).toBe(GRANT_EPSILON);
   });
 
-  it('empower: one candidate per hand position; the winner maps back', () => {
+  it('empower, the pass arm: one candidate per hand position; the winner maps back', () => {
     const run = grantedTurnIntro();
     const gi = grantIndexOf(run, 'empower');
     const handLen = run.hand.length;
@@ -588,7 +593,7 @@ describe('arbitrated grants — mechanism pins (injected evaluator)', () => {
     // Make hand:1 win by a floor-clearing margin (scores: null, hand:0, hand:1, …).
     const scores = Array(handLen + 1).fill(0);
     scores[2] = 1000;
-    const arm = makeArbitratedStrategy(SEED, { evaluate: sequenceEvaluator(scores) });
+    const arm = makeArbitratedStrategy(SEED, { nullArm: 'pass', evaluate: sequenceEvaluator(scores) });
     const action = arm.pickGrantAction!(gi, run, null as never)!;
     expect(action).toEqual({ kind: 'empower', handIndex: 1 });
     const rec = arm.driver.decisions[0]!;
@@ -624,7 +629,7 @@ describe('arbitrated grants — mechanism pins (injected evaluator)', () => {
     expect(passing.driver.decisions[0]!.chosenIndex).toBe(hand.length);
   });
 
-  it('150e — nominee null, redraw: the level:2 pick is the null arm; the default stays pass', () => {
+  it('150e — nominee null, redraw: the level:2 pick is the null arm, the default since 150g; pass abstains', () => {
     const run = grantedTurnIntro();
     const gi = grantIndexOf(run, 'redraw');
     const grant = run.grantViews()[gi]!;
@@ -648,11 +653,15 @@ describe('arbitrated grants — mechanism pins (injected evaluator)', () => {
     const rec = arm.driver.decisions[0]!;
     expect(rec.labels[0]).toMatch(new RegExp(`^nominee redraw level:[12] \\[${doctrine.join(',')}\\]$`));
     expect(rec.labels[rec.labels.length - 1]).toBe('pass');
-    // The dial's default: the null arm abstains, as shipped.
-    const shipped = makeArbitratedStrategy(SEED, { evaluate: sequenceEvaluator(Array(4).fill(0)) });
-    expect(shipped.pickGrantAction!(gi, run, null as never)).toBeNull();
-    expect(shipped.driver.decisions[0]!.labels[0]).toBe('null');
-    expect(shipped.driver.decisions[0]!.labels).not.toContain('pass');
+    // 150g — the default is the nominee: no dial, the same action and log.
+    const byDefault = makeArbitratedStrategy(SEED, { evaluate: sequenceEvaluator(Array(4).fill(0)) });
+    expect(byDefault.pickGrantAction!(gi, run, null as never)).toEqual({ kind: 'redraw', handIndices: doctrine });
+    expect(byDefault.driver.decisions[0]!.labels).toEqual(rec.labels);
+    // The pass arm, the ARM before 150g: the null arm abstains.
+    const passing = makeArbitratedStrategy(SEED, { nullArm: 'pass', evaluate: sequenceEvaluator(Array(4).fill(0)) });
+    expect(passing.pickGrantAction!(gi, run, null as never)).toBeNull();
+    expect(passing.driver.decisions[0]!.labels[0]).toBe('null');
+    expect(passing.driver.decisions[0]!.labels).not.toContain('pass');
   });
 
   it('grant-site rollouts force the walker grant policies OFF; other sites do not', () => {

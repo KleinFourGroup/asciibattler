@@ -243,17 +243,20 @@ export interface Rank {
   readonly ofMean: number;
 }
 
+/** A value's place among `values` (which hold it). */
+export function rankWithin(values: readonly number[], v: number): Rank {
+  const mean = values.reduce((s, x) => s + x, 0) / values.length;
+  const below = values.filter((x) => x < v).length;
+  const equal = values.filter((x) => x === v).length;
+  return { value: v, percentile: (below + equal / 2) / values.length, ofMean: mean === 0 ? (v === 0 ? 1 : Infinity) : v / mean };
+}
+
 /** Each combatant's base stats and growths ranked within its group: the
  *  draftable units, or the enemies (the units the draft never offers). */
 export function ranks(group: 'draftable' | 'enemy'): Record<string, { base: Record<string, Rank>; growth: Record<string, Rank> }> {
   const members = Object.entries(UNIT_DEFS).filter(([, d]) => (group === 'draftable') === d.draftable);
   const out: Record<string, { base: Record<string, Rank>; growth: Record<string, Rank> }> = {};
-  const rank = (values: number[], v: number): Rank => {
-    const mean = values.reduce((s, x) => s + x, 0) / values.length;
-    const below = values.filter((x) => x < v).length;
-    const equal = values.filter((x) => x === v).length;
-    return { value: v, percentile: (below + equal / 2) / values.length, ofMean: mean === 0 ? (v === 0 ? 1 : Infinity) : v / mean };
-  };
+  const rank = rankWithin;
   for (const [id, d] of members) {
     out[id] = { base: {}, growth: {} };
     for (const key of Object.keys(d.baseStats) as (keyof UnitStats)[]) {

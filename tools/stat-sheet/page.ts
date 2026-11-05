@@ -12,7 +12,8 @@ import { SECTORS } from '../../src/config/sectors';
 import { UNIT_DEFS } from '../../src/config/units';
 import type { EncounterKind } from '../../src/config/encounters';
 import type { UnitStats } from '../../src/sim/Unit';
-import { duel, ranks, weaponTable } from './duel';
+import { duel, rankWithin, ranks, weaponTable } from './duel';
+import { placeOf, shade, type ColourMode } from './colour';
 
 const $ = <T extends HTMLElement>(id: string): T => document.getElementById(id) as T;
 const fmt = (x: number, d = 1): string => (Number.isFinite(x) ? x.toFixed(d) : '∞');
@@ -61,17 +62,23 @@ function setup(): void {
   const esc = $<HTMLSelectElement>('escalation');
   option(esc, '0', '0 (off)');
   ESCALATION_LEVELS.forEach((_, i) => option(esc, String(i + 1), String(i + 1)));
-  for (const id of ['archetype', 'level', 'sector', 'kind', 'buff', 'escalation', 'group', 'which']) {
+  for (const id of ['archetype', 'level', 'sector', 'kind', 'buff', 'escalation', 'group', 'which', 'colour']) {
     $(id).addEventListener('change', render);
   }
 }
 
-function table(el: HTMLTableElement, head: string[], rows: string[][], mark?: (i: number) => boolean): void {
+/** A cell: its text, and a background when it is coloured. */
+type Cell = string | { readonly text: string; readonly bg: string };
+
+function table(el: HTMLTableElement, head: string[], rows: Cell[][], mark?: (i: number) => boolean): void {
+  const td = (c: Cell): string => (typeof c === 'string' ? `<td>${c}</td>` : `<td style="background:${c.bg}">${c.text}</td>`);
   el.innerHTML =
     `<thead><tr>${head.map((h) => `<th>${h}</th>`).join('')}</tr></thead><tbody>` +
-    rows.map((r, i) => `<tr${mark?.(i) ? ' class="mine"' : ''}>${r.map((c) => `<td>${c}</td>`).join('')}</tr>`).join('') +
+    rows.map((r, i) => `<tr${mark?.(i) ? ' class="mine"' : ''}>${r.map(td).join('')}</tr>`).join('') +
     '</tbody>';
 }
+
+const colourMode = (): ColourMode => $<HTMLSelectElement>('colour').value as ColourMode;
 
 function renderDuel(): void {
   const archetype = $<HTMLSelectElement>('archetype').value;
@@ -125,7 +132,10 @@ function renderRanks(): void {
       UNIT_DEFS[id]!.name,
       ...keys.map((k) => {
         const c = r[id]![which][k]!;
-        return `${c.value.toFixed(digits)}<span class="pct">${pct(c.percentile)} · ${fmt(c.ofMean, 2)}×</span>`;
+        return {
+          text: `${c.value.toFixed(digits)}<span class="pct">${pct(c.percentile)} · ${fmt(c.ofMean, 2)}×</span>`,
+          bg: shade(placeOf(colourMode(), c.percentile, c.ofMean)),
+        };
       }),
     ]),
     (i) => ids[i] === archetype,
@@ -133,19 +143,29 @@ function renderRanks(): void {
 }
 
 function renderWeapons(): void {
+  const rows = weaponTable();
+  const strikes = rows.filter((w) => w.verb !== 'heal');
+  const perSecond = (w: (typeof rows)[number]): number => w.might / w.cooldownSeconds;
+  // Coloured among the strikes alone; a heal's might is a different verb.
+  const coloured = (w: (typeof rows)[number], f: (x: (typeof rows)[number]) => number, text: string): Cell => {
+    if (w.verb === 'heal') return text;
+    const r = rankWithin(strikes.map(f), f(w));
+    return { text, bg: shade(placeOf(colourMode(), r.percentile, r.ofMean)) };
+  };
   table(
     $<HTMLTableElement>('weapon-table'),
-    ['weapon', 'carried by', 'verb', 'might', 'scales on', 'cooldown', 'range', 'target', 'crit base', 'past DEF', 'riders'],
-    weaponTable().map((w) => [
+    ['weapon', 'carried by', 'verb', 'might', 'might /s', 'scales on', 'cooldown (high = slow)', 'range', 'target', 'crit base', 'past DEF', 'riders'],
+    rows.map((w) => [
       w.id,
       w.wielders.map((u) => UNIT_DEFS[u]?.name ?? u).join(', '),
       w.verb,
-      String(w.might),
+      coloured(w, (x) => x.might, String(w.might)),
+      coloured(w, perSecond, fmt(perSecond(w), 2)),
       w.scaling,
       `${w.cooldownSeconds} s${w.speedScaled ? '' : ' flat'}`,
-      w.minRangeCells > 0 ? `${w.minRangeCells}–${w.rangeCells}` : String(w.rangeCells),
+      coloured(w, (x) => x.rangeCells, w.minRangeCells > 0 ? `${w.minRangeCells}–${w.rangeCells}` : String(w.rangeCells)),
       w.target,
-      w.critBase > 0 ? pct(w.critBase) : '—',
+      coloured(w, (x) => x.critBase, w.critBase > 0 ? pct(w.critBase) : '—'),
       w.bypassDefense ? 'yes' : '',
       w.riders.join(', '),
     ]),
@@ -155,8 +175,8 @@ function renderWeapons(): void {
 function render(): void {
   renderDuel();
   renderRanks();
+  renderWeapons();
 }
 
 setup();
 render();
-renderWeapons();

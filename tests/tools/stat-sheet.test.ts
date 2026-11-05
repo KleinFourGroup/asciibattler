@@ -29,6 +29,7 @@ import {
 } from '../../tools/stat-sheet/model';
 import { fieldedEnemies, fightWaves, turnsFor } from '../../tools/stat-sheet/enemies';
 import { DotTrack, duel, ranks, timeline, weaponTable } from '../../tools/stat-sheet/duel';
+import { placeOf, shade } from '../../tools/stat-sheet/colour';
 import { World } from '../../src/sim/World';
 import { Unit } from '../../src/sim/Unit';
 import { EventBus } from '../../src/core/EventBus';
@@ -315,6 +316,22 @@ describe('the stat sheet model: the duel', () => {
       expect(r[id]!.base.strength!.ofMean, id).toBeCloseTo(v / mean, 10);
     }
     expect(Object.keys(r).sort()).toEqual(draftable.map(([id]) => id).sort());
+  });
+
+  it('the colour scale: the middle clear, by rank about the 50th percentile, by size half and double at full colour', () => {
+    expect(placeOf('rank', 0.5, 7)).toBe(0);
+    expect(placeOf('rank', 1, 0)).toBe(1);
+    expect(placeOf('rank', 0, 9)).toBe(-1);
+    expect(placeOf('rank', 0.75, 1)).toBeCloseTo(0.5, 10);
+    expect(placeOf('size', 0.1, 1)).toBe(0);
+    expect(placeOf('size', 0.1, 2)).toBe(1);
+    expect(placeOf('size', 0.1, 0.5)).toBe(-1);
+    expect(placeOf('size', 0.1, Math.SQRT2)).toBeCloseTo(0.5, 10);
+    expect(placeOf('size', 0.1, 0)).toBe(-1);
+    expect(placeOf('size', 0.1, Infinity)).toBe(1);
+    expect(shade(0)).toBe('transparent');
+    expect(shade(-1)).toMatch(/^rgba\(70, 130, 230,/);
+    expect(shade(1)).toMatch(/^rgba\(240, 150, 40,/);
   });
 
   it('the weapon table: every combatant strike or heal, with its wielders', () => {

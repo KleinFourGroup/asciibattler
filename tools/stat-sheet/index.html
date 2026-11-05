@@ -35,12 +35,14 @@
         <div class="controls">
           <label>Group <select id="group"><option value="draftable">draftable units</option><option value="enemy">enemies (never drafted)</option></select></label>
           <label>Show <select id="which"><option value="base">base stats</option><option value="growth">growths</option></select></label>
+          <label>Colour <select id="colour"><option value="rank">by rank (percentile)</option><option value="size">by size (× the group's mean)</option></select></label>
         </div>
+        <p class="key"><span class="swatch lo"></span> below the middle · no colour at it · <span class="swatch hi"></span> above it; full colour at the bottom and top of the group by rank, or at half and double its mean by size. Colours both tables.</p>
         <table id="rank-table" class="sheet"></table>
       </section>
 
       <section class="card">
-        <h2>Weapons <span class="sub">every strike and heal, with who carries it</span></h2>
+        <h2>Weapons <span class="sub">every strike and heal, with who carries it; might, might a second, range and crit coloured among the strikes</span></h2>
         <table id="weapon-table" class="sheet"></table>
       </section>
     </main>

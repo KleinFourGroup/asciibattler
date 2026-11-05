@@ -492,3 +492,30 @@ dealt and 1.8 taken a second, 2.9 s and 17.5 s, as the headless
 Mars's empower 6.9 dealt; the ranks table marks the archer's row. *Not
 verified:* the page's look at the user's own window size, and every
 unit and sector in turn. Typecheck and lint clean.
+
+### 149f read in part, and the colours added (2026-11-05)
+
+The user on the duel card: "exactly what I was looking for! 😁" On the
+stats and weapons, they asked for a colour gradient against the mean or
+the median, with a toggle, green at the middle, red above and blue
+below. The session's counter, approved ("That all works perfectly"): a
+clear middle, blue below and orange above (a quiet middle lets the
+outliers stand out, red against green is the pair the common colour
+blindnesses lose, and neither colour reads as good or bad); the toggle
+by rank (the percentile, which is median-centred and puts a column of
+mostly zeros near the middle) or by size (over the group's mean on a log
+scale, full colour at half and double), since a median of 0 in the
+magic and ranged columns makes a ratio to it unbounded; might a second
+in the weapon table, with might, might a second, range and crit
+coloured among the strikes and the cooldown marked "high = slow"; and a
+key.
+
+Built: `tools/stat-sheet/colour.ts` (`placeOf`, `shade`), its test (17
+in all); `rankWithin` exported from `duel.ts` for the weapons; the page's
+Colour toggle, key and coloured cells. *Verified in the Browser pane*,
+by the cells' styles: 153 stat cells coloured (17 draftable units, 9
+stats) and 92 weapon cells; by rank the ronin's luck, 97th percentile,
+orange at 0.518 (0.94 × 0.55); by size the ronin's luck (3.05×) and the
+archer's ranged (3.40×) full orange, the archer's 0 magic full blue.
+*Not verified:* the look itself; the pane's screenshots timed out, so
+the colours on screen are the user's to read.

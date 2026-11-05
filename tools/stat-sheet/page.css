@@ -58,6 +58,26 @@ table.sheet tr.mine td {
   outline: 1px solid rgba(255, 210, 90, 0.6);
 }
 
+.key {
+  margin: 0 0 8px;
+  opacity: 0.85;
+}
+
+.swatch {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  vertical-align: -2px;
+}
+
+.swatch.lo {
+  background: rgba(70, 130, 230, 0.55);
+}
+
+.swatch.hi {
+  background: rgba(240, 150, 40, 0.55);
+}
+
 table.sheet td .pct {
   opacity: 0.65;
   font-size: 11px;

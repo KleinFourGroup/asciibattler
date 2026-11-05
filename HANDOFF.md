@@ -10,7 +10,7 @@ A fresh-session orientation for ASCIIbattler. Read this first; then dive into th
 - **In flight:** nothing on the box since 2026-11-03.
 - **The public build:** `0.3.0` (`273d587d`, tag `v0.3.0`), uploaded to itch.io on 2026-11-04; the uploads before it are in Closed rounds below.
 - **Snapshots:** WorldSnapshot **v39** (no player keeps one) · RunSnapshot **v50** (a v49 save, `0.1.1`'s, rejects).
-- **Tests:** **3947 main** in 272 files at `7aff81a9` (149f); **570 fuzz:smoke** in 59 files and **1 fuzz:jobs-parity** at `94cca56f` (146g); typecheck clean; the journal corpus, run by hand, 37 tests over 33 journals, re-recorded at 146e.
+- **Tests:** **3947 main** in 272 files at `7aff81a9` (149f); **574 fuzz:smoke** in 59 files and **1 fuzz:jobs-parity** at `6684b6a8` (150c); typecheck clean; the journal corpus, run by hand, 37 tests over 33 journals, re-recorded at 146e.
 - **Model id: `claude-opus-5-5`** since 2026-09-22. When yours differs, say so at the next stop; at the user's word, review AGENTS.md against the vendor's current prompting guidance and record the new id (the last review: `archive/post-104-worklog.md`, "The new-model tone audit").
 - **Last phase: §149**, the stat sheet, 2026-11-05: a read-only page at `/tools/stat-sheet/` (`archive/worklog-phase-149.md`, with §148, Round 11's kickoff). Round 10 and every round before it are in Closed rounds below.
 

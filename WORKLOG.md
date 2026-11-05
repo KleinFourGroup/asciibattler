@@ -336,3 +336,7 @@ is 149f's):
    mixed "all".
 6. *Toggles:* the idols' buffs (Mars today, the three idols after §151)
    and Escalation, which scales the level budget, both in at 149f.
+
+**Signed** (the user, 2026-11-05: "That looks good to me, Claude! 😁
+Signed!"): the cut and its reads, and the six calls at their leans.
+ROADMAP §149 holds the cut's lines.

@@ -49,6 +49,16 @@ read's protocol), each unit's gap named, with a planted failure; the page
 read by the user. **Scope guards:** no config number and no sim code
 moved; a hand against a wave as a team fight stays the sim's.
 
+The cut, signed 2026-11-05 with its six leans (WORKLOG §149):
+
+- ☐ **149a — the strike model** (`none`).
+- ☐ **149b — the editor's cadence** (`none`).
+- ☐ **149c — the check against play** (`none`; its result in the stop's
+  report).
+- ☐ **149d — the enemies** (`none`).
+- ☐ **149e — the duel, the ranks and the weapons** (`none`).
+- ☐ **149f — the page** (`stop`).
+
 ## Phase 150 — the board's instruments (signed 2026-11-05)
 
 Charter: BALANCE's header read for protocol text to demote to an

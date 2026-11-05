@@ -62,12 +62,14 @@ import type { UnitTemplate } from '../../../src/sim/Unit';
 import { scoredStrategy, maxPowerIndex, minPowerIndex } from '../strategies/scored';
 import { DEFAULT_SCORED_WEIGHTS } from '../strategies/scoredWeights';
 import { selectRedrawPositions } from '../redrawPolicy';
+import { selectEmpowerPosition } from '../empowerPolicy';
+import type { CandidateApply } from './evaluator';
 import {
   RunArbitrationDriver,
   type RunArbitrationConfig,
   type RunDecisionCandidate,
 } from './driver';
-import type { InnerTier } from './walker';
+import { DEFAULT_ROLLOUT_EMPOWER, DEFAULT_ROLLOUT_REDRAW, type InnerTier } from './walker';
 import type { RolloutSearchConfig } from '../../../src/bot/RolloutSearchDriver';
 import { campRaidEligible } from '../campRaid';
 import type { DecisionSite } from './sites';
@@ -258,6 +260,15 @@ export interface ArbitratedConfig {
    *  site's causal value under paired luck. Default true (the 85d
    *  shipping shape). */
   readonly campRaid?: boolean;
+  /** 150e — the null arm at the grant and fire sites (`--arb-null`).
+   *  'pass' (the default, the shipping arm): the null arm abstains, so a
+   *  grant passes and a packet stays banked unless a challenger beats
+   *  that by ε. 'nominee': the null arm is the doctrine's own pick, the
+   *  pick every rollout's walk already makes (the empower `level:hi`, the
+   *  redraw `level:2`, the base's fire), and abstaining is a challenger;
+   *  the node and event sites' rule (the base nominates the null arm)
+   *  extended to these four. The port site keeps its own null. */
+  readonly nullArm?: 'pass' | 'nominee';
   /** Resolution 4's swept exchange rate (default 0 — a board arm). */
   readonly bitsLambda?: number;
   /** 85c — λ_prior, the fold's board arm ({0, 0.5, 1}; `--prior-lambda`).
@@ -303,6 +314,7 @@ export function makeArbitratedStrategy(
   config: ArbitratedConfig = {},
 ): ArbitratedRunStrategy {
   const base = config.base ?? scoredStrategy('arb-base', DEFAULT_SCORED_WEIGHTS);
+  const nominee = config.nullArm === 'nominee';
   // 85b — the all-rollouts overlay (fires + future docks), composed into
   // EVERY spec via rollout.walkPolicies; sites override per call where a
   // coherence window demands suppression.
@@ -360,8 +372,8 @@ export function makeArbitratedStrategy(
     // presence flips the harness turn gates ON (59a) — the arbitrated arm
     // therefore always rides the gated path (RNG-aligned, H4b; the
     // doctrine arm ran gated anyway via --redraw/--empower).
-    pickPacketFire: (context, run, _rng) =>
-      arbitratePacketFire(driver, context, run, overlay),
+    pickPacketFire: (context, run, rng) =>
+      arbitratePacketFire(driver, context, run, overlay, nominee ? base : undefined, rng),
     // 70c — the daemon-pick site (reward lane; the port lane rides
     // pickPortBuy above).
     pickReward: (portion, run, _rng) =>
@@ -369,7 +381,7 @@ export function makeArbitratedStrategy(
     // 70d — the grant site (defining this routes the harness grant walk
     // here; the --redraw/--empower policy path is superseded for the arm).
     pickGrantAction: (grantIndex, run, rng) =>
-      arbitrateGrant(driver, grantIndex, run, rng),
+      arbitrateGrant(driver, grantIndex, run, rng, nominee),
     // 74g — the event-choice site (the doctrine's uniform-random pick is
     // the NOMINEE/null arm; see arbitrateEventChoice's header).
     pickEventChoice: (run, rng) => arbitrateEventChoice(driver, run, rng),
@@ -518,9 +530,11 @@ function arbitratePacketFire(
   context: UseContext,
   run: Run,
   overlay: Partial<FuzzStrategy>,
+  nomineeBase?: FuzzStrategy,
+  rng?: RNG,
 ): PacketFire | null {
   const challengers: RunDecisionCandidate[] = [];
-  const fires: PacketFire[] = [];
+  const fires: (PacketFire | null)[] = [];
   const seen = new Set<string>();
 
   for (let cacheIndex = 0; cacheIndex < run.cache.length; cacheIndex++) {
@@ -562,6 +576,32 @@ function arbitratePacketFire(
   }
 
   if (challengers.length === 0) return null;
+  // 150e — the nominee null (`nullArm: 'nominee'`): the base's own fire is
+  // the null arm and holding is a challenger. The base scans the cache in
+  // the same order with the same guards and targets, so its pick is one of
+  // the enumerated fires and leaves the challenger list for the null arm's
+  // place. A base that holds (or has no fire policy) leaves the pass null.
+  const nominee =
+    nomineeBase?.pickPacketFire !== undefined && rng !== undefined
+      ? nomineeBase.pickPacketFire(context, run, rng)
+      : null;
+  let nullOpts: { nullApply?: CandidateApply; nullLabel?: string } = {};
+  if (nominee !== null) {
+    const same = (f: PacketFire | null): boolean =>
+      f !== null &&
+      f.cacheIndex === nominee.cacheIndex &&
+      f.handIndex === nominee.handIndex &&
+      f.rosterIndex === nominee.rosterIndex;
+    const at = fires.findIndex(same);
+    if (at < 0) {
+      throw new Error(`arbitratePacketFire: the base's fire ${JSON.stringify(nominee)} is not among the enumerated fires`);
+    }
+    const [taken] = challengers.splice(at, 1);
+    fires.splice(at, 1);
+    nullOpts = { nullApply: taken!.apply, nullLabel: `nominee ${taken!.label}` };
+    challengers.push({ label: 'hold', apply: () => {} });
+    fires.push(null);
+  }
   // 85b — the own-gate exclusion (the port site's dock rule, fire
   // flavored): the walker's fire policy is suppressed for THIS decision's
   // context at THIS node — the null arm must mean "bank past this gate",
@@ -592,8 +632,9 @@ function arbitratePacketFire(
     // 85g1 — the candidate packet ids (fired-as-held keeps the term
     // neutral either way; the restriction kills off-key walk noise).
     priorItemKeys: [...seen].map((id) => `packet:${id}`),
+    ...nullOpts,
   });
-  return winner === null ? null : fires[challengers.indexOf(winner)]!;
+  return winner === null ? nominee : (fires[challengers.indexOf(winner)] ?? null);
 }
 
 /**
@@ -669,12 +710,13 @@ function arbitrateGrant(
   grantIndex: number,
   run: Run,
   rng: RNG,
+  nomineeMode = false,
 ): GrantAction | null {
   const grant = run.grantViews()[grantIndex];
   if (grant === undefined || grant.remaining <= 0) return null;
   const effect = grant.effect;
   const challengers: RunDecisionCandidate[] = [];
-  const actions: GrantAction[] = [];
+  const actions: (GrantAction | null)[] = [];
 
   if (effect.kind === 'redraw') {
     const hand = run.hand.map((i) => run.team[i]!);
@@ -711,13 +753,52 @@ function arbitrateGrant(
   }
 
   if (challengers.length === 0) return null;
+  // 150e — the nominee null (`nullArm: 'nominee'`): the doctrine policy's
+  // pick, the one every rollout's grant walk makes (`DEFAULT_ROLLOUT_*`),
+  // is the null arm and passing is a challenger. Its pick is among the
+  // enumerated candidates (the same selectors on the same hand; neither
+  // level policy draws), so it leaves the list for the null arm's place.
+  // A policy that passes leaves the pass null.
+  let nominee: GrantAction | null = null;
+  let nullOpts: { nullApply?: CandidateApply; nullLabel?: string } = {};
+  if (nomineeMode) {
+    const hand = run.hand.map((i) => run.team[i]!);
+    if (effect.kind === 'redraw') {
+      const pool = [...run.drawPile, ...run.discardPile].map((i) => run.team[i]!);
+      const positions = selectRedrawPositions(
+        hand,
+        pool,
+        { redrawsRemaining: grant.remaining, cardsRemaining: effect.maxCards },
+        DEFAULT_ROLLOUT_REDRAW,
+        rng,
+      );
+      if (positions.length > 0) nominee = { kind: 'redraw', handIndices: positions };
+    } else if (effect.kind === 'empower') {
+      const pos = selectEmpowerPosition(hand, { empowersRemaining: grant.remaining }, DEFAULT_ROLLOUT_EMPOWER, rng);
+      if (pos !== null) nominee = { kind: 'empower', handIndex: pos };
+    }
+  }
+  if (nominee !== null) {
+    const key = (a: GrantAction | null): string =>
+      a === null ? '' : a.kind === 'redraw' ? `redraw ${a.handIndices.join(',')}` : `empower ${a.handIndex}`;
+    const at = actions.findIndex((a) => key(a) === key(nominee));
+    if (at < 0) {
+      throw new Error(`arbitrateGrant: the doctrine's pick ${key(nominee)} is not among the enumerated candidates`);
+    }
+    const [taken] = challengers.splice(at, 1);
+    actions.splice(at, 1);
+    nullOpts = { nullApply: taken!.apply, nullLabel: `nominee ${taken!.label}` };
+    challengers.push({ label: 'pass', apply: () => {} });
+    actions.push(null);
+  }
   const winner = driver.decide(`grant:${effect.kind}`, run, challengers, {
     epsilon: GRANT_EPSILON,
     rollout: { redraw: { kind: 'none' }, empower: { kind: 'none' } },
     // 85g1 — grants acquire nothing: the prior term is pure walk noise here.
     priorItemKeys: [],
+    ...nullOpts,
   });
-  return winner === null ? null : actions[challengers.indexOf(winner)]!;
+  return winner === null ? nominee : (actions[challengers.indexOf(winner)] ?? null);
 }
 
 /**

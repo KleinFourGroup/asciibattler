@@ -223,6 +223,11 @@ export interface CliArgs {
   // the site's causal value under paired luck. Requires --arbitrate; a
   // run-mode ablation dial (refused with --search).
   campRaid?: string;
+  // 150e — the null arm at the grant and fire sites (`--arb-null=pass|nominee`,
+  // default pass): nominee makes the doctrine's own pick the null arm there
+  // and abstaining a challenger (ArbitratedConfig.nullArm). Requires
+  // --arbitrate; a run-mode dial (refused with --search).
+  arbNull?: string;
   // 84c — the §84 long-horizon shadow instrument (`--shadow-horizon[=run|N]`,
   // bare = 'run'): every sampled arbitrated decision's candidates ALSO walked
   // to the horizon as a separate decisions.csv record, plus the shadow-only
@@ -448,6 +453,9 @@ export function parseArgs(argv: readonly string[]): CliArgs {
       case '--camp-raid':
         if (v !== undefined) args.campRaid = v;
         break;
+      case '--arb-null':
+        if (v !== undefined) args.arbNull = v;
+        break;
       case '--arbitrate-tier':
         if (v !== undefined) args.arbitrateTier = v;
         break;
@@ -541,6 +549,9 @@ export function parseArgs(argv: readonly string[]): CliArgs {
   if (args.search && args.campRaid !== undefined) {
     throw new Error('--camp-raid is a run-mode ablation dial (not supported with --search)');
   }
+  if (args.search && args.arbNull !== undefined) {
+    throw new Error('--arb-null is a run-mode dial (not supported with --search)');
+  }
   if (args.search && args.priorTable !== undefined) {
     throw new Error('--prior-table is a run-mode dial (not supported with --search)');
   }
@@ -584,6 +595,16 @@ export function parseArgs(argv: readonly string[]): CliArgs {
     }
     if (!['on', 'off'].includes(args.campRaid)) {
       throw new Error(`--camp-raid must be on|off (got '${args.campRaid}')`);
+    }
+  }
+  // 150e — the null-arm dial, the same discipline: the arbitrated arm only,
+  // and only the two states parse.
+  if (args.arbNull !== undefined) {
+    if (!args.arbitrate) {
+      throw new Error('--arb-null requires --arbitrate (it dials the arbitrated grant and fire sites)');
+    }
+    if (!['pass', 'nominee'].includes(args.arbNull)) {
+      throw new Error(`--arb-null must be pass|nominee (got '${args.arbNull}')`);
     }
   }
   // 85-pre F3 (user-signed 2026-08-23, the 84b refusal class CLOSED):

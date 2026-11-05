@@ -210,6 +210,14 @@ export class RunArbitrationDriver {
        *  config carries λ_prior ≠ 0; `'all'` = the explicit opt-out —
        *  see `RunHoldingsPrior.itemKeys`). */
       readonly priorItemKeys?: readonly string[] | 'all';
+      /** 150e — the null arm's own apply, for a site whose null arm acts
+       *  (the base's nominee) rather than abstains; absent = apply nothing.
+       *  A null result still means "the null arm stands": the caller
+       *  dispatches what this apply does. */
+      readonly nullApply?: CandidateApply;
+      /** 150e — the null arm's label in the log (index 0); absent = 'null'.
+       *  Readers key the null arm on index 0, not on this label. */
+      readonly nullLabel?: string;
     } = {},
   ): RunDecisionCandidate | null {
     if (challengers.length === 0) return null;
@@ -247,9 +255,10 @@ export class RunArbitrationDriver {
       );
     }
 
-    const nullResult = this.evaluate(live, null, spec);
+    const nullApply = opts.nullApply ?? null;
+    const nullResult = this.evaluate(live, nullApply, spec);
     const results: RunCandidateResult[] = [nullResult];
-    const labels: string[] = ['null'];
+    const labels: string[] = [opts.nullLabel ?? 'null'];
     // Argmax over challengers: strictly-greater first-wins (the 57f tie
     // rule), then the ε gate against the null arm.
     let bestIdx = -1;
@@ -285,7 +294,7 @@ export class RunArbitrationDriver {
     // consume no driver RNG, so the sample gate below is the only other
     // branch and it reads a value already drawn.
     if (this.shadowHorizon !== undefined && this.shadowSite(site) && this.shadowSampled(pairs)) {
-      this.decisions.push(this.judgeLong(ctx, live, null, challengers, spec, epsilon));
+      this.decisions.push(this.judgeLong(ctx, live, nullApply, challengers, spec, epsilon));
     }
     return wins ? challengers[bestIdx]! : null;
   }

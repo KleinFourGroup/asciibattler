@@ -321,6 +321,58 @@ describe('arbitrated packet fires — mechanism pins (injected evaluator)', () =
     expect(rec.epsilon).toBe(FIRE_OUTOFBATTLE_EPSILON);
     expect(rec.chosenIndex).toBe(2);
   });
+
+  // 150e — a base that fires at every gate (all biases positive, the 92c2
+  // vector's shape), and one that never does.
+  const firing = scoredStrategy('fires', {
+    ...DEFAULT_SCORED_WEIGHTS,
+    fire: { bias: { normal: 1, elite: 1, boss: 1 }, cachePressure: 0 },
+  });
+  const holding = scoredStrategy('holds', {
+    ...DEFAULT_SCORED_WEIGHTS,
+    fire: { bias: { normal: -1, elite: -1, boss: -1 }, cachePressure: 0 },
+  });
+
+  it('150e — nominee null, fires: the base\'s fire is the null arm and hold a challenger', () => {
+    const run = atTurnIntro(['hype', 'discard-one']);
+    const expected = expectedFireLabels(run, 'preTurn');
+    expect(expected).toHaveLength(2);
+    // The base fires the first usable packet in cache order: hype, at the
+    // max-power hand card.
+    const h = maxPowerIndex(run.hand.map((slot) => run.team[slot]!))!;
+    const hypeAt = run.cache.indexOf('hype');
+    const tie = makeArbitratedStrategy(SEED, {
+      base: firing,
+      nullArm: 'nominee',
+      evaluate: sequenceEvaluator([0, 0, 0]),
+    });
+    expect(tie.pickPacketFire!('preTurn', run, null as never)).toEqual({ cacheIndex: hypeAt, handIndex: h });
+    const rec = tie.driver.decisions[0]!;
+    expect(rec.labels).toEqual([`nominee fire hype@hand:${h}`, ...expected.filter((l) => !l.startsWith('fire hype')), 'hold']);
+    expect(rec.chosenIndex).toBe(0);
+    // Hold clearing ε banks the packet.
+    const banking = makeArbitratedStrategy(SEED, {
+      base: firing,
+      nullArm: 'nominee',
+      evaluate: sequenceEvaluator([0, 0, 1000]),
+    });
+    expect(banking.pickPacketFire!('preTurn', run, null as never)).toBeNull();
+  });
+
+  it('150e — a base that holds leaves the pass null; the default ignores the base\'s fire', () => {
+    const run = atTurnIntro(['hype', 'discard-one']);
+    const expected = expectedFireLabels(run, 'preTurn');
+    const held = makeArbitratedStrategy(SEED, {
+      base: holding,
+      nullArm: 'nominee',
+      evaluate: sequenceEvaluator([0, 0, 0]),
+    });
+    expect(held.pickPacketFire!('preTurn', run, null as never)).toBeNull();
+    expect(held.driver.decisions[0]!.labels).toEqual(['null', ...expected]);
+    const shipped = makeArbitratedStrategy(SEED, { base: firing, evaluate: sequenceEvaluator([0, 0, 0]) });
+    expect(shipped.pickPacketFire!('preTurn', run, null as never)).toBeNull();
+    expect(shipped.driver.decisions[0]!.labels).toEqual(['null', ...expected]);
+  });
 });
 
 describe('the pickReward chokepoint (70c) — harness contracts', () => {
@@ -542,6 +594,65 @@ describe('arbitrated grants — mechanism pins (injected evaluator)', () => {
     const rec = arm.driver.decisions[0]!;
     expect(rec.site).toBe('grant:empower');
     expect(rec.labels).toEqual(['null', ...Array.from({ length: handLen }, (_v, i) => `empower hand:${i}`)]);
+  });
+
+  it('150e — nominee null, empower: the level:hi pick is the null arm and pass a challenger', () => {
+    const run = grantedTurnIntro();
+    const gi = grantIndexOf(run, 'empower');
+    const hand = run.hand.map((i) => run.team[i]!);
+    expect(hand.length).toBeGreaterThan(1);
+    // level:hi restated: the highest level, the lowest position on a tie.
+    let hi = 0;
+    hand.forEach((u, i) => {
+      if (u.level > hand[hi]!.level) hi = i;
+    });
+    const others = hand.map((_u, i) => i).filter((i) => i !== hi);
+    // A tie keeps the null arm, so the live action is doctrine's own.
+    const tie = makeArbitratedStrategy(SEED, {
+      nullArm: 'nominee',
+      evaluate: sequenceEvaluator(Array(hand.length + 1).fill(0)),
+    });
+    expect(tie.pickGrantAction!(gi, run, null as never)).toEqual({ kind: 'empower', handIndex: hi });
+    const rec = tie.driver.decisions[0]!;
+    expect(rec.labels).toEqual([`nominee empower hand:${hi}`, ...others.map((i) => `empower hand:${i}`), 'pass']);
+    expect(rec.chosenIndex).toBe(0);
+    // Pass, the last challenger, clearing ε: the grant goes unspent.
+    const scores = Array(hand.length + 1).fill(0);
+    scores[hand.length] = 1000;
+    const passing = makeArbitratedStrategy(SEED, { nullArm: 'nominee', evaluate: sequenceEvaluator(scores) });
+    expect(passing.pickGrantAction!(gi, run, null as never)).toBeNull();
+    expect(passing.driver.decisions[0]!.chosenIndex).toBe(hand.length);
+  });
+
+  it('150e — nominee null, redraw: the level:2 pick is the null arm; the default stays pass', () => {
+    const run = grantedTurnIntro();
+    const gi = grantIndexOf(run, 'redraw');
+    const grant = run.grantViews()[gi]!;
+    if (grant.effect.kind !== 'redraw') throw new Error('unreachable');
+    const hand = run.hand.map((i) => run.team[i]!);
+    const pool = [...run.drawPile, ...run.discardPile].map((i) => run.team[i]!);
+    // The doctrine row's own policy, `--redraw=level:2`.
+    const doctrine = selectRedrawPositions(
+      hand,
+      pool,
+      { redrawsRemaining: grant.remaining, cardsRemaining: grant.effect.maxCards },
+      { kind: 'level', cards: 2 },
+      null as never,
+    );
+    expect(doctrine.length).toBeGreaterThan(0);
+    const arm = makeArbitratedStrategy(SEED, {
+      nullArm: 'nominee',
+      evaluate: sequenceEvaluator(Array(4).fill(0)),
+    });
+    expect(arm.pickGrantAction!(gi, run, null as never)).toEqual({ kind: 'redraw', handIndices: doctrine });
+    const rec = arm.driver.decisions[0]!;
+    expect(rec.labels[0]).toMatch(new RegExp(`^nominee redraw level:[12] \\[${doctrine.join(',')}\\]$`));
+    expect(rec.labels[rec.labels.length - 1]).toBe('pass');
+    // The dial's default: the null arm abstains, as shipped.
+    const shipped = makeArbitratedStrategy(SEED, { evaluate: sequenceEvaluator(Array(4).fill(0)) });
+    expect(shipped.pickGrantAction!(gi, run, null as never)).toBeNull();
+    expect(shipped.driver.decisions[0]!.labels[0]).toBe('null');
+    expect(shipped.driver.decisions[0]!.labels).not.toContain('pass');
   });
 
   it('grant-site rollouts force the walker grant policies OFF; other sites do not', () => {

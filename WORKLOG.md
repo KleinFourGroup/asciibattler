@@ -295,3 +295,37 @@ the same HEAD. ROADMAP gains 150e (the flag, `none`, its byte-identity
 with the flag off the oracle) and 150f (the cohort, `stop`: the paired
 deltas, and whether the flag becomes the default, which moves every ARM
 row).
+
+### 150e — the nominee null behind a flag (2026-11-05)
+
+*Step zero:* the driver evaluated the null arm as "apply nothing" with no
+hook for another; the base's fire (`pickPacketFireScored`) and both level
+grant policies draw no RNG, so naming the nominee costs the run's streams
+nothing; the doctrine policies the rollouts walk with are
+`DEFAULT_ROLLOUT_REDRAW` (`level:2`) and `DEFAULT_ROLLOUT_EMPOWER`
+(`level:hi`), the same as the doctrine rows' flags; both board vectors
+(92c2 and 59-regen) carry a fire group. `--jobs` children take the
+parent's argv, so a run-mode dial reaches them unchanged.
+
+Built: `decide` takes an optional `nullApply` and `nullLabel` (the log's
+readers key the null arm on index 0, not its label); `ArbitratedConfig`
+gains `nullArm: 'pass' | 'nominee'` (default pass); under `nominee` the
+grant site's null arm is the doctrine policy's pick and `pass` a
+challenger, the fire site's null arm is the base's fire and `hold` a
+challenger, each nominee taken out of the challenger list it is part of
+(a throw if it is not, which no run hit). A base that holds, or a policy
+that passes, leaves the pass null. The CLI dial is `--arb-null=pass|nominee`
+(requires `--arbitrate`, refused with `--search`, the launch line naming
+it). The port site keeps its null.
+
+*Pins:* the empower and redraw nominees against the doctrine selectors
+(level:hi restated in the test), a tie keeping the nominee, pass and hold
+winning past ε, a holding base and the default leaving the logs as
+shipped; the dial's parse and guards. *Control:* with the dial planted
+off, the three nominee pins fail. *The oracle:* the ARM on act 1 deploy
+(3 seeds), act 1 regen (2) and the walk on deploy (2), captured at
+`64fed7f8` from a detached worktree and again on the new code with the
+dial off: summary, decisions, rosters and pacing byte-identical, 10 of
+10. Its control, the same shapes with `--arb-null=nominee`: 10 of 10
+differ, the empower nominee standing on 187 of 195 asks and the redraw's
+on 56 of 59. `scratch/150/oracle.sh` and `compare.sh` ran it.

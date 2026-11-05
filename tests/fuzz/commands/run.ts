@@ -117,6 +117,7 @@ export type RunModeArgs = Pick<
   | 'arbitrateTier'
   | 'priorLambda'
   | 'campRaid'
+  | 'arbNull'
   | 'shadowHorizon'
   | 'shadowSample'
   | 'set'
@@ -356,6 +357,8 @@ export function runRunCli(args: RunModeArgs): void {
   const wrapStrategy = arbitratedWrapFromArgs(args, {
     // 85g6a — the campRaid causal-arm dial (validated in args.ts: on|off).
     ...(args.campRaid === 'off' ? { campRaid: false } : {}),
+    // 150e — the null-arm dial (validated in args.ts: pass|nominee).
+    ...(args.arbNull === 'nominee' ? { nullArm: 'nominee' as const } : {}),
     // 84c — the long-horizon shadow instrument (validated in args.ts:
     // 'run' | integer ≥ 1; refused on run-shape probes; sample ≥ 1).
     ...(args.shadowHorizon !== undefined
@@ -375,6 +378,7 @@ export function runRunCli(args: RunModeArgs): void {
       : '';
   const priorNote = args.priorLambda !== undefined ? ` prior-lambda=${args.priorLambda}` : '';
   const campNote = args.campRaid === 'off' ? ' camp-raid=OFF' : '';
+  const nullNote = args.arbNull === 'nominee' ? ' arb-null=NOMINEE' : '';
   // 85-pre F2, generalized at 85b: the walk-policy overlay composes the
   // BASE's fire policy into EVERY rollout now (not just shadow long
   // walks) — a fire-group-less base (the default vector) composes no
@@ -398,7 +402,7 @@ export function runRunCli(args: RunModeArgs): void {
   const timingRows: string[] = [];
   for (const strategy of strategies) {
     process.stdout.write(
-      `Running ${seeds.length} seeds with strategy '${nameFor(strategy)}'${layoutNote}${encounterNote}${hopsNote}${rosterNote}${daemonNote}${characterNote}${scriptsNote}${shadowNote}${priorNote}${campNote}…\n`,
+      `Running ${seeds.length} seeds with strategy '${nameFor(strategy)}'${layoutNote}${encounterNote}${hopsNote}${rosterNote}${daemonNote}${characterNote}${scriptsNote}${shadowNote}${priorNote}${campNote}${nullNote}…\n`,
     );
     for (const s of seeds) {
       // 85g3 — the per-seed wrap + the 71a decisions harvest both live

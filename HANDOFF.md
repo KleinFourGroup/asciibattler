@@ -6,7 +6,7 @@ A fresh-session orientation for ASCIIbattler. Read this first; then dive into th
 
 **The ONE home for live status.** Other docs (and the agent memory) point here instead of restating it; when state changes, this section is the single place that updates.
 
-- **NEXT — ROUND 11 (The roster): §148, act 1's cost target per kind, at its stop** (WORKLOG §148); then §149, the stat sheet's kickoff. The spec ([round-11-spec.md](round-11-spec.md)) and the phases §149 to §156 signed 2026-11-05 ([ROADMAP.md](ROADMAP.md)). **Open ◐:** none.
+- **NEXT — ROUND 11 (The roster): §148, act 1's cost target per kind, at its stop** (WORKLOG §148); then §149, the stat sheet's kickoff. The spec ([round-11-spec.md](round-11-spec.md)) and the phases §149 to §156 signed 2026-11-05 ([ROADMAP.md](ROADMAP.md)). **Open ◐:** act 1's cost target.
 - **In flight:** nothing on the box since 2026-11-03.
 - **The public build:** `0.3.0` (`273d587d`, tag `v0.3.0`), uploaded to itch.io on 2026-11-04; the uploads before it are in Closed rounds below.
 - **Snapshots:** WorldSnapshot **v39** (no player keeps one) · RunSnapshot **v50** (a v49 save, `0.1.1`'s, rejects).

@@ -29,7 +29,8 @@ cut and the user's to sign.
 - ☑ **The spec and the phases** — signed 2026-11-05: the spec
   ([round-11-spec.md](round-11-spec.md)) and §149 to §156 below, with
   the stat sheet added as §149 (WORKLOG §148).
-- ☐ **Act 1's cost target per kind** (`stop`), on the pool as it is now.
+- ◐ **Act 1's cost target per kind** (`stop`), on the pool as it is now:
+  put to the user (WORKLOG §148).
 
 ## Phase 149 — the stat sheet (signed 2026-11-05)
 

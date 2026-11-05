@@ -147,3 +147,52 @@ Claude! 😁 Signing everything!"): the spec, the phases §149 to §156 with
 the stat sheet first, and the sheet's shape above. The sheet's open
 questions go to §149's kickoff (the spec's tranche 2). Next: act 1's
 cost target per kind, put to the user.
+
+### Act 1's cost target per kind, put to the user (2026-11-05, session 65cfb3a3)
+
+The data: 146f's two ARM walk rows, 120 runs each
+(`output/board-runs/146f/arb-walk-{deploy,regen}/pacing.csv`, the
+`playerCostPerInstance` column), by kind with
+`scratch/148/kind-cost.mjs`. Its per-encounter values are BALANCE's
+2026-11-03 table (the cats 19.94, the Vermin Lords 2.67; the elite mean
+12.67 is their instance-weighted mean). The brigands are in act 1's and
+act 2's pools and pooled in the file.
+
+| kind (act 1) | instances a run, deploy / regen | mean pool an instance | range by encounter |
+|---|---|---|---|
+| boss | 0.97 / 0.82 | 19.1 / 18.1 | 16.1 to 20.0 |
+| elite | 0.47 / 0.74 | 12.7 / 13.6 | 1.7 (the Vermin Lords) to 22.5 (the cats) |
+| normal | 2.95 to 4.14 / 4.25 to 5.62 | 3.6 to 4.1 | 0.02 (the rats' nest) to 9.45 (the poachers) |
+
+The pool is 40, and seam 1 is signed at 0.475 to 0.55 of it (146g),
+read at 21.0 / 19.9. BALANCE's guide (normal ≈ 3, elite ≈ 6, boss ≈ 10)
+was set at X3 with a pool of 20, in ratios 1 : 2 : 3.3.
+
+*The arms.*
+
+- **(A) The guide doubled with the pool: 6 / 12 / 20.** The elites and
+  bosses match it now. The normals sit at about 4, and raising them by 2
+  costs act 1 about 6 to 11 more pool a walk (3 to 5 normals a walk).
+  That takes the seam from about 21 to about 9 to 15, outside its
+  signed band.
+- **(B) X3's ratios, with act 1's total kept: about 5 / 10 / 16.5.**
+  This eases the bosses, which the wall signed at 146g reads, and halves
+  the cats.
+- **(C), the lean: the kinds where act 1 has them, rounded to shares of
+  the pool. Normal 10 %, elite 30 %, boss 50 % (4, 12 and 20 at 40),
+  each fight within half to one and a half times its kind's target.**
+  It keeps act 1's total, and with it the signed seam and wall. The
+  target then does what 146e asked of it: it catches the fights priced
+  apart from their kind. Out of band at 146f: the rats' nest (0.02 /
+  0.09 against 2 to 6), the wolfpack (1.84 / 1.58, just under), the
+  poachers (9.45 / 9.41, over 6), the cats (19.94 / 22.51, over 18) and
+  the Vermin Lords (2.67 / 1.66, under 6). Moving each to its band's
+  near edge changes act 1's pool a walk by under 1 on the deploy row
+  (the rats' nest +1.4, the wolfpack +0.1, the poachers −2.1, the cats
+  −0.5, the Vermin Lords +0.7). Its ratios are 1 : 3 : 5, not X3's, as
+  the normals did not double with the pool. Shares rather than points,
+  since §153's power and pools may move the scale.
+
+Read at §153 after the weapons, then on the closing board. On the sign,
+the target replaces the X3 guide in BALANCE's "Per-kind target bands",
+and TODO's row points at it.

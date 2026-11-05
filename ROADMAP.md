@@ -69,7 +69,7 @@ The cut, signed 2026-11-05 with its four calls (WORKLOG §150): no
 snapshot bump, no RNG stream, no config change, no box unless 150d's stop
 sizes one.
 
-- ☐ **150a — BALANCE's header** (`none`): sections no longer worked from to an archive, a pointer each, the cap kept.
+- ☑ **150a — BALANCE's header** (`none`): three Phase X sections to `archive/balance-header.md`, 700 lines to 642.
 - ☐ **150b — the ceiling deltas** (`none`): on the shared seeds, pinned where paired and pooled differ.
 - ☐ **150c — the skill gradient's leg** (`none`): an exact sign test on the shared seeds, a tie fine, BALANCE's words.
 - ☐ **150d — the arbitration's walk loss** (`stop`): the decision log by site and by hops remaining, as rates by hop; where the loss sits and a fix's scope, or the box run that would tell.

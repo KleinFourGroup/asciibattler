@@ -118,3 +118,25 @@ disagree (the walk-loss read's test, on 150b's per-seed join), one-sided
 at p < 0.05, a tie fine. The user signed "fully"; the session reads that
 as the cut as put, call 3 by the sign test, and names the reading at
 150d's stop.
+
+### 150a — BALANCE's header (2026-11-05)
+
+*Step zero:* no doc or code links into a header section by anchor;
+the sections named elsewhere by title (Protocol v2, the consumption
+table, the shipping checklist, the pool-ratio confound, the dwm leak)
+stay. Moved, verbatim, to `archive/balance-header.md` with a pointer
+where each stood: What changed (21 lines, the Phase X turn to authored
+encounters), the funnel + tiers (28, the X sweep's funnel and the
+`--preset` table, whose live sizes are `PRESETS` in
+`tests/fuzz/search.ts`) and Mechanics (19, the X sweep's internals,
+its overfitting rules restated by the 5-step loop's step 5). The header
+went from 700 lines to 642, 58 under the cap.
+
+Kept, though weighed: the consumption contract's table (the instrument
+registry, user-signed, names it the authoritative list, so moving it
+would edit a signed row); the dwm leak (a live caution for a local
+`--jobs` run with no other home); Caveats (the enforceable list, worked
+from). *Oracle:* every line of the old header is in the new header or
+the archive, the two repointed links and the heading levels aside; a
+planted control (one moved line dropped) reads one line lost. The docs
+test is green (20). `scratch/150/move-header.mjs` did the move.

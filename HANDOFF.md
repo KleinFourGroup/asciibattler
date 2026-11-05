@@ -6,7 +6,7 @@ A fresh-session orientation for ASCIIbattler. Read this first; then dive into th
 
 **The ONE home for live status.** Other docs (and the agent memory) point here instead of restating it; when state changes, this section is the single place that updates.
 
-- **NEXT — ROUND 11 (The roster): §149, the stat sheet, its kickoff** ([ROADMAP.md](ROADMAP.md) §149; the spec, [round-11-spec.md](round-11-spec.md)). **Open ◐:** none.
+- **NEXT — ROUND 11 (The roster): §149, the stat sheet, its cut at its stop**: 149a to 149f and six calls put to the user (WORKLOG §149; [ROADMAP.md](ROADMAP.md) §149; the spec, [round-11-spec.md](round-11-spec.md)). **Open ◐:** none.
 - **In flight:** nothing on the box since 2026-11-03.
 - **The public build:** `0.3.0` (`273d587d`, tag `v0.3.0`), uploaded to itch.io on 2026-11-04; the uploads before it are in Closed rounds below.
 - **Snapshots:** WorldSnapshot **v39** (no player keeps one) · RunSnapshot **v50** (a v49 save, `0.1.1`'s, rejects).

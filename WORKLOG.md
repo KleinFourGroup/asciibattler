@@ -204,3 +204,135 @@ it in the X3 section's eleven lines, since the header sits at its
 is an 83f candidate is kept in a clause. TODO's Round 11 row names the
 five fights out of band and §153's read. §148's lines are all ticked;
 next, §149's kickoff.
+
+## Phase 149 — the stat sheet
+
+### The kickoff's audit, and the cut put to the user (2026-11-05, session 65cfb3a3)
+
+Read at `503e1c1d`. A read-only subagent mapped the strike pipeline with
+files and lines; spot-checked here against the code: `World.ts:706-711`,
+`interpreter.ts:195-198`, `resolveScalars.ts:37-44`, `leveling.ts:48-52`
+and `:72-84`, `wave.ts:163-166` and `:205-210`, `timeline.ts:37-41`,
+the archetype editor's `editor.ts:641-644`, `Run.ts:2498`,
+`sectors.ts:225-230`, `config/stats.json`, and the two +2 defense
+grants in `config/daemons.json` and `config/packets.json`.
+
+**A strike, as the game deals it.** The base is `might` plus the scaling
+stat (`resolveDamageScalars`, `src/sim/effects/resolveScalars.ts:37-44`,
+pure and importable, which also gives the crit chance:
+`critBase + luck × 0.01`, capped at 0.6). The crit is rolled inline
+(`interpreter.ts:196-197`, damage `round(base × 2)` on a crit), and
+defense is subtracted inline after it, floored at 1
+(`World.ts:708-710`, skipped under `bypassDefense`). No other draw: every
+strike lands. So a strike's expected damage against defense D is
+`(1−p)·max(1, B−D) + p·max(1, 2B−D)`, and no one function computes it;
+the model writes the last two steps itself, which is what the check
+below tests.
+
+**Timing.** A strike every `resolveCadenceTicks(def, speed)` ticks at 20
+ticks a second (`timeline.ts:37-41`; `src/config.ts`): the cooldown
+scaled by `max(0.4, 1 − 0.05 × speed)` when `speedScaled`. The phases
+of a strike (wind-up, travel) sit inside the cadence, so they delay the
+first hit and not the rate. *A finding:* the archetype editor's preview
+uses `attackCooldownTicksFor` whatever `speedScaled` says
+(`editor.ts:643`), so it shows the dash's flat cooldown scaled by speed.
+
+**One weapon each.** Every combatant carries one ability at priority 10,
+its weapon; the rogue's and the fox's dash (priority 5) and the
+officer's inspire (0) deal no damage (`config/units.json`,
+`config/abilities.json`, read by script). So "the main attack" covers
+every unit, and the open part is the weapons' riders. Area spells roll
+one crit for every victim and take a ring multiplier off the centre;
+chain lightning falls off a jump at a time. Damage over time ticks
+`might × magnitude` with no crit (burn: 2 a second for 4 s, past
+defense). By the subagent's reading a 4 s burn ticks 3 times, not 4;
+it said itself that this is unverified, and no test pins it. The
+healer heals; the shaman summons; the warlock and the banshee only
+apply statuses.
+
+**Levels.** A player unit's level-up adds 1 to a stat with its growth as
+the chance (`leveling.ts:50-51`), so its expected stat at level L is
+`base + growth × (L−1)`, unrounded. An enemy is built on the rounded
+path, `base + round(growth × (L−1))` (`scaleStats`, `:72-84`, through
+`scaledUnit`), so the sheet uses that path for enemies, as the game
+fields them. HP is constitution (`hpPerConstitution` 1.0). Only defense
+reduces a strike by default; the `warded` daemon and the `shield` packet
+add 2 on the player's side.
+
+**Waves.** A wave's count is `round(factor × handSize)` and its level
+budget `round(factor × the hand's mean level × handSize)`, the levels
+split by weight from 1 up, with one shuffle for ties (`wave.ts:163-210`,
+`:284-298`). The hand is `min(team, drawAmount)`, 6 by default
+(`Run.ts:2498`, `config/deck.json`). A node's encounter is drawn by
+weight from its sector's pool for its kind, filtered by `minHop`
+(`src/config/sectors.ts:225-230`, `selection.ts:115`). The sheet can
+call the game's `resolveWave` and `scaledUnit` with its own `RNG` seeds,
+so its enemies cannot drift from the game's and it draws on no stream of
+the game's.
+
+**The check against play.** §139's `scratch/139/swing.ts` wraps
+`World.applyDamage` and records each swing's damage and the target's
+defense, at about 4 minutes a bot on this machine (BALANCE 2026-10-28).
+Extended to record the swing's base and crit chance, it gives a known
+answer for the model's expectation that the model does not compute:
+the sim's own inline crit, defense and floor, over many swings.
+
+**The cut** (each step one commit; no snapshot bump, no RNG stream, no
+`src/` or `config/` change, so the fuzz smoke does not fire; no box):
+
+- **149a — the strike model** (`none`). `tools/stat-sheet/model.ts`: a
+  player unit's expected stats at a level, an enemy's by `scaledUnit`,
+  HP, the cadence by `resolveCadenceTicks`, and a strike's expected
+  damage and DPS against a target. Exit: pinned in
+  `tests/tools/stat-sheet.test.ts` on cases worked by hand from the raw
+  config, each with a planted failure (the floor dropped; defense
+  before the crit).
+- **149b — the editor's cadence** (`none`). The archetype editor's
+  preview through `resolveCadenceTicks`. Exit: the dash's cadence flat
+  under speed, pinned, with the old line failing it.
+- **149c — the check against play** (`none`, its result in the stop's
+  report). `scratch/149/swing.ts`, §139's probe recording each swing's
+  base, crit chance and target defense, run at HEAD on both bots. Per
+  unit, the measured damage a swing against the model's expectation on
+  the same inputs, within three standard errors on rows of at least
+  1,000 swings, with a planted model error failing it. Also per unit,
+  swings a second alive in battle against the cadence: the standing
+  sheet's gap to play, named and not gated. The numbers go to BALANCE's
+  run log.
+- **149d — the enemies** (`none`). A sector's fielded enemies for a hand
+  of 6 at level L and a kind: each encounter by its pool weight, its
+  waves through `resolveWave` over 200 seeds, each enemy type's share
+  and mean level. Exit: one encounter's counts and level budget pinned
+  against its config worked by hand, with a planted failure.
+- **149e — the duel, the ranks and the weapons** (`none`). Per enemy
+  type, DPS dealt and received and time to kill both ways, then
+  weighted means; each stat and growth ranked; the weapon table (might,
+  scaling, cadence, range, crit, riders). Riders, heals and the units
+  with no strike as the calls below decide. Exit: pinned on cases worked
+  by hand.
+- **149f — the page** (`stop`). `tools/stat-sheet/` beside the editors,
+  at `http://localhost:5173/tools/stat-sheet/` on the dev server:
+  archetype, level, sector and kind; the toggles the calls keep; the
+  three tables. The user reads whether it answers their questions.
+
+*Why this order:* the model before what is built on it, and the check
+before the enemies and the duel multiply it out; the page last, so its
+look is read on numbers already pinned (headless first, render second).
+
+**The calls, with the session's leans** (tranche 1; the page's layout
+is 149f's):
+
+1. *The cut and its reads* as above.
+2. *Expected stats:* a player unit's unrounded (the exact expectation),
+   an enemy's on the game's rounded path.
+3. *Past the strike:* damage over time in, as damage a second while it
+   is kept up, its tick count pinned against the sim first; an area
+   attack per target hit, its centre's damage; chain lightning's first
+   target; a heal-a-second column for the healer; the shaman, the
+   warlock and the banshee listed with no DPS.
+4. *The ranks:* draftable units and enemies ranked apart, each stat and
+   growth as a percentile and as a share of its group's mean.
+5. *Kind:* an input (normal, elite or boss), normal by default, with no
+   mixed "all".
+6. *Toggles:* the idols' buffs (Mars today, the three idols after §151)
+   and Escalation, which scales the level budget, both in at 149f.

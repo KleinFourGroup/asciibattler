@@ -12,7 +12,7 @@ with its spec, its per-phase worklogs (`archive/worklog-phase-142.md` to
 `-147.md`) and its session reports beside it; before it
 [archive/post-133-roadmap.md](archive/post-133-roadmap.md) (Round 9).
 
-**Status: Round 11 under way; §149, the stat sheet, is next.** The spec
+**Status: Round 11 under way; §150, the board's instruments, is next.** The spec
 is [round-11-spec.md](round-11-spec.md), signed 2026-11-05. The charter,
 the decision points, the exit and the scope guards are in META-ROADMAP
 §"Round 11 — The roster"; its riders are TODO's "Round 11".
@@ -20,7 +20,7 @@ the decision points, the exit and the scope guards are in META-ROADMAP
 ## Phase 148 — the kickoff ✅ (closed 2026-11-05)
 
 The spec, the phases and act 1's cost target, each signed by the user
-(WORKLOG §148).
+(WORKLOG §148, in `archive/worklog-phase-149.md`).
 
 - ☑ **The spec and the phases** — signed 2026-11-05: the spec
   ([round-11-spec.md](round-11-spec.md)) and §149 to §156 below, with
@@ -29,27 +29,14 @@ The spec, the phases and act 1's cost target, each signed by the user
   elite 30 %, boss 50 % of the pool, each fight within ½× to 1½×
   (BALANCE "Per-kind target bands").
 
-## Phase 149 — the stat sheet (signed 2026-11-05)
+## Phase 149 — the stat sheet ✅ (closed 2026-11-05)
 
-Charter: a page beside the editors in `tools/` that ranks each
-archetype's base stats and growths against the others and tables the
-weapons, and gives a unit's maximum DPS dealt and received, with time to
-kill both ways. Its inputs are an archetype, a level and a sector: a full
-hand at that level resolves the sector's waves through the game's own
-`resolveWave`, the damage is computed against each fielded enemy type and
-then averaged, and range is ignored. The model is built headless first
-and pinned in Vitest, then the page. **Why here:** the weapons' taste
-stops are read through it; first, so the user uses it while §150 runs.
-**Risk:** low-medium: the page is front-end, and the model's check is the
-risk. **Decision points:** at its kickoff, abilities past the main
-attack, a heal-per-second column, the idols as a toggle, Escalation as
-an input, the check's tolerance; the page's look (a stop). **Exit:** the
-model's damage a swing checked against in-play damage a swing (the swing
-read's protocol), each unit's gap named, with a planted failure; the page
-read by the user. **Scope guards:** no config number and no sim code
-moved; a hand against a wave as a team fight stays the sim's.
-
-The cut, signed 2026-11-05 with its six leans (WORKLOG §149):
+A read-only page at `/tools/stat-sheet/`: a unit's duel at a level with a
+sector's fielded enemies through the game's own wave and strike code, its
+stats, growths and weapon ranked and coloured; the strike model within
+three standard errors of play on 24 of 24 rows, play striking at 0.15 to
+0.36 of the standing rate (WORKLOG §149, in `archive/worklog-phase-149.md`;
+BALANCE 2026-11-05).
 
 - ☑ **149a — the strike model** (`none`): pinned on the raw config, three planted mistakes caught.
 - ☑ **149b — the editor's cadence** (`none`): through `resolveCadenceTicks`; latent, no shipped preview moves.
@@ -57,7 +44,7 @@ The cut, signed 2026-11-05 with its six leans (WORKLOG §149):
   three standard errors; play strikes at 0.15 to 0.36 of the standing rate.
 - ☑ **149d — the enemies** (`none`): through `waveForTurn` and `resolveWave`; two planted mistakes caught.
 - ☑ **149e — the duel, the ranks and the weapons** (`none`): the status ticks pinned against the sim (a 4 s burn ticks 3 times).
-- ◐ **149f — the page** (`stop`): built, at the user's read.
+- ☑ **149f — the page** (`stop`): signed 2026-11-05, with its colours.
 
 ## Phase 150 — the board's instruments (signed 2026-11-05)
 

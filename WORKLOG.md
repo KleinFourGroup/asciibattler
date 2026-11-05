@@ -329,3 +329,57 @@ dial off: summary, decisions, rosters and pacing byte-identical, 10 of
 10. Its control, the same shapes with `--arb-null=nominee`: 10 of 10
 differ, the empower nominee standing on 187 of 195 asks and the redraw's
 on 56 of 59. `scratch/150/oracle.sh` and `compare.sh` ran it.
+
+### 150f — the cohort (2026-11-05, at its stop)
+
+The box ran `output/box-batches/150f-nominee.queue` at `66e221f1` (clean
+tree, every batch seeds 1 to 40; cpx42, `--jobs=8`; 19:47 to 21:03 UTC,
+the box destroyed): the four ARM rows with `--arb-null=nominee` and the
+four doctrine controls, each with the board's own argv. Batches
+`20261105-194749` (arb-deploy), `-195455` (arb-regen), `-200324`
+(arb-walk-deploy), `-202613` (arb-walk-regen), `-204503` (deploy),
+`-204721` (regen), `-204943` (walk-deploy), `-205611` (walk-regen), all
+`-66e221f1`. Read by `scratch/150/cohort-read.ts` (the board's own
+`deltaValue`, the reader first checked against 146f's known figures) and
+`scratch/150/walk-loss.mjs`; the output is in `scratch/150/out/`.
+
+*The doctrine controls* match 146f's on every seed (0 of 160 outcomes
+differ), so the stretch from 146f's commit to this one did not move the
+doctrine arm, and the cohort's rows compare with 146f's on the seed.
+
+*The ceiling deltas on the shared seeds, nominee ARM minus doctrine at
+the same HEAD,* against 146f's pass ARM:
+
+| shape | now | split (ARM alone : doctrine alone) | 146f |
+|---|---|---|---|
+| act 1, regen | 0.000 | 1 : 1 | −0.200 (0 : 8) |
+| act 1, deploy | +0.025 | 2 : 1 | −0.150 (0 : 6) |
+| walk, regen | +0.225 | 12 : 3 (p 0.018) | −0.075 (2 : 5) |
+| walk, deploy | −0.025 | 8 : 9 | −0.350 (1 : 15) |
+
+*The dial's own effect,* the nominee ARM against 146f's pass ARM on
+seeds 1 to 40 (a cross-HEAD pairing, sound here because the doctrine
+controls are identical and the dial off is byte-identical, 150e): act 1
+regen 31 wins against 23 (8 seeds to 0), act 1 deploy 39 against 32 (7
+to 0), the walk on regen 14 against 2 (13 to 1), the walk on deploy 27
+against 14 (14 to 1); every split one-sided p < 0.01.
+
+*What the ARM now does:* it fires at least as often as doctrine (a
+battle: 0.213 against 0.127, 0.314 against 0.198, 0.197 against 0.150,
+0.286 against 0.293), takes the empower nominee on 98.6 to 99.5 % of asks
+(the average challenger to it now scores below it, −0.04 to −0.09), and
+on the walk on deploy still buys less at ports (8.15 a run against
+11.65), the port site's own null untouched. The lost seeds that remain
+end at a boss, as before.
+
+So 150d's location holds: the four pass-null sites were the loss, and
+with doctrine's pick as their null the ARM matches doctrine on three
+shapes and beats it on the fourth. The walk on regen's +0.225 sits above
+the ceiling band (±0.08), a real ceiling move in the ARM's favour.
+
+*The decision at the stop:* whether the nominee becomes the ARM's
+default. That moves every ARM row: the sheet's ARM refs re-pin at a
+board, and the prior table and the roster table re-derive under the new
+ARM (BALANCE's derived-artifact registry). 146f's full board cost 34.8
+CPU-hours (4.4 hours at 8 jobs); the prior table's recipe is about 1.5
+hours of box.

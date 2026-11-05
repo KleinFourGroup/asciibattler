@@ -5457,3 +5457,19 @@ deltas. The pre-X H7c→O log lives at
   All four read ok; the old rule (`random < greedy`, strictly) WARNed at
   146f, 146b and 94h. A second reader on the raw CSVs gives the same
   counts. The smallest split that WARNs is 5 to 0.
+- **2026-11-05 — the ARM with doctrine's pick as the null arm at the
+  grant and fire sites** (§150, 150f). `--arb-null=nominee` (150e) on
+  the four ceiling shapes, seeds 1 to 40, at `66e221f1`, with the four
+  doctrine controls at the same HEAD (batches `20261105-194749` to
+  `-205611`, `output/box-batches/`, this machine). The controls match
+  146f's on every seed. Paired ceiling deltas, nominee ARM minus
+  doctrine: act 1 regen 0.000 (1 : 1), act 1 deploy +0.025 (2 : 1), the
+  walk on regen +0.225 (12 : 3), the walk on deploy −0.025 (8 : 9);
+  146f's pass ARM read −0.200, −0.150, −0.075, −0.350. Against 146f's
+  pass ARM on the same seeds the nominee ARM wins 8 : 0, 7 : 0, 13 : 1
+  and 14 : 1 (win rates 0.775, 0.975, 0.350, 0.675 against 0.575,
+  0.800, 0.050, 0.350 on seeds 1 to 40). The ARM now fires at least as
+  often as doctrine a battle and takes the empower nominee on 98.6 to
+  99.5 % of asks; the port site, untouched, still buys less on the walk on
+  deploy (8.15 a run against doctrine's 11.65). Not yet the default: the
+  ARM rows and the sheet are as at 146f (WORKLOG §150, 150f).

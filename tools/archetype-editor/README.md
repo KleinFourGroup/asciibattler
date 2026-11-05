@@ -29,7 +29,7 @@ the [layout editor](../layout-editor/).
   strip an entry that fails structural checks.)
 - **Live derived-stat preview.** maxHp, crit, move + per-ability attack cadence,
   and attack/heal power — all computed by the **real** game functions
-  (`deriveStats`, `attackCooldownTicksFor`, `scaleStats`), never
+  (`deriveStats`, `resolveCadenceTicks`, `scaleStats`), never
   reimplemented, so they match combat exactly.
   - **Level dial** previews where the growth rates land a unit deeper into a run
     (deterministic expected-growth path).

@@ -362,3 +362,21 @@ byte-identical, 8 of 8. Typecheck and lint clean on both files.
 *For 149e:* the stormcaller's chain lightning nests its damage inside a
 `chain` op, so `weaponOf` finds no weapon for it (nor for the healer,
 the warlock, the banshee and the shaman); the chain is 149e's.
+
+### 149b — the editor's cadence (2026-11-05)
+
+*Step zero changed the premise.* The kickoff said the archetype editor
+shows the dash's flat cooldown scaled by speed. It does not: a
+self-targeted move returns before the cadence line
+(`tools/archetype-editor/editor.ts:638-641`), and the dash is the only
+ability with `speedScaled: false`. A script over `config/abilities.json`
+found no flat-cooldown ability that reaches the line, so no shipped
+preview changes. The bug is latent: a flat-cooldown weapon would be
+shown sped up.
+
+Built inside the step's intent and flagged: the preview's cadence is
+`resolveCadenceTicks(def, speed)`, the sim's, which honours
+`speedScaled`; the file's header and the README name it. The exit's pin
+on the dash cannot be met, since the dash never reaches the line, and
+the preview line sits in the DOM module, which no test imports; the
+check is the script's count above, 0. Typecheck and lint clean.

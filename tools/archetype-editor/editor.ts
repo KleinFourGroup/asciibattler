@@ -17,7 +17,7 @@
  *     (Validates PER ENTRY rather than the whole-config `z.record`, which would
  *     silently strip a new, not-yet-referenced key.)
  *  2. **Live derived-stat preview** (combatants) via the REAL game functions
- *     (`deriveStats`, `attackCooldownTicksFor`, `scaleStats`,
+ *     (`deriveStats`, `resolveCadenceTicks`, `scaleStats`,
  *     `scalingStatValue`), so the numbers are correct for ANY archetype,
  *     including a freshly-created one.
  *  3. **Save to disk** via the dev-only `/__save-config` endpoint. Copy / Download
@@ -58,12 +58,9 @@ import { abilityDef, damageOpOf, healOpOf } from '../../src/config/abilities';
 import { STATUS_DEFS } from '../../src/config/statuses';
 import { STATS } from '../../src/config/stats';
 import { ticksToSeconds } from '../../src/config';
-import {
-  attackCooldownTicksFor,
-  critChanceFor,
-  deriveStats,
-} from '../../src/sim/stats';
+import { critChanceFor, deriveStats } from '../../src/sim/stats';
 import { scalingStatValue } from '../../src/sim/effects/resolveScalars';
+import { resolveCadenceTicks } from '../../src/sim/effects/timeline';
 import { scaleStats } from '../../src/sim/leveling';
 import { atlasCellsFor, ATLAS_CELL_BUDGET } from '../../src/render/glyphs';
 import { FONT_STACK } from '../../src/render/fontSubset';
@@ -640,7 +637,8 @@ function abilityOutputLine(id: string, stats: UnitStats): string {
     return `leap ${def.rangeCells} · ${motionSeconds}s motion · cd ${def.cooldownSeconds}s`;
   }
 
-  const ticks = attackCooldownTicksFor(def.cooldownSeconds, stats.speed);
+  // The sim's cadence, which honours `speedScaled` (a flat cooldown ignores speed).
+  const ticks = resolveCadenceTicks(def, stats.speed);
   const damageOp = damageOpOf(id);
   const op = damageOp ?? healOpOf(id);
 

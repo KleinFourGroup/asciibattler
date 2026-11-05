@@ -383,3 +383,17 @@ board, and the prior table and the roster table re-derive under the new
 ARM (BALANCE's derived-artifact registry). 146f's full board cost 34.8
 CPU-hours (4.4 hours at 8 jobs); the prior table's recipe is about 1.5
 hours of box.
+
+### 150f signed; 150g and 150h inserted (2026-11-05)
+
+The user approved the lean ("Approving your lean!"): the nominee null
+becomes the ARM's default in §150, before §152's box reads. ROADMAP gains
+150g (the default flipped, `none`: the default byte-identical to the
+cohort's `--arb-null=nominee` output and `--arb-null=pass` to the old
+ARM's) and 150h (`stop`): the prior table re-derived under the new ARM
+by its v5 recipe and committed, then the full board at that HEAD under
+it, 146f's shape, and the roster table rebuilt from its ARM rows; the
+stop brings the sheet's ARM refs re-pinned for the user's signature, no
+band moved. One sizing note for the stop: the registry's "~1.5 h box"
+for the table is two-act era; v5's own batch cost 13.7 CPU-hours, and on
+three acts with the longer nominee runs it will cost more.

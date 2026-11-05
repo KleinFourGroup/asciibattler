@@ -6,7 +6,7 @@ A fresh-session orientation for ASCIIbattler. Read this first; then dive into th
 
 **The ONE home for live status.** Other docs (and the agent memory) point here instead of restating it; when state changes, this section is the single place that updates.
 
-- **NEXT — ROUND 11 (The roster): §150, the board's instruments, at 150f's stop**: 150a to 150c and 150e built, 150d signed; 150f's cohort read, whether the nominee null becomes the ARM's default put to the user (WORKLOG §150, 150f; [ROADMAP.md](ROADMAP.md) §150; the spec, [round-11-spec.md](round-11-spec.md)). **Open ◐:** 150f.
+- **NEXT — ROUND 11 (The roster): §150, the board's instruments, building 150g**: 150a to 150c and 150e built, 150d and 150f signed; 150g (the nominee the ARM's default) and 150h (the prior table, the board, the re-pin at a stop) inserted at 150f's sign (WORKLOG §150, 150f; [ROADMAP.md](ROADMAP.md) §150; the spec, [round-11-spec.md](round-11-spec.md)). **Open ◐:** none.
 - **In flight:** nothing on the box since 2026-11-05 (150f's cohort, fetched, the box destroyed).
 - **The public build:** `0.3.0` (`273d587d`, tag `v0.3.0`), uploaded to itch.io on 2026-11-04; the uploads before it are in Closed rounds below.
 - **Snapshots:** WorldSnapshot **v39** (no player keeps one) · RunSnapshot **v50** (a v49 save, `0.1.1`'s, rejects).

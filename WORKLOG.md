@@ -407,3 +407,26 @@ to `max(bodies, round(1.25 × level × 6))` within one of each other; act
 1's normals fielding exactly the archetypes its normal encounters name.
 *The failing control:* a hand of 5 failed 1 of 11; the turns floored in
 place of rounded failed 1 of 11; restored byte-identical, 11 of 11.
+
+### 149c — the check against play (2026-11-05)
+
+`scratch/149/swing.ts` (§139's probe extended) and
+`scratch/149/report.mjs`, run at `1b1aa683` on both bots, 200 seeds each;
+the numbers are BALANCE's run log, 2026-11-05. **The gate passes:** 24 of
+24 rows with at least 1,000 strikes sit within three standard errors of
+the model's expectation (largest |z| 2.85). Its control: defense before
+the crit fails 24 of 24, the crit left out 23 of 24, the floor dropped 9
+of 24, the rows whose strikes meet the floor.
+
+**The gap to play, named:** a unit strikes at 0.15 to 0.36 of its
+standing cadence over its ticks alive in battle. The sheet's DPS is a
+ceiling by about three to six times; its ranks between units are what it
+reads, not a forecast of a fight's length.
+
+*Built on leans, listed for the stop:* the model reads the attacker's
+stats at impact, where the sim resolves them at cast (2 strikes of
+509,775 differed, both the catapult's, and were left out); the uptime
+counts every tick a unit is alive in a World, so it includes the
+approach and any ticks before contact. One slip filed: a crit figure in
+the BALANCE entry written before its source and corrected before the
+commit.

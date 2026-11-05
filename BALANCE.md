@@ -5450,3 +5450,40 @@ deltas. The pre-X H7c→O log lives at
   / 3.61), the infernal column over on deploy (3.31, 13 instances), and
   act 3's elites under: the plague spreaders 3.85 / 3.40 and, on regen,
   the dark-magic posse 3.40 (7 and 10 instances).
+- **2026-11-05 — the stat sheet's strike model against the sim's own
+  swings** (§149, 149c). At `1b1aa683`'s config (146f's game), default
+  run config, seeds 1000–1199 on `greedy` and `pure-random`, two runs
+  side by side on this machine (426 s and 448 s; 4,391 and 4,388
+  battles). `scratch/149/swing.ts`, §139's probe extended: for each
+  strike by a unit with a single-target weapon it reads, at impact, the
+  attacker's effective stats and the target's effective defense, and
+  sets the damage taken (the strike's own `unit:attacked`) beside the
+  model's expectation on those inputs (`tools/stat-sheet/model.ts`,
+  `expectedStrike`). Its self-checks: every strike counted, kept or
+  stale (509,775); each strike with exactly one hit event of its own
+  (0 without). Stale, a rolled damage neither the base nor its crit, so
+  stats moved in flight: 2, both the catapult's. Pooled by
+  `scratch/149/report.mjs` (the full table: `scratch/149/out/report.txt`,
+  ignored, this machine).
+
+  **The gate**, on the 24 rows with at least 1,000 strikes: the mean of
+  (taken − expected) within three standard errors of zero. All 24 pass;
+  the largest |z| is 2.85 (the tiger as an enemy, 9,404 strikes: 8.771
+  taken, 8.675 expected), and the largest row, the player's mercenary,
+  138,358 strikes, 6.278 against 6.273 (z 0.79). Its control, the same
+  statistic on three planted versions of the rule: defense taken before
+  the crit fails 24 of 24 rows, the crit left out 23 of 24, the floor
+  dropped 9 of 24 (the rows whose strikes meet it: the wolf, the bandit,
+  the giant rat, the ghoul, the officer and others). Crit rate against
+  the mean chance, the same rows: within 0.019 on every gated row
+  (the rogue as an enemy, 0.256 against 0.275).
+
+  **Uptime**, strikes over what the standing cadence would give across
+  each unit's ticks alive in a battle, not gated: 0.15 to 0.36 on the
+  player's and enemies' gated rows (the mercenary 0.281, the archer
+  0.297, the gunslinger 0.344, the officer 0.358; the fox 0.148, the
+  giant rat 0.146, the rogue 0.161), 0.03 to 0.05 for the camps' idle
+  wild units. So a unit in play strikes at a sixth to a third of the
+  sheet's standing rate, its ticks alive including the approach,
+  retargeting, statuses and the battle's tail; the sheet's DPS is a
+  ceiling by that factor, not a forecast.

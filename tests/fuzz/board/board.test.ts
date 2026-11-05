@@ -203,6 +203,43 @@ describe('evaluateBoard', () => {
     expect(missingSide.missing).toContain('fire-ablated');
   });
 
+  it('150b — a ceiling delta reads the seeds both rows ran, not the whole rows', () => {
+    // The ARM row at 120 seeds wins 1..10 and 41..120 (90 of 120); the
+    // doctrine row at 40 wins 1..20 (20 of 40). Whole rows: 0.75 − 0.5 =
+    // +0.25. On seeds 1..40: 10 − 20 of 40 = −0.25. The sign flips, so the
+    // old pooled arithmetic fails this pin.
+    const csv = (strategy: string, seeds: number[], won: (s: number) => boolean): string =>
+      [
+        'seed,strategy,outcome,finalHop,sectorsCleared,portPurchases,finalBits,packetsFired',
+        ...seeds.map((s) => `${s},${strategy},${won(s) ? 'complete' : 'defeat'},10,0,0,0,0`),
+      ].join('\n');
+    const range = (a: number, b: number): number[] => Array.from({ length: b - a + 1 }, (_, i) => a + i);
+    const arm = computeMetrics(parseSummaryCsv(csv('arm', range(1, 120), (s) => s <= 10 || s > 40)));
+    const doctrine = computeMetrics(parseSummaryCsv(csv('doc', range(1, 40), (s) => s <= 20)));
+    expect(arm.winRate - doctrine.winRate).toBeCloseTo(0.25); // the fixture tells the two apart
+    const report = evaluateBoard(
+      board,
+      new Map([
+        ['arb-regen', arm],
+        ['regen', doctrine],
+      ]),
+    );
+    const row = report.rows.find((r) => r.instrument === 'ceiling-regen')!;
+    expect(row.value).toBeCloseTo(-0.25);
+    expect(row.metric).toContain('40 shared seeds');
+    expect(row.status).toBe('WARN');
+    // No shared seed reads N/A, never a number.
+    const apart = computeMetrics(parseSummaryCsv(csv('doc', range(121, 160), () => true)));
+    const none = evaluateBoard(
+      board,
+      new Map([
+        ['arb-regen', arm],
+        ['regen', apart],
+      ]),
+    );
+    expect(none.rows.find((r) => r.instrument === 'ceiling-regen')?.status).toBe('N/A');
+  });
+
   it('a null wall (no wins) is N/A, not a verdict — pinned on the walk row that carries the wall check', () => {
     const noWins = { ...metricsAt(0.6), bossWall: null };
     const report = evaluateBoard(board, new Map([['arb-walk-regen', noWins]]));
@@ -246,6 +283,8 @@ describe('86e2 — the fail-closed verdict layer (mechanism smoke; the per-class
     pacingBoss: 0.5 * (sheet.pacingBands.boss.min + sheet.pacingBands.boss.max),
     seams: [{ act: 1, crossed: 40, pool: 0.5 * (sheet.seams['1']!.min + sheet.seams['1']!.max) * HEALTH.playerHealthMax }],
     acts: [{ act: 1, bossHop: 10, arrivals: 40, reach: 1, wall: 0.5 * (sheet.walls['1']!.min + sheet.walls['1']!.max) }],
+    // 150b — the paired ceiling deltas read these: the same 0.6 on seeds 1..n.
+    winsBySeed: new Map(Array.from({ length: BOARD_MIN_N }, (_, i) => [i + 1, i < 0.6 * BOARD_MIN_N] as const)),
   });
   const cleanBoardInputs = (): {
     audits: Map<string, InstrumentAudit>;
@@ -264,6 +303,18 @@ describe('86e2 — the fail-closed verdict layer (mechanism smoke; the per-class
     expect(v.warns).toBe(0);
     expect(v.measurementHead).toBe(HEAD);
     expect(v.rows.filter((r) => r.status === 'PASS')).toHaveLength(board.instruments.length);
+  });
+
+  it('150b — a paired ceiling delta whose two found rows share no seed FAILs (fail-closed)', () => {
+    const { audits, metrics } = cleanBoardInputs();
+    const shifted = new Map(Array.from({ length: BOARD_MIN_N }, (_, i) => [i + 1 + BOARD_MIN_N, true] as const));
+    metrics.set('arb-regen', { ...metrics.get('arb-regen')!, winsBySeed: shifted });
+    const v = evaluateVerdict(board, audits, metrics, OPTS);
+    const row = v.rows.find((r) => r.instrument === 'ceiling-regen');
+    expect(row?.status).toBe('FAIL');
+    expect(row?.check).toBe('n/a');
+    // Its three siblings still pair, so they add nothing.
+    expect(v.rows.filter((r) => r.instrument.startsWith('ceiling-') && r.status === 'FAIL')).toHaveLength(1);
   });
 
   it('a missing instrument FAILs (never a footer): the fail-closed core', () => {
@@ -566,10 +617,14 @@ describe('the board definition itself', () => {
         expect(delta.a).toBe(a);
         expect(delta.b).toBe(b);
         expect(delta.metric).toBe('winRate');
+        expect(delta.paired).toBe(true); // 150b — on the seeds both rows ran
         expect(delta.grade).toBe('reference');
         expect(delta.min).toBeCloseTo(-0.08);
         expect(delta.max).toBeCloseTo(0.08);
       }
+      // The fire channel's two doctrine rows run the same 40 seeds, so it
+      // stays a whole-row delta.
+      expect(board.deltas.find((d) => d.id === 'fire-channel')?.paired).toBeUndefined();
       expect(board.deltas).toHaveLength(pairs.length + 1); // + the fire channel
       expect(board.deltas.find((d) => d.id === 'arb-fire-channel')).toBeUndefined();
     });

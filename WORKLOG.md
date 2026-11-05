@@ -140,3 +140,33 @@ from). *Oracle:* every line of the old header is in the new header or
 the archive, the two repointed links and the heading levels aside; a
 planted control (one moved line dropped) reads one line lost. The docs
 test is green (20). `scratch/150/move-header.mjs` did the move.
+
+### 150b — the ceiling deltas (2026-11-05)
+
+*Step zero:* `evaluateBoard` and the verdict read a delta off two
+`InstrumentMetrics`, which held no per-seed outcome, and the summary rows
+carry their seed. Built: `InstrumentMetrics.winsBySeed` (filled by
+`computeMetrics`), `BoardDelta.paired`, and `deltaValue`, which both
+readers call; a paired delta is each row's win rate on the seeds both
+ran, its report row naming the count of shared seeds, and a pair of found
+rows with no shared seed FAILs the verdict as unmeasurable. The four
+ceiling deltas are paired, their title and source line saying so; the
+fire channel, two doctrine rows on the same 40 seeds, stays a whole-row
+delta. The hand-built metrics in the verdict tests gained `winsBySeed`,
+since without it the paired deltas fail closed (the first run: three
+tests red, as predicted).
+
+*Pins:* a fixture where the sign flips (an ARM row at 120 seeds,
+pooled +0.25; on seeds 1 to 40, −0.25) and a verdict with no shared seed.
+*Control:* with the pooled arithmetic planted back, both pins fail.
+*The re-read:* 146f's four, by the board code and by a second reader on
+the raw CSVs, agree (BALANCE.md 2026-11-05); 146b's rows reproduce the
+figures 146b recorded both ways.
+
+**For 150d:** the seeds one arm won and the other lost at 146f, ARM
+against doctrine: act 1 on regen 0 to 8, act 1 on deploy 0 to 6, the
+walk on regen 2 to 5, the walk on deploy 1 to 15. The act-1 rows are the
+11-hop shape, so the ARM loses there too (exact sign tests, one-sided:
+p 0.004 and 0.016), not on the long walk alone; TODO's row had act 1 at
+146b at 5 against 1. The rollout's horizon against a three-act walk's
+hops may not be where the loss sits.

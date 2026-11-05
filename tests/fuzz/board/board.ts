@@ -176,13 +176,18 @@ export interface BoardInstrument {
   readonly checks: readonly BoardCheck[];
 }
 
-/** A cross-instrument delta check (channel ablations): metric(a) − metric(b). */
+/** A cross-instrument delta check (channel ablations): metric(a) − metric(b),
+ *  each row's whole batch, or with `paired` the win rates on the seeds both
+ *  rows ran. */
 export interface BoardDelta {
   readonly id: string;
   readonly title: string;
   readonly metric: ScalarMetricKey;
   readonly a: string;
   readonly b: string;
+  /** 150b — read on the seeds both rows ran (`winRate` only): a row run at
+   *  more seeds than the other drops its extra seeds from this delta. */
+  readonly paired?: true;
   readonly grade: 'signed' | 'reference';
   readonly min: number;
   readonly max: number;
@@ -518,8 +523,11 @@ export function buildBoard(
       checks: [],
     },
   ];
-  // The 4 ceiling deltas (arb − doctrine, paired seeds): the cheapest
-  // standing read on what arbitration is worth; a WARN = a real move.
+  // The 4 ceiling deltas (arb − doctrine on the seeds both rows ran): the
+  // cheapest standing read on what arbitration is worth; a WARN = a real
+  // move. The ARM rows extend to 120 seeds and the doctrine controls stay
+  // at the board's floor of 40, so the delta reads the seeds they share;
+  // the whole rows would mix in seeds doctrine never ran (150b).
   const ceilingDeltas: BoardDelta[] = (
     [
       ['regen', 'arb-regen'],
@@ -529,14 +537,15 @@ export function buildBoard(
     ] as const
   ).map(([ctrl, arb]) => ({
     id: `ceiling-${ctrl}`,
-    title: `ceiling move (arb − doctrine win rate, ${ctrl})`,
+    title: `ceiling move (arb − doctrine win rate on the shared seeds, ${ctrl})`,
     metric: 'winRate',
     a: arb,
     b: ctrl,
+    paired: true,
     grade: 'reference',
     min: -WIN_TOL,
     max: WIN_TOL,
-    source: '72f standing control: paired same-seed arb−doctrine; WARN = a real ceiling move',
+    source: '72f standing control: arb−doctrine on the seeds both rows ran (150b); WARN = a real ceiling move',
   }));
   const deltas: BoardDelta[] = [
     {
@@ -664,6 +673,11 @@ export interface InstrumentMetrics {
    *  reads the winners' act alone, at the winners' terminal. The last act's
    *  pair is `terminalReach` and `bossWall` wherever a run won. */
   readonly acts: readonly ActMetric[];
+  /** 150b — whether each seed's run won, keyed by seed: a paired delta
+   *  reads two rows on the seeds both ran. `computeMetrics` always fills
+   *  it; a metrics object built without it reads a paired delta as
+   *  unmeasurable. */
+  readonly winsBySeed?: ReadonlyMap<number, boolean>;
 }
 
 export interface SeamMetric {
@@ -775,6 +789,7 @@ export function computeMetrics(rows: readonly SummaryRow[]): InstrumentMetrics {
       pacingBoss: null,
       seams: [],
       acts: [],
+      winsBySeed: new Map(),
     };
   }
   const wins = rows.filter((r) => r.outcome === 'complete');
@@ -824,6 +839,7 @@ export function computeMetrics(rows: readonly SummaryRow[]): InstrumentMetrics {
     pacingBoss: null,
     seams: seamsOf(rows),
     acts: actsOf(rows, wins),
+    winsBySeed: new Map(rows.map((r) => [r.seed, r.outcome === 'complete'])),
   };
 }
 
@@ -948,6 +964,36 @@ export function checkLabel(check: Pick<BoardCheck, 'metric' | 'act'>): string {
   return check.metric;
 }
 
+/** 150b — a delta's value. Unpaired: metric(a) − metric(b), null when
+ *  either side is. Paired: the mean over the seeds both rows ran of
+ *  won(a) − won(b), which is each row's win rate on those seeds alone;
+ *  null when the rows share no seed or either lacks `winsBySeed`. */
+export function deltaValue(
+  d: BoardDelta,
+  metricsById: ReadonlyMap<string, InstrumentMetrics>,
+): { readonly value: number | null; readonly shared: number | null } {
+  const ma = metricsById.get(d.a);
+  const mb = metricsById.get(d.b);
+  if (d.paired !== true) {
+    const a = ma?.[d.metric];
+    const b = mb?.[d.metric];
+    return { value: a === undefined || b === undefined || a === null || b === null ? null : a - b, shared: null };
+  }
+  if (d.metric !== 'winRate') throw new Error(`delta '${d.id}': a paired delta reads winRate, not '${d.metric}'`);
+  const wa = ma?.winsBySeed;
+  const wb = mb?.winsBySeed;
+  if (wa === undefined || wb === undefined) return { value: null, shared: 0 };
+  let shared = 0;
+  let sum = 0;
+  for (const [seed, aWon] of wa) {
+    const bWon = wb.get(seed);
+    if (bWon === undefined) continue;
+    shared++;
+    sum += (aWon ? 1 : 0) - (bWon ? 1 : 0);
+  }
+  return { value: shared === 0 ? null : sum / shared, shared };
+}
+
 function statusFor(
   value: number | null,
   check: Pick<BoardCheck, 'grade' | 'min' | 'max'>,
@@ -985,12 +1031,13 @@ export function evaluateBoard(
     }
   }
   for (const d of board.deltas) {
-    const a = metricsById.get(d.a)?.[d.metric];
-    const b = metricsById.get(d.b)?.[d.metric];
-    const value = a === undefined || b === undefined || a === null || b === null ? null : a - b;
+    const { value, shared } = deltaValue(d, metricsById);
     rows.push({
       instrument: d.id,
-      metric: `Δ ${d.metric} (${d.a}−${d.b})`,
+      metric:
+        shared === null
+          ? `Δ ${d.metric} (${d.a}−${d.b})`
+          : `Δ ${d.metric} (${d.a}−${d.b}, ${shared} shared seeds)`,
       value,
       band: `[${d.min.toFixed(2)}, ${d.max.toFixed(2)}]`,
       grade: d.grade,
@@ -1201,7 +1248,15 @@ export function evaluateVerdict(
 
   // Deltas: a null side that survived per-instrument checks (e.g. a delta on
   // a metric no per-row check covers) still voids the delta — fail-closed.
+  // 150b: so does a paired delta whose two found rows share no seed.
   for (const d of board.deltas) {
+    if (d.paired === true) {
+      const found = (id: string): boolean => auditsById.get(id)?.summaryFound === true;
+      if (found(d.a) && found(d.b) && deltaValue(d, metricsById).value === null) {
+        fail(d.id, 'n/a', `paired delta: ${d.a} and ${d.b} share no seed with a recorded outcome`);
+      }
+      continue;
+    }
     const av = metricsById.get(d.a)?.[d.metric];
     const bv = metricsById.get(d.b)?.[d.metric];
     const missingSide = (v: number | null | undefined, id: string): boolean =>

@@ -5429,3 +5429,18 @@ deltas. The pre-X H7c→O log lives at
   sheet's standing rate, its ticks alive including the approach,
   retargeting, statuses and the battle's tail; the sheet's DPS is a
   ceiling by that factor, not a forecast.
+- **2026-11-05 — the ceiling deltas on the shared seeds** (§150, 150b).
+  Each `ceiling-*` delta now reads the ARM row and its doctrine control
+  on the seeds both ran (`deltaValue` in `tests/fuzz/board/board.ts`),
+  where it had subtracted the doctrine row's 40 runs from the ARM row's
+  120. Re-read at 146f (`output/board-runs/146f/`, this machine), shared
+  seeds 1 to 40 against the old pooled value: regen −0.200 (pooled
+  −0.233), deploy −0.150 (−0.158), the walk on regen −0.075 (−0.050), the
+  walk on deploy −0.350 (−0.325); the walk on regen inside ±0.08, the
+  other three WARN as before. The seeds one arm won and the other lost,
+  ARM against doctrine: 0 to 8, 0 to 6, 2 to 5 and 1 to 15. A second
+  reader on the raw CSVs, its own parser
+  (`scratch/150/ceiling-raw.mjs`), gives the same four; the board code
+  on 146b's rows gives the four figures 146b recorded on the shared
+  seeds (−0.125, −0.100, −0.100, −0.300) and the pooled four beside
+  them.

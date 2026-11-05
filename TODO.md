@@ -197,14 +197,9 @@ META-ROADMAP §"Round 11 — The roster" names each row's place.
   it, read the header for protocol text to demote to an archive, the cap
   kept (WORKLOG §147, 147d).
 
-- [ ] **The ceiling deltas' label says paired seeds; the arithmetic is
-  pooled.** Each `ceiling-*` delta subtracts the doctrine control's 40
-  runs from the ARM row's 120 (`tests/fuzz/board/board.ts`,
-  `ceilingDeltas`, its `source` line "paired same-seed"). Either compute
-  it on the shared seeds or name it as pooled. At 146b, pooled: −0.117,
-  −0.125, −0.083, −0.358; on the shared seeds 1 to 40: −0.125, −0.100,
-  −0.100, −0.300 (WORKLOG §146, 146b; placed here at Round 10's close,
-  WORKLOG §147, 147d).
+- ✅ **The ceiling deltas' label says paired seeds; the arithmetic is
+  pooled.** Computed on the shared seeds since 150b, pinned where paired
+  and pooled differ (WORKLOG §150, 150b; BALANCE.md 2026-11-05).
 
 - [ ] **A blinded ranged unit strikes past its acquisition range.** Under `atWill`, blind sets `targetId` null when nothing is within its `acquisitionRange` (1), and `Targeting.currentTarget` then falls back to `findTarget`, so the abilities still fire out to the attack range. A probe in a worktree: a blinded archer fired at an enemy 3 cells away (`archive/post-118-worklog.md` §122, 122o batch 6). The tests pin only a melee unit. **The user's lean (2026-10-15), pending testing:** blind means wander and strike only within the acquisition range, so `currentTarget` skips the fallback for a blinded unit as it does for a confused one. **The catch to weigh first:** ten abilities ship a `minRangeCells` floor (nine at 2, one at 4), and a unit with a floor above 1 can't fire at a target 1 cell away, so under that rule a blinded kiter can't attack at all while blind lasts; a plain archer still hits what is adjacent. Decide whether that full shutdown is intended and pin it either way. The tests: a blinded archer holds fire at 3 cells and fires at 1; the kiter's case as decided; then a board re-run, since blind (the luminant's `light_ray`) gets stronger. A behaviour change, so the round's scope guards rule it out of Round 8.5; placed here at §122's close, since it needs the board.
 

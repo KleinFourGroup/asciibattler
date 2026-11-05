@@ -340,3 +340,25 @@ is 149f's):
 **Signed** (the user, 2026-11-05: "That looks good to me, Claude! 😁
 Signed!"): the cut and its reads, and the six calls at their leans.
 ROADMAP §149 holds the cut's lines.
+
+### 149a — the strike model (2026-11-05)
+
+`tools/stat-sheet/model.ts`: `statsAt` (a player unit's expectation
+unrounded, an enemy's by `scaledUnit`), `maxHpOf`, `weaponOf`,
+`strikePeriodSeconds` (through `resolveCadenceTicks`), `expectedStrike`
+and `expectedDps`. The crit's multiplier and the defense's floor are
+written again from the sim's inline lines; the game rounds `base ×
+critMult`, which on whole stats at a multiplier of 2 changes nothing, so
+the model leaves the round out, and a test guards the multiplier being
+whole.
+
+`tests/tools/stat-sheet.test.ts`, 8 tests, each expectation worked from
+the raw JSON files: the 24 combatants whose weapon holds a damage op,
+at levels 1 and 8 against defenses 0 to 12, the cadence at each unit's speed and the dash's flat
+one. *The failing control:* each of three mistakes planted in the model
+in turn failed the file (the floor dropped: 2 of 8; defense taken before
+the crit: 2 of 8; a player's growth rounded: 1 of 8); restored
+byte-identical, 8 of 8. Typecheck and lint clean on both files.
+*For 149e:* the stormcaller's chain lightning nests its damage inside a
+`chain` op, so `weaponOf` finds no weapon for it (nor for the healer,
+the warlock, the banshee and the shaman); the chain is 149e's.

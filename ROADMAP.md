@@ -51,7 +51,7 @@ moved; a hand against a wave as a team fight stays the sim's.
 
 The cut, signed 2026-11-05 with its six leans (WORKLOG §149):
 
-- ☐ **149a — the strike model** (`none`).
+- ☑ **149a — the strike model** (`none`): pinned on the raw config, three planted mistakes caught.
 - ☐ **149b — the editor's cadence** (`none`).
 - ☐ **149c — the check against play** (`none`; its result in the stop's
   report).

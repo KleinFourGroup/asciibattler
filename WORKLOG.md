@@ -106,3 +106,15 @@ quoted fields, which the peek's parser handles); it is 150d's starting
 point. `scratch/149/swing.ts` and `report.mjs` re-run the strike check
 after §152. Nothing is half-built; the commits since `a7ca0baf` are
 unpushed docs.
+
+### The cut signed (2026-11-05, session d36a1828)
+
+Put again at the session's first turn, with two premises checked in
+146f's manifests: the doctrine rows and both anchors run seeds 1 to 40,
+the ARM rows 1 to 120, and every `summary.csv` row carries its seed. The
+session agreed with calls 1, 2 and 4 and differed on call 3: the anchors
+share their seeds, so the exact sign test on the seeds where they
+disagree (the walk-loss read's test, on 150b's per-seed join), one-sided
+at p < 0.05, a tie fine. The user signed "fully"; the session reads that
+as the cut as put, call 3 by the sign test, and names the reading at
+150d's stop.

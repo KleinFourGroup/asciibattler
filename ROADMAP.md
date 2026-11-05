@@ -65,6 +65,15 @@ failure; the gradient's leg read against its noise; the arbitration's
 loss located, and fixed or recorded with its cause. **Scope guards:** no
 config number and no band moved.
 
+The cut, signed 2026-11-05 with its four calls (WORKLOG §150): no
+snapshot bump, no RNG stream, no config change, no box unless 150d's stop
+sizes one.
+
+- ☐ **150a — BALANCE's header** (`none`): sections no longer worked from to an archive, a pointer each, the cap kept.
+- ☐ **150b — the ceiling deltas** (`none`): on the shared seeds, pinned where paired and pooled differ.
+- ☐ **150c — the skill gradient's leg** (`none`): an exact sign test on the shared seeds, a tie fine, BALANCE's words.
+- ☐ **150d — the arbitration's walk loss** (`stop`): the decision log by site and by hops remaining, as rates by hop; where the loss sits and a fix's scope, or the box run that would tell.
+
 ## Phase 151 — the content (signed 2026-11-05)
 
 Charter: bandits out of the draft (N28), with the roster table's guard

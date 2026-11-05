@@ -470,3 +470,25 @@ byte-identical, 16 of 16. Act 1 at level 3, read by
 `scratch/149/duel-peek.ts`: the mercenary against the normals 5.5
 dealt and 1.8 received a second, kills in 2.9 s and dies in 17.5 s;
 the healer 3.7 healed a second; 48 ms for four duels.
+
+### 149f — the page, built and put to the user (2026-11-05)
+
+`tools/stat-sheet/` (`index.html`, `page.ts`, `page.css`), linked from
+the tools index under a new "Balance" group. Three read-only cards: the
+duel (unit, level, sector, kind, an empower and Escalation; a summary
+line and a row per fielded enemy), the stats and growths of a group
+(each cell its value, percentile and share of the group's mean, the
+selected unit's row marked), and the weapon table. The empower list is
+every daemon with a `grantEmpowers` rule, so it holds the Idol of Mars
+(+4 strength, +4 ranged, +8 magic) and the Idol of Minerva (+2
+defense) today and the three idols after §151; Escalation passes its
+level's wave-size and level-budget factors (`leverFactors`) to the
+waves.
+
+*Verified in the Browser pane* (`dev-preview`, port 5191): no console
+errors; the mercenary at level 3 against act 1's normals reads 5.5
+dealt and 1.8 taken a second, 2.9 s and 17.5 s, as the headless
+`scratch/149/duel-peek.ts` did; set to the archer, 3.9 and 2.6, and with
+Mars's empower 6.9 dealt; the ranks table marks the archer's row. *Not
+verified:* the page's look at the user's own window size, and every
+unit and sector in turn. Typecheck and lint clean.

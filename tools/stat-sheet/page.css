@@ -1,0 +1,65 @@
+/* The stat sheet: the editors' tokens and cards, with three read-only tables. */
+
+@import '../editor-base.css';
+
+#editor-root {
+  max-width: 1280px;
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 18px;
+  margin-bottom: 10px;
+}
+
+.controls label {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.summary {
+  margin: 6px 0 10px;
+  line-height: 1.6;
+}
+
+.summary b {
+  font-variant-numeric: tabular-nums;
+}
+
+table.sheet {
+  border-collapse: collapse;
+  width: 100%;
+  font-variant-numeric: tabular-nums;
+  font-size: 13px;
+}
+
+table.sheet th,
+table.sheet td {
+  padding: 3px 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  text-align: right;
+  white-space: nowrap;
+}
+
+table.sheet th:first-child,
+table.sheet td:first-child {
+  text-align: left;
+}
+
+table.sheet th {
+  position: sticky;
+  top: 0;
+  background: rgba(20, 20, 28, 0.95);
+}
+
+table.sheet tr.mine td {
+  outline: 1px solid rgba(255, 210, 90, 0.6);
+}
+
+table.sheet td .pct {
+  opacity: 0.65;
+  font-size: 11px;
+  margin-left: 4px;
+}

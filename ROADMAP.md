@@ -57,7 +57,7 @@ The cut, signed 2026-11-05 with its six leans (WORKLOG §149):
   three standard errors; play strikes at 0.15 to 0.36 of the standing rate.
 - ☑ **149d — the enemies** (`none`): through `waveForTurn` and `resolveWave`; two planted mistakes caught.
 - ☑ **149e — the duel, the ranks and the weapons** (`none`): the status ticks pinned against the sim (a 4 s burn ticks 3 times).
-- ☐ **149f — the page** (`stop`).
+- ◐ **149f — the page** (`stop`): built, at the user's read.
 
 ## Phase 150 — the board's instruments (signed 2026-11-05)
 

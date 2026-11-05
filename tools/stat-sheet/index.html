@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ASCIIbattler Stat Sheet</title>
+  </head>
+  <body>
+    <main id="editor-root">
+      <header class="bar">
+        <h1>Stat Sheet</h1>
+        <span class="subtitle"
+          >A unit's stats, growths and weapon against the rest, and its duel with a sector's
+          enemies · read-only · the game's own functions</span
+        >
+        <a class="home" href="/tools/">← Tools</a>
+      </header>
+
+      <section class="card">
+        <h2>The duel <span class="sub">standing in range, so a ceiling: in play a unit strikes at 0.15 to 0.36 of this rate (BALANCE, 2026-11-05)</span></h2>
+        <div class="controls">
+          <label>Unit <select id="archetype"></select></label>
+          <label>Level <input id="level" type="number" min="1" max="20" step="1" value="3" /></label>
+          <label>Sector <select id="sector"></select></label>
+          <label>Kind <select id="kind"><option>normal</option><option>elite</option><option>boss</option></select></label>
+          <label>Empower <select id="buff"></select></label>
+          <label>Escalation <select id="escalation"></select></label>
+        </div>
+        <div id="duel-summary" class="summary"></div>
+        <table id="duel-table" class="sheet"></table>
+      </section>
+
+      <section class="card">
+        <h2>Stats and growths <span class="sub">each cell its value, its percentile in the group and its share of the group's mean; the selected unit's row is marked</span></h2>
+        <div class="controls">
+          <label>Group <select id="group"><option value="draftable">draftable units</option><option value="enemy">enemies (never drafted)</option></select></label>
+          <label>Show <select id="which"><option value="base">base stats</option><option value="growth">growths</option></select></label>
+        </div>
+        <table id="rank-table" class="sheet"></table>
+      </section>
+
+      <section class="card">
+        <h2>Weapons <span class="sub">every strike and heal, with who carries it</span></h2>
+        <table id="weapon-table" class="sheet"></table>
+      </section>
+    </main>
+    <script type="module" src="./page.ts"></script>
+  </body>
+</html>

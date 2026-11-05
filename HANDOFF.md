@@ -6,11 +6,11 @@ A fresh-session orientation for ASCIIbattler. Read this first; then dive into th
 
 **The ONE home for live status.** Other docs (and the agent memory) point here instead of restating it; when state changes, this section is the single place that updates.
 
-- **NEXT — ROUND 11 (The roster): §149, the stat sheet, building to 149f's stop**: the cut signed 2026-11-05 (WORKLOG §149; [ROADMAP.md](ROADMAP.md) §149; the spec, [round-11-spec.md](round-11-spec.md)). **Open ◐:** none.
+- **NEXT — ROUND 11 (The roster): §149, the stat sheet, at 149f's stop**: the page at `/tools/stat-sheet/`, put to the user with the phase's leans (WORKLOG §149); then §149's close and §150 ([ROADMAP.md](ROADMAP.md); the spec, [round-11-spec.md](round-11-spec.md)). **Open ◐:** 149f.
 - **In flight:** nothing on the box since 2026-11-03.
 - **The public build:** `0.3.0` (`273d587d`, tag `v0.3.0`), uploaded to itch.io on 2026-11-04; the uploads before it are in Closed rounds below.
 - **Snapshots:** WorldSnapshot **v39** (no player keeps one) · RunSnapshot **v50** (a v49 save, `0.1.1`'s, rejects).
-- **Tests:** **3930 main** in 271 files at `b651a611` (147e); **570 fuzz:smoke** in 59 files and **1 fuzz:jobs-parity** at `94cca56f` (146g); typecheck clean; the journal corpus, run by hand, 37 tests over 33 journals, re-recorded at 146e.
+- **Tests:** **3946 main** in 272 files at `4b841e76` (149e); **570 fuzz:smoke** in 59 files and **1 fuzz:jobs-parity** at `94cca56f` (146g); typecheck clean; the journal corpus, run by hand, 37 tests over 33 journals, re-recorded at 146e.
 - **Model id: `claude-opus-5-5`** since 2026-09-22. When yours differs, say so at the next stop; at the user's word, review AGENTS.md against the vendor's current prompting guidance and record the new id (the last review: `archive/post-104-worklog.md`, "The new-model tone audit").
 - **Last phase: §148**, Round 11's kickoff, 2026-11-05: the spec, the phases §149 to §156 and act 1's cost target signed (WORKLOG §148). Round 10 and every round before it are in Closed rounds below.
 

@@ -22,6 +22,7 @@ import {
   loadSignedSheet,
   parseSummaryCsv,
   sheetProvenance,
+  signTestUpper,
   type BoardInstrument,
   type InstrumentAudit,
   type InstrumentMetrics,
@@ -418,27 +419,35 @@ describe('86e2 — the fail-closed verdict layer (mechanism smoke; the per-class
 });
 
 describe('86e3 — the skill-gradient health check', () => {
-  const at = (winRate: number): InstrumentMetrics => ({
-    runs: 40,
-    winRate,
-    bossWall: 0.32,
-    terminalReach: 0.45,
-    seamPool: 16,
-    transactionRate: 0.2,
-    terminalBank: 100,
-    firesPerRun: 1.7,
-    pacingNormal: 2.9, // 94h-pre — the gradient check reads none of these
-    pacingElite: 4.5,
-    pacingBoss: 5.75,
-    seams: [],
-    acts: [],
-  });
+  // 150c — `won` lists the seeds of 1..40 the row won; the win rate follows.
+  const at = (won: readonly number[] | number): InstrumentMetrics => {
+    const seeds = typeof won === 'number' ? null : new Set(won);
+    return {
+      runs: 40,
+      winRate: seeds === null ? (won as number) : seeds.size / 40,
+      bossWall: 0.32,
+      terminalReach: 0.45,
+      seamPool: 16,
+      transactionRate: 0.2,
+      terminalBank: 100,
+      firesPerRun: 1.7,
+      pacingNormal: 2.9, // 94h-pre — the gradient check reads none of these
+      pacingElite: 4.5,
+      pacingBoss: 5.75,
+      seams: [],
+      acts: [],
+      ...(seeds === null
+        ? {}
+        : { winsBySeed: new Map(Array.from({ length: 40 }, (_, i) => [i + 1, seeds.has(i + 1)] as const)) }),
+    };
+  };
+  const seeds = (a: number, b: number): number[] => Array.from({ length: b - a + 1 }, (_, i) => a + i);
 
   it('a monotone gradient reads ok on both legs, upper = the best act-1 ARM row', () => {
     const rows = evaluateSkillGradient(
       new Map([
-        ['anchor-random', at(0.05)],
-        ['anchor-greedy', at(0.35)],
+        ['anchor-random', at(seeds(1, 2))],
+        ['anchor-greedy', at(seeds(1, 14))],
         ['arb-regen', at(0.65)],
         ['arb-deploy', at(0.75)],
       ]),
@@ -447,28 +456,64 @@ describe('86e3 — the skill-gradient health check', () => {
     expect(rows[1]?.detail).toContain('arb-deploy'); // max of the ARM legs
   });
 
-  it('an inversion WARNs — the instrument is broken, not the balance', () => {
+  it('an inversion past the noise WARNs — the instrument is broken, not the balance', () => {
+    // Random alone wins 12 seeds, greedy alone 2: P(X ≥ 12 | 14) = 106/16384.
     const inverted = evaluateSkillGradient(
       new Map([
-        ['anchor-random', at(0.5)],
-        ['anchor-greedy', at(0.35)],
-        ['arb-deploy', at(0.3)],
+        ['anchor-random', at(seeds(1, 12))],
+        ['anchor-greedy', at(seeds(13, 14))],
+        ['arb-deploy', at(0.03)],
       ]),
     );
     expect(inverted.map((r) => r.status)).toEqual(['WARN', 'WARN']);
     expect(inverted[0]?.detail).toContain('INVERTED');
+    expect(inverted[0]?.detail).toContain('p 0.006');
   });
 
-  it('absent legs read N/A, never a silent pass: missing anchors / missing ARM rows', () => {
+  it('150c — a tie and a flip inside the noise read ok; the leg WARNs from a 5-to-0 split', () => {
+    const leg = (random: number[], greedy: number[]) =>
+      evaluateSkillGradient(
+        new Map([
+          ['anchor-random', at(random)],
+          ['anchor-greedy', at(greedy)],
+        ]),
+      )[0]!;
+    // A tie on the same seeds: no seed told apart, p 1.
+    expect(leg(seeds(1, 11), seeds(1, 11)).status).toBe('ok');
+    // A tie on different seeds: 11 each, 11 to 11 of the discordant.
+    expect(leg(seeds(1, 11), seeds(12, 22)).status).toBe('ok');
+    // 4 to 0: P = 1/16, inside the noise; 5 to 0: P = 1/32, past it.
+    expect(leg(seeds(1, 11), seeds(1, 7)).status).toBe('ok');
+    expect(leg(seeds(1, 12), seeds(1, 7)).status).toBe('WARN');
+  });
+
+  it('150c — the sign test against hand-worked binomial tails', () => {
+    expect(signTestUpper(8, 8)).toBeCloseTo(1 / 256, 12);
+    expect(signTestUpper(7, 10)).toBeCloseTo((120 + 45 + 10 + 1) / 1024, 12);
+    expect(signTestUpper(12, 14)).toBeCloseTo((91 + 14 + 1) / 16384, 12);
+    expect(signTestUpper(15, 16)).toBeCloseTo(17 / 65536, 12);
+    expect(signTestUpper(0, 0)).toBe(1);
+    expect(signTestUpper(0, 40)).toBeCloseTo(1, 12);
+    expect(() => signTestUpper(5, 4)).toThrow();
+  });
+
+  it('absent legs read N/A, never a silent pass: missing anchors / missing ARM rows / no seeds to pair', () => {
     expect(evaluateSkillGradient(new Map()).map((r) => r.status)).toEqual(['N/A']);
     const noArm = evaluateSkillGradient(
+      new Map([
+        ['anchor-random', at(seeds(1, 2))],
+        ['anchor-greedy', at(seeds(1, 14))],
+      ]),
+    );
+    expect(noArm.map((r) => r.status)).toEqual(['ok', 'N/A']);
+    expect(noArm[1]?.detail).toContain('signing boards');
+    const unpaired = evaluateSkillGradient(
       new Map([
         ['anchor-random', at(0.05)],
         ['anchor-greedy', at(0.35)],
       ]),
     );
-    expect(noArm.map((r) => r.status)).toEqual(['ok', 'N/A']);
-    expect(noArm[1]?.detail).toContain('signing boards');
+    expect(unpaired[0]?.status).toBe('N/A');
   });
 });
 

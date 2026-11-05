@@ -253,9 +253,12 @@ and the board is **fail-closed**: it can (and does) exit non-zero.
   EVERY full board (~a minute total; checkless rows). HEALTH checks
   random < greedy < the best act-1 ARM row; an INVERSION means the
   instrument is broken, not the balance. The bare-baseline gap is narrow
-  (0.200 vs 0.225 at the 86e3 maiden read, n=40) — an occasional
-  random↔greedy inversion WARN is expected noise; the ARM-vs-anchor legs
-  are the load-bearing ones. **At amendment/re-pin boards the
+  (0.200 vs 0.225 at the 86e3 maiden read, n=40), so since 150c the
+  random < greedy leg reads against its noise: on the anchors' shared
+  seeds, an exact sign test on the seeds one won and the other lost,
+  WARN only when random wins more of them at one-sided p < 0.05; a tie
+  or a flip inside the noise reads ok. The ARM-vs-anchor legs are the
+  load-bearing ones. **At amendment/re-pin boards the
   searched-UPPER leg is additionally a FRESH `--search` derive** (the
   85g5 frozen-vector lesson: a deployed vector's ceiling drifts), not
   just the standing arb rows.
@@ -5444,3 +5447,13 @@ deltas. The pre-X H7c→O log lives at
   on 146b's rows gives the four figures 146b recorded on the shared
   seeds (−0.125, −0.100, −0.100, −0.300) and the pooled four beside
   them.
+- **2026-11-05 — the skill gradient's random < greedy leg against its
+  noise** (§150, 150c). The leg now reads the two anchors on their
+  shared seeds by an exact sign test, WARN only when random wins more of
+  the seeds they split at one-sided p < 0.05. Re-read on the boards whose
+  dirs are on this machine (`output/board-runs/`): 146f random 11 of 40,
+  greedy 7, split 6 to 2, p 0.145; 146b 11 each, 3 to 3, p 0.656; 94h 3
+  each on the same seeds, 0 to 0, p 1; 92h 4 against 5, 1 to 2, p 0.875.
+  All four read ok; the old rule (`random < greedy`, strictly) WARNed at
+  146f, 146b and 94h. A second reader on the raw CSVs gives the same
+  counts. The smallest split that WARNs is 5 to 0.

@@ -170,3 +170,32 @@ walk on regen 2 to 5, the walk on deploy 1 to 15. The act-1 rows are the
 p 0.004 and 0.016), not on the long walk alone; TODO's row had act 1 at
 146b at 5 against 1. The rollout's horizon against a three-act walk's
 hops may not be where the loss sits.
+
+### 150c — the skill gradient's leg (2026-11-05)
+
+*Step zero:* both anchors run seeds 1 to 40 (146f's manifests), and
+150b's `winsBySeed` gives the per-seed join. The docstring's "a WARN on
+a signing board blocks the signing" is in no signed decision: 86e3's
+landing (`archive/post-83-worklog.md`) has the check "never gates", and
+BALANCE has HEALTH never gating, so the docstring drops it.
+
+Built: `signTestUpper` (the one-sided exact binomial tail) and
+`GRADIENT_FLOOR_P` (0.05); the random < greedy leg pairs the anchors'
+seeds, counts the seeds each won alone, and WARNs only when random's
+count is the larger at p < 0.05; it reads N/A without per-seed outcomes
+or a shared seed. The report row names the rates, the split and p. The
+docstring and BALANCE's board-protocol bullet say the same thing; the
+greedy < ARM leg is unchanged. *Pins:* the tail against five hand-worked
+binomial sums; a tie on the same seeds and on different seeds, a 4-to-0
+split ok, a 5-to-0 split WARN, a 12-to-2 split WARN at p 0.006.
+*Controls:* the old strict rule planted back fails the tie pin; the tail
+off by one (`i > k`) fails three pins. *The re-read* on four recorded
+boards (BALANCE.md 2026-11-05): all ok, where the old rule WARNed on
+three. `scratch/150/gradient-boards.ts` reads a board dir's gradient.
+
+One figure differs from TODO's record: TODO (and 147's audit) had 92h's
+anchors tied at 0.275 each; `output/board-runs/92h/` reads 0.100 and
+0.125 (4 and 5 of 40), and 92h's own report
+(`output/board-runs/92h-report.txt`) printed the same, ok. So 92h did not
+tie, and the leg had WARNed on 94h, 146b and 146f, not on every board
+since 92h.

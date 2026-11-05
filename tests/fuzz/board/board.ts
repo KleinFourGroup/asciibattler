@@ -572,12 +572,34 @@ export interface GradientRow {
   readonly detail: string;
 }
 
+/** 150c — P(X ≥ k) for X ~ Binomial(n, ½): the one-sided exact sign test
+ *  on n discordant seeds, k of them won by the side under test. */
+export function signTestUpper(k: number, n: number): number {
+  if (!Number.isInteger(k) || !Number.isInteger(n) || n < 0 || k < 0 || k > n) {
+    throw new Error(`signTestUpper: needs integers 0 ≤ k ≤ n (k ${k}, n ${n})`);
+  }
+  let pmf = Math.pow(0.5, n); // P(X = 0)
+  let tail = 0;
+  for (let i = 0; i <= n; i++) {
+    if (i >= k) tail += pmf;
+    pmf = (pmf * (n - i)) / (i + 1);
+  }
+  return Math.min(1, tail);
+}
+
+/** The level below which the random < greedy leg reads random as beating
+ *  greedy (one-sided). */
+export const GRADIENT_FLOOR_P = 0.05;
+
 /** The monotone skill gradient on the act-1 shape: pure-random < greedy <
  *  the ARM (the searched vector + the full doctrine arm). An INVERSION means
- *  the measurement instrument is broken — a bot that plays worse with more
- *  machinery is not a balance finding. HEALTH semantics: WARN, never a gate
- *  (the section contract), but a gradient WARN on a signing board blocks the
- *  signing by protocol, not by exit code. */
+ *  the instrument is broken, not the balance: a bot that plays worse with
+ *  more machinery is not a balance finding. HEALTH semantics: WARN, never a
+ *  gate. The random < greedy leg is narrow at the anchors' 40 seeds, so it
+ *  reads against its noise: on the seeds both anchors ran, an exact sign
+ *  test on the seeds one won and the other lost, WARN only when random wins
+ *  more of them at one-sided p < GRADIENT_FLOOR_P; a tie or a flip inside
+ *  the noise reads ok. The ARM legs are the load-bearing ones. */
 export function evaluateSkillGradient(
   metricsById: ReadonlyMap<string, InstrumentMetrics>,
 ): readonly GradientRow[] {
@@ -601,15 +623,7 @@ export function evaluateSkillGradient(
     });
     return rows;
   }
-  rows.push(
-    floor < mid
-      ? { label: 'random<greedy', status: 'ok', detail: `${fmt(floor)} < ${fmt(mid)}` }
-      : {
-          label: 'random<greedy',
-          status: 'WARN',
-          detail: `INVERTED: pure-random ${fmt(floor)} ≥ greedy ${fmt(mid)} — the instrument is broken, not the balance`,
-        },
-  );
+  rows.push(floorLeg(metricsById.get('anchor-random')?.winsBySeed, metricsById.get('anchor-greedy')?.winsBySeed, floor, mid));
   if (upper === undefined) {
     rows.push({
       label: 'greedy<ARM',
@@ -628,6 +642,41 @@ export function evaluateSkillGradient(
     );
   }
   return rows;
+}
+
+/** 150c — the random < greedy leg on the anchors' shared seeds. */
+function floorLeg(
+  randomWins: ReadonlyMap<number, boolean> | undefined,
+  greedyWins: ReadonlyMap<number, boolean> | undefined,
+  floor: number,
+  mid: number,
+): GradientRow {
+  const rates = `random ${floor.toFixed(3)}, greedy ${mid.toFixed(3)}`;
+  if (randomWins === undefined || greedyWins === undefined) {
+    return { label: 'random<greedy', status: 'N/A', detail: `${rates}; no per-seed outcomes to pair` };
+  }
+  let shared = 0;
+  let randomOnly = 0;
+  let greedyOnly = 0;
+  for (const [seed, r] of randomWins) {
+    const g = greedyWins.get(seed);
+    if (g === undefined) continue;
+    shared++;
+    if (r && !g) randomOnly++;
+    if (g && !r) greedyOnly++;
+  }
+  if (shared === 0) {
+    return { label: 'random<greedy', status: 'N/A', detail: `${rates}; the anchors share no seed` };
+  }
+  const p = signTestUpper(randomOnly, randomOnly + greedyOnly);
+  const split = `won by random alone ${randomOnly}, by greedy alone ${greedyOnly}, of ${shared} shared seeds; one-sided sign test p ${p.toFixed(3)}`;
+  return randomOnly > greedyOnly && p < GRADIENT_FLOOR_P
+    ? {
+        label: 'random<greedy',
+        status: 'WARN',
+        detail: `INVERTED past the noise: ${rates}; ${split} — the instrument is broken, not the balance`,
+      }
+    : { label: 'random<greedy', status: 'ok', detail: `${rates}; ${split} (a tie or a flip inside the noise is fine)` };
 }
 
 export function renderSkillGradient(rows: readonly GradientRow[]): string {

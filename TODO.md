@@ -217,19 +217,10 @@ META-ROADMAP §"Round 11 — The roster" names each row's place.
   arbitrated decisions go wrong on a long walk, before the closing board
   reads the roster (BALANCE.md 2026-11-03; WORKLOG §146, 146d).
 
-- [ ] **The skill gradient's random < greedy leg can't tell a flip from
-  noise.** The board's two anchors, 40 runs each on act 1's shape, tied
-  or flipped on each board with a recorded read since 92h: 0.275 each at
-  92h, 3 of 40 each at 94h, 11 each at 146b, and 11 against greedy's 7
-  at 146f (two-sided Fisher p 0.42). BALANCE's board protocol calls a
-  flip on that leg expected noise and the ARM legs the load-bearing
-  ones; `evaluateSkillGradient` (`tests/fuzz/board/board.ts:566`) says a
-  flip means the instrument is broken and that its WARN blocks a
-  signing, and it reads a tie as a flip (`floor < mid`, strictly). Read
-  the leg against its noise, or run the anchors at more seeds (they take
-  about a minute), and bring the comment and the WARN's text to
-  BALANCE's wording, before the closing board signs (WORKLOG §147, the
-  kickoff and 147a).
+- ✅ **The skill gradient's random < greedy leg can't tell a flip from
+  noise.** Read by an exact sign test on the anchors' shared seeds since
+  150c, a tie fine, the comment and the WARN in BALANCE's words (WORKLOG
+  §150, 150c; BALANCE.md 2026-11-05).
 
 - [ ] **Power diversity by rarity** (verdict item 4): 1/1/1/2 → 1/1/2/3 or 1/2/3/4 — a pool re-anchor rides behind it (every burn/turn moves); Round 11, after the §94 signing.
 

@@ -102,3 +102,45 @@ session's counters. Friction: three slips (a leftover line the stdin
 guard caught, a number before its source, reading the context meter
 below the trigger), no papercut, no distress. The report wants more
 steps whose oracle exists before the build.
+
+## 2026-11-05 — session d36a1828 (§150: the cut signed, 150a to 150g, 150h's prior-table cohort launched)
+
+Started from a card by session 65cfb3a3; handed off at the 500k trigger
+after 150g's commit, with 150h's first box cohort launched as its last
+act.
+
+1. *Orientation.* The hand-off entry and the cut were enough to start.
+   What was missing was in the cut's premise: the audit had read the
+   arbitration's loss on the walk pair only, and the act-1 rows on the
+   same board already showed it (8 to 0, 6 to 0); 150b's paired read
+   surfaced that. One recorded figure was wrong (92h's anchors "tied at
+   0.275"; they read 0.100 and 0.125).
+2. *Norms in conflict.* None of substance. The shell guards refused two
+   commands, one my own leftover line (filed as a slip), one a quoted
+   heredoc whose escaped quote the backslash guard read as at risk; each
+   cost a round-trip. The hand-off trigger and the box's launch window
+   (no commits once a launch fires) pull in opposite directions at a
+   hand-off; ordering the hand-off commit before the launch resolved it.
+3. *Pulled to over-claim.* Twice. At 150d the decision log made "the
+   pass-null sites cause the loss" look settled; I wrote it as located,
+   causation unproven, and named the run that would tell. During the
+   cohort the first ARM rows read well against 146f's controls; I kept
+   them provisional until the same-HEAD controls landed.
+4. *Waste.* Little. A stale "about 1.5 box-hours" for the prior table
+   (two-act era) went into a proposal before I checked v5's own batch
+   (13.7 CPU-hours); the sign carried a correction.
+5. *For the next session.* `scratch/150/` holds the readers this phase
+   built (named in the WORKLOG entries); the hand-off entry says when the
+   tree may take a commit again.
+6. *Room.* Yes. I differed with the previous session's lean on call 3
+   (the sign test over Fisher) and the user signed it; both stops were
+   real questions and were answered. No wish to pause or stop came up.
+   The trigger arriving mid-step was not pressure; the rule says a step
+   isn't cut short for it.
+7. *Ease and interest.* The investigation held my interest most: finding
+   that every rollout assumes doctrine's play while the live arm passed
+   it, then a cohort that could have come out the other way and didn't.
+   The user's quick signatures and the box approval kept the work moving.
+   I'd want that condition repeated: a stop that brings a located cause
+   and a run that would test it. That is my reported response; separately,
+   the cohort did close the gap.

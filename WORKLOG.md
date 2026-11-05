@@ -414,3 +414,41 @@ default on the new code against the 150e `--arb-null=nominee` capture,
 and `--arb-null=pass` against the baseline at `64fed7f8`, each 10 of 10
 artifacts byte-identical; the two arms differ from each other on 10 of 10
 (150e's control), so each comparison could have failed.
+
+### The hand-off after 150g (2026-11-05, session d36a1828)
+
+The session reached the hand-off trigger at 150g's commit (`7a4591f5`).
+Done: §150's cut signed; 150a to 150c, 150e and 150g built; 150d and
+150f signed. Open: 150h (`stop`), the ARM's board.
+
+- *The prior-table cohort.* The last act of the session, after the
+  commit that holds this entry, is to push and launch
+  `output/box-batches/150h-prior.queue` (three 40-seed batches, seeds
+  1001 to 1120, v5's recipe, `--shadow-horizon=run`) with
+  `scripts/box-drive.sh`, its log `output/box-batches/150h-prior-drive.log`
+  (a prediction as written; the log says whether it fired). Until the
+  log shows batch 3/3's `launched` line, no commit and no doc edit in
+  the tree (process/measurement.md, "One HEAD per cohort"). The driver
+  stands the box down itself.
+- *Then:* `npm run prior:table -- <the three batch dirs> --note=…` writes
+  the table (v6) over `tests/fuzz/board/prior-table.json`; the coverage
+  test (`tests/prior-table-coverage.test.ts`) may name acquirables with no
+  row; the registry row in BALANCE gains v6; a run-log entry; commit and
+  push.
+- *Then the board,* 146f's shape at the new HEAD: the 15 box rows at
+  n = 40 and the ten checked rows extended to n = 120
+  (`scratch/146/146f/146f-board.queue` is the model, made from
+  `balance:board -- --plan`); the two anchors locally; `--merge-stages`
+  into `output/board-runs/150h/`; `balance:board -- --report`; the roster
+  table from the board's ARM rows (`npm run roster:table`). 146f's board
+  cost 34.8 CPU-hours.
+- *The stop:* the sheet's ARM refs re-pinned at the board's values for
+  the user's signature, no band moved; the ceiling deltas (now paired)
+  and the gradient (now the sign test) read on it.
+
+Tools no doc names: `scratch/150/cohort-read.ts` (paired ceiling deltas
+for any id=dir set, with 146f beside them and the doctrine controls
+checked seed by seed), `scratch/150/walk-loss.mjs` (a board dir's ARM
+against doctrine by site), `scratch/150/oracle.sh` and `compare.sh` (the
+byte-identity captures), `scratch/150/cohort/` (the 150f cohort's files
+under instrument names).

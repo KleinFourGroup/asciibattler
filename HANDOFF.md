@@ -6,11 +6,11 @@ A fresh-session orientation for ASCIIbattler. Read this first; then dive into th
 
 **The ONE home for live status.** Other docs (and the agent memory) point here instead of restating it; when state changes, this section is the single place that updates.
 
-- **NEXT — ROUND 11 (The roster): §150, the board's instruments, 150h**: 150a to 150c, 150e and 150g built, 150d and 150f signed; 150h, the prior table under the new ARM on the box, then the board under it, then the re-pin at a stop (WORKLOG §150, 150f to 150g; [ROADMAP.md](ROADMAP.md) §150; the spec, [round-11-spec.md](round-11-spec.md)). **Open ◐:** none.
+- **NEXT — ROUND 11 (The roster): §150, the board's instruments, 150h**: 150a to 150c, 150e and 150g built, 150d and 150f signed; 150h, the prior table under the new ARM on the box, then the board under it, then the re-pin at a stop; the entry is "The hand-off after 150g" (WORKLOG §150; [ROADMAP.md](ROADMAP.md) §150; the spec, [round-11-spec.md](round-11-spec.md)). **Open ◐:** none.
 - **In flight:** 150h's prior-table cohort on the box from 2026-11-05, `output/box-batches/150h-prior.queue` (three 40-seed batches, seeds 1001 to 1120, `--shadow-horizon=run`), driven by `scripts/box-drive.sh`; then `npm run prior:table` on the three batch dirs.
 - **The public build:** `0.3.0` (`273d587d`, tag `v0.3.0`), uploaded to itch.io on 2026-11-04; the uploads before it are in Closed rounds below.
 - **Snapshots:** WorldSnapshot **v39** (no player keeps one) · RunSnapshot **v50** (a v49 save, `0.1.1`'s, rejects).
-- **Tests:** **3947 main** in 272 files at `7aff81a9` (149f); **581 fuzz:smoke** in 60 files and **1 fuzz:jobs-parity** at `66e221f1` (150e); typecheck clean; the journal corpus, run by hand, 37 tests over 33 journals, re-recorded at 146e.
+- **Tests:** **3947 main** in 272 files at `7a4591f5` (150g); **581 fuzz:smoke** in 60 files and **1 fuzz:jobs-parity** at `7a4591f5` (150g); typecheck clean; the journal corpus, run by hand, 37 tests over 33 journals, re-recorded at 146e.
 - **Model id: `claude-opus-5-5`** since 2026-09-22. When yours differs, say so at the next stop; at the user's word, review AGENTS.md against the vendor's current prompting guidance and record the new id (the last review: `archive/post-104-worklog.md`, "The new-model tone audit").
 - **Last phase: §149**, the stat sheet, 2026-11-05: a read-only page at `/tools/stat-sheet/` (`archive/worklog-phase-149.md`, with §148, Round 11's kickoff). Round 10 and every round before it are in Closed rounds below.
 

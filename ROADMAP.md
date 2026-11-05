@@ -72,7 +72,9 @@ sizes one.
 - ☑ **150a — BALANCE's header** (`none`): three Phase X sections to `archive/balance-header.md`, 700 lines to 642.
 - ☑ **150b — the ceiling deltas** (`none`): on the shared seeds, pinned where the sign flips; 146f −0.200, −0.150, −0.075, −0.350.
 - ☑ **150c — the skill gradient's leg** (`none`): an exact sign test on the shared seeds, a tie fine; four recorded boards read ok.
-- ◐ **150d — the arbitration's walk loss** (`stop`): located at the four sites whose null arm is "pass", against rollouts that assume doctrine's play; the fix's scope and a box run at the stop.
+- ☑ **150d — the arbitration's walk loss** (`stop`): located at the four sites whose null arm is "pass", against rollouts that assume doctrine's play; signed 2026-11-05, the lean: a flag, then a box cohort, the port site out.
+- ☐ **150e — the nominee null behind a flag** (`none`), inserted at 150d's sign: at the grant and fire sites the base's pick is the null arm; the flag off, the ARM byte-identical.
+- ☐ **150f — the cohort** (`stop`), inserted at 150d's sign: the four ceiling shapes at seeds 1 to 40 with the flag, the four doctrine controls at the same HEAD; the paired deltas, and whether to take it as the default.
 
 ## Phase 151 — the content (signed 2026-11-05)
 

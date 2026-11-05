@@ -284,3 +284,14 @@ to 40, with the four doctrine controls at the same HEAD. At 146f's
 per-run times that is about 6.8 CPU-hours for the four ARM rows and 1.6
 for the controls. Pre-registered read: the four paired ceiling deltas,
 now −0.200, −0.150, −0.075 and −0.350, and the sign counts beside them.
+
+### 150d signed; 150e and 150f inserted (2026-11-05)
+
+The user signed the lean ("Signing your lean"; "Box use is approved"):
+the base's pick as the null arm at the four pass-null sites, behind a
+flag off by default; the port site out of this cut; the four ceiling
+shapes at seeds 1 to 40 on the box with the four doctrine controls at
+the same HEAD. ROADMAP gains 150e (the flag, `none`, its byte-identity
+with the flag off the oracle) and 150f (the cohort, `stop`: the paired
+deltas, and whether the flag becomes the default, which moves every ARM
+row).

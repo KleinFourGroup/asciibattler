@@ -253,6 +253,16 @@ META-ROADMAP §"Round 11 — The roster" names each row's place.
   re-draws every recruit's level-ups, so it goes, with the eleventh
   draw, in a round that accepts the stream moving and re-runs the board.
 
+- [ ] **The corpus's trade rows, picked by what they drive.**
+  `corpus.test.ts` wants 20 of 21 command kinds to change a run, and the
+  rows that cover a trade are picked by seed, so a content change that
+  moves a run can lose a kind and send a session surveying chaos seeds
+  for a replacement: three port rows re-picked at 145g, chaos 15 and 26
+  for 7 and 37 at 146e, chaos 33 added for a unit paid off at 151b. A row
+  that drives its trade (a scripted port, say) may hold through a
+  content change, and §152 to §154 re-record the corpus often (session
+  3d0a8fc1's report; WORKLOG §151, 151b).
+
 ### Dis Pater
 
 - [ ] **Dis Pater's sentence, against the tithe as built** (117e's watch,
@@ -277,7 +287,9 @@ META-ROADMAP §"Round 11 — The roster" names each row's place.
 
 ### Ability descriptions
 
-- [ ] **Ability DESCRIPTION text (the name half is done).** Ability display *names* shipped at Yb (`AbilityDef.name`, required — the §61g audit found this already live); what remains is descriptive flavor text: a `description` on the ability config surfaced on the card ability rows ("Whip — long reach, rarely misses"). Cosmetic; surfaced at I6.
+- ✅ **Ability DESCRIPTION text (the name half is done).** Shipped at
+  §151: the schema's optional `description` (151d) and the 29 lines, the
+  name's tooltip on the full card (151e; WORKLOG §151).
 
 ### Unit descriptions
 

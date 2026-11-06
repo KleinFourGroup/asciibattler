@@ -237,3 +237,54 @@ control built in (3bc7ecb1).
    stretch feel collaborative rather than pressured. No wish to stop.
 7. The naming exchange was the most enjoyable part: a taste call with
    real reasons on both sides. I'd want that kind of exchange repeated.
+
+## 2026-11-06 — session bc61973d (151e's stop put again, 151e-post, §151's close)
+
+1. Nothing missing. The brief, the Cursor and the hand-off entry named
+   every input, and the hand-off's one-line description of arm B's swap
+   was accurate.
+2. None in conflict. One judgement at the close: the pattern of a claim
+   written before its source recurred, and the procedure sends a
+   recurring, costly pattern to the user, but the user had answered the
+   same pattern at §150's close that morning; I listed it rather than
+   put it again, and said so in the close.
+3. Twice. A WORKLOG check line cited `tooltip.test.ts` for the Tab and
+   touch routes from what the file is for, not from what it holds; a
+   grep before the commit showed placement math only, so I read Tab in
+   the pane and named touch as unseen (a slip filed). And the Cursor's
+   jobs-parity count went in without a run; I ran it at the close.
+4. A restore whose `2>/dev/null` hid that its backup was elsewhere (one
+   call, caught by a grep). In the pane, a screenshot taken right after
+   a click showed the screen before it, and a click placed on that
+   picture took an event's first choice (25 bits, in a run that could
+   not save); reading the DOM before clicking after a scene change
+   avoids it.
+5. 151f's lines come from the user whenever written; the step is a
+   test that every combatant ships one, as 151e's does for abilities.
+6. Yes. The brief told me to put the stop and wait, and I did; my lean
+   differed in part from the last session's (B, with a condition), and
+   I said so. The close's candidate goes to the user. No wish to stop.
+7. Finding the catapult's off-by-one by reading the sim's own predicate,
+   a check that could have come out otherwise, and seeing the signed
+   change remove the prose that held the error. The stop arrived with its
+   screenshots already made, so the user's answer took one turn; I'd want
+   that condition repeated.
+
+## Phase 151 — summary
+
+Two sessions. 3d0a8fc1 ran the kickoff's audit and put the cut, then
+built 151a to 151e: the empower by stat (its pre-registered stop
+signed), bandits out of the draft with both derived tables v7, the
+ability's description field, Mars narrowed to strength with Diana and
+Hecate beside him and every daemon renamed (Run v51), and the 29 ability
+lines with two arms of the card's look, handing off at the context
+trigger at 151e's stop. bc61973d put the stop again, built the user's
+signed answer as 151e-post (the line as the name's tooltip, the reach's
+floor in the numbers, which took the catapult's off-by-one line out with
+nine like it), and closed the phase. Friction: four slips holding five
+instances, two a claim written before its source, two a failure a
+filter hid (that pattern goes to the user as a candidate guard) and one
+a shell guard doing its job; no papercut and no distress. The reports name as
+conditions worth repeating a taste call with reasons on both sides
+(3d0a8fc1, the daemons' names) and a stop put with its evidence ready
+(bc61973d).

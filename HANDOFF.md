@@ -6,13 +6,13 @@ A fresh-session orientation for ASCIIbattler. Read this first; then dive into th
 
 **The ONE home for live status.** Other docs (and the agent memory) point here instead of restating it; when state changes, this section is the single place that updates.
 
-- **NEXT — ROUND 11 (The roster): §151's close** (151a to 151e done, the last two read and signed 2026-11-06; 151f, the units' lines, waits on the user's writing and does not hold it); then §152 ([ROADMAP.md](ROADMAP.md) §151; the calls, WORKLOG §151; the spec, [round-11-spec.md](round-11-spec.md)). **Open ◐:** none.
+- **NEXT — ROUND 11 (The roster): §152, the weapons and defense, by taste: its kickoff** ([ROADMAP.md](ROADMAP.md) §152; `process/planning.md` "Phase kickoff"; the spec, [round-11-spec.md](round-11-spec.md)). 151f, the units' lines, lands when the user writes them. **Open ◐:** none.
 - **In flight:** nothing on the box since 2026-11-06.
 - **The public build:** `0.3.0` (`273d587d`, tag `v0.3.0`), uploaded to itch.io on 2026-11-04; the uploads before it are in Closed rounds below.
 - **Snapshots:** WorldSnapshot **v39** (no player keeps one) · RunSnapshot **v51** (a v50 save, `0.3.0`'s, rejects).
-- **Tests:** **3959 main** in 272 files, **587 fuzz:smoke** in 60 files and **1 fuzz:jobs-parity** at `83cb01ed` (151e-post); typecheck clean; the journal corpus, run by hand, 38 tests over 34 journals, recorded at 151c.
+- **Tests:** **3959 main** in 272 files, **587 fuzz:smoke** in 60 files and **1 fuzz:jobs-parity** at `83cb01ed` (151e-post); typecheck clean; the journal corpus, run by hand, 38 tests over 34 journals, recorded at 151c and 38 passed at `83cb01ed`.
 - **Model id: `claude-opus-5-5`** since 2026-09-22. When yours differs, say so at the next stop; at the user's word, review AGENTS.md against the vendor's current prompting guidance and record the new id (the last review: `archive/post-104-worklog.md`, "The new-model tone audit").
-- **Last phase: §150**, the board's instruments, 2026-11-06: the arbitration's walk loss located and fixed (doctrine's pick as the ARM's null), the prior table, the roster table and the sheet's ARM refs re-derived under it (`archive/worklog-phase-150.md`). Round 10 and every round before it are in Closed rounds below.
+- **Last phase: §151**, the content, 2026-11-06: bandits out of the draft, Mars narrowed to strength with Diana and Hecate beside him and every daemon renamed (Run v51), the abilities' lines as the name's tooltip with the reach's floor in the numbers (`archive/worklog-phase-151.md`).
 
 ## Current state
 

@@ -12,7 +12,7 @@ with its spec, its per-phase worklogs (`archive/worklog-phase-142.md` to
 `-147.md`) and its session reports beside it; before it
 [archive/post-133-roadmap.md](archive/post-133-roadmap.md) (Round 9).
 
-**Status: Round 11 under way; §151, the content, is next.** The spec
+**Status: Round 11 under way; §152, the weapons and defense, by taste, is next.** The spec
 is [round-11-spec.md](round-11-spec.md), signed 2026-11-05. The charter,
 the decision points, the exit and the scope guards are in META-ROADMAP
 §"Round 11 — The roster"; its riders are TODO's "Round 11".
@@ -65,35 +65,21 @@ roster table and the sheet's ARM refs re-derived under it (WORKLOG
 - ☑ **150g — the nominee the default** (`none`), inserted at 150f's sign: the default byte-identical to the nominee capture and `--arb-null=pass` to the old ARM, 10 of 10 each.
 - ☑ **150h — the ARM's board** (`stop`), inserted at 150f's sign: the prior table re-derived under the new ARM and committed, then the full board under it, the roster table from its ARM rows; the sheet's ARM refs re-pinned for the user's signature, no band moved. Built: v6 and the roster table v6, the board at `8a63a20e` 0 FAIL, 16 WARN, the ceilings +0.025, +0.025, +0.125, −0.025; the re-pin signed 2026-11-06 with both leans: the deploy row's fires re-pinned, the gambler added to §154's parity item (WORKLOG 150h).
 
-## Phase 151 — the content (signed 2026-11-05)
+## Phase 151 — the content ✅ (closed 2026-11-06)
 
-Charter: bandits out of the draft (N28), with the roster table's guard
-failing on a recorded roster that holds an archetype no longer
-draftable; Mars as three one-stat idols (N24) at provisional sizes,
-Mars kept as the strength one, with the Run bump (v50 to v51); a `description` on the
-ability schema, a line on the card and the shipped abilities' text
-(A33); the units' lines, the user's, as they are written. **Why here:**
-each changes what a run draws or shows, not a number the retune reads,
-so the retune tunes the roster that ships, and the user's writing runs
-beside the balance phases. **Risk:** low. **Decision points:** the
-idols' provisional sizes; who drafts the abilities' text; the card
-line's look (a stop). **Exit:** no bandit in a draft or a port's stock;
-the roster table's guard failing on its planted case; the three idols in
-play by URL; a v50 save rejected with its message; a line on every
-shipped ability's card. **Scope guards:** no number the retune reads
-moved; the idols' sizes are §154's.
-
-The cut, signed 2026-11-06 (WORKLOG §151, "The cut signed"). ✅ DECIDED
-there: Mars stays as the strength idol and the Soldier keeps him; the
-daemons renamed for an object of their god, off "Idol"; the provisional
-sizes Mars's own per stat; the abilities' lines terse, the session's.
+Bandits out of the draft and the ports, with the roster guard on what a
+player can hold; Mars narrowed to strength, Diana and Hecate beside him,
+every daemon renamed off "Idol" (Run v51); the ability's optional
+`description`, its 29 lines as the name's tooltip on the card, the
+reach's floor in the numbers (WORKLOG §151, in
+`archive/worklog-phase-151.md`).
 
 - ☑ **151a — the empower, by stat** (`none`, a pre-registered stop): under Mars a corrupter's or rioter's pick moves, 1 of 30 act-1 seeds and 4 of 30 walk seeds; signed 2026-11-06 (WORKLOG 151a).
 - ☑ **151b — bandits out of the draft** (`none`): the roster guard on an archetype no player can hold; both tables v7, v6 less the bandit; a scripted port stocks only draftable units.
 - ☑ **151c — Mars narrowed, Diana and Hecate, the renames** (`batch`): Run v50 to v51, a v50 save rejected with its message; read at 151e's stop and signed 2026-11-06 (WORKLOG 151e-post).
 - ☑ **151d — the ability's `description`** (`none`): the schema's optional field and the attack editor's; the corpus 0 of 33 differ.
 - ☑ **151e — the abilities' lines and the card's line** (`stop`): 29 terse lines, a test that each ships one; arm B signed 2026-11-06, the line as the name's tooltip with the reach's floor in the numbers, built as 151e-post (WORKLOG 151e-post).
-- ☐ **151f — the units' lines** (`none`): the user's 23, with a test that every combatant has one; it does not hold the close.
+- ☐ **151f — the units' lines** (`none`): the user's 23, with a test that every combatant has one; carried past the close as signed at the cut, it lands when the user writes them.
 
 ## Phase 152 — the weapons and defense, by taste (signed 2026-11-05)
 

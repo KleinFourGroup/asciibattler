@@ -545,3 +545,22 @@ the lean is §154 beside the priest's parity, the gambler added to its
 charter. After the re-pin the board would carry 9 WARN, all on the walk's
 signed bands and the regen walk's ceiling (a prediction, read when the
 report runs again on the re-pinned sheet).
+
+### 150h signed (2026-11-06)
+
+The user signed the re-pin and both leans ("signing the re-pin and your
+leans!"): the deploy row's fires literal re-pinned with the firer's, at
+5.44, and the gambler added to §154's parity item beside the priest
+(ROADMAP §154 and META-ROADMAP's Round 11 line). The sheet's 2026-11-06
+entry holds the values; read on its own board, every act-1 entry passes
+and the nine WARNs are the ones predicted at the stop, and on 146f's
+board the same sheet WARNs on seven of the twelve act-1 entries (BALANCE
+2026-11-06, "the sheet amended at the ARM's board").
+
+The user's lead on the parity, for §154: act 1's encounters "look to be
+a bit bimodal in their difficulty: healing on the easy ones just doesn't
+actually help, and on the hard ones it's not enough." It fits the
+priest. It does not by itself cover the gambler, whose kit does not
+heal and whose gap is the larger (−16.7 and −13.3 to the priest's −10.8
+and −8.3); a per-encounter read of the three characters' act-1 rows
+would test both.

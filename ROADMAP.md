@@ -76,7 +76,7 @@ sizes one.
 - ☑ **150e — the nominee null behind a flag** (`none`), inserted at 150d's sign: `--arb-null=nominee`; the dial off, the ARM byte-identical on 10 of 10 artifacts.
 - ☑ **150f — the cohort** (`stop`), inserted at 150d's sign: the ceiling deltas 0.000, +0.025, +0.225, −0.025 (146f −0.200, −0.150, −0.075, −0.350); signed 2026-11-05, the nominee to be the default.
 - ☑ **150g — the nominee the default** (`none`), inserted at 150f's sign: the default byte-identical to the nominee capture and `--arb-null=pass` to the old ARM, 10 of 10 each.
-- ◐ **150h — the ARM's board** (`stop`), inserted at 150f's sign: the prior table re-derived under the new ARM and committed, then the full board under it, the roster table from its ARM rows; the sheet's ARM refs re-pinned for the user's signature, no band moved. Built: v6 and the roster table v6, the board at `8a63a20e` 0 FAIL, 16 WARN, the ceilings +0.025, +0.025, +0.125, −0.025; the re-pin at the stop (WORKLOG 150h).
+- ☑ **150h — the ARM's board** (`stop`), inserted at 150f's sign: the prior table re-derived under the new ARM and committed, then the full board under it, the roster table from its ARM rows; the sheet's ARM refs re-pinned for the user's signature, no band moved. Built: v6 and the roster table v6, the board at `8a63a20e` 0 FAIL, 16 WARN, the ceilings +0.025, +0.025, +0.125, −0.025; the re-pin signed 2026-11-06 with both leans: the deploy row's fires re-pinned, the gambler added to §154's parity item (WORKLOG 150h).
 
 ## Phase 151 — the content (signed 2026-11-05)
 
@@ -127,8 +127,9 @@ the target. **Scope guards:** acts 2 and 3 recorded, not retuned.
 ## Phase 154 — the kits (signed 2026-11-05)
 
 Charter: the officer, the mercenary, the halberdier and the stormcaller
-(C20); the priest's parity (C16); the area-status enemies' retune (C19);
-the blind fix (C12), the kiter's case a stop; the idols' sizes (N24); the
+(C20); the priest's and the gambler's parity against the soldier (C16,
+the gambler added at 150h's sign); the area-status enemies' retune
+(C19); the blind fix (C12), the kiter's case a stop; the idols' sizes (N24); the
 wolf's retreat, if it plays as a plain biter. **Why here:** after power,
 which moves the worth the kit watches read; before the closing board.
 **Risk:** medium: a call per kit. **Decision points:** each kit change;

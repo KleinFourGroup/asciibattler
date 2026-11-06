@@ -5573,3 +5573,20 @@ deltas. The pre-X H7c→O log lives at
   eight ARM rows, and on 146f's board the sheet's parity gaps and 150b's
   ceilings. The roster table rebuilt from the eight ARM rows as v6 (the
   registry above).
+- **2026-11-06 — the sheet amended at the ARM's board** (§150, 150h,
+  user-signed). Act 1's ARM entries re-pinned at the board's n = 120
+  values: the six win refs (0.775 / 0.942, 0.667 / 0.858, 0.608 /
+  0.808), the banks 130.0 / 83.3, the firer's fires 4.69, the
+  transaction rates 0.292 / 0.900, and the deploy row's fires, a literal
+  in `tests/fuzz/board/board.ts` held at 2.0 since 72f, at 5.44. The fire
+  channel and the forced King and Queen (doctrine rows) hold, and no band
+  moved. The values are the sheet's (`tests/fuzz/board/signed-sheet.json`,
+  its 2026-11-06 entry). Read on its own board (`output/board-runs/150h/`):
+  every act-1 entry PASS, 0 FAIL, 9 WARN (before the re-pin 16): the
+  walk rows against seam 1, act 1's wall on deploy and the terminal pair,
+  and the regen walk's ceiling. Its control, the same sheet on
+  146f's board: WARN on seven of the twelve act-1 entries (the soldier's
+  two wins, the firer's bank and fires, the deploy row's fires, the
+  priest's and the gambler's regen), PASS on the five that moved less than
+  their tolerance (the deploy wins of the priest and the gambler, the
+  shopper's bank, both transaction rates).

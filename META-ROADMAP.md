@@ -1030,8 +1030,10 @@ landing, the Idol of Mars split into three, and bandits out of the draft.
   level-up draw and its growth key (R19) in the same re-baseline: taking
   the key out moves five run streams.
 - **The kit watches** (C20: officer, mercenary, halberdier and
-  stormcaller; the bandit's ends with N28); the priest's parity (C16); the area-status enemies'
-  retune (C19); the blind fix (C12), the kiter's case a stop.
+  stormcaller; the bandit's ends with N28); the priest's and the
+  gambler's parity against the soldier (C16, the gambler added at 150h's
+  sign); the area-status enemies' retune (C19); the blind fix (C12), the
+  kiter's case a stop.
 - **Mars as three one-stat idols** (N24): strength, ranged and magic, in
   place of one that empowers all three; a prior-table rebuild.
 - **Bandits not draftable** (N28), with the roster table's guard failing

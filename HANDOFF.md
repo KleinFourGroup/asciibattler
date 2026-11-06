@@ -6,7 +6,7 @@ A fresh-session orientation for ASCIIbattler. Read this first; then dive into th
 
 **The ONE home for live status.** Other docs (and the agent memory) point here instead of restating it; when state changes, this section is the single place that updates.
 
-- **NEXT — ROUND 11 (The roster): §150, the board's instruments, 150h**: 150a to 150c, 150e and 150g built, 150d and 150f signed; 150h at its stop: the prior table v6 and the roster table v6 committed, the board back at `8a63a20e` (`output/board-runs/150h/`, its report `output/board-runs/150h-report.txt`), the sheet's ARM refs re-pinned for the user's signature with two calls; the entry is "150h — the prior table v6, then the board" (WORKLOG §150; [ROADMAP.md](ROADMAP.md) §150; the spec, [round-11-spec.md](round-11-spec.md)). **Open ◐:** 150h (the re-pin, unsigned).
+- **NEXT — ROUND 11 (The roster): §150's close, then §151**: every §150 step built or signed, the last 150h, signed 2026-11-06 (the prior table v6, the roster table v6, the sheet's ARM refs re-pinned at the board at `8a63a20e`, the gambler added to §154's parity item); the close is [process/planning.md](process/planning.md) "Phase close" (WORKLOG §150; [ROADMAP.md](ROADMAP.md) §150 and §151; the spec, [round-11-spec.md](round-11-spec.md)). **Open ◐:** none.
 - **In flight:** nothing; the box is destroyed.
 - **The public build:** `0.3.0` (`273d587d`, tag `v0.3.0`), uploaded to itch.io on 2026-11-04; the uploads before it are in Closed rounds below.
 - **Snapshots:** WorldSnapshot **v39** (no player keeps one) · RunSnapshot **v50** (a v49 save, `0.1.1`'s, rejects).

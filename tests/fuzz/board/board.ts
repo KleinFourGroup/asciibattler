@@ -248,7 +248,7 @@ function act1Posture(
       ? 'arbitrated:scored:59-regen-vector'
       : 'arbitrated:scored:92c2-winner';
   const provisional = character === 'gambler' ? ` [${sheet.gamblerNote}]` : '';
-  const winSource = `146g re-pin at the 146f board (act 1, The Periphery, arb λ=0.5, n=120 pooled, ±8)${provisional}`;
+  const winSource = `150h re-pin at the 150h board (act 1, The Periphery, arb λ=0.5, doctrine's pick the null, n=120 pooled, ±8)${provisional}`;
   const checks: BoardCheck[] = [
     ref('winRate', refs.winRefs[character][posture], WIN_TOL, winSource),
   ];
@@ -257,16 +257,16 @@ function act1Posture(
   // dissolution is the arm's structure, not a drift to chase.
   if (character === 'soldier' && posture === 'regen') {
     checks.push(
-      ref('terminalBank', refs.bankRefs.firer, BANK_TOL, '146g re-pin at the 146f board: the firer banks ~115 after act 1 (88 at 94h, on The Start)'),
-      ref('firesPerRun', refs.firerFiresPerRun, 1.0, '146g re-pin at the 146f board: ~2.5 arbitrated fires a run'),
-      ref('transactionRate', refs.firerTransactionRate, 0.1, '146g re-pin at the 146f board: the firer shops in ~31% of runs (the port economy re-activated by the fold at 85g6d)'),
+      ref('terminalBank', refs.bankRefs.firer, BANK_TOL, '150h re-pin at the 150h board: the firer banks ~130 after act 1 (115 at 146f, under the pass null)'),
+      ref('firesPerRun', refs.firerFiresPerRun, 1.0, '150h re-pin at the 150h board: ~4.7 arbitrated fires a run (2.5 at 146f, under the pass null)'),
+      ref('transactionRate', refs.firerTransactionRate, 0.1, '150h re-pin at the 150h board: the firer shops in ~29% of runs (the port economy re-activated by the fold at 85g6d)'),
     );
   }
   if (character === 'soldier' && posture === 'deploy') {
     checks.push(
-      ref('terminalBank', refs.bankRefs.shopper, BANK_TOL, '146g re-pin at the 146f board: the deploy row banks ~80 after act 1 (58 at 94h, on The Start)'),
-      ref('transactionRate', refs.shopperTransactionRate, 0.1, '146g re-pin at the 146f board: the deploy vector shops in ~88% of runs'),
-      ref('firesPerRun', 2.0, 1.0, '72f: ~2.0 arbitrated fires/run, HELD at 85g6d (1.77 in-band)'),
+      ref('terminalBank', refs.bankRefs.shopper, BANK_TOL, '150h re-pin at the 150h board: the deploy row banks ~83 after act 1 (80 at 146f)'),
+      ref('transactionRate', refs.shopperTransactionRate, 0.1, '150h re-pin at the 150h board: the deploy vector shops in ~90% of runs'),
+      ref('firesPerRun', 5.44, 1.0, '150h re-pin at the 150h board: ~5.4 arbitrated fires a run (2.0 from 72f to 146f, under the pass null)'),
     );
   }
   const base = character === 'soldier' ? posture : `${character}-${posture}`;

@@ -600,7 +600,8 @@ three session reports (65cfb3a3, d36a1828, 3bc7ecb1):
   so it goes to the user as a candidate; the lean is no new rule, since
   AGENTS "Evidence" already says a claim points at a tool result from
   this session and each instance broke that rule, and no guard I can
-  name catches a prose figure.
+  name catches a prose figure. The user agreed, no rule ("I fully
+  agree; no need for a rule there", 2026-11-06).
 - *A shell guard refusing a command before it ran*: the stdin guard on a
   leftover first line (150a, slip), the backslash guard twice in 3bc7ecb1
   and once in d36a1828; one resend each, the guards doing their job.

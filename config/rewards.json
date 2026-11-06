@@ -22,6 +22,8 @@
       "id": "daemons",
       "entries": [
         { "kind": "daemon", "weight": 1, "daemon": "mars" },
+        { "kind": "daemon", "weight": 1, "daemon": "diana" },
+        { "kind": "daemon", "weight": 1, "daemon": "hecate" },
         { "kind": "daemon", "weight": 1, "daemon": "minerva" },
         { "kind": "daemon", "weight": 1, "daemon": "mercury" },
         { "kind": "daemon", "weight": 1, "daemon": "janus" },

@@ -496,7 +496,7 @@ config/                      # A4: balance JSON source of truth (paired with src
                              # 49d/f: grantQueue { passIsFinal } — the strict acquisition-order dial (ships TRUE, the locked default; RunConfig.passIsFinal overrides for tests/fuzz)
   daemons.json               # L1→47c: the idol catalog, authored in the rule vocabulary — `rules: Rule[]`
                              # (modifier | hook; the shared daemon/packet effect pool; trigger×op×filter
-                             # matrix parse-enforced). Mars/Minerva empower hooks; Mercury coin-flip full
+                             # matrix parse-enforced). Mars/Diana/Hecate/Minerva empower hooks, one stat each; Mercury coin-flip full
                              # redraw; Janus guaranteed 2-card redraw — all `turnStart` grant hooks;
                              # Dis Pater on-kill bits tithe (88c — the daemonized miner)
   encounters.json            # U3a: the authored-fight catalog (name/healthPool/kind/fit-filter/waves grammar + 48a rewards refs) — ALL 13 encounters reference a reward table (48g)

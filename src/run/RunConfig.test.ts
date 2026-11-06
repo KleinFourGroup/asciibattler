@@ -238,3 +238,15 @@ describe('sectorAdvanceConfig (the scatter slice that survives a sector advance)
     });
   });
 });
+
+describe('daemon= reaches each empower idol by its id', () => {
+  it('mars, diana and hecate each start a run as its daemon, and round-trip the query', () => {
+    for (const id of ['mars', 'diana', 'hecate']) {
+      const config = parseRunConfig(new URLSearchParams(`daemon=${id}`));
+      expect(config.daemon?.id, id).toBe(id);
+      expect(runConfigToQueryString(config), id).toContain(`daemon=${id}`);
+    }
+    // The control: an id the catalog lacks starts no daemon from the dial.
+    expect(parseRunConfig(new URLSearchParams('daemon=apollo')).daemon).toBeUndefined();
+  });
+});

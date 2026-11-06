@@ -90,7 +90,7 @@ sizes Mars's own per stat; the abilities' lines terse, the session's.
 
 - ☑ **151a — the empower, by stat** (`none`, a pre-registered stop): under Mars a corrupter's or rioter's pick moves, 1 of 30 act-1 seeds and 4 of 30 walk seeds; signed 2026-11-06 (WORKLOG 151a).
 - ☑ **151b — bandits out of the draft** (`none`): the roster guard on an archetype no player can hold; both tables v7, v6 less the bandit; a scripted port stocks only draftable units.
-- ☐ **151c — Mars narrowed, Diana and Hecate, the renames** (`batch`): +4 strength, +4 ranged, +8 magic; every daemon off "Idol"; Run v50 to v51.
+- ◐ **151c — Mars narrowed, Diana and Hecate, the renames** (`batch`): built, read at 151e's stop; Run v50 to v51, a v50 save rejected with its message.
 - ☑ **151d — the ability's `description`** (`none`): the schema's optional field and the attack editor's; the corpus 0 of 33 differ.
 - ☐ **151e — the abilities' lines and the card's line** (`stop`): 29 terse lines, the field required; the look in two arms.
 - ☐ **151f — the units' lines** (`none`): the user's 23, with a test that every combatant has one; it does not hold the close.

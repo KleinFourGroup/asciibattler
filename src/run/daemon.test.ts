@@ -420,11 +420,13 @@ describe('battleRulesFor (the battle-domain compile)', () => {
 });
 
 describe('the shipped catalog (config/daemons.json) — design-shape pins', () => {
-  it('ships the eleven daemons', () => {
+  it('ships the thirteen daemons', () => {
     expect(DAEMONS.map((d) => d.id).sort()).toEqual([
       'cornucopia',
+      'diana',
       'dis-pater',
       'fortuna',
+      'hecate',
       'janus',
       'laverna',
       'mars',
@@ -510,8 +512,8 @@ describe('the shipped catalog (config/daemons.json) — design-shape pins', () =
     expect(daemonEmpowerHook(moneta)).toBeUndefined();
   });
 
-  it('mars and minerva are empower-only; mercury and janus are redraw-only', () => {
-    for (const id of ['mars', 'minerva']) {
+  it('mars, diana, hecate and minerva are empower-only; mercury and janus are redraw-only', () => {
+    for (const id of ['mars', 'diana', 'hecate', 'minerva']) {
       const d = daemonById(id)!;
       expect(daemonEmpowerHook(d)).toBeDefined();
       expect(daemonRedrawHook(d)).toBeUndefined();
@@ -543,16 +545,17 @@ describe('the shipped catalog (config/daemons.json) — design-shape pins', () =
     expect(daemonRedrawHook(janus)!.maxCardsPerTurn).toBeLessThan(DECK.handSize);
   });
 
-  it('mars buffs offense, minerva buffs defense (distinct keys, additive mods)', () => {
-    const mars = daemonEmpowerHook(daemonById('mars')!)!.buff;
-    const minerva = daemonEmpowerHook(daemonById('minerva')!)!.buff;
-    expect(mars.key).not.toBe(minerva.key);
-    for (const stat of ['strength', 'ranged', 'magic'] as const) {
-      expect(mars.mods[stat]?.add).toBeGreaterThan(0);
+  it('mars, diana and hecate each buff one attack stat under one key; minerva buffs defense under her own', () => {
+    const buff = (id: string) => daemonEmpowerHook(daemonById(id)!)!.buff;
+    for (const [id, stat] of [['mars', 'strength'], ['diana', 'ranged'], ['hecate', 'magic']] as const) {
+      expect(Object.keys(buff(id).mods), id).toEqual([stat]);
+      expect(buff(id).mods[stat]?.add, id).toBeGreaterThan(0);
+      expect(buff(id).key, id).toBe(buff('mars').key);
+      expect(buff(id).merge, id).toBe('add');
     }
-    expect(mars.mods.defense).toBeUndefined();
-    expect(minerva.mods.defense?.add).toBeGreaterThan(0);
-    expect(minerva.mods.strength).toBeUndefined();
+    const minerva = buff('minerva');
+    expect(minerva.key).not.toBe(buff('mars').key);
+    expect(Object.keys(minerva.mods)).toEqual(['defense']);
   });
 
   it('daemonById misses return undefined', () => {

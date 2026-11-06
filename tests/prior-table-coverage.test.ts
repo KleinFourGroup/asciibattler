@@ -52,6 +52,11 @@ interface PriorTableShape {
  * stock filters owned) — so the soldier's own idol is structurally
  * unmeasurable on that bank. Clears when a priest/gambler shadow batch feeds
  * a table build. Derived from the character config, not spelled as an id.
+ *
+ * `daemon:diana`, `daemon:hecate` — the ranged and magic halves of Mars,
+ * added when he was narrowed to strength, after v7's batches were measured.
+ * The fold prices them at 0 until the prior table is rebuilt at Round 11's
+ * closing board, which clears both.
  */
 function pendingAcknowledgments(): ReadonlyMap<string, string> {
   const soldier = CHARACTERS.find((c) => c.id === DEFAULT_CHARACTER_ID);
@@ -61,6 +66,8 @@ function pendingAcknowledgments(): ReadonlyMap<string, string> {
       `daemon:${soldier.daemon}`,
       `the ${soldier.id}'s start daemon — owned from hop 0 on every all-${soldier.id} shadow batch, so no site ever offers it; clears at the first multi-character shadow build`,
     ],
+    ['daemon:diana', "added after v7's batches were measured; clears at the closing board's rebuild"],
+    ['daemon:hecate', "added after v7's batches were measured; clears at the closing board's rebuild"],
   ]);
 }
 

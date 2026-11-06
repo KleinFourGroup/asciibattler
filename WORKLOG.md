@@ -301,3 +301,51 @@ old baseline differed on 13 of 33 journals; recorded again, none of the
 survey of chaos seeds 1 to 40 on its four dial sets found one run that
 pays a unit off, chaos 33, added; recorded again, 34 journals, 0 differ,
 20 of 21 command kinds change a run, `corpus.test.ts` 38 passed.
+
+### 151c — Mars narrowed, Diana and Hecate, the renames (2026-11-06)
+
+The user's last names (2026-11-06: "Cloak and scales are objectively
+better; let's go with those!"): the Cloak of Laverna and the Scales of
+Moneta. Built: Mars (`mars` kept) +4 strength alone, the Spear of Mars;
+`diana`, the Quiver of Diana, +4 ranged; `hecate`, the Torch of Hecate,
++8 magic; each one empower a turn under the shared `honed` key with
+`merge: add`, priced 40, weight 1 in the daemons reward table after Mars.
+Every daemon off "Idol" as signed, and the three character lines with
+them. Run v50 to v51; the fingerprint's diff is its version line alone.
+
+- *The v50 save.* `save-across-map.test.ts` said a bump turns it into
+  the rejection check, never re-recorded, so no v51 save was recorded (the
+  cut's "a v51 one recorded" dropped). It now pins: `Run.fromJSON`
+  refuses it; the run slot, stamped 50, rejects it as stale before
+  loading, keeps its text, and the player reads `save.rejected`; the
+  control, the same save stamped at v51, loads.
+- *The strike-conversion test* reads Mars's ranged and magic at Diana's
+  and Hecate's keys (`MOVED_AFTER`), the converted 4 and 8, until it
+  retires at §152.
+- *The prior table's guard* acknowledges `daemon:diana` and
+  `daemon:hecate` PENDING until the closing board's rebuild; the fold
+  prices them at 0 until then. Mars stays acknowledged as the Soldier's
+  start daemon.
+- *A mirror of the empower policy* in `arbitratedStrategy.test.ts` called
+  the selector without the buff; with Mars on strength alone it no longer
+  matched the policy path, so it passes the grant's buff as the path has
+  since 151a.
+
+Checks: the catalog's pins (thirteen daemons; Mars, Diana and Hecate one
+attack stat each under one key, Minerva defense under her own);
+`daemon=mars|diana|hecate` start a run with that daemon and round-trip,
+an unknown id starts none; a Soldier's ports over seeds 1 to 120 stock
+Diana 17 and Hecate 9 times and never Mars. Hecate stocked none of the
+first 30 seeds' 60 slots, and over 120 seeds 9 where 20 is the mean, the
+lowest of the twelve; `sampleDistinct` is an unweighted partial
+Fisher–Yates, so the session reads it as chance. `npm test` 3955
+passed; the fuzz smoke 587 passed. The corpus: a replay differed on 34 of
+34 journals (the renames alone change the event payloads), recorded
+again, 0 of 34 differ, 20 of 21 command kinds, `corpus.test.ts` 38
+passed.
+
+*Read at 151e's stop (batch):* a new run as the Soldier; at the pre-turn
+gate the Spear of Mars offers one empower, +4 strength, the card badged
+"Honed"; wrong looks like three stats, or no prompt. Diana and Hecate by
+`?daemon=diana` and `?daemon=hecate`; the new names on the character
+select, the ports and the rewards.

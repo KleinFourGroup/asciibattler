@@ -521,6 +521,7 @@ describe('the pickGrantAction chokepoint (70d) — harness contracts', () => {
           { empowersRemaining: grant.remaining },
           { kind: 'level', dir: 'hi' },
           rng,
+          grant.effect.buff,
         );
         return pos === null ? null : { kind: 'empower', handIndex: pos };
       }

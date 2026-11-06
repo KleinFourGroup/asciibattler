@@ -75,9 +75,22 @@ const ADDED_AFTER = new Set(['wolf', 'giant_rat', 'fox', 'puma', 'tiger', 'bear'
 const round2 = (x: number): number => Math.round(x * 100) / 100;
 const P = BEFORE.pooledRate;
 
-/** The expected config: the rules' numbers with the departures over them. */
+/** Mars's ranged and magic, moved to daemons of their own on their converted
+ *  numbers when he was narrowed to strength (signed 2026-11-06). */
+const MOVED_AFTER: Record<string, string> = {
+  'buffs:daemons/mars.ranged': 'buffs:daemons/diana.ranged',
+  'buffs:daemons/mars.magic': 'buffs:daemons/hecate.magic',
+};
+
+/** The expected config: the rules' numbers with the departures over them,
+ *  and the moved keys at their new homes. */
 function derive(): Record<string, number> {
-  return { ...deriveRules(), ...DEPARTURES };
+  const out: Record<string, number> = { ...deriveRules(), ...DEPARTURES };
+  for (const [from, to] of Object.entries(MOVED_AFTER)) {
+    out[to] = out[from]!;
+    delete out[from];
+  }
+  return out;
 }
 
 /** The rules' numbers, from the frozen numbers and the rates alone. */

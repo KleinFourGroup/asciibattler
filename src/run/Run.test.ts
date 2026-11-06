@@ -3114,7 +3114,7 @@ describe('Run', () => {
       run.dispatch({ kind: 'usePacket', cacheIndex: 0 });
       run.dispatch({ kind: 'usePacket', cacheIndex: 0 });
       const wire = JSON.parse(JSON.stringify(run.toJSON()));
-      expect(wire.schemaVersion).toBe(50); // the format without precision and evasion
+      expect(wire.schemaVersion).toBe(51); // the format since Mars was narrowed to strength
       const restored = Run.fromJSON(wire, new EventBus<GameEvents>());
       // The stores carry provenance ({rule, sourceId}).
       expect(restored.injectedEncounterRules).toEqual([
@@ -3304,7 +3304,7 @@ describe('Run', () => {
       const { run, bus } = freshRunWithBus(1, { daemon: null });
       dockAtPort(run, bus);
       const wire = JSON.parse(JSON.stringify(run.toJSON()));
-      expect(wire.schemaVersion).toBe(50); // the format without precision and evasion
+      expect(wire.schemaVersion).toBe(51); // the format since Mars was narrowed to strength
       expect(wire.phase).toBe('port');
       const restored = Run.fromJSON(wire, new EventBus<GameEvents>());
       expect(restored.phase).toBe('port');
@@ -3350,6 +3350,19 @@ describe('Run', () => {
       expect(stocked.get('bandit') ?? 0, 'bandits stocked').toBe(0);
       expect([...stocked.keys()].filter((a) => undraftable.has(a))).toEqual([]);
       expect(stocked.size).toBeGreaterThan(5);
+    });
+
+    it("a Soldier's ports stock Diana and Hecate, the halves of Mars he does not start with, and never Mars", () => {
+      const counts = new Map<string, number>();
+      for (let seed = 1; seed <= 120; seed++) {
+        const { run, bus } = freshRunWithBus(seed);
+        expect(run.daemons.map((d) => d.id)).toEqual(['mars']);
+        dockAtPort(run, bus);
+        for (const s of run.portStock!.daemons) counts.set(s.daemonId, (counts.get(s.daemonId) ?? 0) + 1);
+      }
+      expect(counts.get('diana') ?? 0, JSON.stringify([...counts])).toBeGreaterThan(0);
+      expect(counts.get('hecate') ?? 0, JSON.stringify([...counts])).toBeGreaterThan(0);
+      expect(counts.get('mars') ?? 0).toBe(0);
     });
 
     it('unit slots price at the level curve ± the config jitter, integer ≥1; same seed → same stock', () => {
@@ -3642,7 +3655,7 @@ describe('Run', () => {
       run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
       chipTurn(bus, { player: 0, enemy: 0 }, [], { bits: 9 });
       const wire = JSON.parse(JSON.stringify(run.toJSON()));
-      expect(wire.schemaVersion).toBe(50); // the format without precision and evasion
+      expect(wire.schemaVersion).toBe(51); // the format since Mars was narrowed to strength
       expect(wire.phase).toBe('reward');
       const restored = Run.fromJSON(wire, new EventBus<GameEvents>());
       expect(restored.pendingRewards).toEqual([
@@ -6029,7 +6042,7 @@ describe('the event phase', () => {
     const run = openEventAtSeedScan({ forcedEventId: 'corrupted-shrine' });
     expect(run.phase).toBe('event');
     const wire = run.toJSON();
-    expect(wire.schemaVersion).toBe(50); // the format without precision and evasion
+    expect(wire.schemaVersion).toBe(51); // the format since Mars was narrowed to strength
     expect(wire.activeEvent).toEqual({ eventId: 'corrupted-shrine', pageId: 'start' });
     const restored = Run.fromJSON(JSON.parse(JSON.stringify(wire)), new EventBus<GameEvents>());
     expect(restored.phase).toBe('event');
@@ -6759,7 +6772,7 @@ describe('the fallen ledger (Run-owned, in the snapshot)', () => {
     bus.emit('unit:died', death({ unitId: 1, team: 'player', archetype: 'archer', power: 2 }));
     bus.emit('unit:died', death({ unitId: 2, team: 'enemy', archetype: 'bandit', power: 1 }));
     const wire = JSON.parse(JSON.stringify(run.toJSON()));
-    expect(wire.schemaVersion).toBe(50); // the format without precision and evasion
+    expect(wire.schemaVersion).toBe(51); // the format since Mars was narrowed to strength
     expect(wire.fallenLedger).toHaveLength(2);
     const restored = Run.fromJSON(wire, new EventBus<GameEvents>());
     expect(restored.fallenLedger).toEqual(run.fallenLedger);

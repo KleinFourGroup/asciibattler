@@ -134,6 +134,9 @@ period technology. That is the shipped run since 145g; the four acts it is
 being built toward are [plans/acts.md](plans/acts.md). Named
 deferrals: 1920s-register archetypes (riflemen etc.) are Cluster-5 sector-
 identity content, not a rider; the Roman daemon naming keeps fading out.
+Each daemon is named for an object of its god (the Spear of Mars, the
+Quiver of Diana), since a daemon is an item the company carries, rather than
+every one an "Idol of"; moving past the Roman gods is a TODO row.
 Rationale: WORKLOG §67-shape-lock.
 
 **Reference palette** (from the user's previous game; serves as the starting vocabulary, not a hard constraint):

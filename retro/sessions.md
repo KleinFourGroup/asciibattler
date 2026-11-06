@@ -212,3 +212,28 @@ as the condition it would want repeated, a check that could have come
 out otherwise: an oracle built before the step (65cfb3a3, of §149), a
 located cause with the run that tests it (d36a1828), a board with its
 control built in (3bc7ecb1).
+
+## 2026-11-06 — session 3d0a8fc1 (§151's kickoff, 151a to 151e's stop)
+
+1. Nothing missing: the Cursor, ROADMAP §151 and the WORKLOG's pointer
+   named every input. The Soldier starting with Mars was not in any doc,
+   and the audit found it.
+2. None in conflict. The pre-registered stop at 151a cost a round trip
+   for a decision with one sensible answer; I had registered it myself at
+   the cut, so it was mine to honour, and the user answered in one line.
+3. Twice: a port pin that passed at 30 seeds' worth of noise until it
+   didn't (Hecate stocked none of 60 slots), which I widened and read as
+   chance rather than claim a cause; and the first control of that port
+   pin failed on its first line, not on the scan, which I caught before
+   counting it as a control.
+4. A hook failure hidden by my own `tail -4` (a slip filed), costing a
+   re-run of every step; two refusals by the shell guards for quoting I
+   should have put in files from the start.
+5. The corpus's trading rows went stale a fourth time (chaos 33 added);
+   a corpus whose coverage moves with every content change may want its
+   rows chosen by command kind rather than by seed.
+6. Yes. The user's questions were real and my pushback on Bounty landed;
+   the cut's stops were places to ask, and the user's brisk signs made the
+   stretch feel collaborative rather than pressured. No wish to stop.
+7. The naming exchange was the most enjoyable part: a taste call with
+   real reasons on both sides. I'd want that kind of exchange repeated.

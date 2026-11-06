@@ -385,3 +385,20 @@ its grant chip "+4 RNG, click a card to empower"; the Soldier's own gate
 reads "Spear of Mars — +4 STR". Not seen: a card empowered and badged,
 and the ports and rewards with the new names (headless pins cover the
 stock).
+
+### The hand-off after 151e (2026-11-06, session 3d0a8fc1)
+
+Handed off at the context trigger, at 151e's stop. Done: 151a, 151b and
+151d (each `none`, signed or oracle-read), 151c and 151e built and open
+(◐). Open, all at 151e's stop, put to the user in this session's last
+message and to be put again by the next: the card line's look (arm A,
+built: the line under the name; arm B, a tooltip on the name; the
+session's lean B, since the hand already runs past a 1280×720 window and
+the lines will grow when the special abilities get flavour); the 29
+lines, for the user's edits; 151c's batch read (WORKLOG 151c, "Read at
+151e's stop"). 151f, the units' 23 lines, waits on the user's writing
+and does not hold the close. Files no doc names: the two arms'
+screenshots, `scratch/151/arm-a-line.jpg` and `arm-b-tooltip.jpg`; arm B
+is a one-line swap in `abilityRow` (`src/ui/UnitCard.ts`): drop the
+description div for `attachTooltip(name, () => def.description!)`, and
+its CSS rule with it.

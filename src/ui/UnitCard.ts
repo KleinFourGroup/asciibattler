@@ -644,7 +644,8 @@ function buildXpBar(data: UnitCardData): HTMLDivElement {
 }
 
 /**
- * One ability row: the name, the detail line of what the ability does
+ * One ability row: the name, the ability's own line (its `description`,
+ * what the numbers don't say), the detail line of what the ability does
  * (`abilityDetailParts`) with an AoE tag, then the cadence in seconds. All
  * of it is read from the `AbilityDef` (`config/abilities.json`) through the
  * sim's own helpers, so the card can't disagree with battle.
@@ -659,6 +660,13 @@ function abilityRow(id: string, stats: UnitStats): HTMLDivElement {
   name.className = 'unit-card__ability-name';
   name.textContent = def.name;
   row.appendChild(name);
+
+  if (def.description !== undefined) {
+    const line = document.createElement('div');
+    line.className = 'unit-card__ability-description';
+    line.textContent = def.description;
+    row.appendChild(line);
+  }
 
   const detail = document.createElement('div');
   detail.className = 'unit-card__ability-detail';

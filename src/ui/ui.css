@@ -1033,6 +1033,15 @@ body {
   letter-spacing: 0.04em;
 }
 
+/* The ability's own line under its name, dim and italic as the unit's line
+   is, so the mechanics beneath stay the read. */
+.unit-card__ability-description {
+  font-size: var(--text-11);
+  font-style: italic;
+  opacity: 0.6;
+  line-height: 1.3;
+}
+
 .unit-card__ability-detail {
   font-variant-numeric: tabular-nums;
 }

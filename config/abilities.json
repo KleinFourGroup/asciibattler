@@ -2,6 +2,7 @@
   "sword": {
     "id": "sword",
     "name": "Sword",
+    "description": "A plain blade.",
     "cooldownSeconds": 1.5,
     "rangeCells": 1,
     "target": { "kind": "enemyInRange" },
@@ -30,6 +31,7 @@
   "club": {
     "id": "club",
     "name": "Club",
+    "description": "A heavy club.",
     "cooldownSeconds": 1.5,
     "rangeCells": 1,
     "target": { "kind": "enemyInRange" },
@@ -58,6 +60,7 @@
   "katana": {
     "id": "katana",
     "name": "Katana",
+    "description": "A curved blade, keen at the edge.",
     "cooldownSeconds": 1.5,
     "rangeCells": 1,
     "target": { "kind": "enemyInRange" },
@@ -86,6 +89,7 @@
   "whip": {
     "id": "whip",
     "name": "Whip",
+    "description": "A braided lash.",
     "cooldownSeconds": 1.5,
     "rangeCells": 1,
     "target": { "kind": "enemyInRange" },
@@ -114,6 +118,7 @@
   "bow": {
     "id": "bow",
     "name": "Bow",
+    "description": "Can't hit an adjacent foe.",
     "cooldownSeconds": 2,
     "rangeCells": 3,
     "minRangeCells": 2,
@@ -143,6 +148,7 @@
   "heal_ally": {
     "id": "heal_ally",
     "name": "Heal",
+    "description": "Mends the hurt ally lowest on health, itself included.",
     "cooldownSeconds": 2,
     "rangeCells": 3,
     "target": { "kind": "lowestHpAlly", "rangeCells": 3 },
@@ -162,6 +168,7 @@
   "gambit_strike": {
     "id": "gambit_strike",
     "name": "Gambit",
+    "description": "Strikes, then springs back.",
     "cooldownSeconds": 1.2,
     "rangeCells": 1,
     "target": { "kind": "enemyInRange" },
@@ -195,6 +202,7 @@
   "dash": {
     "id": "dash",
     "name": "Dash",
+    "description": "A burst of speed toward the fight.",
     "cooldownSeconds": 10,
     "speedScaled": false,
     "rangeCells": 2,
@@ -214,6 +222,7 @@
   "magic_bolt": {
     "id": "magic_bolt",
     "name": "Bolt",
+    "description": "A bolt of raw magic. Can't hit an adjacent foe.",
     "cooldownSeconds": 2.5,
     "rangeCells": 5,
     "minRangeCells": 2,
@@ -246,6 +255,7 @@
   "catapult_shot": {
     "id": "catapult_shot",
     "name": "Lob",
+    "description": "Arcs over walls. Can't hit a foe within four cells.",
     "cooldownSeconds": 3,
     "rangeCells": 6,
     "minRangeCells": 4,
@@ -280,6 +290,7 @@
   "cleaver": {
     "id": "cleaver",
     "name": "Cleaver",
+    "description": "A butcher's blade; its cuts bleed.",
     "cooldownSeconds": 1.5,
     "rangeCells": 1,
     "target": { "kind": "enemyInRange" },
@@ -312,6 +323,7 @@
   "vial": {
     "id": "vial",
     "name": "Vial",
+    "description": "A thrown vial of poison. Can't hit an adjacent foe.",
     "cooldownSeconds": 2.5,
     "rangeCells": 5,
     "minRangeCells": 2,
@@ -347,6 +359,7 @@
   "ice_storm": {
     "id": "ice_storm",
     "name": "Ice Storm",
+    "description": "Hail that freezes. Can't hit an adjacent foe.",
     "cooldownSeconds": 2.5,
     "rangeCells": 5,
     "minRangeCells": 2,
@@ -380,6 +393,7 @@
   "hex": {
     "id": "hex",
     "name": "Hex",
+    "description": "Confuses, longer with luck. Can't hit an adjacent foe.",
     "cooldownSeconds": 3,
     "rangeCells": 5,
     "minRangeCells": 2,
@@ -404,6 +418,7 @@
   "light_ray": {
     "id": "light_ray",
     "name": "Light Ray",
+    "description": "A blinding beam. Can't hit an adjacent foe.",
     "cooldownSeconds": 2,
     "rangeCells": 3,
     "minRangeCells": 2,
@@ -437,6 +452,7 @@
   "wail": {
     "id": "wail",
     "name": "Wail",
+    "description": "Panics, longer with luck.",
     "cooldownSeconds": 4,
     "rangeCells": 4,
     "target": { "kind": "aoe", "shape": "square", "radius": 1, "anchor": "targetCell", "affects": "enemies" },
@@ -460,6 +476,7 @@
   "chain_lightning": {
     "id": "chain_lightning",
     "name": "Chain",
+    "description": "Arcs foe to foe, weaker each jump. Can't hit an adjacent foe.",
     "cooldownSeconds": 2.5,
     "rangeCells": 5,
     "minRangeCells": 2,
@@ -497,6 +514,7 @@
   "raise_dead": {
     "id": "raise_dead",
     "name": "Raise Dead",
+    "description": "Raises ghouls, three at most, higher in level with magic.",
     "cooldownSeconds": 2,
     "rangeCells": 6,
     "ignoresLineOfSight": true,
@@ -519,6 +537,7 @@
   "ghoul_claw": {
     "id": "ghoul_claw",
     "name": "Claw",
+    "description": "Grave-dirty claws.",
     "cooldownSeconds": 1.5,
     "rangeCells": 1,
     "target": { "kind": "enemyInRange" },
@@ -547,6 +566,7 @@
   "molotov": {
     "id": "molotov",
     "name": "Molotov",
+    "description": "A thrown firebomb; burns longer with luck. Can't hit an adjacent foe.",
     "cooldownSeconds": 2.5,
     "rangeCells": 4,
     "minRangeCells": 2,
@@ -582,6 +602,7 @@
   "pistol": {
     "id": "pistol",
     "name": "Pistol",
+    "description": "Quick shots. Can't hit an adjacent foe.",
     "cooldownSeconds": 0.8,
     "rangeCells": 4,
     "minRangeCells": 2,
@@ -611,6 +632,7 @@
   "halberd": {
     "id": "halberd",
     "name": "Halberd",
+    "description": "A long polearm.",
     "cooldownSeconds": 2,
     "rangeCells": 2,
     "target": { "kind": "enemyInRange" },
@@ -639,6 +661,7 @@
   "cane": {
     "id": "cane",
     "name": "Cane",
+    "description": "An officer's cane.",
     "cooldownSeconds": 0.8,
     "rangeCells": 1,
     "target": { "kind": "enemyInRange" },
@@ -667,6 +690,7 @@
   "inspire": {
     "id": "inspire",
     "name": "Inspire",
+    "description": "Nearby allies fight inspired.",
     "cooldownSeconds": 1,
     "rangeCells": 0,
     "target": { "kind": "self" },
@@ -681,6 +705,7 @@
   "gnaw": {
     "id": "gnaw",
     "name": "Gnaw",
+    "description": "Gnawing teeth.",
     "cooldownSeconds": 1.5,
     "rangeCells": 1,
     "target": { "kind": "enemyInRange" },
@@ -709,6 +734,7 @@
   "bite": {
     "id": "bite",
     "name": "Bite",
+    "description": "A wolf's bite.",
     "cooldownSeconds": 1.5,
     "rangeCells": 1,
     "target": { "kind": "enemyInRange" },
@@ -737,6 +763,7 @@
   "pounce": {
     "id": "pounce",
     "name": "Pounce",
+    "description": "A pouncing strike.",
     "cooldownSeconds": 1.5,
     "rangeCells": 1,
     "target": { "kind": "enemyInRange" },
@@ -765,6 +792,7 @@
   "rake": {
     "id": "rake",
     "name": "Rake",
+    "description": "Raking claws; the wounds bleed.",
     "cooldownSeconds": 1.5,
     "rangeCells": 1,
     "target": { "kind": "enemyInRange" },
@@ -797,6 +825,7 @@
   "maul": {
     "id": "maul",
     "name": "Maul",
+    "description": "A crushing blow.",
     "cooldownSeconds": 2,
     "rangeCells": 1,
     "target": { "kind": "enemyInRange" },

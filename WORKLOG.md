@@ -349,3 +349,39 @@ gate the Spear of Mars offers one empower, +4 strength, the card badged
 "Honed"; wrong looks like three stats, or no prompt. Diana and Hecate by
 `?daemon=diana` and `?daemon=hecate`; the new names on the character
 select, the ports and the rewards.
+
+### 151e — the abilities' lines and the card's line (2026-11-06, at its stop)
+
+The 29 lines, terse and plain as signed, each saying what the card's
+numbers don't: the floor of ten abilities ("Can't hit an adjacent foe.",
+the catapult's "within four cells"), the arc over walls, the heal's
+target, the gambit's spring back, the summon's cap and its level with
+magic, the luck-lengthened statuses, the chain's falloff. The weapons and
+the beasts' attacks name themselves. Written into `config/abilities.json`
+where the attack editor's formatter puts them (its test reproduces the
+file byte for byte); the locales re-extracted, 356 addresses to 385.
+
+The guard: a test over the raw config file that every ability has a
+non-empty line and the loaded catalog the same, its control a planted
+def without one and one with a blank. The schema keeps the field
+optional, so the many synthetic defs in the tests need none; the test
+is the requirement for what ships.
+
+The card, arm A as built: the line under the ability's name, italic at
+0.6 opacity as the unit's own line is, above the numbers
+(`unit-card__ability-description`). Read in the Browser pane (Chromium,
+1280×720, seed 3, the Soldier with `daemon=diana`, the first pre-turn
+gate): six hand cards, a line on each row. A line adds 30 px to a card
+there (the bow's wraps to two lines); without it the hand already ran
+27 px past the window's bottom, and the pre-turn screen scrolls to it.
+Arm B, drawn by a temporary change not committed: the line as a tooltip
+on the name, the card's height unchanged. Screenshots:
+`scratch/151/arm-a-line.jpg`, `scratch/151/arm-b-tooltip.jpg`.
+
+151c's read points seen in the same pane: the character select names the
+Spear of Mars, the Aegis of Minerva and the Mask of Janus; `daemon=diana`
+opens with "Quiver of Diana — once per turn, empower a unit: +4 RNG" and
+its grant chip "+4 RNG, click a card to empower"; the Soldier's own gate
+reads "Spear of Mars — +4 STR". Not seen: a card empowered and badged,
+and the ports and rewards with the new names (headless pins cover the
+stock).

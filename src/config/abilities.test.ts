@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import { readFileSync } from 'node:fs';
 import { ABILITY_DEFS, abilityDef, damageOpOf, healOpOf } from './abilities';
 
 /**
@@ -219,5 +220,26 @@ describe('the stat-identity weapons', () => {
     // The mights differ since each was scaled by its wielder's hit rate when
     // the roll went (officer 24 %, gunslinger 29 %).
     expect(c.might).toBeLessThanOrEqual(p.might);
+  });
+});
+
+describe("every shipped ability carries its card's line", () => {
+  /** The ids whose def has no non-empty `description`. */
+  const withoutLine = (defs: Record<string, { description?: unknown }>): string[] =>
+    Object.entries(defs)
+      .filter(([, d]) => typeof d.description !== 'string' || d.description.trim() === '')
+      .map(([id]) => id);
+
+  it('in the raw config file, each ability has one', () => {
+    const raw = JSON.parse(readFileSync('config/abilities.json', 'utf8')) as Record<string, unknown>;
+    const defs = (raw['abilities'] ?? raw) as Record<string, { description?: unknown }>;
+    expect(Object.keys(defs).length).toBeGreaterThan(1);
+    expect(withoutLine(defs)).toEqual([]);
+    // The loaded catalog carries the same lines.
+    for (const [id, def] of Object.entries(defs)) expect(ABILITY_DEFS[id]?.description, id).toBe(def.description);
+  });
+
+  it('the control: a def without one, or with a blank one, is named', () => {
+    expect(withoutLine({ a: { description: 'A plain blade.' }, b: {}, c: { description: '  ' } })).toEqual(['b', 'c']);
   });
 });

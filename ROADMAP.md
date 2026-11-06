@@ -92,7 +92,7 @@ sizes Mars's own per stat; the abilities' lines terse, the session's.
 - ☑ **151b — bandits out of the draft** (`none`): the roster guard on an archetype no player can hold; both tables v7, v6 less the bandit; a scripted port stocks only draftable units.
 - ◐ **151c — Mars narrowed, Diana and Hecate, the renames** (`batch`): built, read at 151e's stop; Run v50 to v51, a v50 save rejected with its message.
 - ☑ **151d — the ability's `description`** (`none`): the schema's optional field and the attack editor's; the corpus 0 of 33 differ.
-- ☐ **151e — the abilities' lines and the card's line** (`stop`): 29 terse lines, the field required; the look in two arms.
+- ◐ **151e — the abilities' lines and the card's line** (`stop`): 29 terse lines, a test that each ships one; arm A built (the line under the name), arm B drawn (a tooltip); at its stop.
 - ☐ **151f — the units' lines** (`none`): the user's 23, with a test that every combatant has one; it does not hold the close.
 
 ## Phase 152 — the weapons and defense, by taste (signed 2026-11-05)

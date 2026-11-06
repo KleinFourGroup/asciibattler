@@ -15,6 +15,7 @@ import {
   renderPriorTable,
   SHRINK_K,
   type PriorTable,
+  dropUnacquirable,
 } from './priorTable';
 
 const PROV = { head: 'abc1234', builtAt: '2026-08-22T00:00:00Z', sources: ['x/decisions.csv'] };
@@ -259,5 +260,24 @@ describe('85g2 — priorFoldValuesBySite (site-conditioned shrinkage)', () => {
     const views = priorFoldValuesBySite(TABLE, 0);
     expect(views['portBuy']!['unit:ronin']).toBeCloseTo(-33, 10);
     expect(views['recruit']!['unit:ronin']).toBeCloseTo(11.875, 10);
+  });
+});
+
+describe('dropUnacquirable', () => {
+  it('drops the row of an item no site offers now, keeping every other row and the decision count', () => {
+    const row = (n: number) => ({ valuePerHop: 0.1, meanDelta: 1, n, signable: false, sites: {} });
+    const table = {
+      provenance: { measurementHead: 'deadbeef', sources: ['x'] },
+      floor: 80,
+      decisions: 7,
+      items: { 'daemon:janus': row(3), 'unit:bandit': row(5), 'unit:archer': row(9) },
+    } as unknown as Parameters<typeof dropUnacquirable>[0];
+    const { table: out, dropped } = dropUnacquirable(table, new Set(['daemon:janus', 'unit:archer']));
+    expect(dropped).toEqual(['unit:bandit']);
+    expect(Object.keys(out.items)).toEqual(['daemon:janus', 'unit:archer']);
+    expect(out.items['unit:archer']).toBe(table.items['unit:archer']);
+    expect(out.decisions).toBe(7);
+    // The control: everything acquirable, nothing drops.
+    expect(dropUnacquirable(table, new Set(Object.keys(table.items))).dropped).toEqual([]);
   });
 });

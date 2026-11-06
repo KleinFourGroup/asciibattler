@@ -27,7 +27,10 @@
 import { readFileSync } from 'node:fs';
 import { deriveRng } from '../../../src/core/RNG';
 import { SECTOR_MAP } from '../../../src/config/sectorMap';
-import { ALL_ARCHETYPES, type Archetype } from '../../../src/sim/archetypes';
+import { ALL_ARCHETYPES, DRAFTABLE_ARCHETYPES, type Archetype } from '../../../src/sim/archetypes';
+import { EVENTS } from '../../../src/config/events';
+import { REWARD_TABLES } from '../../../src/config/rewards';
+import { CHARACTERS } from '../../../src/config/characters';
 import type { RosterEntry } from '../../../src/run/RunConfig';
 
 /** The committed artifact the sampled mode reads (the signed-sheet pattern). */
@@ -182,6 +185,49 @@ export function parseRostersCsv(text: string, source = 'rosters.csv'): RosterCsv
     rows.push(row);
   }
   return rows;
+}
+
+/**
+ * The archetypes a player's roster can hold: the draftable ones, any an event
+ * grants (`grantUnit`), any a reward table holds, and any a character starts
+ * with. A unit out of the draft still fights as an enemy, so "exists" is not
+ * the test: the prodigy is no draft's but an event's, and the bandit, out of
+ * the draft, is nobody's.
+ */
+export function holdableArchetypes(): ReadonlySet<string> {
+  const held = new Set<string>(DRAFTABLE_ARCHETYPES);
+  const walk = (node: unknown): void => {
+    if (Array.isArray(node)) return node.forEach(walk);
+    if (node === null || typeof node !== 'object') return;
+    const rec = node as Record<string, unknown>;
+    if (rec['op'] === 'grantUnit' && typeof rec['archetype'] === 'string') held.add(rec['archetype']);
+    Object.values(rec).forEach(walk);
+  };
+  walk(EVENTS);
+  for (const table of REWARD_TABLES) for (const e of table.entries) if (e.kind === 'unit') held.add(e.archetype);
+  for (const c of CHARACTERS) for (const a of c.roster) held.add(a);
+  return held;
+}
+
+/**
+ * The rows a table built now may keep: a recorded roster holding an archetype
+ * that exists but no player can hold any more (a unit taken out of the draft)
+ * is dropped, and counted by archetype, since no run can field that company
+ * now. An unknown archetype is kept for `buildRosterTable` to refuse.
+ */
+export function dropUnholdable(
+  rows: readonly RosterCsvRow[],
+  holdable: ReadonlySet<string>,
+): { kept: RosterCsvRow[]; dropped: Record<string, number> } {
+  const known = new Set<string>(ALL_ARCHETYPES);
+  const kept: RosterCsvRow[] = [];
+  const dropped: Record<string, number> = {};
+  for (const r of rows) {
+    const out = [...new Set(r.archetypes.filter((a) => known.has(a) && !holdable.has(a)))];
+    if (out.length === 0) kept.push(r);
+    else for (const a of out) dropped[a] = (dropped[a] ?? 0) + 1;
+  }
+  return { kept, dropped };
 }
 
 /** Build the table from parsed sidecar rows. Pure; the CLI supplies

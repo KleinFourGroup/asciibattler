@@ -1,4 +1,5 @@
 import { describe, it, expect, afterEach } from 'vitest';
+import { readFileSync } from 'node:fs';
 import { Run, type FallenRecord, type RunSnapshot } from './Run';
 import { PRE_ROOT_NODE_ID } from './NodeMap';
 import { fatigueEffect, FATIGUE_KEY } from './fatigue';
@@ -3335,6 +3336,20 @@ describe('Run', () => {
       // Flat price-book prices on packet/daemon slots (no jitter axis there).
       for (const s of stock.packets) expect(s.price).toBe(packetPrice(s.packetId));
       for (const s of stock.daemons) expect(s.price).toBe(daemonPrice(s.daemonId));
+    });
+
+    it('stocks no unit the raw config marks not draftable, over a seed window (the bandit, taken out of the draft)', () => {
+      const units = JSON.parse(readFileSync('config/units.json', 'utf8')) as Record<string, { draftable?: boolean }>;
+      const undraftable = new Set(Object.keys(units).filter((id) => units[id]!.draftable === false));
+      const stocked = new Map<string, number>();
+      for (let seed = 1; seed <= 30; seed++) {
+        const { run, bus } = freshRunWithBus(seed, { daemon: null });
+        dockAtPort(run, bus);
+        for (const s of run.portStock!.units) stocked.set(s.template.archetype, (stocked.get(s.template.archetype) ?? 0) + 1);
+      }
+      expect(stocked.get('bandit') ?? 0, 'bandits stocked').toBe(0);
+      expect([...stocked.keys()].filter((a) => undraftable.has(a))).toEqual([]);
+      expect(stocked.size).toBeGreaterThan(5);
     });
 
     it('unit slots price at the level curve ± the config jitter, integer ≥1; same seed → same stock', () => {

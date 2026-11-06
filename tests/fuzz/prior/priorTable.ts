@@ -192,6 +192,26 @@ export function buildPriorTable(
   return { provenance, floor, decisions, items };
 }
 
+/**
+ * The table a build makes now may keep: a row for an item no site can offer
+ * any more (a daemon or packet gone from its catalog, a unit out of the
+ * draft) is dropped and named, since the fold never reads it and the
+ * coverage guard calls it stale. Every other row, and the decision count,
+ * stay as built.
+ */
+export function dropUnacquirable(
+  table: PriorTable,
+  acquirable: ReadonlySet<string>,
+): { table: PriorTable; dropped: string[] } {
+  const items: Record<string, PriorRow> = {};
+  const dropped: string[] = [];
+  for (const [key, row] of Object.entries(table.items)) {
+    if (acquirable.has(key)) items[key] = row;
+    else dropped.push(key);
+  }
+  return { table: { ...table, items }, dropped };
+}
+
 /** 85c — the fold's value view: item key → meanDelta (the UNSCALED raw
  *  long-horizon holding margin — the 2026-08-24 shape-lock's fold input;
  *  valuePerHop stays a reader column). EVERY row participates,

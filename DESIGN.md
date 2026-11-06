@@ -90,6 +90,8 @@ The config's numbers were converted when the hit roll was deleted, so that each 
 
 **The beasts (§144):** act 1's wilds field six enemy-only archetypes (`draftable: false`), each a drawn letter with the ears and each on a shipped body's numbers until §146 bands them: the **Giant Rat** (the ghoul's, Gnaw), the **Wolf** (the bandit's with the adventurer's mobility, Bite), the **Fox** (the rogue's with less strength, Pounce and the Dash), the **Puma** (the adventurer's, Pounce), the **Tiger** (the reaver's, Rake, with bleed) and the **Bear** (the halberdier's, Maul at reach 1). An attack is named for the animal, never a weapon's name, and a shared move is one row: the fox and the puma both Pounce, the fox weaker by its stats.
 
+**The bandit leaves the draft (§151):** the user's call at the re-cut ("They just kinda don't have any purpose"), so `draftable: false`; he stays an enemy in act 1's camps and encounters, and a scripted port stocks only draftable units, since the price book prices only those.
+
 ## Run structure
 
 **Node map:** A directed acyclic graph generated from the seed. Roughly 7–10 nodes per run, arranged in layered hops (node rows) with branching paths between them. The player begins before the map and **selects the root as their first encounter** (a normal battle node — unless the sector authors a starting event, which stamps the root; The Periphery does since 145g, as The Start did from §74i), then advances one hop at a time, and must reach the single terminal node to complete the run.

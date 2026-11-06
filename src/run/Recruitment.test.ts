@@ -57,10 +57,11 @@ describe('rollOffer', () => {
     // `draftable:false` that leaks into the offer trips this. Two complementary
     // checks: the flag derivation excludes exactly these, and a wide
     // deterministic seed scan never surfaces one in an actual offer.
-    // 'prodigy' is the event-grant-only legendary; the beasts are the wilds' enemies.
+    // 'prodigy' is the event-grant-only legendary; the beasts are the wilds'
+    // enemies; the bandit, taken out of the draft, stays an enemy.
     const EXCLUDED = [
       'ice_mage', 'warlock', 'luminant', 'banshee', 'ghoul', 'prodigy',
-      'wolf', 'giant_rat', 'fox', 'puma', 'tiger', 'bear',
+      'wolf', 'giant_rat', 'fox', 'puma', 'tiger', 'bear', 'bandit',
     ] as const;
     for (const a of EXCLUDED) expect(DRAFTABLE_ARCHETYPES).not.toContain(a);
     expect(DRAFTABLE_ARCHETYPES.length).toBe(ALL_ARCHETYPES.length - EXCLUDED.length);

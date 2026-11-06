@@ -84,7 +84,7 @@ If the renderer ever grows pure-logic helpers (e.g. atlas UV computation), those
   same bytes. A failure names its seed and writes its journal under
   `output/chaos/`. Four seeds run on every `npm test` (`chaos.test.ts`). It is
   a crash and invariant instrument, never a balance input.
-- **The journal corpus:** `npm run corpus` replays 33 stored run journals
+- **The journal corpus:** `npm run corpus` replays 34 stored run journals
   (`tests/fuzz/corpus/`) and holds each against what it reached when it was
   recorded: a digest of every event of every battle, the end's hash, and
   which commands changed the run in which phases. It is the proof that a
@@ -295,7 +295,7 @@ suite both missed, so what those two miss, the pre-commit hook misses;
 and with every hit dealing one more the smoke failed in one file of 65,
 the corpus's own test.
 
-**By part.** "Corpus" is `npm run corpus` (33 journals, run by hand: the
+**By part.** "Corpus" is `npm run corpus` (34 journals, run by hand: the
 pre-commit hook does not run it); "fuzz diff" is
 `bash scripts/perf-oracle.sh [ref]`; "build compare" is
 `npm run oracle -- build-hash [ref]`.

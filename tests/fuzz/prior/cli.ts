@@ -17,7 +17,10 @@ import { execSync } from 'node:child_process';
 import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { join, relative, resolve } from 'node:path';
 import { parseDecisionsCsv, type DecisionRow } from '../reporters';
-import { buildPriorTable, measurementHeadFromPaths, renderPriorTable } from './priorTable';
+import { buildPriorTable, dropUnacquirable, measurementHeadFromPaths, renderPriorTable } from './priorTable';
+import { DAEMONS } from '../../../src/config/daemons';
+import { PACKET_IDS } from '../../../src/config/packets';
+import { DRAFTABLE_ARCHETYPES } from '../../../src/sim/archetypes';
 
 const DEFAULT_OUT = 'tests/fuzz/board/prior-table.json';
 
@@ -88,7 +91,7 @@ function main(): void {
   }
   const buildHead = execSync('git rev-parse --short HEAD', { encoding: 'utf8' }).trim();
   const repoRoot = resolve('.');
-  const table = buildPriorTable(rows, {
+  const built = buildPriorTable(rows, {
     measurementHead,
     buildHead,
     builtAt: new Date().toISOString(),
@@ -96,6 +99,17 @@ function main(): void {
     sources: sources.map((s) => relative(repoRoot, s).replace(/\\/g, '/')),
     ...(note !== undefined ? { note } : {}),
   });
+  // What the acquisition sites can offer now: every daemon and packet, the
+  // draftable units (tests/prior-table-coverage.test.ts reads the same).
+  const acquirable = new Set<string>([
+    ...DAEMONS.map((d) => `daemon:${d.id}`),
+    ...PACKET_IDS.map((id) => `packet:${id}`),
+    ...DRAFTABLE_ARCHETYPES.map((a) => `unit:${a}`),
+  ]);
+  const { table, dropped } = dropUnacquirable(built, acquirable);
+  for (const key of dropped) {
+    process.stdout.write(`Dropped the row for ${key} (n ${built.items[key]!.n}), which no site offers now\n`);
+  }
   writeFileSync(out, JSON.stringify(table, null, 2) + '\n');
   process.stdout.write(renderPriorTable(table));
   process.stdout.write(`Wrote ${out} (${rows.length} rows read, ${longRows} long-horizon)\n`);

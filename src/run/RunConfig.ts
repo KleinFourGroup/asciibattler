@@ -16,7 +16,7 @@
  * shifts another's.
  */
 
-import { ALL_ARCHETYPES, type Archetype } from '../sim/archetypes';
+import { ALL_ARCHETYPES, DRAFTABLE_ARCHETYPES, type Archetype } from '../sim/archetypes';
 import { LAYOUT_IDS, THEMES } from '../sim/layouts';
 import { LEVELING } from '../config/leveling';
 import { daemonById, type DaemonConfig } from '../config/daemons';
@@ -392,9 +392,10 @@ const encounterKind: EncounterKindOf = (id) => getEncounter(id)?.kind;
 /**
  * `port=`'s goods, `/` between them: each id a daemon, a packet or an
  * archetype, in that order (as `grants` resolves), a unit's `:level` clamped
- * as `roster=`'s is. A good no catalog holds, a level on a daemon or a
- * packet, and a good past the shipped slots of its kind (`PRICES.portStock`)
- * are dropped, each through `drop`.
+ * as `roster=`'s is. A good no catalog holds, a unit not draftable (a port
+ * prices a unit by the price book, which prices only the draftable ones), a
+ * level on a daemon or a packet, and a good past the shipped slots of its
+ * kind (`PRICES.portStock`) are dropped, each through `drop`.
  */
 export function parsePortGoods(raw: string, drop: (why: string) => void): PortGood[] {
   const goods: PortGood[] = [];
@@ -416,6 +417,8 @@ export function parsePortGoods(raw: string, drop: (why: string) => void): PortGo
             : undefined;
     if (good === undefined) {
       drop(`port good "${token}" is no daemon, packet or archetype`);
+    } else if (good.kind === 'unit' && !(DRAFTABLE_ARCHETYPES as readonly string[]).includes(good.archetype)) {
+      drop(`port good "${token}": a port stocks only draftable units`);
     } else if (good.kind !== 'unit' && levelPart !== undefined) {
       drop(`port good "${token}": only a unit takes a level`);
     } else if (count[good.kind] >= slots[good.kind]) {

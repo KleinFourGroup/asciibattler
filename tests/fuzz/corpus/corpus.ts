@@ -109,10 +109,12 @@ export const CORPUS: readonly CorpusRow[] = [
   // rows above never do: chosen from `--survey=12` when the strikes moved
   // (2026-10-29), and again from a survey of 40 each time those rows stopped
   // trading, when act 1 went in front (2026-11-02) and when its waves shrank
-  // (2026-11-03).
+  // (2026-11-03). When the bandit left the draft (2026-11-06) none of them
+  // paid a unit off any more, and a survey of 40 found one run that does.
   chaos(15),
   chaos(16),
   chaos(26),
+  chaos(33),
 ];
 
 const HERE = dirname(fileURLToPath(import.meta.url));

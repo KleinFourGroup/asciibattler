@@ -5,11 +5,16 @@
  * its builder throws only on an archetype it does not know, so a catalog or
  * map that moves after the table was measured goes unseen until a
  * `--roster=sampled` read draws from it. This test sees it on `npm test`.
+ * A unit taken out of the draft (`draftable: false`) still exists as an
+ * enemy, so rule 2 asks whether a player can hold him, not whether he exists:
+ * a recorded roster holding him would hand the sampler a company no run can
+ * field now. A player holds what the draft offers and what an event grants, a
+ * reward table holds or a character starts with (the prodigy is an event's).
  *
  * Contract, derived from config and never from a hard-coded id list:
  *   1. every draftable archetype is in some recorded roster, or has a
  *      PENDING acknowledgment below with its reason;
- *   2. every archetype in the table still exists;
+ *   2. every archetype in the table is one a player can still hold;
  *   3. every bucket names a shipped character, a sector position the map
  *      walks, and a hop inside that sector's length;
  *   4. the sector ids the table was built over are the ones the map walks
@@ -27,7 +32,8 @@ import { readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { CHARACTERS } from '../src/config/characters';
-import { ALL_ARCHETYPES, DRAFTABLE_ARCHETYPES } from '../src/sim/archetypes';
+import { DRAFTABLE_ARCHETYPES } from '../src/sim/archetypes';
+import { holdableArchetypes } from './fuzz/roster/rosterTable';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const TABLE_PATH = 'tests/fuzz/board/roster-table.json';
@@ -39,7 +45,9 @@ interface RosterTableShape {
 
 interface Catalog {
   readonly draftable: readonly string[];
-  readonly archetypes: readonly string[];
+  /** What a player's roster can hold: the draftable, plus what an event
+   *  grants, a reward table holds or a character starts with. */
+  readonly holdable: readonly string[];
   readonly characters: readonly string[];
   /** The sector ids the map walks, by position, with each sector's length. */
   readonly walk: readonly { readonly id: string; readonly length: number }[];
@@ -54,6 +62,29 @@ const PENDING: ReadonlyMap<string, string> = new Map<string, string>();
 
 function readJson<T>(rel: string): T {
   return JSON.parse(readFileSync(join(ROOT, rel), 'utf8')) as T;
+}
+
+/** The holdable archetypes, read from the raw event, reward and character
+ *  files beside the draftable ones, not through the builder's
+ *  `holdableArchetypes`. */
+function holdableFromRawConfig(): string[] {
+  const held = new Set<string>(DRAFTABLE_ARCHETYPES);
+  const walk = (node: unknown, grant: (rec: Record<string, unknown>) => void): void => {
+    if (Array.isArray(node)) return node.forEach((n) => walk(n, grant));
+    if (node === null || typeof node !== 'object') return;
+    grant(node as Record<string, unknown>);
+    Object.values(node).forEach((n) => walk(n, grant));
+  };
+  walk(readJson<unknown>('config/events.json'), (r) => {
+    if (r.op === 'grantUnit' && typeof r.archetype === 'string') held.add(r.archetype);
+  });
+  walk(readJson<unknown>('config/rewards.json'), (r) => {
+    if (r.kind === 'unit' && typeof r.archetype === 'string') held.add(r.archetype);
+  });
+  for (const c of readJson<{ characters: { roster: string[] }[] }>('config/characters.json').characters) {
+    for (const a of c.roster) held.add(a);
+  }
+  return [...held];
 }
 
 /** The shipped catalog: the map walked from its source along its edges, a
@@ -76,7 +107,7 @@ function shippedCatalog(): Catalog {
   }
   return {
     draftable: DRAFTABLE_ARCHETYPES,
-    archetypes: ALL_ARCHETYPES,
+    holdable: holdableFromRawConfig(),
     characters: CHARACTERS.map((c) => c.id),
     walk,
   };
@@ -86,7 +117,7 @@ function shippedCatalog(): Catalog {
 function coverageGaps(table: RosterTableShape, catalog: Catalog, pending: ReadonlyMap<string, string>) {
   const inTable = new Set<string>();
   for (const rows of Object.values(table.rows)) for (const r of rows) for (const a of r.archetypes) inTable.add(a);
-  const known = new Set(catalog.archetypes);
+  const holdable = new Set(catalog.holdable);
   const characters = new Set(catalog.characters);
   const walkIds = catalog.walk.map((s) => s.id);
   const sectorsMatch = JSON.stringify(table.provenance.sectors ?? null) === JSON.stringify(walkIds);
@@ -101,7 +132,7 @@ function coverageGaps(table: RosterTableShape, catalog: Catalog, pending: Readon
   ]);
   return {
     missing: catalog.draftable.filter((a) => !inTable.has(a) && !pending.has(`unit:${a}`)).sort(),
-    stale: [...inTable].filter((a) => !known.has(a)).sort(),
+    stale: [...inTable].filter((a) => !holdable.has(a)).sort(),
     badBuckets: badBuckets.sort(),
     sectors: sectorsMatch || pending.has('sectors') ? null : { table: table.provenance.sectors ?? null, map: walkIds },
     unneededPending: [...pending.keys()].filter((k) => !needed.has(k)).sort(),
@@ -126,8 +157,8 @@ describe('the roster table covers the catalog and the sector map', () => {
     expect(gaps.missing, `draftable archetypes no recorded roster holds (measured @${table.provenance.measurementHead.slice(0, 7)}): ${gaps.missing.join(', ')}. ${REBUILD_HINT}.`).toEqual([]);
   });
 
-  it('every archetype in the table still exists', () => {
-    expect(gaps.stale, `archetypes in the table that the catalog no longer has: ${gaps.stale.join(', ')}. ${REBUILD_HINT}.`).toEqual([]);
+  it('every archetype in the table is one a player can still hold', () => {
+    expect(gaps.stale, `archetypes in the table no player can hold now: ${gaps.stale.join(', ')}. ${REBUILD_HINT}.`).toEqual([]);
   });
 
   it('every bucket names a shipped character, a sector position and a hop inside it', () => {
@@ -146,7 +177,7 @@ describe('the roster table covers the catalog and the sector map', () => {
 describe('the guard catches each planted gap', () => {
   const catalog: Catalog = {
     draftable: ['mercenary', 'archer'],
-    archetypes: ['mercenary', 'archer', 'bandit'],
+    holdable: ['mercenary', 'archer', 'prodigy'],
     characters: ['soldier'],
     walk: [
       { id: 'first', length: 3 },
@@ -180,6 +211,22 @@ describe('the guard catches each planted gap', () => {
   it('an archetype the catalog dropped', () => {
     const t = table({ 'soldier|0|1': [{ archetypes: ['mercenary', 'archer', 'ghost'] }] });
     expect(coverageGaps(t, catalog, new Map()).stale).toEqual(['ghost']);
+  });
+
+  it('an archetype that still exists but no player can hold (the bandit, out of the draft); a granted one is held', () => {
+    const t = table({
+      'soldier|0|1': [{ archetypes: ['mercenary', 'prodigy'] }, { archetypes: ['mercenary', 'bandit'] }],
+    });
+    expect(coverageGaps(t, catalog, new Map()).stale).toEqual(['bandit']);
+    // The control: held again, the same table is clean.
+    expect(coverageGaps(t, { ...catalog, holdable: [...catalog.holdable, 'bandit'] }, new Map()).stale).toEqual([]);
+  });
+
+  it('the raw re-derivation holds what the builder holds: the prodigy in, the bandit out', () => {
+    const raw = holdableFromRawConfig().sort();
+    expect(raw).toEqual([...holdableArchetypes()].sort());
+    expect(raw).toContain('prodigy');
+    expect(raw).not.toContain('bandit');
   });
 
   it('a bucket with an unknown character, a sector past the walk, or a hop past its sector', () => {

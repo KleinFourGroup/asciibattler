@@ -24,6 +24,8 @@ import { readBatchManifest } from '../manifest';
 import {
   ROSTER_TABLE_PATH,
   buildRosterTable,
+  dropUnholdable,
+  holdableArchetypes,
   parseRostersCsv,
   renderRosterTable,
   resolveMeasurementHead,
@@ -86,7 +88,11 @@ function main(): void {
   }
   const measurementHead = resolveMeasurementHead(manifests);
   const buildHead = execSync('git rev-parse --short HEAD', { encoding: 'utf8' }).trim();
-  const table = buildRosterTable(rows, {
+  const { kept, dropped } = dropUnholdable(rows, holdableArchetypes());
+  for (const [archetype, n] of Object.entries(dropped)) {
+    process.stdout.write(`Dropped ${n} roster rows holding '${archetype}', whom no player can hold now\n`);
+  }
+  const table = buildRosterTable(kept, {
     measurementHead,
     buildHead,
     builtAt: new Date().toISOString(),

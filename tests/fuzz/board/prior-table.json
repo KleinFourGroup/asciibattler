@@ -1,14 +1,14 @@
 {
   "provenance": {
     "measurementHead": "4c4fecec",
-    "buildHead": "4c4fecec",
-    "builtAt": "2026-11-06T03:01:14.539Z",
+    "buildHead": "855e3e84",
+    "builtAt": "2026-11-06T17:33:00.061Z",
     "sources": [
       "output/box-batches/20261105-222058-4c4fecec/decisions.csv",
       "output/box-batches/20261105-235239-4c4fecec/decisions.csv",
       "output/box-batches/20261106-012343-4c4fecec/decisions.csv"
     ],
-    "note": "150h — the prior table under the ARM with the nominee null (the default since 150g) at 4c4fecec, the three-act map; v5's recipe, the 85g2b shadow shape under the 92c2 deploy vector, n=120 seeds 1001–1120 in three 40-seed batches"
+    "note": "151b — v6's three 150h batches rebuilt under the catalog without the bandit in the draft: his row dropped (no site offers him now), every other row as v6"
   },
   "floor": 80,
   "decisions": 4424,
@@ -362,26 +362,6 @@
           "nPerHop": 289,
           "valuePerHop": 2.4876457124472164,
           "meanDelta": -0.06401384083044982
-        }
-      }
-    },
-    "unit:bandit": {
-      "valuePerHop": 0.017646419545265066,
-      "meanDelta": -16.522593320235757,
-      "n": 509,
-      "signable": true,
-      "sites": {
-        "portBuy": {
-          "n": 211,
-          "nPerHop": 211,
-          "valuePerHop": -2.732473014274491,
-          "meanDelta": -23.82938388625593
-        },
-        "recruit": {
-          "n": 298,
-          "nPerHop": 298,
-          "valuePerHop": 1.9648786361089179,
-          "meanDelta": -11.348993288590604
         }
       }
     },

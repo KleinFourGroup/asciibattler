@@ -90,6 +90,7 @@
     "glyph": "B",
     "abilities": ["club"],
     "targeting": "nearest",
+    "draftable": false,
     "baseStats": {
       "constitution": 22,
       "strength": 2,

@@ -15,6 +15,7 @@ import { ALL_ARCHETYPES } from '../../../src/sim/archetypes';
 import { deriveRng } from '../../../src/core/RNG';
 import {
   buildRosterTable,
+  dropUnholdable,
   loadRosterTable,
   makeRosterSampler,
   parseRostersCsv,
@@ -140,6 +141,21 @@ describe('buildRosterTable', () => {
     expect(() =>
       buildRosterTable([csvRow({ archetypes: ['gremlin', A[0]!], levels: [5, 5] })], PROV),
     ).toThrowError(/unknown archetype 'gremlin'/);
+  });
+
+  it('drops a row holding an archetype no player can hold, counted by archetype; keeps an unknown one for the build to refuse', () => {
+    const holdable = new Set(['mercenary', 'archer']);
+    const rows = [
+      csvRow({ archetypes: ['mercenary', 'archer'], levels: [3, 3] }),
+      csvRow({ archetypes: ['mercenary', 'bandit', 'bandit'], levels: [3, 3, 4] }),
+      csvRow({ archetypes: ['bandit', 'archer'], levels: [2, 2] }),
+      csvRow({ archetypes: ['gremlin'], levels: [1] }),
+    ];
+    const { kept, dropped } = dropUnholdable(rows, holdable);
+    expect(dropped).toEqual({ bandit: 2 });
+    expect(kept).toEqual([rows[0], rows[3]]);
+    // The control: with the bandit held, nothing drops.
+    expect(dropUnholdable(rows, new Set([...holdable, 'bandit'])).dropped).toEqual({});
   });
 });
 

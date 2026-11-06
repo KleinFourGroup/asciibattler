@@ -197,6 +197,15 @@ describe('the URL form', () => {
     expect(hopKind(parseScript('2:port=mars', []).entries, 1, 2, 1, kindOf)).toBe('port');
   });
 
+  it('drops a port good that is a unit no player can draft, since the price book prices only those', () => {
+    const { entries, warnings } = parseScript('3:port=archer/bandit:2/ghoul', []);
+    expect(entries).toEqual([{ hop: 3, port: [{ kind: 'unit', archetype: 'archer' }] }]);
+    expect(warnings).toEqual([
+      'script: dropped "port=archer/bandit:2/ghoul" from "3:port=archer/bandit:2/ghoul": port good "bandit:2": a port stocks only draftable units',
+      'script: dropped "port=archer/bandit:2/ghoul" from "3:port=archer/bandit:2/ghoul": port good "ghoul": a port stocks only draftable units',
+    ]);
+  });
+
   it('drops an entry that contradicts an old dial', () => {
     const config = parseRunConfig(new URLSearchParams('layout=river&script=*:layout=isthmus;3:rest'));
     expect(config.forcedLayoutId).toBe('river');

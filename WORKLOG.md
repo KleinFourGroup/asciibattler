@@ -262,3 +262,42 @@ the old pick under Mars alone, carves out a daemon 151c narrows anyway.
 
 **151a signed** (the user: "Signing your lean, Claude! 😁"): committed
 ahead of 151b.
+
+### 151b — bandits out of the draft (2026-11-06)
+
+`draftable: false` on the bandit and his price row out. Two findings at
+step zero, each inside the step's intent:
+
+- *A scripted port* took any archetype (`src/run/RunConfig.ts`), and a
+  port prices its units by the price book, which throws on an unpriced
+  one (`unitPriceFor`): `port=ghoul` already, and `port=bandit` once his
+  price went. A scripted port now drops a unit no player can draft, with
+  the other bad goods' warning.
+- *The roster guard's rule 2 as cut* ("every archetype in the table is
+  draftable") failed on the shipped table for the bandit and for the
+  prodigy, whom an event grants (`grantUnit`), so a player's roster holds
+  him without a draft. Rule 2 asks instead whether a player can hold the
+  archetype: the draftable, and what an event grants, a reward table holds
+  or a character starts with. The guard reads that from the raw event,
+  reward and character files; the builder's `holdableArchetypes` from the
+  parsed catalogs, a test holding the two equal.
+
+The tables, rebuilt from their own 150h sources with no box: each builder
+drops what no player can hold or no site can offer and names the count
+(`dropUnholdable`, `dropUnacquirable`, each with a planted case and its
+control). The roster table v7 dropped 66 rows holding a bandit, 28,551
+battles to 28,485, and equals v6 less those rows; the prior table v7
+dropped `unit:bandit`'s row (n 509), 35 items to 34, and equals v6 less
+it. In each, the provenance differs from v6's in the build head, the time
+and the note alone. On the shipped v6 tables both guards failed on the
+bandit alone; on v7 both pass.
+
+Checks: the draft's literal exclusion list with the bandit, and a port
+scan of 30 seeds read against the raw config (on the old config, 9
+bandits stocked; on the new, none); a scripted port dropping a bandit and
+a ghoul. `npm test` and the fuzz smoke green. The corpus: a replay on the
+old baseline differed on 13 of 33 journals; recorded again, none of the
+33 paid a unit off, so `corpus.test.ts` failed on the command kinds; a
+survey of chaos seeds 1 to 40 on its four dial sets found one run that
+pays a unit off, chaos 33, added; recorded again, 34 journals, 0 differ,
+20 of 21 command kinds change a run, `corpus.test.ts` 38 passed.

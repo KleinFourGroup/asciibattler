@@ -18,3 +18,145 @@ The kickoff's inputs, by pointer: the charter, ROADMAP §151;
 META-ROADMAP §"Round 11 — The roster" (N28, N24, A33); the roster table
 v6 holds a bandit in 66 of its battles (archive/worklog-phase-150.md,
 150h); `process/planning.md` "Phase kickoff".
+
+### The kickoff's audit, and the cut put to the user (2026-11-06, session 3d0a8fc1)
+
+Read at `bda09e6e`.
+
+- *Mars is the Soldier's start daemon* (`config/characters.json`,
+  `"daemon": "mars"`, his description "marching under the Idol of
+  Mars"), so removing it decides what the default company starts with.
+  Mars is also one of the eleven entries, at weight 1, in the daemons
+  reward table (`config/rewards.json`), and is priced 40
+  (`config/prices.json`). No event names him.
+- *The board's ARM empowers blind to stats.* `--empower=level:hi`
+  (`tests/fuzz/board/board.ts:211`) picks the highest-level hand card
+  (`tests/fuzz/empowerPolicy.ts:130`). Under Mars every attacker uses a
+  stat he raises; under one-stat idols the same rule would spend +4
+  ranged on a mercenary, and the Soldier's rows would fall for the bot's
+  reason, not the game's.
+- *The buff's key.* Mars's empower is `honed`, merged by key with `add`,
+  with a colour and the label "Honed" (`src/render/statusDisplay.ts:113`,
+  `locales/en/ui.json:61`). Three idols sharing it need no new colour or
+  label; a card empowered by two of them shows one badge with both mods.
+- *The prior table* has no Mars row: the Soldier's start daemon is
+  acknowledged PENDING, derived from his config
+  (`tests/prior-table-coverage.test.ts`). After the split the two idols
+  he does not start with have no row, and the fold prices them at 0 until
+  a rebuild. `unit:bandit`'s row (n 509) goes stale at N28, and rule 2
+  fails on a stale row, with no acknowledgment for one.
+- *The roster table's* rule 2 asks only that an archetype exists
+  (`tests/roster-table-coverage.test.ts`). v6 holds a bandit in 66 of its
+  28,551 battles: the sum of `n` over the rows holding one, the control
+  the sum over every row, which equals the table's own `battles`. Its
+  only consumer is `--roster=sampled` (the run, search and sweep
+  commands); no board row reads it.
+- *Both tables' sources are on this machine*: the eight
+  `output/board-runs/150h/arb-*/rosters.csv` and the three
+  `output/box-batches/*-4c4fecec/decisions.csv`. A rebuild under the new
+  catalog needs no box.
+- *The bandit* leaves the draft by `draftable: false`. His price row (25)
+  is read when a port stocks him or a player sells one
+  (`unitPriceFor`, `src/config/prices.ts:130`), and no character's roster,
+  reward table or event grants him, so out of the draft nothing reads it
+  and it goes with the flag. He stays an enemy in the camps and the
+  encounters.
+- *The save.* `RUN_SCHEMA_VERSION` is 50 (`src/run/Run.ts:305`). A slot
+  at another version is `rejected: stale` (`src/store/runSlot.ts`), and
+  the menu shows `save.rejected`, "saved by an older version of the game"
+  (`locales/en/ui.json:207`). `tests/integration/save-across-map.v50.json`
+  holds Mars.
+- *The strike-conversion test* reads Mars's mods out of
+  `config/daemons.json` (`tests/strike-conversion.test.ts:125`) and
+  throws once he is gone. It still retires at §152's first commit.
+- *The ability's text.* 29 abilities in `config/abilities.json`. The
+  schema's `name` is prose, addressed `abilities.<id>.name`, so a
+  `description` joins the i18n extract. The attack editor's formatter
+  writes each field by name (`tools/attack-editor/format.ts:170`), so a
+  save from it would drop a field it does not know. The card's ability row
+  is `abilityRow` (`src/ui/UnitCard.ts:652`): the name, the detail line,
+  the cadence.
+- *The units' lines.* 23 combatants have none: the 29 less the six
+  beasts. They are the 16 draftable after N28 and seven that are enemies
+  only (the bandit, the ice mage, the warlock, the luminant, the banshee,
+  the ghoul, the prodigy).
+- *The corpus* replays past the config stamp, so it proves the
+  description steps inert; N28 and N24 change behaviour, so each records
+  it again (`--record`, `tests/fuzz/corpus/corpus.ts`).
+- *By URL*, `?daemon=<id>` starts a run with a catalog daemon in place of
+  the character's (`src/run/RunConfig.ts:184`).
+
+**The cut** (Run v50 to v51 at 151c; no RNG stream added; no box):
+
+- **151a — the empower, by stat** (`none`). `level:hi` picks the
+  highest-level hand card whose abilities scale with a stat the granting
+  buff raises, else the highest-level card, as now. Exit: under Mars,
+  byte-identical on the ARM's shape; the failing control, a planted
+  one-stat buff on which the old rule picks a card that does not use it.
+  The fuzz smoke and the jobs parity fire (`tests/fuzz/`). A
+  pre-registered stop: if a Mars run moves, the moved rows go to the
+  user, since the change would then move 150h's refs before the idols do.
+- **151b — bandits out of the draft** (`none`). `draftable: false` and his
+  price out. The roster table's rule 2 becomes "every archetype in the
+  table is draftable", its planted case failing and its control passing.
+  Both tables rebuilt from their own 150h sources under the new catalog,
+  each builder dropping what is no longer draftable or acquirable and
+  naming the count: the roster table v7 with 66 battles out, the prior
+  table without `unit:bandit`'s row, each diff showing nothing else moved.
+  Exit: no bandit in a draft or a port's stock over a seed window, read
+  against the raw config. Every draft and port roll moves, from a smaller
+  common tier; the fuzz smoke fires; the corpus recorded again.
+- **151c — the three idols** (`batch`). `mars` out and three one-stat
+  idols in at the provisional sizes, one empower a turn each, the `honed`
+  key shared; the Soldier's start idol and his description; Run v50 to
+  v51, the v50 fixture kept as a rejected save pinned to its message and a
+  v51 one recorded; the prior table's PENDING for the two idols he does
+  not start with, until §155's rebuild; the strike-conversion test told
+  Mars left. Exit: each idol in play by `?daemon=<id>` and in a port's
+  stock; a v50 save rejected with its message. The reward and port rolls
+  and every Soldier battle move; the fuzz smoke fires; the corpus recorded
+  again. *Read:* a new run as the Soldier; at the pre-turn gate his idol
+  offers one empower, +4 to its one stat, the card badged "Honed"; wrong
+  looks like Mars's three stats, or no prompt; the other two by
+  `?daemon=`.
+- **151d — the ability's `description`** (`none`). An optional prose
+  field on the ability schema, the attack editor's field with its
+  formatter carrying it, the i18n extract. Exit: a description
+  round-trips an editor save, the old formatter its failing control; the
+  corpus replays green. The fuzz smoke fires and stays byte-identical.
+- **151e — the abilities' lines and the card's line** (`stop`). The 29
+  lines, the field required from here, and the line on the card's ability
+  row, its look drawn in two arms at the stop. Exit: a line on every
+  shipped ability's card. Byte-identical; the corpus green.
+- **151f — the units' lines** (`none`), the user's, as they are written:
+  23 lines in the archetype editor, committed with a test that every
+  combatant has one. The words are the user's, read as written, and the
+  line's place on the card shipped at 145c. It runs beside the round and
+  does not hold §151's close.
+
+*Why this order:* the bot before the idols, so the idols are read by a
+bot that spends them where a player would; the bandits before the idols,
+since both touch the prior table's guard and the smaller change goes
+first; the ability text after the content, so the stretch ends at its one
+stop, where 151c's batch read is read too. *Between §151 and §155* the
+ARM prices the two idols the Soldier does not start with at 0; §153's
+kickoff decides whether its box read needs the prior table rebuilt first
+(150h's recipe, 31 CPU-hours).
+
+**The calls, with the session's leans:**
+
+1. *The cut and its reads* as above.
+2. *The Soldier's start idol:* the strength one. Six of his ten cards are
+   mercenaries, so his hand nearly always holds a card it fits, and a
+   mercenary company under the strongman keeps his line's fiction. The
+   ranged one is the near alternative, which keeps the buff on his four
+   archers; whether that is where Mars felt too strong is a guess, not
+   measured. Uncertain between the two; none at all is the third arm.
+3. *The idols' names and provisional sizes:* the Idol of Hercules (+4
+   strength), the Idol of Diana (+4 ranged), the Idol of Hecate (+8
+   magic): Mars's own number for each stat, one empower a turn, price 40
+   each, weight 1 each in the daemons reward table, so one of the three
+   comes up 3 times in 13 where Mars came up once in 11. The sizes stay
+   §154's.
+4. *Who drafts the abilities' 29 lines:* the session, from each ability's
+   shape, edited by the user at 151e's stop.

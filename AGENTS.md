@@ -242,8 +242,9 @@ anything unstaged or untracked, on a copy of the staged files. A failing
 hook means the commit needs fixing.
 It doesn't run lint or
 prettier; leave formatting drift in files you didn't touch. When it
-fails, its last line says what to do with a failure in a file you didn't
-touch.
+fails, its last lines name the failing tests and type errors, then the
+step, the log of its whole output (`.git/pre-commit.log`) and what to do
+with a failure in a file you didn't touch.
 
 ## Before you… read…
 

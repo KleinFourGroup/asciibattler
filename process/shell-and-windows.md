@@ -23,7 +23,11 @@ Claude Code's own tools.
   CLIs colour their output even when piped (so an anchored grep reads 0),
   and a pipeline reports the exit code of its last command. Read the raw
   tail before trusting a zero; for a one-number probe, a deliberately
-  failing `expect()` prints on the first try.
+  failing `expect()` prints on the first try. A commit piped into `tail`
+  keeps the pre-commit hook's failure, since the hook ends with it and
+  keeps its whole output in `.git/pre-commit.log`, but the pipe still
+  reports `tail`'s exit code: chain nothing after a piped commit (a push
+  went up after a refused commit once).
 - Put scratch probes in real `.ts` files (`.mts` outside the repo, where
   `tsx` reads `.ts` as CommonJS); an inline `npx tsx -e` can hang at
   spawn on Windows with no output. Throwaways go in your scratch directory.

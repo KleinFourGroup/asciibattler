@@ -15,10 +15,44 @@ set -e
 REPO=$(pwd)
 COPY=
 
+# The hook's whole output is kept in a log beside git's own files, written
+# again each run, and on a failure its last lines name the failing tests and
+# type errors, the step that failed and the log. A filter on the commit's
+# output (`| tail -4`) then keeps what it would otherwise cut: sessions that
+# piped their commits lost the failing test's name about a dozen times in
+# three months (archive/worklog-phase-151.md, "§151 closed").
+LOG=$(git rev-parse --absolute-git-dir)/pre-commit.log
+: > "$LOG"
+STEP="the hook's setup"
+
+say() {
+  echo "$*"
+  echo "$*" >> "$LOG"
+}
+
+# run <step> <command...>: the command's output to the console and the log.
+# A pipeline reports its last command's exit code, here tee's, so the
+# command's own is carried out through a file.
+run() {
+  STEP=$1
+  shift
+  { "$@" 2>&1 && echo 0 > "$LOG.rc" || echo $? > "$LOG.rc"; } | tee -a "$LOG"
+  rc=$(cat "$LOG.rc")
+  rm -f "$LOG.rc"
+  [ "$rc" -eq 0 ] || exit "$rc"
+}
+
+# The failing tests and type errors in the log, colour codes stripped, each
+# once and five at most.
+failing() {
+  esc=$(printf '\033')
+  sed "s/$esc\[[0-9;]*m//g" "$LOG" | grep -E '^ *FAIL |error TS[0-9]+' | sed 's/^ *//' | awk '!seen[$0]++' | head -5 | sed 's/^/[pre-commit] failing: /'
+}
+
 # A failure says what to do with it at the moment it happens, rather than in a
 # doc read beforehand (AGENTS "Pre-commit"). A copy made below is removed on
 # the way out, pass or fail.
-trap 'rc=$?; if [ -n "$COPY" ]; then cd "$REPO"; node "$REPO/scripts/commit-copy.mjs" remove "$COPY" || echo "[pre-commit] the copy at $COPY was left in place"; fi; if [ "$rc" -ne 0 ]; then echo "[pre-commit] FAILED (exit $rc). If the failure is in a file you did not touch: a small fix goes in a commit of its own and is presented to the user; a large one is talked through first."; fi' EXIT
+trap 'rc=$?; if [ -n "$COPY" ]; then cd "$REPO"; node "$REPO/scripts/commit-copy.mjs" remove "$COPY" || echo "[pre-commit] the copy at $COPY was left in place"; fi; if [ "$rc" -ne 0 ]; then failing; echo "[pre-commit] FAILED at $STEP (exit $rc); the whole output is in $LOG. If the failure is in a file you did not touch: a small fix goes in a commit of its own and is presented to the user; a large one is talked through first."; fi' EXIT
 
 # The checks read the commit, not the working tree. Git runs this hook in the
 # working tree, which also holds whatever is unstaged or untracked; when it
@@ -29,9 +63,10 @@ trap 'rc=$?; if [ -n "$COPY" ]; then cd "$REPO"; node "$REPO/scripts/commit-copy
 # is the commit and the checks run here.
 OUTSIDE=$({ git diff --name-only; git ls-files --others --exclude-standard; } | sort -u)
 if [ -n "$OUTSIDE" ]; then
-  echo "[pre-commit] the working tree holds $(printf '%s\n' "$OUTSIDE" | wc -l | tr -d ' ') file(s) the commit does not:"
-  printf '%s\n' "$OUTSIDE" | head -10 | sed 's/^/  /'
-  echo "[pre-commit] -> checking the commit itself, in a copy of the staged files"
+  say "[pre-commit] the working tree holds $(printf '%s\n' "$OUTSIDE" | wc -l | tr -d ' ') file(s) the commit does not:"
+  say "$(printf '%s\n' "$OUTSIDE" | head -10 | sed 's/^/  /')"
+  say "[pre-commit] -> checking the commit itself, in a copy of the staged files"
+  STEP="making the copy of the staged files"
   COPY=$(node scripts/commit-copy.mjs make)
   # The copy is a checkout of its own, which git finds from there. A GIT_DIR
   # or GIT_INDEX_FILE left in the environment would send every git command a
@@ -50,17 +85,17 @@ fi
 STAGED=$(git diff --cached --name-only)
 if [ -n "$STAGED" ] && ! printf '%s\n' "$STAGED" | grep -qvE '\.md$|^retro/papercuts\.jsonl$'; then
   DOC_TESTS=$(git grep -lE "\.md['\"\`]" -- 'src/*.test.ts' 'tests/*.test.ts' ':!tests/fuzz/' || true)
-  echo "[pre-commit] docs only -> the tests that read docs:" $DOC_TESTS
-  npx vitest run $DOC_TESTS
-  echo "[pre-commit] green — proceeding with commit."
+  say "[pre-commit] docs only -> the tests that read docs:" $DOC_TESTS
+  run "the tests that read docs" npx vitest run $DOC_TESTS
+  say "[pre-commit] green — proceeding with commit."
   exit 0
 fi
 
-echo "[pre-commit] npm run typecheck ..."
-npm run typecheck
+say "[pre-commit] npm run typecheck ..."
+run "npm run typecheck" npm run typecheck
 
-echo "[pre-commit] npm test (full suite) ..."
-npm test
+say "[pre-commit] npm test (full suite) ..."
+run "npm test" npm test
 
 # The checklist's conditional half, as path detection instead of memory:
 # fuzz:smoke when staged changes touch sim/run/core behavior or the balance
@@ -73,10 +108,10 @@ npm test
 # vitest.fuzz.config.ts — the main suite never exercises them (the §54a
 # scratchpad note; until now those commits needed a MANUAL fuzz:smoke).
 if git diff --cached --name-only | grep -qE '^(src/(sim|run|core|config|bot)/|config/|tests/fuzz/)'; then
-  echo "[pre-commit] staged sim/run/core/config changes -> npm run fuzz:smoke ..."
-  npm run fuzz:smoke
+  say "[pre-commit] staged sim/run/core/config changes -> npm run fuzz:smoke ..."
+  run "npm run fuzz:smoke" npm run fuzz:smoke
 else
-  echo "[pre-commit] no staged sim/run/core/config changes -> fuzz:smoke skipped."
+  say "[pre-commit] no staged sim/run/core/config changes -> fuzz:smoke skipped."
 fi
 
 # The --jobs parity test (tests/fuzz/parallelRunDecisions.test.ts, 2.5 minutes)
@@ -85,8 +120,8 @@ fi
 # the child processes write all live under tests/fuzz/; scripts/box-batch.sh
 # runs it before a --jobs batch, once per HEAD (process/measurement.md).
 if git diff --cached --name-only | grep -qE '^tests/fuzz/'; then
-  echo "[pre-commit] staged tests/fuzz/ changes -> npm run fuzz:jobs-parity ..."
-  npm run fuzz:jobs-parity
+  say "[pre-commit] staged tests/fuzz/ changes -> npm run fuzz:jobs-parity ..."
+  run "npm run fuzz:jobs-parity" npm run fuzz:jobs-parity
 fi
 
-echo "[pre-commit] green — proceeding with commit."
+say "[pre-commit] green — proceeding with commit."

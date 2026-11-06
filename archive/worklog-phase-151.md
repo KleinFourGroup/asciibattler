@@ -532,3 +532,16 @@ working well 95% of the time"), and the lean taken was to revert and put
 the missing detail where any filter keeps it, the hook's last lines (the
 user, 2026-11-06: "the hook fix is a great idea! Let's revert and do
 that"). Reverted with the Cursor's count it carried (`7dd5d392`).
+
+**The hook fix.** The pre-commit hook keeps its whole output in
+`.git/pre-commit.log`, written again each run, tracks the step it is in,
+and on a failure prints the failing tests and type errors from the log
+(five at most) above its last line, which now names the step and the
+log. Checked on two planted failures, each through `| tail -4` or
+`| tail -3` as 151c piped it: a failing test, where the old hook's tail
+showed only "FAILED (exit 1)" and the new one's names the test, the step
+(`npm test`) and the log, the log holding the assertion and its source
+line; a type error, the step `npm run typecheck` and the TS2322 line.
+Unpiped, the hook exits 1 and 2 as the steps did. One change a person
+at a terminal sees: the steps' output now passes through `tee`, so
+vitest prints without colour there, as it already did for a session.

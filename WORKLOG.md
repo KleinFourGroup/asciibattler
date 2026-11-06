@@ -211,3 +211,51 @@ Checks: the formatter's new test round-trips a description and omits an
 absent one, failing on the old formatter (its control) and passing on the
 new; `npm run corpus`, 0 of 33 journals differ; the typecheck clean; the
 i18n tests, 85 passed.
+
+### 151a — the empower, by stat (2026-11-06, at its stop)
+
+Built: the `level` policies take the grant's buff and look only at the
+cards whose abilities read a stat it raises, or at the whole hand when
+none does (`tests/fuzz/empowerPolicy.ts`). `scalingStatsOf` walks the
+parsed defs for every op's `scaling` and every scaled value's `stat`,
+`none` and `level` aside. Both callers pass the grant's `effect.buff`:
+the gate walk (`tests/fuzz/gateWalks.ts`), which the rollouts' walk goes
+through too, and the ARM's nominee (`arbitratedStrategy.ts`). `scored`
+and `random` are unchanged. Not committed at the stop; the patch is
+`scratch/151/151a.patch`.
+
+Step zero changed the cut's prediction. The corrupter's vial scales on
+nothing and the rioter's molotov on luck, so neither reads a stat Mars
+raises: under Mars a hand whose highest-level card is one of them now
+empowers the next card, where the old rule spent Mars on it for nothing.
+Byte-identity under Mars was the exit, so this is the pre-registered
+stop.
+
+Checks:
+
+- The helper's stats per archetype equal a re-derivation from the raw
+  config files, all 29. Under the three-stat buff the draftable
+  archetypes it passes over are the corrupter and the rioter alone, and
+  a hand led by any other draftable keeps its pick.
+- The planted control: a level-5 mercenary and a level-3 archer under a
+  ranged-only buff, where the old rule takes the mercenary and the new
+  the archer. A buff no ability reads (defense) keeps the old pick.
+- Against 150h's board at `8a63a20e`, seeds 1 to 30, run locally: the
+  deploy row (act 1) 29 identical and seed 10 moved; the walk-deploy row
+  26 identical and seeds 8, 10, 15 and 23 moved, every outcome and final
+  hop unchanged. A probe line, not committed, logged each pick the new
+  rule changed, read on serial re-runs since the `--jobs` workers do not
+  forward stderr: deploy seed 10, one pick, a level-9 corrupter passed
+  over for a level-9 archer; on the walk, one pick each: seed 8 a level-17
+  corrupter for a level-14 archer, seed 10 a level-9 corrupter for a
+  level-9 archer, seed 15 a level-10 rioter for a level-9 mercenary, seed
+  23 a level-10 corrupter for a level-10 mercenary. Each serial re-run's
+  row equals its `--jobs` row.
+- Not run: the ARM rows. Their nominee and their rollouts call the same
+  selector, so they move at least where doctrine does, and likely more,
+  since every rollout walks the grants.
+
+The decision at the stop, with the session's lean: commit 151a now and
+go on to 151b. 151b and 151c move every run next, and 150h's refs are
+re-pinned at §155, so holding it saves no re-pin; the other arm, keeping
+the old pick under Mars alone, carves out a daemon 151c narrows anyway.

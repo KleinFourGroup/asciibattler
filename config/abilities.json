@@ -118,7 +118,7 @@
   "bow": {
     "id": "bow",
     "name": "Bow",
-    "description": "Can't hit an adjacent foe.",
+    "description": "A short bow.",
     "cooldownSeconds": 2,
     "rangeCells": 3,
     "minRangeCells": 2,
@@ -222,7 +222,7 @@
   "magic_bolt": {
     "id": "magic_bolt",
     "name": "Bolt",
-    "description": "A bolt of raw magic. Can't hit an adjacent foe.",
+    "description": "A bolt of raw magic.",
     "cooldownSeconds": 2.5,
     "rangeCells": 5,
     "minRangeCells": 2,
@@ -255,7 +255,7 @@
   "catapult_shot": {
     "id": "catapult_shot",
     "name": "Lob",
-    "description": "Arcs over walls. Can't hit a foe within four cells.",
+    "description": "Arcs over walls.",
     "cooldownSeconds": 3,
     "rangeCells": 6,
     "minRangeCells": 4,
@@ -323,7 +323,7 @@
   "vial": {
     "id": "vial",
     "name": "Vial",
-    "description": "A thrown vial of poison. Can't hit an adjacent foe.",
+    "description": "A thrown vial of poison.",
     "cooldownSeconds": 2.5,
     "rangeCells": 5,
     "minRangeCells": 2,
@@ -359,7 +359,7 @@
   "ice_storm": {
     "id": "ice_storm",
     "name": "Ice Storm",
-    "description": "Hail that freezes. Can't hit an adjacent foe.",
+    "description": "Hail that freezes.",
     "cooldownSeconds": 2.5,
     "rangeCells": 5,
     "minRangeCells": 2,
@@ -393,7 +393,7 @@
   "hex": {
     "id": "hex",
     "name": "Hex",
-    "description": "Confuses, longer with luck. Can't hit an adjacent foe.",
+    "description": "Confuses, longer with luck.",
     "cooldownSeconds": 3,
     "rangeCells": 5,
     "minRangeCells": 2,
@@ -418,7 +418,7 @@
   "light_ray": {
     "id": "light_ray",
     "name": "Light Ray",
-    "description": "A blinding beam. Can't hit an adjacent foe.",
+    "description": "A blinding beam.",
     "cooldownSeconds": 2,
     "rangeCells": 3,
     "minRangeCells": 2,
@@ -476,7 +476,7 @@
   "chain_lightning": {
     "id": "chain_lightning",
     "name": "Chain",
-    "description": "Arcs foe to foe, weaker each jump. Can't hit an adjacent foe.",
+    "description": "Arcs foe to foe, weaker each jump.",
     "cooldownSeconds": 2.5,
     "rangeCells": 5,
     "minRangeCells": 2,
@@ -566,7 +566,7 @@
   "molotov": {
     "id": "molotov",
     "name": "Molotov",
-    "description": "A thrown firebomb; burns longer with luck. Can't hit an adjacent foe.",
+    "description": "A thrown firebomb; burns longer with luck.",
     "cooldownSeconds": 2.5,
     "rangeCells": 4,
     "minRangeCells": 2,
@@ -602,7 +602,7 @@
   "pistol": {
     "id": "pistol",
     "name": "Pistol",
-    "description": "Quick shots. Can't hit an adjacent foe.",
+    "description": "Quick shots.",
     "cooldownSeconds": 0.8,
     "rangeCells": 4,
     "minRangeCells": 2,
@@ -690,7 +690,7 @@
   "inspire": {
     "id": "inspire",
     "name": "Inspire",
-    "description": "Nearby allies fight inspired.",
+    "description": "Nearby allies move faster.",
     "cooldownSeconds": 1,
     "rangeCells": 0,
     "target": { "kind": "self" },

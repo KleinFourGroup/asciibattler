@@ -485,7 +485,7 @@ locales/                     # §95a: the locale SIDECARS — one flat file per 
 
 config/                      # A4: balance JSON source of truth (paired with src/config/*.ts)
   units.json                 # §38 UnitDef catalog (was archetypes.json) — per-unit-kind glyph + baseStats + growthRates + abilities/targeting (E1/E3/§38); a combatant's optional `description`, its line of flavour on the full card and an enemy card's tooltip (145c)
-  abilities.json             # The AbilityDef catalog — one entry per combat verb (targeting / timeline / effect-ops / damage-heal profile). Y5e consolidated this (was abilityDefs.json) atop the retired legacy AbilityConfig json
+  abilities.json             # The AbilityDef catalog — one entry per combat verb (targeting / timeline / effect-ops / damage-heal profile). Y5e consolidated this (was abilityDefs.json) atop the retired legacy AbilityConfig json; an ability's optional `description`, its line, the name's tooltip on the full card (151e; every shipped ability has one, `src/config/abilities.test.ts`)
   statuses.json              # 27a: the StatusDef catalog (burn/bleed/poison/rejuvenate) — empty until 27c authors content
   difficulty.json            # G4: enemy level-budget knobs + A/B/C presets; startingBits
   escalation.json            # 117b: the Escalation ladder, five levels: each level's standing on the three levers (levelBudget, wave, bits)

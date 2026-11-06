@@ -224,7 +224,8 @@ export function buildUnitCard(data: UnitCardData, opts: UnitCardOptions): UnitCa
   card.appendChild(statsEl);
 
   if (opts.mode === 'full' && (opts.showAbilities ?? defaultShowAbilities(opts.skin))) {
-    card.appendChild(buildAbilities(data.archetype, data.stats));
+    // The ability names' tooltips take the star run's touch route.
+    card.appendChild(buildAbilities(data.archetype, data.stats, clickable ? 'press' : 'tap'));
   }
 
   if (opts.mode === 'full' && (opts.showXpBar ?? defaultShowXpBar(opts.skin))) {
@@ -599,8 +600,10 @@ function buildStatRow(
 }
 
 /** The abilities list: one row per ability id, in the archetype's order, so
- *  the card says what the unit does. */
-function buildAbilities(archetype: Archetype, stats: UnitStats): HTMLDivElement {
+ *  the card says what the unit does. `touch` is the names' tooltip route:
+ *  a long press on a card that is itself a control, so a tap stays the
+ *  card's, else a tap. */
+function buildAbilities(archetype: Archetype, stats: UnitStats, touch: 'tap' | 'press'): HTMLDivElement {
   const abilities = document.createElement('div');
   abilities.className = 'unit-card__abilities';
 
@@ -610,7 +613,7 @@ function buildAbilities(archetype: Archetype, stats: UnitStats): HTMLDivElement 
   abilities.appendChild(heading);
 
   for (const id of abilityIdsForArchetype(archetype)) {
-    abilities.appendChild(abilityRow(id, stats));
+    abilities.appendChild(abilityRow(id, stats, touch));
   }
   return abilities;
 }
@@ -644,13 +647,15 @@ function buildXpBar(data: UnitCardData): HTMLDivElement {
 }
 
 /**
- * One ability row: the name, the ability's own line (its `description`,
- * what the numbers don't say), the detail line of what the ability does
- * (`abilityDetailParts`) with an AoE tag, then the cadence in seconds. All
- * of it is read from the `AbilityDef` (`config/abilities.json`) through the
- * sim's own helpers, so the card can't disagree with battle.
+ * One ability row: the name, the detail line of what the ability does
+ * (`abilityDetailParts`) with an AoE tag, then the cadence in seconds. The
+ * ability's own line (its `description`, what the numbers don't say) is the
+ * name's tooltip, a text site with a dotted underline and a tab stop, so the
+ * card keeps its height; everything to act on is in the numbers. All of it is
+ * read from the `AbilityDef` (`config/abilities.json`) through the sim's own
+ * helpers, so the card can't disagree with battle.
  */
-function abilityRow(id: string, stats: UnitStats): HTMLDivElement {
+function abilityRow(id: string, stats: UnitStats, touch: 'tap' | 'press'): HTMLDivElement {
   const def = abilityDef(id);
 
   const row = document.createElement('div');
@@ -659,14 +664,12 @@ function abilityRow(id: string, stats: UnitStats): HTMLDivElement {
   const name = document.createElement('div');
   name.className = 'unit-card__ability-name';
   name.textContent = def.name;
-  row.appendChild(name);
-
   if (def.description !== undefined) {
-    const line = document.createElement('div');
-    line.className = 'unit-card__ability-description';
-    line.textContent = def.description;
-    row.appendChild(line);
+    name.classList.add('unit-card__ability-name--line');
+    name.tabIndex = 0;
+    attachTooltip(name, def.description, { touch });
   }
+  row.appendChild(name);
 
   const detail = document.createElement('div');
   detail.className = 'unit-card__ability-detail';

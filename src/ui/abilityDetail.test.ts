@@ -168,3 +168,41 @@ describe("the card's damage and heal number is the one the sim uses", () => {
     expect(wrong).toEqual([]);
   });
 });
+
+describe("the card's reach is the band the sim fires in", () => {
+  // The expectation comes from the raw config, not the parsed def the card
+  // reads: `rangeCells` and, where the ability has one, its floor
+  // `minRangeCells`. The sim fires at a cell at least the floor and at most
+  // the reach away (`firingBandCell`), so a floored ability reads "reach
+  // min–max" and the rest "reach max". A pure aura's reach is its radius
+  // (pinned above), so it is left out here.
+  type RawDef = { rangeCells: number; minRangeCells?: number; effects: unknown[]; aura?: unknown };
+  const RAW = abilitiesJson as unknown as Record<string, RawDef>;
+  const stats = rollUnit('mercenary', new RNG(1)).stats;
+
+  it('on every shipped ability with a reach, the floor where it has one', () => {
+    const wrong: string[] = [];
+    let floored = 0;
+    for (const [id, raw] of Object.entries(RAW)) {
+      if (raw.effects.length === 0) continue; // a pure aura
+      const shown = abilityDetailParts(id, stats).find((p) => p.startsWith('reach '));
+      if (shown === undefined) continue; // the dash shows its leap, no reach
+      const min = raw.minRangeCells ?? 0;
+      const expected = min > 0 ? `reach ${min}–${raw.rangeCells}` : `reach ${raw.rangeCells}`;
+      if (min > 0) floored++;
+      if (shown !== expected) wrong.push(`${id}: shows ${shown}, the sim fires at ${expected}`);
+    }
+    // Ten shipped abilities have a floor (the bow, the catapult's four, the
+    // casters'); none checked would make the pass vacuous.
+    expect(floored).toBe(10);
+    expect(wrong).toEqual([]);
+  });
+
+  it('the control: the same def without its floor reads the bare reach', () => {
+    const bow = ABILITY_DEFS.bow!;
+    expect(abilityDetailPartsForDef(bow, stats)).toContain(`reach ${bow.minRangeCells}–${bow.rangeCells}`);
+    const unfloored = parseAbilityDef({ ...bow, minRangeCells: 0 });
+    expect(abilityDetailPartsForDef(unfloored, stats)).toContain(`reach ${bow.rangeCells}`);
+    expect(abilityDetailPartsForDef(unfloored, stats).join(' · ')).not.toContain('–');
+  });
+});

@@ -41,9 +41,9 @@ export function abilityDetailPartsForDef(def: AbilityDef, stats: UnitStats): str
   const statusOp = opOf(def, 'applyStatus');
 
   if (healOp) {
-    parts.push(`${resolveHealAmount(healOp, stats)} heal`, `reach ${def.rangeCells}`);
+    parts.push(`${resolveHealAmount(healOp, stats)} heal`, reachPart(def));
   } else if (damageOp) {
-    parts.push(`${resolveDamageScalars(damageOp, stats).baseDamage} dmg`, `reach ${def.rangeCells}`);
+    parts.push(`${resolveDamageScalars(damageOp, stats).baseDamage} dmg`, reachPart(def));
     // The weapon's crit, derived as the damage number is (the op's base and
     // the unit's stat): `critChanceFor` with its luck, which is exact, having
     // no target term, and keeps the sim's cap.
@@ -58,17 +58,17 @@ export function abilityDetailPartsForDef(def: AbilityDef, stats: UnitStats): str
       // The inner strike's crit, derived the same way (gated on its flag).
       pushCrit(parts, inner, stats);
     }
-    parts.push(`chains ${chainOp.maxJumps}`, `reach ${def.rangeCells}`);
+    parts.push(`chains ${chainOp.maxJumps}`, reachPart(def));
   } else if (summonOp) {
     // A summoner (the Shaman's `raise_dead`): what it raises. It targets
     // `self`, so it must come before the dash branch.
     const { count, archetype: minion } = summonOp.summon;
-    parts.push(count > 1 ? `summons ${count}×${minion}` : `summons ${minion}`, `reach ${def.rangeCells}`);
+    parts.push(count > 1 ? `summons ${count}×${minion}` : `summons ${minion}`, reachPart(def));
   } else if (statusOp) {
     // A pure afflicter (the Warlock's `hex`, the Banshee's `wail`): no
     // damage, only the status it lays. A damage afflicter takes the rider
     // below instead.
-    parts.push(`applies ${statusOp.statusId}`, `reach ${def.rangeCells}`);
+    parts.push(`applies ${statusOp.statusId}`, reachPart(def));
   } else if (def.aura) {
     // A pure aura (no ops; the schema makes it target `self`): the status
     // it radiates and the aura's own radius, not `rangeCells`, which is the
@@ -91,6 +91,14 @@ export function abilityDetailPartsForDef(def: AbilityDef, stats: UnitStats): str
   }
 
   return parts;
+}
+
+/** The reach: the farthest cell the ability fires at, and where it has a
+ *  floor (`minRangeCells`), the nearest as well, as the band the sim fires in
+ *  (`firingBandCell`: at least the floor, at most the reach), so a bow reads
+ *  "reach 2–3" and the card never says it can hit a foe it can't. */
+function reachPart(def: AbilityDef): string {
+  return def.minRangeCells > 0 ? `reach ${def.minRangeCells}–${def.rangeCells}` : `reach ${def.rangeCells}`;
 }
 
 /** The derived crit chance of one damage op. */

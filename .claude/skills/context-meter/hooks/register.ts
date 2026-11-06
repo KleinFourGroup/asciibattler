@@ -1,6 +1,5 @@
 import type { EngineInterface, Register } from 'claude-code'
 import { type Found, backtickBashRuns, backticksRefusal } from './backticks.ts'
-import { type Piped, commitPipeRefusal, pipedCommit } from './commitpipe.ts'
 import { halvingNote, halvingRefusal } from './halving.ts'
 import { HAND_OFF_AT, commitIn, landed, pastTrigger } from './handoff.ts'
 import { type Stall, stdinRefusal, stdinStall } from './stdin.ts'
@@ -35,17 +34,6 @@ async function halvedIn($: EngineInterface, command: string): Promise<string | u
 function backtickIn(command: string): Found | undefined {
   try {
     return backtickBashRuns(command)
-  } catch {
-    return undefined
-  }
-}
-
-// A `git commit` whose output goes into a pipe is refused before it runs
-// (commitpipe.ts has the model); a fault in the model lets the command run,
-// as the stdin guard's does.
-function pipedCommitIn(command: string): Piped | undefined {
-  try {
-    return pipedCommit(command)
   } catch {
     return undefined
   }
@@ -94,12 +82,6 @@ export const register: Register = on => {
     if (backtick !== undefined) {
       $.ui.log(`backticks guard: refused line ${backtick.line}, which bash would run as a command substitution`)
       return { deny: backticksRefusal(backtick) }
-    }
-
-    const piped = pipedCommitIn(e.command)
-    if (piped !== undefined) {
-      $.ui.log(`commit-pipe guard: refused line ${piped.line}, a git commit piped into ${piped.into || 'a command'}`)
-      return { deny: commitPipeRefusal(piped) }
     }
 
     return withHalvingNote($, e.command, await withHandOff($, e.command, () => next(e)))

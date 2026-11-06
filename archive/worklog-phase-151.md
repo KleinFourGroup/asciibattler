@@ -514,25 +514,21 @@ No `papercut` was filed in §151, so none needs a disposition; the four
 slips are counted by trap at the round sweep. No `distress` was filed,
 and neither report records a wish to pause or stop.
 
-**The candidate, signed and built.** The user, 2026-11-06: "Let's build
-that guard, Claude! 👍 That one makes a lot of sense". The commit-pipe
-guard (`.claude/skills/context-meter/hooks/commitpipe.ts`) refuses a
-`git commit` whose output a pipe carries into another command, reading
-the command through the stdin guard's parse, lifted out of `stdinStall`
-as `commandsIn`. Checks: `tests/shell-commit-pipe.test.ts`, 23 cases
-(the four instances' shapes and seven more to refuse, eleven to let
-through), with two planted controls, a guard blind to the pipe (4
-failed) and one that refuses nothing (12 failed); the mod's hooks
-type-checked against Claude Code 2.1.317's declarations, a planted type
-error failing the same check. Replayed over the retained transcripts'
-20,948 main-chain Bash calls, it refuses 753 of the 1,894 that name a
-commit, in 112 sessions (442 into `tail`, 305 into `grep`, 6 into
-`sed`), the three piped commits among them (132d's session 60e58d62,
-136f's 37c3d345 with its push, 151c's 3d0a8fc1; the fourth instance,
-this session's `2>/dev/null`, is no commit), and throws on none; the stdin guard's verdict is the same through
-the lifted parse as through HEAD's on every one (35 stalls, 0 differ).
-The count is the cost: piping the commit is the habit, 2 to 16 a session
-in the last two weeks, so a session is likely to meet the refusal once
-before it switches to logging the commit to a file. The replay is
-`scratch/151/commit-pipe-scan.mjs`. The mod loads in a fresh session, so
-the guard was not seen refusing live here.
+**The candidate, built, measured and reverted.** The user signed the
+guard (2026-11-06: "Let's build that guard, Claude! 👍"), and a
+commit-pipe guard was built in the context meter's mod (`79e1be65`): a
+`git commit` whose output a pipe carries into another command refused
+before it ran, read through the stdin guard's parse, 23 cases with two
+planted controls. Replayed over the retained transcripts' 20,948
+main-chain Bash calls, it refused 753 of the 1,894 that name a commit,
+in 112 sessions, the three piped instances among them. Then the cost
+(`scratch/151/commit-pipe-cost.mjs`): of the 753, 25 failed their hook,
+and every one showed it in the filtered output, since the hook's last
+line says FAILED; about 12 had the failing test's name cut, each a
+re-run to find it; 46 chained a push, one after a failed commit (136f,
+harmless). A refusal a session for a dozen re-runs in three months
+oversteps, as the user asked ("an overreaction to something that's
+working well 95% of the time"), and the lean taken was to revert and put
+the missing detail where any filter keeps it, the hook's last lines (the
+user, 2026-11-06: "the hook fix is a great idea! Let's revert and do
+that"). Reverted with the Cursor's count it carried (`7dd5d392`).

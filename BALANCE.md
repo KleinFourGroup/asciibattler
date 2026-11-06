@@ -289,7 +289,7 @@ has someone's attention).
 | Artifact | Measures | Invalidated by | Rebuild recipe | Tripwire |
 |---|---|---|---|---|
 | [tests/fuzz/board/prior-table.json](tests/fuzz/board/prior-table.json) (v6, measured @`4c4fecec` — 150h, under the ARM with doctrine's pick as the null, on the three-act map, committed before the board that runs under it; v5, measured @`4d3fa22` off the 94h signing board's shadow leg, is kept as [tests/fuzz/fixtures/prior-table-v5.json](tests/fuzz/fixtures/prior-table-v5.json): every ARM row from that signing to 150g's ran under it, and `--prior-table=<file>` with `--arb-null=pass` hands those rows back; v4, measured @`7dc07a3` at 92g, is kept as [tests/fuzz/fixtures/prior-table-v4.json](tests/fuzz/fixtures/prior-table-v4.json), the table the 94h signing board's arbitrated rows ran under; v3 @`251514d` was the survivors era) | per acquirable item (`daemon:*` · `packet:*` · `unit:*`), the paired long-horizon holding margin under the deployed ARM — the §85 fold input | any acquirable-catalog MEMBERSHIP change (`daemons.json` · `packets.json` · a `units.json` `draftable` flip · a character blacklist); any ARM-semantics change (λ_prior, the walker, the deployed vector — the 85h deployed-semantics rule: measure under what ships); any sim/run change that plausibly moves item values (re-measure at the next amendment board) | the 85g2b shape on the TRAIN bank under the deploy vector, seeds 1001 to 1120: `scripts/box-drive.sh <queue>` with three lines, `--count=40 --seed-offset=1000` (then 1040, 1080) `--character=soldier --strategy=tests/fuzz/fixtures/92c2-winner.json` + the ARM + `--shadow-horizon=run --jobs=8` (v6: 4 h 38 min of `cpx42`, 31.2 CPU-hours) → `npm run prior:table -- <the three batch dirs> --note=…` → commit the table with its run-log entry | [tests/prior-table-coverage.test.ts](tests/prior-table-coverage.test.ts): every acquirable id has a row or an explicit PENDING acknowledgment (config-derived; `daemon:mars` = the soldier's start idol, structurally unmeasurable on an all-soldier bank) · no stale rows · PENDING honesty. Rides `npm test`. |
-| [tests/fuzz/board/roster-table.json](tests/fuzz/board/roster-table.json) (v5, measured @`3476d272` — 146f, off §146's verify board's eight ARM rows on the three-act walk, 25,657 battles in 52 buckets, 2.2 MB; written a row a line since 135a, its provenance naming the sector ids by position, since a bucket key holds a sector's index; the officer acknowledged PENDING, offered but never drafted by the ARM since rule C; v4 @`d4b2af3a` was 146c, 23,471 battles in 52 buckets, the first on three acts; v3 @`4d3fa22` was 94h, 21,221 battles in 41 buckets on two acts, v2 @`9c6c60d` was 92h, v1 @`8c47b73` was 87c, survivors era) | per (character, sector, hop) the REALIZED roster distribution under the 8 ARM board rows — the `--roster=sampled` source | any change to recruitment / draft pools / prices / the archetype catalog / the ARM | the 87b capture cohort (the board's 8 ARM rows carry `rosters.csv`) → `npm run roster:table -- <board-dir>` | `tests/roster-table-coverage.test.ts` (135b), the prior tripwire's twin: every draftable archetype in a recorded roster or acknowledged PENDING, no archetype the catalog dropped, every bucket inside the characters and the map, and the sector ids the map walks; `makeRosterSampler` refuses a sector mismatch at launch as well |
+| [tests/fuzz/board/roster-table.json](tests/fuzz/board/roster-table.json) (v6, measured @`8a63a20e` — 150h, off §150's board's eight ARM rows, the ARM with doctrine's pick as the null, 28,551 battles in 52 buckets, 2.6 MB; written a row a line since 135a, its provenance naming the sector ids by position, since a bucket key holds a sector's index; the officer in 24 of its battles, all the soldier's, the first ARM rows to draft him since rule C, so his PENDING acknowledgment is gone; v5 @`3476d272` was 146f, 25,657 battles in 52 buckets, the officer PENDING; v4 @`d4b2af3a` was 146c, 23,471 battles in 52 buckets, the first on three acts; v3 @`4d3fa22` was 94h, 21,221 battles in 41 buckets on two acts, v2 @`9c6c60d` was 92h, v1 @`8c47b73` was 87c, survivors era) | per (character, sector, hop) the REALIZED roster distribution under the 8 ARM board rows — the `--roster=sampled` source | any change to recruitment / draft pools / prices / the archetype catalog / the ARM | the 87b capture cohort (the board's 8 ARM rows carry `rosters.csv`) → `npm run roster:table -- <board-dir>` | `tests/roster-table-coverage.test.ts` (135b), the prior tripwire's twin: every draftable archetype in a recorded roster or acknowledged PENDING, no archetype the catalog dropped, every bucket inside the characters and the map, and the sector ids the map walks; `makeRosterSampler` refuses a sector mismatch at launch as well |
 | [tests/fuzz/fixtures/85g5-finalist-56.json](tests/fuzz/fixtures/85g5-finalist-56.json) (the DEPLOYED searched vector) | the searched-upper ceiling on the act-1 shape, at derive time | a frozen vector's ceiling DRIFTS with every balance change (the pre55ReachRef lesson, 83f→85g5) | at every amendment/re-pin board, a FRESH `--search` derive as the ceiling READ (the `88d2-derive.queue` line: `--search --refine --searcher --audition --preset=heavy --vectors=96 --seeds=32 --sampler-seed=85 --seed-offset=1000 --jobs=8`, its fetch checking `best-strategy.json`, a search line's own artifact since 135c, ~2.7 h box); DEPLOYING a new vector is its own decision — the 85g5 arbitrated-selection cohort + a sheet re-anchor | the board integrity protocol's fresh-derive requirement (above); no test — a derive is a box run |
 | [tests/fuzz/board/signed-sheet.json](tests/fuzz/board/signed-sheet.json) | NOT derived — the hand-signed refs + bands | — (amended at board runs, user-signed) | — | the board's DRIFT table |
 
@@ -5505,3 +5505,71 @@ deltas. The pre-X H7c→O log lives at
   between the two tables as well as the ARM (three acts, act 1 tuned at
   146e), so a row's move is not the null arm's alone. The full table:
   `scratch/150/150h/v5-v6.txt` (ignored, this machine).
+- **2026-11-06 — the ARM's board, doctrine's pick the null** (§150,
+  150h). The full board at `8a63a20e` (the nominee the default since
+  150g, the prior table v6), 146f's shape and queue line for line: 25
+  batches on one `cpx42`, 03:14Z to 08:42Z (5 h 28 min), every batch
+  fetched with exit 0 and verified, the box destroyed by its driver; the
+  anchors local at the same HEAD. Pooled into `output/board-runs/150h/`
+  by `scratch/146/merge.mjs`. Integrity PASS on all 17 rows, 0 FAIL, 16
+  WARN (146f: 18). The seven doctrine rows (regen, deploy, fire-ablated,
+  the two walks, the King and the Queen) and both anchors are 146f's
+  byte for byte, the control that the game did not move. The ten checked
+  rows against 146f's, paired on seeds 1 to 120 (`scratch/146/pair.mjs`,
+  the exact sign test):
+
+  | row | 146f | 150h | 146f alone / 150h alone | p |
+  |---|---|---|---|---|
+  | arb-regen | 0.542 | 0.775 | 1 / 29 | < 0.0001 |
+  | arb-deploy | 0.792 | 0.942 | 1 / 19 | < 0.0001 |
+  | arb-priest-regen | 0.558 | 0.667 | 3 / 16 | 0.004 |
+  | arb-priest-deploy | 0.800 | 0.858 | 4 / 11 | 0.119 |
+  | arb-gambler-regen | 0.517 | 0.608 | 3 / 14 | 0.013 |
+  | arb-gambler-deploy | 0.775 | 0.808 | 7 / 11 | 0.481 |
+  | wall-king | 0.717 | 0.717 | identical | — |
+  | wall-queen (`--act=3`) | 0.258 | 0.258 | identical | — |
+  | arb-walk-regen | 0.075 | 0.283 | 3 / 28 | < 0.0001 |
+  | arb-walk-deploy | 0.375 | 0.692 | 3 / 41 | < 0.0001 |
+
+  *The ceilings,* ARM minus doctrine on the 40 shared seeds (ARM alone :
+  doctrine alone): regen +0.025 (2 : 1), deploy +0.025 (2 : 1), the walk
+  on regen +0.125 (9 : 4, WARN, above the ±0.08 band in the ARM's
+  favour), the walk on deploy −0.025 (5 : 6); 146f −0.200, −0.150,
+  −0.075, −0.350. Against 150f's nominee cohort on seeds 1 to 40, the
+  same game and ARM under the v5 table (150h alone : 150f alone): regen
+  32 against 31 won (2 : 1), deploy 39 and 39, the walk on regen 10
+  against 14 (4 : 8), the walk on deploy 27 and 27 (5 : 5).
+
+  *Parity on act 1* (the ±5 principle), against the soldier at n = 120,
+  paired on the seeds (the character alone : the soldier alone): the
+  priest −10.8 on regen (5 : 18, p 0.011) and −8.3 on deploy (2 : 12, p
+  0.013), the gambler −16.7 (0 : 20, p < 0.0001) and −13.3 (1 : 17, p
+  0.0001); at 146f +1.7, +0.8, −2.5, −1.7, none told apart. The
+  soldier's rows gained the most from the null (+23.3 and +15.0, against
+  the priest's +10.8 and +5.8 and the gambler's +9.2 and +3.3); why is
+  not read.
+
+  *The walk against the signed bands* (seam 1, act 1's wall, the
+  terminal pair; none moved), deploy / regen: seam 1 24.84 / 22.44 of 40
+  (0.621 / 0.561 of max, the band 0.475–0.55); act 1's wall 0.042 /
+  0.155 (0.15–0.38); act 2 reach 0.858 / 0.642, wall 0.049 / 0.377;
+  the terminal reach 0.783 / 0.342 (0.40–0.50) and wall 0.117 / 0.171
+  (0.30–0.35); win 0.692 / 0.283 (derived 0.26–0.35). Doctrine's walk
+  rows, unchanged since 146f: terminal reach 0.775 / 0.175, wall 0.097 /
+  0.286. The pacing bands pass on both rows (normal 2.95 / 2.95, elite
+  4.03 / 4.20, boss 5.36 / 5.30).
+
+  *The economy,* firer / shopper: banks 130.0 / 83.3 (146f 114.9 /
+  80.0), fires a run 4.69 / 5.44 (2.50 / 2.61), transaction rates 0.292
+  / 0.900 (0.308 / 0.875). On seeds 1 to 40 the ARM fires more than
+  doctrine on act 1 (4.88 against 2.83 on regen, 5.70 against 3.58 on
+  deploy) and on the walk on regen (9.95 against 6.97), and a little
+  less on the walk on deploy (14.95 against 16.32), in as many battles.
+  The fire channel 0.100, as at 146f. The skill gradient: pure-random
+  0.275, greedy 0.175, 6 : 2 on the shared seeds, one-sided p 0.145, ok
+  under 150c's leg (the same anchors as 146f's); greedy under the ARM.
+  A second reader on the raw CSVs (`scratch/150/150h/raw-read.mjs`)
+  gives the board's win rates, banks, fires and transaction rates on all
+  eight ARM rows, and on 146f's board the sheet's parity gaps and 150b's
+  ceilings. The roster table rebuilt from the eight ARM rows as v6 (the
+  registry above).

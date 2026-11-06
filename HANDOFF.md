@@ -6,11 +6,11 @@ A fresh-session orientation for ASCIIbattler. Read this first; then dive into th
 
 **The ONE home for live status.** Other docs (and the agent memory) point here instead of restating it; when state changes, this section is the single place that updates.
 
-- **NEXT — ROUND 11 (The roster): §150, the board's instruments, 150h**: 150a to 150c, 150e and 150g built, 150d and 150f signed; 150h, the prior table v6 committed, the board under it on the box, then the roster table and the re-pin at a stop; the entry is "150h — the prior table v6, then the board" (WORKLOG §150; [ROADMAP.md](ROADMAP.md) §150; the spec, [round-11-spec.md](round-11-spec.md)). **Open ◐:** none.
-- **In flight:** 150h's board on the box from 2026-11-06 (a prediction as written), `output/box-batches/150h-board.queue` (25 batches, 146f's shape), driven by `scripts/box-drive.sh`, its log `output/box-batches/150h-board-drive.log`; no commit and no doc edit until batch 25/25 has launched.
+- **NEXT — ROUND 11 (The roster): §150, the board's instruments, 150h**: 150a to 150c, 150e and 150g built, 150d and 150f signed; 150h at its stop: the prior table v6 and the roster table v6 committed, the board back at `8a63a20e` (`output/board-runs/150h/`, its report `output/board-runs/150h-report.txt`), the sheet's ARM refs re-pinned for the user's signature with two calls; the entry is "150h — the prior table v6, then the board" (WORKLOG §150; [ROADMAP.md](ROADMAP.md) §150; the spec, [round-11-spec.md](round-11-spec.md)). **Open ◐:** 150h (the re-pin, unsigned).
+- **In flight:** nothing; the box is destroyed.
 - **The public build:** `0.3.0` (`273d587d`, tag `v0.3.0`), uploaded to itch.io on 2026-11-04; the uploads before it are in Closed rounds below.
 - **Snapshots:** WorldSnapshot **v39** (no player keeps one) · RunSnapshot **v50** (a v49 save, `0.1.1`'s, rejects).
-- **Tests:** **3947 main** in 272 files at `7a4591f5` (150g); **581 fuzz:smoke** in 60 files and **1 fuzz:jobs-parity** at `7a4591f5` (150g); typecheck clean; the journal corpus, run by hand, 37 tests over 33 journals, re-recorded at 146e.
+- **Tests:** **3947 main** in 272 files at 150h's board commit (as at `7a4591f5`, 150g); **581 fuzz:smoke** in 60 files and **1 fuzz:jobs-parity** at `7a4591f5` (150g); typecheck clean; the journal corpus, run by hand, 37 tests over 33 journals, re-recorded at 146e.
 - **Model id: `claude-opus-5-5`** since 2026-09-22. When yours differs, say so at the next stop; at the user's word, review AGENTS.md against the vendor's current prompting guidance and record the new id (the last review: `archive/post-104-worklog.md`, "The new-model tone audit").
 - **Last phase: §149**, the stat sheet, 2026-11-05: a read-only page at `/tools/stat-sheet/` (`archive/worklog-phase-149.md`, with §148, Round 11's kickoff). Round 10 and every round before it are in Closed rounds below.
 

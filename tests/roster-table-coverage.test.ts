@@ -50,12 +50,7 @@ interface Catalog {
  * An entry is `unit:<archetype>` or `sectors`; an entry that is no longer
  * needed fails (5). Empty while the table covers the catalog.
  */
-const PENDING: ReadonlyMap<string, string> = new Map([
-  [
-    'unit:officer',
-    'offered but never drafted by the ARM since rule C (ca97b9fc): 0 of the 25,657 rosters at 3476d272 and of the 23,471 at d4b2af3a, where the pure-random and greedy anchors hold it; clears when an ARM row drafts it',
-  ],
-]);
+const PENDING: ReadonlyMap<string, string> = new Map<string, string>();
 
 function readJson<T>(rel: string): T {
   return JSON.parse(readFileSync(join(ROOT, rel), 'utf8')) as T;

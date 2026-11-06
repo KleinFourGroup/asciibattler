@@ -489,3 +489,59 @@ is launched after this commit with `scripts/box-drive.sh`, its log
 merge into `output/board-runs/150h/` (`scratch/146/merge.mjs`), the
 report, the roster table from the eight ARM rows, and the stop with the
 sheet's ARM refs re-pinned for the user's signature.
+
+*The board, back.* It drained at 08:42Z: 25 of 25 batches verified at
+`8a63a20e` with no hold, so none of the overnight calls came up. Its
+numbers are in the BALANCE run log (2026-11-06, "the ARM's board"):
+integrity PASS on all 17 rows, 0 FAIL, 16 WARN, the seven doctrine rows
+and both anchors 146f's byte for byte. What it shows:
+
+- The ARM plays at doctrine's level on all four ceiling shapes, +0.025,
+  +0.025, +0.125 and −0.025 (146f −0.200, −0.150, −0.075, −0.350), and
+  every ARM row rose against 146f's, told apart on six of eight. Under
+  the same ARM, v6 against v5 (150f's cohort, seeds 1 to 40) is not
+  told apart on any shape.
+- The characters came apart on act 1. The soldier's two rows gained the
+  most, so the priest now reads −10.8 and −8.3 and the gambler −16.7 and
+  −13.3 against him, each told apart on the shared seeds; at 146f all
+  four were inside ±5. Why is not read. The round's parity item is
+  §154's (the priest's parity, C16), and the gambler is not in its
+  charter.
+- The walk against its signed bands. Under the pass null the ARM's walk
+  rows read well under doctrine's, and seam 1 (re-signed at 146g) and act
+  1's wall (first signed at 146g) were set over those rows. The ARM's
+  walk now reads like doctrine's: on deploy, seam 1 at 0.621 of max (the
+  band 0.475–0.55), act 1's wall 0.042 (0.15–0.38), the terminal reach
+  0.783 (0.40–0.50) and win 0.692 (derived 0.26–0.35), where doctrine's
+  walk on deploy has read 0.775 and 0.700 since 146f. On regen the
+  terminal pair sits under its bands (0.342, 0.171). §155 re-pins and
+  signs act 1's bands; the terminal band's re-set is Round 22's.
+- The officer: the ARM drafted him in 24 battles, all the soldier's, the
+  first ARM rows to draft him since rule C. The roster table's coverage guard
+  failed on his PENDING acknowledgment, which it refuses once the table
+  no longer needs it, and the acknowledgment is removed.
+- The skill gradient reads ok under 150c's leg (random 0.275, greedy
+  0.175, 6 : 2, p 0.145), on the same anchors as 146f's.
+
+*The decision at the stop:* the sheet's ARM refs re-pinned at this
+board's n = 120 values, no band moved, held where the row is
+doctrine's:
+
+| ref | 146g | 150h |
+|---|---|---|
+| act-1 win, soldier regen / deploy | 0.542 / 0.792 | 0.775 / 0.942 |
+| act-1 win, priest regen / deploy | 0.558 / 0.800 | 0.667 / 0.858 |
+| act-1 win, gambler regen / deploy | 0.517 / 0.775 | 0.608 / 0.808 |
+| banks, firer / shopper | 114.9 / 80.0 | 130.0 / 83.3 |
+| the firer's fires a run | 2.50 | 4.69 |
+| transaction rates, firer / shopper | 0.308 / 0.875 | 0.292 / 0.900 |
+| the fire channel (doctrine pair) | 0.100 | held, 0.100 |
+| forced King / Queen (doctrine) | 0.717 / 0.258 | held, identical |
+
+With it, two calls. The deploy row's fires ref is a 2.0 in `board.ts`,
+held since 85g6d and not on the sheet; it reads 5.44 (146f 2.61), and the
+lean is to re-pin it with the firer's. And where the parity breach goes:
+the lean is §154 beside the priest's parity, the gambler added to its
+charter. After the re-pin the board would carry 9 WARN, all on the walk's
+signed bands and the regen walk's ceiling (a prediction, read when the
+report runs again on the re-pinned sheet).

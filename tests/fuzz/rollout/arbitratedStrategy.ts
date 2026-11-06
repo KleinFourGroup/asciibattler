@@ -777,7 +777,13 @@ function arbitrateGrant(
       );
       if (positions.length > 0) nominee = { kind: 'redraw', handIndices: positions };
     } else if (effect.kind === 'empower') {
-      const pos = selectEmpowerPosition(hand, { empowersRemaining: grant.remaining }, DEFAULT_ROLLOUT_EMPOWER, rng);
+      const pos = selectEmpowerPosition(
+        hand,
+        { empowersRemaining: grant.remaining },
+        DEFAULT_ROLLOUT_EMPOWER,
+        rng,
+        effect.buff,
+      );
       if (pos !== null) nominee = { kind: 'empower', handIndex: pos };
     }
   }

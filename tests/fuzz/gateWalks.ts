@@ -78,6 +78,7 @@ export function policyGrantChoice(
         { empowersRemaining: grant.remaining },
         empower,
         empowerRng,
+        effect.buff,
       );
       return pos === null ? null : { kind: 'empower', handIndex: pos };
     }

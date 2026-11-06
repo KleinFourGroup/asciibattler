@@ -19,8 +19,12 @@ import {
   serializeEmpowerPolicy,
   empowerPolicyLabel,
   selectEmpowerPosition,
+  scalingStatsOf,
   type EmpowerPolicy,
 } from './empowerPolicy';
+import { readFileSync } from 'node:fs';
+import { DRAFTABLE_ARCHETYPES } from '../../src/sim/archetypes';
+import type { EmpowerConfig } from '../../src/config/empower';
 import type { ScoredCardWeights } from './redrawPolicy';
 import { STAT_KEYS } from './strategies/policies';
 import { ALL_ARCHETYPES } from '../../src/sim/archetypes';
@@ -135,5 +139,74 @@ describe('selectEmpowerPosition', () => {
   it('scored ties break by ascending hand position', () => {
     const policy: EmpowerPolicy = { kind: 'scored', weights: zeroWeights() };
     expect(selectEmpowerPosition(HAND, AVAIL, policy, rng())).toBe(0);
+  });
+});
+
+/** The stats each archetype's abilities read, from the raw config files
+ *  (not the parsed catalog `scalingStatsOf` walks): an op's `scaling` and a
+ *  scaled value's `stat`, `none` and `level` aside. */
+function rawScalingStats(): Map<string, Set<string>> {
+  const abilitiesFile = JSON.parse(readFileSync('config/abilities.json', 'utf8'));
+  const abilities: Record<string, unknown> = abilitiesFile.abilities ?? abilitiesFile;
+  const units: Record<string, { abilities?: string[] }> = JSON.parse(readFileSync('config/units.json', 'utf8'));
+  const out = new Map<string, Set<string>>();
+  for (const [id, def] of Object.entries(units)) {
+    if (!def.abilities) continue;
+    const found = new Set<string>();
+    const walk = (node: unknown): void => {
+      if (Array.isArray(node)) return node.forEach(walk);
+      if (node === null || typeof node !== 'object') return;
+      const rec = node as Record<string, unknown>;
+      if (typeof rec.scaling === 'string' && rec.scaling !== 'none') found.add(rec.scaling);
+      if (typeof rec.stat === 'string' && typeof rec.perPoint === 'number' && rec.stat !== 'level') found.add(rec.stat);
+      Object.values(rec).forEach(walk);
+    };
+    for (const ability of def.abilities) walk(abilities[ability]);
+    out.set(id, found);
+  }
+  return out;
+}
+
+const buffOf = (mods: EmpowerConfig['buff']['mods']): EmpowerConfig['buff'] => ({ key: 'test', mods, merge: 'add' });
+/** Mars as shipped before §151: three stats at once. */
+const THREE_STATS = buffOf({ strength: { add: 4 }, ranged: { add: 4 }, magic: { add: 8 } });
+const RANGED_ONLY = buffOf({ ranged: { add: 4 } });
+const DEFENSE_ONLY = buffOf({ defense: { add: 2 } });
+const LEVEL_HI: EmpowerPolicy = { kind: 'level', dir: 'hi' };
+
+describe('the level policy spends a buff on a card that uses it', () => {
+  it('reads the same stats per archetype as the raw config gives', () => {
+    const raw = rawScalingStats();
+    expect(raw.size).toBe(ALL_ARCHETYPES.length);
+    for (const archetype of ALL_ARCHETYPES) {
+      expect([...scalingStatsOf(archetype)].sort(), archetype).toEqual([...raw.get(archetype)!].sort());
+    }
+    expect([...scalingStatsOf('archer')]).toEqual(['ranged']);
+    expect([...scalingStatsOf('healer')]).toEqual(['magic']);
+    expect([...scalingStatsOf('corrupter')]).toEqual([]);
+  });
+
+  it('a ranged buff goes on the archer below a higher mercenary; the old rule, without the buff, takes the mercenary', () => {
+    const hand = [card('mercenary', 5), card('archer', 3)];
+    expect(selectEmpowerPosition(hand, AVAIL, LEVEL_HI, rng())).toBe(0);
+    expect(selectEmpowerPosition(hand, AVAIL, LEVEL_HI, rng(), RANGED_ONLY)).toBe(1);
+    expect(selectEmpowerPosition(hand, AVAIL, { kind: 'level', dir: 'lo' }, rng(), RANGED_ONLY)).toBe(1);
+  });
+
+  it('a buff no card uses keeps the whole hand, as before', () => {
+    const hand = [card('mercenary', 5), card('archer', 3)];
+    expect(selectEmpowerPosition(hand, AVAIL, LEVEL_HI, rng(), DEFENSE_ONLY)).toBe(0);
+    expect(selectEmpowerPosition([card('mercenary', 2), card('archer', 4)], AVAIL, LEVEL_HI, rng(), buffOf({ magic: { add: 8 } }))).toBe(1);
+  });
+
+  it('under the three-stat buff, only a pick of a card that reads none of them moves: the corrupter and the rioter', () => {
+    const raw = rawScalingStats();
+    const skipped = DRAFTABLE_ARCHETYPES.filter((a) => !['strength', 'ranged', 'magic'].some((s) => raw.get(a)!.has(s)));
+    expect([...skipped].sort()).toEqual(['corrupter', 'rioter']);
+    for (const archetype of DRAFTABLE_ARCHETYPES) {
+      const hand = [card(archetype, 5), card('mercenary', 3)];
+      const moved = selectEmpowerPosition(hand, AVAIL, LEVEL_HI, rng(), THREE_STATS) !== selectEmpowerPosition(hand, AVAIL, LEVEL_HI, rng());
+      expect(moved, archetype).toBe(skipped.includes(archetype));
+    }
   });
 });

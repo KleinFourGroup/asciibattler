@@ -259,3 +259,6 @@ The decision at the stop, with the session's lean: commit 151a now and
 go on to 151b. 151b and 151c move every run next, and 150h's refs are
 re-pinned at §155, so holding it saves no re-pin; the other arm, keeping
 the old pick under Mars alone, carves out a daemon 151c narrows anyway.
+
+**151a signed** (the user: "Signing your lean, Claude! 😁"): committed
+ahead of 151b.

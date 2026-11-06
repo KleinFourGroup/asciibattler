@@ -18,7 +18,11 @@
  *   - `level`     : the highest- (`hi`) or lowest- (`lo`) level hand card —
  *                   the two obvious human heuristics ("sharpen the carry" vs
  *                   "shore up the weak link"). With the stacking `add` merge,
- *                   `hi` re-picks the same carry every turn → stacks.
+ *                   `hi` re-picks the same carry every turn → stacks. Given
+ *                   the grant's buff, it looks only at the cards whose
+ *                   abilities read a stat the buff raises (`scalingStatsOf`),
+ *                   and at the whole hand when none does, so a one-stat buff
+ *                   goes on a card that uses it.
  *   - `scored`    : argmax of the H7a linear card score over the hand
  *                   (weights min–max normalized over the HAND per decision —
  *                   there's no replacement pool to compare against).
@@ -31,6 +35,10 @@ import { z } from 'zod';
 import type { RNG } from '../../src/core/RNG';
 import type { UnitTemplate } from '../../src/sim/Unit';
 import type { EmpowerAvailability } from '../../src/run/empower';
+import type { EmpowerConfig } from '../../src/config/empower';
+import { abilityDef } from '../../src/config/abilities';
+import { abilityIdsForArchetype, type Archetype } from '../../src/sim/archetypes';
+import type { StatKey } from '../../src/sim/statusEffects';
 import { ScoredCardWeightsSchema, type ScoredCardWeights } from './redrawPolicy';
 import { minMax, norm } from './scoring';
 import { STAT_KEYS } from './strategies/policies';
@@ -103,6 +111,49 @@ export function parseEmpowerFlag(value: string): EmpowerPolicy {
   );
 }
 
+const scalingStatsCache = new Map<Archetype, ReadonlySet<StatKey>>();
+
+/**
+ * The stats an archetype's abilities read: every op's `scaling` and every
+ * scaled value's `stat` (a `{ stat, perPoint }` anywhere in the def), with
+ * `none` and `level` left out. Walked over the parsed defs rather than
+ * listed by op kind, so a new op or a scaled field is read without an edit
+ * here. A unit whose attack scales on nothing a buff raises (the corrupter's
+ * vial, the rioter's molotov, which reads luck) gains nothing from it.
+ */
+export function scalingStatsOf(archetype: Archetype): ReadonlySet<StatKey> {
+  const cached = scalingStatsCache.get(archetype);
+  if (cached) return cached;
+  const stats = new Set<StatKey>();
+  const walk = (node: unknown): void => {
+    if (Array.isArray(node)) {
+      for (const item of node) walk(item);
+      return;
+    }
+    if (node === null || typeof node !== 'object') return;
+    const rec = node as Record<string, unknown>;
+    if (typeof rec['scaling'] === 'string' && rec['scaling'] !== 'none') stats.add(rec['scaling'] as StatKey);
+    if (typeof rec['stat'] === 'string' && typeof rec['perPoint'] === 'number' && rec['stat'] !== 'level') {
+      stats.add(rec['stat'] as StatKey);
+    }
+    for (const value of Object.values(rec)) walk(value);
+  };
+  for (const id of abilityIdsForArchetype(archetype)) walk(abilityDef(id));
+  scalingStatsCache.set(archetype, stats);
+  return stats;
+}
+
+/** The hand positions a buff is worth spending on: the cards whose abilities
+ *  read a stat the buff's `mods` name, or every position when none does (a
+ *  defense buff, which no ability reads, keeps the whole hand). */
+function positionsUsing(hand: readonly UnitTemplate[], buff: EmpowerConfig['buff'] | undefined): number[] {
+  const all = hand.map((_, i) => i);
+  if (!buff) return all;
+  const raised = Object.keys(buff.mods) as StatKey[];
+  const using = all.filter((i) => raised.some((s) => scalingStatsOf(hand[i]!.archetype).has(s)));
+  return using.length > 0 ? using : all;
+}
+
 /**
  * The pure per-decision selector: WHICH hand position to buff (`null` = don't
  * empower). Respects the `availability` budget — `null` with no action left —
@@ -111,13 +162,15 @@ export function parseEmpowerFlag(value: string): EmpowerPolicy {
  * → the picks STACK, the user-locked carry-investment model).
  *
  * Determinism: only `random` draws from `rng`; `level` / `scored` tie-break
- * by ascending hand position.
+ * by ascending hand position. `buff` is the granting source's (the grant's
+ * `effect.buff`); only `level` reads it.
  */
 export function selectEmpowerPosition(
   hand: readonly UnitTemplate[],
   availability: EmpowerAvailability,
   policy: EmpowerPolicy,
   rng: RNG,
+  buff?: EmpowerConfig['buff'],
 ): number | null {
   if (policy.kind === 'none') return null;
   if (availability.empowersRemaining <= 0) return null;
@@ -128,8 +181,9 @@ export function selectEmpowerPosition(
   }
 
   if (policy.kind === 'level') {
-    let best = 0;
-    for (let i = 1; i < hand.length; i++) {
+    const positions = positionsUsing(hand, buff);
+    let best = positions[0]!;
+    for (const i of positions) {
       const better =
         policy.dir === 'hi' ? hand[i]!.level > hand[best]!.level : hand[i]!.level < hand[best]!.level;
       if (better) best = i;

@@ -39,11 +39,14 @@ user for the reading.
 - The backslash guard's model, `hooks/halving.ts`, is also held by
   `tests/shell-halving.test.ts` and type-checked by the repo's own
   typecheck. So are the stdin guard's, `hooks/stdin.ts`, by
-  `tests/shell-stdin.test.ts`, and the backticks guard's,
-  `hooks/backticks.ts`, by `tests/shell-backticks.test.ts`. `hooks/register.ts` imports the engine's
+  `tests/shell-stdin.test.ts`, the backticks guard's,
+  `hooks/backticks.ts`, by `tests/shell-backticks.test.ts`, and the
+  commit-pipe guard's, `hooks/commitpipe.ts`, which reads a command
+  through the stdin guard's parse (`commandsIn`), by
+  `tests/shell-commit-pipe.test.ts`. `hooks/register.ts` imports the engine's
   types, so only the scratch tsconfig above checks it.
 - **Measuring the halving again.** The backslash guard refuses a halved
   command, so the halving can't be seen through it. A command whose first
   line is `# halving: measure` runs, and the backslash note says what bash
-  got (`hooks/halving.ts`, `MEASURE_LINE`). The stdin and backticks guards
-  still read it.
+  got (`hooks/halving.ts`, `MEASURE_LINE`). The stdin, backticks and
+  commit-pipe guards still read it.

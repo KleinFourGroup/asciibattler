@@ -20,7 +20,8 @@ export type Stall = { kind: 'cat' | 'python'; line: number; text: string };
 
 type Heredoc = { delim: string; strip: boolean; empty: boolean };
 
-type Cmd = {
+/** One simple command of the parse: its words, nesting depth, line, span, and where its stdin comes from. */
+export type Cmd = {
   words: string[];
   depth: number;
   line: number;
@@ -38,10 +39,10 @@ const LEADS = new Set(['then', 'else', 'elif', '!', 'time', 'while', 'until']);
 const ASSIGNMENT = /^[A-Za-z_][A-Za-z0-9_]*\+?=/;
 const PYTHON = /^(python(3(\.\d+)?)?|py)$/;
 
-const base = (word: string): string => (word.split(/[\\/]/).pop() ?? '').toLowerCase().replace(/\.exe$/, '');
+export const base = (word: string): string => (word.split(/[\\/]/).pop() ?? '').toLowerCase().replace(/\.exe$/, '');
 
 /** The words a wrapper (`timeout 5`, `nohup`, `env X=1`) puts before the command it runs. */
-function unwrap(words: string[]): string[] {
+export function unwrap(words: string[]): string[] {
   let w = words;
   for (;;) {
     const name = base(w[0] ?? '');
@@ -61,8 +62,12 @@ function unwrap(words: string[]): string[] {
   }
 }
 
-/** The first top-level step of a command that reads stdin with nothing to feed it, or undefined. */
-export function stdinStall(cmd: string): Stall | undefined {
+/**
+ * The simple commands of a bash command, in order, as the guards read it: a
+ * command whose stdin is a pipe follows the one whose output feeds it. Words
+ * inside quotes, `$( )` and backticks are kept whole and not parsed.
+ */
+export function commandsIn(cmd: string): Cmd[] {
   const cmds: Cmd[] = [];
   const n = cmd.length;
   let i = 0;
@@ -268,7 +273,12 @@ export function stdinStall(cmd: string): Stall | undefined {
     cur.end = i;
   }
 
-  for (const c of cmds) {
+  return cmds;
+}
+
+/** The first top-level step of a command that reads stdin with nothing to feed it, or undefined. */
+export function stdinStall(cmd: string): Stall | undefined {
+  for (const c of commandsIn(cmd)) {
     if (c.depth > 0) continue;
     const w = unwrap(c.words);
     const name = base(w[0] ?? '');

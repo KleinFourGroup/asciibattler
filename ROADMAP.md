@@ -70,7 +70,7 @@ roster table and the sheet's ARM refs re-derived under it (WORKLOG
 Charter: bandits out of the draft (N28), with the roster table's guard
 failing on a recorded roster that holds an archetype no longer
 draftable; Mars as three one-stat idols (N24) at provisional sizes,
-`mars` removed with the Run bump (v50 to v51); a `description` on the
+Mars kept as the strength one, with the Run bump (v50 to v51); a `description` on the
 ability schema, a line on the card and the shipped abilities' text
 (A33); the units' lines, the user's, as they are written. **Why here:**
 each changes what a run draws or shows, not a number the retune reads,
@@ -82,6 +82,18 @@ the roster table's guard failing on its planted case; the three idols in
 play by URL; a v50 save rejected with its message; a line on every
 shipped ability's card. **Scope guards:** no number the retune reads
 moved; the idols' sizes are §154's.
+
+The cut, signed 2026-11-06 (WORKLOG §151, "The cut signed"). ✅ DECIDED
+there: Mars stays as the strength idol and the Soldier keeps him; the
+daemons renamed for an object of their god, off "Idol"; the provisional
+sizes Mars's own per stat; the abilities' lines terse, the session's.
+
+- ☐ **151a — the empower, by stat** (`none`): `level:hi` takes the highest-level card that uses the buff's stat; byte-identical under Mars, or a stop.
+- ☐ **151b — bandits out of the draft** (`none`): `draftable: false`, his price out; the roster table's guard on a non-draftable archetype; both tables rebuilt from 150h's sources without him.
+- ☐ **151c — Mars narrowed, Diana and Hecate, the renames** (`batch`): +4 strength, +4 ranged, +8 magic; every daemon off "Idol"; Run v50 to v51.
+- ☐ **151d — the ability's `description`** (`none`): the schema's field, the attack editor's and the extract; inert.
+- ☐ **151e — the abilities' lines and the card's line** (`stop`): 29 terse lines, the field required; the look in two arms.
+- ☐ **151f — the units' lines** (`none`): the user's 23, with a test that every combatant has one; it does not hold the close.
 
 ## Phase 152 — the weapons and defense, by taste (signed 2026-11-05)
 

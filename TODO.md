@@ -939,6 +939,13 @@ Rows with a trigger and no round (§133, tranche 3). Each names what reopens it.
 
 The inbox for a new row until the next pass places it.
 
+- [ ] **Beyond the Roman look.** The user, at §151's kickoff
+  (2026-11-06): "More generally, I want to start diversifying from the
+  Roman aesthetic also, but I think that can be a future point." Every
+  daemon but the Cornucopia and the Patrician's Seal is a Roman god's,
+  renamed at 151c for an object of the god; Round 17's daemons are the
+  next new ones (WORKLOG §151, "The cut signed").
+
 - [ ] **The redraw-fisher file is refused by its own schema.**
   `config/redraw-level-fisher.json` names 10 of the 23 archetypes, and
   `ScoredCardWeightsSchema` is strict over every one, so

@@ -1061,7 +1061,7 @@ before the seam rounds tune new units against this roster. **Risk:** low-medium
 blind; each kit change; the idols' sizes. **Exit:** the board read, act
 1's bands re-pinned and signed, acts 2 and 3 recorded for Rounds 21 and
 22 (147a); the prior table rebuilt. **Release:** three idols, reworked units,
-ability descriptions. **Save:** a Run bump (`mars` removed). **Scope
+ability descriptions. **Save:** a Run bump (Mars narrowed to strength, §151). **Scope
 guards:** no new mechanism but the description field.
 
 ---

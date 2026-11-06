@@ -160,3 +160,39 @@ kickoff decides whether its box read needs the prior table rebuilt first
    §154's.
 4. *Who drafts the abilities' 29 lines:* the session, from each ability's
    shape, edited by the user at 151e's stop.
+
+### The cut signed (2026-11-06, session 3d0a8fc1)
+
+The user signed the cut and its reads ("that generally looks good"),
+with these calls over two replies:
+
+- *Mars stays as the strength idol* ("keep the 'strength' daemon as
+  Mars, since that thematically makes sense"), with Diana for ranged and
+  Hecate for magic. The Soldier keeps him, the session's lean for his
+  start. So the id `mars` stays and the prior table's acknowledgment for
+  the Soldier's start daemon is unchanged; the Run bump stays, as the
+  signed exit has it, so no save made under the old catalog (Mars on
+  three stats, bandits in the draft) goes on under the new one. The
+  charter's "`mars` removed" is amended in ROADMAP and META-ROADMAP.
+- *The daemons off "Idol"* ("so many of our daemons are idols, and it
+  reads as repetitive"), each named for an object of its god, since a
+  daemon is an item the company carries; the renames ride 151c and its
+  batch read. Signed: Spear of Mars, Quiver of Diana, Torch of Hecate,
+  Aegis of Minerva, Coin of Mercury, Mask of Janus, Sigil of Laverna,
+  Key of Portunus, Wheel of Fortuna, Pact of Dis Pater; the Cornucopia
+  and the Patrician's Seal as they are. The session's Mint of Moneta and
+  Shrine of Laverna were refused as not portable, and "Pact with" as
+  reading oddly. Moneta's is the user's Bounty of Moneta, with the
+  session's note that a bounty is a reward, not an object, and Scales of
+  Moneta (her coins show her with a balance) the alternative; settled
+  before 151c.
+- *The sizes* at the lean: Mars's own number for each stat, one empower
+  a turn, price 40 each, weight 1 each in the daemons reward table; §154
+  sets them.
+- *The abilities' lines:* the session drafts all 29, terse and plain.
+  Eleven are not weapons (seven spells; the heal, the gambit, the dash,
+  the inspire), and the user counts them mundane by gaming standards
+  too; the user leads the flavour when the special abilities come.
+- *Not this round:* "I want to start diversifying from the Roman
+  aesthetic also, but I think that can be a future point" (TODO, "Not
+  yet placed").

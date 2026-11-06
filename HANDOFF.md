@@ -10,7 +10,7 @@ A fresh-session orientation for ASCIIbattler. Read this first; then dive into th
 - **In flight:** nothing on the box since 2026-11-06.
 - **The public build:** `0.3.0` (`273d587d`, tag `v0.3.0`), uploaded to itch.io on 2026-11-04; the uploads before it are in Closed rounds below.
 - **Snapshots:** WorldSnapshot **v39** (no player keeps one) · RunSnapshot **v51** (a v50 save, `0.3.0`'s, rejects).
-- **Tests:** **3959 main** in 272 files, **587 fuzz:smoke** in 60 files and **1 fuzz:jobs-parity** at `83cb01ed` (151e-post); typecheck clean; the journal corpus, run by hand, 38 tests over 34 journals, recorded at 151c and 38 passed at `83cb01ed`.
+- **Tests:** **3982 main** in 273 files at `79e1be65` (the commit-pipe guard); **587 fuzz:smoke** in 60 files and **1 fuzz:jobs-parity** at `83cb01ed` (151e-post); typecheck clean; the journal corpus, run by hand, 38 tests over 34 journals, recorded at 151c and 38 passed at `83cb01ed`.
 - **Model id: `claude-opus-5-5`** since 2026-09-22. When yours differs, say so at the next stop; at the user's word, review AGENTS.md against the vendor's current prompting guidance and record the new id (the last review: `archive/post-104-worklog.md`, "The new-model tone audit").
 - **Last phase: §151**, the content, 2026-11-06: bandits out of the draft, Mars narrowed to strength with Diana and Hecate beside him and every daemon renamed (Run v51), the abilities' lines as the name's tooltip with the reach's floor in the numbers (`archive/worklog-phase-151.md`).
 

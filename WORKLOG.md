@@ -452,3 +452,40 @@ checked seed by seed), `scratch/150/walk-loss.mjs` (a board dir's ARM
 against doctrine by site), `scratch/150/oracle.sh` and `compare.sh` (the
 byte-identity captures), `scratch/150/cohort/` (the 150f cohort's files
 under instrument names).
+
+### 150h — the prior table v6, then the board (2026-11-06, session 3bc7ecb1)
+
+*The overnight calls,* asked for and pre-approved by the user before the
+night ("Those all sound reasonable; approved!", 2026-11-05): the box a
+`cpx42` at `--jobs=8`, as 146f; no fresh `--search` derive at this
+board, as at 146f, since the ARM change does not reach a `--search` run
+(it has no `--arbitrate`) and the game is 146f's (150f's doctrine
+controls identical on every seed), 146b's derive having cost 5 h 52 min;
+a gap in the v6 table stops before the board with the box down; a failing
+test at the table's commit gets its pin updated if the pin restates the
+table, and stops otherwise; a driver hold gets one relaunch of the
+unfetched lines at the same HEAD, and a second hold destroys the box
+after fetching what finished, and stops. Past twice its estimate the
+board keeps running.
+
+*The table.* The cohort the last session launched completed at
+`4c4fecec`, three of three batches verified; v6 is built from the three
+and committed here, its numbers in the BALANCE run log (2026-11-06).
+No gap: the same 35 items as v5, and two batches had already given all
+35. One figure checked before the commit: hype's meanΔ is exactly 0.000
+over 524 rows, which could have meant a degenerate pairing under the new
+null; it is not, 188 of the deltas are non-zero and sum to 0 on the
+half-point scores. v5 is kept as a fixture (the registry row), the table
+146f's board ran under.
+
+*The board,* 146f's shape at this commit: `balance:board -- --plan`
+gives 146f's argv on all 17 rows, and the queue
+(`output/box-batches/150h-board.queue`, made by
+`scratch/150/150h/make-queue.mjs`) equals 146f's line for line, 25
+batches, the anchors run here. As written it is a prediction: the board
+is launched after this commit with `scripts/box-drive.sh`, its log
+`output/box-batches/150h-board-drive.log`; until that log shows batch
+25/25's `launched` line, no commit and no doc edit in the tree. Then the
+merge into `output/board-runs/150h/` (`scratch/146/merge.mjs`), the
+report, the roster table from the eight ARM rows, and the stop with the
+sheet's ARM refs re-pinned for the user's signature.

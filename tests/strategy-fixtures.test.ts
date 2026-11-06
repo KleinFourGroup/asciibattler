@@ -32,6 +32,10 @@ const NOT_VECTORS: ReadonlyMap<string, string> = new Map([
     'prior-table-v4.json',
     'the prior table v4, handed back by `--prior-table=<file>` (BALANCE.md "The derived-artifact registry")',
   ],
+  [
+    'prior-table-v5.json',
+    'the prior table v5, handed back by `--prior-table=<file>` (BALANCE.md "The derived-artifact registry")',
+  ],
 ]);
 
 function readJson(rel: string): unknown {

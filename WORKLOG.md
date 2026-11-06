@@ -402,3 +402,41 @@ screenshots, `scratch/151/arm-a-line.jpg` and `arm-b-tooltip.jpg`; arm B
 is a one-line swap in `abilityRow` (`src/ui/UnitCard.ts`): drop the
 description div for `attachTooltip(name, () => def.description!)`, and
 its CSS rule with it.
+
+### 151e-post — arm B, the reach's floor, the lines; 151c and 151e read (2026-11-06)
+
+The stop put again and answered (2026-11-06: "Signing all of your leans,
+Claude, and the read looks good!"). The leans signed: arm B, on the
+condition that the floor goes in the numbers, since DESIGN says a tooltip
+is never the only channel for what the player acts on, and "reach 3" on a
+bow that can't fire at 1 said otherwise; the ten "Can't hit…" clauses
+out with it; Inspire's line made to say what "inspired" does. 151c's
+batch read signed in the same words.
+
+- *The catapult's line was a cell off.* `firingBandCell` fires at a
+  distance at least `minRangeCells` and at most `rangeCells`, so the
+  catapult's floor of 4 fires at 4 to 6, and "within four cells" read as
+  including four. The clause went with the other nine; the numbers now
+  say `reach 4–6`.
+- *The two new lines are the session's:* the bow, whose line was only its
+  floor, "A short bow."; Inspire, from the status (+2 mobility, 5 s,
+  `config/statuses.json`), "Nearby allies move faster.", no number in it
+  to go stale.
+- *The text site* takes the star run's touch route: a long press on a
+  card that is a control (the pre-turn hand, read `press` on all six),
+  a tap where it isn't (the roster modal, `tap`). Tab reaches each name.
+- The exit's "a line on every shipped ability's card" holds as the name's
+  tooltip; the test that each ships one stands.
+
+Checks: the reach test reads the raw config, ten floored abilities
+among those with a reach, 0 wrong; its control, the old bare reach, fails
+it 2 of 2. `npm test` 3959 passed, the fuzz smoke 587, typecheck clean.
+Read in the Browser pane (Chromium, 1280×720, seed 3, the Soldier, the
+first battle's pre-turn gate): the bows read `reach 2–3`; the cards 380
+px, ending at 747 px, the same 27 px past the window as the line-less
+baseline, so neither change costs height (the bow's numbers already ran
+two lines); hovering the Bow opens "A short bow." in the roster and on
+the hand (`scratch/151/post-b-tooltip.jpg`). Tab from the first card
+lands on its Bow, `:focus-visible`, and opens the line over it (the box
+centred on that name, 8 px above it, not on the hovered one). Not seen:
+the touch route, a long press on the hand, and anything in Firefox.

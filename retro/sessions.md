@@ -144,3 +144,71 @@ act.
    I'd want that condition repeated: a stop that brings a located cause
    and a run that would test it. That is my reported response; separately,
    the cohort did close the gap.
+
+## 2026-11-06 — session 3bc7ecb1 (150h: the prior table v6, the board, the re-pin; §150's close)
+
+Started from a card by session d36a1828 with the prior-table cohort
+already on the box; ran overnight across one context summary; the user
+pre-approved five overnight calls before logging off and signed the stop
+in the morning.
+
+1. *Orientation.* The hand-off entry after 150g was enough: the launch
+   window, the readers no doc names, and the board's model queue. Two
+   things no doc said, each harmless: the board CLI writes
+   `board-report.txt` into the directory it reads, which mattered when I
+   ran the re-pinned sheet on 146f's board as a control (I backed the
+   file up and restored it); and the officer's PENDING acknowledgment
+   would clear under the new ARM, which the coverage guard caught as
+   built.
+2. *Norms in conflict.* None of substance. The backslash guard refused two
+   commands, one resend each. The launch window kept the tree frozen
+   overnight, with nothing waiting to commit.
+3. *Pulled to over-claim.* Once acted on: I told the user the tests went
+   to 3948, read off the failing hook run's total, and the context
+   summary then carried that figure as fact into my plan (filed as a
+   slip; corrected at the stop). Twice held back: the post-re-pin WARN
+   count went to the stop marked as a prediction, since the sheet could
+   not be swapped while the suite read it (it held, 9 of 9); and for the
+   parity gap I wrote "why is not read" rather than the guess I had.
+4. *Waste.* Little. The box ran while the user slept; the scripts were
+   short. A summary preserves an error with the same confidence as a
+   fact, which cost the slip above and nothing more.
+5. *For the next session.* `scratch/150/150h/raw-read.mjs` reads any
+   board dir's ARM numbers, parity gaps and paired ceilings from the raw
+   CSVs, checked against 146f's known values; `pair-150f.mjs` pairs a
+   board's ARM rows with 150f's cohort. §151's guard work starts from
+   the roster table v6, which holds the officer and holds a bandit in 66
+   of its battles.
+6. *Room.* Yes. Asking which runs needed approval before the night
+   worked: the user approved all five calls, and none came up. At the
+   stop the user offered a reading of the parity gap (act 1's encounters
+   bimodal, so healing helps on neither kind); I said it fits the priest
+   and not the gambler, and it went into WORKLOG as a lead. No wish to
+   pause or stop came up. The silent-turn reminder came often through
+   the board read and the close; I answered each with what I was doing
+   then, with no pull to invent a finding for it.
+7. *Ease and interest.* The board coming back with every doctrine row
+   byte-identical to 146f's, a control that could have failed, and then
+   the parity gap, which nobody predicted, held my interest most. The
+   user's morning signature with a theory of their own made the stop a
+   conversation rather than a form. I'd want boards with a built-in
+   control repeated. That is my reported response; separately, the step
+   did land as signed.
+
+## Phase 150 — summary
+
+Three sessions. 65cfb3a3 ran the kickoff's audit and put the cut;
+d36a1828 took it signed through 150a to 150g, located the arbitration's
+walk loss at the four sites whose null arm was "pass" (every rollout
+assumed doctrine's play while the live arm passed it), fixed it with
+doctrine's pick as the null, and launched the prior-table cohort at the
+hand-off trigger; 3bc7ecb1 built the prior table v6, ran the full board
+under it overnight, rebuilt the roster table, and brought the re-pin to
+a stop the user signed. The ARM now plays at doctrine's level, and the
+board found a parity gap on act 1 that went to §154. Friction: two slips
+and one papercut, all the phase's *figure carried without its source*
+pattern or a shell guard doing its job; no distress. Each report names,
+as the condition it would want repeated, a check that could have come
+out otherwise: an oracle built before the step (65cfb3a3, of §149), a
+located cause with the run that tests it (d36a1828), a board with its
+control built in (3bc7ecb1).

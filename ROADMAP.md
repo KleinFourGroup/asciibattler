@@ -12,7 +12,7 @@ with its spec, its per-phase worklogs (`archive/worklog-phase-142.md` to
 `-147.md`) and its session reports beside it; before it
 [archive/post-133-roadmap.md](archive/post-133-roadmap.md) (Round 9).
 
-**Status: Round 11 under way; §150, the board's instruments, is next.** The spec
+**Status: Round 11 under way; §151, the content, is next.** The spec
 is [round-11-spec.md](round-11-spec.md), signed 2026-11-05. The charter,
 the decision points, the exit and the scope guards are in META-ROADMAP
 §"Round 11 — The roster"; its riders are TODO's "Round 11".
@@ -46,28 +46,15 @@ BALANCE 2026-11-05).
 - ☑ **149e — the duel, the ranks and the weapons** (`none`): the status ticks pinned against the sim (a 4 s burn ticks 3 times).
 - ☑ **149f — the page** (`stop`): signed 2026-11-05, with its colours.
 
-## Phase 150 — the board's instruments (signed 2026-11-05)
+## Phase 150 — the board's instruments ✅ (closed 2026-11-06)
 
-Charter: BALANCE's header read for protocol text to demote to an
-archive, its 700-line cap kept; the ceiling deltas computed on the
-shared seeds or named pooled; the skill gradient's random < greedy leg
-read against its noise or run at more seeds, its comment and WARN
-brought to BALANCE's wording; the arbitration's walk loss traced to
-where the arbitrated decisions go wrong on a long walk (TODO, Round 11,
-"Before the closing board"). **Why here:** the header before the retune
-writes BALANCE most; the other three before any box read the retune
-takes and before the closing board. **Risk:** medium: the arbitration's
-loss is an open investigation, and a fix to the ARM moves every ARM row.
-**Decision points:** how far to chase the arbitration, and a fix's
-scope; the box's size if a run is needed. **Exit:** the header under its
-cap with room; the ceiling label true to its arithmetic, with a planted
-failure; the gradient's leg read against its noise; the arbitration's
-loss located, and fixed or recorded with its cause. **Scope guards:** no
-config number and no band moved.
-
-The cut, signed 2026-11-05 with its four calls (WORKLOG §150): no
-snapshot bump, no RNG stream, no config change, no box unless 150d's stop
-sizes one.
+BALANCE's header under its cap with room; the ceiling deltas and the
+skill gradient's leg read on the shared seeds; the arbitration's walk
+loss located at the null arm and fixed with doctrine's pick, the ARM
+now at or above doctrine's level on every ceiling shape; the prior table, the
+roster table and the sheet's ARM refs re-derived under it (WORKLOG
+§150, in `archive/worklog-phase-150.md`; BALANCE 2026-11-05 and
+2026-11-06).
 
 - ☑ **150a — BALANCE's header** (`none`): three Phase X sections to `archive/balance-header.md`, 700 lines to 642.
 - ☑ **150b — the ceiling deltas** (`none`): on the shared seeds, pinned where the sign flips; 146f −0.200, −0.150, −0.075, −0.350.

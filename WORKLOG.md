@@ -196,3 +196,18 @@ with these calls over two replies:
 - *Not this round:* "I want to start diversifying from the Roman
   aesthetic also, but I think that can be a future point" (TODO, "Not
   yet placed").
+
+### 151d — the ability's `description` (2026-11-06)
+
+Built ahead of 151a's stop, since it rests on nothing 151a decides. An
+optional prose field on `AbilityDefSchema` (`src/sim/effects/schema.ts`),
+addressed `abilities.<id>.description`; the attack editor's Description
+input; and its formatter writing the line after the name when present
+(`tools/attack-editor/format.ts`). No ability has one yet, so
+`locales/en/abilities.json` is unchanged; 151e writes them and makes the
+field required.
+
+Checks: the formatter's new test round-trips a description and omits an
+absent one, failing on the old formatter (its control) and passing on the
+new; `npm run corpus`, 0 of 33 journals differ; the typecheck clean; the
+i18n tests, 85 passed.

@@ -106,4 +106,16 @@ describe('formatAbilitiesJson', () => {
     expect(text).toContain('"aura": { "radius": 3, "statusId": "emboldened", "affects": "allies" }');
     expect(text).toContain('"aura": { "radius": 2, "statusId": "emboldened", "affects": "all" }');
   });
+
+  it('round-trips the description, emitted after the name, and omits an absent one', () => {
+    const catalog: Record<string, AbilityDef> = {
+      described: parseAbilityDef({ ...ABILITY_DEFS.sword!, id: 'described', description: 'A plain blade.' }),
+      bare: parseAbilityDef({ ...ABILITY_DEFS.sword!, id: 'bare', description: undefined }),
+    };
+    const text = formatAbilitiesJson(catalog);
+    const FileSchema = z.record(z.string(), AbilityDefSchema);
+    expect(FileSchema.parse(JSON.parse(text))).toEqual(catalog);
+    expect(text).toContain('"name": "Sword",\n    "description": "A plain blade.",\n    "cooldownSeconds"');
+    expect(text.match(/"description"/g)).toHaveLength(1);
+  });
 });

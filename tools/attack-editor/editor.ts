@@ -123,6 +123,7 @@ const sample: SampleCaster = { speed: 5, strength: 5, ranged: 5, magic: 5, luck:
 const tabsEl = mustQuery<HTMLDivElement>('#tabs');
 const idEl = mustQuery<HTMLInputElement>('#id');
 const nameEl = mustQuery<HTMLInputElement>('#name');
+const descriptionEl = mustQuery<HTMLInputElement>('#description');
 const cooldownEl = mustQuery<HTMLInputElement>('#cooldownSeconds');
 const priorityEl = mustQuery<HTMLInputElement>('#priority');
 const rangeEl = mustQuery<HTMLInputElement>('#rangeCells');
@@ -181,6 +182,13 @@ function buildTabs(): void {
 function attachIdentity(): void {
   nameEl.addEventListener('input', () => {
     def().name = nameEl.value;
+    refreshDerived();
+  });
+  // An empty description is no description: the field is optional, and the
+  // schema refuses an empty string.
+  descriptionEl.addEventListener('input', () => {
+    if (descriptionEl.value.trim() === '') delete def().description;
+    else def().description = descriptionEl.value;
     refreshDerived();
   });
   cooldownEl.addEventListener('input', () => {
@@ -312,6 +320,7 @@ function syncForm(): void {
   const d = def();
   idEl.value = d.id;
   nameEl.value = d.name;
+  descriptionEl.value = d.description ?? '';
   cooldownEl.value = String(d.cooldownSeconds);
   priorityEl.value = String(d.priority);
   rangeEl.value = String(d.rangeCells);

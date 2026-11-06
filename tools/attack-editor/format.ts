@@ -168,8 +168,11 @@ export function formatAbilitiesJson(config: Record<string, AbilityDef>): string 
     const lines: string[] = [
       `${F}"id": ${s(def.id)}`,
       `${F}"name": ${s(def.name)}`,
-      `${F}"cooldownSeconds": ${n(def.cooldownSeconds)}`,
     ];
+    // The card's line (optional; emitted only when present, after the name it
+    // describes).
+    if (def.description !== undefined) lines.push(`${F}"description": ${s(def.description)}`);
+    lines.push(`${F}"cooldownSeconds": ${n(def.cooldownSeconds)}`);
     if (def.speedScaled === false) lines.push(`${F}"speedScaled": false`);
     lines.push(`${F}"rangeCells": ${n(def.rangeCells)}`);
     if (def.minRangeCells !== 0) lines.push(`${F}"minRangeCells": ${n(def.minRangeCells)}`);

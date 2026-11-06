@@ -91,7 +91,7 @@ sizes Mars's own per stat; the abilities' lines terse, the session's.
 - ☐ **151a — the empower, by stat** (`none`): `level:hi` takes the highest-level card that uses the buff's stat; byte-identical under Mars, or a stop.
 - ☐ **151b — bandits out of the draft** (`none`): `draftable: false`, his price out; the roster table's guard on a non-draftable archetype; both tables rebuilt from 150h's sources without him.
 - ☐ **151c — Mars narrowed, Diana and Hecate, the renames** (`batch`): +4 strength, +4 ranged, +8 magic; every daemon off "Idol"; Run v50 to v51.
-- ☐ **151d — the ability's `description`** (`none`): the schema's field, the attack editor's and the extract; inert.
+- ☑ **151d — the ability's `description`** (`none`): the schema's optional field and the attack editor's; the corpus 0 of 33 differ.
 - ☐ **151e — the abilities' lines and the card's line** (`stop`): 29 terse lines, the field required; the look in two arms.
 - ☐ **151f — the units' lines** (`none`): the user's 23, with a test that every combatant has one; it does not hold the close.
 

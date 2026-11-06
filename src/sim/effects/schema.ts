@@ -373,6 +373,12 @@ export const AbilityDefSchema = z
      * editor), a locale address (`abilities.<id>.name`).
      */
     name: prose(),
+    /**
+     * One terse line on what the ability does that the card's numbers don't
+     * say (the unit card's ability row), a locale address
+     * (`abilities.<id>.description`). The sim never reads it.
+     */
+    description: prose().optional(),
     /** The base interval before the ability proposes again, in seconds. */
     cooldownSeconds: z.number().positive(),
     /**

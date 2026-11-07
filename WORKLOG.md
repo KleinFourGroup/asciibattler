@@ -266,3 +266,26 @@ draws realigned at 153a; the box at 153c and 153f, and at 153g if taken):
    its own test, which the session estimates at more than the losses have
    cost so far (four since 145g; §152's about ten minutes of surveys). The
    row stays in TODO, weighed again at the round close.
+
+### The cut signed (2026-11-07, session d86f434b)
+
+The user agreed that 1/2/3/4 is too steep and asked about distinct tiers
+by 0.75/1/2/3, or 3/4/8/12 in whole numbers with morale raised three to
+four times. The session's answer: the pools are priced in commons (act
+1's enemies are common but for three in the King's later stages, and
+commons fill 79 to 92 % of act 1's fielded slots), and read per common
+0.75/1/2/3 is 1 / 1⅓ / 2⅔ / 4, a legendary at four commons, as steep at
+the top as 1/2/3/4. The gentle scale with distinct tiers is 1 / 1.5 / 2 /
+3 per common, 2/3/4/6 in whole numbers with morale doubled, whose cost is
+every morale number in config doubled, the board's point refs moved and
+the bots' scores checked constant by constant; a unit's base power is an
+integer by schema (`z.number().int()`), while an encounter entry's
+override may already be fractional (`src/config/encounters.ts:97`).
+
+**Signed** (the user, 2026-11-07: "Agreed! But let's add a note
+somewhere naming 2/3/4/6 as a future option"): the cut and its reads as
+put; power's scale at 1/1/2/3; the player's pool held at 40; 153g in;
+the corpus's trade rows out of §153. 2/3/4/6 with morale doubled is a
+TODO row under Round 21, weighed where acts 2 and 3's pools are retuned.
+
+The stretch: 153a, 153b and 153c, to 153d's stop.

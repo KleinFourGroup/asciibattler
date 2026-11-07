@@ -525,6 +525,8 @@ META-ROADMAP §"Round 21 — Act 2, the realm in chaos" names each row's place.
 
 - [ ] **The three deep-end cost residuals** (the 94c re-read, 2026-09-07 — BALANCE §94c re-read): infernalColumn 10.6 · miscreants 10.2 · ronin-vs-mages 10.6 cost/instance against the 1.5 × normal-mean line (9.3), in band on TURNS. A bite property (cost/turn 3.2–3.3 vs 2.1) that predates 94b and the pool cannot close; the lever is the COUNT factor on those three waves (column hand×1.2 · miscreants hand×1.5 · mages hand×1.3 — fewer bodies at the same kill throughput = the same burn, less bite; level is already ×1.0 / ×1.25). One config commit + a six-arm re-read (~3.4 h) whenever those rows are next touched; not a §94 blocker (the config froze over it, user-signed).
 
+- [ ] **Power at 2/3/4/6 with morale doubled, an option** (the user, 2026-11-07, at §153's kickoff, which signed 1/1/2/3). Read per common it is 1 / 1.5 / 2 / 3: 1/1/2/3 with the uncommon priced apart from the common, each tier distinct in whole numbers. (0.75/1/2/3 read the same way is 1 / 1⅓ / 2⅔ / 4, a legendary at four commons, as steep at the top as 1/2/3/4.) The cost: every morale number in config doubles (the player's pool, every encounter's pool, the power overrides, the morale heals and conditions in packets and events), the board's refs in points move, and the bots' scores need a check constant by constant (the rollout evaluator's death penalty already scales with the pool; the prior table's rows are in pool points). Weigh it where acts 2 and 3's pools are retuned, here or at Round 22 (WORKLOG §153, "The cut signed").
+
 ## Round 22 — Act 3, the plague
 
 META-ROADMAP §"Round 22 — Act 3, the plague" names each row's place.

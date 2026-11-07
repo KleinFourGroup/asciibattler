@@ -6,7 +6,7 @@ A fresh-session orientation for ASCIIbattler. Read this first; then dive into th
 
 **The ONE home for live status.** Other docs (and the agent memory) point here instead of restating it; when state changes, this section is the single place that updates.
 
-- **NEXT — ROUND 11 (The roster): §153, power by rarity, its growth key, and the pools: its cut put to the user, awaiting the sign** ([ROADMAP.md](ROADMAP.md) §153; the cut and its calls, WORKLOG §153; the spec, [round-11-spec.md](round-11-spec.md)). 151f, the units' lines, lands when the user writes them. **Open ◐:** none.
+- **NEXT — ROUND 11 (The roster): §153, power by rarity, its growth key, and the pools: the cut signed 2026-11-07 (1/1/2/3), the stretch 153a, 153b and 153c to 153d's stop** ([ROADMAP.md](ROADMAP.md) §153; WORKLOG §153; the spec, [round-11-spec.md](round-11-spec.md)). 151f, the units' lines, lands when the user writes them. **Open ◐:** none.
 - **In flight:** nothing on the box since 2026-11-06.
 - **The public build:** `0.3.0` (`273d587d`, tag `v0.3.0`), uploaded to itch.io on 2026-11-04; the uploads before it are in Closed rounds below.
 - **Snapshots:** WorldSnapshot **v39** (no player keeps one) · RunSnapshot **v51** (a v50 save, `0.3.0`'s, rejects).

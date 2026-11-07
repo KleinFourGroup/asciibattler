@@ -102,9 +102,20 @@ behind it; act 1's encounters read against the per-kind cost target, the
 rats' nest and the Vermin Lords first. **Why here:** after the weapons,
 since the pools re-anchor on how fights end, and before the kits, whose
 watches read a unit's worth. **Risk:** medium: a re-baseline and a box
-read. **Decision points:** power's scale; the pools' moves. **Exit:** act
+read. **Decision points:** power's scale (✅ DECIDED 2026-11-07: 1/1/2/3,
+WORKLOG §153); the pools' moves. **Exit:** act
 1's turn targets held on a box read and its cost per kind read against
 the target. **Scope guards:** acts 2 and 3 recorded, not retuned.
+
+The cut, signed 2026-11-07 (WORKLOG §153):
+
+- ☐ **153a — power's growth key out** (`none`): out of the schema, the 29 combatants and `STAT_KEYS` (eight draws a level-up), proven against the old roll; six run streams' draws realign.
+- ☐ **153b — power by rarity at 1/1/2/3** (`batch`, read at 153e's stop): the rare tier 1 → 2, the legendaries 2 → 3; in act 1 the King alone moves.
+- ☐ **153c — act 1 on the box** (`none`): the two Soldier ARM rows at n = 120, each encounter's turns and cost against both targets.
+- ☐ **153d — the moves put** (`stop`, the decision point): each act-1 fight outside a target, its lever and how it is read.
+- ☐ **153e — the tune** (`stop`): the signed moves baked; the user plays act 1.
+- ☐ **153f — the verify read** (`none`, a pre-registered stop on a miss): 153c's rows at 153e's HEAD.
+- ☐ **153g — the prior table rebuilt** (`none`): v8 at 153f's HEAD, the units' worth re-read for §154's kickoff.
 
 ## Phase 154 — the kits (signed 2026-11-05)
 

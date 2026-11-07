@@ -5605,3 +5605,26 @@ deltas. The pre-X H7c→O log lives at
   buckets), and the prior table v7, v6 less `unit:bandit`'s row (n 509;
   35 items to 34, 4,424 decisions). Each diff against v6 shows those rows
   and the build stamp alone.
+- **2026-11-06 — the draftable units' worth on the prior table v7, with
+  its noise** (§152's kickoff, at the user's question). The table's 16
+  `unit:*` rows recomputed from its three sources (the 150h ARM batches
+  at `4c4fecec`: the Soldier, seeds 1001 to 1120, the run's horizon):
+  each unit candidate's score less its decision's null, at the recruit
+  site (free) and the port (bought; bits score 0, so the price rides as
+  opportunity cost). The check: n and meanDelta equal the table's on all
+  16; the bandit, dropped at 151b, is the one row it fails. The table
+  keeps no error, so the errors here are clustered by run, since a unit
+  is offered more than once a run. *Recruit*, the protocol's disposition
+  row: the rioter −33.4 ± 10 (n 318), the halberdier +31.3 ± 14 (220),
+  the stormcaller +25.1 ± 14 (282), the officer −20.9 ± 14 (231), the
+  shaman −19.9 ± 13 (265), the healer +16.1 ± 14 (308), the catapult
+  −14.7 ± 13 (215), the other nine within about one error of 0. *Port*:
+  the gunslinger +74.6 ± 18 (162) and the adventurer −59.4 ± 24 (248),
+  at the same price (25 × 1.5, uncommon); the healer −33.3 ± 23 (85) and
+  the corrupter −30.4 ± 22 (96); the rest within 1.5 errors. With 16
+  units read, about one row would pass two errors by chance; the
+  rioter's recruit row (3.3) and the gunslinger's port row (4.1) pass
+  three. A death scores −440 against a few tens for a run that lives,
+  and 20 to 31 % of each unit's instances changed whether the run died
+  (a delta of 200 or more either way). One character and one bot's play, on
+  the numbers before §152 moves any. `scratch/152/unit-worth.mjs`.

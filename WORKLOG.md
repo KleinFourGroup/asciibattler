@@ -186,3 +186,23 @@ per target.
 §151's candidate guard needs no asking again: the user signed it, it was
 built, measured and reverted at the user's call, and the hook's failure
 lines replaced it (archive/worklog-phase-151.md, "§151 closed").
+
+### Call 3 answered, and the units' worth at the user's question (2026-11-06, session 096110b8)
+
+The user took call 3 at the lean, the bow 2.0 → 2.5 s with its might
+raised so its damage a second holds within a tenth ("I'm on-board with
+slowing the archer down as described, to feel a bit more sniper like"),
+and placed the charter's line: "snipers slow and heavy" was "primarily
+meant … as guidance for future units". Calls 1, 2, 4, 5 and 6 stay open.
+
+The user asked how the units' recruitment numbers look, which need a buff
+or a nerf, and whether a later phase handles it. The read is BALANCE's
+run log, 2026-11-06, "the draftable units' worth": the rioter clearly low
+taken free, the halberdier high free, the gunslinger and the adventurer at
+opposite ends bought at one price, the rest not told apart. Where each
+could land was put to the user with the session's leans: the rioter in
+§152's draft, through its molotov or its defense (both in the charter);
+the halberdier and the stormcaller, which read high where 94f's kit watch
+read them low, held here and weighed at §153's power scale and §154's
+kits; the port pair to §154's list, read on the numbers §152 and §153
+leave.

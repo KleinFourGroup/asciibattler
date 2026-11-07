@@ -119,7 +119,7 @@
     "id": "bow",
     "name": "Bow",
     "description": "A short bow.",
-    "cooldownSeconds": 2,
+    "cooldownSeconds": 2.5,
     "rangeCells": 3,
     "minRangeCells": 2,
     "target": { "kind": "enemyInRange" },
@@ -135,7 +135,7 @@
         "op": {
           "kind": "damage",
           "scaling": "ranged",
-          "might": 3,
+          "might": 4,
           "critBase": 0.05,
           "critable": true,
           "evadable": true,

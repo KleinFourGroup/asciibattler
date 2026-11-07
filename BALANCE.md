@@ -5742,3 +5742,21 @@ deltas. The pre-X H7c→O log lives at
   | puma | 3 (85 %) | 0 (42 %) | 0 (42 %) | 1 (42 %) | 0.26 (81 %) | 0 (42 %) | 0 (42 %) | 0.05 (31 %) |
   | tiger | 5 (96 %) | 0 (42 %) | 0 (42 %) | 2 (81 %) | 0.33 (88 %) | 0 (42 %) | 0 (42 %) | 0.1 (65 %) |
   | bear | 3 (85 %) | 0 (42 %) | 0 (42 %) | 3 (96 %) | 0.25 (73 %) | 0 (42 %) | 0 (42 %) | 0.17 (88 %) |
+
+- **2026-11-06 — the draft on the sheet** (§152, 152b). The bow 2.0 →
+  2.5 s and its might 3 → 4; the rioter's base defense 0 → 1; nothing
+  else. Sized on the sheet by `scratch/152/size.ts` (the parsed config
+  patched in memory): at 2.5 s the bow's might 4 holds the archer's
+  damage a second against act 1's mix at level 3 within a tenth (3.87 →
+  3.72, −4 %), and might 5 does not (4.32, +12 %). Might 4 falls further
+  down the walk, since the archer's ranged growth makes the might a
+  smaller share of a strike: 4.77 → 4.44 at act 1's elite (−7 %), 4.12 →
+  3.92 at its boss, 5.03 → 4.78 at act 2's level 8, 7.54 → 6.73 at act
+  3's level 14 (−11 %); might 5 holds act 3 (7.53). For the rioter, the
+  molotov's might 3 moves its damage 2 to 12 % across the points, and a
+  point of defense cuts the damage it takes by 9 to 24 %, its time to be
+  killed at act 1's level 3 6.9 → 8.4 s (from the shortest of the 16 to
+  level with the stormcaller); the draft takes the defense. Every other
+  draftable unit's numbers move by a hundredth or two at most, through
+  act 1's enemy archers; the enemies' ranks do not move. 152c records
+  the signed numbers in full beside 152a's.

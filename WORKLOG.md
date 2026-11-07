@@ -238,3 +238,61 @@ its `--md` mode; `before.json` stays in `scratch/152/` for 152c's
 level off that does not. The enemies' ranks are recorded though call 6
 holds every enemy-only unit, so 152c shows them unmoved rather than
 leaving it to be assumed. No config or code moved.
+
+### 152b — the draft (2026-11-06, at its stop)
+
+*Step zero*, on the sheet (`scratch/152/size.ts`, the parsed config
+patched in memory). At 2.5 s the bow's might 4 holds the archer's damage
+a second against act 1's mix at level 3 within a tenth (−4 %) and might 5
+does not (+12 %), so the signed rule gives 4. Might 4 falls to −11 % by
+act 3's level 14, where might 5 holds: the archer's ranged growth makes
+the might a smaller share of each strike. The kickoff's "it gains where
+armour is higher" was wrong, filed as a slip; both mights go to the stop.
+The rioter's two levers: the molotov's might 3 moves its damage 2 to
+12 % across the five points, and a point of defense cuts the damage it
+takes 9 to 24 %. The draft takes the defense: on the sheet its weak side
+is staying alive (killed in 6.9 s at act 1's level 3, the shortest of the
+16), which its dodge used to cover, and at 8.4 s it is still the third
+shortest.
+
+*Built:* the bow's cooldown 2 → 2.5 and might 3 → 4; the rioter's base
+defense 0 → 1; nothing else in `config/`. `tests/strike-conversion.test.ts`
+and its before-file deleted, with DESIGN's conversion paragraph and
+HANDOFF's config line no longer pointing at it. No identity pin crossed:
+the pistol (0.8 s, might 1) is still faster and weaker than the bow. The
+sheet on the draft: BALANCE 2026-11-06, "the draft on the sheet".
+
+*What moved, each re-picked by its own rule.* The main suite on the draft
+failed 2 of 3954 tests, the chaos census and the continuation check.
+
+- The continuation check's completing two-hop Soldier run, seed 4, now
+  dies; seed 8 is the smallest of 1 to 12 that completes.
+- The chaos census: the procedural slot's seed 3 stopped empowering, and
+  seed 9 is the shortest of 40 that declines a reward and empowers (about
+  440 ms against seed 1's 680, each timed alone three times); the
+  Gambler's seed 12 stopped redrawing and recruiting, and seed 31 is the
+  shortest of 40 that redraws, docks and recruits (about 280 ms, the next
+  856). The census's reach moved with them, and both pinned lists were
+  moved: dismissing a cleared sector now changes a run (seed 6), and on
+  the four seeds no packet use does.
+- The corpus: all 34 journals diverged on the old baseline. Recorded
+  again, chaos 33 stopped paying a unit off (19 of 21 kinds), so chaos
+  10, the shortest no-dial run of a survey of 40 that does, replaced it.
+  Recorded once more: 20 of 21 kinds change a run, 0 of 34 journals
+  differ on replay, and the corpus test passes 38 of 38 with its plants. Chaos 4 in the same survey also sells a packet, which no
+  stored run does, at 39 battles and 14 s; not taken, a note for TODO's
+  row on the corpus's trade rows.
+
+*In the pane:* the dev server serves the draft (the bow 2.5 s and might
+4, the rioter's defense 1; the sword's might 3, unmoved, the control).
+The read's roster URL, with the Soldier picked, starts a run holding
+exactly its six cards; the forced encounter was not checked there.
+
+*The stop*, put to the user: the draft as built, the read below, and two
+calls, each with both arms: the bow's might 4 (built) or 5; the rioter's
+point of defense (built) or the molotov's might 3 in its place. The read,
+on the user's dev server: a run as the Soldier (his four archers); a
+roster of archers by URL against the wolfpack and one of rioters against
+the rat hunt; the poachers for the enemy's archers. Wrong looks like an
+archer whose slower shot reads sluggish or feeble, or rioters that still
+fall first, or now shrug hits off.

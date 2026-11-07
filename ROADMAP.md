@@ -98,7 +98,7 @@ recorded before and after. **Scope guards:** no new mechanism; no dodge
 (Round 13); power, the kits and the pools are later phases'.
 
 - ☑ **152a — the before record** (`none`): the sheet's tables and both groups' ranks at five points, by `scratch/152/sheet.ts`, in BALANCE 2026-11-06; two rows matched against the page (WORKLOG 152a).
-- ☐ **152b — the draft** (`stop`): the bow 2.0 → 2.5 s, its might holding its damage a second; the rioter's modest buff; the rest held; the strike-conversion test retired; rounds of the user's play as 152b-post.
+- ◐ **152b — the draft** (`stop`): the bow 2.0 → 2.5 s, its might holding its damage a second; the rioter's modest buff; the rest held; the strike-conversion test retired; rounds of the user's play as 152b-post. Built: the bow's might 4, the rioter's base defense 1; at its stop for the user's play (WORKLOG 152b).
 - ☐ **152c — the after record** (`none`): 152a's tables on the signed numbers, beside the before.
 
 ## Phase 153 — power by rarity, its growth key, and the pools (signed 2026-11-05)

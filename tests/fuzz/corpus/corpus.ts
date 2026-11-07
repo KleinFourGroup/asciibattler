@@ -110,11 +110,13 @@ export const CORPUS: readonly CorpusRow[] = [
   // (2026-10-29), and again from a survey of 40 each time those rows stopped
   // trading, when act 1 went in front (2026-11-02) and when its waves shrank
   // (2026-11-03). When the bandit left the draft (2026-11-06) none of them
-  // paid a unit off any more, and a survey of 40 found one run that does.
+  // paid a unit off any more, and a survey of 40 found one run that does,
+  // chaos 33; when the bow slowed (2026-11-06) it stopped, and chaos 10 is
+  // the shortest run of that survey's 40 with no dials that does.
   chaos(15),
   chaos(16),
   chaos(26),
-  chaos(33),
+  chaos(10),
 ];
 
 const HERE = dirname(fileURLToPath(import.meta.url));

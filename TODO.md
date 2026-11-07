@@ -261,7 +261,10 @@ META-ROADMAP §"Round 11 — The roster" names each row's place.
   for 7 and 37 at 146e, chaos 33 added for a unit paid off at 151b. A row
   that drives its trade (a scripted port, say) may hold through a
   content change, and §152 to §154 re-record the corpus often (session
-  3d0a8fc1's report; WORKLOG §151, 151b).
+  3d0a8fc1's report; WORKLOG §151, 151b). At 152b chaos 33 stopped paying
+  a unit off and chaos 10 replaced it; in the same survey chaos 4 also
+  sells a packet, the one kind no stored run reaches, at 39 battles and
+  14 s (WORKLOG 152b).
 
 ### Dis Pater
 

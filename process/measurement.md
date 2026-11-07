@@ -72,7 +72,9 @@ Boxes are created on demand and destroyed after use.
   `npm run papercut` may file during the window.
 - To keep building during a cohort's launch window (it can be hours), work
   in a detached worktree: `git worktree add --detach <dir>` plus a
-  `node_modules` junction. Build, typecheck, test and smoke there, then land
+  `node_modules` junction, made with PowerShell's `New-Item -ItemType
+  Junction -Path <dir>\node_modules -Target <repo>\node_modules` (from Git
+  Bash, `cmd //c mklink /J` fails on its `/J`). Build, typecheck, test and smoke there, then land
   the work on `main` as separate commits after the last launch. `git add -N`
   makes new files show up in `git diff`.
 - Remove a worktree with a `node_modules` junction by unlinking the

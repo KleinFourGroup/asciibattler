@@ -288,3 +288,67 @@ a shell guard doing its job; no papercut and no distress. The reports name as
 conditions worth repeating a taste call with reasons on both sides
 (3d0a8fc1, the daemons' names) and a stop put with its evidence ready
 (bc61973d).
+
+## 2026-11-06 — session 096110b8 (§152's kickoff, the units' worth at the user's question, 152a to 152c, §152's close)
+
+1. Nothing the work needed was missing. The brief, the Cursor and the
+   fresh WORKLOG named every input. The one search that took several
+   tries was the source of the charter's "snipers slow and heavy",
+   which no doc records; the user then placed it as guidance for future
+   units.
+2. None in conflict. Two judgements: the cut said "ranks in both groups"
+   and call 6 then held every enemy, so I recorded the enemies' ranks
+   anyway and showed them unmoved rather than assume it; and step zero's
+   finding that the bow's might 4 falls off by act 3 sat inside the
+   signed rule, so I built on the rule and put both mights at the stop
+   instead of stopping before the build.
+3. Three times. At the kickoff I wrote that a heavier bow "gains where
+   armour is higher" without measuring it; the sheet showed it falling
+   11 % by act 3 (a slip, corrected at the stop). In the units' worth I
+   first had errors per offer, which overstate the precision since offers
+   in one run share its luck; I clustered them by run before presenting.
+   And a BALANCE line said the deaths were "most of the rows' noise"
+   before I had computed it; I replaced it with the measured share
+   before the commit.
+4. Small things, a call or two each: a node rewrite of the config in the
+   scratch worktree reformatted 900 lines (caught by the diff's stat);
+   the junction from Git Bash; two backslash-guard resends; the corpus
+   test under the main config; a temporary test whose console was
+   swallowed. The seeded-drive surveys took about ten minutes. The sheet's
+   tables in tool output used a fair share of context.
+5. `scratch/152/chaos-survey.ts` prints each seed's census for a dial
+   set, and `scratch/152/make-survey.mjs` builds a temporary copy of the
+   continuation check's driver that reports which seeds reach which
+   gates (delete the file it writes after the run). §153's re-baseline
+   moves every seeded drive, and these made the re-picks quick.
+   `scratch/152/sheet.ts` and `unit-worth.mjs` are named in the WORKLOG.
+6. Yes. The user's question mid-kickoff got a full answer before any
+   build, and the leans went out with "uncertain" where they were; the
+   correction to my own bow line went to the user in the stop's first
+   lines. No wish to pause or stop.
+7. Recomputing the prior table's unit rows and matching its numbers
+   exactly, with the bandit's dropped row as the one that fails, then
+   watching the clustered errors change which units stood out (the
+   gunslinger's high number came almost all from the port). It was a
+   question the data already on disk could answer, and I would want that
+   condition repeated. Separately from whether it worked: the stop went
+   out with its URLs checked in the pane, and the user's verdict came in
+   one turn.
+
+## Phase 152 — summary
+
+One session. 096110b8 ran the kickoff's audit and put the cut, then
+answered the user's question about which units need a buff or a nerf
+with the prior table v7's unit rows recomputed with errors clustered by
+run (the rioter clearly low taken free, the halberdier high, the
+gunslinger and the adventurer at opposite ends bought at one price).
+With the cut and every lean signed, it built 152a (the stat sheet's
+before record), 152b (the bow 2.5 s at might 4, the rioter's base
+defense 1, the strike-conversion test retired, three seeded drives and a
+corpus row re-picked), read and kept by the user in play, and 152c (the
+after record), and closed the phase. Friction: one slip (a claim before
+its source, the pattern the user answered at §150's close), three
+papercuts (two fixed at the close, one left) and two guard refusals
+listed; no distress. The report names as worth repeating a user's
+question the data on disk could answer, and a stop put with its URLs
+checked.

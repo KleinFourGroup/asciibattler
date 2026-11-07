@@ -12,7 +12,7 @@ with its spec, its per-phase worklogs (`archive/worklog-phase-142.md` to
 `-147.md`) and its session reports beside it; before it
 [archive/post-133-roadmap.md](archive/post-133-roadmap.md) (Round 9).
 
-**Status: Round 11 under way; §152, the weapons and defense, by taste, in progress.** The spec
+**Status: Round 11 under way; §153, power by rarity, its growth key, and the pools, is next.** The spec
 is [round-11-spec.md](round-11-spec.md), signed 2026-11-05. The charter,
 the decision points, the exit and the scope guards are in META-ROADMAP
 §"Round 11 — The roster"; its riders are TODO's "Round 11".
@@ -81,21 +81,13 @@ reach's floor in the numbers (WORKLOG §151, in
 - ☑ **151e — the abilities' lines and the card's line** (`stop`): 29 terse lines, a test that each ships one; arm B signed 2026-11-06, the line as the name's tooltip with the reach's floor in the numbers, built as 151e-post (WORKLOG 151e-post).
 - ☐ **151f — the units' lines** (`none`): the user's 23, with a test that every combatant has one; carried past the close as signed at the cut, it lands when the user writes them.
 
-## Phase 152 — the weapons and defense, by taste (signed 2026-11-05)
+## Phase 152 — the weapons and defense, by taste ✅ (closed 2026-11-06)
 
-Charter: Round 9's conversion retuned by taste through the stat sheet:
-each weapon's might and cadence (snipers slow and heavy, the user's
-guidance for future units; here the bow alone, signed at the kickoff), the units'
-strength and ranged, defense's bases and growth; the spells and the
-catapult against the halved defense. `tests/strike-conversion.test.ts`
-retires at the first commit that moves a converted number. **Why here:**
-after the sheet it is read through and the content it tunes; before
-power, since the pools re-anchor on how fights end. **Risk:**
-medium-high: many numbers, read by taste. **Decision points:** each
-weapon's numbers and the defense numbers, taste stops in the user's
-play. **Exit:** the numbers signed in the user's play, the sheet's ranks
-recorded before and after. **Scope guards:** no new mechanism; no dodge
-(Round 13); power, the kits and the pools are later phases'.
+The bow slowed and heavier, 2.5 s at might 4, and the rioter a point of
+defense, each signed in the user's play; every other number held; the
+strike-conversion test retired; the stat sheet's ranks recorded before
+and after (WORKLOG §152, in `archive/worklog-phase-152.md`; BALANCE
+2026-11-06).
 
 - ☑ **152a — the before record** (`none`): the sheet's tables and both groups' ranks at five points, by `scratch/152/sheet.ts`, in BALANCE 2026-11-06; two rows matched against the page (WORKLOG 152a).
 - ☑ **152b — the draft** (`stop`): the bow 2.0 → 2.5 s, its might holding its damage a second; the rioter's modest buff; the rest held; the strike-conversion test retired. The bow's might 4 and the rioter's base defense 1, signed in play 2026-11-06 (WORKLOG 152b).

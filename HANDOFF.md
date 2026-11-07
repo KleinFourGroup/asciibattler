@@ -6,13 +6,13 @@ A fresh-session orientation for ASCIIbattler. Read this first; then dive into th
 
 **The ONE home for live status.** Other docs (and the agent memory) point here instead of restating it; when state changes, this section is the single place that updates.
 
-- **NEXT — ROUND 11 (The roster): §152, the weapons and defense, by taste: 152b's draft at its stop, for the user's play** (152a's before record done) (the cut signed 2026-11-06; [ROADMAP.md](ROADMAP.md) §152; WORKLOG §152; the spec, [round-11-spec.md](round-11-spec.md)). 151f, the units' lines, lands when the user writes them. **Open ◐:** 152b, at its stop.
+- **NEXT — ROUND 11 (The roster): §153, power by rarity, its growth key, and the pools: its kickoff** ([ROADMAP.md](ROADMAP.md) §153; `process/planning.md` "Phase kickoff"; the fresh WORKLOG's inputs; the spec, [round-11-spec.md](round-11-spec.md)). 151f, the units' lines, lands when the user writes them. **Open ◐:** none.
 - **In flight:** nothing on the box since 2026-11-06.
 - **The public build:** `0.3.0` (`273d587d`, tag `v0.3.0`), uploaded to itch.io on 2026-11-04; the uploads before it are in Closed rounds below.
 - **Snapshots:** WorldSnapshot **v39** (no player keeps one) · RunSnapshot **v51** (a v50 save, `0.3.0`'s, rejects).
 - **Tests:** **3954 main** in 271 files, **587 fuzz:smoke** in 60 files and **1 fuzz:jobs-parity** at `4a8eb0df` (152b, its hook); typecheck clean; the journal corpus, run by hand, 38 tests over 34 journals, recorded at 152b and 38 passed on its tree.
 - **Model id: `claude-opus-5-5`** since 2026-09-22. When yours differs, say so at the next stop; at the user's word, review AGENTS.md against the vendor's current prompting guidance and record the new id (the last review: `archive/post-104-worklog.md`, "The new-model tone audit").
-- **Last phase: §151**, the content, 2026-11-06: bandits out of the draft, Mars narrowed to strength with Diana and Hecate beside him and every daemon renamed (Run v51), the abilities' lines as the name's tooltip with the reach's floor in the numbers (`archive/worklog-phase-151.md`).
+- **Last phase: §152**, the weapons and defense, by taste, 2026-11-06: the bow slowed and heavier (2.5 s, might 4) and the rioter a point of defense, each signed in play, the rest held; the strike-conversion test retired; the stat sheet's before and after records in BALANCE (`archive/worklog-phase-152.md`).
 
 ## Current state
 

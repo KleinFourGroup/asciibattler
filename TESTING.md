@@ -95,7 +95,9 @@ If the renderer ever grows pure-logic helpers (e.g. atlas UV computation), those
   of the 30 runs, and the event digests caught it. Neither `npm test` nor
   the smoke runs it, since a change meant to alter behaviour would fail it
   in the gate: it runs by hand, as `npm run corpus` or as `corpus.test.ts`
-  with its plants (the smoke's script leaves the file out), on a change
+  with its plants under `--config vitest.fuzz.config.ts`, since the main
+  config leaves `tests/fuzz/` out (the smoke's script leaves the file out
+  too), on a change
   that claims to leave behaviour alone. `corpus.ts` says when the baseline may be
   retaken (`--rebaseline`, `--record`) and what has to be shown first. Its
   reach has limits: one port trade, selling a packet, never changes a run

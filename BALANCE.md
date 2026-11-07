@@ -5924,3 +5924,47 @@ deltas. The pre-X H7c→O log lives at
   Its wave's level budget is 1.65 × the roster's mean level × the hand
   of six, over eight rats, about 1.24 times the mean level a rat, so ×4
   fields rats near five times the hand's mean level.
+- **2026-11-07 — act 1's five moved fights in isolation** (§153, 153e).
+  Each fight forced alone, 146e's shapes (the normals at hop 1 of
+  `--hops=3`, the elites as the stamped first node of `--hops=2`, a
+  roster drawn from the roster table v7 by `--roster=sampled:0:5`), the
+  doctrine player on the deploy vector, seeds 2001 to 2040, on the box at
+  `4846ef07` in two cohorts (23 and 12 batches, one `cpx42` each, every
+  batch fetched with exit 0 and both boxes destroyed by their driver).
+  The levers through `--set`: `L` the run's level-budget multiplier, `W`
+  its wave-size multiplier, `M` its enemy-pool multiplier. Turns per won
+  instance / pool an instance (cap shares 0 but where given):
+
+  | fight | arms |
+  |---|---|
+  | poachers | L1 3.05 / 8.22 · L0.85 3.02 / 6.45 · L0.7 3.00 / 5.95 · L0.55 3.00 / 4.55 |
+  | wolfpack | L1 3.00 / 0.80 · L1.25 0.88 · L1.5 1.15 · L1.6 1.40 · L1.7 1.63 · L1.8 2.45 · L2 3.02 / 4.00 (turns 3.00 elsewhere) |
+  | rats' nest | L1 0.10 · L3 0.82 · L3.25 1.30 · L3.5 2.17 · L3.75 3.15 · L4 4.42 (turns 3.00, 3.02 at L4) · W=L=M ×1.5 0.25 · ×2 0.45 · ×2.5 0.85 |
+  | cats | ×1 3.95 / 17.68 · L1 M1.1 4.26 / 18.90 · L0.9 M1.1 4.13 / 17.32 · L0.8 M1.1 4.13 / 17.93 · W0.85 L0.85 4.45 / 15.40 · W0.75 L0.75 4.60 / 14.55 · W0.85 L0.7 4.41 / 15.30 · W0.75 L0.65 4.47 / 13.50 |
+  | Vermin Lords | L1 5.00 / 1.80 (cap 0.055) · L1.5 5.05 / 2.83 · L2 5.08 / 3.77 · L2.5 5.03 / 3.77 · W=L=M ×1.5 5.08 / 4.38 · ×2 5.10 / 5.63 · ×2.5 5.13 / 8.13 (cap 0.054 to 0.074) |
+
+  The whole wave's level lever flattens on the Vermin Lords at 3.77,
+  since it raises the healers with the rats. Their rats' share of the
+  level cannot be swept through `--set`, so it was probed locally on
+  seeds 2001 to 2020 (`--jobs=16`) with `config/encounters.json` edited
+  per arm and put back (`scratch/153/vl-set.mjs`): the rats' level
+  weight 2r with the level budget raised to hold the healers' level, r =
+  1 (the control) 4.95 / 1.70, 2 5.05 / 3.40, 3 5.05 / 4.85, 4 5.05 /
+  5.30; r = 3 with the count ×1.5 and the pool 90, 5.15 / 7.05; r = 2
+  with the count ×2 and the pool 120, 5.15 / 9.95. The bot's time a
+  seed grows with the bodies: 13.2 s at r = 1, 23.4 at r = 3 with ×1.5,
+  28.8 at r = 2 with ×2; on the box 14.9 at L1 and 41.9 at W=L=M ×2.5.
+
+  *Calibrated* against 153c's in-situ cost at today's config (in situ ÷
+  isolation, deploy / regen): the poachers 0.94 / 1.07, the wolfpack 1.9
+  / 1.8, the Vermin Lords 1.3 / 0.64 (29 and 37 instances), the cats 0.89
+  / 1.11 on cost and 0.96 / 1.02 on turns; the rats' nest has no ratio,
+  its cost near nothing both ways. *Baked* (`scratch/153/bake.mjs`, to
+  four places so the config reproduces the multiplier): the poachers L0.55,
+  the wolfpack L1.7, the rats' nest L3.5, the cats W0.75 L0.75 at pool 30,
+  the Vermin Lords r = 3 with the count ×1.5 and the pool 86 (90 held the
+  turns at 5.15; 86 is the arithmetic for about 4.9). Predicted in situ,
+  isolation × ratio, unmeasured until 153f: the poachers about 4.3 / 4.9,
+  the wolfpack about 3.1 / 2.9, the rats' nest about 2 to 4, the cats
+  about 4.4 / 4.7 turns and 12.9 / 16.2 pool, the Vermin Lords about 8.8
+  / 4.3 pool and 4.8 turns.

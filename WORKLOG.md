@@ -428,3 +428,81 @@ nothing, and amend the per-kind target in BALANCE to exempt it by name.
 **Signed** (the user, 2026-11-07: "Signing the moves, and I agree with
 your lean. A sounds good to me!"): the moves and their aims as put, and
 the rats' nest tuned to the band's low edge (A).
+
+### 153e — the tune (2026-11-07; baked, its held-out turns and stop next)
+
+The sweeps, the calibration and the predictions are in BALANCE
+(2026-11-07, act 1's five moved fights in isolation). Step zero found two
+signed levers short of their aims in isolation:
+
+- *The cats.* Their level budget barely moved their cost (17.3 to 17.9
+  alone at ×0.8 to ×0.9 with the pool ×1.1), and the pool raised their
+  cost with their turns. Built: fewer cats at the same level (count and
+  level budget ×0.75), the pool held at 30, 4.60 turns and 14.55 pool
+  alone. Inside the move's intent (turns up, cost down) by the count, not
+  the pool and the level.
+- *The Vermin Lords.* The signed lever, the rats' share of the level,
+  cannot be swept on the box (`--set` reaches only a config group's
+  top-level numbers); probed locally on 20 seeds it flattens near 5.3
+  alone, short of the aim. The whole wave's level flattens at 3.77, and
+  more rats at the same level reaches the aim (×2.5, 8.13) at 34 bodies
+  and nearly three times the bot's time. Built: the rats three times as
+  strong and half again as many (16 rats and the four healers, 7.05
+  alone at pool 90), the pool 86 for turns. **Flagged for the stop:** a
+  change of lever inside the signed intent (cost about 7, turns held),
+  and a fight that fields 16 rats where it fielded 10, at three times
+  their level.
+- *The rats' nest* by its level, ×3.5, since its count lever stays far
+  under the band (×2.5, 0.85 alone). On 40 seeds the slope is smoother
+  than the 10-seed probe showed (×3 0.82 to ×4 4.42). The rats field
+  near four times the hand's mean level, which shows on their cards.
+- *The wolfpack* ×1.7 and *the poachers* ×0.55, as signed.
+
+*The seeded drives:* the chaos census's no-dials slot 31 → 18; its walk
+took 5 s alone, past the 4 s at which the test's comment re-picks a slot
+for its 15 s timeout, and 18 is the shortest of 40 that leaves both
+census lists as they are. *The corpus:* 20 of 34 diverged and the table
+was recorded again. Chaos 2 and 28 stopped trading and chaos 16 now pays
+a unit off; no run of 40 with no dials buys a unit, so chaos 53 (the
+shortest of 80 that does) and 37 (the shortest of 40 that buys a daemon)
+join the trade rows. Chaos 37 also sells a packet, so the corpus reaches
+all 21 command kinds for the first time and its test is re-pinned at 21;
+0 of 34 differ, `corpus.test.ts` 38 of 38.
+
+*Not yet run:* the held-out turns, the cut's check before the stop.
+
+### The hand-off after 153e's bake (2026-11-07, session d86f434b)
+
+At the context trigger, after `0b9a326c`.
+
+*Done:* the cut signed with power at 1/1/2/3; 153a, 153b and 153c built;
+153d's moves signed, the rats' nest at (A); 153e's sweeps and bake.
+
+*Open:*
+
+- **153e's held-out turns.** The five fights at `0b9a326c` on seeds 5001
+  to 5040: the lines of `scratch/153/153e-sweep.queue` for the five
+  fights' ×1 arms with `--seed-offset=5000` and no `--set`, on the box.
+  `0b9a326c` and the docs commit after it are not on origin, so push
+  first. Read with `node scratch/153/sweep-read.mjs <batch dirs>`. A turn
+  target missed there goes back into the bake before the stop; the likeliest
+  is the Vermin Lords' 4.00–5.00, read at 5.15 with the pool at 90 before
+  the 86.
+- **153e's stop.** The table before and after: BALANCE's 153c table
+  against the held-out rows and BALANCE 153e's predictions. The user
+  plays act 1 on the dev server, a run and each moved fight forced by
+  `?encounter=<id>` (`rats-nest`, `wolfpack`, `poachers`,
+  `vermin-lords`, `cats`), and with it reads 153b (the cut's script: a
+  rare's card at POW 2 and a legendary's at 3, the risk line and the
+  post-turn ledger agreeing). Put the two flags above with it: the
+  Vermin Lords' lever and size, and the rats' nest's levels.
+- **Then 153f** (153c's queue, `scratch/153/153c.queue`, at the stop's
+  HEAD, read by `scratch/153/act1-read.mjs`) **and 153g** (the prior
+  table rebuilt, the registry's recipe).
+
+*Tools,* all in `scratch/153/` (ignored by git): `act1-read.mjs` (act 1
+by encounter against both targets), `sweep-read.mjs` (an isolation
+sweep's forced rows), `bake.mjs` (a lever into one encounter, per id),
+`vl-set.mjs` (the Vermin Lords' wave), `set-power.mjs`, `moved.mjs`,
+`members.mjs`, `slot-share.mjs`, the seed surveys in `scans/`, and the
+queue files.

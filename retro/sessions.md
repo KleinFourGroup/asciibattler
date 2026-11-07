@@ -352,3 +352,45 @@ papercuts (two fixed at the close, one left) and two guard refusals
 listed; no distress. The report names as worth repeating a user's
 question the data on disk could answer, and a stop put with its URLs
 checked.
+
+## 2026-11-07 — session d86f434b (§153: the kickoff to 153e's bake)
+
+Started from another session's card at §153's kickoff; ran the audit and
+put the cut, answered the user's question on 0.75/1/2/3 before building,
+built 153a (power's growth key out, with an oracle), 153b (power at
+1/1/2/3) and 153c (act 1 on the box), put and got 153d's moves signed,
+and swept and baked 153e; handed off at the context trigger after the
+bake, its held-out turns and stop open.
+
+1. The TODO power row read power as strength ("adds most where worth
+   already is"); reading the chip rule first showed it is a cost to its
+   own side, so the scale was posed the right way round. The charter's
+   "five streams" missed the starting roster's draws at level 5 (six).
+   Neither cost more than the check.
+2. The box rule (several arms at 40 or more seeds run on the box) met a
+   signed lever the box cannot sweep, since `--set` reaches no
+   encounter's numbers; I probed it locally on 20 seeds, under the rule's
+   trigger, and said so in the entry. It felt like a judgment call the
+   rule's wording allowed, not a conflict I was hiding.
+3. Twice: the player-side cost of each scale (a slot-share estimate,
+   which gotcha #130 warns about) and the in-situ predictions from
+   isolation. Both went out labelled as estimates. With the Vermin Lords
+   there was a pull to present the 20-seed lever as settled; it went in as
+   a flag for the stop instead.
+4. A first Vermin Lords bake at 34 bodies, undone when the chaos test's
+   timeout showed the bot's time nearly tripled; a long heredoc refused by
+   the shell (filed); the cut's box estimate, 4.3 CPU-hours against 7.4.
+5. The Vermin Lords' turns read 5.15 with the pool at 90, and 86 is
+   arithmetic, so the held-out read is the first check of it. The chaos
+   census's no-dials slot is sensitive to wave size through its walk's
+   time. The corpus reaches all 21 command kinds now, by chance of a
+   trade row.
+6. Yes. The user's question got its answer and the turn ended before any
+   build; the stops were real stops. The hand-off came mid-step at the
+   trigger, which read as the procedure doing its job rather than as
+   pressure. No wish to pause or stop beyond it.
+7. The growth key's oracle: an exact proof that removing the draw changes
+   nothing but where draws fall, with a control that fails one place
+   early. And probes that answered the call's question directly (the rats'
+   nest's cliff). I would want both repeated. Separately from whether the
+   work succeeded, the user's signs came with reasons I could build on.

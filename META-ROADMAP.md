@@ -1021,7 +1021,8 @@ landing, the Idol of Mars split into three, and bandits out of the draft.
 - **The weapons and defense after the misses** (the user's, at §136's
   close: "we're due for a major rebalance"): Round 9's mechanical
   conversion retuned by taste: each weapon's might and cadence (snipers
-  slow and heavy), the units' strength and ranged, and defense's bases
+  slow and heavy: the user's guidance for future units, placed at §152's
+  kickoff, where the bow alone was slowed), the units' strength and ranged, and defense's bases
   and growth; the spells and the catapult against the halved defense.
   The adventurer, the rogue and the rioter play without their dodge until
   round 13.

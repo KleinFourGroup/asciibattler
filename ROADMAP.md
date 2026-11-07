@@ -12,7 +12,7 @@ with its spec, its per-phase worklogs (`archive/worklog-phase-142.md` to
 `-147.md`) and its session reports beside it; before it
 [archive/post-133-roadmap.md](archive/post-133-roadmap.md) (Round 9).
 
-**Status: Round 11 under way; §152, the weapons and defense, by taste, is next.** The spec
+**Status: Round 11 under way; §152, the weapons and defense, by taste, in progress.** The spec
 is [round-11-spec.md](round-11-spec.md), signed 2026-11-05. The charter,
 the decision points, the exit and the scope guards are in META-ROADMAP
 §"Round 11 — The roster"; its riders are TODO's "Round 11".
@@ -84,7 +84,8 @@ reach's floor in the numbers (WORKLOG §151, in
 ## Phase 152 — the weapons and defense, by taste (signed 2026-11-05)
 
 Charter: Round 9's conversion retuned by taste through the stat sheet:
-each weapon's might and cadence (snipers slow and heavy), the units'
+each weapon's might and cadence (snipers slow and heavy, the user's
+guidance for future units; here the bow alone, signed at the kickoff), the units'
 strength and ranged, defense's bases and growth; the spells and the
 catapult against the halved defense. `tests/strike-conversion.test.ts`
 retires at the first commit that moves a converted number. **Why here:**
@@ -95,6 +96,10 @@ weapon's numbers and the defense numbers, taste stops in the user's
 play. **Exit:** the numbers signed in the user's play, the sheet's ranks
 recorded before and after. **Scope guards:** no new mechanism; no dodge
 (Round 13); power, the kits and the pools are later phases'.
+
+- ☐ **152a — the before record** (`none`): the sheet's tables and the draftable units' ranks at five points, by `scratch/152/sheet.ts`, in BALANCE.
+- ☐ **152b — the draft** (`stop`): the bow 2.0 → 2.5 s, its might holding its damage a second; the rioter's modest buff; the rest held; the strike-conversion test retired; rounds of the user's play as 152b-post.
+- ☐ **152c — the after record** (`none`): 152a's tables on the signed numbers, beside the before.
 
 ## Phase 153 — power by rarity, its growth key, and the pools (signed 2026-11-05)
 

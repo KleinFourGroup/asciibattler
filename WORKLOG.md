@@ -206,3 +206,24 @@ the halberdier and the stormcaller, which read high where 94f's kit watch
 read them low, held here and weighed at §153's power scale and §154's
 kits; the port pair to §154's list, read on the numbers §152 and §153
 leave.
+
+### The cut signed (2026-11-06, session 096110b8)
+
+The user signed the cut and its reads and every lean ("Buffing the rioter
+as described sounds good to me! 😁 Signing your leans for everything"):
+
+- *The draft moves two things:* the bow, 2.0 → 2.5 s with its might
+  raised so its damage a second against act 1's mix at level 3 holds
+  within a tenth (call 3); and the rioter, a modest buff through its
+  molotov or its defense, both in the charter, its hit points left out.
+  Every other number is held: defense (call 4), the spells and the
+  catapult (call 5), the enemy-only units (call 6), with the archer and
+  the rioter moving where they field as enemies.
+- *The halberdier and the stormcaller* are held here and weighed at
+  §153's power scale (TODO's power row); *the kit watches* are re-aimed
+  at §154's kickoff, the gunslinger and the adventurer added (TODO's kit
+  row), read on the numbers §152 and §153 leave.
+- *The charter's "snipers slow and heavy"* is the user's guidance for
+  future units, amended so in ROADMAP and META-ROADMAP.
+
+The stretch: 152a, then 152b's build to its stop.

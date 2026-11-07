@@ -296,3 +296,19 @@ roster of archers by URL against the wolfpack and one of rioters against
 the rat hunt; the poachers for the enemy's archers. Wrong looks like an
 archer whose slower shot reads sluggish or feeble, or rioters that still
 fall first, or now shrug hits off.
+
+### 152b signed (2026-11-06)
+
+The user read both in play and kept the draft ("Those reads are both
+feeling really good, Claude! 😁 I vote that we keep them as drafted--4 &
+the point of defense"): the bow's might 4 at 2.5 s, the rioter's base
+defense 1. No 152b-post.
+
+### 152c — the after record (2026-11-06)
+
+BALANCE's run log, 2026-11-06, "the stat sheet's after record": 152a's
+tables on the signed numbers, each moved cell `before → after`. The
+record of the signed tree equals 152b's draft record byte for byte (no
+config moved between). 31 lines hold a moved cell, none of them in the
+enemies' ranks. With it §152's exit is met: the numbers signed in the
+user's play, the sheet's ranks recorded before and after.

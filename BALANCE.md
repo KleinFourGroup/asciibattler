@@ -5760,3 +5760,114 @@ deltas. The pre-X H7c→O log lives at
   draftable unit's numbers move by a hundredth or two at most, through
   act 1's enemy archers; the enemies' ranks do not move. 152c records
   the signed numbers in full beside 152a's.
+
+- **2026-11-06 — the stat sheet's after record** (§152, 152c, the
+  exit's record). 152a's tables on the numbers signed at 152b (config as
+  at `4a8eb0df`), by `scratch/152/sheet.ts --record` and `--md` against
+  152a's record; a cell that moved reads `before → after`. 31 lines hold
+  a moved cell: the archer's and the rioter's rows, the bow's, a
+  hundredth or two on the other units' damage taken and time to be
+  killed (act 1's enemy archers strike slower), and the draftable group's
+  defense percentiles, which shift because the rioter's 1 joins the
+  group's 1s. No cell of the enemies' ranks moved.
+
+  *act 1 normal, level 3*, against fox 3 (17 %, defense 1), wolf 3 (16 %, defense 2), wolf 2 (13 %, defense 2), giant_rat 3 (13 %, defense 1), giant_rat 4 (12 %, defense 1), bandit 3 (11 %, defense 2), fox 2 (9 %, defense 1), archer 3 (6 %, defense 1), archer 2 (2 %, defense 1), bandit 4 (1 %, defense 2), bandit 2 (1 %, defense 2), archer 4 (0 %, defense 1):
+
+  | unit | rarity | weapon | HP | strike | period s | dealt /s | taken /s | kills in s | killed in s | defense takes |
+  |---|---|---|---|---|---|---|---|---|---|---|
+  | reaver | rare | cleaver | 26 | 8.41 | 1.00 | 9.66 | 1.76 | 1.5 | 19.2 → 19.1 | 17 % |
+  | ronin | uncommon | katana | 24 | 8.81 | 1.00 | 7.39 | 1.78 | 2.2 | 17.5 | 16 % |
+  | rogue | common | gambit_strike | 17 | 5.43 | 0.60 | 6.67 | 2.56 → 2.55 | 2.5 | 9.0 | 26 % |
+  | mercenary | common | sword | 24 | 6.97 | 1.00 | 5.54 | 1.76 | 2.9 | 17.5 | 20 % |
+  | adventurer | uncommon | whip | 21 | 6.06 | 0.90 | 5.15 | 2.56 → 2.55 | 3.3 | 11.1 → 11.2 | 24 % |
+  | mage | uncommon | magic_bolt | 21 | 11.09 | 1.95 | 4.95 | 3.20 → 3.18 | 2.8 | 9.3 | 13 % |
+  | stormcaller | legendary | chain_lightning | 19 | 11.09 | 1.95 | 4.95 | 3.20 → 3.18 | 2.8 | 8.4 → 8.3 | 13 % |
+  | halberdier | rare | halberd | 30 | 8.13 | 1.55 | 4.32 | 1.39 → 1.41 | 3.4 | 24.1 → 24.0 | 18 % |
+  | catapult | rare | catapult_shot | 21 | 10.85 | 2.35 | 4.01 | 1.76 | 3.5 | 15.6 → 15.5 | 13 % |
+  | gunslinger | uncommon | pistol | 17 | 3.58 | 0.55 | 3.91 | 2.56 → 2.55 | 4.9 | 9.0 | 40 % |
+  | archer | common | bow | 20 | 7.04 → 8.12 | 1.45 → 1.80 | 3.87 → 3.72 | 2.56 → 2.55 | 3.9 | 10.2 → 10.1 | 20 % → 18 % |
+  | corrupter | rare | vial | 22 | 2.07 | 1.80 | 2.93 | 2.40 → 2.39 | 6.2 | 12.6 → 12.5 | 49 % |
+  | rioter | common | molotov | 16 | 2.12 | 1.80 | 2.39 | 3.36 → 2.55 | 7.4 | 6.9 → 8.4 | 48 % |
+  | officer | rare | cane | 21 | 1.24 | 0.55 | 1.85 | 2.48 → 2.47 | 9.6 | 11.8 | 18 % |
+  | healer | common | - | 17 | 0.00 | ∞ | 0.00 | 3.28 → 3.26 | ∞ | 7.1 → 7.2 | - |
+  | shaman | legendary | - | 21 | 0.00 | ∞ | 0.00 | 1.76 | ∞ | 15.6 → 15.5 | - |
+
+  *Dealt · taken a second at the other four points:*
+
+  | unit | act 1 elite, 5 | act 1 boss, 5 | act 2 normal, 8 | act 3 normal, 14 |
+  |---|---|---|---|---|
+  | reaver | 9.5 · 2.9 | 9.4 · 4.3 | 11.1 · 2.4 | 15.7 · 4.2 |
+  | ronin | 9.1 · 2.9 | 8.2 · 4.3 | 9.9 · 2.5 | 15.3 · 4.4 |
+  | rogue | 10.1 · 3.3 | 8.3 · 5.2 | 9.9 · 3.2 | 13.5 · 5.4 |
+  | mercenary | 6.9 · 2.9 | 5.9 · 4.2 | 7.0 · 2.4 | 10.5 · 4.2 → 10.5 · 4.1 |
+  | adventurer | 6.8 · 3.3 | 5.7 · 5.2 | 7.1 · 3.2 | 11.8 · 5.4 |
+  | mage | 5.9 · 3.6 | 5.4 · 5.8 | 6.4 · 3.5 | 9.1 · 5.2 → 9.1 · 5.1 |
+  | stormcaller | 5.9 · 3.6 | 5.4 · 5.8 | 6.4 · 3.5 | 9.1 · 5.2 → 9.1 · 5.1 |
+  | halberdier | 5.2 · 2.4 | 4.6 · 3.4 | 5.3 · 2.0 | 7.0 · 3.0 |
+  | catapult | 4.6 · 2.7 | 4.2 · 4.2 | 4.8 · 2.4 | 6.3 · 4.1 |
+  | gunslinger | 5.8 · 3.3 | 4.3 · 5.2 | 5.2 · 3.2 | 8.8 · 5.4 |
+  | archer | 4.8 · 3.3 → 4.4 · 3.3 | 4.1 · 5.2 → 3.9 · 5.2 | 5.0 · 3.2 → 4.8 · 3.2 | 7.5 · 5.4 → 6.7 · 5.4 |
+  | corrupter | 2.9 · 3.1 | 2.9 · 4.8 | 3.3 · 2.6 | 3.6 · 4.3 |
+  | rioter | 2.5 · 3.7 → 2.5 · 3.3 | 2.5 · 6.0 → 2.5 · 5.1 | 2.6 · 4.2 → 2.6 · 3.2 | 2.7 · 6.3 → 2.7 · 5.3 |
+  | officer | 2.2 · 3.2 | 2.0 · 5.0 | 2.3 · 2.9 | 3.2 · 4.9 |
+  | healer | 0.0 · 3.7 | 0.0 · 5.9 → 0.0 · 5.8 | 0.0 · 3.9 | 0.0 · 5.7 |
+  | shaman | 0.0 · 2.7 | 0.0 · 4.2 | 0.0 · 2.4 | 0.0 · 4.1 |
+
+  *The draftable units' weapons:*
+
+  | weapon | wielders | might | scaling | cooldown s | reach | crit | riders |
+  |---|---|---|---|---|---|---|---|
+  | sword | mercenary, prodigy | 3 | strength | 1.5 | 1 | 0.05 | - |
+  | whip | adventurer | 2 | strength | 1.5 | 1 | 0.05 | - |
+  | katana | ronin | 2 | strength | 1.5 | 1 | 0.2 | - |
+  | bow | archer | 3 → 4 | ranged | 2 → 2.5 | 2 to 3 | 0.05 | - |
+  | gambit_strike | rogue | 1 | strength | 1.2 | 1 | 0.1 | - |
+  | heal_ally | healer | 0 | magic | 2 | 3 | 0 | - |
+  | magic_bolt | mage | 0 | magic | 2.5 | 2 to 5 | 0 | - |
+  | catapult_shot | catapult | 0 | ranged | 3 | 4 to 6 | 0 | - |
+  | cleaver | reaver | 2 | strength | 1.5 | 1 | 0.05 | bleed |
+  | vial | corrupter | 2 | none | 2.5 | 2 to 5 | 0 | poison |
+  | chain_lightning | stormcaller | 0 | magic | 2.5 | 2 to 5 | 0 | - |
+  | molotov | rioter | 2 | none | 2.5 | 2 to 4 | 0 | burn |
+  | pistol | gunslinger | 1 | ranged | 0.8 | 2 to 4 | 0.05 | - |
+  | halberd | halberdier | 4 | strength | 2 | 2 | 0.05 | - |
+  | cane | officer | 0 | strength | 0.8 | 1 | 0.05 | - |
+
+  *Ranks within the draftable units*, value (percentile; base, then growth):
+
+  | unit | strength | ranged | magic | defense | g.strength | g.ranged | g.magic | g.defense |
+  |---|---|---|---|---|---|---|---|---|
+  | reaver | 5 (97 %) | 0 (41 %) | 0 (34 %) | 2 (78 %) | 0.33 (97 %) | 0 (41 %) | 0 (34 %) | 0.1 (56 %) |
+  | ronin | 4 (91 %) | 0 (41 %) | 0 (34 %) | 2 (78 %) | 0.25 (81 %) | 0 (41 %) | 0 (34 %) | 0.07 (34 %) |
+  | rogue | 3 (75 %) | 0 (41 %) | 0 (34 %) | 1 (44 %) → 1 (41 %) | 0.2 (66 %) | 0 (41 %) | 0 (34 %) | 0.05 (16 %) |
+  | mercenary | 3 (75 %) | 0 (41 %) | 0 (34 %) | 2 (78 %) | 0.21 (72 %) | 0 (41 %) | 0 (34 %) | 0.1 (56 %) |
+  | adventurer | 3 (75 %) | 0 (41 %) | 0 (34 %) | 1 (44 %) → 1 (41 %) | 0.26 (91 %) | 0 (41 %) | 0 (34 %) | 0.05 (16 %) |
+  | mage | 0 (28 %) | 0 (41 %) | 10 (94 %) | 0 (13 %) → 0 (9 %) | 0 (28 %) | 0 (41 %) | 0.35 (88 %) | 0.15 (84 %) |
+  | stormcaller | 0 (28 %) | 0 (41 %) | 10 (94 %) | 0 (13 %) → 0 (9 %) | 0 (28 %) | 0 (41 %) | 0.35 (88 %) | 0.15 (84 %) |
+  | halberdier | 3 (75 %) | 0 (41 %) | 0 (34 %) | 3 (97 %) | 0.25 (81 %) | 0 (41 %) | 0 (34 %) | 0.17 (97 %) |
+  | catapult | 0 (28 %) | 10 (97 %) | 0 (34 %) | 2 (78 %) | 0 (28 %) | 0.3 (97 %) | 0 (34 %) | 0.1 (56 %) |
+  | gunslinger | 0 (28 %) | 2 (84 %) | 0 (34 %) | 1 (44 %) → 1 (41 %) | 0 (28 %) | 0.1 (84 %) | 0 (34 %) | 0.05 (16 %) |
+  | archer | 0 (28 %) | 3 (91 %) | 0 (34 %) | 1 (44 %) → 1 (41 %) | 0 (28 %) | 0.24 (91 %) | 0 (34 %) | 0.05 (16 %) |
+  | corrupter | 0 (28 %) | 0 (41 %) | 6 (84 %) | 1 (44 %) → 1 (41 %) | 0 (28 %) | 0 (41 %) | 0.15 (72 %) | 0.15 (84 %) |
+  | rioter | 0 (28 %) | 0 (41 %) | 0 (34 %) | 0 (13 %) → 1 (41 %) | 0 (28 %) | 0 (41 %) | 0 (34 %) | 0.05 (16 %) |
+  | officer | 1 (59 %) | 0 (41 %) | 0 (34 %) | 1 (44 %) → 1 (41 %) | 0.06 (59 %) | 0 (41 %) | 0 (34 %) | 0.1 (56 %) |
+  | healer | 0 (28 %) | 0 (41 %) | 4 (78 %) | 0 (13 %) → 0 (9 %) | 0 (28 %) | 0 (41 %) | 0.4 (97 %) | 0.1 (56 %) |
+  | shaman | 0 (28 %) | 0 (41 %) | 3 (72 %) | 2 (78 %) | 0 (28 %) | 0 (41 %) | 0.3 (78 %) | 0.1 (56 %) |
+
+  *Ranks within the enemies (never drafted)*, value (percentile; base, then growth):
+
+  | unit | strength | ranged | magic | defense | g.strength | g.ranged | g.magic | g.defense |
+  |---|---|---|---|---|---|---|---|---|
+  | bandit | 2 (62 %) | 0 (42 %) | 0 (42 %) | 2 (81 %) | 0.06 (38 %) | 0 (42 %) | 0 (42 %) | 0.05 (31 %) |
+  | ice_mage | 0 (23 %) | 6 (96 %) | 0 (42 %) | 1 (42 %) | 0 (15 %) | 0.35 (96 %) | 0 (42 %) | 0.05 (31 %) |
+  | warlock | 0 (23 %) | 0 (42 %) | 10 (92 %) | 0 (8 %) | 0 (15 %) | 0 (42 %) | 0.35 (92 %) | 0.15 (77 %) |
+  | luminant | 0 (23 %) | 3 (88 %) | 0 (42 %) | 1 (42 %) | 0 (15 %) | 0.24 (88 %) | 0 (42 %) | 0.05 (31 %) |
+  | banshee | 0 (23 %) | 0 (42 %) | 10 (92 %) | 0 (8 %) | 0 (15 %) | 0 (42 %) | 0.35 (92 %) | 0.15 (77 %) |
+  | ghoul | 0 (23 %) | 0 (42 %) | 0 (42 %) | 1 (42 %) | 0.09 (54 %) | 0 (42 %) | 0 (42 %) | 0.05 (31 %) |
+  | prodigy | 2 (62 %) | 0 (42 %) | 0 (42 %) | 1 (42 %) | 0.35 (96 %) | 0 (42 %) | 0 (42 %) | 0.22 (96 %) |
+  | wolf | 2 (62 %) | 0 (42 %) | 0 (42 %) | 2 (81 %) | 0.06 (38 %) | 0 (42 %) | 0 (42 %) | 0.05 (31 %) |
+  | giant_rat | 0 (23 %) | 0 (42 %) | 0 (42 %) | 1 (42 %) | 0.09 (54 %) | 0 (42 %) | 0 (42 %) | 0.05 (31 %) |
+  | fox | 2 (62 %) | 0 (42 %) | 0 (42 %) | 1 (42 %) | 0.2 (65 %) | 0 (42 %) | 0 (42 %) | 0.05 (31 %) |
+  | puma | 3 (85 %) | 0 (42 %) | 0 (42 %) | 1 (42 %) | 0.26 (81 %) | 0 (42 %) | 0 (42 %) | 0.05 (31 %) |
+  | tiger | 5 (96 %) | 0 (42 %) | 0 (42 %) | 2 (81 %) | 0.33 (88 %) | 0 (42 %) | 0 (42 %) | 0.1 (65 %) |
+  | bear | 3 (85 %) | 0 (42 %) | 0 (42 %) | 3 (96 %) | 0.25 (73 %) | 0 (42 %) | 0 (42 %) | 0.17 (88 %) |

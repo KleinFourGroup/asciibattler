@@ -424,3 +424,7 @@ three turns (the count lever is unmeasured upward). A cliff near the
 aim means a hand weaker than the bot's may meet the steep side, which
 153f and the user's play read. (B): leave it a breather, its cost near
 nothing, and amend the per-kind target in BALANCE to exempt it by name.
+
+**Signed** (the user, 2026-11-07: "Signing the moves, and I agree with
+your lean. A sounds good to me!"): the moves and their aims as put, and
+the rats' nest tuned to the band's low edge (A).

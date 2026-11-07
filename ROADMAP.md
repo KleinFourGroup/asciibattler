@@ -112,7 +112,7 @@ The cut, signed 2026-11-07 (WORKLOG §153):
 - ☑ **153a — power's growth key out** (`none`): out of the schema, the 29 combatants and `STAT_KEYS` (eight draws a level-up), equal to the old roll with power's draw spliced back; four seeded drives and three corpus rows re-picked (WORKLOG 153a).
 - ◐ **153b — power by rarity at 1/1/2/3** (`batch`, read at 153e's stop): the rare tier 1 → 2, the legendaries 2 → 3, eight archetypes; in act 1 the King alone moves (WORKLOG 153b).
 - ☑ **153c — act 1 on the box** (`none`): the two Soldier ARM rows at n = 120; five fights outside a target, the King and the bear in both (BALANCE 2026-11-07; WORKLOG 153c).
-- ☐ **153d — the moves put** (`stop`, the decision point): each act-1 fight outside a target, its lever and how it is read.
+- ☑ **153d — the moves put** (`stop`, the decision point): signed 2026-11-07, five fights moved by their levers to aims that hold act 1's total, the rats' nest tuned to its band's low edge (WORKLOG 153d).
 - ☐ **153e — the tune** (`stop`): the signed moves baked; the user plays act 1.
 - ☐ **153f — the verify read** (`none`, a pre-registered stop on a miss): 153c's rows at 153e's HEAD.
 - ☐ **153g — the prior table rebuilt** (`none`): v8 at 153f's HEAD, the units' worth re-read for §154's kickoff.

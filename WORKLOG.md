@@ -227,3 +227,14 @@ as described sounds good to me! 😁 Signing your leans for everything"):
   future units, amended so in ROADMAP and META-ROADMAP.
 
 The stretch: 152a, then 152b's build to its stop.
+
+### 152a — the before record (2026-11-06)
+
+BALANCE's run log, 2026-11-06, "the stat sheet's before record": the
+duel at the five points, the weapons and both groups' ranks, printed by
+`scratch/152/sheet.ts --record scratch/152/before.json` and rendered by
+its `--md` mode; `before.json` stays in `scratch/152/` for 152c's
+`before → after`. Two rows matched against the page, with a control one
+level off that does not. The enemies' ranks are recorded though call 6
+holds every enemy-only unit, so 152c shows them unmoved rather than
+leaving it to be assumed. No config or code moved.

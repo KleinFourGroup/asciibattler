@@ -363,3 +363,64 @@ power it was rolled with, and no player holds a v51 save (`0.3.0`'s are
 v50), so only a dev save from before this commit keeps a rare at 1.
 
 *The read* is `batch`, at 153e's stop (the cut's script); built, unread.
+
+### 153c — act 1 on the box (2026-11-07)
+
+The read and its numbers are in BALANCE (2026-11-07, act 1 on the new
+power table): act 1 alone on the two Soldier ARM rows at `ee480b32`,
+n = 120, one `cpx42`, 65 minutes. In short, deploy / regen:
+
+- Act 1 cleared 114 / 80 of 120 (150h 113 / 93); the regen row's loss
+  is told apart on the seeds (19 : 6, p 0.015), and the rows cannot say
+  which of §152's numbers, the re-baseline or the scale moved it. Seam 1
+  24.62 / 19.59 (band 19.0–22.0).
+- Outside a target: the rats' nest (0.06 / 0.02 pool an instance), the
+  wolfpack (1.52 / 1.44) and the Vermin Lords (2.34 / 1.16) under their
+  cost bands; the poachers over theirs (7.70 / 8.76); the cats under the
+  turn target on deploy (3.79) and over the cost band on regen (19.64).
+  The King and the bear in both targets; each kind's mean in its band.
+- The cut's estimate of the box time (4.3 CPU-hours for both rows) was
+  off: each row took 3.7, at 110 s a seed against 150h's 58 and 71 for
+  the same queue lines, `--per-encounter` added. Not chased: the batch
+  ran 65 minutes against an estimate under one.
+
+### 153d — the moves put (2026-11-07, at its stop)
+
+*Step zero,* the rats' nest's lever in isolation on 10 seeds (BALANCE,
+the same entry): its level budget ×3 costs 0.70 an instance, ×4 2.80,
+×5 8.90 with its turns starting to move; a cliff between ×3 and ×5, the
+rats near five times the hand's mean level at ×4.
+
+*The moves, with the session's leans.* Each fight's lever by the
+arithmetic of the kickoff's audit (the level budget moves cost and
+leaves turns while the hand clears a wave in a turn; the pool moves
+turns); the aim inside each band is chosen so act 1's total holds:
+
+| fight | now, deploy / regen | lever | aim |
+|---|---|---|---|
+| poachers | 7.70 / 8.76 pool (2–6) | level budget down, both waves | about 4 |
+| wolfpack | 1.52 / 1.44 pool (2–6) | level budget up | about 3 |
+| Vermin Lords | 2.34 / 1.16 pool (6–18) | the rats' share of the level budget up; the pool down if turns pass 5.00 | about 7 |
+| cats | 3.79 turns on deploy (4.00–5.00); 19.64 pool on regen (6–18) | the pool up a little (30 → about 33) and the level budget down a little | 4.2–4.5 turns, about 15 pool |
+| rats' nest | 0.06 / 0.02 pool (2–6) | call below | about 2.5 |
+| the King, the bear, the canids, the rat hunt, the brigands | in both targets | held | — |
+
+At those aims, holding each fight's instances a run as 153c read them, act
+1 costs about 1.0 more morale a run on deploy and 0.7 less on regen; a
+desk estimate, unmeasured until 153f. Without the rats' nest's move,
+0.6 less and 3.2 less.
+
+*The method* (the session's, inside the cut): each move by forced
+isolation on the box (146e's shapes, the doctrine player on the deploy
+vector, 40 seeds a step), each fight's isolation cost calibrated to its
+in-situ cost from 153c at the current config, since isolation cost is
+not in-situ cost; baked to two places into the wave spec or the pool,
+held-out seeds for turns; then 153f in situ.
+
+*The call: the rats' nest.* (A), the lean: tune it to the band's low
+edge, about 2.5, by whichever lever lands there on the gentler slope in
+isolation, the rats' level or their count with the pool raised to hold
+three turns (the count lever is unmeasured upward). A cliff near the
+aim means a hand weaker than the bot's may meet the steep side, which
+153f and the user's play read. (B): leave it a breather, its cost near
+nothing, and amend the per-kind target in BALANCE to exempt it by name.

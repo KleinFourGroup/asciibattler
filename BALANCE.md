@@ -5871,3 +5871,56 @@ deltas. The pre-X H7c→O log lives at
   | puma | 3 (85 %) | 0 (42 %) | 0 (42 %) | 1 (42 %) | 0.26 (81 %) | 0 (42 %) | 0 (42 %) | 0.05 (31 %) |
   | tiger | 5 (96 %) | 0 (42 %) | 0 (42 %) | 2 (81 %) | 0.33 (88 %) | 0 (42 %) | 0 (42 %) | 0.1 (65 %) |
   | bear | 3 (85 %) | 0 (42 %) | 0 (42 %) | 3 (96 %) | 0.25 (73 %) | 0 (42 %) | 0 (42 %) | 0.17 (88 %) |
+- **2026-11-07 — act 1 on the new power table** (§153, 153c). At
+  `ee480b32`: power's growth draw out (153a) and power by rarity at
+  1 / 1 / 2 / 3 (153b), on §152's bow and rioter. Act 1 alone on the two
+  Soldier ARM rows, 150h's `arb-regen` and `arb-deploy` queue lines at
+  one count of 120 with `--per-encounter`: batches `20261107-151629`
+  (regen) and `20261107-154848` (deploy), both `-ee480b32`, on one
+  `cpx42`, 15:16Z to 16:21Z, each fetched with exit 0 and the box
+  destroyed by its driver. 3.7 CPU-hours a row, 110 and 112 s a seed
+  (150h's act-1 rows ran 58 and 71; the cut's estimate of 4.3 CPU-hours
+  for both rows missed by 3.1). Read by `scratch/153/act1-read.mjs`,
+  which gives the 150h walk rows' act-1 table and 150h's act-1 wins and
+  seam 1 (113 and 93 of 120; 24.84 and 22.44) as its known answer.
+
+  *Act 1 cleared,* deploy / regen: 114 / 80 of 120 (150h 113 / 93).
+  Paired on the seeds against 150h's rows (`scratch/146/pair.mjs`, 150h
+  alone : now alone): deploy 5 : 6 (p 1.000), regen 19 : 6 (p 0.015),
+  so the regen row loses act 1 more often, told apart. The game moved
+  three ways between the two reads (§152's bow and rioter, the stream
+  re-baseline, the scale), and these rows cannot tell which. *Seam 1*
+  (the pool of the runs that cleared act 1): 24.62 / 19.59 of 40, 0.616
+  / 0.490 of max against the band 0.475–0.55 (150h 24.84 / 22.44).
+
+  *By encounter*, against the turn targets and the per-kind cost bands;
+  in bold, outside:
+
+  | encounter | kind | turns / won (target) | pool an instance (band) | cap share |
+  |---|---|---|---|---|
+  | bandit-king | boss | 5.63 / 5.76 (5.00–6.50) | 15.48 / 17.75 (10–30) | 0 / 0 |
+  | bear | boss | 5.44 / 5.35 | 14.02 / 15.07 | 0.003 / 0 |
+  | cats | elite | **3.79** / 4.02 (4.00–5.00) | 15.82 / **19.64** (6–18) | 0.008 / 0.005 |
+  | vermin-lords | elite | 4.90 / 4.89 | **2.34 / 1.16** | 0.085 / 0.039 |
+  | poachers | normal | 3.00 / 3.06 (2.50–3.25) | **7.70 / 8.76** (2–6) | 0 / 0 |
+  | brigands | normal | 3.01 / 3.00 | 4.23 / 5.13 | 0 / 0 |
+  | rat-hunt | normal | 3.04 / 3.03 | 2.89 / 3.16 | 0.006 / 0 |
+  | canids | normal | 3.00 / 3.00 | 2.15 / 2.49 | 0 / 0 |
+  | wolfpack | normal | 3.02 / 3.00 | **1.52 / 1.44** | 0.006 / 0 |
+  | rats-nest | normal | 3.00 / 3.00 | **0.06 / 0.02** | 0 / 0 |
+
+  The brigands here are act 1's alone; 150h's walk rows pooled acts 1
+  and 2. By kind (`scratch/148/kind-cost.mjs`), an instance, deploy /
+  regen: boss 14.71 / 16.37 (target 20), elite 9.62 / 12.04 (12), normal
+  3.09 / 3.47 (4), each kind's mean in its band with five fights outside
+  theirs. The King under the scale (its catapults at power 2): 5.63 /
+  5.76 turns and 15.48 / 17.75 pool, against 5.58 / 5.46 and 13.82 /
+  14.08 in act 1 of 150h's walk rows; in both targets.
+
+  *The rats' nest in isolation* (153d's step zero; 146e's shape, the
+  doctrine player on the deploy vector, seeds 2001 to 2010 only),
+  `difficulty.levelBudgetMultiplier` ×1, ×2, ×3, ×4, ×5: pool an
+  instance 0.00, 0.10, 0.70, 2.80, 8.90; turns 3.00 until ×5's 3.40.
+  Its wave's level budget is 1.65 × the roster's mean level × the hand
+  of six, over eight rats, about 1.24 times the mean level a rat, so ×4
+  fields rats near five times the hand's mean level.

@@ -111,12 +111,16 @@ export const CORPUS: readonly CorpusRow[] = [
   // trading, when act 1 went in front (2026-11-02) and when its waves shrank
   // (2026-11-03). When the bandit left the draft (2026-11-06) none of them
   // paid a unit off any more, and a survey of 40 found one run that does,
-  // chaos 33; when the bow slowed (2026-11-06) it stopped, and chaos 10 is
-  // the shortest run of that survey's 40 with no dials that does.
-  chaos(15),
+  // chaos 33; when the bow slowed (2026-11-06) it stopped, and chaos 10 was
+  // the shortest run of that survey's 40 with no dials that does. When
+  // power's growth draw came out (2026-11-07) only chaos 16 still traded (its
+  // daemon), and from a survey of 40 with no dials chaos 2 is the one run that
+  // buys a unit, chaos 13 the shortest that buys a packet and chaos 28 the
+  // shortest that pays a unit off.
+  chaos(2),
   chaos(16),
-  chaos(26),
-  chaos(10),
+  chaos(13),
+  chaos(28),
 ];
 
 const HERE = dirname(fileURLToPath(import.meta.url));

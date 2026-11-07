@@ -4,24 +4,27 @@
  *
  * - `simulateLevelUps` rolls each stat against its growth rate and adds 1 on
  *   a success. The player's units level this way, where the dice feel
- *   rewarding; it draws one RNG value per stat per level.
+ *   rewarding; it draws one RNG value per growing stat per level, eight.
  * - `scaleStats` adds `round(growth × n)` to each stat. Enemies and summons
  *   level this way: no RNG state to carry per encounter, and a predictable
  *   difficulty curve. It draws nothing.
  *
  * Both are pure. `n` is the number of level-ups: a unit at level L is its
  * archetype's base stats with `n = L − 1` applied, so level 1 is the base.
+ * Power has no growth rate (`config/units.ts`), so both carry it over from
+ * the base.
  */
 
 import type { RNG } from '../core/RNG';
 import type { UnitStats } from './Unit';
 import type { GrowthRates } from '../config/units';
 
-// The canonical stat order (combat, then cadence, then meta): the
-// order of the level-up draws and of the card's stat rows (`STAT_LABELS`), so
-// the two read alike. Reordering it moves every level-up roll; snapshots key
-// stats by name, so they are unaffected.
-const STAT_KEYS: readonly (keyof UnitStats & keyof GrowthRates)[] = [
+// The stats that grow, in the canonical order (combat, then cadence): the
+// order of the level-up draws and of the card's stat rows (`STAT_LABELS`,
+// which ends with power), so the two read alike. Reordering it, or adding or
+// removing a key, moves every level-up roll; snapshots key stats by name, so
+// they are unaffected.
+const STAT_KEYS: readonly (keyof GrowthRates)[] = [
   'constitution',
   'strength',
   'ranged',
@@ -30,7 +33,6 @@ const STAT_KEYS: readonly (keyof UnitStats & keyof GrowthRates)[] = [
   'defense',
   'speed',
   'mobility',
-  'power',
 ];
 
 /**
@@ -79,6 +81,6 @@ export function scaleStats(base: UnitStats, growth: GrowthRates, n: number): Uni
     defense: base.defense + Math.round(growth.defense * n),
     speed: base.speed + Math.round(growth.speed * n),
     mobility: base.mobility + Math.round(growth.mobility * n),
-    power: base.power + Math.round(growth.power * n),
+    power: base.power,
   };
 }

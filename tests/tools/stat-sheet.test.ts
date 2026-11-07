@@ -109,7 +109,8 @@ describe('the stat sheet model: stats at a level', () => {
         const got = statsAt(id, level, 'player');
         for (const key of Object.keys(u.baseStats)) {
           expect(got[key as keyof typeof got], `${id} L${level} ${key}`).toBeCloseTo(
-            u.baseStats[key]! + u.growthRates[key]! * (level - 1),
+            // Power has no growth rate in the file, so it reads as 0.
+            u.baseStats[key]! + (u.growthRates[key] ?? 0) * (level - 1),
             10,
           );
         }
@@ -123,7 +124,7 @@ describe('the stat sheet model: stats at a level', () => {
         const got = statsAt(id, level, 'enemy');
         for (const key of Object.keys(u.baseStats)) {
           expect(got[key as keyof typeof got], `${id} L${level} ${key}`).toBe(
-            u.baseStats[key]! + Math.round(u.growthRates[key]! * (level - 1)),
+            u.baseStats[key]! + Math.round((u.growthRates[key] ?? 0) * (level - 1)),
           );
         }
       }

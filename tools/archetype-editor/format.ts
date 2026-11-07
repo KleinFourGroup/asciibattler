@@ -2,26 +2,28 @@
  * Pure formatter for `config/units.json` — the archetype editor's Save /
  * Copy / Download all emit through here so a saved file is byte-for-byte the
  * shape a hand-edit would produce (no noisy whitespace diffs). Extracted from
- * the editor UI and node-safe (types + a label map only) so it can be unit-
- * tested against the committed file (tests/tools/archetype-editor.test.ts).
+ * the editor UI and node-safe (types, a label map and the growth keys) so it
+ * can be unit-tested against the committed file
+ * (tests/tools/archetype-editor.test.ts).
  *
  * Mirrors the existing file exactly: 2-space indent, the `glyph / abilities /
  * targeting / baseStats / growthRates` key order, the `abilities` array inline
- * on one line, and the stats emitted in the canonical `STAT_LABELS` order
- * (CON·STR·RNG·MAG·LCK·DEF·PRC·EVA·SPD·MOB·POW). Driving the stat order off
- * `STAT_LABELS` — the same source the recruit/promotion cards iterate — means a
+ * on one line, and the base stats emitted in the canonical `STAT_LABELS` order
+ * (CON·STR·RNG·MAG·LCK·DEF·SPD·MOB·POW), the growth rates in the schema's
+ * `GROWTH_KEYS` order, the same less power. Driving the orders off those two
+ * — `STAT_LABELS` the source the recruit/promotion cards iterate — means a
  * future stat addition flows through the formatter with no edit here.
  */
 
-import type { UnitDef } from '../../src/config/units';
+import { GROWTH_KEYS, type UnitDef } from '../../src/config/units';
 import { STAT_LABELS } from '../../src/ui/statLabels';
 
 const STAT_ORDER = Object.keys(STAT_LABELS) as (keyof typeof STAT_LABELS)[];
 
-/** Emit the canonical-ordered `"stat": value,` lines for one stat block. */
-function statLines(block: Readonly<Record<string, number>>): string[] {
-  return STAT_ORDER.map((key, i) => {
-    const sep = i === STAT_ORDER.length - 1 ? '' : ',';
+/** Emit the `"stat": value,` lines for one stat block, in `order`. */
+function statLines(block: Readonly<Record<string, number>>, order: readonly string[]): string[] {
+  return order.map((key, i) => {
+    const sep = i === order.length - 1 ? '' : ',';
     return `      ${JSON.stringify(key)}: ${JSON.stringify(block[key])}${sep}`;
   });
 }
@@ -113,10 +115,10 @@ export function formatArchetypesJson(config: Record<string, UnitDef>): string {
     if (a.statusImmunities !== undefined)
       parts.push(`    "statusImmunities": ${JSON.stringify(a.statusImmunities)},`);
     parts.push(`    "baseStats": {`);
-    parts.push(...statLines(a.baseStats));
+    parts.push(...statLines(a.baseStats, STAT_ORDER));
     parts.push(`    },`);
     parts.push(`    "growthRates": {`);
-    parts.push(...statLines(a.growthRates));
+    parts.push(...statLines(a.growthRates, GROWTH_KEYS));
     parts.push(`    }`);
     parts.push(`  }${tail}`);
   });

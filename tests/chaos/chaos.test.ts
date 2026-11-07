@@ -17,12 +17,16 @@ import { ChaosFailure, KINDS, chaosRun, type ChaosOptions, type ChaosResult } fr
 // declining a reward and empowering a unit, then seed 5 until act 1 went in
 // front and it stopped again, then seed 32 until act 1's waves shrank, then
 // seed 3 again until the bow slowed and the rioter took a point of defense
-// and it stopped empowering; seed 9 is the shortest of 40 that does both. The
+// and it stopped empowering, then seed 9 until power's growth draw came out
+// and it stopped doing both; seed 32 is the shortest of 40 that does both. The
 // Gambler's slot was seed 4 until act 1 went in front and its walk grew to 34
 // battles, 8.7 s alone, then seed 3 until act 1's waves shrank and it stopped
 // redrawing and docking, then seed 12 until the bow slowed and it stopped
-// redrawing and recruiting; seed 31 is the shortest of 40 that redraws, docks
-// at a port and recruits.
+// redrawing and recruiting, then seed 31 until power's growth draw came out and
+// it stopped redrawing; seed 32 is the shortest of 40 that redraws, docks at a
+// port, recruits and rests, the rest added then since no other slot rests. The
+// two-hop slot was seed 6 until that draw came out and its walk stopped
+// clearing a sector; seed 32 is the shortest of 40 that clears one.
 //
 // A seed takes under 1 s alone and up to about 3 s beside the whole suite,
 // which failed the default 5 s under load with nothing wrong. 15 s leaves
@@ -30,10 +34,10 @@ import { ChaosFailure, KINDS, chaosRun, type ChaosOptions, type ChaosResult } fr
 // slower beside the suite, so a walk of 4 s alone takes 13 s or more there.
 const SEED_TIMEOUT_MS = 15_000;
 const EVERY_COMMIT: ReadonlyArray<readonly [number, string]> = [
-  [9, 'hops=3&layout=procedural'],
+  [32, 'hops=3&layout=procedural'],
   [31, ''],
-  [6, 'sectorHops=2'],
-  [31, 'character=gambler&bits=300'],
+  [32, 'sectorHops=2'],
+  [32, 'character=gambler&bits=300'],
 ];
 
 const dir = mkdtempSync(join(tmpdir(), 'chaos-test-'));
@@ -107,6 +111,7 @@ describe('115c — the chaos driver', () => {
       'passGrant',
       'passRecruit',
       'redrawCards',
+      'usePacket',
     ]);
     // The driver's blind side on these four seeds. The journal corpus
     // (tests/fuzz/corpus) reaches all but `sellPacket`, which nothing
@@ -117,7 +122,6 @@ describe('115c — the chaos driver', () => {
       'buyPortUnit',
       'payToRemoveUnit',
       'sellPacket',
-      'usePacket',
     ]);
   });
 

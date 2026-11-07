@@ -51,7 +51,8 @@ export function statsAt(archetype: string, level: number, side: Side): UnitStats
   if (side === 'enemy') return { ...scaledUnit(archetype, level).stats };
   const n = Math.max(0, level - 1);
   const out = {} as Record<keyof UnitStats, number>;
-  for (const key of STAT_KEYS) out[key] = def.baseStats[key] + def.growthRates[key] * n;
+  // Power has no growth rate (`config/units.ts`), so it stays at its base.
+  for (const key of STAT_KEYS) out[key] = def.baseStats[key] + (key === 'power' ? 0 : def.growthRates[key] * n);
   return out;
 }
 

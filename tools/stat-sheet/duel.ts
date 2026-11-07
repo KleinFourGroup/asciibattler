@@ -20,7 +20,7 @@ import { TICK_RATE, secondsToTicks } from '../../src/config';
 import { abilityDef } from '../../src/config/abilities';
 import { STATS } from '../../src/config/stats';
 import { STATUS_DEFS } from '../../src/config/statuses';
-import { UNIT_DEFS } from '../../src/config/units';
+import { GROWTH_KEYS, UNIT_DEFS } from '../../src/config/units';
 import type { EncounterKind } from '../../src/config/encounters';
 import { evalScaled } from '../../src/sim/effects/resolveScalars';
 import { resolveCadenceTicks } from '../../src/sim/effects/timeline';
@@ -261,6 +261,9 @@ export function ranks(group: 'draftable' | 'enemy'): Record<string, { base: Reco
     out[id] = { base: {}, growth: {} };
     for (const key of Object.keys(d.baseStats) as (keyof UnitStats)[]) {
       out[id]!.base[key] = rank(members.map(([, m]) => m.baseStats[key]), d.baseStats[key]);
+    }
+    // Every stat but power, which has no growth rate.
+    for (const key of GROWTH_KEYS) {
       out[id]!.growth[key] = rank(members.map(([, m]) => m.growthRates[key]), d.growthRates[key]);
     }
   }

@@ -109,7 +109,7 @@ the target. **Scope guards:** acts 2 and 3 recorded, not retuned.
 
 The cut, signed 2026-11-07 (WORKLOG §153):
 
-- ☐ **153a — power's growth key out** (`none`): out of the schema, the 29 combatants and `STAT_KEYS` (eight draws a level-up), proven against the old roll; six run streams' draws realign.
+- ☑ **153a — power's growth key out** (`none`): out of the schema, the 29 combatants and `STAT_KEYS` (eight draws a level-up), equal to the old roll with power's draw spliced back; four seeded drives and three corpus rows re-picked (WORKLOG 153a).
 - ☐ **153b — power by rarity at 1/1/2/3** (`batch`, read at 153e's stop): the rare tier 1 → 2, the legendaries 2 → 3; in act 1 the King alone moves.
 - ☐ **153c — act 1 on the box** (`none`): the two Soldier ARM rows at n = 120, each encounter's turns and cost against both targets.
 - ☐ **153d — the moves put** (`stop`, the decision point): each act-1 fight outside a target, its lever and how it is read.

@@ -122,8 +122,8 @@ export function abilityIdsForArchetype(archetype: Archetype): readonly string[] 
 
 /**
  * A player's template at `level`, by simulated level-ups. Level 1 is the
- * base stats, with no draw; a higher level draws once a stat a level,
- * `11 × (level − 1)`, against the archetype's growth rates. The starting
+ * base stats, with no draw; a higher level draws once a growing stat a
+ * level, `8 × (level − 1)`, against the archetype's growth rates. The starting
  * roster, the recruit offer and a reward's unit come through here.
  */
 export function rollUnit(archetype: Archetype, rng: RNG, level: number = 1): UnitTemplate {

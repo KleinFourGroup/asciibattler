@@ -9,10 +9,12 @@
  *   stats (constitution, strength, ranged, magic, luck, defense), then the
  *   cadence stats speed and mobility, and power.
  *   `STAT_CAP` catches typos and is not a design limit.
- * - `growthRates` — per stat, 0 to 1: the chance the stat rises by 1 on one
- *   simulated level-up of a player's recruit (`simulateLevelUps`), and the
- *   per-level increment of an enemy (`scaleStats`). At 0 the stat never
- *   grows, as a melee unit's ranged stays 0.
+ * - `growthRates` — per stat but power, 0 to 1: the chance the stat rises by
+ *   1 on one simulated level-up of a player's recruit (`simulateLevelUps`),
+ *   and the per-level increment of an enemy (`scaleStats`). At 0 the stat
+ *   never grows, as a melee unit's ranged stays 0. Power has no growth: it
+ *   is the unit's weight in the chip rule, fixed per archetype (and per
+ *   encounter entry), so it neither rolls nor scales with level.
  *
  * A unit's move cooldown is the one `STATS.baseMoveCooldownSeconds` scaled
  * by its mobility, so a slow unit is one with low or negative mobility. Its
@@ -65,17 +67,27 @@ const BaseStatsSchema = z.object({
   power: z.number().int().nonnegative().max(STAT_CAP),
 });
 
-const GrowthRatesSchema = z.object({
-  constitution: z.number().min(0).max(1),
-  strength: z.number().min(0).max(1),
-  ranged: z.number().min(0).max(1),
-  magic: z.number().min(0).max(1),
-  luck: z.number().min(0).max(1),
-  defense: z.number().min(0).max(1),
-  speed: z.number().min(0).max(1),
-  mobility: z.number().min(0).max(1),
-  power: z.number().min(0).max(1),
-});
+// Every stat but power (the header says why). Strict, so a `power` growth
+// left in the JSON fails at load rather than being dropped unread.
+const GrowthRatesSchema = z
+  .object({
+    constitution: z.number().min(0).max(1),
+    strength: z.number().min(0).max(1),
+    ranged: z.number().min(0).max(1),
+    magic: z.number().min(0).max(1),
+    luck: z.number().min(0).max(1),
+    defense: z.number().min(0).max(1),
+    speed: z.number().min(0).max(1),
+    mobility: z.number().min(0).max(1),
+  })
+  .strict();
+
+/** The stats with a growth rate, in the schema's order: the editors' growth
+ *  fields and the stat sheet's growth ranks. The level-up draws keep their own
+ *  list (`src/sim/leveling.ts`), since its order is the draws' order. */
+export const GROWTH_KEYS = Object.keys(GrowthRatesSchema.shape) as readonly (keyof z.infer<
+  typeof GrowthRatesSchema
+>)[];
 
 // An archetype's ability ids are checked against the ability catalog, whose
 // ids the ability registry's own load check holds equal to its factories.

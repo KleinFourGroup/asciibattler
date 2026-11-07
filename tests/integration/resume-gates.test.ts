@@ -115,10 +115,11 @@ function resumed(save: string, config: RunConfig): Emitted[] {
 // Step zero (WORKLOG §115a): a `sectorHops=2` run clears its first sector in
 // about fifteen battles; no short run met a port, so one full-length run is
 // here for that gate. The first run must reach the end of the walk for the
-// `complete` gate: since act 1 went in front that is three bosses, and seed 8
-// is the quicker of the two of 20 whose run clears them (3 and 8).
+// `complete` gate: since act 1 went in front that is three bosses. Since
+// power's growth draw came out no seed of 1 to 20 clears them, and seed 36
+// is the quickest of the four of 80 that do (36, 53, 66 and 68).
 const RUNS: ReadonlyArray<readonly [number, string]> = [
-  [8, 'sectorHops=2&character=soldier'],
+  [36, 'sectorHops=2&character=soldier'],
   [1, 'sectorHops=2&character=soldier'],
   [1, 'character=soldier'],
 ];

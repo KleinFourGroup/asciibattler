@@ -34,7 +34,6 @@ const GROWTH_MID: GrowthRates = {
   defense: 0.5,
   speed: 0.5,
   mobility: 0.5,
-  power: 0.5,
 };
 
 const GROWTH_NONE: GrowthRates = {
@@ -46,7 +45,6 @@ const GROWTH_NONE: GrowthRates = {
   defense: 0,
   speed: 0,
   mobility: 0,
-  power: 0,
 };
 
 const GROWTH_ALL: GrowthRates = {
@@ -58,7 +56,6 @@ const GROWTH_ALL: GrowthRates = {
   defense: 1,
   speed: 1,
   mobility: 1,
-  power: 1,
 };
 
 describe('scaleStats — deterministic', () => {
@@ -173,37 +170,116 @@ describe('simulateLevelUps — distribution lands near expected value', () => {
   });
 });
 
-describe('`power` levels per growthRates (config-derived, balance-proof)', () => {
-  it('every archetype config defines a numeric power base + growth', () => {
+describe('power has no growth: it stays at its base (config-derived, balance-proof)', () => {
+  it('every archetype config defines a numeric power base and no power growth', () => {
     for (const arch of ALL_ARCHETYPES) {
       const cfg = ARCHETYPE_CONFIG[arch];
       expect(typeof cfg.baseStats.power, `${arch} baseStats.power`).toBe('number');
-      expect(typeof cfg.growthRates.power, `${arch} growthRates.power`).toBe('number');
+      expect(Object.keys(cfg.growthRates), `${arch} growthRates`).not.toContain('power');
     }
   });
 
-  it('scaleStats grows power by round(growth.power × n) for every archetype', () => {
-    // Balance-proof: the expectation is derived from the shipped config, not a
-    // hardcoded base/growth — so this stays correct if the knobs are re-tuned.
+  it('scaleStats and simulateLevelUps keep power at its base for every archetype', () => {
     for (const arch of ALL_ARCHETYPES) {
       const cfg = ARCHETYPE_CONFIG[arch];
       for (const n of [0, 1, 5, 25]) {
-        const out = scaleStats(cfg.baseStats, cfg.growthRates, n);
-        expect(out.power, `${arch} @ n=${n}`).toBe(
-          cfg.baseStats.power + Math.round(cfg.growthRates.power * n),
-        );
+        expect(scaleStats(cfg.baseStats, cfg.growthRates, n).power, `${arch} scaled @ n=${n}`).toBe(cfg.baseStats.power);
+        const rolled = simulateLevelUps(cfg.baseStats, cfg.growthRates, n, new RNG(123 + n));
+        expect(rolled.power, `${arch} rolled @ n=${n}`).toBe(cfg.baseStats.power);
       }
     }
   });
 
-  it('simulateLevelUps advances power deterministically and only upward', () => {
-    for (const arch of ALL_ARCHETYPES) {
-      const cfg = ARCHETYPE_CONFIG[arch];
-      const a = simulateLevelUps(cfg.baseStats, cfg.growthRates, 30, new RNG(123));
-      const b = simulateLevelUps(cfg.baseStats, cfg.growthRates, 30, new RNG(123));
-      expect(a.power, `${arch} determinism`).toBe(b.power);
-      // Additive growth never reduces a stat below its base.
-      expect(a.power, `${arch} monotonic`).toBeGreaterThanOrEqual(cfg.baseStats.power);
+  it('a level-up draws eight values, one per growing stat', () => {
+    for (const n of [1, 3, 10]) {
+      const rng = new RNG(7);
+      simulateLevelUps(BASE, GROWTH_MID, n, rng);
+      const reference = new RNG(7);
+      for (let i = 0; i < 8 * n; i++) reference.next();
+      expect(rng.toJSON(), `n=${n}`).toEqual(reference.toJSON());
     }
   });
 });
+
+/**
+ * The roll before power's growth key came out (2026-11-07), kept as the
+ * reference: nine draws a level-up, power's last, against a growth of 0 that
+ * never succeeds. Taking the key out should change nothing but where the
+ * draws fall in the stream, so the new roll on a stream equals this one on the
+ * same stream with a value spliced in where power's draw was.
+ */
+const OLD_KEYS = [
+  'constitution',
+  'strength',
+  'ranged',
+  'magic',
+  'luck',
+  'defense',
+  'speed',
+  'mobility',
+  'power',
+] as const;
+
+function oldSimulateLevelUps(
+  base: UnitStats,
+  growth: Record<(typeof OLD_KEYS)[number], number>,
+  n: number,
+  rng: { next(): number },
+): UnitStats {
+  const out: Record<keyof UnitStats, number> = { ...base };
+  for (let level = 0; level < n; level++) {
+    for (const key of OLD_KEYS) {
+      if (rng.next() < growth[key]) out[key] += 1;
+    }
+  }
+  return out;
+}
+
+/** `source`'s values in order with a filler spliced in at position `at` of
+ *  every block of nine (at 8: after every eighth source value). The filler is
+ *  just under 1, so a draw that reads it never succeeds. */
+function spliced(source: RNG, at: number): { next(): number } {
+  let i = 0;
+  return {
+    next(): number {
+      const slot = i++ % 9;
+      return slot === at ? 0.999999 : source.next();
+    },
+  };
+}
+
+describe('the oracle: the roll without power equals the old roll with power spliced back', () => {
+  const LEVELS = [1, 4, 9, 19];
+  const SEEDS = Array.from({ length: 20 }, (_, k) => k + 1);
+
+  /** The cases where the new roll and the old roll on the spliced stream
+   *  differ, splicing at `at`, or leave their streams in different places. */
+  function differing(at: number): string[] {
+    const out: string[] = [];
+    for (const arch of ALL_ARCHETYPES) {
+      const cfg = ARCHETYPE_CONFIG[arch];
+      for (const n of LEVELS) {
+        for (const seed of SEEDS) {
+          const fresh = new RNG(seed);
+          const now = simulateLevelUps(cfg.baseStats, cfg.growthRates, n, fresh);
+          const source = new RNG(seed);
+          const before = oldSimulateLevelUps(cfg.baseStats, { ...cfg.growthRates, power: 0 }, n, spliced(source, at));
+          const same =
+            JSON.stringify(now) === JSON.stringify(before) &&
+            JSON.stringify(fresh.toJSON()) === JSON.stringify(source.toJSON());
+          if (!same) out.push(`${arch} n=${n} seed=${seed}`);
+        }
+      }
+    }
+    return out;
+  }
+
+  it('every archetype at four levels on twenty seeds: identical stats, the stream left in the same place', () => {
+    expect(differing(8)).toEqual([]);
+  });
+
+  it('its failing control: the splice one place early (where mobility draws) differs', () => {
+    expect(differing(7).length).toBeGreaterThan(0);
+  });
+});
+

@@ -246,12 +246,10 @@ META-ROADMAP §"Round 11 — The roster" names each row's place.
   was offered before it took Pounce and Dash (WORKLOG §144, "144e
   signed").
 
-- [ ] **Power's level-up draw and its growth key.** `growthRates.power`
-  is 0 on every unit and is meant to stay 0, and a recruit's level-up
-  still draws for it (`STAT_KEYS` in `src/sim/leveling.ts`, which
-  `simulateLevelUps` walks for each level). Taking the key out
-  re-draws every recruit's level-ups, so it goes, with the eleventh
-  draw, in a round that accepts the stream moving and re-runs the board.
+- ✅ **Power's level-up draw and its growth key.** Out at 153a: power
+  has no growth rate (the schema refuses one), a level-up draws eight
+  values, not nine, and six run streams' draws realigned, proven against
+  the old roll with power's draw spliced back (WORKLOG §153, 153a).
 
 - [ ] **The corpus's trade rows, picked by what they drive.**
   `corpus.test.ts` wants 20 of 21 command kinds to change a run, and the

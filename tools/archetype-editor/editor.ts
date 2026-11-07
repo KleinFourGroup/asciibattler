@@ -33,7 +33,8 @@
  *  count). "+ New" clones the active entry (combatant or neutral); Save writes the
  *  file; a reload spawns + renders it.
  *
- * Schema-driven where it counts: the stat fields enumerate from `STAT_LABELS`,
+ * Schema-driven where it counts: the base-stat fields enumerate from
+ * `STAT_LABELS` and the growth fields from `GROWTH_KEYS` (power has none),
  * the ability/targeting choices from the live registries, and the
  * status-susceptibility choices from `STATUS_DEFS`, so a future stat / ability /
  * status surfaces here with no edit.
@@ -43,10 +44,12 @@ import '../../src/fonts.css';
 import './editor.css';
 import {
   ALL_UNIT_DEFS,
+  GROWTH_KEYS,
   RARITY_TIERS,
   UnitDefSchema,
   isNeutralUnitDef,
   type CombatantUnitDef,
+  type GrowthRates,
   type NeutralUnitDef,
   type UnitDef,
 } from '../../src/config/units';
@@ -151,7 +154,7 @@ const copyBtn = mustQuery<HTMLButtonElement>('#copy-btn');
 const downloadBtn = mustQuery<HTMLButtonElement>('#download-btn');
 
 const baseInputs = new Map<keyof UnitStats, HTMLInputElement>();
-const growthInputs = new Map<keyof UnitStats, HTMLInputElement>();
+const growthInputs = new Map<keyof GrowthRates, HTMLInputElement>();
 const abilityChecks = new Map<string, HTMLInputElement>();
 const targetingRadios = new Map<string, HTMLInputElement>();
 const susChecks = new Map<string, HTMLInputElement>();
@@ -199,10 +202,8 @@ function buildTabs(): void {
 function buildStatInputs(): void {
   baseStatsEl.innerHTML = '';
   growthRatesEl.innerHTML = '';
-  for (const key of STAT_ORDER) {
-    baseInputs.set(key, makeStatField(baseStatsEl, key, 'base'));
-    growthInputs.set(key, makeStatField(growthRatesEl, key, 'growth'));
-  }
+  for (const key of STAT_ORDER) baseInputs.set(key, makeStatField(baseStatsEl, key, 'base'));
+  for (const key of GROWTH_KEYS) growthInputs.set(key, makeStatField(growthRatesEl, key, 'growth'));
 }
 
 function makeStatField(
@@ -406,7 +407,8 @@ function onStatInput(key: keyof UnitStats, kind: StatKind, input: HTMLInputEleme
   const value = Number.isFinite(num) ? num : 0;
   const a = activeCombatant();
   if (kind === 'base') a.baseStats[key] = value;
-  else a.growthRates[key] = value;
+  // A growth field exists only for a `GROWTH_KEYS` stat (`buildStatInputs`).
+  else a.growthRates[key as keyof GrowthRates] = value;
   refreshDerived();
 }
 
@@ -496,10 +498,8 @@ function syncForm(): void {
   descriptionEl.value = a.description ?? '';
   draftableEl.checked = a.draftable;
   rarityEl.value = a.rarity ?? 'common';
-  for (const key of STAT_ORDER) {
-    baseInputs.get(key)!.value = String(a.baseStats[key]);
-    growthInputs.get(key)!.value = String(a.growthRates[key]);
-  }
+  for (const key of STAT_ORDER) baseInputs.get(key)!.value = String(a.baseStats[key]);
+  for (const key of GROWTH_KEYS) growthInputs.get(key)!.value = String(a.growthRates[key]);
   for (const [id, cb] of abilityChecks) cb.checked = a.abilities.includes(id);
   for (const [id, radio] of targetingRadios) radio.checked = a.targeting === id;
 }

@@ -289,3 +289,55 @@ the corpus's trade rows out of §153. 2/3/4/6 with morale doubled is a
 TODO row under Round 21, weighed where acts 2 and 3's pools are retuned.
 
 The stretch: 153a, 153b and 153c, to 153d's stop.
+
+### 153a — power's growth key out (2026-11-07)
+
+*Step zero* found the audit's premises at HEAD: nine draws a level-up,
+power's growth 0 on the 29 combatants, `GrowthRates` in no snapshot type.
+
+*Built.* The growth schema without power, strict, so a power growth left
+in the JSON fails at load; `GROWTH_KEYS` exported for the editors and
+the sheet; `STAT_KEYS` at eight; `scaleStats` carries power over from
+the base; `rollUnit`'s count at `8 × (level − 1)`. Checked in the
+Browser pane (`dev-preview`): the archetype editor's growth fields run
+CON to MOB with the mercenary's values, it reads "Valid — matches the
+game schema", and its export writes no power growth; the stat sheet's
+growth ranks run constitution to mobility while its base ranks keep
+power; no console errors on either page.
+
+*The oracle* (`src/sim/leveling.test.ts`): the new roll on a stream
+equals the old roll, kept in the test, on the same stream with a filler
+spliced in at the ninth place of every block of nine, stats and stream
+position both, for the 29 combatants at levels 1, 4, 9 and 19 on seeds 1
+to 20. Its control, the filler one place early (mobility's draw),
+differs. A second test pins eight draws a level-up against a reference
+stream.
+
+*The seeded drives*, the four the plant predicted, each re-picked by its
+rule (scans in `scratch/153/scans/`):
+
+- The continuation check's completing run, 8 → 36: no two-hop Soldier
+  run of seeds 1 to 20 completes now, and of 1 to 80 four do (36, 53, 66
+  and 68); 36 is the smallest. The resume gates' run, 8 → 36, the
+  quickest of the four (1,046 ms; 1,510, 2,159 and 2,033).
+- The journal tool's run, 5 → 1, the smallest of 30 whose `hops=3`
+  Soldier drive ends in victory.
+- The chaos census: the procedural slot 9 → 32, the shortest of 40 that
+  declines a reward and empowers a unit; the two-hop slot 6 → 32, the
+  shortest of 40 whose walk clears a sector (it had no written rule, and
+  it carried `dismissSectorCleared`); the Gambler's slot 31 → 32, the
+  shortest of 40 that redraws, docks at a port, recruits and rests. The
+  rest is added to that slot's rule, since no other slot rests and the
+  census pinned `chooseRestOption`; without it seed 40 would take the
+  slot and the census would lose the kind. The procedural slot's seed
+  uses a packet, so `usePacket` moves from the blind side to the kinds
+  that change a run: 16 change, 5 are only sent.
+
+*The corpus:* 34 of 34 journals diverged, and the table was recorded
+again. Three trades were in no row after the recording (a unit bought, a
+packet bought, a unit paid off), and chaos 15, 26 and 10 no longer
+traded, so from a survey of 40 with no dials they gave way to chaos 2
+(the one run that buys a unit), 13 (the shortest that buys a packet) and
+28 (the shortest that pays a unit off); chaos 16 still buys a daemon.
+Recorded again: 20 of 21 kinds, 0 of 34 differing on replay,
+`corpus.test.ts` 38 of 38.

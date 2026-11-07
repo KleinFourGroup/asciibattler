@@ -317,7 +317,7 @@ describe('the stat-identity roster', () => {
 /**
  * THE POWER TABLE (encounter-feel-spec §The casualty chip rule): `power` is a
  * HEADCOUNT WEIGHT fixed per archetype
- * — 1 everywhere, legendary 2 — and it never grows. Config-derived: the
+ * — 1 everywhere, legendary 2 — and it has no growth rate. Config-derived: the
  * legendary set comes from `rarity`, so a new legendary fails here until its
  * weight is set on purpose. Summons are NOT a table row: a conjured
  * unit is zeroed in the fallen LEDGER by its `summonedBy` stamp
@@ -338,13 +338,20 @@ describe('the power table (headcount weights)', () => {
     expect(UNIT_DEFS.ghoul!.baseStats.power).toBe(1);
   });
 
-  it.each(COMBATANT_ENTRIES)('%s: power = legendary 2 / else 1, and power growth 0', (_id, def) => {
+  it.each(COMBATANT_ENTRIES)('%s: power = legendary 2 / else 1', (_id, def) => {
     const expected = def.rarity === 'legendary' ? 2 : 1;
     expect(def.baseStats.power).toBe(expected);
-    expect(def.growthRates.power).toBe(0);
   });
 
   it('every power sits in {1, 2} — no archetype carries a hidden weight or a zero', () => {
     for (const [, def] of COMBATANT_ENTRIES) expect([1, 2]).toContain(def.baseStats.power);
+  });
+
+  it('power has no growth rate: the schema refuses one, and the catalog holds none', () => {
+    const [id, def] = COMBATANT_ENTRIES[0]!;
+    const withPowerGrowth = { ...def, growthRates: { ...def.growthRates, power: 0 } };
+    expect(CombatantUnitDefSchema.safeParse(withPowerGrowth).success, id).toBe(false);
+    expect(CombatantUnitDefSchema.safeParse(def).success, id).toBe(true);
+    for (const [cid, d] of COMBATANT_ENTRIES) expect(Object.keys(d.growthRates), cid).not.toContain('power');
   });
 });

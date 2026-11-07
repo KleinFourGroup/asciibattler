@@ -316,10 +316,10 @@ describe('the stat-identity roster', () => {
 
 /**
  * THE POWER TABLE (encounter-feel-spec §The casualty chip rule): `power` is a
- * HEADCOUNT WEIGHT fixed per archetype
- * — 1 everywhere, legendary 2 — and it has no growth rate. Config-derived: the
- * legendary set comes from `rarity`, so a new legendary fails here until its
- * weight is set on purpose. Summons are NOT a table row: a conjured
+ * HEADCOUNT WEIGHT fixed per archetype by its rarity — common and uncommon 1,
+ * rare 2, legendary 3 (signed 2026-11-07) — and it has no growth
+ * rate. Config-derived: the tier comes from `rarity`, so a unit whose weight
+ * is off its tier fails here until the table or its rarity moves on purpose. Summons are NOT a table row: a conjured
  * unit is zeroed in the fallen LEDGER by its `summonedBy` stamp
  * (`World.recordFallen`), so the summoned archetype (the ghoul) prices like
  * any body when an encounter FIELDS it.
@@ -338,13 +338,16 @@ describe('the power table (headcount weights)', () => {
     expect(UNIT_DEFS.ghoul!.baseStats.power).toBe(1);
   });
 
-  it.each(COMBATANT_ENTRIES)('%s: power = legendary 2 / else 1', (_id, def) => {
-    const expected = def.rarity === 'legendary' ? 2 : 1;
-    expect(def.baseStats.power).toBe(expected);
+  const BY_RARITY = { common: 1, uncommon: 1, rare: 2, legendary: 3 } as const;
+
+  it.each(COMBATANT_ENTRIES)('%s: power by rarity, 1 / 1 / 2 / 3', (_id, def) => {
+    expect(def.baseStats.power).toBe(BY_RARITY[def.rarity]);
   });
 
-  it('every power sits in {1, 2} — no archetype carries a hidden weight or a zero', () => {
-    for (const [, def] of COMBATANT_ENTRIES) expect([1, 2]).toContain(def.baseStats.power);
+  it('every power sits in {1, 2, 3} — no archetype carries a hidden weight or a zero', () => {
+    for (const [, def] of COMBATANT_ENTRIES) expect([1, 2, 3]).toContain(def.baseStats.power);
+    // Each tier the catalog holds is in use, so the table is not vacuous.
+    expect(new Set(COMBATANT_ENTRIES.map(([, d]) => d.rarity))).toEqual(new Set(RARITY_TIERS));
   });
 
   it('power has no growth rate: the schema refuses one, and the catalog holds none', () => {

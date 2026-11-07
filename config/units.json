@@ -237,7 +237,7 @@
       "defense": 2,
       "speed": 4,
       "mobility": -14,
-      "power": 1
+      "power": 2
     },
     "growthRates": {
       "constitution": 0.5,
@@ -265,7 +265,7 @@
       "defense": 2,
       "speed": 6,
       "mobility": 4,
-      "power": 1
+      "power": 2
     },
     "growthRates": {
       "constitution": 0.9,
@@ -293,7 +293,7 @@
       "defense": 1,
       "speed": 5,
       "mobility": 2,
-      "power": 1
+      "power": 2
     },
     "growthRates": {
       "constitution": 0.65,
@@ -433,7 +433,7 @@
       "defense": 0,
       "speed": 4,
       "mobility": 2,
-      "power": 2
+      "power": 3
     },
     "growthRates": {
       "constitution": 0.5,
@@ -461,7 +461,7 @@
       "defense": 2,
       "speed": 4,
       "mobility": -14,
-      "power": 2
+      "power": 3
     },
     "growthRates": {
       "constitution": 0.5,
@@ -558,7 +558,7 @@
       "defense": 1,
       "speed": 5,
       "mobility": 4,
-      "power": 2
+      "power": 3
     },
     "growthRates": {
       "constitution": 0.9,
@@ -641,7 +641,7 @@
       "defense": 3,
       "speed": 4,
       "mobility": 2,
-      "power": 1
+      "power": 2
     },
     "growthRates": {
       "constitution": 0.9,
@@ -669,7 +669,7 @@
       "defense": 1,
       "speed": 6,
       "mobility": 6,
-      "power": 1
+      "power": 2
     },
     "growthRates": {
       "constitution": 0.6,

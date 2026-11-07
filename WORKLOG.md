@@ -341,3 +341,25 @@ traded, so from a survey of 40 with no dials they gave way to chaos 2
 28 (the shortest that pays a unit off); chaos 16 still buys a daemon.
 Recorded again: 20 of 21 kinds, 0 of 34 differing on replay,
 `corpus.test.ts` 38 of 38.
+
+### 153b — power by rarity at 1/1/2/3 (2026-11-07)
+
+*Step zero:* `scratch/153/set-power.mjs` moved eight archetypes, per id:
+the catapult, the reaver, the corrupter, the halberdier and the officer 1
+→ 2, the stormcaller, the shaman and the enemy-only prodigy 2 → 3; then
+`moved.mjs` on the new config names no fight still off the scale, and the
+King is the one act-1 fight whose members moved (the audit's list).
+
+*Built.* The power-table test reads the tier from `rarity` (1 / 1 / 2 /
+3) and checks every tier is in use; DESIGN's two lines on the table; the
+bots' packet-target comment, which still described the flat table and
+the survivors rule's "chips the pools". The encounters' overrides are as
+authored. The main suite at the change failed one test, the step-code
+guard, on a phase address written into the table's comment (taken out);
+no seeded drive moved. The corpus: 28 of 34 journals diverged, recorded
+again, 20 of 21 kinds with no row re-picked, 0 of 34 differing,
+`corpus.test.ts` 38 of 38. No snapshot bump: a saved unit carries the
+power it was rolled with, and no player holds a v51 save (`0.3.0`'s are
+v50), so only a dev save from before this commit keeps a rare at 1.
+
+*The read* is `batch`, at 153e's stop (the cut's script); built, unread.

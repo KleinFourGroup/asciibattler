@@ -458,8 +458,8 @@ function fireStrategy(fire: FireWeights): FuzzStrategyWithPort {
 }
 
 describe('the (power, level) index pickers (§91b re-key)', () => {
-  // Under the flat power table every non-legendary hand ties on power; the
-  // re-key lets LEVEL break the tie so the nominator stops pointing at slot 0.
+  // A hand of commons and uncommons ties on power (each is 1); the re-key
+  // lets LEVEL break the tie so the nominator stops pointing at slot 0.
   const at = (power: number, level: number): UnitTemplate => ({ ...meleeWithPower(power), level });
 
   it('power stays dominant: a higher power beats any level', () => {

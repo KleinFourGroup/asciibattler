@@ -331,11 +331,11 @@ function worstFrontierKind(run: Run): EncounterKind | null {
 }
 
 /** Max-(`power`, `level`) slot index (lowest index ties) — the unit-target
- *  heuristic: `power` chips the pools, so the biggest chipper gets the buff.
- *  §91b re-keyed it to (power, level): under the flat power table (1 /
- *  legendary 2 / summon 0) every non-legendary hand ties on power, and a
- *  power-only key would have buffed slot 0 forever — power stays dominant,
- *  LEVEL breaks the ties (the stronger body carries the buff further). One
+ *  heuristic: a unit's `power` is what its fall costs its pool, so the
+ *  costliest body gets the buff. §91b re-keyed it to (power, level): under the
+ *  power table (1 / 1 / 2 / 3 by rarity, a summon 0) a hand of
+ *  commons and uncommons ties on power, and a power-only key would buff slot 0
+ *  forever — power stays dominant, LEVEL breaks the ties (the stronger body carries the buff further). One
  *  two-field read, deterministic, no scorer machinery. Exported at 70b: the
  *  arbitrated fire site keeps it as the TARGET nominator (candidates are
  *  per-packet, not per-position — the spec's nominator role). */

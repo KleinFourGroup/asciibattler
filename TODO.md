@@ -252,7 +252,8 @@ META-ROADMAP §"Round 11 — The roster" names each row's place.
   the old roll with power's draw spliced back (WORKLOG §153, 153a).
 
 - [ ] **The corpus's trade rows, picked by what they drive.**
-  `corpus.test.ts` wants 20 of 21 command kinds to change a run, and the
+  `corpus.test.ts` wants all 21 command kinds to change a run (20 until
+  153e), and the
   rows that cover a trade are picked by seed, so a content change that
   moves a run can lose a kind and send a session surveying chaos seeds
   for a replacement: three port rows re-picked at 145g, chaos 15 and 26
@@ -262,7 +263,9 @@ META-ROADMAP §"Round 11 — The roster" names each row's place.
   3d0a8fc1's report; WORKLOG §151, 151b). At 152b chaos 33 stopped paying
   a unit off and chaos 10 replaced it; in the same survey chaos 4 also
   sells a packet, the one kind no stored run reaches, at 39 battles and
-  14 s (WORKLOG 152b).
+  14 s (WORKLOG 152b). At 153a three trade rows were re-picked, and at
+  153e two more, chaos 37 among them, which also sells a packet (WORKLOG
+  153a, 153e).
 
 ### Dis Pater
 

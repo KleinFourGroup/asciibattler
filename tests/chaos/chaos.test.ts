@@ -11,8 +11,10 @@ import { ChaosFailure, KINDS, chaosRun, type ChaosOptions, type ChaosResult } fr
 // grants a redraw every turn, and her bits buy at ports. A change that moves
 // a run's streams makes each seed another walk, and a long one times out
 // under the whole suite: the slot with no dials was seed 2 until three events
-// gained pages and its walk went from 0.7 s to 4 s, and seed 31 is the
-// shortest of 40 that keeps the census below whole (WORKLOG §118d). The
+// gained pages and its walk went from 0.7 s to 4 s, then seed 31 (the
+// shortest of 40 that kept the census below whole) until act 1's fights were
+// retuned and its walk took 5 s; seed 18 is the shortest of 40 that leaves
+// both census lists as they are. The
 // procedural slot was seed 3 until every strike landed and its walk stopped
 // declining a reward and empowering a unit, then seed 5 until act 1 went in
 // front and it stopped again, then seed 32 until act 1's waves shrank, then
@@ -35,7 +37,7 @@ import { ChaosFailure, KINDS, chaosRun, type ChaosOptions, type ChaosResult } fr
 const SEED_TIMEOUT_MS = 15_000;
 const EVERY_COMMIT: ReadonlyArray<readonly [number, string]> = [
   [32, 'hops=3&layout=procedural'],
-  [31, ''],
+  [18, ''],
   [32, 'sectorHops=2'],
   [32, 'character=gambler&bits=300'],
 ];
@@ -114,8 +116,7 @@ describe('115c — the chaos driver', () => {
       'usePacket',
     ]);
     // The driver's blind side on these four seeds. The journal corpus
-    // (tests/fuzz/corpus) reaches all but `sellPacket`, which nothing
-    // stored reaches.
+    // (tests/fuzz/corpus) reaches all of them.
     expect(KINDS.filter((kind) => !changesTheRun(kind)).sort()).toEqual([
       'buyPortDaemon',
       'buyPortPacket',

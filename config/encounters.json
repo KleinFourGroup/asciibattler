@@ -849,7 +849,7 @@
           {
             "kind": "wave",
             "spec": {
-              "levelBudget": { "kind": "mean", "factor": 1.25 },
+              "levelBudget": { "kind": "mean", "factor": 2.125 },
               "count": { "kind": "hand", "factor": 1.5 },
               "units": [
                 { "archetype": "wolf", "count": { "kind": "weight", "weight": 1 }, "level": { "kind": "weight", "weight": 1 } }
@@ -878,7 +878,7 @@
           {
             "kind": "wave",
             "spec": {
-              "levelBudget": { "kind": "mean", "factor": 1.65 },
+              "levelBudget": { "kind": "mean", "factor": 5.775 },
               "count": { "kind": "hand", "factor": 1.4 },
               "units": [
                 { "archetype": "giant_rat", "count": { "kind": "weight", "weight": 1 }, "level": { "kind": "weight", "weight": 1 } }
@@ -957,7 +957,7 @@
           {
             "kind": "wave",
             "spec": {
-              "levelBudget": { "kind": "mean", "factor": 1.25 },
+              "levelBudget": { "kind": "mean", "factor": 0.6875 },
               "count": { "kind": "hand", "factor": 1.5 },
               "units": [
                 { "archetype": "fox", "count": { "kind": "weight", "weight": 1 }, "level": { "kind": "weight", "weight": 1 } }
@@ -967,7 +967,7 @@
           {
             "kind": "wave",
             "spec": {
-              "levelBudget": { "kind": "mean", "factor": 1.25 },
+              "levelBudget": { "kind": "mean", "factor": 0.6875 },
               "count": { "kind": "hand", "factor": 1.5 },
               "units": [
                 { "archetype": "bandit", "count": { "kind": "weight", "weight": 1 }, "level": { "kind": "weight", "weight": 1 } },
@@ -1013,7 +1013,7 @@
     "id": "vermin-lords",
     "name": "The Vermin Lords",
     "description": "A posse of clerics, at one with the rats",
-    "healthPool": 60,
+    "healthPool": 86,
     "kind": "elite",
     "rewards": [
       { "table": "bits-large", "trigger": { "chance": 1 } },
@@ -1028,11 +1028,11 @@
           {
             "kind": "wave",
             "spec": {
-              "levelBudget": { "kind": "mean", "factor": 1.5 },
-              "count": { "kind": "hand", "factor": 2.25 },
+              "levelBudget": { "kind": "mean", "factor": 6.25 },
+              "count": { "kind": "hand", "factor": 3.375 },
               "units": [
                 { "archetype": "healer", "count": { "kind": "fixed", "value": 4 }, "level": { "kind": "weight", "weight": 1 } },
-                { "archetype": "giant_rat", "count": { "kind": "weight", "weight": 1 }, "level": { "kind": "weight", "weight": 2 } }
+                { "archetype": "giant_rat", "count": { "kind": "weight", "weight": 1 }, "level": { "kind": "weight", "weight": 6 } }
               ]
             }
           }
@@ -1059,8 +1059,8 @@
           {
             "kind": "wave",
             "spec": {
-              "levelBudget": { "kind": "mean", "factor": 1.4 },
-              "count": { "kind": "hand", "factor": 1.75 },
+              "levelBudget": { "kind": "mean", "factor": 1.05 },
+              "count": { "kind": "hand", "factor": 1.3125 },
               "units": [
                 { "archetype": "tiger", "count": { "kind": "fixed", "value": 2 }, "level": { "kind": "weight", "weight": 1 } },
                 { "archetype": "puma", "count": { "kind": "weight", "weight": 1 }, "level": { "kind": "weight", "weight": 1 } }

@@ -34,9 +34,9 @@ describe('the journal corpus', () => {
     const changed = new Set(
       reaches.flatMap((r) => Object.entries(r.commands).flatMap(([kind, [, n]]) => (n > 0 ? [kind] : []))),
     );
-    // Written from the recording of 2026-11-02, when act 1 went in front: 20
-    // of the 21 kinds. The one missing is a port trade, selling a packet, that
-    // no seed of the survey's grid completes.
+    // All 21 kinds since the recording of 2026-11-07, when chaos 37 joined the
+    // trade rows and sells a packet; from 2026-11-02 to then it was 20, the
+    // packet sale in no row.
     expect([...changed].sort()).toEqual([
       'acceptReward',
       'advanceTurn',
@@ -57,6 +57,7 @@ describe('the journal corpus', () => {
       'passRecruit',
       'payToRemoveUnit',
       'redrawCards',
+      'sellPacket',
       'usePacket',
     ]);
   });

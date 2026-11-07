@@ -116,11 +116,15 @@ export const CORPUS: readonly CorpusRow[] = [
   // power's growth draw came out (2026-11-07) only chaos 16 still traded (its
   // daemon), and from a survey of 40 with no dials chaos 2 is the one run that
   // buys a unit, chaos 13 the shortest that buys a packet and chaos 28 the
-  // shortest that pays a unit off.
-  chaos(2),
+  // shortest that pays a unit off. When act 1's fights were retuned the same
+  // day, chaos 2 stopped buying a unit and 28 paying one off, and chaos 16
+  // now pays one off in place of its daemon: no run of 40 with no dials buys
+  // a unit, so chaos 53 is the shortest of 80 that does, and chaos 37 the
+  // shortest of 40 that buys a daemon.
+  chaos(53),
   chaos(16),
   chaos(13),
-  chaos(28),
+  chaos(37),
 ];
 
 const HERE = dirname(fileURLToPath(import.meta.url));

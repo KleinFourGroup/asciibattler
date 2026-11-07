@@ -222,7 +222,7 @@ META-ROADMAP §"Round 11 — The roster" names each row's place.
   150c, a tie fine, the comment and the WARN in BALANCE's words (WORKLOG
   §150, 150c; BALANCE.md 2026-11-05).
 
-- [ ] **Power diversity by rarity** (verdict item 4): 1/1/1/2 → 1/1/2/3 or 1/2/3/4 — a pool re-anchor rides behind it (every burn/turn moves); Round 11, after the §94 signing. Weigh the scale against the prior table v7, where the rare halberdier (+31 ± 14 taken free) and the legendary stormcaller (+25 ± 14) already read the highest, so a steeper scale adds most where worth already is (BALANCE 2026-11-06, "the draftable units' worth"; signed at §152's kickoff).
+- [ ] **Power diversity by rarity** (verdict item 4): 1/1/1/2 → 1/1/2/3 or 1/2/3/4 — a pool re-anchor rides behind it (every burn/turn moves); Round 11, after the §94 signing. Weigh the scale against the prior table v7, where the rare halberdier (+31 ± 14 taken free) and the legendary stormcaller (+25 ± 14) already read the highest (BALANCE 2026-11-06, "the draftable units' worth"; signed at §152's kickoff). A unit's power is what its fall costs its own side, so a steeper scale lowers a rare's or a legendary's worth by what its deaths cost, the officer's, the catapult's and the shaman's as well (WORKLOG §153, the kickoff's audit, which corrects this row's earlier "adds most where worth already is").
 
 - [ ] **Act 1's cost, against the per-kind cost target.** §146 tuned
   act 1 to turn targets only. The target was signed at Round 11's

@@ -6,11 +6,11 @@ A fresh-session orientation for ASCIIbattler. Read this first; then dive into th
 
 **The ONE home for live status.** Other docs (and the agent memory) point here instead of restating it; when state changes, this section is the single place that updates.
 
-- **NEXT — ROUND 11 (The roster): §153, power by rarity, its growth key, and the pools: the cut signed 2026-11-07 (1/1/2/3); 153e signed 2026-11-08 at `1cedbd9d`, 153b's read with it; 153f read at `305cab62`, its two misses on deploy kept (WORKLOG 153f); next 153g, the prior table rebuilt at this HEAD by the registry's recipe (BALANCE "The derived-artifact registry"), then the units' worth re-read by `scratch/152/unit-worth.mjs`** ([ROADMAP.md](ROADMAP.md) §153; the spec, [round-11-spec.md](round-11-spec.md)). 151f, the units' lines, lands when the user writes them. **Open ◐:** none.
-- **In flight:** nothing on the box since 2026-11-08 (153f).
+- **NEXT — ROUND 11 (The roster): §153, power by rarity, its growth key, and the pools: the cut signed 2026-11-07 (1/1/2/3); 153e signed 2026-11-08 at `1cedbd9d`, 153b's read with it; 153f read at `305cab62`, its two misses on deploy kept (WORKLOG 153f); 153g built at `614dcf68`, the prior table v8 and the units' worth on it (WORKLOG 153g); the cut done, next §153's close (process/planning.md "Phase close")** ([ROADMAP.md](ROADMAP.md) §153; the spec, [round-11-spec.md](round-11-spec.md)). 151f, the units' lines, lands when the user writes them. **Open ◐:** none.
+- **In flight:** nothing on the box since 2026-11-08 (153g's three batches, fetched and the box destroyed).
 - **The public build:** `0.3.0` (`273d587d`, tag `v0.3.0`), uploaded to itch.io on 2026-11-04; the uploads before it are in Closed rounds below.
 - **Snapshots:** WorldSnapshot **v39** (no player keeps one) · RunSnapshot **v51** (a v50 save, `0.3.0`'s, rejects).
-- **Tests:** **3957 main** in 271 files, **587 fuzz:smoke** in 60 files and **1 fuzz:jobs-parity** at `1cedbd9d` (153e's re-bake, its hook); typecheck clean; the journal corpus, run by hand, 38 tests over 34 journals, recorded at 153e and 38 passed on its tree.
+- **Tests:** **3957 main** in 271 files, **587 fuzz:smoke** in 60 files and **1 fuzz:jobs-parity** at `614dcf68` (153g's table, its hook); typecheck clean; the journal corpus, run by hand, 38 tests over 34 journals, recorded at 153e and 38 passed on its tree.
 - **Model id: `claude-opus-5-5`** since 2026-09-22. When yours differs, say so at the next stop; at the user's word, review AGENTS.md against the vendor's current prompting guidance and record the new id (the last review: `archive/post-104-worklog.md`, "The new-model tone audit").
 - **Last phase: §152**, the weapons and defense, by taste, 2026-11-06: the bow slowed and heavier (2.5 s, might 4) and the rioter a point of defense, each signed in play, the rest held; the strike-conversion test retired; the stat sheet's before and after records in BALANCE (`archive/worklog-phase-152.md`).
 

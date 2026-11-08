@@ -538,6 +538,36 @@ this HEAD.
 This looks great!"): both kept, the Vermin Lords at pool 80 and the
 rats' nest at ×3.5; 153g next, at this HEAD.
 
+### 153g — the prior table rebuilt (2026-11-08)
+
+The table and its numbers are in BALANCE (2026-11-08, the prior table
+v8): v6's three lines at `3f051b43`, one `cpx42`, 5 h 4 min; v8
+committed at `614dcf68`. In short:
+
+- 36 items, 34 over the floor. Diana and Hecate are measured for the
+  first time, so the coverage test's PENDING acknowledgments for them
+  went; the test failed on them until they did, which is its job.
+- The table moved down: the mean margin over items +10.1 to −1.5, every
+  family lower. Four changes landed between v7's measurement and v8's
+  (151c, 152b, 153b, 153e), and none is isolated.
+- The units' worth on v8, by `scratch/152/unit-worth.mjs` (n and mean
+  equal to the table's on all 16, a planted mismatch caught). The officer
+  is the worst row free and bought (−50.1 ± 17, −68.8 ± 33); the
+  mercenary bought (−41.2 ± 12) and the shaman bought (−59.1 ± 22) pass
+  two errors, and the mage free (+29.3 ± 14) on the high side. Rows v7
+  flagged that v8 does not: the rioter free (−33.4 to −4.1, after §152's
+  point of defense), the halberdier and the stormcaller free (+31.3 and
+  +25.1 to within an error of 0), the gunslinger and the adventurer
+  bought (+74.6 and −59.4 to within one). The seven rare and legendary
+  draftables fell 19.1 on average and the rest 2.5, which fits power's
+  casualty cost (a fallen rare now costs its pool 2) but is not
+  isolated.
+
+*For §154's kickoff:* TODO's kit-watch list is re-aimed there on these
+numbers (BALANCE's table is the read). 153c's and 153f's act-1 rows ran
+under v7; the ARM under v8 has not been read on act 1, and §155's board
+reads act 1 under the table as it then stands.
+
 ### The hand-off after 153e's bake (2026-11-07, session d86f434b)
 
 At the context trigger, after `0b9a326c`.

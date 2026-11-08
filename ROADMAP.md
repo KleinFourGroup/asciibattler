@@ -115,7 +115,7 @@ The cut, signed 2026-11-07 (WORKLOG §153):
 - ☑ **153d — the moves put** (`stop`, the decision point): signed 2026-11-07, five fights moved by their levers to aims that hold act 1's total, the rats' nest tuned to its band's low edge (WORKLOG 153d).
 - ☑ **153e — the tune** (`stop`, signed 2026-11-08): the signed moves baked; held out, four fights in their turn targets and the Vermin Lords over theirs, their pool 86 → 80 (`1cedbd9d`); the user plays act 1 (WORKLOG 153e).
 - ☑ **153f — the verify read** (`none`, a pre-registered stop on a miss; both misses kept 2026-11-08): 153c's rows at 153e's HEAD; every turn target held, two costs under their bands on deploy (the Vermin Lords, the rats' nest) (BALANCE 2026-11-08; WORKLOG 153f).
-- ☐ **153g — the prior table rebuilt** (`none`): v8 at 153f's HEAD, the units' worth re-read for §154's kickoff.
+- ☑ **153g — the prior table rebuilt** (`none`): v8 at `614dcf68`, 36 items, Diana and Hecate measured for the first time, the table's mean margin +10.1 → −1.5; the units' worth re-read on it for §154's kickoff, the officer the worst row free and bought (BALANCE 2026-11-08; WORKLOG 153g).
 
 ## Phase 154 — the kits (signed 2026-11-05)
 

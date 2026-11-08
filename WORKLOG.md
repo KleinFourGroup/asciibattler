@@ -498,7 +498,7 @@ Vermin Lords' lever and size, their turn step, the rats' nest's levels).
 great!"): 153e as built, the Vermin Lords' pool at 80 and the rats'
 nest's levels kept; 153b's `batch` read signed with it.
 
-### 153f — the verify read (2026-11-08, at its stop)
+### 153f — the verify read (2026-11-08, kept)
 
 The read and its numbers are in BALANCE (2026-11-08, act 1 after the
 tune): 153c's queue at `305cab62`, n = 120, one `cpx42`, 49 minutes. In
@@ -533,6 +533,10 @@ user, tune again or keep). The calls, with the session's leans:
 Either arm of "tune again" costs a bake, the corpus and 153f again
 (about an hour of box), and 153g waits on it. On "keep", 153g runs at
 this HEAD.
+
+**Signed** (the user, 2026-11-08: "I vote that we keep both, Claude! 😁
+This looks great!"): both kept, the Vermin Lords at pool 80 and the
+rats' nest at ×3.5; 153g next, at this HEAD.
 
 ### The hand-off after 153e's bake (2026-11-07, session d86f434b)
 

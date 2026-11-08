@@ -1013,7 +1013,7 @@
     "id": "vermin-lords",
     "name": "The Vermin Lords",
     "description": "A posse of clerics, at one with the rats",
-    "healthPool": 86,
+    "healthPool": 80,
     "kind": "elite",
     "rewards": [
       { "table": "bits-large", "trigger": { "chance": 1 } },

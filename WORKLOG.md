@@ -498,6 +498,42 @@ Vermin Lords' lever and size, their turn step, the rats' nest's levels).
 great!"): 153e as built, the Vermin Lords' pool at 80 and the rats'
 nest's levels kept; 153b's `batch` read signed with it.
 
+### 153f — the verify read (2026-11-08, at its stop)
+
+The read and its numbers are in BALANCE (2026-11-08, act 1 after the
+tune): 153c's queue at `305cab62`, n = 120, one `cpx42`, 49 minutes. In
+short, deploy / regen:
+
+- Every turn target holds, the cats now inside theirs (4.53 / 4.54).
+  Act 1 cleared 115 / 79 of 120, paired against 153c's 114 / 80 at p
+  1.000 both.
+- Two costs fall under their bands, both on deploy: the Vermin Lords
+  (5.79 / 8.26, band 6–18) and the rats' nest (1.73 / 3.00, band 2–6).
+  Weighted by instances over the two rows, each sits at its signed aim
+  (7.2 against about 7; 2.50 against about 2.5). The poachers, the
+  wolfpack and the cats are inside both targets on both rows.
+- Act 1 costs 0.5 / 1.3 more a run than at 153c. Seam 1 is 23.91 /
+  17.57, the regen row now under its band (153c 19.59, inside); the seam
+  is a run-shape band of the sheet's walk rows, outside 153f's check.
+
+**The stop** (pre-registered: a cost outside its band goes back to the
+user, tune again or keep). The calls, with the session's leans:
+
+1. *The rats' nest on deploy, 1.73 of 2.* Lean: keep. The signed aim was
+   the band's low edge, so reads on both sides of it are what the aim
+   asks for, and the two rows average 2.50. The other arm: its level
+   ×3.5 → ×3.75 (153e's isolation sweep, 2.17 → 3.15 alone), with its
+   rats further above the hand's level than the flag the user accepted.
+2. *The Vermin Lords on deploy, 5.79 of 6.* Lean: keep. The two rows
+   average 7.2 against the aim of about 7, the regen row is inside at
+   8.26, and the calibration that would aim a second tune did not carry
+   (153e predicted the rows the other way round). The other arm: their
+   level up a step, sized by a new isolation sweep, and 153f again.
+
+Either arm of "tune again" costs a bake, the corpus and 153f again
+(about an hour of box), and 153g waits on it. On "keep", 153g runs at
+this HEAD.
+
 ### The hand-off after 153e's bake (2026-11-07, session d86f434b)
 
 At the context trigger, after `0b9a326c`.

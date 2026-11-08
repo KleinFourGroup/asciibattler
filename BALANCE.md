@@ -6008,3 +6008,49 @@ deltas. The pre-X H7c→O log lives at
   turns 0.1 lower, as at ×1): about 7.0 to 8.6 / 3.5 to 4.2 pool and 4.2
   turns, unmeasured until 153f; the regen row under the elite band
   (6–18), as was predicted at 86.
+- **2026-11-08 — act 1 after the tune** (§153, 153f). 153c's queue, the
+  two Soldier ARM rows at n = 120 with `--per-encounter`, at `305cab62`
+  (153e signed; `1cedbd9d`'s game): batches `20261108-174057` (regen)
+  and `20261108-180643` (deploy), both `-305cab62`, on one `cpx42`,
+  17:40Z to 18:29Z, each fetched with exit 0 and the box destroyed by its
+  driver; 85.1 and 73.9 s a seed (153c's 110 and 112). Read by
+  `scratch/153/act1-read.mjs`, `scratch/148/kind-cost.mjs` and
+  `scratch/146/pair.mjs`, the same seeds as 153c.
+
+  *Act 1 cleared,* deploy / regen: 115 / 79 of 120 (153c 114 / 80);
+  paired on the seeds against 153c (153c alone : now alone), deploy 3 : 4
+  and regen 12 : 11, p 1.000 both. *Seam 1:* 23.91 / 17.57 of 40, 0.598
+  / 0.439 of max against the band 0.475–0.55 (153c 24.62 / 19.59, the
+  regen row then inside it).
+
+  *By encounter*, against the turn targets and the per-kind cost bands;
+  in bold, outside; 153c's read in brackets where the fight moved:
+
+  | encounter | kind | turns / won (target) | pool an instance (band) | cap share |
+  |---|---|---|---|---|
+  | bandit-king | boss | 5.66 / 5.59 (5.00–6.50) | 15.75 / 17.73 (10–30) | 0 / 0.004 |
+  | bear | boss | 5.52 / 5.47 | 13.88 / 15.60 | 0 / 0.003 |
+  | cats | elite | 4.53 / 4.54 (4.00–5.00) [3.79 / 4.02] | 13.74 / 16.48 (6–18) [15.82 / 19.64] | 0.006 / 0 |
+  | vermin-lords | elite | 4.14 / 4.46 [4.90 / 4.89] | **5.79** / 8.26 [2.34 / 1.16] | 0.117 / 0.040 |
+  | poachers | normal | 3.00 / 3.01 (2.50–3.25) | 4.65 / 5.03 (2–6) [7.70 / 8.76] | 0.004 / 0.003 |
+  | brigands | normal | 3.01 / 3.00 | 4.32 / 5.19 | 0 / 0 |
+  | rat-hunt | normal | 3.04 / 3.04 | 3.04 / 3.11 | 0.006 / 0 |
+  | canids | normal | 3.00 / 3.00 | 2.02 / 2.40 | 0 / 0 |
+  | wolfpack | normal | 3.00 / 3.00 | 2.21 / 2.89 [1.52 / 1.44] | 0 / 0 |
+  | rats-nest | normal | 3.00 / 3.02 | **1.73** / 3.00 [0.06 / 0.02] | 0 / 0 |
+
+  Every turn target holds; two costs fall under their bands, both on the
+  deploy row: the Vermin Lords (5.79 of 6, 29 instances) and the rats'
+  nest (1.73 of 2, 83). Weighted by instances across the two rows, each
+  sits at its signed aim: the Vermin Lords 7.2 (aim about 7), the rats'
+  nest 2.50 (aim about 2.5). The rows record no per-instance cost, so
+  they cannot give either miss a spread. Against 153e's predictions, the
+  Vermin Lords' rows came out the other way round (predicted about 8.6 /
+  4.2, measured 5.79 / 8.26), so 153c's calibration ratios for that fight
+  (29 and 37 instances) did not carry.
+
+  By kind, an instance, deploy / regen: boss 14.75 / 16.57 (target 20),
+  elite 10.08 / 12.96 (12), normal 3.01 / 3.61 (4), each kind's mean in
+  its band. *Act 1's cost a run* (the kinds' pool a run summed): 31.0 /
+  43.3, against 153c's 30.5 / 42.0, so act 1 costs 0.5 and 1.3 more a run;
+  153d's desk estimate was 1.0 more and 0.7 less.

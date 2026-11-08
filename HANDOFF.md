@@ -6,8 +6,8 @@ A fresh-session orientation for ASCIIbattler. Read this first; then dive into th
 
 **The ONE home for live status.** Other docs (and the agent memory) point here instead of restating it; when state changes, this section is the single place that updates.
 
-- **NEXT — ROUND 11 (The roster): §153, power by rarity, its growth key, and the pools: the cut signed 2026-11-07 (1/1/2/3); 153e signed 2026-11-08 at `1cedbd9d` (the Vermin Lords' pool 86 → 80), 153b's read with it; next 153f, the verify read (153c's queue at this HEAD), then 153g, from WORKLOG §153, "The hand-off after 153e's bake", its "Then 153f" line** ([ROADMAP.md](ROADMAP.md) §153; the spec, [round-11-spec.md](round-11-spec.md)). 151f, the units' lines, lands when the user writes them. **Open ◐:** none.
-- **In flight:** nothing on the box since 2026-11-08 (153e's held-out turns).
+- **NEXT — ROUND 11 (The roster): §153, power by rarity, its growth key, and the pools: the cut signed 2026-11-07 (1/1/2/3); 153e signed 2026-11-08 at `1cedbd9d`, 153b's read with it; 153f read at `305cab62` and at its pre-registered stop (two costs under their bands on deploy: keep or tune again), from WORKLOG 153f; then 153g, from WORKLOG §153, "The hand-off after 153e's bake"** ([ROADMAP.md](ROADMAP.md) §153; the spec, [round-11-spec.md](round-11-spec.md)). 151f, the units' lines, lands when the user writes them. **Open ◐:** 153f, the verify read (at its stop).
+- **In flight:** nothing on the box since 2026-11-08 (153f).
 - **The public build:** `0.3.0` (`273d587d`, tag `v0.3.0`), uploaded to itch.io on 2026-11-04; the uploads before it are in Closed rounds below.
 - **Snapshots:** WorldSnapshot **v39** (no player keeps one) · RunSnapshot **v51** (a v50 save, `0.3.0`'s, rejects).
 - **Tests:** **3957 main** in 271 files, **587 fuzz:smoke** in 60 files and **1 fuzz:jobs-parity** at `1cedbd9d` (153e's re-bake, its hook); typecheck clean; the journal corpus, run by hand, 38 tests over 34 journals, recorded at 153e and 38 passed on its tree.

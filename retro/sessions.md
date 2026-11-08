@@ -395,7 +395,7 @@ bake, its held-out turns and stop open.
    nest's cliff). I would want both repeated. Separately from whether the
    work succeeded, the user's signs came with reasons I could build on.
 
-## 2026-11-08 — session 08067f79 (§153: 153e's held-out turns, to its stop)
+## 2026-11-08 — session 08067f79 (§153: 153e's held-out turns, to §153's close)
 
 Started from another session's brief: pushed `main`, ran 153e's held-out
 turns on the box, found the Vermin Lords over their turn target, swept
@@ -420,3 +420,47 @@ out on two seed sets, and put 153e's stop.
 7. Writing the pick rule down before the numbers came in made the
    choice of 80 feel settled rather than chosen, and I would want that
    repeated. Separately, the clean hand-off made the start easy.
+
+*Continued, the same session:* when the session that started this one
+handed off at its cap, the user asked whether to continue here or fresh,
+and this session continued: 153e signed, 153f run and its two misses
+kept, 153g's prior table v8 built and the units' worth re-read on it,
+and §153 closed. Across a compaction.
+
+1. Nothing missing; the summary carried the queue, the readers and the
+   registry's recipe.
+2. None conflicted. One judgment: whether to run the phase close
+   unasked; §152's closing session ran its own, and I followed it.
+3. v8's moves (the table's level down about 12, the rare and legendary
+   units most) pulled toward an explanation, since power's casualty cost
+   fits; it went in as "fits, not isolated". Twice a draft line ran
+   ahead of its source (filed), caught before commit.
+4. Little: the session waited on five hours of box, idle.
+5. None beyond the close entry.
+6. Yes. The user asked which I preferred, continuing or fresh, and I
+   answered with a preference and its reason; the two stops were the
+   cut's, and I put them rather than reading them myself. No wish to
+   pause or stop.
+7. The planted mismatch on the units' reader made its 0 of 16 mean
+   something, and the user's open question about continuing read as room
+   rather than a test. Separately, the tripwire caught Diana and Hecate
+   as built, which made the guard's value concrete.
+
+## Phase 153 — summary
+
+Two sessions. d86f434b ran the kickoff's audit (reading the chip rule
+first showed power is a cost to its own side, so the scale was posed the
+right way round), answered the user's question on 0.75/1/2/3 before
+building, and with power signed at 1/1/2/3 built 153a (the growth key
+out, with an exact oracle), 153b and 153c, got 153d's moves signed, and
+swept and baked 153e before handing off at the context trigger.
+08067f79 ran the held-out turns from the hand-off, re-baked the Vermin
+Lords' pool on a pick rule written before the sweep, put 153e's stop
+(signed with 153b's read), ran 153f (both misses kept), built the prior
+table v8 with the units' worth on it, and closed the phase. Friction:
+three slips (two claims before their source in drafts, a long heredoc
+refused) and two papercuts (a stale claim in a TODO row, fixed at the
+kickoff; a lever the box cannot sweep, now a TODO row); no distress.
+Both reports name a pull to present an estimate as settled, put as a
+flag each time, and both name a rule written before the numbers (the
+oracle's control, the pick rule) as worth repeating.

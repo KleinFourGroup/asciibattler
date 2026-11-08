@@ -12,7 +12,7 @@ with its spec, its per-phase worklogs (`archive/worklog-phase-142.md` to
 `-147.md`) and its session reports beside it; before it
 [archive/post-133-roadmap.md](archive/post-133-roadmap.md) (Round 9).
 
-**Status: Round 11 under way; §153, power by rarity, its growth key, and the pools, is next.** The spec
+**Status: Round 11 under way; §154, the kits, is next.** The spec
 is [round-11-spec.md](round-11-spec.md), signed 2026-11-05. The charter,
 the decision points, the exit and the scope guards are in META-ROADMAP
 §"Round 11 — The roster"; its riders are TODO's "Round 11".
@@ -93,21 +93,16 @@ and after (WORKLOG §152, in `archive/worklog-phase-152.md`; BALANCE
 - ☑ **152b — the draft** (`stop`): the bow 2.0 → 2.5 s, its might holding its damage a second; the rioter's modest buff; the rest held; the strike-conversion test retired. The bow's might 4 and the rioter's base defense 1, signed in play 2026-11-06 (WORKLOG 152b).
 - ☑ **152c — the after record** (`none`): 152a's tables on the signed numbers, each moved cell before → after, in BALANCE 2026-11-06 (WORKLOG 152c).
 
-## Phase 153 — power by rarity, its growth key, and the pools (signed 2026-11-05)
+## Phase 153 — power by rarity, its growth key, and the pools ✅ (closed 2026-11-08)
 
-Charter: power by rarity from 1/1/1/2 to the scale signed at its kickoff
-(C18); power's level-up draw and its growth key out in the same
-re-baseline (R19; five run streams move); the enemy pools re-anchored
-behind it; act 1's encounters read against the per-kind cost target, the
-rats' nest and the Vermin Lords first. **Why here:** after the weapons,
-since the pools re-anchor on how fights end, and before the kits, whose
-watches read a unit's worth. **Risk:** medium: a re-baseline and a box
-read. **Decision points:** power's scale (✅ DECIDED 2026-11-07: 1/1/2/3,
-WORKLOG §153); the pools' moves. **Exit:** act
-1's turn targets held on a box read and its cost per kind read against
-the target. **Scope guards:** acts 2 and 3 recorded, not retuned.
-
-The cut, signed 2026-11-07 (WORKLOG §153):
+Power by rarity at 1/1/2/3, its growth key and level-up draw out (six run
+streams realigned, proven against the old roll); act 1 read on the box,
+five fights moved by their levers to the signed aims and baked, the
+Vermin Lords' pool 86 → 80 on a held-out miss; on the verify read every
+turn target held and two costs fell under their bands on deploy, both
+kept; the prior table v8 and the units' worth on it for §154 (WORKLOG
+§153, in `archive/worklog-phase-153.md`; BALANCE 2026-11-07 and
+2026-11-08).
 
 - ☑ **153a — power's growth key out** (`none`): out of the schema, the 29 combatants and `STAT_KEYS` (eight draws a level-up), equal to the old roll with power's draw spliced back; four seeded drives and three corpus rows re-picked (WORKLOG 153a).
 - ☑ **153b — power by rarity at 1/1/2/3** (`batch`, read at 153e's stop, signed 2026-11-08): the rare tier 1 → 2, the legendaries 2 → 3, eight archetypes; in act 1 the King alone moves (WORKLOG 153b).

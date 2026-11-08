@@ -267,6 +267,18 @@ META-ROADMAP §"Round 11 — The roster" names each row's place.
   153e two more, chaos 37 among them, which also sells a packet (WORKLOG
   153a, 153e).
 
+- [ ] **A `--set` path into one encounter.** `--set` reaches only a
+  config group's top-level numbers (`resolveKnob`), so a lever inside one
+  encounter (its pool, a level weight, a count factor) is swept on the box
+  only by a commit per arm, which the one-HEAD rule makes slow. At 153e
+  the Vermin Lords' rats' level weight was probed locally on 20 seeds
+  instead, and their pool swept through `difficulty.enemyMoraleMultiplier`,
+  exact only for a forced fight. A path such as
+  `--set=encounters.vermin-lords.healthPool=80` would make a per-encounter
+  sweep a queue like the others; §155 re-pins act 1's bands and may sweep a
+  fight again (WORKLOG §153, 153e and the close, in
+  `archive/worklog-phase-153.md`).
+
 ### Dis Pater
 
 - [ ] **Dis Pater's sentence, against the tithe as built** (117e's watch,

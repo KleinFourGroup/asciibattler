@@ -288,7 +288,7 @@ has someone's attention).
 
 | Artifact | Measures | Invalidated by | Rebuild recipe | Tripwire |
 |---|---|---|---|---|
-| [tests/fuzz/board/prior-table.json](tests/fuzz/board/prior-table.json) (v7, 151b: v6's three batches rebuilt under the catalog without the bandit in the draft, `unit:bandit`'s row dropped and every other row as v6; v6, measured @`4c4fecec` — 150h, under the ARM with doctrine's pick as the null, on the three-act map, committed before the board that runs under it; v5, measured @`4d3fa22` off the 94h signing board's shadow leg, is kept as [tests/fuzz/fixtures/prior-table-v5.json](tests/fuzz/fixtures/prior-table-v5.json): every ARM row from that signing to 150g's ran under it, and `--prior-table=<file>` with `--arb-null=pass` hands those rows back; v4, measured @`7dc07a3` at 92g, is kept as [tests/fuzz/fixtures/prior-table-v4.json](tests/fuzz/fixtures/prior-table-v4.json), the table the 94h signing board's arbitrated rows ran under; v3 @`251514d` was the survivors era) | per acquirable item (`daemon:*` · `packet:*` · `unit:*`), the paired long-horizon holding margin under the deployed ARM — the §85 fold input | any acquirable-catalog MEMBERSHIP change (`daemons.json` · `packets.json` · a `units.json` `draftable` flip · a character blacklist); any ARM-semantics change (λ_prior, the walker, the deployed vector — the 85h deployed-semantics rule: measure under what ships); any sim/run change that plausibly moves item values (re-measure at the next amendment board) | the 85g2b shape on the TRAIN bank under the deploy vector, seeds 1001 to 1120: `scripts/box-drive.sh <queue>` with three lines, `--count=40 --seed-offset=1000` (then 1040, 1080) `--character=soldier --strategy=tests/fuzz/fixtures/92c2-winner.json` + the ARM + `--shadow-horizon=run --jobs=8` (v6: 4 h 38 min of `cpx42`, 31.2 CPU-hours) → `npm run prior:table -- <the three batch dirs> --note=…` → commit the table with its run-log entry | [tests/prior-table-coverage.test.ts](tests/prior-table-coverage.test.ts): every acquirable id has a row or an explicit PENDING acknowledgment (config-derived; `daemon:mars` = the soldier's start idol, structurally unmeasurable on an all-soldier bank) · no stale rows · PENDING honesty. Rides `npm test`. |
+| [tests/fuzz/board/prior-table.json](tests/fuzz/board/prior-table.json) (v8, measured @`3f051b43` — 153g, by the recipe at §153's tuned act 1, power by rarity at 1/1/2/3, 36 items, 34 over the floor, Diana and Hecate measured for the first time; v7, the table 153c's and 153f's ARM rows ran under, is in git at `3f051b43`; v7, 151b: v6's three batches rebuilt under the catalog without the bandit in the draft, `unit:bandit`'s row dropped and every other row as v6; v6, measured @`4c4fecec` — 150h, under the ARM with doctrine's pick as the null, on the three-act map, committed before the board that runs under it; v5, measured @`4d3fa22` off the 94h signing board's shadow leg, is kept as [tests/fuzz/fixtures/prior-table-v5.json](tests/fuzz/fixtures/prior-table-v5.json): every ARM row from that signing to 150g's ran under it, and `--prior-table=<file>` with `--arb-null=pass` hands those rows back; v4, measured @`7dc07a3` at 92g, is kept as [tests/fuzz/fixtures/prior-table-v4.json](tests/fuzz/fixtures/prior-table-v4.json), the table the 94h signing board's arbitrated rows ran under; v3 @`251514d` was the survivors era) | per acquirable item (`daemon:*` · `packet:*` · `unit:*`), the paired long-horizon holding margin under the deployed ARM — the §85 fold input | any acquirable-catalog MEMBERSHIP change (`daemons.json` · `packets.json` · a `units.json` `draftable` flip · a character blacklist); any ARM-semantics change (λ_prior, the walker, the deployed vector — the 85h deployed-semantics rule: measure under what ships); any sim/run change that plausibly moves item values (re-measure at the next amendment board) | the 85g2b shape on the TRAIN bank under the deploy vector, seeds 1001 to 1120: `scripts/box-drive.sh <queue>` with three lines, `--count=40 --seed-offset=1000` (then 1040, 1080) `--character=soldier --strategy=tests/fuzz/fixtures/92c2-winner.json` + the ARM + `--shadow-horizon=run --jobs=8` (v6: 4 h 38 min of `cpx42`, 31.2 CPU-hours; v8: 5 h 4 min, 33.7) → `npm run prior:table -- <the three batch dirs> --note=…` → commit the table with its run-log entry | [tests/prior-table-coverage.test.ts](tests/prior-table-coverage.test.ts): every acquirable id has a row or an explicit PENDING acknowledgment (config-derived; `daemon:mars` = the soldier's start idol, structurally unmeasurable on an all-soldier bank) · no stale rows · PENDING honesty. Rides `npm test`. |
 | [tests/fuzz/board/roster-table.json](tests/fuzz/board/roster-table.json) (v7, 151b: v6's eight sidecars rebuilt under the catalog without the bandit in the draft, the 66 battles holding him dropped, 28,485 battles in 52 buckets, every other row as v6; v6, measured @`8a63a20e` — 150h, off §150's board's eight ARM rows, the ARM with doctrine's pick as the null, 28,551 battles in 52 buckets, 2.6 MB; written a row a line since 135a, its provenance naming the sector ids by position, since a bucket key holds a sector's index; the officer in 24 of its battles, all the soldier's, the first ARM rows to draft him since rule C, so his PENDING acknowledgment is gone; v5 @`3476d272` was 146f, 25,657 battles in 52 buckets, the officer PENDING; v4 @`d4b2af3a` was 146c, 23,471 battles in 52 buckets, the first on three acts; v3 @`4d3fa22` was 94h, 21,221 battles in 41 buckets on two acts, v2 @`9c6c60d` was 92h, v1 @`8c47b73` was 87c, survivors era) | per (character, sector, hop) the REALIZED roster distribution under the 8 ARM board rows — the `--roster=sampled` source | any change to recruitment / draft pools / prices / the archetype catalog / the ARM | the 87b capture cohort (the board's 8 ARM rows carry `rosters.csv`) → `npm run roster:table -- <board-dir>` | `tests/roster-table-coverage.test.ts` (135b), the prior tripwire's twin: every draftable archetype in a recorded roster or acknowledged PENDING, no archetype a player can no longer hold (the draftable, and what an event grants, a reward table holds or a character starts with), every bucket inside the characters and the map, and the sector ids the map walks; `makeRosterSampler` refuses a sector mismatch at launch as well |
 | [tests/fuzz/fixtures/85g5-finalist-56.json](tests/fuzz/fixtures/85g5-finalist-56.json) (the DEPLOYED searched vector) | the searched-upper ceiling on the act-1 shape, at derive time | a frozen vector's ceiling DRIFTS with every balance change (the pre55ReachRef lesson, 83f→85g5) | at every amendment/re-pin board, a FRESH `--search` derive as the ceiling READ (the `88d2-derive.queue` line: `--search --refine --searcher --audition --preset=heavy --vectors=96 --seeds=32 --sampler-seed=85 --seed-offset=1000 --jobs=8`, its fetch checking `best-strategy.json`, a search line's own artifact since 135c, ~2.7 h box); DEPLOYING a new vector is its own decision — the 85g5 arbitrated-selection cohort + a sheet re-anchor | the board integrity protocol's fresh-derive requirement (above); no test — a derive is a box run |
 | [tests/fuzz/board/signed-sheet.json](tests/fuzz/board/signed-sheet.json) | NOT derived — the hand-signed refs + bands | — (amended at board runs, user-signed) | — | the board's DRIFT table |
@@ -6054,3 +6054,67 @@ deltas. The pre-X H7c→O log lives at
   its band. *Act 1's cost a run* (the kinds' pool a run summed): 31.0 /
   43.3, against 153c's 30.5 / 42.0, so act 1 costs 0.5 and 1.3 more a run;
   153d's desk estimate was 1.0 more and 0.7 less.
+- **2026-11-08 — the prior table v8, and the units' worth on it** (§153,
+  153g). The registry's recipe at `3f051b43`, 153f's HEAD, the three
+  lines v6 ran: batches `20261108-183935`, `-202101` and `-220147`, all
+  `-3f051b43`, on one `cpx42`, each fetched with exit 0 and the box
+  destroyed by its driver; 5 h 4 min from creation to teardown, 33.7
+  CPU-hours (v6 31.2). The bank completed 80 of 120 runs (v6's batches
+  78). `npm run prior:table`: 36 items from 4,475 long-horizon decisions
+  (20,314 long-horizon rows of 130,180), 34 over the floor of 80, Janus
+  (78) and Minerva (75) under it as in v7 (84, 79). Diana (n 194,
+  meanΔ +23.4) and Hecate (143, +79.7) have rows for the first time; the
+  coverage test failed on their PENDING acknowledgments until those were
+  deleted, then passed.
+
+  *The table moved down.* The mean margin over items went from +10.1 (v7,
+  34 items) to −1.5 (v8, 36): daemons +27.5 to +9.0, packets +10.7 to
+  +1.8, units −1.2 to −10.9. The largest moves: Janus −83.7 (under the
+  floor both times), the Patrician's Seal −47.8, the officer −36.8,
+  Mercury −34.8, Cornucopia −32.6, the halberdier −30.4, reroute −29.4;
+  up, the adventurer +16.0, the reaver +15.3, Dis Pater +15.2, the
+  rioter +13.2. Between the two measurements (`4c4fecec`, `3f051b43`)
+  Mars was narrowed with Diana and Hecate beside him (151c), the bow and
+  the rioter moved (152b), power went by rarity (153b) and act 1 was
+  tuned (153e); no one of them is isolated here.
+
+  *The units' worth*, by `scratch/152/unit-worth.mjs` on v8's sources,
+  read as 2026-11-06's on v7 (errors clustered by run). Its check: n and
+  meanΔ equal the table's on all 16 units, 0 mismatches; a planted 0.01
+  on the officer's meanΔ reads 1. The same reader on v7 reproduces
+  2026-11-06's numbers. v7's in brackets:
+
+  | unit | rarity | all | recruit (free) | port (bought) |
+  |---|---|---|---|---|
+  | mage | uncommon | +17.6 ± 10 [+11.1] | **+29.3 ± 14** (360) [+10.1] | +1.3 ± 18 (258) [+12.4] |
+  | healer | common | +15.4 ± 8 [+5.5] | +8.8 ± 11 (377) [+16.1] | +24.1 ± 16 (286) [−33.3] |
+  | gunslinger | uncommon | +12.7 ± 10 [+26.0] | +13.0 ± 11 (382) [+8.4] | +10.9 ± 21 (81) [+74.6] |
+  | ronin | uncommon | −0.1 ± 10 [+9.4] | +9.1 ± 11 (353) [+2.7] | −19.8 ± 19 (165) [+20.6] |
+  | reaver | rare | −0.3 ± 11 [−15.7] | +10.9 ± 16 (185) [−10.3] | −18.4 ± 17 (115) [−27.7] |
+  | halberdier | rare | −0.4 ± 15 [+30.0] | +5.3 ± 17 (211) [+31.3] | −32.0 ± 33 (38) [+26.1] |
+  | stormcaller | legendary | −6.6 ± 13 [+17.3] | +2.9 ± 16 (256) [+25.1] | −28.0 ± 20 (114) [+2.4] |
+  | adventurer | uncommon | −12.4 ± 10 [−28.4] | −19.8 ± 12 (370) [−10.5] | −1.7 ± 19 (258) [−59.4] |
+  | archer | common | −12.5 ± 9 [+7.0] | −2.0 ± 11 (374) [−0.1] | −31.2 ± 16 (210) [+16.4] |
+  | rioter | common | −13.0 ± 9 [−26.2] | −4.1 ± 8 (402) [−33.4] | −23.1 ± 14 (358) [−16.9] |
+  | corrupter | rare | −16.4 ± 14 [−7.0] | −12.0 ± 18 (207) [+2.2] | −23.7 ± 18 (122) [−30.4] |
+  | rogue | common | −21.4 ± 9 [−16.8] | −19.0 ± 10 (384) [−9.0] | −24.3 ± 14 (325) [−26.9] |
+  | mercenary | common | −24.4 ± 8 [−3.1] | −10.7 ± 9 (411) [−1.1] | **−41.2 ± 12** (335) [−6.2] |
+  | catapult | rare | −28.0 ± 13 [−1.4] | −25.5 ± 13 (208) [−14.7] | −32.6 ± 28 (114) [+21.9] |
+  | shaman | legendary | −30.1 ± 14 [−8.5] | −15.7 ± 16 (237) [−19.9] | **−59.1 ± 22** (118) [+7.7] |
+  | officer | rare | −54.7 ± 14 [−17.9] | **−50.1 ± 17** (237) [−20.9] | **−68.8 ± 33** (77) [−10.1] |
+
+  In bold, the five site rows past two errors of 0; with 32 site rows,
+  about 1.5 would pass by chance, and three pass 2.5 (the mercenary
+  bought 3.4, the officer free 2.9, the shaman bought 2.7). The officer is
+  the worst row at both sites and pooled (on v7 the rioter's free row and
+  the adventurer's bought row were the worst). The rioter's free
+  row went from −33.4 to −4.1, the first read since §152 gave him a point
+  of defense; the halberdier's and the stormcaller's, +31.3 and +25.1 on
+  v7, now read within an error of 0; the gunslinger's and the
+  adventurer's bought rows, +74.6 and −59.4 on v7, now read within one.
+  The seven rare and legendary draftables moved −19.1 on average (the
+  reaver alone up), the nine commons and uncommons −2.5. That fits
+  power's casualty cost, since a fallen rare now costs its own pool 2 and
+  a legendary 3, but it is not isolated. 23 to 29 % of each unit's
+  instances changed whether the run died. One character and one bot's
+  play.

@@ -429,7 +429,7 @@ nothing, and amend the per-kind target in BALANCE to exempt it by name.
 your lean. A sounds good to me!"): the moves and their aims as put, and
 the rats' nest tuned to the band's low edge (A).
 
-### 153e — the tune (2026-11-07; baked, its held-out turns and stop next)
+### 153e — the tune (2026-11-07 → 11-08; at its stop)
 
 The sweeps, the calibration and the predictions are in BALANCE
 (2026-11-07, act 1's five moved fights in isolation). Step zero found two
@@ -469,7 +469,30 @@ join the trade rows. Chaos 37 also sells a packet, so the corpus reaches
 all 21 command kinds for the first time and its test is re-pinned at 21;
 0 of 34 differ, `corpus.test.ts` 38 of 38.
 
-*Not yet run:* the held-out turns, the cut's check before the stop.
+*The held-out turns* (2026-11-08, session 08067f79; BALANCE, "153e's
+held-out turns, and the Vermin Lords' pool"): the five fights as baked,
+alone, on seeds 5001 to 5040. Four held their turn targets (the
+poachers, the wolfpack and the rats' nest at 3.00, the cats at 4.35).
+The Vermin Lords read 5.13, over their 4.00–5.00, so the pool went back
+into the bake, as 153d's move allows ("the pool down if turns pass
+5.00"). Swept on the tuning seeds, their turns step from five to four at
+a pool of 80, since a cleared wave of 20 bodies burns about 20 a turn,
+and no pool lands near the 4.9 the bake aimed at. By the rule set before
+the sweep (the highest pool reading at or under 4.90) the pool is 80, at
+`1cedbd9d`: held out at 4.28 turns on fresh seeds 6001 to 6040 and
+4.25 on 5001 to 5040 (5.13 at 86). The corpus: 10 of 34 journals
+diverged, recorded again, 21 of 21 kinds, 0 of 34 differing,
+`corpus.test.ts` 38 of 38; the hook's suite passed with no seeded drive
+re-picked.
+
+**Flagged for the stop:** the Vermin Lords' turns go to about 4.3 in
+isolation, where 153c read 4.90 in situ: inside the target, but not the
+"turns held" of the move. The other side of the step reads 5.03 at 82
+and 5.10 at 86 on the tuning seeds, outside it.
+
+*The stop* was put on 2026-11-08 (session 08067f79): the table before
+and after, the play script with 153b's read, and the three flags (the
+Vermin Lords' lever and size, their turn step, the rats' nest's levels).
 
 ### The hand-off after 153e's bake (2026-11-07, session d86f434b)
 
@@ -506,3 +529,25 @@ sweep's forced rows), `bake.mjs` (a lever into one encounter, per id),
 `vl-set.mjs` (the Vermin Lords' wave), `set-power.mjs`, `moved.mjs`,
 `members.mjs`, `slot-share.mjs`, the seed surveys in `scans/`, and the
 queue files.
+
+### The hand-off at 153e's stop (2026-11-08, session 08067f79)
+
+*Done:* 153e's held-out turns, the Vermin Lords' pool re-baked (86 → 80,
+`1cedbd9d`) and held out, and the stop put to the user.
+
+*Open:*
+
+- **153e's stop**, waiting on the user's play and verdict, with 153b's
+  `batch` read. A session started fresh puts the stop again from the
+  153e entry above and BALANCE's two 153e entries; the play script is
+  this entry's next line.
+- *The play script:* a run on the dev server, and each moved fight
+  forced, the normals by `?encounter=<id>` (`rats-nest`, `wolfpack`,
+  `poachers`) and the elites at a full pool by
+  `?encounter=<id>&hops=2&firstNode=elite` (`vermin-lords`, `cats`).
+- **Then 153f and 153g**, as the previous hand-off says, at the stop's
+  HEAD.
+
+*Tools:* the queues of these reads are `scratch/153/153e-heldout.queue`,
+`153e-vl-pool.queue` and `153e-vl-heldout.queue`, beside their drive
+logs.

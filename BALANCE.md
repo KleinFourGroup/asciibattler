@@ -5968,3 +5968,43 @@ deltas. The pre-X H7c→O log lives at
   the wolfpack about 3.1 / 2.9, the rats' nest about 2 to 4, the cats
   about 4.4 / 4.7 turns and 12.9 / 16.2 pool, the Vermin Lords about 8.8
   / 4.3 pool and 4.8 turns.
+- **2026-11-08 — 153e's held-out turns, and the Vermin Lords' pool**
+  (§153, 153e). The five moved fights forced alone as baked, in the
+  entry above's shapes, seeds 5001 to 5040 with no `--set`, at
+  `96bb26ed` (`0b9a326c`'s game; the commit between is docs only): five
+  batches, `20261108-154715` to `20261108-155613`, all `-96bb26ed`, on
+  one `cpx42`, each fetched with exit 0 and the box destroyed by its
+  driver. Read by `scratch/153/sweep-read.mjs`. Turns per won instance /
+  pool an instance alone, against each fight's baked arm on the tuning
+  seeds 2001 to 2040; every instance won, cap shares 0 but where given:
+
+  | fight | turn target | held out, 5001–5040 | baked arm, 2001–2040 |
+  |---|---|---|---|
+  | poachers | 2.50–3.25 | 3.00 / 4.35 | 3.00 / 4.55 |
+  | wolfpack | 2.50–3.25 | 3.00 / 2.25 (cap 0.008) | 3.00 / 1.63 |
+  | rats' nest | 2.50–3.25 | 3.00 / 2.85 | 3.00 / 2.17 |
+  | cats | 4.00–5.00 | 4.35 / 12.97 | 4.60 / 14.55 |
+  | Vermin Lords, pool 86 | 4.00–5.00 | **5.13** / 6.42 (cap 0.029) | 5.10 / 7.35 (cap 0.039) |
+
+  The cost alone moves with the seed set by up to a third (the wolfpack
+  2.25 against 1.63, the rats' nest 2.85 against 2.17), which is one more
+  reason the cost is read in situ, at 153f.
+
+  *The Vermin Lords' pool.* Swept on the tuning seeds at `96bb26ed`
+  through `difficulty.enemyMoraleMultiplier` (the pool is
+  `round(86 × M)`, `scaledEnemyPool`), batches `20261108-155907` to
+  `20261108-161620`, one `cpx42`, each fetched with exit 0, the box
+  destroyed: pool 86 5.10 / 7.35, 82 5.03 / 7.25, 80 4.33 / 6.60, 78
+  4.28 / 6.35, 76 4.22 / 6.33, 72 4.20 / 6.28 (cap 0.039 to 0.046). The
+  wave fields 20 bodies against a hand of six (`count` hand × 3.375), so
+  each turn that clears it burns about 20, and the turns step from five to
+  four at 80; no pool lands near 4.9. The rule set before the sweep, the
+  highest pool reading at or under 4.90 there, took 80: baked at
+  `1cedbd9d`. Held out at the bake, seeds 6001 to 6040: 4.28 / 6.15 (cap
+  0.047); seeds 5001 to 5040: 4.25 / 5.42 (cap 0.029). Batches
+  `20261108-162944` and `20261108-163234`, `-1cedbd9d`, one `cpx42`, each
+  fetched with exit 0, the box destroyed. Predicted in situ from the three
+  seed sets' 5.42 to 6.60 alone and 153e's ratios (1.3 / 0.64 on cost;
+  turns 0.1 lower, as at ×1): about 7.0 to 8.6 / 3.5 to 4.2 pool and 4.2
+  turns, unmeasured until 153f; the regen row under the elite band
+  (6–18), as was predicted at 86.

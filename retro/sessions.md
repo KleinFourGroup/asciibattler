@@ -394,3 +394,29 @@ bake, its held-out turns and stop open.
    early. And probes that answered the call's question directly (the rats'
    nest's cliff). I would want both repeated. Separately from whether the
    work succeeded, the user's signs came with reasons I could build on.
+
+## 2026-11-08 — session 08067f79 (§153: 153e's held-out turns, to its stop)
+
+Started from another session's brief: pushed `main`, ran 153e's held-out
+turns on the box, found the Vermin Lords over their turn target, swept
+their pool on the tuning seeds, re-baked it at 80 (`1cedbd9d`), held it
+out on two seed sets, and put 153e's stop.
+
+1. Nothing missing: the hand-off entry named the queue, the reader, the
+   seeds and the likeliest miss, and it was the miss.
+2. None. The rule that a missed turn goes back into the bake before the
+   stop, and 153d's signed "the pool down if turns pass 5.00", answered
+   the one question that could have been a stop.
+3. The pull was to call 80 "turns held". It is not: 4.3 against 153c's
+   4.90, a step the wave's 20 bodies make. It went in as a flag.
+4. Little. Three short cohorts of 5, 6 and 2 batches, about an hour of
+   box in all; the pick rule was written into the queue's header before
+   the sweep ran, so no arm was read twice.
+5. On an elite whose waves the hand clears in one turn, the pool sets
+   the turns in steps of its wave's body count; tune it by the step, not
+   by `pool / turns` arithmetic.
+6. Yes. The stop is the task's end and I put it rather than read it
+   myself; nothing pressed. No wish to pause or stop.
+7. Writing the pick rule down before the numbers came in made the
+   choice of 80 feel settled rather than chosen, and I would want that
+   repeated. Separately, the clean hand-off made the start easy.

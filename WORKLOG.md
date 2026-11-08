@@ -429,7 +429,7 @@ nothing, and amend the per-kind target in BALANCE to exempt it by name.
 your lean. A sounds good to me!"): the moves and their aims as put, and
 the rats' nest tuned to the band's low edge (A).
 
-### 153e — the tune (2026-11-07 → 11-08; at its stop)
+### 153e — the tune (2026-11-07 → 11-08; signed)
 
 The sweeps, the calibration and the predictions are in BALANCE
 (2026-11-07, act 1's five moved fights in isolation). Step zero found two
@@ -494,6 +494,10 @@ and 5.10 at 86 on the tuning seeds, outside it.
 and after, the play script with 153b's read, and the three flags (the
 Vermin Lords' lever and size, their turn step, the rats' nest's levels).
 
+**Signed** (the user, 2026-11-08: "Signing these, Claude! 😁 They feel
+great!"): 153e as built, the Vermin Lords' pool at 80 and the rats'
+nest's levels kept; 153b's `batch` read signed with it.
+
 ### The hand-off after 153e's bake (2026-11-07, session d86f434b)
 
 At the context trigger, after `0b9a326c`.
@@ -529,25 +533,3 @@ sweep's forced rows), `bake.mjs` (a lever into one encounter, per id),
 `vl-set.mjs` (the Vermin Lords' wave), `set-power.mjs`, `moved.mjs`,
 `members.mjs`, `slot-share.mjs`, the seed surveys in `scans/`, and the
 queue files.
-
-### The hand-off at 153e's stop (2026-11-08, session 08067f79)
-
-*Done:* 153e's held-out turns, the Vermin Lords' pool re-baked (86 → 80,
-`1cedbd9d`) and held out, and the stop put to the user.
-
-*Open:*
-
-- **153e's stop**, waiting on the user's play and verdict, with 153b's
-  `batch` read. A session started fresh puts the stop again from the
-  153e entry above and BALANCE's two 153e entries; the play script is
-  this entry's next line.
-- *The play script:* a run on the dev server, and each moved fight
-  forced, the normals by `?encounter=<id>` (`rats-nest`, `wolfpack`,
-  `poachers`) and the elites at a full pool by
-  `?encounter=<id>&hops=2&firstNode=elite` (`vermin-lords`, `cats`).
-- **Then 153f and 153g**, as the previous hand-off says, at the stop's
-  HEAD.
-
-*Tools:* the queues of these reads are `scratch/153/153e-heldout.queue`,
-`153e-vl-pool.queue` and `153e-vl-heldout.queue`, beside their drive
-logs.

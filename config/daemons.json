@@ -47,7 +47,7 @@
     {
       "id": "hecate",
       "name": "Torch of Hecate",
-      "description": "Once per turn, empower a unit: +8 MAG for the encounter.",
+      "description": "Once per turn, empower a unit: +4 MAG for the encounter.",
       "rules": [
         {
           "kind": "hook",
@@ -58,7 +58,7 @@
             "buff": {
               "key": "honed",
               "mods": {
-                "magic": { "add": 8 }
+                "magic": { "add": 4 }
               },
               "merge": "add"
             }

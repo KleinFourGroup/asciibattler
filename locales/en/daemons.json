@@ -14,7 +14,7 @@
   "daemons.dis-pater.name": "Pact of Dis Pater",
   "daemons.mars.description": "Once per turn, empower a unit: +4 STR for the encounter.",
   "daemons.diana.description": "Once per turn, empower a unit: +4 RNG for the encounter.",
-  "daemons.hecate.description": "Once per turn, empower a unit: +8 MAG for the encounter.",
+  "daemons.hecate.description": "Once per turn, empower a unit: +4 MAG for the encounter.",
   "daemons.minerva.description": "Once per turn, empower a unit: +2 DEF for the encounter.",
   "daemons.mercury.description": "Each turn, a coin flip: heads grants the full redraw.",
   "daemons.janus.description": "Every turn, redraw up to four cards.",

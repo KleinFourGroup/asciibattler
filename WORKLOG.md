@@ -204,3 +204,12 @@ numbers; Harry; the other watches held until 154g.
 - *The batch read, at the next stop:* the officer's card reads the new
   line, and an ally beside him in battle shows the defense; wrong looks
   like the two disagreeing. His worth at 154g.
+
+### 154d — Hecate's size (2026-11-08)
+
+- Hecate's empower +8 → +4 MAG, her line to match (config and locale);
+  Mars and Diana held. No test pins the size.
+- The corpus: no journal beyond 154c's three diverges, so none meets
+  Hecate.
+- *The batch read, at the next stop:* Hecate's card and tooltip read
+  "+4 MAG"; wrong looks like either still reading +8. Her worth at 154g.

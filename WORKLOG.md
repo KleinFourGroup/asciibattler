@@ -150,3 +150,21 @@ corpus move where a run meets a changed unit):
 tree until its last line launches), then 154b, 154c and 154d, then 154e
 and 154f built and put together at one stop with 154a's read and 154c's
 and 154d's batch reads.
+
+The leans put with the cut: the kiter's case (A), every ranged unit with
+a floor holding fire while blind, since it adds no rule beyond the reach
+capped at blind's acquisition range and a floored unit already holds
+fire point-blank; the officer's aura +1 DEF (the other arms a +2 STR
+aura, or the officer re-tiered to uncommon); Hecate +4; the area-status
+numbers, each about half its cooldown at act 3's level: the wail's
+cooldown 4 → 6 s and its panic 2 s + 0.15 s a point of luck (at most
+4), the hex's cooldown 3 → 5 s and its confusion 1.5 s + 0.15 s a point
+(at most 3), the ice storm's frozen 2 → 1.25 s with its cooldown kept,
+since it also strikes; the wolf given Harry; every other watch held
+until 154g.
+
+**Signed** (the user, 2026-11-08: "Signing the cut and your leans,
+Claude! 😁"): the cut and its reads as put, and every lean: the kiter's
+case (A), so the exit's pin reads a blinded archer holding fire at 3
+cells and at 1; the officer's +1 DEF; Hecate +4; the area-status
+numbers; Harry; the other watches held until 154g.

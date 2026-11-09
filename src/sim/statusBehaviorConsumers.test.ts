@@ -9,6 +9,7 @@ import { SupportMovementBehavior } from './behaviors/SupportMovementBehavior';
 import { AbilityBehavior } from './behaviors/AbilityBehavior';
 import { MoveAction } from './actions/MoveAction';
 import { updateTarget } from './Targeting';
+import { secondsToTicks } from '../config';
 import type { StatusEffect } from './statusEffects';
 import type { Unit, Archetype, Team } from './Unit';
 import type { GameEvents } from '../core/events';
@@ -43,6 +44,13 @@ interface Spec {
   ability?: string;
   /** Override the move cooldown (default left to deriveStats) for fast tests. */
   moveCd?: number;
+  /**
+   * With `combat`, attach the ability alone, no MovementBehavior: the unit
+   * strikes from where it stands and never steps. A long `moveCd` can't do
+   * this, since a unit's first step needs no cooldown and adding a status
+   * re-derives its stats, dropping the override.
+   */
+  still?: boolean;
 }
 
 function build(specs: Spec[], seed = 1) {
@@ -64,7 +72,8 @@ function build(specs: Spec[], seed = 1) {
       (u as unknown as { derived: { moveCooldownTicks: number } }).derived.moveCooldownTicks = s.moveCd;
     }
     if (s.combat) {
-      u.behaviors.push(new MovementBehavior(), new AbilityBehavior());
+      if (s.still) u.behaviors.push(new AbilityBehavior());
+      else u.behaviors.push(new MovementBehavior(), new AbilityBehavior());
       u.abilities.push(createAbility(s.ability ?? 'sword'));
     }
     return u;
@@ -254,6 +263,70 @@ describe('28 — blind', () => {
     for (let i = 0; i < 8; i++) world.tick();
     expect(attacks).toHaveLength(0); // blind acquires ENEMIES only — the ally is safe
     expect((units[1] as Unit).currentHp).toBe(100);
+  });
+
+  // The reach under blind is blind's acquisition range, 1: a blinded unit acts
+  // only on an enemy that close and never falls back to a pick at its full
+  // reach. A ranged unit's floor sits above that range (the bow fires at 2 to
+  // 3), so a blinded archer holds fire for the whole blind. The units stand
+  // still (`still`: no MovementBehavior), so neither blind's wander nor a
+  // kite carries them to a distance these tests don't name; the target is
+  // still refreshed each tick, by `World.tick`, not by a behaviour.
+  const WINDOW = secondsToTicks(6);
+
+  it('a blinded archer holds fire at 3 cells, where it fires unblinded', () => {
+    const scene = (blinded: boolean) => {
+      const { world, units, attacks } = build([
+        { archetype: 'archer', team: 'player', x: 5, y: 5, combat: true, ability: 'bow', still: true },
+        { archetype: 'mercenary', team: 'enemy', x: 8, y: 5, hp: 100 },
+      ]);
+      if (blinded) (units[0] as Unit).addEffect(status('blind'));
+      for (let i = 0; i < WINDOW; i++) world.tick();
+      return attacks.length;
+    };
+    expect(scene(false)).toBeGreaterThan(0); // the control: at 3 it fires
+    expect(scene(true)).toBe(0);
+  });
+
+  it('a blinded archer holds fire at 1 cell too: the bow has a floor of 2', () => {
+    const { world, units, attacks } = build([
+      { archetype: 'archer', team: 'player', x: 5, y: 5, combat: true, ability: 'bow', still: true },
+      { archetype: 'mercenary', team: 'enemy', x: 6, y: 5, hp: 100 },
+    ]);
+    const [p] = units as [Unit, Unit];
+    p.addEffect(status('blind'));
+    for (let i = 0; i < WINDOW; i++) world.tick();
+    expect(p.targetId).toBe((units[1] as Unit).id); // it acquires the adjacent foe
+    expect(attacks).toHaveLength(0); // and cannot fire at it
+  });
+
+  it('a blinded halberdier strikes at 1 cell and holds at 2, its full reach', () => {
+    const scene = (distance: number, blinded: boolean) => {
+      const { world, units, attacks } = build([
+        { archetype: 'halberdier', team: 'player', x: 5, y: 5, combat: true, ability: 'halberd', still: true },
+        { archetype: 'mercenary', team: 'enemy', x: 5 + distance, y: 5, hp: 100 },
+      ]);
+      if (blinded) (units[0] as Unit).addEffect(status('blind'));
+      for (let i = 0; i < WINDOW; i++) world.tick();
+      return attacks.length;
+    };
+    expect(scene(2, false)).toBeGreaterThan(0); // the control: the halberd reaches 2
+    expect(scene(2, true)).toBe(0);
+    expect(scene(1, true)).toBeGreaterThan(0);
+  });
+
+  it('a blinded archer fires at 3 cells again once blind lapses', () => {
+    const { world, units, attacks } = build([
+      { archetype: 'archer', team: 'player', x: 5, y: 5, combat: true, ability: 'bow', still: true },
+      { archetype: 'mercenary', team: 'enemy', x: 8, y: 5, hp: 100 },
+    ]);
+    const [p] = units as [Unit, Unit];
+    p.addEffect(status('blind'));
+    for (let i = 0; i < WINDOW; i++) world.tick();
+    expect(attacks).toHaveLength(0);
+    p.removeEffect('blind');
+    for (let i = 0; i < WINDOW; i++) world.tick();
+    expect(attacks.length).toBeGreaterThan(0);
   });
 });
 

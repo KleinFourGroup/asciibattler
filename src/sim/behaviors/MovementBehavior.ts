@@ -261,8 +261,8 @@ function fleeSwapProposal(
  * unoccupied neighbour, rolled on `combatRng`. Abstains when every
  * neighbour is blocked. An ability that
  * proposes outranks the wander (score 1), so a blinded unit strikes what is
- * in reach and wanders only when nothing is (but see `currentTarget`'s
- * fallback, which reaches past the blindness under `atWill`).
+ * inside blind's acquisition range and wanders when nothing is
+ * (`currentTarget` takes no fallback under blind).
  */
 function proposeWander(unit: Unit, world: World): ActionProposal | null {
   // Every cell of a body, so a rubble's body cells don't read as free; a

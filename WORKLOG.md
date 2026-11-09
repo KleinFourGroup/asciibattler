@@ -168,3 +168,22 @@ Claude! 😁"): the cut and its reads as put, and every lean: the kiter's
 case (A), so the exit's pin reads a blinded archer holding fire at 3
 cells and at 1; the officer's +1 DEF; Hecate +4; the area-status
 numbers; Harry; the other watches held until 154g.
+
+### 154b — blind (2026-11-08)
+
+- `currentTarget` takes no fallback for a blinded unit, as for a confused
+  one, so a blinded unit strikes only what `updateTarget` marked inside
+  blind's acquisition range, 1. Pinned in
+  `src/sim/statusBehaviorConsumers.test.ts`: a blinded archer holds fire
+  at 3 cells (unblinded, it fires there) and at 1 (it marks the adjacent
+  foe, and the bow's floor is 2); a blinded halberdier strikes at 1 and
+  holds at 2 (unblinded, it strikes at 2); a blinded archer fires at 3
+  again once blind is removed. On the code before the fix three failed,
+  each at its blinded line after its control passed; the pin at 1 passed
+  there too, since the floor already held fire at 1.
+- The tests' units stand still by carrying no MovementBehavior (`still`
+  in the test helper), not by a long move cooldown: a unit's first step
+  needs no cooldown, and `addEffect` re-derives the stats, which drops
+  the test's override. With the cooldown, the draft's archer at 1 kited
+  to 2 on its first tick and lost its mark.
+- The journal corpus: 0 of 34 journals differ (`npm run corpus`).

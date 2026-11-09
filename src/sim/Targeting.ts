@@ -667,16 +667,18 @@ function objectiveEngages(unit: Unit, enemy: Unit): boolean {
  * (under `atWill`). Behaviours (`MovementBehavior`, the abilities) call this,
  * not `findTarget`. The fallback means a behaviour polled with no
  * `updateTarget` before it (a test calling `proposeAction` directly) still
- * gets a target rather than abstaining. A blinded unit with nothing inside
- * its acquisition range takes the fallback too, so a blinded ranged unit
- * still strikes out to its attack range.
+ * gets a target rather than abstaining. A confused or blinded unit never
+ * takes the fallback: its acquisition is the status's (`updateTarget`), so
+ * a blinded unit acts only on what is inside blind's acquisition range, and
+ * a ranged unit whose floor sits above that range holds fire while blind.
  */
 export function currentTarget(unit: Unit, world: World): Unit | null {
   // A confused unit's mark may be an ally (`updateConfusedTarget` picks any
   // team). Honour a living commitment of any team, and never fall back to the
   // normal pick, which would cure the confusion; its mark is rolled again each
   // tick, so a null here means no candidate, and it idles.
-  const confused = behaviorFlags(unit.effects).targeting === 'random';
+  const flags = behaviorFlags(unit.effects);
+  const confused = flags.targeting === 'random';
   if (unit.targetId !== null) {
     const t = world.findUnit(unit.targetId);
     if (t !== undefined && t.currentHp > 0) {
@@ -697,6 +699,9 @@ export function currentTarget(unit: Unit, world: World): Unit | null {
     }
   }
   if (confused) return null;
+  // Blind caps acquisition at its range (`updateTarget`); the normal pick
+  // would reach past it, so a null mark means nothing is that close.
+  if (flags.acquisitionRange !== null) return null;
   // Under any objective but `atWill`, a null `targetId` is deliberate: a tile
   // pursued, nothing in a held unit's range, an ordered target gone. No
   // fallback, or the unit would chase the map instead of the objective.

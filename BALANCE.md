@@ -6118,3 +6118,31 @@ deltas. The pre-X H7c→O log lives at
   a legendary 3, but it is not isolated. 23 to 29 % of each unit's
   instances changed whether the run died. One character and one bot's
   play.
+- **2026-11-08 — the characters' parity on act 1 under the prior table
+  v8** (§154, 154a). 153c's two soldier lines run for each of the
+  three characters (`--count=120 --hops=11 --searcher
+  --audition --redraw=level:2 --empower=level:hi --arbitrate
+  --prior-lambda=0.5 --per-encounter`, the regen vector and the deploy
+  winner), at `8ebca66d`, one `cpx42` (the launcher's default), six
+  batches in 2 h 25 min, each exit 0. Act 1 cleared of 120, regen /
+  deploy: the soldier 85 / 113, the priest 80 / 103, the gambler 65 / 97.
+
+  *Parity* (the ±5 principle), against the soldier, paired on the seeds
+  (the character alone : the soldier alone, `scratch/146/pair.mjs`): the
+  priest −4.2 on regen (10 : 15, p 0.42) and −8.3 on deploy (4 : 14,
+  p 0.031); the gambler −16.7 (7 : 27, p 0.0008) and −13.3 (3 : 19,
+  p 0.0009). Three of the four rows are outside ±5 and told apart; the
+  priest's regen row is inside and not. At 150h, under v6 at `8a63a20e`:
+  −10.8, −8.3, −16.7 and −13.3. The gambler's two gaps and the priest's
+  deploy gap equal 150h's to the run; the priest's regen gap is 6.7
+  points narrower, unpaired against 150h's row (another HEAD and table).
+
+  *The soldier under v8 against v7* (153f's rows at `305cab62`, the same
+  arguments): regen 79 → 85 (3 : 9, p 0.15), deploy 115 → 113 (3 : 1,
+  p 0.63), neither told apart.
+
+  *Act 1 by encounter under v8* (`scratch/153/act1-read.mjs`, the
+  soldier's rows): every turn target holds on both rows. The two deploy
+  costs 153f kept stay under their bands, the Vermin Lords 5.50 (band
+  6–18) and the rats' nest 1.81 (band 2–6); on regen both are inside
+  (8.41, 2.96). One bot's play.

@@ -169,6 +169,27 @@ case (A), so the exit's pin reads a blinded archer holding fire at 3
 cells and at 1; the officer's +1 DEF; Hecate +4; the area-status
 numbers; Harry; the other watches held until 154g.
 
+### 154a — the parity read (2026-11-08)
+
+The numbers are in BALANCE (2026-11-08, the characters' parity on act 1
+under the prior table v8): six rows at `8ebca66d`, one `cpx42`, 2 h 25
+min. In short, against the soldier, regen / deploy:
+
+- The priest −4.2 / −8.3, the regen row inside ±5 and not told apart,
+  the deploy row outside and told apart (p 0.031).
+- The gambler −16.7 / −13.3, both outside and told apart (p 0.0008,
+  0.0009).
+- 150h read −10.8 / −8.3 and −16.7 / −13.3. Three of the four gaps are
+  where they were; the priest's regen gap narrowed, unpaired.
+- The soldier under v8 against 153f's rows under v7: regen 79 → 85,
+  deploy 115 → 113 of 120, neither told apart. Act 1's turn targets hold
+  on both rows, and 153f's two kept deploy costs stay just under their
+  bands.
+
+*Its call, at the next stop* (signed: a character outside ±5 and told
+apart goes to the user, hold or a lever on the character): the priest
+on deploy and the gambler on both rows.
+
 ### 154b — blind (2026-11-08)
 
 - `currentTarget` takes no fallback for a blinded unit, as for a confused
@@ -201,9 +222,12 @@ numbers; Harry; the other watches held until 154g.
 - The corpus: 3 of 34 journals diverge (player-1-sectorHops-2,
   player-2-sectorHops-2-character-priest, chaos-1-sectorHops-2), runs
   that meet an officer; re-recorded once after 154f.
-- *The batch read, at the next stop:* the officer's card reads the new
-  line, and an ally beside him in battle shows the defense; wrong looks
-  like the two disagreeing. His worth at 154g.
+- *The batch read, at the next stop:* hovering Inspire's name on the
+  officer's card shows the new line (seen in the pane), and an ally
+  within 4 cells in battle wears the `»` pip. No card shows the +1
+  itself, since a card draws the unit's base stats; the headless probe
+  above is its evidence. Wrong looks like the old line. His worth at
+  154g.
 
 ### 154d — Hecate's size (2026-11-08)
 

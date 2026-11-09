@@ -120,11 +120,15 @@ export const CORPUS: readonly CorpusRow[] = [
   // day, chaos 2 stopped buying a unit and 28 paying one off, and chaos 16
   // now pays one off in place of its daemon: no run of 40 with no dials buys
   // a unit, so chaos 53 is the shortest of 80 that does, and chaos 37 the
-  // shortest of 40 that buys a daemon.
-  chaos(53),
+  // shortest of 40 that buys a daemon. When the wolf's bite gained its
+  // spring back (2026-11-08), chaos 53 stopped buying a unit and chaos 37
+  // selling a packet (the gambler's chaos 5 now buys the daemon): no run of
+  // 80 with no dials buys a unit, and chaos 64 on the gambler's dials, the
+  // shortest of the survey's 320 that buys a unit or sells a packet, does
+  // both, so it takes their place.
   chaos(16),
   chaos(13),
-  chaos(37),
+  chaos(64, 'character=gambler&bits=300'),
 ];
 
 const HERE = dirname(fileURLToPath(import.meta.url));

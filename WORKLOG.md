@@ -285,3 +285,14 @@ on deploy and the gambler on both rows.
   fields wolves too). A wolf should bite and spring back, not stand and
   trade; wrong looks like a stutter that never lands a bite, or one that
   never leaves contact.
+
+### The corpus re-recorded after 154c to 154f (2026-11-08)
+
+- `npm run corpus -- --record` after the four behaviour changes (154b
+  moved no journal). On the new record the corpus's reach test failed:
+  no row bought a unit or sold a packet any more (chaos 53 and chaos 37
+  had). A survey of 80 (320 runs over its four dial sets) found no
+  undialled run that buys a unit; chaos 64 on the gambler's dials, the
+  shortest run that buys a unit or sells a packet, does both, so it
+  replaces those two rows (33 journals, the table's comment says why).
+  `corpus.test.ts` 37 passed, and a replay 0 of 33 differ.

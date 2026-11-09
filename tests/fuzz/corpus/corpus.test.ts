@@ -34,9 +34,9 @@ describe('the journal corpus', () => {
     const changed = new Set(
       reaches.flatMap((r) => Object.entries(r.commands).flatMap(([kind, [, n]]) => (n > 0 ? [kind] : []))),
     );
-    // All 21 kinds since the recording of 2026-11-07, when chaos 37 joined the
-    // trade rows and sells a packet; from 2026-11-02 to then it was 20, the
-    // packet sale in no row.
+    // All 21 kinds since the recording of 2026-11-07; from 2026-11-02 to then
+    // it was 20, the packet sale in no row. Which row reaches each trade, and
+    // why, is in corpus.ts's table.
     expect([...changed].sort()).toEqual([
       'acceptReward',
       'advanceTurn',

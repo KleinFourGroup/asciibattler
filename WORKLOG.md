@@ -187,3 +187,20 @@ numbers; Harry; the other watches held until 154g.
   the test's override. With the cooldown, the draft's archer at 1 kited
   to 2 on its first tick and lost its mark.
 - The journal corpus: 0 of 34 journals differ (`npm run corpus`).
+
+### 154c — the officer's kit (2026-11-08)
+
+- Inspire's status, `inspired`, carries +1 defense beside its +2
+  mobility; the ability's line reads "Nearby allies move faster and
+  defend better." (config and locale), DESIGN's auras paragraph names
+  both mods. `src/config/units.test.ts` pins the status's axes, mobility
+  and defense, and fails on the status before the change (it read
+  mobility alone).
+- A headless probe (an officer with Inspire, a mercenary beside him):
+  the mercenary's defense 2 → 3 and mobility 4 → 6 within five ticks.
+- The corpus: 3 of 34 journals diverge (player-1-sectorHops-2,
+  player-2-sectorHops-2-character-priest, chaos-1-sectorHops-2), runs
+  that meet an officer; re-recorded once after 154f.
+- *The batch read, at the next stop:* the officer's card reads the new
+  line, and an ally beside him in battle shows the defense; wrong looks
+  like the two disagreeing. His worth at 154g.

@@ -690,7 +690,7 @@
   "inspire": {
     "id": "inspire",
     "name": "Inspire",
-    "description": "Nearby allies move faster.",
+    "description": "Nearby allies move faster and defend better.",
     "cooldownSeconds": 1,
     "rangeCells": 0,
     "target": { "kind": "self" },

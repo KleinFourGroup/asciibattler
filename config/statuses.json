@@ -115,6 +115,6 @@
     "name": "Inspired",
     "durationSeconds": 5,
     "merge": "refresh",
-    "statMods": { "mobility": { "add": 2 } }
+    "statMods": { "mobility": { "add": 2 }, "defense": { "add": 1 } }
   }
 }

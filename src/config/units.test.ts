@@ -305,12 +305,14 @@ describe('the stat-identity roster', () => {
     expect(def.target.kind).toBe('self'); // the schema's attackRange guard shape
     expect(def.aura?.statusId).toBe('inspired');
     expect(def.aura?.affects).toBe('allies');
-    // `inspired` is a pure mobility statMod (magnitude is a signed design
-    // number — pin the AXIS, not the value).
+    // `inspired` is a pure statMod on two axes, mobility and defense (each
+    // magnitude is a design number: pin the axes, not the values).
     const inspired = STATUS_DEFS.inspired!;
     expect(inspired.periodic).toBeUndefined();
     expect(inspired.behavior).toBeUndefined();
+    expect(Object.keys(inspired.statMods ?? {}).sort()).toEqual(['defense', 'mobility']);
     expect(inspired.statMods?.mobility?.add).toBeGreaterThan(0);
+    expect(inspired.statMods?.defense?.add).toBeGreaterThan(0);
   });
 });
 

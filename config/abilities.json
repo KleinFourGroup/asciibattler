@@ -731,14 +731,15 @@
     ],
     "fx": { "impact": "melee_swing" }
   },
-  "bite": {
-    "id": "bite",
-    "name": "Bite",
-    "description": "A wolf's bite.",
+  "harry": {
+    "id": "harry",
+    "name": "Harry",
+    "description": "Bites, then springs back.",
     "cooldownSeconds": 1.5,
     "rangeCells": 1,
     "target": { "kind": "enemyInRange" },
     "timeline": [
+      { "phase": "windup", "seconds": 0.25 },
       { "phase": "impact", "seconds": 0 },
       { "phase": "recovery", "seconds": "fill" }
     ],
@@ -746,7 +747,7 @@
     "priority": 10,
     "effects": [
       {
-        "phase": "impact",
+        "phase": "windup",
         "op": {
           "kind": "damage",
           "scaling": "strength",
@@ -756,9 +757,13 @@
           "evadable": true,
           "bypassDefense": false
         }
+      },
+      {
+        "phase": "impact",
+        "op": { "kind": "move", "mode": "retreat" }
       }
     ],
-    "fx": { "impact": "melee_swing" }
+    "fx": { "windup": "melee_swing" }
   },
   "pounce": {
     "id": "pounce",

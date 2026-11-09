@@ -235,3 +235,29 @@ numbers; Harry; the other watches held until 154g.
 - *The stop, in play:* the bandit Queen, the elemental trio, the
   miscreants and the dark magic posse; each area status should hold its
   area about half the time, not most of it.
+
+### 154f — the wolf (2026-11-08)
+
+- The wolf's Bite becomes Harry: Bite's damage (might 1 on strength,
+  1.5 s, no crit base) moved to a 0.25 s windup, then the gambit's
+  `move: retreat` on the impact, its swing on the windup. Bite is gone
+  from the catalog, the registry, the locale and DESIGN's beasts line;
+  no other unit used it. `src/config/units.test.ts` pins the wolf's
+  ability and Harry's two ops, and rejects a planted Harry that advances
+  instead.
+- A headless probe (a wolf beside a mercenary, 80 ticks): it bites at
+  tick 1, springs back a cell at tick 6, steps in again, and bites every
+  32 ticks against the 30 of its cooldown, so its damage rate barely
+  moves; it spends part of each cycle out of contact.
+- The corpus: 24 of 34 journals now differ, act 1's wolf fights being
+  common; re-recorded in the next commit.
+- Two seeded pins moved with it, both in files outside the step: the
+  journal tool's test needs a winning soldier run at three hops, and
+  seed 1 now loses, so it takes seed 2, the smallest that wins (seeds 1
+  to 12 driven: 2, 4, 7, 8, 10 and 11 win); the chaos census sees
+  `buyPortPacket` change a run on its four seeds, so the kind moves from
+  its blind list to its changing list.
+- *The stop, in play:* the wolfpack and the canids (the bear's fight
+  fields wolves too). A wolf should bite and spring back, not stand and
+  trade; wrong looks like a stutter that never lands a bite, or one that
+  never leaves contact.

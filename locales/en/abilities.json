@@ -24,7 +24,7 @@
   "abilities.cane.name": "Cane",
   "abilities.inspire.name": "Inspire",
   "abilities.gnaw.name": "Gnaw",
-  "abilities.bite.name": "Bite",
+  "abilities.harry.name": "Harry",
   "abilities.pounce.name": "Pounce",
   "abilities.rake.name": "Rake",
   "abilities.maul.name": "Maul",
@@ -53,7 +53,7 @@
   "abilities.cane.description": "An officer's cane.",
   "abilities.inspire.description": "Nearby allies move faster and defend better.",
   "abilities.gnaw.description": "Gnawing teeth.",
-  "abilities.bite.description": "A wolf's bite.",
+  "abilities.harry.description": "Bites, then springs back.",
   "abilities.pounce.description": "A pouncing strike.",
   "abilities.rake.description": "Raking claws; the wounds bleed.",
   "abilities.maul.description": "A crushing blow."

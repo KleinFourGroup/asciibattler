@@ -38,10 +38,11 @@ describe('buildRefusal: which builds a journal is accepted from', () => {
 });
 
 describe('replayText: the tool over a recorded journal', () => {
-  // A run that ends in victory: seed 1 is the smallest whose drive wins (it
-  // was 5 until power's growth draw came out and that run lost).
+  // A run that ends in victory: seed 2 is the smallest whose drive wins (it
+  // was 5 until power's growth draw came out and that run lost, then 1 until
+  // the wolf's bite gained its spring back and that run lost).
   const recorded = driveRun({
-    start: { kind: 'seed', seed: 1, dials: 'hops=3&character=soldier' },
+    start: { kind: 'seed', seed: 2, dials: 'hops=3&character=soldier' },
     plants: replayPlants(),
   });
   const base = asFile(recorded.journal);
@@ -56,7 +57,7 @@ describe('replayText: the tool over a recorded journal', () => {
     const { code, lines } = replayText(text(journal()), TREE);
     expect(code).toBe(0);
     expect(lines[0]).toBe(
-      `segment 0: build ${GOOD}-dev, config ${base.segments[0]!.configHash}, seed 1 (hops=3&character=soldier), ` +
+      `segment 0: build ${GOOD}-dev, config ${base.segments[0]!.configHash}, seed 2 (hops=3&character=soldier), ` +
         `${base.segments[0]!.entries.length} entries`,
     );
     expect(lines[1]).toBe(

@@ -48,7 +48,7 @@ const DEMO_ABILITY_IDS = [
   'inspire',
 ] as const;
 
-const BEAST_ABILITY_IDS = ['gnaw', 'bite', 'pounce', 'rake', 'maul'] as const;
+const BEAST_ABILITY_IDS = ['gnaw', 'harry', 'pounce', 'rake', 'maul'] as const;
 
 const FACTORIES: Record<string, AbilityFactory> = {
   ...Object.fromEntries(

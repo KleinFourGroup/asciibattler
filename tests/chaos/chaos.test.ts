@@ -100,6 +100,7 @@ describe('115c — the chaos driver', () => {
     expect(KINDS.filter(changesTheRun).sort()).toEqual([
       'acceptReward',
       'advanceTurn',
+      'buyPortPacket',
       'chooseEventOption',
       'chooseRecruit',
       'chooseRestOption',
@@ -119,7 +120,6 @@ describe('115c — the chaos driver', () => {
     // (tests/fuzz/corpus) reaches all of them.
     expect(KINDS.filter((kind) => !changesTheRun(kind)).sort()).toEqual([
       'buyPortDaemon',
-      'buyPortPacket',
       'buyPortUnit',
       'payToRemoveUnit',
       'sellPacket',

@@ -686,7 +686,7 @@
     "name": "Wolf",
     "description": "Hunts in packs, and is never alone for long.",
     "glyph": "",
-    "abilities": ["bite"],
+    "abilities": ["harry"],
     "targeting": "nearest",
     "draftable": false,
     "baseStats": {

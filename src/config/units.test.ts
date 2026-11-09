@@ -314,6 +314,17 @@ describe('the stat-identity roster', () => {
     expect(inspired.statMods?.mobility?.add).toBeGreaterThan(0);
     expect(inspired.statMods?.defense?.add).toBeGreaterThan(0);
   });
+
+  it('the wolf harries: it bites on the windup and springs back on the impact, as the gambit does', () => {
+    expect(UNIT_DEFS.wolf?.abilities).toEqual(['harry']);
+    const def = abilityDef('harry');
+    const ops = def.effects.map((e) => [e.phase, e.op.kind === 'move' ? `move:${e.op.mode}` : e.op.kind]);
+    expect(ops).toEqual([
+      ['windup', 'damage'],
+      ['impact', 'move:retreat'],
+    ]);
+    expect(def.fx?.windup).toBe('melee_swing'); // the swing plays where the damage lands
+  });
 });
 
 /**

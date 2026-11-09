@@ -213,3 +213,25 @@ numbers; Harry; the other watches held until 154g.
   Hecate.
 - *The batch read, at the next stop:* Hecate's card and tooltip read
   "+4 MAG"; wrong looks like either still reading +8. Her worth at 154g.
+
+### 154e — the area-status retune (2026-11-08)
+
+- Through the three abilities' own numbers, as signed. The wail: its
+  cooldown 4 → 6 s, its panic 2 s + 0.15 s a point of luck (at most 4;
+  was 3 s + 0.15, at most 6). The hex: its cooldown 3 → 5 s, its
+  confusion 1.5 s + 0.15 s a point (at most 3; was 4 s + 0.3, at most
+  8). The ice storm: its frozen set on the op at 1.25 s (the status's own
+  2 s stays the default), its cooldown kept at 2.5 s, since it also
+  strikes.
+- At act 3's level 14 (luck 6.9), by the formulas: panic 3.0 s every
+  6 s (was 4.0 every 4), confusion 2.5 s every 5 (was 6.1 every 3),
+  frozen 1.25 s every 2.5 (was 2 every 2.5). The bandit Queen's banshee,
+  fielded higher, holds longer, at most 4 s of 6. Each status is applied
+  by its one ability alone, so nothing else moves.
+- The corpus: six journals beyond 154c's three diverge (player-5,
+  chaos-4-character-gambler-bits-300, chaos-5-character-gambler-bits-300,
+  chaos-8-sectorHops-2, chaos-16, chaos-37), runs that reach act 3's
+  casters.
+- *The stop, in play:* the bandit Queen, the elemental trio, the
+  miscreants and the dark magic posse; each area status should hold its
+  area about half the time, not most of it.

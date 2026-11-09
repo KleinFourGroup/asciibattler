@@ -133,7 +133,7 @@ The cut, signed 2026-11-08 (WORKLOG §154):
 - ☑ **154b — blind** (`none`): no fallback target for a blinded unit, so it strikes only inside blind's acquisition range; pinned headless (an archer holds fire at 3 and 1, a halberdier strikes at 1 and holds at 2).
 - ◐ **154c — the officer's kit** (`batch`): Inspire's aura +1 DEF beside its +2 MOB, its lines to match; his worth at 154g.
 - ◐ **154d — Hecate's size** (`batch`): +8 → +4 MAG, Mars and Diana held; her worth at 154g.
-- ☐ **154e — the area-status retune** (`stop`, in play): the wail, the hex and the ice storm, each status holding its area about half the time at act 3's level.
+- ◐ **154e — the area-status retune** (`stop`, in play): the wail, the hex and the ice storm, each status holding its area about half the time at act 3's level.
 - ☐ **154f — the wolf** (`stop`, in play, at 154e's stop): Harry, Bite's numbers with Gambit's retreat.
 - ☐ **154g — the prior table v9 and the watches re-read** (`stop`, the decision point): each watched row's disposition to the user; it stands as §155's prior-table rebuild if nothing after it moves an item's value.
 

@@ -6,11 +6,11 @@ A fresh-session orientation for ASCIIbattler. Read this first; then dive into th
 
 **The ONE home for live status.** Other docs (and the agent memory) point here instead of restating it; when state changes, this section is the single place that updates.
 
-- **NEXT — ROUND 11 (The roster): §154, the kits: the cut signed 2026-11-08 with every lean (WORKLOG §154); 154a's six parity rows on the box first, then 154b to 154d, then 154e and 154f at one stop with 154a's read** ([ROADMAP.md](ROADMAP.md) §154; the spec, [round-11-spec.md](round-11-spec.md)). 151f, the units' lines, lands when the user writes them. **Open ◐:** none.
-- **In flight:** nothing on the box since 2026-11-08 (153g's three batches, fetched and the box destroyed).
+- **NEXT — ROUND 11 (The roster): §154, the kits: 154a to 154f built; at the stop: 154a's call (the priest on deploy and the gambler on both rows outside ±5 and told apart), 154e's and 154f's reads in play, 154c's and 154d's batch reads; then 154g, the prior table v9 on the box** (WORKLOG §154; [ROADMAP.md](ROADMAP.md) §154; the spec, [round-11-spec.md](round-11-spec.md)). 151f, the units' lines, lands when the user writes them. **Open ◐:** 154a (its call), 154c, 154d, 154e, 154f.
+- **In flight:** nothing on the box since 2026-11-08 (154a's six batches, fetched and the box destroyed by its driver).
 - **The public build:** `0.3.0` (`273d587d`, tag `v0.3.0`), uploaded to itch.io on 2026-11-04; the uploads before it are in Closed rounds below.
 - **Snapshots:** WorldSnapshot **v39** (no player keeps one) · RunSnapshot **v51** (a v50 save, `0.3.0`'s, rejects).
-- **Tests:** **3957 main** in 271 files, **587 fuzz:smoke** in 60 files and **1 fuzz:jobs-parity** at `614dcf68` (153g's table, its hook); typecheck clean; the journal corpus, run by hand, 38 tests over 34 journals, recorded at 153e and 38 passed at `a03b871d`.
+- **Tests:** **3962 main** in 271 files, **587 fuzz:smoke** in 60 files and **1 fuzz:jobs-parity** at `3797f47b` (the corpus re-recorded, its hook); typecheck clean; the journal corpus, run by hand, 37 tests over 33 journals, recorded and 37 passed at `3797f47b`.
 - **Model id: `claude-opus-5-5`** since 2026-09-22. When yours differs, say so at the next stop; at the user's word, review AGENTS.md against the vendor's current prompting guidance and record the new id (the last review: `archive/post-104-worklog.md`, "The new-model tone audit").
 - **Last phase: §153**, power by rarity, its growth key, and the pools, 2026-11-07 → 11-08: power at 1/1/2/3 with its growth key out; act 1's five moved fights tuned and baked, every turn target held on the verify read, two costs under their bands on deploy and kept; the prior table v8 (`archive/worklog-phase-153.md`).
 

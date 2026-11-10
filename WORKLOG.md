@@ -53,7 +53,9 @@ prior table v8.
   mobility, which moves them faster and does nothing else. Power 2 since
   153b; his free row was −20.9 on v7 at power 1. Speed scales only an
   ability that sets `speedScaled`, and none ships one, so a speed aura
-  would do nothing.
+  would do nothing. *Wrong, found at 154e's stop:* `speedScaled`
+  defaults to true and only the dash opts out, so speed quickens every
+  other ability, and a speed aura would quicken allies' strikes.
 - *The stormcaller* has the mage's stats and strike (the sheet's rows are
   identical) plus chain lightning's three jumps at 0.6 falloff, at a
   legendary's price (105) and power (3) against the mage's 45 and 1; on
@@ -95,7 +97,8 @@ prior table v8.
   banshee, fielded at twice the level, longer), confusion 6.1 s every
   3 s, frozen 2 s every 2.5 s. Each status is applied by that one
   ability alone, so a retune through the abilities' own numbers moves
-  nothing else.
+  nothing else. *These figures leave out speed, wrongly (154e's stop):*
+  each caster's speed shortens its cooldown.
 - *The wolf* ships Bite (might 1, 1.5 s) on the bandit's body with the
   adventurer's mobility, a plain biter by construction. Gambit's retreat
   is a `move: retreat` op after the strike, config alone.
@@ -251,7 +254,9 @@ on deploy and the gambler on both rows.
   6 s (was 4.0 every 4), confusion 2.5 s every 5 (was 6.1 every 3),
   frozen 1.25 s every 2.5 (was 2 every 2.5). The bandit Queen's banshee,
   fielded higher, holds longer, at most 4 s of 6. Each status is applied
-  by its one ability alone, so nothing else moves.
+  by its one ability alone, so nothing else moves. *Wrong, found at the
+  stop:* these use the base cooldowns, but speed shortens them, and the
+  casters are fielded above level 14 (below).
 - The corpus: six journals beyond 154c's three diverge (player-5,
   chaos-4-character-gambler-bits-300, chaos-5-character-gambler-bits-300,
   chaos-8-sectorHops-2, chaos-16, chaos-37), runs that reach act 3's
@@ -296,3 +301,45 @@ on deploy and the gambler on both rows.
   shortest run that buys a unit or sells a packet, does both, so it
   replaces those two rows (33 journals, the table's comment says why).
   `corpus.test.ts` 37 passed, and a replay 0 of 33 differ.
+
+### 154e's and 154f's stop (2026-11-10)
+
+The user's read: "the effect stun locking is still happening in the
+first three" (the bandit Queen, the dark magic posse, the elemental
+trio), "Everything else passed": 154f's wolf in play and 154c's and
+154d's batch reads. 154a's call is not yet answered.
+
+*The cause is speed, not magic* (the user asked whether magic's scaling
+was it; no duration scales on magic). `speedScaled` defaults to true
+(`src/sim/effects/schema.ts:390`) and only the dash opts out, so a
+cooldown shrinks to 1 − 0.05 a point of speed, floored at 0.4
+(`config/stats.json`); and the casters are fielded above level 14. A
+headless probe (`scratch/154/lock-probe.test.ts.txt`) played the four
+fights from the play links on seeds 1 to 3 and read, each tick, which
+player units carried each status:
+
+| fight | caster | cooldown, base → real | status | longest lock | share locked |
+|---|---|---|---|---|---|
+| bandit Queen | banshee L22, spd 10, lck 9 | 6 → 3.0 s | panic 3.35 s | 36–39 s | 24–34 % |
+| dark magic posse | warlock L35, spd 14, lck 13 | 5 → 2.0 s | confusion 3.0 s | 3–15.7 s | 0.7–12 % |
+| elemental trio | ice mage L17–18, spd 10 | 2.5 → 1.25 s | frozen 1.25 s | 3.75–10 s | 2–9 % |
+| miscreants | warlock L8–9, spd 6, lck 5 | 5 → 3.5 s | confusion 2.25 s | 2.25 s | 16–23 % |
+
+In the first three the status lasts as long as the cooldown or longer,
+so it chains on whoever stands in the area; the miscreants' warlock
+never chains, which fits its passing. "Share locked" is of all player
+unit-time, most of which is outside the area.
+
+*The same probe with `speedScaled: false` on the three abilities* (a
+temporary config edit, reverted): the cooldowns stay 6, 5 and 2.5 s at
+any level, every duration's cap sits below its cooldown, and the
+longest lock in all twelve runs is one application (panic 3.35 s,
+confusion 3 or 2.25 s, frozen 1.25 s). The Queen's panic share falls to
+9–20 %. The cost: the ice storm also strikes, and at the trio's level
+it would hit half as often as it does now (every 2.5 s, not 1.25).
+
+*Put to the user* (the message of 2026-11-10): `speedScaled: false` on
+the wail, the hex and the ice storm, the signed numbers kept; the ice
+storm's cadence a lean (keep 2.5 s with frozen 1.25, or 1.5 s with
+frozen 0.75 to keep its damage rate near today's); 154a's call asked
+again.

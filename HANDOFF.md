@@ -6,7 +6,7 @@ A fresh-session orientation for ASCIIbattler. Read this first; then dive into th
 
 **The ONE home for live status.** Other docs (and the agent memory) point here instead of restating it; when state changes, this section is the single place that updates.
 
-- **NEXT — ROUND 11 (The roster): §154, the kits: 154a to 154f built; at the stop: 154a's call (the priest on deploy and the gambler on both rows outside ±5 and told apart), 154e's and 154f's reads in play, 154c's and 154d's batch reads; then 154g, the prior table v9 on the box** (WORKLOG §154; [ROADMAP.md](ROADMAP.md) §154; the spec, [round-11-spec.md](round-11-spec.md)). 151f, the units' lines, lands when the user writes them. **Open ◐:** 154a (its call), 154c, 154d, 154e, 154f.
+- **NEXT — ROUND 11 (The roster): §154, the kits: at the stop, read 2026-11-10: 154c, 154d and 154f passed; 154e failed in play (the act-3 casters' speed shortens their cooldowns, so three statuses chain), its fix put to the user (`speedScaled: false` on the three abilities, the ice storm's cadence a lean); 154a's call asked again; then 154g, the prior table v9 on the box** (WORKLOG §154, "154e's and 154f's stop"; [ROADMAP.md](ROADMAP.md) §154; the spec, [round-11-spec.md](round-11-spec.md)). 151f, the units' lines, lands when the user writes them. **Open ◐:** 154a (its call), 154e (the fix).
 - **In flight:** nothing on the box since 2026-11-08 (154a's six batches, fetched and the box destroyed by its driver).
 - **The public build:** `0.3.0` (`273d587d`, tag `v0.3.0`), uploaded to itch.io on 2026-11-04; the uploads before it are in Closed rounds below.
 - **Snapshots:** WorldSnapshot **v39** (no player keeps one) · RunSnapshot **v51** (a v50 save, `0.3.0`'s, rejects).

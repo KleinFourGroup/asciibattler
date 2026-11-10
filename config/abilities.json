@@ -361,6 +361,7 @@
     "name": "Ice Storm",
     "description": "Hail that freezes.",
     "cooldownSeconds": 2.5,
+    "speedScaled": false,
     "rangeCells": 5,
     "minRangeCells": 2,
     "target": { "kind": "aoe", "shape": "square", "radius": 1, "anchor": "targetCell", "affects": "enemies" },
@@ -395,6 +396,7 @@
     "name": "Hex",
     "description": "Confuses, longer with luck.",
     "cooldownSeconds": 5,
+    "speedScaled": false,
     "rangeCells": 5,
     "minRangeCells": 2,
     "target": { "kind": "aoe", "shape": "square", "radius": 1, "anchor": "targetCell", "affects": "enemies" },
@@ -454,6 +456,7 @@
     "name": "Wail",
     "description": "Panics, longer with luck.",
     "cooldownSeconds": 6,
+    "speedScaled": false,
     "rangeCells": 4,
     "target": { "kind": "aoe", "shape": "square", "radius": 1, "anchor": "targetCell", "affects": "enemies" },
     "timeline": [

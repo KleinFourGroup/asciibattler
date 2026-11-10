@@ -343,3 +343,31 @@ the wail, the hex and the ice storm, the signed numbers kept; the ice
 storm's cadence a lean (keep 2.5 s with frozen 1.25, or 1.5 s with
 frozen 0.75 to keep its damage rate near today's); 154a's call asked
 again.
+
+**Signed** (the user, 2026-11-10: "Signing your leans for all three!"):
+`speedScaled: false` on the wail, the hex and the ice storm, the signed
+numbers kept; the ice storm at 2.5 s with frozen 1.25 s, its damage
+cadence halving at the trio's level; 154a held, the priest's and the
+gambler's gaps for §155's board to read again (TODO's priest parity
+row).
+
+### 154e-post — the area locks unhasted (2026-11-10)
+
+- `speedScaled: false` on the wail, the hex and the ice storm: their
+  cooldowns stay 6, 5 and 2.5 s at any level, the signed durations
+  kept. DESIGN's speed line and the schema's comment name them beside
+  the dash.
+- A rule in `src/config/abilities.test.ts`: an area ability that lays a
+  status with a `behavior` keeps a flat cooldown, and that status's
+  longest duration is shorter than the cooldown. It selects exactly the
+  three, and on the config before the fix it failed at the ice storm's
+  speed scaling.
+- The lock probe on the built tree, the four fights on seeds 1 to 3:
+  cooldowns 120, 100 and 50 ticks; the longest lock in every run is one
+  application (panic 3.35 s, confusion 3 s or 2.25 s, frozen 1.25 s);
+  the bandit Queen's panic share 9–20 % of player unit-time.
+- The corpus: 4 of 33 journals diverged; re-recorded, and
+  `corpus.test.ts` 37 passed, its reach whole.
+- Seen beside it, not changed: the luminant's light ray recasts every
+  1.1 s at the trio's level with a 4 s blind, so it can hold one target
+  blind; blind took 2–3 % of player unit-time in the probe.

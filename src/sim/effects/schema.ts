@@ -385,7 +385,8 @@ export const AbilityDefSchema = z
      * Whether the cadence, and so the `'fill'` phase, scales with the caster's
      * `speed`: true is the attack cadence (`attackCooldownTicksFor`), false a
      * flat cooldown apart from the busy window (the dash, whose cooldown is far
-     * longer than its motion).
+     * longer than its motion; the area locks, so a fast caster can't chain its
+     * status, held by `src/config/abilities.test.ts`).
      */
     speedScaled: z.boolean().default(true),
     rangeCells: z.number().int().nonnegative(),

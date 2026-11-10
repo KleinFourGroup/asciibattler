@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { ABILITY_DEFS, abilityDef, damageOpOf, healOpOf } from './abilities';
+import { STATUS_DEFS } from './statuses';
 
 /**
  * The ability-definition catalog loader + the catalog-level structural pins.
@@ -167,6 +168,32 @@ describe('status-on-hit afflicters', () => {
       const statusIdx = effects.findIndex((e) => e.op.kind === 'applyStatus');
       expect(dmgIdx, `${id} has a damage op`).toBeGreaterThanOrEqual(0);
       expect(statusIdx, `${id} applyStatus after damage`).toBeGreaterThan(dmgIdx);
+    }
+  });
+
+  // An area lock (an AoE laying a status with a `behavior`: frozen, panic,
+  // confusion) keeps a flat cooldown, and its status's longest duration is
+  // shorter than that cooldown, so a recast can't refresh the status before
+  // it lapses and chain it on whoever stands in the area. Speed would shrink
+  // the cooldown and not the duration.
+  it('an area lock never outlasts its cooldown: a flat cadence and a shorter longest duration', () => {
+    const locks = Object.values(ABILITY_DEFS).filter(
+      (def) =>
+        def.target.kind === 'aoe' &&
+        def.effects.some((e) => e.op.kind === 'applyStatus' && STATUS_DEFS[e.op.statusId]?.behavior !== undefined),
+    );
+    expect(locks.map((d) => d.id).sort()).toEqual(['hex', 'ice_storm', 'wail']);
+    for (const def of locks) {
+      expect(def.speedScaled, `${def.id} has a flat cooldown`).toBe(false);
+      for (const e of def.effects) {
+        if (e.op.kind !== 'applyStatus') continue;
+        const d = e.op.durationSeconds ?? STATUS_DEFS[e.op.statusId]!.durationSeconds;
+        const longest = typeof d === 'number' ? d : d?.max;
+        expect(longest, `${def.id}: its ${e.op.statusId} has a ceiling`).toBeDefined();
+        expect(longest!, `${def.id}: the longest ${e.op.statusId} is shorter than the cooldown`).toBeLessThan(
+          def.cooldownSeconds,
+        );
+      }
     }
   });
 });

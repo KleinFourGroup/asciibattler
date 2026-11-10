@@ -6,8 +6,8 @@ A fresh-session orientation for ASCIIbattler. Read this first; then dive into th
 
 **The ONE home for live status.** Other docs (and the agent memory) point here instead of restating it; when state changes, this section is the single place that updates.
 
-- **NEXT — ROUND 11 (The roster): §154, the kits: 154a (held for §155), 154b to 154d and 154f done; 154e's -post fix built 2026-11-10 (the area locks' cooldowns flat), its re-read in play the stop; then 154g, the prior table v9 on the box** (WORKLOG §154, "154e-post"; [ROADMAP.md](ROADMAP.md) §154; the spec, [round-11-spec.md](round-11-spec.md)). 151f, the units' lines, lands when the user writes them. **Open ◐:** 154e (the -post fix's re-read).
-- **In flight:** nothing on the box since 2026-11-08 (154a's six batches, fetched and the box destroyed by its driver).
+- **NEXT — ROUND 11 (The roster): §154, the kits: 154a to 154f done (154a held for §155, 154e with its -post fix passed in play 2026-11-10); 154g, the prior table v9, on the box: when its three lines are fetched, the table built and the units' and the idols' worth re-read, each watched row's disposition to the user** (WORKLOG §154; [ROADMAP.md](ROADMAP.md) §154; the spec, [round-11-spec.md](round-11-spec.md)). 151f, the units' lines, lands when the user writes them. **Open ◐:** none.
+- **In flight:** 154g's three prior-table lines (`scratch/154/154g.queue`), launched 2026-11-10 by `scripts/box-drive.sh`, its log `scratch/154/154g-drive.log`; no commit until the third line has launched.
 - **The public build:** `0.3.0` (`273d587d`, tag `v0.3.0`), uploaded to itch.io on 2026-11-04; the uploads before it are in Closed rounds below.
 - **Snapshots:** WorldSnapshot **v39** (no player keeps one) · RunSnapshot **v51** (a v50 save, `0.3.0`'s, rejects).
 - **Tests:** **3963 main** in 271 files, **587 fuzz:smoke** in 60 files and **1 fuzz:jobs-parity** at `794cc905` (154e-post, its hook); typecheck clean; the journal corpus, run by hand, 37 tests over 33 journals, recorded and 37 passed at `794cc905`.

@@ -371,3 +371,7 @@ row).
 - Seen beside it, not changed: the luminant's light ray recasts every
   1.1 s at the trio's level with a 4 s blind, so it can hold one target
   blind; blind took 2–3 % of player unit-time in the probe.
+
+*154e-post's re-read* (the user, 2026-11-10: "I did the plays first,
+Claude, and they're good, so you're clear to launch!"): the three
+fights pass in play. 154e done; 154g launched.

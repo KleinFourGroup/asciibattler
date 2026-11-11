@@ -191,7 +191,9 @@ META-ROADMAP §"Round 11 — The roster" names each row's place.
 
 ### Before the closing board
 
-- [ ] **BALANCE.md's header at its 700-line cap.** It refused a commit
+- ✅ **BALANCE.md's header at its 700-line cap.** Done at 150a: three
+  Phase X sections to `archive/balance-header.md`, 700 lines to 642
+  (WORKLOG §150, in `archive/worklog-phase-150.md`). It refused a commit
   at 140e, 143b and 145h, a hook round each, and every fix above the run
   log is now a net-zero edit. The retune writes BALANCE most, so before
   it, read the header for protocol text to demote to an archive, the cap
@@ -207,7 +209,11 @@ META-ROADMAP §"Round 11 — The roster" names each row's place.
 
 - [ ] **The deep-end wall, from above its band to below it.** Under the hit roll the deploy walk's boss wall read 0.459 at the §94 config (94h, user-signed HOLD: a roster-strength lever before any band move) and 0.579 on the old game at 139c, against the signed 30–35. The conversion moved it to 0.200 (139b's numbers; 0.299 at 137c's), and the two-act wins from 24 to 52 of 120, outside §139's line of one Escalation step (7). The old game with 137c's bot vector won 20 with a wall of 0.630 (139e), so the move is the game's, not the bot's. Where: act 2's elites and bosses 27 to 38 % less pool damage, act 1's bandit fights 41 and 46 % less, the ronin and the mages 59 % more; act 1's wins unchanged. Signed at §139: no number moves in Round 9, and the retune takes it. The cause is not measured; the user's idea (every swing pays defense at one pooled rate, a gap that grows with level) estimates at 1 to 4 % of an archer's swing, and a swing read split by act would test it (BALANCE.md 2026-10-29; WORKLOG §139). Those are the two-act walk's numbers. On the three-act walk the deep end is act 3, which the sheet's terminal pair reads: at 146f its wall 0.211 on deploy and 0.357 on regen, its reach 0.475 and 0.117 (BALANCE.md 2026-11-03). Round 11 reads it on its board; the band's re-set is Round 22's (WORKLOG §147, 147a).
 
-- [ ] **The arbitration loses the walk.** The board's doctrine and ARM
+- ✅ **The arbitration loses the walk.** Done at 150d to 150g: the
+  loss sat at the four sites whose null arm was "pass", and doctrine's
+  pick as the null is the default since 150g; at 150h the ARM is at or
+  above doctrine's level on every ceiling shape (WORKLOG §150, in
+  `archive/worklog-phase-150.md`; BALANCE 2026-11-06). The board's doctrine and ARM
   rows differ in `--arbitrate --prior-lambda=0.5` alone. On the
   three-act walk at 146b, paired on seeds 1 to 40, doctrine won 12 seeds
   the ARM lost and the ARM none that doctrine lost (p 0.0005); on act 1
@@ -222,7 +228,7 @@ META-ROADMAP §"Round 11 — The roster" names each row's place.
   150c, a tie fine, the comment and the WARN in BALANCE's words (WORKLOG
   §150, 150c; BALANCE.md 2026-11-05).
 
-- [ ] **Power diversity by rarity** (verdict item 4): 1/1/1/2 → 1/1/2/3 or 1/2/3/4 — a pool re-anchor rides behind it (every burn/turn moves); Round 11, after the §94 signing. Weigh the scale against the prior table v7, where the rare halberdier (+31 ± 14 taken free) and the legendary stormcaller (+25 ± 14) already read the highest (BALANCE 2026-11-06, "the draftable units' worth"; signed at §152's kickoff). A unit's power is what its fall costs its own side, so a steeper scale lowers a rare's or a legendary's worth by what its deaths cost, the officer's, the catapult's and the shaman's as well (WORKLOG §153, the kickoff's audit, which corrects this row's earlier "adds most where worth already is").
+- ✅ **Power diversity by rarity** (verdict item 4): done at 153b, 1/1/2/3 (WORKLOG §153, in `archive/worklog-phase-153.md`). The row: 1/1/1/2 → 1/1/2/3 or 1/2/3/4 — a pool re-anchor rides behind it (every burn/turn moves); Round 11, after the §94 signing. Weigh the scale against the prior table v7, where the rare halberdier (+31 ± 14 taken free) and the legendary stormcaller (+25 ± 14) already read the highest (BALANCE 2026-11-06, "the draftable units' worth"; signed at §152's kickoff). A unit's power is what its fall costs its own side, so a steeper scale lowers a rare's or a legendary's worth by what its deaths cost, the officer's, the catapult's and the shaman's as well (WORKLOG §153, the kickoff's audit, which corrects this row's earlier "adds most where worth already is").
 
 - [ ] **Act 1's cost, against the per-kind cost target.** §146 tuned
   act 1 to turn targets only. The target was signed at Round 11's

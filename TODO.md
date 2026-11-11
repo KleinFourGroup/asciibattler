@@ -234,17 +234,18 @@ META-ROADMAP §"Round 11 — The roster" names each row's place.
   after the weapons move every fight's cost, the rats' nest and the
   Vermin Lords first; `scratch/148/kind-cost.mjs` gives the kinds.
 
-- [ ] **The AoE-status enemies — the RETUNE half** (range / cooldown / duration; "really annoying"): board work, carried to **Round 11** with the kit watches (Round 7's no-board guard).
+- ✅ **The AoE-status enemies — the RETUNE half** (range / cooldown / duration; "really annoying"): board work, carried to **Round 11** with the kit watches (Round 7's no-board guard). Done at 154e and 154e-post: the wail's, the hex's and the ice storm's cooldowns and durations retuned and their cooldowns flat, pinned by a rule in `src/config/abilities.test.ts` (WORKLOG §154).
 
-- [ ] **Kit watches from the 94f price-book re-read on prior v4** (BALANCE §"The rarity verification protocol" step 3: a negative recruit row at FREE acquisition is a KIT question, not a price one — WORKLOG §94f): **officer** (−42 recruit / −36 port-buy, the worst row in the book) · **bandit** (−24 / −25, the weakest common) · **mercenary** (−15 / −10, the soldier's starter body) · **halberdier** (−16 recruit; port n=8 unreadable) · **stormcaller** (−2.8 — a legendary that does not pay at free acquisition under casualties). Round 7 idiom / Round 11 candidates; the §94 charter's "NOT doing: archetype changes" held. The dispositions taken at 94f: gunslinger common → uncommon (+28 / +27 at the cheapest price) · healer base 30 → 32 · everything else HOLD. Since rule C the ARM never drafts the officer at all (0 of 23,471 rosters at 146b and of 25,657 at 146f; the random and greedy anchors still take him), so the roster table's guard holds him PENDING until an ARM row drafts him (WORKLOG §146, 146c). On the prior table v7 (150h's ARM, the Soldier; BALANCE 2026-11-06, "the draftable units' worth"), taken free: the halberdier +31 ± 14 and the stormcaller +25 ± 14 now read high, the officer −21 ± 14 still low, the mercenary −1 ± 11 near 0; bought, the gunslinger +75 ± 18 and the adventurer −59 ± 24 at the same price, both added to the list; the rioter's −33 ± 10 free took §152's buff. The list is re-aimed at §154's kickoff, read on the numbers §152 and §153 leave (signed at §152's kickoff, 2026-11-06). Those numbers: the prior table v8's unit rows with their errors (BALANCE 2026-11-08, "the prior table v8"; WORKLOG 153g).
+- ✅ **Kit watches from the 94f price-book re-read on prior v4** (BALANCE §"The rarity verification protocol" step 3: a negative recruit row at FREE acquisition is a KIT question, not a price one — WORKLOG §94f): **officer** (−42 recruit / −36 port-buy, the worst row in the book) · **bandit** (−24 / −25, the weakest common) · **mercenary** (−15 / −10, the soldier's starter body) · **halberdier** (−16 recruit; port n=8 unreadable) · **stormcaller** (−2.8 — a legendary that does not pay at free acquisition under casualties). Round 7 idiom / Round 11 candidates; the §94 charter's "NOT doing: archetype changes" held. The dispositions taken at 94f: gunslinger common → uncommon (+28 / +27 at the cheapest price) · healer base 30 → 32 · everything else HOLD. Since rule C the ARM never drafts the officer at all (0 of 23,471 rosters at 146b and of 25,657 at 146f; the random and greedy anchors still take him), so the roster table's guard holds him PENDING until an ARM row drafts him (WORKLOG §146, 146c). On the prior table v7 (150h's ARM, the Soldier; BALANCE 2026-11-06, "the draftable units' worth"), taken free: the halberdier +31 ± 14 and the stormcaller +25 ± 14 now read high, the officer −21 ± 14 still low, the mercenary −1 ± 11 near 0; bought, the gunslinger +75 ± 18 and the adventurer −59 ± 24 at the same price, both added to the list; the rioter's −33 ± 10 free took §152's buff. The list is re-aimed at §154's kickoff, read on the numbers §152 and §153 leave (signed at §152's kickoff, 2026-11-06). Those numbers: the prior table v8's unit rows with their errors (BALANCE 2026-11-08, "the prior table v8"; WORKLOG 153g). Decided at 154g on the prior table v9 (BALANCE 2026-11-10; signed 2026-11-11, WORKLOG §154): the officer's +1 DEF built (154c) and held, his kit carried to Round 13; the stormcaller and the gunslinger off the list; the rest carried to Round 13 as named watches (TODO, Round 13).
 
-- [ ] **The wolf's retreat, if the wolf doesn't feel distinct** (the
+- ✅ **The wolf's retreat, if the wolf doesn't feel distinct** (the
   user, 2026-11-01, at 144e's stop). The wolf ships Bite, the Club's
   numbers, on the bandit's body with the adventurer's mobility. If it plays
   as a plain biter beside the other beasts, give it Gambit's retreat
   (strike, then spring back, as wolves harry big prey), the kit the fox
   was offered before it took Pounce and Dash (WORKLOG §144, "144e
-  signed").
+  signed"). Done at 154f: Bite became Harry, Bite's damage with Gambit's
+  retreat, passed in play (WORKLOG §154).
 
 - ✅ **Power's level-up draw and its growth key.** Out at 153a: power
   has no growth rate (the schema refuses one), a level-up draws eight
@@ -341,6 +342,25 @@ META-ROADMAP §"Round 12 — Push, pull and blink" names each row's place.
 
 META-ROADMAP §"Round 13 — The unit kit" names each row's place.
 
+- [ ] **The officer: a study or a redesign** (the user, 2026-11-11, at
+  154g's sign: "it needs a more detailed study and / or a total
+  redesign"). The lowest unit on the prior table v9, −36.0 ± 14 pooled,
+  and the lowest or near it on every table since v4, when a rare's power
+  was 1. 154c's +1 DEF on Inspire's aura is built and unread: the table
+  cannot resolve a change that size (BALANCE 2026-11-10). A speed aura
+  quickens allies' strikes (+1 speed about 7–11 % at acts 1–2); the
+  kickoff dismissed it on a false premise (WORKLOG §154).
+
+- [ ] **The kit watches carried from §154** (signed 2026-11-11, on the
+  prior table v9, BALANCE 2026-11-10): the mercenary (−17.5 ± 7 pooled;
+  every character starts with four to six, so his recruit row reads an
+  extra copy as much as his kit), the halberdier (−30.9 ± 16; his bought
+  row swings between tables at n 38 to 60), the catapult (taken free
+  −49.2 ± 19) and the shaman (−27.9 ± 14), named watches; the adventurer
+  (−28.4 ± 12), the rioter (−16.2 ± 7) and the rogue (−29.5 ± 9, v9's
+  clearest negative unit), held until this round gives them their dodge
+  back, then re-read.
+
 - [ ] **`knownAbilityIds` has one reader left, the archetype editor.**
   The unit catalog stopped calling it at the load cycle's fix, so no
   test reaches it. The editor could read `Object.keys(ABILITY_DEFS)` and
@@ -418,6 +438,21 @@ META-ROADMAP §"Round 16 — The turn" names each row's place.
 ## Round 17 — Deck and daemons
 
 META-ROADMAP §"Round 17 — Deck and daemons" names each row's place.
+
+- [ ] **WATCH: a unit bought at the port reads below keeping the bits.**
+  On the prior table v9, 15 of the 16 units' bought rows sit below the
+  null (mean −32.4; v8 13 of 16, −23.0), against 11 of 16 taken free
+  (mean −6.3): a price level, not one unit's. The rarity protocol calls
+  it a price question only with a grant read beside it (step 3), so read
+  the grant first (BALANCE 2026-11-10; signed at 154g, 2026-11-11).
+
+- [ ] **The idols' rows swing past their errors between prior tables.**
+  Each item's move in its clustered errors has an rms of 1.45 over the
+  12 idols from v8 to v9 and 1.44 from v7 to v8 (the units' 0.85 and
+  1.20); the economy idols went down at v8 and up at v9. Each bank runs
+  under the previous table, and whether that drives the swing is not
+  read. Until it is, an idol's row from one table is not a disposition
+  (BALANCE 2026-11-10; WORKLOG §154, 154g).
 
 - [ ] **WATCH: Escalation 3 (bits −25%) reads no harder on the board's
   arm** (118e; BALANCE 2026-10-10). Kept by the user as an economy step:

@@ -6,7 +6,7 @@ A fresh-session orientation for ASCIIbattler. Read this first; then dive into th
 
 **The ONE home for live status.** Other docs (and the agent memory) point here instead of restating it; when state changes, this section is the single place that updates.
 
-- **NEXT — ROUND 11 (The roster): §154, the kits: 154a to 154f done (154a held for §155, 154e with its -post fix passed in play 2026-11-10); 154g's prior table v9 built and the units' and the idols' worth re-read on it; each watched row's disposition with the user, the stop (the leans in WORKLOG 154g)** (WORKLOG §154; [ROADMAP.md](ROADMAP.md) §154; the spec, [round-11-spec.md](round-11-spec.md)). 151f, the units' lines, lands when the user writes them. **Open ◐:** 154g, its dispositions.
+- **NEXT — ROUND 11 (The roster): §154, the kits: 154a to 154f done (154a held for §155, 154e with its -post fix passed in play 2026-11-10); 154g signed 2026-11-11 (the officer held for Round 13, every other lean as put; v9 stands as §155's prior table); next, the officer study the user invited, then §154's close** (WORKLOG §154; [ROADMAP.md](ROADMAP.md) §154; the spec, [round-11-spec.md](round-11-spec.md)). 151f, the units' lines, lands when the user writes them. **Open ◐:** none.
 - **In flight:** nothing; 154g's box was destroyed by its driver (2026-11-11 03:35Z).
 - **The public build:** `0.3.0` (`273d587d`, tag `v0.3.0`), uploaded to itch.io on 2026-11-04; the uploads before it are in Closed rounds below.
 - **Snapshots:** WorldSnapshot **v39** (no player keeps one) · RunSnapshot **v51** (a v50 save, `0.3.0`'s, rejects).

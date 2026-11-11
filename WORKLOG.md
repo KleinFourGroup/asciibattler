@@ -442,3 +442,11 @@ cadence reads the caster's effective speed at each cast,
   question only with a grant read (the protocol's step 3).
 - Cornucopia's flag dropped; the idols' swing between tables a TODO
   row, since a row read on one table can flip on the next.
+
+**Signed** (the user, 2026-11-11: "I vote that we leave the officer as
+is for round 13; I think it needs a more detailed study and / or a total
+redesign. Signing everything else."): the officer held at +1 DEF, his
+kit a study or a redesign at Round 13 (TODO, Round 13); every other lean
+as put. Nothing after 154g moves an item's value, so v9 stands as §155's
+prior-table rebuild. The user invited a study of why the officer
+underperforms, run while they were away.

@@ -135,7 +135,7 @@ The cut, signed 2026-11-08 (WORKLOG §154):
 - ☑ **154d — Hecate's size** (`batch`): +8 → +4 MAG, Mars and Diana held; her worth at 154g.
 - ☑ **154e — the area-status retune** (`stop`, in play): the wail, the hex and the ice storm, each status holding its area about half the time at act 3's level. Failed in play (2026-11-10: speed chained the statuses); its -post fix, the three cooldowns flat (`speedScaled: false`), signed, built and passed in play (WORKLOG §154).
 - ☑ **154f — the wolf** (`stop`, in play, at 154e's stop): Harry, Bite's numbers with Gambit's retreat.
-- ◐ **154g — the prior table v9 and the watches re-read** (`stop`, the decision point): each watched row's disposition to the user; it stands as §155's prior-table rebuild if nothing after it moves an item's value. v9 built at `07ce8ed5` (BALANCE 2026-11-10); the dispositions with the user (WORKLOG §154).
+- ☑ **154g — the prior table v9 and the watches re-read** (`stop`, the decision point): each watched row's disposition to the user; it stands as §155's prior-table rebuild if nothing after it moves an item's value. v9 built at `07ce8ed5` (BALANCE 2026-11-10); signed 2026-11-11: the officer held for Round 13, every other lean as put, so v9 stands as §155's table (WORKLOG §154).
 
 ## Phase 155 — the closing board (signed 2026-11-05)
 

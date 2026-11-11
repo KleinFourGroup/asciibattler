@@ -586,6 +586,14 @@ META-ROADMAP §"Round 21 — Act 2, the realm in chaos" names each row's place.
 
 META-ROADMAP §"Round 22 — Act 3, the plague" names each row's place.
 
+- [ ] **The luminant's light ray can hold one target blind.** At the
+  elemental trio's level it recasts every 1.1 s with a 4 s blind, so a
+  target it keeps choosing never sees; in 154e-post's lock probe, blind
+  took 2–3 % of player unit-time. Not changed at §154, whose retune was
+  the area locks (WORKLOG §154, 154e-post, in
+  `archive/worklog-phase-154.md`). The luminant fields at act 2's
+  witch-hunt and act 3's elemental trio.
+
 - [ ] **Mapgen tool: empty-camp-pool hint.** §81c field report
   (2026-08-17): the user spent five minutes rerolling VOLCANIC maps
   hunting for camps — the one theme whose pool ships empty. One line

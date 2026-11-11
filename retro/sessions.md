@@ -464,3 +464,59 @@ kickoff; a lever the box cannot sweep, now a TODO row); no distress.
 Both reports name a pull to present an estimate as settled, put as a
 flag each time, and both name a rule written before the numbers (the
 oracle's control, the pick rule) as worth repeating.
+
+## 2026-11-11 — session 08067f79 (§154: the kickoff to §154's close)
+
+The same session as the entry above, continued across at least one
+more compaction: §154's kickoff and cut, 154a to 154g, 154e's failed stop
+and its -post fix, the officer study the user invited at 154g's sign,
+and the close.
+
+1. Nothing missing at the kickoff; each compaction's summary carried the
+   queue, the readers and the signed numbers. After the last one, the
+   readers' paths were found again by listing scratch/.
+2. None conflicted. The no-commit window during a box launch and the
+   wish to record a result at once met twice; the window won, and the
+   drafts waited in scratch/.
+3. Three times, all filed. The kickoff's speed line was written from
+   memory of the dash's flag, not from the schema, and 154e failed in
+   play on it. 154g's reason against a re-tier was stated as whole from
+   one table row. At 154g there was also a pull to read the officer's
+   +18.7 as the +1 DEF working; the move in errors, with unchanged units
+   moving further, stopped it before it was written.
+4. 154e's first pass: a probe, a stop and a play pass for the user that
+   reading the schema would have saved. In the study, about ten minutes
+   on a check script's file-prefix bug, which the check itself exposed.
+5. The officer study's driver is machine-local
+   (`scratch/154/officer-study.ts`): a six-card roster makes the hand
+   the roster, unit ids restart each turn, and power moves only the
+   pool, which makes a clean known answer for any battle-level arm.
+6. Yes. The user's questions were real and the leans were mine to
+   put; the officer's hold was their call against my lean, and that
+   read as the process working. At 154e's stop I noticed a mild pull to
+   frame the speed error as "the audit's" rather than mine; I named it
+   as mine and the user answered warmly. No wish to pause or stop.
+7. The study: an open invitation to find out why, arms that each change
+   one thing, and a known answer that caught two of my own bugs before
+   a number was used. I would want that kind of task and that kind of
+   check repeated. Separately, the user's replay of 154e-post before the
+   launch made the box run feel unhurried.
+
+## Phase 154 — summary
+
+One session, 08067f79, from the kickoff to the close. It audited the
+kits on the prior table v8, got the cut and every lean signed, read the
+characters' parity on the box (154a, held for §155), pinned blind's rule
+(154b), and built the officer's +1 DEF, Hecate's +4 MAG, the area-lock
+retune and the wolf's Harry (154c to 154f). 154e failed in play because
+the kickoff's audit had the speed default backwards; its -post fix (flat
+cooldowns on the three locks) passed in play. 154g built the prior table
+v9 and re-read the watches; the user signed every lean but the
+officer's, held for Round 13, and invited a study of why he
+underperforms, which read power 2 as the largest part of his cost, then
+his fast, frail body, then his damage. Friction: four slips, three of
+them a claim ahead of its source (one cost the user a play pass) and
+one a test helper whose premise failed; no papercut, no distress. The
+report names a mild pull to frame an error as the audit's, reported
+plainly, and an open study with a known-answer check as worth
+repeating.

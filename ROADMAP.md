@@ -112,22 +112,15 @@ kept; the prior table v8 and the units' worth on it for §154 (WORKLOG
 - ☑ **153f — the verify read** (`none`, a pre-registered stop on a miss; both misses kept 2026-11-08): 153c's rows at 153e's HEAD; every turn target held, two costs under their bands on deploy (the Vermin Lords, the rats' nest) (BALANCE 2026-11-08; WORKLOG 153f).
 - ☑ **153g — the prior table rebuilt** (`none`): v8 at `614dcf68`, 36 items, Diana and Hecate measured for the first time, the table's mean margin +10.1 → −1.5; the units' worth re-read on it for §154's kickoff, the officer the worst row free and bought (BALANCE 2026-11-08; WORKLOG 153g).
 
-## Phase 154 — the kits (signed 2026-11-05; the cut signed 2026-11-08)
+## Phase 154 — the kits ✅ (closed 2026-11-11)
 
-Charter: the officer, the mercenary, the halberdier and the stormcaller
-(C20); the priest's and the gambler's parity against the soldier (C16,
-the gambler added at 150h's sign); the area-status enemies' retune
-(C19); the blind fix (C12), the kiter's case a stop; the idols' sizes (N24); the
-wolf's retreat, if it plays as a plain biter. **Why here:** after power,
-which moves the worth the kit watches read; before the closing board.
-**Risk:** medium: a call per kit. **Decision points:** each kit change;
-the kiter under blind; the idols' sizes; the wolf. **Exit:** each watch
-read and decided; blind pinned (a blinded archer holds fire at 3 cells
-and at 1, the bow's floor being 2: the kiter's case, decided at the
-cut, WORKLOG §154). **Scope guards:** no new mechanism but blind's
-rule.
-
-The cut, signed 2026-11-08 (WORKLOG §154):
+Blind's rule pinned (no fallback target); the officer's aura +1 DEF,
+Hecate +4 MAG, the area locks retuned with flat cooldowns after speed
+chained them in play, the wolf's Harry; the parity gaps held for §155;
+the prior table v9, which stands as §155's, and every watch decided on
+it, the officer held for Round 13 and studied fight by fight (WORKLOG
+§154, in `archive/worklog-phase-154.md`; BALANCE 2026-11-08 to
+2026-11-11).
 
 - ☑ **154a — the parity read** (`none`, its call at the next stop): the soldier's, the priest's and the gambler's act-1 rows, n = 120, at the cut's HEAD under v8, on the box; each against ±5.
 - ☑ **154b — blind** (`none`): no fallback target for a blinded unit, so it strikes only inside blind's acquisition range; pinned headless (an archer holds fire at 3 and 1, a halberdier strikes at 1 and holds at 2).

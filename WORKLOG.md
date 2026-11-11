@@ -273,3 +273,14 @@ the grant holds him and pays two bits a kill at Escalation 0.
 25 lines equal `scratch/150/150h/150h-board.queue`'s but the header,
 and the pair appended (`scratch/155/155a-board.queue`); the derive's
 line is 146b's (`scratch/155/155a-derive.queue`).
+
+### 155a — the cohorts launched (2026-11-11)
+
+*Launched* at `5d3bcba8`, pushed, from a detached worktree at
+`../asciibattler-155a` with a `node_modules` junction: the board's 25
+lines and Dis Pater's pair (`scratch/155/155a-board.queue`, 27 lines) on
+one `cpx42` from 23:46Z, after the driver's parity test, and the fresh
+derive on a second from 23:50Z. Drive logs in the worktree's
+`output/box-batches/155a-board-drive.log` and `155a-derive-drive.log`.
+The anchors ran locally in the worktree at the same HEAD, clean
+manifests: pure-random 6 of 40, greedy 7 of 40 (150h: 11 and 7).

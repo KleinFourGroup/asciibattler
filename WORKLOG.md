@@ -30,3 +30,9 @@ table v9 stands as §155's, the roster table still to rebuild, act 3
 easier on v9's bank, the parity gaps to read again;
 `process/planning.md` "Phase kickoff". 151f, the units' lines, lands
 here when the user writes them.
+
+§154's candidate guard (its close's friction read: a kickoff audit's
+line about how the code behaves names the file and line it read) is
+held. The user, 2026-11-11: "let's hold off for a bit; that extra test
+was a negligible inconvenience." The pattern, a claim written ahead of
+its source, stays listed for Round 11's close.

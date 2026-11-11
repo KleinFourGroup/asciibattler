@@ -6296,8 +6296,9 @@ deltas. The pre-X H7c→O log lives at
   lives 296, 255 and 297 ticks against 381, 309 and 374. Inspire's status
   is on 86 to 88 % of the allies' living ticks while he lives (69 to 71 %
   stand within 4 cells; the rest carry it out). In a fight at level 3 his
-  mobility reads 9 (6 base and his own aura's +2), an inspired
-  mercenary's 7.
+  mobility reads 9 (6 base, 1 from his levels, and his own aura's +2,
+  since an aura covers its carrier; 7 with the aura's mods emptied), an
+  inspired mercenary's 7.
 
   So the officer costs the pool 2.2 to 3.3 more an encounter than a
   sixth mercenary at every act and level read, where an archer costs

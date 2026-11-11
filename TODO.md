@@ -355,8 +355,11 @@ META-ROADMAP §"Round 13 — The unit kit" names each row's place.
   mercenary's). The aura works (1.7–2.5, mostly 154c's +1 DEF) and its
   reach is not the problem. The levers read: power 1, +2 STR or +2 SPD
   on the aura, the mercenary's mobility, ten more constitution; the
-  kickoff had dismissed a speed aura on a false premise. The study's
-  driver is machine-local, `scratch/154/officer-study.ts`.
+  kickoff had dismissed a speed aura on a false premise. His aura covers
+  him too (+2 MOB on himself; `aura.test.ts` pins a carrier's
+  inclusion), so an aura that skips its carrier would leave him the
+  mercenary's-mobility arm's speed of foot, less his own +1 DEF. The
+  study's driver is machine-local, `scratch/154/officer-study.ts`.
 
 - [ ] **The kit watches carried from §154** (signed 2026-11-11, on the
   prior table v9, BALANCE 2026-11-10): the mercenary (−17.5 ± 7 pooled;

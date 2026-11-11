@@ -36,3 +36,12 @@ line about how the code behaves names the file and line it read) is
 held. The user, 2026-11-11: "let's hold off for a bit; that extra test
 was a negligible inconvenience." The pattern, a claim written ahead of
 its source, stays listed for Round 11's close.
+
+After §154's close the user cut the officer's base mobility from 6 to
+3, committed as is: "we'll refine it more in round 13" (BALANCE
+2026-11-11, the officer at base mobility 3). The prior table v9 was
+measured before the cut. The bot fielded the officer in none of v9's
+hands, so the cut reaches the bank mainly through the generalissimo,
+whose band holds an officer. On the study's hand that act-2 boss went
+from 64 % cleared to 45 %, so the board reads the generalissimo on the
+bank as a watch.

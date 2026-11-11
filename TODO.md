@@ -360,6 +360,12 @@ META-ROADMAP §"Round 13 — The unit kit" names each row's place.
   inclusion), so an aura that skips its carrier would leave him the
   mercenary's-mobility arm's speed of foot, less his own +1 DEF. The
   study's driver is machine-local, `scratch/154/officer-study.ts`.
+  Then the user cut his base mobility from 6 to 3, committed the same
+  day ("we'll refine it more in round 13"; BALANCE 2026-11-11, the
+  officer at base mobility 3). He now costs 1.3–1.9 more an encounter,
+  mostly because he dies less. The other levers were read at base 6, so
+  Round 13 reads them again on base 3. The cut slows the generalissimo's
+  officer too.
 
 - [ ] **The kit watches carried from §154** (signed 2026-11-11, on the
   prior table v9, BALANCE 2026-11-10): the mercenary (−17.5 ± 7 pooled;

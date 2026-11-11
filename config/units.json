@@ -668,7 +668,7 @@
       "luck": 5,
       "defense": 1,
       "speed": 6,
-      "mobility": 6,
+      "mobility": 3,
       "power": 2
     },
     "growthRates": {

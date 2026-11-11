@@ -6319,3 +6319,49 @@ deltas. The pre-X H7c→O log lives at
   play; a fight's pool loss, not the table's long-horizon margin. The bot
   fielded the officer in none of 6,547 hands on v9's bank, so this reads
   his slot, not what a player builds around him.
+
+- **2026-11-11 — the officer at base mobility 3 (the user's change)**.
+  The user cut the officer's base mobility from 6 to 3, so with his own
+  aura's +2 he walks faster than an uninspired mercenary (4) and slower
+  than an inspired one (6). Measured with that one line of
+  `config/units.json` in the working tree at `ccc70cd5`: the study's
+  officer and mercenary arms rerun on its fights, seeds and levels
+  (10,400 runs, 10 min on 28 processes). The check: the mercenary arm's
+  hand holds no officer, so its rows must equal the study's byte for
+  byte wherever the enemy has none either, and 5,080 of 5,080 do; a row
+  planted +1 drops the count to 5,079. At the generalissimo, whose band
+  holds an officer, 0 of 120 do. In a fight at level 3 his mobility now
+  reads 5 or 6 (it read 9). The main suite passes on the change, 3,963
+  of 3,963.
+
+  His pool cost against a sixth mercenary, per encounter:
+
+  | the officer | act 1 L3 | act 1 L7 | act 2 L10 | act 3 L12 |
+  |---|---|---|---|---|
+  | base 3 | +1.60 ± 0.14 | +1.87 ± 0.17 | +1.27 ± 0.16 | +1.59 ± 0.18 |
+  | base 6, the study | +3.30 | +3.30 | +2.15 | +2.23 |
+  | base 4, the study's arm | +2.02 | +2.54 | +1.75 | +1.64 |
+  | base 3 less base 6, paired on the seed | −1.70 ± 0.12 | −1.44 ± 0.14 | −0.82 ± 0.13 | −0.64 ± 0.15 |
+
+  A turn he is dealt (the same four columns), he dies 0.57, 0.66, 0.72
+  and 0.63 times (at base 6, 0.77, 0.81, 0.80 and 0.71; a sixth
+  mercenary 0.52, 0.60, 0.69 and 0.59), lives 392, 360, 298 and 338
+  ticks (317, 296, 255 and 297), and deals 10.6, 11.3, 9.9 and 12.7
+  damage (12.5, 12.7, 11.1 and 15.3; a mercenary 29 to 46). So the cut
+  takes 52 % and 44 % off his cost at act 1 and 38 % and 29 % at acts 2
+  and 3, by keeping him alive: he now dies nearly as often as a mercenary,
+  and deals a little less than he did. Left over: 1.3 to 1.9 per
+  encounter. The study's other levers (power 1, the aura's +2 STR or
+  +2 SPD, more constitution) were read at base 6, not on top of this.
+
+  The generalissimo: the change reaches the enemy's officers too, since
+  his band holds one at power 3. On the study's mercenary hand at act 2,
+  level 10 (n 120, paired), the enemy's pool loses 4.08 ± 0.67 less,
+  clears fall from 64.2 % to 45.0 % (−19.2 ± 4.6 points), defeats rise
+  from 55.0 % to 64.2 % (+9.2 ± 4.6), and the player's pool loss moves
+  +0.67 ± 0.52. The enemy losing less pool fits his officer falling
+  later or less often; that is not traced.
+
+  Limits: those of the study (one forced fight, its hand, the driver's
+  fixed play). The bank's hands and its generalissimo fights are not
+  read.

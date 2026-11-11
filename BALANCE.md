@@ -6248,3 +6248,73 @@ deltas. The pre-X H7c→O log lives at
 
   Mars is unmeasurable, the soldier's start idol. One character and one
   bot's play.
+- **2026-11-11 — the officer study: what his slot costs a fight**
+  (§154, after 154g's sign, the user's invitation). The driver,
+  `scratch/154/officer-study.ts` (machine-local): one forced fight a run
+  (a normal at the root, an elite by `firstNode=elite`, a boss by
+  `hops=1`), the soldier with `daemon=none` and a six-card roster, so the
+  hand is the roster: three mercenaries, two archers and a sixth card,
+  all at one level. The probe kit's driver plays it (Fight with the hand
+  as dealt, nothing else chosen). An arm changes only the sixth card or
+  the officer's config, set in the process before any run, and each arm
+  is paired on the run seed against the sixth card a mercenary. The
+  metric is the pool the player lost over the encounter, which is the
+  casualty rule's fallen power on 44,885 of the 45,811 runs not lost
+  (the rest held a capped turn). Two grids: act 1's eight fights
+  at level 3, 13 arms × 200 seeds (20,800 runs, 20 min on 28 processes);
+  every act's ten fights at the bot's hand levels on v9's bank (act 1 6.7,
+  act 2 9.6, act 3 11.7, run at 7, 10 and 12), 9 arms × 120 seeds
+  (32,400 runs, 24 min). The check: power moves only the pool, so on a
+  seed neither arm lost, the power-1 arm's fight is the shipped
+  officer's and its pool loss one less per officer death; it holds on
+  1,354 of 1,355 pairs, and a planted fault on one pair reads 1,353.
+  `scratch/154/study-read.mjs` reads the grids, `study-check.mjs` the
+  check.
+
+  Pool loss over the encounter, the arm less the mercenary arm, mean
+  over the fights weighted equally (the officer arms' errors 0.13 to
+  0.20; the mercenary arm lost 11.8, 13.9, 17.5 and 12.6):
+
+  | arm | act 1, L3 | act 1, L7 | act 2, L10 | act 3, L12 |
+  |---|---|---|---|---|
+  | the officer as shipped | +3.30 | +3.30 | +2.15 | +2.23 |
+  | his aura off | +4.98 | +5.60 | +4.49 | +4.76 |
+  | his aura as before 154c, +2 MOB alone | +4.63 | | | |
+  | his aura over the whole board | +2.96 | +2.88 | +1.75 | +1.67 |
+  | his power 1 | +1.03 | +0.84 | −0.10 | +0.07 |
+  | his base mobility 4, the mercenary's | +2.02 | +2.54 | +1.75 | +1.64 |
+  | his constitution 30 | +2.00 | +1.89 | +1.23 | +1.28 |
+  | his aura +1 SPD | +2.65 | | | |
+  | his aura +2 SPD | +1.90 | +1.32 | +0.64 | +0.47 |
+  | his aura +2 STR | +0.49 | | | |
+  | an archer | −0.32 | −0.07 | −0.24 | +0.04 |
+  | a healer | −1.41 | | | |
+
+  A turn he is dealt (act 1 L7, act 2, act 3), the officer dies 0.81,
+  0.80 and 0.71 times against a sixth mercenary's 0.60, 0.69 and 0.59,
+  deals 12.7, 11.1 and 15.3 damage against its 35.1, 29.0 and 45.8, and
+  lives 296, 255 and 297 ticks against 381, 309 and 374. Inspire's status
+  is on 86 to 88 % of the allies' living ticks while he lives (69 to 71 %
+  stand within 4 cells; the rest carry it out). In a fight at level 3 his
+  mobility reads 9 (6 base and his own aura's +2), an inspired
+  mercenary's 7.
+
+  So the officer costs the pool 2.2 to 3.3 more an encounter than a
+  sixth mercenary at every act and level read, where an archer costs
+  what a mercenary does (within a third of a point). Power 2 is the largest single
+  part: at power 1 he costs 0.8 to 1.0 more at act 1 and nothing more at
+  acts 2 and 3, since he dies the most of the six and each death costs
+  2. The aura works: off, he costs 1.7 to 2.5 more. Its reach is not the
+  problem (the whole board saves 0.3 to 0.6), and before 154c it was
+  worth 0.35 at act 1, level 3; 154c's +1 DEF is 1.33 of the shipped
+  aura's 1.68 there. His body is the fastest and among the frailest, so
+  he arrives first and falls first: the mercenary's mobility saves 0.4 to
+  1.3, ten more constitution 0.9 to 1.4. His own damage is a third of a
+  mercenary's. Of the kit levers read, an aura of +2 STR closes all but
+  0.5 at act 1, level 3, and +2 SPD 1.4 to 2.0 at every act.
+
+  The limits: one forced fight from a full pool, a hand of mercenaries
+  and archers at one level, no daemon and no empower, the driver's fixed
+  play; a fight's pool loss, not the table's long-horizon margin. The bot
+  fielded the officer in none of 6,547 hands on v9's bank, so this reads
+  his slot, not what a player builds around him.

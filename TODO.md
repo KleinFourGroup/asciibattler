@@ -346,10 +346,17 @@ META-ROADMAP §"Round 13 — The unit kit" names each row's place.
   154g's sign: "it needs a more detailed study and / or a total
   redesign"). The lowest unit on the prior table v9, −36.0 ± 14 pooled,
   and the lowest or near it on every table since v4, when a rare's power
-  was 1. 154c's +1 DEF on Inspire's aura is built and unread: the table
-  cannot resolve a change that size (BALANCE 2026-11-10). A speed aura
-  quickens allies' strikes (+1 speed about 7–11 % at acts 1–2); the
-  kickoff dismissed it on a false premise (WORKLOG §154).
+  was 1. The table cannot resolve a change the size of 154c's +1 DEF
+  (BALANCE 2026-11-10). Studied fight by fight the next morning
+  (BALANCE 2026-11-11, the officer study; WORKLOG §154): against a sixth
+  mercenary he costs the pool 2.2–3.3 more an encounter at every act.
+  Power 2 is the largest part (he dies the most of the six, at 2 a
+  death), then his fast, frail body, then his damage (a third of a
+  mercenary's). The aura works (1.7–2.5, mostly 154c's +1 DEF) and its
+  reach is not the problem. The levers read: power 1, +2 STR or +2 SPD
+  on the aura, the mercenary's mobility, ten more constitution; the
+  kickoff had dismissed a speed aura on a false premise. The study's
+  driver is machine-local, `scratch/154/officer-study.ts`.
 
 - [ ] **The kit watches carried from §154** (signed 2026-11-11, on the
   prior table v9, BALANCE 2026-11-10): the mercenary (−17.5 ± 7 pooled;

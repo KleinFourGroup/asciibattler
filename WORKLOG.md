@@ -450,3 +450,46 @@ kit a study or a redesign at Round 13 (TODO, Round 13); every other lean
 as put. Nothing after 154g moves an item's value, so v9 stands as §155's
 prior-table rebuild. The user invited a study of why the officer
 underperforms, run while they were away.
+
+### The officer study (2026-11-11, the user's invitation at 154g's sign)
+
+The numbers are in BALANCE (2026-11-11, the officer study). The prior
+table reads a long horizon and cannot resolve a change the size of
+154c's; this reads one fight at a time, the officer against a sixth
+mercenary in a fixed six-card hand, paired on the seed, with arms that
+each change one thing about him. Act 1's eight fights at level 3, then
+every act's ten fights at the bot's hand levels.
+
+- He costs the pool 2.2 to 3.3 more an encounter than a sixth mercenary
+  at every act and level read; an archer costs what a mercenary does.
+- Power 2 is the largest single part (2.2 to 2.5): he dies the most of
+  the six, 0.7 to 0.8 times a turn he is dealt, and each death costs 2.
+  At power 1 he is 0.8 to 1.0 behind at act 1 and level at acts 2 and 3.
+- The aura works, worth 1.7 to 2.5 an encounter, and its status is on
+  86 to 88 % of the allies' living ticks while he lives, so widening it
+  saves little (0.3 to 0.6). Before 154c it was worth 0.35 at act 1;
+  154c's +1 DEF is most of what it is worth now, the read the table
+  could not give.
+- His body is the fastest on the team (mobility 6, and his own aura's +2
+  on himself) and among the frailest, so he arrives first and falls
+  first: the mercenary's mobility saves 0.4 to 1.3, ten more
+  constitution 0.9 to 1.4.
+- His damage is a third of a mercenary's. Of the kit levers read, an
+  aura of +2 STR closes all but 0.5 at act 1, and +2 SPD saves 1.4 to
+  2.0 at every act.
+
+For Round 13, not decided here: the levers by what they save, power
+first. The limits are BALANCE's: one fight from a full pool, a plain
+hand, fixed play, and the bot never fields him, so this is his slot and
+not what a player builds around him.
+
+*Corrected:* 154g's message gave "he read lowest in v4's book at power 1
+too" as the reason a re-tier was not the lean. The study puts power 2 as
+the largest single part of his cost; the v4 row fits that, since at
+power 1 he is still behind at act 1. A slip filed.
+
+*The study's own faults,* both caught by its known-answer check before a
+number was used: the check first loaded files by an arm-name prefix, so
+`officer-` matched every officer arm; and the driver's sixth-card flag
+missed a unit id used again, since ids restart each turn (the reads use
+the per-archetype tallies, which the check runs on).

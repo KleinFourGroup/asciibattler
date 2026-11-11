@@ -220,3 +220,56 @@ only; 155f's line moves no run. Box: 155a, and 155e if it runs.
    it.
 
 *The stretch the cut opens:* 155a and 155b, to the stop at 155c.
+
+### The cut signed, with an overnight chain (2026-11-11)
+
+The user, before the sign, proposed a gamble on a box run: the two
+boxes finish at about 2 a.m. their time, so if the board read leans to
+a retune, the session tunes act 1 as best it can and launches the
+verify board, and the morning holds the tunes to sign with a board
+about to land. The session's answer, put before the sign: on board,
+under rules signed in advance (`process/measurement.md`, "Watching a
+batch"); the user plays act 1 after the verify board launches, and a
+finding in play reopens it, which is the gamble. Its best guess from
+153f's and 154a's act-alone rows: seam 1 and act 1's wall are likely
+band calls, since the two vectors straddled the seam band at 153f
+(0.598 deploy, 0.439 regen, against 0.475–0.55; 1.1 points apart at
+146f, 6.3 at 153f) and a content tune moves both one way; the wolf's
+Harry is the one §154 change in act 1's fights (the wolfpack, the
+canids, the bear's fight), so the canids (2.02 deploy against 2–6) and
+the wolfpack (2.21) are the likeliest per-fight tunes; the rats' nest
+and the Vermin Lords, kept at 153f, kept again under rule 1. Zero to
+two fights.
+
+**Signed** (the user: "I'm quite happy with all of those, Claude! 😁
+Signing all of these!"): the cut, its seven leans, and the chain:
+
+1. *Which fight is tuned:* only one whose value pooled over the two ARM
+   walk rows (weighted by instances) is outside its turn target or cost
+   band. A one-row miss in band pooled is kept and listed, as at 153f.
+2. *How:* the fight's own levers (wave size, level budget, pool), baked
+   as at 146e and 153e: an isolation sweep, then a held-out check, on
+   the box. A fight not landed after two sweep rounds stays untuned and
+   listed.
+3. *Never overnight:* seam 1, act 1's wall, a lever outside one fight;
+   acts 2 and 3 recorded only.
+4. *Pauses:* a lean to rebuild v9 after the generalissimo's read stops
+   the chain before any launch, since the verify board would run under
+   a table about to change. Driver holds as lean 6. The context meter's
+   hand-off at a commit before the launch stops it there with hand-off
+   notes, since a turn a finished box wakes cannot start a session.
+   No fight qualifying launches nothing; the morning is 155c's stop.
+5. *Flags:* every call the session makes is written here for the
+   morning read.
+
+### 155a's step zero (2026-11-11)
+
+The grant arm's argv at one seed, locally at `d99fc976` with the cut's
+docs uncommitted, `--hops=2` to keep it short: seed 7001 with and
+without `--grant=dis-pater`, the same 5 battles and 34 kills on both,
+the grant's bits 105 against the control's 37, 68 more, two a kill. So
+the grant holds him and pays two bits a kill at Escalation 0.
+`scratch/155/make-queue.mjs` made the queues from `--plan`: the board's
+25 lines equal `scratch/150/150h/150h-board.queue`'s but the header,
+and the pair appended (`scratch/155/155a-board.queue`); the derive's
+line is 146b's (`scratch/155/155a-derive.queue`).

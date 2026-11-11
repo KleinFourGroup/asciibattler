@@ -12,7 +12,7 @@ with its spec, its per-phase worklogs (`archive/worklog-phase-142.md` to
 `-147.md`) and its session reports beside it; before it
 [archive/post-133-roadmap.md](archive/post-133-roadmap.md) (Round 9).
 
-**Status: Round 11 under way; §154, the kits, is next.** The spec
+**Status: Round 11 under way; §155, the closing board, cut and signed.** The spec
 is [round-11-spec.md](round-11-spec.md), signed 2026-11-05. The charter,
 the decision points, the exit and the scope guards are in META-ROADMAP
 §"Round 11 — The roster"; its riders are TODO's "Round 11".
@@ -141,6 +141,17 @@ here:** after every number the round moves. **Risk:** medium: box time.
 **Decision points:** the box's size and cost; act 1's bands. **Exit:**
 the round's (META-ROADMAP §"Round 11"). **Scope guards:** act 3's
 terminal band's re-set is Round 22's.
+
+The cut, signed 2026-11-11 with its seven leans and the overnight chain
+(WORKLOG §155):
+
+- ☐ **155a — the cohorts on the box** (`none`): the board, 150h's queue line for line, and Dis Pater's grant pair (n=80, seeds 7001–7080) on one `cpx42`; the fresh derive on a second; the anchors local.
+- ☐ **155b — the roster table rebuilt** (`none`): v8 from the eight ARM rows, the officer's PENDING line back if no ARM row drafts him.
+- ☐ **155c — the board read** (`stop`, the decision point): against 146f's and 150h's; act 1's bands in two arms; the parity gaps, the generalissimo and v9, the wall watch, acts 2 and 3 recorded, the derive, Dis Pater and his sentence's wording.
+- ☐ **155d — act 1 tuned** (`stop`; only fights whose pooled value misses its turn target or cost band, by the overnight chain's rules, signed in the morning): isolation, held-out, baked; the user plays act 1.
+- ☐ **155e — the verify board** (`none`; only after 155d, launched before 155d's sign as the overnight gamble): 155a's board at 155d's HEAD, the roster table rebuilt from it.
+- ☐ **155f — Dis Pater's sentence** (`batch`): the wording signed at 155c; read with `?daemon=dis-pater` on the pre-turn panel.
+- ☐ **155g — the sheet amended** (`stop`; the user may make it `none` under arm A): act 1's refs, seam 1, act 1's wall and the forced King and Queen re-pinned; acts 2 and 3 recorded for Rounds 21 and 22.
 
 ## Phase 156 — the close (signed 2026-11-05)
 

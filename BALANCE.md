@@ -6216,8 +6216,8 @@ deltas. The pre-X H7c→O log lives at
   In bold, the 11 site rows past two errors of 0 (v8: 5); with 32 site
   rows, about 1.5 would pass by chance. Bought, 15 of the 16 rows read
   below the null, mean −32.4 (v8: 13 of 16, −23.0); taken free, 11 of
-  16 below it, mean −6.3. The officer's +18.7 is 0.95 errors, and units no §154
-  change touched moved further (the halberdier −30.5, the reaver −26.0,
+  16 below it, mean −6.3. The officer's +18.7 is 0.95 errors, and units whose own kits §154
+  left alone moved further (the halberdier −30.5, the reaver −26.0,
   the stormcaller +25.4, the mage −22.7), so the table cannot read his
   +1 DEF; he is still the lowest row pooled, 5.1 under the halberdier,
   and his free row is no longer past two errors (1.75). Free rows negative on

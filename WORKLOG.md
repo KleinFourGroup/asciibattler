@@ -375,3 +375,70 @@ row).
 *154e-post's re-read* (the user, 2026-11-10: "I did the plays first,
 Claude, and they're good, so you're clear to launch!"): the three
 fights pass in play. 154e done; 154g launched.
+
+### 154g — the prior table v9 and the watches re-read (2026-11-10)
+
+The numbers are in BALANCE (2026-11-10, the prior table v9, and the
+watches re-read on it): the registry's recipe at `07ce8ed5`, 4 h 54 min
+of one `cpx42`, 32.3 CPU-hours; 36 items, 35 over the floor, Hecate (65)
+under it. What it says:
+
+- *The bank completed 97 of 120 runs* against v8's 80 (paired 22 : 5,
+  p 0.0015), and act 3's defeats fell from 14 to 2. Act 3 is where the
+  area locks act, but the bank's prior changed too (v9's bank ran under
+  v8, v8's under v7), so neither cause is isolated. §155's board
+  records acts 2 and 3; act 3's band is Round 22's.
+- *The units' moves are the table's noise*: an rms of 0.85 errors over
+  16 units, none past two. The officer's +18.7 is 0.95 errors, and
+  units whose own kits §154 left alone moved further (the halberdier −30.5, the
+  reaver −26.0, the stormcaller +25.4), so the table cannot read his
+  +1 DEF. He is still the lowest unit pooled, −36.0 ± 14 (2.7 errors),
+  as on v8 (−54.7 ± 14) and in v4's book, when a rare's power was 1.
+- *Hecate*, +79.7 ± 19 → +0.5 ± 23, a move of −79 ± 30 in the
+  direction the cut aimed. Her n fell under the floor because v8's prior
+  had the bank take her at every offer (29 of 29 at the port, 36 of 36
+  as a reward), so she is met about once a run.
+- *The idols swing past their errors between any two tables*: an rms of
+  1.45 errors (v7 → v8: 1.44), the economy idols down at v8 and up at
+  v9. Cornucopia, −36.3 at the kickoff, reads +10.5 ± 16.
+- *Bought, 15 of the 16 unit rows read below the null* (mean −32.4; v8
+  13 of 16, −23.0); taken free, 11 of 16 (mean −6.3).
+- *Every character starts with four to six mercenaries* (the soldier
+  six, the priest six, the gambler four), so a mercenary recruited is
+  always a fifth to seventh copy.
+- The readers' checks: n and meanΔ equal the table's on 16 of 16 units
+  and 12 of 12 idols; a planted 0.01 on the officer and on Hecate reads
+  one mismatch in each family; on v8's sources the reader reproduces
+  153g's units.
+
+*Also found:* the kickoff's false speed claim (corrected at 154e's stop)
+had taken a speed aura off the officer's options too. Speed quickens
+every ability but the dash and the three area locks, so +1 speed on
+Inspire's aura would quicken nearby allies' strikes: at acts 1 and 2,
+where the draftables' speed runs about 5 to 10, by 7 to 11 % (the
+cadence reads the caster's effective speed at each cast,
+`src/sim/effects/propose.ts`).
+
+*Put to the user* (the message of 2026-11-10), the leans:
+
+- Hecate: hold at +4 MAG; Diana held.
+- The officer: Inspire's aura gains +1 speed beside +2 mobility and +1
+  defense, a `batch` read, §155 rebuilding the table. The alternative:
+  hold, a named watch for Round 13 (the unit kit), and v9 stands as
+  §155's table. A re-tier is not the lean: he read lowest in v4's book
+  at power 1 too.
+- The mercenary: hold, a named watch; his recruit row reads a fifth to
+  seventh copy as much as his kit.
+- The halberdier: hold, a named watch (free −12.7 ± 16; his bought row
+  +26.1, −32.0, −81.7 on v7 to v9 at n 38 to 60).
+- The stormcaller and the gunslinger: hold, off the watch list (pooled
+  +18.8 and +11.5, free +34.7 and +29.5).
+- The adventurer, the rioter and the rogue: hold until Round 13 gives
+  them back their dodge; the rogue named beside them, v9's strongest
+  unit signal (pooled −29.5 ± 9, 3.4 errors; free −31.0 ± 11).
+- The catapult and the shaman: named watches (the catapult free
+  −49.2 ± 19; the shaman pooled −27.9 ± 14).
+- The port's unit prices as a level: a named watch in TODO, a price
+  question only with a grant read (the protocol's step 3).
+- Cornucopia's flag dropped; the idols' swing between tables a TODO
+  row, since a row read on one table can flip on the next.

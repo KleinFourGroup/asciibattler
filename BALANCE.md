@@ -6512,3 +6512,19 @@ deltas. The pre-X H7c→O log lives at
   `output/155a-anchors/`, the derive's vector in
   `output/box-batches/20261111-235011-5d3bcba8/best-strategy.json`, the
   logs in `scratch/155/`. Detail: WORKLOG §155, 155a to 155c.
+- **2026-11-12 — the priest's regen row under v8** (§155, 155h). The
+  board's arb-priest-regen line with the ARM on the prior table v8
+  (`--prior-table`, the file from git at `07ce8ed5` carried to the box,
+  sha256 `76e7e2e1` on both ends), n=120 on seeds 1 to 120, at
+  `f6787d04` (the board's game; the commits since `5d3bcba8` are docs and
+  the roster table, which this row does not read), one `cpx42`, 28 min,
+  exit 0. Act 1 cleared 66 of 120. Paired on the seeds
+  (`scratch/146/pair.mjs`): against the board's row under v9 (63), 5 : 8,
+  p 0.58, not told apart; against 154a's row under v8 at `8ebca66d`
+  (80), 20 : 6, p 0.009; against the soldier's row on the board (85), 8 :
+  27, p 0.002. Its defeats by encounter: the King 19, the bear 22, the
+  cats 6, the rest 7 (the board's v9 row 21, 22, 6 and 8; 154a's 15, 14,
+  4 and 7). So the priest's regen drop is not the table's: it came with
+  the game between `8ebca66d` and `5d3bcba8`, §154's kits and the
+  officer's base mobility 3, none isolated. The bear's fight fields
+  wolves, whose Harry is §154's; the King's fields no officer.

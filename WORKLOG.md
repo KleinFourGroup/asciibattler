@@ -476,3 +476,17 @@ Set into the same box, 8 of the 13 shipped idols' lines take two lines,
 Mars's among them (shown on every soldier run), and the old sentence
 took one. So two lines is the panel's ordinary state; the read is
 whether this one looks right on two, in Firefox.
+
+### 155h — the priest's cause read (2026-11-12)
+
+Back at 15:09Z, one batch verified with exit 0 and the box destroyed by
+its driver; 28 min of box. The numbers are in BALANCE (2026-11-12, the
+priest's regen row under v8). Under v8 at this game the row clears 66
+of 120, against 63 under v9 on the same seeds (5 : 8, p 0.58) and 80
+under v8 at 154a's game (20 : 6, p 0.009), and its defeats fall where
+the v9 row's do, the King 19 and the bear 22. So the table did not move
+the priest; the game did, between `8ebca66d` and `5d3bcba8`: §154's kits
+and the officer's base mobility, not isolated here. Under the signed
+calls that settles it: v9 stands with nothing reopened, and the priest's
+regen gap carries with the others, its cause narrowed to §154's game.
+Which kit is a read for the parity work, noted on TODO's row.

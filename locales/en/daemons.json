@@ -24,5 +24,5 @@
   "daemons.patricians-seal.description": "Common units no longer appear in draft pools.",
   "daemons.portunus.description": "Ports always stock a legendary unit.",
   "daemons.fortuna.description": "A critical strike emboldens the striker: +1 STR / RNG / MAG for 5s.",
-  "daemons.dis-pater.description": "Each kill tithes 2 bits from below."
+  "daemons.dis-pater.description": "Kills tithe bits from below: 2 apiece, paid as one sum at the turn's end."
 }

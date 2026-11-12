@@ -151,7 +151,7 @@ The cut, signed 2026-11-11 with its seven leans and the overnight chain
 - ☐ **155h — the priest's cause read** (`none`; inserted at 155c's sign, the priest's regen row fell 80 → 63 against 154a): that row at this HEAD with the ARM on v8, n=120, paired against the board's row under v9.
 - ✗ **155d — act 1 tuned**: not run; arm A signed and no fight misses its band pooled (WORKLOG 155c).
 - ✗ **155e — the verify board**: not run, with 155d.
-- ☐ **155f — Dis Pater's sentence** (`batch`): the wording signed at 155c; read with `?daemon=dis-pater` on the pre-turn panel.
+- ◐ **155f — Dis Pater's sentence** (`batch`): the wording signed at 155c; read with `?daemon=dis-pater` on the pre-turn panel. Built 2026-11-12, wording (b) in the config and the locale (WORKLOG 155f).
 - ☐ **155g — the sheet amended** (`stop`; the user may make it `none` under arm A): act 1's refs, seam 1, act 1's wall and the forced King and Queen re-pinned; acts 2 and 3 recorded for Rounds 21 and 22.
 
 ## Phase 156 — the close (signed 2026-11-05)

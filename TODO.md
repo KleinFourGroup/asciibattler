@@ -288,13 +288,11 @@ META-ROADMAP §"Round 11 — The roster" names each row's place.
 
 ### Dis Pater
 
-- [ ] **Dis Pater's sentence, against the tithe as built** (117e's watch,
-  rewritten at §133). The tithe is tallied raw in the World and rounded
-  once on a turn's total, which the user confirmed is the intent
-  (2026-10-26), so at Escalation 3 to 5 (a bits lever of 0.75) one kill in
-  a turn pays 2 and two pay 3: "each kill tithes 2 bits" holds for a
-  one-kill turn alone. Reword it with the `--grant` read below, and reread
-  it whenever level 3's lever is retuned.
+- ✅ **Dis Pater's sentence, against the tithe as built.** Done at 155f:
+  "Kills tithe bits from below: 2 apiece, paid as one sum at the turn's
+  end.", signed 2026-11-12; the sum is rounded once, so Escalation's
+  "You earn fewer bits" scales it as the player sees (WORKLOG §155).
+  Reread it whenever level 3's bits lever is retuned.
 
 - ✅ **The Dis Pater `--grant` read at n=80.** Done at 155a and 155c:
   held free he is net-positive, +0.087 (11 : 4, z 1.81), +2.23 pool,

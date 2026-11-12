@@ -6,8 +6,8 @@ A fresh-session orientation for ASCIIbattler. Read this first; then dive into th
 
 **The ONE home for live status.** Other docs (and the agent memory) point here instead of restating it; when state changes, this section is the single place that updates.
 
-- **NEXT — ROUND 11 (The roster): §155, the closing board: 155c signed (arm A, every lean); 155h, the priest's cause read on the box, then 155f, Dis Pater's sentence, and 155g's stop, the sheet re-pinned** (WORKLOG §155, 155c and "The calls signed"; [ROADMAP.md](ROADMAP.md) §155; the spec, [round-11-spec.md](round-11-spec.md)). 151f, the units' lines, lands when the user writes them. **Open ◐:** none.
-- **In flight:** nothing; 155a's two boxes are destroyed, the derive's by its driver (2026-11-12 04:06Z), the board's by hand after a Windows Update restart killed its driver (14:13Z; WORKLOG 155a).
+- **NEXT — ROUND 11 (The roster): §155, the closing board: 155c signed (arm A, every lean); 155h, the priest's cause read on the box, then 155f, Dis Pater's sentence, and 155g's stop, the sheet re-pinned** (WORKLOG §155, 155c and "The calls signed"; [ROADMAP.md](ROADMAP.md) §155; the spec, [round-11-spec.md](round-11-spec.md)). 151f, the units' lines, lands when the user writes them. **Open ◐:** 155f, Dis Pater's sentence (`batch`), read at the next stop.
+- **In flight:** 155h's box, `abox-20261112-144126`, one batch launched 14:43Z at `f6787d04`, driven by `scripts/box-drive.sh` (log `scratch/155/155h-drive.log`), which destroys it after a verified fetch; 155a's two boxes are destroyed.
 - **The public build:** `0.3.0` (`273d587d`, tag `v0.3.0`), uploaded to itch.io on 2026-11-04; the uploads before it are in Closed rounds below.
 - **Snapshots:** WorldSnapshot **v39** (no player keeps one) · RunSnapshot **v51** (a v50 save, `0.3.0`'s, rejects).
 - **Tests:** **3963 main** in 271 files, **587 fuzz:smoke** in 60 files and **1 fuzz:jobs-parity** at `05f65ef5` (155b, its hook); typecheck clean; the journal corpus, run by hand, 37 tests over 33 journals, recorded and 37 passed at `794cc905`.

@@ -452,3 +452,27 @@ summing to 84.4 against 62.2, and both seeds end as under v9. So the
 flag reads the table, and the manifest's argv holds it. The box takes
 the table by `--carry`, as measurement.md says for an input the commit
 does not hold.
+
+*Launched* at `f6787d04`, pushed: one `cpx42` from 14:41Z, the batch
+`20261112-144218-f6787d04` from 14:43Z, the carried table's sha256
+`76e7e2e1` on both ends (`scratch/155/155h-drive.log`).
+
+### 155f — Dis Pater's sentence (2026-11-12)
+
+Wording (b), "Kills tithe bits from below: 2 apiece, paid as one sum at
+the turn's end.", in `config/daemons.json` and
+`locales/en/daemons.json`; no test pins either, and only the archive and
+TODO's row held the old line. The payment matches the code
+(`src/run/Run.ts:2688-2707`): the battle's kill tally is one reward
+portion between turns, settled through `gainBits`, so the bits lever
+rounds the sum once. TODO's two Dis Pater rows are closed.
+
+In the Browser pane at 1280×720 (Chromium, the dev server at this
+tree), `?daemon=dis-pater&character=soldier&seed=7&layout=isthmus`
+driven to `turn-intro`: the ◈ line reads the new sentence from the
+locale, over two lines of its 520 px box. *Flag:* the read script I
+wrote at the cut calls a wrapped line wrong, and that was unmeasured.
+Set into the same box, 8 of the 13 shipped idols' lines take two lines,
+Mars's among them (shown on every soldier run), and the old sentence
+took one. So two lines is the panel's ordinary state; the read is
+whether this one looks right on two, in Firefox.

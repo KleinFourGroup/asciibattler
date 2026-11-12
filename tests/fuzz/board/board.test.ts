@@ -125,7 +125,7 @@ describe('evaluateBoard', () => {
     winRate,
     bossWall: 0.32,
     terminalReach: 0.45,
-    seamPool: 0.5 * (sheet.seams['1']!.min + sheet.seams['1']!.max) * HEALTH.playerHealthMax, // 94h-pre: mid-band, a fraction of max
+    seamPool: 0.5 * (sheet.seams['1']!.regen.min + sheet.seams['1']!.regen.max) * HEALTH.playerHealthMax, // 94h-pre: mid-band, a fraction of max
     // 83f — bank/fires come FROM the sheet too (the 72f fixture hardcoded 70 /
     // 2.9 inside the old bands; the §82-economy re-pin exposed it — the
     // balance-proof rule, applied to every ref the row checks). 85g6d: tx
@@ -137,10 +137,11 @@ describe('evaluateBoard', () => {
     pacingNormal: 0.5 * (sheet.pacingBands.normal.min + sheet.pacingBands.normal.max),
     pacingElite: 0.5 * (sheet.pacingBands.elite.min + sheet.pacingBands.elite.max),
     pacingBoss: 0.5 * (sheet.pacingBands.boss.min + sheet.pacingBands.boss.max),
-    // 143d — the walk rows check seam 1 off `seams`; the same mid-band pool.
-    seams: [{ act: 1, crossed: 40, pool: 0.5 * (sheet.seams['1']!.min + sheet.seams['1']!.max) * HEALTH.playerHealthMax }],
+    // 143d — the walk rows check seam 1 off `seams`; the regen vector's
+    // mid-band pool (a band a vector since 155g).
+    seams: [{ act: 1, crossed: 40, pool: 0.5 * (sheet.seams['1']!.regen.min + sheet.seams['1']!.regen.max) * HEALTH.playerHealthMax }],
     // The walk rows check act 1's wall off `walls` since it was signed; mid-band.
-    acts: [{ act: 1, bossHop: 10, arrivals: 40, reach: 1, wall: 0.5 * (sheet.walls['1']!.min + sheet.walls['1']!.max) }],
+    acts: [{ act: 1, bossHop: 10, arrivals: 40, reach: 1, wall: 0.5 * (sheet.walls['1']!.regen.min + sheet.walls['1']!.regen.max) }],
   });
 
   it('an at-reference arb-regen read PASSes every check', () => {
@@ -275,15 +276,15 @@ describe('86e2 — the fail-closed verdict layer (mechanism smoke; the per-class
     winRate: 0.6,
     bossWall: 0.32,
     terminalReach: 0.45,
-    seamPool: 0.5 * (sheet.seams['1']!.min + sheet.seams['1']!.max) * HEALTH.playerHealthMax,
+    seamPool: 0.5 * (sheet.seams['1']!.regen.min + sheet.seams['1']!.regen.max) * HEALTH.playerHealthMax,
     transactionRate: sheet.acts['1']!.firerTransactionRate,
     terminalBank: sheet.acts['1']!.bankRefs.firer,
     firesPerRun: sheet.acts['1']!.firerFiresPerRun,
     pacingNormal: 0.5 * (sheet.pacingBands.normal.min + sheet.pacingBands.normal.max),
     pacingElite: 0.5 * (sheet.pacingBands.elite.min + sheet.pacingBands.elite.max),
     pacingBoss: 0.5 * (sheet.pacingBands.boss.min + sheet.pacingBands.boss.max),
-    seams: [{ act: 1, crossed: 40, pool: 0.5 * (sheet.seams['1']!.min + sheet.seams['1']!.max) * HEALTH.playerHealthMax }],
-    acts: [{ act: 1, bossHop: 10, arrivals: 40, reach: 1, wall: 0.5 * (sheet.walls['1']!.min + sheet.walls['1']!.max) }],
+    seams: [{ act: 1, crossed: 40, pool: 0.5 * (sheet.seams['1']!.regen.min + sheet.seams['1']!.regen.max) * HEALTH.playerHealthMax }],
+    acts: [{ act: 1, bossHop: 10, arrivals: 40, reach: 1, wall: 0.5 * (sheet.walls['1']!.regen.min + sheet.walls['1']!.regen.max) }],
     // 150b — the paired ceiling deltas read these: the same 0.6 on seeds 1..n.
     winsBySeed: new Map(Array.from({ length: BOARD_MIN_N }, (_, i) => [i + 1, i < 0.6 * BOARD_MIN_N] as const)),
   });
@@ -562,13 +563,15 @@ describe('the board definition itself', () => {
   });
 
   it('72b/72f — the walk primaries carry the unified architecture: seam + reach + wall from the sheet, win DERIVED (balance-proof)', () => {
-    for (const id of ['arb-walk-regen', 'arb-walk-deploy']) {
+    for (const vector of ['regen', 'deploy'] as const) {
+      const id = `arb-walk-${vector}`;
       const inst = board.instruments.find((i) => i.id === id)!;
       expect(inst.args).not.toContain('--hops=11');
       const seam = inst.checks.find((c) => c.metric === 'seam' && c.act === 1)!;
-      // 94h-pre — a FRACTION of the pool max, derived at verdict time.
-      expect(seam.min).toBeCloseTo(sheet.seams['1']!.min * HEALTH.playerHealthMax);
-      expect(seam.max).toBeCloseTo(sheet.seams['1']!.max * HEALTH.playerHealthMax);
+      // 94h-pre — a FRACTION of the pool max, derived at verdict time; 155g —
+      // the row's own vector's band.
+      expect(seam.min).toBeCloseTo(sheet.seams['1']![vector].min * HEALTH.playerHealthMax);
+      expect(seam.max).toBeCloseTo(sheet.seams['1']![vector].max * HEALTH.playerHealthMax);
       // 94h-pre — the pacing DRIFT read: the walk rows run --per-encounter and
       // carry the three kind bands from the sheet.
       expect(inst.args).toContain('--per-encounter');
@@ -874,7 +877,11 @@ describe('143d — the board per act: the sheet by act number, the forced bosses
 
   it("a signed wall or seam past act 1 is checked at that act's entry, and reads N/A without one", () => {
     const board = buildBoard(
-      { ...sheet, seams: { ...sheet.seams, 2: { min: 0.3, max: 0.35 } }, walls: { 2: { min: 0.2, max: 0.3 } } },
+      {
+        ...sheet,
+        seams: { ...sheet.seams, 2: { regen: { min: 0.3, max: 0.35 }, deploy: { min: 0.3, max: 0.35 } } },
+        walls: { 2: { regen: { min: 0.2, max: 0.3 }, deploy: { min: 0.2, max: 0.3 } } },
+      },
       LIVE,
     );
     const walk = board.instruments.find((i) => i.id === 'arb-walk-deploy')!;
@@ -899,6 +906,27 @@ describe('143d — the board per act: the sheet by act number, the forced bosses
     );
     expect(row?.status).toBe('PASS');
     expect(checkValue(metrics({}), seam2)).toBeNull();
+  });
+
+  it("155g — each walk row reads its own vector's seam and wall band: the other vector's mid-band WARNs", () => {
+    const board = buildBoard(sheet, LIVE);
+    const mid = (b: { min: number; max: number }): number => 0.5 * (b.min + b.max);
+    for (const [own, other] of [['regen', 'deploy'], ['deploy', 'regen']] as const) {
+      const id = `arb-walk-${own}`;
+      const at = (v: 'regen' | 'deploy'): InstrumentMetrics =>
+        metrics({
+          seams: [{ act: 1, crossed: 30, pool: mid(sheet.seams['1']![v]) * HEALTH.playerHealthMax }],
+          acts: [{ act: 1, bossHop: 10, arrivals: 30, reach: 0.75, wall: mid(sheet.walls['1']![v]) }],
+        });
+      const status = (m: InstrumentMetrics, metric: string): string | undefined =>
+        evaluateBoard(board, new Map([[id, m]])).rows.find((r) => r.instrument === id && r.metric === metric)?.status;
+      expect(status(at(own), 'seam (act 1)')).toBe('PASS');
+      expect(status(at(own), 'wall (act 1)')).toBe('PASS');
+      // The planted case: the bands sit apart, so the other vector's middle
+      // falls outside this row's band.
+      expect(status(at(other), 'seam (act 1)')).toBe('WARN');
+      expect(status(at(other), 'wall (act 1)')).toBe('WARN');
+    }
   });
 });
 

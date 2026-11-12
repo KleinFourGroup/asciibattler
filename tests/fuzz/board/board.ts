@@ -52,6 +52,14 @@ export interface SheetBand {
   readonly max: number;
 }
 
+/** The two strategy vectors the walk rows play. */
+export type Vector = 'regen' | 'deploy';
+
+/** A band a vector: a walk row reads its own vector's band. Since 155g,
+ *  because the two vectors' seams and walls sit too far apart for one band
+ *  to hold both without passing a drift on either. */
+export type VectorBands = Readonly<Record<Vector, SheetBand>>;
+
 export interface SignedSheet {
   /** The sheet's history: one entry per signing or amendment, each opening
    *  with its title up to the first ': ', joined by ' ⭑ '. A report prints
@@ -70,16 +78,16 @@ export interface SignedSheet {
    *  - `wall`: the 30–35 target, RE-SIGNED at 72b for the deep-end terminal
    *    (the §68g crisis was gotcha #120 contamination). */
   readonly terminal: { readonly reach: SheetBand; readonly wall: SheetBand };
-  /** A band per seam, keyed by the act the seam ends. Each is a FRACTION of
-   *  `HEALTH.playerHealthMax` (94h-pre: the 15–18 pool-HP band was written
-   *  at max 20 and stranded when 92d doubled it; the board derives the
-   *  pool-HP band at verdict time, so the next pool-max move cannot strand
-   *  it again). Seam 1's is signed at measured reality, one band over both
-   *  walk rows. */
-  readonly seams: Readonly<Record<string, SheetBand>>;
-  /** The mid-walk boss walls, keyed by act, each one band over both walk
-   *  rows; act 1's signed at 146g. */
-  readonly walls: Readonly<Record<string, SheetBand>>;
+  /** The seam bands, keyed by the act the seam ends, a band a vector. Each is
+   *  a FRACTION of `HEALTH.playerHealthMax` (94h-pre: the 15–18 pool-HP band
+   *  was written at max 20 and stranded when 92d doubled it; the board
+   *  derives the pool-HP band at verdict time, so the next pool-max move
+   *  cannot strand it again). Seam 1's are signed at measured reality, a
+   *  band a vector since 155g. */
+  readonly seams: Readonly<Record<string, VectorBands>>;
+  /** The mid-walk boss walls, keyed by act, a band a vector; act 1's signed
+   *  at 146g, a band a vector since 155g. */
+  readonly walls: Readonly<Record<string, VectorBands>>;
   /** 94h-pre (user-signed at the §94 shape-lock) — the kind pacing targets as
    *  a DRIFT read on the walk rows: turns per WON instance off the pooled
    *  `pacing.csv` (the walk rows run `--per-encounter`; `--merge-stages`
@@ -248,7 +256,7 @@ function act1Posture(
       ? 'arbitrated:scored:59-regen-vector'
       : 'arbitrated:scored:92c2-winner';
   const provisional = character === 'gambler' ? ` [${sheet.gamblerNote}]` : '';
-  const winSource = `150h re-pin at the 150h board (act 1, The Periphery, arb λ=0.5, doctrine's pick the null, n=120 pooled, ±8)${provisional}`;
+  const winSource = `155g re-pin at the 155a board (act 1, The Periphery, arb λ=0.5, doctrine's pick the null, the prior table v9, n=120 pooled, ±8)${provisional}`;
   const checks: BoardCheck[] = [
     ref('winRate', refs.winRefs[character][posture], WIN_TOL, winSource),
   ];
@@ -257,16 +265,16 @@ function act1Posture(
   // dissolution is the arm's structure, not a drift to chase.
   if (character === 'soldier' && posture === 'regen') {
     checks.push(
-      ref('terminalBank', refs.bankRefs.firer, BANK_TOL, '150h re-pin at the 150h board: the firer banks ~130 after act 1 (115 at 146f, under the pass null)'),
-      ref('firesPerRun', refs.firerFiresPerRun, 1.0, '150h re-pin at the 150h board: ~4.7 arbitrated fires a run (2.5 at 146f, under the pass null)'),
-      ref('transactionRate', refs.firerTransactionRate, 0.1, '150h re-pin at the 150h board: the firer shops in ~29% of runs (the port economy re-activated by the fold at 85g6d)'),
+      ref('terminalBank', refs.bankRefs.firer, BANK_TOL, '155g re-pin at the 155a board: the firer banks ~127 after act 1 (130 at 150h)'),
+      ref('firesPerRun', refs.firerFiresPerRun, 1.0, '155g re-pin at the 155a board: ~4.4 arbitrated fires a run (4.7 at 150h)'),
+      ref('transactionRate', refs.firerTransactionRate, 0.1, '155g re-pin at the 155a board: the firer shops in ~28% of runs (the port economy re-activated by the fold at 85g6d)'),
     );
   }
   if (character === 'soldier' && posture === 'deploy') {
     checks.push(
-      ref('terminalBank', refs.bankRefs.shopper, BANK_TOL, '150h re-pin at the 150h board: the deploy row banks ~83 after act 1 (80 at 146f)'),
-      ref('transactionRate', refs.shopperTransactionRate, 0.1, '150h re-pin at the 150h board: the deploy vector shops in ~90% of runs'),
-      ref('firesPerRun', 5.44, 1.0, '150h re-pin at the 150h board: ~5.4 arbitrated fires a run (2.0 from 72f to 146f, under the pass null)'),
+      ref('terminalBank', refs.bankRefs.shopper, BANK_TOL, '155g re-pin at the 155a board: the deploy row banks ~92 after act 1 (83 at 150h)'),
+      ref('transactionRate', refs.shopperTransactionRate, 0.1, '155g re-pin at the 155a board: the deploy vector shops in ~73% of runs (90% at 150h)'),
+      ref('firesPerRun', 4.81, 1.0, '155g re-pin at the 155a board: ~4.8 arbitrated fires a run (5.4 at 150h)'),
     );
   }
   const base = character === 'soldier' ? posture : `${character}-${posture}`;
@@ -311,10 +319,11 @@ function walkPosture(posture: 'regen' | 'deploy', sheet: SignedSheet): BoardInst
     max: reachBand.max * (1 - sheet.terminal.wall.min),
   };
   // 143d — a check per signed seam and per signed mid-walk wall, in act
-  // order; an act with no band prints in the PER ACT table unchecked.
-  const byAct = (bands: Readonly<Record<string, SheetBand>>): [number, SheetBand][] =>
+  // order; an act with no band prints in the PER ACT table unchecked. 155g:
+  // each act holds a band a vector, and this row reads its own.
+  const byAct = (bands: Readonly<Record<string, VectorBands>>): [number, SheetBand][] =>
     Object.entries(bands)
-      .map(([act, band]): [number, SheetBand] => [Number(act), band])
+      .map(([act, perVector]): [number, SheetBand] => [Number(act), perVector[posture]])
       .sort(([a], [b]) => a - b);
   const reachSource =
     posture === 'deploy'
@@ -341,8 +350,8 @@ function walkPosture(posture: 'regen' | 'deploy', sheet: SignedSheet): BoardInst
         max: band.max * HEALTH.playerHealthMax,
         source:
           act === 1
-            ? '146g SIGNED as a fraction of max at the 146f board, one band over both walk rows (19.9 and 21.0 of 40); a fraction since 94h-pre, so a pool-max move moves the band'
-            : `the sheet's seam ${act}, a fraction of max`,
+            ? `155g SIGNED as a fraction of max at the 155a board, a band a vector (16.7 regen, 24.5 deploy of 40, each ±2), this row the ${posture} band; a fraction since 94h-pre, so a pool-max move moves the band`
+            : `the sheet's seam ${act}, a fraction of max, the ${posture} band`,
       })),
       ...(['normal', 'elite', 'boss'] as const).map((kind): BoardCheck => ({
         metric: `pacing${kind[0]!.toUpperCase()}${kind.slice(1)}` as MetricKey,
@@ -359,8 +368,8 @@ function walkPosture(posture: 'regen' | 'deploy', sheet: SignedSheet): BoardInst
         max: band.max,
         source:
           act === 1
-            ? '146g SIGNED at the 146f board, one band over both walk rows (0.337 regen, 0.188 deploy)'
-            : `the sheet's act-${act} boss wall`,
+            ? `155g SIGNED at the 155a board, a band a vector (0.227 regen, 0.034 deploy, each ±0.08), this row the ${posture} band`
+            : `the sheet's act-${act} boss wall, the ${posture} band`,
       })),
       {
         metric: 'terminalReach',
@@ -473,7 +482,7 @@ export function buildBoard(
       'bandit-king',
       sheet,
       walk,
-      '146g re-pin at the 146f board: the doctrine arm at n=120, the King at act 1',
+      '155g re-pin at the 155a board: the doctrine arm at n=120, the King at act 1 (0.717 at 146f)',
     ),
     forcedBoss(
       'wall-queen',
@@ -481,7 +490,7 @@ export function buildBoard(
       'banditQueen',
       sheet,
       walk,
-      '146g re-pin at the 146f board: the doctrine arm at n=120, the Queen at act 3; the King>Queen order is the durable check',
+      '155g re-pin at the 155a board: the doctrine arm at n=120, the Queen at act 3 (0.258 at 146f); the King>Queen order is the durable check',
     ),
     act1Posture('priest', 'regen', act1, sheet),
     act1Posture('priest', 'deploy', act1, sheet),

@@ -171,6 +171,8 @@ scripted run's two warnings to Round 18 and the editors' shared rules to
 
 - ✅ **The board report prints the sheet's whole history** — both headers print `sheetProvenance`: the count of the sheet's entries and the first and last entries' titles (ROADMAP §146, 146a; WORKLOG §146).
 
+- [ ] **The fire channel reads 0.275 against its signed +0.10.** At §155's closing board the fire-ablated doctrine row cleared act 1 in 17 of 40 against 27 at 146f and 150h (p 0.021, one of 15 tests), so regen − fire-ablated widened; held unchanged at 155g (BALANCE 2026-11-12). Read it again at the next board before any re-sign, which is the user's.
+
 ### The scripted run
 
 - ✅ **A scripted run for content work** — `script=` and `act=` on `RunConfig`, the four old dials its cases, with a port's stock, a starting act and the CLIs; the user's three cases and a start at act 2 played at 142h (ROADMAP §142; WORKLOG §142). Round 25 keeps one clause: which dials a shipped build answers.

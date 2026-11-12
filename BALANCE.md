@@ -6528,3 +6528,24 @@ deltas. The pre-X H7c→O log lives at
   the game between `8ebca66d` and `5d3bcba8`, §154's kits and the
   officer's base mobility 3, none isolated. The bear's fight fields
   wolves, whose Harry is §154's; the King's fields no officer.
+- **2026-11-12 — the sheet amended under arm A** (§155g, user-signed).
+  Act 1's entries re-pinned at the closing board's values: the six act-1
+  win refs (soldier 0.708 / 0.958, priest 0.525 / 0.867, gambler 0.525 /
+  0.842), the banks 126.7 / 92.2, the firer's fires 4.42, the deploy
+  row's 4.81 (a literal in `board.ts`), the transaction rates 0.275 /
+  0.733, and the forced King 0.658 (act 1) and Queen 0.408 (act 3). Seam
+  1 and act 1's wall became a band a vector, each walk row reading its
+  own: the seam regen 0.37–0.47 and deploy 0.56–0.66 of max (each ±2
+  pool), the wall regen 0.15–0.31 and deploy 0.00–0.11 (each ±0.08). One
+  band wide enough for both vectors, 0.40–0.64 of max by 146g's margins,
+  would have held 153f's regen seam drop (22.44 → 16.73) as a PASS. The
+  fire channel, the terminal pair and the pacing bands unchanged. The
+  values are the sheet's (`tests/fuzz/board/signed-sheet.json`, its
+  2026-11-12 entry). Read on its own board (`output/board-runs/155a/`):
+  every act-1 entry and both seam and wall bands PASS, 0 FAIL, 9 WARN
+  (before the re-pin: 16): the terminal pair and derived win on the walk
+  rows, the fire channel 0.275, and the ceilings on deploy and
+  walk-deploy (+0.125). Its control, the same sheet on 150h's board: the
+  regen seam 22.44 WARNs against 14.8–18.8, as do the priest's and the
+  gambler's regen refs, the deploy row's transactions (0.900) and the
+  Queen (0.258).

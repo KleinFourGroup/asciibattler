@@ -151,8 +151,8 @@ The cut, signed 2026-11-11 with its seven leans and the overnight chain
 - ☑ **155h — the priest's cause read** (`none`; inserted at 155c's sign, the priest's regen row fell 80 → 63 against 154a): that row at this HEAD with the ARM on v8, n=120, paired against the board's row under v9. Read 2026-11-12: 66 under v8 against 63 under v9 (p 0.58) and 80 at 154a (p 0.009), so the game moved the priest, not the table; v9 stands (WORKLOG 155h).
 - ✗ **155d — act 1 tuned**: not run; arm A signed and no fight misses its band pooled (WORKLOG 155c).
 - ✗ **155e — the verify board**: not run, with 155d.
-- ◐ **155f — Dis Pater's sentence** (`batch`): the wording signed at 155c; read with `?daemon=dis-pater` on the pre-turn panel. Built 2026-11-12, wording (b) in the config and the locale (WORKLOG 155f).
-- ☐ **155g — the sheet amended** (`stop`; the user may make it `none` under arm A): act 1's refs, seam 1, act 1's wall and the forced King and Queen re-pinned; acts 2 and 3 recorded for Rounds 21 and 22.
+- ☑ **155f — Dis Pater's sentence** (`batch`): the wording signed at 155c; read with `?daemon=dis-pater` on the pre-turn panel. Built 2026-11-12, wording (b) in the config and the locale; read and signed 2026-11-12 (WORKLOG 155f, 155g).
+- ☑ **155g — the sheet amended** (`stop`): act 1's refs and the forced King and Queen re-pinned at the 155a board; seam 1 and act 1's wall a band a vector (option 2, signed 2026-11-12); acts 2 and 3 recorded in BALANCE for Rounds 21 and 22; 0 FAIL, 9 WARN on its own board (WORKLOG 155g).
 
 ## Phase 156 — the close (signed 2026-11-05)
 

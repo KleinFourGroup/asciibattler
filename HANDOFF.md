@@ -6,7 +6,7 @@ A fresh-session orientation for ASCIIbattler. Read this first; then dive into th
 
 **The ONE home for live status.** Other docs (and the agent memory) point here instead of restating it; when state changes, this section is the single place that updates.
 
-- **NEXT — ROUND 11 (The roster): §155, the closing board: 155c signed (arm A, every lean); 155h read (the game moved the priest, not the table; v9 stands) and 155f built; 155g's stop, the sheet's re-pin put to the user, then the phase close** (WORKLOG §155, 155c to 155h; [ROADMAP.md](ROADMAP.md) §155; the spec, [round-11-spec.md](round-11-spec.md)). 151f, the units' lines, lands when the user writes them. **Open ◐:** 155f, Dis Pater's sentence (`batch`), read at the next stop.
+- **NEXT — ROUND 11 (The roster): §155, the closing board: every step done (155d and 155e not run under arm A), 155g's sheet signed and amended; the phase close next, then Round 11's close put to the user** (WORKLOG §155, 155c to 155g; [ROADMAP.md](ROADMAP.md) §155; the spec, [round-11-spec.md](round-11-spec.md)). 151f, the units' lines, lands when the user writes them. **Open ◐:** none.
 - **In flight:** nothing; 155h's box was destroyed by its driver (2026-11-12 15:09Z), and 155a's two before it.
 - **The public build:** `0.3.0` (`273d587d`, tag `v0.3.0`), uploaded to itch.io on 2026-11-04; the uploads before it are in Closed rounds below.
 - **Snapshots:** WorldSnapshot **v39** (no player keeps one) · RunSnapshot **v51** (a v50 save, `0.3.0`'s, rejects).

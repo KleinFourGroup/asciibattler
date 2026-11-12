@@ -490,3 +490,30 @@ and the officer's base mobility, not isolated here. Under the signed
 calls that settles it: v9 stands with nothing reopened, and the priest's
 regen gap carries with the others, its cause narrowed to §154's game.
 Which kit is a read for the parity work, noted on TODO's row.
+
+### 155g — the sheet amended, and 155f read (2026-11-12)
+
+The user signed the re-pin's table with option (2), seam 1 and act 1's
+wall a band a vector: "Signing the table with (2), Claude! 😁 And
+signing 155f's read!" So 155f, Dis Pater's sentence on two lines, is
+read and kept.
+
+*Built:* `tests/fuzz/board/signed-sheet.json` amended by
+`scratch/155/amend-sheet.mjs`, which checks every old value and the
+file's byte-identical round trip before writing (the values in BALANCE,
+2026-11-12, the sheet amended). The sheet's `seams` and `walls` hold a
+band a vector under each act (`VectorBands` in `board.ts`), and a walk
+row's seam and wall checks read its own vector's band; the source
+strings and the deploy row's fires literal moved to 155g's values. The
+tests: the fixtures read the regen vector's middle, the walk-primaries
+test each row's own band, and a new test plants the other vector's
+middle on each walk row and asserts its seam and wall WARN while its
+own PASS.
+
+*The proof:* `--report` on `output/board-runs/155a/` under the amended
+sheet, 0 FAIL and 9 WARN, every re-pinned entry PASS; on 150h's board,
+the control, the regen seam (22.44) WARNs against 14.8–18.8. The nine
+WARNs left are the cut's holds: the terminal pair and derived win on
+both walk rows, the fire channel (0.275 against its signed 0.10, a TODO
+row now), and the ARM above doctrine on the two deploy ceilings
+(+0.125), recorded at 155c.

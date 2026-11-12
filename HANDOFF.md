@@ -6,8 +6,8 @@ A fresh-session orientation for ASCIIbattler. Read this first; then dive into th
 
 **The ONE home for live status.** Other docs (and the agent memory) point here instead of restating it; when state changes, this section is the single place that updates.
 
-- **NEXT — ROUND 11 (The roster): §155, the closing board: 155a's cohorts, then 155b and the read at 155c; the overnight chain past it is signed** (WORKLOG §155, "The cut signed, with an overnight chain"; [ROADMAP.md](ROADMAP.md) §155; the spec, [round-11-spec.md](round-11-spec.md)). 151f, the units' lines, lands when the user writes them. **Open ◐:** none.
-- **In flight:** nothing; 154g's box was destroyed by its driver (2026-11-11 03:35Z).
+- **NEXT — ROUND 11 (The roster): §155, the closing board: the read at 155c, the stop; 155a and 155b done; the overnight chain launched nothing, since no act-1 fight misses its band pooled** (WORKLOG §155, "The cut signed, with an overnight chain" and 155a to 155c; [ROADMAP.md](ROADMAP.md) §155; the spec, [round-11-spec.md](round-11-spec.md)). 151f, the units' lines, lands when the user writes them. **Open ◐:** none.
+- **In flight:** nothing; 155a's two boxes are destroyed, the derive's by its driver (2026-11-12 04:06Z), the board's by hand after a Windows Update restart killed its driver (14:13Z; WORKLOG 155a).
 - **The public build:** `0.3.0` (`273d587d`, tag `v0.3.0`), uploaded to itch.io on 2026-11-04; the uploads before it are in Closed rounds below.
 - **Snapshots:** WorldSnapshot **v39** (no player keeps one) · RunSnapshot **v51** (a v50 save, `0.3.0`'s, rejects).
 - **Tests:** **3963 main** in 271 files, **587 fuzz:smoke** in 60 files and **1 fuzz:jobs-parity** at `b51a0ad4` (154g, its hook); typecheck clean; the journal corpus, run by hand, 37 tests over 33 journals, recorded and 37 passed at `794cc905`.

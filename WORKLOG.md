@@ -284,3 +284,63 @@ derive on a second from 23:50Z. Drive logs in the worktree's
 `output/box-batches/155a-board-drive.log` and `155a-derive-drive.log`.
 The anchors ran locally in the worktree at the same HEAD, clean
 manifests: pure-random 6 of 40, greedy 7 of 40 (150h: 11 and 7).
+
+### 155a — the cohorts back (2026-11-12)
+
+*The derive* drained at 04:06Z: one batch, exit 0, `best-strategy.json`
+present, the box destroyed by its driver; 4 h 15 min of play against a
+prediction of 5.5 to 7 h (146b's took 5 h 53 min).
+
+*The board's driver died with the PC.* Batches 1 to 25 were fetched and
+verified by 05:05Z, and batch 26, Dis Pater's control, launched then. At
+05:29Z Windows restarted the PC to finish an update: System event 1074
+from the update orchestrator, "Operating System: Service pack (Planned)",
+for KB5132061, then a second servicing restart at 05:32Z. The System log
+holds no Kernel-Power 41, no 6008, no bugcheck and no WHEA event that
+night, so it was no crash. The driver's log ends at 05:25:21Z, before
+any stand-down, so the box idled with batch 26 finished on it.
+
+*Recovered* at 13:20Z, as measurement.md's crash steps say: both trees
+clean, no driver left running. The box still held batch 26, exit 0, and
+`scripts/box-batch.sh <box> status|fetch` brought it back: 80 rows, the
+manifest at `5d3bcba8`, seeds 7001 to 7080. Line 27, the grant arm, then
+ran on the same box by `box-batch.sh run` from the worktree, 13:21Z to
+14:13Z, fetched with exit 0, and the box was destroyed on that verified
+fetch (`scratch/155/155a-recover.log`); `hcloud server list` was empty
+after. *Flag:* that is lean 6's one relaunch of the unfetched lines at
+the same HEAD, applied to a dead driver rather than a hold, with the
+user's go-ahead to recover.
+
+*Box time:* the board's box 14 h 28 min, about 7.5 h of it idle after
+batch 26; the derive's 4 h 17 min; 18.75 h, about 2.45 at 0.1314 an hour
+(the price not re-read), against the lean's 12.5 to 15 h and 1.65 to
+2.0. The overrun is the idle box.
+
+*Merged:* `scratch/146/merge.mjs` pooled the 25 board batches into 15
+rows by each manifest's argv (ten merged from two stages, five copied),
+with the two anchors beside them, in `output/board-runs/155a/`. The
+merged rows' wins equal a second count, taken off the two stages'
+`summary.csv` by hand, on all eight act-alone ARM and wall rows.
+`--report`: integrity PASS on all 17 rows, 0 WARN; DRIFT 0 FAIL, 16
+WARN, read at 155c. So 155a's exit holds.
+
+The 28 batch dirs, the board and the anchors are copied into the
+checkout's `output/` (`diff -rq` identical), the three logs into
+`scratch/155/`. The worktree came out with its junction unlinked first:
+the checkout's `node_modules` at 133 entries before and after, `npm ls`
+clean. The restart went to the friction log. `process/measurement.md`'s
+overnight checks cover idle-sleep and not a pending update restart; a
+line there is the user's call, and this is its first occurrence.
+
+### 155b — the roster table rebuilt (2026-11-12)
+
+`npm run roster:table` over the eight ARM rows of
+`output/board-runs/155a/` writes v8: 27,485 battles in 52 buckets (the
+cut's ceiling 55), measured at `5d3bcba8`. The officer is in 856
+battles, the soldier's 585, the priest's 153 and the gambler's 118 (v7:
+24, all the soldier's), so his PENDING line is not needed; the kickoff
+named it as possible because v9's bank fielded him in no hand. The
+coverage guard passes (14 tests), and the table's and the sampled flag's
+tests too (22, under `vitest.fuzz.config.ts`); `--roster=sampled:2:5
+--act=3` loads and plays a seed (exit 0). BALANCE's registry row is at
+v8.

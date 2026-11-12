@@ -6365,3 +6365,150 @@ deltas. The pre-X H7c→O log lives at
   Limits: those of the study (one forced fight, its hand, the driver's
   fixed play). The bank's hands and its generalissimo fights are not
   read.
+- **2026-11-12 — the closing board** (§155, 155a to 155c). 150h's board
+  line for line at `5d3bcba8`, under the prior table v9 with the
+  officer's base mobility 3: the 15 box rows at n=40, the ten checked
+  rows extended to n=120, on one `cpx42`, the two anchors locally; then
+  Dis Pater's grant pair, n=80 on seeds 7001 to 7080; and a fresh
+  `--search` derive on a second `cpx42`. Every batch fetched with exit 0
+  at that HEAD (batch 26 and line 27 by hand after a Windows Update
+  restart killed the driver, WORKLOG 155a). Pooled into
+  `output/board-runs/155a/` by `scratch/146/merge.mjs`; `--report`
+  integrity PASS on all 17 rows, 0 WARN; DRIFT 0 FAIL, 16 WARN.
+
+  *Against 150h* (`output/board-runs/150h/`), paired on the seeds
+  (`scratch/146/pair.mjs`, only 150h : only 155a), wins of 120 or 40:
+
+  | row | 150h | 155a | paired | p |
+  |---|---|---|---|---|
+  | arb-regen | 93 | 85 | 19 : 11 | 0.20 |
+  | arb-deploy | 113 | 115 | 4 : 6 | 0.75 |
+  | wall-king | 86 | 79 | 17 : 10 | 0.25 |
+  | wall-queen | 31 | 49 | 6 : 24 | 0.0014 |
+  | arb-priest-regen | 80 | 63 | 24 : 7 | 0.0033 |
+  | arb-priest-deploy | 103 | 104 | 5 : 6 | 1.0 |
+  | arb-gambler-regen | 73 | 63 | 21 : 11 | 0.11 |
+  | arb-gambler-deploy | 97 | 101 | 6 : 10 | 0.45 |
+  | arb-walk-regen | 34 | 24 | 21 : 11 | 0.11 |
+  | arb-walk-deploy | 83 | 92 | 14 : 23 | 0.19 |
+  | regen (40) | 31 | 28 | 6 : 3 | 0.51 |
+  | deploy (40) | 38 | 35 | 4 : 1 | 0.38 |
+  | fire-ablated (40) | 27 | 17 | 13 : 3 | 0.021 |
+  | walk-regen (40) | 5 | 4 | 1 : 0 | 1.0 |
+  | walk-deploy (40) | 28 | 24 | 8 : 4 | 0.39 |
+
+  150h's doctrine rows are 146f's byte for byte, so against 146f they
+  read the same. Against 146f the ARM rows read: arb-regen 65 → 85 (11 :
+  31, p 0.003), arb-deploy 95 → 115 (3 : 23, p 0.0001), the walk rows 9
+  → 24 (p 0.006) and 45 → 92 (p < 0.0001), the priest 67 → 63 and 96 →
+  104, the gambler 62 → 63 and 93 → 101 (none told apart). Act 1 cleared
+  on each walk row equals its act-alone row on the same seeds (regen 93
+  → 85, deploy 113 → 115), a check the two rows give each other.
+
+  *Act 1 on the ARM walk rows*, pooled over both by instances
+  (`scratch/155/act1-pooled.mjs`, self-checked: one batch equals
+  `scratch/153/act1-read.mjs`, a batch pooled with itself equals one, two
+  batches pooled equal a hand-worked mean), turns per won instance /
+  pool an instance: the King 5.59 / 16.19, the bear 5.40 / 14.46, the
+  cats 4.53 / 14.99, the Vermin Lords 4.28 / 6.71, the poachers 3.01 /
+  4.74, the brigands (acts 1 and 2 on a walk row) 3.00 / 4.90, the rat
+  hunt 3.02 / 3.04, the canids 3.00 / 2.25, the wolfpack 3.00 / 2.61,
+  the rats' nest 3.02 / 2.58. Every fight is inside its turn target and
+  its cost band. On the deploy row alone two costs are under, as at 153f
+  and 154a: the Vermin Lords 5.29 (band 6–18) and the rats' nest 1.58
+  (2–6).
+
+  *Seam 1 and act 1's wall:* the seam 16.73 regen, 24.46 deploy (band
+  19–22 of 40); the wall 0.227 and 0.034 (0.15–0.38). The regen seam
+  sits 6.51 ± 1.23 under 150h's on the 74 seeds that crossed on both
+  (52 down, 17 up), 1.96 ± 1.47 under 146f's; deploy's is 0.16 ± 0.96
+  under 150h's. On the act-alone soldier rows (pool at act 1's clear,
+  seeds both cleared), the regen drop is all at 150h → 153f, −6.38 ±
+  1.23 on 72 seeds, then 153f → 154a −0.05 ± 0.52 and 154a → 155a −0.15
+  ± 0.97; deploy moves −0.66, −0.67 and +1.17 across the same steps,
+  each inside its error.
+
+  *Per act on the walk rows* (reach, wall, seam pool with the runs
+  crossing; 150h's in brackets):
+
+  | row | act 1 | act 2 | act 3 |
+  |---|---|---|---|
+  | arb-walk-regen | 0.917, 0.227, 16.73 (85) [0.917, 0.155, 22.44 (93)] | 0.492, 0.424, 12.65 (34) [0.642, 0.377, 15.25 (48)] | 0.242, 0.172 [0.342, 0.171] |
+  | arb-walk-deploy | 0.992, 0.034, 24.46 (115) [0.983, 0.042, 24.84 (113)] | 0.883, 0.094, 23.39 (96) [0.858, 0.049, 23.01 (98)] | 0.792, 0.032 [0.783, 0.117] |
+  | walk-regen | 0.950, 0.263, 11.25 (28) [0.900, 0.139, 18.16 (31)] | 0.400, 0.375, 10.20 (10) [0.500, 0.350, 15.62 (13)] | 0.200, 0.500 [0.175, 0.286] |
+  | walk-deploy | 1.000, 0.125, 21.66 (35) [1.000, 0.050, 21.58 (38)] | 0.825, 0.242, 20.76 (25) [0.900, 0.083, 21.24 (33)] | 0.600, 0.000 [0.775, 0.097] |
+
+  The terminal pair against the wall watch (C17): reach 0.242 and 0.792
+  (band 0.40–0.50), wall 0.172 and 0.032 (0.30–0.35). Act 3's one boss,
+  the Bandit Queen, kills 5 of 29 instances on regen (150h 7 of 41) and
+  3 of 95 on deploy (11 of 94); her forced row clears 49 of 120 against
+  31.
+
+  *The bosses in situ*, deaths of instances (`scratch/146/walls.mjs`) and
+  turns per won instance, regen / deploy, 150h → 155a: the generalissimo
+  14 of 34 → 15 of 32 and 3 of 48 → 3 of 52, turns 5.00 → 4.29 and 5.02
+  → 4.32; the witch hunt 15 of 43 → 10 of 27 and 2 of 55 → 7 of 54, turns
+  5.42 → 5.00 and 5.30 → 5.02; the King 7 of 52 → 14 of 52 and 1 of 56 →
+  2 of 56; the bear 10 of 58 → 11 of 58 and 4 of 62 → 2 of 63.
+
+  *Acts 2 and 3 by encounter*, pooled over the two ARM walk rows, turns
+  per won instance / pool an instance, where a value is outside its
+  target or band: act 2, the ronin-vs-mages 3.57 / 13.82 (both over),
+  the deserters' cost 1.70 and the highwaymen's 1.24 (under), the
+  generalissimo's turns 4.31 (under); acts 2 and 3, the adventurer with
+  guards' turns 2.13 (under); act 3, the plague doctors' turns 2.16, the
+  dark magic posse's 3.29 and the plague spreaders' 3.18 (under), the
+  infernal column's cost 9.79 (over), the plague victims' 0.17 and the
+  Queen's 9.69 (under). The rest inside both.
+
+  *The parity gaps (C16)*, the class against the soldier on the same
+  seeds (only the class : only the soldier): the priest −18.3 on regen
+  (63 against 85; 7 : 29, p 0.0003) and −9.2 on deploy (104 against 115;
+  3 : 14, p 0.013); the gambler −18.3 (63; 7 : 29, p 0.0003) and −11.7
+  (101; 3 : 17, p 0.0026). The priest's and the gambler's regen rows
+  pair alike against the soldier but differ on 28 of 120 seeds. Against
+  154a's rows on the same seeds (154a : 155a): the soldier 85 → 85 (7 :
+  7) and 113 → 115 (2 : 4); the priest 80 → 63 (21 : 4, p 0.0009) and
+  103 → 104 (5 : 6); the gambler 65 → 63 (11 : 9) and 97 → 101 (4 : 8).
+  The priest's regen defeats by encounter, 154a → 155a: the King 15 →
+  21, the bear 14 → 22, the cats 4 → 6, the wolfpack 0 → 2, the rest 7
+  → 6; 40 → 57. Between those rows ride §154's kits, the prior table v9
+  and the officer's base mobility; none is isolated.
+
+  *The rest of the drift table:* banks 126.7 regen and 92.2 deploy, in
+  band; deploy's transactions 0.733 against 0.80–1.00 (WARN); fires 4.42
+  and 4.81, in band; pacing on the walk rows, all acts pooled, normal
+  2.94 and 2.89, elite 4.28 and 4.05, boss 5.20 and 5.12, all in band;
+  the fire channel 0.275 against 0.05–0.15 (WARN), the fire-ablated
+  doctrine row 27 → 17; the ceilings +0.075, +0.125, +0.075 and +0.125
+  (two WARN, the ARM over doctrine on the deploy shapes); the anchors
+  pure-random 6 and greedy 7 of 40, random < greedy < the ARM ok.
+
+  *The fresh derive*, the registry's line, 4 h 15 min, exit 0: the best
+  of 96 vectors trains at 57.7 % before refinement and after (15 of 26),
+  and wins 1 of 6 held-out (146b: 42.3 % and 50.0 %, 2 of 6). The
+  deployed vector wins 24 of 40 on the doctrine walk row, 92 of 120
+  under the ARM; the search finds nothing above it.
+
+  *Dis Pater's grant pair* (`scratch/155/grant-paired.mjs`, 88b's terms;
+  it reads all zero on the control against itself and matches
+  `pair.mjs` on a known pair): the control wins 57 of 80, the grant 64.
+  Δwin +0.087 (11 : 4, z 1.81, sign test p 0.12), ΔfinalPool +2.23,
+  ΔfinalBits +663, acts cleared +0.063. The grant arm is never offered
+  him at a port (0 offers; the summary's `daemon` column holds the
+  start idol alone, mars, so it cannot show a grant); the control is
+  offered him 25 times and buys him 17 times, in 17 runs, all in acts 2
+  and 3, at 40 bits. On those 17 seeds the pair ties (0 : 0, Δpool
+  +0.41); the margin is the other 63 (11 : 4, Δpool +2.71), a split on
+  the control's own path, so descriptive. The grant arm buys more at
+  ports, 5.30 a run against 4.42. v9's row for him: meanDelta +22.9 at
+  n=88, signable (the port +43.0 at 47, a reward pick −0.07 at 41). As
+  at 88b, no arm clears z 2 at n=80; the read is fit for a sign, not a
+  magnitude.
+
+  Artifacts (ignored, this machine): the 28 batches,
+  `output/box-batches/2026111{1,2}-*-5d3bcba8/`, the pooled board and
+  its report in `output/board-runs/155a/`, the anchors in
+  `output/155a-anchors/`, the derive's vector in
+  `output/box-batches/20261111-235011-5d3bcba8/best-strategy.json`, the
+  logs in `scratch/155/`. Detail: WORKLOG §155, 155a to 155c.

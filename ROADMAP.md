@@ -147,7 +147,7 @@ The cut, signed 2026-11-11 with its seven leans and the overnight chain
 
 - ☑ **155a — the cohorts on the box** (`none`): the board, 150h's queue line for line, and Dis Pater's grant pair (n=80, seeds 7001–7080) on one `cpx42`; the fresh derive on a second; the anchors local. Back 2026-11-12, VERDICT PASS on all 17 rows; a Windows Update restart killed the driver at batch 26, recovered by hand (WORKLOG 155a).
 - ☑ **155b — the roster table rebuilt** (`none`): v8 from the eight ARM rows, the officer's PENDING line back if no ARM row drafts him. Built 2026-11-12: 27,485 battles in 52 buckets, the officer in 856, no PENDING (WORKLOG 155b).
-- ☐ **155c — the board read** (`stop`, the decision point): against 146f's and 150h's; act 1's bands in two arms; the parity gaps, the generalissimo and v9, the wall watch, acts 2 and 3 recorded, the derive, Dis Pater and his sentence's wording.
+- ◐ **155c — the board read** (`stop`, the decision point): against 146f's and 150h's; act 1's bands in two arms; the parity gaps, the generalissimo and v9, the wall watch, acts 2 and 3 recorded, the derive, Dis Pater and his sentence's wording. Read 2026-11-12, the calls put (WORKLOG 155c).
 - ☐ **155d — act 1 tuned** (`stop`; only fights whose pooled value misses its turn target or cost band, by the overnight chain's rules, signed in the morning): isolation, held-out, baked; the user plays act 1.
 - ☐ **155e — the verify board** (`none`; only after 155d, launched before 155d's sign as the overnight gamble): 155a's board at 155d's HEAD, the roster table rebuilt from it.
 - ☐ **155f — Dis Pater's sentence** (`batch`): the wording signed at 155c; read with `?daemon=dis-pater` on the pre-turn panel.

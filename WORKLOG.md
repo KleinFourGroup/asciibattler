@@ -344,3 +344,85 @@ coverage guard passes (14 tests), and the table's and the sampled flag's
 tests too (22, under `vitest.fuzz.config.ts`); `--roster=sampled:2:5
 --act=3` loads and plays a seed (exit 0). BALANCE's registry row is at
 v8.
+
+### 155c — the board read, and the calls put (2026-11-12)
+
+The numbers are in BALANCE (2026-11-12, the closing board). What they
+say:
+
+1. **Act 1's fights sit where the user put them; its seam and wall do
+   not.** Pooled over the two ARM walk rows at n=120 each, every act-1
+   fight is inside its turn target and its cost band. The canids (2.25)
+   and the wolfpack (2.61), the likeliest tunes at the sign, are in.
+   Seam 1 straddles its band by 7.7 points (regen 16.73, deploy 24.46
+   of 40, band 19–22), and act 1's wall is under on deploy (0.034, band
+   0.15–0.38; regen 0.227, in). The regen seam's whole drop since 150h
+   is at 153f, the act-1 tune to the cost bands (−6.38 ± 1.23), and flat
+   after. So on the regen vector two signed targets disagree: fights at
+   their cost bands leave the seam under its band, and a tune to the
+   seam would move fights out of theirs.
+2. **The overnight chain launched nothing.** Rule 1's test, on the full
+   rows, finds no act-1 fight outside its target or band pooled.
+3. **The priest's regen row fell, alone.** 80 → 63 against 154a on the
+   same seeds (21 : 4, p 0.0009), the extra defeats at the King (15 →
+   21) and the bear (14 → 22). The soldier's rows, the gambler's and
+   the priest's deploy row did not move. Between 154a and this board
+   ride §154's kits, v9 and the officer's base mobility, none isolated.
+   Against the soldier: the priest −18.3 / −9.2, the gambler −18.3 /
+   −11.7, each outside ±5 and told apart.
+4. **The generalissimo is no harder in situ.** Deaths 14 of 34 → 15 of
+   32 on regen and 3 of 48 → 3 of 52 on deploy; his won fights end in
+   4.3 turns against 5.0, under the boss target, on both rows. The
+   officer's cut reaches v9 through the bank's generalissimo fights, and
+   in situ that fight has not moved.
+5. **Act 3's boss is easier, and the wall watch wider.** On deploy the
+   Queen kills 3 of 95 against 11 of 94, and her forced row clears 49 of
+   120 against 31 (p 0.0014). The terminal walls are 0.172 and 0.032
+   against 0.30–0.35. Recorded for Round 22 (C17), with acts 2 and 3 by
+   encounter (BALANCE) for Round 21.
+6. **The derive finds nothing above the deployed vector:** 57.7 % on
+   training, 1 of 6 held-out, against the deployed vector's 60 % on the
+   doctrine walk row. The searched-upper leg is met, and there is no
+   vector to deploy.
+7. **Dis Pater held free is net-positive.** +0.087 (11 : 4, z 1.81),
+   +2.23 pool, and v9's +22.9 at n=88, signable, agree in sign. TODO's
+   question, whether holding him is net-negative, reads no: he funds
+   more shopping (5.30 buys a run against 4.42) and still nets positive.
+8. Two doctrine readings moved and are recorded, not called: the
+   fire-ablated row 27 → 17 of 40 (p 0.021, one of 15 tests), so the
+   fire channel reads 0.275 against 0.05–0.15; and the deploy vector
+   shops in 73 % of act-alone runs against 0.80–1.00.
+
+**The calls put to the user:**
+
+1. *Act 1's bands*, (A) re-pinned at this board's values with no
+   content moved, or (B) set as targets with act 1's misses tuned to
+   them. **Lean A.** Every fight is at its turn target and cost band.
+   The misses are seam 1 and the deploy wall, which follow from the
+   fights and from each vector's play, and a tune to them would move
+   fights out of the per-kind bands. Under A, 155d and 155e drop, and
+   155g re-pins seam 1 and act 1's wall at these values; whether as one
+   band over both rows or one a vector is 155g's to put.
+2. *The parity gaps.* The gambler's two and the priest's deploy row are
+   unchanged since 154a: **lean carry**, held as TODO's row has them.
+   The priest's regen drop is new: **lean a cause read**, an inserted
+   step, the priest's regen row at this HEAD with the ARM on v8
+   (`--prior-table=` the v8 file from `07ce8ed5`), n=120, about 40 min
+   of box. Back near 80, the drop is the table's; still near 63, it is
+   the kits' or the officer's. The alternative is to carry it as a
+   watch.
+3. *v9.* **Lean: it stands**, since the generalissimo did not move in
+   situ; the priest's cause read could reopen it for the priest alone.
+4. *Dis Pater.* **Lean hold**, no price or kit change, and TODO's grant
+   row closes. His sentence, for 155f, in two wordings that name the
+   base rate and leave the scaling to Escalation's own line ("You earn
+   fewer bits"): (a) "Each kill tithes 2 bits from below, paid at the
+   turn's end." (b) "Kills tithe bits from below: 2 apiece, paid as one
+   sum at the turn's end." **Lean (b)**: "one sum" is what makes the
+   rounding at Escalation 3 to 5 read true (one kill pays 2, two pay 3).
+5. *Tunes to sign:* none.
+
+*Flags.* Rule 1's test ran at 13:30Z on the full rows, after the
+recovery, not overnight; the n=40 stages read the same at 04:10Z. The
+doctrine rows' identity with 146f's is 150h's finding, not re-checked
+today.

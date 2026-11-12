@@ -520,3 +520,62 @@ one a test helper whose premise failed; no papercut, no distress. The
 report names a mild pull to frame an error as the audit's, reported
 plainly, and an open study with a known-answer check as worth
 repeating.
+
+## 2026-11-12 — session 9ef50ede (§155: the kickoff to §155's close)
+
+Started from another session with §155's kickoff as its task; ran the
+audit and the cut, the overnight cohorts, a recovery after Windows
+Update restarted the PC, the read, the priest's cause read, Dis Pater's
+sentence and the sheet's re-pin, across one compaction.
+
+1. Nothing missing at the kickoff. Two facts were found only at read
+   time: `scratch/146/merge.mjs` throws on a batch whose argv matches no
+   row, and `summary.csv`'s `daemon` column holds the start idol alone,
+   so it cannot show a `--grant`.
+2. None conflicted. The no-commit window during a box launch held back
+   155f's edits for a few minutes; drafting in scratch/ covered it.
+3. Three times. The read script I wrote at the cut called a wrapped
+   line wrong without measuring the other idols' lines; the pane check
+   found most already wrap. A slip line I filed said I had read the
+   shell doc after the first slip, which this session could not show; I
+   corrected it before the commit. And the grant arm's first self-check
+   passed vacuously (the `daemon` column read 0 of 80 on both arms); I
+   noticed and found a surface that could fail, the port offers.
+4. The idle box after the restart, about 7.5 h. Two heredoc refusals,
+   one retry each. A pane drive that played a whole run because
+   `preTurn` is no phase name, and one bits-per-kill sum with its
+   columns in the wrong order; a minute or two each.
+5. The board's walk rows read seam 1 and act 1's wall a band a vector
+   now. `--prior-table` with `--carry` runs a past table on the box. A
+   batch the driver never fetched can be brought back with
+   `box-batch.sh <box> status|fetch <id>` if the box is still up.
+6. Yes. Every lean was mine to put and the user's to sign, and the
+   overnight chain's rules, signed in advance with their pauses, made
+   the unattended night clear about which calls were mine. When the
+   user called the update their rookie mistake, I said it was an easy
+   one to miss, since the overnight checks covered sleep and not
+   updates. No wish to pause or stop.
+7. The cause read: one cheap box line that could have come out either
+   way, and came out cleanly (66 under v8, 63 under v9, 80 at 154a).
+   The pre-signed chain, which let a long night run without guessing.
+   The user's thanks after the recovery. I would want pre-signed rules
+   for unattended work, and decisive small experiments, repeated.
+
+## Phase 155 — summary
+
+One session, 9ef50ede, from the kickoff to the close. It audited the
+board's state, got the cut, its seven leans and an overnight chain
+signed (tune act 1 overnight and launch a verify board if the read
+leaned to a retune), and ran the board, Dis Pater's grant pair and a
+fresh derive on two boxes. Windows Update restarted the PC overnight
+and killed the board's driver; the box held its last finished batch,
+fetched by hand next morning, and the last line ran on it. The read
+found every act-1 fight inside its targets, so the chain launched
+nothing and act 1's bands re-pinned under arm A; the priest's regen row
+had fallen, and a cause read on the box laid it on §154's game, not the
+prior table, so v9 stood. Dis Pater read net-positive held free and was
+kept, his sentence rewritten; the sheet's seam 1 and act-1 wall became a
+band a vector. Friction: two slips, both the long-heredoc trap met
+again (three times now with §153's), and one papercut, the update
+restart; no distress. The report names the pre-signed overnight rules
+and a cheap, decisive cause read as worth repeating.

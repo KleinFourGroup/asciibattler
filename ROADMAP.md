@@ -12,7 +12,7 @@ with its spec, its per-phase worklogs (`archive/worklog-phase-142.md` to
 `-147.md`) and its session reports beside it; before it
 [archive/post-133-roadmap.md](archive/post-133-roadmap.md) (Round 9).
 
-**Status: Round 11 under way; §155, the closing board, cut and signed.** The spec
+**Status: Round 11 under way; §155, the closing board, closed 2026-11-12; §156, the close, next.** The spec
 is [round-11-spec.md](round-11-spec.md), signed 2026-11-05. The charter,
 the decision points, the exit and the scope guards are in META-ROADMAP
 §"Round 11 — The roster"; its riders are TODO's "Round 11".
@@ -130,29 +130,24 @@ it, the officer held for Round 13 and studied fight by fight (WORKLOG
 - ☑ **154f — the wolf** (`stop`, in play, at 154e's stop): Harry, Bite's numbers with Gambit's retreat.
 - ☑ **154g — the prior table v9 and the watches re-read** (`stop`, the decision point): each watched row's disposition to the user; it stands as §155's prior-table rebuild if nothing after it moves an item's value. v9 built at `07ce8ed5` (BALANCE 2026-11-10); signed 2026-11-11: the officer held for Round 13, every other lean as put, so v9 stands as §155's table (WORKLOG §154).
 
-## Phase 155 — the closing board (signed 2026-11-05)
+## Phase 155 — the closing board ✅ (closed 2026-11-12)
 
-Charter: the board read as paired same-seed deltas against 146f's; act
-1's bands re-pinned and signed; act 1's cost against its target; acts 2
-and 3 recorded for Rounds 21 and 22; the wall watch (C17); Dis Pater's
-`--grant` read at n=80 on the tithe as built, and his sentence rewritten
-to it (A31, A28); the prior table and the roster table rebuilt. **Why
-here:** after every number the round moves. **Risk:** medium: box time.
-**Decision points:** the box's size and cost; act 1's bands. **Exit:**
-the round's (META-ROADMAP §"Round 11"). **Scope guards:** act 3's
-terminal band's re-set is Round 22's.
+The board at `5d3bcba8`, VERDICT PASS on all 17 rows: every act-1 fight
+inside its turn target and cost band, so act 1's bands re-pinned with no
+content moved (arm A), seam 1 and act 1's wall a band a vector; the
+parity gaps carried, the priest's regen drop §154's game, not the
+table, and v9 standing; Dis Pater held, net-positive held free, his
+sentence rewritten; the roster table v8; acts 2 and 3 recorded for
+Rounds 21 and 22 (WORKLOG §155, in `archive/worklog-phase-155.md`;
+BALANCE 2026-11-12).
 
-The cut, signed 2026-11-11 with its seven leans and the overnight chain
-(WORKLOG §155):
-
-- ☑ **155a — the cohorts on the box** (`none`): the board, 150h's queue line for line, and Dis Pater's grant pair (n=80, seeds 7001–7080) on one `cpx42`; the fresh derive on a second; the anchors local. Back 2026-11-12, VERDICT PASS on all 17 rows; a Windows Update restart killed the driver at batch 26, recovered by hand (WORKLOG 155a).
-- ☑ **155b — the roster table rebuilt** (`none`): v8 from the eight ARM rows, the officer's PENDING line back if no ARM row drafts him. Built 2026-11-12: 27,485 battles in 52 buckets, the officer in 856, no PENDING (WORKLOG 155b).
-- ☑ **155c — the board read** (`stop`, the decision point): against 146f's and 150h's; act 1's bands in two arms; the parity gaps, the generalissimo and v9, the wall watch, acts 2 and 3 recorded, the derive, Dis Pater and his sentence's wording. ✅ DECIDED 2026-11-12, every lean signed: arm A, the parity gaps carried with a cause read on the priest's regen row (155h), v9 stands, Dis Pater held, wording (b) (WORKLOG 155c, "The calls signed").
-- ☑ **155h — the priest's cause read** (`none`; inserted at 155c's sign, the priest's regen row fell 80 → 63 against 154a): that row at this HEAD with the ARM on v8, n=120, paired against the board's row under v9. Read 2026-11-12: 66 under v8 against 63 under v9 (p 0.58) and 80 at 154a (p 0.009), so the game moved the priest, not the table; v9 stands (WORKLOG 155h).
-- ✗ **155d — act 1 tuned**: not run; arm A signed and no fight misses its band pooled (WORKLOG 155c).
-- ✗ **155e — the verify board**: not run, with 155d.
-- ☑ **155f — Dis Pater's sentence** (`batch`): the wording signed at 155c; read with `?daemon=dis-pater` on the pre-turn panel. Built 2026-11-12, wording (b) in the config and the locale; read and signed 2026-11-12 (WORKLOG 155f, 155g).
-- ☑ **155g — the sheet amended** (`stop`): act 1's refs and the forced King and Queen re-pinned at the 155a board; seam 1 and act 1's wall a band a vector (option 2, signed 2026-11-12); acts 2 and 3 recorded in BALANCE for Rounds 21 and 22; 0 FAIL, 9 WARN on its own board (WORKLOG 155g).
+- ☑ **155a — the cohorts on the box** (`none`): the board, Dis Pater's grant pair and the fresh derive; recovered by hand after a Windows Update restart killed the driver.
+- ☑ **155b — the roster table rebuilt** (`none`): v8, 52 buckets, the officer drafted, no PENDING.
+- ☑ **155c — the board read** (`stop`, the decision point): ✅ DECIDED 2026-11-12, every lean signed: arm A, the parity gaps carried, v9 stands, Dis Pater held, wording (b).
+- ☑ **155h — the priest's cause read** (`none`, inserted at 155c's sign): 66 under v8 against 63 under v9 and 80 at 154a, so the game moved him, not the table.
+- ✗ **155d — act 1 tuned** and ✗ **155e — the verify board**: not run under arm A.
+- ☑ **155f — Dis Pater's sentence** (`batch`): "Kills tithe bits from below: 2 apiece, paid as one sum at the turn's end."; read and signed.
+- ☑ **155g — the sheet amended** (`stop`): act 1's refs and the forced bosses re-pinned, seam 1 and act 1's wall a band a vector (option 2, signed); 0 FAIL, 9 WARN on its own board.
 
 ## Phase 156 — the close (signed 2026-11-05)
 

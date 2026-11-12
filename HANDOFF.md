@@ -6,13 +6,13 @@ A fresh-session orientation for ASCIIbattler. Read this first; then dive into th
 
 **The ONE home for live status.** Other docs (and the agent memory) point here instead of restating it; when state changes, this section is the single place that updates.
 
-- **NEXT — ROUND 11 (The roster): §155, the closing board: every step done (155d and 155e not run under arm A), 155g's sheet signed and amended; the phase close next, then Round 11's close put to the user** (WORKLOG §155, 155c to 155g; [ROADMAP.md](ROADMAP.md) §155; the spec, [round-11-spec.md](round-11-spec.md)). 151f, the units' lines, lands when the user writes them. **Open ◐:** none.
+- **NEXT — ROUND 11 (The roster): §156, the close: its kickoff** ([ROADMAP.md](ROADMAP.md) §156, `process/planning.md` "Phase kickoff" and "Round close"; the spec, [round-11-spec.md](round-11-spec.md)); §155's close lists two friction patterns and a papercut for §156's process read (`archive/worklog-phase-155.md`, "§155's close"). 151f, the units' lines, lands when the user writes them. **Open ◐:** none.
 - **In flight:** nothing; 155h's box was destroyed by its driver (2026-11-12 15:09Z), and 155a's two before it.
 - **The public build:** `0.3.0` (`273d587d`, tag `v0.3.0`), uploaded to itch.io on 2026-11-04; the uploads before it are in Closed rounds below.
 - **Snapshots:** WorldSnapshot **v39** (no player keeps one) · RunSnapshot **v51** (a v50 save, `0.3.0`'s, rejects).
-- **Tests:** **3963 main** in 271 files, **587 fuzz:smoke** in 60 files and **1 fuzz:jobs-parity** at `05f65ef5` (155b, its hook); typecheck clean; the journal corpus, run by hand, 37 tests over 33 journals, recorded and 37 passed at `794cc905`.
+- **Tests:** **3963 main** in 271 files, **588 fuzz:smoke** in 60 files and **1 fuzz:jobs-parity** at `ca8dd3be` (155g, its hook); typecheck clean; the journal corpus, run by hand, 37 tests over 33 journals, recorded and 37 passed at `794cc905`.
 - **Model id: `claude-opus-5-5`** since 2026-09-22. When yours differs, say so at the next stop; at the user's word, review AGENTS.md against the vendor's current prompting guidance and record the new id (the last review: `archive/post-104-worklog.md`, "The new-model tone audit").
-- **Last phase: §154**, the kits, 2026-11-08 → 11-11: blind's rule; the officer's +1 DEF, Hecate +4 MAG, the area locks retuned and unhasted, the wolf's Harry; the prior table v9, which stands as §155's, every watch decided on it, the officer held for Round 13 and studied (`archive/worklog-phase-154.md`).
+- **Last phase: §155**, the closing board, 2026-11-11 → 11-12: the board at `5d3bcba8`, every act-1 fight in its targets, so act 1's bands re-pinned with no content moved, seam 1 and act 1's wall a band a vector; the parity gaps carried, the priest's regen drop §154's game, v9 standing; Dis Pater held, his sentence rewritten; the roster table v8 (`archive/worklog-phase-155.md`).
 
 ## Current state
 

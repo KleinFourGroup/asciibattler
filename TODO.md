@@ -205,7 +205,7 @@ META-ROADMAP §"Round 11 — The roster" names each row's place.
 
 - ✅ **A blinded ranged unit strikes past its acquisition range** — `currentTarget` takes no fallback under blind, so a blinded unit strikes only inside blind's acquisition range and a ranged unit with a floor holds fire while blind (the kiter's case as signed); pinned in `src/sim/statusBehaviorConsumers.test.ts` (154b; WORKLOG §154). Its worth on the board: 154g's prior table and §155.
 
-- [ ] **The PRIEST parity breach** (the 94h signing, 2026-09-08 — BALANCE §94h): +14.2 over the soldier on the deploy shape, +10.0 on regen (92h +5.0 / +5.9; the ±5 principle). Healing pays more when fights last three turns and the dead are booked (the casualty rule + the 94b openers). A kit/price question for Round 7 (the §94 charter excluded archetype changes); the gambler reads +6.7 / −1.6. At 146f, on act 1 (The Periphery), n=120: the priest +1.7 regen · +0.8 deploy over the soldier, inside ±5, and the gambler −2.5 / −1.7 (the 146g sheet); the row stays for Round 11's board, the priest's parity (C16). At 150h, the ARM with doctrine's pick as the null, n=120 on act 1: the priest −10.8 regen · −8.3 deploy against the soldier, the gambler −16.7 / −13.3, each told apart on the shared seeds, the soldier's rows having gained the most (BALANCE 2026-11-06, WORKLOG 150h). At 154a, under the prior table v8: the priest −4.2 / −8.3, the gambler −16.7 / −13.3, three of the four gaps unchanged since 150h (BALANCE 2026-11-08); held at the user's sign (2026-11-10), since the gaps opened when the bot changed, for §155's board to read again; signed at 150h's stop into §154 beside the priest (the user's lead, act 1's encounters bimodal in difficulty, in WORKLOG 150h).
+- [ ] **The PRIEST parity breach** (the 94h signing, 2026-09-08 — BALANCE §94h): +14.2 over the soldier on the deploy shape, +10.0 on regen (92h +5.0 / +5.9; the ±5 principle). Healing pays more when fights last three turns and the dead are booked (the casualty rule + the 94b openers). A kit/price question for Round 7 (the §94 charter excluded archetype changes); the gambler reads +6.7 / −1.6. At 146f, on act 1 (The Periphery), n=120: the priest +1.7 regen · +0.8 deploy over the soldier, inside ±5, and the gambler −2.5 / −1.7 (the 146g sheet); the row stays for Round 11's board, the priest's parity (C16). At 150h, the ARM with doctrine's pick as the null, n=120 on act 1: the priest −10.8 regen · −8.3 deploy against the soldier, the gambler −16.7 / −13.3, each told apart on the shared seeds, the soldier's rows having gained the most (BALANCE 2026-11-06, WORKLOG 150h). At 154a, under the prior table v8: the priest −4.2 / −8.3, the gambler −16.7 / −13.3, three of the four gaps unchanged since 150h (BALANCE 2026-11-08); held at the user's sign (2026-11-10), since the gaps opened when the bot changed, for §155's board to read again. At §155's closing board (n=120, BALANCE 2026-11-12): the priest −18.3 / −9.2, the gambler −18.3 / −11.7, all four told apart; the priest's regen row fell 80 → 63 against 154a on the same seeds (p 0.0009) while the other five rows held; carried at the user's sign (2026-11-12), with 155h's cause read on that row (v8 against v9). Signed at 150h's stop into §154 beside the priest (the user's lead, act 1's encounters bimodal in difficulty, in WORKLOG 150h).
 
 - [ ] **The deep-end wall, from above its band to below it.** Under the hit roll the deploy walk's boss wall read 0.459 at the §94 config (94h, user-signed HOLD: a roster-strength lever before any band move) and 0.579 on the old game at 139c, against the signed 30–35. The conversion moved it to 0.200 (139b's numbers; 0.299 at 137c's), and the two-act wins from 24 to 52 of 120, outside §139's line of one Escalation step (7). The old game with 137c's bot vector won 20 with a wall of 0.630 (139e), so the move is the game's, not the bot's. Where: act 2's elites and bosses 27 to 38 % less pool damage, act 1's bandit fights 41 and 46 % less, the ronin and the mages 59 % more; act 1's wins unchanged. Signed at §139: no number moves in Round 9, and the retune takes it. The cause is not measured; the user's idea (every swing pays defense at one pooled rate, a gap that grows with level) estimates at 1 to 4 % of an archer's swing, and a swing read split by act would test it (BALANCE.md 2026-10-29; WORKLOG §139). Those are the two-act walk's numbers. On the three-act walk the deep end is act 3, which the sheet's terminal pair reads: at 146f its wall 0.211 on deploy and 0.357 on regen, its reach 0.475 and 0.117 (BALANCE.md 2026-11-03). Round 11 reads it on its board; the band's re-set is Round 22's (WORKLOG §147, 147a).
 
@@ -296,17 +296,11 @@ META-ROADMAP §"Round 11 — The roster" names each row's place.
   one-kill turn alone. Reword it with the `--grant` read below, and reread
   it whenever level 3's lever is retuned.
 
-- [ ] **The Dis Pater `--grant` read at n=80.** Both reads on the
-      daemonized miner are thin site-causal pairs (the v3 shadow −11.25
-      at n=55; the 88d3 live decline margin +4.3 at n≈18) — exactly the
-      stream-perturbation-dominated shape WORKLOG §85g6c warned about —
-      yet the user picks him every run. The standing rarity protocol's
-      tool for a thin row is the paired same-seed `--grant` arm at the
-      n=80 floor (the 88b cohort shape, ~40 min box): a FREE endowment
-      read that answers "is holding him net-negative" without the
-      site-causal confound. Candidate mechanism if it holds: the tithe
-      funds MORE bot shopping, and port purchases price negative on
-      average (88b). Rides the §89 amendment cohort or its own line.
+- ✅ **The Dis Pater `--grant` read at n=80.** Done at 155a and 155c:
+  held free he is net-positive, +0.087 (11 : 4, z 1.81), +2.23 pool,
+  with v9's row +22.9 at n=88 agreeing; he funds more shopping and still
+  nets positive. Held, no change, at the user's sign 2026-11-12 (BALANCE
+  2026-11-12, WORKLOG §155).
 
 ### Ability descriptions
 

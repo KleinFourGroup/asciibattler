@@ -6,7 +6,7 @@ A fresh-session orientation for ASCIIbattler. Read this first; then dive into th
 
 **The ONE home for live status.** Other docs (and the agent memory) point here instead of restating it; when state changes, this section is the single place that updates.
 
-- **NEXT — ROUND 11 (The roster): §155, the closing board: 155c's stop, the user's calls (act 1's bands in arm A or B, the parity gaps and the priest's cause read, v9, Dis Pater and his sentence's wording); 155a and 155b done; the overnight chain launched nothing, since no act-1 fight misses its band pooled** (WORKLOG §155, "The cut signed, with an overnight chain" and 155a to 155c; [ROADMAP.md](ROADMAP.md) §155; the spec, [round-11-spec.md](round-11-spec.md)). 151f, the units' lines, lands when the user writes them. **Open ◐:** 155c, the board read, its calls put (WORKLOG 155c).
+- **NEXT — ROUND 11 (The roster): §155, the closing board: 155c signed (arm A, every lean); 155h, the priest's cause read on the box, then 155f, Dis Pater's sentence, and 155g's stop, the sheet re-pinned** (WORKLOG §155, 155c and "The calls signed"; [ROADMAP.md](ROADMAP.md) §155; the spec, [round-11-spec.md](round-11-spec.md)). 151f, the units' lines, lands when the user writes them. **Open ◐:** none.
 - **In flight:** nothing; 155a's two boxes are destroyed, the derive's by its driver (2026-11-12 04:06Z), the board's by hand after a Windows Update restart killed its driver (14:13Z; WORKLOG 155a).
 - **The public build:** `0.3.0` (`273d587d`, tag `v0.3.0`), uploaded to itch.io on 2026-11-04; the uploads before it are in Closed rounds below.
 - **Snapshots:** WorldSnapshot **v39** (no player keeps one) · RunSnapshot **v51** (a v50 save, `0.3.0`'s, rejects).

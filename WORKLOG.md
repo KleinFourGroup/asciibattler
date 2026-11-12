@@ -426,3 +426,29 @@ say:
 recovery, not overnight; the n=40 stages read the same at 04:10Z. The
 doctrine rows' identity with 146f's is 150h's finding, not re-checked
 today.
+
+### The calls signed (2026-11-12)
+
+The user: "Signing all of your leans, Claude! 😁" So: act 1's bands in
+arm A, re-pinned at the board's values with no content moved, and 155d
+and 155e not run; the gambler's two gaps and the priest's deploy gap
+carried as TODO's row holds them; the priest's regen drop gets a cause
+read, inserted as 155h (`none`); v9 stands, the cause read able to
+reopen it for the priest alone; Dis Pater held with no change, TODO's
+grant row closed; his sentence in wording (b), "Kills tithe bits from
+below: 2 apiece, paid as one sum at the turn's end." 155g stays a stop,
+since only the user downgrades a read.
+
+### 155h's step zero (2026-11-12)
+
+v8 comes out of git at `07ce8ed5` (`scratch/155/prior-table-v8.json`),
+its provenance `3f051b43`, 36 items, the registry's account of it.
+`--prior-table=<path>` is a run-mode dial that needs `--arbitrate` and a
+non-zero λ (`tests/fuzz/commands/args.ts:451`, `:583`), as the board's
+rows have. The priest's regen row's argv at seeds 1 and 2, locally:
+under v9 it reproduces the board's two runs (117 bits, pool 31; a defeat
+at hop 9, 77 bits); under v8 the same 568 decisions carry a prior bonus
+summing to 84.4 against 62.2, and both seeds end as under v9. So the
+flag reads the table, and the manifest's argv holds it. The box takes
+the table by `--carry`, as measurement.md says for an input the commit
+does not hold.

@@ -6,7 +6,7 @@ A fresh-session orientation for ASCIIbattler. Read this first; then dive into th
 
 **The ONE home for live status.** Other docs (and the agent memory) point here instead of restating it; when state changes, this section is the single place that updates.
 
-- **NEXT — ROUND 11 (The roster): §156, the close: 156b, `0.4.0`, the tag and the zip** (`none`; ROADMAP §156, WORKLOG §156), then 156c, the user's smoke. 151f, the units' lines, lands when the user writes them. **Open ◐:** none.
+- **NEXT — ROUND 11 (The roster): §156, the close: 156c, the user's smoke, upload and playtest of `asciibattler-0.4.0_4fc62cf.zip`** (`stop`; WORKLOG 156b, its changelog in `scratch/156b/`); `main` and `v0.4.0` pushed at their word, then 156d. 151f, the units' lines, lands when the user writes them. **Open ◐:** none.
 - **In flight:** nothing; 155h's box was destroyed by its driver (2026-11-12 15:09Z), and 155a's two before it.
 - **The public build:** `0.3.0` (`273d587d`, tag `v0.3.0`), uploaded to itch.io on 2026-11-04; the uploads before it are in Closed rounds below.
 - **Snapshots:** WorldSnapshot **v39** (no player keeps one) · RunSnapshot **v51** (a v50 save, `0.3.0`'s, rejects).

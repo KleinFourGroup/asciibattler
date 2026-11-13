@@ -288,3 +288,50 @@ GOTCHAS.md unchanged over the range.
 **156a signed** (the user: "Signed! 😁"): both calls at the leans.
 Round 11's exit is met; Round 12's charter stands as written, so
 META-ROADMAP and TODO are unchanged by this step.
+
+### 156b — `0.4.0`, the tag and the zip (2026-11-13)
+
+**Built.** `npm version 0.4.0 --no-git-tag-version` changed
+`package.json` and the lock file; the commit `4fc62cfe` and the
+annotated tag `v0.4.0` were made by hand, as at `0.3.0`. Neither is
+pushed. The commit's hook ran the full suite: 3963 tests in 271 files,
+green, typecheck clean, the smoke skipped (no sim path staged), as the
+cut predicted. `node scripts/itch-zip.mjs` on the clean tree:
+`asciibattler-0.4.0_4fc62cf.zip`, build ID `0.4.0+4fc62cf`, 32 entries,
+1,264,358 bytes (`0.3.0`'s: 32 and 1,263,546), the build's hash
+`3ecc9802…5095eed`. Its file names are `0.3.0`'s but the bundle and the
+stylesheet (`index-Yp_K9fu7.js`, `index-DzkgYRcG.css`). `--check`
+against the build, run on its own, exit 0; the control, `0.3.0`'s zip
+against this build, exit 1, naming `74e6ddd3…4d4672ca2`, the hash 147b
+recorded.
+
+**In the pane** (Chromium, `itch-preview` over `output/itch/current`):
+`<html data-build>` and the menu's corner read `0.4.0+4fc62cf`;
+JetBrains Mono, DejaVu Sans Mono and ASCIIbattler Glyphs loaded
+(`document.fonts`); `__probe`, `__game` and `__diag` undefined; one
+inline script and one module bundle; no console error (the warnings are
+the hidden pane's zero-size canvas, before it was sized).
+
+**A run saved by `0.3.0` itself**, in place of 145d's fixture, as 147b
+read `0.2.0`'s: the origin's slot held the run `0.3.0` saved at 147b,
+format 50, stamped `0.3.0+273d587`, 5,838 characters. With `0.4.0`
+served, the menu read "This run was saved by an older version of the
+game and can't be continued. Your settings and unlocks are kept.", with
+New run, Settings and Credits and no Continue, and the slot kept its
+text. The control that passes: a new run with the soldier opened The
+Periphery, the Bandit King its boss, roster 10, morale 40 / 40, and
+saved at format 51 stamped `0.4.0+4fc62cf`; on a reload the menu offered
+Continue with no message, and Continue opened that map. The slot now
+holds the `0.4.0` run, for the next upload's check.
+
+**The changelog** for the itch page, drafted for the user to post:
+`scratch/156b/changelog.md` (off git). Its claims are read from config
+and the round's records: the three daemons' names and sizes, the
+bandit's `draftable: false` with 12 bandit entries left in
+`config/encounters.json`, the bow, the rioter, the officer, Harry,
+power by rarity as DESIGN's stat line gives it, 154e's intent for the
+area statuses, the blind fix's comment in `Targeting.ts`, and the
+menu's message.
+
+**Not verified:** Firefox and Edge, the itch frame, a battle in this
+build, sound by ear, the daemons and the card's tooltip in play: 156c.

@@ -160,7 +160,7 @@ lists. **Exit:** Round 11 closed. The cut signed 2026-11-13 with its
 five leans (WORKLOG §156).
 
 - ☑ **156a — the round's exit by clause, and Round 12's charter against the code** (`stop`): signed 2026-11-13, the exit met by clause and Round 12's charter standing as written (WORKLOG 156a).
-- ☐ **156b — `0.4.0`, the tag and the zip** (`none`): a `0.3.0` save met with `save.rejected` in the pane; the changelog drafted.
+- ☑ **156b — `0.4.0`, the tag and the zip** (`none`): `4fc62cfe`, tagged `v0.4.0`, `asciibattler-0.4.0_4fc62cf.zip` checked; a real `0.3.0` save refused in the pane, a `0.4.0` save continued; the changelog drafted.
 - ☐ **156c — the smoke, the upload and the playtest** (`stop`, the user's): Firefox and Edge; `main` and the tag pushed at their word.
 - ☐ **156d — the process read** (`stop`, in tranches): the keep test and the candidates, then the two trials, then the open rows.
 - ☐ **156e — the list built as signed** (`none`): the rule docs' diff against the signed list.

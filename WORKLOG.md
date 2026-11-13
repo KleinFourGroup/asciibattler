@@ -179,3 +179,108 @@ carries to Round 12's TODO as it stands.
 
 Signed: "That all looks good to me, Claude! 😁", over the cut as put and
 its five leans. The stretch it opens runs to 156a's stop.
+
+### 156a — the round's exit by clause, and Round 12's charter against the code (2026-11-13)
+
+Read at `e3e22e09`. Nothing under `src`, `config`, `tools` or `scripts`
+has changed since `8db7501c` (155f), so the tree plays the closing
+board's game with Dis Pater's new line.
+
+**Round 11's exit (META-ROADMAP §"Round 11"), by clause:**
+
+| Clause | Holds? | Evidence |
+|---|---|---|
+| The board read | yes | 155a's board at `5d3bcba8`, integrity PASS on 17 of 17 rows; read and every lean signed at 155c, 2026-11-12 (BALANCE 2026-11-12, "the closing board") |
+| Act 1's bands re-pinned and signed | yes | arm A at 155c; the sheet amended at 155g and signed with option (2), 0 FAIL and 9 WARN on its own board, its control (150h's board) WARNing on the regen seam (BALANCE 2026-11-12, "the sheet amended") |
+| Acts 2 and 3 recorded for Rounds 21 and 22 | yes | BALANCE 2026-11-12: the per-act table on the four walk rows and acts 2 and 3 by encounter, each value out of its target named |
+| The prior table rebuilt | yes | v9 at 154g (BALANCE 2026-11-10), standing at 155c's sign, its cause read at 155h; the roster table v8 at 155b |
+
+**The spec's rule for a round that changes combat**, a board read as
+paired same-seed deltas against 146f's: BALANCE 2026-11-12 pairs the
+board against 150h, whose doctrine rows are 146f's byte for byte, and
+the ARM rows against 146f directly (arb-regen 65 → 85, p 0.003;
+arb-deploy 95 → 115, p 0.0001; the walk rows 9 → 24 and 45 → 92).
+
+**The release line**, read in config at HEAD: three idols, each one
+empower a turn under `honed`, Mars +4 STR, Diana +4 RNG, Hecate +4 MAG
+(`config/daemons.json`; Hecate's +8 → +4 at 154d); reworked units, among
+them the bow at 2.5 s and might 4, the rioter's base defense 1, the
+officer's defense 1 and mobility 3 at rare power 2, the wolf's Harry a
+damage op then `move: retreat` (`config/abilities.json`,
+`config/units.json`); ability descriptions on 29 of 29 abilities, held
+by `src/config/abilities.test.ts` (its `withoutLine` check). The bandit
+reads `draftable: false`. It reaches players at 156c.
+
+**The save clause.** `RUN_SCHEMA_VERSION` 51 (`src/run/Run.ts:305`),
+50 at `1ded6293`; World 39 at both ends. 151c's record: a v50 save is
+rejected as stale with `save.rejected`, 145d's fixture kept as that
+rejected save. 156b plants it in the built game.
+
+**The decision points.** Power's scale: 1/1/2/3, built at 153b and
+signed at 153e's stop (2026-11-08). The kiter under blind: case (A), signed with
+§154's cut, pinned at 154b. Each kit change: decided at 154g, signed
+2026-11-11. The idols' sizes: provisional at 151c, Hecate's cut to +4
+at 154d and read; Mars and Diana held.
+
+**The scope guard** (no new mechanism but the description field). The
+source outside tests changed in 12 files over `1ded6293..e3e22e09`:
+`schema.ts` gains the ability's optional `description` and a comment;
+`Targeting.ts` takes no fallback under blind (C12, in scope);
+`units.ts` and `leveling.ts` drop power's growth key and its draw (R19,
+in scope); `RunConfig.ts` drops a port's non-draftable unit (N28, in
+scope); `Run.ts` the version; `archetypes.ts`, `registry.ts` and
+`MovementBehavior.ts` the beast ability's rename and comments; and
+`src/ui`'s `UnitCard.ts`, `abilityDetail.ts` and `ui.css` the line as
+the name's tooltip (151e-post). The round's new files are the stat
+sheet (`tools/stat-sheet/`, the user's at §148), its test, a fuzz test
+for `--arb-null`, two corpus journals and v5's prior-table fixture.
+GOTCHAS.md unchanged over the range.
+
+**Round 12's charter at HEAD** (META-ROADMAP §"Round 12"):
+
+- *Forced movement* (C6). The `move` op's modes are `advance` and
+  `retreat` (`src/sim/effects/schema.ts:131`), each moving the caster;
+  nothing moves a target. `World.shove` (`src/sim/World.ts:1401`) parts
+  two units in one cell, sending one to the nearest free cell within
+  `SIM.shoveSearchRadiusCells`, with no direction; its only callers are
+  in `src/sim/shove.test.ts`. Gotcha #113 stands: a claimed cell is off
+  limits to every placement path, so a push's landing is a new one. A
+  leap's landing captured at cast already rides the action's serialized
+  capture (`moveDest`, `src/sim/effects/EffectAction.ts:40-56`), so the
+  charter's inferred World bump depends on whether a pushed target's
+  landing gets a field of its own.
+- *The cavalier's hit after its move* (C5). Holds: a `self` def without
+  a `summon` op proposes a leap (`propose.ts:175-178`), built with
+  `targetId: -1` (`propose.ts:162`), so a damage op after the move has no
+  target.
+- *A caster-anchored area that leaves out its caster* (N3). Holds:
+  `affectsMatch` reads the team alone (`targeting.ts:60-69`), so
+  `allies` and `all` take the caster whenever its cell is in the area.
+  The banshee's `wail` is `anchor: 'targetCell'`, `affects: 'enemies'`,
+  range 4; the census (`archive/post-118-worklog.md`, N3) already notes
+  the flag matters only if her burst touches allies.
+- *The dash's visual.* `unit:dashed` is emitted by the interpreter
+  (`interpreter.ts:226`) and read by the sound registry alone
+  (`src/audio/eventSounds.ts:77`); no file under `src/render` or `src/ui`
+  names it. TODO's one Round 12 row, Dash VFX, stands.
+- *The consumers.* Of the seven, the banshee and the adventurer ship
+  (39 units, 29 abilities); the grenadier, the telekinetic, the ninja,
+  the cavalier and the blade whirlwind do not. A caster-anchored area
+  proposes today (`propose.ts:228`), which the telekinetic and the
+  whirlwind build on. N4 and N27 name C2 (specials), whose two gaps (a
+  self-buff arm, the self-heal) are Round 13's; a pull aimed at an enemy
+  and an `aoe` selector need neither, so the order holds.
+- *What Round 11 hands it.* Every new ability must ship a `description`
+  (the 151e test refuses one without); a new unit's line stays optional
+  until 151f's test lands. A new draftable unit needs a prior-table row
+  or a PENDING acknowledgment (`tests/prior-table-coverage.test.ts`,
+  rule 1), so which units are draftable decides whether Round 12's board
+  rebuilds the table.
+
+**The calls, with the session's leans:**
+
+1. *Round 11's exit* is met by every clause, and the scope guard held.
+2. *Round 12's charter* stands as written: each premise holds at HEAD,
+   and nothing found asks for a line to change.
+3. Settled by the cut: 156c's smoke is the round's playtest. No audit
+   round, since no META-ROADMAP cluster closed, as at Rounds 8.5 to 10.

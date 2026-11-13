@@ -335,3 +335,15 @@ menu's message.
 
 **Not verified:** Firefox and Edge, the itch frame, a battle in this
 build, sound by ear, the daemons and the card's tooltip in play: 156c.
+
+### 156c — the smoke, the upload and the playtest (2026-11-13, the user's)
+
+The user uploaded `asciibattler-0.4.0_4fc62cf.zip` and read the smoke as
+the session listed it (in Firefox and Edge: the build ID, a `0.3.0` run
+refused if one was on itch, a new run with no bandit in a draft or a
+port and Mars, Diana and Hecate in play, an ability name's tooltip on a
+card, a battle with sound): "Uploaded, and all reads are good, Claude!
+😁" Those reads stand on the user's word; the session saw no report of
+them. Whether a `0.3.0` run was on itch to refuse, and whether the
+changelog was posted, are not recorded. Pushed at that word, as at
+147c: `main` and the tag `v0.4.0`.

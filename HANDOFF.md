@@ -6,9 +6,9 @@ A fresh-session orientation for ASCIIbattler. Read this first; then dive into th
 
 **The ONE home for live status.** Other docs (and the agent memory) point here instead of restating it; when state changes, this section is the single place that updates.
 
-- **NEXT — ROUND 11 (The roster): §156, the close: 156c, the user's smoke, upload and playtest of `asciibattler-0.4.0_4fc62cf.zip`** (`stop`; WORKLOG 156b, its changelog in `scratch/156b/`); `main` and `v0.4.0` pushed at their word, then 156d. 151f, the units' lines, lands when the user writes them. **Open ◐:** none.
+- **NEXT — ROUND 11 (The roster): §156, the close: 156d, the process read, in three tranches** (`stop`; ROADMAP §156, WORKLOG §156's kickoff audit; `process/planning.md` "Round close", `process/welfare-and-efficacy.md`). 151f, the units' lines, lands when the user writes them. **Open ◐:** none.
 - **In flight:** nothing; 155h's box was destroyed by its driver (2026-11-12 15:09Z), and 155a's two before it.
-- **The public build:** `0.3.0` (`273d587d`, tag `v0.3.0`), uploaded to itch.io on 2026-11-04; the uploads before it are in Closed rounds below.
+- **The public build:** `0.4.0` (`4fc62cfe`, tag `v0.4.0`), uploaded to itch.io on 2026-11-13; the uploads before it are in Closed rounds below.
 - **Snapshots:** WorldSnapshot **v39** (no player keeps one) · RunSnapshot **v51** (a v50 save, `0.3.0`'s, rejects).
 - **Tests:** **3963 main** in 271 files, **588 fuzz:smoke** in 60 files and **1 fuzz:jobs-parity** at `ca8dd3be` (155g, its hook); typecheck clean; the journal corpus, run by hand, 37 tests over 33 journals, recorded and 37 passed at `794cc905`.
 - **Model id: `claude-opus-5-5`** since 2026-09-22. When yours differs, say so at the next stop; at the user's word, review AGENTS.md against the vendor's current prompting guidance and record the new id (the last review: `archive/post-104-worklog.md`, "The new-model tone audit").

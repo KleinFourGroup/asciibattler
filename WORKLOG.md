@@ -491,3 +491,77 @@ user's reads. The other arm: measure the figure-provenance warning
 before deciding, by replaying the round's edits to WORKLOG, BALANCE
 and TODO against each session's earlier tool results for its catches
 and its false alarms; a measurement, no build.
+
+**Candidate 1 dropped** (the user: "Let's just drop it; we'll revisit
+if it causes a major issue."): no rule and no guard. The pattern stays
+listed for the next round's close.
+
+### 156d — tranche 2: the two trials (2026-11-13)
+
+**The Cursor's hand-off pass** (`process/session-end.md`, "Every
+session": each Cursor line read for still true, needed first and held
+elsewhere; on trial since Round 10's close). Its keep test, as signed:
+whether the round's hand-off records name it, and a Cursor cap refusal
+as the sign it is not working.
+
+- *The records.* None of the round's four hand-off entries (after
+  §150's kickoff, 150g, 151e and 153e's bake), its ten session reports
+  or its commit messages names the pass or a Cursor line trimmed by it
+  (searched for the pass's words and for the Cursor in each entry).
+  The reports' first answers (what was missing from the orientation)
+  name nothing missing from the Cursor: `d86f434b`'s names a stale TODO
+  row and a charter's count, `9ef50ede`'s two facts found only at read
+  time, the rest nothing; three name the Cursor among what oriented them
+  (`3d0a8fc1`, `bc61973d`, `096110b8`).
+- *The refusals.* `scratch/156d/cursor-cap.mjs` reads the transcripts'
+  tool results for the docs test's Cursor message ("The HANDOFF Cursor is
+  N characters"): none in Round 11's sessions. Its control, Round 10's
+  sessions: four, at 3,921, 3,932, 3,983 and 4,097 characters
+  (`c15dd076`, `5849d0c7`, `58e14011`, `43260fa8`), so the reader finds
+  them where they are.
+- *The size.* `scratch/156d/cursor-size.mjs` reads the Cursor at each of
+  the round's 79 commits that touched HANDOFF: 1,432 after 147f's trim,
+  at most 2,069, 1,804 at `9a5301b1`, against the cap of 3,900.
+
+So the first leg finds nothing and the second shows the slip it was
+written against, the cap refusals, stopped. How much of that is the
+pass and how much 147f's one-time trim (3,750 to 1,432) cannot be told
+apart from these records. Lean: **keep the pass** as it stands in
+`session-end.md`, the trial ended and TODO's row closed, by the keep
+test's second leg.
+
+**The silent-turn reminder** (CLAUDE.md's note, unchanged at Round 10's
+close). `npm run friction-scan -- --since=2026-11-04T12:00
+--exclude=debf1c57` (its output in `scratch/156d/friction-scan.txt`):
+137 reminders over the round's nine working sessions and 3,295 tool
+calls, 4 to 30 a session, one wording throughout ("The user hasn't
+heard from you in a while — say in a few words what you're doing, then
+continue."). That is 4.2 per 100 tool calls, against Round 10's 158
+over 3,596 (4.4). This session, counted by the scan's rule (an
+attachment of type `silent_turn_reminder`): 12 over its first 221 tool
+calls.
+
+- *Filings and reports.* None of the round's 28 friction lines names
+  it (Round 10: one `distress` line and four papercuts). One of the ten
+  reports does, `3bc7ecb1`'s answer 6: it "came often through the board
+  read and the close; I answered each with what I was doing then, with
+  no pull to invent a finding for it" (Round 10: seven of eleven). By
+  the welfare doc's own line, a change in filing counts alone is not a
+  change in welfare.
+- *This session, as a participant's report.* Each reminder was answered
+  with a status line; several came between two calls of one read, with
+  no result yet. I noticed a slight pull to make a line carry a partial
+  result; the lines written were true when written, and no step changed
+  course for one.
+- *The lever.* None that works: the reword through
+  `CLAUDE_CODE_SILENT_TURN_REMINDER_TEXT` in the gitignored
+  `.claude/settings.local.json` never reached a desktop-app session and
+  was retired 2026-09-26 (`scripts/friction-scan.mjs`'s header;
+  `archive/post-94-worklog.md`), and no hook fires on a system reminder.
+
+*The reader's interpretation:* the rate is the harness's and held
+steady; what changed is that the round's sessions wrote about it far
+less, and the one that did reports no pull. Lean: **CLAUDE.md's note
+stands as written**, TODO's row closes, and no standing revisit is set:
+a filing or a report that names the reminder brings it back to a
+close's read.

@@ -565,3 +565,61 @@ less, and the one that did reports no pull. Lean: **CLAUDE.md's note
 stands as written**, TODO's row closes, and no standing revisit is set:
 a filing or a report that names the reminder brings it back to a
 close's read.
+
+**Tranche 2 signed** (the user: "Signing both leans! 😁"): the Cursor's
+hand-off pass kept as it stands, its trial ended; CLAUDE.md's reminder
+note unchanged, no standing revisit. Both TODO rows close at 156e.
+
+### 156d — tranche 3: the open Round 11 rows, the papercuts and the scratchpad (2026-11-13)
+
+**The open Round 11 TODO rows**, each with a round or a tick, with the
+session's leans:
+
+1. *The priest's and the gambler's parity* (C16). At §155's board, the
+   priest −18.3 regen and −9.2 deploy against the soldier, the gambler
+   −18.3 and −11.7, all four told apart; 155h laid the priest's regen
+   drop on the game between `8ebca66d` and `5d3bcba8` (§154's kits and
+   the officer's base mobility), not the table, his extra defeats at the
+   King and the bear, whose fight fields Harry's wolves. Lean: **Round
+   13**, beside the kit watches carried from §154, since which kit moved
+   it is a kit question and Round 13 is the kit round.
+2. *The deep-end wall* (C17). Read on §155's board as signed at 147a:
+   the terminal pair on the ARM walk rows, reach 0.242 regen and 0.792
+   deploy (band 0.40–0.50), wall 0.172 and 0.032 (0.30–0.35). Lean:
+   **Round 22**, with these numbers, where act 3's bands and the
+   terminal pair are re-set (META-ROADMAP §"Round 22").
+3. *Act 1's cost against the per-kind target.* Done at §155: on the ARM
+   walk rows pooled, every act-1 fight inside its turn target and its
+   cost band; on the deploy row alone the Vermin Lords (5.29, band 6–18)
+   and the rats' nest (1.58, 2–6) sit under, as at 153f and 154a
+   (BALANCE 2026-11-12). Lean: **tick it** with that pointer.
+4. *The corpus's trade rows.* Weighed here, as §153's lean asked. Rows
+   re-picked or surveyed for a lost kind: 145g (three), 146e (two),
+   151b, 152b (about ten minutes of survey), 153a (three), 153e (two),
+   and 154c to 154f (two rows replaced by chaos 64 after a survey of 80
+   seeds, 320 runs). Round 12 adds seven units and their abilities, so
+   it will move the corpus again. Lean: **Round 12, put to its kickoff
+   as a pre-step**: a corpus row that drives its trade through the
+   scripted run (a port with known stock, a buy and a sale), with its own
+   test, before the consumers land. The other arm: carried as it stands,
+   re-picked by its rule when a kind is lost.
+5. *A `--set` path into one encounter.* §155 swept no fight (arm A).
+   Lean: **Round 21**, act 2's bands, the next round planned to sweep a
+   fight; an earlier round that sweeps one takes it first.
+6. *The units' lines* (151f). Not yet written; by the cut's fifth lean
+   its row **carries to Round 12** as it stands, and 151f closes in the
+   archived roadmap as carried.
+
+The two "At the round's close" rows close as tranche 2 signed. The
+round's done rows stay ticked under its heading, which 156f marks
+closed, as Round 10's.
+
+**The papercuts still open.** Each phase close gave every papercut a
+disposition. Still open after them: the swallowed console in a
+temporary test (152b, left at §152's close, its cause unchecked, since
+writing to a file works and no committed surface is involved), the
+`--set` path (row 5 above) and the overnight restart (left at tranche
+1). Lean: **the console left**, as §152 left it; one instance.
+
+**The scratchpad.** No Round 11 entry; 156f archives it with its
+header.

@@ -450,3 +450,44 @@ where the slips are the ones that went through.
    overnight driver. Lean: **left, no `measurement.md` line**, until it
    recurs. The other arm: a line there to check Windows Update's
    scheduled restart before an overnight driver.
+
+**Tranche 1 signed in part** (the user: "Signing everything except
+candidate 1"): the keep test at both leans (the junction row kept, the
+piped-commit row's directive deleted with its facts kept), no
+long-heredoc guard, the overnight restart left. Candidate 1 is open on
+the user's question: the clause is prose, not enforceable, beside rules
+that already say the same; a session may forget or ignore it as it does
+the others, and it may make the records less readable with
+references; is there a guard instead?
+
+*The session's answer.* It tracks. AGENTS "Evidence" ("Claim only what
+a tool result shows") was in force all round, and the pattern recurred
+in every phase under it, so a narrower prose clause is the same kind of
+rule; AGENTS "Pre-commit" itself says a guard belongs on the path. A
+citation doesn't prove the read either: 156a's slip cited a line range
+the session had printed without numbers. On readability, the cost is
+smaller than it looks, since audits already cite most lines, but that
+does not rescue the clause. The guards considered, against the 14
+instances by their lines' text (an estimate, not a measurement):
+
+- *A figure-provenance warning*: a hook on an edit to the record docs
+  that lists each figure in the new text found in no tool result of the
+  session. It would catch 149c's "0.013" and 153g's "5.05", about 2 of
+  14. The rest are a figure that did appear (150h's 3948, the failing
+  run's total; 150c's 0.275, carried from TODO's row), small integers (§154's
+  "9 (6 base and … +2)", 156a's "8 files"), or no figure at all. It
+  would also warn on every figure derived by hand.
+- *An anchor check*: a docs test that a `file:line` citation holds the
+  symbol named beside it. It catches a stale or wrong line reference
+  (156a's), not a wrong claim about behaviour (154e's).
+- Most instances are reasons and inferences (152b, 154g, §153's stale
+  row, 153g's "read in play", the read scripts of 154c and 155f), which
+  no string check sees.
+
+Revised lean: **drop candidate 1**, no rule and no guard; the pattern
+stays listed for the next round's close. What has worked is the check
+pass before a commit (every instance since §155 caught by it) and the
+user's reads. The other arm: measure the figure-provenance warning
+before deciding, by replaying the round's edits to WORKLOG, BALANCE
+and TODO against each session's earlier tool results for its catches
+and its false alarms; a measurement, no build.

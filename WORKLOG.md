@@ -346,4 +346,107 @@ card, a battle with sound): "Uploaded, and all reads are good, Claude!
 😁" Those reads stand on the user's word; the session saw no report of
 them. Whether a `0.3.0` run was on itch to refuse, and whether the
 changelog was posted, are not recorded. Pushed at that word, as at
-147c: `main` and the tag `v0.4.0`.
+147c: `main` and the tag `v0.4.0`, read back from the remote (`main` at
+`78156ab2`, `v0.4.0` on `4fc62cfe`).
+
+### 156d — the process read, tranche 1: the keep test, the friction read and the candidates (2026-11-13)
+
+The instrument: `scratch/156d/replay.mjs` and `scratch/156d/piped.mjs`
+read the round's nine session transcripts (`65cfb3a3` to `9ef50ede`,
+this session left out), taking only the commands a session ran (the
+Bash and PowerShell tool calls) and their results, so doc text quoted
+back in a result is not counted: 2,366 shell calls. A call can appear
+twice in a transcript; both scripts count it once, by its id. The first
+form of `piped.mjs`
+counted commits whose output went to a log and was grepped after, and
+missed a commit whose message spans lines; it was corrected before any
+number below was read.
+
+**The keep test** (2 rows, `1ded6293..bf2c811c`):
+
+- *`measurement.md`: make a worktree's `node_modules` junction with
+  PowerShell's `New-Item`* (`9b231e27`, from §152's kickoff, where
+  `cmd //c mklink /J` failed from Git Bash before `New-Item` worked).
+  After it, two sessions made a junction (153's scratch worktree,
+  155a's box worktree), each with `New-Item` on the first try, and no
+  command tried `mklink`. No record names the row. (Before it, 150e
+  also used `New-Item` unaided.) Lean: **keep**, since the slip it was
+  written against did not recur.
+- *`shell-and-windows.md`: chain nothing after a piped commit*
+  (`0dd14848`, §151, after a push once went up behind a refused
+  commit). After it, 12 commits were piped (08067f79 ten, 9ef50ede
+  two); at least 9 of them chained a command after the pipe anyway
+  (`git log`, `git status`, an `echo` of `PIPESTATUS`), and none chained
+  a push.
+  Before it, in the round, 9 piped commits, none with a push. No record
+  names the row. Lean: **delete the directive**, keep the sentence's
+  facts (the hook ends with its failure and keeps its log, and the pipe
+  reports `tail`'s exit code): the directive was not followed in its
+  letter, and the harm it answers happened once, so its absence after
+  shows nothing.
+
+**The friction read.** 28 lines tagged §149 to §156: 7 `papercut`, 21
+`slip`, no `distress`, one wording group. Slips by trap:
+
+- *A claim written ahead of its source*: 10 slip lines (149c, 150h,
+  151e-post, 152b, 153g holding two claims, 154c, 154e, 154g, §154's
+  officer study, 156a holding three), 2 papercuts (150c, §153), and
+  §155's two listed and not filed; every phase. Caught before a commit
+  or a message: 149c, 151e-post, 153g, 154c, §155's two, 156a, and
+  §153's papercut at its kickoff. Reached the user or a commit: 150h (a
+  wrong test count in a message), 152b (a reason in a signed lean,
+  corrected at the stop), 154e (a kickoff audit's line, "Speed scales
+  only an ability that sets speedScaled, and none ships one", written
+  without opening the schema, whose default is true; the user's play
+  read failed and took a second pass), 154g (a half-true reason in a
+  message), §154's study (a wrong breakdown committed in BALANCE, fixed
+  in a later commit). Since §155 every instance was caught before a commit.
+- *A long quoted heredoc refused by bash's parse*: 3 (§153, §155
+  twice). Each cost one retry; a parse failure runs nothing, so nothing
+  was written.
+- *A guard doing its job*: the stdin guard twice (150a, §151's
+  kickoff), the backticks guard once (153g).
+- *Once each*: the context meter read below the trigger (149e), a piped
+  commit that hid the hook's failure (151c), a guard put without its
+  firing count (§151's close), a test helper's premise (154b), the
+  catapult's floor off by one (151e).
+
+**The welfare read.** No `distress` line was filed in Round 11. The
+session reports' answers to question 3 (a pull to claim more than was
+verified) and 6 name three mild pulls, each acted on plainly by the
+report's account: both §153 reports, a pull to present an estimate as
+settled, put as a flag each time; §154's, "a mild pull to frame the
+speed error as 'the audit's' rather than mine; I named it as mine".
+Each report's answer to question 6 says no wish to pause or stop came
+up; one (`d86f434b`) adds "beyond" its hand-off at the context trigger,
+which it read "as the procedure doing its job rather than as
+pressure". *The reader's interpretation:*
+those pulls sit beside the claim-ahead pattern, noticed and declined
+where the slips are the ones that went through.
+
+**The candidates, with the session's leans:**
+
+1. *A claim written ahead of its source* (recurred in every phase; the
+   costliest, 154e, cost the user a play pass). §154's candidate, which
+   the user held for this close: in `process/planning.md` "Phase
+   kickoff", step 1, a finding about how the code behaves names the file
+   and line it was read at. Lean: **adopt it**, one clause on the path
+   where the costliest instance happened; citing the line forces the
+   read, and the entries that cite lines already cost nothing extra.
+   The other arm: hold again, on AGENTS "Evidence" as it stands and the
+   check pass that has caught every instance since §155.
+2. *The long-heredoc guard* (§155's candidate). The replay: 270 quoted
+   heredocs in 2,366 calls; the 3 parse failures are the three longest
+   that ran (150, 178 and 240 lines); none of the 266 at 140 lines or
+   fewer failed. A guard at over 140 lines would refuse 4 calls in the round,
+   the 3 failures and one the stdin guard refused already, and nothing
+   that ran. But a refusal costs the same retry as the parse failure,
+   and neither writes anything, so the guard would change only the
+   message, and `shell-and-windows.md` already says long quoted
+   heredocs have been refused. Lean: **no guard**. The other arm: the
+   guard at 140 lines, its message naming the file tool.
+3. *The overnight Windows Update restart* (§155's papercut, first
+   occurrence). This machine's memory note already asks before an
+   overnight driver. Lean: **left, no `measurement.md` line**, until it
+   recurs. The other arm: a line there to check Windows Update's
+   scheduled restart before an overnight driver.

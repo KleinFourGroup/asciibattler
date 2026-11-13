@@ -6,7 +6,7 @@ A fresh-session orientation for ASCIIbattler. Read this first; then dive into th
 
 **The ONE home for live status.** Other docs (and the agent memory) point here instead of restating it; when state changes, this section is the single place that updates.
 
-- **NEXT — ROUND 11 (The roster): §156, the close: 156d, the process read, in three tranches** (`stop`; ROADMAP §156, WORKLOG §156's kickoff audit; `process/planning.md` "Round close", `process/welfare-and-efficacy.md`). 151f, the units' lines, lands when the user writes them. **Open ◐:** none.
+- **NEXT — ROUND 11 (The roster): §156, the close: 156d's tranche 1 put to the user** (the keep test's two rows, the friction read, three candidates with leans; WORKLOG 156d; the replay in `scratch/156d/`); on the sign, tranche 2, the two trials. 151f, the units' lines, lands when the user writes them. **Open ◐:** 156d.
 - **In flight:** nothing; 155h's box was destroyed by its driver (2026-11-12 15:09Z), and 155a's two before it.
 - **The public build:** `0.4.0` (`4fc62cfe`, tag `v0.4.0`), uploaded to itch.io on 2026-11-13; the uploads before it are in Closed rounds below.
 - **Snapshots:** WorldSnapshot **v39** (no player keeps one) · RunSnapshot **v51** (a v50 save, `0.3.0`'s, rejects).

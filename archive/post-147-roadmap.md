@@ -12,7 +12,7 @@ with its spec, its per-phase worklogs (`archive/worklog-phase-142.md` to
 `-147.md`) and its session reports beside it; before it
 [archive/post-133-roadmap.md](archive/post-133-roadmap.md) (Round 9).
 
-**Status: Round 11 closed 2026-11-13, its last step, 156f, at the user's read.** The spec
+**Status: Round 11 closed 2026-11-13, every phase signed by the user, 156f included.** The spec
 is [round-11-spec.md](round-11-spec.md), signed 2026-11-05. The charter,
 the decision points, the exit and the scope guards are in META-ROADMAP
 §"Round 11 — The roster"; its riders are TODO's "Round 11".
@@ -149,7 +149,7 @@ BALANCE 2026-11-12).
 - ☑ **155f — Dis Pater's sentence** (`batch`): "Kills tithe bits from below: 2 apiece, paid as one sum at the turn's end."; read and signed.
 - ☑ **155g — the sheet amended** (`stop`): act 1's refs and the forced bosses re-pinned, seam 1 and act 1's wall a band a vector (option 2, signed); 0 FAIL, 9 WARN on its own board.
 
-## Phase 156 — the close ✅ (built 2026-11-13; 156f at its stop)
+## Phase 156 — the close ✅ (closed 2026-11-13)
 
 Round 11's exit met by clause and Round 12's charter standing; `0.4.0`
 uploaded with a `0.3.0` run refused; the process read in three tranches
@@ -162,4 +162,4 @@ archive. Each step's record is `archive/worklog-phase-156.md`.
 - ☑ **156c — the smoke, the upload and the playtest** (`stop`, the user's): read 2026-11-13, uploaded, every read good on the user's word; `main` and `v0.4.0` pushed.
 - ☑ **156d — the process read** (`stop`, in tranches): signed 2026-11-13 in three: the junction row kept and the piped-commit directive deleted, no new rule or guard; the Cursor pass kept, the reminder's note unchanged; each open row placed (WORKLOG 156d).
 - ☑ **156e — the list built as signed** (`none`): one clause out of `shell-and-windows.md`, nothing else in the rule docs; TODO's open Round 11 rows placed in Rounds 12, 13, 21 and 22, act 1's cost and the two trials ticked.
-- ◐ **156f — the archive and the round's close** (`stop`): built 2026-11-13, put to the user; the push at their read.
+- ☑ **156f — the archive and the round's close** (`stop`): signed 2026-11-13, the close as built and the fire-channel row moved to Round 12; pushed.

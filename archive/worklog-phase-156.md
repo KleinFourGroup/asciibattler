@@ -711,3 +711,11 @@ By `process/planning.md` "Round close" and "Phase close":
 - *The playtest:* 156c's smoke on the uploaded build, as signed with
   the cut. *The audit round:* none, since no cluster closed (156a).
 - *Not yet:* the push, at the user's read of this step.
+
+### 156f signed (2026-11-13)
+
+The user: "Fully signed, Claude! 😁", over the close as built and the
+fire-channel row's lean. The row moves from Round 10's "The board" to
+Round 12's TODO, its next board. 156f ticked in
+`archive/post-147-roadmap.md`, its §156 closed; the Cursor at Round 12's
+kickoff with no open ◐; `main` pushed at the sign.

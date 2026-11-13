@@ -174,3 +174,8 @@ rule docs only, the round's guards out of it, as at §140 and §147; a
 guard signed at 156d built at 156e rather than carried; 151f lands in
 §156 if the user writes the lines before 156f, and otherwise its row
 carries to Round 12's TODO as it stands.
+
+### The cut signed (2026-11-13)
+
+Signed: "That all looks good to me, Claude! 😁", over the cut as put and
+its five leans. The stretch it opens runs to 156a's stop.

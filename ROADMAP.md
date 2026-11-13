@@ -12,7 +12,7 @@ with its spec, its per-phase worklogs (`archive/worklog-phase-142.md` to
 `-147.md`) and its session reports beside it; before it
 [archive/post-133-roadmap.md](archive/post-133-roadmap.md) (Round 9).
 
-**Status: Round 11 under way; §156, the close: its cut put to the user 2026-11-13 (WORKLOG §156).** The spec
+**Status: Round 11 under way; §156, the close: the cut signed 2026-11-13, 156a next (WORKLOG §156).** The spec
 is [round-11-spec.md](round-11-spec.md), signed 2026-11-05. The charter,
 the decision points, the exit and the scope guards are in META-ROADMAP
 §"Round 11 — The roster"; its riders are TODO's "Round 11".
@@ -156,4 +156,12 @@ round's playtest; the round's exit by clause; Round 12's charter against
 the code; the process read, with the Cursor pass's trial and the
 reminder read (TODO, Round 11, "At the round's close"); the archive.
 **Risk:** low. **Decision points:** the release; the process read's
-lists. **Exit:** Round 11 closed.
+lists. **Exit:** Round 11 closed. The cut signed 2026-11-13 with its
+five leans (WORKLOG §156).
+
+- ☐ **156a — the round's exit by clause, and Round 12's charter against the code** (`stop`): a decision point, the charter stands or is amended.
+- ☐ **156b — `0.4.0`, the tag and the zip** (`none`): a `0.3.0` save met with `save.rejected` in the pane; the changelog drafted.
+- ☐ **156c — the smoke, the upload and the playtest** (`stop`, the user's): Firefox and Edge; `main` and the tag pushed at their word.
+- ☐ **156d — the process read** (`stop`, in tranches): the keep test and the candidates, then the two trials, then the open rows.
+- ☐ **156e — the list built as signed** (`none`): the rule docs' diff against the signed list.
+- ☐ **156f — the archive and the round's close** (`stop`): Round 12's kickoff in the Cursor; pushed.

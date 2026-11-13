@@ -207,10 +207,6 @@ META-ROADMAP §"Round 11 — The roster" names each row's place.
 
 - ✅ **A blinded ranged unit strikes past its acquisition range** — `currentTarget` takes no fallback under blind, so a blinded unit strikes only inside blind's acquisition range and a ranged unit with a floor holds fire while blind (the kiter's case as signed); pinned in `src/sim/statusBehaviorConsumers.test.ts` (154b; WORKLOG §154). Its worth on the board: 154g's prior table and §155.
 
-- [ ] **The PRIEST parity breach** (the 94h signing, 2026-09-08 — BALANCE §94h): +14.2 over the soldier on the deploy shape, +10.0 on regen (92h +5.0 / +5.9; the ±5 principle). Healing pays more when fights last three turns and the dead are booked (the casualty rule + the 94b openers). A kit/price question for Round 7 (the §94 charter excluded archetype changes); the gambler reads +6.7 / −1.6. At 146f, on act 1 (The Periphery), n=120: the priest +1.7 regen · +0.8 deploy over the soldier, inside ±5, and the gambler −2.5 / −1.7 (the 146g sheet); the row stays for Round 11's board, the priest's parity (C16). At 150h, the ARM with doctrine's pick as the null, n=120 on act 1: the priest −10.8 regen · −8.3 deploy against the soldier, the gambler −16.7 / −13.3, each told apart on the shared seeds, the soldier's rows having gained the most (BALANCE 2026-11-06, WORKLOG 150h). At 154a, under the prior table v8: the priest −4.2 / −8.3, the gambler −16.7 / −13.3, three of the four gaps unchanged since 150h (BALANCE 2026-11-08); held at the user's sign (2026-11-10), since the gaps opened when the bot changed, for §155's board to read again. At §155's closing board (n=120, BALANCE 2026-11-12): the priest −18.3 / −9.2, the gambler −18.3 / −11.7, all four told apart; the priest's regen row fell 80 → 63 against 154a on the same seeds (p 0.0009) while the other five rows held; carried at the user's sign (2026-11-12). 155h's cause read: under v8 at that game the row clears 66 (v9 63, p 0.58; 154a's v8 80, p 0.009), so the game moved it between `8ebca66d` and `5d3bcba8` (§154's kits, the officer's base mobility), not the table; its extra defeats are at the King and the bear (the bear's fight fields the wolf, whose Harry is §154's). Which kit is the parity work's read. Signed at 150h's stop into §154 beside the priest (the user's lead, act 1's encounters bimodal in difficulty, in WORKLOG 150h).
-
-- [ ] **The deep-end wall, from above its band to below it.** Under the hit roll the deploy walk's boss wall read 0.459 at the §94 config (94h, user-signed HOLD: a roster-strength lever before any band move) and 0.579 on the old game at 139c, against the signed 30–35. The conversion moved it to 0.200 (139b's numbers; 0.299 at 137c's), and the two-act wins from 24 to 52 of 120, outside §139's line of one Escalation step (7). The old game with 137c's bot vector won 20 with a wall of 0.630 (139e), so the move is the game's, not the bot's. Where: act 2's elites and bosses 27 to 38 % less pool damage, act 1's bandit fights 41 and 46 % less, the ronin and the mages 59 % more; act 1's wins unchanged. Signed at §139: no number moves in Round 9, and the retune takes it. The cause is not measured; the user's idea (every swing pays defense at one pooled rate, a gap that grows with level) estimates at 1 to 4 % of an archer's swing, and a swing read split by act would test it (BALANCE.md 2026-10-29; WORKLOG §139). Those are the two-act walk's numbers. On the three-act walk the deep end is act 3, which the sheet's terminal pair reads: at 146f its wall 0.211 on deploy and 0.357 on regen, its reach 0.475 and 0.117 (BALANCE.md 2026-11-03). Round 11 reads it on its board; the band's re-set is Round 22's (WORKLOG §147, 147a).
-
 - ✅ **The arbitration loses the walk.** Done at 150d to 150g: the
   loss sat at the four sites whose null arm was "pass", and doctrine's
   pick as the null is the default since 150g; at 150h the ARM is at or
@@ -232,15 +228,11 @@ META-ROADMAP §"Round 11 — The roster" names each row's place.
 
 - ✅ **Power diversity by rarity** (verdict item 4): done at 153b, 1/1/2/3 (WORKLOG §153, in `archive/worklog-phase-153.md`). The row: 1/1/1/2 → 1/1/2/3 or 1/2/3/4 — a pool re-anchor rides behind it (every burn/turn moves); Round 11, after the §94 signing. Weigh the scale against the prior table v7, where the rare halberdier (+31 ± 14 taken free) and the legendary stormcaller (+25 ± 14) already read the highest (BALANCE 2026-11-06, "the draftable units' worth"; signed at §152's kickoff). A unit's power is what its fall costs its own side, so a steeper scale lowers a rare's or a legendary's worth by what its deaths cost, the officer's, the catapult's and the shaman's as well (WORKLOG §153, the kickoff's audit, which corrects this row's earlier "adds most where worth already is").
 
-- [ ] **Act 1's cost, against the per-kind cost target.** §146 tuned
-  act 1 to turn targets only. The target was signed at Round 11's
-  kickoff (2026-11-05): normal 10 %, elite 30 %, boss 50 % of the pool,
-  each fight within ½× to 1½× (BALANCE "Per-kind target bands"; WORKLOG
-  §148). Out of band on 146f's walk rows: the rats' nest (0.02 / 0.09),
-  the wolfpack (1.84 / 1.58), the poachers (9.45 / 9.41), the cats
-  (19.94 / 22.51) and the Vermin Lords (2.67 / 1.66). Read at §153,
-  after the weapons move every fight's cost, the rats' nest and the
-  Vermin Lords first; `scratch/148/kind-cost.mjs` gives the kinds.
+- ✅ **Act 1's cost, against the per-kind cost target.** Done at §155:
+  on the ARM walk rows pooled, every act-1 fight sits inside its turn
+  target and its cost band; on the deploy row alone the Vermin Lords
+  (5.29, band 6–18) and the rats' nest (1.58, 2–6) sit under, as at 153f
+  and 154a (BALANCE 2026-11-12, "the closing board"; ticked at 156d).
 
 - ✅ **The AoE-status enemies — the RETUNE half** (range / cooldown / duration; "really annoying"): board work, carried to **Round 11** with the kit watches (Round 7's no-board guard). Done at 154e and 154e-post: the wail's, the hex's and the ice storm's cooldowns and durations retuned and their cooldowns flat, pinned by a rule in `src/config/abilities.test.ts` (WORKLOG §154).
 
@@ -259,34 +251,6 @@ META-ROADMAP §"Round 11 — The roster" names each row's place.
   has no growth rate (the schema refuses one), a level-up draws eight
   values, not nine, and six run streams' draws realigned, proven against
   the old roll with power's draw spliced back (WORKLOG §153, 153a).
-
-- [ ] **The corpus's trade rows, picked by what they drive.**
-  `corpus.test.ts` wants all 21 command kinds to change a run (20 until
-  153e), and the
-  rows that cover a trade are picked by seed, so a content change that
-  moves a run can lose a kind and send a session surveying chaos seeds
-  for a replacement: three port rows re-picked at 145g, chaos 15 and 26
-  for 7 and 37 at 146e, chaos 33 added for a unit paid off at 151b. A row
-  that drives its trade (a scripted port, say) may hold through a
-  content change, and §152 to §154 re-record the corpus often (session
-  3d0a8fc1's report; WORKLOG §151, 151b). At 152b chaos 33 stopped paying
-  a unit off and chaos 10 replaced it; in the same survey chaos 4 also
-  sells a packet, the one kind no stored run reaches, at 39 battles and
-  14 s (WORKLOG 152b). At 153a three trade rows were re-picked, and at
-  153e two more, chaos 37 among them, which also sells a packet (WORKLOG
-  153a, 153e).
-
-- [ ] **A `--set` path into one encounter.** `--set` reaches only a
-  config group's top-level numbers (`resolveKnob`), so a lever inside one
-  encounter (its pool, a level weight, a count factor) is swept on the box
-  only by a commit per arm, which the one-HEAD rule makes slow. At 153e
-  the Vermin Lords' rats' level weight was probed locally on 20 seeds
-  instead, and their pool swept through `difficulty.enemyMoraleMultiplier`,
-  exact only for a forced fight. A path such as
-  `--set=encounters.vermin-lords.healthPool=80` would make a per-encounter
-  sweep a queue like the others; §155 re-pins act 1's bands and may sweep a
-  fight again (WORKLOG §153, 153e and the close, in
-  `archive/worklog-phase-153.md`).
 
 ### Dis Pater
 
@@ -308,7 +272,42 @@ META-ROADMAP §"Round 11 — The roster" names each row's place.
   §151: the schema's optional `description` (151d) and the 29 lines, the
   name's tooltip on the full card (151e; WORKLOG §151).
 
-### Unit descriptions
+### At the round's close
+
+- ✅ **The Cursor's hand-off pass, read as a trial** — kept at 156d:
+  no Cursor cap refusal in the round (four in Round 10's transcripts), the
+  Cursor at most 2,069 of its 3,900 characters; no hand-off record names
+  the pass (WORKLOG §156, 156d).
+
+- ✅ **The silent-turn reminder, read again** — 137 over 3,295 tool
+  calls (4.2 per 100; Round 10's 4.4), one wording; no friction line and
+  one report of ten name it; CLAUDE.md's note stands, with no standing
+  revisit (WORKLOG §156, 156d).
+
+At Round 11's close the priest's and the gambler's parity went to
+Round 13, the deep-end wall to Round 22, the corpus's trade rows to
+Round 12's kickoff, the per-encounter `--set` to Round 21 and the units'
+lines to Round 12 (WORKLOG §156, 156d).
+
+## Round 12 — Push, pull and blink
+
+META-ROADMAP §"Round 12 — Push, pull and blink" names each row's place.
+
+- [ ] **Dash VFX (afterimage / trail / blink-flash).** N1's rogue dash currently reads as a fast slide (the `unit:moved` lerp over the ~5-tick motion window) + the `dash.wav` whoosh — no dedicated visual. The first-class **`unit:dashed`** event ([events.ts](src/core/events.ts), emitted by the effect interpreter's dash ([interpreter.ts](src/sim/effects/interpreter.ts)), carries `from`/`to`/`durationTicks`) is the ready hook: a BattleScene/BattleRenderer subscriber can draw a motion trail / afterimage / blink-flash on the leap. Folds into the deferred L/M status-VFX presentation pass. Surfaced at N1.
+
+- [ ] **The corpus's trade rows, picked by what they drive: a kickoff
+  pre-step** (signed at 156d, 2026-11-13, for this round's kickoff, before
+  its consumers land). `corpus.test.ts` wants all 21 command kinds to
+  change a run, and the rows that cover a trade are picked by seed, so a
+  content change that moves a run can lose a kind and send a session
+  surveying seeds for a replacement: 145g (three rows), 146e (two), 151b,
+  152b (about ten minutes of survey), 153a (three), 153e (two), and 154c
+  to 154f (two rows replaced by chaos 64 after a survey of 80 seeds, 320
+  runs). This round's seven units will move the corpus again. The
+  proposal: a corpus row that drives its trades through the scripted run
+  (`script=`: a port with known stock, a buy and a sale), with its own
+  test, so it holds through a content change (WORKLOG §156, 156d;
+  §153's lean in `archive/worklog-phase-153.md`).
 
 - [ ] **A line for every unit, the user's to write.** A unit's
   `description` (145c) is optional, and only the six beasts have one;
@@ -316,27 +315,9 @@ META-ROADMAP §"Round 11 — The roster" names each row's place.
   an enemy card's tooltip is the only place one appears. The user writes
   a one-line summary for each unit in the archetype editor's Description
   field, as a set, since a line on some player cards and not others reads
-  as uneven. Asked 2026-11-02 (WORKLOG §145, "145c's tooltip in tiers").
-
-### At the round's close
-
-- [ ] **The Cursor's hand-off pass, read as a trial** (signed at Round
-  10's close). Each hand-off reads every Cursor line for still true,
-  needed first and held elsewhere (`process/session-end.md`). The keep
-  test reads whether the round's hand-off records name it, and a Cursor
-  cap refusal in the round says it is not working (WORKLOG §147, 147d).
-
-- [ ] **The silent-turn reminder, read again.** `npm run friction-scan`'s
-  `nudges` over the round's sessions, beside Round 10's 158 over 11
-  sessions and 3,596 tool calls, with the round's filings and reports on
-  it; CLAUDE.md's note stood unchanged at Round 10's close (WORKLOG §147,
-  147d).
-
-## Round 12 — Push, pull and blink
-
-META-ROADMAP §"Round 12 — Push, pull and blink" names each row's place.
-
-- [ ] **Dash VFX (afterimage / trail / blink-flash).** N1's rogue dash currently reads as a fast slide (the `unit:moved` lerp over the ~5-tick motion window) + the `dash.wav` whoosh — no dedicated visual. The first-class **`unit:dashed`** event ([events.ts](src/core/events.ts), emitted by the effect interpreter's dash ([interpreter.ts](src/sim/effects/interpreter.ts)), carries `from`/`to`/`durationTicks`) is the ready hook: a BattleScene/BattleRenderer subscriber can draw a motion trail / afterimage / blink-flash on the leap. Folds into the deferred L/M status-VFX presentation pass. Surfaced at N1.
+  as uneven. Asked 2026-11-02 (WORKLOG §145, "145c's tooltip in tiers");
+  carried from Round 11 at its close as 151f, which lands when the user
+  writes them.
 
 ## Round 13 — The unit kit
 
@@ -376,6 +357,19 @@ META-ROADMAP §"Round 13 — The unit kit" names each row's place.
   (−28.4 ± 12), the rioter (−16.2 ± 7) and the rogue (−29.5 ± 9, v9's
   clearest negative unit), held until this round gives them their dodge
   back, then re-read.
+
+- [ ] **The priest's and the gambler's parity against the soldier**
+  (C16; carried from Round 11 at 156d, 2026-11-13). At §155's closing
+  board (n=120; BALANCE 2026-11-12): the priest −18.3 regen and −9.2
+  deploy, the gambler −18.3 and −11.7, all four told apart. 155h's cause
+  read: the priest's regen row fell 80 → 63 between `8ebca66d` and
+  `5d3bcba8` (§154's kits and the officer's base mobility), not with the
+  prior table; his extra defeats are at the King and the bear, whose
+  fight fields the wolf, whose Harry is §154's (BALANCE 2026-11-12, "the
+  priest's regen row under v8"). Which kit moved it is this round's read,
+  beside the kit watches. The user's lead at 150h: act 1's encounters are
+  bimodal in difficulty, so healing helps on neither kind (WORKLOG 150h).
+  The row's history from the 94h signing is in TODO at `bf2c811c`.
 
 - [ ] **`knownAbilityIds` has one reader left, the archetype editor.**
   The unit catalog stopped calling it at the load cycle's fix, so no
@@ -591,6 +585,19 @@ META-ROADMAP §"Round 21 — Act 2, the realm in chaos" names each row's place.
 
 - [ ] **Power at 2/3/4/6 with morale doubled, an option** (the user, 2026-11-07, at §153's kickoff, which signed 1/1/2/3). Read per common it is 1 / 1.5 / 2 / 3: 1/1/2/3 with the uncommon priced apart from the common, each tier distinct in whole numbers. (0.75/1/2/3 read the same way is 1 / 1⅓ / 2⅔ / 4, a legendary at four commons, as steep at the top as 1/2/3/4.) The cost: every morale number in config doubles (the player's pool, every encounter's pool, the power overrides, the morale heals and conditions in packets and events), the board's refs in points move, and the bots' scores need a check constant by constant (the rollout evaluator's death penalty already scales with the pool; the prior table's rows are in pool points). Weigh it where acts 2 and 3's pools are retuned, here or at Round 22 (WORKLOG §153, "The cut signed").
 
+- [ ] **A `--set` path into one encounter.** `--set` reaches only a
+  config group's top-level numbers (`resolveKnob`), so a lever inside one
+  encounter (its pool, a level weight, a count factor) is swept on the box
+  only by a commit per arm, which the one-HEAD rule makes slow. At 153e
+  the Vermin Lords' rats' level weight was probed locally on 20 seeds
+  instead, and their pool swept through `difficulty.enemyMoraleMultiplier`,
+  exact only for a forced fight. A path such as
+  `--set=encounters.vermin-lords.healthPool=80` would make a per-encounter
+  sweep a queue like the others (WORKLOG §153, 153e and the close, in
+  `archive/worklog-phase-153.md`). §155 swept no fight (arm A); carried
+  here at 156d (2026-11-13), the next round planned to sweep one, and an
+  earlier round that sweeps a fight takes it first.
+
 ## Round 22 — Act 3, the plague
 
 META-ROADMAP §"Round 22 — Act 3, the plague" names each row's place.
@@ -614,6 +621,20 @@ META-ROADMAP §"Round 22 — Act 3, the plague" names each row's place.
   act"; it is act 3 since §145. Editor metadata only, never shown
   (`src/config/sectors.ts`), so it is rewritten with act 3 (WORKLOG §147,
   147a).
+
+- [ ] **The deep-end wall** (C17; carried from Round 11 at 156d,
+  2026-11-13). The sheet's terminal pair was set for the two-act walk's
+  deep end (reach 0.40–0.50, wall 0.30–0.35); on the three-act walk it
+  reads act 3. At §155's closing board, on the ARM walk rows: reach 0.242
+  regen and 0.792 deploy, wall 0.172 and 0.032; act 3's one boss, the
+  Bandit Queen, kills 5 of 29 instances on regen and 3 of 95 on deploy
+  (BALANCE 2026-11-12, "the closing board"). Re-set with act 3's bands
+  here. The conversion's move on the old two-act walk (0.459 at the §94
+  config, 0.200 after 139b) has no measured cause; the user's idea, every
+  swing paying defense at one pooled rate, estimates at 1 to 4 % of an
+  archer's swing, and a swing read split by act would test it (BALANCE
+  2026-10-29; WORKLOG §139). The row's history is in TODO at
+  `bf2c811c`.
 
 ## Round 24 — Onboarding & Feel
 

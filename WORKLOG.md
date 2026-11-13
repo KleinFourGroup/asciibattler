@@ -623,3 +623,34 @@ writing to a file works and no committed surface is involved), the
 
 **The scratchpad.** No Round 11 entry; 156f archives it with its
 header.
+
+**Tranche 3 signed** (the user: "Signing all of tranche 3! 😁"): every
+row at its lean, the corpus's trade rows put to Round 12's kickoff as a
+pre-step. 156d is done; 156e builds the three tranches' list.
+
+### 156e — the list built as signed (2026-11-13)
+
+**The rule docs.** `process/shell-and-windows.md` loses "chain nothing
+after a piped commit (a push went up after a refused commit once)"; the
+sentence's facts stay. `process/measurement.md`'s junction row is kept
+unchanged. AGENTS.md, CLAUDE.md and ROUND-RULES.md are unchanged; no rule
+and no guard is added (candidate 1 dropped, no heredoc guard, no
+`measurement.md` line). The oracle: `git diff` over `process/`, AGENTS
+and CLAUDE.md shows that one clause and nothing else.
+
+**TODO**, by `scratch/156e/todo.mjs`, which checks every anchor before
+it writes: under Round 11, act 1's cost ticked and the two "At the
+round's close" rows closed, each with its 156d read, and a closing note
+naming where the rest went; the priest's and the gambler's parity to
+Round 13 beside the kit watches, the deep-end wall to Round 22 with
+§155's terminal pair, the corpus's trade rows to Round 12 as a kickoff
+pre-step, the `--set` path to Round 21, and the units' lines with their
+heading to Round 12 as they stood, with a clause that they carry 151f.
+The two long rows (the parity, the wall) are rewritten to their state
+at §155 with their history left at `bf2c811c`. The diff's hunks fall in
+Rounds 11, 12, 13, 21 and 22 alone. Its first run also collapsed three
+double blank lines elsewhere in the file and dropped the closing note
+(an insertion keyed to a line the script skips); the hunk list caught
+the first and a read the second, both before the commit (a slip filed).
+
+No smoke: nothing under the hook's sim paths is staged.

@@ -26,8 +26,7 @@ Claude Code's own tools.
   failing `expect()` prints on the first try. A commit piped into `tail`
   keeps the pre-commit hook's failure, since the hook ends with it and
   keeps its whole output in `.git/pre-commit.log`, but the pipe still
-  reports `tail`'s exit code: chain nothing after a piped commit (a push
-  went up after a refused commit once).
+  reports `tail`'s exit code.
 - Put scratch probes in real `.ts` files (`.mts` outside the repo, where
   `tsx` reads `.ts` as CommonJS); an inline `npx tsx -e` can hang at
   spawn on Windows with no output. Throwaways go in your scratch directory.

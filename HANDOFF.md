@@ -6,7 +6,7 @@ A fresh-session orientation for ASCIIbattler. Read this first; then dive into th
 
 **The ONE home for live status.** Other docs (and the agent memory) point here instead of restating it; when state changes, this section is the single place that updates.
 
-- **NEXT — ROUND 11 (The roster): §156, the close: 156d's tranche 3 put to the user** (the six open Round 11 rows, each with a round or a tick; the papercuts; WORKLOG 156d); on the sign, 156e builds the signed list. 151f, the units' lines, lands when the user writes them. **Open ◐:** 156d.
+- **NEXT — ROUND 11 (The roster): §156, the close: 156f, the archive and the round's close** (`stop`; ROADMAP §156, `process/planning.md` "Round close" and "Phase close"). 151f, the units' lines, lands when the user writes them. **Open ◐:** 156d.
 - **In flight:** nothing; 155h's box was destroyed by its driver (2026-11-12 15:09Z), and 155a's two before it.
 - **The public build:** `0.4.0` (`4fc62cfe`, tag `v0.4.0`), uploaded to itch.io on 2026-11-13; the uploads before it are in Closed rounds below.
 - **Snapshots:** WorldSnapshot **v39** (no player keeps one) · RunSnapshot **v51** (a v50 save, `0.3.0`'s, rejects).

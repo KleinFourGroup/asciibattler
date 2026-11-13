@@ -12,7 +12,7 @@ with its spec, its per-phase worklogs (`archive/worklog-phase-142.md` to
 `-147.md`) and its session reports beside it; before it
 [archive/post-133-roadmap.md](archive/post-133-roadmap.md) (Round 9).
 
-**Status: Round 11 under way; §155, the closing board, closed 2026-11-12; §156, the close, next.** The spec
+**Status: Round 11 under way; §156, the close: its cut put to the user 2026-11-13 (WORKLOG §156).** The spec
 is [round-11-spec.md](round-11-spec.md), signed 2026-11-05. The charter,
 the decision points, the exit and the scope guards are in META-ROADMAP
 §"Round 11 — The roster"; its riders are TODO's "Round 11".

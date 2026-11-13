@@ -73,7 +73,7 @@ every amendment re-runs the full board; paired same-seed deltas govern.
  8.5 Housekeeping ┤  ✅ CLOSED 2026-10-26 — the oracle map · the census · deletions per subsystem, byte-identical · the comment pass · 0.1.1 · the dependency phase · AGENTS as a router · the re-cut (§119–§133 + §124.5)
  9. The frame ────┤  ✅ CLOSED 2026-10-30 — the act design · the board's guards · every strike lands, precision and evasion out · 0.2.0 (§134–§140)
 10. Act 1 ────────┤  ✅ CLOSED 2026-11-04 — the scripted run · the board by act · six beasts · act 1, The Periphery · act 1's bands · 0.3.0 (§141–§147)
-11. The roster ───┤  kits · power by rarity · Mars in three · bandits out of the draft
+11. The roster ───┤  ✅ CLOSED 2026-11-13 — the stat sheet · the weapons by taste · power by rarity · Mars in three · bandits out of the draft · the kits · act 1's bands · 0.4.0 (§148–§156)
 12. Push, pull ───┤  forced movement · the teleport · the cavalier · seven units
 13. The unit kit ─┤  lifesteal · specials · global reach · `extends` and its reskins
 14. Neutrals ─────┤  the split · `affects` as flags · totems · the aura healer · camp levels
@@ -1011,7 +1011,7 @@ Archives: `archive/post-140-roadmap.md` + `worklog-phase-142.md` to
 
 ---
 
-## Round 11 — The roster
+## Round 11 — The roster ✅ CLOSED 2026-11-13
 
 **Charter:** the shipped roster balanced, by taste, on every strike
 landing, the Idol of Mars split into three, and bandits out of the draft.
@@ -1064,6 +1064,34 @@ blind; each kit change; the idols' sizes. **Exit:** the board read, act
 22 (147a); the prior table rebuilt. **Release:** three idols, reworked units,
 ability descriptions. **Save:** a Run bump (Mars narrowed to strength, §151). **Scope
 guards:** no new mechanism but the description field.
+
+**CLOSED 2026-11-13** — nine phases (§148–§156), each closed on the
+user's read, the close's last step at its sign. The exit met, clause by
+clause (156a): the board read at 155a and signed at 155c, paired against
+146f's; act 1's bands re-pinned and signed at 155g, seam 1 and act 1's
+wall a band a vector; acts 2 and 3 recorded for Rounds 21 and 22; the
+prior table rebuilt (v9 at 154g, standing at 155c) and the roster table
+v8 (155b). The release, `0.4.0`, uploaded 2026-11-13: Mars narrowed to
+strength with Diana and Hecate beside him, bandits out of the draft and
+the ports, the abilities' lines as the name's tooltip, the bow, the
+rioter, the officer's aura, the area statuses and the wolf retuned,
+power by rarity at 1/1/2/3; a run saved by `0.3.0` is refused, the save
+at Run v51. **Against the charter:** the stat sheet, added at the
+kickoff at the user's ask (§149); the arbitration's walk loss fixed with
+doctrine's pick as the null (150d to 150g); the strike-conversion test
+retired at the retune (152b); act 1's five fights moved and baked to the
+per-kind cost target signed at the kickoff (§148, §153); Dis Pater held
+free, his sentence rewritten (155f); the officer's base mobility 6 → 3
+at the user's cut after §154, his kit to Round 13; the parity gaps
+carried to Round 13 and the deep-end wall to Round 22. The scope guard
+held (156a). World v39 at both ends, Run v50 → v51; no gotcha added. At
+the close: Round 12's charter standing as written (156a); the keep test
+kept one row and deleted one directive; no new rule or guard, the
+claim-ahead clause dropped at the user's question; the Cursor's
+hand-off pass kept (156d, 156e). Archives: `archive/post-147-roadmap.md`
++ `worklog-phase-149.md` to `-156.md` + `round-11-spec.md` +
+`round-11-rules.md` + `sessions-round-11.md` +
+`retro-scratchpad-round-11.md`.
 
 ---
 

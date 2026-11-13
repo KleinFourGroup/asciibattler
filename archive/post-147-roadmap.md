@@ -1,0 +1,165 @@
+# ROADMAP — Round 11 (The roster), post-§147
+
+The active PLAN (it stays a plan for its whole life). The macro order is
+[META-ROADMAP.md](META-ROADMAP.md) (Round 10 Act 1, the wilds ✅ CLOSED
+2026-11-04); findings + rationale land in [WORKLOG.md](WORKLOG.md); live
+status is HANDOFF's 🧭 Cursor. Sub-steps are cut at each phase kickoff
+(AGENTS "The planning stack"), never here, and each cut step declares
+its read (`none` · `batch` · `stop`; AGENTS "Reads are cut, not
+improvised"). Prior round's plan:
+[archive/post-140-roadmap.md](archive/post-140-roadmap.md) (Round 10)
+with its spec, its per-phase worklogs (`archive/worklog-phase-142.md` to
+`-147.md`) and its session reports beside it; before it
+[archive/post-133-roadmap.md](archive/post-133-roadmap.md) (Round 9).
+
+**Status: Round 11 closed 2026-11-13, its last step, 156f, at the user's read.** The spec
+is [round-11-spec.md](round-11-spec.md), signed 2026-11-05. The charter,
+the decision points, the exit and the scope guards are in META-ROADMAP
+§"Round 11 — The roster"; its riders are TODO's "Round 11".
+
+## Phase 148 — the kickoff ✅ (closed 2026-11-05)
+
+The spec, the phases and act 1's cost target, each signed by the user
+(WORKLOG §148, in `archive/worklog-phase-149.md`).
+
+- ☑ **The spec and the phases** — signed 2026-11-05: the spec
+  ([round-11-spec.md](round-11-spec.md)) and §149 to §156 below, with
+  the stat sheet added as §149 (WORKLOG §148).
+- ☑ **Act 1's cost target per kind** — signed 2026-11-05: normal 10 %,
+  elite 30 %, boss 50 % of the pool, each fight within ½× to 1½×
+  (BALANCE "Per-kind target bands").
+
+## Phase 149 — the stat sheet ✅ (closed 2026-11-05)
+
+A read-only page at `/tools/stat-sheet/`: a unit's duel at a level with a
+sector's fielded enemies through the game's own wave and strike code, its
+stats, growths and weapon ranked and coloured; the strike model within
+three standard errors of play on 24 of 24 rows, play striking at 0.15 to
+0.36 of the standing rate (WORKLOG §149, in `archive/worklog-phase-149.md`;
+BALANCE 2026-11-05).
+
+- ☑ **149a — the strike model** (`none`): pinned on the raw config, three planted mistakes caught.
+- ☑ **149b — the editor's cadence** (`none`): through `resolveCadenceTicks`; latent, no shipped preview moves.
+- ☑ **149c — the check against play** (`none`): 24 of 24 rows within
+  three standard errors; play strikes at 0.15 to 0.36 of the standing rate.
+- ☑ **149d — the enemies** (`none`): through `waveForTurn` and `resolveWave`; two planted mistakes caught.
+- ☑ **149e — the duel, the ranks and the weapons** (`none`): the status ticks pinned against the sim (a 4 s burn ticks 3 times).
+- ☑ **149f — the page** (`stop`): signed 2026-11-05, with its colours.
+
+## Phase 150 — the board's instruments ✅ (closed 2026-11-06)
+
+BALANCE's header under its cap with room; the ceiling deltas and the
+skill gradient's leg read on the shared seeds; the arbitration's walk
+loss located at the null arm and fixed with doctrine's pick, the ARM
+now at or above doctrine's level on every ceiling shape; the prior table, the
+roster table and the sheet's ARM refs re-derived under it (WORKLOG
+§150, in `archive/worklog-phase-150.md`; BALANCE 2026-11-05 and
+2026-11-06).
+
+- ☑ **150a — BALANCE's header** (`none`): three Phase X sections to `archive/balance-header.md`, 700 lines to 642.
+- ☑ **150b — the ceiling deltas** (`none`): on the shared seeds, pinned where the sign flips; 146f −0.200, −0.150, −0.075, −0.350.
+- ☑ **150c — the skill gradient's leg** (`none`): an exact sign test on the shared seeds, a tie fine; four recorded boards read ok.
+- ☑ **150d — the arbitration's walk loss** (`stop`): located at the four sites whose null arm is "pass", against rollouts that assume doctrine's play; signed 2026-11-05, the lean: a flag, then a box cohort, the port site out.
+- ☑ **150e — the nominee null behind a flag** (`none`), inserted at 150d's sign: `--arb-null=nominee`; the dial off, the ARM byte-identical on 10 of 10 artifacts.
+- ☑ **150f — the cohort** (`stop`), inserted at 150d's sign: the ceiling deltas 0.000, +0.025, +0.225, −0.025 (146f −0.200, −0.150, −0.075, −0.350); signed 2026-11-05, the nominee to be the default.
+- ☑ **150g — the nominee the default** (`none`), inserted at 150f's sign: the default byte-identical to the nominee capture and `--arb-null=pass` to the old ARM, 10 of 10 each.
+- ☑ **150h — the ARM's board** (`stop`), inserted at 150f's sign: the prior table re-derived under the new ARM and committed, then the full board under it, the roster table from its ARM rows; the sheet's ARM refs re-pinned for the user's signature, no band moved. Built: v6 and the roster table v6, the board at `8a63a20e` 0 FAIL, 16 WARN, the ceilings +0.025, +0.025, +0.125, −0.025; the re-pin signed 2026-11-06 with both leans: the deploy row's fires re-pinned, the gambler added to §154's parity item (WORKLOG 150h).
+
+## Phase 151 — the content ✅ (closed 2026-11-06)
+
+Bandits out of the draft and the ports, with the roster guard on what a
+player can hold; Mars narrowed to strength, Diana and Hecate beside him,
+every daemon renamed off "Idol" (Run v51); the ability's optional
+`description`, its 29 lines as the name's tooltip on the card, the
+reach's floor in the numbers (WORKLOG §151, in
+`archive/worklog-phase-151.md`).
+
+- ☑ **151a — the empower, by stat** (`none`, a pre-registered stop): under Mars a corrupter's or rioter's pick moves, 1 of 30 act-1 seeds and 4 of 30 walk seeds; signed 2026-11-06 (WORKLOG 151a).
+- ☑ **151b — bandits out of the draft** (`none`): the roster guard on an archetype no player can hold; both tables v7, v6 less the bandit; a scripted port stocks only draftable units.
+- ☑ **151c — Mars narrowed, Diana and Hecate, the renames** (`batch`): Run v50 to v51, a v50 save rejected with its message; read at 151e's stop and signed 2026-11-06 (WORKLOG 151e-post).
+- ☑ **151d — the ability's `description`** (`none`): the schema's optional field and the attack editor's; the corpus 0 of 33 differ.
+- ☑ **151e — the abilities' lines and the card's line** (`stop`): 29 terse lines, a test that each ships one; arm B signed 2026-11-06, the line as the name's tooltip with the reach's floor in the numbers, built as 151e-post (WORKLOG 151e-post).
+- ✗ **151f — the units' lines** (`none`): the user's 23, with a test that every combatant has one; not written in the round, its TODO row carried to Round 12 at 156e (WORKLOG §156).
+
+## Phase 152 — the weapons and defense, by taste ✅ (closed 2026-11-06)
+
+The bow slowed and heavier, 2.5 s at might 4, and the rioter a point of
+defense, each signed in the user's play; every other number held; the
+strike-conversion test retired; the stat sheet's ranks recorded before
+and after (WORKLOG §152, in `archive/worklog-phase-152.md`; BALANCE
+2026-11-06).
+
+- ☑ **152a — the before record** (`none`): the sheet's tables and both groups' ranks at five points, by `scratch/152/sheet.ts`, in BALANCE 2026-11-06; two rows matched against the page (WORKLOG 152a).
+- ☑ **152b — the draft** (`stop`): the bow 2.0 → 2.5 s, its might holding its damage a second; the rioter's modest buff; the rest held; the strike-conversion test retired. The bow's might 4 and the rioter's base defense 1, signed in play 2026-11-06 (WORKLOG 152b).
+- ☑ **152c — the after record** (`none`): 152a's tables on the signed numbers, each moved cell before → after, in BALANCE 2026-11-06 (WORKLOG 152c).
+
+## Phase 153 — power by rarity, its growth key, and the pools ✅ (closed 2026-11-08)
+
+Power by rarity at 1/1/2/3, its growth key and level-up draw out (six run
+streams realigned, proven against the old roll); act 1 read on the box,
+five fights moved by their levers to the signed aims and baked, the
+Vermin Lords' pool 86 → 80 on a held-out miss; on the verify read every
+turn target held and two costs fell under their bands on deploy, both
+kept; the prior table v8 and the units' worth on it for §154 (WORKLOG
+§153, in `archive/worklog-phase-153.md`; BALANCE 2026-11-07 and
+2026-11-08).
+
+- ☑ **153a — power's growth key out** (`none`): out of the schema, the 29 combatants and `STAT_KEYS` (eight draws a level-up), equal to the old roll with power's draw spliced back; four seeded drives and three corpus rows re-picked (WORKLOG 153a).
+- ☑ **153b — power by rarity at 1/1/2/3** (`batch`, read at 153e's stop, signed 2026-11-08): the rare tier 1 → 2, the legendaries 2 → 3, eight archetypes; in act 1 the King alone moves (WORKLOG 153b).
+- ☑ **153c — act 1 on the box** (`none`): the two Soldier ARM rows at n = 120; five fights outside a target, the King and the bear in both (BALANCE 2026-11-07; WORKLOG 153c).
+- ☑ **153d — the moves put** (`stop`, the decision point): signed 2026-11-07, five fights moved by their levers to aims that hold act 1's total, the rats' nest tuned to its band's low edge (WORKLOG 153d).
+- ☑ **153e — the tune** (`stop`, signed 2026-11-08): the signed moves baked; held out, four fights in their turn targets and the Vermin Lords over theirs, their pool 86 → 80 (`1cedbd9d`); the user plays act 1 (WORKLOG 153e).
+- ☑ **153f — the verify read** (`none`, a pre-registered stop on a miss; both misses kept 2026-11-08): 153c's rows at 153e's HEAD; every turn target held, two costs under their bands on deploy (the Vermin Lords, the rats' nest) (BALANCE 2026-11-08; WORKLOG 153f).
+- ☑ **153g — the prior table rebuilt** (`none`): v8 at `614dcf68`, 36 items, Diana and Hecate measured for the first time, the table's mean margin +10.1 → −1.5; the units' worth re-read on it for §154's kickoff, the officer the worst row free and bought (BALANCE 2026-11-08; WORKLOG 153g).
+
+## Phase 154 — the kits ✅ (closed 2026-11-11)
+
+Blind's rule pinned (no fallback target); the officer's aura +1 DEF,
+Hecate +4 MAG, the area locks retuned with flat cooldowns after speed
+chained them in play, the wolf's Harry; the parity gaps held for §155;
+the prior table v9, which stands as §155's, and every watch decided on
+it, the officer held for Round 13 and studied fight by fight (WORKLOG
+§154, in `archive/worklog-phase-154.md`; BALANCE 2026-11-08 to
+2026-11-11).
+
+- ☑ **154a — the parity read** (`none`, its call at the next stop): the soldier's, the priest's and the gambler's act-1 rows, n = 120, at the cut's HEAD under v8, on the box; each against ±5.
+- ☑ **154b — blind** (`none`): no fallback target for a blinded unit, so it strikes only inside blind's acquisition range; pinned headless (an archer holds fire at 3 and 1, a halberdier strikes at 1 and holds at 2).
+- ☑ **154c — the officer's kit** (`batch`): Inspire's aura +1 DEF beside its +2 MOB, its lines to match; his worth at 154g.
+- ☑ **154d — Hecate's size** (`batch`): +8 → +4 MAG, Mars and Diana held; her worth at 154g.
+- ☑ **154e — the area-status retune** (`stop`, in play): the wail, the hex and the ice storm, each status holding its area about half the time at act 3's level. Failed in play (2026-11-10: speed chained the statuses); its -post fix, the three cooldowns flat (`speedScaled: false`), signed, built and passed in play (WORKLOG §154).
+- ☑ **154f — the wolf** (`stop`, in play, at 154e's stop): Harry, Bite's numbers with Gambit's retreat.
+- ☑ **154g — the prior table v9 and the watches re-read** (`stop`, the decision point): each watched row's disposition to the user; it stands as §155's prior-table rebuild if nothing after it moves an item's value. v9 built at `07ce8ed5` (BALANCE 2026-11-10); signed 2026-11-11: the officer held for Round 13, every other lean as put, so v9 stands as §155's table (WORKLOG §154).
+
+## Phase 155 — the closing board ✅ (closed 2026-11-12)
+
+The board at `5d3bcba8`, VERDICT PASS on all 17 rows: every act-1 fight
+inside its turn target and cost band, so act 1's bands re-pinned with no
+content moved (arm A), seam 1 and act 1's wall a band a vector; the
+parity gaps carried, the priest's regen drop §154's game, not the
+table, and v9 standing; Dis Pater held, net-positive held free, his
+sentence rewritten; the roster table v8; acts 2 and 3 recorded for
+Rounds 21 and 22 (WORKLOG §155, in `archive/worklog-phase-155.md`;
+BALANCE 2026-11-12).
+
+- ☑ **155a — the cohorts on the box** (`none`): the board, Dis Pater's grant pair and the fresh derive; recovered by hand after a Windows Update restart killed the driver.
+- ☑ **155b — the roster table rebuilt** (`none`): v8, 52 buckets, the officer drafted, no PENDING.
+- ☑ **155c — the board read** (`stop`, the decision point): ✅ DECIDED 2026-11-12, every lean signed: arm A, the parity gaps carried, v9 stands, Dis Pater held, wording (b).
+- ☑ **155h — the priest's cause read** (`none`, inserted at 155c's sign): 66 under v8 against 63 under v9 and 80 at 154a, so the game moved him, not the table.
+- ✗ **155d — act 1 tuned** and ✗ **155e — the verify board**: not run under arm A.
+- ☑ **155f — Dis Pater's sentence** (`batch`): "Kills tithe bits from below: 2 apiece, paid as one sum at the turn's end."; read and signed.
+- ☑ **155g — the sheet amended** (`stop`): act 1's refs and the forced bosses re-pinned, seam 1 and act 1's wall a band a vector (option 2, signed); 0 FAIL, 9 WARN on its own board.
+
+## Phase 156 — the close ✅ (built 2026-11-13; 156f at its stop)
+
+Round 11's exit met by clause and Round 12's charter standing; `0.4.0`
+uploaded with a `0.3.0` run refused; the process read in three tranches
+(the piped-commit directive deleted, no new rule or guard, the Cursor
+pass kept, the reminder's note unchanged, the open rows placed); the
+archive. Each step's record is `archive/worklog-phase-156.md`.
+
+- ☑ **156a — the round's exit by clause, and Round 12's charter against the code** (`stop`): signed 2026-11-13, the exit met by clause and Round 12's charter standing as written (WORKLOG 156a).
+- ☑ **156b — `0.4.0`, the tag and the zip** (`none`): `4fc62cfe`, tagged `v0.4.0`, `asciibattler-0.4.0_4fc62cf.zip` checked; a real `0.3.0` save refused in the pane, a `0.4.0` save continued; the changelog drafted.
+- ☑ **156c — the smoke, the upload and the playtest** (`stop`, the user's): read 2026-11-13, uploaded, every read good on the user's word; `main` and `v0.4.0` pushed.
+- ☑ **156d — the process read** (`stop`, in tranches): signed 2026-11-13 in three: the junction row kept and the piped-commit directive deleted, no new rule or guard; the Cursor pass kept, the reminder's note unchanged; each open row placed (WORKLOG 156d).
+- ☑ **156e — the list built as signed** (`none`): one clause out of `shell-and-windows.md`, nothing else in the rule docs; TODO's open Round 11 rows placed in Rounds 12, 13, 21 and 22, act 1's cost and the two trials ticked.
+- ◐ **156f — the archive and the round's close** (`stop`): built 2026-11-13, put to the user; the push at their read.

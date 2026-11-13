@@ -7,6 +7,7 @@ from this header ([process/planning.md](process/planning.md), "Round
 close"). A rule enters with the date it was signed and a pointer to its
 WORKLOG entry.
 
-## Round 11
 
-None signed yet. Round 10 signed none (`archive/round-10-rules.md`).
+## Round 12
+
+None signed yet. Round 11 signed none (`archive/round-11-rules.md`).

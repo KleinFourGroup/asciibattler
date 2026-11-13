@@ -67,8 +67,12 @@ the Round-10 (Act 1, the wilds, §141–§147) backlog was swept 2026-11-04
 (the fourteenth run, at 147d — no entries; from the friction read: the
 backticks guard and the Cursor's hand-off pass) →
 [archive/retro-scratchpad-round-10.md](../archive/retro-scratchpad-round-10.md);
+the Round-11 (The roster, §148–§156) backlog was swept 2026-11-13 (the
+fifteenth run, at 156d — no entries; from the friction read: the
+piped-commit directive deleted, no new rule or guard) →
+[archive/retro-scratchpad-round-11.md](../archive/retro-scratchpad-round-11.md);
 the MVP-era entries had earlier fed [post-mvp-review.md](post-mvp-review.md).
 
 ---
 
-_(The post-§147 entries start here — Round 11, The roster.)_
+_(The post-§156 entries start here — Round 12, Push, pull and blink.)_

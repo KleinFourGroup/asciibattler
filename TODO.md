@@ -187,7 +187,7 @@ scripted run's two warnings to Round 18 and the editors' shared rules to
 
 - ✅ **The backticks guard** — the context meter's mod refuses, before it runs, a Bash command holding a backtick bash would run as a command substitution, as written or after the halving; replayed over the round's 2,400 Bash commands it refuses the four that lost text and one other real substitution, and nothing else (ROADMAP §147, 147e; WORKLOG §147).
 
-## Round 11 — The roster
+## Round 11 — The roster (closed 2026-11-13)
 
 META-ROADMAP §"Round 11 — The roster" names each row's place.
 

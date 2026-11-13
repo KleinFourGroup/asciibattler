@@ -719,3 +719,7 @@ fire-channel row's lean. The row moves from Round 10's "The board" to
 Round 12's TODO, its next board. 156f ticked in
 `archive/post-147-roadmap.md`, its §156 closed; the Cursor at Round 12's
 kickoff with no open ◐; `main` pushed at the sign.
+
+*The itch page's officer line* (the correction above): the user fixed
+it on itch, 2026-11-13 ("Fixed the officer line on itch"), so the page
+now names the Inspire aura's +1 DEF.

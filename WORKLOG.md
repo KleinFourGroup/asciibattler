@@ -284,3 +284,7 @@ GOTCHAS.md unchanged over the range.
    and nothing found asks for a line to change.
 3. Settled by the cut: 156c's smoke is the round's playtest. No audit
    round, since no META-ROADMAP cluster closed, as at Rounds 8.5 to 10.
+
+**156a signed** (the user: "Signed! 😁"): both calls at the leans.
+Round 11's exit is met; Round 12's charter stands as written, so
+META-ROADMAP and TODO are unchanged by this step.

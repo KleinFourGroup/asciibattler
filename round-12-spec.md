@@ -1,7 +1,7 @@
 # Round 12 Spec — Push, pull and blink
 
-**Status: PROPOSED 2026-11-14, for the user's sign** with the phases §158
-to §163 (WORKLOG §157). The intent is the user's, verbatim where it is
+**Status: SIGNED 2026-11-14** ("Thank you, Claude! 😁 Signing the spec and
+the cut!"), with the phases §158 to §163 (WORKLOG §157). The intent is the user's, verbatim where it is
 theirs, from the Round 8.5 census (A-07), the re-cut (§133c) and the
 casualty verdict (§93); what was signed before the kickoff is listed with
 its date. The Open section is what the round still has to settle, with
@@ -46,9 +46,11 @@ burst above is the rework's second half.
 
 **The cavalier** is item #14 of the 2026-08-21 feature list
 (META-ROADMAP's Coverage map). No words of the user's for it were found in
-`archive/post-83-worklog.md`, `plans/` or META-ROADMAP; the audit of that
-day read it as damage on arrival after a dash (`archive/post-83-worklog.md`,
-"Cavalier").
+the repo, its git history or the session transcripts reachable from
+2026-09-27 on; that day's META-ROADMAP v2 (`daff9a08`) read it as "blitz +
+hit on arrival … Everything else is a dash clone + mobility". What it
+should be is the round's most open question of intent (WORKLOG §157, "The
+cavalier previewed").
 
 **Snipers slow and heavy** (the user's guidance for future units, placed
 at §152's kickoff, `archive/worklog-phase-152.md`): it applies to any
@@ -123,7 +125,7 @@ files and lines. In short:
 The calls, in tranches, with the session's leans; WORKLOG §157 holds the
 reasons and both arms of each.
 
-### Tranche 1 (this kickoff)
+### Tranche 1 (this kickoff), signed 2026-11-14
 
 1. **The spec and the phases:** this spec, and §158 to §163 in the order
    WORKLOG §157 gives (the pre-step and the design; forced movement, the
@@ -167,6 +169,13 @@ The forced-movement design, each fork with its lean:
 - *The cavalier's hit:* a leap keeps its enemy's id, and a damage op after
   the move hits it only if it is alive and within reach of the landing.
 - *`World.shove`:* retired, its `unit:shoved` event kept for the push.
+
+The cavalier's six, previewed at the kickoff: the hit strikes the enemy it
+charged, only if beside it on arrival; plain damage or damage and a
+one-cell knockback (lean: the knockback); no damage by distance; a
+run-up of at least two cells; the path, not a straight line; a one-cell
+body with high mobility, a melee weapon and the charge on a long
+cooldown.
 
 With them, since §160's units rest on them: which new units are draftable
 (lean: all four, each also an enemy in one act-2 or act-3 encounter); who

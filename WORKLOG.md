@@ -238,3 +238,38 @@ consumer, or none); the dash's visual rides §161 with the blink it
 shares. *Predicted:* the release four new units (five if the whirlwind
 gets one of its own), two reworked, and their abilities; no Run bump, since no shipped id is removed and the banshee's
 `wail` is reworked under its id; a World bump only on fork 5's other arm.
+
+### The cavalier previewed, and the spec and the cut signed (2026-11-14)
+
+The user asked to preview the cavalier before signing, remembering it as
+the most open item. *The record:* the one line from the 2026-08-21
+planning session, in that day's META-ROADMAP v2 (`daff9a08`): "blitz +
+hit on arrival … Everything else is a dash clone + mobility". No words
+of the user's were found in the repo, in `git log -S` back to that
+commit, or in a search of the session transcripts for "cavalier",
+"blitz" and "cavalry" (the oldest hit 2026-09-27). The re-cut sized C5
+at 0.5 to 1 phase and A18 at none. So it is the one consumer of the
+seven with no sentence of the user's behind it, and one of the round's
+smallest mechanisms: the leap abstains within strike reach and lands a
+cell short of its target (`propose.ts:138-168`, `movement.ts:241-264`),
+an op fires at offset 0 and at `impact` (`EffectAction.ts:6-18`), so a
+move at the wind-up's start and a hit at `impact` lands the hit as the
+slide ends, and the gambit already does the reverse.
+
+*The six put with it, for 158b's stop:* the hit strikes the enemy it
+charged, only if beside it on arrival (the other arm, whoever is in reach,
+never wastes the charge and can hit a bystander); plain damage or damage
+and a one-cell knockback through §159's push (lean: the knockback, which
+makes the charge read as one and, under fork 6, ends the target's action:
+the cavalier a disruptor where the ninja is an assassin); no damage by
+distance travelled (a cast-time capture, a World bump, hard to read); a
+run-up of at least two cells, read off the def's `minRangeCells`, which
+the leap does not read yet; the path, as the dash, not a straight line;
+a one-cell body with high mobility, a melee weapon and the charge on a
+long cooldown, the dash's 10 s to start, its act, glyph and draft at its
+phase.
+
+**Signed** (the user: "Thank you, Claude! 😁 Signing the spec and the
+cut!"): the spec, and §158 to §163 with 158a `none` and 158b `stop`. The
+cavalier's six join tranche 2 at 158b, as the preview proposed. The cut
+is in the ROADMAP; the stretch runs 158a, then 158b's stop.

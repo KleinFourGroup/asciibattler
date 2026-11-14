@@ -6,13 +6,13 @@ A fresh-session orientation for ASCIIbattler. Read this first; then dive into th
 
 **The ONE home for live status.** Other docs (and the agent memory) point here instead of restating it; when state changes, this section is the single place that updates.
 
-- **NEXT — ROUND 12 (Push, pull and blink): §157's sign** — the spec ([round-12-spec.md](round-12-spec.md), proposed) and the phases §158 to §163 put to the user as tranche 1 (WORKLOG §157); at the sign, the cut into [ROADMAP.md](ROADMAP.md), then 158a (the corpus's trade row) and 158b's design stop. **Open ◐:** none.
+- **NEXT — ROUND 12 (Push, pull and blink): 158a, the corpus's trade row** (`none`), then 158b's design stop ([ROADMAP.md](ROADMAP.md) §158; the spec [round-12-spec.md](round-12-spec.md) and the cut signed 2026-11-14, WORKLOG §157). **Open ◐:** none.
 - **In flight:** nothing.
 - **The public build:** `0.4.0` (`4fc62cfe`, tag `v0.4.0`), uploaded to itch.io on 2026-11-13; the uploads before it are in Closed rounds below.
 - **Snapshots:** WorldSnapshot **v39** (no player keeps one) · RunSnapshot **v51** (a v50 save, `0.3.0`'s, rejects).
 - **Tests:** **3963 main** in 271 files at `4fc62cfe` (156b, its hook); **588 fuzz:smoke** in 60 files and **1 fuzz:jobs-parity** at `ca8dd3be` (155g); typecheck clean; the journal corpus, run by hand, 37 tests over 33 journals, recorded and 37 passed at `794cc905`.
 - **Model id: `claude-opus-5-5`** since 2026-09-22. When yours differs, say so at the next stop; at the user's word, review AGENTS.md against the vendor's current prompting guidance and record the new id (the last review: `archive/post-104-worklog.md`, "The new-model tone audit").
-- **Last phase: §156**, the close, 2026-11-13: Round 11's exit met, Round 12's charter standing; `0.4.0` uploaded; the piped-commit directive deleted, no new rule or guard, the Cursor pass kept; the open rows placed in Rounds 12, 13, 21 and 22 (`archive/worklog-phase-156.md`).
+- **Last phase: §157**, Round 12's kickoff, 2026-11-14: the spec and the phases §158 to §163 signed; thirteen forced-movement forks and the cavalier's six for 158b (WORKLOG §157).
 
 ## Current state
 

@@ -12,17 +12,71 @@ with its spec, its per-phase worklogs (`archive/worklog-phase-149.md` to
 `-156.md`) and its session reports beside it; before it
 [archive/post-140-roadmap.md](archive/post-140-roadmap.md) (Round 10).
 
-**Status: Round 11 closed 2026-11-13; Round 12's kickoff, at §157, is
-next.** The kickoff writes the spec, checks the charter's premises
-against the code and cuts the phases with their reads for the user to
-sign (`process/planning.md`). The charter, the decision points, the exit
-and the scope guards are in META-ROADMAP §"Round 12 — Push, pull and
-blink", standing as written at Round 11's close; its premises were read
-at HEAD then (`archive/worklog-phase-156.md`, 156a); its riders are
-TODO's "Round 12", the corpus's trade rows among them as a pre-step put
-to this kickoff.
+**Status: Round 12 under way; the spec and the cut signed 2026-11-14.**
+The spec is [round-12-spec.md](round-12-spec.md). The charter, the
+decision points, the exit and the scope guards are in META-ROADMAP
+§"Round 12 — Push, pull and blink"; its riders are TODO's "Round 12".
 
-## Phase 157 — the kickoff
+## Phase 157 — the kickoff ✅ (closed 2026-11-14)
 
-The spec, the audit and the cut. The phases and their order are the
-kickoff's to cut and the user's to sign.
+The spec and the phases, signed by the user (WORKLOG §157).
+
+- ☑ **The spec and the phases** — signed 2026-11-14: the spec
+  ([round-12-spec.md](round-12-spec.md)) and §158 to §163 below, with
+  §158's two steps and their reads; the cavalier's six put to 158b.
+
+## Phase 158 — the pre-step and the design
+
+The corpus's trade row, so the units after it stop costing a re-pick by
+seed, then the forced-movement design, the stop the charter names, with
+the calls §160 rests on. **Risk:** low for the row; the design is the
+round's decision point. **Exit:** the row holding the five trades on its
+own test; the design signed.
+
+- ☐ **158a — the corpus's trade row** (`none`): a corpus row whose port
+  comes from `script=`, its five trades planted there; its own test with
+  a planted failure; the seed-picked rows' re-pick rule deleted.
+- ☐ **158b — the forced-movement design** (`stop`): the thirteen forks
+  and the cavalier's six with both arms and leans; which new units are
+  draftable, the whirlwind's carrier, N3's flag, the abilities' lines.
+
+## Phase 159 — forced movement, the seam
+
+The push and its op on the signed design: knockback from a point and the
+pull toward the caster, each landing and interrupt rule held by a
+headless test with its planted failure; `World.shove` used or retired;
+then the forced move's look and sound. Before any consumer, since three
+units and the adventurer's special stand on it. **Risk:** medium-high
+(claims, flips and swaps). **Predicted:** no shipped ability pushes
+until §160, so the headless steps replay the corpus unchanged; the look
+a `stop`; a World bump only if the design holds a pushed unit busy.
+**Scope guard:** no body larger than one cell is pushed (Round 19).
+
+## Phase 160 — the pushers and the bursts
+
+The grenadier, the telekinetic, the adventurer's pull, the banshee's
+self-centred burst and the blade whirlwind, with N3's flag if signed,
+each in the live acts' pools. Right after §159, so the push's distance
+and feel are judged on units in play. **Risk:** medium. **Reads,
+foreseen:** the glyphs a `stop` at its start; each unit `batch` with its
+URL; the play a `stop`.
+
+## Phase 161 — the blink and the charge
+
+The teleport, the cavalier's hit after its move, the dash's trail and
+the blink on `unit:dashed`, then the ninja and the cavalier. It stands on
+none of §160. **Risk:** medium. **Reads, foreseen:** the headless steps
+`none`; the trail and blink a `stop`; the play a `stop`.
+
+## Phase 162 — the closing board
+
+The prior table rebuilt, the rarity protocol's desk read per new
+draftable, the board line for line against §155's and paired on its
+seeds, act 1's bands against 155g's sheet, the fire channel read (TODO).
+**Risk:** medium (about a day of box time, sized at its kickoff).
+**Exit:** the board read and signed.
+
+## Phase 163 — the close
+
+`0.5.0` and its upload, the round's exit by clause, Round 13's charter
+against the code, the process read and the archive.

@@ -319,3 +319,47 @@ in 271 files, 588 smoke in 60, 1 `fuzz:jobs-parity`. Predicted and seen:
 no snapshot change, no RNG stream; the other 33 journals unchanged by
 this commit (the corpus check above replays them against `0b8e7b8b`'s
 baseline lines).
+
+### 158b — the forced-movement design, put to the user (2026-11-14)
+
+**The probe** (`scratch/158b/probe.ts`, a 16 × 16 World, a stub behaviour
+seating one step or one swap of 4 ticks, then a bare position write before
+the flip, which is what a push that left the victim's action running
+would do):
+
+- *A step.* Moved from (2,2) to (2,5) before its flip, the unit stands on
+  (3,2) after it: three cells from where the push left it, the claim
+  released by the flip.
+- *A swap's actor.* Moved from (6,6) to (6,9) before the exchange, it ends
+  on (7,6) and its partner on (6,6): the actor jumps three cells back to
+  the partner's cell. No overlap here only because both cells were free.
+- *A swap's partner.* Moved from (7,6) to (7,9), the actor steps alone onto
+  (7,6) and the partner stays where it was pushed: the safe case the
+  exchange's own check already gives.
+
+So fork 6's correctness half stands as read: a push ends the victim's step
+and the actor's swap, whatever the call on strikes and spells.
+
+**What the forks gained since the kickoff:**
+
+- *Fork 6:* the swap already holds the rule the push breaks: "nothing under
+  way is ever moved" (`SwapAction.ts:231-236`), so the push ends the
+  action first, from parts that exist: `releaseClaimsBy`, the pre-flip
+  swap test `preFlipSwap` with its `unit:swapAborted`, `unit:moveAborted`
+  for a step, and `clearActiveAction`, which drops a swap's reservation.
+  A spawn's lockout (`SpawnAction`, a unit fading in) is kept
+  through a push, since it is not something the unit chose; a step's or a
+  swap's cooldown is reset, as their aborts reset it today, so the unit
+  retries from where it lands.
+- *Fork 1:* inside one ability the def's op order decides whether its
+  damage lands before its push, as it decides a status after a strike
+  (`interpreter.ts`, "Order matters"); the grenade lists its damage first,
+  so the blast hits the cells before it scatters them.
+- *Fork 9:* only the landing cell is entered, so a pull across fire burns
+  nothing on the way.
+- *Fork 5:* how fast the slide is drawn is the look's, at §159.
+
+**The tranches at the stop.** A, the thirteen forks, which §159 rests on.
+B, after A's sign and before §160's kickoff: the cavalier's six and the
+four calls (the draftable newcomers, the whirlwind's carrier, N3's flag,
+the abilities' lines).

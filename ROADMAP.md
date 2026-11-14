@@ -37,7 +37,7 @@ own test; the design signed.
   `player-9-…-port-rogue-overclock-diana`, its five trades by a port plant;
   its check and planted failure, 40 of 40; the corpus found red at HEAD
   since `98176860` and re-recorded first, `0b8e7b8b` (WORKLOG 158a).
-- ☐ **158b — the forced-movement design** (`stop`): the thirteen forks
+- ◐ **158b — the forced-movement design** (`stop`): the thirteen forks
   and the cavalier's six with both arms and leans; which new units are
   draftable, the whirlwind's carrier, N3's flag, the abilities' lines.
 

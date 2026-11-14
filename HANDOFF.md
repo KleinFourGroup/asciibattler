@@ -6,7 +6,7 @@ A fresh-session orientation for ASCIIbattler. Read this first; then dive into th
 
 **The ONE home for live status.** Other docs (and the agent memory) point here instead of restating it; when state changes, this section is the single place that updates.
 
-- **NEXT — ROUND 12 (Push, pull and blink): 158b, the forced-movement design** (`stop`): tranche A, the thirteen forks, then B, the cavalier's six and the four calls ([ROADMAP.md](ROADMAP.md) §158; WORKLOG 158b). **Open ◐:** none.
+- **NEXT — ROUND 12 (Push, pull and blink): 158b, the forced-movement design** (`stop`), put to the user: tranche A, the thirteen forks, then B, the cavalier's six and the four calls ([ROADMAP.md](ROADMAP.md) §158; WORKLOG 158b). **Open ◐:** 158b, at its stop.
 - **In flight:** nothing.
 - **The public build:** `0.4.0` (`4fc62cfe`, tag `v0.4.0`), uploaded to itch.io on 2026-11-13; the uploads before it are in Closed rounds below.
 - **Snapshots:** WorldSnapshot **v39** (no player keeps one) · RunSnapshot **v51** (a v50 save, `0.3.0`'s, rejects).

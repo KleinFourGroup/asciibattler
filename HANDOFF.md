@@ -6,7 +6,7 @@ A fresh-session orientation for ASCIIbattler. Read this first; then dive into th
 
 **The ONE home for live status.** Other docs (and the agent memory) point here instead of restating it; when state changes, this section is the single place that updates.
 
-- **NEXT — ROUND 12 (Push, pull and blink): §157, the kickoff** — the spec first, then the audit and the cut ([ROADMAP.md](ROADMAP.md) §157; `process/planning.md` "Phase kickoff"; the charter in META-ROADMAP §"Round 12"; TODO's Round 12 rows, the corpus's trade rows a pre-step put to it). **Open ◐:** none.
+- **NEXT — ROUND 12 (Push, pull and blink): §157's sign** — the spec ([round-12-spec.md](round-12-spec.md), proposed) and the phases §158 to §163 put to the user as tranche 1 (WORKLOG §157); at the sign, the cut into [ROADMAP.md](ROADMAP.md), then 158a (the corpus's trade row) and 158b's design stop. **Open ◐:** none.
 - **In flight:** nothing.
 - **The public build:** `0.4.0` (`4fc62cfe`, tag `v0.4.0`), uploaded to itch.io on 2026-11-13; the uploads before it are in Closed rounds below.
 - **Snapshots:** WorldSnapshot **v39** (no player keeps one) · RunSnapshot **v51** (a v50 save, `0.3.0`'s, rejects).

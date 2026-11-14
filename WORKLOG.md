@@ -273,3 +273,49 @@ phase.
 cut!"): the spec, and §158 to §163 with 158a `none` and 158b `stop`. The
 cavalier's six join tranche 2 at 158b, as the preview proposed. The cut
 is in the ROADMAP; the stretch runs 158a, then 158b's stop.
+
+## Phase 158 — the pre-step and the design
+
+### 158a — the corpus's trade row (2026-11-14)
+
+**Step zero.** The seeded player's port row always leaves
+(`src/dev/probe/drive.ts`, `port`), so the trades need a plant of their
+own; `script=` gives a port its whole stock at the price book's prices
+(`src/run/RunScript.ts`, `ScriptEntry.port`). A probe
+(`scratch/158a/probe.ts`) drove `hops=3&bits=300&script=1:port=rogue/overclock/diana`
+on seed 9 with a port plant: the run opens on the port, and the five
+trades each changed the run (bits 300 → 291 → 251 → 221 → 225 → 205; a
+victory, 10 battles, 241 ms). The same row with the script taken out sent
+no trade (a defeat, 11 battles). `diana`, not `mars`: the soldier starts
+owning Mars, and a port sells no daemon already owned.
+
+**Found: the corpus was red at HEAD.** `--record` re-drives the whole
+table, and every journal came back changed. Replaying HEAD's own journals
+against HEAD's baseline on the tree's src (`scratch/158a/replay-head.ts`):
+9 of 33 differ, 3 diverging in a battle and 6 in the events outside
+battles alone. It was recorded and passed at `794cc905`; the only commits
+since under `config/` or `src/` are `98176860` (the officer's base
+mobility, the user's change) and `8db7501c` (Dis Pater's sentence), both
+meant, which is `--record`'s case. The re-record of the 33 landed on its
+own, as `0b8e7b8b`; this step's commit adds the trade row alone.
+
+**Built.** `Plants.port` in `tests/journalDrive.ts`: at a port, before the
+row's own leave, the next command for this visit or null, asked again
+after each one; a row without it drives as before. `tradesAtFirstPort`,
+`TRADE_KINDS` and `tradesLost` in `corpus.ts`, a `trades` flag on a row,
+and the row `player-9-hops-3-bits-300-script-1-port-rogue-overclock-diana`.
+The seed-picked rows (chaos 16, 13 and 64) stay, their re-pick rule
+deleted and their history condensed to a line. corpus.test.ts: the trade
+row's own check, and its planted failure, the row re-driven with its
+script taken out, which must lose all five. TESTING.md's corpus paragraph
+was stale (it said selling a packet never changes a run, true until
+2026-11-07): rewritten, with the count 34.
+
+**Checked.** `npm run corpus`: 0 of 34 journals differ, 21 of 21 command
+kinds change a run. The corpus test under `vitest.fuzz.config.ts`: 40 of
+40, the planted failure among them (the row re-driven with its port taken
+out of the script loses all five trades). `0b8e7b8b`'s hook: 3963 main
+in 271 files, 588 smoke in 60, 1 `fuzz:jobs-parity`. Predicted and seen:
+no snapshot change, no RNG stream; the other 33 journals unchanged by
+this commit (the corpus check above replays them against `0b8e7b8b`'s
+baseline lines).

@@ -84,7 +84,7 @@ If the renderer ever grows pure-logic helpers (e.g. atlas UV computation), those
   same bytes. A failure names its seed and writes its journal under
   `output/chaos/`. Four seeds run on every `npm test` (`chaos.test.ts`). It is
   a crash and invariant instrument, never a balance input.
-- **The journal corpus:** `npm run corpus` replays 33 stored run journals
+- **The journal corpus:** `npm run corpus` replays 34 stored run journals
   (`tests/fuzz/corpus/`) and holds each against what it reached when it was
   recorded: a digest of every event of every battle, the end's hash, and
   which commands changed the run in which phases. It is the proof that a
@@ -99,9 +99,11 @@ If the renderer ever grows pure-logic helpers (e.g. atlas UV computation), those
   config leaves `tests/fuzz/` out (the smoke's script leaves the file out
   too), on a change
   that claims to leave behaviour alone. `corpus.ts` says when the baseline may be
-  retaken (`--rebaseline`, `--record`) and what has to be shown first. Its
-  reach has limits: one port trade, selling a packet, never changes a run
-  in it, and a
+  retaken (`--rebaseline`, `--record`) and what has to be shown first. The
+  five port trades come from one row's script (a port with fixed stock on
+  its first hop, and the seeded player's port plant), not from its seed,
+  so a content change that moves the runs leaves them in; its test plants
+  the port's removal. Its reach has limits: a
   changed number shows only on the runs that meet it (a rest healing half
   instead of a quarter diverged 3 of the 30).
 - **The path-by-path proofs:** `npm run oracle -- json-diff <before>
@@ -297,7 +299,7 @@ suite both missed, so what those two miss, the pre-commit hook misses;
 and with every hit dealing one more the smoke failed in one file of 65,
 the corpus's own test.
 
-**By part.** "Corpus" is `npm run corpus` (33 journals, run by hand: the
+**By part.** "Corpus" is `npm run corpus` (34 journals, run by hand: the
 pre-commit hook does not run it); "fuzz diff" is
 `bash scripts/perf-oracle.sh [ref]`; "build compare" is
 `npm run oracle -- build-hash [ref]`.

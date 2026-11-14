@@ -41,6 +41,11 @@ export interface Plants {
   /** Abandon the run between commands, asked before each one outside a
    *  battle with the battles fought so far. */
   readonly abandonWhen?: (run: Run, battles: number) => boolean;
+  /** At a port, before the row's own leave: the next command to send on this
+   *  visit (counted from 0) after `sent` of its own, or null when done. Asked
+   *  again after each one, so a command can name what the last one changed
+   *  (the cache index of a packet just bought). */
+  readonly port?: (run: Run, visit: number, sent: number) => JournaledCommand | null;
 }
 
 export interface DriveOptions {
@@ -148,11 +153,25 @@ export function driveRun(options: DriveOptions): DriveResult {
   const pick = pickerFor('seeded', options.choiceSeed ?? 1);
   let battles = 0;
   let abandoned = false;
+  /** Ports entered so far, and whether this visit's plants were sent. */
+  let portVisits = 0;
+  let portPlanted = false;
   for (let sent = 0; ; sent++) {
     if (sent > MAX_COMMANDS) throw new Error(`driveRun: ${MAX_COMMANDS} steps without the run ending`);
     if (run.phase !== 'battle') {
       const reloadTo = options.reloadAt?.(gates++, run);
       if (reloadTo) reload(reloadTo.build);
+    }
+    if (run.phase !== 'port') portPlanted = false;
+    else if (!portPlanted && plants.port) {
+      portPlanted = true;
+      const visit = portVisits++;
+      for (let n = 0; ; n++) {
+        if (n >= MAX_COMMANDS) throw new Error(`driveRun: the port plant sent ${MAX_COMMANDS} commands`);
+        const command = plants.port(run, visit, n);
+        if (command === null) break;
+        send(command);
+      }
     }
     const step = PHASE_ROWS[run.phase](run, pick);
     if (step === 'end') break;

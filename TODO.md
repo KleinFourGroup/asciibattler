@@ -293,19 +293,7 @@ META-ROADMAP §"Round 12 — Push, pull and blink" names each row's place.
 
 - [ ] **Dash VFX (afterimage / trail / blink-flash).** N1's rogue dash currently reads as a fast slide (the `unit:moved` lerp over the ~5-tick motion window) + the `dash.wav` whoosh — no dedicated visual. The first-class **`unit:dashed`** event ([events.ts](src/core/events.ts), emitted by the effect interpreter's dash ([interpreter.ts](src/sim/effects/interpreter.ts)), carries `from`/`to`/`durationTicks`) is the ready hook: a BattleScene/BattleRenderer subscriber can draw a motion trail / afterimage / blink-flash on the leap. Folds into the deferred L/M status-VFX presentation pass. Surfaced at N1.
 
-- [ ] **The corpus's trade rows, picked by what they drive: a kickoff
-  pre-step** (signed at 156d, 2026-11-13, for this round's kickoff, before
-  its consumers land). `corpus.test.ts` wants all 21 command kinds to
-  change a run, and the rows that cover a trade are picked by seed, so a
-  content change that moves a run can lose a kind and send a session
-  surveying seeds for a replacement: 145g (three rows), 146e (two), 151b,
-  152b (about ten minutes of survey), 153a (three), 153e (two), and 154c
-  to 154f (two rows replaced by chaos 64 after a survey of 80 seeds, 320
-  runs). This round's seven units will move the corpus again. The
-  proposal: a corpus row that drives its trades through the scripted run
-  (`script=`: a port with known stock, a buy and a sale), with its own
-  test, so it holds through a content change (WORKLOG §156, 156d;
-  §153's lean in `archive/worklog-phase-153.md`).
+- [x] ✅ **The corpus's trade rows, by script** — 158a: the trade row makes the five port trades at a scripted port, with its own check and planted failure (WORKLOG 158a).
 
 - [ ] **A line for every unit, the user's to write.** A unit's
   `description` (145c) is optional, and only the six beasts have one;

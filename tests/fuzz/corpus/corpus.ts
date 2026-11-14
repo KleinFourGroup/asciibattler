@@ -40,9 +40,9 @@
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import type { RunJournal } from '../../../src/journal/journal';
+import type { JournaledCommand, RunJournal } from '../../../src/journal/journal';
 import { digestReplay } from '../../../src/journal/replayDigest';
-import type { RunSnapshot } from '../../../src/run/Run';
+import type { Run, RunSnapshot } from '../../../src/run/Run';
 import { chaosRun } from '../../chaos/chaos';
 import { asFile, driveRun, replayPlants } from '../../journalDrive';
 
@@ -53,6 +53,42 @@ export interface CorpusRow {
   readonly dials: string;
   /** A short run: corpus.test.ts plants its edits in one of these. */
   readonly quick?: true;
+  /** The seeded player sends the five port trades at its first port
+   *  (`tradesAtFirstPort`); the row's script must put a port with stock there. */
+  readonly trades?: true;
+}
+
+/** The run commands that trade at a port. */
+export const TRADE_KINDS = ['buyPortDaemon', 'buyPortPacket', 'buyPortUnit', 'payToRemoveUnit', 'sellPacket'] as const;
+
+/** The trades `reach` never made change its run, in `TRADE_KINDS` order. */
+export function tradesLost(reach: Reach): string[] {
+  return TRADE_KINDS.filter((kind) => (reach.commands[kind]?.[1] ?? 0) === 0);
+}
+
+/**
+ * The trade row's port plant: on the first port visit, buy the stock's first
+ * packet, daemon and unit, sell the packet just bought, and pay off the unit
+ * just bought; nothing on a later visit. Its trades come from the script's
+ * fixed stock and the `bits=` dial, not from the seed, so a content change
+ * that moves the run leaves them standing.
+ */
+export function tradesAtFirstPort(run: Run, visit: number, sent: number): JournaledCommand | null {
+  if (visit > 0) return null;
+  switch (sent) {
+    case 0:
+      return { kind: 'buyPortPacket', index: 0 };
+    case 1:
+      return { kind: 'buyPortDaemon', index: 0 };
+    case 2:
+      return { kind: 'buyPortUnit', index: 0 };
+    case 3:
+      return { kind: 'sellPacket', cacheIndex: run.cache.length - 1 };
+    case 4:
+      return { kind: 'payToRemoveUnit', rosterIndex: run.team.length - 1 };
+    default:
+      return null;
+  }
 }
 
 /** The file name a row's journal is stored under, without `.json`. */
@@ -65,6 +101,7 @@ const player = (seed: number, dials = '', quick?: true): CorpusRow =>
   quick === undefined ? { driver: 'player', seed, dials } : { driver: 'player', seed, dials, quick };
 const chaos = (seed: number, dials = '', quick?: true): CorpusRow =>
   quick === undefined ? { driver: 'chaos', seed, dials } : { driver: 'chaos', seed, dials, quick };
+const trades = (seed: number, dials: string): CorpusRow => ({ driver: 'player', seed, dials, trades: true });
 
 export const CORPUS: readonly CorpusRow[] = [
   // The seeded player at the shipped length.
@@ -105,30 +142,18 @@ export const CORPUS: readonly CorpusRow[] = [
   chaos(1, 'character=gambler&bits=300'),
   chaos(2, 'character=gambler&bits=300'),
   chaos(5, 'character=gambler&bits=300'),
-  // A packet and a daemon bought, a unit bought and one paid off, which the
-  // rows above never do: chosen from `--survey=12` when the strikes moved
-  // (2026-10-29), and again from a survey of 40 each time those rows stopped
-  // trading, when act 1 went in front (2026-11-02) and when its waves shrank
-  // (2026-11-03). When the bandit left the draft (2026-11-06) none of them
-  // paid a unit off any more, and a survey of 40 found one run that does,
-  // chaos 33; when the bow slowed (2026-11-06) it stopped, and chaos 10 was
-  // the shortest run of that survey's 40 with no dials that does. When
-  // power's growth draw came out (2026-11-07) only chaos 16 still traded (its
-  // daemon), and from a survey of 40 with no dials chaos 2 is the one run that
-  // buys a unit, chaos 13 the shortest that buys a packet and chaos 28 the
-  // shortest that pays a unit off. When act 1's fights were retuned the same
-  // day, chaos 2 stopped buying a unit and 28 paying one off, and chaos 16
-  // now pays one off in place of its daemon: no run of 40 with no dials buys
-  // a unit, so chaos 53 is the shortest of 80 that does, and chaos 37 the
-  // shortest of 40 that buys a daemon. When the wolf's bite gained its
-  // spring back (2026-11-08), chaos 53 stopped buying a unit and chaos 37
-  // selling a packet (the gambler's chaos 5 now buys the daemon): no run of
-  // 80 with no dials buys a unit, and chaos 64 on the gambler's dials, the
-  // shortest of the survey's 320 that buys a unit or sells a packet, does
-  // both, so it takes their place.
+  // Three runs the chaos driver happened to trade in, chosen by seed from
+  // surveys of 12 to 320 runs between 2026-10-29 and 2026-11-08, each time a
+  // content change stopped the rows before them trading (the record is in
+  // git history). They stay for breadth, and nothing re-picks them when they
+  // stop: the trade row below makes the five trades.
   chaos(16),
   chaos(13),
   chaos(64, 'character=gambler&bits=300'),
+  // The five port trades by script, not by seed: a port with fixed stock on
+  // the first hop, the bits to pay for it, and the seeded player's port plant
+  // (`tradesAtFirstPort`). Its own check is in corpus.test.ts.
+  trades(9, 'hops=3&bits=300&script=1:port=rogue/overclock/diana'),
 ];
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -191,7 +216,7 @@ export function recordRow(row: CorpusRow): RunJournal {
   const recorded = driveRun({
     start: { kind: 'seed', seed: row.seed, dials: row.dials },
     choiceSeed: row.seed,
-    plants: replayPlants(),
+    plants: row.trades ? { ...replayPlants(), port: tradesAtFirstPort } : replayPlants(),
   });
   return asFile(recorded.journal);
 }

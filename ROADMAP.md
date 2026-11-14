@@ -33,9 +33,10 @@ the calls §160 rests on. **Risk:** low for the row; the design is the
 round's decision point. **Exit:** the row holding the five trades on its
 own test; the design signed.
 
-- ☐ **158a — the corpus's trade row** (`none`): a corpus row whose port
-  comes from `script=`, its five trades planted there; its own test with
-  a planted failure; the seed-picked rows' re-pick rule deleted.
+- ☑ **158a — the corpus's trade row** (`none`): the row
+  `player-9-…-port-rogue-overclock-diana`, its five trades by a port plant;
+  its check and planted failure, 40 of 40; the corpus found red at HEAD
+  since `98176860` and re-recorded first, `0b8e7b8b` (WORKLOG 158a).
 - ☐ **158b — the forced-movement design** (`stop`): the thirteen forks
   and the cavalier's six with both arms and leans; which new units are
   draftable, the whirlwind's carrier, N3's flag, the abilities' lines.

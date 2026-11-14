@@ -1,7 +1,18 @@
 import { describe, expect, it } from 'vitest';
 import type { JournalEntry, RunJournal } from '../../../src/journal/journal';
 import { JournalDivergence } from '../../../src/journal/replayJournal';
-import { CORPUS, loadBaseline, loadJournal, reachDifferences, replayReach, rowId, storedIds } from './corpus';
+import {
+  CORPUS,
+  TRADE_KINDS,
+  loadBaseline,
+  loadJournal,
+  reachDifferences,
+  recordRow,
+  replayReach,
+  rowId,
+  storedIds,
+  tradesLost,
+} from './corpus';
 
 // THE JOURNAL CORPUS (corpus.ts): every stored journal, replayed on this
 // tree, reaches what it reached when it was recorded, event for event. A
@@ -35,8 +46,9 @@ describe('the journal corpus', () => {
       reaches.flatMap((r) => Object.entries(r.commands).flatMap(([kind, [, n]]) => (n > 0 ? [kind] : []))),
     );
     // All 21 kinds since the recording of 2026-11-07; from 2026-11-02 to then
-    // it was 20, the packet sale in no row. Which row reaches each trade, and
-    // why, is in corpus.ts's table.
+    // it was 20, the packet sale in no row. The five trades rest on the trade
+    // row (its own test below); which row reaches each other kind is in
+    // corpus.ts's table.
     expect([...changed].sort()).toEqual([
       'acceptReward',
       'advanceTurn',
@@ -62,7 +74,20 @@ describe('the journal corpus', () => {
     ]);
   });
 
+  const tradeRow = CORPUS.find((row) => row.trades)!;
+
+  it('the trade row makes the five port trades on its own', () => {
+    expect(tradeRow).toBeDefined();
+    expect(tradesLost(baseline[rowId(tradeRow)]!)).toEqual([]);
+  });
+
   describe('the instrument catches its plants', () => {
+    it('the trade row with its port taken out of the script loses the five trades', () => {
+      const noPort = { ...tradeRow, dials: tradeRow.dials.replace(/&?script=[^&]*/, '') };
+      expect(noPort.dials).not.toContain('port=');
+      expect(tradesLost(replayReach(recordRow(noPort)).reach)).toEqual([...TRADE_KINDS]);
+    });
+
     const id = rowId(CORPUS.find((row) => row.quick && row.driver === 'player')!);
     /** The stored journal with its entries passed through `edit`. */
     const edited = (edit: (entries: JournalEntry[]) => void): RunJournal => {

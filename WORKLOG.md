@@ -114,3 +114,18 @@ put, every lean above, and §159's friction candidate on its lean (no new
 rule; the `execSync` line added to `process/shell-and-windows.md`, after
 a check: `execSync('echo a^b')` printed `ab`). The stretch: 160a's stop
 first, then 160b to 160f with their `batch` reads, to 160g's stop.
+
+### 160a — the glyphs, put (2026-11-17)
+
+In the sampler at
+`?bp=board-open15_pose-sampler&glyphs=U+00F0,U+00F3,O,n,h,e,c;k,K,h,H,t,U+E004`,
+each candidate beside the shipped glyphs it could be taken for (the
+officer's `O`, the healer's `h`, the catapult's `c`; the halberdier's `H`,
+the tiger's eared `t`, U+E004). All six drew from the shipped faces in the
+pane, none refused; the atlas grows by two. **The grenadier:** `ð` (U+00F0,
+Latin-1, shipped), a round body with a stroke rising from it, a grenade
+and its fuse that is still a letter (the lean); `ó` (U+00F3), the same
+idea nearer the officer's `O`; `n` and `e`, plain letters from the name,
+near the healer's `h` and the catapult's `c`. **The telekinetic:** `k`,
+for kinetic (the lean); `K`, nearer the halberdier's `H`; `t`, rejected
+in the lean as the tiger's eared `t` without its ears.

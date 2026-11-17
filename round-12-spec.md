@@ -1,13 +1,14 @@
 # Round 12 Spec — Push, pull and blink
 
 **Status: SIGNED 2026-11-14** ("Thank you, Claude! 😁 Signing the spec and
-the cut!"), with the phases §158 to §163 (WORKLOG §157). The intent is the user's, verbatim where it is
+the cut!"), with the phases §158 to §163 (WORKLOG §157, in `archive/worklog-phase-158.md`). The intent is the user's, verbatim where it is
 theirs, from the Round 8.5 census (A-07), the re-cut (§133c) and the
 casualty verdict (§93); what was signed before the kickoff is listed with
 its date. The Open section is what the round still has to settle, with
 the session's leans marked as leans. The charter is
 [META-ROADMAP.md](META-ROADMAP.md) §"Round 12 — Push, pull and blink";
-the record is [WORKLOG.md](WORKLOG.md) §157; the plan is
+the record is WORKLOG §157 and §158, in
+[archive/worklog-phase-158.md](archive/worklog-phase-158.md); the plan is
 [ROADMAP.md](ROADMAP.md).
 
 ## Intent (the user's words)
@@ -129,20 +130,21 @@ files and lines. In short:
 
 ## Open
 
-The calls, in tranches, with the session's leans; WORKLOG §157 holds the
-reasons and both arms of each.
+The calls, in tranches, with the session's leans; WORKLOG §157 and 158b
+(in `archive/worklog-phase-158.md`) hold the reasons and both arms of
+each.
 
 ### Tranche 1 (this kickoff), signed 2026-11-14
 
 1. **The spec and the phases:** this spec, and §158 to §163 in the order
-   WORKLOG §157 gives (the pre-step and the design; forced movement, the
+   §157 gives (the pre-step and the design; forced movement, the
    seam; the pushers and the bursts; the blink and the charge; the closing
    board; the close), with §158's two steps and their reads.
 
 ### Tranche 2A (at 158b, the design stop), signed 2026-11-16
 
 "Signing all of your leans", with forks 5, 11 and 12 and the cavalier
-reshaped at the stop (WORKLOG 158b, "tranche A signed"). The
+reshaped at the stop (158b, "tranche A signed"). The
 forced-movement design:
 
 - *The op:* a new `push` op that moves the targets its selector resolves,
@@ -191,10 +193,10 @@ forced-movement design:
   again. When the hit lands and how the line is drawn are §161's.
 - *`World.shove`:* retired, its `unit:shoved` event kept for the push.
 
-### Tranche 2B (at 158b, the design stop), signed 2026-11-16 but the pounce
+### Tranche 2B (at 158b, the design stop), signed 2026-11-16
 
-"Signing all leans except for 1" (WORKLOG 158b, "Tranche B" and
-"tranche B signed but the pounce"):
+"Signing all leans except for 1", then the pounce as revised (158b,
+"Tranche B" to "the pounce signed"):
 
 - *The cavalier's body:* one cell, high mobility, a melee weapon, the
   charge on a long cooldown.
@@ -205,18 +207,18 @@ forced-movement design:
   carried to Round 14's `affects` as flags.
 - *The abilities' lines:* the session drafts them, read at each phase's
   stop.
-
-Open, reopened by the user: *the pounce on the beasts.* Revised lean: the
-puma alone, a leap and a hit beside its strike, proposed only from at
-least its minimum range and only when the landing puts its target within
-reach, with no cooldown in effect; the strike it shares with the fox
-renamed; the fox keeps its dash. The other arms: both beasts, or neither,
-which takes C5 out of the round.
+- *The pounce on the beasts,* reopened by the user and signed as revised
+  ("Signing call 1 as revised! 😁 We'll keep the charge cooldown,
+  though"): the puma alone, a leap and a hit beside its strike, proposed
+  only from at least its minimum range (3 or more) and only when the
+  landing puts its target within reach, with no cooldown in effect; the
+  strike it shares with the fox renamed; the fox keeps its dash.
 
 ### Later, at their phases
 
-- *§159:* the forced move's look and sound.
+- *§159:* the slide's rate per cell, the forced move's look and sound.
 - *§160 and §161:* each unit's glyph, numbers, rarity and price, and its
-  encounter; the dash's trail and the teleport's blink.
+  encounter; the dash's trail and the teleport's blink; the pounce's
+  floor; when the charge's hit lands and how its line is drawn.
 - *§162:* the box's size and cost; each new draftable's disposition under
   the rarity protocol; any sheet re-sign.

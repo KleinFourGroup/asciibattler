@@ -19,30 +19,28 @@ decision points, the exit and the scope guards are in META-ROADMAP
 
 ## Phase 157 — the kickoff ✅ (closed 2026-11-14)
 
-The spec and the phases, signed by the user (WORKLOG §157).
+The spec and the phases, signed by the user (WORKLOG §157, in
+`archive/worklog-phase-158.md`).
 
 - ☑ **The spec and the phases** — signed 2026-11-14: the spec
   ([round-12-spec.md](round-12-spec.md)) and §158 to §163 below, with
   §158's two steps and their reads; the cavalier's six put to 158b.
 
-## Phase 158 — the pre-step and the design
+## Phase 158 — the pre-step and the design ✅ (closed 2026-11-16)
 
-The corpus's trade row, so the units after it stop costing a re-pick by
-seed, then the forced-movement design, the stop the charter names, with
-the calls §160 rests on. **Risk:** low for the row; the design is the
-round's decision point. **Exit:** the row holding the five trades on its
-own test; the design signed.
+The corpus's trade row on its own test, and the forced-movement design
+signed in two tranches, the timing, the teleport, the cavalier's charge
+and the beasts' pounce reshaped at the stop (WORKLOG §158, in
+`archive/worklog-phase-158.md`).
 
-- ☑ **158a — the corpus's trade row** (`none`): the row
-  `player-9-…-port-rogue-overclock-diana`, its five trades by a port plant;
-  its check and planted failure, 40 of 40; the corpus found red at HEAD
-  since `98176860` and re-recorded first, `0b8e7b8b` (WORKLOG 158a).
-- ◐ **158b — the forced-movement design** (`stop`): tranche A signed
-  2026-11-16, the push holding its victim for the slide, the teleport
-  with its approach, the cavalier's charge a push on itself (WORKLOG
-  158b); tranche B signed the same day but the beasts' pounce, reopened
-  by the user and re-put (all four newcomers draftable, the whirlwind on
-  the ronin, N3's flag carried to Round 14).
+- ☑ **158a — the corpus's trade row** (`none`): the five port trades by a
+  port plant, its check and planted failure; the corpus re-recorded first,
+  red at HEAD since `98176860`.
+- ☑ **158b — the forced-movement design** (`stop`): signed 2026-11-16, the
+  push holding its victim for the slide, the teleport with its approach,
+  the cavalier's charge a push on itself, the puma's pounce with no
+  cooldown, the four newcomers draftable, the whirlwind on the ronin, N3's
+  flag to Round 14.
 
 ## Phase 159 — forced movement, the seam
 

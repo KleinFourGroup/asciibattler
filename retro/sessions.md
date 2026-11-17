@@ -38,3 +38,10 @@ identify a fix, or reassure the reader that the session coped well.
 
 ---
 
+
+## Phases 157 and 158 — summary
+
+No session report yet. One session (`06280e35`) ran Round 12's kickoff
+(§157) and §158, and runs on into §159's kickoff; its report, at its end,
+covers both phases. The friction log holds its two slips (157, 158b),
+read in §158's close entry (`archive/worklog-phase-158.md`).

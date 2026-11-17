@@ -64,12 +64,14 @@ The cut, signed 2026-11-16 with the adventurer's pull moved up from §160
 - ☑ **159c — the op, and the shove retired** (`none`): `push` over its
   selector's victims, farthest first; a 300-tick push storm holds
   occupancy and claims; 7 rules planted out; the corpus unchanged (WORKLOG 159c).
-- ◐ **159d — the adventurer's pull** (`stop`, read with 159e): the Snag,
+- ☑ **159d — the adventurer's pull** (`stop`, read with 159e): the Snag,
   a pull setting no reach; the corpus re-recorded, 8 of 34 moved, enemy
-  adventurers snagging too (WORKLOG 159d).
-- ◐ **159e — the look and the sound** (`stop`): the yank, the hold's bar
-  hidden, the `shove` cue, the rate at 0.15 s; the Snag pulls about half
-  the time (WORKLOG 159e).
+  adventurers snagging too; signed 2026-11-17 (WORKLOG 159d).
+- ☑ **159e — the look and the sound** (`stop`): the yank, the hold's bar
+  hidden, the `shove` cue, the rate at 0.15 s; signed 2026-11-17 (WORKLOG 159e).
+- ☑ **159d-post — the Snag waits for room** (`none`): a pull fires only
+  when its first cell is free, signed at the read; 4 plants; 3 of 34
+  journals re-recorded (WORKLOG 159d-post).
 
 ## Phase 160 — the pushers and the bursts
 

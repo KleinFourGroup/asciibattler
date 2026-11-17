@@ -221,7 +221,7 @@ src/
       reposition.ts          #   Y2: retreatCell — the caster-reposition primitive (the gambit's move-retreat op, via interpreter executeMove)
       interpreter.ts         #   Y2: executeOp — the switch over op.kind (damage/heal/move/applyStatus/chain/summon/push; push moves its victims farthest from the origin first through pushLanding and World.forceMove); 28: a confused caster's aoe forces affects:'all' (live read)
       EffectAction.ts        #   Y2: the single generic Action that fires a def's effects over the F2 timeline (start/applyEffect)
-      propose.ts             #   Y3: the propose-time bridge — AbilityDef + caster → EffectAction + ActionProposal (cast-time scalar capture)
+      propose.ts             #   Y3: the propose-time bridge — AbilityDef + caster → EffectAction + ActionProposal (cast-time scalar capture); a single-target pull abstains when pushLanding says it would move nothing
       resolveScalars.ts      #   30c: the pure cast-time damage/heal/crit scalar kernel — shared by propose.ts AND the attack-editor's resolution-outline preview (one source of truth, never re-implemented)
       EffectAbility.ts       #   Y3: the single generic Ability wrapping an AbilityDef (replaces MeleeStrike/…; one class + data)
 

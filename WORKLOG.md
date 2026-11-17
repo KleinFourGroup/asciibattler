@@ -394,3 +394,62 @@ JSON, `scratch/159/snag-probe.ts` (the pulls' first cells) and
 `scratch/159/journal-diff.mjs` (which journals changed beyond their
 config hash). After the stop: a `-post` for what the read finds, then
 §160's kickoff, a stop.
+
+### The read of 159d and 159e (2026-11-17)
+
+Put again by a fresh session from the hand-off's list, and read on
+`?character=soldier&roster=adventurer:3,adventurer:3,adventurer:3&seed=5`.
+**Signed** ("The read was good, Claude! Signing all of those"): the yank,
+the rate at 0.15 s a cell, the hold's bar hidden, the `shove` cue, the
+Snag's name, line and numbers as built, and the Snag firing only when its
+pull has room (159d-post). The user asked for the reach flag in detail:
+the firing band `[floor, attackRange]` (`positioning.ts`), what the Snag's
+reach of 3 and floor of 2 would do to it (holding at two or three cells,
+backing off after its own pull), and the other readers of `attackRange`
+(the swap role order, the objective's leash, the bot's sensors).
+**Signed** ("that all tracks"). The other flags stand: enemy adventurers
+snag too; the corpus prediction's miss.
+
+### 159d-post — the Snag waits for room (2026-11-17)
+
+**Step zero.** The op's walk is `pushLanding` (`src/sim/push.ts`), pure,
+null when the victim would move no cell; at impact the interpreter runs it
+from the caster's live cell. A single-target strike proposes through
+`proposeSingleTargetAttack`, whose band gate must agree with the
+positioning hold or a unit freezes in a band the strike refuses. The hold
+never consults the Snag, since a pull sets no reach, so a gate on the
+strike side alone is safe.
+
+**Built.** `pullHasRoom` (`src/sim/effects/propose.ts`): a single-target
+strike carrying a pull abstains when `pushLanding` from the caster's cell
+would move its target nothing, so the adventurer steps or whips instead.
+A rule for every pull rather than a flag on the Snag, a lean: the Snag is
+the only pull shipped and the spec plans no other. A knockback is not
+gated, since it rides on its hit; an aoe pull (none ships) is not gated.
+DESIGN "The carriers" and ARCHITECTURE's `propose.ts` line updated.
+
+**Checked.** `src/sim/snag.test.ts` +2: an ally on the pull's first cell,
+and the adventurer's first act is a step; an ally on its second cell only,
+and the snag fires where the foe stands and drags it one cell.
+`src/sim/effects/propose.test.ts` +2 on synthetic defs: a pull abstains
+with a body on its first cell and fires with one off the line; a knockback
+at a foe against the board's edge fires. Planted
+(`scratch/159/159d-post-plants.json`): 4 plants (the gate removed, once
+per file; the gate wanting the whole pull; the gate holding knockbacks
+too), each caught, the two clean files green. The probe
+(`scratch/159/snag-probe.ts`, the same six seeds, whose runs now go
+differently): 252 snags, 193 moved their target, against 166 of 317
+before. At impact the first cell was free in 212; the rest changed during
+the 0.2 s wind-up (the target already adjacent 13, the caster's ally 8, a
+claim 7, a tile 6, scenery 4, the target's ally 2). The 19 with a free
+cell that moved nothing are most likely misses, since a push skips a
+victim its hit missed (159c); the probe does not count misses.
+
+**The corpus.** Predicted: only journals among 159d's 8 can move. The
+replay diverged on 3 (`chaos-1-sectorHops-2`,
+`chaos-4-character-gambler-bits-300`,
+`chaos-5-character-gambler-bits-300`), all among them; `--record` moved
+those 3 beyond their config hash, which is unchanged, the change being
+code. The re-recorded corpus replays: 0 of 34 differ, 21 of 21 command
+kinds change a run, 48 event names. Read: `none`, by the pins with their
+plants and the probe; the look and the call were read at the stop.

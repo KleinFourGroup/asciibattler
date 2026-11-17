@@ -545,6 +545,45 @@ describe('the caster-anchored blast propose arm (aoe anchor:caster)', () => {
   });
 });
 
+describe("a single-target strike's push: a pull needs room, a knockback does not", () => {
+  // Synthetic parsed defs, so the knockback case runs though no shipped
+  // single-target strike knocks back.
+  function strikeWithPush(direction: 'away' | 'toward'): AbilityDef {
+    return parseAbilityDef({
+      id: 'test_push_strike', name: 'Test Push Strike', cooldownSeconds: 2, rangeCells: 3, minRangeCells: 2,
+      target: { kind: 'enemyInRange' },
+      timeline: [{ phase: 'impact', seconds: 0 }, { phase: 'recovery', seconds: 'fill' }],
+      orphanPolicy: 'commit-at-cast', priority: 10,
+      effects: [
+        {
+          phase: 'impact',
+          op: { kind: 'damage', scaling: 'strength', might: 1, critBase: 0, critable: true, evadable: false, bypassDefense: false },
+        },
+        { phase: 'impact', op: { kind: 'push', cells: 2, direction } },
+      ],
+    });
+  }
+
+  it("a pull abstains while a body stands on its first cell, and fires when one stands off the line", () => {
+    // The caster at (5,5), the foe at (8,5): the pull's first cell is (7,5).
+    const u = makeUnit('player', { x: 5, y: 5 }, { range: 3 });
+    const foe = makeUnit('enemy', { x: 8, y: 5 });
+    const onLine = makeUnit('player', { x: 7, y: 5 });
+    expect(new EffectAbility(strikeWithPush('toward')).propose(u, world([u, foe, onLine]))).toBeNull();
+    const u2 = makeUnit('player', { x: 5, y: 5 }, { range: 3 });
+    const foe2 = makeUnit('enemy', { x: 8, y: 5 });
+    const offLine = makeUnit('player', { x: 6, y: 6 });
+    expect(new EffectAbility(strikeWithPush('toward')).propose(u2, world([u2, foe2, offLine]))).not.toBeNull();
+  });
+
+  it('a knockback fires at a foe with its back to the board edge, where it moves nothing', () => {
+    // The board is 16 wide, so the foe on x 15 has no cell east of it.
+    const u = makeUnit('player', { x: 12, y: 5 }, { range: 3 });
+    const foe = makeUnit('enemy', { x: 15, y: 5 });
+    expect(new EffectAbility(strikeWithPush('away')).propose(u, world([u, foe]))).not.toBeNull();
+  });
+});
+
 describe('engagementReach (the attackRange contribution per ability)', () => {
   const base = {
     id: 'test_reach', name: 'Test Reach', cooldownSeconds: 1, rangeCells: 4,

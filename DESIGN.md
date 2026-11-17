@@ -73,7 +73,7 @@ The config's numbers were converted when the hit roll was deleted, so that each 
 - **The hold.** The pushed unit loses what it was doing (a step, a swap, a swing, whose recharge is spent) and does nothing while it slides, at one fast rate for every unit (`SIM.pushSecondsPerCell`, 0.15 s a cell), so a push is a short stun; a longer one is a status the ability adds. The tile it lands on acts on it as it lands: mud poisons, water douses a burn.
 - **The look.** The slide is drawn as a yank, fast off the mark and skidding to a stop, where a step glides; no bar shows over the held unit, and the yank has its own cue.
 - **Who moves.** Never scenery, never a body larger than one cell. A camp member moves, and only damage turns its camp hostile. Several units hit at once move farthest first, so the outer ring clears room for the inner.
-- **The carriers.** The adventurer's **Snag**: a whip crack at a foe two or three cells off that drags it in beside the adventurer, on a flat 8-second recharge, after which the whip takes over.
+- **The carriers.** The adventurer's **Snag**: a whip crack at a foe two or three cells off that drags it in beside the adventurer, on a flat 8-second recharge, after which the whip takes over. A pull fires only when the first cell of its walk is free as it is cast, so it doesn't spend its recharge on a hit that drags nothing; a knockback rides on its hit and fires regardless.
 
 **Win condition:** One team fully eliminated. (§75g nuance, a 75j feel verdict: a decisive win doesn't land while the winner still has an uncleared *hostile* camp fight open; the battle runs on until the camp is cleared. A passive camp never extends a battle.)
 

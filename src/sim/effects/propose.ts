@@ -1,8 +1,9 @@
 /**
  * The propose step: an `AbilityDef` and its caster become an `EffectAction` and
  * its `ActionProposal`, or null when the ability abstains. It resolves the
- * target, applies the range, line-of-sight and minimum-range gates, and captures
- * the cast-time scalars.
+ * target, applies the range, line-of-sight and minimum-range gates (and a
+ * single-target pull's room, `pullHasRoom`), and captures the cast-time
+ * scalars.
  *
  * The scalars (the base damage, the crit chance, a heal's amount, a status's
  * magnitude and duration, a summon's level) are captured here off the caster's
@@ -20,6 +21,7 @@ import { resolveAreaVictims } from './targeting';
 import { collectLosBlockers, firingBandCell } from '../positioning';
 import { unitDistance } from '../occupancy';
 import { leapLanding } from '../movement';
+import { pushLanding } from '../push';
 import type { GridCoord } from '../../core/types';
 import type { AbilityDef, EffectOp, SummonOp } from './schema';
 import { EffectAction } from './EffectAction';
@@ -56,8 +58,8 @@ export function proposeEffectAbility(
 
 /**
  * A single-target strike (the `enemyInRange` selector): the `currentTarget`
- * pick, the `[minRange, range]` band and line-of-sight gate, and the cast-time
- * capture.
+ * pick, the `[minRange, range]` band and line-of-sight gate, a pull's room,
+ * and the cast-time capture.
  */
 function proposeSingleTargetAttack(
   def: AbilityDef,
@@ -82,6 +84,7 @@ function proposeSingleTargetAttack(
     def.ignoresLineOfSight ? null : collectLosBlockers(world),
   );
   if (aim === undefined) return null;
+  if (!pullHasRoom(def, unit, target, world)) return null;
 
   const speed = unit.effectiveStats.speed;
   // `retreatAnchor` is the struck cell, for a `move` op in `retreat` mode; the
@@ -100,6 +103,24 @@ function proposeSingleTargetAttack(
     phases: resolvePhases(def, speed),
     cooldownKey: def.id,
   };
+}
+
+/**
+ * Whether every pull on `def` (a `push` `toward` its caster) would move
+ * `target` at least one cell from where it stands now, by the walk the op
+ * runs at impact (`pushLanding`, from the caster's cell). A pull that would
+ * move nothing abstains, so the unit strikes or steps instead of spending the
+ * pull's recharge on a hit that drags nothing. The board can still change
+ * during the wind-up. A knockback is not gated: it rides on its hit. Safe
+ * against the positioning hold because a pull sets no reach
+ * (`engagementReach`), so the hold never waits on it.
+ */
+function pullHasRoom(def: AbilityDef, unit: Unit, target: Unit, world: World): boolean {
+  for (const e of def.effects) {
+    if (e.op.kind !== 'push' || e.op.direction !== 'toward') continue;
+    if (pushLanding(world, target, unit.position, 'toward', e.op.cells) === null) return false;
+  }
+  return true;
 }
 
 /**

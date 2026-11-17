@@ -64,8 +64,9 @@ The cut, signed 2026-11-16 with the adventurer's pull moved up from §160
 - ☑ **159c — the op, and the shove retired** (`none`): `push` over its
   selector's victims, farthest first; a 300-tick push storm holds
   occupancy and claims; 7 rules planted out; the corpus unchanged (WORKLOG 159c).
-- ☐ **159d — the adventurer's pull** (`stop`, read with 159e): the pull's
-  first consumer; the corpus re-recorded where the adventurer fights.
+- ◐ **159d — the adventurer's pull** (`stop`, read with 159e): the Snag,
+  a pull setting no reach; the corpus re-recorded, 8 of 34 moved, enemy
+  adventurers snagging too (WORKLOG 159d).
 - ☐ **159e — the look and the sound** (`stop`): the yank, the hold's bar,
   the cue and the rate, read on the adventurer's pull.
 

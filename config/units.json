@@ -29,7 +29,7 @@
   "adventurer": {
     "name": "Adventurer",
     "glyph": "A",
-    "abilities": ["whip"],
+    "abilities": ["whip","snag"],
     "targeting": "nearest",
     "rarity": "uncommon",
     "baseStats": {

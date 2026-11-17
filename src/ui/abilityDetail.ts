@@ -6,8 +6,8 @@
  * styled AoE tag); this owns the wording.
  *
  * It must cover every op an archetype's ability fields, `applyStatus`,
- * `summon` and `chain` (whose damage is nested in the chain's inner ops)
- * among them, or that ability's row is blank.
+ * `summon`, `push` and `chain` (whose damage is nested in the chain's inner
+ * ops) among them, or that ability's row is blank.
  */
 
 import type { UnitStats } from '../sim/Unit';
@@ -39,6 +39,7 @@ export function abilityDetailPartsForDef(def: AbilityDef, stats: UnitStats): str
   const chainOp = opOf(def, 'chain');
   const summonOp = opOf(def, 'summon');
   const statusOp = opOf(def, 'applyStatus');
+  const pushOp = opOf(def, 'push');
 
   if (healOp) {
     parts.push(`${resolveHealAmount(healOp, stats)} heal`, reachPart(def));
@@ -69,6 +70,9 @@ export function abilityDetailPartsForDef(def: AbilityDef, stats: UnitStats): str
     // damage, only the status it lays. A damage afflicter takes the rider
     // below instead.
     parts.push(`applies ${statusOp.statusId}`, reachPart(def));
+  } else if (pushOp) {
+    // A pure push or pull: how far it moves what it hits.
+    parts.push(pushPart(pushOp), reachPart(def));
   } else if (def.aura) {
     // A pure aura (no ops; the schema makes it target `self`): the status
     // it radiates and the aura's own radius, not `rangeCells`, which is the
@@ -83,6 +87,9 @@ export function abilityDetailPartsForDef(def: AbilityDef, stats: UnitStats): str
 
   // A damage afflicter lays a status on top of its hit; the rider shows it.
   if (statusOp && (damageOp || chainOp)) parts.push(`+${statusOp.statusId}`);
+
+  // A push on top of another op rides as a rider: the Snag's hit, then its pull.
+  if (pushOp && (healOp || damageOp || chainOp || summonOp || statusOp)) parts.push(`+${pushPart(pushOp)}`);
 
   // An ability with ops that also radiates an aura: the aura is a rider, so
   // the passive shows on the card.
@@ -99,6 +106,11 @@ export function abilityDetailPartsForDef(def: AbilityDef, stats: UnitStats): str
  *  "reach 2–3" and the card never says it can hit a foe it can't. */
 function reachPart(def: AbilityDef): string {
   return def.minRangeCells > 0 ? `reach ${def.minRangeCells}–${def.rangeCells}` : `reach ${def.rangeCells}`;
+}
+
+/** A push's cells and sense: `pull 2` toward its caster, `knockback 2` away. */
+function pushPart(op: Extract<EffectOp, { kind: 'push' }>): string {
+  return `${op.direction === 'toward' ? 'pull' : 'knockback'} ${op.cells}`;
 }
 
 /** The derived crit chance of one damage op. */

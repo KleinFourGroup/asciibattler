@@ -48,6 +48,24 @@ describe('abilityDetailParts (every op kind renders a non-blank detail)', () => 
     expect(partsFor('corrupter', 'vial').join(' · ')).toContain('+poison');
   });
 
+  it("a push rides on its hit as its sense and cells (the adventurer's snag), and a pure one leads", () => {
+    const snag = partsFor('adventurer', 'snag').join(' · ');
+    expect(snag).toMatch(/\d+ dmg/);
+    expect(snag).toContain('reach 2–3');
+    expect(snag).toContain('+pull 2');
+    const knockback = abilityDetailPartsForDef(
+      parseAbilityDef({
+        id: 'test_knockback', name: 'Test', description: 'A test.', cooldownSeconds: 5, rangeCells: 4,
+        target: { kind: 'aoe', shape: 'square', radius: 1, anchor: 'caster', affects: 'enemies' },
+        timeline: [{ phase: 'impact', seconds: 0 }, { phase: 'recovery', seconds: 'fill' }],
+        orphanPolicy: 'ground-target', priority: 10,
+        effects: [{ phase: 'impact', op: { kind: 'push', cells: 2, direction: 'away' } }],
+      }),
+      rollUnit('mercenary', new RNG(1)).stats,
+    );
+    expect(knockback).toEqual(['knockback 2', 'reach 4']);
+  });
+
   it('preserves the existing heal / damage / dash readouts', () => {
     expect(partsFor('healer', 'heal_ally').join(' · ')).toContain('heal');
     expect(partsFor('mercenary', 'sword').join(' · ')).toMatch(/\d+ dmg/);
@@ -192,9 +210,10 @@ describe("the card's reach is the band the sim fires in", () => {
       if (min > 0) floored++;
       if (shown !== expected) wrong.push(`${id}: shows ${shown}, the sim fires at ${expected}`);
     }
-    // Ten shipped abilities have a floor (the bow, the catapult's four, the
-    // casters'); none checked would make the pass vacuous.
-    expect(floored).toBe(10);
+    // Eleven shipped abilities have a floor (the bow, the catapult's four,
+    // the casters', the adventurer's snag); none checked would make the pass
+    // vacuous.
+    expect(floored).toBe(11);
     expect(wrong).toEqual([]);
   });
 

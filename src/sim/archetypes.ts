@@ -28,6 +28,8 @@ export function glyphForArchetype(archetype: Archetype): string {
  * nothing:
  *
  * - a `self` target is null: a leap's or a summon's range is not reach;
+ * - a pull (a `push` `toward` its caster) is null: it fetches its target
+ *   into the unit's other reach, so the unit still closes to that one;
  * - an aoe anchored on the caster that affects `allies` is null: a buff
  *   shout is support;
  * - an aoe anchored on the caster that hits enemies (a nova) is its
@@ -39,6 +41,7 @@ export function glyphForArchetype(archetype: Archetype): string {
  */
 export function engagementReach(def: AbilityDef): number | null {
   if (def.target.kind === 'self') return null;
+  if (def.effects.some((e) => e.op.kind === 'push' && e.op.direction === 'toward')) return null;
   if (def.target.kind === 'aoe' && def.target.anchor === 'caster') {
     return def.target.affects === 'allies' ? null : def.target.radius;
   }

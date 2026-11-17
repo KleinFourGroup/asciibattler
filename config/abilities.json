@@ -115,6 +115,42 @@
     ],
     "fx": { "impact": "melee_swing" }
   },
+  "snag": {
+    "id": "snag",
+    "name": "Snag",
+    "description": "Snags a foe with the whip and drags it close.",
+    "cooldownSeconds": 8,
+    "speedScaled": false,
+    "rangeCells": 3,
+    "minRangeCells": 2,
+    "target": { "kind": "enemyInRange" },
+    "timeline": [
+      { "phase": "windup", "seconds": 0.2 },
+      { "phase": "impact", "seconds": 0 },
+      { "phase": "recovery", "seconds": 0.3 }
+    ],
+    "orphanPolicy": "commit-at-cast",
+    "priority": 10,
+    "effects": [
+      {
+        "phase": "impact",
+        "op": {
+          "kind": "damage",
+          "scaling": "strength",
+          "might": 1,
+          "critBase": 0.05,
+          "critable": true,
+          "evadable": true,
+          "bypassDefense": false
+        }
+      },
+      {
+        "phase": "impact",
+        "op": { "kind": "push", "cells": 2, "direction": "toward" }
+      }
+    ],
+    "fx": { "impact": "melee_swing" }
+  },
   "bow": {
     "id": "bow",
     "name": "Bow",

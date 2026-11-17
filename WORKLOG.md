@@ -262,3 +262,67 @@ strike lands since Round 9; a corpse lasts only to its tick's reap).
 Typecheck and lint clean. `npm run corpus`, by hand: 0 of 34 journals
 differ, 21 of 21 command kinds change a run, as predicted with no shipped
 ability pushing.
+
+159c's hook, at `59a099ec`: 3988 main in 273 files (the shove's tests
+gone), 588 smoke in 60.
+
+### 159d — the adventurer's pull (2026-11-16)
+
+**Step zero, and one change built inside the signed intent.** An
+`enemyInRange` ability of reach 3 raises the adventurer's
+`derived.attackRange` from 1 to 3 and its floor to 2
+(`rangeForArchetype`, `minRangeForArchetype`, `src/sim/archetypes.ts`),
+and movement holds a unit inside that band, so the adventurer would have
+hung back like an archer and never closed to whip. A pull now sets no
+reach (`engagementReach`), as a leap does not: the adventurer closes to
+whip and snags what it meets on the way. Flagged for the stop. Movement
+proposes at a score of 1 and an ability at its priority
+(`src/sim/movement.ts:200`), so a priority-10 snag wins whenever its
+target is in its band. The name: the whip's own line is "A braided
+lash.", so the pull is **Snag**, not Lash; the name and its line are the
+session's drafts, read at the stop.
+
+**Built.**
+
+- `snag` (`config/abilities.json`): reach 3, floor 2, `enemyInRange`, a
+  flat 8 s recharge; 0.2 s wind-up, then at `impact` a hit (might 1,
+  strength) and a pull of 2 toward the caster, 0.3 s of recovery. Its
+  line: "Snags a foe with the whip and drags it close." On the
+  adventurer beside the whip (`config/units.json`), and in the ability
+  registry's new list of forced movers; the en sidecar extract
+  regenerated for its name and line (`npm run i18n:extract`).
+- `engagementReach`: a def with a `push` `toward` its caster is null.
+- The ability card: a push rides on a hit as `+pull 2` or
+  `+knockback 2`, and a pure one leads with it and its reach.
+- DESIGN.md: forced movement's rules and the Snag under Battle mechanics;
+  the `attackRange` line now says which abilities set no reach.
+
+**Checked.** `src/sim/snag.test.ts`, 3 tests, the expectations read from
+the raw config: the adventurer carries the snag; its reach and floor stay
+the whip's; and on an open board a foe three cells off is snagged where
+it stands and whipped beside the adventurer, which never moves. The card
+test gains the snag's `+pull 2` and a pure knockback's line; its count of
+abilities with a floor moved from 10 to 11, the snag's. Planted
+(`scratch/159/159d-plants.json`): 5 rules, each caught, the two clean
+files green.
+
+**The corpus moved more than predicted.** The cut predicted the 2
+journals that name the adventurer; `--record` moved 8 of 34 beyond their
+config hash (a script over HEAD's journals and the tree's,
+`scratch/159/journal-diff.mjs`). A journal names an archetype only when
+the player recruits it, and the adventurer also fights as an enemy, in
+the Guarded Adventurer encounter and the Bandit King's boss fight
+(`config/encounters.json`), so enemy adventurers now snag the player's
+units too. That is the archetype's kit, not a second change, and §162's
+board reads it; it goes to the stop. A slip is filed: an absence read
+from a source that could not show it. The re-recorded corpus replays: 0
+of 34 journals differ, 21 of 21 command kinds change a run, 48 event
+names fired where 159c's replay saw 47 (`unit:shoved`, now in play).
+
+The first commit attempt failed its hook on 5 tests. Two mistakes of
+mine broke four: the units file writes a list of abilities without a
+space (`["gambit_strike","dash"]`), which the archetype and blacklist
+editors' round trip holds (three tests), and the en extract lacked the
+snag (one); both fixed. The fifth, `tests/build-id.test.ts`, timed out at
+5 s while a second vitest batch of mine ran beside the hook, and passed
+on its own.

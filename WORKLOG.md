@@ -131,3 +131,7 @@ Lean: §159 ends on a push in play, so the look and the rate are judged
 on one and the seam ships with its consumer (the round's rule). The other
 arm keeps the pull in §160 and §159 headless, its look built blind and
 read at §160's first unit.
+
+**Signed** ("Signing the cut, with the pull moved up! 😁"): the cut as
+put, the adventurer's pull moved up from §160 to 159d. The stretch runs
+159a to 159d, then the stop at 159e.

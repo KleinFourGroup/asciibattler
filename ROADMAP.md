@@ -47,18 +47,32 @@ and the beasts' pounce reshaped at the stop (WORKLOG §158, in
 The push and its op on the signed design: knockback from a point and the
 pull toward the caster, each landing and interrupt rule held by a
 headless test with its planted failure; `World.shove` used or retired;
-then the forced move's look and sound. Before any consumer, since three
-units and the adventurer's special stand on it. **Risk:** medium-high
-(claims, flips and swaps). **Predicted:** no shipped ability pushes
-until §160, so the headless steps replay the corpus unchanged; the look
+then the adventurer's pull, its first consumer, and the forced move's
+look and sound. Before the other consumers, since three units stand on
+it. **Risk:** medium-high (claims, flips and swaps). **Predicted:** no
+shipped ability pushes until 159d, so the headless steps replay the
+corpus unchanged; the look
 and the slide's rate a `stop`; a World bump for the held slide (158b).
 **Scope guard:** no body larger than one cell is pushed (Round 19).
+The cut, signed 2026-11-16 with the adventurer's pull moved up from §160
+(WORKLOG §159):
+
+- ☐ **159a — the walk** (`none`): one victim's landing, pushed or pulled,
+  each stopping rule failing its test when taken out.
+- ☐ **159b — the held slide** (`none`): the victim held for its slide,
+  its own action ended first, the landing's entry at the end; World v40.
+- ☐ **159c — the op, and the shove retired** (`none`): `push` over its
+  selector's victims, farthest first; a push storm holds occupancy.
+- ☐ **159d — the adventurer's pull** (`stop`, read with 159e): the pull's
+  first consumer; the corpus re-recorded where the adventurer fights.
+- ☐ **159e — the look and the sound** (`stop`): the yank, the hold's bar,
+  the cue and the rate, read on the adventurer's pull.
 
 ## Phase 160 — the pushers and the bursts
 
-The grenadier, the telekinetic, the adventurer's pull, the banshee's
-self-centred burst and the ronin's blade whirlwind, each in the live
-acts' pools; N3's flag carried to Round 14 (158b). Right after §159, so the push's distance
+The grenadier, the telekinetic, the banshee's self-centred burst and the
+ronin's blade whirlwind, each in the live acts' pools; the adventurer's
+pull moved up to 159d, N3's flag carried to Round 14 (158b). Right after §159, so the push's distance
 and feel are judged on units in play. **Risk:** medium. **Reads,
 foreseen:** the glyphs a `stop` at its start; each unit `batch` with its
 URL; the play a `stop`.

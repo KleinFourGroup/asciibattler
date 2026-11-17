@@ -57,8 +57,8 @@ and the slide's rate a `stop`; a World bump for the held slide (158b).
 The cut, signed 2026-11-16 with the adventurer's pull moved up from §160
 (WORKLOG §159):
 
-- ☐ **159a — the walk** (`none`): one victim's landing, pushed or pulled,
-  each stopping rule failing its test when taken out.
+- ☑ **159a — the walk** (`none`): one victim's landing, pushed or pulled;
+  ten rules each failing its test when planted out (WORKLOG 159a).
 - ☐ **159b — the held slide** (`none`): the victim held for its slide,
   its own action ended first, the landing's entry at the end; World v40.
 - ☐ **159c — the op, and the shove retired** (`none`): `push` over its

@@ -135,3 +135,25 @@ read at §160's first unit.
 **Signed** ("Signing the cut, with the pull moved up! 😁"): the cut as
 put, the adventurer's pull moved up from §160 to 159d. The stretch runs
 159a to 159d, then the stop at 159e.
+
+### 159a — the walk (2026-11-16)
+
+**Step zero.** The occupancy helpers hold the walk's sets: `occupiedCells`
+and `claimedCells`, each with `excludeId` (every body, scenery included;
+every claim but the victim's own, gotcha #113), `costAt` for the tiles,
+`isInertNeutral` and `footprintOf` for who never moves. `costAt` prices
+an off-grid cell as Infinity (`src/sim/TileGrid.ts:142-153`), so the
+board's edge is the tile rule: an edge check written beside it could not
+fail its plant, since taking it out changed nothing, and it was dropped.
+
+**Built.** `src/sim/push.ts`: `pushLanding(world, victim, origin,
+direction, cells, fallback?)`, the landing and the cells walked, or null
+when the victim moves no cell. Pure; nothing calls it yet (a search of
+`src`, `tests` and `tools`).
+
+**Checked.** `src/sim/push.test.ts`, 14 tests, each expectation worked
+out on the grid by hand. Planted (`scratch/159/plant.ts` with
+`scratch/159/159a-plants.json`): ten rules taken out one at a time, each
+failing its test (the tile rule fails the edge's and the chasm's, the
+pull's reversal all three pull tests); the clean tree 0 of 14 failed.
+Typecheck and lint clean on the two files.

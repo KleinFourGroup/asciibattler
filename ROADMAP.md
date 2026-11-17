@@ -71,6 +71,22 @@ pull moved up to 159d, N3's flag carried to Round 14 (158b). Right after §159, 
 and feel are judged on units in play. **Risk:** medium. **Reads,
 foreseen:** the glyphs a `stop` at its start; each unit `batch` with its
 URL; the play a `stop`.
+The cut, signed 2026-11-17 with its leans (WORKLOG §160):
+
+- ☐ **160a — the glyphs** (`stop`): candidates for the grenadier and the
+  telekinetic in the sampler, a lean each.
+- ☐ **160b — the burst drawn on its caster** (`none`): a caster-anchored
+  explosion at the caster's cell, its ring sized to the radius.
+- ☐ **160c — the grenadier** (`batch`): a draftable grenade thrower, a
+  knockback of 1 from the blast's centre; an enemy in the Artillery Company.
+- ☐ **160d — the telekinetic** (`batch`): a draftable burst on itself, a
+  knockback of 2; an enemy in the Dark Magic Posse.
+- ☐ **160e — the banshee's burst** (`batch`): the Wail on the banshee,
+  radius 2, the panic kept.
+- ☐ **160f — the ronin's whirlwind** (`batch`): a burst on itself beside
+  the katana.
+- ☐ **160g — the play** (`stop`): the four in play, the push's feel, the
+  bursts' look and sound, the drafted numbers.
 
 ## Phase 161 — the blink and the charge
 

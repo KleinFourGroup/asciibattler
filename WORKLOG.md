@@ -108,3 +108,9 @@ minimum count, since the schema has none); sounds reused (the grenade
 the catapult's impact, the bursts the bolt's, the whirlwind the melee
 swing), a new cue only where 160g asks. The priors: a PENDING
 acknowledgment for each newcomer, measured at §162's board.
+
+**Signed** ("Signed with all of your leans!"): the cut and its reads as
+put, every lean above, and §159's friction candidate on its lean (no new
+rule; the `execSync` line added to `process/shell-and-windows.md`, after
+a check: `execSync('echo a^b')` printed `ab`). The stretch: 160a's stop
+first, then 160b to 160f with their `batch` reads, to 160g's stop.

@@ -30,6 +30,9 @@ Claude Code's own tools.
 - Put scratch probes in real `.ts` files (`.mts` outside the repo, where
   `tsx` reads `.ts` as CommonJS); an inline `npx tsx -e` can hang at
   spawn on Windows with no output. Throwaways go in your scratch directory.
+- Node's `execSync` runs its command through `cmd.exe` here, whatever
+  shell launched Node, and `cmd.exe` reads `^` as an escape: `<sha>^`
+  arrives as `<sha>`. Write `<sha>~1`.
 - **Git's variables.** An absolute `GIT_DIR` or `GIT_INDEX_FILE` in the
   environment sends every git command beneath it to that repository, from
   any folder: a test that builds its own repository wrote this one's

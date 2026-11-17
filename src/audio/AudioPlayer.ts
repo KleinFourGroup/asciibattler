@@ -37,6 +37,7 @@ export type SoundKey =
   | 'poison'
   | 'recruit'
   | 'sectorwin'
+  | 'shove'
   | 'shoot'
   | 'stattick'
   | 'summon'
@@ -84,6 +85,9 @@ export const SOUND_SOURCES: Record<SoundKey, string> = {
   wail: 'audio/wail.wav',
   summon: 'audio/summon.wav',
   thud: 'audio/thud.wav',
+  // A forced move's yank, a push or a pull, off `unit:shoved` in the
+  // event-sound registry (generated, `scripts/gen-sfx.mjs`).
+  shove: 'audio/shove.wav',
   // The pool bar's landing cue, played by the HUD on every orb landing and
   // scaled per play by `lossCue` (src/ui/lossFx.ts): gain up and rate down
   // with the loss's share of the pool max.
@@ -134,6 +138,8 @@ const VOLUMES: Record<SoundKey, number> = {
   wail: 0.75,
   summon: 0.8,
   thud: 0.85,
+  // Under a swing: it lands with the hit that pushes.
+  shove: 0.6,
   // The landing cue's ceiling: `lossCue` scales each play's gain from about
   // half of this at a small loss up to all of it at the shake's ceiling, so
   // a small loss ticks and a big one lands.
@@ -190,6 +196,8 @@ const PITCH_VARIANCE: Record<SoundKey, number> = {
   wail: 0.05,
   summon: 0.05,
   thud: 0.08,
+  // A blast that throws several units plays several at once.
+  shove: 0.1,
 };
 
 const POOL_SIZE = 4;

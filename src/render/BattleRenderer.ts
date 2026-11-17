@@ -34,6 +34,7 @@ import { ABILITY_DEFS } from '../config/abilities';
 import { STATUS_DEFS } from '../config/statuses';
 import { MOVE_ACTION_ID } from '../sim/actions/MoveAction';
 import { SPAWN_ACTION_ID } from '../sim/actions/SpawnAction';
+import { FORCED_MOVE_ACTION_ID } from '../sim/actions/ForcedMoveAction';
 import { footprintOf } from '../sim/occupancy';
 import { validNeutralObjectiveTarget } from '../sim/Targeting';
 import { isDestructibleNeutral } from '../config/units';
@@ -237,6 +238,7 @@ export class BattleRenderer {
     this.animator = new SpriteAnimator(this.sprites);
     this.subscriptions.push(bus.on('unit:spawned', this.onUnitSpawned));
     this.subscriptions.push(bus.on('unit:moved', this.onUnitMoved));
+    this.subscriptions.push(bus.on('unit:shoved', this.onUnitShoved));
     this.subscriptions.push(bus.on('unit:moveAborted', this.onUnitMoveAborted));
     // A release-gate hold: the amber drain bar over the re-aim window, the
     // tell that the unit is re-aiming, not idle (`updateProgressFill`).
@@ -889,6 +891,20 @@ export class BattleRenderer {
   };
 
   /**
+   * A forced move, a push or a pull. Its `unit:moved` started the slide on
+   * the same tick, so this re-times it as a yank (`easeOut`): off the mark
+   * fast, skidding to a stop on the landing, where a step glides.
+   */
+  private onUnitShoved = ({
+    unitId,
+    from,
+    to,
+    durationTicks,
+  }: GameEvents['unit:shoved']): void => {
+    this.animateStep(unitId, from, to, durationTicks, true);
+  };
+
+  /**
    * The settle-back. A deferred move aborted mid-flight (its destination went
    * invalid while the sprite slid toward it): ease the sprite from wherever it
    * reached back to `from`, its logical cell, since a unit doesn't leave it
@@ -986,6 +1002,7 @@ export class BattleRenderer {
     from: GridCoord,
     to: GridCoord,
     durationTicks: number,
+    easeOut = false,
   ): void {
     if (!this.world) return;
     const handle = this.handles.get(unitId);
@@ -1002,6 +1019,7 @@ export class BattleRenderer {
       origin,
       this.unitAnchorPos(to, footprint),
       ticksToSeconds(durationTicks),
+      easeOut,
     );
   }
 
@@ -1772,11 +1790,14 @@ export class BattleRenderer {
     //
     // Hidden through the SpawnAction lockout too: the fade-in is the spawn's
     // feedback, and a bar over a half-faded sprite would compete with it.
+    // And through a forced move's hold: the yank is its feedback, and a bar
+    // over a slide of a few tenths of a second would flash.
     if (
       !active ||
       active.finishTick <= active.startTick ||
       active.action.id === MOVE_ACTION_ID ||
-      active.action.id === SPAWN_ACTION_ID
+      active.action.id === SPAWN_ACTION_ID ||
+      active.action.id === FORCED_MOVE_ACTION_ID
     ) {
       if (this.progress.has(unitId)) this.progress.delete(unitId);
       // No action bar claims the element: a live re-aim window draws the

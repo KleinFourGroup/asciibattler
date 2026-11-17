@@ -6,11 +6,11 @@ A fresh-session orientation for ASCIIbattler. Read this first; then dive into th
 
 **The ONE home for live status.** Other docs (and the agent memory) point here instead of restating it; when state changes, this section is the single place that updates.
 
-- **NEXT — ROUND 12 (Push, pull and blink): §159's kickoff** (`stop`), forced movement, the seam: the audit and the cut with its reads put to the user ([ROADMAP.md](ROADMAP.md) §159; WORKLOG §159). **Open ◐:** none.
+- **NEXT — ROUND 12 (Push, pull and blink): 159d and 159e, read at one `stop`**: the adventurer's Snag and the forced move's look and sound, on `?character=soldier&roster=adventurer:3,adventurer:3,adventurer:3&seed=5`; the calls (the yank, the rate, the hidden bar, the cue, the Snag's name, numbers and whether it fires without room to pull) and the flags (a pull sets no reach; enemy adventurers snag too) are in WORKLOG 159d and 159e ([ROADMAP.md](ROADMAP.md) §159). 159a to 159c are built and checked (`none`). **Open ◐:** 159d and 159e, at their stop.
 - **In flight:** nothing.
 - **The public build:** `0.4.0` (`4fc62cfe`, tag `v0.4.0`), uploaded to itch.io on 2026-11-13; the uploads before it are in Closed rounds below.
 - **Snapshots:** WorldSnapshot **v40** (no player keeps one) · RunSnapshot **v51** (a v50 save, `0.3.0`'s, rejects).
-- **Tests:** **3963 main** in 271 files, **588 fuzz:smoke** in 60 files and **1 fuzz:jobs-parity** at `0b8e7b8b` (its hook); typecheck clean; the journal corpus, run by hand, 40 tests over 34 journals, 33 recorded at `0b8e7b8b` and the trade row at 158a, 40 passed at 158a.
+- **Tests:** **3992 main** in 274 files, **588 fuzz:smoke** in 60 files and **1 fuzz:jobs-parity** at `b3072cc4` (its hook); typecheck clean; the journal corpus, run by hand, 34 journals re-recorded at 159d (8 of them moved by the Snag), the replay 0 of 34 differing.
 - **Model id: `claude-opus-5-5`** since 2026-09-22. When yours differs, say so at the next stop; at the user's word, review AGENTS.md against the vendor's current prompting guidance and record the new id (the last review: `archive/post-104-worklog.md`, "The new-model tone audit").
 - **Last phase: §158**, the pre-step and the design, 2026-11-16: the corpus's trade row on its own test; the forced-movement design signed in two tranches, the push holding its victim for the slide, the teleport with its approach, the cavalier's charge a push on itself, the puma's pounce (`archive/worklog-phase-158.md`).
 

@@ -75,6 +75,8 @@ export const EVENT_SOUNDS = {
   // Keyed off the leap itself, not an inferred move distance, so a one-cell
   // dash still whooshes. Either team's.
   'unit:dashed': { sound: 'dash' },
+  // A forced move, a push or a pull, either team's: the yank.
+  'unit:shoved': { sound: 'shove' },
 } as const satisfies EventSoundTable;
 
 /**
@@ -114,7 +116,6 @@ export const SILENT_EVENTS: Readonly<
   'unit:actionHeld': 'bookkeeping',
   'unit:moveDecision': 'bookkeeping',
   'unit:waited': 'bookkeeping',
-  'unit:shoved': 'bookkeeping',
   // The swing or whoosh rides `action:phase`, so a miss plays it too.
   'unit:attacked': 'fxChannel',
   'unit:missed': 'fxChannel', // idle until there is a dodge, kept for it

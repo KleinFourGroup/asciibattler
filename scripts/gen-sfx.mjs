@@ -304,6 +304,17 @@ const SOUNDS = {
     addNoise(b, { amp: (t) => 0.12 * expDecay(0.003)(t), rng, lp: 0.6 });
     return finish(b, 0.8);
   },
+
+  // A forced move, a push or a pull (`unit:shoved`): a yank. A dark noise
+  // rush that starts at full and drains, over a low body sweeping down, so it
+  // reads as being moved, not as the dash's chosen whoosh, which swells.
+  shove: () => {
+    const b = buffer(0.2);
+    const rng = mulberry32(0x540e);
+    addNoise(b, { rng, lp: 0.08, amp: (t) => 0.8 * attack(0.006)(t) * expDecay(0.07)(t) });
+    addOsc(b, { type: 'triangle', freq: (t) => 170 * Math.exp(-t / 0.09) + 55, amp: (t) => 0.55 * attack(0.004)(t) * expDecay(0.06)(t) });
+    return finish(b, 0.75);
+  },
 };
 
 /* --------------------------------- main --------------------------------- */

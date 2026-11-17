@@ -71,6 +71,7 @@ The config's numbers were converted when the hit roll was deleted, so that each 
 
 - **The walk.** One of the eight directions, taken from where the unit stands when the push lands and fixed for the whole walk, so nothing is random; a unit on a blast's centre goes away from the caster. It slides up to its cells and stops early before the board's edge, a chasm or deep water, another body (a wall included) or a cell another unit is stepping into; a pull stops beside its caster. Nothing more happens when it is cut short.
 - **The hold.** The pushed unit loses what it was doing (a step, a swap, a swing, whose recharge is spent) and does nothing while it slides, at one fast rate for every unit (`SIM.pushSecondsPerCell`, 0.15 s a cell), so a push is a short stun; a longer one is a status the ability adds. The tile it lands on acts on it as it lands: mud poisons, water douses a burn.
+- **The look.** The slide is drawn as a yank, fast off the mark and skidding to a stop, where a step glides; no bar shows over the held unit, and the yank has its own cue.
 - **Who moves.** Never scenery, never a body larger than one cell. A camp member moves, and only damage turns its camp hostile. Several units hit at once move farthest first, so the outer ring clears room for the inner.
 - **The carriers.** The adventurer's **Snag**: a whip crack at a foe two or three cells off that drags it in beside the adventurer, on a flat 8-second recharge, after which the whip takes over.
 

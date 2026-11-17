@@ -46,6 +46,12 @@ interface ActiveLerp {
    * which fly.
    */
   readonly groundStepY: boolean;
+  /**
+   * A forced move's yank: the slide's progress eased out, `1 − (1 − t)²`, so
+   * the sprite leaves fast and skids to a stop, where a step glides at an
+   * even pace. It re-times the whole position, the ground step's Y with it.
+   */
+  readonly easeOut: boolean;
 }
 
 interface ActiveFade {
@@ -112,6 +118,7 @@ export class SpriteAnimator {
       onComplete,
       targetProvider,
       groundStepY: false,
+      easeOut: false,
     });
   }
 
@@ -119,13 +126,15 @@ export class SpriteAnimator {
    * A unit's ground relocation: a fixed-destination lerp with the
    * climb-early, descend-late Y profile (`ActiveLerp.groundStepY`). For the
    * move and swap steps and the settle-backs, anything whose from and to are
-   * both ground anchors. It overrides as `startLerp` does.
+   * both ground anchors, and with `easeOut` for a forced move's yank. It
+   * overrides as `startLerp` does.
    */
   startGroundLerp(
     handle: SpriteHandle,
     from: THREE.Vector3,
     to: THREE.Vector3,
     durationSeconds: number,
+    easeOut = false,
   ): void {
     this.shoves.delete(handle);
     if (durationSeconds <= 0) {
@@ -142,6 +151,7 @@ export class SpriteAnimator {
       onComplete: undefined,
       targetProvider: undefined,
       groundStepY: true,
+      easeOut,
     });
   }
 
@@ -252,7 +262,8 @@ export class SpriteAnimator {
         const tgt = lerp.targetProvider();
         if (tgt) lerp.to.copy(tgt);
       }
-      const t = lerp.elapsed >= lerp.duration ? 1 : lerp.elapsed / lerp.duration;
+      const linear = lerp.elapsed >= lerp.duration ? 1 : lerp.elapsed / lerp.duration;
+      const t = lerp.easeOut ? 1 - (1 - linear) * (1 - linear) : linear;
       this.scratch.copy(lerp.from).lerp(lerp.to, t);
       // A ground step re-times Y: rising completes by t = 0.5, falling starts
       // at t = 0.5 (ActiveLerp.groundStepY). XZ keeps the linear t.

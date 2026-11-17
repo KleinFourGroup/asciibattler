@@ -67,8 +67,9 @@ The cut, signed 2026-11-16 with the adventurer's pull moved up from §160
 - ◐ **159d — the adventurer's pull** (`stop`, read with 159e): the Snag,
   a pull setting no reach; the corpus re-recorded, 8 of 34 moved, enemy
   adventurers snagging too (WORKLOG 159d).
-- ☐ **159e — the look and the sound** (`stop`): the yank, the hold's bar,
-  the cue and the rate, read on the adventurer's pull.
+- ◐ **159e — the look and the sound** (`stop`): the yank, the hold's bar
+  hidden, the `shove` cue, the rate at 0.15 s; the Snag pulls about half
+  the time (WORKLOG 159e).
 
 ## Phase 160 — the pushers and the bursts
 

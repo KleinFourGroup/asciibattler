@@ -135,6 +135,11 @@ function fmtOp(op: EffectOp, indent: string): string {
       return `{ "kind": "heal", "scaling": ${s(op.scaling)}, "might": ${n(op.might)} }`;
     case 'move':
       return `{ "kind": "move", "mode": ${s(op.mode)} }`;
+    case 'push': {
+      const pairs = [`"kind": "push"`, `"cells": ${n(op.cells)}`, `"direction": ${s(op.direction)}`];
+      if (op.from !== 'caster') pairs.push(`"from": ${s(op.from)}`);
+      return `{ ${pairs.join(', ')} }`;
+    }
     case 'applyStatus': {
       const pairs = [`"kind": "applyStatus"`, `"statusId": ${s(op.statusId)}`];
       if (op.magnitude !== undefined) pairs.push(`"magnitude": ${fmtScalarOrScaled(op.magnitude)}`);

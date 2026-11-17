@@ -61,8 +61,9 @@ The cut, signed 2026-11-16 with the adventurer's pull moved up from §160
   ten rules each failing its test when planted out (WORKLOG 159a).
 - ☑ **159b — the held slide** (`none`): `World.forceMove`, the victim's
   action ended and the unit held; 13 rules planted out; World v40 (WORKLOG 159b).
-- ☐ **159c — the op, and the shove retired** (`none`): `push` over its
-  selector's victims, farthest first; a push storm holds occupancy.
+- ☑ **159c — the op, and the shove retired** (`none`): `push` over its
+  selector's victims, farthest first; a 300-tick push storm holds
+  occupancy and claims; 7 rules planted out; the corpus unchanged (WORKLOG 159c).
 - ☐ **159d — the adventurer's pull** (`stop`, read with 159e): the pull's
   first consumer; the corpus re-recorded where the adventurer fights.
 - ☐ **159e — the look and the sound** (`stop`): the yank, the hold's bar,

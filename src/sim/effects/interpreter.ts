@@ -23,6 +23,7 @@ import { nearestChainTarget, resolveAreaVictims } from './targeting';
 import { nearestFreeCells } from '../actingPosition';
 import { retreatCell } from './reposition';
 import { behaviorFlags } from '../statusBehavior';
+import { pushLanding } from '../push';
 
 /**
  * A scratch shared by every op that fires on one phase boundary
@@ -118,6 +119,9 @@ export function executeOp(op: EffectOp, ctx: OpFireContext): void {
     case 'summon':
       executeSummon(op, ctx);
       return;
+    case 'push':
+      executePush(op, ctx);
+      return;
     default: {
       const _exhaustive: never = op;
       throw new Error(`unknown effect op: ${JSON.stringify(_exhaustive)}`);
@@ -127,7 +131,7 @@ export function executeOp(op: EffectOp, ctx: OpFireContext): void {
 
 /**
  * An `aoe`'s centre: for `anchor: 'caster'` the caster's live cell as the op
- * fires, so a shove during the wind-up moves the blast with the body and nothing
+ * fires, so a push during the wind-up moves the blast with the body and nothing
  * is captured at cast; for `anchor: 'targetCell'` the cell captured at cast.
  */
 function aoeCenter(
@@ -291,6 +295,32 @@ function resolveStatusTargets(ctx: OpFireContext): Unit[] {
   if (sel.kind === 'self') return [ctx.caster];
   // `enemyInRange` and `lowestHpAlly`: the captured target, if alive in the world.
   return ctx.target ? [ctx.target] : [];
+}
+
+/**
+ * Moves the op's live victims by force (`pushLanding`, then
+ * `World.forceMove`), farthest from the origin first, ties in the order the
+ * selector found them (`world.units`'), so an outer victim clears the cell an
+ * inner one is pushed into. The origin is the caster's live cell, or an
+ * `aoe`'s centre for `from: 'center'`; a victim on the origin goes away from
+ * the caster. A victim a damage op on this boundary missed, and the dead,
+ * are skipped, as `applyStatus` skips them. A push angers no camp: only
+ * damage does (`markCampHostile`).
+ */
+function executePush(op: Extract<EffectOp, { kind: 'push' }>, ctx: OpFireContext): void {
+  const { world, caster } = ctx;
+  const origin = op.from === 'center' && ctx.selector.kind === 'aoe' ? aoeCenter(ctx.selector, ctx) : caster.position;
+  if (origin === undefined) return;
+  const at = { ...origin };
+  const victims = resolveStatusTargets(ctx)
+    .filter((v) => v.currentHp > 0 && !ctx.fireScratch.missed.has(v.id))
+    .map((unit, i) => ({ unit, i, d: Math.max(Math.abs(unit.position.x - at.x), Math.abs(unit.position.y - at.y)) }))
+    .sort((a, b) => b.d - a.d || a.i - b.i);
+  const fallback = { ...caster.position };
+  for (const { unit } of victims) {
+    const landing = pushLanding(world, unit, at, op.direction, op.cells, fallback);
+    if (landing !== null) world.forceMove(unit, landing.cell, landing.cells);
+  }
 }
 
 /* -------------------------------------------------------------------------- */

@@ -205,3 +205,60 @@ Typecheck and lint clean.
 *Landing note:* the offset-0 skip has no test here, since these tests
 push between ticks. 159c's op pushes inside a caster's action, and its
 test counts the victim's `action:phase` events to pin it.
+
+159b's hook, at `1015e8ea`: 3986 main in 273 files, 588 smoke in 60.
+
+### 159c — the op, and the shove retired (2026-11-16)
+
+**Step zero.** `resolveStatusTargets` gives the op its live victims under
+any selector, in the order the selector found them (an area's in
+`world.units` order, `effects/targeting.ts:133-143`); typecheck named
+the four exhaustive readers of the op union (the interpreter, the
+cast-time capture, the attack editor's outline and its formatter). A
+passive camp member is a body an area finds (`isCombatTargetable`), and a
+camp turns hostile only on damage, so the push needs nothing to leave it
+calm.
+
+**Built.**
+
+- `push` in the effect schema: `cells`, `direction` (`away` or
+  `toward`), `from` (`caster`, the default, or `center`, refused at load
+  without an `aoe` selector). Nothing is captured at cast.
+- `executePush`: the victims alive and not missed by a damage op on the
+  same boundary, sorted farthest from the origin first (Chebyshev), ties
+  in found order; each through `pushLanding` and `World.forceMove`, a
+  victim on the origin going away from the caster. The origin and the
+  caster's cell are copied as the op fires, so a caster caught in its own
+  blast moves no later victim's origin.
+- The attack editor: the op's kind, default, form, outline and format
+  (`from` written only when it is `center`, as a summon's `at` only when
+  it is not `self`).
+- `World.shove`, `SIM.shoveSearchRadiusCells` and `src/sim/shove.test.ts`
+  retired; `unit:shoved` re-described as the forced move's event in
+  `events.ts` and ARCHITECTURE; the comments that named the shove
+  (`World.applyTileEnterEffects`, `nearestFreeCells`, the caster-anchored
+  centre in the interpreter and in propose, gotcha #113's list) moved to
+  the push. ARCHITECTURE's interpreter line listed "reserved arms" that
+  throw, stale since the ops it named were built; corrected.
+
+**Checked.** `src/sim/effects/pushOp.test.ts`, 6 tests through real
+casts: a packed line pushed from a grenade's centre, farthest first,
+with a victim north of the centre going north; a burst around its caster
+pushing enemies out and leaving its ally and a unit outside it; a pull
+landing beside its caster, the victim's `travel` phase emitted once on
+the tick it was pushed (159b's landing note: the offset-0 skip, pinned
+here); a camp member moved with its camp still calm; `from: 'center'`
+refused without an area; and a push storm, two sides of six fighting
+among walls and a chasm for 300 ticks with a seeded push or pull every
+tick, in which no two bodies ever share a cell and no body stands on
+another unit's claim, after every push and every tick (more than 100
+pushes, claims standing on more than 100 ticks). Planted
+(`scratch/159/159c-plants.json`): 7 rules, each caught, among them the
+offset-0 skip, a walk that ignores claims (the storm) and one that
+ignores bodies (the storm); the clean tree 0 of 6 failed. Not planted:
+the skips of a dead victim and of one a damage op missed, which mirror
+`applyStatus`'s and which no shipped path reaches in a test (every
+strike lands since Round 9; a corpse lasts only to its tick's reap).
+Typecheck and lint clean. `npm run corpus`, by hand: 0 of 34 journals
+differ, 21 of 21 command kinds change a run, as predicted with no shipped
+ability pushing.

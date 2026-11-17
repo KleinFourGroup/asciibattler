@@ -268,7 +268,7 @@ function proposeAreaBlast(def: AbilityDef, unit: Unit, world: World): ActionProp
  * `'all'` blast always finds the caster, whose footprint covers the centre, so
  * it fires on every cooldown. Nothing is captured as the centre: the
  * interpreter's `aoeCenter` reads the caster's live cell when it fires, so a
- * shove during the wind-up moves the blast with the body. `targetId` −1, and
+ * push during the wind-up moves the blast with the body. `targetId` −1, and
  * `phaseTarget` surfaces nothing.
  */
 function proposeCasterAnchoredBlast(
@@ -354,5 +354,9 @@ function resolveOp(op: EffectOp, c: OpResolveContext): OpResolution {
       const level = evalScaled(op.summon.level, c.unit) ?? 1;
       return { summonLevel: Math.max(1, Math.round(level)) };
     }
+    case 'push':
+      // Nothing: the cells, the sense and the origin are read off the op when
+      // it fires, where the victims stand then.
+      return {};
   }
 }

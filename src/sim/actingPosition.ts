@@ -99,7 +99,7 @@ export function nearestActingCell(
 /**
  * The placement query: up to `count` of the nearest free, passable cells
  * within `radiusCells` (search depth) of `anchor`, for a summon's minions
- * (`interpreter.ts`) and `World.shove`'s landing. The same bounded search
+ * (`interpreter.ts`). The same bounded search
  * and fixed order as `nearestActingCell`, so the first free cells are the
  * same every run, with two differences:
  *

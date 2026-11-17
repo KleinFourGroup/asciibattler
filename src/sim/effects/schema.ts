@@ -286,6 +286,23 @@ const SummonOpSchema = z.object({
 });
 
 /**
+ * `push` moves what the selector resolved by force, `cells` cells `away` from
+ * an origin (a knockback) or `toward` it (a pull), through `pushLanding`:
+ * one of the eight grid directions, fixed as the op fires, each victim
+ * stopping before an impassable tile, a body or a claim. The origin is the
+ * caster's cell, or with `from: 'center'` an `aoe` selector's centre (refined
+ * below). Victims move farthest from the origin first, so an outer one
+ * clears the cell an inner one is pushed into. Each is held for its slide
+ * (`World.forceMove`). It draws no RNG, and nothing is captured at cast.
+ */
+const PushOpSchema = z.object({
+  kind: z.literal('push'),
+  cells: z.number().int().positive(),
+  direction: z.enum(['away', 'toward']),
+  from: z.enum(['caster', 'center']).default('caster'),
+});
+
+/**
  * The closed op union: every operation an ability performs on what it resolved.
  * A new mechanic is a new variant here, never a new action class.
  */
@@ -296,6 +313,7 @@ export const EffectOpSchema = z.discriminatedUnion('kind', [
   ApplyStatusOpSchema,
   ChainOpSchema,
   SummonOpSchema,
+  PushOpSchema,
 ]);
 
 /* -------------------------------------------------------------------------- */
@@ -450,7 +468,14 @@ export const AbilityDefSchema = z
       "releaseGate requires the 'enemyInRange' selector — the gate re-tests a locked " +
       'single target; aoe/self/ally verbs have no band to re-test',
     path: ['releaseGate'],
-  });
+  })
+  .refine(
+    (def) => def.target.kind === 'aoe' || def.effects.every((e) => e.op.kind !== 'push' || e.op.from !== 'center'),
+    {
+      message: "a push from 'center' needs an 'aoe' selector, the only one with a centre",
+      path: ['effects'],
+    },
+  );
 
 /* -------------------------------------------------------------------------- */
 /* Inferred types.                                                            */

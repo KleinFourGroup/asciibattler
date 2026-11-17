@@ -58,7 +58,6 @@ import {
   type OccupancyPlane,
 } from './occupancy';
 import { affectsMatch } from './effects/targeting';
-import { nearestFreeCells } from './actingPosition';
 import { SIM } from '../config/sim';
 import { TileGrid, type TileGridSnapshot } from './TileGrid';
 import { AbilityBehavior } from './behaviors/AbilityBehavior';
@@ -1148,8 +1147,9 @@ export class World {
    *
    * Once per entry, unlike `applyTileStatuses`, which sustains a status every
    * tick a unit stands on a tile: a step onto mud poisons once, and the
-   * cleanse comes only with the move that lands in water. A spawn, a shove or
-   * a summon's placement is not an entry.
+   * cleanse comes only with the move that lands in water. A forced move's
+   * entry runs as its slide ends (`ForcedMoveAction`); a spawn or a summon's
+   * placement is not an entry.
    */
   applyTileEnterEffects(unit: Unit): void {
     const def = this.tileGrid.defAt(unit.position);
@@ -1398,24 +1398,6 @@ export class World {
     for (const [key, claim] of this.claims) {
       if (claim.unitId === unitId) this.claims.delete(key);
     }
-  }
-
-  /**
-   * Moves `unit` off its cell to the nearest free cell (`nearestFreeCells`),
-   * emitting `unit:moved` for the slide, as a dash does, and `unit:shoved`.
-   * Returns false, and moves nothing, when no free cell is within
-   * `SIM.shoveSearchRadiusCells`, rather than send the unit across the map.
-   * Only tests call it.
-   */
-  shove(unit: Unit): boolean {
-    const [dest] = nearestFreeCells(unit.position, 1, SIM.shoveSearchRadiusCells, this);
-    if (dest === undefined) return false;
-    const from = unit.position;
-    const durationTicks = unit.derived.moveCooldownTicks;
-    unit.position = dest;
-    this.bus.emit('unit:moved', { unitId: unit.id, from, to: dest, durationTicks });
-    this.bus.emit('unit:shoved', { unitId: unit.id, from, to: dest, durationTicks });
-    return true;
   }
 
   /**

@@ -211,10 +211,10 @@ export interface GameEvents extends Record<string, unknown> {
    */
   'unit:waited': { unitId: number };
   /**
-   * A unit sharing a cell was pushed off it: `World.shove` moved it from
-   * `from` to the nearest free cell `to` over `durationTicks`, and emitted
-   * `unit:moved` for the slide. A shove is forced, not chosen, which is why
-   * it has its own event. Only tests call `World.shove`.
+   * A unit was moved by force, a push or a pull: `World.forceMove` put it
+   * from `from` onto `to` and holds it for the slide's `durationTicks`, and
+   * emitted `unit:moved` for the slide. A forced move is not chosen, which is
+   * why it has its own event.
    */
   'unit:shoved': {
     unitId: number;

@@ -11,7 +11,6 @@
   "healerPanicRangeCells": 1,
   "healerFollowGapCells": 1,
   "actingCellSearchSlack": 2,
-  "shoveSearchRadiusCells": 3,
   "pushSecondsPerCell": 0.15,
   "moveFlipFraction": 0.5,
   "campWanderChancePerSecond": 0.64,

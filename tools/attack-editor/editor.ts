@@ -61,7 +61,9 @@ const AFFECTS = ['enemies', 'allies', 'all'] as const;
 const DAMAGE_SCALING = ['strength', 'ranged', 'magic', 'none'] as const;
 const HEAL_SCALING = ['magic', 'none'] as const;
 const MOVE_MODES = ['advance', 'retreat'] as const;
-const TOP_OP_KINDS = ['damage', 'heal', 'move', 'applyStatus', 'chain', 'summon'] as const;
+const PUSH_DIRECTIONS = ['away', 'toward'] as const;
+const PUSH_ORIGINS = ['caster', 'center'] as const;
+const TOP_OP_KINDS = ['damage', 'heal', 'move', 'applyStatus', 'chain', 'summon', 'push'] as const;
 const INNER_OP_KINDS = ['damage', 'applyStatus'] as const; // a chain's per-hop payload
 
 const STATUS_IDS = Object.keys(STATUS_DEFS);
@@ -108,6 +110,8 @@ function defaultOp(kind: OpKind): EffectOp {
       return { kind: 'chain', maxJumps: 2, rangeCells: 3, falloff: 0.6, hopDelaySeconds: 0.1, ops: [defaultOp('damage') as ChainInnerOp] };
     case 'summon':
       return { kind: 'summon', summon: { archetype: ARCHETYPE_IDS[0] ?? 'ghoul', level: 1, count: 1, maxLive: 3, radiusCells: 2 }, at: { kind: 'self' } };
+    case 'push':
+      return { kind: 'push', cells: 1, direction: 'away', from: 'caster' };
   }
 }
 
@@ -553,6 +557,11 @@ function renderOp(host: HTMLElement, op: EffectOp, ctx: OpCtx): void {
     case 'move':
       selectField(body, 'Mode', MOVE_MODES, op.mode, (v) => (op.mode = v as typeof op.mode));
       break;
+    case 'push':
+      numberField(body, 'Cells', op.cells, 1, (v) => (op.cells = v));
+      selectField(body, 'Direction', PUSH_DIRECTIONS, op.direction, (v) => (op.direction = v as typeof op.direction));
+      selectField(body, 'From', PUSH_ORIGINS, op.from, (v) => (op.from = v as typeof op.from));
+      break;
     case 'applyStatus':
       selectField(body, 'Status', STATUS_IDS, op.statusId, (v) => (op.statusId = v));
       // §31d: magnitude/duration are `ScalarOrScaled` — the toggle widget edits both
@@ -723,6 +732,8 @@ function outlineOp(op: EffectOp, source: ScalingSource): string {
       const lvl = typeof s.level === 'number' ? `${lvlN}` : `${lvlN} (${displayScaledValue(s.level)})`;
       return `summon ${s.count}× ${s.archetype} (lvl ${lvl}, max ${s.maxLive}) @ ${op.at.kind}`;
     }
+    case 'push':
+      return `push ${op.cells} ${op.direction} from ${op.from}`;
   }
 }
 

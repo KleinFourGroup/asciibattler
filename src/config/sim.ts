@@ -67,6 +67,10 @@
  *   cell looks for a free cell. One is almost always adjacent, so a small
  *   radius keeps the shove local; with none in reach the shove does nothing
  *   rather than carry a unit across the board.
+ * - `pushSecondsPerCell` — how long a forced move (a push or a pull) holds
+ *   its victim for each cell it slides (`World.forceMove`): the slide drawn
+ *   and the stun it carries, the same for every unit. A one-cell slide holds
+ *   at least one tick.
  * - `moveFlipFraction` — the point in a one-cell move's busy window at which
  *   the unit's logical position flips from `from` to `to` and its claim on
  *   the destination is released: tick `startTick + floor(durationTicks ×
@@ -135,6 +139,7 @@ const SimSchema = z.object({
   healerFollowGapCells: z.number().int().nonnegative(),
   actingCellSearchSlack: z.number().int().nonnegative(),
   shoveSearchRadiusCells: z.number().int().positive(),
+  pushSecondsPerCell: z.number().positive(),
   moveFlipFraction: z.number().min(0).max(1),
   campWanderChancePerSecond: z.number().min(0).max(1),
   enemyPullChance: z.number().min(0).max(1),
@@ -159,6 +164,7 @@ export const SIM = {
   healerFollowGapCells: parsed.healerFollowGapCells,
   actingCellSearchSlack: parsed.actingCellSearchSlack,
   shoveSearchRadiusCells: parsed.shoveSearchRadiusCells,
+  pushSecondsPerCell: parsed.pushSecondsPerCell,
   moveFlipFraction: parsed.moveFlipFraction,
   // Derived from the per-second value (see above); at 1 it is exactly 1.
   campWanderChancePerTick: 1 - (1 - parsed.campWanderChancePerSecond) ** (1 / TICK_RATE),

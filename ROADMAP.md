@@ -59,8 +59,8 @@ The cut, signed 2026-11-16 with the adventurer's pull moved up from §160
 
 - ☑ **159a — the walk** (`none`): one victim's landing, pushed or pulled;
   ten rules each failing its test when planted out (WORKLOG 159a).
-- ☐ **159b — the held slide** (`none`): the victim held for its slide,
-  its own action ended first, the landing's entry at the end; World v40.
+- ☑ **159b — the held slide** (`none`): `World.forceMove`, the victim's
+  action ended and the unit held; 13 rules planted out; World v40 (WORKLOG 159b).
 - ☐ **159c — the op, and the shove retired** (`none`): `push` over its
   selector's victims, farthest first; a push storm holds occupancy.
 - ☐ **159d — the adventurer's pull** (`stop`, read with 159e): the pull's

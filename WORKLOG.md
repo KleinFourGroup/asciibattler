@@ -157,3 +157,51 @@ out on the grid by hand. Planted (`scratch/159/plant.ts` with
 failing its test (the tile rule fails the edge's and the chasm's, the
 pull's reversal all three pull tests); the clean tree 0 of 14 failed.
 Typecheck and lint clean on the two files.
+
+159a's hook, at `7e51cc14`: 3977 main in 272 files, 588 smoke in 60.
+
+### 159b — the held slide (2026-11-16)
+
+**Step zero.** The spawn's lockout is the precedent: World seats it
+directly (`seatAction`) and no behaviour proposes it
+(`src/sim/actions/SpawnAction.ts`). One thing new: a push seats an action
+on a unit other than the one acting, mid-tick. A victim later in the
+tick's pass would then meet its hold at offset 0 and walk its offset-0
+phase a second time, so the in-flight branch now skips an action at
+offset 0, which only a seat by another unit's effect can produce (the
+selector seats a unit's own action after that branch, and a seat between
+ticks is at offset 1 by the next).
+
+**Built.**
+
+- `World.forceMove(unit, to, cells)`: the unit on `to` at once, its own
+  action ended first (a step before its flip with `unit:moveAborted` and
+  its cooldown reset; a swap before its exchange with `unit:swapAborted`
+  and its cooldown reset; an ability cleared with its cooldown spent),
+  every claim it holds released, `unit:moved` and `unit:shoved` for the
+  slide, then the hold seated.
+- `ForcedMoveAction` (`forcedMove`): `travel` for the slide, `impact` at
+  its end, where the landing's entry runs, and a `recovery` tail when a
+  hold already on the unit outlasts the slide. A spawn's lockout or an
+  earlier push's hold is kept to whichever ends later; the second rule is
+  new beside the signed design, on the same reasoning as the spawn's.
+- `SIM.pushSecondsPerCell`, 0.15 (3 ticks a cell); its value is read at
+  159e. The registry's fourth entry; WorldSnapshot v39 → v40, its two
+  pins moved.
+
+**Checked.** `src/sim/forcedMove.test.ts`, 9 tests: §158's three probe
+cases (a step, a swap's actor, a swap's partner), the gambit's
+spring-back never landing after a push with its cooldown spent, the hold
+and the step that follows it on the slide's last tick, a spawn's lockout
+and an earlier push's hold kept, a mud landing poisoning as the slide
+ends, and a world reloaded mid-slide ending byte-identical to the
+unbroken one. The slide's ticks are worked out from the raw
+`config/sim.json`. Planted (`scratch/159/159b-plants.json`): 13 rules
+taken out or turned, each caught, among them the instant arm (nothing
+ended, nothing held), which fails 7 of the 9, the step and the swap
+jumping back as §158's probe showed; the clean tree 0 of 9 failed.
+Typecheck and lint clean.
+
+*Landing note:* the offset-0 skip has no test here, since these tests
+push between ticks. 159c's op pushes inside a caster's action, and its
+test counts the victim's `action:phase` events to pin it.

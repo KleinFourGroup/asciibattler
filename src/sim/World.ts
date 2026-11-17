@@ -63,8 +63,10 @@ import { SIM } from '../config/sim';
 import { TileGrid, type TileGridSnapshot } from './TileGrid';
 import { AbilityBehavior } from './behaviors/AbilityBehavior';
 import { CampWanderBehavior } from './behaviors/CampWanderBehavior';
-import { SpawnAction } from './actions/SpawnAction';
-import { isReservedSwapPartner, preFlipSwap } from './actions/SwapAction';
+import { SPAWN_ACTION_ID, SpawnAction } from './actions/SpawnAction';
+import { SWAP_ACTION_ID, isReservedSwapPartner, preFlipSwap } from './actions/SwapAction';
+import { MOVE_ACTION_ID } from './actions/MoveAction';
+import { FORCED_MOVE_ACTION_ID, ForcedMoveAction, forcedMovePhases } from './actions/ForcedMoveAction';
 /**
  * The statuses a tile sustains on the unit standing on it: `fire` sustains
  * `burn`, `healing` sustains `rejuvenate`. Resolved at module load, so a
@@ -89,7 +91,7 @@ import { getCamp } from '../config/camps';
  * a side's fallen power under-charged). Bump it with any change to
  * `WorldSnapshot`'s shape or to what one of its fields means.
  */
-const WORLD_SCHEMA_VERSION = 39;
+const WORLD_SCHEMA_VERSION = 40;
 
 /** The maxHp of a neutral whose def has no `hp` (indestructible), so its unit
  *  is alive and blocks pathing and line of sight. Never a damage target:
@@ -901,6 +903,13 @@ export class World {
         const aa = unit.activeAction;
         const offset = this.tickCount - aa.startTick;
 
+        // An action seated this tick by another unit's effect (a forced move,
+        // `forceMove`) emitted its offset-0 phases where it was seated; the
+        // unit is busy and walks nothing until its next boundary. A unit's own
+        // action is never seen here at offset 0, since the selector seats it
+        // after this branch.
+        if (offset === 0) continue;
+
         // A move holds its destination's claim until its flip
         // (`MoveAction.applyEffect`, at `impact`), so a held claim marks a unit
         // still on `from`. If the destination has become occupied or
@@ -1407,6 +1416,62 @@ export class World {
     this.bus.emit('unit:moved', { unitId: unit.id, from, to: dest, durationTicks });
     this.bus.emit('unit:shoved', { unitId: unit.id, from, to: dest, durationTicks });
     return true;
+  }
+
+  /**
+   * A forced move, a push or a pull: puts `unit` on `to` at once and holds it
+   * there while its glyph slides `cells` cells (`ForcedMoveAction`), at
+   * `SIM.pushSecondsPerCell` a cell. The cell changes now, not at a flip, so a
+   * victim pushed out of a cluster leaves its cell for the next one pushed
+   * into it.
+   *
+   * What the unit was doing ends first, since a flip still to come would move
+   * it again from wherever this leaves it:
+   * - a step before its flip: `unit:moveAborted`, as the in-flight abort tells
+   *   it; its cooldown reset, so it steps again from the landing;
+   * - a swap before its exchange: `unit:swapAborted`, as `removeUnit` tells
+   *   it, and its partner's reservation dropped; its cooldown reset;
+   * - an ability: cleared with nothing more fired, its cooldown spent;
+   * - a hold already on it (a spawn's lockout, an earlier push's): kept, the
+   *   new hold lasting to whichever ends later.
+   * Every claim it holds is released. The landing tile's enter effects run as
+   * the slide ends. `unit:moved` draws the slide and `unit:shoved` marks it
+   * as forced.
+   *
+   * The caller has found `to` with `pushLanding`: free, passable, unclaimed.
+   */
+  forceMove(unit: Unit, to: GridCoord, cells: number): void {
+    const slideTicks = Math.max(1, secondsToTicks(cells * SIM.pushSecondsPerCell));
+    let holdTicks = slideTicks;
+    const aa = unit.activeAction;
+    if (aa !== null) {
+      const id = aa.action.id;
+      if (id === SPAWN_ACTION_ID || id === FORCED_MOVE_ACTION_ID) {
+        holdTicks = Math.max(slideTicks, aa.finishTick - this.tickCount);
+      } else if (id === MOVE_ACTION_ID) {
+        const dest = aa.action.destinationCell?.();
+        if (dest !== undefined && claimantOf(this, dest) === unit.id) {
+          this.bus.emit('unit:moveAborted', { unitId: unit.id, from: unit.position, to: dest });
+        }
+        unit.actionCooldowns.set(id, 0);
+      } else if (id === SWAP_ACTION_ID) {
+        const swap = preFlipSwap(aa, this.tickCount);
+        if (swap !== null) {
+          const d = swap.toData();
+          this.bus.emit('unit:swapAborted', { unitA: unit.id, unitB: d.otherId, cellA: d.from, cellB: d.to });
+        }
+        unit.actionCooldowns.set(id, 0);
+      }
+      this.clearActiveAction(unit);
+    }
+    this.releaseClaimsBy(unit.id);
+
+    const from = unit.position;
+    unit.position = { ...to };
+    this.bus.emit('unit:moved', { unitId: unit.id, from, to: { ...to }, durationTicks: slideTicks });
+    this.bus.emit('unit:shoved', { unitId: unit.id, from, to: { ...to }, durationTicks: slideTicks });
+    const held = this.seatAction(unit, new ForcedMoveAction(), forcedMovePhases(slideTicks, holdTicks));
+    for (const phase of phasesBeginningAt(held.phases, 0)) this.emitActionPhase(unit, held.action, phase);
   }
 
   /**

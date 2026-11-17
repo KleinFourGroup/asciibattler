@@ -3,6 +3,7 @@ import type { World } from '../World';
 import { MOVE_ACTION_ID, MoveAction, type MoveActionData } from './MoveAction';
 import { SPAWN_ACTION_ID, SpawnAction } from './SpawnAction';
 import { SWAP_ACTION_ID, SwapAction, type SwapActionData } from './SwapAction';
+import { FORCED_MOVE_ACTION_ID, ForcedMoveAction } from './ForcedMoveAction';
 import { EffectAction, type EffectActionData } from '../effects/EffectAction';
 import { abilityDef } from '../../config/abilities';
 
@@ -25,6 +26,7 @@ const FACTORIES: Record<string, ActionFactory> = {
   [MOVE_ACTION_ID]: (data) => MoveAction.fromData(data as MoveActionData),
   [SPAWN_ACTION_ID]: () => SpawnAction.fromData(),
   [SWAP_ACTION_ID]: (data) => SwapAction.fromData(data as SwapActionData),
+  [FORCED_MOVE_ACTION_ID]: () => ForcedMoveAction.fromData(),
 };
 
 export function createAction(id: string, data: unknown, world: World): Action {
@@ -32,7 +34,7 @@ export function createAction(id: string, data: unknown, world: World): Action {
   if (factory) return factory(data, world);
   // A combat verb: re-resolve its def and rehydrate the context captured at
   // cast time. The table above is checked first, so no ability may take the
-  // id `move`, `spawn` or `swap`. `abilityDef` throws on an unknown id, so a
+  // id `move`, `spawn`, `swap` or `forcedMove`. `abilityDef` throws on an unknown id, so a
   // corrupt snapshot fails loudly.
   return EffectAction.fromData(data as EffectActionData, world, abilityDef(id));
 }

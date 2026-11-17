@@ -376,3 +376,21 @@ beside it (20), one of the target's allies (14), or another unit's claim
 A call for the stop: keep it, or let the Snag fire only when its pull
 has room to land, as the puma's pounce fires only when its landing puts
 its target in reach.
+
+### The hand-off after 159e (2026-11-16)
+
+At the hand-off trigger (565k at `9bded72f`). **Done:** 159a to 159c
+(`none`), built and checked; 159d and 159e built, ◐ at their one stop.
+**Open, the stop's calls** (put to the user at the session's end; a new
+session puts them again): the yank against a plain glide; the rate,
+0.15 s a cell; the hold's bar hidden or shown; the `shove` cue, against
+the dash's whoosh or none; the Snag's name, line and numbers; and whether
+the Snag fires only when its pull has room to land (it moves its target
+about half the time, 159e). **The flags:** a pull sets no reach (159d);
+enemy adventurers snag too (the Guarded Adventurer, the Bandit King);
+the corpus prediction's miss. **Tools no doc names:**
+`scratch/159/plant.ts` (the planting harness) with each step's plants
+JSON, `scratch/159/snag-probe.ts` (the pulls' first cells) and
+`scratch/159/journal-diff.mjs` (which journals changed beyond their
+config hash). After the stop: a `-post` for what the read finds, then
+§160's kickoff, a stop.

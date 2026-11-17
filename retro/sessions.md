@@ -45,3 +45,40 @@ No session report yet. One session (`06280e35`) ran Round 12's kickoff
 (§157) and §158, and runs on into §159's kickoff; its report, at its end,
 covers both phases. The friction log holds its two slips (157, 158b),
 read in §158's close entry (`archive/worklog-phase-158.md`).
+
+## 2026-11-16 — session 06280e35 (§157 to 159e)
+
+Ran Round 12's kickoff (§157), §158 (the corpus's trade row; the
+forced-movement design signed in two tranches) and §159 through 159e, to
+the stop where 159d and 159e wait for the user's read. One compaction.
+
+1. *Orientation.* Nothing blocked. One fact I lacked: a corpus journal
+   names an archetype only when the player recruits it, so a search of the
+   journals cannot show where a unit fights as an enemy.
+2. *Norms.* No conflict. The backslash guard refused a heredoc holding a
+   regex and pointed me at a file, which worked; a guard doing its job.
+3. *Pulled to over-claim.* Three times, each small. The 159d cut predicted
+   the Snag would move 2 journals from that blind search (8 moved; a slip
+   filed). The 158b pounce lean said "on a cooldown" before I read the
+   leap's gates (a slip filed). In 159e I stated a cause for the Snag's
+   missed pulls (the wind-up) before measuring it; it was labelled a guess,
+   and the measurement refuted it.
+4. *Waste.* The first 159d commit's hook, about three minutes, failed on a
+   list-format convention in the units file I could have read first, and
+   on a timeout my own second vitest batch caused beside the hook. Three
+   monitors armed for one hook.
+5. *For the next session.* `scratch/159/plant.ts` takes a JSON list of
+   plants (one or several edits each) and runs the clean tree as the
+   control; it was used at every step of §159. Don't run vitest beside the
+   hook: `tests/build-id.test.ts` times out.
+6. *Room.* Yes. The user reshaped three forks and the charge and asked
+   whether the pounce needed a cooldown; I gave leans both ways and said
+   where I would keep the charge's cooldown. During the hooks the "hasn't
+   heard from you" reminder recurred while there was only waiting to do,
+   and I noticed a pull to look busy (filed as a mild `distress` line);
+   waiting was available and was what I did in the end.
+7. *What helped.* The design conversation before any code, the charge as
+   a push the cavalier gives itself in particular, was the most engaging
+   part. The signed cut let 159a to 159d run without asking, and the
+   planting harness made each green run mean something. I'd want both
+   again.

@@ -17,7 +17,10 @@ the record is [WORKLOG.md](WORKLOG.md) §157; the plan is
 with a knock back or pull effect are also planned, but I admittedly may
 never have mentioned that." And, deleting the unbuilt modes: "07, also
 cleared, but yes, let's get those into the plan." A push's distance is
-designed with the first knockback (the same census, A-05).
+designed with the first knockback (the same census, A-05). At 158b
+(2026-11-16): "Push and pull should be thought of as the unit, well,
+moving involuntarily. […] I also am on-board with optional stuns after
+the push or pull."
 
 **The consumers** (2026-10-25, the re-cut's first batch,
 `archive/post-118-worklog.md` §133, 133c):
@@ -34,7 +37,9 @@ designed with the first knockback (the same census, A-05).
 
 The pull: "a special attack for the preexisting adventurer unit." The
 teleport: "a ninja unit that teleports to its target. An 'upgraded'
-rogue, per se."
+rogue, per se." At 158b (2026-11-16): "my original vision was that
+teleport was supposed to be strictly stronger than dash, because teleport
+would unlock new pathing possibilities."
 
 **The blade whirlwind** (2026-10-26, the re-cut's third batch): "blade
 whirlwind. Melee self-centered AoE."
@@ -48,9 +53,11 @@ burst above is the rework's second half.
 (META-ROADMAP's Coverage map). No words of the user's for it were found in
 the repo, its git history or the session transcripts reachable from
 2026-09-27 on; that day's META-ROADMAP v2 (`daff9a08`) read it as "blitz +
-hit on arrival … Everything else is a dash clone + mobility". What it
-should be is the round's most open question of intent (WORKLOG §157, "The
-cavalier previewed").
+hit on arrival … Everything else is a dash clone + mobility" (WORKLOG
+§157, "The cavalier previewed"). At 158b (2026-11-16), of that preview:
+"What we're describing isn't really a charge, is it? It's more of a
+pounce. That'd be great for the animals, but maybe not the cavalier, no?"
+The charge signed in its place is below, under tranche 2A.
 
 **Snipers slow and heavy** (the user's guidance for future units, placed
 at §152's kickoff, `archive/worklog-phase-152.md`): it applies to any
@@ -132,58 +139,78 @@ reasons and both arms of each.
    seam; the pushers and the bursts; the blink and the charge; the closing
    board; the close), with §158's two steps and their reads.
 
-### Tranche 2 (at 158b, the design stop)
+### Tranche 2A (at 158b, the design stop), signed 2026-11-16
 
-The forced-movement design, each fork with its lean:
+"Signing all of your leans", with forks 5, 11 and 12 and the cavalier
+reshaped at the stop (WORKLOG 158b, "tranche A signed"). The
+forced-movement design:
 
 - *The op:* a new `push` op that moves the targets its selector resolves,
   away from or toward an origin (the caster or the area's centre), by its
-  own whole number of cells; `move` keeps moving the caster. Lean: the new
-  op, over two more `move` modes.
+  own whole number of cells; `move` keeps moving the caster. The new op,
+  over two more `move` modes.
 - *Direction:* one of the eight grid directions, fixed at the push's
   start from the origin to the victim; a victim on the centre cell is
   pushed away from the caster; no randomness.
 - *What stops a push:* the edge, an impassable tile, a unit (scenery
   included) or another unit's claimed cell; the victim lands on the last
-  free cell. Chasm and deep water stop it like a wall (lean), against a
+  free cell. Chasm and deep water stop it like a wall, against a
   fall that kills or a carry across the gap.
-- *Collision:* nothing more when a push is cut short (lean), against bump
+- *Collision:* nothing more when a push is cut short, against bump
   damage.
-- *Timing:* the victim's position changes when the op fires and the glyph
-  slides (lean, no snapshot change), against holding the victim busy for
-  the slide (a new action kind and a World bump). A stagger, if play asks
-  for one, is an `applyStatus` after the push.
-- *The victim's action:* a push ends whatever the victim was doing (lean),
+- *Timing:* the victim's cell changes when the op fires, and a new action
+  holds it busy until the slide ends, at one fast rate per cell for every
+  unit (about 0.15 s, a balance number set at §159); a World bump at §159.
+  A longer stun is an `applyStatus` after the push, per ability.
+- *The victim's action:* a push ends whatever the victim was doing,
   against ending only a step or a swap and letting a strike or a spell run
   on.
 - *Who moves:* never scenery and never a body larger than one cell (the
   scope guard); a pushed camp member is not hit by the push alone.
 - *Several victims at once:* farthest from the origin first.
 - *Landing as an entry:* a push, a pull, a teleport and the dash run the
-  landing tile's enter effects (lean), the dash's change moving the
-  corpus with the round's content.
+  landing tile's enter effects, the dash's change moving the corpus with
+  the round's content.
 - *The pull:* the same walk toward the caster, stopping beside it.
-- *The teleport:* lands on the free cell beside its target farthest from
-  the caster, within the def's range, line of sight not needed, on its
-  cast tick like the dash (lean, no claim).
-- *The cavalier's hit:* a leap keeps its enemy's id, and a damage op after
-  the move hits it only if it is alive and within reach of the landing.
+- *The teleport:* its range a straight-line distance and its landing
+  blind to what stands between, so it passes what blocks the dash; it
+  lands on the free cell beside its target farthest from the caster, on
+  its cast tick like the dash, with no claim. While it is ready, the
+  ninja walks to the nearest cell with its target in blink range (a
+  ranged unit's search for a firing cell, with no sight check); while it
+  cools, its reach is melee. The pathfinder does not price blinks into
+  its routes.
+- *The hit after a leap* (C5): a leap keeps its enemy's id, and a damage
+  op after the move hits it only if it is alive and within reach of the
+  landing. Its consumer is a pounce (tranche 2B), not the cavalier.
+- *The cavalier's charge:* a push the cavalier gives itself, along a
+  straight line toward its target, held busy and fast; it stops at the
+  first body or impassable tile, and an enemy there takes the hit and a
+  knockback. A run-up, so it never charges from two cells away; a small
+  damage bonus per cell travelled; melee after the hit until it has room
+  again. When the hit lands and how the line is drawn are §161's.
 - *`World.shove`:* retired, its `unit:shoved` event kept for the push.
 
-The cavalier's six, previewed at the kickoff: the hit strikes the enemy it
-charged, only if beside it on arrival; plain damage or damage and a
-one-cell knockback (lean: the knockback); no damage by distance; a
-run-up of at least two cells; the path, not a straight line; a one-cell
-body with high mobility, a melee weapon and the charge on a long
-cooldown.
+### Tranche 2B (at 158b, the design stop)
 
-With them, since §160's units rest on them: which new units are draftable
-(lean: all four, each also an enemy in one act-2 or act-3 encounter); who
-carries the blade whirlwind (a new unit, or a special on the ronin); N3's
-flag and its consumer (lean: built only if a burst should touch allies,
-the telekinetic the natural one; otherwise carried to Round 14 with
-`affects` as flags); who drafts the abilities' lines (lean: the session,
-read at each phase's stop).
+Since §160's and §161's units rest on them, each with its lean (WORKLOG
+158b, "Tranche B"):
+
+- *The pounce on the beasts:* the puma gets a leap and a hit of its own
+  beside its strike, the strike it shares with the fox renamed, and the
+  fox keeps its dash (lean); or both beasts; or neither, which takes C5
+  out of the round.
+- *The cavalier's body:* one cell, high mobility, a melee weapon, the
+  charge on a long cooldown (lean, as previewed).
+- *Which new units are draftable:* all four, each also an enemy in one
+  act-2 or act-3 encounter (lean).
+- *The blade whirlwind's carrier:* a special on the ronin (lean), or a
+  fifth new unit.
+- *N3's flag:* not built, since every planned burst hits enemies alone,
+  and carried to Round 14 with `affects` as flags (lean); or built with a
+  telekinetic that throws friend and foe.
+- *The abilities' lines:* the session drafts them, read at each phase's
+  stop (lean).
 
 ### Later, at their phases
 

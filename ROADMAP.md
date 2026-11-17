@@ -37,9 +37,12 @@ own test; the design signed.
   `player-9-…-port-rogue-overclock-diana`, its five trades by a port plant;
   its check and planted failure, 40 of 40; the corpus found red at HEAD
   since `98176860` and re-recorded first, `0b8e7b8b` (WORKLOG 158a).
-- ◐ **158b — the forced-movement design** (`stop`): the thirteen forks
-  and the cavalier's six with both arms and leans; which new units are
-  draftable, the whirlwind's carrier, N3's flag, the abilities' lines.
+- ◐ **158b — the forced-movement design** (`stop`): tranche A signed
+  2026-11-16, the push holding its victim for the slide, the teleport
+  with its approach, the cavalier's charge a push on itself (WORKLOG
+  158b); tranche B at the stop: the beasts' pounce, the cavalier's body,
+  which new units are draftable, the whirlwind's carrier, N3's flag, the
+  abilities' lines.
 
 ## Phase 159 — forced movement, the seam
 
@@ -50,7 +53,7 @@ then the forced move's look and sound. Before any consumer, since three
 units and the adventurer's special stand on it. **Risk:** medium-high
 (claims, flips and swaps). **Predicted:** no shipped ability pushes
 until §160, so the headless steps replay the corpus unchanged; the look
-a `stop`; a World bump only if the design holds a pushed unit busy.
+and the slide's rate a `stop`; a World bump for the held slide (158b).
 **Scope guard:** no body larger than one cell is pushed (Round 19).
 
 ## Phase 160 — the pushers and the bursts
@@ -64,9 +67,10 @@ URL; the play a `stop`.
 
 ## Phase 161 — the blink and the charge
 
-The teleport, the cavalier's hit after its move, the dash's trail and
-the blink on `unit:dashed`, then the ninja and the cavalier. It stands on
-none of §160. **Risk:** medium. **Reads, foreseen:** the headless steps
+The teleport and the ninja's approach with it ready, the hit after a leap
+for its pounce, the cavalier's charge on §159's push, the dash's trail
+and the blink on `unit:dashed`, then the ninja and the cavalier (as
+reshaped at 158b). It stands on none of §160. **Risk:** medium. **Reads, foreseen:** the headless steps
 `none`; the trail and blink a `stop`; the play a `stop`.
 
 ## Phase 162 — the closing board

@@ -1111,9 +1111,10 @@ with their consumers.
   toward the caster, and a teleport landing beside its target (the dash's
   move with another rule for the landing); `World.shove`, called by its
   own test alone, used or retired.
-- **The cavalier's hit after its move** (C5): `proposeSelfMove` gives the
-  move `targetId: -1`, so a damage op after it needs its target resolved
-  again.
+- **The hit after a leap** (C5): `proposeSelfMove` gives the move
+  `targetId: -1`, so a damage op after it needs its target resolved
+  again. Its consumer is a pounce, the beasts' if 158b's tranche B signs
+  it; the cavalier's charge is a push on itself instead (signed at 158b).
 - **A caster-anchored area that leaves out its caster** (N3): a flag for
   `allies` and `all`, since `enemies` leaves the caster out already.
 - **The dash's visual:** a trail or blink-flash on `unit:dashed`, which
@@ -1127,8 +1128,8 @@ with their consumers.
 core). **Decision points:** the design stop; which new units are
 draftable. **Exit:** each seam with a headless test and its planted
 failure; the consumers in play; the board. **Release:** seven units and
-abilities. **Save:** a World bump if a push captures a cell at cast
-(inferred). **Scope guards:** no 2×2 body is pushed until round 19.
+abilities. **Save:** a World bump, the push holding its victim for the
+slide (signed at 158b). **Scope guards:** no 2×2 body is pushed until round 19.
 
 ---
 

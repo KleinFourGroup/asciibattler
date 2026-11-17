@@ -363,3 +363,111 @@ and the actor's swap, whatever the call on strikes and spells.
 B, after A's sign and before §160's kickoff: the cavalier's six and the
 four calls (the draftable newcomers, the whirlwind's carrier, N3's flag,
 the abilities' lines).
+
+### 158b — tranche A signed, three forks reshaped (2026-11-16)
+
+The user signed forks 1 to 4, 6 to 10 and 13 as leaned ("The others look
+good!") and took three back to the design:
+
+> For the push and pull timing, my lean is B. Push and pull should be
+> thought of as the unit, well, moving involuntarily. […] I also am
+> on-board with optional stuns after the push or pull.
+
+> my original vision was that teleport was supposed to be strictly
+> stronger than dash, because teleport would unlock new pathing
+> possibilities. […] Oh, but that's a complete pathing overhaul, isn't it?
+
+> What we're describing isn't really a charge, is it? It's more of a
+> pounce. That'd be great for the animals, but maybe not the cavalier, no?
+
+The session answered each with a lean. **Signed** ("YES! 😁 Okay, I love
+that charge idea. Signing all of your leans, Claude!"):
+
+- *Fork 5, the timing: the victim held for the slide.* Its cell changes
+  when the push fires, since an outer victim must leave its cell before an
+  inner one is pushed into it (fork 8), and a new action holds it busy
+  until the slide ends; fork 6 ends what it was doing first. The hold is a
+  stun, so the slide's speed is a balance number: one fast rate per cell
+  for every unit (about 0.15 s, a two-cell push holding its victim 0.3 s),
+  set at §159 with the look, not the victim's own step time (1.4 s for a
+  mobility-4 unit pushed two cells, and longer the slower the unit). A
+  longer stun is an `applyStatus` after the push, chosen per ability. The
+  new action is serialized: a World bump at §159 (v39 → v40; no player
+  save holds a World).
+- *Fork 11, the teleport: the blink and its approach, not a new
+  pathfinder.* The blink's range is a straight-line distance and its
+  landing ignores what stands between (walls, chasms, bodies), so a target
+  in range is reached whatever blocks the path: strictly stronger than the
+  dash, which walks the path and stops at the first body. The landing as
+  leaned: the free cell beside the target farthest from the caster, on the
+  cast tick, no claim. While the blink is ready, the ninja walks to the
+  nearest cell with its target in blink range, the search a ranged unit
+  makes for a firing cell (`nearestActingCell`, `actingPosition.ts`) with
+  the blink's range and no sight check; while it cools, its reach is
+  melee. New beside the search is a reach that changes with a cooldown:
+  `derived.attackRange` is fixed per archetype, and `engagementReach`
+  gives a `self` def none. Not built: the pathfinder pricing blinks into
+  its routes (waiting at a wall for the cooldown, chained blinks), which
+  would touch every unit's routing for an effect the two layers mostly
+  give at a range of 5 or 6 on a long cooldown.
+- *The cavalier's charge: a push the cavalier gives itself.* 157's preview
+  (a leap along the path, a hit on arrival) is a pounce, as the user read
+  it. The charge rushes along a straight line drawn toward its target's
+  cell, held busy and fast by §159's action, and stops at the first body
+  or impassable tile; an enemy there takes the hit and a knockback, and an
+  ally, a wall or a tile ends the charge without one. It needs a run-up,
+  so it never charges from two cells away; a small bonus per cell
+  travelled makes a long run-up worth taking (157's lean against damage by
+  distance rested on its World bump, which fork 5 now brings anyway).
+  After the hit it fights in melee until it has room to charge again, the
+  knockback reopening the gap; a wheel-away after each charge is a later
+  dial, if play wants one. This supersedes four of 157's six: the first
+  body on the line, not the enemy charged; a straight line, not the path;
+  damage by distance; the run-up's length, set at §161. The knockback
+  stands; the body goes to tranche B.
+- *Fork 12, the hit after a leap* (C5), as leaned. Its consumer is now a
+  pounce, the beasts' if tranche B signs it, not the cavalier.
+
+*Carried to §161's kickoff:* when the charge's hit lands. The cavalier's
+cell changes as the charge fires and its glyph arrives a slide later
+(about 0.75 s for five cells at the push's rate, time for its victim to
+step away); the lean is fork 12's rule, the hit at the end and only if
+the body is still beside it. With it, the line on a grid (any drawn line,
+or the eight directions alone) and whether it passes diagonally between
+two blocked cells.
+
+**Tranche B, put to the user**, since §160's and §161's units rest on it:
+
+1. *The pounce on the beasts.* The puma's and the fox's `pounce` is their
+   basic strike (range 1, 1.5 s) with no leap. Lean: the puma gets a
+   pounce of its own, a leap and a hit on a cooldown beside its strike,
+   the shared strike takes a new name, and the fox keeps its dash. The
+   puma's line ("Waits in the undergrowth for something to pass.") is the
+   ambush; the fox's ("gone before the swing lands") is the evasion its
+   dash already carries. The puma fights in the Periphery's Cats! elite
+   and the Divine Bear's second stage and guards a camp, so act 1's fights
+   move, read at §162 against 155g's sheet. The other arms: both beasts
+   (the fox's dash gains the hit), or neither this round, which leaves C5
+   without a consumer and so out of the round.
+2. *The cavalier's body*, the last of 157's six: one cell, high mobility,
+   a melee weapon, the charge on a long cooldown (the dash's 10 s to
+   start), its numbers at §161. Lean: as previewed.
+3. *Which new units are draftable.* Lean: all four (the grenadier, the
+   telekinetic, the ninja, the cavalier), each also an enemy in one act-2
+   or act-3 encounter; each needs a prior-table row, a thin row's
+   `--grant` arm about 3.7 CPU-hours at §162. The other arm: enemies only.
+4. *The whirlwind's carrier.* Lean: a special on the ronin, which carries
+   the katana alone; a spinning blade fits its sword, and it registers no
+   new archetype (glyph, prices, two fuzz-strategy records, a prior-table
+   row). The other arm: a fifth new unit, which is where the user's line
+   sat (among unit ideas).
+5. *N3's flag.* Every burst the round plans hits enemies (the banshee's,
+   the telekinetic's, the whirlwind), and `affects: 'enemies'` already
+   leaves the caster out (the banshee's `wail` is `enemies` today), so the
+   flag has a consumer only if a burst should also move or hit allies.
+   Lean: none should, since an unaimed burst that throws the player's own
+   melee off its target reads as a bug; the flag is not built and goes to
+   Round 14 with `affects` as flags. The other arm: the telekinetic throws
+   everything around it, friend and foe, and the flag ships with it.
+6. *The abilities' lines.* Lean: the session drafts each `description`,
+   read at each phase's stop; the units' lines stay the user's (151f).

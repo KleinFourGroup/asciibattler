@@ -40,9 +40,9 @@ own test; the design signed.
 - ◐ **158b — the forced-movement design** (`stop`): tranche A signed
   2026-11-16, the push holding its victim for the slide, the teleport
   with its approach, the cavalier's charge a push on itself (WORKLOG
-  158b); tranche B at the stop: the beasts' pounce, the cavalier's body,
-  which new units are draftable, the whirlwind's carrier, N3's flag, the
-  abilities' lines.
+  158b); tranche B signed the same day but the beasts' pounce, reopened
+  by the user and re-put (all four newcomers draftable, the whirlwind on
+  the ronin, N3's flag carried to Round 14).
 
 ## Phase 159 — forced movement, the seam
 
@@ -59,8 +59,8 @@ and the slide's rate a `stop`; a World bump for the held slide (158b).
 ## Phase 160 — the pushers and the bursts
 
 The grenadier, the telekinetic, the adventurer's pull, the banshee's
-self-centred burst and the blade whirlwind, with N3's flag if signed,
-each in the live acts' pools. Right after §159, so the push's distance
+self-centred burst and the ronin's blade whirlwind, each in the live
+acts' pools; N3's flag carried to Round 14 (158b). Right after §159, so the push's distance
 and feel are judged on units in play. **Risk:** medium. **Reads,
 foreseen:** the glyphs a `stop` at its start; each unit `batch` with its
 URL; the play a `stop`.

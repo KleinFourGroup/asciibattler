@@ -471,3 +471,40 @@ two blocked cells.
    everything around it, friend and foe, and the flag ships with it.
 6. *The abilities' lines.* Lean: the session drafts each `description`,
    read at each phase's stop; the units' lines stay the user's (151f).
+
+### 158b — tranche B signed but the pounce (2026-11-16)
+
+**Signed** ("Signing all leans except for 1"): calls 2 to 6 as leaned.
+The cavalier's body as previewed; all four new units draftable, each also
+an enemy in one act-2 or act-3 encounter; the blade whirlwind a special
+on the ronin; N3's flag not built, carried to Round 14's `affects` as
+flags; the session drafts the abilities' lines.
+
+**Call 1 reopened.** The user: "the leap doesn't actually need a
+cooldown, right? It just needs a min range. Once it fires, it won't fire
+again until a more distant target is chosen, right?" Read against the
+code:
+
+- *Today's leap has no upper gate.* `proposeSelfMove` abstains only when
+  the target is within strike reach (`propose.ts:144`); otherwise
+  `leapLanding` walks up to `rangeCells` along the route and lands before
+  the first body (`movement.ts:241-263`), whatever the distance. The
+  dash's 10 s hides this. With no cooldown, a target beyond the leap's
+  range would draw a chain of leaps, and so would a route a body cuts
+  short: the leap would be the puma's walk at a quarter-second a hop.
+- *With a gate it holds.* A pounce that proposes only when its landing
+  puts the target within strike reach, and only from at least its
+  `minRangeCells` (read by the leap for the first time, as the charge's
+  run-up needs), lands beside its target and then strikes. It fires again
+  when the gap reopens: a new target farther off (the target dead, or a
+  `nearest` switch, which takes a rival only when it is 1.5 times closer,
+  `SIM.retargetCloserRatio`), or the same one moving away (a unit kiting,
+  a push on either). A floor of 3 keeps the rogue's gambit, a one-cell
+  spring-back after its strike, from setting it off each swing.
+- *No cooldown in effect.* The schema wants a positive `cooldownSeconds`
+  (`schema.ts:383`), floored at a tick (`timeline.ts:40`), so the pounce's
+  is its own length.
+
+Revised lean put: the puma alone, its pounce gated as above with no
+cooldown in effect, the strike it shares with the fox renamed, the fox
+keeping its dash.

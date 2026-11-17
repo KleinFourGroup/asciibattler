@@ -191,26 +191,27 @@ forced-movement design:
   again. When the hit lands and how the line is drawn are §161's.
 - *`World.shove`:* retired, its `unit:shoved` event kept for the push.
 
-### Tranche 2B (at 158b, the design stop)
+### Tranche 2B (at 158b, the design stop), signed 2026-11-16 but the pounce
 
-Since §160's and §161's units rest on them, each with its lean (WORKLOG
-158b, "Tranche B"):
+"Signing all leans except for 1" (WORKLOG 158b, "Tranche B" and
+"tranche B signed but the pounce"):
 
-- *The pounce on the beasts:* the puma gets a leap and a hit of its own
-  beside its strike, the strike it shares with the fox renamed, and the
-  fox keeps its dash (lean); or both beasts; or neither, which takes C5
-  out of the round.
 - *The cavalier's body:* one cell, high mobility, a melee weapon, the
-  charge on a long cooldown (lean, as previewed).
+  charge on a long cooldown.
 - *Which new units are draftable:* all four, each also an enemy in one
-  act-2 or act-3 encounter (lean).
-- *The blade whirlwind's carrier:* a special on the ronin (lean), or a
-  fifth new unit.
-- *N3's flag:* not built, since every planned burst hits enemies alone,
-  and carried to Round 14 with `affects` as flags (lean); or built with a
-  telekinetic that throws friend and foe.
+  act-2 or act-3 encounter.
+- *The blade whirlwind's carrier:* a special on the ronin.
+- *N3's flag:* not built, since every planned burst hits enemies alone;
+  carried to Round 14's `affects` as flags.
 - *The abilities' lines:* the session drafts them, read at each phase's
-  stop (lean).
+  stop.
+
+Open, reopened by the user: *the pounce on the beasts.* Revised lean: the
+puma alone, a leap and a hit beside its strike, proposed only from at
+least its minimum range and only when the landing puts its target within
+reach, with no cooldown in effect; the strike it shares with the fox
+renamed; the fox keeps its dash. The other arms: both beasts, or neither,
+which takes C5 out of the round.
 
 ### Later, at their phases
 

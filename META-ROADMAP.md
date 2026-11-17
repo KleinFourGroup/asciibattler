@@ -1117,12 +1117,15 @@ with their consumers.
   it; the cavalier's charge is a push on itself instead (signed at 158b).
 - **A caster-anchored area that leaves out its caster** (N3): a flag for
   `allies` and `all`, since `enemies` leaves the caster out already.
+  Carried to Round 14's `affects` as flags at 158b, since every burst
+  this round plans hits enemies alone.
 - **The dash's visual:** a trail or blink-flash on `unit:dashed`, which
   the teleport's blink shares.
 - **Consumers,** each in the live acts' pools: the grenadier (N1), the
   telekinetic (N2), the adventurer's pull special (N4), the ninja (N5),
-  the blade whirlwind (N27), the banshee's self-centred burst (N3), a
-  cavalier (A18).
+  the blade whirlwind (N27, a special on the ronin), the banshee's
+  self-centred burst (N3), a cavalier (A18). The four new units are
+  draftable (signed at 158b).
 
 **Depends on:** round 11's roster. **Risk:** medium-high (the occupancy
 core). **Decision points:** the design stop; which new units are
@@ -1202,7 +1205,8 @@ healer that use them.
 - **`affects` as flags** (C3, N6): allies, neutrals and hostiles, where
   today it is one of `enemies`, `allies` and `all`, by team alone; a
   neutral is a camp member whose camp is not hostile to the caster's
-  team; through every reader and the editors.
+  team; through every reader and the editors. With it, Round 12's N3: a
+  caster-anchored area that leaves out its caster.
 - **Totems** (N23): scenery carrying an ability, placed in the layout
   editor, immobile, destructible, not counted toward a battle's end, its
   side set where it is placed; first, whether a unit's own target scan

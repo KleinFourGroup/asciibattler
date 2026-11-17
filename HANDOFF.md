@@ -6,7 +6,7 @@ A fresh-session orientation for ASCIIbattler. Read this first; then dive into th
 
 **The ONE home for live status.** Other docs (and the agent memory) point here instead of restating it; when state changes, this section is the single place that updates.
 
-- **NEXT — ROUND 12 (Push, pull and blink): 158b, the forced-movement design** (`stop`): tranche A signed 2026-11-16 (the push holds its victim for the slide, the teleport with its approach, the cavalier's charge a push on itself); tranche B put to the user: the beasts' pounce, the cavalier's body, which new units are draftable, the whirlwind's carrier, N3's flag, the abilities' lines ([ROADMAP.md](ROADMAP.md) §158; WORKLOG 158b). After its sign, §159's kickoff, a stop. **Open ◐:** 158b, at its stop.
+- **NEXT — ROUND 12 (Push, pull and blink): 158b, the forced-movement design** (`stop`): tranche A signed 2026-11-16 (the push holds its victim for the slide, the teleport with its approach, the cavalier's charge a push on itself); tranche B signed the same day but its first call, the beasts' pounce, reopened by the user (no cooldown, a minimum range) and re-put with a revised lean ([ROADMAP.md](ROADMAP.md) §158; WORKLOG 158b). After its sign, §159's kickoff, a stop. **Open ◐:** 158b, at its stop.
 - **In flight:** nothing.
 - **The public build:** `0.4.0` (`4fc62cfe`, tag `v0.4.0`), uploaded to itch.io on 2026-11-13; the uploads before it are in Closed rounds below.
 - **Snapshots:** WorldSnapshot **v39** (no player keeps one) · RunSnapshot **v51** (a v50 save, `0.3.0`'s, rejects).

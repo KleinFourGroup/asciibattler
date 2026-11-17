@@ -129,3 +129,31 @@ idea nearer the officer's `O`; `n` and `e`, plain letters from the name,
 near the healer's `h` and the catapult's `c`. **The telekinetic:** `k`,
 for kinetic (the lean); `K`, nearer the halberdier's `H`; `t`, rejected
 in the lean as the tiger's eared `t` without its ears.
+
+### 160a — the soldiery's radical, drawn (2026-11-17)
+
+**Signed:** `k` for the telekinetic ("I love k for the telekinetic!").
+The grenadier's `ð` was turned down as decidedly not ASCII; the user
+asked for `g` or `G` with a new radical beside the ears, one that more
+units could wear. A hat over the letter was liked and then set aside for
+a mark flanking the sides, as the ears do, so any letter in either case
+can wear it ("the hat directly above would force us to lowercase only
+for all soldiery"). The session's lean, epaulettes at the top corners:
+the corner slot then says what kind of unit it is (ears a beast,
+epaulettes a soldier), and the two never stack.
+
+**Drawn** in `scratch/160a/` (ignored by git): `radicals/*.svg`, a
+`glyphs.json` of trial rows at U+E020 to U+E025, and `build.ts`, which
+composes `trial.otf` with the production builder
+(`tools/font/glyphFace.ts`); `trial-c.otf` is the copy the sampler
+loads. A first pass at a 165-wide, 170-tall board read as quote marks and
+dashes at 150 px, much weaker than the ears (180 by 280), so both were
+redrawn at the ears' size. The candidates: a flat board with three
+strands of fringe (U+E020 `g`, U+E022 `G`), the classic rounded pad with
+the same fringe (U+E024, U+E025), and a plain board sloping down and out
+(U+E021, U+E023). At 120 px in the pane the sloping board reads as an
+acute and a grave accent, rejected in the lean; the flat board reads a
+little like a comb. The URL:
+`?bp=board-open15_pose-sampler&glyphFace=/scratch/160a/trial-c.otf&glyphs=g,U+E020,U+E024,U+E021,U+E000;G,U+E022,U+E025,U+E023,U+E001`.
+The board-size read is the user's: the pane's board was too small to
+judge.

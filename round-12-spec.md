@@ -216,7 +216,10 @@ forced-movement design:
 
 ### Later, at their phases
 
-- *§159:* the slide's rate per cell, the forced move's look and sound.
+- *§159:* signed 2026-11-17 (`archive/worklog-phase-159.md`, "The read
+  of 159d and 159e"): 0.15 s a cell; the slide a yank, no bar over the
+  held unit, the `shove` cue; the Snag's name, line and numbers, and a
+  pull firing only when its first cell is free.
 - *§160 and §161:* each unit's glyph, numbers, rarity and price, and its
   encounter; the dash's trail and the teleport's blink; the pounce's
   floor; when the charge's hit lands and how its line is drawn.

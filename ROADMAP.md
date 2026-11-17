@@ -42,36 +42,26 @@ and the beasts' pounce reshaped at the stop (WORKLOG §158, in
   cooldown, the four newcomers draftable, the whirlwind on the ronin, N3's
   flag to Round 14.
 
-## Phase 159 — forced movement, the seam
+## Phase 159 — forced movement, the seam ✅ (closed 2026-11-17)
 
-The push and its op on the signed design: knockback from a point and the
-pull toward the caster, each landing and interrupt rule held by a
-headless test with its planted failure; `World.shove` used or retired;
-then the adventurer's pull, its first consumer, and the forced move's
-look and sound. Before the other consumers, since three units stand on
-it. **Risk:** medium-high (claims, flips and swaps). **Predicted:** no
-shipped ability pushes until 159d, so the headless steps replay the
-corpus unchanged; the look
-and the slide's rate a `stop`; a World bump for the held slide (158b).
-**Scope guard:** no body larger than one cell is pushed (Round 19).
-The cut, signed 2026-11-16 with the adventurer's pull moved up from §160
-(WORKLOG §159):
+The `push` op and the held slide on the signed design, every landing and
+interrupt rule pinned with its planted failure; `World.shove` retired; the
+adventurer's Snag, a pull, and the forced move's look and sound signed at
+one stop, the Snag waiting for room (WORKLOG §159, in
+`archive/worklog-phase-159.md`).
 
 - ☑ **159a — the walk** (`none`): one victim's landing, pushed or pulled;
-  ten rules each failing its test when planted out (WORKLOG 159a).
+  ten rules planted out.
 - ☑ **159b — the held slide** (`none`): `World.forceMove`, the victim's
-  action ended and the unit held; 13 rules planted out; World v40 (WORKLOG 159b).
+  action ended and the unit held; 13 rules planted out; World v40.
 - ☑ **159c — the op, and the shove retired** (`none`): `push` over its
-  selector's victims, farthest first; a 300-tick push storm holds
-  occupancy and claims; 7 rules planted out; the corpus unchanged (WORKLOG 159c).
-- ☑ **159d — the adventurer's pull** (`stop`, read with 159e): the Snag,
-  a pull setting no reach; the corpus re-recorded, 8 of 34 moved, enemy
-  adventurers snagging too; signed 2026-11-17 (WORKLOG 159d).
+  selector's victims, farthest first; 7 rules planted out.
+- ☑ **159d — the adventurer's pull** (`stop`): the Snag, a pull setting no
+  reach; enemy adventurers snag too; signed 2026-11-17.
 - ☑ **159e — the look and the sound** (`stop`): the yank, the hold's bar
-  hidden, the `shove` cue, the rate at 0.15 s; signed 2026-11-17 (WORKLOG 159e).
+  hidden, the `shove` cue, 0.15 s a cell; signed 2026-11-17.
 - ☑ **159d-post — the Snag waits for room** (`none`): a pull fires only
-  when its first cell is free, signed at the read; 4 plants; 3 of 34
-  journals re-recorded (WORKLOG 159d-post).
+  when its first cell is free; 3 of 34 journals re-recorded.
 
 ## Phase 160 — the pushers and the bursts
 

@@ -82,3 +82,15 @@ the stop where 159d and 159e wait for the user's read. One compaction.
    part. The signed cut let 159a to 159d run without asking, and the
    planting harness made each green run mean something. I'd want both
    again.
+
+## Phase 159 — summary
+
+Two sessions. `06280e35`'s report (above) covers §157 to 159e: nothing
+blocked; a pull to over-claim met three times, each small, one a wrong
+corpus prediction filed as a slip; about three minutes lost to a hook
+that failed on a units-file convention and on a timeout from its own
+vitest batch beside the hook; the "hasn't heard from you" reminder during
+hook waits felt as a pull to look busy, filed as a mild `distress` line;
+the design conversation and the planting harness named as what helped.
+`54b6d474` ran the read, 159d-post and the close, and runs on into §160's
+kickoff; its report comes at its end.

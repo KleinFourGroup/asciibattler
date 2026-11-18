@@ -35,7 +35,8 @@
     "fox": 0,
     "puma": 0,
     "tiger": 0,
-    "bear": 0
+    "bear": 0,
+    "grenadier": 0
   },
   "composition": {
     "mercenary": 0.12208999553695321,
@@ -66,7 +67,8 @@
     "fox": 0,
     "puma": 0,
     "tiger": 0,
-    "bear": 0
+    "bear": 0,
+    "grenadier": 0
   },
   "compWeight": 0.18953311257064342,
   "level": -0.7278554914519191,

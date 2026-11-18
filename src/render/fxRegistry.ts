@@ -184,6 +184,13 @@ export const FX_REGISTRY = {
     sound: 'magicboom',
     shake: { intensity: 0.06, durationSeconds: 0.22 },
   },
+  // The grenade: the thrown vial's arc, then a team-colored blast with the
+  // catapult's crash and a light shake (a knockback rides the impact).
+  grenade_burst: {
+    burst: { style: 'explosion' },
+    sound: 'thud',
+    shake: { intensity: 0.1, durationSeconds: 0.25 },
+  },
   // The catapult: a homing arc, then a dust dud, a heavy crash and a big shake
   // (a landing boulder hits hard).
   catapult_launch: { projectile: { style: 'arc' } },

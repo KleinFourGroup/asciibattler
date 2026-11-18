@@ -16,7 +16,8 @@
       "rioter": 28,
       "gunslinger": 25,
       "halberdier": 28,
-      "officer": 32
+      "officer": 32,
+      "grenadier": 28
     },
     "levelGrowth": 1.05,
     "jitter": 0.15,

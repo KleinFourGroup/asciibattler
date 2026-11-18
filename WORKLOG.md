@@ -230,3 +230,63 @@ through the first fight: 17 explosions, every ring 1.1, so the bolt
 reaches the new path unchanged. No caster-anchored blast ships yet; its
 first draw is 160d's. No sim touch: the smoke silent, the corpus
 unchanged by construction.
+
+### 160c — the grenadier (2026-11-18)
+
+**Step zero.** The rioter's Molotov is the shipped thrown blast (range 4,
+floor 2, radius 1 on the target's cell, the vial's arc), so the grenade
+is its sibling: `ranged` scaling, a heavier, slower throw (snipers slow
+and heavy: the bow is might 4 every 2.5 s; damage is might plus the
+scaling stat) and a knockback from the blast's centre. A new draftable
+trips more than the beasts' four registrations: every weight vector,
+the default and the five fixtures (gotcha #124, appended at weight 0);
+the prior table's and the roster table's coverage (a PENDING each); the
+units file's field order (the formatter writes `rarity` before
+`retargetOnLosLoss`); the ability card's count of abilities with a floor
+(11 to 12, the grenade's 2); and the seeded run the two resume tests
+need to complete, since the draft pool grew.
+
+**Built.**
+
+- `grenadier` (`config/units.json`, after the officer): `g` with the
+  epaulettes (U+E020), uncommon, the archer's stat line and growth,
+  `retargetOnLosLoss` as the archer; base price 28.
+- `grenade` (`config/abilities.json`, after the snag): range 4, floor 2,
+  a radius-1 square on the target's cell, the ring at half damage; a
+  0.3 s wind-up, the vial's throw over 0.5 s; at impact might 5,
+  `ranged`, not evadable, and a push of 1 away from the centre; a 3.5 s
+  recharge. Its line: "Lobs a charge that blasts foes a step back." In
+  the registry's list of forced movers. `grenade_burst`
+  (`fxRegistry.ts`): the explosion with the catapult's `thud` and a light
+  shake.
+- An enemy among the Artillery Company's skirmishers (weight 1 beside
+  the bandits' 3 and the mercenary's 1); acts 2 and 3 both field it.
+- The joins: `"grenadier": 0` appended to both records of the default
+  and the five fixture vectors; PENDING rows in the prior-table and
+  roster-table coverage tests, each cleared by §162's rebuild; the card
+  test's floor count 12; the resume tests' completing seed 36 to 19, the
+  smallest of the eight of 80 that now complete (19, 34, 41, 53, 67, 72,
+  76, 79; `scratch/160/seed-complete.ts`). The en extract regenerated.
+- DESIGN: the officer's `O` with the epaulettes (missed at 160a), the
+  newcomers' line, the Grenade among the carriers.
+
+**Checked.** `src/sim/grenadier.test.ts`, 3 tests from the raw config:
+it carries the grenade and is drafted uncommon; its reach and floor are
+the grenade's; and a grenade at a foe four cells off, with foes on the
+three ring cells beyond it and one due north, knocks each ring foe a
+cell out along its own line from the centre and the centre's foe away
+from the thrower into the cell the east foe left. Planted
+(`scratch/160/160c-plants.json`): 5 plants (no push; the push from the
+thrower; the inner ring moved first; not drafted; no reach), each
+caught, the clean file green. **The corpus:** predicted most of the 34
+would move; the replay diverged on 15, and `--record` moved 9 beyond
+their config hash; the re-recorded corpus replays 0 of 34 differing, 21
+of 21 command kinds change a run, 48 event names. In the pane, on
+`?seed=5&character=soldier&roster=mercenary:3,mercenary:3,grenadier:3,grenadier:3`
+driven through the first fight: 23 grenades, 24 explosions drawn, 26
+foes shoved, the grenadiers on U+E020.
+
+**Read** (`batch`, at 160g's stop): that URL. What changed: two
+grenadiers behind two mercenaries. Wrong looks like a grenade that moves
+no one, a blast that flings foes through walls, or a grenadier that
+walks into melee.

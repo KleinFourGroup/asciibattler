@@ -682,6 +682,35 @@
       "mobility": 0.26
     }
   },
+  "grenadier": {
+    "name": "Grenadier",
+    "glyph": "",
+    "abilities": ["grenade"],
+    "targeting": "nearest",
+    "rarity": "uncommon",
+    "retargetOnLosLoss": true,
+    "baseStats": {
+      "constitution": 18,
+      "strength": 0,
+      "ranged": 3,
+      "magic": 0,
+      "luck": 3,
+      "defense": 1,
+      "speed": 5,
+      "mobility": 2,
+      "power": 1
+    },
+    "growthRates": {
+      "constitution": 0.75,
+      "strength": 0,
+      "ranged": 0.24,
+      "magic": 0,
+      "luck": 0.3,
+      "defense": 0.05,
+      "speed": 0.3,
+      "mobility": 0.2
+    }
+  },
   "wolf": {
     "name": "Wolf",
     "description": "Hunts in packs, and is never alone for long.",

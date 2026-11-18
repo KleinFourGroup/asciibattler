@@ -210,10 +210,10 @@ describe("the card's reach is the band the sim fires in", () => {
       if (min > 0) floored++;
       if (shown !== expected) wrong.push(`${id}: shows ${shown}, the sim fires at ${expected}`);
     }
-    // Eleven shipped abilities have a floor (the bow, the catapult's four,
-    // the casters', the adventurer's snag); none checked would make the pass
-    // vacuous.
-    expect(floored).toBe(11);
+    // Twelve shipped abilities have a floor (the bow, the catapult's four,
+    // the casters', the adventurer's snag, the grenadier's grenade); none
+    // checked would make the pass vacuous.
+    expect(floored).toBe(12);
     expect(wrong).toEqual([]);
   });
 

@@ -200,3 +200,33 @@ glyph. What carries the claim instead: a search of `src/sim`, `run`,
 snapshot and restore), no branch; the same search over `src/render`
 finds its reads, the control. The officer's swap moves nothing but what
 is drawn.
+
+### 160b — the burst drawn on its caster (2026-11-18)
+
+**Step zero.** The audit's gap holds: `spawnBurstFx`'s explosion
+returned without a surfaced cell, and a caster-anchored action surfaces
+none. `onActionPhase` already reads the ability's def, so the renderer
+can tell an aimed blast from one on its caster without the sim saying
+more. Every shipped explosion (the bolt, the vial, the molotov, the ice
+storm, the hex, the wail) is aimed, radius 1, so a ring sized by radius
+leaves them all as they were. No `BattleRenderer` test exists (it needs
+WebGL), so the decision moved into a pure function for the pin.
+
+**Built.** `src/render/burstPlacement.ts`: `explosionPlacement(selector,
+targetCell, casterCell)`, the surfaced cell for an aimed blast and the
+caster's live cell for one on its caster, the ring 1.1 world units a
+cell of radius. `BattleRenderer` passes the def's selector to
+`spawnBurstFx`, which draws what it returns; `EXPLOSION_RING_SPREAD`
+moved to the new module. ARCHITECTURE's render tree.
+
+**Checked.** `burstPlacement.test.ts`, 3 tests: every shipped explosion,
+read from the raw config, drawn on its cell with the ring at 1.1, its
+value before; a burst on its caster drawn on the caster's cell, at 2.2
+for radius 2; nothing drawn with no cell. Planted
+(`scratch/160/160b-plants.json`, run by `scratch/159/plant.ts`): 4
+plants, each caught, the clean file green. Typecheck clean. In the pane,
+on `?seed=5&character=soldier&roster=mage:3,mage:3,mage:3` driven
+through the first fight: 17 explosions, every ring 1.1, so the bolt
+reaches the new path unchanged. No caster-anchored blast ships yet; its
+first draw is 160d's. No sim touch: the smoke silent, the corpus
+unchanged by construction.

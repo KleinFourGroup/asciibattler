@@ -2,6 +2,8 @@ import * as THREE from 'three';
 import type { EventBus } from '../core/EventBus';
 import type { GameEvents } from '../core/events';
 import type { GridCoord } from '../core/types';
+import { explosionPlacement } from './burstPlacement';
+import type { AbilityDef } from '../sim/effects/schema';
 import type { World } from '../sim/World';
 import type { ObjectiveTarget } from '../sim/objective';
 import { isInertNeutral, type Unit } from '../sim/Unit';
@@ -1328,7 +1330,8 @@ export class BattleRenderer {
     targetId,
     targetCell,
   }: GameEvents['action:phase']): void => {
-    const key = ABILITY_DEFS[actionId]?.fx?.[phase];
+    const def = ABILITY_DEFS[actionId];
+    const key = def?.fx?.[phase];
     if (!key) return;
     // The motion gate rides the resolver: under reduced motion the shake, the
     // burst and the sparkle come back absent (REDUCED_MOTION_STRIPS).
@@ -1338,7 +1341,7 @@ export class BattleRenderer {
     // One key: the sound plays with the visual.
     if (fx.sound) this.audio.play(fx.sound);
     if (fx.projectile) this.launchProjectileFx(fx.projectile, unitId, targetId, targetCell);
-    if (fx.burst) this.spawnBurstFx(fx.burst, unitId, targetId, targetCell);
+    if (fx.burst) this.spawnBurstFx(fx.burst, unitId, targetId, targetCell, def?.target);
     // The Renderer owns the camera and the render loop, so the driver only
     // kicks the shake; the registry authors its size.
     if (fx.shake) this.renderer.shakeCamera(fx.shake.intensity, fx.shake.durationSeconds);
@@ -1507,13 +1510,17 @@ export class BattleRenderer {
     casterId: number,
     targetId: number | undefined,
     targetCell: GridCoord | undefined,
+    selector: AbilityDef['target'] | undefined,
   ): void {
     if (!this.world) return;
     if (spec.style === 'explosion') {
-      if (!targetCell) return;
+      // An aimed blast on its surfaced cell; one anchored on its caster on the
+      // caster's live cell, its ring as wide as its radius (`burstPlacement.ts`).
       const caster = this.world.findUnit(casterId);
+      const placed = explosionPlacement(selector, targetCell, caster?.position);
+      if (!placed) return;
       const color = caster ? colorForTeam(caster.team) : COLORS.TERMINAL_STONE;
-      this.spawnExplosion(this.cellVisualCenter(targetCell), color);
+      this.spawnExplosion(this.cellVisualCenter(placed.cell), color, placed.ringSpread);
       return;
     }
 
@@ -1530,11 +1537,12 @@ export class BattleRenderer {
 
   /**
    * A flash and a ring of sparks at `center`: one central flash glyph that
-   * grows and fades, and a ring of sparks that shoot out to about a 3×3
-   * blast's edge and fade, all in `color` and glowing through the bloom.
+   * grows and fades, and a ring of sparks that shoot `ringSpread` world units
+   * out to the blast's edge and fade, all in `color` and glowing through the
+   * bloom.
    * Tuned by the EXPLOSION_* constants below.
    */
-  private spawnExplosion(center: THREE.Vector3, color: string): void {
+  private spawnExplosion(center: THREE.Vector3, color: string, ringSpread: number): void {
     // Central flash: stays put, grows large, fades.
     this.addExplosionParticle(
       center,
@@ -1548,8 +1556,8 @@ export class BattleRenderer {
     // Spark ring: 8 tracers fly outward to the blast edge.
     for (const [dx, dz] of EXPLOSION_RING_DIRS) {
       const dest = center.clone();
-      dest.x += dx * EXPLOSION_RING_SPREAD;
-      dest.z += dz * EXPLOSION_RING_SPREAD;
+      dest.x += dx * ringSpread;
+      dest.z += dz * ringSpread;
       this.addExplosionParticle(
         center,
         dest,
@@ -1881,8 +1889,8 @@ const PROJECTILE_SIZE = 0.6;
 /**
  * The explosion, every `explosion` burst's. The flash is a central `*` that
  * grows from FLASH_SIZE_FROM to FLASH_SIZE_TO while fading; the spark ring is
- * 8 `*`s that shoot RING_SPREAD world units outward (cells are 1×1, so 1.1
- * lands the sparks at a radius-1 blast's 3×3 edge) and fade. EXPLOSION_BLOOM
+ * 8 `*`s that shoot outward by the blast's radius (`EXPLOSION_RING_SPREAD`
+ * a cell, `burstPlacement.ts`) and fade. EXPLOSION_BLOOM
  * lifts the whole burst well above a unit's bloom, so it glows. Tuned by eye.
  */
 const EXPLOSION_FLASH_GLYPH = '*';
@@ -1890,7 +1898,6 @@ const EXPLOSION_FLASH_SIZE_FROM = 0.8;
 const EXPLOSION_FLASH_SIZE_TO = 3.0;
 const EXPLOSION_FLASH_SECONDS = 0.35;
 const EXPLOSION_SPARK_SIZE = 0.55;
-const EXPLOSION_RING_SPREAD = 1.1;
 const EXPLOSION_RING_SECONDS = 0.3;
 const EXPLOSION_BLOOM = 2.2;
 /** 8 unit-ish directions (orthogonal + diagonal, diagonals normalized) so the

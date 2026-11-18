@@ -85,8 +85,8 @@ The cut, signed 2026-11-17 with its leans (WORKLOG §160):
 - ◐ **160d — the telekinetic** (`batch`): a draftable burst on itself, a
   knockback of 2; an enemy in the Dark Magic Posse; 6 plants; 14 of 34
   journals moved (WORKLOG 160d).
-- ☐ **160e — the banshee's burst** (`batch`): the Wail on the banshee,
-  radius 2, the panic kept.
+- ◐ **160e — the banshee's burst** (`batch`): the Wail on the banshee,
+  radius 2, the panic kept; 4 plants; 3 of 34 journals moved (WORKLOG 160e).
 - ☐ **160f — the ronin's whirlwind** (`batch`): a burst on itself beside
   the katana.
 - ☐ **160g — the play** (`stop`): the four in play, the push's feel, the

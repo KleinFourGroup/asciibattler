@@ -224,12 +224,11 @@ export const FX_REGISTRY = {
   ice_storm_burst: { burst: { style: 'explosion' }, sound: 'freeze', shake: { intensity: 0.08, durationSeconds: 0.25 } },
   hex_burst: { burst: { style: 'explosion' }, sound: 'hex' }, // a confusion warble
   light_ray: { tracer: {}, sound: 'lightray' }, // a beam; blinds on a landed hit
-  wail_burst: { burst: { style: 'explosion' }, sound: 'wail', shake: { intensity: 0.1, durationSeconds: 0.3 } }, // the fear scream
-  // The hex and the wail deal no damage, so each flies a straight projectile
-  // on `release` to say whose burst lands. Silent: the cast sound stays on the
-  // burst, at the moment the status lands.
+  wail_burst: { burst: { style: 'explosion' }, sound: 'wail', shake: { intensity: 0.1, durationSeconds: 0.3 } }, // the fear scream, on the banshee
+  // The hex deals no damage, so it flies a straight projectile on `release` to
+  // say whose burst lands. Silent: the cast sound stays on the burst, at the
+  // moment the status lands. The wail needs none: its burst is on its caster.
   hex_launch: { projectile: { style: 'straight' } },
-  wail_launch: { projectile: { style: 'straight' } },
 
   // The stormcaller's chain lightning, driven once a hop by `unit:chained`, not
   // by `action:phase`, so the bolt travels jump by jump: each arc flies from

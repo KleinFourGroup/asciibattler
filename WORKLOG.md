@@ -342,3 +342,37 @@ pushers for 160g.
 **Read** (`batch`, at 160g's stop): that URL. Wrong looks like a
 telekinetic that hangs back, a burst drawn anywhere but on it, or foes
 that never land.
+
+### 160e — the banshee's burst (2026-11-18)
+
+**Step zero.** The Wail was an aimed blast (range 4, radius 1, a
+straight launch and 0.3 s of flight). On its caster it needs no launch
+and no flight, so its `wail_launch` key goes unused and leaves the
+registry; one fx pin held that both pure afflicters fly a projectile,
+and now holds the hex alone, the Wail being a burst on its caster. The
+area-lock pin (a flat cadence, a shorter longest duration) still holds:
+6 s against 4 s.
+
+**Built.** `wail`: a radius-2 square on the banshee, enemies only, a
+0.2 s wind-up then the panic as before, `rangeCells` 0, its burst
+`wail_burst` (drawn on the banshee by 160b at a 2.2 ring). The banshee's
+reach is the radius, so it closes to two cells. Still enemy-only, in the
+Bandit Queen and the banshee barrow. DESIGN's newcomers paragraph.
+
+**Checked.** `src/sim/banshee.test.ts`, 2 tests from the raw config:
+the banshee stays undraftable and reaches its radius; a Wail panics a
+foe beside it and one at the radius's edge, not one a cell beyond, nor
+its ally, nor itself. Planted (`scratch/160/160e-plants.json`): 4
+plants (aimed at the target again; radius 1; allies hit; drafted), each
+caught, the clean file green. The render, config and card tests 456 of
+456. **The corpus:** predicted 0 to 4 of 34, only runs meeting a
+banshee; the replay diverged on 3 (`chaos-16`, `chaos-4-…-bits-300`,
+`chaos-8-sectorHops-2`), re-recorded, the replay after 0 of 34, 21 of 21
+command kinds, 48 event names. In the pane, banshees fielded on the
+player's side (`?seed=5&character=soldier&roster=mercenary:3,mercenary:3,banshee:3,banshee:3`)
+through the first fight: 17 Wails, every explosion on the banshee at a
+2.2 ring, up to 3 foes panicked at one impact.
+
+**Read** (`batch`, at 160g's stop): that URL, or the Bandit Queen.
+Wrong looks like a banshee screaming from afar, a burst drawn off it,
+or a scream that panics no one.

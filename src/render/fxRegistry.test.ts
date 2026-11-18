@@ -236,8 +236,8 @@ describe('fxRegistry — a launched projectile has a flight (config-derived)', (
     expect(projectilesWithoutFlight(ABILITY_DEFS)).toEqual([]);
   });
 
-  it('the two pure afflicters launch one (they were impact-only before 102)', () => {
-    for (const id of ['hex', 'wail']) {
+  it('the aimed pure afflicter launches one (the hex was impact-only before 102; the wail is a burst on its caster)', () => {
+    for (const id of ['hex']) {
       const key = ABILITY_DEFS[id]!.fx?.release;
       expect(key, `${id} authors a release key`).toBeDefined();
       expect(fxDescriptor(key!)?.projectile, `${id}'s release key flies`).toBeDefined();

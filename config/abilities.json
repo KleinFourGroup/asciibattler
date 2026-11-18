@@ -564,16 +564,14 @@
     "description": "Panics, longer with luck.",
     "cooldownSeconds": 6,
     "speedScaled": false,
-    "rangeCells": 4,
-    "target": { "kind": "aoe", "shape": "square", "radius": 1, "anchor": "targetCell", "affects": "enemies" },
+    "rangeCells": 0,
+    "target": { "kind": "aoe", "shape": "square", "radius": 2, "anchor": "caster", "affects": "enemies" },
     "timeline": [
       { "phase": "windup", "seconds": 0.2 },
-      { "phase": "release", "seconds": 0 },
-      { "phase": "travel", "seconds": 0.3 },
       { "phase": "impact", "seconds": 0 },
       { "phase": "recovery", "seconds": "fill" }
     ],
-    "orphanPolicy": "ground-target",
+    "orphanPolicy": "commit-at-cast",
     "priority": 10,
     "effects": [
       {
@@ -581,7 +579,7 @@
         "op": { "kind": "applyStatus", "statusId": "panic", "durationSeconds": { "base": 2, "stat": "luck", "perPoint": 0.15, "max": 4 } }
       }
     ],
-    "fx": { "release": "wail_launch", "impact": "wail_burst" }
+    "fx": { "impact": "wail_burst" }
   },
   "chain_lightning": {
     "id": "chain_lightning",

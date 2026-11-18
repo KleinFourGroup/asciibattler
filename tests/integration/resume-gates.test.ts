@@ -116,10 +116,10 @@ function resumed(save: string, config: RunConfig): Emitted[] {
 // about fifteen battles; no short run met a port, so one full-length run is
 // here for that gate. The first run must reach the end of the walk for the
 // `complete` gate: since act 1 went in front that is three bosses. Since
-// the grenadier joined the draft pool, seed 19 is the smallest of the eight
-// of 80 that clear them (19, 34, 41, 53, 67, 72, 76 and 79).
+// the ronin took its whirlwind, seed 3 is the smallest of the nine of 80
+// that clear them (3, 22, 34, 41, 42, 46, 53, 69 and 79).
 const RUNS: ReadonlyArray<readonly [number, string]> = [
-  [19, 'sectorHops=2&character=soldier'],
+  [3, 'sectorHops=2&character=soldier'],
   [1, 'sectorHops=2&character=soldier'],
   [1, 'character=soldier'],
 ];

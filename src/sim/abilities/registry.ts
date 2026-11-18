@@ -53,9 +53,18 @@ const BEAST_ABILITY_IDS = ['gnaw', 'harry', 'pounce', 'rake', 'maul'] as const;
 /** The abilities that move their targets by force (the `push` op). */
 const FORCED_MOVE_ABILITY_IDS = ['snag', 'grenade', 'repulse'] as const;
 
+/** The bursts on their casters that move no one. */
+const SELF_BURST_ABILITY_IDS = ['whirlwind'] as const;
+
 const FACTORIES: Record<string, AbilityFactory> = {
   ...Object.fromEntries(
-    [...MIGRATED_ABILITY_IDS, ...DEMO_ABILITY_IDS, ...BEAST_ABILITY_IDS, ...FORCED_MOVE_ABILITY_IDS].map((id) => [
+    [
+      ...MIGRATED_ABILITY_IDS,
+      ...DEMO_ABILITY_IDS,
+      ...BEAST_ABILITY_IDS,
+      ...FORCED_MOVE_ABILITY_IDS,
+      ...SELF_BURST_ABILITY_IDS,
+    ].map((id) => [
       id,
       () => new EffectAbility(abilityDef(id)),
     ]),

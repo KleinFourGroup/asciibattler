@@ -57,7 +57,7 @@
   "ronin": {
     "name": "Ronin",
     "glyph": "R",
-    "abilities": ["katana"],
+    "abilities": ["katana","whirlwind"],
     "targeting": "nearest",
     "rarity": "uncommon",
     "baseStats": {

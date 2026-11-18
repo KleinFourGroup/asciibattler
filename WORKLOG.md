@@ -376,3 +376,52 @@ through the first fight: 17 Wails, every explosion on the banshee at a
 **Read** (`batch`, at 160g's stop): that URL, or the Bandit Queen.
 Wrong looks like a banshee screaming from afar, a burst drawn off it,
 or a scream that panics no one.
+
+### 160f — the ronin's whirlwind (2026-11-18)
+
+**Step zero.** The ronin carries the katana alone (might 2, 1.5 s, the
+ronin's strength 4 and luck 14); every ability but the dash and Inspire
+is priority 10, so the whirlwind at 11 outranks the katana when both are
+ready. The registry builds its factories from id lists; the whirlwind
+moves no one, so it takes a list of its own, the bursts on their casters
+that move no one.
+
+**Built.** `whirlwind`: a radius-1 square on the ronin, enemies only, a
+0.2 s wind-up, might 3 `strength`, crit base 0.1, evadable as the
+katana; priority 11; a flat 5 s recharge; a 0.3 s recovery. Its line: "A
+spinning cut at every foe around." On the ronin beside the katana; its
+fx `whirlwind`, the explosion on the ronin with the melee swing's sound.
+DESIGN's newcomers paragraph.
+
+**Found while testing: the recovery.** The first draft took the
+single-attack units' `"recovery": "fill"`, which holds the unit for the
+whole recharge, so the ronin stood five seconds after each spin and the
+katana never swung between; the test's "katana between spins" failed on
+it. A second ability needs the Snag's shape, a short fixed recovery on
+a flat recharge. Repulse and the Wail keep `fill`, as the bolt and the
+bow do: each is its unit's only attack.
+
+**The seeded pins moved twice** (once on the first draft, once on the
+fix). The chaos census lost `buyPortPacket` when the Gambler's slot
+stopped buying a packet; across 80 seeds under the final whirlwind,
+seed 11 (2.1 s alone) is the one that redraws, docks, buys a packet,
+recruits and rests while leaving both census lists as they are
+(`scratch/160/chaos-census.ts`). The resume tests' completing seed 19
+no longer completes; seed 3 is the smallest of nine of 80 that do.
+
+**Checked.** `src/sim/ronin.test.ts`, 2 tests from the raw config: the
+ronin carries both and keeps the katana's reach; with three foes beside
+it and one two cells off, it opens with a spin that strikes each foe
+beside it once and not the far one, and the katana swings before the
+second spin. Planted (`scratch/160/160f-plants.json`): 4 plants (the
+`fill` recovery; no whirlwind; the katana's priority; a square blast a
+cell wider), each caught, the clean file green. **The corpus:**
+predicted 8 to 25 of 34; the replay diverged on 13, `--record` moved
+those 13, the replay after 0 of 34, 21 of 21 command kinds, 48 event
+names. In the pane, `?seed=5&character=soldier&roster=ronin:3,ronin:3,ronin:3`
+through the first fight: 7 whirlwinds and 13 katana swings, every spin
+drawn on the ronin at a 1.1 ring. The ronin's prior-table row now
+prices an older kit; §162's rebuild replaces it.
+
+**Read** (`batch`, at 160g's stop): that URL. Wrong looks like a spin
+with no one beside the ronin, or no katana between spins.

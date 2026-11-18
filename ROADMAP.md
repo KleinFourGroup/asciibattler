@@ -87,8 +87,9 @@ The cut, signed 2026-11-17 with its leans (WORKLOG §160):
   journals moved (WORKLOG 160d).
 - ◐ **160e — the banshee's burst** (`batch`): the Wail on the banshee,
   radius 2, the panic kept; 4 plants; 3 of 34 journals moved (WORKLOG 160e).
-- ☐ **160f — the ronin's whirlwind** (`batch`): a burst on itself beside
-  the katana.
+- ◐ **160f — the ronin's whirlwind** (`batch`): a burst on itself beside
+  the katana, a short recovery on a flat 5 s; 4 plants; 13 of 34
+  journals moved; the chaos and resume seeds re-picked (WORKLOG 160f).
 - ☐ **160g — the play** (`stop`): the four in play, the push's feel, the
   bursts' look and sound, the drafted numbers.
 

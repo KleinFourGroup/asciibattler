@@ -222,6 +222,37 @@
     ],
     "fx": { "impact": "repulse_burst" }
   },
+  "whirlwind": {
+    "id": "whirlwind",
+    "name": "Whirlwind",
+    "description": "A spinning cut at every foe around.",
+    "cooldownSeconds": 5,
+    "speedScaled": false,
+    "rangeCells": 0,
+    "target": { "kind": "aoe", "shape": "square", "radius": 1, "anchor": "caster", "affects": "enemies" },
+    "timeline": [
+      { "phase": "windup", "seconds": 0.2 },
+      { "phase": "impact", "seconds": 0 },
+      { "phase": "recovery", "seconds": 0.3 }
+    ],
+    "orphanPolicy": "commit-at-cast",
+    "priority": 11,
+    "effects": [
+      {
+        "phase": "impact",
+        "op": {
+          "kind": "damage",
+          "scaling": "strength",
+          "might": 3,
+          "critBase": 0.1,
+          "critable": true,
+          "evadable": true,
+          "bypassDefense": false
+        }
+      }
+    ],
+    "fx": { "impact": "whirlwind" }
+  },
   "bow": {
     "id": "bow",
     "name": "Bow",

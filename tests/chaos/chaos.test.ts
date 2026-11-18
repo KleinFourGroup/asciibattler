@@ -25,8 +25,11 @@ import { ChaosFailure, KINDS, chaosRun, type ChaosOptions, type ChaosResult } fr
 // battles, 8.7 s alone, then seed 3 until act 1's waves shrank and it stopped
 // redrawing and docking, then seed 12 until the bow slowed and it stopped
 // redrawing and recruiting, then seed 31 until power's growth draw came out and
-// it stopped redrawing; seed 32 is the shortest of 40 that redraws, docks at a
-// port, recruits and rests, the rest added then since no other slot rests. The
+// it stopped redrawing, then seed 32 (the shortest of 40 that redraws, docks
+// at a port, recruits and rests, the rest added then since no other slot
+// rests) until the ronin took its whirlwind and the walk stopped buying a
+// packet; seed 11 is the one of 80 that does all of that and buys a packet
+// while leaving both census lists as they are (2.1 s alone). The
 // two-hop slot was seed 6 until that draw came out and its walk stopped
 // clearing a sector; seed 32 is the shortest of 40 that clears one.
 //
@@ -39,7 +42,7 @@ const EVERY_COMMIT: ReadonlyArray<readonly [number, string]> = [
   [32, 'hops=3&layout=procedural'],
   [18, ''],
   [32, 'sectorHops=2'],
-  [32, 'character=gambler&bits=300'],
+  [11, 'character=gambler&bits=300'],
 ];
 
 const dir = mkdtempSync(join(tmpdir(), 'chaos-test-'));

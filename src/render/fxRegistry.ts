@@ -198,6 +198,9 @@ export const FX_REGISTRY = {
     sound: 'magicboom',
     shake: { intensity: 0.08, durationSeconds: 0.22 },
   },
+  // The ronin's whirlwind: the explosion on the ronin, ringed out to its blast,
+  // with the melee swing's sound.
+  whirlwind: { burst: { style: 'explosion' }, sound: 'melee' },
   // The catapult: a homing arc, then a dust dud, a heavy crash and a big shake
   // (a landing boulder hits hard).
   catapult_launch: { projectile: { style: 'arc' } },

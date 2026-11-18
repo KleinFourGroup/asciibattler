@@ -157,3 +157,17 @@ little like a comb. The URL:
 `?bp=board-open15_pose-sampler&glyphFace=/scratch/160a/trial-c.otf&glyphs=g,U+E020,U+E024,U+E021,U+E000;G,U+E022,U+E025,U+E023,U+E001`.
 The board-size read is the user's: the pane's board was too small to
 judge.
+
+**The pick** (2026-11-18): the rounded pad with fringe, on `g` ("I like
+the rounded with fringe! And I'm good with g also!"); the trial's U+E024.
+The user asked whether the officer should wear it too. Drawn for that
+read: the officer's `O` with it (U+E026 in `trial-d.otf`), beside the
+plain `O`, `Ö` and `Q`, at
+`?bp=board-open15_pose-sampler&glyphFace=/scratch/160a/trial-d.otf&glyphs=O,U+E026,U+00D6,Q;g,U+E024,U+E000`;
+at 130 px in the pane the epaulettes sit wide of the letter, beside its
+upper half, where the umlaut's dots sit close above it. What a shipped
+glyph change touches: the glyph rides in the WorldSnapshot's units (no
+player keeps one) and in the promotion screen's event payload
+(`src/core/events.ts`), so the corpus's event digests move for runs that
+promote an officer; `corpus.ts` allows `--rebaseline` after a replay
+mapped back to the old glyph shows nothing else moved.

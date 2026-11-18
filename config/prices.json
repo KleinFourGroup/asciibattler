@@ -17,7 +17,8 @@
       "gunslinger": 25,
       "halberdier": 28,
       "officer": 32,
-      "grenadier": 28
+      "grenadier": 28,
+      "telekinetic": 30
     },
     "levelGrowth": 1.05,
     "jitter": 0.15,

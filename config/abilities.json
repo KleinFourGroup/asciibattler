@@ -188,6 +188,40 @@
     ],
     "fx": { "release": "vial_throw", "impact": "grenade_burst" }
   },
+  "repulse": {
+    "id": "repulse",
+    "name": "Repulse",
+    "description": "A burst of force that hurls back every foe beside it.",
+    "cooldownSeconds": 3,
+    "rangeCells": 0,
+    "target": { "kind": "aoe", "shape": "square", "radius": 1, "anchor": "caster", "affects": "enemies" },
+    "timeline": [
+      { "phase": "windup", "seconds": 0.4 },
+      { "phase": "impact", "seconds": 0 },
+      { "phase": "recovery", "seconds": "fill" }
+    ],
+    "orphanPolicy": "commit-at-cast",
+    "priority": 10,
+    "effects": [
+      {
+        "phase": "impact",
+        "op": {
+          "kind": "damage",
+          "scaling": "magic",
+          "might": 0,
+          "critBase": 0,
+          "critable": true,
+          "evadable": false,
+          "bypassDefense": false
+        }
+      },
+      {
+        "phase": "impact",
+        "op": { "kind": "push", "cells": 2, "direction": "away" }
+      }
+    ],
+    "fx": { "impact": "repulse_burst" }
+  },
   "bow": {
     "id": "bow",
     "name": "Bow",

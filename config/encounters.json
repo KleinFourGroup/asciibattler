@@ -390,7 +390,8 @@
               "count": { "kind": "hand", "factor": 1.5 },
               "units": [
                 { "archetype": "shaman", "count": { "kind": "fixed", "value": 1 }, "level": { "kind": "weight", "weight": 1 }, "power": 4 },
-                { "archetype": "corrupter", "count": { "kind": "fixed", "value": 1 }, "level": { "kind": "weight", "weight": 1 }, "power": 3 }
+                { "archetype": "corrupter", "count": { "kind": "fixed", "value": 1 }, "level": { "kind": "weight", "weight": 1 }, "power": 3 },
+                { "archetype": "telekinetic", "count": { "kind": "fixed", "value": 1 }, "level": { "kind": "weight", "weight": 1 }, "power": 3 }
               ]
             }
           }

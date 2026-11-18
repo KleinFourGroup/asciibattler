@@ -82,8 +82,9 @@ The cut, signed 2026-11-17 with its leans (WORKLOG §160):
 - ◐ **160c — the grenadier** (`batch`): a draftable grenade thrower, a
   knockback of 1 from the blast's centre; an enemy in the Artillery
   Company; 5 plants; the corpus re-recorded, 15 of 34 moved (WORKLOG 160c).
-- ☐ **160d — the telekinetic** (`batch`): a draftable burst on itself, a
-  knockback of 2; an enemy in the Dark Magic Posse.
+- ◐ **160d — the telekinetic** (`batch`): a draftable burst on itself, a
+  knockback of 2; an enemy in the Dark Magic Posse; 6 plants; 14 of 34
+  journals moved (WORKLOG 160d).
 - ☐ **160e — the banshee's burst** (`batch`): the Wail on the banshee,
   radius 2, the panic kept.
 - ☐ **160f — the ronin's whirlwind** (`batch`): a burst on itself beside

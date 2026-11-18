@@ -32,13 +32,25 @@ function burstOnSelf(radius: number): AbilityDef {
 
 describe('the explosion, placed', () => {
   it('draws every shipped aimed blast on its surfaced cell, its ring as before', () => {
-    expect(shippedExplosions.length).toBeGreaterThanOrEqual(5);
-    for (const [id, d] of shippedExplosions) {
-      expect(d.target.kind === 'aoe' && d.target.anchor, id).toBe('targetCell');
+    const aimed = shippedExplosions.filter(([, d]) => d.target.kind === 'aoe' && d.target.anchor === 'targetCell');
+    expect(aimed.length).toBeGreaterThanOrEqual(5);
+    for (const [id, d] of aimed) {
+      expect(d.target.kind === 'aoe' && d.target.radius, id).toBe(1);
       expect(explosionPlacement(d.target, { x: 4, y: 7 }, { x: 1, y: 1 }), id).toEqual({
         cell: { x: 4, y: 7 },
         ringSpread: 1.1,
       });
+    }
+  });
+
+  it("draws every shipped blast on its caster on the caster's cell, its ring by the raw radius", () => {
+    const onCaster = shippedExplosions.filter(([, d]) => d.target.kind === 'aoe' && d.target.anchor === 'caster');
+    expect(onCaster.length).toBeGreaterThanOrEqual(1);
+    for (const [id, d] of onCaster) {
+      const radius = d.target.kind === 'aoe' ? d.target.radius : NaN;
+      const placed = explosionPlacement(d.target, undefined, { x: 3, y: 5 });
+      expect(placed?.cell, id).toEqual({ x: 3, y: 5 });
+      expect(placed?.ringSpread, id).toBeCloseTo(1.1 * radius, 10);
     }
   });
 

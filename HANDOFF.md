@@ -6,7 +6,7 @@ A fresh-session orientation for ASCIIbattler. Read this first; then dive into th
 
 **The ONE home for live status.** Other docs (and the agent memory) point here instead of restating it; when state changes, this section is the single place that updates.
 
-- **NEXT — ROUND 12 (Push, pull and blink): 160d, the telekinetic** (`batch`), then 160e and 160f, to 160g's play `stop` ([ROADMAP.md](ROADMAP.md) §160; WORKLOG §160). 160a signed (`k`; `g` with the epaulettes, worn by the officer too); 160b built (`none`); 160c built. **Open ◐:** 160c, read at 160g.
+- **NEXT — ROUND 12 (Push, pull and blink): 160e, the banshee's burst** (`batch`), then 160f, to 160g's play `stop` ([ROADMAP.md](ROADMAP.md) §160; WORKLOG §160). 160a signed (`k`; `g` with the epaulettes, worn by the officer too); 160b built (`none`); 160c and 160d built. **Open ◐:** 160c, 160d, read at 160g.
 - **In flight:** nothing.
 - **The public build:** `0.4.0` (`4fc62cfe`, tag `v0.4.0`), uploaded to itch.io on 2026-11-13; the uploads before it are in Closed rounds below.
 - **Snapshots:** WorldSnapshot **v40** (no player keeps one) · RunSnapshot **v51** (a v50 save, `0.3.0`'s, rejects).

@@ -60,6 +60,7 @@ interface Catalog {
  */
 const PENDING: ReadonlyMap<string, string> = new Map<string, string>([
   ['unit:grenadier', "Round 12's newcomer, drafted from 160c; the roster table is rebuilt from §162's board cohort"],
+  ['unit:telekinetic', "Round 12's newcomer, drafted from 160d; the roster table is rebuilt from §162's board cohort"],
 ]);
 
 function readJson<T>(rel: string): T {

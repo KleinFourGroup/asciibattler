@@ -290,3 +290,55 @@ foes shoved, the grenadiers on U+E020.
 grenadiers behind two mercenaries. Wrong looks like a grenade that moves
 no one, a blast that flings foes through walls, or a grenadier that
 walks into melee.
+
+### 160d — the telekinetic (2026-11-18)
+
+**Step zero.** A blast on its caster reaches its radius
+(`engagementReach`), so a radius-1 Repulse makes the telekinetic close
+to melee, with no floor. Damage can't go below might 0 (`schema.ts`),
+and a ring multiplier on a burst whose centre is the caster would halve
+every victim, a trick; so the damage is set by the stat instead: the
+mage's line at the corrupter's magic of 6, Repulse at might 0. The Dark
+Magic Posse's waves are fixed pairs (a shaman with a warlock or with a
+corrupter, each with a casualty weight); the telekinetic joins the
+corrupter's wave as its bodyguard at the same weight, 3.
+
+**Built.**
+
+- `telekinetic` (after the grenadier): `k`, rare, the mage's stat line
+  with magic 6, power 2 (the rare tier's); base price 30.
+- `repulse` (after the grenade): a radius-1 square on the caster, enemies
+  only; a 0.4 s wind-up, then magic at might 0 and a push of 2 away from
+  the caster; a 3 s recharge. Its line: "A burst of force that hurls back
+  every foe beside it." In the forced movers; `repulse_burst`, the
+  explosion with the bolt's boom and a light shake.
+- The joins as at 160c: `"telekinetic": 0` appended to the six weight
+  vectors, PENDING rows in both coverage tests; the en extract. The
+  resume tests' seed 19 still completes. 160b's pin said every shipped
+  explosion is aimed; it now holds the aimed ones as before and adds the
+  shipped blasts on a caster, drawn on the caster's cell at the raw
+  radius's ring.
+- DESIGN: the newcomers' line and Repulse among the carriers.
+
+**Checked.** `src/sim/telekinetic.test.ts`, 3 tests from the raw config:
+it carries Repulse alone, drafted rare; its reach is the burst's radius,
+no floor; and a Repulse throws three foes beside it two cells along
+their own lines, and leaves the telekinetic (place and HP), an adjacent
+ally and a foe two cells off where they stand. Planted
+(`scratch/160/160d-plants.json`): 6 plants (no push; a pull; allies
+hit; radius 2; not drafted; the reach read from `rangeCells`), each
+caught, the clean file green. One plant's expectation was mine and
+wrong: at radius 2 the reach test passes, correctly, since the reach
+follows the radius; the knock test catches it. **The corpus:**
+predicted 5 to 20 of 34; the replay diverged on 14, `--record` moved 4
+beyond their config hash, the replay after 0 of 34, 21 of 21 command
+kinds, 48 event names. In the pane, on
+`?seed=5&character=soldier&roster=mercenary:3,mercenary:3,telekinetic:3,telekinetic:3`
+through the first fight: 17 Repulses, all 17 explosions on the caster's
+own cell at a ring of 1.1 (160b's first consumer), and 5 foes shoved:
+in a crowd the cell behind a foe is often taken. Measured across the
+pushers for 160g.
+
+**Read** (`batch`, at 160g's stop): that URL. Wrong looks like a
+telekinetic that hangs back, a burst drawn anywhere but on it, or foes
+that never land.

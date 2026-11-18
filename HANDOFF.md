@@ -6,11 +6,11 @@ A fresh-session orientation for ASCIIbattler. Read this first; then dive into th
 
 **The ONE home for live status.** Other docs (and the agent memory) point here instead of restating it; when state changes, this section is the single place that updates.
 
-- **NEXT — ROUND 12 (Push, pull and blink): 160g, the play** (`stop`): the four in play, the push's feel, the bursts' look and sound, the drafted numbers, with 160c to 160f's `batch` reads ([ROADMAP.md](ROADMAP.md) §160; WORKLOG §160). 160a signed; 160b built (`none`). **Open ◐:** 160c, 160d, 160e, 160f, read at 160g.
+- **NEXT — ROUND 12 (Push, pull and blink): 160g, the play** (`stop`, not yet put): first measure the pushers' landings, then put the four in play with 160c to 160f's `batch` reads and the drafted numbers (WORKLOG "The hand-off after 160f"; [ROADMAP.md](ROADMAP.md) §160). **Open ◐:** 160c, 160d, 160e, 160f, read at 160g.
 - **In flight:** nothing.
 - **The public build:** `0.4.0` (`4fc62cfe`, tag `v0.4.0`), uploaded to itch.io on 2026-11-13; the uploads before it are in Closed rounds below.
 - **Snapshots:** WorldSnapshot **v40** (no player keeps one) · RunSnapshot **v51** (a v50 save, `0.3.0`'s, rejects).
-- **Tests:** **3996 main** in 274 files, **588 fuzz:smoke** in 60 files and **1 fuzz:jobs-parity** at `deda6d3f` (its hook); typecheck clean; the journal corpus, run by hand, 34 journals, 3 re-recorded at 159d-post (the Snag's room gate), the replay 0 of 34 differing.
+- **Tests:** **4012 main** in 279 files, **588 fuzz:smoke** in 60 files and **1 fuzz:jobs-parity** at `c17096bf` (its hook); typecheck clean; the journal corpus, run by hand, 34 journals, re-recorded at 160f (13 moved), the replay 0 of 34 differing.
 - **Model id: `claude-opus-5-5`** since 2026-09-22. When yours differs, say so at the next stop; at the user's word, review AGENTS.md against the vendor's current prompting guidance and record the new id (the last review: `archive/post-104-worklog.md`, "The new-model tone audit").
 - **Last phase: §159**, forced movement, the seam, 2026-11-17: the `push` op and the held slide, every landing rule planted out; `World.shove` retired; the adventurer's Snag and the forced move's look and sound signed, the Snag waiting for room (`archive/worklog-phase-159.md`).
 

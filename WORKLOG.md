@@ -425,3 +425,32 @@ prices an older kit; §162's rebuild replaces it.
 
 **Read** (`batch`, at 160g's stop): that URL. Wrong looks like a spin
 with no one beside the ronin, or no katana between spins.
+
+### The hand-off after 160f (2026-11-18)
+
+At the hand-off trigger (505k at `c17096bf`). **Done:** 160a signed
+(`k`; `g` with the epaulettes, worn by the officer too); 160b built
+(`none`); 160c to 160f built, ◐, their `batch` reads due at 160g.
+**Open: 160g, the play `stop`, not yet put.** Before putting it, one
+measurement: in the pane's first fight 17 Repulses shoved only 5 foes
+(the cell behind a foe is often taken in a crowd), as the Snag pulled
+about half the time before 159d-post; measure each pusher's landings
+headless (the grenade, Repulse, the Snag) on a few seeded runs, as
+`scratch/159/snag-probe.ts` did, and put the number with the calls.
+**160g's calls** (session drafts, the leans built on): the grenade
+(might 5 `ranged`, the ring at half, push 1 from the centre, range 4
+floor 2, 3.5 s, its line), Repulse (magic 6 on the mage's line, push 2,
+3 s, its line), the Wail's radius 2, the whirlwind (might 3, flat 5 s,
+priority 11, its line); the rarities and prices (the grenadier uncommon
+at 28, the telekinetic rare at 30); the encounters (the grenadier among
+the Artillery Company's skirmishers, acts 2 and 3; the telekinetic in
+the Dark Magic Posse's corrupter wave at casualty weight 3); the sounds
+reused (the grenade the catapult's `thud`, Repulse the bolt's
+`magicboom`, the whirlwind the melee swing); the explosion as every
+burst's look. **The reads' URLs** are in 160c to 160f's entries.
+**Tools no doc names:** `scratch/159/plant.ts` with
+`scratch/160/160{b..f}-plants.json`; `scratch/160/seed-complete.ts`
+(the completing two-hop seeds); `scratch/160/chaos-census.ts` (which
+kinds each chaos slot applies, for a seed re-pick);
+`scratch/160a/build.ts` (a trial face from scratch radicals for the
+sampler).

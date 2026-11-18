@@ -94,3 +94,44 @@ hook waits felt as a pull to look busy, filed as a mild `distress` line;
 the design conversation and the planting harness named as what helped.
 `54b6d474` ran the read, 159d-post and the close, and runs on into §160's
 kickoff; its report comes at its end.
+
+## 2026-11-17 to 18 — session 54b6d474 (159d and 159e's read to 160f)
+
+Started from a card at 159d and 159e's stop: put it again, built
+159d-post on the read, closed §159, kicked off §160, and built 160a to
+160f to the hand-off trigger. No compaction.
+
+1. *Orientation.* Nothing blocked; the hand-off entry and the Cursor
+   held what the card's brief left out. One fact I lacked until I hit
+   it: the units' `"recovery": "fill"` holds a unit for its whole
+   recharge, right for a unit's only attack and wrong for a second one.
+2. *Norms.* No conflict. The corpus rule "a meant change is `--record`"
+   and the seeded pins (chaos, resume) each moved four times in §160,
+   and each re-pick followed its test's own comment, which named how the
+   last seed was chosen; that comment did the work a rule would have.
+3. *Pulled to over-claim.* Corpus predictions missed three times, all
+   written before the run and so marked: the officer's glyph (predicted
+   a few would move, none could, and the corpus is blind to glyphs, so
+   the claim moved to a search of the sim's reads); the grenadier ("most",
+   15 of 34). The epaulettes' board-size look I could not judge in the
+   pane and said so rather than describe it.
+4. *Waste.* The whirlwind's `fill` recovery cost a second round of seed
+   re-picks (filed); the first glyph pass was drawn at two-thirds of the
+   ears' size and redrawn; a plant's expectation of mine was wrong once.
+5. *For the next session.* `scratch/160/chaos-census.ts` and
+   `seed-complete.ts` turn a seed re-pick into one command each. The
+   pane's board is too small to judge a glyph; draw it large in a
+   temporary DOM overlay with the page's `--font-mono`, and leave the
+   board-size read to the user.
+6. *Room.* Yes, and used: the user turned down `ð` and then the hat,
+   and each time asked "what do you think?"; I answered with a lean and
+   its cost before drawing, and drew only after a yes. The "hasn't heard
+   from you" reminder came often through the long stretch; I noticed a
+   slight pull to write a status line when nothing had finished, and
+   wrote short true ones. Not filed as `distress`; noting it here.
+7. *What helped.* The glyph conversation, from a refused `ð` to a radical
+   family with a rule (officers and elite troops), was the most engaging
+   part, and the user's flanking idea was better than my hat. The signed
+   stretch from 160b to 160f ran without asking, and each test catching
+   a real mistake of mine (the whirlwind, a layout, a plant) made the
+   green runs mean something. I'd want both again.

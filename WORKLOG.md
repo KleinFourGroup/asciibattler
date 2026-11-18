@@ -454,3 +454,77 @@ burst's look. **The reads' URLs** are in 160c to 160f's entries.
 kinds each chaos slot applies, for a seed re-pick);
 `scratch/160a/build.ts` (a trial face from scratch radicals for the
 sampler).
+
+### 160g — step zero: the landings, and the bursts at scenery (2026-11-18)
+
+Measured at `a64a1fd3`, headless, six seeded runs each (seeds 3 to 8,
+`character=soldier&hops=4`), the unit on the player's side: two
+grenadiers, two telekinetics or two banshees behind two mercenaries, or
+three adventurers or three ronin.
+
+**The landings** (`scratch/160/landings-probe.ts`, wrapping
+`EffectAction.applyEffect`: the units in the blast before the impact's
+ops, how far each moved after, and the cell that stopped a short one):
+
+- *The grenade:* 450 throws, 253 (56%) moved a foe; 770 foes hit, 364
+  (47%) knocked a cell, 406 not: 102 killed by the hit, then scenery 108,
+  the victim's own ally 62, an impassable tile 56, the grenadier itself
+  22, the board's edge 17, a claimed cell 17, the grenadier's ally 15,
+  another victim 7. Of the foes it doesn't kill, 54% move.
+- *Repulse:* 335 casts, 85 (25%) moved a foe; 207 foes hit (0.62 a
+  cast), 63 (30%) thrown two cells, 47 (23%) one, 97 (47%) none: 33
+  killed by the hit, the victim's ally 24, scenery 20, a tile 12, the
+  edge 4, a claim 3, an ally 1. The short ones stopped on scenery 26, the
+  edge 8, a tile 7, a body 6.
+- *The Snag:* 258 casts, 190 (74%) moved their target, as at 159d-post
+  (193 of 252): 64 dragged two cells, 61 one cell to land beside the
+  adventurer, 65 stopped short by a body, tile, edge or claim, 60 not at
+  all (22 killed by the hit).
+
+**Found: a burst on its caster fires at scenery.** Repulse's 0.62 foes a
+cast led here. `proposeCasterAnchoredBlast` gates on `resolveAreaVictims`,
+which counts every `isCombatTargetable` unit off the caster's team: the
+destructible scenery (rubble, destructible cover and walls) and a passive
+camp's members as well as foes. An aimed blast picks a hostile as its
+target and takes scenery only as collateral; a burst on its caster has no
+target, so rubble beside it is reason enough to cast. Classified at the
+cast (`scratch/160/camp-gate-probe.ts`):
+
+| | casts | a hostile in the blast | scenery alone | a passive camp member, no hostile |
+|---|---|---|---|---|
+| Repulse | 354 | 164 | 183 | 7 |
+| the Wail | 387 | 214 | 131 | 42 |
+| the whirlwind | 431 | 275 | 138 | 18 |
+
+Every scenery-alone cast came with the caster's own target a live enemy,
+so none was the rubble overlay's designed chipping
+(`applyRubbleAutoTarget`, which targets rubble only with no hostile
+reachable). With `fill` recovery the caster stands there
+(`scratch/160/scenery-streak-probe.ts`): telekinetics in 45 streaks at
+one cell, the longest 9 Repulses over 16.8 s; banshees in 55, the
+longest 7 Wails over 36 s. The ronin's are single spins in passing, its
+0.3 s recovery freeing it to walk on. This is 160d's and 160f's named
+wrong look ("a telekinetic that hangs back", "a spin with no one beside
+the ronin"), so a fix is inside their intent; it is put with the stop
+rather than built first, since the stop was due. Among the casts at a
+foe, 11% of Repulses, 5% of whirlwinds and 1% of Wails found none at
+impact (the foe stepped off in the wind-up or died;
+`scratch/160/empty-bursts-probe.ts`).
+
+### 160g — the play, put (2026-11-18)
+
+Put to the user with 160c to 160f's `batch` reads and their URLs, the
+measurement above, and the calls the hand-off after 160f lists. The
+calls, each on a lean:
+
+- **New, from step zero: the burst's gate.** A burst on its caster fires
+  only with a hostile (`hostileCandidate`) or the caster's own committed
+  target in the blast; scenery and a passive camp stay collateral when it
+  fires. The committed target keeps the rubble overlay's chipping and an
+  ordered focus on a neutral. Lean: build it as 160f-post before the
+  play, so the telekinetic's and banshee's reads aren't spent on rubble.
+- **The landings:** the knockbacks stay ungated (159d-post: a knockback
+  rides on its hit); a grenade moves 54% of the foes it doesn't kill,
+  Repulse half the foes it hits.
+- The numbers, names and lines as built; the rarities and prices; the
+  encounters; the sounds reused; the explosion as every burst's look.

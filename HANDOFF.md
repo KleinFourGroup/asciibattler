@@ -6,7 +6,7 @@ A fresh-session orientation for ASCIIbattler. Read this first; then dive into th
 
 **The ONE home for live status.** Other docs (and the agent memory) point here instead of restating it; when state changes, this section is the single place that updates.
 
-- **NEXT — ROUND 12 (Push, pull and blink): 160g, the play** (`stop`, not yet put): first measure the pushers' landings, then put the four in play with 160c to 160f's `batch` reads and the drafted numbers (WORKLOG "The hand-off after 160f"; [ROADMAP.md](ROADMAP.md) §160). **Open ◐:** 160c, 160d, 160e, 160f, read at 160g.
+- **NEXT — ROUND 12 (Push, pull and blink): 160g, the play** (`stop`, put 2026-11-18, waiting on the user's answer): the four in play with 160c to 160f's `batch` reads, the landings measured, and a new call from step zero, a burst on its caster firing at scenery (WORKLOG "160g — step zero" and "160g — the play, put"; [ROADMAP.md](ROADMAP.md) §160). After the answer: its `-post` steps, then §160's close. **Open ◐:** 160c, 160d, 160e, 160f, read at 160g.
 - **In flight:** nothing.
 - **The public build:** `0.4.0` (`4fc62cfe`, tag `v0.4.0`), uploaded to itch.io on 2026-11-13; the uploads before it are in Closed rounds below.
 - **Snapshots:** WorldSnapshot **v40** (no player keeps one) · RunSnapshot **v51** (a v50 save, `0.3.0`'s, rejects).

@@ -6,7 +6,7 @@ A fresh-session orientation for ASCIIbattler. Read this first; then dive into th
 
 **The ONE home for live status.** Other docs (and the agent memory) point here instead of restating it; when state changes, this section is the single place that updates.
 
-- **NEXT — ROUND 12 (Push, pull and blink): 160a, the glyphs** (`stop`): the grenadier's and the telekinetic's candidates in the glyph sampler, put to the user; the cut signed 2026-11-17 with its leans, 160b to 160g after the pick ([ROADMAP.md](ROADMAP.md) §160; WORKLOG §160). **Open ◐:** none.
+- **NEXT — ROUND 12 (Push, pull and blink): 160b, the burst drawn on its caster** (`none`), then 160c to 160f with their `batch` reads, to 160g's play `stop` ([ROADMAP.md](ROADMAP.md) §160; WORKLOG §160). 160a signed 2026-11-18: `k`, and `g` with the epaulettes, which the officer now wears. **Open ◐:** none.
 - **In flight:** nothing.
 - **The public build:** `0.4.0` (`4fc62cfe`, tag `v0.4.0`), uploaded to itch.io on 2026-11-13; the uploads before it are in Closed rounds below.
 - **Snapshots:** WorldSnapshot **v40** (no player keeps one) · RunSnapshot **v51** (a v50 save, `0.3.0`'s, rejects).

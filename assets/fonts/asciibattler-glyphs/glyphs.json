@@ -7,6 +7,8 @@
     { "codePoint": "U+E004", "name": "t.ears", "letter": "t", "radicals": ["ears"], "width": 900 },
     { "codePoint": "U+E005", "name": "b.ears", "letter": "b", "radicals": ["ears"], "width": 900 },
     { "codePoint": "U+E010", "name": "tree.conifer", "radicals": ["conifer"], "width": 600 },
-    { "codePoint": "U+E011", "name": "tree.broadleaf", "radicals": ["broadleaf"], "width": 600 }
+    { "codePoint": "U+E011", "name": "tree.broadleaf", "radicals": ["broadleaf"], "width": 600 },
+    { "codePoint": "U+E020", "name": "g.epaulettes", "letter": "g", "radicals": ["epaulettes"], "width": 900 },
+    { "codePoint": "U+E021", "name": "O.epaulettes", "letter": "O", "radicals": ["epaulettes"], "width": 900 }
   ]
 }

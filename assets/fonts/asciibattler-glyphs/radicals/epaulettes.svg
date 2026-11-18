@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 1320" width="450" height="660">
+  <!-- The epaulettes, the soldiery's mark (officers and elite troops): a
+       rounded pad at each top corner of a 900-wide glyph, clear of the letter
+       centred between them, with three strands of fringe hanging from it.
+       The pad's dome rises to 688 above the baseline; the fringe hangs to
+       430, so the pair sits beside a capital's upper half and above a
+       lower-case letter's x-height. -->
+  <g id="guide" fill="none" stroke-width="4">
+    <rect x="0" y="0" width="900" height="1320" stroke="#555"/>
+    <rect x="150" y="0" width="600" height="1320" stroke="#3a6" stroke-dasharray="20 14"/>
+    <text x="450" y="1020" text-anchor="middle" font-family="JetBrains Mono" font-size="1000" fill="#3a6" fill-opacity="0.35" stroke="none">G</text>
+    <line x1="0" x2="900" y1="181" y2="181" stroke="#a44" stroke-dasharray="8 8"/>
+    <line x1="0" x2="900" y1="290" y2="290" stroke="#468"/>
+    <line x1="0" x2="900" y1="470" y2="470" stroke="#468"/>
+    <line x1="0" x2="900" y1="1020" y2="1020" stroke="#a84"/>
+    <line x1="0" x2="900" y1="1200" y2="1200" stroke="#468"/>
+  </g>
+  <path d="M 17 420 L 23 387 L 42 359 L 69 340 L 102 332 L 135 337 L 164 355 L 184 381 L 193 420 L 193 590 L 153 590 L 153 450 L 125 450 L 125 590 L 85 590 L 85 450 L 57 450 L 57 590 L 17 590 Z" fill="#000"/>
+  <path d="M 883 590 L 843 590 L 843 450 L 815 450 L 815 590 L 775 590 L 775 450 L 747 450 L 747 590 L 707 590 L 707 420 L 716 381 L 736 355 L 765 337 L 798 332 L 831 340 L 858 359 L 877 387 L 883 420 Z" fill="#000"/>
+</svg>

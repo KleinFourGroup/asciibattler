@@ -73,8 +73,9 @@ foreseen:** the glyphs a `stop` at its start; each unit `batch` with its
 URL; the play a `stop`.
 The cut, signed 2026-11-17 with its leans (WORKLOG §160):
 
-- ☐ **160a — the glyphs** (`stop`): candidates for the grenadier and the
-  telekinetic in the sampler, a lean each.
+- ☑ **160a — the glyphs** (`stop`): the telekinetic `k`; the grenadier `g`
+  with a new radical, the soldiery's epaulettes, worn by the officer too;
+  signed 2026-11-18 (WORKLOG 160a).
 - ☐ **160b — the burst drawn on its caster** (`none`): a caster-anchored
   explosion at the caster's cell, its ring sized to the radius.
 - ☐ **160c — the grenadier** (`batch`): a draftable grenade thrower, a

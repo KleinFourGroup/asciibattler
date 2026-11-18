@@ -7,8 +7,11 @@ DejaVu Sans Mono, and maps no code point either of them has, so it changes
 no glyph they draw.
 
 A glyph is JetBrains Mono's own letter with **radicals** added to it, marks
-that name a family (the beasts' ears), or radicals alone for a glyph with no
-letter. The letter is copied from the vendored
+that name a family (the beasts' ears; the epaulettes of the soldiery, its
+officers and elite troops), or radicals alone for a glyph with no letter. A
+family's radical sits in the glyph's top corners, outside the letter's
+slot, so any letter in either case can wear it, and one glyph carries one
+family. The letter is copied from the vendored
 [`../jetbrains-mono/JetBrainsMono-Regular.ttf`](../jetbrains-mono/README.md)
 and centred in the glyph's width.
 

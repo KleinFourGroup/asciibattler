@@ -171,3 +171,32 @@ player keeps one) and in the promotion screen's event payload
 (`src/core/events.ts`), so the corpus's event digests move for runs that
 promote an officer; `corpus.ts` allows `--rebaseline` after a replay
 mapped back to the old glyph shows nothing else moved.
+
+### 160a — the epaulettes shipped (2026-11-18)
+
+**Signed** ("Fully agreed, Claude! 😁 The officer looks great with the
+epaulettes, but the mercenary and the halberdier definitely don't
+thematically fit."): the officer wears them; the rule is officers and
+elite troops, the line infantry and hired swords plain.
+
+**Built.** `radicals/epaulettes.svg` (the trial's rounded pad with three
+strands of fringe), and two rows in `glyphs.json`: U+E020 `g.epaulettes`,
+the grenadier's, unused until 160c adds the unit, and U+E021
+`O.epaulettes`, the officer's, now in `config/units.json`. `npm run
+gen:font`: 10 drawn glyphs, the atlas's 40 live glyphs all in a shipped
+face (the officer's `O` out, its new glyph in). The face's README and
+DESIGN's glyph paragraph name the soldiery's family and the rule.
+
+**Checked.** The glyph-face and font-coverage tests and the sampler's,
+102 of 102: the rebuild byte-identical to the committed woff2, and every
+drawn glyph's ink inside the atlas cell's room (the epaulettes' top 688
+units above the baseline against 839). The corpus: predicted to move in
+the promotion screen's payload for runs that promote an officer;
+**0 of 34 differ**, since the corpus digests battle events, none of
+which carries a glyph, and the end's hash holds none, so it cannot see a
+glyph. What carries the claim instead: a search of `src/sim`, `run`,
+`bot`, `core` and `journal` for reads of `.glyph` finds only copies
+(the archetype lookup, the unit's constructor, the World's spawn,
+snapshot and restore), no branch; the same search over `src/render`
+finds its reads, the control. The officer's swap moves nothing but what
+is drawn.

@@ -656,7 +656,7 @@
   },
   "officer": {
     "name": "Officer",
-    "glyph": "O",
+    "glyph": "",
     "abilities": ["cane","inspire"],
     "targeting": "nearest",
     "rarity": "rare",

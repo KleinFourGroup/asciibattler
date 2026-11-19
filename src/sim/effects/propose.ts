@@ -16,7 +16,7 @@
 import type { Unit } from '../Unit';
 import type { World } from '../World';
 import type { ActionProposal } from '../Action';
-import { currentTarget, lowestWoundedAlly } from '../Targeting';
+import { currentTarget, hostileCandidate, lowestWoundedAlly } from '../Targeting';
 import { resolveAreaVictims } from './targeting';
 import { collectLosBlockers, firingBandCell } from '../positioning';
 import { unitDistance } from '../occupancy';
@@ -284,14 +284,31 @@ function proposeAreaBlast(def: AbilityDef, unit: Unit, world: World): ActionProp
 /**
  * A blast anchored on the caster (an `aoe` selector with `anchor: 'caster'`).
  * No target, no band and no line of sight; the one gate is whether the blast
- * would touch anyone now, judged by the `resolveAreaVictims` the interpreter
- * runs when it fires, so the two cannot disagree. An `affects: 'allies'` or
- * `'all'` blast always finds the caster, whose footprint covers the centre, so
- * it fires on every cooldown. Nothing is captured as the centre: the
+ * would touch someone it is for now (`burstIsFor`), among the
+ * `resolveAreaVictims` the interpreter runs when it fires. Scenery and a
+ * passive camp in the blast take the hit when it fires but never set it off,
+ * as an aimed blast takes them only beside its target. An `affects: 'allies'`
+ * or `'all'` blast always finds the caster, whose footprint covers the centre,
+ * so it fires on every cooldown. Nothing is captured as the centre: the
  * interpreter's `aoeCenter` reads the caster's live cell when it fires, so a
  * push during the wind-up moves the blast with the body. `targetId` −1, and
  * `phaseTarget` surfaces nothing.
  */
+/**
+ * Whether a victim of a burst on its caster is reason to cast it: one of the
+ * caster's own side (the blast affects allies), a hostile (`hostileCandidate`:
+ * a foe, or a camp turned hostile), or the caster's own target
+ * (`currentTarget`: the rubble the overlay chose, an ordered focus on a
+ * passive camp). Destructible scenery and a passive camp's members otherwise
+ * ride along, so a caster beside rubble walks on toward its foe instead of
+ * standing there blasting it.
+ */
+function burstIsFor(victim: Unit, caster: Unit, world: World): boolean {
+  if (victim.team === caster.team) return true;
+  if (hostileCandidate(caster, victim, world)) return true;
+  return currentTarget(caster, world)?.id === victim.id;
+}
+
 function proposeCasterAnchoredBlast(
   def: AbilityDef,
   sel: Extract<AbilityDef['target'], { kind: 'aoe' }>,
@@ -304,7 +321,7 @@ function proposeCasterAnchoredBlast(
     ringMultiplier: sel.ringMultiplier,
     affects: sel.affects,
   });
-  if (victims.length === 0) return null;
+  if (!victims.some((v) => burstIsFor(v.unit, unit, world))) return null;
 
   const speed = unit.effectiveStats.speed;
   const ops = def.effects.map((e) => resolveOp(e.op, { unit }));

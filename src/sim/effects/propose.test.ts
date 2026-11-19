@@ -37,6 +37,8 @@ interface MakeOpts {
   range?: number;
   hp?: number;
   blocksLos?: boolean;
+  /** A neutral's camp: a member of camp `campId` rather than scenery. */
+  campId?: number;
 }
 
 let nextId = 1;
@@ -54,6 +56,7 @@ function makeUnit(team: Team, pos: GridCoord, opts: MakeOpts = {}): Unit {
     derived,
     position: pos,
     ...(opts.blocksLos !== undefined ? { blocksLineOfSight: opts.blocksLos } : {}),
+    ...(opts.campId !== undefined ? { campId: opts.campId } : {}),
   });
   if (opts.hp !== undefined) u.currentHp = opts.hp;
   return u;
@@ -542,6 +545,64 @@ describe('the caster-anchored blast propose arm (aoe anchor:caster)', () => {
       effects: [{ phase: 'impact', op: { kind: 'applyStatus', statusId: 'emboldened' } }],
     });
     expect(new EffectAbility(def).propose(u, w)).not.toBeNull();
+  });
+
+  // Scenery and a passive camp are hit when the burst fires but never set it
+  // off: the caster's foe is elsewhere, so it walks on rather than standing
+  // at the rubble. The caster's own target is the exception.
+  const rubble = (pos: GridCoord): Unit => makeUnit('neutral', pos, { archetype: 'rubble_1x1' });
+  const campMember = (pos: GridCoord): Unit => makeUnit('neutral', pos, { archetype: 'wolf', campId: 1 });
+  function withCamp(units: Unit[], hostileTo: Team[] = []): World {
+    const w = world(units);
+    w.installCamps(
+      [{ id: 1, defId: 'test-den', anchor: { x: 0, y: 0 }, hostileTo: new Set(hostileTo), pending: [], killedBy: null }],
+      new RNG(5),
+    );
+    return w;
+  }
+
+  it('abstains with only rubble beside it while its foe stands off', () => {
+    const u = makeUnit('player', { x: 5, y: 5 });
+    const foe = makeUnit('enemy', { x: 12, y: 12 });
+    const r = rubble({ x: 6, y: 5 });
+    const w = world([u, foe, r]);
+    u.targetId = foe.id;
+    expect(new EffectAbility(novaDef()).propose(u, w)).toBeNull();
+  });
+
+  it('fires at rubble that is its own target (the overlay breaking a way through)', () => {
+    const u = makeUnit('player', { x: 5, y: 5 });
+    const r = rubble({ x: 6, y: 5 });
+    const w = world([u, r]);
+    u.targetId = r.id;
+    expect(new EffectAbility(novaDef()).propose(u, w)).not.toBeNull();
+  });
+
+  it('fires at a foe beside it, rubble beside it too, though its target stands off', () => {
+    const u = makeUnit('player', { x: 5, y: 5 });
+    const r = rubble({ x: 6, y: 5 });
+    const foe = makeUnit('enemy', { x: 4, y: 4 });
+    const target = makeUnit('enemy', { x: 12, y: 12 });
+    const w = world([u, r, foe, target]);
+    u.targetId = target.id;
+    expect(new EffectAbility(novaDef()).propose(u, w)).not.toBeNull();
+  });
+
+  it('abstains beside a passive camp, and fires once the camp turns on its team', () => {
+    const u = makeUnit('player', { x: 5, y: 5 });
+    const wolf = campMember({ x: 5, y: 6 });
+    expect(new EffectAbility(novaDef()).propose(u, withCamp([u, wolf]))).toBeNull();
+    const u2 = makeUnit('player', { x: 5, y: 5 });
+    const wolf2 = campMember({ x: 5, y: 6 });
+    expect(new EffectAbility(novaDef()).propose(u2, withCamp([u2, wolf2], ['player']))).not.toBeNull();
+  });
+
+  it('fires at a passive camp member it was ordered onto (its own target)', () => {
+    const u = makeUnit('player', { x: 5, y: 5 });
+    const wolf = campMember({ x: 5, y: 6 });
+    const w = withCamp([u, wolf]);
+    u.targetId = wolf.id;
+    expect(new EffectAbility(novaDef()).propose(u, w)).not.toBeNull();
   });
 });
 

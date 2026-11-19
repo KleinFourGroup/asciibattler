@@ -90,6 +90,10 @@ The cut, signed 2026-11-17 with its leans (WORKLOG §160):
 - ◐ **160f — the ronin's whirlwind** (`batch`): a burst on itself beside
   the katana, a short recovery on a flat 5 s; 4 plants; 13 of 34
   journals moved; the chaos and resume seeds re-picked (WORKLOG 160f).
+- ☑ **160f-post — a burst fires at someone it is for** (`none`): a burst
+  on its caster no longer fires at scenery or a passive camp alone, found
+  at 160g's step zero; 5 plants; 12 of 34 journals moved (WORKLOG
+  160f-post).
 - ☐ **160g — the play** (`stop`): the four in play, the push's feel, the
   bursts' look and sound, the drafted numbers.
 

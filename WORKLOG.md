@@ -528,3 +528,49 @@ calls, each on a lean:
   Repulse half the foes it hits.
 - The numbers, names and lines as built; the rarities and prices; the
   encounters; the sounds reused; the explosion as every burst's look.
+
+### 160g — the user's answer (2026-11-18)
+
+**Signed** ("absolutely build 1"): call 1, the burst's gate, built
+before the play as 160f-post. The user had already played the grenadier,
+on `spiralFireLife`, and brought two findings. *A knockback into the
+abyss:* a grenade into a line of foes on a path flanked by chasm moves no
+one, where they should fall; a fall is a mechanic bigger than a `-post`,
+and the user asked for the session's view (§158's fork 3 weighed a fall
+that kills against the wall and signed the wall). *A knockback toward the
+thrower:* the blast's near ring is knocked toward the grenadier, which
+delivers a melee foe to it; the user's fix, a short stun after the push.
+Both answered at the next stop, below.
+
+### 160f-post — a burst fires at someone it is for (2026-11-18)
+
+**Step zero.** As measured above: `proposeCasterAnchoredBlast`'s gate is
+any `resolveAreaVictims` victim, scenery and passive camps included.
+`currentTarget` already honours rubble the overlay chose and an ordered
+camp member, and `hostileCandidate` is the acquisition's own test of a
+hostile, so the gate composes the two without a new rule.
+
+**Built.** `burstIsFor` (`src/sim/effects/propose.ts`): a victim sets the
+burst off if it is on the caster's side (an allies blast, as before), a
+hostile, or the caster's own target. Scenery and a passive camp are still
+hit when it fires, as an aimed blast's ring hits them. DESIGN "The
+carriers" and ARCHITECTURE's `propose.ts` line.
+
+**Checked.** `src/sim/effects/propose.test.ts` +5 on the synthetic nova:
+rubble alone beside it with its foe off abstains; rubble that is its own
+target fires; a foe beside it with rubble too fires while its target
+stands off; a passive camp abstains and the same camp turned hostile
+fires; a passive camp member it was ordered onto fires. Planted
+(`scratch/160/160f-post-plants.json`): 5 plants (the gate back to any
+victim; no own-target clause; no hostile clause; any non-scenery counts;
+no ally clause), each caught, the clean file green. The probes after:
+Repulse 189 casts, every one with a hostile in the blast (was 164 of
+354), 1.32 foes a cast, 54% moving one; the Wail 298 of 298; the
+whirlwind 316 of 317, the other at rubble that was the ronin's own
+target; no caster stood at scenery. **The corpus:** no prediction was
+written before the replay, which diverged on 12 of 34; `--record` moved
+those 12, the replay after 0 of 34, 21 of 21 command kinds, 48 event
+names.
+
+**Read:** `none` by the pins and their plants; the four's look is read
+at 160g's play.

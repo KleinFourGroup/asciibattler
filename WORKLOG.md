@@ -793,3 +793,10 @@ the user's read.
 
 **Read** (`batch`, at 160g): the ronin's URL. Wrong looks like sparks
 flying outward, a spin off the ronin, or a flash at its centre.
+
+### 160g — the play, put again (2026-11-19)
+
+Put over the `-post` steps, with their `batch` reads, the URLs, and what
+the user has still to read: the stun's tint and symbol, the attacks'
+names and lines, the grenade's flat 2.65 s (a signed number changed
+inside its intent), and the banshee's reach staying the Wail's.

@@ -606,3 +606,30 @@ blast away from the thrower (`from` the caster rather than the centre),
 so none lands nearer it; the grenade's strength stays where it is, and
 the line already says "a step back". With falls, it would also throw a
 whole line off a path when the thrower stands across the gap.
+
+### 160g — the second answer (2026-11-19)
+
+**Signed:** calls 2 to 8 as leaned ("2-8 stay as leaned"). *The stun,* the
+user's over the session's lean: a one-second stun after the grenade's
+push; knocking every foe away from the thrower is not how grenades work,
+would clash with what the player expects, and with several grenadiers the
+player couldn't tell who threw what. *The fall,* every lean but one: the
+Snag drags a foe off an edge too ("it'll be hilarious"), its
+brokenness accepted since the AI doesn't plan around it. **New, from the
+user's play:** the telekinetic and the banshee stand around between
+casts, and want a recharge longer than the ability's own time; the
+ronin's whirlwind should be its glyphs spinning around it, not an
+explosion on it. The user asked to talk these through before ordering.
+
+**The session's reply, measured** (`scratch/160/holds.ts`, at each unit's
+speed): `fill` holds the telekinetic 2.0 s after each Repulse, the
+banshee 5.8 s after each Wail, the grenadier 1.85 s after each grenade;
+the Snag and the whirlwind already take the shape asked for, a 0.3 s
+recovery on a longer recharge. The open details put back: the stun's
+scope (every foe in the blast, the lean, or only those knocked); the
+grenadier's recovery shortened too, so the stun buys its step back (a
+lean, the user's call since it makes the grenadier back off between
+throws); the short recovery for Repulse and the Wail, with a basic
+attack each only if play still reads them idle; the spin as a new burst
+style, its glyphs a taste stop; how common the Snag's drop will be on
+the chasm maps.

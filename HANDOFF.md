@@ -6,7 +6,7 @@ A fresh-session orientation for ASCIIbattler. Read this first; then dive into th
 
 **The ONE home for live status.** Other docs (and the agent memory) point here instead of restating it; when state changes, this section is the single place that updates.
 
-- **NEXT — ROUND 12 (Push, pull and blink): 160g, the play** (`stop`, put again 2026-11-18, waiting on the user): 160f-post built (a burst fires only at someone it is for); the user, having played the grenadier, raised a fall into the abyss (answered: a phase of its own, its calls on leans) and a stun for foes knocked toward the thrower (answered against, with a lean to knock every foe away from the thrower). Their answer decides the grenade's `-post` and where the fall phase goes; then the other three units' reads, then §160's close (WORKLOG "160g — the abyss and the stun, answered"; [ROADMAP.md](ROADMAP.md) §160). **Open ◐:** 160c, 160d, 160e, 160f, read at 160g.
+- **NEXT — ROUND 12 (Push, pull and blink): 160g, the play** (`stop`, mid-answer 2026-11-19): calls 2 to 8 signed, the grenade's 1 s stun signed, the fall's leans signed with the Snag dropping foes too; the short recovery for Repulse and the Wail and the ronin's spin raised by the user; details put back, then the ordering (WORKLOG "160g — the second answer"; [ROADMAP.md](ROADMAP.md) §160). **Open ◐:** 160c, 160d, 160e, 160f, read at 160g.
 - **In flight:** nothing.
 - **The public build:** `0.4.0` (`4fc62cfe`, tag `v0.4.0`), uploaded to itch.io on 2026-11-13; the uploads before it are in Closed rounds below.
 - **Snapshots:** WorldSnapshot **v40** (no player keeps one) · RunSnapshot **v51** (a v50 save, `0.3.0`'s, rejects).

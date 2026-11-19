@@ -42,3 +42,19 @@ export function explosionPlacement(
   const radius = Math.max(1, area?.radius ?? 1);
   return { cell: { ...cell }, ringSpread: EXPLOSION_RING_SPREAD * radius };
 }
+
+/** How many sparks a spin sweeps round its caster: the explosion's ring. */
+export const SPIN_SPARKS = 8;
+
+/**
+ * Where spark `index` of a spin sits at `t` (0 to 1 over the spin), as an
+ * offset in world units from the caster's centre on the ground plane: the
+ * sparks start evenly round a circle of `radius`, the explosion's eight
+ * directions, and sweep one full turn together at a steady rate, so at
+ * `t = 1` each is back where it began. A spin is drawn on its caster as an
+ * explosion anchored there is (`explosionPlacement`), at its ring's spread.
+ */
+export function spinSparkOffset(index: number, t: number, radius: number): { dx: number; dz: number } {
+  const angle = (2 * Math.PI * index) / SPIN_SPARKS + 2 * Math.PI * Math.min(1, Math.max(0, t));
+  return { dx: radius * Math.cos(angle), dz: radius * Math.sin(angle) };
+}

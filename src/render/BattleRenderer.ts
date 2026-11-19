@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import type { EventBus } from '../core/EventBus';
 import type { GameEvents } from '../core/events';
 import type { GridCoord } from '../core/types';
-import { explosionPlacement } from './burstPlacement';
+import { explosionPlacement, SPIN_SPARKS, spinSparkOffset } from './burstPlacement';
 import type { AbilityDef } from '../sim/effects/schema';
 import type { World } from '../sim/World';
 import type { ObjectiveTarget } from '../sim/objective';
@@ -103,6 +103,9 @@ interface ExplosionParticle {
   /** The fade's peak alpha (1 by default), so the aura ring rides the lane
    *  at a whisper without dimming the bursts. */
   readonly alphaScale: number;
+  /** A spin's spark: it circles `from` at `radius` (`spinSparkOffset`)
+   *  instead of easing to `to`. */
+  readonly orbit?: { readonly index: number; readonly radius: number };
 }
 
 /**
@@ -357,7 +360,14 @@ export class BattleRenderer {
       // Ease-out: sparks shoot out fast then settle, which reads more
       // explosive than a linear drift.
       const eased = 1 - (1 - t) * (1 - t);
-      const pos = this.scratchPos.copy(p.from).lerp(p.to, eased);
+      const pos = this.scratchPos.copy(p.from);
+      if (p.orbit) {
+        const { dx, dz } = spinSparkOffset(p.orbit.index, t, p.orbit.radius);
+        pos.x += dx;
+        pos.z += dz;
+      } else {
+        pos.lerp(p.to, eased);
+      }
       const size = p.sizeFrom + (p.sizeTo - p.sizeFrom) * t;
       this.sprites.updateSprite(p.handle, { position: pos, size, alpha: (1 - t) * p.alphaScale });
       if (t >= 1) {
@@ -1513,6 +1523,16 @@ export class BattleRenderer {
     selector: AbilityDef['target'] | undefined,
   ): void {
     if (!this.world) return;
+    if (spec.style === 'spin') {
+      // On its caster's live cell, as an explosion anchored there is, at the
+      // ring's spread.
+      const caster = this.world.findUnit(casterId);
+      const placed = explosionPlacement(selector, targetCell, caster?.position);
+      if (!placed) return;
+      const color = caster ? colorForTeam(caster.team) : COLORS.TERMINAL_STONE;
+      this.spawnSpin(this.cellVisualCenter(placed.cell), color, placed.ringSpread);
+      return;
+    }
     if (spec.style === 'explosion') {
       // An aimed blast on its surfaced cell; one anchored on its caster on the
       // caster's live cell, its ring as wide as its radius (`burstPlacement.ts`).
@@ -1643,6 +1663,28 @@ export class BattleRenderer {
     }
   }
 
+  /**
+   * The explosion's eight sparks swept once round `center` at `radius`, from
+   * its eight directions, fading as they go, with no central flash: a blade
+   * circling its wielder. Over the explosion ring's time.
+   */
+  private spawnSpin(center: THREE.Vector3, color: string, radius: number): void {
+    for (let index = 0; index < SPIN_SPARKS; index++) {
+      this.addExplosionParticle(
+        center,
+        center,
+        PROJECTILE_GLYPH,
+        color,
+        EXPLOSION_SPARK_SIZE,
+        EXPLOSION_SPARK_SIZE,
+        EXPLOSION_RING_SECONDS,
+        EXPLOSION_BLOOM,
+        1,
+        { index, radius },
+      );
+    }
+  }
+
   private addExplosionParticle(
     from: THREE.Vector3,
     to: THREE.Vector3,
@@ -1653,8 +1695,15 @@ export class BattleRenderer {
     duration: number,
     bloom: number = EXPLOSION_BLOOM,
     alphaScale = 1,
+    orbit?: { index: number; radius: number },
   ): void {
-    const handle = this.sprites.addSprite(glyph, color, from);
+    const start = orbit ? from.clone() : from;
+    if (orbit) {
+      const { dx, dz } = spinSparkOffset(orbit.index, 0, orbit.radius);
+      start.x += dx;
+      start.z += dz;
+    }
+    const handle = this.sprites.addSprite(glyph, color, start);
     this.sprites.updateSprite(handle, {
       size: sizeFrom,
       bloomIntensity: bloom,
@@ -1669,6 +1718,7 @@ export class BattleRenderer {
       sizeFrom,
       sizeTo,
       alphaScale,
+      ...(orbit ? { orbit } : {}),
     });
   }
 

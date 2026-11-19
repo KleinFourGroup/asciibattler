@@ -104,8 +104,9 @@ The cut, signed 2026-11-17 with its leans (WORKLOG §160):
 - ◐ **160e-post — the scratch** (`batch`): the banshee's scratch on the
   same shape; the Wail over it on a 0.3 s recovery; 2 plants; with
   160d-post, 2 of 34 journals moved.
-- ☐ **160f-post2 — the spin** (`batch`): the whirlwind drawn as the
-  explosion's sparks circling the ronin once, no central flash.
+- ◐ **160f-post2 — the spin** (`batch`): the whirlwind drawn as the
+  explosion's sparks circling the ronin once, no central flash; 4 plants
+  (WORKLOG 160f-post2).
 - ☐ **160g — the play** (`stop`): the four in play, the push's feel, the
   bursts' look and sound, the drafted numbers; calls 2 to 8 signed
   2026-11-19, the play read again over the `-post` steps above.

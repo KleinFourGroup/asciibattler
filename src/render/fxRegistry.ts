@@ -39,11 +39,12 @@ export interface FxProjectile {
 export interface FxBurst {
   /**
    * `explosion` — a team-colored flash and an outward ring of sparks (the
-   * mage's detonation). `dud` — a small stone-grey dust puff (the catapult's
-   * boulder landing). The driver picks the place and the color from the live
-   * event and world.
+   * mage's detonation). `spin` — the explosion's sparks swept once round
+   * their caster at the ring's spread, no flash (the ronin's whirlwind).
+   * `dud` — a small stone-grey dust puff (the catapult's boulder landing).
+   * The driver picks the place and the color from the live event and world.
    */
-  style: 'explosion' | 'dud';
+  style: 'explosion' | 'spin' | 'dud';
 }
 
 /**
@@ -198,9 +199,9 @@ export const FX_REGISTRY = {
     sound: 'magicboom',
     shake: { intensity: 0.08, durationSeconds: 0.22 },
   },
-  // The ronin's whirlwind: the explosion on the ronin, ringed out to its blast,
-  // with the melee swing's sound.
-  whirlwind: { burst: { style: 'explosion' }, sound: 'melee' },
+  // The ronin's whirlwind: the explosion's sparks swept once round the ronin
+  // at its blast's edge, with the melee swing's sound.
+  whirlwind: { burst: { style: 'spin' }, sound: 'melee' },
   // The catapult: a homing arc, then a dust dud, a heavy crash and a big shake
   // (a landing boulder hits hard).
   catapult_launch: { projectile: { style: 'arc' } },

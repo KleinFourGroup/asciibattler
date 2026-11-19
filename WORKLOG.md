@@ -755,3 +755,41 @@ event names; the four chaos slots apply the kinds they did.
 Wrong looks like a caster standing still between bursts beside a foe, a
 basic attack before the burst when both are ready, or a banshee walking
 into melee.
+
+### 160f-post2 — the spin (2026-11-19)
+
+**Step zero.** The explosion's particles ease in a straight line from
+one point to another (`updateExplosions`), so a spin needs a path of its
+own; the placement is the explosion's on its caster
+(`explosionPlacement`), so the spin reuses it.
+
+**Built.** A burst style `spin` (`FxBurst`): `spinSparkOffset`
+(`src/render/burstPlacement.ts`, pure), spark `i` of eight at an eighth
+of a turn apart on a circle of the ring's spread, sweeping one full turn
+at a steady rate over the spin; `BattleRenderer.spawnSpin` lays the
+explosion's eight sparks on it in the team colour, the ring's glyph,
+size, bloom and time (0.3 s), fading as they go, with no flash; an
+explosion particle may carry an `orbit` and is moved round its centre
+rather than eased to its end. The whirlwind's fx is the spin with the
+melee swing's sound. DESIGN's whirlwind line, and the grenade's recharge
+there corrected to 160c-post's flat 2.65 s (missed in that commit);
+ARCHITECTURE's `burstPlacement.ts` line.
+
+**Checked.** `burstPlacement.test.ts` +2: the whirlwind alone among the
+shipped abilities draws a spin, on the ronin's cell at 1.1 a cell of
+radius, read from the raw config; each spark keeps the spread at every
+point of the spin, a quarter of the spin is a quarter turn, the whole
+spin a full turn, neighbours an eighth of a turn apart at the start.
+Planted (`scratch/160/160f-post2-plants.json`): 4 plants (the whirlwind
+an explosion again; half a turn; sparks flying out; all eight at one
+angle), each caught, the clean file green. In the pane, on
+`?seed=5&character=soldier&roster=ronin:3,ronin:3,ronin:3` driven to the
+first reward: 11 whirlwinds, 11 spins, each at 1.1 in the player's
+green, no explosion drawn; every one of 176 sampled spark frames on its
+circle (the largest miss 2e-7 world units); the console's only errors
+the pane's cache failures. Render only: no sim touch, the corpus
+unchanged by construction. Not seen: the spin's look in motion, which is
+the user's read.
+
+**Read** (`batch`, at 160g): the ronin's URL. Wrong looks like sparks
+flying outward, a spin off the ronin, or a flash at its centre.

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { explosionPlacement } from './burstPlacement';
+import { explosionPlacement, SPIN_SPARKS, spinSparkOffset } from './burstPlacement';
 import { fxDescriptor } from './fxRegistry';
 import { parseAbilityDef, type AbilityDef } from '../sim/effects/schema';
 import abilitiesJson from '../../config/abilities.json';
@@ -68,5 +68,44 @@ describe('the explosion, placed', () => {
     const aimed = shippedExplosions[0]![1].target;
     expect(explosionPlacement(aimed, undefined, { x: 3, y: 5 })).toBeNull();
     expect(explosionPlacement(burstOnSelf(1).target, { x: 4, y: 7 }, undefined)).toBeNull();
+  });
+});
+
+describe('the spin', () => {
+  // The shipped abilities whose fx draws a spin, read from the raw config.
+  const shippedSpins = Object.entries(raw).filter(([, d]) =>
+    Object.values(d.fx ?? {}).some((key) => fxDescriptor(key)?.burst?.style === 'spin'),
+  );
+
+  it("draws the whirlwind alone as a spin, on the ronin's cell at its blast's spread", () => {
+    expect(shippedSpins.map(([id]) => id)).toEqual(['whirlwind']);
+    const target = raw.whirlwind!.target;
+    expect(target).toMatchObject({ kind: 'aoe', anchor: 'caster' });
+    const placed = explosionPlacement(target, undefined, { x: 3, y: 5 });
+    expect(placed?.cell).toEqual({ x: 3, y: 5 });
+    expect(placed?.ringSpread).toBeCloseTo(1.1 * (target.kind === 'aoe' ? target.radius : 1), 10);
+  });
+
+  it("starts its eight sparks a turn's eighth apart at the spread, keeps them there, and ends one turn on", () => {
+    expect(SPIN_SPARKS).toBe(8);
+    const r = 1.1;
+    const angleOf = (o: { dx: number; dz: number }) => Math.atan2(o.dz, o.dx);
+    for (let i = 0; i < SPIN_SPARKS; i++) {
+      for (const t of [0, 0.25, 0.5, 0.75, 1]) {
+        const o = spinSparkOffset(i, t, r);
+        expect(Math.hypot(o.dx, o.dz), `spark ${i} at ${t}`).toBeCloseTo(r, 10);
+      }
+      // A quarter of the spin is a quarter turn on; the whole spin a full turn.
+      const start = spinSparkOffset(i, 0, r);
+      const quarter = spinSparkOffset(i, 0.25, r);
+      expect(quarter.dx).toBeCloseTo(-start.dz, 10);
+      expect(quarter.dz).toBeCloseTo(start.dx, 10);
+      const end = spinSparkOffset(i, 1, r);
+      expect(end.dx).toBeCloseTo(start.dx, 10);
+      expect(end.dz).toBeCloseTo(start.dz, 10);
+    }
+    // At the start, neighbours sit an eighth of a turn apart.
+    const step = angleOf(spinSparkOffset(1, 0, r)) - angleOf(spinSparkOffset(0, 0, r));
+    expect(step).toBeCloseTo((2 * Math.PI) / SPIN_SPARKS, 10);
   });
 });

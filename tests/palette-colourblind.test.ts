@@ -201,7 +201,7 @@ describe('116g — the palettes and the setting that names them', () => {
   it('every palette spells every name as a #rrggbb hex', async () => {
     const { PALETTES } = await import('../src/render/palette');
     const names = Object.keys(PALETTES.get('default')!).sort();
-    expect(names.length).toBe(30);
+    expect(names.length).toBe(31);
     for (const [name, palette] of PALETTES) {
       expect(Object.keys(palette).sort(), name).toEqual(names);
       for (const hex of Object.values(palette)) expect(() => hexToLinear(hex), `${name}: ${hex}`).not.toThrow();

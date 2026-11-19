@@ -155,7 +155,8 @@
     "id": "grenade",
     "name": "Grenade",
     "description": "Lobs a charge that blasts foes a step back.",
-    "cooldownSeconds": 3.5,
+    "cooldownSeconds": 2.65,
+    "speedScaled": false,
     "rangeCells": 4,
     "minRangeCells": 2,
     "target": { "kind": "aoe", "shape": "square", "radius": 1, "anchor": "targetCell", "affects": "enemies", "ringMultiplier": 0.5 },
@@ -164,7 +165,7 @@
       { "phase": "release", "seconds": 0 },
       { "phase": "travel", "seconds": 0.5 },
       { "phase": "impact", "seconds": 0 },
-      { "phase": "recovery", "seconds": "fill" }
+      { "phase": "recovery", "seconds": 0.3 }
     ],
     "orphanPolicy": "ground-target",
     "priority": 10,
@@ -180,6 +181,10 @@
           "evadable": false,
           "bypassDefense": false
         }
+      },
+      {
+        "phase": "impact",
+        "op": { "kind": "applyStatus", "statusId": "stunned" }
       },
       {
         "phase": "impact",

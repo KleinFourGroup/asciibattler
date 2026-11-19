@@ -78,6 +78,7 @@ const DEFAULT = {
   PARTY_PINK: '#FF7AD9', // hyped
   SHIELD_STEEL: '#6FA8FF', // shielded
   VOLT_YELLOW: '#F4FF3D', // overclocked
+  STUN_WHITE: '#FFF4D6', // stunned — a warm white, apart from every status hue
 } as const;
 
 type PaletteName = keyof typeof DEFAULT;

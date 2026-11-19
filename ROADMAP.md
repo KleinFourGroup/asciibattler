@@ -94,9 +94,10 @@ The cut, signed 2026-11-17 with its leans (WORKLOG §160):
   on its caster no longer fires at scenery or a passive camp alone, found
   at 160g's step zero; 5 plants; 12 of 34 journals moved (WORKLOG
   160f-post).
-- ☐ **160c-post — the stun and the fall-back** (`batch`): a 1 s stun on
+- ◐ **160c-post — the stun and the fall-back** (`batch`): a 1 s stun on
   every foe the grenade hits; the grenadier's short recovery, so it falls
-  back between throws (signed 2026-11-19, WORKLOG 160g).
+  back between throws; 5 plants; 7 of 34 journals moved (WORKLOG
+  160c-post).
 - ☐ **160d-post — the punch** (`batch`): a melee punch on the telekinetic,
   might 1 `strength`; Repulse over it on a 0.3 s recovery.
 - ☐ **160e-post — the scratch** (`batch`): the banshee's scratch on the

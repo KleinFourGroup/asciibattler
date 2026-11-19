@@ -7,6 +7,7 @@
   "statuses.panic.name": "Panic",
   "statuses.blind.name": "Blind",
   "statuses.confusion.name": "Confusion",
+  "statuses.stunned.name": "Stunned",
   "statuses.emboldened.name": "Emboldened",
   "statuses.inspired.name": "Inspired"
 }

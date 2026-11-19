@@ -265,6 +265,7 @@ export const FX_REGISTRY = {
   panic_active: { overlay: { tint: COLORS.TERMINAL_AMBER } },
   blind_active: { overlay: { tint: COLORS.TERMINAL_STONE } },
   confusion_active: { overlay: { tint: COLORS.NEON_PURPLE } },
+  stunned_active: { overlay: { tint: COLORS.STUN_WHITE } },
 } satisfies Record<string, FxDescriptor>;
 
 /**

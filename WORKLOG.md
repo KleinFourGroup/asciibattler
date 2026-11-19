@@ -663,3 +663,55 @@ a `stop`; cut at its kickoff); §160's rest in order: 160c-post (the stun
 and the fall-back), 160d-post (the punch), 160e-post (the scratch),
 160f-post2 (the spin), then 160g's play again, then §160's close. The
 `-post` steps are `batch`, read together at 160g.
+
+### 160c-post — the stun and the fall-back (2026-11-19)
+
+**Step zero.** The stun's flags exist (`frozen`'s `preventsAttack` and
+`preventsMove`), so a status needs config, a tint, a symbol and a name,
+and no sim code. A status op on an area resolves its victims from the
+blast's cells as it fires, so after the push a foe knocked clear of the
+blast escaped the stun; found by the test, and the stun put before the
+push in the grenade's ops.
+
+**Built.** `stunned` (`config/statuses.json`): 1 s, no move, no attack,
+refreshed on a second hit; its tint and symbol a warm white `STUN_WHITE`
+(`#FFF4D6`, apart from every status hue) and `@` (a dev fixture's body
+before, no unit's glyph); its name in the en locale. The grenade:
+`applyStatus stunned` after the damage and before the push; its recovery
+0.3 s for `fill`, so the grenadier is free between throws and the band
+hold steps it back from a foe inside its floor. DESIGN "The carriers"
+and the status symbols' list.
+
+**Found by the hook: the grenade is now an area lock.** An area that
+lays a behaviour status must keep a flat cooldown longer than the
+status's longest time (`abilities.test.ts`), so a recast can't chain the
+status on whoever stands in the blast as speed shortens the cooldown.
+The grenade's was speed-scaled, 3.5 s that is 2.65 s at the grenadier's
+speed of 5. It is now a flat 2.65 s, the rate played at 160c at the
+base speed, which no longer quickens as a grenadier's speed grows; a
+change to signed call 3's number inside its intent, flagged at 160g. The
+guard's census and the statuses' census each take the newcomer, the
+palette's count and the CSS tokens the new colour. **The chaos census**
+lost `declineReward`: none of the four every-commit walks declined a
+reward any more. The two-hop slot moved from seed 32 to seed 1, the
+shortest of 40 that clears a sector and declines one (0.65 s alone;
+`scratch/160/chaos-census.ts`), both census lists as they were.
+
+**Checked.** `src/sim/grenadier.test.ts` +2 from the raw config: every
+foe in the blast is stunned, a moved one and one a body kept from moving,
+not a foe beyond the blast nor the thrower, and the stun lasts the
+status's time; a foe placed beside the grenadier after a throw, and it is
+back at its floor within its recovery and half a second. The first test's
+thrower check now reads where it threw from, since it moves after.
+Planted (`scratch/160/160c-post-plants.json`): 5 plants (no stun; the
+stun after the push; `fill` again; a stun that lets its victim move; a
+stun twice as long; the grenade speed-scaled again, caught by the
+guard), each caught, the clean files green. **The corpus:** predicted 3
+to 12 of 34; the replay diverged on 7 under the speed-scaled cooldown,
+and on 5 more against that recording under the flat one; against HEAD,
+7 moved beyond their config hash (all 34 carry the new hash); the replay
+after 0 of 34, 21 of 21 command kinds, 48 event names.
+
+**Read** (`batch`, at 160g): the grenadier's URL. Wrong looks like a
+knocked foe swinging at once, a stun with no tint, or a grenadier
+standing still beside a foe.

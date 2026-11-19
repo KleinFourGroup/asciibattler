@@ -182,7 +182,7 @@ describe('status-on-hit afflicters', () => {
         def.target.kind === 'aoe' &&
         def.effects.some((e) => e.op.kind === 'applyStatus' && STATUS_DEFS[e.op.statusId]?.behavior !== undefined),
     );
-    expect(locks.map((d) => d.id).sort()).toEqual(['hex', 'ice_storm', 'wail']);
+    expect(locks.map((d) => d.id).sort()).toEqual(['grenade', 'hex', 'ice_storm', 'wail']);
     for (const def of locks) {
       expect(def.speedScaled, `${def.id} has a flat cooldown`).toBe(false);
       for (const e of def.effects) {

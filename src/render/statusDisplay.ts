@@ -60,6 +60,8 @@ export const STATUS_DISPLAY: Record<string, StatusDisplay> = {
   panic: { color: COLORS.TERMINAL_AMBER, symbol: '!' },
   blind: { color: COLORS.TERMINAL_STONE, symbol: '⊘' },
   confusion: { color: COLORS.NEON_PURPLE, symbol: '?' },
+  // The grenade's stun: a dazed warm white, the swirl of a head knocked about.
+  stunned: { color: COLORS.STUN_WHITE, symbol: '@' },
   // The stat buffs. Gold beside panic's amber is a buff beside a behavior, as
   // burn beside panic is; retune by eye if it reads ambiguously.
   emboldened: { color: COLORS.BUFF_GOLD, symbol: '↑' },

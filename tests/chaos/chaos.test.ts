@@ -31,7 +31,9 @@ import { ChaosFailure, KINDS, chaosRun, type ChaosOptions, type ChaosResult } fr
 // packet; seed 11 is the one of 80 that does all of that and buys a packet
 // while leaving both census lists as they are (2.1 s alone). The
 // two-hop slot was seed 6 until that draw came out and its walk stopped
-// clearing a sector; seed 32 is the shortest of 40 that clears one.
+// clearing a sector, then seed 32 until the grenade's stun moved the walks
+// and none of the four declined a reward; seed 1 is the shortest of 40 that
+// clears a sector and declines one (0.65 s alone).
 //
 // A seed takes under 1 s alone and up to about 3 s beside the whole suite,
 // which failed the default 5 s under load with nothing wrong. 15 s leaves
@@ -41,7 +43,7 @@ const SEED_TIMEOUT_MS = 15_000;
 const EVERY_COMMIT: ReadonlyArray<readonly [number, string]> = [
   [32, 'hops=3&layout=procedural'],
   [18, ''],
-  [32, 'sectorHops=2'],
+  [1, 'sectorHops=2'],
   [11, 'character=gambler&bits=300'],
 ];
 

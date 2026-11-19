@@ -94,8 +94,30 @@ The cut, signed 2026-11-17 with its leans (WORKLOG §160):
   on its caster no longer fires at scenery or a passive camp alone, found
   at 160g's step zero; 5 plants; 12 of 34 journals moved (WORKLOG
   160f-post).
+- ☐ **160c-post — the stun and the fall-back** (`batch`): a 1 s stun on
+  every foe the grenade hits; the grenadier's short recovery, so it falls
+  back between throws (signed 2026-11-19, WORKLOG 160g).
+- ☐ **160d-post — the punch** (`batch`): a melee punch on the telekinetic,
+  might 1 `strength`; Repulse over it on a 0.3 s recovery.
+- ☐ **160e-post — the scratch** (`batch`): the banshee's scratch on the
+  same shape; the Wail over it on a 0.3 s recovery.
+- ☐ **160f-post2 — the spin** (`batch`): the whirlwind drawn as the
+  explosion's sparks circling the ronin once, no central flash.
 - ☐ **160g — the play** (`stop`): the four in play, the push's feel, the
-  bursts' look and sound, the drafted numbers.
+  bursts' look and sound, the drafted numbers; calls 2 to 8 signed
+  2026-11-19, the play read again over the `-post` steps above.
+
+## Phase 160.5 — the fall
+
+Inserted 2026-11-19 at 160g (WORKLOG "160g — the abyss and the stun,
+answered" and after): a push or a pull whose walk reaches chasm or deep
+water drops its victim, reopening §158's fork 3 (the wall). Signed with
+it: a fall kills as any death does, the pusher credited; deep water
+drowns as chasm drops; a boss stops at the edge; the Snag drops foes
+too; a self-move never falls; the AI unchanged. Before §161, so the
+charge is built on the rule and §162's board prices falls. **Risk:**
+medium. **Reads, foreseen:** the fall `none`; its look and sound a
+`stop`; the measurement a `stop`; the play a `stop`. Cut at its kickoff.
 
 ## Phase 161 — the blink and the charge
 

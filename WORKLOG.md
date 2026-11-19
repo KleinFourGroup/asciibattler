@@ -653,3 +653,13 @@ have strength 0, so a swing is might alone. The banshee's reach stays
 the Wail's 2 cells (`rangeForArchetype` takes the longest), so it
 scratches the foes that walk up to it rather than closing to melee. The
 user then asked for the session's lean on the fall phase.
+
+### 160g — the order signed (2026-11-19)
+
+**Signed** ("That all looks good to me"): §160.5, the fall, inserted
+after §160's close and before §161, with its draft shape (the fall
+`none`, its look and sound a `stop`, the measurement a `stop`, the play
+a `stop`; cut at its kickoff); §160's rest in order: 160c-post (the stun
+and the fall-back), 160d-post (the punch), 160e-post (the scratch),
+160f-post2 (the spin), then 160g's play again, then §160's close. The
+`-post` steps are `batch`, read together at 160g.

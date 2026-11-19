@@ -6,7 +6,7 @@ A fresh-session orientation for ASCIIbattler. Read this first; then dive into th
 
 **The ONE home for live status.** Other docs (and the agent memory) point here instead of restating it; when state changes, this section is the single place that updates.
 
-- **NEXT — ROUND 12 (Push, pull and blink): 160g, the play** (`stop`, mid-answer 2026-11-19): calls 2 to 8 signed, the grenade's 1 s stun signed, the fall's leans signed with the Snag dropping foes too; the short recovery for Repulse and the Wail and the ronin's spin raised by the user; details put back, then the ordering (WORKLOG "160g — the second answer"; [ROADMAP.md](ROADMAP.md) §160). **Open ◐:** 160c, 160d, 160e, 160f, read at 160g.
+- **NEXT — ROUND 12 (Push, pull and blink): §160's `-post` steps** (signed 2026-11-19): 160c-post (the stun, the grenadier's fall-back), 160d-post (the punch), 160e-post (the scratch), 160f-post2 (the spin), then 160g's play put again, then §160's close; then §160.5, the fall, inserted before §161 (WORKLOG "160g — the order signed"; [ROADMAP.md](ROADMAP.md) §160, §160.5). **Open ◐:** 160c, 160d, 160e, 160f, read at 160g.
 - **In flight:** nothing.
 - **The public build:** `0.4.0` (`4fc62cfe`, tag `v0.4.0`), uploaded to itch.io on 2026-11-13; the uploads before it are in Closed rounds below.
 - **Snapshots:** WorldSnapshot **v40** (no player keeps one) · RunSnapshot **v51** (a v50 save, `0.3.0`'s, rejects).

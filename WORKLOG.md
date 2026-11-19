@@ -633,3 +633,23 @@ throws); the short recovery for Repulse and the Wail, with a basic
 attack each only if play still reads them idle; the spin as a new burst
 style, its glyphs a taste stop; how common the Snag's drop will be on
 the chasm maps.
+
+### 160g — the third answer (2026-11-19)
+
+**Signed** ("YES! 😁"): the stun on every foe the blast hits; the
+grenadier's recovery shortened so it falls back between throws; the
+spin as the explosion's eight sparks circling the ronin once at a
+cell's distance, no central flash. **The user's, over the session's
+lean:** a small basic attack each now, not after play, the banshee a
+scratch and the telekinetic a punch, melee, minimal damage, scaling with
+strength. Read with it: Repulse and the Wail take the short recovery,
+since under `fill` a basic attack could never swing between casts.
+
+**Leans the session builds on, listed at the next stop:** both attacks
+on the club's and the ghoul claw's shape (might 1 `strength`, every
+1.5 s, `fill`, priority 10); Repulse and the Wail at priority 11 over
+them with a 0.3 s recovery, as the whirlwind over the katana; both units
+have strength 0, so a swing is might alone. The banshee's reach stays
+the Wail's 2 cells (`rangeForArchetype` takes the longest), so it
+scratches the foes that walk up to it rather than closing to melee. The
+user then asked for the session's lean on the fall phase.

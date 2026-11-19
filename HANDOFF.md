@@ -6,11 +6,11 @@ A fresh-session orientation for ASCIIbattler. Read this first; then dive into th
 
 **The ONE home for live status.** Other docs (and the agent memory) point here instead of restating it; when state changes, this section is the single place that updates.
 
-- **NEXT — ROUND 12 (Push, pull and blink): 160g, the play** (`stop`, put 2026-11-18, waiting on the user's answer): the four in play with 160c to 160f's `batch` reads, the landings measured, and a new call from step zero, a burst on its caster firing at scenery (WORKLOG "160g — step zero" and "160g — the play, put"; [ROADMAP.md](ROADMAP.md) §160). After the answer: its `-post` steps, then §160's close. **Open ◐:** 160c, 160d, 160e, 160f, read at 160g.
+- **NEXT — ROUND 12 (Push, pull and blink): 160g, the play** (`stop`, put again 2026-11-18, waiting on the user): 160f-post built (a burst fires only at someone it is for); the user, having played the grenadier, raised a fall into the abyss (answered: a phase of its own, its calls on leans) and a stun for foes knocked toward the thrower (answered against, with a lean to knock every foe away from the thrower). Their answer decides the grenade's `-post` and where the fall phase goes; then the other three units' reads, then §160's close (WORKLOG "160g — the abyss and the stun, answered"; [ROADMAP.md](ROADMAP.md) §160). **Open ◐:** 160c, 160d, 160e, 160f, read at 160g.
 - **In flight:** nothing.
 - **The public build:** `0.4.0` (`4fc62cfe`, tag `v0.4.0`), uploaded to itch.io on 2026-11-13; the uploads before it are in Closed rounds below.
 - **Snapshots:** WorldSnapshot **v40** (no player keeps one) · RunSnapshot **v51** (a v50 save, `0.3.0`'s, rejects).
-- **Tests:** **4012 main** in 279 files, **588 fuzz:smoke** in 60 files and **1 fuzz:jobs-parity** at `c17096bf` (its hook); typecheck clean; the journal corpus, run by hand, 34 journals, re-recorded at 160f (13 moved), the replay 0 of 34 differing.
+- **Tests:** **4017 main** in 279 files, **588 fuzz:smoke** in 60 files and **1 fuzz:jobs-parity** at `53a61e27` (its hook); typecheck clean; the journal corpus, run by hand, 34 journals, re-recorded at 160f-post (12 moved), the replay 0 of 34 differing.
 - **Model id: `claude-opus-5-5`** since 2026-09-22. When yours differs, say so at the next stop; at the user's word, review AGENTS.md against the vendor's current prompting guidance and record the new id (the last review: `archive/post-104-worklog.md`, "The new-model tone audit").
 - **Last phase: §159**, forced movement, the seam, 2026-11-17: the `push` op and the held slide, every landing rule planted out; `World.shove` retired; the adventurer's Snag and the forced move's look and sound signed, the Snag waiting for room (`archive/worklog-phase-159.md`).
 

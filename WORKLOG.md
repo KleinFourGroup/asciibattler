@@ -574,3 +574,35 @@ names.
 
 **Read:** `none` by the pins and their plants; the four's look is read
 at 160g's play.
+
+### 160g — the abyss and the stun, answered (2026-11-18)
+
+*The fall.* The session's view, put to the user: worth doing, as a phase
+of its own, not a `-post`. The play showed the cost of the wall that
+§158's fork 3 leaned on: a knockback that does nothing reads as broken
+on 4 of each sector's 12 maps (`junctionAmbush` and `spiralFireLife`,
+96 and 88 chasm tiles; `isthmus` and `icebergs`, 102 and 148 deep-water
+tiles; the procedural maps' water pools besides). The cost §158 named
+stands: a death cause, its look, and a balance read. The sim side is
+small: `pushLanding` already finds the tile that stops the walk, and a
+death at the op likely needs no new saved state (a prediction). The open calls, each with a
+lean: a fall kills, a death like any other under the casualty rule;
+deep water drowns as chasm drops, with a look of its own; a boss stops
+at the edge (one-cell bodies with no flag today, so a field); a pull
+never drops anyone; a self-move (the dash, the cavalier's charge) never
+falls; the AI unchanged at first. Placement: after §160, before the
+blink and the charge, so the charge is built on the rule and §162's
+board prices the pushers with falls in; a change to the signed spec,
+the user's call.
+
+*The stun.* Measured (`scratch/160/grenade-hold.ts`): at the
+grenadier's speed of 5 the grenade's cadence is 2.65 s, and the `fill`
+recovery holds the grenadier 1.85 s after the grenade lands. A melee foe
+knocked beside it is held only for the 0.15 s slide, so a short stun
+delays its first swing but the grenadier still can't step away first; a
+stun that lets it (about 2 s) holds every knocked foe three quarters of
+the time. The session's lean, against the stun: knock every foe in the
+blast away from the thrower (`from` the caster rather than the centre),
+so none lands nearer it; the grenade's strength stays where it is, and
+the line already says "a step back". With falls, it would also throw a
+whole line off a path when the thrower stands across the gap.

@@ -98,10 +98,12 @@ The cut, signed 2026-11-17 with its leans (WORKLOG §160):
   every foe the grenade hits; the grenadier's short recovery, so it falls
   back between throws; 5 plants; 7 of 34 journals moved (WORKLOG
   160c-post).
-- ☐ **160d-post — the punch** (`batch`): a melee punch on the telekinetic,
-  might 1 `strength`; Repulse over it on a 0.3 s recovery.
-- ☐ **160e-post — the scratch** (`batch`): the banshee's scratch on the
-  same shape; the Wail over it on a 0.3 s recovery.
+- ◐ **160d-post — the punch** (`batch`): a melee punch on the telekinetic,
+  might 1 `strength`; Repulse over it on a 0.3 s recovery; 3 plants
+  (WORKLOG 160d-post and 160e-post).
+- ◐ **160e-post — the scratch** (`batch`): the banshee's scratch on the
+  same shape; the Wail over it on a 0.3 s recovery; 2 plants; with
+  160d-post, 2 of 34 journals moved.
 - ☐ **160f-post2 — the spin** (`batch`): the whirlwind drawn as the
   explosion's sparks circling the ronin once, no central flash.
 - ☐ **160g — the play** (`stop`): the four in play, the push's feel, the

@@ -393,7 +393,7 @@
   "banshee": {
     "name": "Banshee",
     "glyph": "b",
-    "abilities": ["wail"],
+    "abilities": ["scratch","wail"],
     "targeting": "nearest",
     "draftable": false,
     "baseStats": {
@@ -714,7 +714,7 @@
   "telekinetic": {
     "name": "Telekinetic",
     "glyph": "k",
-    "abilities": ["repulse"],
+    "abilities": ["punch","repulse"],
     "targeting": "nearest",
     "rarity": "rare",
     "baseStats": {

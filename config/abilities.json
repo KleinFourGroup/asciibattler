@@ -203,10 +203,10 @@
     "timeline": [
       { "phase": "windup", "seconds": 0.4 },
       { "phase": "impact", "seconds": 0 },
-      { "phase": "recovery", "seconds": "fill" }
+      { "phase": "recovery", "seconds": 0.3 }
     ],
     "orphanPolicy": "commit-at-cast",
-    "priority": 10,
+    "priority": 11,
     "effects": [
       {
         "phase": "impact",
@@ -257,6 +257,64 @@
       }
     ],
     "fx": { "impact": "whirlwind" }
+  },
+  "punch": {
+    "id": "punch",
+    "name": "Punch",
+    "description": "A plain punch, while the mind gathers itself.",
+    "cooldownSeconds": 1.5,
+    "rangeCells": 1,
+    "target": { "kind": "enemyInRange" },
+    "timeline": [
+      { "phase": "impact", "seconds": 0 },
+      { "phase": "recovery", "seconds": "fill" }
+    ],
+    "orphanPolicy": "commit-at-cast",
+    "priority": 10,
+    "effects": [
+      {
+        "phase": "impact",
+        "op": {
+          "kind": "damage",
+          "scaling": "strength",
+          "might": 1,
+          "critBase": 0,
+          "critable": true,
+          "evadable": true,
+          "bypassDefense": false
+        }
+      }
+    ],
+    "fx": { "impact": "melee_swing" }
+  },
+  "scratch": {
+    "id": "scratch",
+    "name": "Scratch",
+    "description": "A rake of cold, spectral nails.",
+    "cooldownSeconds": 1.5,
+    "rangeCells": 1,
+    "target": { "kind": "enemyInRange" },
+    "timeline": [
+      { "phase": "impact", "seconds": 0 },
+      { "phase": "recovery", "seconds": "fill" }
+    ],
+    "orphanPolicy": "commit-at-cast",
+    "priority": 10,
+    "effects": [
+      {
+        "phase": "impact",
+        "op": {
+          "kind": "damage",
+          "scaling": "strength",
+          "might": 1,
+          "critBase": 0,
+          "critable": true,
+          "evadable": true,
+          "bypassDefense": false
+        }
+      }
+    ],
+    "fx": { "impact": "melee_swing" }
   },
   "bow": {
     "id": "bow",
@@ -605,10 +663,10 @@
     "timeline": [
       { "phase": "windup", "seconds": 0.2 },
       { "phase": "impact", "seconds": 0 },
-      { "phase": "recovery", "seconds": "fill" }
+      { "phase": "recovery", "seconds": 0.3 }
     ],
     "orphanPolicy": "commit-at-cast",
-    "priority": 10,
+    "priority": 11,
     "effects": [
       {
         "phase": "impact",

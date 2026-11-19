@@ -715,3 +715,43 @@ after 0 of 34, 21 of 21 command kinds, 48 event names.
 **Read** (`batch`, at 160g): the grenadier's URL. Wrong looks like a
 knocked foe swinging at once, a stun with no tint, or a grenadier
 standing still beside a foe.
+
+### 160d-post and 160e-post — the punch and the scratch (2026-11-19)
+
+**Step zero.** The shape asked for exists: the Snag and the whirlwind
+recover in 0.3 s on a longer recharge. A unit's reach is its longest
+engaging ability's (`rangeForArchetype`), so the telekinetic's stays 1
+and the banshee's the Wail's 2; abilities in a unit's list sit in the
+registry by id list, so the two attacks take one of their own.
+
+**Built.** `punch` and `scratch` (`config/abilities.json`, after the
+whirlwind): the club's and the ghoul claw's shape, melee, might 1
+`strength`, crit base 0, evadable, every 1.5 s, `fill`, priority 10,
+the melee swing's fx. Lines, drafts read at 160g: "A plain punch, while
+the mind gathers itself." and "A rake of cold, spectral nails." The
+telekinetic carries `punch, repulse` and the banshee `scratch, wail`, the
+basic attack first as the ronin's katana is. Repulse and the Wail: a
+0.3 s recovery for `fill` and priority 11, as the whirlwind over the
+katana; their cadences unchanged (Repulse 2.4 s at speed 4, the Wail a
+flat 6 s). Both units have strength 0, so a swing is might alone.
+`CASTER_MELEE_IDS` in the registry. DESIGN "The carriers" and the
+newcomers' paragraph.
+
+**Checked.** `telekinetic.test.ts`: the carry test takes the punch; the
+throw test reads where it cast from, since the telekinetic now follows
+the foes it threw; +1: a foe at the board's west edge, which Repulse
+can't throw, is punched between the first Repulse and the second, the
+Repulse first. `banshee.test.ts` +1: a foe beside it is scratched
+between Wails, the Wail first; the banshee's reach still the Wail's.
+Planted (`scratch/160/160de-post-plants.json`): 5 plants (Repulse
+`fill` again; Repulse at the punch's rank; no punch; the Wail `fill`
+again; no scratch), each caught, the clean files green. **The corpus:**
+predicted 2 to 10 of 34; the replay diverged on 2 (`chaos-16`,
+`chaos-4-character-gambler-bits-300`), `--record` moved those 2 beyond
+their config hash, the replay after 0 of 34, 21 of 21 command kinds, 48
+event names; the four chaos slots apply the kinds they did.
+
+**Read** (`batch`, at 160g): the telekinetic's and the banshee's URLs.
+Wrong looks like a caster standing still between bursts beside a foe, a
+basic attack before the burst when both are ready, or a banshee walking
+into melee.

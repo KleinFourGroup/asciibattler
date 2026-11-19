@@ -10,10 +10,10 @@ import abilitiesJson from '../../config/abilities.json';
 import unitsJson from '../../config/units.json';
 
 /**
- * The telekinetic: a draftable caster whose one ability, Repulse, is a burst
- * on itself that throws every foe beside it away. The expectations are read
- * from the raw config, not from the code under test: the burst's radius, its
- * anchor and its push.
+ * The telekinetic: a draftable caster whose Repulse is a burst on itself that
+ * throws every foe beside it away, with a punch swung between bursts. The
+ * expectations are read from the raw config, not from the code under test:
+ * the burst's radius, its anchor and its push, and the two abilities' ranks.
  */
 
 const BASE: UnitStats = {
@@ -24,16 +24,21 @@ const BASE: UnitStats = {
 interface RawPush { kind: 'push'; cells: number; direction: string; from?: string }
 interface RawRepulse {
   minRangeCells?: number;
+  rangeCells: number;
+  cooldownSeconds: number;
+  priority: number;
   target: { kind: string; radius: number; anchor: string; affects: string };
-  effects: { op: { kind: string } }[];
+  timeline: { phase: string; seconds: number | string }[];
+  effects: { op: { kind: string; scaling?: string } }[];
 }
 const repulse = (abilitiesJson as unknown as Record<string, RawRepulse>).repulse!;
+const punch = (abilitiesJson as unknown as Record<string, RawRepulse>).punch!;
 const push = repulse.effects.map((e) => e.op).find((op) => op.kind === 'push') as RawPush;
 const units = unitsJson as unknown as Record<string, { abilities: string[]; rarity?: string; draftable?: boolean }>;
 
 describe('the telekinetic', () => {
-  it('carries Repulse alone, and is drafted at its rarity', () => {
-    expect(units.telekinetic!.abilities).toEqual(['repulse']);
+  it('carries a punch and Repulse, and is drafted at its rarity', () => {
+    expect(units.telekinetic!.abilities).toEqual(['punch', 'repulse']);
     expect(units.telekinetic!.draftable).not.toBe(false);
     expect(units.telekinetic!.rarity).toBe('rare');
     expect(DRAFTABLE_ARCHETYPES).toContain('telekinetic');
@@ -68,8 +73,12 @@ describe('the telekinetic', () => {
     const tkHp = tk.currentHp;
 
     let impacts = 0;
+    let castFrom: { x: number; y: number } | undefined;
     bus.on('action:phase', (e) => {
-      if (e.unitId === tk.id && e.actionId === 'repulse' && e.phase === 'impact') impacts++;
+      if (e.unitId === tk.id && e.actionId === 'repulse' && e.phase === 'impact') {
+        impacts++;
+        castFrom = { ...tk.position };
+      }
     });
     for (let i = 0; i < 120 && impacts < 1; i++) world.tick();
     expect(impacts).toBe(1);
@@ -79,9 +88,40 @@ describe('the telekinetic', () => {
     expect(east.position).toEqual({ x: at.x + 1 + n, y: at.y });
     expect(north.position).toEqual({ x: at.x, y: at.y - 1 - n });
     expect(southWest.position).toEqual({ x: at.x - 1 - n, y: at.y + 1 + n });
-    expect(tk.position).toEqual(at);
+    // Cast where it stood, unmoved and unhurt by its own burst; after it, the
+    // telekinetic is free to follow the foes it threw.
+    expect(castFrom).toEqual(at);
     expect(tk.currentHp).toBe(tkHp);
     expect(ally.position).toEqual({ x: at.x, y: at.y + 1 });
     expect(farther.position).toEqual({ x: at.x + 2, y: at.y + 2 });
+  });
+
+  it('opens with Repulse, and punches a foe it cannot throw between Repulses', () => {
+    // The premises, from the config: Repulse outranks the punch, recharges
+    // slower, and frees the telekinetic between casts; the punch is melee.
+    expect(punch.rangeCells).toBe(1);
+    expect(punch.effects.map((e) => e.op)).toContainEqual(expect.objectContaining({ kind: 'damage', scaling: 'strength' }));
+    expect(repulse.priority).toBeGreaterThan(punch.priority);
+    expect(repulse.cooldownSeconds).toBeGreaterThan(punch.cooldownSeconds);
+    expect(typeof repulse.timeline.find((p) => p.phase === 'recovery')!.seconds).toBe('number');
+
+    const bus = new EventBus<GameEvents>();
+    const world = new World(bus, new RNG(1), 16, 16);
+    // A foe at the board's west edge, the telekinetic east of it: Repulse
+    // can't throw it, so it stays beside the telekinetic. Not wired.
+    const tk = world.spawnUnit({ archetype: 'telekinetic', level: 1, stats: BASE, xp: 0 }, 'player', { x: 1, y: 8 });
+    world.wireSpawned(tk, createMovementBehavior('telekinetic'), true);
+    const pinned = world.spawnUnit({ archetype: 'mercenary', level: 1, stats: BASE, xp: 0 }, 'enemy', { x: 0, y: 8 });
+
+    const acts: string[] = [];
+    bus.on('action:phase', (e) => {
+      if (e.unitId === tk.id && e.phase === 'impact') acts.push(e.actionId);
+    });
+    for (let i = 0; i < 400 && acts.filter((a) => a === 'repulse').length < 2; i++) world.tick();
+
+    expect(pinned.position).toEqual({ x: 0, y: 8 });
+    expect(acts[0]).toBe('repulse');
+    expect(acts.lastIndexOf('repulse')).toBeGreaterThan(0);
+    expect(acts.slice(1, acts.lastIndexOf('repulse'))).toContain('punch');
   });
 });

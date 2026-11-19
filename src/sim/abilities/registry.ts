@@ -56,6 +56,9 @@ const FORCED_MOVE_ABILITY_IDS = ['snag', 'grenade', 'repulse'] as const;
 /** The bursts on their casters that move no one. */
 const SELF_BURST_ABILITY_IDS = ['whirlwind'] as const;
 
+// The burst casters' basic attacks, swung between bursts.
+const CASTER_MELEE_IDS = ['punch', 'scratch'] as const;
+
 const FACTORIES: Record<string, AbilityFactory> = {
   ...Object.fromEntries(
     [
@@ -64,6 +67,7 @@ const FACTORIES: Record<string, AbilityFactory> = {
       ...BEAST_ABILITY_IDS,
       ...FORCED_MOVE_ABILITY_IDS,
       ...SELF_BURST_ABILITY_IDS,
+      ...CASTER_MELEE_IDS,
     ].map((id) => [
       id,
       () => new EffectAbility(abilityDef(id)),

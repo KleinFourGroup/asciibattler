@@ -6,7 +6,7 @@ A fresh-session orientation for ASCIIbattler. Read this first; then dive into th
 
 **The ONE home for live status.** Other docs (and the agent memory) point here instead of restating it; when state changes, this section is the single place that updates.
 
-- **NEXT — ROUND 12 (Push, pull and blink): 160.5d, the census of falls** (`stop`, put 2026-11-20): 33 falls in 577 battles over 20 seeds, the decision whether a pusher changes before §162; then 160.5e, the play ([ROADMAP.md](ROADMAP.md) §160.5; WORKLOG from "The kickoff's audit"; BALANCE's run log). §161.5, the hex and the ice storm as specials, is inserted before §162. **Open ◐:** 160.5d.
+- **NEXT — ROUND 12 (Push, pull and blink): 160.5e, the play** (`stop`): falls in play on the chasm and water maps, then §160.5's close; 160.5d signed 2026-11-20, no pusher changes before §162 ([ROADMAP.md](ROADMAP.md) §160.5; WORKLOG from "The kickoff's audit"; BALANCE's run log). §161.5, the hex and the ice storm as specials, is inserted before §162. **Open ◐:** none.
 - **In flight:** nothing.
 - **The public build:** `0.4.0` (`4fc62cfe`, tag `v0.4.0`), uploaded to itch.io on 2026-11-13; the uploads before it are in Closed rounds below.
 - **Snapshots:** WorldSnapshot **v42** (no player keeps one) · RunSnapshot **v51** (a v50 save, `0.3.0`'s, rejects).

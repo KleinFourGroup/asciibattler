@@ -287,3 +287,25 @@ Session `652e794b` hands off at the trigger, at 160.5d's stop.
   `160.5b-plants.json`.
 - **For 160.5e's URLs:** `?seed=5&character=soldier&roster=grenadier:3,grenadier:3,telekinetic:3,adventurer:3&layout=spiralFireLife`
   (or `layout=isthmus`); falls come within the first battles there.
+
+### 160.5d — answered (2026-11-20)
+
+Put again by the next session, with one fact the census entry above
+lacks: the player's six falls are all in seed 4, in two battles on the
+isthmus against enemy grenadiers, four units in its battle 20 and two
+in its battle 22, and that run ended where it ended before the fall
+(defeated in sector 1 at hop 10, after 32 battles). A fall against the
+player comes as a burst, not one at a time.
+
+**Signed** ("I don't think we need to change anything! 😁", 2026-11-20):
+no pusher changes before §162.
+
+The user asked where the enemy grenadier comes from. The Artillery
+Company, a normal encounter, fields it in its first wave beside bandits
+and mercenaries (weights 3, 1 and 1), since 160c (`92ac5ca3`); the
+encounter is drawn in the second act's sector (`the-start`) and the
+third's (`the-deep-end`), not the first's. It is the only spec in
+`config/` that names the grenadier for an enemy, and nothing in `src/`
+names it. The other enemy pushers are the Dark Magic Posse's
+telekinetic (an elite of the third act) and the adventurers' Snag;
+neither threw anyone in in the census.

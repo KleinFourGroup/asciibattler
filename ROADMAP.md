@@ -109,9 +109,9 @@ medium. The cut, signed 2026-11-20 with its calls (WORKLOG §160.5):
 - ☑ **160.5c — the look and the sound** (`stop`): a chasm's plunge,
   deep water's splash, a cue each and the death's cry; signed 2026-11-20
   (WORKLOG 160.5c).
-- ◐ **160.5d — the measurement** (`stop`): a census of falls, 20 seeds
-  paired before and after; 33 falls in 577 battles (BALANCE, WORKLOG
-  160.5d).
+- ☑ **160.5d — the measurement** (`stop`): a census of falls, 20 seeds
+  paired before and after; 33 falls in 577 battles; no pusher changes
+  before §162, signed 2026-11-20 (BALANCE, WORKLOG 160.5d).
 - ☐ **160.5e — the play** (`stop`).
 
 ## Phase 161 — the blink and the charge

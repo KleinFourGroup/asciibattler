@@ -6559,7 +6559,8 @@ deltas. The pre-X H7c→O log lives at
   moves, **33 falls in 14 battles** (2.4% of battles; 1 in 15 forced
   moves). By the victim's side: enemy 20, a camp's 7, the player's 6. By
   pusher: the player's grenadiers 21, telekinetics 4, adventurer 2; the
-  enemy's grenadiers 6 (the player's 6). By board: icebergs 21 (deep
+  enemy's grenadiers 6 (the player's 6, all in seed 4: four in its battle
+  20 and two in its battle 22, both on the isthmus). By board: icebergs 21 (deep
   water), isthmus 7 (deep water), the spiral 5 (chasm); none on
   `junctionAmbush`'s chasms in 58 battles. Before: 537 battles, 435 forced
   moves, 0 falls (the control). Paired outcomes: 19 seeds end where they

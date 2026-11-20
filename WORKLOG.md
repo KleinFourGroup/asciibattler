@@ -35,8 +35,8 @@ wrote CRLF, binary mode and `newline` LF).
   change at that one check, telling the edge from the two tiles. Scenery
   and a body larger than one cell never move, so no wall or big beast
   falls. The Snag's room gate calls the same walk
-  (`propose.ts`, `firstCellFree`'s caller), so a drop counts as room once
-  the walk returns it.
+  (`pullHasRoom`, `propose.ts`), so a drop counts as room once the walk
+  returns it.
 - *The seam for the drop.* `World.forceMove` puts the victim on its
   landing at once and holds it for the slide (`ForcedMoveAction`), whose
   `impact` runs the landing tile's enter effects

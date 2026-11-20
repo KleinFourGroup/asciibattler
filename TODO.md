@@ -307,6 +307,16 @@ META-ROADMAP §"Round 12 — Push, pull and blink" names each row's place.
 
 - [ ] **The fire channel reads 0.275 against its signed +0.10.** At §155's closing board the fire-ablated doctrine row cleared act 1 in 17 of 40 against 27 at 146f and 150h (p 0.021, one of 15 tests), so regen − fire-ablated widened; held unchanged at 155g (BALANCE 2026-11-12). Read it again at the next board, this round's, before any re-sign, which is the user's (moved from Round 10's "The board" at Round 11's close, WORKLOG §156, 156f).
 
+- [ ] **The enemy grenadier, used judiciously.** A fall is a permanent
+  loss under the casualty rule, and an enemy grenadier's come in bursts:
+  the census's six player falls were all in one seed, four in one battle
+  (BALANCE 2026-11-20, the census of falls), and the Artillery Company
+  forced on the isthmus threw 6 in four battles, two by one grenade
+  (WORKLOG 160.5e). The user likes it, tentatively, harsh as it is, and
+  asks that enemy grenadiers be used judiciously (2026-11-20). Read at
+  §162's board: the Artillery Company's grenadier weight and the sectors
+  that draw it, against what the board shows the losses cost.
+
 ## Round 13 — The unit kit
 
 META-ROADMAP §"Round 13 — The unit kit" names each row's place.

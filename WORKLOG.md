@@ -332,3 +332,12 @@ probe's error path left its audio poll running against the destroyed
 window, and Electron put a dialog on the user's screen after every OK.
 The shell now exits a failed probe without one (`054dc0d9`); a slip
 and a papercut filed.
+
+### 160.5e — the user's answer (2026-11-20)
+
+On the third URL, the player's units thrown in by enemy grenadiers:
+"Losing your own... It's harsh, but I tentatively like it! 😁 We'll need
+to use enemy grenadiers judiciously." Kept as built; the judicious use
+is carried to TODO (Round 12, "The enemy grenadier, used judiciously")
+for §162's board. The reply did not say whether the falls on the chasm
+and water URLs were played; asked once before the close.

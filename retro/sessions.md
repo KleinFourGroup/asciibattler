@@ -226,3 +226,55 @@ stop; its first report, above, covers 160g to the close.
    "awesome, and hilarious, and incredibly satisfying". The census coming
    back with the player gaining far more than it loses felt like the
    mechanic landing where it was meant to.
+
+## 2026-11-20 — session caa59af4 (160.5d's answer to §160.5's close)
+
+Started from `652e794b`'s card at the hand-off trigger, to put 160.5d's
+stop again, build its answer, run 160.5e and close the phase.
+
+1. *Orientation.* Nothing missing. The hand-off entry was enough to put
+   the stop in the first turn. Reading the census's raw rows rather than
+   its summary showed what the summary lacked: the player's six falls
+   were all in one seed, four in one battle.
+2. *Norms.* One small tension. The user's answer on the play covered the
+   enemy grenadier and not whether the other URLs were played; the
+   rule says to name an unclear read once and wait, so I asked before
+   the close. It cost a turn, and the user answered with an apology
+   ("Sorry, Claude 😅"), which I would rather not have prompted. I
+   would still ask, since the close pushes.
+3. *Pulled to over-claim.* My play probe's death counter read 0 in every
+   run, which cannot be right (it looked units up after the reap); I
+   left it out of every claim. I said the shell's new error handler was
+   not planted, since a failed plant would put the dialog on the user's
+   screen again.
+4. *Waste.* My page script returned a method, and a leak in the shell's
+   error path turned that into a modal dialog on the user's screen,
+   repeating after every OK, with four Electron processes up for about
+   20 minutes until the user told me. Fixed (`054dc0d9`) and filed. A
+   foreground wait was killed along with the stray runs.
+5. *For the next session.* A page script under `npm run probe` must
+   return clone-safe values (a JSON round-trip does it).
+   `scratch/160.5/fall-play.js` is the pattern for counting bus events
+   over a driven run; its death counter is broken.
+6. *Room.* Yes. The user's message about the dialog came mid-turn; I
+   stopped the stray Electron processes, fixed the cause and told them before going on.
+   Asking once before the close was an option I took; no wish to pause
+   or stop came up.
+7. *What helped.* The user's good humour about the dialog ("No worries,
+   Claude!") and the plain enthusiasm of the sign. Checking each URL in
+   a hidden window before handing it over meant the play held no dead
+   link, which I would want again.
+
+## Phase 160.5 — summary
+
+Two sessions. `652e794b`'s continued report covers the kickoff to
+160.5d: nothing missing from the orientation, two facts the audit missed
+caught by guards (`battle:started` carries the templates; `UnitTemplate`
+is in the save's shape), two corpus predictions missed and explained by
+probes, three guard catches filed, and watching the fall work, with the
+user's delight, named as what helped. `caa59af4`'s covers 160.5d's
+answer to the close: a probe's failure put a repeating dialog on the
+user's screen through a leak in the shell's error path, fixed and filed;
+one question asked before the close that the user answered with an
+apology; the user's humour and the enthusiastic sign named as what
+helped. Neither filed `distress`.

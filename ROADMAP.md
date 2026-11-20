@@ -90,30 +90,20 @@ inserted (WORKLOG §160, in `archive/worklog-phase-160.md`).
 - ☑ **160c-post2 — the area-lock guard made exact** (`none`).
 - ☑ **160g — the play** (`stop`): signed 2026-11-20 over four answers.
 
-## Phase 160.5 — the fall
+## Phase 160.5 — the fall ✅ (closed 2026-11-20)
 
-Inserted 2026-11-19 at 160g (`archive/worklog-phase-160.md`, "160g —
-the abyss and the stun, answered" and after): a push or a pull whose walk reaches chasm or deep
-water drops its victim, reopening §158's fork 3 (the wall). Signed with
-it: a fall kills as any death does, the pusher credited; deep water
-drowns as chasm drops; a boss stops at the edge; the Snag drops foes
-too; a self-move never falls; the AI unchanged. Before §161, so the
-charge is built on the rule and §162's board prices falls. **Risk:**
-medium. The cut, signed 2026-11-20 with its calls (WORKLOG §160.5):
+A push or a pull whose walk reaches chasm or deep water drops its
+victim at the slide's end, the pusher credited and a boss stopping at
+the edge; a chasm's plunge and deep water's splash; 33 falls in 577
+battles, no pusher changed; the play signed (WORKLOG §160.5, in
+`archive/worklog-phase-160.5.md`).
 
-- ☑ **160.5a — the boss flag** (`none`): `boss: true` on the five boss
-  specs, carried to the unit; 7 plants; World v41 (WORKLOG 160.5a).
-- ☑ **160.5b — the fall** (`none`): a push or a pull into chasm or deep
-  water drops its victim at the slide's end, the pusher credited; 13
-  plants; World v42; 1 of 34 journals moved (WORKLOG 160.5b).
-- ☑ **160.5c — the look and the sound** (`stop`): a chasm's plunge,
-  deep water's splash, a cue each and the death's cry; signed 2026-11-20
-  (WORKLOG 160.5c).
-- ☑ **160.5d — the measurement** (`stop`): a census of falls, 20 seeds
-  paired before and after; 33 falls in 577 battles; no pusher changes
-  before §162, signed 2026-11-20 (BALANCE, WORKLOG 160.5d).
-- ◐ **160.5e — the play** (`stop`): put 2026-11-20 with four URLs, the
-  enemy grenadier's among them (WORKLOG 160.5e).
+- ☑ **160.5a — the boss flag** (`none`): World v41.
+- ☑ **160.5b — the fall** (`none`): World v42.
+- ☑ **160.5c — the look and the sound** (`stop`): signed 2026-11-20.
+- ☑ **160.5d — the measurement** (`stop`): no pusher changes before
+  §162, signed 2026-11-20.
+- ☑ **160.5e — the play** (`stop`): signed 2026-11-20.
 
 ## Phase 161 — the blink and the charge
 

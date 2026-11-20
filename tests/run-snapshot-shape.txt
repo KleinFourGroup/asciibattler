@@ -2,6 +2,7 @@
 # tests/save-fingerprint.test.ts holds this file against the types: a change of
 # shape fails until RUN_SCHEMA_VERSION is bumped and this file is re-pinned with
 #   npm run save:fingerprint
+# re-pinned without a bump: UnitTemplate gains an optional boss flag, set only on an enemy wave's templates; a save written before it has none, which reads as no boss, so it loads as it did
 RUN_SCHEMA_VERSION 51
 
 RunSnapshot = {
@@ -240,6 +241,7 @@ UnitStats = {
 
 UnitTemplate = {
   archetype: string
+  boss?: boolean | undefined
   effects?: Array<StatusEffect> | undefined
   level: number
   rosterIndex?: null | number | undefined

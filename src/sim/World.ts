@@ -90,7 +90,7 @@ import { getCamp } from '../config/camps';
  * a side's fallen power under-charged). Bump it with any change to
  * `WorldSnapshot`'s shape or to what one of its fields means.
  */
-const WORLD_SCHEMA_VERSION = 40;
+const WORLD_SCHEMA_VERSION = 41;
 
 /** The maxHp of a neutral whose def has no `hp` (indestructible), so its unit
  *  is alive and blocks pathing and line of sight. Never a damage target:
@@ -134,6 +134,7 @@ interface UnitSnapshot {
   rosterIndex: number | null;
   summonedBy: number | null;
   campId: number | null;
+  boss: boolean;
   stats: UnitStats;
   derived: UnitDerived;
   position: GridCoord;
@@ -1981,6 +1982,7 @@ export class World {
         rosterIndex,
         // The statuses the run stamps on the template (`Run.beginTurn`).
         ...(template.effects ? { effects: template.effects } : {}),
+        ...(template.boss === true ? { boss: true } : {}),
       },
       true,
     );
@@ -2126,6 +2128,7 @@ export class World {
       summonedBy?: number | null;
       campId?: number | null;
       effects?: readonly StatusEffect[];
+      boss?: boolean;
     },
     instant: boolean,
   ): Unit {
@@ -2144,6 +2147,7 @@ export class World {
       rosterIndex: init.rosterIndex ?? null,
       summonedBy: init.summonedBy ?? null,
       campId: init.campId ?? null,
+      boss: init.boss ?? false,
       ...(init.effects && init.effects.length > 0 ? { effects: init.effects } : {}),
     });
     this.placeUnits(unit);
@@ -2198,6 +2202,7 @@ export class World {
             ...(t.rosterIndex !== undefined && t.rosterIndex !== null
               ? { rosterIndex: t.rosterIndex }
               : {}),
+            ...(t.boss === true ? { boss: true } : {}),
           };
           return tpl;
         }),
@@ -2309,6 +2314,7 @@ export class World {
         rosterIndex: us.rosterIndex,
         summonedBy: us.summonedBy,
         campId: us.campId,
+        boss: us.boss,
         // The constructor folds `effectiveStats` and `refreshDerived` from
         // them again, and the restored `derived` is the same under that.
         effects: us.effects,
@@ -2427,6 +2433,7 @@ function snapshotUnit(unit: Unit): UnitSnapshot {
     rosterIndex: unit.rosterIndex,
     summonedBy: unit.summonedBy,
     campId: unit.campId,
+    boss: unit.boss,
     stats: unit.stats,
     derived: unit.derived,
     position: unit.position,

@@ -99,8 +99,17 @@ it: a fall kills as any death does, the pusher credited; deep water
 drowns as chasm drops; a boss stops at the edge; the Snag drops foes
 too; a self-move never falls; the AI unchanged. Before §161, so the
 charge is built on the rule and §162's board prices falls. **Risk:**
-medium. **Reads, foreseen:** the fall `none`; its look and sound a
-`stop`; the measurement a `stop`; the play a `stop`. Cut at its kickoff.
+medium. The cut, signed 2026-11-20 with its calls (WORKLOG §160.5):
+
+- ☑ **160.5a — the boss flag** (`none`): `boss: true` on the five boss
+  specs, carried to the unit; 7 plants; World v41 (WORKLOG 160.5a).
+- ☐ **160.5b — the fall** (`none`): a push or a pull into chasm or deep
+  water drops its victim at the slide's end, the pusher credited.
+- ☐ **160.5c — the look and the sound** (`stop`): the drop and the
+  sinking, a cue each.
+- ☐ **160.5d — the measurement** (`stop`): a census of falls, 20 seeds
+  paired before and after.
+- ☐ **160.5e — the play** (`stop`).
 
 ## Phase 161 — the blink and the charge
 

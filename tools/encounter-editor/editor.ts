@@ -938,6 +938,18 @@ function renderUnitRow(units: WUnit[], i: number): HTMLElement {
     refreshDerived();
   });
   row.append(el('span', 'field-label', 'pow'), pw);
+  // The encounter's boss (`WaveUnitSpec.boss`). Unchecked = absent, deleted
+  // rather than set false (the formatter writes only true).
+  const bossBox = el('input');
+  bossBox.type = 'checkbox';
+  bossBox.title = "the encounter's boss";
+  bossBox.checked = u.boss === true;
+  bossBox.addEventListener('change', () => {
+    if (bossBox.checked) u.boss = true;
+    else delete u.boss;
+    refreshDerived();
+  });
+  row.append(el('span', 'field-label', 'boss'), bossBox);
   row.append(nodeControls(units, i));
   return row;
 }

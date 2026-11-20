@@ -95,6 +95,7 @@ const WaveUnitSchema = z.object({
   count: UnitCountSchema,
   level: UnitLevelSchema,
   power: z.number().nonnegative().optional(),
+  boss: z.boolean().optional(),
 }) as z.ZodType<WaveUnitSpec>;
 
 // Cast at the zod boundary for the exact-optional `levelCap` (see StageSchema).

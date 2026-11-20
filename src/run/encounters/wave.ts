@@ -85,6 +85,11 @@ export interface WaveUnitSpec {
    * Absent, the archetype's power.
    */
   readonly power?: number;
+  /**
+   * This entry's units are the encounter's boss, stamped on each resolved
+   * template and so on the unit (`Unit.boss`). Absent, false.
+   */
+  readonly boss?: boolean;
 }
 
 /** One wave: a level budget, a total count, an optional level cap, and the
@@ -126,10 +131,20 @@ export function resolveWave(spec: WaveSpec, context: WaveContext, rng: RNG): Uni
 
   // Expand to a flat instance list in spec order (each carries its type's
   // level-spec). The level step assigns one level per instance, in this order.
-  const instances: { readonly archetype: Archetype; readonly level: UnitLevelSpec; readonly power?: number }[] = [];
+  const instances: {
+    readonly archetype: Archetype;
+    readonly level: UnitLevelSpec;
+    readonly power?: number;
+    readonly boss?: boolean;
+  }[] = [];
   spec.units.forEach((u, i) => {
     for (let k = 0; k < counts[i]!; k++) {
-      instances.push(u.power === undefined ? { archetype: u.archetype, level: u.level } : { archetype: u.archetype, level: u.level, power: u.power });
+      instances.push({
+        archetype: u.archetype,
+        level: u.level,
+        ...(u.power === undefined ? {} : { power: u.power }),
+        ...(u.boss === true ? { boss: true } : {}),
+      });
     }
   });
 
@@ -141,7 +156,8 @@ export function resolveWave(spec: WaveSpec, context: WaveContext, rng: RNG): Uni
     const t = scaledUnit(inst.archetype, levels[i]!);
     // The power override is stamped after scaling; every other stat stays as
     // scaled.
-    return inst.power === undefined ? t : { ...t, stats: { ...t.stats, power: inst.power } };
+    const powered = inst.power === undefined ? t : { ...t, stats: { ...t.stats, power: inst.power } };
+    return inst.boss === true ? { ...powered, boss: true } : powered;
   });
 }
 

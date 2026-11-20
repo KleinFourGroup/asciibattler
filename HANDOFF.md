@@ -9,7 +9,7 @@ A fresh-session orientation for ASCIIbattler. Read this first; then dive into th
 - **NEXT — ROUND 12 (Push, pull and blink): §160.5, the fall — its kickoff** (`stop`: the code-reality audit and the cut, [process/planning.md](process/planning.md) "Phase kickoff"), on the leans signed at 160g ([ROADMAP.md](ROADMAP.md) §160.5; `archive/worklog-phase-160.md` from "160g — the abyss and the stun, answered"). §161.5, the hex and the ice storm as specials, is inserted before §162. **Open ◐:** none.
 - **In flight:** nothing.
 - **The public build:** `0.4.0` (`4fc62cfe`, tag `v0.4.0`), uploaded to itch.io on 2026-11-13; the uploads before it are in Closed rounds below.
-- **Snapshots:** WorldSnapshot **v40** (no player keeps one) · RunSnapshot **v51** (a v50 save, `0.3.0`'s, rejects).
+- **Snapshots:** WorldSnapshot **v41** (no player keeps one) · RunSnapshot **v51** (a v50 save, `0.3.0`'s, rejects).
 - **Tests:** **4023 main** in 279 files, **588 fuzz:smoke** in 60 files and **1 fuzz:jobs-parity** at `96d27af1` (its hook); typecheck clean; the journal corpus, run by hand, 34 journals, re-recorded at 160c-post2 (5 moved), the replay 0 of 34 differing.
 - **Model id: `claude-opus-5-5`** since 2026-09-22. When yours differs, say so at the next stop; at the user's word, review AGENTS.md against the vendor's current prompting guidance and record the new id (the last review: `archive/post-104-worklog.md`, "The new-model tone audit").
 - **Last phase: §160**, the pushers and the bursts, 2026-11-20: the grenadier, the telekinetic, the banshee's Wail and the ronin's whirlwind in play, read at one stop over four answers; the stun, the punch and the scratch, the spin, the area-lock guard made exact (`archive/worklog-phase-160.md`).

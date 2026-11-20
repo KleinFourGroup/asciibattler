@@ -60,10 +60,12 @@ function inlineObj(obj: Readonly<Record<string, unknown>>): string {
 /** One `units` entry, inline: `{ "archetype": …, "count": {…}, "level": {…} }` —
  *  plus `, "power": N` when the 92e per-entry override is present (absent =
  *  the catalog weight; the formatter must carry it or the editor's Save drops
- *  the field silently — the 92d surgery caught exactly that). */
+ *  the field silently — the 92d surgery caught exactly that), and
+ *  `, "boss": true` on the encounter's boss (absent = not a boss). */
 function inlineUnit(u: WaveUnitSpec): string {
   const power = u.power === undefined ? '' : `, "power": ${JSON.stringify(u.power)}`;
-  return `{ "archetype": ${JSON.stringify(u.archetype)}, "count": ${inlineObj(u.count)}, "level": ${inlineObj(u.level)}${power} }`;
+  const boss = u.boss === true ? ', "boss": true' : '';
+  return `{ "archetype": ${JSON.stringify(u.archetype)}, "count": ${inlineObj(u.count)}, "level": ${inlineObj(u.level)}${power}${boss} }`;
 }
 
 /** A `WaveSpec` block (`levelBudget` / `count` / optional `levelCap` inline,

@@ -159,6 +159,7 @@ src/
                              # blocksLineOfSight (D6)
                              # K1: effects[] (status effects) + effectiveStats (cached fold; === stats when empty) + addEffect/expireEffects/refreshDerived
                              # 75b/d: campId (null = the pre-75 world) + the isActiveNeutral/isInertNeutral predicate PAIR — the §75d/e widening's single vocabulary (an active neutral is a mobile combatant on team 'neutral'; inert = walls/cover/rubble; ~40 call sites gate on these, never on bare team checks)
+                             # boss: an encounter's boss, from its wave entry's `boss: true` through the template (World v41)
     statusEffects.ts         # K1: generic status-effect system — StatusEffect (per-stat add/mul mods + lifetime + merge policy) + foldEffects + combineMagnitude
     statusBehavior.ts        # 28: behaviorFlags — the def-resolve fold turning a unit's effects[] into merged AI overrides (frozen/blind/panic/confusion) the selector/movement/targeting consumers read
     statusReadout.ts         # §32c: readUnitStatuses — pure projection of effects[] → per-status display facts (name/kind/stacks/remaining/durationFraction/potencyPerSec); feeds the board pip-strip + card row (sim truth only; color lives render-side)

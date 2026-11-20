@@ -114,3 +114,43 @@ a cell a falling one holds stops at the edge; no unit floats. Named so
 the play holds no surprise: the player's units fall too, to enemy
 grenadiers, telekinetics and adventurers, and are lost under the
 casualty rule.
+
+**Signed** ("All of those leans are exactly what I was thinking! 😁
+Signed!", 2026-11-20): the cut and its reads as put, and every call on
+its lean. The stretch: 160.5a and 160.5b, then 160.5c's stop.
+
+### 160.5a — the boss flag (2026-11-20)
+
+`boss: true` on a wave unit spec (`WaveUnitSpec`, its schema in
+`src/config/encounters.ts`), stamped by `resolveWave` on each template
+the entry resolves to, carried by `World.spawnUnit` to `Unit.boss`, and
+kept in the snapshot on the unit and on a queued template (World v41).
+Flagged by `scratch/160.5/flag-bosses.ts` through the editor's own
+formatter, which reproduced the file before the edit: 11 entries, the
+five bosses, three of them once a stage (the Bandit Queen's banshee, the
+Generalissimo's officer, the Divine Bear). The editor writes the flag
+and shows it as a checkbox beside the power override.
+
+`src/run/encounters/bossFlag.test.ts`, its expectations from the raw
+config: the flagged entries are exactly the boss encounters' powered
+ones, one boss archetype per boss encounter; each boss encounter's
+waves, resolved and spawned, flag exactly the flagged entry's units;
+the flag survives a snapshot on a unit and a queued template. 7 plants,
+all caught, controls clean (`scratch/160.5/160.5a-plants.json`): an
+entry unflagged, a normal encounter's entry flagged, the resolver, the
+spawn, the unit's and the template's snapshot, and the editor's writer
+each dropping it.
+
+Corpus: predicted no event would move, since nothing reads the flag; 17
+of 34 journals' digests moved. `battle:started` carries the enemy
+templates, so the flag rides in event payloads: replayed with every
+`boss` key mapped out (`scratch/160.5/digest-without-boss.ts`), 34 of 34
+match the old baseline, and unmapped 17 do, the corpus run's count.
+Re-recorded; 0 of 34 differ on the replay after; no journal differs
+beyond its config hash. A slip filed for the prediction.
+
+The save's fingerprint caught what the kickoff's audit missed:
+`UnitTemplate` is part of the RunSnapshot's shape (the roster), so the
+optional field changed it. Re-pinned without a bump (`npm run
+save:fingerprint -- --compatible`): a save written before the flag has
+none, which reads as no boss, and no roster template carries it.

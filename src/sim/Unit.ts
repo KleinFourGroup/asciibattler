@@ -141,6 +141,11 @@ export interface UnitTemplate {
    * roster carries no battle state.
    */
   readonly effects?: readonly StatusEffect[];
+  /**
+   * An encounter's boss (`WaveUnitSpec.boss`), carried to `Unit.boss`.
+   * Absent for every other unit.
+   */
+  readonly boss?: boolean;
 }
 
 /**
@@ -182,6 +187,7 @@ interface UnitInit {
   readonly rosterIndex?: number | null;
   readonly summonedBy?: number | null;
   readonly campId?: number | null;
+  readonly boss?: boolean;
 }
 
 export class Unit {
@@ -231,6 +237,10 @@ export class Unit {
    * camps, keyed by this id, never on the unit.
    */
   readonly campId: number | null;
+  /**
+   * An encounter's boss (`WaveUnitSpec.boss`). False for every other unit.
+   */
+  readonly boss: boolean;
   position: GridCoord;
   currentHp: number;
   readonly behaviors: Behavior[] = [];
@@ -325,6 +335,7 @@ export class Unit {
     this.rosterIndex = init.rosterIndex ?? null;
     this.summonedBy = init.summonedBy ?? null;
     this.campId = init.campId ?? null;
+    this.boss = init.boss ?? false;
     // The spawn statuses, or a rehydrate's. `currentHp` was set to the base
     // maxHp above, and the recompute derives maxHp from the folded stats, so
     // a status that lowers constitution (Fatigued) would leave the unit

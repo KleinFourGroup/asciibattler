@@ -48,7 +48,7 @@ describe('pushLanding — away from an origin', () => {
     expect(pushLanding(world, w, { x: 10, y: 8 }, 'away', 3)).toBeNull();
   });
 
-  it('stops before a chasm and before deep water, as at a wall', () => {
+  it('stops before a chasm and before deep water, as at a wall, for a victim that cannot fall', () => {
     const world = setup();
     world.tileGrid.setKind({ x: 8, y: 5 }, 'chasm');
     const v = spawnAt(world, { x: 6, y: 5 });
@@ -83,7 +83,7 @@ describe('pushLanding — away from an origin', () => {
   it('pushes a victim on the origin away from the caster, and leaves it without one', () => {
     const world = setup();
     const v = spawnAt(world, { x: 5, y: 5 });
-    expect(pushLanding(world, v, { x: 5, y: 5 }, 'away', 2, { x: 3, y: 5 })).toEqual({ cell: { x: 7, y: 5 }, cells: 2 });
+    expect(pushLanding(world, v, { x: 5, y: 5 }, 'away', 2, { fallback: { x: 3, y: 5 } })).toEqual({ cell: { x: 7, y: 5 }, cells: 2 });
     expect(pushLanding(world, v, { x: 5, y: 5 }, 'away', 2)).toBeNull();
   });
 
@@ -144,6 +144,6 @@ describe('pushLanding — toward an origin (the pull)', () => {
   it('does not move a victim already on the origin', () => {
     const world = setup();
     const v = spawnAt(world, { x: 5, y: 5 });
-    expect(pushLanding(world, v, { x: 5, y: 5 }, 'toward', 3, { x: 2, y: 5 })).toBeNull();
+    expect(pushLanding(world, v, { x: 5, y: 5 }, 'toward', 3, { fallback: { x: 2, y: 5 } })).toBeNull();
   });
 });

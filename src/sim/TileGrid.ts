@@ -62,6 +62,12 @@ interface TileDef {
   statusOnEnter?: string;
   /** Status id removed from a unit when it enters the tile. Absent = none. */
   statusRemovedOnEnter?: string;
+  /**
+   * A forced move may walk its victim onto the tile, and the victim falls as
+   * the slide ends (`pushLanding`, `World.forceMove`). No step or path ever
+   * enters it: every such tile is impassable too.
+   */
+  drops?: true;
 }
 
 /**
@@ -70,10 +76,12 @@ interface TileDef {
  *
  * - `shallow_water` — slow, and entering douses burn.
  * - `chasm` — impassable (gotcha #73). Line of sight checks units only
- *   (`LineOfSight.ts`), so a chasm never blocks a shot.
+ *   (`LineOfSight.ts`), so a chasm never blocks a shot. A push or a pull
+ *   drops its victim in (`drops`).
  * - `fire`, `healing` — floor cost; standing on one sustains a status (see
  *   `TileDef`).
- * - `deep_water` — impassable like chasm, and douses burn.
+ * - `deep_water` — impassable like chasm, drops a pushed victim as chasm
+ *   does, and douses burn.
  * - `hills` — slow.
  * - `ice` — floor cost.
  * - `sand` — slow.
@@ -82,10 +90,10 @@ interface TileDef {
 export const TILE_DEFS: Record<TileKind, TileDef> = {
   floor: { cost: 1, passable: true },
   shallow_water: { cost: 2, passable: true, statusRemovedOnEnter: 'burn' },
-  chasm: { cost: Infinity, passable: false },
+  chasm: { cost: Infinity, passable: false, drops: true },
   fire: { cost: 1, passable: true },
   healing: { cost: 1, passable: true },
-  deep_water: { cost: Infinity, passable: false, statusRemovedOnEnter: 'burn' },
+  deep_water: { cost: Infinity, passable: false, statusRemovedOnEnter: 'burn', drops: true },
   hills: { cost: 3, passable: true },
   ice: { cost: 1, passable: true },
   sand: { cost: 2, passable: true },

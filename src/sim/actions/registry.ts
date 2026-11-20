@@ -3,7 +3,7 @@ import type { World } from '../World';
 import { MOVE_ACTION_ID, MoveAction, type MoveActionData } from './MoveAction';
 import { SPAWN_ACTION_ID, SpawnAction } from './SpawnAction';
 import { SWAP_ACTION_ID, SwapAction, type SwapActionData } from './SwapAction';
-import { FORCED_MOVE_ACTION_ID, ForcedMoveAction } from './ForcedMoveAction';
+import { FORCED_MOVE_ACTION_ID, ForcedMoveAction, type ForcedMoveData } from './ForcedMoveAction';
 import { EffectAction, type EffectActionData } from '../effects/EffectAction';
 import { abilityDef } from '../../config/abilities';
 
@@ -26,7 +26,7 @@ const FACTORIES: Record<string, ActionFactory> = {
   [MOVE_ACTION_ID]: (data) => MoveAction.fromData(data as MoveActionData),
   [SPAWN_ACTION_ID]: () => SpawnAction.fromData(),
   [SWAP_ACTION_ID]: (data) => SwapAction.fromData(data as SwapActionData),
-  [FORCED_MOVE_ACTION_ID]: () => ForcedMoveAction.fromData(),
+  [FORCED_MOVE_ACTION_ID]: (data) => ForcedMoveAction.fromData(data as ForcedMoveData),
 };
 
 export function createAction(id: string, data: unknown, world: World): Action {

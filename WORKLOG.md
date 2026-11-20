@@ -154,3 +154,43 @@ The save's fingerprint caught what the kickoff's audit missed:
 optional field changed it. Re-pinned without a bump (`npm run
 save:fingerprint -- --compatible`): a save written before the flag has
 none, which reads as no boss, and no roster template carries it.
+
+### 160.5b — the fall (2026-11-20)
+
+`pushLanding` takes `drops`: a tile that drops (`TileDef.drops`, on
+`chasm` and `deep_water`) ends the walk on it, the landing marked
+`drops`; a body or a claim on that tile still stops the walk before it,
+and a victim already standing on one moves no further. The push op
+passes `drops` for every victim but the caster and a boss; the pull's
+room gate passes it too, so a drop counts as room. `World.forceMove`
+takes the pusher, which `ForcedMoveAction` carries and serializes (World
+v42), and its `impact` lands the unit (`World.landForcedMove`): on a
+tile that drops, `unit:fell`, then `dealDamage` for every HP it has,
+defense bypassed, so the pusher's XP ledger, a camp's hostility and its
+kill stamp book the fall as a blow's; then the pusher's `kill` hooks;
+no `unit:attacked` and no `dealHit`. A victim a blow killed during its
+slide is that blow's. Until 160.5c a fall looks and sounds like any
+death; `unit:fell` waits as a sound `candidate`. Gotcha #142 records the
+unit standing on the tile for its slide.
+
+`src/sim/fall.test.ts`, worked by hand on the grid: a knockback walks a
+foe onto a chasm, where it stands alive for the slide and falls as it
+ends, the caster credited with its HP and no hit drawn; the pusher
+survives a snapshot taken mid-slide; deep water drowns as chasm drops;
+a pull drags a foe into the gap, so its gate counted the drop; the kill
+hooks fire and a camp turns hostile; a boss stops at the edge; the
+board's edge stops the walk; without `drops` the walk stops before the
+tiles; a second victim stops at a falling one's tile, and a falling one
+moves no further. 13 plants, all caught, control clean
+(`scratch/160.5/160.5b-plants.json`), among them the drop at the push
+rather than the slide's end, the fall drawn as a hit, and the board's
+edge dropping too.
+
+Corpus: predicted 5 to 25 of 34; 1 diverged (`player-3`). A count of
+the replays (`scratch/160.5/corpus-falls.ts`): 70 forced moves in the
+whole corpus and 2 falls, both in `player-3`, the journal that moved, so
+the miss is the rate, not a fall that fails to fire. The prediction
+counted journals with a pusher on a dropping map, and few of the
+corpus's runs field a pusher at all. How often falls happen in play is
+160.5d's to measure. Re-recorded; 0 of 34 differ on the replay after;
+`player-3` differs beyond its config hash. The chaos census passes.

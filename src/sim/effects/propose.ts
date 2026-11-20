@@ -118,7 +118,8 @@ function proposeSingleTargetAttack(
 function pullHasRoom(def: AbilityDef, unit: Unit, target: Unit, world: World): boolean {
   for (const e of def.effects) {
     if (e.op.kind !== 'push' || e.op.direction !== 'toward') continue;
-    if (pushLanding(world, target, unit.position, 'toward', e.op.cells) === null) return false;
+    // A drop counts as room: a pull into a gap fires.
+    if (pushLanding(world, target, unit.position, 'toward', e.op.cells, { drops: !target.boss }) === null) return false;
   }
   return true;
 }

@@ -103,8 +103,9 @@ medium. The cut, signed 2026-11-20 with its calls (WORKLOG §160.5):
 
 - ☑ **160.5a — the boss flag** (`none`): `boss: true` on the five boss
   specs, carried to the unit; 7 plants; World v41 (WORKLOG 160.5a).
-- ☐ **160.5b — the fall** (`none`): a push or a pull into chasm or deep
-  water drops its victim at the slide's end, the pusher credited.
+- ☑ **160.5b — the fall** (`none`): a push or a pull into chasm or deep
+  water drops its victim at the slide's end, the pusher credited; 13
+  plants; World v42; 1 of 34 journals moved (WORKLOG 160.5b).
 - ☐ **160.5c — the look and the sound** (`stop`): the drop and the
   sinking, a cue each.
 - ☐ **160.5d — the measurement** (`stop`): a census of falls, 20 seeds

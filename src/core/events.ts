@@ -27,6 +27,7 @@ import type { TurnGrantView } from '../run/daemon';
 import type { EmpowerStackView } from '../run/empower';
 import type { RewardPortion } from '../run/rewards';
 import type { Theme } from '../sim/layouts';
+import type { TileKind } from '../sim/TileGrid';
 import type { EncounterKind } from '../config/encounters';
 import type { UseContext } from '../config/packets';
 
@@ -222,6 +223,14 @@ export interface GameEvents extends Record<string, unknown> {
     to: GridCoord;
     durationTicks: number;
   };
+  /**
+   * A forced move's victim fell, as its slide ended on a tile that drops
+   * (`into`, a chasm or deep water): `World.landForcedMove` took every HP
+   * it had, credited to `pusherId` (null when the pusher is gone or there
+   * was none), and the tick's reap emits its `unit:died`. No `unit:attacked`
+   * comes with it, so no hit is drawn.
+   */
+  'unit:fell': { unitId: number; into: TileKind; pusherId: number | null };
   /**
    * A hit landed (`World.applyDamage`). `damage` is what was taken off the
    * target's HP, after the crit factor (`STATS.critMult`, applied when `crit`

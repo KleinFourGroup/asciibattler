@@ -59,7 +59,7 @@ import {
 } from './occupancy';
 import { affectsMatch } from './effects/targeting';
 import { SIM } from '../config/sim';
-import { TileGrid, type TileGridSnapshot } from './TileGrid';
+import { TILE_DEFS, TileGrid, type TileGridSnapshot } from './TileGrid';
 import { AbilityBehavior } from './behaviors/AbilityBehavior';
 import { CampWanderBehavior } from './behaviors/CampWanderBehavior';
 import { SPAWN_ACTION_ID, SpawnAction } from './actions/SpawnAction';
@@ -90,7 +90,7 @@ import { getCamp } from '../config/camps';
  * a side's fallen power under-charged). Bump it with any change to
  * `WorldSnapshot`'s shape or to what one of its fields means.
  */
-const WORLD_SCHEMA_VERSION = 41;
+const WORLD_SCHEMA_VERSION = 42;
 
 /** The maxHp of a neutral whose def has no `hp` (indestructible), so its unit
  *  is alive and blocks pathing and line of sight. Never a damage target:
@@ -1141,6 +1141,32 @@ export class World {
   }
 
   /**
+   * A forced move's landing, as its slide ends (`ForcedMoveAction`). On a
+   * tile that drops (a chasm, deep water) the unit falls: `unit:fell`, then
+   * every HP it has is taken through `dealDamage`, defense bypassed, so the
+   * pusher is credited as a blow's striker is (the XP ledger, a camp's
+   * hostility and kill stamp), and the pusher's `kill` hooks fire; the
+   * tick's reap removes it. No `unit:attacked` is emitted, so no hit is
+   * drawn, and no `dealHit`, since nothing struck it. A pusher gone by now
+   * is credited with nothing, as a status tick whose source died is; a
+   * victim a blow killed during its slide has fallen to that blow, and
+   * nothing more happens. On any other tile the enter effects run
+   * (`applyTileEnterEffects`).
+   */
+  landForcedMove(unit: Unit, pusherId: number | null): void {
+    const into = this.tileGrid.kindAt(unit.position);
+    if (TILE_DEFS[into].drops !== true) {
+      this.applyTileEnterEffects(unit);
+      return;
+    }
+    if (unit.currentHp <= 0) return;
+    const pusher = pusherId === null ? undefined : this.findUnit(pusherId);
+    this.emit('unit:fell', { unitId: unit.id, into, pusherId: pusher?.id ?? null });
+    this.dealDamage(pusher, unit, unit.currentHp, { bypassDefense: true });
+    if (pusher) this.fireTrigger('kill', { attacker: pusher, victim: unit });
+  }
+
+  /**
    * A unit's entering a tile, called at a move's or a swap's flip, when the
    * unit is on its new cell: strips the tile's `statusRemovedOnEnter` (water
    * puts out a burn) and applies its `statusOnEnter` (mud poisons, with no
@@ -1417,13 +1443,15 @@ export class World {
    * - an ability: cleared with nothing more fired, its cooldown spent;
    * - a hold already on it (a spawn's lockout, an earlier push's): kept, the
    *   new hold lasting to whichever ends later.
-   * Every claim it holds is released. The landing tile's enter effects run as
-   * the slide ends. `unit:moved` draws the slide and `unit:shoved` marks it
-   * as forced.
+   * Every claim it holds is released. The unit lands as the slide ends
+   * (`landForcedMove`): the tile's enter effects run, or on a tile that
+   * drops it falls, credited to `pusherId`. `unit:moved` draws the slide and
+   * `unit:shoved` marks it as forced.
    *
-   * The caller has found `to` with `pushLanding`: free, passable, unclaimed.
+   * The caller has found `to` with `pushLanding`: free and unclaimed, and
+   * passable unless the landing drops.
    */
-  forceMove(unit: Unit, to: GridCoord, cells: number): void {
+  forceMove(unit: Unit, to: GridCoord, cells: number, pusherId: number | null = null): void {
     const slideTicks = Math.max(1, secondsToTicks(cells * SIM.pushSecondsPerCell));
     let holdTicks = slideTicks;
     const aa = unit.activeAction;
@@ -1453,7 +1481,7 @@ export class World {
     unit.position = { ...to };
     this.bus.emit('unit:moved', { unitId: unit.id, from, to: { ...to }, durationTicks: slideTicks });
     this.bus.emit('unit:shoved', { unitId: unit.id, from, to: { ...to }, durationTicks: slideTicks });
-    const held = this.seatAction(unit, new ForcedMoveAction(), forcedMovePhases(slideTicks, holdTicks));
+    const held = this.seatAction(unit, new ForcedMoveAction(pusherId), forcedMovePhases(slideTicks, holdTicks));
     for (const phase of phasesBeginningAt(held.phases, 0)) this.emitActionPhase(unit, held.action, phase);
   }
 

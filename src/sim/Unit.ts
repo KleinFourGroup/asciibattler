@@ -238,7 +238,9 @@ export class Unit {
    */
   readonly campId: number | null;
   /**
-   * An encounter's boss (`WaveUnitSpec.boss`). False for every other unit.
+   * An encounter's boss (`WaveUnitSpec.boss`): a push or a pull stops it at
+   * a chasm's or deep water's edge rather than dropping it (`pushLanding`'s
+   * `drops`). False for every other unit.
    */
   readonly boss: boolean;
   position: GridCoord;

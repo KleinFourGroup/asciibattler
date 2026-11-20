@@ -942,7 +942,7 @@ function renderUnitRow(units: WUnit[], i: number): HTMLElement {
   // rather than set false (the formatter writes only true).
   const bossBox = el('input');
   bossBox.type = 'checkbox';
-  bossBox.title = "the encounter's boss";
+  bossBox.title = "the encounter's boss: a push or a pull never drops it";
   bossBox.checked = u.boss === true;
   bossBox.addEventListener('change', () => {
     if (bossBox.checked) u.boss = true;

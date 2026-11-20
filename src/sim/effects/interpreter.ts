@@ -305,7 +305,11 @@ function resolveStatusTargets(ctx: OpFireContext): Unit[] {
  * `aoe`'s centre for `from: 'center'`; a victim on the origin goes away from
  * the caster. A victim a damage op on this boundary missed, and the dead,
  * are skipped, as `applyStatus` skips them. A push angers no camp: only
- * damage does (`markCampHostile`).
+ * damage does (`markCampHostile`), a fall's included.
+ *
+ * A victim walked onto chasm or deep water falls as its slide ends, the
+ * caster credited (`World.landForcedMove`); a boss, and the caster moving
+ * itself, stop at the edge instead.
  */
 function executePush(op: Extract<EffectOp, { kind: 'push' }>, ctx: OpFireContext): void {
   const { world, caster } = ctx;
@@ -318,8 +322,9 @@ function executePush(op: Extract<EffectOp, { kind: 'push' }>, ctx: OpFireContext
     .sort((a, b) => b.d - a.d || a.i - b.i);
   const fallback = { ...caster.position };
   for (const { unit } of victims) {
-    const landing = pushLanding(world, unit, at, op.direction, op.cells, fallback);
-    if (landing !== null) world.forceMove(unit, landing.cell, landing.cells);
+    const drops = unit !== caster && !unit.boss;
+    const landing = pushLanding(world, unit, at, op.direction, op.cells, { fallback, drops });
+    if (landing !== null) world.forceMove(unit, landing.cell, landing.cells, caster.id);
   }
 }
 

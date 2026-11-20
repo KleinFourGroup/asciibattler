@@ -15,6 +15,21 @@ export interface PushLanding {
   cell: GridCoord;
   /** The cells walked, at least 1: the slide's length. */
   cells: number;
+  /** True when `cell` is a tile that drops (a chasm, deep water): the victim
+   *  falls as the slide ends. Absent otherwise. */
+  drops?: true;
+}
+
+/** `pushLanding`'s options. */
+export interface PushOptions {
+  /** Where a victim standing on the origin is pushed away from (the caster). */
+  readonly fallback?: GridCoord;
+  /**
+   * Whether the victim can fall: the walk then enters the first tile that
+   * drops and ends there. False (the default) stops it before one, as at the
+   * board's edge: a self-move and a boss never fall.
+   */
+  readonly drops?: boolean;
 }
 
 /**
@@ -26,13 +41,18 @@ export interface PushLanding {
  *   standing on `origin` is pushed away from `fallback` (the caster); with
  *   no offset there either, it stays.
  * - It walks up to `cells` cells and lands on the last free one. The walk
- *   ends before the board's edge or an impassable tile (a chasm, deep water;
- *   `costAt` prices both as Infinity), a cell another unit's body covers
- *   (scenery included), or a cell another unit has claimed (gotcha #113).
- *   The victim's own claim, a step it is abandoning, does not end it.
+ *   ends before the board's edge or an impassable tile (`costAt` prices each
+ *   as Infinity), a cell another unit's body covers (scenery included), or a
+ *   cell another unit has claimed (gotcha #113). The victim's own claim, a
+ *   step it is abandoning, does not end it.
+ * - With `drops`, a tile that drops (a chasm, deep water) ends the walk on
+ *   it instead, the landing marked `drops`: the victim falls as the slide
+ *   ends. A body or a claim on that tile (a victim already falling there)
+ *   still stops the walk before it.
  * - `toward` also ends when the next cell would be the origin or no nearer to
  *   it (Chebyshev), so a pull stops beside its caster rather than passing it.
- * - Scenery and a body larger than one cell never move.
+ * - Scenery, a body larger than one cell, and a victim already falling (one
+ *   standing on a tile that drops) never move.
  *
  * A diagonal passes between two blocked cells, as a step may (the router has
  * no corner rule). Pure: it reads the world and changes nothing.
@@ -43,10 +63,12 @@ export function pushLanding(
   origin: GridCoord,
   direction: PushDirection,
   cells: number,
-  fallback?: GridCoord,
+  opts: PushOptions = {},
 ): PushLanding | null {
   if (cells <= 0) return null;
   if (isInertNeutral(victim) || footprintOf(victim) > 1) return null;
+  if (world.tileGrid.defAt(victim.position).drops === true) return null;
+  const { fallback } = opts;
 
   const from = victim.position;
   let dx = Math.sign(from.x - origin.x);
@@ -69,13 +91,18 @@ export function pushLanding(
   let walked = 0;
   for (let i = 0; i < cells; i++) {
     const next = { x: at.x + dx, y: at.y + dy };
-    // Off the board `costAt` is Infinity too, so this is also the edge.
-    if (!isFinite(world.tileGrid.costAt(next))) break;
     if (taken.has(cellKey(next))) break;
     if (direction === 'toward') {
       const now = chebyshev(at, origin);
       const then = chebyshev(next, origin);
       if (then === 0 || then >= now) break;
+    }
+    // Off the board `costAt` is Infinity too, so this is also the edge.
+    if (!isFinite(world.tileGrid.costAt(next))) {
+      if (opts.drops === true && world.tileGrid.inBounds(next) && world.tileGrid.defAt(next).drops === true) {
+        return { cell: next, cells: walked + 1, drops: true };
+      }
+      break;
     }
     at = next;
     walked++;

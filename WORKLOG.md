@@ -194,3 +194,41 @@ counted journals with a pusher on a dropping map, and few of the
 corpus's runs field a pusher at all. How often falls happen in play is
 160.5d's to measure. Re-recorded; 0 of 34 differ on the replay after;
 `player-3` differs beyond its config hash. The chaos census passes.
+
+### 160.5c — the look and the sound, built for the stop (2026-11-20)
+
+A fall is drawn in place of a death's fade: `unit:fell` plays the cue
+and marks the unit, and the `unit:died` its tick's reap emits draws the
+glyph leaving through its tile (`src/render/fallMotion.ts`, `fallPose`,
+driven per frame by `BattleRenderer.updateFalls`; the HP bar fades over
+the same time). The slide has already carried the glyph down to the
+tile's surface (a chasm's top at −1.2, water's at −0.4), and the
+terrain's top face hides what sinks below it. Two arms each, switched by
+the board panel's `fall` dial (`bp=fall-b`), a dev seam that goes when
+one is signed:
+
+- chasm `a`, the plunge: down 2 cells on gravity's curve, a third
+  smaller, fading over the last 30%, 0.55 s; chasm `b`, the fall away:
+  shrinks to a point while barely sinking, 0.7 s.
+- deep water `a`, the sink: under slowly with a faint ripple of eight
+  motes easing out along the surface, 0.9 s; deep water `b`, the splash:
+  under fast, eight sparks of spray thrown up and out, 0.45 s.
+
+The cues are generated (`scripts/gen-sfx.mjs`): `fall`, a whistle
+dropping in pitch over a thin rush of air; `splash`, a slap of spray and
+a low gulp. Each plays beside the death's cry, which every fall still
+has. The regeneration left the other twelve cues byte-identical.
+
+`src/render/fallMotion.test.ts` pins what every arm must do (start as
+the glyph stands, only go down, end unseen) and what tells each pair
+apart. In the pane (Chromium, so wiring, not feel), on the spiral and
+the isthmus: a staged forced move dropped its victim at the slide's end
+(`unit:fell` at tick 5 for a push at tick 2), the sprite's height and
+alpha matched `fallPose` frame by frame in each of the four arms, the
+sprite and its handle were gone at the end, each water arm spawned its
+eight sparks, and the audio heard `fall` or `splash` then `death` per
+fall; no console errors. Falls also happened unstaged: one on the
+spiral's second battle, and on the isthmus, with every battle forced
+there, 21 in a seed's four battles, all enemies, 19 of them thrown by
+the player's grenadiers (16 giant rats). That rate is a staged run's,
+every battle on the water map; 160.5d's census is the measure.

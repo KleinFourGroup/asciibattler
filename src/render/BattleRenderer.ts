@@ -3,6 +3,7 @@ import type { EventBus } from '../core/EventBus';
 import type { GameEvents } from '../core/events';
 import type { GridCoord } from '../core/types';
 import { explosionPlacement, SPIN_SPARKS, spinSparkOffset } from './burstPlacement';
+import { FALL_SECONDS, fallArm, fallPose, type FallArm, type FallInto } from './fallMotion';
 import type { AbilityDef } from '../sim/effects/schema';
 import type { World } from '../sim/World';
 import type { ObjectiveTarget } from '../sim/objective';
@@ -109,6 +110,21 @@ interface ExplosionParticle {
 }
 
 /**
+ * A fallen unit's own sprite, leaving the board through the tile it fell
+ * into (`fallPose`), driven per render frame in place of a death's fade;
+ * removed with its handle at the end, as the fade's callback does.
+ */
+interface FallingSprite {
+  readonly unitId: number;
+  readonly handle: SpriteHandle;
+  readonly from: THREE.Vector3;
+  readonly into: FallInto;
+  readonly arm: FallArm;
+  readonly duration: number;
+  elapsed: number;
+}
+
+/**
  * One mote of a `track`-mode aura pulse (the modes are in ./auraFx.ts): it
  * re-anchors to its carrier's live sprite every frame, so the wave glides
  * with the carrier.
@@ -165,6 +181,10 @@ export class BattleRenderer {
   /** The burst lane's live particles. Like `projectiles`, they live in the
    *  shared SpriteRenderer but not in `handles`, and `detach` sweeps them. */
   private readonly explosions: ExplosionParticle[] = [];
+  /** The tile each unit that fell this tick fell into (`unit:fell`), read by
+   *  the `unit:died` the tick's reap emits next, to draw the fall. */
+  private readonly fellInto = new Map<number, FallInto>();
+  private readonly falls: FallingSprite[] = [];
   /** Gates the aura ring's mote shed, in speed-scaled dt, so the ring slows
    *  with playback and freezes at pause. */
   private auraRingClock = 0;
@@ -254,6 +274,7 @@ export class BattleRenderer {
     // A dodged single-target strike: "Miss" floats instead of a number. The
     // swing rides `action:phase`, which fires on a miss too.
     this.subscriptions.push(bus.on('unit:missed', this.onUnitMissed));
+    this.subscriptions.push(bus.on('unit:fell', this.onUnitFell));
     this.subscriptions.push(bus.on('unit:died', this.onUnitDied));
     // The FX driver: every keyed combat cue resolves off the action's phase
     // boundaries (`actionId → AbilityDef.fx[phase] → FX_REGISTRY →
@@ -305,6 +326,7 @@ export class BattleRenderer {
     this.renderClockMs += dt * 1000;
     this.animator.update(dt);
     this.updateExplosions(dt);
+    this.updateFalls(dt);
     this.updateAuraFx(dt);
     this.updateAuraPulseParticles(dt);
     this.updateOverlays(dt);
@@ -776,6 +798,9 @@ export class BattleRenderer {
     // The burst lane's particles too: the animator doesn't own them.
     for (const p of this.explosions) this.sprites.removeSprite(p.handle);
     this.explosions.length = 0;
+    // A fall's sprite is its unit's handle, swept with `handles` above.
+    this.falls.length = 0;
+    this.fellInto.clear();
     // The ring's motes live in `explosions` (swept above); rewind the shed
     // clocks so the next battle starts on fresh intervals.
     this.auraRingClock = 0;
@@ -1748,17 +1773,81 @@ export class BattleRenderer {
     // A unit can die during its spawn fade-in; drop the overlay's fade-in so
     // it doesn't fight the fade-out below.
     this.overlayFadeIns.delete(unitId);
-    this.animator.startFade(handle, FADE_SECONDS, () => {
-      this.sprites.removeSprite(handle);
-      this.handles.delete(unitId);
-      this.markSpecs.delete(unitId); // the mark faded with the sprite
-    });
+    // A unit that fell leaves through its tile (`updateFalls`); any other
+    // fades where it stands.
+    const into = this.fellInto.get(unitId);
+    this.fellInto.delete(unitId);
+    let duration = FADE_SECONDS;
+    if (into !== undefined) {
+      const arm = fallArm();
+      duration = FALL_SECONDS[into][arm];
+      const from = this.sprites.getPosition(handle, new THREE.Vector3()) ?? new THREE.Vector3();
+      this.falls.push({ unitId, handle, from, into, arm, duration, elapsed: 0 });
+      if (into === 'deep_water') this.spawnWaterBurst(from, arm);
+    } else {
+      this.animator.startFade(handle, FADE_SECONDS, () => {
+        this.sprites.removeSprite(handle);
+        this.handles.delete(unitId);
+        this.markSpecs.delete(unitId); // the mark faded with the sprite
+      });
+    }
     const overlay = this.overlayHandles.get(unitId);
     if (overlay) {
-      this.overlayFades.set(unitId, { elapsed: 0, duration: FADE_SECONDS, handle: overlay });
+      this.overlayFades.set(unitId, { elapsed: 0, duration, handle: overlay });
       this.overlayHandles.delete(unitId);
     }
   };
+
+  /**
+   * A forced move's victim fell (`unit:fell`): its cue plays now, and the
+   * `unit:died` the same tick's reap emits draws the fall (`onUnitDied`).
+   * Only a chasm and deep water drop a unit.
+   */
+  private onUnitFell = ({ unitId, into }: GameEvents['unit:fell']): void => {
+    if (into !== 'chasm' && into !== 'deep_water') return;
+    this.fellInto.set(unitId, into);
+    this.audio.play(into === 'chasm' ? 'fall' : 'splash');
+  };
+
+  /** Each fall's pose this frame; at its end the sprite goes, as a fade's. */
+  private updateFalls(dt: number): void {
+    for (let i = this.falls.length - 1; i >= 0; i--) {
+      const f = this.falls[i]!;
+      f.elapsed += dt;
+      const t = f.elapsed >= f.duration ? 1 : f.elapsed / f.duration;
+      const pose = fallPose(f.into, f.arm, t);
+      const pos = this.scratchPos.copy(f.from);
+      pos.y += pose.dy;
+      this.sprites.updateSprite(f.handle, { position: pos, size: pose.size, alpha: pose.alpha });
+      if (t >= 1) {
+        this.sprites.removeSprite(f.handle);
+        this.handles.delete(f.unitId);
+        this.markSpecs.delete(f.unitId);
+        this.falls.splice(i, 1);
+      }
+    }
+  }
+
+  /**
+   * The water a unit falls into, on the burst lane: arm `a` a slow ripple,
+   * eight faint motes easing out along the surface; arm `b` a splash, eight
+   * sparks thrown up and out fast.
+   */
+  private spawnWaterBurst(at: THREE.Vector3, arm: FallArm): void {
+    for (const [dx, dz] of EXPLOSION_RING_DIRS) {
+      const dest = at.clone();
+      if (arm === 'a') {
+        dest.x += dx * WATER_RIPPLE_SPREAD;
+        dest.z += dz * WATER_RIPPLE_SPREAD;
+        this.addExplosionParticle(at, dest, PROJECTILE_GLYPH, COLORS.FLOURESCENT_BLUE, 0.35, 0.5, FALL_SECONDS.deep_water.a, EXPLOSION_BLOOM, 0.6);
+      } else {
+        dest.x += dx * WATER_SPRAY_SPREAD;
+        dest.z += dz * WATER_SPRAY_SPREAD;
+        dest.y += WATER_SPRAY_LIFT;
+        this.addExplosionParticle(at, dest, PROJECTILE_GLYPH, COLORS.FLOURESCENT_BLUE, EXPLOSION_SPARK_SIZE, 0.3, WATER_SPRAY_SECONDS);
+      }
+    }
+  }
 
   /**
    * The per-frame overlay driver:
@@ -1949,6 +2038,12 @@ const EXPLOSION_FLASH_SIZE_TO = 3.0;
 const EXPLOSION_FLASH_SECONDS = 0.35;
 const EXPLOSION_SPARK_SIZE = 0.55;
 const EXPLOSION_RING_SECONDS = 0.3;
+/** A fall into deep water's ripple: how far its motes ease out, in cells. */
+const WATER_RIPPLE_SPREAD = 0.75;
+/** The splash: how far out and up its spray flies, and how fast. */
+const WATER_SPRAY_SPREAD = 0.55;
+const WATER_SPRAY_LIFT = 0.8;
+const WATER_SPRAY_SECONDS = 0.35;
 const EXPLOSION_BLOOM = 2.2;
 /** 8 unit-ish directions (orthogonal + diagonal, diagonals normalized) so the
  *  spark ring expands evenly to the blast edge. */

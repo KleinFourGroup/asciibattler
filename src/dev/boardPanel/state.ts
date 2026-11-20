@@ -162,6 +162,15 @@ export const DIALS = {
     def: 1,
     hint: 'camera-up, in tiles — the flyer pose only',
   },
+  /** The fall's two arms, a taste call the user makes in play
+   *  (src/render/fallMotion.ts); goes when one is signed. */
+  fall: {
+    kind: 'enum',
+    label: 'fall look',
+    options: ['a', 'b'],
+    def: 'a',
+    hint: 'a chasm: a = the plunge, b = the fall away; deep water: a = the sink, b = the splash',
+  },
   /** Bookmark-only: the panel starts collapsed (the dials still apply). */
   hide: { kind: 'bool', label: 'start hidden', def: false },
 } as const satisfies Record<string, DialSpec>;

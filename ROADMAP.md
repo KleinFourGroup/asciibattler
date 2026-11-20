@@ -106,8 +106,9 @@ medium. The cut, signed 2026-11-20 with its calls (WORKLOG §160.5):
 - ☑ **160.5b — the fall** (`none`): a push or a pull into chasm or deep
   water drops its victim at the slide's end, the pusher credited; 13
   plants; World v42; 1 of 34 journals moved (WORKLOG 160.5b).
-- ☐ **160.5c — the look and the sound** (`stop`): the drop and the
-  sinking, a cue each.
+- ◐ **160.5c — the look and the sound** (`stop`): the drop and the
+  sinking, a cue each; two arms each built, read at the stop (WORKLOG
+  160.5c).
 - ☐ **160.5d — the measurement** (`stop`): a census of falls, 20 seeds
   paired before and after.
 - ☐ **160.5e — the play** (`stop`).

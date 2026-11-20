@@ -315,6 +315,27 @@ const SOUNDS = {
     addOsc(b, { type: 'triangle', freq: (t) => 170 * Math.exp(-t / 0.09) + 55, amp: (t) => 0.55 * attack(0.004)(t) * expDecay(0.06)(t) });
     return finish(b, 0.75);
   },
+
+  // A fall into a chasm (`unit:fell`, played with its look by BattleRenderer):
+  // a whistle that drops in pitch as it fades, the cartoon fall, over a thin
+  // rush of air, gone before it lands, since nothing is heard landing.
+  fall: () => {
+    const b = buffer(0.7);
+    const rng = mulberry32(0xfa11);
+    addOsc(b, { type: 'sine', freq: (t) => 1400 * Math.exp(-t / 0.35) + 180, amp: (t) => 0.6 * attack(0.02)(t) * expDecay(0.3)(t) });
+    addNoise(b, { rng, lp: 0.05, amp: (t) => 0.25 * attack(0.05)(t) * expDecay(0.25)(t) });
+    return finish(b, 0.7);
+  },
+  // A fall into deep water: a bright slap of spray, then a low gulp as the
+  // water closes over.
+  splash: () => {
+    const b = buffer(0.5);
+    const rng = mulberry32(0x5b1a);
+    addNoise(b, { rng, lp: 0.5, amp: (t) => 0.9 * attack(0.003)(t) * expDecay(0.06)(t) });
+    addNoise(b, { rng, lp: 0.06, amp: (t) => (t > 0.03 ? 0.5 * expDecay(0.15)(t - 0.03) : 0) });
+    addOsc(b, { type: 'sine', freq: (t) => 220 * Math.exp(-t / 0.12) + 70, amp: (t) => (t > 0.08 ? 0.45 * expDecay(0.1)(t - 0.08) : 0) });
+    return finish(b, 0.8);
+  },
 };
 
 /* --------------------------------- main --------------------------------- */

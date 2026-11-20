@@ -110,7 +110,7 @@ export const SILENT_EVENTS: Readonly<
 
   'unit:spawned': 'bookkeeping', // a summon's cue rides its fx key
   'unit:moved': 'bookkeeping',
-  'unit:fell': 'candidate',
+  'unit:fell': 'fxChannel', // BattleRenderer plays the fall's cue with its look
   'unit:swapped': 'bookkeeping',
   'unit:swapAborted': 'bookkeeping',
   'unit:moveAborted': 'bookkeeping',

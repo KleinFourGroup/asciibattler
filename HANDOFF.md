@@ -6,7 +6,7 @@ A fresh-session orientation for ASCIIbattler. Read this first; then dive into th
 
 **The ONE home for live status.** Other docs (and the agent memory) point here instead of restating it; when state changes, this section is the single place that updates.
 
-- **NEXT — ROUND 12 (Push, pull and blink): §160.5, the fall — its kickoff** (`stop`: the code-reality audit and the cut, [process/planning.md](process/planning.md) "Phase kickoff"), on the leans signed at 160g ([ROADMAP.md](ROADMAP.md) §160.5; `archive/worklog-phase-160.md` from "160g — the abyss and the stun, answered"). §161.5, the hex and the ice storm as specials, is inserted before §162. **Open ◐:** none.
+- **NEXT — ROUND 12 (Push, pull and blink): 160.5c, the fall's look and sound** (`stop`, put 2026-11-20): two arms each for the drop into a chasm and the sinking into deep water, switched by `bp=fall-b`; then 160.5d, the census of falls (`stop`), and 160.5e, the play ([ROADMAP.md](ROADMAP.md) §160.5; WORKLOG from "The kickoff's audit"). §161.5, the hex and the ice storm as specials, is inserted before §162. **Open ◐:** 160.5c.
 - **In flight:** nothing.
 - **The public build:** `0.4.0` (`4fc62cfe`, tag `v0.4.0`), uploaded to itch.io on 2026-11-13; the uploads before it are in Closed rounds below.
 - **Snapshots:** WorldSnapshot **v42** (no player keeps one) · RunSnapshot **v51** (a v50 save, `0.3.0`'s, rejects).

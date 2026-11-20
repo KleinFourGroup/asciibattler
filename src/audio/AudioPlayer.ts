@@ -38,6 +38,8 @@ export type SoundKey =
   | 'recruit'
   | 'sectorwin'
   | 'shove'
+  | 'fall'
+  | 'splash'
   | 'shoot'
   | 'stattick'
   | 'summon'
@@ -88,6 +90,10 @@ export const SOUND_SOURCES: Record<SoundKey, string> = {
   // A forced move's yank, a push or a pull, off `unit:shoved` in the
   // event-sound registry (generated, `scripts/gen-sfx.mjs`).
   shove: 'audio/shove.wav',
+  // A fall into a chasm and into deep water, played with the fall's look by
+  // BattleRenderer (generated, `scripts/gen-sfx.mjs`).
+  fall: 'audio/fall.wav',
+  splash: 'audio/splash.wav',
   // The pool bar's landing cue, played by the HUD on every orb landing and
   // scaled per play by `lossCue` (src/ui/lossFx.ts): gain up and rate down
   // with the loss's share of the pool max.
@@ -140,6 +146,9 @@ const VOLUMES: Record<SoundKey, number> = {
   thud: 0.85,
   // Under a swing: it lands with the hit that pushes.
   shove: 0.6,
+  // With the death's cry, which every fall also has.
+  fall: 0.7,
+  splash: 0.75,
   // The landing cue's ceiling: `lossCue` scales each play's gain from about
   // half of this at a small loss up to all of it at the shake's ceiling, so
   // a small loss ticks and a big one lands.
@@ -198,6 +207,9 @@ const PITCH_VARIANCE: Record<SoundKey, number> = {
   thud: 0.08,
   // A blast that throws several units plays several at once.
   shove: 0.1,
+  // A blast can drop several at once too.
+  fall: 0.08,
+  splash: 0.08,
 };
 
 const POOL_SIZE = 4;

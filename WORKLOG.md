@@ -241,3 +241,26 @@ dial are gone; `fallPose` takes the tile alone. Re-checked in the pane
 after the cut: the splash (0.45 s, its eight sparks) and the plunge
 (0.55 s) each tracked `fallPose` exactly frame by frame and left no
 sprite, with `splash` or `fall` then `death` heard; no console errors.
+
+### 160.5d — the census of falls, put (2026-11-20)
+
+The numbers are BALANCE's run log, "the census of falls". The probe
+(`scratch/160.5/fall-census.ts`) plays N fuzz seeds with the deploy
+vector and counts forced moves and falls on two surfaces, a wrap on
+`World.landForcedMove` and the bus's `unit:fell`; they agreed (33 and
+33), and the arm before the fall read 0, its control. The before arm ran
+from a detached worktree at `be14743d` with a `node_modules` junction,
+removed after.
+
+Read: falls are rare in a run and land where they were meant to, on the
+water maps and the spiral, about one battle in forty, and the player
+gains from them far more than it loses: 27 foes and camp members thrown
+in against 6 of its own, every one of those by an enemy grenadier. The
+Snag dropped 2. No battle on `junctionAmbush` saw one, though its pushers
+moved 43 units there. The session's lean on the decision the cut
+returns: no pusher changes before §162; the enemy grenadier's six
+permanent losses are the line for the board to watch.
+
+The staged isthmus count at 160.5c (21 falls in four battles) was a run
+with every battle forced onto deep water and four pushers drafted; a
+plain run sees one fall in about forty battles.

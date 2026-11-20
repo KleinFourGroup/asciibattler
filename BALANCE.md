@@ -6549,3 +6549,20 @@ deltas. The pre-X H7c→O log lives at
   regen seam 22.44 WARNs against 14.8–18.8, as do the priest's and the
   gambler's regen refs, the deploy row's transactions (0.900) and the
   Queen (0.258).
+- **2026-11-20 — the census of falls** (§160.5, 160.5d). A push or a pull
+  into chasm or deep water drops its victim since `3c967784`. Seeds 1–20,
+  the deploy vector (`tests/fuzz/fixtures/92c2-winner.json`, the
+  harness's Soldier), full runs, local, at `6f449b0a` and paired at
+  `be14743d` (the commit before the fall), by `scratch/160.5/fall-census.ts`
+  (a wrap on `World.landForcedMove` and the bus's `unit:fell`, which agreed:
+  33 and 33; forced moves 491 and 491). After: 577 battles, 491 forced
+  moves, **33 falls in 14 battles** (2.4% of battles; 1 in 15 forced
+  moves). By the victim's side: enemy 20, a camp's 7, the player's 6. By
+  pusher: the player's grenadiers 21, telekinetics 4, adventurer 2; the
+  enemy's grenadiers 6 (the player's 6). By board: icebergs 21 (deep
+  water), isthmus 7 (deep water), the spiral 5 (chasm); none on
+  `junctionAmbush`'s chasms in 58 battles. Before: 537 battles, 435 forced
+  moves, 0 falls (the control). Paired outcomes: 19 seeds end where they
+  ended before; seed 8 goes farther (died in act 1, now in act 3, its run
+  holding 9 falls); seed 19 completes in both. Twenty seeds read the rate,
+  not the balance, which is §162's board.

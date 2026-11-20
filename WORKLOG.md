@@ -232,3 +232,12 @@ spiral's second battle, and on the isthmus, with every battle forced
 there, 21 in a seed's four battles, all enemies, 19 of them thrown by
 the player's grenadiers (16 giant rats). That rate is a staged run's,
 every battle on the water map; 160.5d's census is the measure.
+
+**Signed** ("I'm signing all of those! 😁 That is awesome, and
+hilarious, and feels incredibly satisfying!", 2026-11-20): the chasm's
+plunge (`a`), deep water's splash (`b`), both cues as built, and the
+death's cry kept beside each. The other two arms and the panel's `fall`
+dial are gone; `fallPose` takes the tile alone. Re-checked in the pane
+after the cut: the splash (0.45 s, its eight sparks) and the plunge
+(0.55 s) each tracked `fallPose` exactly frame by frame and left no
+sprite, with `splash` or `fall` then `death` heard; no console errors.

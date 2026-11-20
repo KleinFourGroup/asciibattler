@@ -3,7 +3,7 @@ import type { EventBus } from '../core/EventBus';
 import type { GameEvents } from '../core/events';
 import type { GridCoord } from '../core/types';
 import { explosionPlacement, SPIN_SPARKS, spinSparkOffset } from './burstPlacement';
-import { FALL_SECONDS, fallArm, fallPose, type FallArm, type FallInto } from './fallMotion';
+import { FALL_SECONDS, fallPose, type FallInto } from './fallMotion';
 import type { AbilityDef } from '../sim/effects/schema';
 import type { World } from '../sim/World';
 import type { ObjectiveTarget } from '../sim/objective';
@@ -119,7 +119,6 @@ interface FallingSprite {
   readonly handle: SpriteHandle;
   readonly from: THREE.Vector3;
   readonly into: FallInto;
-  readonly arm: FallArm;
   readonly duration: number;
   elapsed: number;
 }
@@ -1779,11 +1778,10 @@ export class BattleRenderer {
     this.fellInto.delete(unitId);
     let duration = FADE_SECONDS;
     if (into !== undefined) {
-      const arm = fallArm();
-      duration = FALL_SECONDS[into][arm];
+      duration = FALL_SECONDS[into];
       const from = this.sprites.getPosition(handle, new THREE.Vector3()) ?? new THREE.Vector3();
-      this.falls.push({ unitId, handle, from, into, arm, duration, elapsed: 0 });
-      if (into === 'deep_water') this.spawnWaterBurst(from, arm);
+      this.falls.push({ unitId, handle, from, into, duration, elapsed: 0 });
+      if (into === 'deep_water') this.spawnWaterSplash(from);
     } else {
       this.animator.startFade(handle, FADE_SECONDS, () => {
         this.sprites.removeSprite(handle);
@@ -1815,7 +1813,7 @@ export class BattleRenderer {
       const f = this.falls[i]!;
       f.elapsed += dt;
       const t = f.elapsed >= f.duration ? 1 : f.elapsed / f.duration;
-      const pose = fallPose(f.into, f.arm, t);
+      const pose = fallPose(f.into, t);
       const pos = this.scratchPos.copy(f.from);
       pos.y += pose.dy;
       this.sprites.updateSprite(f.handle, { position: pos, size: pose.size, alpha: pose.alpha });
@@ -1829,23 +1827,16 @@ export class BattleRenderer {
   }
 
   /**
-   * The water a unit falls into, on the burst lane: arm `a` a slow ripple,
-   * eight faint motes easing out along the surface; arm `b` a splash, eight
-   * sparks thrown up and out fast.
+   * The splash a unit falling into deep water throws up, on the burst lane:
+   * eight sparks of spray flung up and out fast as the glyph goes under.
    */
-  private spawnWaterBurst(at: THREE.Vector3, arm: FallArm): void {
+  private spawnWaterSplash(at: THREE.Vector3): void {
     for (const [dx, dz] of EXPLOSION_RING_DIRS) {
       const dest = at.clone();
-      if (arm === 'a') {
-        dest.x += dx * WATER_RIPPLE_SPREAD;
-        dest.z += dz * WATER_RIPPLE_SPREAD;
-        this.addExplosionParticle(at, dest, PROJECTILE_GLYPH, COLORS.FLOURESCENT_BLUE, 0.35, 0.5, FALL_SECONDS.deep_water.a, EXPLOSION_BLOOM, 0.6);
-      } else {
-        dest.x += dx * WATER_SPRAY_SPREAD;
-        dest.z += dz * WATER_SPRAY_SPREAD;
-        dest.y += WATER_SPRAY_LIFT;
-        this.addExplosionParticle(at, dest, PROJECTILE_GLYPH, COLORS.FLOURESCENT_BLUE, EXPLOSION_SPARK_SIZE, 0.3, WATER_SPRAY_SECONDS);
-      }
+      dest.x += dx * WATER_SPRAY_SPREAD;
+      dest.z += dz * WATER_SPRAY_SPREAD;
+      dest.y += WATER_SPRAY_LIFT;
+      this.addExplosionParticle(at, dest, PROJECTILE_GLYPH, COLORS.FLOURESCENT_BLUE, EXPLOSION_SPARK_SIZE, 0.3, WATER_SPRAY_SECONDS);
     }
   }
 
@@ -2038,9 +2029,8 @@ const EXPLOSION_FLASH_SIZE_TO = 3.0;
 const EXPLOSION_FLASH_SECONDS = 0.35;
 const EXPLOSION_SPARK_SIZE = 0.55;
 const EXPLOSION_RING_SECONDS = 0.3;
-/** A fall into deep water's ripple: how far its motes ease out, in cells. */
-const WATER_RIPPLE_SPREAD = 0.75;
-/** The splash: how far out and up its spray flies, and how fast. */
+/** A fall into deep water's splash: how far out and up its spray flies,
+ *  and how fast. */
 const WATER_SPRAY_SPREAD = 0.55;
 const WATER_SPRAY_LIFT = 0.8;
 const WATER_SPRAY_SECONDS = 0.35;

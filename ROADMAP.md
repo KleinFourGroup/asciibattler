@@ -107,6 +107,10 @@ The cut, signed 2026-11-17 with its leans (WORKLOG §160):
 - ◐ **160f-post2 — the spin** (`batch`): the whirlwind drawn as the
   explosion's sparks circling the ronin once, no central flash; 4 plants
   (WORKLOG 160f-post2).
+- ☑ **160c-post2 — the area-lock guard made exact** (`none`): a lock's
+  longest status under its cooldown at the speed floor; the grenade back
+  on 3.5 s speed-scaled; 4 plants; 5 of 34 journals moved (WORKLOG
+  160c-post2).
 - ☐ **160g — the play** (`stop`): the four in play, the push's feel, the
   bursts' look and sound, the drafted numbers; calls 2 to 8 signed
   2026-11-19, the play read again over the `-post` steps above.

@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { ABILITY_DEFS, abilityDef, damageOpOf, healOpOf } from './abilities';
 import { STATUS_DEFS } from './statuses';
+import { STATS } from './stats';
 
 /**
  * The ability-definition catalog loader + the catalog-level structural pins.
@@ -171,12 +172,13 @@ describe('status-on-hit afflicters', () => {
     }
   });
 
-  // An area lock (an AoE laying a status with a `behavior`: frozen, panic,
-  // confusion) keeps a flat cooldown, and its status's longest duration is
-  // shorter than that cooldown, so a recast can't refresh the status before
-  // it lapses and chain it on whoever stands in the area. Speed would shrink
-  // the cooldown and not the duration.
-  it('an area lock never outlasts its cooldown: a flat cadence and a shorter longest duration', () => {
+  // An area lock (an AoE laying a status with a `behavior`: stunned, frozen,
+  // panic, confusion) never recasts before its status lapses, so a recast
+  // can't refresh the status and chain it on whoever stands in the area.
+  // Speed shrinks the cooldown and not the duration, so a speed-scaled lock is
+  // held to its cooldown at the speed floor, the fastest any caster recharges
+  // it, and a flat one to its cooldown.
+  it("an area lock never outlasts its fastest recast: the longest duration is shorter than the cooldown at the speed floor", () => {
     const locks = Object.values(ABILITY_DEFS).filter(
       (def) =>
         def.target.kind === 'aoe' &&
@@ -184,14 +186,14 @@ describe('status-on-hit afflicters', () => {
     );
     expect(locks.map((d) => d.id).sort()).toEqual(['grenade', 'hex', 'ice_storm', 'wail']);
     for (const def of locks) {
-      expect(def.speedScaled, `${def.id} has a flat cooldown`).toBe(false);
+      const fastest = def.speedScaled ? def.cooldownSeconds * STATS.speedMinCdScale : def.cooldownSeconds;
       for (const e of def.effects) {
         if (e.op.kind !== 'applyStatus') continue;
         const d = e.op.durationSeconds ?? STATUS_DEFS[e.op.statusId]!.durationSeconds;
         const longest = typeof d === 'number' ? d : d?.max;
         expect(longest, `${def.id}: its ${e.op.statusId} has a ceiling`).toBeDefined();
-        expect(longest!, `${def.id}: the longest ${e.op.statusId} is shorter than the cooldown`).toBeLessThan(
-          def.cooldownSeconds,
+        expect(longest!, `${def.id}: the longest ${e.op.statusId} is shorter than its fastest recast`).toBeLessThan(
+          fastest,
         );
       }
     }

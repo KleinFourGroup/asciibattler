@@ -800,3 +800,48 @@ Put over the `-post` steps, with their `batch` reads, the URLs, and what
 the user has still to read: the stun's tint and symbol, the attacks'
 names and lines, the grenade's flat 2.65 s (a signed number changed
 inside its intent), and the banshee's reach staying the Wail's.
+
+### 160g — the fourth answer (2026-11-20)
+
+The user read the play over the `-post` steps as good, with one issue:
+the grenade's flat 2.65 s. The area-lock guard was meant for the
+enemy-only locks; a grenadier seldom stunlocks a group, since its blast
+moves its target, and the banshee's lock now fires rarely besides. They
+asked for the guard as a warning. Put back instead: a warning prints
+into a log that shows only failures, so nobody would read it; the guard
+can be exact, since speed's effect has a floor (no cooldown drops below
+`speedMinCdScale`, 0.4, of its base). At that floor the grenade (1 s
+stun, 3.5 s) can't recast faster than 1.4 s, so it can't chain even
+speed-scaled; the hex (3 s against 2.0 s), the ice storm (1.25 s against
+1.0 s) and the Wail (4 s against 2.4 s) could, so they stay flat. Signed
+2026-11-20: the exact guard, built as 160c-post2. With it the user read
+the rest of the play as signed (the stun's tint and symbol, the punch and
+the scratch, the banshee's reach, the spin), so 160g closes.
+
+They also asked for a mini-phase §161.5 before §162: the hex and the ice
+storm made specials over a weak basic attack, as the Wail now is; taken
+up after §160's close.
+
+### 160c-post2 — the area-lock guard made exact (2026-11-20)
+
+`src/config/abilities.test.ts`: an area lock's longest status duration
+is held under its fastest recast, the cooldown times `speedMinCdScale`
+when the lock is speed-scaled and the cooldown itself when flat. The
+grenade is back on its 3.5 s speed-scaled recharge (2.65 s at the
+grenadier's speed 5, never below 1.4 s); the hex, the ice storm and the
+Wail stay flat. DESIGN's speed rule and the grenade's line say so; the
+schema's `speedScaled` comment names the rule.
+
+4 plants, all caught, control clean
+(`scratch/160/160c-post2-plants.json`): the Wail speed-scaled, the hex
+speed-scaled, the grenade at 2.4 s (0.96 s at the floor against its 1 s
+stun), and the stun at 1.5 s (against the grenade's 1.4 s).
+
+Corpus: predicted 0 to 12 of 34, since at speed 5 the cadence is 53
+ticks either way (2.625 s and 2.65 s both round to it) and only a
+grenadier at another speed moves. 5 of 34 differed on replay (player-3,
+player-5, player-2-sectorHops-2-character-priest, and the gambler chaos
+runs 2 and 5); three name a drafted grenadier, and the other two can
+only move through the encounter grenadier, the grenade being the one
+value changed. Re-recorded; 0 of 34 differ on the replay after; 4
+journals differ beyond the config hash. The chaos census passes.

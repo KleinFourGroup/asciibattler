@@ -20,12 +20,16 @@ function replayReaches(entry: string, read: Read): string[] {
   return graph.files.filter(isReplay).map((f) => chainTo(f, graph).join(' → '));
 }
 
+// A walk of the game's import graph reads and parses every module it reaches,
+// which beside the whole suite in the hook has run past vitest's 5 s default.
+const WALK_TIMEOUT = 30_000;
+
 describe('the game’s entry never reaches the journal replay', () => {
-  it('src/main.ts reaches no src/journal/replay*.ts at run time', () => {
+  it('src/main.ts reaches no src/journal/replay*.ts at run time', { timeout: WALK_TIMEOUT }, () => {
     expect(replayReaches(ENTRY, repoRead)).toEqual([]);
   });
 
-  it('the walk reaches the game and the journal’s recorder', () => {
+  it('the walk reaches the game and the journal’s recorder', { timeout: WALK_TIMEOUT }, () => {
     // Known answers for the instrument: an empty or shallow walk would pass.
     const graph = runtimeGraph(ENTRY, repoRead);
     expect(graph.files).toContain('src/Game.ts');

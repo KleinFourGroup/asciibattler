@@ -443,7 +443,9 @@ describe('docs hygiene', () => {
       text.split(/\r?\n/).flatMap((line, i) => (HOME_PATH.test(line) ? [`${path}:${i + 1}`] : [])),
     );
 
-  it('no tracked file names a home folder', () => {
+  // It reads every tracked file, which beside the whole suite in the hook has
+  // run past vitest's 5 s default, so it takes 30 s.
+  it('no tracked file names a home folder', { timeout: 30_000 }, () => {
     const files = execFileSync('git', ['ls-files', '-z'], { cwd: repoRoot, encoding: 'utf8' })
       .split('\0')
       .filter((f) => f !== '')

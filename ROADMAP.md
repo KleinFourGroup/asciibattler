@@ -112,7 +112,8 @@ medium. The cut, signed 2026-11-20 with its calls (WORKLOG §160.5):
 - ☑ **160.5d — the measurement** (`stop`): a census of falls, 20 seeds
   paired before and after; 33 falls in 577 battles; no pusher changes
   before §162, signed 2026-11-20 (BALANCE, WORKLOG 160.5d).
-- ☐ **160.5e — the play** (`stop`).
+- ◐ **160.5e — the play** (`stop`): put 2026-11-20 with four URLs, the
+  enemy grenadier's among them (WORKLOG 160.5e).
 
 ## Phase 161 — the blink and the charge
 

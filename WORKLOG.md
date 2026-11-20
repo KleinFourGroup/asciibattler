@@ -309,3 +309,26 @@ third's (`the-deep-end`), not the first's. It is the only spec in
 names it. The other enemy pushers are the Dark Magic Posse's
 telekinetic (an elite of the third act) and the adventurers' Snag;
 neither threw anyone in in the census.
+
+### 160.5e — the play, put (2026-11-20)
+
+The URLs, checked in a hidden Electron window before they were put
+(`scratch/160.5/fall-play.js` under `npm run probe`, four battles each,
+choices by the kit's seeded pick, falls read off `unit:fell`):
+
+- `?seed=5&character=soldier&roster=grenadier:3,grenadier:3,telekinetic:3,adventurer:3&layout=spiralFireLife`:
+  10 falls into the chasm, all enemies, 2 in the first battle; 9 by the
+  grenadiers, 1 by the Snag.
+- the same roster, `layout=isthmus`: 4 into deep water, all enemies.
+- the same roster, `layout=icebergs`: 9 into deep water, 6 enemies and 3
+  camp members.
+- `?seed=5&character=soldier&encounter=artillery&layout=isthmus`, the
+  Artillery Company on the water with the Soldier's own roster: the
+  enemy grenadiers threw 6 of the player's mercenaries in over four
+  battles, 3 in the first, two of them by one grenade.
+
+The first launch of the script returned a method in its result, the
+probe's error path left its audio poll running against the destroyed
+window, and Electron put a dialog on the user's screen after every OK.
+The shell now exits a failed probe without one (`054dc0d9`); a slip
+and a papercut filed.

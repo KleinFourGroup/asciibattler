@@ -63,62 +63,37 @@ one stop, the Snag waiting for room (WORKLOG §159, in
 - ☑ **159d-post — the Snag waits for room** (`none`): a pull fires only
   when its first cell is free; 3 of 34 journals re-recorded.
 
-## Phase 160 — the pushers and the bursts
+## Phase 160 — the pushers and the bursts ✅ (closed 2026-11-20)
 
-The grenadier, the telekinetic, the banshee's self-centred burst and the
-ronin's blade whirlwind, each in the live acts' pools; the adventurer's
-pull moved up to 159d, N3's flag carried to Round 14 (158b). Right after §159, so the push's distance
-and feel are judged on units in play. **Risk:** medium. **Reads,
-foreseen:** the glyphs a `stop` at its start; each unit `batch` with its
-URL; the play a `stop`.
-The cut, signed 2026-11-17 with its leans (WORKLOG §160):
+The grenadier, the telekinetic, the banshee's Wail on its caster and the
+ronin's whirlwind in play, read at one stop over four answers: a burst
+fires only for someone it is for, the grenade stuns and its thrower falls
+back, a punch and a scratch under the slower bursts, the whirlwind drawn
+as a spin, the area-lock guard made exact; §160.5, the fall, and §161.5
+inserted (WORKLOG §160, in `archive/worklog-phase-160.md`).
 
-- ☑ **160a — the glyphs** (`stop`): the telekinetic `k`; the grenadier `g`
-  with a new radical, the soldiery's epaulettes, worn by the officer too;
-  signed 2026-11-18 (WORKLOG 160a).
-- ☑ **160b — the burst drawn on its caster** (`none`): a caster-anchored
-  explosion at the caster's cell, its ring sized to the radius; 4 plants
-  (WORKLOG 160b).
-- ◐ **160c — the grenadier** (`batch`): a draftable grenade thrower, a
-  knockback of 1 from the blast's centre; an enemy in the Artillery
-  Company; 5 plants; the corpus re-recorded, 15 of 34 moved (WORKLOG 160c).
-- ◐ **160d — the telekinetic** (`batch`): a draftable burst on itself, a
-  knockback of 2; an enemy in the Dark Magic Posse; 6 plants; 14 of 34
-  journals moved (WORKLOG 160d).
-- ◐ **160e — the banshee's burst** (`batch`): the Wail on the banshee,
-  radius 2, the panic kept; 4 plants; 3 of 34 journals moved (WORKLOG 160e).
-- ◐ **160f — the ronin's whirlwind** (`batch`): a burst on itself beside
-  the katana, a short recovery on a flat 5 s; 4 plants; 13 of 34
-  journals moved; the chaos and resume seeds re-picked (WORKLOG 160f).
-- ☑ **160f-post — a burst fires at someone it is for** (`none`): a burst
-  on its caster no longer fires at scenery or a passive camp alone, found
-  at 160g's step zero; 5 plants; 12 of 34 journals moved (WORKLOG
-  160f-post).
-- ◐ **160c-post — the stun and the fall-back** (`batch`): a 1 s stun on
-  every foe the grenade hits; the grenadier's short recovery, so it falls
-  back between throws; 5 plants; 7 of 34 journals moved (WORKLOG
-  160c-post).
-- ◐ **160d-post — the punch** (`batch`): a melee punch on the telekinetic,
-  might 1 `strength`; Repulse over it on a 0.3 s recovery; 3 plants
-  (WORKLOG 160d-post and 160e-post).
-- ◐ **160e-post — the scratch** (`batch`): the banshee's scratch on the
-  same shape; the Wail over it on a 0.3 s recovery; 2 plants; with
-  160d-post, 2 of 34 journals moved.
-- ◐ **160f-post2 — the spin** (`batch`): the whirlwind drawn as the
-  explosion's sparks circling the ronin once, no central flash; 4 plants
-  (WORKLOG 160f-post2).
-- ☑ **160c-post2 — the area-lock guard made exact** (`none`): a lock's
-  longest status under its cooldown at the speed floor; the grenade back
-  on 3.5 s speed-scaled; 4 plants; 5 of 34 journals moved (WORKLOG
-  160c-post2).
-- ☐ **160g — the play** (`stop`): the four in play, the push's feel, the
-  bursts' look and sound, the drafted numbers; calls 2 to 8 signed
-  2026-11-19, the play read again over the `-post` steps above.
+- ☑ **160a — the glyphs** (`stop`): the telekinetic `k`, the grenadier
+  `g` with the soldiery's epaulettes, worn by the officer too.
+- ☑ **160b — the burst drawn on its caster** (`none`).
+- ☑ **160c — the grenadier** (`batch`): draftable, a knockback of 1 from
+  the blast's centre; an enemy in the Artillery Company.
+- ☑ **160d — the telekinetic** (`batch`): draftable, a burst on itself, a
+  knockback of 2; an enemy in the Dark Magic Posse.
+- ☑ **160e — the banshee's burst** (`batch`): the Wail on the banshee,
+  radius 2.
+- ☑ **160f — the ronin's whirlwind** (`batch`): a burst on itself beside
+  the katana.
+- ☑ **160f-post — a burst fires at someone it is for** (`none`).
+- ☑ **160c-post — the stun and the fall-back** (`batch`).
+- ☑ **160d-post, 160e-post — the punch and the scratch** (`batch`).
+- ☑ **160f-post2 — the spin** (`batch`).
+- ☑ **160c-post2 — the area-lock guard made exact** (`none`).
+- ☑ **160g — the play** (`stop`): signed 2026-11-20 over four answers.
 
 ## Phase 160.5 — the fall
 
-Inserted 2026-11-19 at 160g (WORKLOG "160g — the abyss and the stun,
-answered" and after): a push or a pull whose walk reaches chasm or deep
+Inserted 2026-11-19 at 160g (`archive/worklog-phase-160.md`, "160g —
+the abyss and the stun, answered" and after): a push or a pull whose walk reaches chasm or deep
 water drops its victim, reopening §158's fork 3 (the wall). Signed with
 it: a fall kills as any death does, the pusher credited; deep water
 drowns as chasm drops; a boss stops at the edge; the Snag drops foes
@@ -134,6 +109,15 @@ for its pounce, the cavalier's charge on §159's push, the dash's trail
 and the blink on `unit:dashed`, then the ninja and the cavalier (as
 reshaped at 158b). It stands on none of §160. **Risk:** medium. **Reads, foreseen:** the headless steps
 `none`; the trail and blink a `stop`; the play a `stop`.
+
+## Phase 161.5 — the hex and the ice storm as specials
+
+Inserted 2026-11-20 at §160's close (`archive/worklog-phase-160.md`, "160g — the fourth
+answer"): the warlock's hex and the ice mage's ice storm made specials
+over a weak basic attack, as the banshee's Wail and the telekinetic's
+Repulse are since 160d-post and 160e-post. Before §162, so the closing
+board prices them. **Risk:** low. **Reads, foreseen:** each carrier
+`batch`; the play a `stop`. Cut at its kickoff.
 
 ## Phase 162 — the closing board
 

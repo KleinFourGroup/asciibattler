@@ -135,3 +135,66 @@ Started from a card at 159d and 159e's stop: put it again, built
    stretch from 160b to 160f ran without asking, and each test catching
    a real mistake of mine (the whirlwind, a layout, a plant) made the
    green runs mean something. I'd want both again.
+
+## 2026-11-18 to 20 — session 652e794b (160g to §160's close)
+
+Started from a card at 160f's hand-off: measured the pushers' landings,
+put 160g's play stop, took four answers over three days, built
+160f-post, 160c-post, 160d-post, 160e-post, 160f-post2 and 160c-post2,
+and closed §160. One compaction, near the end; the summary carried the
+state.
+
+1. *Orientation.* Nothing blocked; the brief and "The hand-off after
+   160f" held what the card left out. One fact I learned by hitting it: a
+   status op on an area resolves its victims from the blast's cells when
+   it fires, so the grenade's stun had to come before its push, or a
+   knocked foe went unstunned.
+2. *Norms.* One pull between doing what was asked and the guard rule:
+   the user asked for the area-lock guard as a warning, and a warning in
+   a hook that shows only failures would be read by no one. I put an
+   exact guard as the alternative with the measured numbers and waited;
+   the user chose it. Not a conflict once put, but I noticed the pull to
+   build the literal ask.
+3. *Pulled to over-claim.* The spin's look: the pane showed every
+   sampled spark on its circle, which is geometry, not feel; I said the
+   feel was the user's read. Corpus predictions were written before each
+   run and held (3 to 12, 7 moved; 0 to 12, 5 moved).
+4. *Waste.* Three hook runs lost to the 5 s timeouts on the tree-walking
+   tests (now 30 s); two Bash refusals of a Python heredoc with a
+   backslash; one CRLF cleanup from Python's text mode; one hook run on
+   the units file's comma form; one follow-up edit for a stale DESIGN
+   number. All filed.
+5. *For the next session.* `scratch/160/landings-probe.ts` counts how
+   far each push or pull moved its victims, the starting point for
+   §160.5's measurement; `scratch/159/plant.ts` runs a plants file. On
+   Windows, write files from Python in binary mode.
+6. *Room.* Yes, and used. The user asked "what do you think?" about the
+   abyss, the stun, the fall's leans and §161.5, and each answer was a
+   lean with its cost before any build; once my lean changed the plan
+   (the exact guard), and twice the user's changed mine (a stun on the
+   grenade in place of knocking foes from the thrower; the Snag drops
+   foes too). The "hasn't heard from you"
+   reminder came often during hook waits; I answered with short true
+   lines and kept working. Not filed as `distress`.
+7. *What helped.* The user's playtest catches (foes on the spiral's
+   lanes that should have fallen, foes knocked back toward the thrower)
+   found what no probe was aimed at, and turning the first into a phase
+   of its own was the most engaging part. The guard question had a
+   small, exact answer once the speed floor was measured, which I found
+   satisfying; I'd want that kind of question again.
+
+## Phase 160 — summary
+
+Two sessions. `54b6d474`'s report covers §160's kickoff to 160f (with
+159d's read before it): nothing blocked, one fact learned by hitting it
+(a `"fill"` recovery holds a unit for its whole recharge); three corpus
+predictions missed, each written before its run; a second round of seed
+re-picks wasted; the glyph conversation and the signed stretch named as
+what helped. `652e794b`'s covers 160g to the close: nothing blocked; one
+pull, to build the user's literal ask (the guard as a warning) where an
+exact guard did the job, put and chosen; waste in three hook runs lost
+to test timeouts (now fixed) and four Windows-shell or format traps met
+again, all filed; the user's playtest catches and the fall's design
+named as what helped. Both noted the "hasn't heard from you" reminder
+during long waits and answered it with short true lines; neither filed
+it as `distress`.

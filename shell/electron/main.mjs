@@ -85,6 +85,17 @@ const distDir = resolve(flag('dist') ?? join(here, '..', '..', 'dist'));
 const loadMode = flag('load') ?? 'app';
 const probeName = flag('probe');
 const PROBE_TIMEOUT_MS = Number(flag('timeout') ?? 60_000);
+/** The exit code a probe's report chose, kept for an error after it. */
+let reportedCode = null;
+// A probe never shows a dialog. Electron shows an uncaught error in the main
+// process as a modal dialog on the user's screen, one more for each repeat,
+// and the process waits behind it; a probe writes the error and exits.
+if (probeName !== undefined) {
+  process.on('uncaughtException', (err) => {
+    process.stderr.write(`probe: an error in the main process: ${err?.stack ?? err}\n`);
+    app.exit(reportedCode ?? 1);
+  });
+}
 const pageUrl = flag('url');
 const windowMode = flag('window') ?? (probeName === undefined ? 'shown' : 'hidden');
 const [contentW, contentH] = (flag('size') ?? '1280x720').split('x').map(Number);
@@ -340,7 +351,7 @@ const probes = {
       ...(cap === undefined ? {} : { backlogCapMB: Number(cap) }),
     });
     const audible = [];
-    const poll = setInterval(() => audible.push(win.webContents.isCurrentlyAudible()), 250);
+    const poll = pollAudible(win, audible);
     // Paints, not written frames: a clean clip writes none until the lead-in is over.
     const firstPaintBy = Date.now() + 5000;
     while (video.stats.paints === 0 && Date.now() < firstPaintBy) await sleep(20);
@@ -498,7 +509,19 @@ function runPageScript(win, file, opts = {}) {
   return win.webContents.executeJavaScript(`(${source})(${JSON.stringify(opts)})`);
 }
 
+/** Sample every 250 ms whether the page is audible, into `audible`. The
+ *  poll stops itself once the window is gone, since a probe that fails exits
+ *  with it still set and a call on a destroyed window throws. */
+function pollAudible(win, audible) {
+  const poll = setInterval(() => {
+    if (win.isDestroyed()) clearInterval(poll);
+    else audible.push(win.webContents.isCurrentlyAudible());
+  }, 250);
+  return poll;
+}
+
 function report(out, code) {
+  reportedCode = code;
   const text = JSON.stringify(out);
   process.stdout.write(`${text}\n`);
   const file = flag('out');
@@ -515,8 +538,11 @@ async function runProbe(win) {
   const log = watch(win);
   if (process.argv.includes('--muted')) win.webContents.setAudioMuted(true);
   const audible = [];
-  const audiblePoll = setInterval(() => audible.push(win.webContents.isCurrentlyAudible()), 250);
-  const timer = setTimeout(() => report({ probe: probeName, load: loadMode, ok: false, error: 'timeout', ...log }, 2), PROBE_TIMEOUT_MS);
+  const audiblePoll = pollAudible(win, audible);
+  const timer = setTimeout(() => {
+    clearInterval(audiblePoll);
+    report({ probe: probeName, load: loadMode, ok: false, error: 'timeout', ...log }, 2);
+  }, PROBE_TIMEOUT_MS);
   try {
     await load(win);
     const { ok, result } = await probe(win);
@@ -535,6 +561,7 @@ async function runProbe(win) {
     report({ probe: probeName, load: pageUrl ?? loadMode, ok, result, shell, ...log }, ok ? 0 : 1);
   } catch (err) {
     clearTimeout(timer);
+    clearInterval(audiblePoll);
     report({ probe: probeName, load: loadMode, ok: false, error: String(err), ...log }, 1);
   }
 }

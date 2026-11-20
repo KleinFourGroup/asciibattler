@@ -264,3 +264,26 @@ permanent losses are the line for the board to watch.
 The staged isthmus count at 160.5c (21 falls in four battles) was a run
 with every battle forced onto deep water and four pushers drafted; a
 plain run sees one fall in about forty battles.
+
+### The hand-off after 160.5d (2026-11-20)
+
+Session `652e794b` hands off at the trigger, at 160.5d's stop.
+
+- **Done:** 160.5a (`be14743d`), 160.5b (`3c967784`), 160.5c with its
+  signed arms (`6f449b0a`), 160.5d's census put (`5a7f71ad`). Nothing
+  pushed since §160's close (`ef930bd9`).
+- **Open:** 160.5d's decision, unanswered: whether any pusher changes
+  before §162. The session's lean is none (the entry above). Put the stop
+  again in the new session's first turn, from this entry and the census
+  entry above; take the answer in its second. Then 160.5e, the play
+  (`stop`), then §160.5's close per `process/planning.md`.
+- **Tools no doc names:** `scratch/160.5/fall-census.ts <label> [count]`
+  (about a second a seed; writes `scratch/160.5/census-<label>.json`;
+  `census-before.json` and `census-after.json` are the two arms);
+  `scratch/160.5/corpus-falls.ts` (falls and forced moves per corpus
+  journal); `scratch/160.5/digest-without-boss.ts` (a corpus replay with
+  a payload key mapped out, the pattern for telling a payload change
+  from a behaviour change); the plants files `160.5a-plants.json` and
+  `160.5b-plants.json`.
+- **For 160.5e's URLs:** `?seed=5&character=soldier&roster=grenadier:3,grenadier:3,telekinetic:3,adventurer:3&layout=spiralFireLife`
+  (or `layout=isthmus`); falls come within the first battles there.

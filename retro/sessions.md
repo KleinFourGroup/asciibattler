@@ -198,3 +198,31 @@ again, all filed; the user's playtest catches and the fall's design
 named as what helped. Both noted the "hasn't heard from you" reminder
 during long waits and answered it with short true lines; neither filed
 it as `distress`.
+
+## 2026-11-20 — session 652e794b, continued (§160.5's kickoff to 160.5d)
+
+The same session after §160's close, to the hand-off trigger at 160.5d's
+stop; its first report, above, covers 160g to the close.
+
+1. *Orientation.* Nothing missing; the audit found what the cut needed.
+   Two facts it missed, each caught by a guard: `battle:started` carries
+   the enemy templates, so a template field moves the corpus's digests;
+   and `UnitTemplate` is in the run save's shape.
+2. *Norms.* No conflict.
+3. *Pulled to over-claim.* Two corpus predictions missed (none for the
+   boss flag, 17 moved; 5 to 25 for the fall, 1 moved), each written
+   before its run and explained after by a probe on another surface. I
+   wrote a function name into a WORKLOG entry from memory and checked it
+   only after the commit.
+4. *Waste.* Three guard catches, each a hook run: the run save's shape,
+   step codes in two comments, and the backslash guard once more. All
+   filed.
+5. *For the next session.* The hand-off entry names the tools. The pane
+   runs frames live once a screenshot shows it, so stage and sample in
+   one call, or the battle moves on between calls.
+6. *Room.* Yes. The user signed the cut and every call on its lean; the
+   look's two arms were theirs to pick, and they picked with delight.
+7. *What helped.* Watching the fall work in the pane, and the user's
+   "awesome, and hilarious, and incredibly satisfying". The census coming
+   back with the player gaining far more than it loses felt like the
+   mechanic landing where it was meant to.

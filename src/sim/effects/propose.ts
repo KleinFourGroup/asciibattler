@@ -22,6 +22,9 @@ import { collectLosBlockers, firingBandCell } from '../positioning';
 import { cellUnitDistance, unitDistance } from '../occupancy';
 import { leapLanding } from '../movement';
 import { blinkLanding } from '../blink';
+import { chargeWalk } from '../charge';
+import { SIM } from '../../config/sim';
+import { secondsToTicks } from '../../config';
 import { pushLanding } from '../push';
 import type { GridCoord } from '../../core/types';
 import type { AbilityDef, EffectOp, SummonOp } from './schema';
@@ -47,7 +50,7 @@ export function proposeEffectAbility(
   if (def.aura && def.effects.length === 0) return null;
   switch (def.target.kind) {
     case 'enemyInRange':
-      return proposeSingleTargetAttack(def, unit, world);
+      return isCharge(def) ? proposeCharge(def, unit, world) : proposeSingleTargetAttack(def, unit, world);
     case 'lowestHpAlly':
       return proposeHeal(def, def.target.rangeCells, unit, world);
     case 'self':
@@ -102,6 +105,48 @@ function proposeSingleTargetAttack(
     score: def.priority,
     cooldown: resolveCadenceTicks(def, speed),
     phases: resolvePhases(def, speed),
+    cooldownKey: def.id,
+  };
+}
+
+/** Whether `def` charges: a `move` op in `charge` mode. */
+export function isCharge(def: AbilityDef): boolean {
+  return def.effects.some((e) => e.op.kind === 'move' && e.op.mode === 'charge');
+}
+
+/**
+ * A charge (an `enemyInRange` def with a `move` op in `charge` mode): the
+ * `currentTarget` pick, within `[minRangeCells, rangeCells]` body to body,
+ * and the walk along the straight line toward it (`chargeWalk`). It
+ * proposes only when the walk is two cells or more and ends against a foe:
+ * the target, or a hostile in the way (the first body, which takes the hit),
+ * never an ally, scenery or a passive camp, so it never rushes into a wall.
+ * The foe met is the action's target. The landing and the cells walked are
+ * captured, the cells adding each damage op's `mightPerCell`, and the
+ * `travel` phase is sized to the cells at `SIM.pushSecondsPerCell`, a
+ * forced move's rate.
+ */
+function proposeCharge(def: AbilityDef, unit: Unit, world: World): ActionProposal | null {
+  const target = currentTarget(unit, world);
+  if (target === null) return null;
+  const distance = unitDistance(unit, target);
+  if (distance < def.minRangeCells || distance > def.rangeCells) return null;
+  const walk = chargeWalk(world, unit, target.position);
+  if (walk === null || walk.cells < 2 || walk.met === null) return null;
+  const met = walk.met;
+  if (met.id !== target.id && !hostileCandidate(unit, met, world)) return null;
+
+  const speed = unit.effectiveStats.speed;
+  const ops = def.effects.map((e) =>
+    resolveOp(e.op, { unit, advanceLanding: walk.landing, chargeCells: walk.cells }),
+  );
+  const travelTicks = Math.max(1, secondsToTicks(walk.cells * SIM.pushSecondsPerCell));
+  const phases = resolvePhases(def, speed).map((p) => (p.phase === 'travel' ? { ...p, ticks: travelTicks } : p));
+  return {
+    action: new EffectAction(def, { targetId: met.id, targetCell: undefined, ops }),
+    score: def.priority,
+    cooldown: resolveCadenceTicks(def, speed),
+    phases,
     cooldownKey: def.id,
   };
 }
@@ -351,8 +396,10 @@ interface OpResolveContext {
   /** A `retreat` move's anchor: the struck target's cell at cast, which the
    *  caster steps away from. */
   retreatAnchor?: GridCoord;
-  /** An `advance` or `blink` move's landing cell. */
+  /** An `advance`, `blink` or `charge` move's landing cell. */
   advanceLanding?: GridCoord;
+  /** A charge's cells walked, for each damage op's `mightPerCell`. */
+  chargeCells?: number;
 }
 
 /** One op's cast-time scalars, carried unchanged to impact. */
@@ -361,7 +408,8 @@ function resolveOp(op: EffectOp, c: OpResolveContext): OpResolution {
     case 'damage': {
       // The kernel the editors' previews share (`resolveScalars.ts`).
       const { baseDamage, critChance } = resolveDamageScalars(op, c.unit.effectiveStats);
-      return { baseDamage, critChance };
+      // A charge's bonus: `mightPerCell` for each cell it walked.
+      return { baseDamage: baseDamage + (op.mightPerCell ?? 0) * (c.chargeCells ?? 0), critChance };
     }
     case 'heal': {
       // The shared kernel too; a heal never rolls to hit or to crit.
@@ -370,8 +418,8 @@ function resolveOp(op: EffectOp, c: OpResolveContext): OpResolution {
     }
     case 'move': {
       // `retreat`: the struck cell, which the interpreter steps away from
-      // (`retreatCell`). `advance` and `blink`: the landing, where it puts
-      // the caster.
+      // (`retreatCell`). `advance`, `blink` and `charge`: the landing, where
+      // it puts the caster.
       if (op.mode === 'retreat') {
         return c.retreatAnchor ? { moveDest: { ...c.retreatAnchor } } : {};
       }

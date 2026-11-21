@@ -217,18 +217,23 @@ function executeDamage(
 }
 
 /**
- * A leap's hit (`strikesFromLanding`): true when the target is within the
- * caster's strike reach from where the caster stands now, body to body, as
- * the leap's propose gate measured it. Out of reach (it stepped away during
- * the slide), nothing lands and nothing is drawn. Any other strike is true:
- * it was gated at propose and lands as committed.
+ * A leap's or a charge's hit (`strikesFromLanding`): true when the target is
+ * within the caster's strike reach from where the caster stands now, body to
+ * body, as the propose gate measured it. Out of reach (it stepped away during
+ * the slide), nothing lands and nothing is drawn, and the miss is recorded,
+ * so a status or a push after it on the same boundary skips it too: a
+ * charge's knockback moves only the foe it hit. Any other strike is true: it
+ * was gated at propose and lands as committed.
  *
  * A leap is a `self` def, so its `applyStatus` and `push` ops act on the
- * caster, as `self` says; only its damage reaches the enemy.
+ * caster, as `self` says; only its damage reaches the enemy. A charge
+ * targets its enemy, so all of its ops reach the foe it met.
  */
 function withinLandingReach(target: Unit, ctx: OpFireContext): boolean {
   if (!ctx.strikesFromLanding) return true;
-  return unitDistance(ctx.caster, target) <= ctx.caster.derived.attackRange;
+  if (unitDistance(ctx.caster, target) <= ctx.caster.derived.attackRange) return true;
+  ctx.fireScratch.missed.add(target.id);
+  return false;
 }
 
 function executeHeal(_op: Extract<EffectOp, { kind: 'heal' }>, ctx: OpFireContext): void {
@@ -255,6 +260,16 @@ function executeMove(op: Extract<EffectOp, { kind: 'move' }>, ctx: OpFireContext
     world.emit('unit:moved', { unitId: caster.id, from, to: { ...ref }, durationTicks: ctx.phaseTicks });
     const dashed = { unitId: caster.id, from, to: { ...ref }, durationTicks: ctx.phaseTicks };
     world.emit('unit:dashed', op.mode === 'blink' ? { ...dashed, blink: true } : dashed);
+    world.applyTileEnterEffects(caster);
+    return;
+  }
+  if (op.mode === 'charge') {
+    // The charge: onto the landing captured at cast, held by the action's
+    // `travel` phase; drawn and heard as a forced move's yank.
+    const from = { ...caster.position };
+    caster.position = { ...ref };
+    world.emit('unit:moved', { unitId: caster.id, from, to: { ...ref }, durationTicks: ctx.phaseTicks });
+    world.emit('unit:shoved', { unitId: caster.id, from, to: { ...ref }, durationTicks: ctx.phaseTicks });
     world.applyTileEnterEffects(caster);
     return;
   }

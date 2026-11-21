@@ -30,18 +30,21 @@ export function glyphForArchetype(archetype: Archetype): string {
  * - a `self` target is null: a leap's or a summon's range is not reach;
  * - a pull (a `push` `toward` its caster) is null: it fetches its target
  *   into the unit's other reach, so the unit still closes to that one;
+ * - a charge (a `move` in `charge` mode) is null: it rushes in from its
+ *   range to fight at the unit's other reach, so the unit closes as melee
+ *   rather than holding at the charge's range like an archer;
  * - an aoe anchored on the caster that affects `allies` is null: a buff
  *   shout is support;
  * - an aoe anchored on the caster that hits enemies (a nova) is its
  *   radius, its true reach: `rangeCells` means nothing for a blast with no
  *   aim, and reading it would strand the unit at a stale authored range.
  *
- * Anything else engages at its `rangeCells`. No shipped def anchors an aoe
- * on the caster.
+ * Anything else engages at its `rangeCells`.
  */
 export function engagementReach(def: AbilityDef): number | null {
   if (def.target.kind === 'self') return null;
   if (def.effects.some((e) => e.op.kind === 'push' && e.op.direction === 'toward')) return null;
+  if (def.effects.some((e) => e.op.kind === 'move' && e.op.mode === 'charge')) return null;
   if (def.target.kind === 'aoe' && def.target.anchor === 'caster') {
     return def.target.affects === 'allies' ? null : def.target.radius;
   }

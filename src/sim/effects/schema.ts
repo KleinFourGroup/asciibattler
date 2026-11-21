@@ -95,6 +95,10 @@ export const ScalarOrScaledSchema = z.union([z.number(), ScaledValueSchema]);
  * read only when `critable`. `bypassDefense` skips the defense mitigation,
  * as the status DoTs do; every ability's damage takes it.
  *
+ * `mightPerCell` adds that much might for each cell the def's charge walked
+ * (a `move` op in `charge` mode), captured at cast; absent, nothing is
+ * added, as for every strike without a charge.
+ *
  * `evadable` is read by nothing today. Landing note for the dodge planned as
  * a passive special (Round 13): it marks the strikes a dodge may stop, the
  * single-target weapons, as against blasts, spells and ticks, and
@@ -108,6 +112,7 @@ const DamageOpSchema = z.object({
   critable: z.boolean(),
   evadable: z.boolean(),
   bypassDefense: z.boolean(),
+  mightPerCell: z.number().nonnegative().optional(),
 });
 
 /**
@@ -129,14 +134,24 @@ const HealOpSchema = z.object({
  *   (`blinkLanding`), blind to what stands between; the enemy must be within
  *   `rangeCells`, body to body. While it is ready its carrier approaches to
  *   that range (`Ability.blinkRange`).
+ * - `charge` — a rush along the straight line toward the enemy
+ *   (`chargeWalk`), stopping before the first body, impassable tile or
+ *   claim, from at least `minRangeCells` and within `rangeCells`; proposed
+ *   only when it walks two cells or more and meets a foe, which becomes the
+ *   action's target. The caster is on its landing as the op fires and is
+ *   held by its `travel` phase, sized per cast to the cells walked at
+ *   `SIM.pushSecondsPerCell`; ops on `impact` then strike the foe it met
+ *   if it is still within reach. Its def targets `enemyInRange`, sets no
+ *   reach (`engagementReach`), and fires the move on a `travel` phase in a
+ *   timeline with no `'fill'` (refined below).
  * - `retreat` — one step away from the struck cell (the gambit's dart-back).
  *
- * A leap's and a blink's landing is an entry, as a step's is: the tile's
- * enter effects run.
+ * A leap's, a blink's and a charge's landing is an entry, as a step's is:
+ * the tile's enter effects run.
  */
 const MoveOpSchema = z.object({
   kind: z.literal('move'),
-  mode: z.enum(['advance', 'blink', 'retreat']),
+  mode: z.enum(['advance', 'blink', 'charge', 'retreat']),
 });
 
 /**
@@ -481,6 +496,23 @@ export const AbilityDefSchema = z
     (def) => def.target.kind === 'aoe' || def.effects.every((e) => e.op.kind !== 'push' || e.op.from !== 'center'),
     {
       message: "a push from 'center' needs an 'aoe' selector, the only one with a centre",
+      path: ['effects'],
+    },
+  )
+  .refine(
+    (def) =>
+      def.effects.every(
+        (e) =>
+          e.op.kind !== 'move' ||
+          e.op.mode !== 'charge' ||
+          (def.target.kind === 'enemyInRange' &&
+            e.phase === 'travel' &&
+            def.timeline.every((p) => p.seconds !== 'fill')),
+      ),
+    {
+      message:
+        "a charge needs the 'enemyInRange' selector and fires its move on a 'travel' phase, " +
+        "in a timeline with no 'fill' (the travel is sized per cast)",
       path: ['effects'],
     },
   );

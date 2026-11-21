@@ -306,3 +306,34 @@ water; **5 of 34 differed** (chaos-4, -5, -8, -13 and -16), and with the
 entry's one line mapped out in the worktree 0 of 34, so the five are the
 dash's entry alone. Re-recorded: four journals and the baseline; the
 replay 0 of 34 differing.
+
+### 161d — the charge (2026-11-21)
+
+A `move` mode `charge` on an `enemyInRange` def, signed with its calls
+at the kickoff. `chargeWalk` (`src/sim/charge.ts`) walks `lineCells`,
+the Bresenham line `hasLineOfSight` takes, as cells, and stops before
+the first body, claim or tile of infinite cost, so it passes diagonally
+between two corner blockers as sight does and never falls.
+`proposeCharge` (`propose.ts`) takes the target within
+`[minRangeCells, rangeCells]` and proposes only when the walk is two
+cells or more and meets the target or a hostile in the way, which
+becomes the action's target; never an ally, scenery or a passive camp.
+The cells walked add a damage op's new optional `mightPerCell` at cast,
+and size the `travel` phase at `SIM.pushSecondsPerCell`. The move fires
+on `travel`, putting the caster on its landing at once (an entry), with
+`unit:moved` and `unit:shoved`, so it draws and sounds as a yank until
+161h. At `impact` the hit lands only within reach (161b's gate); a miss
+is now recorded on the boundary's scratch, so the knockback after it
+skips the foe, and the knockback is the push op as built, so it drops.
+`engagementReach` gives a charge none, and its stale line about
+caster-anchored areas is gone. The schema refuses a charge off the
+`enemyInRange` selector, off a `travel` phase, or beside a `'fill'`
+phase. The attack editor offers the mode and the field.
+
+`src/sim/charge.test.ts`, eleven tests, one of them holding `lineCells`
+to `hasLineOfSight` over every pair and blocker in an 11 × 11 square;
+18 plants, all caught, control clean (`scratch/161d/161d-plants.json`).
+The first run missed one: with the run-up floor removed, the two-cell
+walk gate still refused a foe two cells off, so the floor had no test of
+its own; a def with a floor of 4 now refuses a three-cell charge the
+walk would allow. The corpus: predicted 0 of 34, **0 of 34 differ**.

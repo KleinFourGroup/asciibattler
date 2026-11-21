@@ -172,7 +172,8 @@ export class EffectAction implements Action {
     // only on a hit. Each boundary starts fresh: a status rides only its own
     // phase's hits.
     const fireScratch = newFireScratch();
-    // A def that leaps strikes from its landing (`OpFireContext.strikesFromLanding`).
+    // A def that leaps, blinks or charges strikes from its landing
+    // (`OpFireContext.strikesFromLanding`).
     const strikesFromLanding = this.def.effects.some((e) => e.op.kind === 'move' && e.op.mode !== 'retreat');
     this.def.effects.forEach((effect, i) => {
       if (!beginning.has(effect.phase)) return;

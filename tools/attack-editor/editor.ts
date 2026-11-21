@@ -60,7 +60,7 @@ const AOE_ANCHORS = ['caster', 'targetCell'] as const;
 const AFFECTS = ['enemies', 'allies', 'all'] as const;
 const DAMAGE_SCALING = ['strength', 'ranged', 'magic', 'none'] as const;
 const HEAL_SCALING = ['magic', 'none'] as const;
-const MOVE_MODES = ['advance', 'blink', 'retreat'] as const;
+const MOVE_MODES = ['advance', 'blink', 'charge', 'retreat'] as const;
 const PUSH_DIRECTIONS = ['away', 'toward'] as const;
 const PUSH_ORIGINS = ['caster', 'center'] as const;
 const TOP_OP_KINDS = ['damage', 'heal', 'move', 'applyStatus', 'chain', 'summon', 'push'] as const;
@@ -549,6 +549,11 @@ function renderOp(host: HTMLElement, op: EffectOp, ctx: OpCtx): void {
       checkboxField(body, 'Critable', op.critable, (v) => (op.critable = v));
       checkboxField(body, 'Evadable', op.evadable, (v) => (op.evadable = v));
       checkboxField(body, 'Bypass defense', op.bypassDefense, (v) => (op.bypassDefense = v));
+      // A charge's bonus a cell walked; 0 leaves the field out of the def.
+      numberField(body, 'Might per cell', op.mightPerCell ?? 0, 0, (v) => {
+        if (v === 0) delete op.mightPerCell;
+        else op.mightPerCell = v;
+      }, true);
       break;
     case 'heal':
       selectField(body, 'Scaling', HEAL_SCALING, op.scaling, (v) => (op.scaling = v as typeof op.scaling));

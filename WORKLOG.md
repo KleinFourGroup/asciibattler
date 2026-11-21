@@ -485,3 +485,58 @@ blink as "dash 5", since the card's branch for a pure reposition labelled
 every one a dash. It reads "blink 5" now, and a test pins the label at the
 blink's range from the raw config; a plant of the old label is caught
 (`scratch/161g/blink-card-plants.json`).
+
+### 161g — the cavalier (2026-11-21)
+
+The **Cavalier**, the epauletted `C` (U+E022, 161a's row): rare,
+draftable, on a body of the session's between the mercenary's and the
+reaver's (constitution 22, strength 4, luck 4, defense 2, speed 6,
+mobility 7 as the lean, power 2 as its rarity sets). Its **Sabre**: a
+one-cell blade, might 2 on strength, crit base 0.1, 1.5 s. Its
+**Charge**: 161d's test def as the lean put it, from 3 to 5 cells
+(`minRangeCells` 3, `rangeCells` 5), might 2 and `mightPerCell` 1, crit
+base 0.05, a knockback of 1 on `impact`, a flat 10 s, priority 10 beside
+the sabre's (their bands never overlap). The lines, the session's: "A
+light cavalry blade." and "Rushes a foe three to five cells off,
+striking harder for every cell run, and knocks it back a cell." Its base
+price 30, the reaver's. As an enemy it rides in act 2's Warband
+Vanguard, at weight 0.5 beside the mercenaries and archers. The joins as
+161f's; DESIGN's newcomers paragraph and its drawn-glyph paragraph's
+epaulettes list name it. `npm run gen:font`: 44 live atlas glyphs, every
+face unchanged.
+
+Found on the way, each fixed here:
+
+- *The attack editor's formatter dropped `mightPerCell`*, the field 161d
+  added, since no shipped def carried it until the charge; its verbatim
+  test caught it, and the field now follows `might` where a def has it.
+- *The charge's card read "6 dmg"*, a standing hit, for a blow of 8 to 10
+  at a run of 2 to 4 cells. It carries a rider now, "+1 dmg a cell run"
+  (`card.ability.perCell` in `locales/en/ui.json`, since the literal pin
+  refuses prose in code), built inside the cut's intent and read at 161i. The card test's count
+  of floored abilities is 14.
+
+The floor of 3 never binds alone: the two-cell walk gate (161d) already
+refuses a foe two cells off, since the walk ends beside it after one
+cell. It keeps the card's "reach 3–5" true. A plant removing it fails
+only the kit test; with the walk gate cut to one cell as well, the
+two-cells-off test fails.
+
+`src/sim/cavalier.test.ts`, three tests from the raw config files: the
+kit and its encounter; three cells off a foe, the cavalier ends its run
+beside it, strikes for the might, the two cells run and its strength,
+knocks the foe a cell back along the line, then closes and strikes with
+the sabre from beside it; two cells off, it never charges. 12 plants,
+all caught, control clean (`scratch/161g/161g-plants.json`).
+
+The corpus. Predicted before the run: fewer than 161f's 12, only offers
+from the rare tier changing; with the cavalier undraftable, 0 unless a
+journal meets the Vanguard. **10 of 34 differed**; with the cavalier
+undraftable in the worktree, 0 of 34, so the 10 are the draft's and no
+journal meets the Vanguard's cavalier. Re-recorded: every journal (its
+config hash) and the baseline; the replay 0 of 34.
+
+**Read (`batch`, at 161h's stop):** `?seed=5&character=soldier&roster=cavalier:3,cavalier:3,mercenary:3,archer:3`;
+wrong looks like a cavalier that hangs back like an archer, charges from
+two cells, or charges into its own side. Its charge draws and sounds as
+a yank until 161h. The URL is checked in the pane at 161h's put.

@@ -96,14 +96,16 @@ function fmtSummonSpec(spec: SummonSpec): string {
   return `{ ${pairs.join(', ')} }`;
 }
 
-/** The seven `damage` fields expanded, one per line. `indent` is the column of
- *  the opening `{` line's caller (so continuation lines sit at `indent + 2`). */
+/** The seven `damage` fields expanded, one per line, with `mightPerCell` after
+ *  `might` where a charge carries it. `indent` is the column of the opening
+ *  `{` line's caller (so continuation lines sit at `indent + 2`). */
 function fmtDamage(op: DamageOp, indent: string): string {
   const inner = indent + '  ';
   const lines = [
     `"kind": "damage"`,
     `"scaling": ${s(op.scaling)}`,
     `"might": ${n(op.might)}`,
+    ...(op.mightPerCell === undefined ? [] : [`"mightPerCell": ${n(op.mightPerCell)}`]),
     `"critBase": ${n(op.critBase)}`,
     `"critable": ${String(op.critable)}`,
     `"evadable": ${String(op.evadable)}`,

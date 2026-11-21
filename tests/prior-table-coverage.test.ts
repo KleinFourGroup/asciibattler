@@ -70,6 +70,10 @@ function pendingAcknowledgments(): ReadonlyMap<string, string> {
       "Round 12's newcomer, drafted from 161f; its row comes with the prior table's rebuild at §162's board",
     ],
     [
+      'unit:cavalier',
+      "Round 12's newcomer, drafted from 161g; its row comes with the prior table's rebuild at §162's board",
+    ],
+    [
       `daemon:${soldier.daemon}`,
       `the ${soldier.id}'s start daemon — owned from hop 0 on every all-${soldier.id} shadow batch, so no site ever offers it; clears at the first multi-character shadow build`,
     ],

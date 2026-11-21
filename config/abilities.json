@@ -192,6 +192,76 @@
     ],
     "fx": { "release": "vial_throw", "impact": "grenade_burst" }
   },
+  "sabre": {
+    "id": "sabre",
+    "name": "Sabre",
+    "description": "A light cavalry blade.",
+    "cooldownSeconds": 1.5,
+    "rangeCells": 1,
+    "target": { "kind": "enemyInRange" },
+    "timeline": [
+      { "phase": "impact", "seconds": 0 },
+      { "phase": "recovery", "seconds": "fill" }
+    ],
+    "orphanPolicy": "commit-at-cast",
+    "priority": 10,
+    "effects": [
+      {
+        "phase": "impact",
+        "op": {
+          "kind": "damage",
+          "scaling": "strength",
+          "might": 2,
+          "critBase": 0.1,
+          "critable": true,
+          "evadable": true,
+          "bypassDefense": false
+        }
+      }
+    ],
+    "fx": { "impact": "melee_swing" }
+  },
+  "charge": {
+    "id": "charge",
+    "name": "Charge",
+    "description": "Rushes a foe three to five cells off, striking harder for every cell run, and knocks it back a cell.",
+    "cooldownSeconds": 10,
+    "speedScaled": false,
+    "rangeCells": 5,
+    "minRangeCells": 3,
+    "target": { "kind": "enemyInRange" },
+    "timeline": [
+      { "phase": "travel", "seconds": 0 },
+      { "phase": "impact", "seconds": 0 },
+      { "phase": "recovery", "seconds": 0.3 }
+    ],
+    "orphanPolicy": "commit-at-cast",
+    "priority": 10,
+    "effects": [
+      {
+        "phase": "travel",
+        "op": { "kind": "move", "mode": "charge" }
+      },
+      {
+        "phase": "impact",
+        "op": {
+          "kind": "damage",
+          "scaling": "strength",
+          "might": 2,
+          "mightPerCell": 1,
+          "critBase": 0.05,
+          "critable": true,
+          "evadable": true,
+          "bypassDefense": false
+        }
+      },
+      {
+        "phase": "impact",
+        "op": { "kind": "push", "cells": 1, "direction": "away" }
+      }
+    ],
+    "fx": { "impact": "melee_swing" }
+  },
   "repulse": {
     "id": "repulse",
     "name": "Repulse",

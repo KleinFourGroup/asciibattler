@@ -38,7 +38,8 @@
     "bear": 0,
     "grenadier": 0,
     "telekinetic": 0,
-    "ninja": 0
+    "ninja": 0,
+    "cavalier": 0
   },
   "composition": {
     "mercenary": -0.6397586455568671,
@@ -72,7 +73,8 @@
     "bear": 0,
     "grenadier": 0,
     "telekinetic": 0,
-    "ninja": 0
+    "ninja": 0,
+    "cavalier": 0
   },
   "compWeight": 0.17792339948937297,
   "level": -0.5987305897288024,

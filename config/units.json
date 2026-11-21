@@ -767,6 +767,34 @@
       "mobility": 0.2
     }
   },
+  "cavalier": {
+    "name": "Cavalier",
+    "glyph": "",
+    "abilities": ["sabre","charge"],
+    "targeting": "nearest",
+    "rarity": "rare",
+    "baseStats": {
+      "constitution": 22,
+      "strength": 4,
+      "ranged": 0,
+      "magic": 0,
+      "luck": 4,
+      "defense": 2,
+      "speed": 6,
+      "mobility": 7,
+      "power": 2
+    },
+    "growthRates": {
+      "constitution": 0.8,
+      "strength": 0.28,
+      "ranged": 0,
+      "magic": 0,
+      "luck": 0.4,
+      "defense": 0.08,
+      "speed": 0.35,
+      "mobility": 0.26
+    }
+  },
   "wolf": {
     "name": "Wolf",
     "description": "Hunts in packs, and is never alone for long.",

@@ -62,6 +62,9 @@ const CASTER_MELEE_IDS = ['punch', 'scratch'] as const;
 /** The ninja's blade and its blink, a teleport beside its foe. */
 const NINJA_ABILITY_IDS = ['ninjato', 'blink'] as const;
 
+/** The cavalier's blade and its charge, a rush along sight's line. */
+const CAVALIER_ABILITY_IDS = ['sabre', 'charge'] as const;
+
 const FACTORIES: Record<string, AbilityFactory> = {
   ...Object.fromEntries(
     [
@@ -72,6 +75,7 @@ const FACTORIES: Record<string, AbilityFactory> = {
       ...SELF_BURST_ABILITY_IDS,
       ...CASTER_MELEE_IDS,
       ...NINJA_ABILITY_IDS,
+      ...CAVALIER_ABILITY_IDS,
     ].map((id) => [
       id,
       () => new EffectAbility(abilityDef(id)),

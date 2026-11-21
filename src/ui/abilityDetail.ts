@@ -15,6 +15,7 @@ import type { AbilityDef, EffectOp } from '../sim/effects/schema';
 import { abilityDef } from '../config/abilities';
 import { critChanceFor } from '../sim/stats';
 import { resolveDamageScalars, resolveHealAmount } from '../sim/effects/resolveScalars';
+import { t } from '../i18n/ui';
 
 export function abilityDetailParts(id: string, stats: UnitStats): string[] {
   return abilityDetailPartsForDef(abilityDef(id), stats);
@@ -49,6 +50,9 @@ export function abilityDetailPartsForDef(def: AbilityDef, stats: UnitStats): str
     // the unit's stat): `critChanceFor` with its luck, which is exact, having
     // no target term, and keeps the sim's cap.
     pushCrit(parts, damageOp, stats);
+    // A charge strikes harder for each cell it ran: the base above is a
+    // standing hit, and the bonus rides beside it.
+    if (damageOp.mightPerCell !== undefined) parts.push(t('card.ability.perCell', { n: damageOp.mightPerCell }));
   } else if (chainOp) {
     // A chain's damage is nested in its inner ops (the chain arcs and
     // applies them per hop), so `opOf(def, 'damage')` finds none; the inner

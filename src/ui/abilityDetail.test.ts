@@ -72,6 +72,14 @@ describe('abilityDetailParts (every op kind renders a non-blank detail)', () => 
     expect(partsFor('rogue', 'dash').join(' · ')).toContain('dash');
   });
 
+  it('a charge shows its bonus for each cell run beside its standing hit', () => {
+    const raw = (abilitiesJson as Record<string, { effects: { op: { kind: string; mightPerCell?: number } }[] }>).charge!;
+    const perCell = raw.effects.find((e) => e.op.kind === 'damage')!.op.mightPerCell;
+    expect(perCell).toBeDefined();
+    expect(partsFor('cavalier' as Archetype, 'charge')).toContain(`+${perCell} dmg a cell run`);
+    expect(partsFor('cavalier' as Archetype, 'sabre').join(' · ')).not.toContain('a cell run');
+  });
+
   it('a blink reads as a blink at its range, never a dash', () => {
     const raw = (abilitiesJson as Record<string, { rangeCells: number }>).blink!;
     expect(partsFor('ninja' as Archetype, 'blink')).toEqual([`blink ${raw.rangeCells}`]);
@@ -226,10 +234,11 @@ describe("the card's reach is the band the sim fires in", () => {
       if (min > 0) floored++;
       if (shown !== expected) wrong.push(`${id}: shows ${shown}, the sim fires at ${expected}`);
     }
-    // Thirteen shipped abilities have a floor (the bow, the catapult's four,
+    // Fourteen shipped abilities have a floor (the bow, the catapult's four,
     // the casters', the adventurer's snag, the grenadier's grenade, the
-    // puma's pounce); none checked would make the pass vacuous.
-    expect(floored).toBe(13);
+    // puma's pounce, the cavalier's charge); none checked would make the pass
+    // vacuous.
+    expect(floored).toBe(14);
     expect(wrong).toEqual([]);
   });
 

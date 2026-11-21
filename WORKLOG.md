@@ -212,3 +212,50 @@ anything that stands out as wrong, though I suspect that this is one of
 those ones where I won't know it until the play tests 😅", 2026-11-21):
 the cut and its reads as put, and every call on its lean. The stretch:
 161a's stop first, then 161b to 161g with their reads, to 161h's stop.
+
+### 161a — the glyphs, put (2026-11-21)
+
+In the sampler at
+`?bp=board-open15_pose-sampler&glyphFace=/scratch/161a/trial.otf&glyphs=n,N,j,r,h,m,M,H;U+E030,U+E031,U+E032,U+E033,C,k,V,U+E021,U+E020`.
+`scratch/161a/build.ts` composes `trial.otf` with the production builder
+from the shipped table and radicals plus four trial rows, the
+epaulettes on C, K, N and v (U+E030 to U+E033). All of them drew in the
+pane, the trial rows from the trial face. **The ninja** (plain, since
+it is neither soldiery nor a beast): `n` (the lean), the rogue's `r`
+grown a second leg, an upgraded rogue in its shape; `N`, a third
+upright stroke beside the mercenary's `M` and the halberdier's `H`; `j`,
+distinct but a thin mark. Beside them the rogue's `r`, the healer's
+`h`, the mage's `m`. **The cavalier**, wearing the epaulettes as elite
+troops do: `K` (the lean), for knight, a letter no unit uses, told from
+the telekinetic's `k` by its case and the epaulettes; `C`, its initial,
+told from the corrupter's plain `C` by the epaulettes alone, as the
+rat's eared `r` is from the rogue's, but both are draftable; `N`, the
+knight's letter in chess notation, beside the ninja's `n`; `v`, from the
+name, beside the reaver's `V`. Beside them the officer's and the
+grenadier's epaulettes.
+
+### 161a — signed, and the drawn glyph's initial (2026-11-21)
+
+**Signed** ("I agree with both of those leans, Claude! 😁"): `n` for the
+ninja, the epauletted `K` for the cavalier.
+
+Before the font's row was added, DESIGN's drawn-glyph paragraph (§144,
+signed 2026-10-31) was read: a drawn glyph is "JetBrains Mono's own
+letter, the unit's initial, so a player can still name it (the fallen
+strip writes `r×2`)". Every drawn glyph keeps it (the six beasts, the
+officer's `O`, the grenadier's `g`); a `K` for the cavalier would be the
+first that does not. The plain glyphs already depart from it in four
+places (the reaver's `V`, the stormcaller's `z`, the rioter's `f`, the
+telekinetic's `k`). The put named the corrupter's `C` but not this
+rule, so the sign was given without it: asked again.
+
+**Signed** ("Let's just stick with the rule; the epaulets are distinctive
+enough--that's the whole point of the radicals, and if they aren't
+enough, we need to redesign them 👍"): the epauletted `C` for the
+cavalier, told from the corrupter's plain `C` by the radical alone.
+
+**Built.** A row in `assets/fonts/asciibattler-glyphs/glyphs.json`,
+U+E022 `C.epaulettes`, unused until 161g adds the cavalier; `npm run
+gen:font`: 11 drawn glyphs, the 42 live atlas glyphs all in a shipped
+face, the two subset faces unchanged. DESIGN's glyph paragraph names the
+cavalier when it lands.

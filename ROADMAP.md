@@ -113,8 +113,8 @@ and the blink on `unit:dashed`, then the ninja and the cavalier (as
 reshaped at 158b). It stands on none of §160. **Risk:** medium. The
 cut, signed 2026-11-21 with its calls (WORKLOG §161):
 
-- ☐ **161a — the glyphs** (`stop`): candidates for the ninja and the
-  cavalier in the sampler, a lean each.
+- ☑ **161a — the glyphs** (`stop`): signed 2026-11-21, `n` for the
+  ninja and the epauletted `C` for the cavalier (U+E022).
 - ☐ **161b — the hit after a leap** (`none`): a leap keeps its enemy; a
   hit after the move lands only within reach of the landing.
 - ☐ **161c — the blink, and the dash's landing as an entry** (`none`):

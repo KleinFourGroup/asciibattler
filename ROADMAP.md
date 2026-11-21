@@ -129,8 +129,8 @@ cut, signed 2026-11-21 with its calls (WORKLOG §161):
   Blink; among act 3's Miscreants; read at 161h.
 - ◐ **161g — the cavalier** (`batch`): rare, the Sabre and the Charge;
   among act 2's Warband Vanguard; read at 161h.
-- ☐ **161h — the look and the sound** (`stop`): the dash's trail, the
-  blink, the charge's rush.
+- ◐ **161h — the look and the sound** (`stop`): the dash's trail, the
+  blink, the charge's rush; two arms each behind the `move` dial, at its stop.
 - ☐ **161i — the play** (`stop`).
 
 ## Phase 161.5 — the hex and the ice storm as specials

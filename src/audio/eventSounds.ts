@@ -56,6 +56,12 @@ export function audibleDeath({ team, campId }: GameEvents['unit:died']): boolean
   return !(team === 'neutral' && campId === null);
 }
 
+/** A leap whooshes here; a blink plays its own cue with its look, in
+ *  BattleRenderer. */
+export function notBlink({ blink }: GameEvents['unit:dashed']): boolean {
+  return blink !== true;
+}
+
 /** A heal onto a full unit emits a no-op `amount: 0` (gotcha #80); a sound
  *  on a zero-effect event would feel buggy. */
 export function positiveAmount({ amount }: GameEvents['unit:healed']): boolean {
@@ -74,9 +80,7 @@ export const EVENT_SOUNDS = {
   'unit:healed': { sound: 'healtick', when: positiveAmount },
   // Keyed off the leap itself, not an inferred move distance, so a one-cell
   // dash still whooshes. Either team's.
-  'unit:dashed': { sound: 'dash' },
-  // A forced move, a push or a pull, either team's: the yank.
-  'unit:shoved': { sound: 'shove' },
+  'unit:dashed': { sound: 'dash', when: notBlink },
 } as const satisfies EventSoundTable;
 
 /**
@@ -110,6 +114,7 @@ export const SILENT_EVENTS: Readonly<
 
   'unit:spawned': 'bookkeeping', // a summon's cue rides its fx key
   'unit:moved': 'bookkeeping',
+  'unit:shoved': 'fxChannel', // BattleRenderer plays the yank's cue, or a charger's rush
   'unit:fell': 'fxChannel', // BattleRenderer plays the fall's cue with its look
   'unit:swapped': 'bookkeeping',
   'unit:swapAborted': 'bookkeeping',

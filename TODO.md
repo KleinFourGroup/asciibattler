@@ -291,7 +291,7 @@ lines to Round 12 (WORKLOG §156, 156d).
 
 META-ROADMAP §"Round 12 — Push, pull and blink" names each row's place.
 
-- [ ] **Dash VFX (afterimage / trail / blink-flash).** N1's rogue dash currently reads as a fast slide (the `unit:moved` lerp over the ~5-tick motion window) + the `dash.wav` whoosh — no dedicated visual. The first-class **`unit:dashed`** event ([events.ts](src/core/events.ts), emitted by the effect interpreter's dash ([interpreter.ts](src/sim/effects/interpreter.ts)), carries `from`/`to`/`durationTicks`) is the ready hook: a BattleScene/BattleRenderer subscriber can draw a motion trail / afterimage / blink-flash on the leap. Folds into the deferred L/M status-VFX presentation pass. Surfaced at N1.
+- [ ] **Dash VFX (afterimage / trail / blink-flash).** Built at 161h in two arms behind the board panel's `move` dial (`src/render/moveLooks.ts`); ticked when the user signs one at its stop. N1's rogue dash currently reads as a fast slide (the `unit:moved` lerp over the ~5-tick motion window) + the `dash.wav` whoosh — no dedicated visual. The first-class **`unit:dashed`** event ([events.ts](src/core/events.ts), emitted by the effect interpreter's dash ([interpreter.ts](src/sim/effects/interpreter.ts)), carries `from`/`to`/`durationTicks`) is the ready hook: a BattleScene/BattleRenderer subscriber can draw a motion trail / afterimage / blink-flash on the leap. Folds into the deferred L/M status-VFX presentation pass. Surfaced at N1.
 
 - [x] ✅ **The corpus's trade rows, by script** — 158a: the trade row makes the five port trades at a scripted port, with its own check and planted failure (WORKLOG 158a, in `archive/worklog-phase-158.md`).
 

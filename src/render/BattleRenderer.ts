@@ -4,6 +4,7 @@ import type { GameEvents } from '../core/events';
 import type { GridCoord } from '../core/types';
 import { explosionPlacement, SPIN_SPARKS, spinSparkOffset } from './burstPlacement';
 import { FALL_SECONDS, fallPose, type FallInto } from './fallMotion';
+import { BLINK_SECONDS, blinkPose, chargeHit, chargeRush, dashTrail, moveArm, trailFractions, type MoveArm, type TrailSpec } from './moveLooks';
 import type { AbilityDef } from '../sim/effects/schema';
 import type { World } from '../sim/World';
 import type { ObjectiveTarget } from '../sim/objective';
@@ -19,7 +20,7 @@ import type { Renderer } from './Renderer';
 import type { AudioPlayer } from '../audio/AudioPlayer';
 import { COLORS } from './palette';
 import { colorForTeam, spriteColorForUnit } from './spriteColor';
-import { SpriteAnimator } from './animation/SpriteAnimator';
+import { SpriteAnimator, type GroundEase } from './animation/SpriteAnimator';
 import {
   assertFxKeysResolve,
   assertStatusFxKeysResolve,
@@ -124,6 +125,48 @@ interface FallingSprite {
 }
 
 /**
+ * A blinking unit's own sprite, on one of its two cells and never between
+ * (`blinkPose`), driven per render frame; its slide was cancelled.
+ */
+interface BlinkingSprite {
+  readonly unitId: number;
+  readonly handle: SpriteHandle;
+  readonly from: THREE.Vector3;
+  readonly to: THREE.Vector3;
+  readonly arm: MoveArm;
+  readonly duration: number;
+  /** The unit's own size (its footprint), which the pose scales. */
+  readonly size: number;
+  elapsed: number;
+  /** Set once the pose reaches the landing, where the position is set once,
+   *  so a lunge that starts before the pose ends moves the sprite freely. */
+  landed: boolean;
+}
+
+/**
+ * A unit's trail as it leaps or charges: marks dropped where its sprite
+ * stands as it passes even steps of its path (`TrailSpec`), read by the
+ * sprite's progress along the path rather than the clock, so a gallop's
+ * dust falls a puff a cell.
+ */
+interface Trail {
+  readonly handle: SpriteHandle;
+  readonly glyph: string;
+  readonly color: string;
+  readonly spec: TrailSpec;
+  readonly fractions: readonly number[];
+  readonly start: THREE.Vector3;
+  readonly end: THREE.Vector3;
+  /** A unit vector in XZ pointing back along the path. */
+  readonly back: THREE.Vector3;
+  readonly size: number;
+  /** The slide's length plus a frame's slack, after which the trail ends. */
+  readonly duration: number;
+  elapsed: number;
+  dropped: number;
+}
+
+/**
  * One mote of a `track`-mode aura pulse (the modes are in ./auraFx.ts): it
  * re-anchors to its carrier's live sprite every frame, so the wave glides
  * with the carrier.
@@ -184,6 +227,8 @@ export class BattleRenderer {
    *  the `unit:died` the tick's reap emits next, to draw the fall. */
   private readonly fellInto = new Map<number, FallInto>();
   private readonly falls: FallingSprite[] = [];
+  private readonly blinks: BlinkingSprite[] = [];
+  private readonly trails: Trail[] = [];
   /** Gates the aura ring's mote shed, in speed-scaled dt, so the ring slows
    *  with playback and freezes at pause. */
   private auraRingClock = 0;
@@ -263,6 +308,7 @@ export class BattleRenderer {
     this.subscriptions.push(bus.on('unit:spawned', this.onUnitSpawned));
     this.subscriptions.push(bus.on('unit:moved', this.onUnitMoved));
     this.subscriptions.push(bus.on('unit:shoved', this.onUnitShoved));
+    this.subscriptions.push(bus.on('unit:dashed', this.onUnitDashed));
     this.subscriptions.push(bus.on('unit:moveAborted', this.onUnitMoveAborted));
     // A release-gate hold: the amber drain bar over the re-aim window, the
     // tell that the unit is re-aiming, not idle (`updateProgressFill`).
@@ -270,6 +316,7 @@ export class BattleRenderer {
     this.subscriptions.push(bus.on('unit:swapped', this.onUnitSwapped));
     this.subscriptions.push(bus.on('unit:swapAborted', this.onUnitSwapAborted));
     this.subscriptions.push(bus.on('unit:attacked', this.onUnitAttacked));
+    this.subscriptions.push(bus.on('unit:attacked', this.onChargeHit));
     // A dodged single-target strike: "Miss" floats instead of a number. The
     // swing rides `action:phase`, which fires on a miss too.
     this.subscriptions.push(bus.on('unit:missed', this.onUnitMissed));
@@ -326,6 +373,8 @@ export class BattleRenderer {
     this.animator.update(dt);
     this.updateExplosions(dt);
     this.updateFalls(dt);
+    this.updateBlinks(dt);
+    this.updateTrails(dt);
     this.updateAuraFx(dt);
     this.updateAuraPulseParticles(dt);
     this.updateOverlays(dt);
@@ -799,6 +848,10 @@ export class BattleRenderer {
     this.explosions.length = 0;
     // A fall's sprite is its unit's handle, swept with `handles` above.
     this.falls.length = 0;
+    // A blink's sprite is its unit's handle; a trail's marks are burst-lane
+    // particles, swept above.
+    this.blinks.length = 0;
+    this.trails.length = 0;
     this.fellInto.clear();
     // The ring's motes live in `explosions` (swept above); rewind the shed
     // clocks so the next battle starts on fresh intervals.
@@ -927,9 +980,13 @@ export class BattleRenderer {
   };
 
   /**
-   * A forced move, a push or a pull. Its `unit:moved` started the slide on
-   * the same tick, so this re-times it as a yank (`easeOut`): off the mark
-   * fast, skidding to a stop on the landing, where a step glides.
+   * A forced move, a push or a pull, or a charger's own rush, which the sim
+   * draws through the same event. Its `unit:moved` started the slide on the
+   * same tick, so this re-times it: a yank (`out`), off the mark fast and
+   * skidding to a stop on the landing, where a step glides; a charge at its
+   * arm's pace with its trail (`chargeRush`). Each plays its cue here, since
+   * only the world tells a charge from a push: the charger is still in its
+   * charge's action as it moves, and a pushed unit's action has ended.
    */
   private onUnitShoved = ({
     unitId,
@@ -937,7 +994,209 @@ export class BattleRenderer {
     to,
     durationTicks,
   }: GameEvents['unit:shoved']): void => {
-    this.animateStep(unitId, from, to, durationTicks, true);
+    if (this.isCharging(unitId)) {
+      this.audio.play('charge');
+      const cells = Math.max(Math.abs(to.x - from.x), Math.abs(to.y - from.y));
+      const rush = chargeRush(moveArm(), cells);
+      this.animateStep(unitId, from, to, durationTicks, rush.ease);
+      this.startTrail(unitId, from, to, ticksToSeconds(durationTicks), rush.trail);
+      return;
+    }
+    this.audio.play('shove');
+    this.animateStep(unitId, from, to, durationTicks, 'out');
+  };
+
+  /** Whether `unitId` is in a charge's action: its own move is the rush. */
+  private isCharging(unitId: number): boolean {
+    const id = this.world?.findUnit(unitId)?.activeAction?.action.id;
+    const def = id === undefined ? undefined : ABILITY_DEFS[id];
+    return def?.effects.some((e) => e.op.kind === 'move' && e.op.mode === 'charge') ?? false;
+  }
+
+  /**
+   * A leap or a blink (`unit:dashed`), after the `unit:moved` that started
+   * its slide on the same tick. A leap keeps the slide and leaves its trail
+   * (`dashTrail`). A blink never slides: the slide is cancelled and the
+   * sprite goes out on its cell and comes in on its landing (`blinkPose`,
+   * `updateBlinks`), with its cue and its flash; under reduced motion it is
+   * on its landing at once.
+   */
+  private onUnitDashed = ({ unitId, from, to, durationTicks, blink }: GameEvents['unit:dashed']): void => {
+    if (!this.world) return;
+    const handle = this.handles.get(unitId);
+    const unit = this.world.findUnit(unitId);
+    if (!handle || !unit) return;
+    const arm = moveArm();
+    if (!blink) {
+      this.startTrail(unitId, from, to, ticksToSeconds(durationTicks), dashTrail(arm));
+      return;
+    }
+    this.audio.play('blink');
+    const footprint = footprintOf(unit);
+    const start = (this.sprites.getPosition(handle, this.scratchPos) ?? this.unitAnchorPos(from, footprint)).clone();
+    const end = this.unitAnchorPos(to, footprint);
+    this.animator.cancel(handle);
+    if (reducedMotion()) {
+      this.sprites.updateSprite(handle, { position: end });
+      return;
+    }
+    this.sprites.updateSprite(handle, { position: start });
+    this.blinks.push({ unitId, handle, from: start, to: end, arm, duration: BLINK_SECONDS[arm], size: footprint, elapsed: 0, landed: false });
+    this.spawnBlinkFlash(start, end, arm, spriteColorForUnit(unit));
+  };
+
+  /** Each blink's pose this frame; at its end the entry goes. */
+  private updateBlinks(dt: number): void {
+    for (let i = this.blinks.length - 1; i >= 0; i--) {
+      const b = this.blinks[i]!;
+      b.elapsed += dt;
+      const t = b.elapsed >= b.duration ? 1 : b.elapsed / b.duration;
+      const pose = blinkPose(b.arm, t);
+      if (pose.at === 'from') {
+        this.sprites.updateSprite(b.handle, { position: b.from, size: pose.size * b.size, alpha: pose.alpha });
+      } else if (!b.landed) {
+        b.landed = true;
+        this.sprites.updateSprite(b.handle, { position: b.to, size: pose.size * b.size, alpha: pose.alpha });
+      } else {
+        this.sprites.updateSprite(b.handle, { size: pose.size * b.size, alpha: pose.alpha });
+      }
+      if (t >= 1) this.blinks.splice(i, 1);
+    }
+  }
+
+  /**
+   * A blink's light at its two cells, in the unit's colour, both at once, so
+   * the landing shows where it will appear. Arm `a`: a flash that grows and
+   * fades on each. Arm `b`: a puff of eight motes bursting out of where it
+   * stood, and eight drawing into its landing.
+   */
+  private spawnBlinkFlash(from: THREE.Vector3, to: THREE.Vector3, arm: MoveArm, color: string): void {
+    const fromC = aboveAnchor(from, GLYPH_HALF_HEIGHT, this.renderer.camera, new THREE.Vector3());
+    const toC = aboveAnchor(to, GLYPH_HALF_HEIGHT, this.renderer.camera, new THREE.Vector3());
+    if (arm === 'a') {
+      for (const at of [fromC, toC]) {
+        this.addExplosionParticle(at, at, EXPLOSION_FLASH_GLYPH, color, BLINK_FLASH_SIZE_FROM, BLINK_FLASH_SIZE_TO, BLINK_FLASH_SECONDS);
+      }
+      return;
+    }
+    for (const [dx, dz] of EXPLOSION_RING_DIRS) {
+      const out = fromC.clone();
+      out.x += dx * BLINK_PUFF_SPREAD;
+      out.z += dz * BLINK_PUFF_SPREAD;
+      this.addExplosionParticle(fromC, out, PROJECTILE_GLYPH, color, EXPLOSION_SPARK_SIZE, 0.2, BLINK_PUFF_SECONDS);
+      const ring = toC.clone();
+      ring.x += dx * BLINK_PUFF_SPREAD;
+      ring.z += dz * BLINK_PUFF_SPREAD;
+      this.addExplosionParticle(ring, toC, PROJECTILE_GLYPH, color, 0.2, EXPLOSION_SPARK_SIZE, BLINK_PUFF_SECONDS);
+    }
+  }
+
+  /** Starts a unit's trail along its path from `from` to `to`; none under
+   *  reduced motion, or for a move of no length. */
+  private startTrail(unitId: number, from: GridCoord, to: GridCoord, seconds: number, spec: TrailSpec): void {
+    if (reducedMotion() || seconds <= 0 || !this.world) return;
+    const handle = this.handles.get(unitId);
+    const unit = this.world.findUnit(unitId);
+    if (!handle || !unit) return;
+    const footprint = footprintOf(unit);
+    const start = this.unitAnchorPos(from, footprint);
+    const end = this.unitAnchorPos(to, footprint);
+    const back = start.clone().sub(end).setY(0);
+    if (back.lengthSq() === 0) return;
+    back.normalize();
+    this.trails.push({
+      handle,
+      glyph: unit.glyph,
+      color: spriteColorForUnit(unit),
+      spec,
+      fractions: trailFractions(spec.count),
+      start,
+      end,
+      back,
+      size: footprint,
+      duration: seconds + TRAIL_SLACK_SECONDS,
+      elapsed: 0,
+      dropped: 0,
+    });
+  }
+
+  /** Each trail's marks, dropped as its sprite passes their steps of the
+   *  path; the trail ends when all are down or its slide is over. */
+  private updateTrails(dt: number): void {
+    for (let i = this.trails.length - 1; i >= 0; i--) {
+      const tr = this.trails[i]!;
+      tr.elapsed += dt;
+      const at = this.sprites.getPosition(tr.handle, new THREE.Vector3());
+      if (at) {
+        const total = Math.hypot(tr.end.x - tr.start.x, tr.end.z - tr.start.z);
+        const progress = total === 0 ? 1 : Math.hypot(at.x - tr.start.x, at.z - tr.start.z) / total;
+        while (tr.dropped < tr.fractions.length && progress >= tr.fractions[tr.dropped]!) {
+          this.dropTrailMark(tr, at);
+          tr.dropped++;
+        }
+      }
+      if (!at || tr.dropped >= tr.fractions.length || tr.elapsed >= tr.duration) this.trails.splice(i, 1);
+    }
+  }
+
+  /** One mark of a trail at the sprite's ground anchor `at` (`TrailMark`). */
+  private dropTrailMark(tr: Trail, at: THREE.Vector3): void {
+    if (tr.spec.mark === 'ghost') {
+      // A copy of the glyph, standing as the unit stands, fading where it was.
+      const handle = this.sprites.addSprite(tr.glyph, tr.color, at, 'base');
+      this.sprites.updateSprite(handle, { size: tr.size, bloomIntensity: TRAIL_GHOST_BLOOM, alpha: TRAIL_GHOST_ALPHA });
+      this.explosions.push({
+        handle,
+        elapsed: 0,
+        duration: TRAIL_GHOST_SECONDS,
+        from: at.clone(),
+        to: at.clone(),
+        sizeFrom: tr.size,
+        sizeTo: tr.size,
+        alphaScale: TRAIL_GHOST_ALPHA,
+      });
+      return;
+    }
+    if (tr.spec.mark === 'mote') {
+      const c = aboveAnchor(at, GLYPH_HALF_HEIGHT, this.renderer.camera, new THREE.Vector3());
+      const drift = c.clone().addScaledVector(tr.back, TRAIL_MOTE_DRIFT);
+      this.addExplosionParticle(c, drift, PROJECTILE_GLYPH, tr.color, TRAIL_MOTE_SIZE, 0.15, TRAIL_MOTE_SECONDS, EXPLOSION_BLOOM * 0.5, 0.8);
+      return;
+    }
+    // Dust: a grey puff kicked up and back off the ground.
+    const kick = at.clone().addScaledVector(tr.back, TRAIL_DUST_DRIFT);
+    kick.y += TRAIL_DUST_LIFT;
+    this.addExplosionParticle(at, kick, EXPLOSION_FLASH_GLYPH, CATAPULT_DUD_COLOR, 0.35, 1.1, TRAIL_DUST_SECONDS, CATAPULT_DUD_BLOOM, 0.8);
+  }
+
+  /**
+   * The charge's hit, as its blow lands on the foe (`unit:attacked` from a
+   * charger still in its charge's action): sparks or a flash on the foe and
+   * a shake, by arm (`chargeHit`); none under reduced motion. A charge that
+   * met no foe lands no blow, and shows nothing.
+   */
+  private onChargeHit = ({ attackerId, targetId }: GameEvents['unit:attacked']): void => {
+    if (reducedMotion() || !this.world || !this.isCharging(attackerId)) return;
+    const attacker = this.world.findUnit(attackerId);
+    const target = this.world.findUnit(targetId);
+    const handle = this.handles.get(targetId);
+    if (!attacker || !target || !handle) return;
+    const center = this.unitVisualCenter(handle, target, new THREE.Vector3());
+    if (!center) return;
+    const hit = chargeHit(moveArm());
+    const color = spriteColorForUnit(attacker);
+    if (hit.flash) {
+      this.addExplosionParticle(center, center, EXPLOSION_FLASH_GLYPH, color, CHARGE_FLASH_SIZE_FROM, CHARGE_FLASH_SIZE_TO, CHARGE_FLASH_SECONDS);
+    }
+    if (hit.sparks) {
+      for (const [dx, dz] of EXPLOSION_RING_DIRS) {
+        const dest = center.clone();
+        dest.x += dx * CHARGE_SPARK_SPREAD;
+        dest.z += dz * CHARGE_SPARK_SPREAD;
+        this.addExplosionParticle(center, dest, PROJECTILE_GLYPH, color, EXPLOSION_SPARK_SIZE, EXPLOSION_SPARK_SIZE, EXPLOSION_RING_SECONDS);
+      }
+    }
+    this.renderer.shakeCamera(hit.shake.intensity, hit.shake.durationSeconds);
   };
 
   /**
@@ -1038,7 +1297,7 @@ export class BattleRenderer {
     from: GridCoord,
     to: GridCoord,
     durationTicks: number,
-    easeOut = false,
+    ease: GroundEase = 'linear',
   ): void {
     if (!this.world) return;
     const handle = this.handles.get(unitId);
@@ -1055,7 +1314,7 @@ export class BattleRenderer {
       origin,
       this.unitAnchorPos(to, footprint),
       ticksToSeconds(durationTicks),
-      easeOut,
+      ease,
     );
   }
 
@@ -1764,6 +2023,9 @@ export class BattleRenderer {
     const handle = this.handles.get(unitId);
     if (!handle) return;
     this.animator.cancel(handle);
+    // A blink's pose would fight the fade's alpha.
+    const blinking = this.blinks.findIndex((b) => b.unitId === unitId);
+    if (blinking >= 0) this.blinks.splice(blinking, 1);
     this.progress.delete(unitId);
     this.reaims.delete(unitId);
     // Drop the held tints: the unit fades out in its last one, and the entry
@@ -2035,6 +2297,32 @@ const WATER_SPRAY_SPREAD = 0.55;
 const WATER_SPRAY_LIFT = 0.8;
 const WATER_SPRAY_SECONDS = 0.35;
 const EXPLOSION_BLOOM = 2.2;
+/** The blink's flash (arm `a`) on each of its cells, and its puff of
+ *  motes (arm `b`): how far out they reach, in world units, and how fast. */
+const BLINK_FLASH_SIZE_FROM = 0.5;
+const BLINK_FLASH_SIZE_TO = 1.6;
+const BLINK_FLASH_SECONDS = 0.25;
+const BLINK_PUFF_SPREAD = 0.6;
+const BLINK_PUFF_SECONDS = 0.25;
+/** A trail's marks: the afterimage's peak alpha, glow and life; the mote's
+ *  size, drift back along the path and life; the dust's drift, lift and
+ *  life. A trail outlives its slide by a frame or two, so the last mark is
+ *  dropped. Tuned by eye. */
+const TRAIL_SLACK_SECONDS = 0.05;
+const TRAIL_GHOST_ALPHA = 0.45;
+const TRAIL_GHOST_BLOOM = 0.15;
+const TRAIL_GHOST_SECONDS = 0.3;
+const TRAIL_MOTE_SIZE = 0.4;
+const TRAIL_MOTE_DRIFT = 0.35;
+const TRAIL_MOTE_SECONDS = 0.25;
+const TRAIL_DUST_DRIFT = 0.3;
+const TRAIL_DUST_LIFT = 0.15;
+const TRAIL_DUST_SECONDS = 0.35;
+/** The charge's hit on its foe: arm `b`'s flash and arm `a`'s sparks. */
+const CHARGE_FLASH_SIZE_FROM = 0.8;
+const CHARGE_FLASH_SIZE_TO = 2.2;
+const CHARGE_FLASH_SECONDS = 0.3;
+const CHARGE_SPARK_SPREAD = 0.7;
 /** 8 unit-ish directions (orthogonal + diagonal, diagonals normalized) so the
  *  spark ring expands evenly to the blast edge. */
 const EXPLOSION_RING_DIRS: ReadonlyArray<readonly [number, number]> = [

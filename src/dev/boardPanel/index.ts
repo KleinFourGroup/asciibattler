@@ -25,6 +25,7 @@ import { PosedSet } from './posed';
 import { mountSamplerText, setSamplerPose, type SamplerLoad } from './sampler';
 import { DEFAULT_MARK_STYLE, isDashedPlate, markExtent, markShapeOf } from '../../render/groundMarks';
 import { spriteColorForUnit } from '../../render/spriteColor';
+import { setMoveArm, type MoveArm } from '../../render/moveLooks';
 import {
   applyCameraView,
   installSeams,
@@ -158,6 +159,8 @@ export function attachBoardPanel(game: Game, sampler: SamplerLoad | null = null)
     internals.terrain.setMarkStyle({ ...DEFAULT_MARK_STYLE, plateCorner: dials.plateCorner });
   };
   if (dials.marks !== DIALS.marks.def || dials.plateCorner !== DIALS.plateCorner.def) applyMarks();
+  // The moving looks' arm: a module setting the renderer reads at each move.
+  setMoveArm(dials.move as MoveArm);
 
   const bookmarkedSearch = (): string => spliceBookmark(location.search, encodeDials(dials));
 
@@ -183,6 +186,7 @@ export function attachBoardPanel(game: Game, sampler: SamplerLoad | null = null)
   const apply = (key: DialKey): void => {
     if (VIEW_DIALS.includes(key)) applyCameraView(game, cameraViewOf(dials));
     if (key === 'marks' || key === 'plateCorner') applyMarks();
+    if (key === 'move') setMoveArm(dials.move as MoveArm);
     // The slab rule reads the camera, so a view change re-stands it.
     if (VIEW_DIALS.includes(key)) {
       const battle = liveBattleOf(game);

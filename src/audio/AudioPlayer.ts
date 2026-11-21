@@ -39,6 +39,8 @@ export type SoundKey =
   | 'sectorwin'
   | 'shove'
   | 'fall'
+  | 'blink'
+  | 'charge'
   | 'splash'
   | 'shoot'
   | 'stattick'
@@ -93,6 +95,10 @@ export const SOUND_SOURCES: Record<SoundKey, string> = {
   // A fall into a chasm and into deep water, played with the fall's look by
   // BattleRenderer (generated, `scripts/gen-sfx.mjs`).
   fall: 'audio/fall.wav',
+  // A blink and a charge's rush, played with their looks by BattleRenderer
+  // (generated, `scripts/gen-sfx.mjs`).
+  blink: 'audio/blink.wav',
+  charge: 'audio/charge.wav',
   splash: 'audio/splash.wav',
   // The pool bar's landing cue, played by the HUD on every orb landing and
   // scaled per play by `lossCue` (src/ui/lossFx.ts): gain up and rate down
@@ -148,6 +154,9 @@ const VOLUMES: Record<SoundKey, number> = {
   shove: 0.6,
   // With the death's cry, which every fall also has.
   fall: 0.7,
+  // A movement cue each, under the impacts as the dash's whoosh is.
+  blink: 0.7,
+  charge: 0.7,
   splash: 0.75,
   // The landing cue's ceiling: `lossCue` scales each play's gain from about
   // half of this at a small loss up to all of it at the shake's ceiling, so
@@ -209,6 +218,8 @@ const PITCH_VARIANCE: Record<SoundKey, number> = {
   shove: 0.1,
   // A blast can drop several at once too.
   fall: 0.08,
+  blink: 0.08,
+  charge: 0.08,
   splash: 0.08,
 };
 

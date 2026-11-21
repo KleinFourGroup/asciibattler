@@ -316,6 +316,34 @@ const SOUNDS = {
     return finish(b, 0.75);
   },
 
+  // A blink (`unit:dashed` with `blink`, played with its look by
+  // BattleRenderer): a bright zip rising fast and cut off, then a soft pop as
+  // it lands, a teleport rather than the dash's whoosh.
+  blink: () => {
+    const b = buffer(0.3);
+    const rng = mulberry32(0xb11c);
+    addOsc(b, { type: 'sine', freq: (t) => 500 + 2600 * Math.min(1, t / 0.09), amp: (t) => (t < 0.09 ? 0.5 * attack(0.01)(t) : 0) });
+    addNoise(b, { rng, lp: 0.4, amp: (t) => (t < 0.09 ? 0.15 * attack(0.02)(t) : 0) });
+    addOsc(b, { type: 'sine', freq: (t) => 900 * Math.exp(-Math.max(0, t - 0.12) / 0.05) + 300, amp: (t) => (t > 0.12 ? 0.55 * expDecay(0.05)(t - 0.12) : 0) });
+    return finish(b, 0.7);
+  },
+  // A charge's rush (a charger's own `unit:shoved`, played by BattleRenderer):
+  // four hoofbeats drawing closer together under a rising rush of air; the
+  // blow that ends it has the swing's cue.
+  charge: () => {
+    const b = buffer(0.6);
+    const rng = mulberry32(0xc4a6);
+    for (const at of [0, 0.15, 0.27, 0.36]) {
+      addOsc(b, {
+        type: 'triangle',
+        freq: (t) => 140 * Math.exp(-Math.max(0, t - at) / 0.05) + 50,
+        amp: (t) => (t >= at ? 0.6 * attack(0.003)(t - at) * expDecay(0.04)(t - at) : 0),
+      });
+    }
+    addNoise(b, { rng, lp: 0.12, amp: (t) => 0.35 * Math.min(1, t / 0.4) * (t < 0.45 ? 1 : expDecay(0.06)(t - 0.45)) });
+    return finish(b, 0.75);
+  },
+
   // A fall into a chasm (`unit:fell`, played with its look by BattleRenderer):
   // a whistle that drops in pitch as it fades, the cartoon fall, over a thin
   // rush of air, gone before it lands, since nothing is heard landing.

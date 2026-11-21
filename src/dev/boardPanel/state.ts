@@ -162,6 +162,15 @@ export const DIALS = {
     def: 1,
     hint: 'camera-up, in tiles — the flyer pose only',
   },
+  /** The moving looks' two arms, a taste call the user makes in play
+   *  (src/render/moveLooks.ts); goes when they are signed. */
+  move: {
+    kind: 'enum',
+    label: 'move looks',
+    options: ['a', 'b'],
+    def: 'a',
+    hint: 'a = afterimages, the fold, the gallop with sparks · b = motes, the cut, the lance with a flash',
+  },
   /** Bookmark-only: the panel starts collapsed (the dials still apply). */
   hide: { kind: 'bool', label: 'start hidden', def: false },
 } as const satisfies Record<string, DialSpec>;

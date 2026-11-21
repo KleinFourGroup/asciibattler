@@ -477,3 +477,11 @@ the baseline; the replay 0 of 34.
 on the spiral's chasm; wrong looks like a ninja walking the long way
 round with its blink ready, or blinking where it cannot strike. Its
 blink slides until 161h. The URL is checked in the pane at 161h's put.
+
+### 161f-post — the blink's card (2026-11-21)
+
+Found while reading the cavalier's card at 161g: the ninja's card read the
+blink as "dash 5", since the card's branch for a pure reposition labelled
+every one a dash. It reads "blink 5" now, and a test pins the label at the
+blink's range from the raw config; a plant of the old label is caught
+(`scratch/161g/blink-card-plants.json`).

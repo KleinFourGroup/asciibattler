@@ -72,6 +72,11 @@ describe('abilityDetailParts (every op kind renders a non-blank detail)', () => 
     expect(partsFor('rogue', 'dash').join(' · ')).toContain('dash');
   });
 
+  it('a blink reads as a blink at its range, never a dash', () => {
+    const raw = (abilitiesJson as Record<string, { rangeCells: number }>).blink!;
+    expect(partsFor('ninja' as Archetype, 'blink')).toEqual([`blink ${raw.rangeCells}`]);
+  });
+
   it('crit derives from the UNIT (luck folds in, the damage-number convention), and no hit chance shows', () => {
     // Expectations run THROUGH the same sim helper the readout uses
     // (balance-proof: no hand-computed arithmetic; the cap inherited).

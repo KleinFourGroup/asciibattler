@@ -80,9 +80,10 @@ export function abilityDetailPartsForDef(def: AbilityDef, stats: UnitStats): str
     // otherwise label it a dash.
     parts.push(`aura ${def.aura.statusId}`, `reach ${def.aura.radius}`);
   } else if (def.target.kind === 'self') {
-    // A pure reposition (the dash): no damage or heal, only the leap's
+    // A pure reposition (the dash, the blink): no damage or heal, only its
     // distance (its recharge shows in the card's cadence column).
-    parts.push(`dash ${def.rangeCells}`);
+    const blinks = def.effects.some((e) => e.op.kind === 'move' && e.op.mode === 'blink');
+    parts.push(`${blinks ? 'blink' : 'dash'} ${def.rangeCells}`);
   }
 
   // A damage afflicter lays a status on top of its hit; the rider shows it.

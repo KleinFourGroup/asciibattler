@@ -100,6 +100,7 @@ describe('fxRegistry — 28 behavior-status overlays', () => {
 const ABILITIES_WITHOUT_FX: ReadonlyMap<string, string> = new Map([
   ['heal_ally', 'its heal is drawn and heard off unit:healed (the number, the healtick)'],
   ['dash', 'the leap is the move slide and the unit:dashed whoosh; a dash VFX is a TODO row'],
+  ['blink', 'the teleport is the move and the unit:dashed cue, drawn off that event as the dash is'],
   ['chain_lightning', 'its arcs fire off the chain event, as chain_arc'],
   ['inspire', 'an aura: the ring and the wavefront are the aura renderer'],
 ]);

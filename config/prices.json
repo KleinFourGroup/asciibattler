@@ -18,7 +18,8 @@
       "halberdier": 28,
       "officer": 32,
       "grenadier": 28,
-      "telekinetic": 30
+      "telekinetic": 30,
+      "ninja": 28
     },
     "levelGrowth": 1.05,
     "jitter": 0.15,

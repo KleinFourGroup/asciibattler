@@ -125,7 +125,8 @@ cut, signed 2026-11-21 with its calls (WORKLOG §161):
   18 plants.
 - ◐ **161e — the puma's pounce** (`batch`): the shared strike renamed
   Swipe; the puma's leap and hit from three cells; read at 161h.
-- ☐ **161f — the ninja** (`batch`).
+- ◐ **161f — the ninja** (`batch`): uncommon, the Ninjato and the
+  Blink; among act 3's Miscreants; read at 161h.
 - ☐ **161g — the cavalier** (`batch`).
 - ☐ **161h — the look and the sound** (`stop`): the dash's trail, the
   blink, the charge's rush.

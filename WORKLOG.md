@@ -434,3 +434,46 @@ its `node_modules` to the main tree's). `tests/build-id.test.ts` fails in
 that worktree under the whole suite and passes alone: the worktree's,
 not the code's. `scratch/161e/pounce-strikes.ts <actionId>` counts an
 action's phases per corpus journal, for a prediction.
+
+### 161f — the ninja (2026-11-21)
+
+Session `23a263b2` takes over from the hand-off above. The **Ninja** `n`:
+uncommon, draftable, on the rogue's stat line a step up (constitution 18,
+strength 4, mobility 5, strength's and mobility's growth 0.22), power 1
+as its rarity sets. Its **Ninjato**: a one-cell blade, might 2 on
+strength, crit base 0.15, on the rogue's 1.2 s with no windup. Its
+**Blink**: the `blink` mode at a range of 5 on a flat 10 s, the dash's
+0.25 s impact and priority. The lines, the session's: "A short,
+straight blade, quick from the sheath." and "Vanishes and reappears
+behind a foe up to five cells off, whatever stands between." Its base
+price 28, the grenadier's. As an enemy it fights in act 3's Miscreants,
+at weight 0.5 beside the rogues' 1 in the first wave. The joins: the
+registry, `"ninja": 0` in the strategy vector and the five fixtures
+(gotcha #124), the PENDING rows in the prior- and roster-table coverage
+tests, the blink's row in the fx test, the locale files. DESIGN's
+newcomers paragraph names it. `npm run gen:font`: 43 live atlas glyphs,
+every face unchanged.
+
+`src/sim/ninja.test.ts`, three tests from the raw config files: the
+ninja's kit and its encounter; on a board split by a chasm two columns
+wide, it ends across, beside a foe the chasm parts from it, having
+struck it for the blade's damage; a rogue in its place never
+reaches the foe. 6 plants, all caught, control clean
+(`scratch/161f/161f-plants.json`).
+
+The hand-off expected a chaos re-pick: the dry run failed the census.
+The whole suite passed with the census as it stands, so no slot moves;
+by the files' times the dry run was made before 161e's commit re-picked
+two slots.
+
+The corpus. Predicted before the run: most of 34, since the uncommon
+tier gains a sixth member. **12 of 34 differed.** With the ninja
+undraftable in the worktree, 0 of 34 differed, so the 12 are the
+draft's alone and no journal meets the Miscreants' ninja. Why fewer than
+most was not measured. Re-recorded: every journal (its config hash) and
+the baseline; the replay 0 of 34.
+
+**Read (`batch`, at 161h's stop):** `?seed=5&character=soldier&roster=ninja:3,ninja:3,rogue:3,mercenary:3&layout=spiralFireLife`,
+on the spiral's chasm; wrong looks like a ninja walking the long way
+round with its blink ready, or blinking where it cannot strike. Its
+blink slides until 161h. The URL is checked in the pane at 161h's put.

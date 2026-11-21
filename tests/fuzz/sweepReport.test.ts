@@ -49,7 +49,7 @@ describe('renderSweepReport', () => {
     expect(report).toContain('382'); // ranged dmg/dep = 22917 / 60 deployments
     // Every archetype absent from the CSV (or fielded 0×) folds into the inactive
     // note, in ALL_ARCHETYPES order. Only mercenary + ranged have columns here.
-    expect(report).toContain('inactive: adventurer, ronin, bandit, rogue, healer, mage, catapult');
+    expect(report).toContain('inactive: adventurer, ronin, bandit, rogue, ninja, healer, mage, catapult');
   });
 
   it('renders an older CSV missing columns as "—" rather than throwing', () => {

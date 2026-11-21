@@ -165,6 +165,34 @@
       "mobility": 0.2
     }
   },
+  "ninja": {
+    "name": "Ninja",
+    "glyph": "n",
+    "abilities": ["ninjato","blink"],
+    "targeting": "nearest",
+    "rarity": "uncommon",
+    "baseStats": {
+      "constitution": 18,
+      "strength": 4,
+      "ranged": 0,
+      "magic": 0,
+      "luck": 12,
+      "defense": 1,
+      "speed": 9,
+      "mobility": 5,
+      "power": 1
+    },
+    "growthRates": {
+      "constitution": 0.7,
+      "strength": 0.22,
+      "ranged": 0,
+      "magic": 0,
+      "luck": 0.7,
+      "defense": 0.05,
+      "speed": 0.6,
+      "mobility": 0.22
+    }
+  },
   "healer": {
     "name": "Healer",
     "glyph": "h",

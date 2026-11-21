@@ -419,6 +419,55 @@
       }
     ]
   },
+  "ninjato": {
+    "id": "ninjato",
+    "name": "Ninjato",
+    "description": "A short, straight blade, quick from the sheath.",
+    "cooldownSeconds": 1.2,
+    "rangeCells": 1,
+    "target": { "kind": "enemyInRange" },
+    "timeline": [
+      { "phase": "impact", "seconds": 0 },
+      { "phase": "recovery", "seconds": "fill" }
+    ],
+    "orphanPolicy": "commit-at-cast",
+    "priority": 10,
+    "effects": [
+      {
+        "phase": "impact",
+        "op": {
+          "kind": "damage",
+          "scaling": "strength",
+          "might": 2,
+          "critBase": 0.15,
+          "critable": true,
+          "evadable": true,
+          "bypassDefense": false
+        }
+      }
+    ],
+    "fx": { "impact": "melee_swing" }
+  },
+  "blink": {
+    "id": "blink",
+    "name": "Blink",
+    "description": "Vanishes and reappears behind a foe up to five cells off, whatever stands between.",
+    "cooldownSeconds": 10,
+    "speedScaled": false,
+    "rangeCells": 5,
+    "target": { "kind": "self" },
+    "timeline": [
+      { "phase": "impact", "seconds": 0.25 }
+    ],
+    "orphanPolicy": "commit-at-cast",
+    "priority": 5,
+    "effects": [
+      {
+        "phase": "impact",
+        "op": { "kind": "move", "mode": "blink" }
+      }
+    ]
+  },
   "magic_bolt": {
     "id": "magic_bolt",
     "name": "Bolt",

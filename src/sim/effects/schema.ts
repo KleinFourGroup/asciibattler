@@ -123,13 +123,20 @@ const HealOpSchema = z.object({
 /**
  * `move` repositions the caster:
  *
- * - `advance` — a leap to the landing captured at cast (the dash); how far is
- *   the ability's `rangeCells`.
+ * - `advance` — a leap to the landing captured at cast (the dash), along
+ *   its route toward the enemy; how far is the ability's `rangeCells`.
+ * - `blink` — a teleport to the landing captured at cast, beside the enemy
+ *   (`blinkLanding`), blind to what stands between; the enemy must be within
+ *   `rangeCells`, body to body. While it is ready its carrier approaches to
+ *   that range (`Ability.blinkRange`).
  * - `retreat` — one step away from the struck cell (the gambit's dart-back).
+ *
+ * A leap's and a blink's landing is an entry, as a step's is: the tile's
+ * enter effects run.
  */
 const MoveOpSchema = z.object({
   kind: z.literal('move'),
-  mode: z.enum(['advance', 'retreat']),
+  mode: z.enum(['advance', 'blink', 'retreat']),
 });
 
 /**

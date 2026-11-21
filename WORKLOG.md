@@ -282,3 +282,27 @@ at 161d, where its knockback reads it.
 control clean (`scratch/161b/161b-plants.json`), run in a worktree of
 their own by `scratch/161/wt-plant.sh`, so a plant never reloads a dev
 server's page. The corpus: predicted 0 of 34, **0 of 34 differ**.
+
+### 161c — the blink, and the dash's landing as an entry (2026-11-21)
+
+A `move` mode `blink` (`schema.ts`): proposed only with the enemy within
+`rangeCells`, body to body, and landing where `blinkLanding`
+(`src/sim/blink.ts`) puts it: the free, unclaimed, passable cell beside
+the target farthest from the caster by Chebyshev distance, ties to the
+one nearest the straight line and then to scan order, so it passes
+walls, chasms and bodies and never lands on a tile that drops. A leap's
+and a blink's landing now runs the tile's enter effects;
+`unit:dashed` carries `blink: true` for a blink and nothing new for a
+dash, so the dash's events are unchanged. `Ability.blinkRange` surfaces
+a blink's range; `readyBlinkRange` (`MovementBehavior`) reads it with
+the cooldown, and `engagementDirective` puts the nearest cell with the
+target in that range first among its goals, searched with no sight
+list. The attack editor offers the mode.
+
+`src/sim/blink.test.ts`, eleven tests; 14 plants, all caught, control
+clean (`scratch/161c/161c-plants.json`, in the worktree). The corpus:
+predicted "a few of 34", only where a dash lands on mud or shallow
+water; **5 of 34 differed** (chaos-4, -5, -8, -13 and -16), and with the
+entry's one line mapped out in the worktree 0 of 34, so the five are the
+dash's entry alone. Re-recorded: four journals and the baseline; the
+replay 0 of 34 differing.

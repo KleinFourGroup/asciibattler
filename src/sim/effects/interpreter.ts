@@ -59,7 +59,8 @@ export interface OpResolution {
   critChance?: number;
   /** heal: the amount, `might` and the `scaling` stat. */
   healAmount?: number;
-  /** move: the `advance` landing, or the `retreat` anchor (the struck cell). */
+  /** move: the `advance` or `blink` landing, or the `retreat` anchor (the
+   *  struck cell). */
   moveDest?: GridCoord;
   /**
    * chain: the inner ops' resolutions, index for index with `op.ops`, captured
@@ -246,12 +247,15 @@ function executeMove(op: Extract<EffectOp, { kind: 'move' }>, ctx: OpFireContext
   const ref = ctx.resolution.moveDest;
   if (ref === undefined) return;
 
-  if (op.mode === 'advance') {
-    // The leap (the dash): onto the landing captured at cast.
+  if (op.mode === 'advance' || op.mode === 'blink') {
+    // The leap (the dash) or the blink: onto the landing captured at cast,
+    // which is an entry, as a step's flip is.
     const from = { ...caster.position };
     caster.position = { ...ref };
     world.emit('unit:moved', { unitId: caster.id, from, to: { ...ref }, durationTicks: ctx.phaseTicks });
-    world.emit('unit:dashed', { unitId: caster.id, from, to: { ...ref }, durationTicks: ctx.phaseTicks });
+    const dashed = { unitId: caster.id, from, to: { ...ref }, durationTicks: ctx.phaseTicks };
+    world.emit('unit:dashed', op.mode === 'blink' ? { ...dashed, blink: true } : dashed);
+    world.applyTileEnterEffects(caster);
     return;
   }
 

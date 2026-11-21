@@ -133,7 +133,13 @@ export class MovementBehavior implements Behavior {
     // target, the goals, the kite); this maps its directive onto a proposal
     // and a `MoveDecisionKind`. The minimum range is resolved here, since
     // positioning.ts must not import archetypes.ts (its import note).
-    const directive = engagementDirective(unit, world, target, minRangeForArchetype(unit.archetype));
+    const directive = engagementDirective(
+      unit,
+      world,
+      target,
+      minRangeForArchetype(unit.archetype),
+      readyBlinkRange(unit),
+    );
     switch (directive.kind) {
       case 'hold':
         // In position: a wait. A ready ability outranks it; on cooldown ticks
@@ -150,6 +156,19 @@ export class MovementBehavior implements Behavior {
         return advance(unit, world, directive.intent);
     }
   }
+}
+
+/**
+ * The range of the unit's first blink that is ready now (its cooldown spent),
+ * or null: the positioning protocol approaches to it (`engagementDirective`).
+ * Read off `unit.abilities` and `unit.actionCooldowns`, so no state of its
+ * own.
+ */
+export function readyBlinkRange(unit: Unit): number | null {
+  for (const a of unit.abilities) {
+    if (a.blinkRange !== undefined && (unit.actionCooldowns.get(a.id) ?? 0) <= 0) return a.blinkRange;
+  }
+  return null;
 }
 
 /**

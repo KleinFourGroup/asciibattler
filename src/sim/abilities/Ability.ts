@@ -34,4 +34,11 @@ export interface Ability {
    * private def. Absent on every non-aura ability.
    */
   readonly aura?: Aura;
+  /**
+   * A blink's range (the def's `rangeCells`, for a `move` op in `blink`
+   * mode), surfaced so the positioning protocol can approach to it while the
+   * blink is ready (`readyBlinkRange`, `MovementBehavior`). Absent on every
+   * other ability.
+   */
+  readonly blinkRange?: number;
 }

@@ -21,6 +21,8 @@ export class EffectAbility implements Ability {
   readonly ignoresLineOfSight?: boolean;
   /** Copied from the def; documented on `Ability`. */
   readonly aura?: Aura;
+  /** The def's range when it blinks; documented on `Ability`. */
+  readonly blinkRange?: number;
 
   constructor(private readonly def: AbilityDef) {
     this.id = def.id;
@@ -28,6 +30,7 @@ export class EffectAbility implements Ability {
     // assigning `undefined` to an optional field.
     if (def.ignoresLineOfSight) this.ignoresLineOfSight = def.ignoresLineOfSight;
     if (def.aura) this.aura = def.aura;
+    if (def.effects.some((e) => e.op.kind === 'move' && e.op.mode === 'blink')) this.blinkRange = def.rangeCells;
   }
 
   propose(unit: Unit, world: World): ActionProposal | null {

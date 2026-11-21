@@ -165,12 +165,20 @@ type EngagementDirective =
  * inputs always give the same directive. `minRange` is the unit's firing
  * floor (`minRangeForArchetype`), passed by the caller, since this module
  * must not import it (the note at the imports).
+ *
+ * `blinkRange` is the range of a blink that is ready now, or null; the
+ * caller reads the cooldown. While it is ready, the first goal is the
+ * nearest cell with the target within that range, searched with no sight
+ * check, since the blink passes what stands between: across a chasm, the
+ * near bank. The hold is unchanged, so with the blink cooling the unit
+ * closes to its own reach.
  */
 export function engagementDirective(
   unit: Unit,
   world: World,
   target: Unit,
   minRange: number,
+  blinkRange: number | null = null,
 ): EngagementDirective {
   // The occluders for the hold and the firing-cell search, every cell of a
   // body; blocking movement is `advance`'s, so this set is for sight only. It
@@ -223,6 +231,17 @@ export function engagementDirective(
   // Step 3: the firing cell (ranged only, when one is found), then the
   // target's own cell; step 4: the kite leaves the charge out.
   const goals: GridCoord[] = [];
+  if (blinkRange !== null) {
+    const blinkCell = nearestActingCell(
+      unit.position,
+      target.position,
+      blinkRange,
+      SIM.actingCellSearchSlack,
+      world,
+      null,
+    );
+    if (blinkCell !== null) goals.push(blinkCell);
+  }
   if (unit.derived.attackRange > 1) {
     const firingCell = nearestActingCell(
       unit.position,

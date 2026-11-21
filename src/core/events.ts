@@ -155,13 +155,15 @@ export interface GameEvents extends Record<string, unknown> {
    * the renderer slides the glyph on that; this event is the dash's own
    * signal, which a `unit:moved` cannot give, since a dash that lands next to
    * an enemy two cells away moves one cell, as a step does. The audio plays
-   * the dash cue off it.
+   * the dash cue off it. `blink` is set for a teleport (`blink` mode), which
+   * passes what stands between, and absent for a dash.
    */
   'unit:dashed': {
     unitId: number;
     from: GridCoord;
     to: GridCoord;
     durationTicks: number;
+    blink?: true;
   };
   /**
    * A move aborted as it ran: its destination `to` was occupied or

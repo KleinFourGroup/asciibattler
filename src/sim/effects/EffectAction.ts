@@ -173,7 +173,7 @@ export class EffectAction implements Action {
     // phase's hits.
     const fireScratch = newFireScratch();
     // A def that leaps strikes from its landing (`OpFireContext.strikesFromLanding`).
-    const strikesFromLanding = this.def.effects.some((e) => e.op.kind === 'move' && e.op.mode === 'advance');
+    const strikesFromLanding = this.def.effects.some((e) => e.op.kind === 'move' && e.op.mode !== 'retreat');
     this.def.effects.forEach((effect, i) => {
       if (!beginning.has(effect.phase)) return;
       executeOp(effect.op, {

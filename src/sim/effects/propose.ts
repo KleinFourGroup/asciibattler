@@ -21,6 +21,7 @@ import { resolveAreaVictims } from './targeting';
 import { collectLosBlockers, firingBandCell } from '../positioning';
 import { cellUnitDistance, unitDistance } from '../occupancy';
 import { leapLanding } from '../movement';
+import { blinkLanding } from '../blink';
 import { pushLanding } from '../push';
 import type { GridCoord } from '../../core/types';
 import type { AbilityDef, EffectOp, SummonOp } from './schema';
@@ -152,14 +153,16 @@ function proposeHeal(
 
 /**
  * A leap (a `self` def whose op is a `move` in `advance` mode: the dash, a
- * pounce). The enemy places the landing, and the action keeps its id, so a
- * damage op after the move hits it (`executeDamage`, within the caster's
- * reach as it fires). The def abstains when the enemy is already within
- * strike reach, or nearer than its `minRangeCells`, and captures
- * `leapLanding`'s cell for the op. A leap that carries a hit also abstains
- * unless its landing puts the enemy within strike reach, so a pounce never
- * leaps to fall short; with no cooldown in effect it fires again only when
- * the gap reopens. The leap's reach is the def's `rangeCells`.
+ * pounce) or a blink (`blink` mode). The enemy places the landing, and the
+ * action keeps its id, so a damage op after the move hits it
+ * (`executeDamage`, within the caster's reach as it fires). The def abstains
+ * when the enemy is already within strike reach, or nearer than its
+ * `minRangeCells`, and captures the landing for the op: `leapLanding`'s,
+ * up to `rangeCells` along the route, or `blinkLanding`'s beside the enemy,
+ * proposed only with the enemy within `rangeCells`. A def that carries a
+ * hit also abstains unless its landing puts the enemy within strike reach,
+ * so a pounce never leaps to fall short; with no cooldown in effect it fires
+ * again only when the gap reopens.
  */
 function proposeSelfMove(def: AbilityDef, unit: Unit, world: World): ActionProposal | null {
   const target = currentTarget(unit, world);
@@ -171,12 +174,11 @@ function proposeSelfMove(def: AbilityDef, unit: Unit, world: World): ActionPropo
   if (distance <= unit.derived.attackRange) return null;
   if (distance < def.minRangeCells) return null;
 
-  const landing = leapLanding(
-    unit,
-    world,
-    { goals: [target.position], approachToward: target.position },
-    def.rangeCells,
-  );
+  const blinks = def.effects.some((e) => e.op.kind === 'move' && e.op.mode === 'blink');
+  if (blinks && distance > def.rangeCells) return null;
+  const landing = blinks
+    ? blinkLanding(world, unit, target)
+    : leapLanding(unit, world, { goals: [target.position], approachToward: target.position }, def.rangeCells);
   if (landing === null) return null;
   const hits = def.effects.some((e) => e.op.kind === 'damage');
   if (hits && cellUnitDistance(landing, target) > unit.derived.attackRange) return null;
@@ -349,7 +351,7 @@ interface OpResolveContext {
   /** A `retreat` move's anchor: the struck target's cell at cast, which the
    *  caster steps away from. */
   retreatAnchor?: GridCoord;
-  /** An `advance` move's landing cell. */
+  /** An `advance` or `blink` move's landing cell. */
   advanceLanding?: GridCoord;
 }
 
@@ -368,7 +370,8 @@ function resolveOp(op: EffectOp, c: OpResolveContext): OpResolution {
     }
     case 'move': {
       // `retreat`: the struck cell, which the interpreter steps away from
-      // (`retreatCell`). `advance`: the leap's landing, where it puts the caster.
+      // (`retreatCell`). `advance` and `blink`: the landing, where it puts
+      // the caster.
       if (op.mode === 'retreat') {
         return c.retreatAnchor ? { moveDest: { ...c.retreatAnchor } } : {};
       }

@@ -110,8 +110,23 @@ battles, no pusher changed; the play signed (WORKLOG §160.5, in
 The teleport and the ninja's approach with it ready, the hit after a leap
 for its pounce, the cavalier's charge on §159's push, the dash's trail
 and the blink on `unit:dashed`, then the ninja and the cavalier (as
-reshaped at 158b). It stands on none of §160. **Risk:** medium. **Reads, foreseen:** the headless steps
-`none`; the trail and blink a `stop`; the play a `stop`.
+reshaped at 158b). It stands on none of §160. **Risk:** medium. The
+cut, signed 2026-11-21 with its calls (WORKLOG §161):
+
+- ☐ **161a — the glyphs** (`stop`): candidates for the ninja and the
+  cavalier in the sampler, a lean each.
+- ☐ **161b — the hit after a leap** (`none`): a leap keeps its enemy; a
+  hit after the move lands only within reach of the landing.
+- ☐ **161c — the blink, and the dash's landing as an entry** (`none`):
+  the blink's landing and the approach while it is ready.
+- ☐ **161d — the charge** (`none`): a drawn line from three cells or
+  more, held at the push's rate, the hit and a knockback at its end.
+- ☐ **161e — the puma's pounce** (`batch`).
+- ☐ **161f — the ninja** (`batch`).
+- ☐ **161g — the cavalier** (`batch`).
+- ☐ **161h — the look and the sound** (`stop`): the dash's trail, the
+  blink, the charge's rush.
+- ☐ **161i — the play** (`stop`).
 
 ## Phase 161.5 — the hex and the ice storm as specials
 

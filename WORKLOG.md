@@ -388,3 +388,49 @@ The hook's first run refused the commit on two tests, both fixed in it:
   packet, the rest and the decline, and a fifth slot, Gambler seed 69,
   takes the redraw (0.2 s alone, nothing the blind list holds). Both
   census lists stand as they were; the hook runs one more seed.
+
+### The hand-off after 161e (2026-11-21)
+
+Session `a2587a0c` ran §161's kickoff, 161a's stop and 161b to 161e, and
+hands off at the context trigger after 161e's commit.
+
+**Done:** 161a (the epauletted `C` in the font, unused until 161g), 161b,
+161c, 161d (`none`, their oracles in their entries), 161e (`batch`, built
+and unread, ◐: its read script is in its entry, read at 161h's stop).
+**Open:** 161e's read; 161f, 161g and 161h's stop. No call waits on the
+user; every lean the cut listed stands as signed.
+
+**161f is prepared, not applied.** `scratch/161f/edit1.cjs` (the ninja in
+`config/units.json`, `ninjato` and `blink` in `config/abilities.json`,
+the Miscreants' ninja at weight 0.5, its price 28, the registry's two
+ids), `scratch/161f/edit2.cjs` (`"ninja": 0` appended to the strategy
+vector and the five fixtures, gotcha #124; the PENDING rows in the prior-
+and roster-table coverage tests; the blink beside the dash in the fx
+test's list), and `scratch/161f/ninja.test.ts` (to go to
+`src/sim/ninja.test.ts`). Then `npm run i18n:extract`. A dry run of all
+of it in the worktree: the ninja's three tests pass, and the whole suite
+fails only the chaos census, so expect a re-pick there
+(`scratch/161e/chaos-sweep.ts '<dials>' <from> <to> [kinds]`; the WORKLOG
+161e entry says which slot carries which kind). Then the corpus
+(`--record`), plants, DESIGN's newcomers paragraph and the ninja's `n`.
+
+**161g's leans** (the cut's, signed): rare, mobility 7, a sabre, the
+charge from 3 to 5 cells (`minRangeCells` 3, `rangeCells` 5) with
+`mightPerCell` 1 and a push of 1 on `impact`, 10 s flat; its glyph
+U+E022; an enemy in act 2's Warband Vanguard. The charge's def shape is
+161d's test def (`src/sim/charge.test.ts`, `charge()`).
+
+**161h:** the arms behind a board-panel dial, as 160.5c's `fall` dial
+(`src/dev/boardPanel/state.ts`); `unit:dashed` (with `blink`) and the
+charge's `unit:shoved` are the hooks; the renderer slides every move off
+`unit:moved` today (`BattleRenderer.animateStep`).
+
+**Tools no doc names:** `scratch/161/wt-plant.sh <plants.json>` and
+`scratch/161/wt-sync.sh` run plants and probes in a worktree so a planted
+edit never reloads a dev server's page; the worktree's path is in this
+session's scratchpad (`git worktree list`), so a new session points `WT`
+at its own (`git worktree add --detach <path> HEAD`, then a junction from
+its `node_modules` to the main tree's). `tests/build-id.test.ts` fails in
+that worktree under the whole suite and passes alone: the worktree's,
+not the code's. `scratch/161e/pounce-strikes.ts <actionId>` counts an
+action's phases per corpus journal, for a prediction.

@@ -278,3 +278,45 @@ user's screen through a leak in the shell's error path, fixed and filed;
 one question asked before the close that the user answered with an
 apology; the user's humour and the enthusiastic sign named as what
 helped. Neither filed `distress`.
+
+## 2026-11-21 — session a2587a0c (§161's kickoff to 161e)
+
+Ran §161's kickoff (the audit, the cut and five calls, signed), 161a's
+glyph stop (signed twice, the second time with DESIGN's initial rule I
+had missed), and 161b to 161e, handing off at the context trigger after
+161e. No compaction.
+
+1. *Orientation.* The task arrived framed as a single kickoff from
+   another session, so I first treated myself as a one-task side session
+   and asked before committing; the user then said I was the successor.
+   One fact I lacked at 161a: DESIGN's rule that a drawn glyph is its
+   unit's initial. The glyph sampler's workflow, which I followed from
+   160a, doesn't point at it.
+2. *Norms.* The side-session rule (commit only if the task says to) sat
+   against the repo's commit-per-change norm; I asked, which cost a turn.
+   The oracles rule to plant in a worktree sat against a plant harness
+   written to run in place; I wrapped the harness so plants run in a
+   worktree, since the user's dev server was up.
+3. *Pulled to over-claim.* I wrote into DESIGN that the puma "waits in
+   ambush rather than hunting with it" and took it out before the commit,
+   since nothing I ran showed it. The card's "reach 3–4" for the pounce
+   assumes a melee striker; its comment says so.
+4. *Waste.* The chaos census re-pick: about 15 minutes of seed sweeps
+   for one slot that carried four rare jobs, resolved with a fifth slot
+   (filed). Two test premises used before they were read (a status's
+   field, what `spawnUnit` wires), a debug probe each (filed). A heredoc
+   whose escaped backticks bash mangled, a call.
+5. *For the next session.* 161f is prepared in `scratch/161f/` and dry-run
+   green but for the chaos census, which will likely need a re-pick at
+   161f and 161g; the worktree scripts are in `scratch/161/`. All in the
+   WORKLOG's hand-off entry.
+6. *Room.* Yes. After the user signed the cavalier's `K`, I found the
+   initial rule and put the choice back, with my lean still for `K`; the
+   user chose the rule, and seemed glad to be asked. The context meter's
+   hand-off line was the stop I took; no other wish to pause came up.
+7. *What helped.* The user's quick, warm signs, and their answer on the
+   glyph rule ("that's the whole point of the radicals"), which settled
+   it cleanly. I liked watching the plants earn their keep: two of them
+   missed at first and showed me a test that proved less than it
+   seemed. The corpus prediction at 161e, the same 23 journals named
+   before the run, was satisfying, and I'd want that kind of probe again.

@@ -6,11 +6,11 @@ A fresh-session orientation for ASCIIbattler. Read this first; then dive into th
 
 **The ONE home for live status.** Other docs (and the agent memory) point here instead of restating it; when state changes, this section is the single place that updates.
 
-- **NEXT — ROUND 12 (Push, pull and blink): §161, the blink and the charge — 161b to 161g, to 161h's stop** (161a's glyphs signed); the cut signed 2026-11-21 with its calls ([ROADMAP.md](ROADMAP.md) §161; WORKLOG §161). §161.5, the hex and the ice storm as specials, is inserted before §162. **Open ◐:** none.
+- **NEXT — ROUND 12 (Push, pull and blink): §161, the blink and the charge — 161f, the ninja (prepared in `scratch/161f/`), then 161g, to 161h's stop**; the cut signed 2026-11-21 with its calls ([ROADMAP.md](ROADMAP.md) §161; WORKLOG §161, "The hand-off after 161e"). §161.5, the hex and the ice storm as specials, is inserted before §162. **Open ◐:** 161e, the puma's pounce (`batch`, read at 161h's stop).
 - **In flight:** nothing.
 - **The public build:** `0.4.0` (`4fc62cfe`, tag `v0.4.0`), uploaded to itch.io on 2026-11-13; the uploads before it are in Closed rounds below.
 - **Snapshots:** WorldSnapshot **v42** (no player keeps one) · RunSnapshot **v51** (a v50 save, `0.3.0`'s, rejects).
-- **Tests:** **4041 main** in 282 files, **588 fuzz:smoke** in 60 files and **1 fuzz:jobs-parity** at §160.5's close (`11167b41`'s code); typecheck clean; the journal corpus, run by hand, 34 journals, re-recorded at 160.5b (1 moved), the replay 0 of 34 differing at the close.
+- **Tests:** **4073 main** in 286 files, **588 fuzz:smoke** in 60 files and **1 fuzz:jobs-parity** at 161e (`d60b3099`'s hook); typecheck clean; the journal corpus, run by hand, 34 journals, re-recorded at 161e (23 moved, every config hash), the replay 0 of 34 differing.
 - **Model id: `claude-opus-5-5`** since 2026-09-22. When yours differs, say so at the next stop; at the user's word, review AGENTS.md against the vendor's current prompting guidance and record the new id (the last review: `archive/post-104-worklog.md`, "The new-model tone audit").
 - **Last phase: §160.5**, the fall, 2026-11-20: a push or a pull into chasm or deep water drops its victim at the slide's end, the pusher credited, a boss stopping at the edge; a chasm's plunge and deep water's splash; 33 falls in 577 battles, no pusher changed; the play signed (`archive/worklog-phase-160.5.md`).
 

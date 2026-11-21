@@ -19,7 +19,7 @@ import type { ActionProposal } from '../Action';
 import { currentTarget, hostileCandidate, lowestWoundedAlly } from '../Targeting';
 import { resolveAreaVictims } from './targeting';
 import { collectLosBlockers, firingBandCell } from '../positioning';
-import { unitDistance } from '../occupancy';
+import { cellUnitDistance, unitDistance } from '../occupancy';
 import { leapLanding } from '../movement';
 import { pushLanding } from '../push';
 import type { GridCoord } from '../../core/types';
@@ -151,11 +151,15 @@ function proposeHeal(
 }
 
 /**
- * A leap (a `self` def whose op is a `move` in `advance` mode, the dash). An
- * enemy is resolved only to compute the landing, since the effect moves the
- * caster; the def abstains when the enemy is already within strike reach, and
- * captures `leapLanding`'s cell for the op. The leap's reach is the def's
- * `rangeCells`.
+ * A leap (a `self` def whose op is a `move` in `advance` mode: the dash, a
+ * pounce). The enemy places the landing, and the action keeps its id, so a
+ * damage op after the move hits it (`executeDamage`, within the caster's
+ * reach as it fires). The def abstains when the enemy is already within
+ * strike reach, or nearer than its `minRangeCells`, and captures
+ * `leapLanding`'s cell for the op. A leap that carries a hit also abstains
+ * unless its landing puts the enemy within strike reach, so a pounce never
+ * leaps to fall short; with no cooldown in effect it fires again only when
+ * the gap reopens. The leap's reach is the def's `rangeCells`.
  */
 function proposeSelfMove(def: AbilityDef, unit: Unit, world: World): ActionProposal | null {
   const target = currentTarget(unit, world);
@@ -163,7 +167,9 @@ function proposeSelfMove(def: AbilityDef, unit: Unit, world: World): ActionPropo
   // Within strike reach: abstain, so the strike proposes instead. The distance
   // is to the target's body, so standing beside a large rubble counts as in
   // reach.
-  if (unitDistance(unit, target) <= unit.derived.attackRange) return null;
+  const distance = unitDistance(unit, target);
+  if (distance <= unit.derived.attackRange) return null;
+  if (distance < def.minRangeCells) return null;
 
   const landing = leapLanding(
     unit,
@@ -172,16 +178,18 @@ function proposeSelfMove(def: AbilityDef, unit: Unit, world: World): ActionPropo
     def.rangeCells,
   );
   if (landing === null) return null;
+  const hits = def.effects.some((e) => e.op.kind === 'damage');
+  if (hits && cellUnitDistance(landing, target) > unit.derived.attackRange) return null;
 
   const speed = unit.effectiveStats.speed;
-  // No target unit: the enemy only placed the landing, so `targetId` is -1 and
-  // `phaseTarget` surfaces nothing.
   const ops = def.effects.map((e) =>
     resolveOp(e.op, { unit, advanceLanding: landing }),
   );
 
+  // The enemy's id rides on the action for a hit after the move; a `self`
+  // def's `phaseTarget` still surfaces nothing.
   return {
-    action: new EffectAction(def, { targetId: -1, targetCell: undefined, ops }),
+    action: new EffectAction(def, { targetId: target.id, targetCell: undefined, ops }),
     score: def.priority,
     cooldown: resolveCadenceTicks(def, speed),
     phases: resolvePhases(def, speed),

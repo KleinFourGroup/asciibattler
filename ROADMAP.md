@@ -115,8 +115,8 @@ cut, signed 2026-11-21 with its calls (WORKLOG §161):
 
 - ☑ **161a — the glyphs** (`stop`): signed 2026-11-21, `n` for the
   ninja and the epauletted `C` for the cavalier (U+E022).
-- ☐ **161b — the hit after a leap** (`none`): a leap keeps its enemy; a
-  hit after the move lands only within reach of the landing.
+- ☑ **161b — the hit after a leap** (`none`): a leap keeps its enemy; a
+  hit after the move lands only within reach of the landing; 8 plants.
 - ☐ **161c — the blink, and the dash's landing as an entry** (`none`):
   the blink's landing and the approach while it is ready.
 - ☐ **161d — the charge** (`none`): a drawn line from three cells or

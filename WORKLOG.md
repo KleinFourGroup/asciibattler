@@ -259,3 +259,26 @@ U+E022 `C.epaulettes`, unused until 161g adds the cavalier; `npm run
 gen:font`: 11 drawn glyphs, the 42 live atlas glyphs all in a shipped
 face, the two subset faces unchanged. DESIGN's glyph paragraph names the
 cavalier when it lands.
+
+### 161b — the hit after a leap (2026-11-21)
+
+`proposeSelfMove` keeps its enemy's id on the action, reads the def's
+`minRangeCells`, and for a leap carrying a damage op abstains unless the
+landing puts the enemy within the caster's reach (`cellUnitDistance`). In
+a def that leaps (a `move` in `advance` mode), a single-target damage op
+lands only within the caster's reach from where it stands as the op
+fires (`withinLandingReach`, `src/sim/effects/interpreter.ts`), on both
+the `commit-at-cast` and `fizzle` paths, with no draw when it misses. A
+`self` def surfaces no target to the renderer, so the dash draws as
+before.
+
+Step zero found that a leap's `applyStatus` and `push` act on the caster,
+as the `self` selector says (a stun in a trial pounce landed on the
+pouncer), so the miss is not recorded in the boundary's scratch here:
+nothing on a leap reads it. The charge, an `enemyInRange` def, records it
+at 161d, where its knockback reads it.
+
+`src/sim/effects/leapHit.test.ts`, six tests; 8 plants, all caught,
+control clean (`scratch/161b/161b-plants.json`), run in a worktree of
+their own by `scratch/161/wt-plant.sh`, so a plant never reloads a dev
+server's page. The corpus: predicted 0 of 34, **0 of 34 differ**.

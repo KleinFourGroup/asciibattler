@@ -269,14 +269,14 @@ describe('proposeEffectAbility — self caster-reposition (dash)', () => {
     expect(ability('dash').propose(r, world([r]))).toBeNull();
   });
 
-  it('leaps toward a far target: targetId -1, the landing captured on the move op', () => {
+  it('leaps toward a far target: the enemy kept, the landing captured on the move op', () => {
     const start = { x: 5, y: 5 };
     const r = makeUnit('player', start, { archetype: 'rogue', range: 1 });
     const enemy = makeUnit('enemy', { x: 5 + abilityDef('dash').rangeCells + 2, y: 5 });
     const p = ability('dash').propose(r, world([r, enemy]));
     expect(p).not.toBeNull();
     const d = dataOf(p!.action);
-    expect(d.targetId).toBe(-1); // the leap subjects the caster, not the enemy
+    expect(d.targetId).toBe(enemy.id); // kept for a hit after the move
     const land = d.ops[0]!.moveDest!;
     expect(chebyshev(land, start)).toBe(abilityDef('dash').rangeCells); // covers the full leap
     expect(chebyshev(land, enemy.position)).toBeLessThan(chebyshev(start, enemy.position));

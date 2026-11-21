@@ -24,6 +24,7 @@ import { nearestFreeCells } from '../actingPosition';
 import { retreatCell } from './reposition';
 import { behaviorFlags } from '../statusBehavior';
 import { pushLanding } from '../push';
+import { unitDistance } from '../occupancy';
 
 /**
  * A scratch shared by every op that fires on one phase boundary
@@ -97,6 +98,12 @@ export interface OpFireContext {
   remainingTicks: number;
   /** The scratch every op on this boundary shares. */
   fireScratch: FireScratch;
+  /**
+   * The def moves its caster to strike (a leap): a single-target hit lands
+   * only on a target within the caster's reach from where it stands as the
+   * op fires (`withinLandingReach`).
+   */
+  strikesFromLanding: boolean;
 }
 
 export function executeOp(op: EffectOp, ctx: OpFireContext): void {
@@ -184,6 +191,7 @@ function executeDamage(
   if (ctx.orphanPolicy === 'fizzle') {
     const hit = !!target && target.currentHp > 0;
     if (!hit) return; // no crit draw on the abort path
+    if (!withinLandingReach(target!, ctx)) return;
     const crit = world.combatRng.next() < critChance;
     const damage = Math.round(baseDamage * (crit ? STATS.critMult : 1));
     if (damage <= 0) return;
@@ -197,6 +205,7 @@ function executeDamage(
 
   // --- One target, `commit-at-cast`: a dead target is skipped, no draw. ---
   if (!target || target.currentHp <= 0) return;
+  if (!withinLandingReach(target, ctx)) return;
   const crit = world.combatRng.next() < critChance;
   const damage = Math.round(baseDamage * (crit ? STATS.critMult : 1));
   const landed = world.applyDamage(caster.id, target, damage, {
@@ -204,6 +213,21 @@ function executeDamage(
     bypassDefense: op.bypassDefense,
   });
   if (!landed) ctx.fireScratch.missed.add(target.id); // for applyStatus
+}
+
+/**
+ * A leap's hit (`strikesFromLanding`): true when the target is within the
+ * caster's strike reach from where the caster stands now, body to body, as
+ * the leap's propose gate measured it. Out of reach (it stepped away during
+ * the slide), nothing lands and nothing is drawn. Any other strike is true:
+ * it was gated at propose and lands as committed.
+ *
+ * A leap is a `self` def, so its `applyStatus` and `push` ops act on the
+ * caster, as `self` says; only its damage reaches the enemy.
+ */
+function withinLandingReach(target: Unit, ctx: OpFireContext): boolean {
+  if (!ctx.strikesFromLanding) return true;
+  return unitDistance(ctx.caster, target) <= ctx.caster.derived.attackRange;
 }
 
 function executeHeal(_op: Extract<EffectOp, { kind: 'heal' }>, ctx: OpFireContext): void {
@@ -486,6 +510,7 @@ function fireChainHopOps(
       phaseTicks: 0,
       remainingTicks: 0,
       fireScratch: scratch,
+      strikesFromLanding: false,
     });
   });
   world.emit('unit:chained', {

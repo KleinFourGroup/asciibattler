@@ -55,6 +55,7 @@ function ctx(over: Partial<OpFireContext> & Pick<OpFireContext, 'caster' | 'worl
     phaseTicks: 0,
     remainingTicks: 0,
     fireScratch: newFireScratch(),
+    strikesFromLanding: false,
     ...over,
   };
 }

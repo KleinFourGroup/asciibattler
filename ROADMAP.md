@@ -123,7 +123,8 @@ cut, signed 2026-11-21 with its calls (WORKLOG §161):
 - ☑ **161d — the charge** (`none`): a drawn line from three cells or
   more, held at the push's rate, the hit and a knockback at its end;
   18 plants.
-- ☐ **161e — the puma's pounce** (`batch`).
+- ◐ **161e — the puma's pounce** (`batch`): the shared strike renamed
+  Swipe; the puma's leap and hit from three cells; read at 161h.
 - ☐ **161f — the ninja** (`batch`).
 - ☐ **161g — the cavalier** (`batch`).
 - ☐ **161h — the look and the sound** (`stop`): the dash's trail, the

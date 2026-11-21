@@ -28,12 +28,17 @@ import { ChaosFailure, KINDS, chaosRun, type ChaosOptions, type ChaosResult } fr
 // it stopped redrawing, then seed 32 (the shortest of 40 that redraws, docks
 // at a port, recruits and rests, the rest added then since no other slot
 // rests) until the ronin took its whirlwind and the walk stopped buying a
-// packet; seed 11 is the one of 80 that does all of that and buys a packet
-// while leaving both census lists as they are (2.1 s alone). The
-// two-hop slot was seed 6 until that draw came out and its walk stopped
-// clearing a sector, then seed 32 until the grenade's stun moved the walks
-// and none of the four declined a reward; seed 1 is the shortest of 40 that
-// clears a sector and declines one (0.65 s alone).
+// packet; seed 11, the one of 80 that did all of that and bought a packet
+// while leaving both census lists as they are (2.1 s alone), still does all
+// but the redraw since the puma's pounce moved the walks. No seed of 120 then
+// redrew, bought a packet and rested inside a slot's time (two did, in 6 s
+// and 12 s alone), so the redraw went to a second Gambler slot: seed 69, the
+// shortest of 120 that redraws and leaves both lists as they are (0.2 s
+// alone). The two-hop slot was seed 6 until that draw came out and its walk
+// stopped clearing a sector, then seed 32 until the grenade's stun moved the
+// walks and none of the four declined a reward, then seed 1 until the
+// puma's pounce moved them and it stopped clearing one; seed 8 is the
+// shortest of 40 that clears one (0.6 s alone), the decline left to seed 11.
 //
 // A seed takes under 1 s alone and up to about 3 s beside the whole suite,
 // which failed the default 5 s under load with nothing wrong. 15 s leaves
@@ -43,8 +48,9 @@ const SEED_TIMEOUT_MS = 15_000;
 const EVERY_COMMIT: ReadonlyArray<readonly [number, string]> = [
   [32, 'hops=3&layout=procedural'],
   [18, ''],
-  [1, 'sectorHops=2'],
+  [8, 'sectorHops=2'],
   [11, 'character=gambler&bits=300'],
+  [69, 'character=gambler&bits=300'],
 ];
 
 const dir = mkdtempSync(join(tmpdir(), 'chaos-test-'));
@@ -121,7 +127,7 @@ describe('115c — the chaos driver', () => {
       'redrawCards',
       'usePacket',
     ]);
-    // The driver's blind side on these four seeds. The journal corpus
+    // The driver's blind side on these five seeds. The journal corpus
     // (tests/fuzz/corpus) reaches all of them.
     expect(KINDS.filter((kind) => !changesTheRun(kind)).sort()).toEqual([
       'buyPortDaemon',

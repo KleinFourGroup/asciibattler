@@ -801,7 +801,7 @@
     "name": "Fox",
     "description": "Quick, clever, and gone before the swing lands.",
     "glyph": "",
-    "abilities": ["pounce","dash"],
+    "abilities": ["swipe","dash"],
     "targeting": "nearest",
     "draftable": false,
     "baseStats": {
@@ -830,7 +830,7 @@
     "name": "Puma",
     "description": "Waits in the undergrowth for something to pass.",
     "glyph": "",
-    "abilities": ["pounce"],
+    "abilities": ["swipe","pounce"],
     "targeting": "nearest",
     "draftable": false,
     "baseStats": {

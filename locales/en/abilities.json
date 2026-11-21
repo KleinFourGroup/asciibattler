@@ -31,6 +31,7 @@
   "abilities.inspire.name": "Inspire",
   "abilities.gnaw.name": "Gnaw",
   "abilities.harry.name": "Harry",
+  "abilities.swipe.name": "Swipe",
   "abilities.pounce.name": "Pounce",
   "abilities.rake.name": "Rake",
   "abilities.maul.name": "Maul",
@@ -66,7 +67,8 @@
   "abilities.inspire.description": "Nearby allies move faster and defend better.",
   "abilities.gnaw.description": "Gnawing teeth.",
   "abilities.harry.description": "Bites, then springs back.",
-  "abilities.pounce.description": "A pouncing strike.",
+  "abilities.swipe.description": "A quick swipe of the claws.",
+  "abilities.pounce.description": "Leaps on a foe three or four cells off and strikes as it lands.",
   "abilities.rake.description": "Raking claws; the wounds bleed.",
   "abilities.maul.description": "A crushing blow."
 }

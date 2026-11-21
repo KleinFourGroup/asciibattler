@@ -103,9 +103,14 @@ export function abilityDetailPartsForDef(def: AbilityDef, stats: UnitStats): str
 /** The reach: the farthest cell the ability fires at, and where it has a
  *  floor (`minRangeCells`), the nearest as well, as the band the sim fires in
  *  (`firingBandCell`: at least the floor, at most the reach), so a bow reads
- *  "reach 2–3" and the card never says it can hit a foe it can't. */
+ *  "reach 2–3" and the card never says it can hit a foe it can't. A leap
+ *  that strikes (the pounce) lands a cell short of its foe and strikes
+ *  from there, so it reaches a cell past its leap: the pounce's leap of 3
+ *  from a floor of 3 reads "reach 3–4". */
 function reachPart(def: AbilityDef): string {
-  return def.minRangeCells > 0 ? `reach ${def.minRangeCells}–${def.rangeCells}` : `reach ${def.rangeCells}`;
+  const leaps = def.target.kind === 'self' && def.effects.some((e) => e.op.kind === 'move' && e.op.mode === 'advance');
+  const far = leaps ? def.rangeCells + 1 : def.rangeCells;
+  return def.minRangeCells > 0 ? `reach ${def.minRangeCells}–${far}` : `reach ${far}`;
 }
 
 /** A push's cells and sense: `pull 2` toward its caster, `knockback 2` away. */

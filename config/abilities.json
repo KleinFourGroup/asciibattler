@@ -966,10 +966,10 @@
     ],
     "fx": { "windup": "melee_swing" }
   },
-  "pounce": {
-    "id": "pounce",
-    "name": "Pounce",
-    "description": "A pouncing strike.",
+  "swipe": {
+    "id": "swipe",
+    "name": "Swipe",
+    "description": "A quick swipe of the claws.",
     "cooldownSeconds": 1.5,
     "rangeCells": 1,
     "target": { "kind": "enemyInRange" },
@@ -980,6 +980,42 @@
     "orphanPolicy": "commit-at-cast",
     "priority": 10,
     "effects": [
+      {
+        "phase": "impact",
+        "op": {
+          "kind": "damage",
+          "scaling": "strength",
+          "might": 2,
+          "critBase": 0.05,
+          "critable": true,
+          "evadable": true,
+          "bypassDefense": false
+        }
+      }
+    ],
+    "fx": { "impact": "melee_swing" }
+  },
+  "pounce": {
+    "id": "pounce",
+    "name": "Pounce",
+    "description": "Leaps on a foe three or four cells off and strikes as it lands.",
+    "cooldownSeconds": 0.55,
+    "speedScaled": false,
+    "rangeCells": 3,
+    "minRangeCells": 3,
+    "target": { "kind": "self" },
+    "timeline": [
+      { "phase": "travel", "seconds": 0.25 },
+      { "phase": "impact", "seconds": 0 },
+      { "phase": "recovery", "seconds": 0.3 }
+    ],
+    "orphanPolicy": "commit-at-cast",
+    "priority": 5,
+    "effects": [
+      {
+        "phase": "travel",
+        "op": { "kind": "move", "mode": "advance" }
+      },
       {
         "phase": "impact",
         "op": {

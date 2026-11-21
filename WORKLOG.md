@@ -337,3 +337,54 @@ The first run missed one: with the run-up floor removed, the two-cell
 walk gate still refused a foe two cells off, so the floor had no test of
 its own; a def with a floor of 4 now refuses a three-cell charge the
 walk would allow. The corpus: predicted 0 of 34, **0 of 34 differ**.
+
+### 161e — the puma's pounce (2026-11-21)
+
+The strike the fox and the puma shared, `pounce`, is renamed `swipe`
+("Swipe", "A quick swipe of the claws."), its numbers unchanged. The
+puma's own `pounce`: a `self` def, a leap of up to 3 cells
+(`rangeCells`) from a floor of 3 (`minRangeCells`) on a 0.25 s `travel`,
+then a hit at the swipe's numbers (might 2 on strength, crit base 0.05)
+as it lands, a 0.3 s recovery, and a flat cooldown of 0.55 s, its own
+length, so none is in effect: 161b's gates decide when it fires, so it
+reaches a foe three or four cells off. The puma carries `swipe` then
+`pounce`; the fox `swipe` then the dash. The line, the session's:
+"Leaps on a foe three or four cells off and strikes as it lands."
+DESIGN's beasts paragraph says so.
+
+`src/sim/puma.test.ts`, three tests reading the raw config files; 3
+plants in the config, all caught once the hit's might was read inside
+its test (a plant that removed the hit first crashed the file at load,
+which the harness reads as no named failure); control clean
+(`scratch/161e/161e-plants.json`).
+
+The corpus. Predicted before the run, from `scratch/161e/pounce-strikes.ts`
+at HEAD in the worktree: exactly the 23 of 34 journals that fire the
+shared strike move, since the rename changes the action id in their
+`action:phase` events. **23 of 34 differed, the same 23**
+(`scratch/161e/head-set.txt` against `moved-set.txt`). On this tree the
+new leap fires in 11 of them. Re-recorded: every journal (its config
+hash) and the baseline; the replay 0 of 34.
+
+**Read (`batch`, at 161h's stop):** `?seed=5&character=soldier&firstNode=elite&encounter=cats`,
+the Cats! elite in the Periphery; wrong looks like a puma that leaps and
+doesn't strike, leaps on every swing, or never leaps.
+
+The hook's first run refused the commit on two tests, both fixed in it:
+
+- *The card's reach.* The pounce is a thirteenth ability with a floor, and
+  the card read it "reach 3–3", the leap's length. A leap that strikes
+  lands a cell short of its foe, so it fires at foes 3 to 4 cells off;
+  the card's `reachPart` adds that cell for a `self` leap, the pounce
+  reading "5 dmg · reach 3–4 · 9% crit", and the card test derives the
+  same from the raw config (its floor count 13). A plant of the old
+  reach is caught.
+- *The chaos census.* The pounce moved the walks: the two-hop slot (seed
+  1) stopped clearing a sector and the Gambler slot (seed 11) stopped
+  redrawing. Swept (`scratch/161e/chaos-sweep.ts`): seed 8 is the
+  shortest of 40 two-hop seeds that clears one (0.6 s alone); of 120
+  Gambler seeds, none redrew, bought a packet and rested inside a slot's
+  time (66 and 68 did, at 6 s and 12 s alone), so seed 11 keeps the
+  packet, the rest and the decline, and a fifth slot, Gambler seed 69,
+  takes the redraw (0.2 s alone, nothing the blind list holds). Both
+  census lists stand as they were; the hook runs one more seed.

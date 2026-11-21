@@ -192,9 +192,18 @@ describe("the card's reach is the band the sim fires in", () => {
   // reads: `rangeCells` and, where the ability has one, its floor
   // `minRangeCells`. The sim fires at a cell at least the floor and at most
   // the reach away (`firingBandCell`), so a floored ability reads "reach
-  // min–max" and the rest "reach max". A pure aura's reach is its radius
-  // (pinned above), so it is left out here.
-  type RawDef = { rangeCells: number; minRangeCells?: number; effects: unknown[]; aura?: unknown };
+  // min–max" and the rest "reach max". A leap that strikes (a `self` def
+  // with a `move` in `advance` mode beside its damage, the pounce) lands a
+  // cell short of its foe and strikes from there, so its max is a cell past
+  // its leap. A pure aura's reach is its radius (pinned above), so it is
+  // left out here.
+  type RawDef = {
+    rangeCells: number;
+    minRangeCells?: number;
+    target: { kind: string };
+    effects: { op: { kind: string; mode?: string } }[];
+    aura?: unknown;
+  };
   const RAW = abilitiesJson as unknown as Record<string, RawDef>;
   const stats = rollUnit('mercenary', new RNG(1)).stats;
 
@@ -206,14 +215,16 @@ describe("the card's reach is the band the sim fires in", () => {
       const shown = abilityDetailParts(id, stats).find((p) => p.startsWith('reach '));
       if (shown === undefined) continue; // the dash shows its leap, no reach
       const min = raw.minRangeCells ?? 0;
-      const expected = min > 0 ? `reach ${min}–${raw.rangeCells}` : `reach ${raw.rangeCells}`;
+      const leaps = raw.target.kind === 'self' && raw.effects.some((e) => e.op.kind === 'move' && e.op.mode === 'advance');
+      const max = leaps ? raw.rangeCells + 1 : raw.rangeCells;
+      const expected = min > 0 ? `reach ${min}–${max}` : `reach ${max}`;
       if (min > 0) floored++;
       if (shown !== expected) wrong.push(`${id}: shows ${shown}, the sim fires at ${expected}`);
     }
-    // Twelve shipped abilities have a floor (the bow, the catapult's four,
-    // the casters', the adventurer's snag, the grenadier's grenade); none
-    // checked would make the pass vacuous.
-    expect(floored).toBe(12);
+    // Thirteen shipped abilities have a floor (the bow, the catapult's four,
+    // the casters', the adventurer's snag, the grenadier's grenade, the
+    // puma's pounce); none checked would make the pass vacuous.
+    expect(floored).toBe(13);
     expect(wrong).toEqual([]);
   });
 

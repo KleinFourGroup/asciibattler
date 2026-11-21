@@ -48,7 +48,7 @@ const DEMO_ABILITY_IDS = [
   'inspire',
 ] as const;
 
-const BEAST_ABILITY_IDS = ['gnaw', 'harry', 'pounce', 'rake', 'maul'] as const;
+const BEAST_ABILITY_IDS = ['gnaw', 'harry', 'swipe', 'pounce', 'rake', 'maul'] as const;
 
 /** The abilities that move their targets by force (the `push` op). */
 const FORCED_MOVE_ABILITY_IDS = ['snag', 'grenade', 'repulse'] as const;

@@ -15,7 +15,9 @@
  *
  * So an op fires at offset 0 or at the `impact` boundary. An op on any other
  * phase that begins later than offset 0 (a `recovery` after an impact that is
- * not at 0) has no hook and never fires; no shipped def has one.
+ * not at 0) has no hook and never fires; no shipped def has one. A charge's
+ * move, on `travel` at offset 0, sets its caster off, and the caster arrives
+ * at the `impact` boundary before that boundary's ops (`arriveFromCharge`).
  *
  * The phases, and so each phase's offset, are on `unit.activeAction.phases`,
  * which World sets before `start()` and carries across a snapshot; the action
@@ -35,7 +37,7 @@ import { speedScaledSeconds } from '../stats';
 import type { Unit } from '../Unit';
 import type { World } from '../World';
 import type { AbilityDef } from './schema';
-import { executeOp, newFireScratch, type OpResolution } from './interpreter';
+import { arriveFromCharge, executeOp, newFireScratch, type OpResolution } from './interpreter';
 
 /** What an `EffectAction` captured at cast, in its serialized form. */
 export interface EffectActionData {
@@ -175,6 +177,14 @@ export class EffectAction implements Action {
     // A def that leaps, blinks or charges strikes from its landing
     // (`OpFireContext.strikesFromLanding`).
     const strikesFromLanding = this.def.effects.some((e) => e.op.kind === 'move' && e.op.mode !== 'retreat');
+    // A charger set off at an earlier boundary arrives before its blow.
+    if (beginning.has('impact')) {
+      this.def.effects.forEach((effect, i) => {
+        if (effect.op.kind === 'move' && effect.op.mode === 'charge' && !beginning.has(effect.phase)) {
+          arriveFromCharge(unit, world, this.ctx.ops[i]?.moveDest);
+        }
+      });
+    }
     this.def.effects.forEach((effect, i) => {
       if (!beginning.has(effect.phase)) return;
       executeOp(effect.op, {

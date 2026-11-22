@@ -16,7 +16,8 @@ import { STATS } from '../config/stats';
  * and rare, a one-cell sabre and the charge. Three cells off a foe it rushes
  * to the foe's side, strikes harder for the two cells it ran and knocks the
  * foe a cell back, then closes and fights with the sabre; two cells off it
- * never charges.
+ * never charges. A wolf, whose harry springs back from a foe beside it,
+ * takes the blow, since the cavalier arrives only as it strikes.
  */
 
 type RawOp = { kind: string; mode?: string; might?: number; mightPerCell?: number; cells?: number; direction?: string };
@@ -96,6 +97,33 @@ describe('the cavalier, from the raw config', () => {
       expect(s.damage).toBe(dealt(sabre, s.crit));
     }
     expect(f.position).toEqual({ x: 5 + push.cells!, y: 8 });
+  });
+
+  it("charges a wolf walking in, and the blow lands: the wolf's harry cannot spring away first", () => {
+    for (const start of [7, 8, 9, 10]) {
+      const bus = new EventBus<GameEvents>();
+      const world = new World(bus, new RNG(1), 16, 16);
+      const wire = (archetype: string, team: 'player' | 'enemy', x: number): Unit => {
+        const raw = RAW_UNITS[archetype]!;
+        const u = world.spawnUnit({ archetype: archetype as Unit['archetype'], level: 1, stats: raw.baseStats, xp: 0 }, team, { x, y: 8 });
+        for (const id of raw.abilities) u.abilities.push(createAbility(id));
+        u.behaviors.push(createMovementBehavior(archetype as Unit['archetype']), new AbilityBehavior());
+        return u;
+      };
+      const c = wire('cavalier', 'player', 2);
+      const wolf = wire('wolf', 'enemy', start);
+      let rushed = false;
+      let landed = false;
+      bus.on('unit:shoved', (e) => {
+        if (e.unitId === c.id) rushed = true;
+      });
+      bus.on('unit:attacked', (e) => {
+        if (e.attackerId === c.id && e.targetId === wolf.id && c.activeAction?.action.id === 'charge') landed = true;
+      });
+      for (let i = 0; i < 200 && !landed && (!rushed || c.activeAction?.action.id === 'charge'); i++) world.tick();
+      expect(rushed, `from ${start}`).toBe(true);
+      expect(landed, `from ${start}`).toBe(true);
+    }
   });
 
   it('two cells off, never charges: it steps in and swings the sabre', () => {

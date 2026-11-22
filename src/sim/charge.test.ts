@@ -16,16 +16,16 @@ import { spawnWall } from './environment';
 import { hasLineOfSight } from './LineOfSight';
 import { lineCells } from './charge';
 import { createMovementBehavior } from './behaviors/registry';
-import { claimedDestinationOf } from './occupancy';
+import { claimantOf, claimedDestinationOf } from './occupancy';
 
 /**
  * The charge, a `move` op in `charge` mode on an `enemyInRange` def: from
  * three cells or more, along the straight line sight takes, stopping before
  * the first body, impassable tile or claim, a foe's claim meeting the foe
  * when it arrives before the blow; proposed only when it walks two cells or
- * more and meets a foe; the charger on its landing at once and
- * held for the cells at the push's rate; then the hit, with a bonus a cell
- * walked, and a knockback on the foe it met, if still beside. Cells are
+ * more and meets a foe; the charger held for the cells at the push's rate
+ * on its start, its landing claimed, and arriving there as it strikes, with
+ * a bonus a cell walked, and a knockback on the foe it met, if still beside. Cells are
  * worked out on the grid by hand.
  */
 
@@ -88,17 +88,22 @@ const tickUntilHit = (world: World, foe: Unit, max = 60): void => {
 };
 
 describe('the charge', () => {
-  it('rushes along a line off the eight directions, stops beside its foe, then hits it with a bonus a cell and knocks it back', () => {
+  it('rushes along a line off the eight directions to beside its foe, arriving as it hits with a bonus a cell, and knocks it back', () => {
     const { world, spawn, shoved } = setup();
     const caster = spawn('player', { x: 2, y: 8 }, new CastOnce(charge()));
     const foe = spawn('enemy', { x: 7, y: 10 }); // five east, two south
     const hp = foe.currentHp;
     world.tick();
     // The line: (3,8) (4,9) (5,9) (6,10), then the foe's cell. Four cells.
-    expect(caster.position).toEqual({ x: 6, y: 10 });
+    // It sets off: the slide begins and the landing is claimed, but the
+    // caster stands on its start until the blow.
     expect(shoved).toEqual([caster.id]);
-    expect(foe.currentHp).toBe(hp); // the hit comes as the rush ends
+    expect(claimantOf(world, { x: 6, y: 10 })).toBe(caster.id);
+    expect(caster.position).toEqual({ x: 2, y: 8 });
+    expect(foe.currentHp).toBe(hp);
     tickUntilHit(world, foe);
+    expect(caster.position).toEqual({ x: 6, y: 10 });
+    expect(claimantOf(world, { x: 6, y: 10 })).toBeUndefined();
     expect(foe.currentHp).toBe(hp - (2 + 4));
     expect(foe.position).toEqual({ x: 8, y: 10 }); // knocked a cell on
   });
@@ -174,9 +179,10 @@ describe('the charge', () => {
     world.tick();
     expect(claimedDestinationOf(world, foe.id)).toEqual({ x: 6, y: 8 });
     // The walk stops before the claim, three cells, the foe still on (7,8).
-    expect(caster.position).toEqual({ x: 5, y: 8 });
+    expect(claimantOf(world, { x: 5, y: 8 })).toBe(caster.id);
     expect(foe.position).toEqual({ x: 7, y: 8 });
     tickUntilHit(world, foe);
+    expect(caster.position).toEqual({ x: 5, y: 8 });
     expect(foe.currentHp).toBe(hp - (2 + 3));
   });
 
@@ -197,9 +203,10 @@ describe('the charge', () => {
     const foe = spawn('enemy', { x: 7, y: 8 });
     const hp = foe.currentHp;
     world.tick();
-    expect(caster.position).toEqual({ x: 6, y: 8 });
+    expect(claimantOf(world, { x: 6, y: 8 })).toBe(caster.id);
     foe.position = { x: 9, y: 8 };
     tickUntilHit(world, foe);
+    expect(caster.position).toEqual({ x: 6, y: 8 });
     expect(foe.currentHp).toBe(hp);
     expect(foe.position).toEqual({ x: 9, y: 8 });
   });
@@ -208,8 +215,10 @@ describe('the charge', () => {
     const { world, spawn } = setup();
     world.tileGrid.setKind({ x: 6, y: 8 }, 'mud');
     const caster = spawn('player', { x: 2, y: 8 }, new CastOnce(charge()));
-    spawn('enemy', { x: 7, y: 8 });
+    const foe = spawn('enemy', { x: 7, y: 8 });
     world.tick();
+    expect(caster.effects.some((e) => e.key === 'poison')).toBe(false); // not there yet
+    tickUntilHit(world, foe);
     expect(caster.position).toEqual({ x: 6, y: 8 });
     expect(caster.effects.some((e) => e.key === 'poison')).toBe(true);
   });

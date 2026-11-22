@@ -138,7 +138,7 @@ cut, signed 2026-11-21 with its calls (WORKLOG §161):
 - ☑ **161f-post2 — the blink toward a cell** (`batch`): a ready blink with
   no foe in its range jumps toward where its unit is walking, when that
   saves more steps than its range. Read at 161i's stop, 2026-11-22.
-- ☐ **161g-post2 — the charger arrives as its blow lands** (`batch`):
+- ◐ **161g-post2 — the charger arrives as its blow lands** (`batch`):
   held on its start through the rush, its landing claimed, so a wolf
   beside the landing does not spring away before the blow.
 - ☑ **161i — the play** (`stop`): signed 2026-11-22, the newcomers as

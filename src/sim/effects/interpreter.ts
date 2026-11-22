@@ -24,7 +24,7 @@ import { nearestFreeCells } from '../actingPosition';
 import { retreatCell } from './reposition';
 import { behaviorFlags } from '../statusBehavior';
 import { pushLanding } from '../push';
-import { unitDistance } from '../occupancy';
+import { claimantOf, isFree, unitDistance } from '../occupancy';
 
 /**
  * A scratch shared by every op that fires on one phase boundary
@@ -264,13 +264,15 @@ function executeMove(op: Extract<EffectOp, { kind: 'move' }>, ctx: OpFireContext
     return;
   }
   if (op.mode === 'charge') {
-    // The charge: onto the landing captured at cast, held by the action's
-    // `travel` phase; drawn and heard as a forced move's yank.
+    // The charge sets off toward the landing captured at cast: it claims the
+    // landing, as a step claims its cell, and its slide is drawn over the
+    // action's `travel` phase, but the caster stays on its start until its
+    // blow (`arriveFromCharge`, at `impact`), so a foe beside the landing
+    // sees no one beside it until the blow lands.
     const from = { ...caster.position };
-    caster.position = { ...ref };
+    world.claimCell(ref, caster.id);
     world.emit('unit:moved', { unitId: caster.id, from, to: { ...ref }, durationTicks: ctx.phaseTicks });
     world.emit('unit:shoved', { unitId: caster.id, from, to: { ...ref }, durationTicks: ctx.phaseTicks });
-    world.applyTileEnterEffects(caster);
     return;
   }
 
@@ -282,6 +284,26 @@ function executeMove(op: Extract<EffectOp, { kind: 'move' }>, ctx: OpFireContext
   const moveTicks = caster.derived.moveCooldownTicks;
   const durationTicks = Math.max(1, Math.min(moveTicks, ctx.remainingTicks));
   world.emit('unit:moved', { unitId: caster.id, from, to: dest, durationTicks });
+}
+
+/**
+ * A charge's arrival, at its action's `impact` boundary before the blow
+ * (`EffectAction.fireOpsAt`): the caster steps onto the landing it claimed
+ * as it set off (`executeMove`), the claim is released, and the landing's
+ * tile acts on it, as a step's flip does. A caster already there (a world
+ * restored from a snapshot taken mid-rush before the arrival moved to the
+ * blow) is left as it is, so the landing is not entered twice. A landing
+ * that some other unit's body has taken anyway is not entered: the caster
+ * stays on its start and its blow measures from there. The claim blocks
+ * every placement, so this is only a guard.
+ */
+export function arriveFromCharge(caster: Unit, world: World, landing: GridCoord | undefined): void {
+  if (landing === undefined) return;
+  if (caster.position.x === landing.x && caster.position.y === landing.y) return;
+  if (claimantOf(world, landing) === caster.id) world.releaseClaim(landing);
+  if (!isFree(world, landing)) return;
+  caster.position = { ...landing };
+  world.applyTileEnterEffects(caster);
 }
 
 /**

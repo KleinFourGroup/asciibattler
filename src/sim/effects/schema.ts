@@ -139,10 +139,11 @@ const HealOpSchema = z.object({
  *   (`chargeWalk`), stopping before the first body, impassable tile or
  *   claim, from at least `minRangeCells` and within `rangeCells`; proposed
  *   only when it walks two cells or more and meets a foe, which becomes the
- *   action's target. The caster is on its landing as the op fires and is
+ *   action's target. The op claims the landing as it fires, and the caster,
  *   held by its `travel` phase, sized per cast to the cells walked at
- *   `SIM.pushSecondsPerCell`; ops on `impact` then strike the foe it met
- *   if it is still within reach. Its def targets `enemyInRange`, sets no
+ *   `SIM.pushSecondsPerCell`, stays on its start until the `impact`
+ *   boundary, where it arrives (`arriveFromCharge`) before that boundary's
+ *   ops strike the foe it met if it is still within reach. Its def targets `enemyInRange`, sets no
  *   reach (`engagementReach`), and fires the move on a `travel` phase in a
  *   timeline with no `'fill'` (refined below).
  * - `retreat` — one step away from the struck cell (the gambit's dart-back).

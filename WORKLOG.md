@@ -854,3 +854,55 @@ journals that fire the ninja's blade, since its action id is in their
 events. **2 of 34 differed, those two**, in their events alone.
 Re-recorded: every journal (`config/abilities.json` is in each one's
 config hash) and the baseline; the replay 0 of 34.
+
+### 161g-post2 — the charger arrives as its blow lands (2026-11-22)
+
+Signed at 161i ("we definitely want that wolf fix"). It changes call 1's
+"the caster is on that cell at once": a wolf beside the landing saw the
+cavalier beside it from the cast tick, bit and sprang back, and was gone
+when the blow landed as the rush ended (161h's stop entry: 6 to 8 of 8
+rushes at a wolf missed).
+
+- The charge's `move` op, on `travel` at offset 0 (`executeMove`,
+  `interpreter.ts`), claims the landing as a step claims its cell and
+  emits `unit:moved` and `unit:shoved` for the slide over the travel, but
+  leaves the caster on its start.
+- At the `impact` boundary `EffectAction.fireOpsAt` calls
+  `arriveFromCharge` before that boundary's ops: the caster steps onto
+  the landing, the claim is released and the tile acts on it, as a step's
+  flip does. Then the blow measures reach from the landing, as before.
+- No state is new: the landing is the op's captured `moveDest`, and the
+  claim is in `World.claims`, both in the snapshot. A caster already on
+  its landing is left alone, so a world restored from a snapshot taken
+  mid-rush before this change does not enter the landing twice. A landing
+  some other body has taken is not entered (a guard only: the claim
+  blocks every placement).
+- A push or a death mid-rush releases the claim, as for a step
+  (`releaseClaimsBy`), and no status ends an action, so the claim cannot
+  outlive its rush.
+- An edge accepted: the cells between the start and the landing are not
+  claimed, so a foe that steps into them during the rush is passed
+  through, as the slide is drawn. A rush lasts 0.3 to 0.6 s.
+
+`src/sim/charge.test.ts`'s four tests that read the caster on its landing
+after the cast tick now read it on its start with the landing claimed,
+and on the landing once the blow lands; the mud entry comes with the
+arrival. `src/sim/cavalier.test.ts` gains one from the raw config: a
+cavalier charges a wolf walking in from 7, 8, 9 and 10 cells, and every
+blow lands. 6 plants, all caught, control clean
+(`scratch/161i/161g-post2-plants.json`). Among them, HEAD's charge, the
+arrival as it sets off, fails the wolf test.
+
+The probe (`scratch/161h/sandprobe.test.ts`), at reach 5, of 32
+approaches: on flat ground 31 blows landed, none missed, 1 no rush
+(161g-post: 25, 6 and 1); on sand 27, none and 5 (161g-post: 25, 2 and
+5). No rush misses a wolf now.
+
+The corpus. Predicted before the run: 0 of 34, since no journal fires
+the charge. **0 of 34 differed.**
+
+**Read (`batch`, at the next stop):** 161g's act-1 URL,
+`?seed=5&character=soldier&roster=cavalier:3,cavalier:3,mercenary:3,archer:3`,
+or anywhere a cavalier meets wolves. Wrong looks like a wolf that bites a
+cavalier mid-rush and springs clear of its blow, or a cavalier whose
+glyph and blow arrive apart.

@@ -1,7 +1,9 @@
 import type { GridCoord } from '../core/types';
 import type { Unit } from './Unit';
 import type { World } from './World';
-import { cellKey, cellsOccupiedBy, claimedCells } from './occupancy';
+import { SIM } from '../config/sim';
+import { secondsToTicks } from '../config';
+import { cellKey, cellsOccupiedBy, GROUND, vacancyEtaOf } from './occupancy';
 
 /**
  * The cells of a straight line from `from` to `to`, by the same Bresenham
@@ -40,8 +42,9 @@ export interface ChargeWalk {
   landing: GridCoord;
   /** The cells walked, at least 1. */
   cells: number;
-  /** The unit whose body stopped the walk, or null when a tile, a claim or
-   *  the line's end did. */
+  /** The unit whose body stopped the walk, or whose claim did as it arrives
+   *  in time (`chargeWalk`); null when a tile, another claim or the line's
+   *  end did. */
   met: Unit | null;
 }
 
@@ -53,6 +56,14 @@ export interface ChargeWalk {
  * wall's tile, a chasm or deep water, so the charger never falls. Null when
  * it moves no cell.
  *
+ * A claim meets its claimant as a body does when the claimant's step flips
+ * it onto the cell before the blow lands, the rush's `travel` (the cells
+ * walked at `SIM.pushSecondsPerCell`) from now: a foe walking in stands
+ * there by then, beside the landing. Strictly before, so the order the two
+ * units act in on the blow's tick never decides it. A claim that flips later,
+ * or whose claimant is not mid-step, stops the walk with no one met, so a
+ * foe starting a slow step on sand is not rushed a cell short.
+ *
  * Pure: it reads the world and changes nothing.
  */
 export function chargeWalk(world: World, caster: Unit, toward: GridCoord): ChargeWalk | null {
@@ -61,7 +72,12 @@ export function chargeWalk(world: World, caster: Unit, toward: GridCoord): Charg
     if (u.id === caster.id) continue;
     for (const c of cellsOccupiedBy(u)) bodies.set(cellKey(c), u);
   }
-  const claimed = claimedCells(world, undefined, { excludeId: caster.id });
+  // Every claim on the ground but the caster's own, by the unit that made it.
+  const claimants = new Map<string, Unit | undefined>();
+  for (const claim of world.claims.values()) {
+    if (claim.unitId === caster.id || claim.plane !== GROUND) continue;
+    claimants.set(cellKey(claim.cell), world.findUnit(claim.unitId));
+  }
 
   let landing = caster.position;
   let cells = 0;
@@ -73,7 +89,14 @@ export function chargeWalk(world: World, caster: Unit, toward: GridCoord): Charg
       met = body;
       break;
     }
-    if (claimed.has(k) || !isFinite(world.tileGrid.costAt(c))) break;
+    if (claimants.has(k)) {
+      const claimant = claimants.get(k);
+      const eta = claimant === undefined ? undefined : vacancyEtaOf(claimant, world);
+      const blowTicks = Math.max(1, secondsToTicks(cells * SIM.pushSecondsPerCell));
+      if (claimant !== undefined && eta !== undefined && eta < blowTicks) met = claimant;
+      break;
+    }
+    if (!isFinite(world.tileGrid.costAt(c))) break;
     landing = c;
     cells++;
   }

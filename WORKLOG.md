@@ -702,3 +702,40 @@ rush at 0 to 8 cells, the hit's shake and the trail's fractions. Its
 control, against the other arms, fails on all three looks. DESIGN's
 leaps paragraph now describes the looks, and TODO's Dash VFX item is
 ticked. The renderer is checked in the pane with the -posts.
+
+### 161g-post — the charge meets a walking foe (2026-11-22)
+
+Signed at 161h's stop ("Signing the charge fix also!"), the reach kept at
+3 to 5. `chargeWalk` (`src/sim/charge.ts`) still stops before a claim,
+but a claim now meets the unit that made it, as a body does, when that
+unit's step flips it onto the cell strictly before the blow lands: the
+rush's travel, the cells walked at `SIM.pushSecondsPerCell`, from now.
+The test is strict because on the blow's tick the order the two units act
+in would otherwise decide the hit. A claim that flips later, or one whose
+claimant is not mid-step, stops the walk with no one met, as before.
+`proposeCharge` is unchanged, so an ally's claim is refused as an ally's
+body is. DESIGN's charge sentence and ARCHITECTURE's `charge.ts` line say
+so.
+
+`src/sim/charge.test.ts` gains two tests: a foe walking in is met at the
+cell it is stepping into and struck there for the three cells run, and a
+foe starting a slow step onto sand is not rushed. 4 plants, all caught,
+control clean (`scratch/161g/161g-post-plants.json`): no claim met, a
+claim met however late, the walk run onto the claim, and the blow's time
+misread.
+
+The probe (`scratch/161h/sandprobe.test.ts`) on the change, at reach 5,
+of 32 approaches: on flat ground 25 blows landed, 6 rushes missed, 1 no
+rush (HEAD: 17, 6 and 9); on sand 25, 2 and 5 (HEAD: 20, 2 and 10).
+Every miss on flat ground is a wolf, whose harry steps it back before
+the blow (161h's stop entry); that goes to 161i.
+
+The corpus. Predicted before the run: 0 of 34, since no journal fires
+the sabre or the charge (`scratch/161e/pounce-strikes.ts` at HEAD in the
+worktree, its control reading the pounce in 10 and the blink in 2).
+**0 of 34 differed.**
+
+**Read (`batch`, at 161i's stop):** `?seed=5&character=soldier&roster=cavalier:3,cavalier:3,mercenary:3,archer:3&encounter=artillery&layout=desertFortress`,
+on the desert's sand; wrong looks like a cavalier that walks in to its
+sabre with its charge ready while a foe three to five cells off walks at
+it.

@@ -15,12 +15,15 @@ import { engagementReach } from './archetypes';
 import { spawnWall } from './environment';
 import { hasLineOfSight } from './LineOfSight';
 import { lineCells } from './charge';
+import { createMovementBehavior } from './behaviors/registry';
+import { claimedDestinationOf } from './occupancy';
 
 /**
  * The charge, a `move` op in `charge` mode on an `enemyInRange` def: from
  * three cells or more, along the straight line sight takes, stopping before
- * the first body, impassable tile or claim; proposed only when it walks two
- * cells or more and meets a foe; the charger on its landing at once and
+ * the first body, impassable tile or claim, a foe's claim meeting the foe
+ * when it arrives before the blow; proposed only when it walks two cells or
+ * more and meets a foe; the charger on its landing at once and
  * held for the cells at the push's rate; then the hit, with a bonus a cell
  * walked, and a knockback on the foe it met, if still beside. Cells are
  * worked out on the grid by hand.
@@ -152,6 +155,40 @@ describe('the charge', () => {
     const d = p!.action.toData() as EffectActionData;
     expect(d.targetId).toBe(near.id);
     expect(d.ops[0]!.moveDest).toEqual({ x: 4, y: 8 });
+  });
+
+  /** A foe four cells from the caster, spawned first so it sets off toward
+   *  the caster, claiming the cell before it, before the caster looks; its
+   *  mobility of 4 steps a cell in 0.7 s, its flip at half that. */
+  const walkingIn = (world: World): Unit => {
+    const foe = world.spawnUnit({ archetype: 'mercenary', level: 1, stats: { ...BASE, mobility: 4 }, xp: 0 }, 'enemy', { x: 7, y: 8 });
+    foe.behaviors.push(createMovementBehavior('mercenary'));
+    return foe;
+  };
+
+  it('meets a foe walking in at the cell it is stepping into, and strikes it there, when it arrives before the blow', () => {
+    const { world, spawn } = setup();
+    const foe = walkingIn(world);
+    const caster = spawn('player', { x: 2, y: 8 }, new CastOnce(charge()));
+    const hp = foe.currentHp;
+    world.tick();
+    expect(claimedDestinationOf(world, foe.id)).toEqual({ x: 6, y: 8 });
+    // The walk stops before the claim, three cells, the foe still on (7,8).
+    expect(caster.position).toEqual({ x: 5, y: 8 });
+    expect(foe.position).toEqual({ x: 7, y: 8 });
+    tickUntilHit(world, foe);
+    expect(foe.currentHp).toBe(hp - (2 + 3));
+  });
+
+  it('is not proposed at a foe walking in that would arrive after the blow: a slow step onto sand', () => {
+    const { world, spawn } = setup();
+    for (let y = 0; y < 16; y++) world.tileGrid.setKind({ x: 6, y }, 'sand');
+    const foe = walkingIn(world);
+    const caster = spawn('player', { x: 2, y: 8 }, new CastOnce(charge()));
+    world.tick();
+    expect(claimedDestinationOf(world, foe.id)).toEqual({ x: 6, y: 8 });
+    expect(caster.position).toEqual({ x: 2, y: 8 });
+    expect(proposeEffectAbility(charge(), caster, world)).toBeNull();
   });
 
   it('misses a foe that stepped out of reach during the rush, and its knockback skips it', () => {

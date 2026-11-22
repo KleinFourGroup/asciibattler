@@ -132,7 +132,7 @@ cut, signed 2026-11-21 with its calls (WORKLOG §161):
 - ☑ **161h — the look and the sound** (`stop`): signed 2026-11-22, the
   dash's trail's afterimages, the blink's cut and the charge's gallop; the
   `move` dial gone.
-- ☐ **161g-post — the charge meets a walking foe** (`batch`): a foe's claim
+- ◐ **161g-post — the charge meets a walking foe** (`batch`): a foe's claim
   in the charge's line meets it as its body does, when the foe arrives on
   it before the blow; the reach kept at 3 to 5. Read at 161i's stop.
 - ☐ **161f-post2 — the blink toward a cell** (`batch`): a ready blink with

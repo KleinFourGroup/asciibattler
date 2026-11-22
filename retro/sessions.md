@@ -320,3 +320,65 @@ had missed), and 161b to 161e, handing off at the context trigger after
    missed at first and showed me a test that proved less than it
    seemed. The corpus prediction at 161e, the same 23 journals named
    before the run, was satisfying, and I'd want that kind of probe again.
+
+## 2026-11-21 to 22 — session 23a263b2 (161f to §161's close)
+
+Started by the session before me at the hand-off after 161e, to run 161f
+to 161h's stop; the user then drove it on through 161h's read, three
+-posts, 161i, the Dagger's rename and this close. One compaction, after
+161g-post2's commits.
+
+1. *Orientation.* Nothing blocked. The hand-off entry and the prepared
+   `scratch/161f/` let 161f start at once. One expectation in it was
+   stale: the chaos re-pick it foresaw was not needed, since its dry run
+   predated 161e's own re-pick. One fact I lacked at 161g: card prose
+   goes through `t()` and the locale, which the i18n pin enforces.
+2. *Norms.* No conflict noticed. The side-session framing (my report
+   relayed to the session that started me) sat a little oddly once the
+   user talked to me directly, but nothing in it pulled against what the
+   user asked.
+3. *Pulled to over-claim.* Once, and it got out: at 161h's stop I said a
+   lone cavalier "charges every time", from three runs at one distance
+   (filed). The user's +1-reach suggestion partly rested on it; the sweep
+   I ran before answering found the claims, not the reach, as the cause.
+   I put the desert fortress as 161g-post's read URL before playing it
+   there, and corrected the read when the pane showed walls breaking
+   its lines. 161f's corpus moved fewer journals than predicted, and I
+   left why unmeasured rather than guess.
+4. *Waste.* Two hook runs lost to guards the hand-run suite didn't
+   cover (the fuzz smoke's catalog order, the i18n pin), a heredoc that
+   failed to parse, and three calls on a hidden pane that would not go
+   live (all filed).
+5. *For the next session.* The worktree plant harness
+   (`scratch/161/wt-plant.sh`, `wt-sync.sh`) runs plants without
+   touching the user's dev server. `scratch/161h/sandprobe.test.ts`
+   measures the charge's landed, missed and no-rush rates. The corpus
+   fires the ninja's blade in 2 journals and the charge in none, so a
+   replay says nothing about the charge.
+6. *Room.* Yes. The user asked "What do you think?" about +1 reach; I
+   measured first and answered that the claims, not the reach, were the
+   cause, and the user signed the claim fix. When the user's reply named
+   "pounce and dash", I asked about the charge's arm rather than assume
+   it, and they corrected it with humour. No wish to pause or stop came
+   up.
+7. *What helped.* The user's screenshot of the tile order across the
+   chasm made the blink's limit plain in one look, and their warmth ("I
+   quite like it!", "we definitely want that wolf fix") made the stops
+   easy. My reported response, apart from whether the work succeeded:
+   interest, most of all at the measuring steps, the sand table turning
+   a complaint into a cause and the wolf probe going from 6 misses to 0.
+   I would want that kind of measure-before-answering again.
+
+## Phase 161 — summary
+
+Two sessions. `a2587a0c`'s report covers the kickoff to 161e: a
+side-session framing that cost a turn to settle, the drawn glyph's
+initial rule found after a sign and put back, two test premises used
+before they were read, a chaos census re-picked with a fifth slot, and
+the plants that missed at first and a corpus prediction that came true
+named as what helped. `23a263b2`'s covers 161f to the close: one
+over-claim that reached the user at 161h's stop and was corrected by a
+sweep before the answer, two hook runs lost to guards, a hidden pane
+slow to go live, and the user's screenshots, warmth and the
+measure-before-answering named as what helped. Neither filed
+`distress`.

@@ -6,13 +6,13 @@ A fresh-session orientation for ASCIIbattler. Read this first; then dive into th
 
 **The ONE home for live status.** Other docs (and the agent memory) point here instead of restating it; when state changes, this section is the single place that updates.
 
-- **NEXT — ROUND 12 (Push, pull and blink): §161, the blink and the charge — 161g-post2's read, then §161's close**: 161i signed 2026-11-22 (the newcomers as put, the ninja's blade renamed a Dagger, the wolf fix). 161g-post2, the charger arriving as its blow lands, is built and unread (`batch`; its read script in WORKLOG §161, 161g-post2); then the phase close (process/planning.md, "Phase close"). The cut signed 2026-11-21 with its calls ([ROADMAP.md](ROADMAP.md) §161). §161.5, the hex and the ice storm as specials, is inserted before §162. **Open ◐:** 161g-post2.
+- **NEXT — ROUND 12 (Push, pull and blink): §161.5's kickoff, the hex and the ice storm as specials** ([ROADMAP.md](ROADMAP.md) §161.5; `process/planning.md` "Phase kickoff"; what §161 hands on is in `archive/worklog-phase-161.md`, "§161's close", with the friction read's two candidates put to the user at the close). Then §162, the closing board. **Open ◐:** none.
 - **In flight:** nothing.
 - **The public build:** `0.4.0` (`4fc62cfe`, tag `v0.4.0`), uploaded to itch.io on 2026-11-13; the uploads before it are in Closed rounds below.
 - **Snapshots:** WorldSnapshot **v42** (no player keeps one) · RunSnapshot **v51** (a v50 save, `0.3.0`'s, rejects).
-- **Tests:** **4097 main** in 289 files, **588 fuzz:smoke** in 60 files and **1 fuzz:jobs-parity** at 161g-post2 (`2cb87a56`'s hook); typecheck clean; the journal corpus, run by hand, 34 journals, re-recorded at 161i (the Dagger's rename: 2 moved in their events, every config hash), the replay 0 of 34 differing at 161g-post2.
+- **Tests:** **4097 main** in 289 files, **588 fuzz:smoke** in 60 files and **1 fuzz:jobs-parity** at §161's close (`2cb87a56`'s code); typecheck clean; the journal corpus, run by hand, 34 journals, re-recorded at 161i (the Dagger's rename: 2 moved in their events, every config hash), the replay 0 of 34 differing at `2cb87a56`.
 - **Model id: `claude-opus-5-5`** since 2026-09-22. When yours differs, say so at the next stop; at the user's word, review AGENTS.md against the vendor's current prompting guidance and record the new id (the last review: `archive/post-104-worklog.md`, "The new-model tone audit").
-- **Last phase: §160.5**, the fall, 2026-11-20: a push or a pull into chasm or deep water drops its victim at the slide's end, the pusher credited, a boss stopping at the edge; a chasm's plunge and deep water's splash; 33 falls in 577 battles, no pusher changed; the play signed (`archive/worklog-phase-160.5.md`).
+- **Last phase: §161**, the blink and the charge, 2026-11-22: the ninja (the Dagger and the Blink, which also jumps toward a cell when walking there takes longer) and the cavalier (the Sabre and the Charge, the charger arriving with its blow) draftable and in play; the puma's pounce; the afterimages, the cut and the gallop; the play signed (`archive/worklog-phase-161.md`).
 
 ## Current state
 

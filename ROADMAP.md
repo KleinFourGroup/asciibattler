@@ -105,44 +105,29 @@ battles, no pusher changed; the play signed (WORKLOG §160.5, in
   §162, signed 2026-11-20.
 - ☑ **160.5e — the play** (`stop`): signed 2026-11-20.
 
-## Phase 161 — the blink and the charge
+## Phase 161 — the blink and the charge ✅ (closed 2026-11-22)
 
-The teleport and the ninja's approach with it ready, the hit after a leap
-for its pounce, the cavalier's charge on §159's push, the dash's trail
-and the blink on `unit:dashed`, then the ninja and the cavalier (as
-reshaped at 158b). It stands on none of §160. **Risk:** medium. The
-cut, signed 2026-11-21 with its calls (WORKLOG §161):
+The ninja's blink, landing beside a foe in range or jumping toward a
+cell when walking there takes longer; the cavalier's charge, a drawn
+line held at the push's rate, the charger arriving with its blow; the
+puma's pounce; the afterimages, the cut and the gallop; the ninja and the
+cavalier draftable and in play (WORKLOG §161, in
+`archive/worklog-phase-161.md`).
 
-- ☑ **161a — the glyphs** (`stop`): signed 2026-11-21, `n` for the
-  ninja and the epauletted `C` for the cavalier (U+E022).
-- ☑ **161b — the hit after a leap** (`none`): a leap keeps its enemy; a
-  hit after the move lands only within reach of the landing; 8 plants.
-- ☑ **161c — the blink, and the dash's landing as an entry** (`none`):
-  the blink's landing and the approach while it is ready; 14 plants;
-  5 journals moved, by the dash's entry alone.
-- ☑ **161d — the charge** (`none`): a drawn line from three cells or
-  more, held at the push's rate, the hit and a knockback at its end;
-  18 plants.
-- ☑ **161e — the puma's pounce** (`batch`): the shared strike renamed
-  Swipe; the puma's leap and hit from three cells; read 2026-11-22.
-- ☑ **161f — the ninja** (`batch`): uncommon, the Ninjato and the
-  Blink; among act 3's Miscreants; read 2026-11-22, its finding 161f-post2.
-- ☑ **161g — the cavalier** (`batch`): rare, the Sabre and the Charge;
-  among act 2's Warband Vanguard; read 2026-11-22, its finding 161g-post.
-- ☑ **161h — the look and the sound** (`stop`): signed 2026-11-22, the
-  dash's trail's afterimages, the blink's cut and the charge's gallop; the
-  `move` dial gone.
-- ☑ **161g-post — the charge meets a walking foe** (`batch`): a foe's claim
-  in the charge's line meets it as its body does, when the foe arrives on
-  it before the blow; the reach kept at 3 to 5. Read at 161i's stop, 2026-11-22.
-- ☑ **161f-post2 — the blink toward a cell** (`batch`): a ready blink with
-  no foe in its range jumps toward where its unit is walking, when that
-  saves more steps than its range. Read at 161i's stop, 2026-11-22.
-- ◐ **161g-post2 — the charger arrives as its blow lands** (`batch`):
-  held on its start through the rush, its landing claimed, so a wolf
-  beside the landing does not spring away before the blow.
-- ☑ **161i — the play** (`stop`): signed 2026-11-22, the newcomers as
-  put, the ninja's blade renamed a Dagger, the wolf fix (161g-post2).
+- ☑ **161a — the glyphs** (`stop`): signed 2026-11-21.
+- ☑ **161b — the hit after a leap** (`none`).
+- ☑ **161c — the blink, and the dash's landing as an entry** (`none`).
+- ☑ **161d — the charge** (`none`).
+- ☑ **161e — the puma's pounce** (`batch`): read 2026-11-22.
+- ☑ **161f — the ninja** (`batch`): read 2026-11-22.
+- ☑ **161g — the cavalier** (`batch`): read 2026-11-22.
+- ☑ **161h — the look and the sound** (`stop`): signed 2026-11-22.
+- ☑ **161g-post — the charge meets a walking foe** (`batch`): read
+  2026-11-22.
+- ☑ **161f-post2 — the blink toward a cell** (`batch`): read 2026-11-22.
+- ☑ **161g-post2 — the charger arrives as its blow lands** (`batch`):
+  read 2026-11-22.
+- ☑ **161i — the play** (`stop`): signed 2026-11-22.
 
 ## Phase 161.5 — the hex and the ice storm as specials
 

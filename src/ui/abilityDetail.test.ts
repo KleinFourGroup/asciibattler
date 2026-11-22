@@ -234,11 +234,11 @@ describe("the card's reach is the band the sim fires in", () => {
       if (min > 0) floored++;
       if (shown !== expected) wrong.push(`${id}: shows ${shown}, the sim fires at ${expected}`);
     }
-    // Fourteen shipped abilities have a floor (the bow, the catapult's four,
-    // the casters', the adventurer's snag, the grenadier's grenade, the
-    // puma's pounce, the cavalier's charge); none checked would make the pass
-    // vacuous.
-    expect(floored).toBe(14);
+    // Fifteen shipped abilities have a floor (the bow, the catapult's four,
+    // the casters', the warlock's jinx among them, the adventurer's snag, the
+    // grenadier's grenade, the puma's pounce, the cavalier's charge); none
+    // checked would make the pass vacuous.
+    expect(floored).toBe(15);
     expect(wrong).toEqual([]);
   });
 

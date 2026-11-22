@@ -385,6 +385,36 @@
     ],
     "fx": { "impact": "melee_swing" }
   },
+  "jinx": {
+    "id": "jinx",
+    "name": "Jinx",
+    "description": "A spiteful little curse.",
+    "cooldownSeconds": 1.5,
+    "rangeCells": 5,
+    "minRangeCells": 2,
+    "target": { "kind": "enemyInRange" },
+    "timeline": [
+      { "phase": "impact", "seconds": 0 },
+      { "phase": "recovery", "seconds": 0.3 }
+    ],
+    "orphanPolicy": "commit-at-cast",
+    "priority": 10,
+    "effects": [
+      {
+        "phase": "impact",
+        "op": {
+          "kind": "damage",
+          "scaling": "none",
+          "might": 1,
+          "critBase": 0,
+          "critable": true,
+          "evadable": true,
+          "bypassDefense": false
+        }
+      }
+    ],
+    "fx": { "impact": "ranged_shot" }
+  },
   "bow": {
     "id": "bow",
     "name": "Bow",
@@ -724,10 +754,10 @@
       { "phase": "release", "seconds": 0 },
       { "phase": "travel", "seconds": 0.25 },
       { "phase": "impact", "seconds": 0 },
-      { "phase": "recovery", "seconds": "fill" }
+      { "phase": "recovery", "seconds": 0.3 }
     ],
     "orphanPolicy": "ground-target",
-    "priority": 10,
+    "priority": 11,
     "effects": [
       {
         "phase": "impact",

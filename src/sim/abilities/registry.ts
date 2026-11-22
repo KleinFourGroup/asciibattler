@@ -59,6 +59,9 @@ const SELF_BURST_ABILITY_IDS = ['whirlwind'] as const;
 // The burst casters' basic attacks, swung between bursts.
 const CASTER_MELEE_IDS = ['punch', 'scratch'] as const;
 
+// The area casters' basic shots, fired between their specials.
+const CASTER_SHOT_IDS = ['jinx'] as const;
+
 /** The ninja's blade and its blink, a teleport beside its foe. */
 const NINJA_ABILITY_IDS = ['dagger', 'blink'] as const;
 
@@ -74,6 +77,7 @@ const FACTORIES: Record<string, AbilityFactory> = {
       ...FORCED_MOVE_ABILITY_IDS,
       ...SELF_BURST_ABILITY_IDS,
       ...CASTER_MELEE_IDS,
+      ...CASTER_SHOT_IDS,
       ...NINJA_ABILITY_IDS,
       ...CAVALIER_ABILITY_IDS,
     ].map((id) => [

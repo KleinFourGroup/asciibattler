@@ -365,7 +365,7 @@
   "warlock": {
     "name": "Warlock",
     "glyph": "W",
-    "abilities": ["hex"],
+    "abilities": ["jinx","hex"],
     "targeting": "nearest",
     "draftable": false,
     "baseStats": {

@@ -99,3 +99,58 @@ read (four times in §161) takes no new rule, as at §158's close; the
 hidden pane's "not live" case, where calling `__probe.ready()` again did
 not help and a resize with a reload did, is a fact line in
 `process/browser-pane.md`'s "not live" bullet.
+
+### 161.5a — the warlock (2026-11-22)
+
+**Step zero.** The audit holds at `bfb4d921`: the hex holds by `fill`,
+the band is 2 to 5.
+
+**A change inside the cut's intent, flagged.** Built first on the
+punch's shape, the shot recovering by `fill`, the hex landed every 5.5 s
+and not every 5.0 s: a shot holding the warlock for 1.2 s when the hex
+came ready pushed the hex back every cycle (`scratch/161.5/cadence.ts`,
+the warlock at its base stats beside a foe three cells off: seven gaps
+of 5.50 s, 4 shots in each). With the shot recovering in 0.3 s, as the
+hex does, the gaps are seven of 5.00 s, 4 shots in each. The cut signed
+the hex's flat 5 s kept, so the shot recovers in 0.3 s; it also leaves
+the warlock free to step away between shots. The punch and the scratch
+keep `fill`, so the same push can hold back the Repulse or the Wail by up
+to a punch's hold while a foe stands beside the caster; unmeasured, and
+left as signed at 160g.
+
+**Built.** `jinx` (`config/abilities.json`, after the scratch): 5 cells
+with a floor of 2, the nearest foe in range, might 1 on `none`, crit
+base 0, evadable, every 1.5 s speed-scaled (1.2 s at the warlock's speed
+4), impact then a 0.3 s recovery, priority 10, the ranged shot's fx (the
+`*` tracer and the shot's sound). Its line, a draft read at 161.5c: "A
+spiteful little curse." The warlock carries `jinx, hex`. The hex: a
+0.3 s recovery and priority 11; its flat 5 s, reach, floor and confusion
+unchanged. `CASTER_SHOT_IDS` in the registry. DESIGN's scaling line and
+Round 12's newcomers paragraph. `abilityDetail.test.ts`: the floored
+count from 14 to 15, the jinx's floor of 2 (the floored ids in the raw
+config: snag, grenade, charge, jinx, bow, magic_bolt, catapult_shot,
+vial, ice_storm, hex, light_ray, chain_lightning, molotov, pistol,
+pounce).
+
+**Checked.** `src/sim/warlock.test.ts`, 2 tests, from the raw config:
+the band is the hex's (reach 5, floor 2); beside a foe three cells off,
+the hex first, a jinx between the first hex and the second, the warlock
+unmoved, and the second hex one flat recharge after the first. Planted
+(`scratch/161.5/161.5a-plants.json`, run in a worktree by
+`scratch/161/wt-plant.sh`): 6 plants (the hex `fill` again; the hex at
+the jinx's rank; no jinx; the jinx at a floor of 0; the jinx `fill`; the
+jinx on `magic`), each caught, the control clean. **The corpus:**
+predicted 0 to 8 of 34, only where a warlock fights
+(`scratch/161.5/161.5a-prediction.txt`); 6 diverged on replay (the
+gambler bits-300 chaos runs 2, 4 and 5, chaos-6, chaos-8-sectorHops-2,
+chaos-13), and `scratch/161.5/attribute.ts` finds a hex in each one's
+diverging battle and in no other journal of the 34. Re-recorded: no
+journal changed beyond its config hash, the baseline's 6 rows did; the
+replay after, 0 of 34, 21 of 21 command kinds, 49 event names.
+
+**Read** (`batch`, at 161.5c):
+`?seed=5&character=soldier&roster=mercenary:3,mercenary:3,warlock:3,warlock:3`,
+and `?seed=5&character=soldier&encounter=darkMagicPosse` for an enemy
+warlock. Wrong looks like a warlock standing for seconds after a hex
+with a foe 2 to 5 cells off, a jinx before the hex when both are ready,
+or a warlock walking into melee.

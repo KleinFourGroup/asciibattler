@@ -6,7 +6,7 @@ A fresh-session orientation for ASCIIbattler. Read this first; then dive into th
 
 **The ONE home for live status.** Other docs (and the agent memory) point here instead of restating it; when state changes, this section is the single place that updates.
 
-- **NEXT — ROUND 12 (Push, pull and blink): §161.5's kickoff, the hex and the ice storm as specials** ([ROADMAP.md](ROADMAP.md) §161.5; `process/planning.md` "Phase kickoff"; what §161 hands on is in `archive/worklog-phase-161.md`, "§161's close", with the friction read's two candidates put to the user at the close). Then §162, the closing board. **Open ◐:** none.
+- **NEXT — ROUND 12 (Push, pull and blink): §161.5, the hex and the ice storm as specials — 161.5a, the warlock** (the cut signed 2026-11-22, the basic attack ranged: [ROADMAP.md](ROADMAP.md) §161.5, WORKLOG §161.5 "The cut signed"); then 161.5b, the ice mage, then 161.5c's play, a stop. Then §162, the closing board. **Open ◐:** none.
 - **In flight:** nothing.
 - **The public build:** `0.4.0` (`4fc62cfe`, tag `v0.4.0`), uploaded to itch.io on 2026-11-13; the uploads before it are in Closed rounds below.
 - **Snapshots:** WorldSnapshot **v42** (no player keeps one) · RunSnapshot **v51** (a v50 save, `0.3.0`'s, rejects).

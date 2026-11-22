@@ -29,7 +29,9 @@ app can stop the server between turns). Then:
     takes under a second. It took 40 s while the server's file watcher
     covered the fuzz output (`server.watch.ignored` in `vite.config.ts`
     now skips it), so a slow first load again means it is watching too
-    much.
+    much. In a hidden pane, twice after `preview_start`, calling it
+    again did not bring the page live, and `resize_window` to 1280×720
+    with a reload did (2026-11-22).
   - a stylesheet that failed to load (editing `vite.config.ts` restarts
     the server and can drop a request in flight): `location.reload()`.
   - a 0×0 page or canvas (a hidden pane): `resize_window` to 1280×720.

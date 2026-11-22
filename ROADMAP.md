@@ -135,8 +135,15 @@ Inserted 2026-11-20 at §160's close (`archive/worklog-phase-160.md`, "160g — 
 answer"): the warlock's hex and the ice mage's ice storm made specials
 over a weak basic attack, as the banshee's Wail and the telekinetic's
 Repulse are since 160d-post and 160e-post. Before §162, so the closing
-board prices them. **Risk:** low. **Reads, foreseen:** each carrier
-`batch`; the play a `stop`. Cut at its kickoff.
+board prices them. **Risk:** low. Cut signed 2026-11-22, the basic
+attack ranged (WORKLOG §161.5, "The cut signed").
+
+- ☐ **161.5a — the warlock** (`batch`): the hex recovers in 0.3 s over a
+  weak ranged shot inside its band, its flat 5 s recharge kept.
+- ☐ **161.5b — the ice mage** (`batch`): the same over the ice storm, its
+  flat 2.5 s recharge kept.
+- ☐ **161.5c — the play** (`stop`): both in play; the names, lines and
+  sound read here.
 
 ## Phase 162 — the closing board
 

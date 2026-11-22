@@ -735,10 +735,11 @@ the sabre or the charge (`scratch/161e/pounce-strikes.ts` at HEAD in the
 worktree, its control reading the pounce in 10 and the blink in 2).
 **0 of 34 differed.**
 
-**Read (`batch`, at 161i's stop):** `?seed=5&character=soldier&roster=cavalier:3,cavalier:3,mercenary:3,archer:3&encounter=artillery&layout=desertFortress`,
-on the desert's sand; wrong looks like a cavalier that walks in to its
-sabre with its charge ready while a foe three to five cells off walks at
-it.
+**Read (`batch`, at 161i's stop):** in play, wherever a cavalier crosses
+sand at foes walking in (the desert fortress first named here is a poor
+URL for it, see the pane entry below); wrong looks like a cavalier that
+walks in to its sabre with its charge ready while a foe three to five
+cells off walks at it in the open.
 
 ### 161f-post2 — the blink toward a cell (2026-11-22)
 
@@ -792,3 +793,36 @@ the two journals and the baseline; the replay 0 of 34.
 with an order to a tile across the chasm, as in the screenshot. Wrong
 looks like a ninja that walks round with its blink ready, or one that
 spends its blink on open ground.
+
+### The pane, after 161h's signing and the two -posts (2026-11-22)
+
+In the Browser pane (Chromium, so wiring, not feel), at `9c483d9b`:
+
+- *161f's URL with a focus order on (11,7)*, the spiral's inner lane
+  across the chasm from the ring the ninjas start in. On the first tick
+  both ninjas blinked across with no target, (13,10) to (11,7) and (14,9)
+  to (11,8). Each was drawn as the cut with its puffs (2 of 2), with no
+  frame between the two cells in 6 blink frames. A battle on the same
+  URL had 7 leaps (the rogue's and the foxes'), each with three
+  afterimages (21 marks), and 2 blinks, with no frame between cells.
+- *161g's URL* (`encounter=artillery`), three battles: two rushes a
+  battle, each with a dust trail of a puff a cell. Every blow landed, for
+  6 or 7, and each was followed by the small shake (0.06 for 0.2 s).
+- *The desert fortress* (`layout=desertFortress`, 62 cells of sand), two
+  battles: no charge. In band, its line was blocked at the first cell
+  twice, at five cells, and once its walk met a body after one cell. That
+  makes it a poor URL for 161g-post's read, which moves into play at
+  161i.
+- *Act 1*, 161g's URL without the encounter, with two cavaliers in the
+  roster, eight battles: no rush in the first five (foxes, bandits with
+  archers, foxes, archers, then a map split by chasm), then 1, 0 and 1
+  against giant rats and a healer. In the last four, the decisions taken
+  in band with the charge ready came out as follows. The first cell of
+  the line was chasm or deep water 6 times, and the other cavalier stood
+  in the line 3 times. The walk stopped after one cell twice, met no one
+  once, and met a foe after one cell once. It proposed 2. So in act 1 the
+  charge is rare because the maps' water and chasms break its lines and
+  the cavaliers crowd each other's, and foxes leap through its band. This
+  goes to 161i with the wolves' whiff.
+
+No errors in the console but the pane's own cache misses.

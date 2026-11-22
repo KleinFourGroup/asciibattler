@@ -826,3 +826,31 @@ In the Browser pane (Chromium, so wiring, not feel), at `9c483d9b`:
   goes to 161i with the wolves' whiff.
 
 No errors in the console but the pane's own cache misses.
+
+### 161i — the play, signed (2026-11-22)
+
+**Signed** ("Ooh yes, I think we definitely want that wolf fix.
+Everything else looks really good! 😁 Though I think ninjato might be a
+bit niche 😅 Let's just call it a dagger for now?"):
+
+- The reads of 161f-post2 (the blink toward a cell) and 161g-post (the
+  charge meets a walking foe) pass.
+- The newcomers stand as put at the stop: the ninja (uncommon, 28, act
+  3's Miscreants), the cavalier (rare, 30, act 2's Warband Vanguard),
+  their bodies, the Blink, the Sabre, the Charge with its card's rider,
+  the puma's Pounce and the Swipe, with every line. So does the jump's
+  call to price a slow tile at its cost.
+- The ninja's blade is a **Dagger**: the id `ninjato` became `dagger`
+  (config, the registry, the locale's keys), its numbers kept, and its
+  line, "A short, straight blade, quick from the sheath.", kept since it
+  fits a dagger. No other ability was a dagger. DESIGN's newcomers
+  paragraph names it.
+- The wolf fix, signed: the charger arrives on its landing as its blow
+  lands, not as it sets off, which changes call 1's "on that cell at
+  once". It is built as 161g-post2.
+
+The corpus for the rename. Predicted before the run: 2 of 34, the two
+journals that fire the ninja's blade, since its action id is in their
+events. **2 of 34 differed, those two**, in their events alone.
+Re-recorded: every journal (`config/abilities.json` is in each one's
+config hash) and the baseline; the replay 0 of 34.

@@ -489,9 +489,9 @@
       }
     ]
   },
-  "ninjato": {
-    "id": "ninjato",
-    "name": "Ninjato",
+  "dagger": {
+    "id": "dagger",
+    "name": "Dagger",
     "description": "A short, straight blade, quick from the sheath.",
     "cooldownSeconds": 1.2,
     "rangeCells": 1,

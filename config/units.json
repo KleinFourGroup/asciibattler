@@ -168,7 +168,7 @@
   "ninja": {
     "name": "Ninja",
     "glyph": "n",
-    "abilities": ["ninjato","blink"],
+    "abilities": ["dagger","blink"],
     "targeting": "nearest",
     "rarity": "uncommon",
     "baseStats": {

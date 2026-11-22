@@ -150,7 +150,7 @@ replay after, 0 of 34, 21 of 21 command kinds, 49 event names.
 
 **Read** (`batch`, at 161.5c):
 `?seed=5&character=soldier&roster=mercenary:3,mercenary:3,warlock:3,warlock:3`,
-and `?seed=5&character=soldier&encounter=darkMagicPosse` for an enemy
+and `?seed=5&character=soldier&firstNode=elite&encounter=darkMagicPosse` for an enemy
 warlock. Wrong looks like a warlock standing for seconds after a hex
 with a foe 2 to 5 cells off, a jinx before the hex when both are ready,
 or a warlock walking into melee.
@@ -191,3 +191,19 @@ and `?seed=5&character=soldier&encounter=elementalTrio` for an enemy ice
 mage. Wrong looks like an ice mage standing for seconds after a storm
 with a foe 2 to 5 cells off, an icicle before the storm when both are
 ready, or an ice mage walking into melee.
+
+### The pane, on the four read URLs (2026-11-22)
+
+At `e7ec1167`, in the Browser pane (Chromium, hidden), each read URL
+driven by `__probe.drive({ seed: 1, policy: 'first', until: 'reward' })`
+with a listener counting the impacts of the four abilities. The two
+roster URLs seat the casters on the player's side (`run.team`: two
+mercenaries and two warlocks, then two ice mages) and fire: 30 hexes and
+72 jinxes, then 20 storms and 43 icicles. With `encounter=elementalTrio`
+the drive met an enemy ice mage before the first reward: 7 storms and 18
+icicles, on the enemy side. The Dark Magic Posse is an elite, and `encounter=` forces an
+encounter only at nodes of its kind, so `encounter=darkMagicPosse` alone
+met wolves and foxes; with `firstNode=elite` the warlock fights on the
+enemy side, 12 hexes and 52 jinxes, and 161.5a's read URL above carries
+it. The pane proves the wiring only: the look, the sound and the feel
+are the user's read at 161.5c.

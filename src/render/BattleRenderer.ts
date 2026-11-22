@@ -4,7 +4,7 @@ import type { GameEvents } from '../core/events';
 import type { GridCoord } from '../core/types';
 import { explosionPlacement, SPIN_SPARKS, spinSparkOffset } from './burstPlacement';
 import { FALL_SECONDS, fallPose, type FallInto } from './fallMotion';
-import { BLINK_SECONDS, blinkPose, chargeHit, chargeRush, dashTrail, moveArm, trailFractions, type MoveArm, type TrailSpec } from './moveLooks';
+import { BLINK_SECONDS, blinkPose, CHARGE_HIT_SHAKE, chargeRush, DASH_TRAIL, trailFractions, type TrailSpec } from './moveLooks';
 import type { AbilityDef } from '../sim/effects/schema';
 import type { World } from '../sim/World';
 import type { ObjectiveTarget } from '../sim/objective';
@@ -133,10 +133,6 @@ interface BlinkingSprite {
   readonly handle: SpriteHandle;
   readonly from: THREE.Vector3;
   readonly to: THREE.Vector3;
-  readonly arm: MoveArm;
-  readonly duration: number;
-  /** The unit's own size (its footprint), which the pose scales. */
-  readonly size: number;
   elapsed: number;
   /** Set once the pose reaches the landing, where the position is set once,
    *  so a lunge that starts before the pose ends moves the sprite freely. */
@@ -983,8 +979,8 @@ export class BattleRenderer {
    * A forced move, a push or a pull, or a charger's own rush, which the sim
    * draws through the same event. Its `unit:moved` started the slide on the
    * same tick, so this re-times it: a yank (`out`), off the mark fast and
-   * skidding to a stop on the landing, where a step glides; a charge at its
-   * arm's pace with its trail (`chargeRush`). Each plays its cue here, since
+   * skidding to a stop on the landing, where a step glides; a charge at the
+   * gallop's pace with its dust (`chargeRush`). Each plays its cue here, since
    * only the world tells a charge from a push: the charger is still in its
    * charge's action as it moves, and a pushed unit's action has ended.
    */
@@ -997,7 +993,7 @@ export class BattleRenderer {
     if (this.isCharging(unitId)) {
       this.audio.play('charge');
       const cells = Math.max(Math.abs(to.x - from.x), Math.abs(to.y - from.y));
-      const rush = chargeRush(moveArm(), cells);
+      const rush = chargeRush(cells);
       this.animateStep(unitId, from, to, durationTicks, rush.ease);
       this.startTrail(unitId, from, to, ticksToSeconds(durationTicks), rush.trail);
       return;
@@ -1016,9 +1012,9 @@ export class BattleRenderer {
   /**
    * A leap or a blink (`unit:dashed`), after the `unit:moved` that started
    * its slide on the same tick. A leap keeps the slide and leaves its trail
-   * (`dashTrail`). A blink never slides: the slide is cancelled and the
+   * (`DASH_TRAIL`). A blink never slides: the slide is cancelled and the
    * sprite goes out on its cell and comes in on its landing (`blinkPose`,
-   * `updateBlinks`), with its cue and its flash; under reduced motion it is
+   * `updateBlinks`), with its cue and its puffs; under reduced motion it is
    * on its landing at once.
    */
   private onUnitDashed = ({ unitId, from, to, durationTicks, blink }: GameEvents['unit:dashed']): void => {
@@ -1026,9 +1022,8 @@ export class BattleRenderer {
     const handle = this.handles.get(unitId);
     const unit = this.world.findUnit(unitId);
     if (!handle || !unit) return;
-    const arm = moveArm();
     if (!blink) {
-      this.startTrail(unitId, from, to, ticksToSeconds(durationTicks), dashTrail(arm));
+      this.startTrail(unitId, from, to, ticksToSeconds(durationTicks), DASH_TRAIL);
       return;
     }
     this.audio.play('blink');
@@ -1041,8 +1036,8 @@ export class BattleRenderer {
       return;
     }
     this.sprites.updateSprite(handle, { position: start });
-    this.blinks.push({ unitId, handle, from: start, to: end, arm, duration: BLINK_SECONDS[arm], size: footprint, elapsed: 0, landed: false });
-    this.spawnBlinkFlash(start, end, arm, spriteColorForUnit(unit));
+    this.blinks.push({ unitId, handle, from: start, to: end, elapsed: 0, landed: false });
+    this.spawnBlinkPuffs(start, end, spriteColorForUnit(unit));
   };
 
   /** Each blink's pose this frame; at its end the entry goes. */
@@ -1050,35 +1045,28 @@ export class BattleRenderer {
     for (let i = this.blinks.length - 1; i >= 0; i--) {
       const b = this.blinks[i]!;
       b.elapsed += dt;
-      const t = b.elapsed >= b.duration ? 1 : b.elapsed / b.duration;
-      const pose = blinkPose(b.arm, t);
+      const t = b.elapsed >= BLINK_SECONDS ? 1 : b.elapsed / BLINK_SECONDS;
+      const pose = blinkPose(t);
       if (pose.at === 'from') {
-        this.sprites.updateSprite(b.handle, { position: b.from, size: pose.size * b.size, alpha: pose.alpha });
+        this.sprites.updateSprite(b.handle, { position: b.from, alpha: pose.alpha });
       } else if (!b.landed) {
         b.landed = true;
-        this.sprites.updateSprite(b.handle, { position: b.to, size: pose.size * b.size, alpha: pose.alpha });
+        this.sprites.updateSprite(b.handle, { position: b.to, alpha: pose.alpha });
       } else {
-        this.sprites.updateSprite(b.handle, { size: pose.size * b.size, alpha: pose.alpha });
+        this.sprites.updateSprite(b.handle, { alpha: pose.alpha });
       }
       if (t >= 1) this.blinks.splice(i, 1);
     }
   }
 
   /**
-   * A blink's light at its two cells, in the unit's colour, both at once, so
-   * the landing shows where it will appear. Arm `a`: a flash that grows and
-   * fades on each. Arm `b`: a puff of eight motes bursting out of where it
-   * stood, and eight drawing into its landing.
+   * A blink's puffs at its two cells, in the unit's colour, both at once, so
+   * the landing shows where it will appear: eight motes bursting out of where
+   * it stood, and eight drawing into its landing.
    */
-  private spawnBlinkFlash(from: THREE.Vector3, to: THREE.Vector3, arm: MoveArm, color: string): void {
+  private spawnBlinkPuffs(from: THREE.Vector3, to: THREE.Vector3, color: string): void {
     const fromC = aboveAnchor(from, GLYPH_HALF_HEIGHT, this.renderer.camera, new THREE.Vector3());
     const toC = aboveAnchor(to, GLYPH_HALF_HEIGHT, this.renderer.camera, new THREE.Vector3());
-    if (arm === 'a') {
-      for (const at of [fromC, toC]) {
-        this.addExplosionParticle(at, at, EXPLOSION_FLASH_GLYPH, color, BLINK_FLASH_SIZE_FROM, BLINK_FLASH_SIZE_TO, BLINK_FLASH_SECONDS);
-      }
-      return;
-    }
     for (const [dx, dz] of EXPLOSION_RING_DIRS) {
       const out = fromC.clone();
       out.x += dx * BLINK_PUFF_SPREAD;
@@ -1157,12 +1145,6 @@ export class BattleRenderer {
       });
       return;
     }
-    if (tr.spec.mark === 'mote') {
-      const c = aboveAnchor(at, GLYPH_HALF_HEIGHT, this.renderer.camera, new THREE.Vector3());
-      const drift = c.clone().addScaledVector(tr.back, TRAIL_MOTE_DRIFT);
-      this.addExplosionParticle(c, drift, PROJECTILE_GLYPH, tr.color, TRAIL_MOTE_SIZE, 0.15, TRAIL_MOTE_SECONDS, EXPLOSION_BLOOM * 0.5, 0.8);
-      return;
-    }
     // Dust: a grey puff kicked up and back off the ground.
     const kick = at.clone().addScaledVector(tr.back, TRAIL_DUST_DRIFT);
     kick.y += TRAIL_DUST_LIFT;
@@ -1171,8 +1153,8 @@ export class BattleRenderer {
 
   /**
    * The charge's hit, as its blow lands on the foe (`unit:attacked` from a
-   * charger still in its charge's action): sparks or a flash on the foe and
-   * a shake, by arm (`chargeHit`); none under reduced motion. A charge that
+   * charger still in its charge's action): a ring of sparks off the foe and
+   * a small shake (`CHARGE_HIT_SHAKE`); none under reduced motion. A charge that
    * met no foe lands no blow, and shows nothing.
    */
   private onChargeHit = ({ attackerId, targetId }: GameEvents['unit:attacked']): void => {
@@ -1183,20 +1165,14 @@ export class BattleRenderer {
     if (!attacker || !target || !handle) return;
     const center = this.unitVisualCenter(handle, target, new THREE.Vector3());
     if (!center) return;
-    const hit = chargeHit(moveArm());
     const color = spriteColorForUnit(attacker);
-    if (hit.flash) {
-      this.addExplosionParticle(center, center, EXPLOSION_FLASH_GLYPH, color, CHARGE_FLASH_SIZE_FROM, CHARGE_FLASH_SIZE_TO, CHARGE_FLASH_SECONDS);
+    for (const [dx, dz] of EXPLOSION_RING_DIRS) {
+      const dest = center.clone();
+      dest.x += dx * CHARGE_SPARK_SPREAD;
+      dest.z += dz * CHARGE_SPARK_SPREAD;
+      this.addExplosionParticle(center, dest, PROJECTILE_GLYPH, color, EXPLOSION_SPARK_SIZE, EXPLOSION_SPARK_SIZE, EXPLOSION_RING_SECONDS);
     }
-    if (hit.sparks) {
-      for (const [dx, dz] of EXPLOSION_RING_DIRS) {
-        const dest = center.clone();
-        dest.x += dx * CHARGE_SPARK_SPREAD;
-        dest.z += dz * CHARGE_SPARK_SPREAD;
-        this.addExplosionParticle(center, dest, PROJECTILE_GLYPH, color, EXPLOSION_SPARK_SIZE, EXPLOSION_SPARK_SIZE, EXPLOSION_RING_SECONDS);
-      }
-    }
-    this.renderer.shakeCamera(hit.shake.intensity, hit.shake.durationSeconds);
+    this.renderer.shakeCamera(CHARGE_HIT_SHAKE.intensity, CHARGE_HIT_SHAKE.durationSeconds);
   };
 
   /**
@@ -2297,31 +2273,21 @@ const WATER_SPRAY_SPREAD = 0.55;
 const WATER_SPRAY_LIFT = 0.8;
 const WATER_SPRAY_SECONDS = 0.35;
 const EXPLOSION_BLOOM = 2.2;
-/** The blink's flash (arm `a`) on each of its cells, and its puff of
- *  motes (arm `b`): how far out they reach, in world units, and how fast. */
-const BLINK_FLASH_SIZE_FROM = 0.5;
-const BLINK_FLASH_SIZE_TO = 1.6;
-const BLINK_FLASH_SECONDS = 0.25;
+/** The blink's puffs of motes on its two cells: how far out they reach, in
+ *  world units, and how fast. */
 const BLINK_PUFF_SPREAD = 0.6;
 const BLINK_PUFF_SECONDS = 0.25;
-/** A trail's marks: the afterimage's peak alpha, glow and life; the mote's
- *  size, drift back along the path and life; the dust's drift, lift and
- *  life. A trail outlives its slide by a frame or two, so the last mark is
+/** A trail's marks: the afterimage's peak alpha, glow and life; the
+ *  dust's drift, lift and life. A trail outlives its slide by a frame or two, so the last mark is
  *  dropped. Tuned by eye. */
 const TRAIL_SLACK_SECONDS = 0.05;
 const TRAIL_GHOST_ALPHA = 0.45;
 const TRAIL_GHOST_BLOOM = 0.15;
 const TRAIL_GHOST_SECONDS = 0.3;
-const TRAIL_MOTE_SIZE = 0.4;
-const TRAIL_MOTE_DRIFT = 0.35;
-const TRAIL_MOTE_SECONDS = 0.25;
 const TRAIL_DUST_DRIFT = 0.3;
 const TRAIL_DUST_LIFT = 0.15;
 const TRAIL_DUST_SECONDS = 0.35;
-/** The charge's hit on its foe: arm `b`'s flash and arm `a`'s sparks. */
-const CHARGE_FLASH_SIZE_FROM = 0.8;
-const CHARGE_FLASH_SIZE_TO = 2.2;
-const CHARGE_FLASH_SECONDS = 0.3;
+/** How far the charge's sparks fly off its foe, in world units. */
 const CHARGE_SPARK_SPREAD = 0.7;
 /** 8 unit-ish directions (orthogonal + diagonal, diagonals normalized) so the
  *  spark ring expands evenly to the blast edge. */

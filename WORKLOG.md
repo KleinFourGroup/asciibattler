@@ -682,3 +682,23 @@ rushed in 9 of 32 on flat ground.
 blink that jumps toward a cell when walking there would take longer;
 161g-post, a foe's claim meeting the charge as its body does, the reach
 kept at 5.
+
+### 161h — signed (2026-11-22)
+
+**Signed** in the reply to the read ("I meant pounce and charge, not
+dash. I liked the gallop", with "for the blink, B"). The dash's trail
+takes arm `a`, since the pounce leaps on `unit:dashed` and wears the
+dash's trail. The blink takes `b`, the cut, and the charge `a`, the
+gallop. The cues stand as put, with no objection to "say if either
+grates". The dial and the other arms are gone. `moveLooks.ts` holds one
+look each: `DASH_TRAIL`, `blinkPose` (alpha only, since the cut keeps
+the unit's size), `chargeRush` and `CHARGE_HIT_SHAKE`. The renderer no
+longer draws the blink's flash, the motes' trail or the lance's hit.
+
+The oracle (`scratch/161h/signed-oracle.test.ts`, in the worktree)
+holds the new module to HEAD's under the signed arms: the trail, the
+blink's pose at 1001 steps (HEAD's cut never changed the size), the
+rush at 0 to 8 cells, the hit's shake and the trail's fractions. Its
+control, against the other arms, fails on all three looks. DESIGN's
+leaps paragraph now describes the looks, and TODO's Dash VFX item is
+ticked. The renderer is checked in the pane with the -posts.

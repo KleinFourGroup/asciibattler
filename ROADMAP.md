@@ -123,14 +123,16 @@ cut, signed 2026-11-21 with its calls (WORKLOG §161):
 - ☑ **161d — the charge** (`none`): a drawn line from three cells or
   more, held at the push's rate, the hit and a knockback at its end;
   18 plants.
-- ◐ **161e — the puma's pounce** (`batch`): the shared strike renamed
-  Swipe; the puma's leap and hit from three cells; read at 161h.
+- ☑ **161e — the puma's pounce** (`batch`): the shared strike renamed
+  Swipe; the puma's leap and hit from three cells; read 2026-11-22.
 - ◐ **161f — the ninja** (`batch`): uncommon, the Ninjato and the
   Blink; among act 3's Miscreants; read at 161h.
 - ◐ **161g — the cavalier** (`batch`): rare, the Sabre and the Charge;
   among act 2's Warband Vanguard; read at 161h.
 - ◐ **161h — the look and the sound** (`stop`): the dash's trail, the
-  blink, the charge's rush; two arms each behind the `move` dial, at its stop.
+  blink, the charge's rush; two arms each behind the `move` dial. The
+  dash's trail `a` and the blink `b` signed 2026-11-22; the charge's arm
+  and the reads' two findings put to the user (WORKLOG "161h's stop, read").
 - ☐ **161i — the play** (`stop`).
 
 ## Phase 161.5 — the hex and the ice storm as specials

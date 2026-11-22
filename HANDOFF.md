@@ -6,7 +6,7 @@ A fresh-session orientation for ASCIIbattler. Read this first; then dive into th
 
 **The ONE home for live status.** Other docs (and the agent memory) point here instead of restating it; when state changes, this section is the single place that updates.
 
-- **NEXT — ROUND 12 (Push, pull and blink): §161, the blink and the charge — at 161h's stop**: the reads of 161e, 161f and 161g (`batch`) and 161h's arms (`stop`, the board panel's `move` dial) put to the user, with the cavalier that never charged in act 1, for 161i (WORKLOG §161, 161h); then 161i, the play. The cut signed 2026-11-21 with its calls ([ROADMAP.md](ROADMAP.md) §161). §161.5, the hex and the ice storm as specials, is inserted before §162. **Open ◐:** 161e, 161f, 161g, 161h.
+- **NEXT — ROUND 12 (Push, pull and blink): §161, the blink and the charge — at 161h's stop, read 2026-11-22**: the dash's trail `a` and the blink `b` signed, 161e read. Put to the user and waiting: the charge's arm; 161f-post2, a blink toward a cell (the ninja walks round a chasm to a tile order); 161g-post, the charge meeting a walking foe's claim, the reach kept at 5 (WORKLOG §161, "161h's stop, read"). Then the arms' cleanup, the -posts, and 161i, the play. The cut signed 2026-11-21 with its calls ([ROADMAP.md](ROADMAP.md) §161). §161.5, the hex and the ice storm as specials, is inserted before §162. **Open ◐:** 161f, 161g, 161h.
 - **In flight:** nothing.
 - **The public build:** `0.4.0` (`4fc62cfe`, tag `v0.4.0`), uploaded to itch.io on 2026-11-13; the uploads before it are in Closed rounds below.
 - **Snapshots:** WorldSnapshot **v42** (no player keeps one) · RunSnapshot **v51** (a v50 save, `0.3.0`'s, rejects).

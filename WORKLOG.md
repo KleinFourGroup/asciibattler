@@ -618,3 +618,67 @@ The corpus: predicted 0 of 34, no sim touch; **0 of 34 differed**.
 **The URLs, checked in the pane** (each loads with its roster on the map):
 161f's as put; 161g's gains `&encounter=artillery`, since in act 1 the
 cavalier never charged; every one takes `&bp=move-b` for arm `b`.
+
+### 161h's stop, read (2026-11-22)
+
+**Signed:** "For the pounce and dash I like A; for the blink, B." The
+dash's trail takes arm `a`, the afterimages: the puma's pounce and the
+rogue's dash are both leaps on `unit:dashed`, so they share it. The blink
+takes arm `b`, the cut. The charge's arm was not named and is asked. The
+reads ("Generally speaking, I quite like it!"): 161e passes; 161f and
+161g each brought a finding.
+
+**161f: with a tile order across the chasm, the ninja walks the long way
+round** (the user's screenshot: the order's `X` on the far side). From
+the code: under a tile order and beyond `SIM.rangedLeashCells` (3) of
+it, a unit has no target and walks to the rally cell
+(`MovementBehavior`, `advance` with that cell as its goal). The blink
+proposes only on a foe within its range and lands beside it (161c), so
+nothing carries the ninja toward a tile. A second limit, smaller: the
+blink's approach goal is searched only out to its range plus
+`SIM.actingCellSearchSlack` (7 steps), and a ninja farther than that
+heads for its foe's own cell by the walking route until it is within it.
+
+**161g: the cavalier crossing sand never charges**; the user's lean was
++1 reach. Measured headless in the worktree
+(`scratch/161h/sandprobe.test.ts`): a lone cavalier closing on a walking
+mercenary, bandit, wolf or fox from 7 to 14 cells, 32 approaches, on
+flat ground and with six columns of sand between them. Each cell gives
+the blows that landed, the rushes whose blow missed, and the approaches
+with no rush, of 32:
+
+| | flat, reach 5 | flat, reach 6 | sand, reach 5 | sand, reach 6 |
+|---|---|---|---|---|
+| HEAD | 17 / 6 / 9 | 18 / 8 / 6 | 20 / 2 / 10 | 19 / 4 / 9 |
+| a claim meets its claimant | 25 / 7 / 0 | 24 / 8 / 0 | 21 / 11 / 0 | 21 / 11 / 0 |
+| only when it arrives before the blow | 25 / 7 / 0 | 24 / 8 / 0 | 24 / 3 / 5 | 24 / 7 / 1 |
+
+At reach 7, HEAD reads 22 / 8 / 2 flat and 22 / 6 / 4 on sand. The cause
+(`scratch/161h/chargewhy.test.ts`, each of the cavalier's decisions): a
+foe walking in claims the cell in front of it until its step's flip, and
+the charge's walk stops before a claim with no one met, so it never
+proposes. Against a mercenary 8 cells off, at 5 cells the walk is 3 and
+meets nothing, the mercenary claiming the cell before it; at 3 cells
+the walk is 1. Whether a rush happens depends on how the two units'
+steps line up, and a longer reach changes that little.
+Both fix arms ran in the worktree only: a claim stops the walk as a body
+does and meets the unit that made it; the second also requires the
+claimant's flip to fall within the rush's travel. Without that
+requirement, a foe that begins a slow step on sand still stands a cell
+beyond its claim when the blow lands.
+
+The wolves: in every arm the cavalier rushes a wolf and its blow misses,
+6 to 8 of 8. The cavalier stands on its landing from the cast tick
+(call 1). The wolf beside it harries, striking and stepping back, and is
+gone when the blow lands as the rush ends (call 2). This goes to 161i
+with the act-1 finding.
+
+**A correction to 161h's entry.** "A lone cavalier charges a mercenary
+standing or walking in and a fox walking in ... the window holds in a
+duel" rests on one run each from 10 cells. From 7 to 14 cells it never
+rushed in 9 of 32 on flat ground.
+
+**Put to the user, unsigned:** the charge's arm; 161f-post2, a ready
+blink that jumps toward a cell when walking there would take longer;
+161g-post, a foe's claim meeting the charge as its body does, the reach
+kept at 5.

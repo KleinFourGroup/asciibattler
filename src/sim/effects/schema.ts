@@ -133,7 +133,8 @@ const HealOpSchema = z.object({
  * - `blink` — a teleport to the landing captured at cast, beside the enemy
  *   (`blinkLanding`), blind to what stands between; the enemy must be within
  *   `rangeCells`, body to body. While it is ready its carrier approaches to
- *   that range (`Ability.blinkRange`).
+ *   that range (`Ability.blinkRange`). With no enemy in range, a blink that
+ *   carries no hit may jump toward where its carrier walks (`blinkJump`).
  * - `charge` — a rush along the straight line toward the enemy
  *   (`chargeWalk`), stopping before the first body, impassable tile or
  *   claim, from at least `minRangeCells` and within `rangeCells`; proposed

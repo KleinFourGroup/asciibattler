@@ -16,7 +16,8 @@ import { STATS } from '../config/stats';
  * a one-cell blade and the blink. With its blink ready and a foe across a
  * chasm no route crosses, it walks to the near bank, blinks over within
  * the blink's range and strikes; a rogue in its place, whose dash walks the
- * route, never reaches the foe.
+ * route, never reaches the foe. Ordered to a tile across a chasm with a
+ * long way round, it blinks over it.
  */
 
 type RawUnit = { abilities: string[]; baseStats: UnitStats; rarity?: string; draftable?: boolean; glyph: string };
@@ -74,6 +75,26 @@ describe('the ninja, from the raw config', () => {
     expect(might).toBeDefined();
     const base = might! + RAW_UNITS.ninja!.baseStats.strength;
     expect([base, Math.round(base * STATS.critMult)]).toContain(hp - f.currentHp);
+  });
+
+  it('ordered to a tile across a chasm with a long way round, blinks over it, where a rogue walks round', () => {
+    const across: Record<string, number> = {};
+    for (const archetype of ['ninja', 'rogue']) {
+      const world = new World(new EventBus<GameEvents>(), new RNG(1), 16, 16);
+      // The chasm open only at the top two rows; a foe parked in the far corner.
+      for (const x of [6, 7]) for (let y = 2; y < 16; y++) world.tileGrid.setKind({ x, y }, 'chasm');
+      world.spawnUnit({ archetype: 'mercenary', level: 1, stats: FOE, xp: 0 }, 'enemy', { x: 15, y: 15 });
+      const raw = RAW_UNITS[archetype]!;
+      const u = world.spawnUnit({ archetype: archetype as Unit['archetype'], level: 1, stats: raw.baseStats, xp: 0 }, 'player', { x: 2, y: 12 });
+      for (const id of raw.abilities) u.abilities.push(createAbility(id));
+      u.behaviors.push(createMovementBehavior(archetype as Unit['archetype']), new AbilityBehavior());
+      world.enqueueCommand({ kind: 'setObjective', team: 'player', objective: { mode: 'focus', target: { kind: 'tile', cell: { x: 12, y: 12 } } } });
+      let tick = 0;
+      for (; tick < 400 && u.position.x < 8; tick++) world.tick();
+      across[archetype] = tick;
+      if (archetype === 'ninja') expect(u.position.y, 'straight over, not by the gap').toBeGreaterThanOrEqual(7);
+    }
+    expect(across.ninja).toBeLessThan(across.rogue! / 2);
   });
 
   it('a rogue in its place, whose dash walks the route, never reaches the foe', () => {

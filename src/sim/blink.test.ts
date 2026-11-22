@@ -24,8 +24,9 @@ import { createMovementBehavior } from './behaviors/registry';
  * what stands between, landing on the free, unclaimed cell beside its target
  * farthest from the caster, never on a tile that drops; its landing is an
  * entry, and so is the dash's now. While a blink is ready, its carrier's
- * first goal is the nearest cell with its target in blink range. Cells are
- * worked out on the grid by hand.
+ * first goal is the nearest cell with its target in blink range; with no
+ * foe in range, it jumps toward where its carrier walks when that saves
+ * more than its range. Cells are worked out on the grid by hand.
  */
 
 const BASE: UnitStats = {
@@ -213,5 +214,102 @@ describe('the approach while a blink is ready', () => {
       if (ready) expect(u.position.x, 'ready').toBeGreaterThanOrEqual(9); // across, beside the foe
       else expect(u.position, 'cooling').toEqual({ x: 2, y: 8 });
     }
+  });
+});
+
+describe("the blink's jump toward where its unit walks", () => {
+  /** A chasm two columns wide, x 6 and 7, open only at the board's top two
+   *  rows, so the walk round is long; and a foe parked in the far corner. */
+  const chasmBoard = () => {
+    const s = setup();
+    s.tiles('chasm', [6, 7].flatMap((x) => column(x).filter((c) => c.y >= 2)));
+    s.spawn('enemy', { x: 15, y: 15 });
+    return s;
+  };
+  /** The player's order to a tile; the tick drains it, and a unit far from
+   *  the tile is left with no target. */
+  const orderTile = (world: World, cell: GridCoord): void => {
+    world.enqueueCommand({ kind: 'setObjective', team: 'player', objective: { mode: 'focus', target: { kind: 'tile', cell } } });
+    world.tick();
+  };
+  const landing = (p: ActionProposal | null): GridCoord | undefined =>
+    p === null ? undefined : (p.action.toData() as EffectActionData).ops[0]!.moveDest;
+
+  it('under a tile order across a chasm, jumps it to the cell with the least walk left, straight across', () => {
+    const { world, spawn } = chasmBoard();
+    const u = spawn('player', { x: 4, y: 12 });
+    orderTile(world, { x: 12, y: 12 });
+    expect(u.targetId).toBeNull();
+    expect(landing(proposeEffectAbility(blink(5), u, world))).toEqual({ x: 9, y: 12 });
+  });
+
+  it('a claim takes a cell out, the next nearest the straight line taken; a wall line is jumped as a chasm is', () => {
+    const { world, spawn } = chasmBoard();
+    const u = spawn('player', { x: 4, y: 12 });
+    orderTile(world, { x: 12, y: 12 });
+    world.claimCell({ x: 9, y: 12 }, spawn('enemy', { x: 9, y: 14 }).id);
+    expect(landing(proposeEffectAbility(blink(5), u, world))).toEqual({ x: 9, y: 11 });
+
+    const walled = setup();
+    walled.spawn('enemy', { x: 15, y: 15 });
+    for (const x of [6, 7]) for (const c of column(x).filter((c) => c.y >= 2)) spawnWall(walled.world, c);
+    const w = walled.spawn('player', { x: 4, y: 12 });
+    orderTile(walled.world, { x: 12, y: 12 });
+    expect(landing(proposeEffectAbility(blink(5), w, walled.world))).toEqual({ x: 9, y: 12 });
+  });
+
+  it('a slow tile counts at its cost: across six columns of mud it jumps, where a walk of floor would not', () => {
+    const { world, spawn, tiles } = setup();
+    spawn('enemy', { x: 15, y: 15 });
+    tiles('mud', [5, 6, 7, 8, 9, 10].flatMap(column));
+    const u = spawn('player', { x: 4, y: 12 });
+    orderTile(world, { x: 14, y: 12 });
+    expect(landing(proposeEffectAbility(blink(5), u, world))).toEqual({ x: 9, y: 12 });
+  });
+
+  it('on open ground it walks, since a jump saves exactly its range there', () => {
+    const { world, spawn } = setup();
+    spawn('enemy', { x: 15, y: 15 });
+    const u = spawn('player', { x: 4, y: 12 });
+    orderTile(world, { x: 12, y: 12 });
+    expect(proposeEffectAbility(blink(5), u, world)).toBeNull();
+  });
+
+  it('with its foe out of range across the chasm and no near bank in range, jumps it; with one, walks there to blink at the foe', () => {
+    const { world, spawn } = chasmBoard();
+    const u = spawn('player', { x: 4, y: 12 });
+    const foe = spawn('enemy', { x: 13, y: 12 });
+    u.targetId = foe.id;
+    // Every cell in blink range of the foe is across; the nearest landing among them.
+    expect(landing(proposeEffectAbility(blink(5), u, world))).toEqual({ x: 8, y: 12 });
+    foe.position = { x: 10, y: 12 }; // the near bank, (5,12), is in blink range of it
+    expect(proposeEffectAbility(blink(5), u, world)).toBeNull();
+  });
+
+  it('not with no order and no foe, nor while blind, nor for a blink that carries a hit', () => {
+    const lone = setup();
+    lone.tiles('chasm', [6, 7].flatMap((x) => column(x).filter((c) => c.y >= 2)));
+    const alone = lone.spawn('player', { x: 4, y: 12 });
+    expect(proposeEffectAbility(blink(5), alone, lone.world), 'no order, no foe').toBeNull();
+    // The foe parked across the chasm is a target to jump toward, so the
+    // gates below are read under the order.
+    const { world, spawn } = chasmBoard();
+    const u = spawn('player', { x: 4, y: 12 });
+    orderTile(world, { x: 12, y: 12 });
+    const hits = parseAbilityDef({
+      id: 'test_blink_hit', name: 'Test Blink Hit', description: 'A test blink that strikes.',
+      cooldownSeconds: 10, speedScaled: false, rangeCells: 5,
+      target: { kind: 'self' },
+      timeline: [{ phase: 'impact', seconds: 0.25 }],
+      orphanPolicy: 'commit-at-cast', priority: 5,
+      effects: [
+        { phase: 'impact', op: { kind: 'move', mode: 'blink' } },
+        { phase: 'impact', op: { kind: 'damage', scaling: 'strength', might: 2, critBase: 0, critable: false, evadable: true, bypassDefense: false } },
+      ],
+    });
+    expect(proposeEffectAbility(hits, u, world), 'a hit').toBeNull();
+    expect(proposeEffectAbility(blink(5), u, world), 'the order').not.toBeNull();
+    world.applyStatusEffect(u, statusDef('blind'), null);
+    expect(proposeEffectAbility(blink(5), u, world), 'blind').toBeNull();
   });
 });

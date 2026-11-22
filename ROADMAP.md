@@ -135,7 +135,7 @@ cut, signed 2026-11-21 with its calls (WORKLOG §161):
 - ◐ **161g-post — the charge meets a walking foe** (`batch`): a foe's claim
   in the charge's line meets it as its body does, when the foe arrives on
   it before the blow; the reach kept at 3 to 5. Read at 161i's stop.
-- ☐ **161f-post2 — the blink toward a cell** (`batch`): a ready blink with
+- ◐ **161f-post2 — the blink toward a cell** (`batch`): a ready blink with
   no foe in its range jumps toward where its unit is walking, when that
   saves more steps than its range. Read at 161i's stop.
 - ☐ **161i — the play** (`stop`).

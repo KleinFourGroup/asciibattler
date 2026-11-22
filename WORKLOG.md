@@ -739,3 +739,56 @@ worktree, its control reading the pounce in 10 and the blink in 2).
 on the desert's sand; wrong looks like a cavalier that walks in to its
 sabre with its charge ready while a foe three to five cells off walks at
 it.
+
+### 161f-post2 — the blink toward a cell (2026-11-22)
+
+Signed at 161h's stop ("I like your proposed fix") as put: with no foe
+in its range, a ready blink jumps toward where its unit is walking, when
+that saves more than its range. The ninja walked round a chasm to a tile
+order because a blink lands only beside a foe (161h's stop entry).
+
+- `walkCosts` (`src/sim/blink.ts`) gives the cost of walking from every
+  cell to a set of goals, priced as the pather prices a step: the tile
+  cost of each cell entered, through cells of finite cost that no inert
+  neutral stands on, passing bodies, over eight neighbours. It is a
+  Dijkstra with a bucket for each whole cost.
+- `blinkJump` takes, of the free, unclaimed cells of finite cost within
+  the blink's range (`blinkLanding`'s filter), the one with the least
+  walk left. It jumps only when that saves more than the range. Ties go
+  to the straight line, then scan order.
+- `proposeBlinkJump` (`propose.ts`) is where a blink goes with no foe
+  in range, and its goals mirror `MovementBehavior`. With no target,
+  the goal is a tile order's rally cell. With a target out of range, the
+  goals are the cells from which it is in blink range, so walking to the
+  near bank to blink at the foe always wins where that walk is short.
+  There is no jump while a status drives or stops the unit's movement,
+  nor for a blink that carries a hit. The target's id rides on the
+  action, or `-1` with none.
+
+**A call made inside the intent, flagged:** the put said "saves more
+steps". The walk is priced at tile cost, as the pather prices it, so a
+slow tile counts: across six columns of mud a jump saves 20, and the
+ninja jumps it. On open floor a jump still saves exactly its range and is
+never taken.
+
+`src/sim/blink.test.ts` gains six tests: across a chasm under a tile
+order; a claim and a wall line; mud at its cost; open ground walked; a
+far foe with and without a near bank; and the gates (no order and no foe,
+blind, a blink with a hit). `src/sim/ninja.test.ts` gains one from the
+raw config: ordered to a tile across a chasm with a long way round, the
+ninja stands across in under half a rogue's time, straight over. 11
+plants, all caught, control clean (`scratch/161f/161f-post2-plants.json`).
+
+The corpus. Predicted before the run: only the two journals where a
+ninja fights can move, chaos-4-character-gambler-bits-300 and chaos-6
+(`scratch/161e/pounce-strikes.ts` at HEAD), with a lean that both do.
+**2 of 34 differed, those two**, each battle ending sooner (232 ticks
+for 246, 328 for 348). With the jump cut off in the worktree, 0 of 34
+differed, so both differences come from the jump alone. Re-recorded:
+the two journals and the baseline; the replay 0 of 34.
+
+**Read (`batch`, at 161i's stop):** 161f's URL,
+`?seed=5&character=soldier&roster=ninja:3,ninja:3,rogue:3,mercenary:3&layout=spiralFireLife`,
+with an order to a tile across the chasm, as in the screenshot. Wrong
+looks like a ninja that walks round with its blink ready, or one that
+spends its blink on open ground.

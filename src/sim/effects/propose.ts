@@ -21,7 +21,8 @@ import { resolveAreaVictims } from './targeting';
 import { collectLosBlockers, firingBandCell } from '../positioning';
 import { cellUnitDistance, unitDistance } from '../occupancy';
 import { leapLanding } from '../movement';
-import { blinkLanding } from '../blink';
+import { blinkJump, blinkLanding } from '../blink';
+import { behaviorFlags } from '../statusBehavior';
 import { chargeWalk } from '../charge';
 import { SIM } from '../../config/sim';
 import { secondsToTicks } from '../../config';
@@ -207,11 +208,14 @@ function proposeHeal(
  * proposed only with the enemy within `rangeCells`. A def that carries a
  * hit also abstains unless its landing puts the enemy within strike reach,
  * so a pounce never leaps to fall short; with no cooldown in effect it fires
- * again only when the gap reopens.
+ * again only when the gap reopens. A blink with no enemy within its range,
+ * or none at all, may jump toward where its unit is walking instead
+ * (`proposeBlinkJump`).
  */
 function proposeSelfMove(def: AbilityDef, unit: Unit, world: World): ActionProposal | null {
+  const blinks = def.effects.some((e) => e.op.kind === 'move' && e.op.mode === 'blink');
   const target = currentTarget(unit, world);
-  if (target === null) return null;
+  if (target === null) return blinks ? proposeBlinkJump(def, unit, world, null) : null;
   // Within strike reach: abstain, so the strike proposes instead. The distance
   // is to the target's body, so standing beside a large rubble counts as in
   // reach.
@@ -219,8 +223,7 @@ function proposeSelfMove(def: AbilityDef, unit: Unit, world: World): ActionPropo
   if (distance <= unit.derived.attackRange) return null;
   if (distance < def.minRangeCells) return null;
 
-  const blinks = def.effects.some((e) => e.op.kind === 'move' && e.op.mode === 'blink');
-  if (blinks && distance > def.rangeCells) return null;
+  if (blinks && distance > def.rangeCells) return proposeBlinkJump(def, unit, world, target);
   const landing = blinks
     ? blinkLanding(world, unit, target)
     : leapLanding(unit, world, { goals: [target.position], approachToward: target.position }, def.rangeCells);
@@ -237,6 +240,54 @@ function proposeSelfMove(def: AbilityDef, unit: Unit, world: World): ActionPropo
   // def's `phaseTarget` still surfaces nothing.
   return {
     action: new EffectAction(def, { targetId: target.id, targetCell: undefined, ops }),
+    score: def.priority,
+    cooldown: resolveCadenceTicks(def, speed),
+    phases: resolvePhases(def, speed),
+    cooldownKey: def.id,
+  };
+}
+
+/**
+ * A blink's jump (`blinkJump`): with no enemy within its range, a ready
+ * blink carries its unit toward where it is walking, when that walk costs
+ * more than the jump's landing's by more than the blink's range, so the
+ * blink crosses a chasm or a wall it would otherwise walk round, and on open
+ * ground it waits for a foe. Where the unit is walking mirrors
+ * `MovementBehavior`: with `target` null, the rally cell of a tile order
+ * (an `engage` or `focus` objective on a tile); with a target out of
+ * range, every walkable cell from which the target is within the blink's
+ * range, so the jump never preempts walking to the near bank to blink at the
+ * foe. None while a status drives or stops the unit's movement, and none for
+ * a def that carries a hit, since a jump lands beside no one. The target's
+ * id rides on the action (`-1` with none), as a leap's does.
+ */
+function proposeBlinkJump(def: AbilityDef, unit: Unit, world: World, target: Unit | null): ActionProposal | null {
+  if (def.effects.some((e) => e.op.kind === 'damage')) return null;
+  const behavior = behaviorFlags(unit.effects);
+  if (behavior.preventsMove || behavior.movement !== null) return null;
+
+  const seeds: GridCoord[] = [];
+  if (target === null) {
+    const objective = world.objectiveFor(unit.team);
+    if ((objective.mode !== 'engage' && objective.mode !== 'focus') || objective.target.kind !== 'tile') return null;
+    seeds.push(objective.target.cell);
+  } else {
+    const reach = def.rangeCells;
+    for (let y = 0; y < world.gridH; y++) {
+      for (let x = 0; x < world.gridW; x++) {
+        const c = { x, y };
+        if (!isFinite(world.tileGrid.costAt(c))) continue;
+        if (cellUnitDistance(c, target) <= reach) seeds.push(c);
+      }
+    }
+  }
+  const landing = blinkJump(world, unit, seeds, def.rangeCells);
+  if (landing === null) return null;
+
+  const speed = unit.effectiveStats.speed;
+  const ops = def.effects.map((e) => resolveOp(e.op, { unit, advanceLanding: landing }));
+  return {
+    action: new EffectAction(def, { targetId: target?.id ?? -1, targetCell: undefined, ops }),
     score: def.priority,
     cooldown: resolveCadenceTicks(def, speed),
     phases: resolvePhases(def, speed),

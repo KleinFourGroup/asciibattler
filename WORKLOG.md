@@ -906,3 +906,10 @@ the charge. **0 of 34 differed.**
 or anywhere a cavalier meets wolves. Wrong looks like a wolf that bites a
 cavalier mid-rush and springs clear of its blow, or a cavalier whose
 glyph and blow arrive apart.
+
+In the pane, the wolf pack (`encounter=wolfpack` on 161g's act-1 URL),
+three battles: two rushes, each at a wolf, and both blows landed. The
+cavalier stood on its landing as each blow landed. Its sprite galloped
+from its start to the landing over the travel, at a progress of 0.03,
+0.11, 0.25, 0.44, 0.69 and 1.00 a tick. The blow came a tick later, and
+the sabre's lunge carried the sprite past the landing and back.

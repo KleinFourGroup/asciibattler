@@ -337,7 +337,7 @@
   "ice_mage": {
     "name": "Ice Mage",
     "glyph": "I",
-    "abilities": ["ice_storm"],
+    "abilities": ["icicle","ice_storm"],
     "targeting": "nearest",
     "draftable": false,
     "baseStats": {

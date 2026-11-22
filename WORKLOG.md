@@ -154,3 +154,40 @@ and `?seed=5&character=soldier&encounter=darkMagicPosse` for an enemy
 warlock. Wrong looks like a warlock standing for seconds after a hex
 with a foe 2 to 5 cells off, a jinx before the hex when both are ready,
 or a warlock walking into melee.
+
+### 161.5b — the ice mage (2026-11-22)
+
+**Step zero.** At `0a2713e7` the ice storm still holds by `fill` and the
+ice mage's band is 2 to 5, as the audit found.
+
+**Built.** `icicle` (`config/abilities.json`, after the jinx), the
+jinx's shape: 5 cells with a floor of 2, might 1 on `none`, every 1.5 s
+speed-scaled (1.125 s at the ice mage's speed 5), a 0.3 s recovery,
+priority 10, the ranged shot's fx. Its line, a draft read at 161.5c: "A
+flung shard of ice." The ice mage carries `icicle, ice_storm`. The ice
+storm: a 0.3 s recovery and priority 11; its flat 2.5 s, reach, floor,
+damage and freeze unchanged. `CASTER_SHOT_IDS` holds both shots. DESIGN's
+scaling line and Round 12's newcomers paragraph. `abilityDetail.test.ts`:
+the floored count from 15 to 16, the icicle's floor of 2.
+
+**Checked.** `scratch/161.5/cadence.ts`, the ice mage at its base stats
+beside a foe three cells off: fifteen gaps of 2.50 s between storms, 2
+icicles in each, the ice mage unmoved. `src/sim/iceMage.test.ts`, 2
+tests, the warlock's file on the ice mage's abilities. Planted
+(`scratch/161.5/161.5b-plants.json`): 6 plants (the storm `fill` again;
+the storm at the icicle's rank; no icicle; the icicle at a floor of 0;
+the icicle `fill`; the icicle on `ranged`), each caught, the control
+clean. **The corpus:** predicted 0 to 8 of 34, only where an ice mage
+fights (`scratch/161.5/161.5b-prediction.txt`); 2 diverged on replay
+(the gambler bits-300 chaos runs 5 and 64), each with an ice storm in
+its diverging battle and no other journal of the 34 firing one
+(`scratch/161.5/attribute.ts`). Re-recorded: no journal changed beyond
+its config hash, the baseline's 2 rows did; the replay after, 0 of 34,
+21 of 21 command kinds, 49 event names.
+
+**Read** (`batch`, at 161.5c):
+`?seed=5&character=soldier&roster=mercenary:3,mercenary:3,ice_mage:3,ice_mage:3`,
+and `?seed=5&character=soldier&encounter=elementalTrio` for an enemy ice
+mage. Wrong looks like an ice mage standing for seconds after a storm
+with a foe 2 to 5 cells off, an icicle before the storm when both are
+ready, or an ice mage walking into melee.

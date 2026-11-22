@@ -415,6 +415,36 @@
     ],
     "fx": { "impact": "ranged_shot" }
   },
+  "icicle": {
+    "id": "icicle",
+    "name": "Icicle",
+    "description": "A flung shard of ice.",
+    "cooldownSeconds": 1.5,
+    "rangeCells": 5,
+    "minRangeCells": 2,
+    "target": { "kind": "enemyInRange" },
+    "timeline": [
+      { "phase": "impact", "seconds": 0 },
+      { "phase": "recovery", "seconds": 0.3 }
+    ],
+    "orphanPolicy": "commit-at-cast",
+    "priority": 10,
+    "effects": [
+      {
+        "phase": "impact",
+        "op": {
+          "kind": "damage",
+          "scaling": "none",
+          "might": 1,
+          "critBase": 0,
+          "critable": true,
+          "evadable": true,
+          "bypassDefense": false
+        }
+      }
+    ],
+    "fx": { "impact": "ranged_shot" }
+  },
   "bow": {
     "id": "bow",
     "name": "Bow",
@@ -716,10 +746,10 @@
     "target": { "kind": "aoe", "shape": "square", "radius": 1, "anchor": "targetCell", "affects": "enemies" },
     "timeline": [
       { "phase": "impact", "seconds": 0 },
-      { "phase": "recovery", "seconds": "fill" }
+      { "phase": "recovery", "seconds": 0.3 }
     ],
     "orphanPolicy": "ground-target",
-    "priority": 10,
+    "priority": 11,
     "effects": [
       {
         "phase": "impact",

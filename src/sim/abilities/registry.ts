@@ -60,7 +60,7 @@ const SELF_BURST_ABILITY_IDS = ['whirlwind'] as const;
 const CASTER_MELEE_IDS = ['punch', 'scratch'] as const;
 
 // The area casters' basic shots, fired between their specials.
-const CASTER_SHOT_IDS = ['jinx'] as const;
+const CASTER_SHOT_IDS = ['jinx', 'icicle'] as const;
 
 /** The ninja's blade and its blink, a teleport beside its foe. */
 const NINJA_ABILITY_IDS = ['dagger', 'blink'] as const;

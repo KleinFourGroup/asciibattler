@@ -207,3 +207,16 @@ met wolves and foxes; with `firstNode=elite` the warlock fights on the
 enemy side, 12 hexes and 52 jinxes, and 161.5a's read URL above carries
 it. The pane proves the wiring only: the look, the sound and the feel
 are the user's read at 161.5c.
+
+### 161.5c — the play, signed (2026-11-25)
+
+**Signed** ("that's generally feeling nice ... signing everything
+else!"), with the reads of 161.5a and 161.5b: the play; the names and
+lines, the **Jinx** ("A spiteful little curse.") and the **Icicle** ("A
+flung shard of ice."); the shots releasing their casters after 0.3 s
+("I like the shots releasing after 0.3"), the change built inside the
+cut's intent at 161.5a; the archer's shot sound on both shots ("fine for
+now"). **One change, the user's:** the ice storm's recharge doubled to
+5 s ("Ice Storm's cooldown should probably be doubled to 5s"), built as
+161.5b-post. **For later:** the release after 0.3 s is "something to
+experiment with for other ranged attacks", a Round 13 row in TODO.

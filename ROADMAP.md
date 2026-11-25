@@ -138,13 +138,15 @@ Repulse are since 160d-post and 160e-post. Before §162, so the closing
 board prices them. **Risk:** low. Cut signed 2026-11-22, the basic
 attack ranged (WORKLOG §161.5, "The cut signed").
 
-- ◐ **161.5a — the warlock** (`batch`): the hex recovers in 0.3 s over a
+- ☑ **161.5a — the warlock** (`batch`): the hex recovers in 0.3 s over a
   weak ranged shot inside its band, its flat 5 s recharge kept; the shot
-  recovers in 0.3 s too, so it never delays the hex.
-- ◐ **161.5b — the ice mage** (`batch`): the same over the ice storm, its
-  flat 2.5 s recharge kept.
-- ☐ **161.5c — the play** (`stop`): both in play; the names, lines and
-  sound read here.
+  recovers in 0.3 s too, so it never delays the hex. Read 2026-11-25.
+- ☑ **161.5b — the ice mage** (`batch`): the same over the ice storm, its
+  flat 2.5 s recharge kept. Read 2026-11-25.
+- ☑ **161.5c — the play** (`stop`): signed 2026-11-25, with the ice
+  storm's recharge doubled.
+- ☐ **161.5b-post — the storm's recharge doubled** (`batch`): the ice
+  storm every 5 s, flat, the user's at 161.5c.
 
 ## Phase 162 — the closing board
 

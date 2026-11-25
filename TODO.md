@@ -321,6 +321,17 @@ META-ROADMAP §"Round 12 — Push, pull and blink" names each row's place.
 
 META-ROADMAP §"Round 13 — The unit kit" names each row's place.
 
+- [ ] **Ranged attacks that release their caster after 0.3 s, an
+  experiment.** The ranged weapons (the bow, the pistol, the bolt, the
+  catapult's shot, the vial, the molotov, the light ray, the halberd at
+  reach 2) hold their unit until the recharge ends (a `fill` recovery),
+  while the warlock's jinx and the ice mage's icicle free their casters
+  after 0.3 s, so a special is never held back and the caster can step
+  away between shots (WORKLOG 161.5a, in
+  `archive/worklog-phase-161.5.md` after §161.5's close). The user, at
+  161.5c's sign (2026-11-25): "something to experiment with for other
+  ranged attacks". Placed at Round 13's kickoff.
+
 - [ ] **The officer: a study or a redesign** (the user, 2026-11-11, at
   154g's sign: "it needs a more detailed study and / or a total
   redesign"). The lowest unit on the prior table v9, −36.0 ± 14 pooled,

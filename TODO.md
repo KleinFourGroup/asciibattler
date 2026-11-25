@@ -326,8 +326,8 @@ META-ROADMAP §"Round 13 — The unit kit" names each row's place.
   catapult's shot, the vial, the molotov, the light ray, the halberd at
   reach 2) hold their unit until the recharge ends (a `fill` recovery),
   while the warlock's jinx and the ice mage's icicle free their casters
-  after 0.3 s, so a special is never held back and the caster can step
-  away between shots (WORKLOG 161.5a, in
+  after 0.3 s, so a shot holds a special back by 0.3 s at most and the
+  caster can step away between shots (WORKLOG 161.5a and 161.5b-post, in
   `archive/worklog-phase-161.5.md` after §161.5's close). The user, at
   161.5c's sign (2026-11-25): "something to experiment with for other
   ranged attacks". Placed at Round 13's kickoff.

@@ -739,7 +739,7 @@
     "id": "ice_storm",
     "name": "Ice Storm",
     "description": "Hail that freezes.",
-    "cooldownSeconds": 2.5,
+    "cooldownSeconds": 5,
     "speedScaled": false,
     "rangeCells": 5,
     "minRangeCells": 2,

@@ -429,7 +429,8 @@ export const AbilityDefSchema = z
      * flat cooldown apart from the busy window (the dash, whose cooldown is far
      * longer than its motion; an area lock whose status would outlast its
      * cooldown at the speed floor, so a fast caster can't chain the status,
-     * held by `src/config/abilities.test.ts`).
+     * held by `src/config/abilities.test.ts`; the ice storm, whose recharge
+     * was set flat by taste).
      */
     speedScaled: z.boolean().default(true),
     rangeCells: z.number().int().nonnegative(),

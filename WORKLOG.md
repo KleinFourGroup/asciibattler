@@ -220,3 +220,46 @@ now"). **One change, the user's:** the ice storm's recharge doubled to
 5 s ("Ice Storm's cooldown should probably be doubled to 5s"), built as
 161.5b-post. **For later:** the release after 0.3 s is "something to
 experiment with for other ranged attacks", a Round 13 row in TODO.
+
+### 161.5b-post — the storm's recharge doubled (2026-11-25)
+
+**Step zero.** At `c1044b94` the ice storm recharges in a flat 2.5 s
+(`speedScaled: false`), its freeze 1.25 s.
+
+**Built.** The ice storm's `cooldownSeconds` from 2.5 to 5, still flat,
+so it lands every 5 s at any speed, as asked. Its reason for being flat
+changed: at 5 s its fastest scaled recharge would be 2.0 s, longer than
+the freeze, so the area-lock rule no longer needs it flat. It stays flat
+because the user's number is a flat 5 s; speed-scaled it would be 3.75 s
+at the ice mage's speed 5. DESIGN's speed line and the schema's
+`speedScaled` comment say so, and Round 12's newcomers paragraph gives
+the storm its 5 s and four or five icicles between storms.
+
+**A claim of 161.5a's corrected.** "No shot delays a hex" held only by
+the timings' alignment. At 5 s the storm lands every 5.0 to 5.2 s with 4
+or 5 icicles between (`scratch/161.5/cadence.ts`, the ice mage at its
+base stats: gaps 5.20, 5.00, 5.00, 5.20, 5.00, 5.00, 5.20), since an
+icicle under way when the storm comes ready holds it back by up to its
+0.3 s recovery. The rule is that bound, against up to a whole recharge
+by `fill`. Both tests now check every gap over three recharges against
+it, and run each caster at its own base speed from the raw config: at
+speed 0 the jinx's `fill` plant was missed, its delay a constant 0.2 s
+each cycle (0.7 + 3 × 1.5 = 5.2) and inside the bound, where at the
+warlock's speed 4 the same plant gives 5.5 s. DESIGN, the ROADMAP line
+and the TODO row say "0.3 s at most" in place of "never".
+
+**Checked.** `warlock.test.ts` and `iceMage.test.ts` green. Both plant
+files re-run on the rewritten tests: 12 plants, each caught, both
+controls clean (the jinx's scaling plant re-anchored on the jinx's own
+lines, since the icicle shares the damage op's text). No test pins the
+5 s itself, a number by taste. **The corpus:** predicted 0 to 4 of 34,
+only where an ice mage fights
+(`scratch/161.5/161.5b-post-prediction.txt`); the same 2 as at 161.5b
+diverged (the gambler bits-300 chaos runs 5 and 64). Re-recorded: no
+journal changed beyond its config hash, the baseline's 2 rows did; the
+replay after, 0 of 34, 21 of 21 command kinds, 49 event names.
+
+**Read** (`batch`):
+`?seed=5&character=soldier&roster=mercenary:3,mercenary:3,ice_mage:3,ice_mage:3`
+or `?seed=5&character=soldier&encounter=elementalTrio`. Wrong looks like
+storms as frequent as before, or an ice mage standing between storms.

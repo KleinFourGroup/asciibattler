@@ -35,7 +35,7 @@ interface RawAbility {
 const raw = abilitiesJson as unknown as Record<string, RawAbility>;
 const hex = raw.hex!;
 const jinx = raw.jinx!;
-const units = unitsJson as unknown as Record<string, { abilities: string[] }>;
+const units = unitsJson as unknown as Record<string, { abilities: string[]; baseStats: { speed: number } }>;
 
 describe("the warlock's hex over the Jinx", () => {
   it('stays an enemy alone, and keeps the band the hex sets', () => {
@@ -62,7 +62,9 @@ describe("the warlock's hex over the Jinx", () => {
     const bus = new EventBus<GameEvents>();
     const world = new World(bus, new RNG(1), 16, 16);
     const at = { x: 8, y: 8 };
-    const warlock = world.spawnUnit({ archetype: 'warlock', level: 1, stats: BASE, xp: 0 }, 'enemy', at);
+    // At its own base speed, the cadence it plays at.
+    const stats = { ...BASE, speed: units.warlock!.baseStats.speed };
+    const warlock = world.spawnUnit({ archetype: 'warlock', level: 1, stats, xp: 0 }, 'enemy', at);
     world.wireSpawned(warlock, createMovementBehavior('warlock'), true);
     // A foe three cells off, inside the band; not wired, so the confusion
     // doesn't walk it about.
@@ -76,14 +78,22 @@ describe("the warlock's hex over the Jinx", () => {
       acts.push(e.actionId);
       if (e.actionId === 'hex') hexTicks.push(now);
     });
-    for (now = 1; now <= 400 && hexTicks.length < 2; now++) world.tick();
+    for (now = 1; now <= 1600 && hexTicks.length < 4; now++) world.tick();
 
     expect(acts[0]).toBe('hex');
     expect(acts.lastIndexOf('hex')).toBeGreaterThan(0);
     expect(acts.slice(1, acts.lastIndexOf('hex'))).toContain('jinx');
     expect(warlock.position).toEqual(at);
-    // The shots never delay the hex: it lands again one flat recharge after
-    // the first, since a shot frees the warlock as quickly as the hex does.
-    expect((hexTicks[1]! - hexTicks[0]!) / TICK_RATE).toBeCloseTo(hex.cooldownSeconds, 1);
+    // A shot frees the warlock as quickly as the hex does, so a shot under
+    // way when the hex comes ready holds it back by at most that recovery,
+    // never by a whole recharge.
+    // Over three recharges, since one can fall clear of a shot by chance.
+    expect(hexTicks.length).toBe(4);
+    const recovery = hex.timeline.find((p) => p.phase === 'recovery')!.seconds as number;
+    for (let i = 1; i < hexTicks.length; i++) {
+      const gap = (hexTicks[i]! - hexTicks[i - 1]!) / TICK_RATE;
+      expect(gap).toBeGreaterThanOrEqual(hex.cooldownSeconds - 0.05);
+      expect(gap).toBeLessThanOrEqual(hex.cooldownSeconds + recovery + 0.05);
+    }
   });
 });

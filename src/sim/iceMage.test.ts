@@ -35,7 +35,7 @@ interface RawAbility {
 const raw = abilitiesJson as unknown as Record<string, RawAbility>;
 const storm = raw.ice_storm!;
 const icicle = raw.icicle!;
-const units = unitsJson as unknown as Record<string, { abilities: string[] }>;
+const units = unitsJson as unknown as Record<string, { abilities: string[]; baseStats: { speed: number } }>;
 
 describe("the ice mage's storm over the Icicle", () => {
   it('stays an enemy alone, and keeps the band the storm sets', () => {
@@ -62,7 +62,9 @@ describe("the ice mage's storm over the Icicle", () => {
     const bus = new EventBus<GameEvents>();
     const world = new World(bus, new RNG(1), 16, 16);
     const at = { x: 8, y: 8 };
-    const mage = world.spawnUnit({ archetype: 'ice_mage', level: 1, stats: BASE, xp: 0 }, 'enemy', at);
+    // At its own base speed, the cadence it plays at.
+    const stats = { ...BASE, speed: units.ice_mage!.baseStats.speed };
+    const mage = world.spawnUnit({ archetype: 'ice_mage', level: 1, stats, xp: 0 }, 'enemy', at);
     world.wireSpawned(mage, createMovementBehavior('ice_mage'), true);
     // A foe three cells off, inside the band; not wired, so it stands.
     world.spawnUnit({ archetype: 'mercenary', level: 1, stats: BASE, xp: 0 }, 'player', { x: at.x + 3, y: at.y });
@@ -75,14 +77,22 @@ describe("the ice mage's storm over the Icicle", () => {
       acts.push(e.actionId);
       if (e.actionId === 'ice_storm') stormTicks.push(now);
     });
-    for (now = 1; now <= 400 && stormTicks.length < 2; now++) world.tick();
+    for (now = 1; now <= 1600 && stormTicks.length < 4; now++) world.tick();
 
     expect(acts[0]).toBe('ice_storm');
     expect(acts.lastIndexOf('ice_storm')).toBeGreaterThan(0);
     expect(acts.slice(1, acts.lastIndexOf('ice_storm'))).toContain('icicle');
     expect(mage.position).toEqual(at);
-    // The shots never delay the storm: it lands again one flat recharge after
-    // the first, since a shot frees the ice mage as quickly as the storm does.
-    expect((stormTicks[1]! - stormTicks[0]!) / TICK_RATE).toBeCloseTo(storm.cooldownSeconds, 1);
+    // A shot frees the ice mage as quickly as the storm does, so a shot under
+    // way when the storm comes ready holds it back by at most that recovery,
+    // never by a whole recharge.
+    // Over three recharges, since one can fall clear of a shot by chance.
+    expect(stormTicks.length).toBe(4);
+    const recovery = storm.timeline.find((p) => p.phase === 'recovery')!.seconds as number;
+    for (let i = 1; i < stormTicks.length; i++) {
+      const gap = (stormTicks[i]! - stormTicks[i - 1]!) / TICK_RATE;
+      expect(gap).toBeGreaterThanOrEqual(storm.cooldownSeconds - 0.05);
+      expect(gap).toBeLessThanOrEqual(storm.cooldownSeconds + recovery + 0.05);
+    }
   });
 });

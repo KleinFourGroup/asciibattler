@@ -6,7 +6,7 @@ A fresh-session orientation for ASCIIbattler. Read this first; then dive into th
 
 **The ONE home for live status.** Other docs (and the agent memory) point here instead of restating it; when state changes, this section is the single place that updates.
 
-- **NEXT — ROUND 12 (Push, pull and blink): §161.5, the hex and the ice storm as specials — 161.5b-post, the ice storm's recharge doubled to 5 s** (the play signed 2026-11-25 with it: [ROADMAP.md](ROADMAP.md) §161.5, WORKLOG §161.5 "161.5c — the play, signed"); then its read, then §161.5's close. Then §162, the closing board. **Open ◐:** none.
+- **NEXT — ROUND 12 (Push, pull and blink): §161.5, the hex and the ice storm as specials — 161.5b-post, the ice storm's recharge doubled to 5 s** (the play signed 2026-11-25 with it: [ROADMAP.md](ROADMAP.md) §161.5, WORKLOG §161.5 "161.5c — the play, signed"): built, its `batch` read next, then §161.5's close. Then §162, the closing board. **Open ◐:** 161.5b-post (the ice storm at 5 s).
 - **In flight:** nothing.
 - **The public build:** `0.4.0` (`4fc62cfe`, tag `v0.4.0`), uploaded to itch.io on 2026-11-13; the uploads before it are in Closed rounds below.
 - **Snapshots:** WorldSnapshot **v42** (no player keeps one) · RunSnapshot **v51** (a v50 save, `0.3.0`'s, rejects).

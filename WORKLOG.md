@@ -213,6 +213,31 @@ leans with the unattended run from 162a to the stop at 162e, and §161.5's
 friction candidate closed with no new rule, since AGENTS' Evidence already
 covers a claim of an absence.
 
+### 162a's step zero (2026-11-26)
+
+The cut put step zero at one seed with `--hops=2`, as at 155a; the CLI
+refuses `--shadow-horizon` with `--hops`, since a rollout clone drops the
+run-shape dials and its walk would be unbounded (WORKLOG §84b). So the
+recipe's first line ran whole, at four seeds (1001 to 1004, `--jobs=4`)
+locally at `c339879d`: all four runs complete, 27 min, exit 0. Its
+`decisions.csv` holds 4,981 rows, 815 of them at the `run` horizon, and
+names every newcomer as a recruit candidate at the `run` horizon: the
+grenadier in 8 rows, the ninja in 7, the cavalier in 5, the telekinetic
+in 3 (the grenadier and the ninja at the port too). So the line runs on
+today's catalog and the shadow prices the newcomers. Four seeds' recruit
+rows scale to about 240, 210, 150 and 90 in 120, so the telekinetic's may
+come in near 80, against the cut's prediction; 162b reads it
+(`scratch/162/step0/`).
+
+### 162a — the cohort launched (2026-11-26)
+
+*Launched* at `c339879d`, pushed, from a detached worktree at
+`../asciibattler-162a` with a `node_modules` junction (138 entries on both
+sides): the three lines of `scratch/162/162a.queue`, 154g's lines byte for
+byte, on one `cpx42` from 19:31Z. The driver's `--jobs` parity test passed
+in the worktree, and batch 1 launched at 19:32Z. The drive log is the
+worktree's `scratch/162/162a-drive.log`.
+
 ### Between §161.5 and §162: the watcher skips scratch/ (2026-11-26)
 
 **Asked.** The user's own `npm run dev` loads almost at once, where the

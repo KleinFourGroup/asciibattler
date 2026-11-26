@@ -7,7 +7,7 @@ A fresh-session orientation for ASCIIbattler. Read this first; then dive into th
 **The ONE home for live status.** Other docs (and the agent memory) point here instead of restating it; when state changes, this section is the single place that updates.
 
 - **NEXT — ROUND 12 (Push, pull and blink): §162, the closing board — 162a, the prior table rebuilt**, then 162b to 162d unattended to the stop at 162e, the board read ([ROADMAP.md](ROADMAP.md) §162; the cut and its eight leans signed 2026-11-26, with the chain's pauses, in WORKLOG §162). §161.5's friction candidate closed with no new rule. **Open ◐:** none.
-- **In flight:** nothing.
+- **In flight:** 162a's cohort, the prior table's three lines on one `cpx42` from 2026-11-26 19:31Z, driven from the detached worktree `../asciibattler-162a` (its drive log `scratch/162/162a-drive.log`); if the driver died, recover by `process/measurement.md`'s crash steps, then `scripts/box-batch.sh <box> status|fetch`.
 - **The public build:** `0.4.0` (`4fc62cfe`, tag `v0.4.0`), uploaded to itch.io on 2026-11-13; the uploads before it are in Closed rounds below.
 - **Snapshots:** WorldSnapshot **v42** (no player keeps one) · RunSnapshot **v51** (a v50 save, `0.3.0`'s, rejects).
 - **Tests:** **4101 main** in 291 files, **588 fuzz:smoke** in 60 files and **1 fuzz:jobs-parity** at §161.5's close (`49ea7d21`'s code); typecheck clean; the journal corpus, run by hand, 34 journals, re-recorded at 161.5b-post (the ice storm's recharge: 2 moved, every config hash), the replay 0 of 34 differing at `3e0185ed`.

@@ -56,3 +56,8 @@ a resize. The scan's cost varied 3× across three starts minutes apart,
 so a busier moment could stretch it, which would make the resize and
 reload in the "not live" bullet's 2026-11-22 fact line a coincidence;
 that is an inference, and the fact line is the user's.
+
+**The fact line dropped**, the user's call ("You can go ahead and drop
+it!"): the "not live" bullet no longer says a resize and a reload
+brought the hidden pane live, and its stand-in wait reads "about a
+second", as measured above.

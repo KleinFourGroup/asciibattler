@@ -150,7 +150,22 @@ The prior table rebuilt, the rarity protocol's desk read per new
 draftable, the board line for line against §155's and paired on its
 seeds, act 1's bands against 155g's sheet, the fire channel read (TODO).
 **Risk:** medium (about a day of box time, sized at its kickoff).
-**Exit:** the board read and signed.
+**Exit:** the board read and signed. The cut signed 2026-11-26 with its
+eight leans (WORKLOG §162).
+
+- ☐ **162a — the prior table rebuilt** (`none`): v10 by the registry's
+  recipe, before the board, since the ARM prices a missing row at 0.
+- ☐ **162b — the newcomers' desk read** (`none`): v10's recruit-site
+  rows and the fire census; their dispositions at 162e.
+- ☐ **162c — the board on the box** (`none`): §155's 25 lines at v10's
+  HEAD, the fire channel's two rows to n=120, the fresh derive.
+- ☐ **162d — the roster table rebuilt** (`none`): from the board's eight
+  ARM rows.
+- ☐ **162e — the board read** (`stop`, the decision point).
+- ☐ **162f — the sheet amended** (`stop`; `none` if 162e holds the
+  sheet).
+- ☐ **162g — the content changes** (`stop`; only if 162e signs any).
+- ☐ **162h — the verify board** (`none`; only after 162g).
 
 ## Phase 163 — the close
 

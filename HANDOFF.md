@@ -6,7 +6,7 @@ A fresh-session orientation for ASCIIbattler. Read this first; then dive into th
 
 **The ONE home for live status.** Other docs (and the agent memory) point here instead of restating it; when state changes, this section is the single place that updates.
 
-- **NEXT — ROUND 12 (Push, pull and blink): §162, the closing board — its kickoff** ([ROADMAP.md](ROADMAP.md) §162; WORKLOG §162 lists its inputs; `process/planning.md` "Phase kickoff"). §161.5's close put one friction candidate to the user, a claim generalised past its measurement, twice, the lean no new rule (`archive/worklog-phase-161.5.md`, "§161.5's close"): ask it at the kickoff only if still unanswered. **Open ◐:** none.
+- **NEXT — ROUND 12 (Push, pull and blink): §162, the closing board — 162a, the prior table rebuilt**, then 162b to 162d unattended to the stop at 162e, the board read ([ROADMAP.md](ROADMAP.md) §162; the cut and its eight leans signed 2026-11-26, with the chain's pauses, in WORKLOG §162). §161.5's friction candidate closed with no new rule. **Open ◐:** none.
 - **In flight:** nothing.
 - **The public build:** `0.4.0` (`4fc62cfe`, tag `v0.4.0`), uploaded to itch.io on 2026-11-13; the uploads before it are in Closed rounds below.
 - **Snapshots:** WorldSnapshot **v42** (no player keeps one) · RunSnapshot **v51** (a v50 save, `0.3.0`'s, rejects).

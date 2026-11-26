@@ -29,6 +29,190 @@ The kickoff's inputs, by pointer: what §161 and §161.5 hand on
 Round 12 rows; `process/planning.md` "Phase kickoff", then
 `process/measurement.md` and BALANCE.md for the board.
 
+### The kickoff's audit, and the cut put to the user (2026-11-26)
+
+Read at `0af7c357`: ROADMAP §162, META-ROADMAP's Round 12 exit, TODO's
+Round 12 rows, §161's and §161.5's closes, `balance:board -- --plan` at
+HEAD, §155's kickoff and board (`archive/worklog-phase-155.md`; BALANCE
+2026-11-12, both entries), the signed sheet's 2026-11-12 amendment,
+BALANCE's integrity protocol, artifact registry, rarity protocol and the
+prior table v9's entry, `process/measurement.md`, both coverage tests, and
+the drive logs of 154g and 155a.
+
+- **The board runs as at §155.** `--plan` prints the same 17 rows. 155a
+  ran them as 25 batches (`scratch/155/155a-board.queue`) on one `cpx42`:
+  23:46Z to 05:05Z, 5 h 19 min for the 25 lines. The regen and
+  fire-ablated doctrine rows took 5 min 22 s and 5 min 27 s at n=40,
+  launch to launch. §155's pooled board is on disk at
+  `output/board-runs/155a/`, with its readers (`scratch/146/merge.mjs`,
+  `pair.mjs`, `walls.mjs`, `scratch/155/act1-pooled.mjs`), so §162's
+  board pairs with it seed for seed.
+- **What moved since §155's board** (`5d3bcba8`): 20 draftable units
+  against 16 (`scratch/162/draftable.ts`, through
+  `DRAFTABLE_ARCHETYPES`): the grenadier and the ninja uncommon, the
+  telekinetic and the cavalier rare. The adventurer's Snag and the ronin's
+  whirlwind changed two draftable kits. Enemy side, by
+  `config/encounters.json` and `config/sectors.json`: the grenadier in the
+  Artillery Company (a normal, acts 2 and 3); the cavalier in the warband
+  vanguard (an elite, act 2); the telekinetic and the warlock in the Dark
+  Magic Posse (an elite, act 3); the ninja and the warlock in the
+  Miscreants (act 3, from hop 3); the ice mage in the Elemental Trio (act
+  3). The warlock also keeps the `ghoul-nest` camp, and the ice mage the
+  `frost-coven` camp, both placed by biome and layout. Act 1's encounter
+  list names none of those five fights; act 1 moved through the player's
+  draft, the two kits, the puma's pounce and the fall on its chasm and
+  deep-water maps.
+- **The prior table goes first.** The ARM prices an item with no row at
+  0 (`tests/fuzz/rollout/evaluator.ts:164`, `prior.table[key] ?? 0`), and
+  v9's 16 units average −14.6 (BALANCE 2026-11-10), so on v9 the board's
+  ARM rows would price the four newcomers above most of their peers: the
+  Dis Pater trap of 88d at a smaller scale. A row under the floor still
+  folds at its meanDelta (`priorFoldValues`,
+  `tests/fuzz/prior/priorTable.ts:223`); only a missing row reads 0. So
+  the table is rebuilt, and the board runs under it. The rebuild itself
+  runs under v9, where the newcomers read 0, as Diana's and Hecate's first
+  rows did at v8.
+- **The prior table v10** is the registry's recipe, 154g's three lines
+  (`scratch/154/154g.queue`): v9 took 4 h 54 min of one `cpx42`, v8 5 h
+  4 min. Its count, predicted: 40 items, v9's 36 (12 daemons, 8 packets,
+  16 units) plus the four newcomers, Mars still PENDING.
+  `tests/prior-table-coverage.test.ts` carries four unit PENDING lines,
+  and rule 3 fails once they gain rows, so the rebuild's commit deletes
+  them.
+- **The rarity protocol's desk read** reads the recruit-site rows, n≥80
+  signable. v9's five rares read 158 to 173 at recruit; seven rares now,
+  so about 115 to 125 by the share alone, and the uncommons about 195 to
+  210 from 294 to 315 (a prediction). A thin row gets the protocol's
+  `--grant` pair at n=80 on a fresh window; no queue under `scratch/` or
+  `output/box-batches/` and no BALANCE line names `--seed-offset=8000`.
+  Dis Pater's grant line took 52 min (155a). `scratch/154/item-worth.mjs`
+  reads the units' worth by `TABLE=`, with its own check.
+- **Fire rate first** (the protocol's step 4): the batches' CSVs carry no
+  ability casts (`summary.csv`, `pacing.csv`, `rosters.csv`,
+  `decisions.csv`), and §161 found the charge rare in act 1.
+  `scratch/160.5/fall-census.ts` wraps the World for falls; extended to
+  count casts, it reads the newcomers' signature abilities and the falls
+  by pusher on 160.5d's shape (seeds 1 to 20, the deploy vector), locally.
+- **The roster table** v8 (155b) holds no newcomer;
+  `tests/roster-table-coverage.test.ts` carries their four PENDING lines.
+  Rebuilt from the board's eight ARM rows: 52 buckets predicted, since a
+  bucket is a (character, sector, hop) and neither moved.
+- **The fire channel** reads regen − fire-ablated on the same 40 seeds;
+  155a read 0.275 against the signed +0.10 (band 0.05–0.15), the
+  fire-ablated row 27 → 17 (p 0.021, one of 15 tests). At n=40 the two
+  rows leave the read loose; extending both to n=120 costs two 80-seed
+  lines, about 20 minutes of box.
+- **The enemy grenadier** (TODO): the Artillery Company's grenadier is
+  `count` weight 1 (`config/encounters.json`), drawn in the-start and
+  the-deep-end. The walk rows give its cost and turns per instance
+  (`pacing.csv`) and deaths per run (`summary.csv`); no CSV counts falls,
+  which the census does.
+- **The warlock and the ice mage** are priced through their fights on the
+  walk rows' `pacing.csv`: the Dark Magic Posse, the Miscreants and the
+  Elemental Trio, act 3, where 155a's regen walk reached 0.242 and the
+  deploy walk 0.792, so their instance counts are small on regen.
+- **The fresh derive** is due at a re-pin board (the integrity protocol);
+  155a's took 4 h 15 min, 146b's 5 h 53 min. Its search line reads no
+  prior table, and it runs beside the board at the board's HEAD.
+- **The box price**, re-read today from `hcloud server-type describe
+  cpx42`: 0.1314 an hour in fsn1 and nbg1, 0.1114 in hel1, net equal to
+  gross. No Windows restart is pending (both registry flags false); the
+  last update restart was 2026-11-25 at 08:23.
+- **The friction candidate** from §161.5's close (a claim generalised past
+  its measurement, twice) has no answer in the commits since
+  `748a4d04`, so it goes to the user with the cut.
+
+**The cut, put to the user** (unsigned):
+
+- **162a — the prior table rebuilt** (`none`). Step zero: the recipe's
+  line at one seed locally with `--hops=2`, its shadow rows naming a
+  newcomer. Then 154g's three lines at the cut's HEAD, pushed, on one
+  `cpx42` → `npm run prior:table` → v10, the four unit PENDING lines out,
+  BALANCE's registry row and run-log entry. Exit: the coverage test green
+  with every draftable holding a row; the count against the prediction.
+- **162b — the newcomers' desk read** (`none`; dispositions at 162e).
+  v10's recruit-site rows for the four newcomers, with the adventurer and
+  the ronin beside them, against their tiers' peers, by
+  `scratch/154/item-worth.mjs` with its check; a row under 80 named for
+  the grant pair. The fire census at the board's HEAD, locally. Exit:
+  each newcomer's row with its n, and the casts and falls by ability.
+- **162c — the board on the box** (`none`). At v10's HEAD, pushed, from a
+  detached worktree. Box 1: 155a's 25 lines line for line, then the regen
+  and fire-ablated rows extended to n=120. Box 2: the fresh derive. The
+  grant pair (a control and one arm per thin newcomer, n=80 on seeds 8001
+  to 8080) on a third box only if 162b names a thin row. The anchors
+  locally. Exit: every batch fetched with exit 0 at one HEAD; `--report`
+  VERDICT PASS.
+- **162d — the roster table rebuilt** (`none`). From the board's eight ARM
+  rows: v9, its PENDING lines out for every newcomer an ARM row drafts.
+  Exit: the coverage guard green; a sampled draw loads and plays; at most
+  55 buckets.
+- **162e — the board read** (`stop`, the decision point). The board
+  against 155a's, paired on seeds 1 to 120; act 1 by encounter against
+  the turn targets and cost bands, and against 155g's sheet (the six
+  refs, seam 1 and act 1's wall by vector); the fire channel; the
+  newcomers' desk read; the Artillery Company against the deaths and
+  falls; the warlock's and the ice mage's fights; the parity gaps; the
+  terminal pair; acts 2 and 3 recorded; the derive's ceiling. Put: act
+  1's sheet held, re-pinned with no content moved, or its misses tuned
+  (162g, 162h); each newcomer's disposition (hold, re-tier, re-price or a
+  named watch); the fire channel's (re-sign, hold the WARN, or a cause
+  read placed later); the enemy grenadier's (hold, or a weight or sector
+  change).
+- **162f — the sheet amended** (`stop`; `none` if 162e holds the sheet,
+  and the user may make it `none` under a re-pin, as at 155g). The values
+  162e signs, in `signed-sheet.json`; acts 2 and 3 to BALANCE for Rounds
+  21 and 22.
+- **162g — the content changes** (`stop`; only if 162e signs any). The
+  changes as signed, the corpus re-recorded.
+- **162h — the verify board** (`none`; only after 162g). 162c's board at
+  162g's HEAD, the roster table rebuilt from it. Exit: VERDICT PASS, and
+  the changed reads in their bands or the miss to the user.
+
+*Predictions.* No snapshot bump (World v42, Run v51) and no RNG stream.
+162a, 162d and 162f stage `tests/fuzz/`, so the fuzz smoke and the
+`--jobs` parity fire, and no smoke pin is predicted to move (none did at
+154g or 155b); 162b and 162c write docs alone, the census in `scratch/`;
+162g stages `config/`, so the smoke fires. The corpus re-records at 162g
+only: the game reads nothing under `tests/fuzz/`.
+
+*Leans put with it.*
+
+1. The order: the prior table first, the board under it (above).
+2. The box: one `cpx42` for 162a (5 to 6 h), then two side by side for
+   162c, the board (5.5 to 6.5 h with the two extensions) and the derive
+   (4.5 to 6 h); 15 to 18.5 box hours, 2.0 to 2.4 at 0.1314. A grant
+   pair adds about 55 min a line on its own box.
+3. The fresh derive in, since a re-pin asks for it. Without it, about 0.7
+   less and the protocol's re-pin leg named unmet at 162f.
+4. The regen and fire-ablated rows extended to n=120 for the fire
+   channel's read.
+5. The grant pair only for a newcomer row under 80.
+6. The fire census, local, on 160.5d's shape.
+7. 162a to 162d run unattended to the stop at 162e: at 162a's verified
+   fetch the session builds v10, commits, pushes, reads 162b and launches
+   162c. Pauses: a newcomer with no row in v10 (the board would price it
+   0) or a failure the step's intent cannot fix stops the chain before
+   162c's launch. Driver holds: one relaunch of the unfetched lines at the
+   same HEAD; a second hold destroys the box after fetching what finished,
+   and stops. The context meter's hand-off at a commit before a launch
+   stops there with hand-off notes. Never unattended: a content change, a
+   sheet amendment or a disposition. Every call the session makes written
+   here for the read.
+8. Left out: a second prior-table pass under v10; the per-kind cost bands
+   into the sheet; acts 2 and 3 tuned (their rounds); the warlock and the
+   ice mage tuned unless 162e calls it; a pair at Escalation 3.
+
+*The stretch the cut opens:* 162a to 162d, to the stop at 162e.
+
+### The cut signed (2026-11-26)
+
+**Signed** (the user: "Signing the cut and all leans, including no new
+rule. Thank you so much! 😁"): the cut as put, its reads, its eight
+leans with the unattended run from 162a to the stop at 162e, and §161.5's
+friction candidate closed with no new rule, since AGENTS' Evidence already
+covers a claim of an absence.
+
 ### Between §161.5 and §162: the watcher skips scratch/ (2026-11-26)
 
 **Asked.** The user's own `npm run dev` loads almost at once, where the

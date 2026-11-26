@@ -6,13 +6,13 @@ A fresh-session orientation for ASCIIbattler. Read this first; then dive into th
 
 **The ONE home for live status.** Other docs (and the agent memory) point here instead of restating it; when state changes, this section is the single place that updates.
 
-- **NEXT — ROUND 12 (Push, pull and blink): §161.5, the hex and the ice storm as specials — 161.5b-post, the ice storm's recharge doubled to 5 s** (the play signed 2026-11-25 with it: [ROADMAP.md](ROADMAP.md) §161.5, WORKLOG §161.5 "161.5c — the play, signed"): built, its `batch` read next, then §161.5's close. Then §162, the closing board. **Open ◐:** 161.5b-post (the ice storm at 5 s).
+- **NEXT — ROUND 12 (Push, pull and blink): §162, the closing board — its kickoff** ([ROADMAP.md](ROADMAP.md) §162; WORKLOG §162 lists its inputs; `process/planning.md` "Phase kickoff"). §161.5's close put one friction candidate to the user, a claim generalised past its measurement, twice, the lean no new rule (`archive/worklog-phase-161.5.md`, "§161.5's close"): ask it at the kickoff only if still unanswered. **Open ◐:** none.
 - **In flight:** nothing.
 - **The public build:** `0.4.0` (`4fc62cfe`, tag `v0.4.0`), uploaded to itch.io on 2026-11-13; the uploads before it are in Closed rounds below.
 - **Snapshots:** WorldSnapshot **v42** (no player keeps one) · RunSnapshot **v51** (a v50 save, `0.3.0`'s, rejects).
-- **Tests:** **4097 main** in 289 files, **588 fuzz:smoke** in 60 files and **1 fuzz:jobs-parity** at §161's close (`2cb87a56`'s code); typecheck clean; the journal corpus, run by hand, 34 journals, re-recorded at 161i (the Dagger's rename: 2 moved in their events, every config hash), the replay 0 of 34 differing at `2cb87a56`.
+- **Tests:** **4101 main** in 291 files, **588 fuzz:smoke** in 60 files and **1 fuzz:jobs-parity** at §161.5's close (`49ea7d21`'s code); typecheck clean; the journal corpus, run by hand, 34 journals, re-recorded at 161.5b-post (the ice storm's recharge: 2 moved, every config hash), the replay 0 of 34 differing at `3e0185ed`.
 - **Model id: `claude-opus-5-5`** since 2026-09-22. When yours differs, say so at the next stop; at the user's word, review AGENTS.md against the vendor's current prompting guidance and record the new id (the last review: `archive/post-104-worklog.md`, "The new-model tone audit").
-- **Last phase: §161**, the blink and the charge, 2026-11-22: the ninja (the Dagger and the Blink, which also jumps toward a cell when walking there takes longer) and the cavalier (the Sabre and the Charge, the charger arriving with its blow) draftable and in play; the puma's pounce; the afterimages, the cut and the gallop; the play signed (`archive/worklog-phase-161.md`).
+- **Last phase: §161.5**, the hex and the ice storm as specials, 2026-11-26: the warlock's Hex over the Jinx and the ice mage's Ice Storm over the Icicle, each shot releasing its caster after 0.3 s; the storm's recharge doubled to a flat 5 s at the play (`archive/worklog-phase-161.5.md`).
 
 ## Current state
 

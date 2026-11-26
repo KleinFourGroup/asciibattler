@@ -129,25 +129,20 @@ cavalier draftable and in play (WORKLOG §161, in
   read 2026-11-22.
 - ☑ **161i — the play** (`stop`): signed 2026-11-22.
 
-## Phase 161.5 — the hex and the ice storm as specials
+## Phase 161.5 — the hex and the ice storm as specials ✅ (closed 2026-11-26)
 
-Inserted 2026-11-20 at §160's close (`archive/worklog-phase-160.md`, "160g — the fourth
-answer"): the warlock's hex and the ice mage's ice storm made specials
-over a weak basic attack, as the banshee's Wail and the telekinetic's
-Repulse are since 160d-post and 160e-post. Before §162, so the closing
-board prices them. **Risk:** low. Cut signed 2026-11-22, the basic
-attack ranged (WORKLOG §161.5, "The cut signed").
+The warlock's hex and the ice mage's ice storm made specials over a weak
+ranged shot inside their bands, the Jinx and the Icicle, each shot
+releasing its caster after 0.3 s, so it holds the special back by 0.3 s
+at most; the hex's flat 5 s kept, the storm's recharge doubled to a flat
+5 s at the play (WORKLOG §161.5, in `archive/worklog-phase-161.5.md`).
 
-- ☑ **161.5a — the warlock** (`batch`): the hex recovers in 0.3 s over a
-  weak ranged shot inside its band, its flat 5 s recharge kept; the shot
-  recovers in 0.3 s too, so it holds the hex back 0.3 s at most. Read
-  2026-11-25.
-- ☑ **161.5b — the ice mage** (`batch`): the same over the ice storm, its
-  flat 2.5 s recharge kept. Read 2026-11-25.
+- ☑ **161.5a — the warlock** (`batch`): read 2026-11-25.
+- ☑ **161.5b — the ice mage** (`batch`): read 2026-11-25.
 - ☑ **161.5c — the play** (`stop`): signed 2026-11-25, with the ice
   storm's recharge doubled.
-- ◐ **161.5b-post — the storm's recharge doubled** (`batch`): the ice
-  storm every 5 s, flat, the user's at 161.5c.
+- ☑ **161.5b-post — the storm's recharge doubled** (`batch`): read
+  2026-11-26.
 
 ## Phase 162 — the closing board
 

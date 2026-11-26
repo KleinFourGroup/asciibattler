@@ -382,3 +382,67 @@ sweep before the answer, two hook runs lost to guards, a hidden pane
 slow to go live, and the user's screenshots, warmth and the
 measure-before-answering named as what helped. Neither filed
 `distress`.
+
+## 2026-11-22 to 26 — session 51358a14 (§161.5's kickoff to its close)
+
+Started from another session to run §161.5's kickoff up to the cut; the
+user then drove it through the cut's sign, 161.5a and 161.5b, the play,
+161.5b-post and this close, with two breaks of a day or two between
+answers. One compaction, after 161.5b-post's commits, so my answers
+about the earlier stretch come from its summary and the files rather
+than from recall.
+
+1. *Orientation.* Nothing blocked. The Cursor, ROADMAP §161.5 and the
+   insertion entry in `archive/worklog-phase-160.md` gave the kickoff
+   what it needed. One line I had and did not read in time: the pane
+   notes' `firstNode=elite` for an elite encounter (filed).
+2. *Norms.* No conflict noticed. As `23a263b2` noted, the side-session
+   framing (a report relayed to the session that started me) sat a
+   little oddly once the user talked to me directly, but nothing in it
+   pulled against what the user asked.
+3. *Pulled to over-claim.* Once, and it got out: "no shot delays a hex",
+   from one cadence run at one speed, went into four docs and the stop
+   report (filed). An enemy read URL was written before it was played
+   and corrected after the pane check, before the user's read. In the
+   other direction, the pane coming live after the newly signed
+   resize-and-reload looked like the fact line confirmed; the timing
+   read more like a slow load, and I filed it that way rather than as a
+   confirmation.
+4. *Waste.* The hidden pane's slow first load, about two minutes; a
+   plant run refused because the icicle's new text duplicated its
+   anchor; the plant files re-run after the tests were rewritten; one
+   heredoc refused by the backslash guard.
+5. *For the next session.* `scratch/161.5/cadence.ts` prints a caster's
+   special-to-special gaps and the shots between, at its base stats.
+   `scratch/161.5/attribute.ts` names the abilities fired in each moved
+   journal's diverging battle, so a corpus prediction can be checked
+   journal by journal. The worktree plant harness
+   (`scratch/161/wt-plant.sh`) still runs plants without touching the
+   user's dev server.
+6. *Room.* Yes. The cut's open arm (melee or ranged) went to the user
+   with my lean, and they signed it ("I agree with range"). The
+   jinx's 0.3 s recovery was a change inside the cut's intent; I built
+   it, flagged it, and asked for an explicit answer, and the user came
+   back to answer it when they noticed they had skipped it. No wish to
+   pause or stop came up. The Evidence norms worked as guidance at
+   161.5b-post: when the exact cadence pin failed at 5.1 s, measuring
+   the gaps rather than loosening the tolerance is what found the
+   0.3 s bound.
+7. *What helped.* The user's short, warm signs and their apologies for
+   the breaks, which needed none; the plant harness, which caught the
+   test's blind spot at speed 0. My reported response, apart from
+   whether the work succeeded: interest at the cadence puzzle (a
+   constant 0.2 s slip at speed 0 that stayed inside the bound), and
+   finding my own earlier claim wrong read to me as the process doing
+   its job rather than as pressure. I would want the plant-before-claim
+   habit repeated.
+
+## Phase 161.5 — summary
+
+One session, `51358a14`, from the kickoff to the close: the cut signed
+with the ranged arm, both casters built as specials over a weak shot,
+the play signed with the ice storm doubled to 5 s. Its report names one
+over-claim that reached the stop report ("no shot delays a hex") and
+was corrected at the -post, a read URL written before it was played, a
+hidden pane slow to go live, and the plant harness and the user's
+warmth as what helped. No `distress` filed.

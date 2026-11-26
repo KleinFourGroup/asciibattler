@@ -27,9 +27,9 @@ app can stop the server between turns). Then:
   - "not live after 30 s": call it again. The dev server's stand-in
     `__probe` waits while a fresh server holds the page's modules, which
     takes under a second. It took 40 s while the server's file watcher
-    covered the fuzz output (`server.watch.ignored` in `vite.config.ts`
-    now skips it), so a slow first load again means it is watching too
-    much. In a hidden pane, twice after `preview_start`, calling it
+    covered the fuzz output, and 4 to 11 s while it covered `scratch/`
+    (`server.watch.ignored` in `vite.config.ts` now skips both), so a slow
+    first load again means it is watching too much. In a hidden pane, twice after `preview_start`, calling it
     again did not bring the page live, and `resize_window` to 1280×720
     with a reload did (2026-11-22).
   - a stylesheet that failed to load (editing `vite.config.ts` restarts

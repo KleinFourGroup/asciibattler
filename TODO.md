@@ -1074,16 +1074,4 @@ The inbox for a new row until the next pass places it.
   reader still wants (`tests/fuzz/redrawPolicy.ts:60-64`; WORKLOG §144,
   the kickoff's audit).
 
-- [ ] **The hidden pane's slow first load.** Twice in two phases a
-  hidden Browser pane went live only about 90 s after `preview_start`
-  (161f-post2; 161.5b, where a resize and a reload did not help and a
-  third `ready()` did). `process/browser-pane.md` holds that a slow first
-  load means the dev server's watcher covers too much, and
-  `server.watch.ignored` in `vite.config.ts` skips `output/` and the fuzz
-  output but not `scratch/`, which held 9,208 files at §161.5's close
-  (the 46 s cold start that rule came from was over about 33,000). Time
-  a cold first page with `scratch/` watched and with it ignored before
-  changing anything; the "not live" bullet's 2026-11-22 fact line (the
-  resize brought it live) may describe the slow load rather than a cure,
-  and changing it is the user's (WORKLOG §161.5, "§161.5's close", in
-  `archive/worklog-phase-161.5.md`).
+- [x] ✅ **The hidden pane's slow first load.** `scratch/` is skipped by the dev server's watcher: a cold first stylesheet's wait went from 3.6 to 11.1 s over three starts to 0.7 to 1.5 s. The two 90 s loads stay unexplained (WORKLOG §162, "Between §161.5 and §162: the watcher skips scratch/").

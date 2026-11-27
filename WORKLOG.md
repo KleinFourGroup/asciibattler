@@ -325,3 +325,67 @@ push on itself and the pounce on the puma (158b). Gotcha #142 added at
 Round 12's exit is met. Round 13's charter stands with its `extends`
 parenthetical pointing at the recount above, and TODO's Round 13 holds
 the whirlwind's `evadable` row.
+
+### 163b — `0.5.0`, the tag and the zip (2026-11-27)
+
+**Built.** `npm version 0.5.0 --no-git-tag-version` changed
+`package.json` and the lock file; the commit `f0a0438a` and the
+annotated tag `v0.5.0` were made by hand, as at `0.4.0`. Neither is
+pushed. The commit's hook ran the full suite: 4101 tests in 291 files,
+green, typecheck clean, the smoke skipped (no sim path staged), as the
+cut predicted. `node scripts/itch-zip.mjs` on the clean tree:
+`asciibattler-0.5.0_f0a0438.zip`, build ID `0.5.0+f0a0438`, 37 entries,
+1,458,791 bytes (`0.4.0`'s: 32 and 1,264,358), the build's hash
+`031d5d53…501678c`. The five new entries are the round's cues:
+`audio/blink.wav`, `charge.wav`, `fall.wav`, `shove.wav` and
+`splash.wav`. `--check` against the build, run on its own, exit 0; the
+control, `0.4.0`'s zip against this build, exit 1 ("the zip holds 32
+files and the build 37").
+
+**In the pane** (Chromium, `itch-preview` over `output/itch/current`,
+restarted after the zip, since it had served `0.4.0`'s bundle):
+`<html data-build>` and the menu's corner read `0.5.0+f0a0438`;
+JetBrains Mono, DejaVu Sans Mono and ASCIIbattler Glyphs loaded
+(`document.fonts`); `__probe`, `__game` and `__diag` undefined; one
+inline script and one module bundle; the console tool returned no
+error.
+
+**A run saved by `0.4.0` itself.** The origin's slot held the run 156b
+saved: format 51, stamped `0.4.0+4fc62cf`, 5,655 characters. Its text
+was copied to a key of its own first (removed at the end). With `0.4.0`
+still served, the menu offered Continue (the control). With `0.5.0`
+served, the menu offered Continue with no message, the slot's text
+unchanged (the same SHA-256 prefix, `4555161c8091be63`), and Continue
+opened that map: The Periphery, the Bandit King its boss, roster 10,
+morale 40 / 40, no failure plate. Through the first node, an event
+(a pile of bits taken), the next gate saved the run at format 51
+stamped `0.5.0+f0a0438`. A battle node then opened the Canids' deploy
+screen; Fight played the skirmish in the hidden pane, its frames running
+at about 17 a second, hitsplats drawn, to "Skirmish won" and turn 2,
+morale 39 / 40 against 11 / 20, no failure plate. The slot now holds
+that `0.5.0` run, for the next upload's check.
+
+**The changelog** for the itch page, drafted for the user to post:
+`scratch/163b/changelog.md` (off git). Its claims are read from config
+at HEAD (the abilities' names, lines, ops and numbers, the units'
+rarities, the encounters fielding them, the five new cues) and from the
+round's records (a boss stopping at the edge, the storm's 5 s), and the
+continued run above.
+
+**Where each is likeliest met**, for 163c's smoke, from
+`config/sectors.json` and `config/encounters.json`. Act 1, The
+Periphery: the Snag and the whirlwind at the Bandit King (one of its two
+bosses), the puma's pounce at Cats! (an elite) and the Divine Bear (the
+other boss). Act 2, The Fragments: the enemy grenadier's push at the
+Artillery Company, the cavalier's charge at the Warband Vanguard (an
+elite), the Snag at the Guarded Adventurer. Act 3, The Deep End: the
+ninja's blink among the Miscreants, the telekinetic's Repulse and the
+warlock's Jinx at the Dark Magic Posse (an elite), the Icicle at the
+Elemental Trio, the Wail at the Bandit Queen. In a draft, the grenadier
+and the ninja are uncommon, the telekinetic and the cavalier rare. A
+fall needs a push beside chasm or deep water: the spiral and the water
+maps.
+
+**Not verified:** Firefox and Edge, the itch frame, sound by ear, a
+newcomer in a draft or a battle in this build, a push, a pull, a blink,
+a charge or a fall seen in it: 163c.

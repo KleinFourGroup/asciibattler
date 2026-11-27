@@ -1167,10 +1167,10 @@ and archetypes that extend another.
   not a large radius (a radius builds its cells on every fire, an aura's
   every tick); a global stun or heal special as its consumer.
 - **`extends`** (R7): a preprocess merge, the editor's round trip, and the
-  seven places a new archetype is registered (units, prices, the fuzz
-  strategies' strict record, the redraw-fisher's strict record,
-  `Recruitment.test`'s EXCLUDED, the glyph, `REQUIRED_UNIT_IDS`) as a
-  checklist with a guard where one is missing. Its reskins (A21): the
+  places a new archetype is registered (recounted from Round 12's four
+  newcomers at 163a: WORKLOG 163a, in `archive/worklog-phase-163.md`
+  after §163's close) as a checklist with a guard where one is missing.
+  Its reskins (A21): the
   soldier (N17), the conscript (N26) and the commissar (N25, a speed
   status under the colourblind gate).
 - **`knownAbilityIds`'s last reader** (U6), the archetype editor.

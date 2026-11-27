@@ -320,3 +320,8 @@ push on itself and the pounce on the puma (158b). Gotcha #142 added at
    both left for Round 13's kickoff audit to find again.
 3. Settled by the cut: 163c's smoke is the round's playtest; no audit
    round, since no META-ROADMAP cluster closed.
+
+**163a signed** (the user: "Signing both calls on your leans! 😁").
+Round 12's exit is met. Round 13's charter stands with its `extends`
+parenthetical pointing at the recount above, and TODO's Round 13 holds
+the whirlwind's `evadable` row.

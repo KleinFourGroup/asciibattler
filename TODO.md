@@ -398,6 +398,17 @@ META-ROADMAP §"Round 13 — The unit kit" names each row's place.
   catalog instead of the registry (`archive/post-118-worklog.md` §123, "The reach-diff over
   the seven").
 
+- [ ] **The whirlwind's `evadable`, settled with the dodge** (signed at
+  163a, 2026-11-27). The ronin's whirlwind, an area on its caster, is
+  authored `evadable: true` ("evadable as the katana", 160f), so two
+  landing notes for the dodge are false: `src/sim/effects/interpreter.ts`
+  says no shipped area op is `evadable`, and `src/sim/effects/schema.ts`
+  that the flag marks the single-target weapons, as against blasts. The
+  flag is read by nothing today. The dodge's design decides whether a
+  dodger can slip a whirlwind's cut; the flag and both notes change in
+  one commit (WORKLOG 163a, in `archive/worklog-phase-163.md` after
+  §163's close).
+
 ## Round 14 — Neutrals
 
 META-ROADMAP §"Round 14 — Neutrals" names each row's place.

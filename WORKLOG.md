@@ -517,3 +517,52 @@ slips are the ones that went through.
 3. *The shell traps*: the guards caught six of eight before anything
    ran, and §161.5's close put the pattern to the user, who signed no new
    rule. Listed and left; no candidate.
+
+**Tranche 1 signed** (the user: "Signing tranche 1 on all your leans!
+😁"): `execSync`'s row kept; Python's CRLF row deleted (163e); no new
+rule or guard.
+
+### 163d — tranche 2: the open rows, the papercuts and the scratchpad (2026-11-27)
+
+**The open Round 12 rows**, each with its place:
+
+- *A line for every unit* (151f), the user's to write: 6 of 43 units
+  carry a line. By the cut's signed lean it carries to Round 13's TODO
+  as it stands at 163e, unless the user writes the lines before 163f.
+  Round 13 adds four units, so the set grows by four.
+- *A resume mode for `box-drive.sh`* ("Not yet placed", 162c): placed in
+  Round 13's TODO ahead of its board, by the cut's signed lean, at 163e.
+
+**The inbox's two older rows**, which Round 11's close left unplaced:
+
+- *The redraw-fisher file refused by its own schema* (§144): 163a's
+  recount found that no newcomer touched it, since nothing loads it. Lean:
+  **place it in Round 13** beside `extends`, whose registration checklist
+  decides whether the file is filled in or deleted.
+- *Beyond the Roman look* (§151): Round 17's daemons are the next new
+  ones, as the row says. Lean: **place it in Round 17**.
+
+**The papercuts still open.** Of the round's seven: fixed, the hook's
+timeouts (`4a94f71f`, §160) and the stale recipe (`ec0f6ffc`, 162d);
+answered, the hidden pane's slow load (the watcher's `scratch/` skip,
+`6994d7f7`, its TODO row ticked); placed, the driver killed by a restart
+(the resume row, above). Two were left at their phase closes, and
+neither recurred after (the friction log has no line on either since):
+
+- *Electron's binary fetched unannounced* (160.5e): left at §160.5's
+  close, once with no known cause. Lean: **left**.
+- *The chaos census's re-pick* (161e): left at §161's close, since 161f
+  and 161g passed with the census as it stood. Each draftable newcomer
+  moves the walks, and Round 13 adds four units; the sweep that found
+  the fifth slot is `scratch/161e/chaos-sweep.ts`, which git ignores, so
+  it is on this machine only. Lean: **left**; a re-pick at Round 13 is
+  that phase's step zero, and the sweep is named in §161's close.
+
+**The scratchpad.** No Round 12 entry; 163f archives it with its sweep
+line.
+
+The list 163e builds, if tranche 2 is signed on its leans: Python's
+CRLF row out of `process/shell-and-windows.md`; in TODO, 151f's row and
+the resume mode under Round 13, the redraw-fisher row under Round 13
+and the Roman look under Round 17; AGENTS, CLAUDE.md, ROUND-RULES and
+the guards unchanged.

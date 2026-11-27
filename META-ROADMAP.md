@@ -74,7 +74,7 @@ every amendment re-runs the full board; paired same-seed deltas govern.
  9. The frame ────┤  ✅ CLOSED 2026-10-30 — the act design · the board's guards · every strike lands, precision and evasion out · 0.2.0 (§134–§140)
 10. Act 1 ────────┤  ✅ CLOSED 2026-11-04 — the scripted run · the board by act · six beasts · act 1, The Periphery · act 1's bands · 0.3.0 (§141–§147)
 11. The roster ───┤  ✅ CLOSED 2026-11-13 — the stat sheet · the weapons by taste · power by rarity · Mars in three · bandits out of the draft · the kits · act 1's bands · 0.4.0 (§148–§156)
-12. Push, pull ───┤  forced movement · the teleport · the cavalier · seven units
+12. Push, pull ───┤  ✅ CLOSED 2026-11-27 — forced movement · the four newcomers · the fall · the blink, the charge and the pounce · the hex and the storm as specials · the closing board · 0.5.0 (§157–§163)
 13. The unit kit ─┤  lifesteal · specials · global reach · `extends` and its reskins
 14. Neutrals ─────┤  the split · `affects` as flags · totems · the aura healer · camp levels
 15. The split ────┤  `Run.ts` and `World.ts`, byte-identical
@@ -1095,7 +1095,7 @@ hand-off pass kept (156d, 156e). Archives: `archive/post-147-roadmap.md`
 
 ---
 
-## Round 12 — Push, pull and blink
+## Round 12 — Push, pull and blink ✅ CLOSED 2026-11-27
 
 **Charter:** attacks that move their target or their caster, designed once
 with their consumers.
@@ -1133,6 +1133,33 @@ draftable. **Exit:** each seam with a headless test and its planted
 failure; the consumers in play; the board. **Release:** seven units and
 abilities. **Save:** a World bump, the push holding its victim for the
 slide (signed at 158b). **Scope guards:** no 2×2 body is pushed until round 19.
+
+**CLOSED 2026-11-27** — seven phases (§157–§163, with §160.5 and §161.5
+inserted), each closed on the user's read, the close's last step at its
+sign. The exit met, clause by clause (163a): each seam with its headless
+test and its planted failures (the walk, the held slide, the op, the
+Snag's room, the boss flag, the fall, the hit after a leap, the blink,
+the charge); the consumers in play, the four newcomers draftable and
+each an enemy in act 2 or 3; the board read and signed at 162e, act 1's
+refs re-pinned at 162f, paired against §155's. The release, `0.5.0`,
+uploaded 2026-11-27: the push and the pull with the fall, the
+grenadier, the telekinetic, the ninja and the cavalier, the adventurer's
+Snag, the ronin's whirlwind, the banshee's Wail on her own cell, the
+puma's pounce, and the warlock's and the ice mage's specials over a weak
+shot; a run saved by `0.4.0` continues, the save at Run v51. **Against
+the charter:** the fall (§160.5), a push into chasm or deep water
+dropping its victim where the design stop signed a stop at the edge, a
+boss excepted; §161.5, the hex and the ice storm made specials; N3's
+flag carried to Round 14; the cavalier's charge a push on itself, the
+pounce on the puma. The scope guard held (`pushLanding`'s footprint
+check, 163a). World v39 → v42, Run v51 at both ends; gotcha #142 added.
+At the close: Round 13's charter standing, its `extends` parenthetical
+pointing at 163a's recount, the whirlwind's `evadable` a TODO row; the
+keep test kept `execSync`'s row and deleted Python's CRLF row; no new
+rule or guard (163d, 163e). Archives: `archive/post-156-roadmap.md` +
+`worklog-phase-158.md` to `-163.md` + `round-12-spec.md` +
+`round-12-rules.md` + `sessions-round-12.md` +
+`retro-scratchpad-round-12.md`.
 
 ---
 

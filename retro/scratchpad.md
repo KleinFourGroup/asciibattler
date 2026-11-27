@@ -71,8 +71,12 @@ the Round-11 (The roster, §148–§156) backlog was swept 2026-11-13 (the
 fifteenth run, at 156d — no entries; from the friction read: the
 piped-commit directive deleted, no new rule or guard) →
 [archive/retro-scratchpad-round-11.md](../archive/retro-scratchpad-round-11.md);
+the Round-12 (Push, pull and blink, §157–§163) backlog was swept
+2026-11-27 (the sixteenth run, at 163d — no entries; from the friction
+read: Python's CRLF row deleted, no new rule or guard) →
+[archive/retro-scratchpad-round-12.md](../archive/retro-scratchpad-round-12.md);
 the MVP-era entries had earlier fed [post-mvp-review.md](post-mvp-review.md).
 
 ---
 
-_(The post-§156 entries start here — Round 12, Push, pull and blink.)_
+_(The post-§163 entries start here — Round 13, The unit kit.)_

@@ -287,7 +287,7 @@ Round 13, the deep-end wall to Round 22, the corpus's trade rows to
 Round 12's kickoff, the per-encounter `--set` to Round 21 and the units'
 lines to Round 12 (WORKLOG §156, 156d).
 
-## Round 12 — Push, pull and blink
+## Round 12 — Push, pull and blink (closed 2026-11-27)
 
 META-ROADMAP §"Round 12 — Push, pull and blink" names each row's place.
 

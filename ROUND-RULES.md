@@ -8,6 +8,6 @@ close"). A rule enters with the date it was signed and a pointer to its
 WORKLOG entry.
 
 
-## Round 12
+## Round 13
 
-None signed yet. Round 11 signed none (`archive/round-11-rules.md`).
+None signed yet. Round 12 signed none (`archive/round-12-rules.md`).

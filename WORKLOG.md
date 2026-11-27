@@ -238,6 +238,37 @@ byte, on one `cpx42` from 19:31Z. The driver's `--jobs` parity test passed
 in the worktree, and batch 1 launched at 19:32Z. The drive log is the
 worktree's `scratch/162/162a-drive.log`.
 
+### 162a — the prior table v10 (2026-11-26)
+
+The three lines fetched with exit 0 and the driver destroyed the box at
+00:05Z, 4 h 34 min after it made it. v10 holds 40 items, the count the
+cut predicted, with every newcomer in it and 38 over the floor. Its
+numbers are BALANCE's run log, "the prior table v10". The four unit
+PENDING lines are out: the coverage test failed on them first (its rule
+3, the control) and passed after. v9 is in git at `5ca1b705` and beside
+the step's readers at `scratch/162/prior-table-v9.json`. The bank
+completed 84 of 120 runs against v9's 97 (p 0.029), with more defeats
+in acts 1 and 3; the content since `07ce8ed5` and each bank's prior ride
+together there, and the board reads the acts.
+
+### 162b — the newcomers' desk read and the fire census (2026-11-26)
+
+Every newcomer's recruit row is over 80 (the grenadier 219, the ninja
+190, the cavalier 120, the telekinetic 114), so 162c runs no grant pair.
+Taken free, the grenadier and the ninja sit inside the uncommons'
+spread; the telekinetic and the cavalier are the rares' two lowest, the
+halberdier within an error of both. The fire census fires every
+newcomer's abilities on the player's side, the telekinetic's in one
+battle of 432; its runs never reach act 3, so the enemy ninja's,
+telekinetic's, warlock's and ice mage's fights are the board's to read.
+The numbers are in the same BALANCE entry. The dispositions are 162e's.
+
+*The session's calls* (lean 7): the census ran on the working tree
+before v10's commit, since it plays the deploy strategy, which reads no
+prior table, so the code is the board's; the BALANCE entry adds the
+idols' moves and the bought-row watch's numbers, which TODO's Round 17
+watches read.
+
 ### Between §161.5 and §162: the watcher skips scratch/ (2026-11-26)
 
 **Asked.** The user's own `npm run dev` loads almost at once, where the

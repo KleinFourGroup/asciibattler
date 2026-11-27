@@ -153,10 +153,12 @@ seeds, act 1's bands against 155g's sheet, the fire channel read (TODO).
 **Exit:** the board read and signed. The cut signed 2026-11-26 with its
 eight leans (WORKLOG §162).
 
-- ☐ **162a — the prior table rebuilt** (`none`): v10 by the registry's
+- ☑ **162a — the prior table rebuilt** (`none`): v10 by the registry's
   recipe, before the board, since the ARM prices a missing row at 0.
-- ☐ **162b — the newcomers' desk read** (`none`): v10's recruit-site
-  rows and the fire census; their dispositions at 162e.
+  40 items, every newcomer with a row (WORKLOG 162a).
+- ☑ **162b — the newcomers' desk read** (`none`): v10's recruit-site
+  rows and the fire census; their dispositions at 162e. Every recruit
+  row over 80, so no grant pair (WORKLOG 162b).
 - ☐ **162c — the board on the box** (`none`): §155's 25 lines at v10's
   HEAD, the fire channel's two rows to n=120, the fresh derive.
 - ☐ **162d — the roster table rebuilt** (`none`): from the board's eight

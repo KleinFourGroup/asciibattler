@@ -185,3 +185,8 @@ placed in Round 13's TODO ahead of its board; 151f lands in §163 if the
 user writes the lines before 163f, and otherwise its row carries to
 Round 13's TODO as it stands; 163c's smoke is the round's playtest, and
 no audit round, since no META-ROADMAP cluster closed.
+
+### The cut signed (2026-11-27)
+
+Signed: "Signing all of those, Claude! 😁", over the cut as put and its
+seven leans. The stretch it opens runs to 163a's stop.

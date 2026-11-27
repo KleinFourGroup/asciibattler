@@ -12,7 +12,7 @@ with its spec, its per-phase worklogs (`archive/worklog-phase-149.md` to
 `-156.md`) and its session reports beside it; before it
 [archive/post-140-roadmap.md](archive/post-140-roadmap.md) (Round 10).
 
-**Status: Round 12 under way; §163, the close: its cut put to the user 2026-11-27 (WORKLOG §163).**
+**Status: Round 12 under way; §163, the close: its cut signed 2026-11-27 (WORKLOG §163).**
 The spec is [round-12-spec.md](round-12-spec.md). The charter, the
 decision points, the exit and the scope guards are in META-ROADMAP
 §"Round 12 — Push, pull and blink"; its riders are TODO's "Round 12".
@@ -166,3 +166,10 @@ Company's cost (WORKLOG §162, in `archive/worklog-phase-162.md`).
 
 `0.5.0` and its upload, the round's exit by clause, Round 13's charter
 against the code, the process read and the archive.
+
+- ☐ **163a — the round's exit by clause, and Round 13's charter against the code** (`stop`).
+- ☐ **163b — `0.5.0`, the tag and the zip** (`none`): a `0.4.0` run continued in the pane.
+- ☐ **163c — the smoke, the upload and the playtest** (`stop`, the user's).
+- ☐ **163d — the process read** (`stop`, in two tranches).
+- ☐ **163e — the list built as signed** (`none`).
+- ☐ **163f — the archive and the round's close** (`stop`).

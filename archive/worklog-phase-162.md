@@ -1,0 +1,596 @@
+# WORKLOG — Round 12 (Push, pull and blink)
+
+Per-phase narrative log (AGENTS "The planning stack"; `process/planning.md`
+"The artifacts"): findings, decision rationale, rejected alternatives,
+scope changes, playtest verdicts and the checks run land here under the
+matching `## Phase N`; the ROADMAP stays a plan. The file holds the phase
+in progress: at each phase close it moves to `archive/worklog-phase-N.md`
+and a fresh one starts. Round 12's phases before this one are in
+[archive/worklog-phase-158.md](archive/worklog-phase-158.md) (the kickoff,
+§157, and the pre-step and the design, §158),
+[archive/worklog-phase-159.md](archive/worklog-phase-159.md) (forced
+movement, the seam),
+[archive/worklog-phase-160.md](archive/worklog-phase-160.md) (the pushers
+and the bursts),
+[archive/worklog-phase-160.5.md](archive/worklog-phase-160.5.md) (the
+fall),
+[archive/worklog-phase-161.md](archive/worklog-phase-161.md) (the blink
+and the charge) and
+[archive/worklog-phase-161.5.md](archive/worklog-phase-161.5.md) (the hex
+and the ice storm as specials); Round 11's are
+[archive/worklog-phase-149.md](archive/worklog-phase-149.md) to
+[archive/worklog-phase-156.md](archive/worklog-phase-156.md).
+
+## Phase 162 — the closing board
+
+The kickoff's inputs, by pointer: what §161 and §161.5 hand on
+(`archive/worklog-phase-161.md`, "§161's close";
+`archive/worklog-phase-161.5.md`, "§161.5's close"); ROADMAP §162; TODO's
+Round 12 rows; `process/planning.md` "Phase kickoff", then
+`process/measurement.md` and BALANCE.md for the board.
+
+### The kickoff's audit, and the cut put to the user (2026-11-26)
+
+Read at `0af7c357`: ROADMAP §162, META-ROADMAP's Round 12 exit, TODO's
+Round 12 rows, §161's and §161.5's closes, `balance:board -- --plan` at
+HEAD, §155's kickoff and board (`archive/worklog-phase-155.md`; BALANCE
+2026-11-12, both entries), the signed sheet's 2026-11-12 amendment,
+BALANCE's integrity protocol, artifact registry, rarity protocol and the
+prior table v9's entry, `process/measurement.md`, both coverage tests, and
+the drive logs of 154g and 155a.
+
+- **The board runs as at §155.** `--plan` prints the same 17 rows. 155a
+  ran them as 25 batches (`scratch/155/155a-board.queue`) on one `cpx42`:
+  23:46Z to 05:05Z, 5 h 19 min for the 25 lines. The regen and
+  fire-ablated doctrine rows took 5 min 22 s and 5 min 27 s at n=40,
+  launch to launch. §155's pooled board is on disk at
+  `output/board-runs/155a/`, with its readers (`scratch/146/merge.mjs`,
+  `pair.mjs`, `walls.mjs`, `scratch/155/act1-pooled.mjs`), so §162's
+  board pairs with it seed for seed.
+- **What moved since §155's board** (`5d3bcba8`): 20 draftable units
+  against 16 (`scratch/162/draftable.ts`, through
+  `DRAFTABLE_ARCHETYPES`): the grenadier and the ninja uncommon, the
+  telekinetic and the cavalier rare. The adventurer's Snag and the ronin's
+  whirlwind changed two draftable kits. Enemy side, by
+  `config/encounters.json` and `config/sectors.json`: the grenadier in the
+  Artillery Company (a normal, acts 2 and 3); the cavalier in the warband
+  vanguard (an elite, act 2); the telekinetic and the warlock in the Dark
+  Magic Posse (an elite, act 3); the ninja and the warlock in the
+  Miscreants (act 3, from hop 3); the ice mage in the Elemental Trio (act
+  3). The warlock also keeps the `ghoul-nest` camp, and the ice mage the
+  `frost-coven` camp, both placed by biome and layout. Act 1's encounter
+  list names none of those five fights; act 1 moved through the player's
+  draft, the two kits, the puma's pounce and the fall on its chasm and
+  deep-water maps.
+- **The prior table goes first.** The ARM prices an item with no row at
+  0 (`tests/fuzz/rollout/evaluator.ts:164`, `prior.table[key] ?? 0`), and
+  v9's 16 units average −14.6 (BALANCE 2026-11-10), so on v9 the board's
+  ARM rows would price the four newcomers above most of their peers: the
+  Dis Pater trap of 88d at a smaller scale. A row under the floor still
+  folds at its meanDelta (`priorFoldValues`,
+  `tests/fuzz/prior/priorTable.ts:223`); only a missing row reads 0. So
+  the table is rebuilt, and the board runs under it. The rebuild itself
+  runs under v9, where the newcomers read 0, as Diana's and Hecate's first
+  rows did at v8.
+- **The prior table v10** is the registry's recipe, 154g's three lines
+  (`scratch/154/154g.queue`): v9 took 4 h 54 min of one `cpx42`, v8 5 h
+  4 min. Its count, predicted: 40 items, v9's 36 (12 daemons, 8 packets,
+  16 units) plus the four newcomers, Mars still PENDING.
+  `tests/prior-table-coverage.test.ts` carries four unit PENDING lines,
+  and rule 3 fails once they gain rows, so the rebuild's commit deletes
+  them.
+- **The rarity protocol's desk read** reads the recruit-site rows, n≥80
+  signable. v9's five rares read 158 to 173 at recruit; seven rares now,
+  so about 115 to 125 by the share alone, and the uncommons about 195 to
+  210 from 294 to 315 (a prediction). A thin row gets the protocol's
+  `--grant` pair at n=80 on a fresh window; no queue under `scratch/` or
+  `output/box-batches/` and no BALANCE line names `--seed-offset=8000`.
+  Dis Pater's grant line took 52 min (155a). `scratch/154/item-worth.mjs`
+  reads the units' worth by `TABLE=`, with its own check.
+- **Fire rate first** (the protocol's step 4): the batches' CSVs carry no
+  ability casts (`summary.csv`, `pacing.csv`, `rosters.csv`,
+  `decisions.csv`), and §161 found the charge rare in act 1.
+  `scratch/160.5/fall-census.ts` wraps the World for falls; extended to
+  count casts, it reads the newcomers' signature abilities and the falls
+  by pusher on 160.5d's shape (seeds 1 to 20, the deploy vector), locally.
+- **The roster table** v8 (155b) holds no newcomer;
+  `tests/roster-table-coverage.test.ts` carries their four PENDING lines.
+  Rebuilt from the board's eight ARM rows: 52 buckets predicted, since a
+  bucket is a (character, sector, hop) and neither moved.
+- **The fire channel** reads regen − fire-ablated on the same 40 seeds;
+  155a read 0.275 against the signed +0.10 (band 0.05–0.15), the
+  fire-ablated row 27 → 17 (p 0.021, one of 15 tests). At n=40 the two
+  rows leave the read loose; extending both to n=120 costs two 80-seed
+  lines, about 20 minutes of box.
+- **The enemy grenadier** (TODO): the Artillery Company's grenadier is
+  `count` weight 1 (`config/encounters.json`), drawn in the-start and
+  the-deep-end. The walk rows give its cost and turns per instance
+  (`pacing.csv`) and deaths per run (`summary.csv`); no CSV counts falls,
+  which the census does.
+- **The warlock and the ice mage** are priced through their fights on the
+  walk rows' `pacing.csv`: the Dark Magic Posse, the Miscreants and the
+  Elemental Trio, act 3, where 155a's regen walk reached 0.242 and the
+  deploy walk 0.792, so their instance counts are small on regen.
+- **The fresh derive** is due at a re-pin board (the integrity protocol);
+  155a's took 4 h 15 min, 146b's 5 h 53 min. Its search line reads no
+  prior table, and it runs beside the board at the board's HEAD.
+- **The box price**, re-read today from `hcloud server-type describe
+  cpx42`: 0.1314 an hour in fsn1 and nbg1, 0.1114 in hel1, net equal to
+  gross. No Windows restart is pending (both registry flags false); the
+  last update restart was 2026-11-25 at 08:23.
+- **The friction candidate** from §161.5's close (a claim generalised past
+  its measurement, twice) has no answer in the commits since
+  `748a4d04`, so it goes to the user with the cut.
+
+**The cut, put to the user** (unsigned):
+
+- **162a — the prior table rebuilt** (`none`). Step zero: the recipe's
+  line at one seed locally with `--hops=2`, its shadow rows naming a
+  newcomer. Then 154g's three lines at the cut's HEAD, pushed, on one
+  `cpx42` → `npm run prior:table` → v10, the four unit PENDING lines out,
+  BALANCE's registry row and run-log entry. Exit: the coverage test green
+  with every draftable holding a row; the count against the prediction.
+- **162b — the newcomers' desk read** (`none`; dispositions at 162e).
+  v10's recruit-site rows for the four newcomers, with the adventurer and
+  the ronin beside them, against their tiers' peers, by
+  `scratch/154/item-worth.mjs` with its check; a row under 80 named for
+  the grant pair. The fire census at the board's HEAD, locally. Exit:
+  each newcomer's row with its n, and the casts and falls by ability.
+- **162c — the board on the box** (`none`). At v10's HEAD, pushed, from a
+  detached worktree. Box 1: 155a's 25 lines line for line, then the regen
+  and fire-ablated rows extended to n=120. Box 2: the fresh derive. The
+  grant pair (a control and one arm per thin newcomer, n=80 on seeds 8001
+  to 8080) on a third box only if 162b names a thin row. The anchors
+  locally. Exit: every batch fetched with exit 0 at one HEAD; `--report`
+  VERDICT PASS.
+- **162d — the roster table rebuilt** (`none`). From the board's eight ARM
+  rows: v9, its PENDING lines out for every newcomer an ARM row drafts.
+  Exit: the coverage guard green; a sampled draw loads and plays; at most
+  55 buckets.
+- **162e — the board read** (`stop`, the decision point). The board
+  against 155a's, paired on seeds 1 to 120; act 1 by encounter against
+  the turn targets and cost bands, and against 155g's sheet (the six
+  refs, seam 1 and act 1's wall by vector); the fire channel; the
+  newcomers' desk read; the Artillery Company against the deaths and
+  falls; the warlock's and the ice mage's fights; the parity gaps; the
+  terminal pair; acts 2 and 3 recorded; the derive's ceiling. Put: act
+  1's sheet held, re-pinned with no content moved, or its misses tuned
+  (162g, 162h); each newcomer's disposition (hold, re-tier, re-price or a
+  named watch); the fire channel's (re-sign, hold the WARN, or a cause
+  read placed later); the enemy grenadier's (hold, or a weight or sector
+  change).
+- **162f — the sheet amended** (`stop`; `none` if 162e holds the sheet,
+  and the user may make it `none` under a re-pin, as at 155g). The values
+  162e signs, in `signed-sheet.json`; acts 2 and 3 to BALANCE for Rounds
+  21 and 22.
+- **162g — the content changes** (`stop`; only if 162e signs any). The
+  changes as signed, the corpus re-recorded.
+- **162h — the verify board** (`none`; only after 162g). 162c's board at
+  162g's HEAD, the roster table rebuilt from it. Exit: VERDICT PASS, and
+  the changed reads in their bands or the miss to the user.
+
+*Predictions.* No snapshot bump (World v42, Run v51) and no RNG stream.
+162a, 162d and 162f stage `tests/fuzz/`, so the fuzz smoke and the
+`--jobs` parity fire, and no smoke pin is predicted to move (none did at
+154g or 155b); 162b and 162c write docs alone, the census in `scratch/`;
+162g stages `config/`, so the smoke fires. The corpus re-records at 162g
+only: the game reads nothing under `tests/fuzz/`.
+
+*Leans put with it.*
+
+1. The order: the prior table first, the board under it (above).
+2. The box: one `cpx42` for 162a (5 to 6 h), then two side by side for
+   162c, the board (5.5 to 6.5 h with the two extensions) and the derive
+   (4.5 to 6 h); 15 to 18.5 box hours, 2.0 to 2.4 at 0.1314. A grant
+   pair adds about 55 min a line on its own box.
+3. The fresh derive in, since a re-pin asks for it. Without it, about 0.7
+   less and the protocol's re-pin leg named unmet at 162f.
+4. The regen and fire-ablated rows extended to n=120 for the fire
+   channel's read.
+5. The grant pair only for a newcomer row under 80.
+6. The fire census, local, on 160.5d's shape.
+7. 162a to 162d run unattended to the stop at 162e: at 162a's verified
+   fetch the session builds v10, commits, pushes, reads 162b and launches
+   162c. Pauses: a newcomer with no row in v10 (the board would price it
+   0) or a failure the step's intent cannot fix stops the chain before
+   162c's launch. Driver holds: one relaunch of the unfetched lines at the
+   same HEAD; a second hold destroys the box after fetching what finished,
+   and stops. The context meter's hand-off at a commit before a launch
+   stops there with hand-off notes. Never unattended: a content change, a
+   sheet amendment or a disposition. Every call the session makes written
+   here for the read.
+8. Left out: a second prior-table pass under v10; the per-kind cost bands
+   into the sheet; acts 2 and 3 tuned (their rounds); the warlock and the
+   ice mage tuned unless 162e calls it; a pair at Escalation 3.
+
+*The stretch the cut opens:* 162a to 162d, to the stop at 162e.
+
+### The cut signed (2026-11-26)
+
+**Signed** (the user: "Signing the cut and all leans, including no new
+rule. Thank you so much! 😁"): the cut as put, its reads, its eight
+leans with the unattended run from 162a to the stop at 162e, and §161.5's
+friction candidate closed with no new rule, since AGENTS' Evidence already
+covers a claim of an absence.
+
+### 162a's step zero (2026-11-26)
+
+The cut put step zero at one seed with `--hops=2`, as at 155a; the CLI
+refuses `--shadow-horizon` with `--hops`, since a rollout clone drops the
+run-shape dials and its walk would be unbounded (WORKLOG §84b). So the
+recipe's first line ran whole, at four seeds (1001 to 1004, `--jobs=4`)
+locally at `c339879d`: all four runs complete, 27 min, exit 0. Its
+`decisions.csv` holds 4,981 rows, 815 of them at the `run` horizon, and
+names every newcomer as a recruit candidate at the `run` horizon: the
+grenadier in 8 rows, the ninja in 7, the cavalier in 5, the telekinetic
+in 3 (the grenadier and the ninja at the port too). So the line runs on
+today's catalog and the shadow prices the newcomers. Four seeds' recruit
+rows scale to about 240, 210, 150 and 90 in 120, so the telekinetic's may
+come in near 80, against the cut's prediction; 162b reads it
+(`scratch/162/step0/`).
+
+### 162a — the cohort launched (2026-11-26)
+
+*Launched* at `c339879d`, pushed, from a detached worktree at
+`../asciibattler-162a` with a `node_modules` junction (138 entries on both
+sides): the three lines of `scratch/162/162a.queue`, 154g's lines byte for
+byte, on one `cpx42` from 19:31Z. The driver's `--jobs` parity test passed
+in the worktree, and batch 1 launched at 19:32Z. The drive log is the
+worktree's `scratch/162/162a-drive.log`.
+
+### 162a — the prior table v10 (2026-11-26)
+
+The three lines fetched with exit 0 and the driver destroyed the box at
+00:05Z, 4 h 34 min after it made it. v10 holds 40 items, the count the
+cut predicted, with every newcomer in it and 38 over the floor. Its
+numbers are BALANCE's run log, "the prior table v10". The four unit
+PENDING lines are out: the coverage test failed on them first (its rule
+3, the control) and passed after. v9 is in git at `5ca1b705` and beside
+the step's readers at `scratch/162/prior-table-v9.json`. The bank
+completed 84 of 120 runs against v9's 97 (p 0.029), with more defeats
+in acts 1 and 3; the content since `07ce8ed5` and each bank's prior ride
+together there, and the board reads the acts.
+
+### 162b — the newcomers' desk read and the fire census (2026-11-26)
+
+Every newcomer's recruit row is over 80 (the grenadier 219, the ninja
+190, the cavalier 120, the telekinetic 114), so 162c runs no grant pair.
+Taken free, the grenadier and the ninja sit inside the uncommons'
+spread; the telekinetic and the cavalier are the rares' two lowest, the
+halberdier within an error of both. The fire census fires every
+newcomer's abilities on the player's side, the telekinetic's in one
+battle of 432; its runs never reach act 3, so the enemy ninja's,
+telekinetic's, warlock's and ice mage's fights are the board's to read.
+The numbers are in the same BALANCE entry. The dispositions are 162e's.
+
+*The session's calls* (lean 7): the census ran on the working tree
+before v10's commit, since it plays the deploy strategy, which reads no
+prior table, so the code is the board's; the BALANCE entry adds the
+idols' moves and the bought-row watch's numbers, which TODO's Round 17
+watches read.
+
+### 162c — the cohorts launched (2026-11-27)
+
+*Launched* at `5f277acc`, v10's commit, pushed, from a detached worktree
+at `../asciibattler-162c` with a `node_modules` junction (138 entries on
+both sides). `balance:board -- --plan` printed 155a's 17 rows unchanged,
+and `scratch/162/make-queue.mjs` wrote the queues: the board's 25 lines
+byte for byte as 155a's, then the regen and fire-ablated rows to n=120
+in place of 155a's Dis Pater pair (27 lines, `162c-board.queue`), on one
+`cpx42` from 00:17Z, batch 1 at 00:18Z after the driver's parity test;
+the fresh derive (`162c-derive.queue`, the registry's line as 155a ran
+it) on a second from 00:19Z, launched at 00:20Z. No grant queue, since
+162b named no thin row. Drive logs in the worktree's
+`scratch/162/162c-board-drive.log` and `162c-derive-drive.log`.
+The anchors ran locally in the worktree at the same HEAD, clean
+manifests: pure-random 4 of 40, greedy 6 of 40 (155a: 6 and 7), in the
+worktree's `output/162c-anchors/`.
+
+### 162c — the drivers died with the PC, and the recovery (2026-11-27)
+
+The PC restarted at 02:12Z: System event 1074 from Explorer on the
+user's behalf, "Other (Unplanned)", and Kernel-Power 109; no
+Kernel-Power 41. The user reported a crash. Both drivers died with it.
+The board's log ends at 02:02Z with batches 1 to 9 launched and 1 to 8
+fetched; the derive's at 02:10Z, its one batch running.
+
+*Recovered* at the user's word ("can you recover?"), by
+`process/measurement.md`'s crash steps: the trees clean, no driver left
+running, both boxes up. The board's box held batch 9, done with exit 0;
+`scripts/box-batch.sh <box> fetch` brought it back (summary.csv
+`cefb1df4`, the manifest at `5f277acc`), and the nine fetched manifests'
+argv equal queue lines 1 to 9. That box was destroyed, and lines 10 to
+27, verbatim, went to a fresh `cpx42` under the unchanged driver
+(`scratch/162/162c-board-resume.queue`) from 02:37Z, its first batch at
+02:38Z (the `--jobs` parity pass held from 00:18Z at the same HEAD). The
+derive, still running, is watched by `scratch/162/162c-derive-watch.sh`:
+it polls `box-batch.sh status`, fetches on done, checks the fetch as the
+driver does (the `fetched →` line, exit 0, a non-empty
+`best-strategy.json`), destroys the box, and holds it on any anomaly;
+its status loop read the derive as running before it was armed. Logs in
+the worktree's `scratch/162/`: `162c-board-resume-drive.log`,
+`162c-derive-watch.log`.
+
+*Flag:* this is lean 7's one relaunch of the unfetched lines at the
+same HEAD, applied to a dead driver rather than a hold, as at 155a; a
+second failure fetches what finished and stops. The board's box idled
+about 25 min with batch 9 done. The restart went to the friction log
+with a candidate fix, a resume mode for `box-drive.sh`.
+
+### 162c — the cohorts fetched (2026-11-27)
+
+The derive's watcher read it done at 05:39Z, fetched it with exit 0 and
+a non-empty `best-strategy.json`, and destroyed its box at 05:40Z. The
+resume driver drained its 18 lines, each fetched with exit 0 and a
+`summary.csv`, and destroyed its box at 08:18Z; `box-launch.sh list`
+then read no box. The three board logs (the first driver's, batch 9's
+fetch by hand, the resume driver's) name 27 distinct fetched batches,
+each with exit 0 and a non-empty `summary.csv`. Box time: the board 8 h
+1 min over two boxes (00:17 to 02:37Z, 02:37 to 08:18Z), the derive 5 h
+21 min. No second failure, so lean 7's pause never came into play.
+
+### 162d — the board merged and the roster table v9 (2026-11-27)
+
+`scratch/146/merge.mjs`, run from the worktree on the three logs
+joined, matched every batch to its plan row by argv: 12 rows pooled
+from two stages (1+40, 41+80), the regen and fire-ablated doctrine rows
+among them now, and 3 copied; the anchors beside them, in
+`output/board-runs/162c/`. `--report` from the worktree: integrity PASS
+on all 17 rows, 0 WARN, the measurement HEAD matching the tree; DRIFT 0
+FAIL, 12 WARN. Its numbers are read at 162e (BALANCE, "the closing
+board at v10").
+
+*The roster table v9*, from the eight ARM rows: 26,985 battles in 52
+buckets, the raw sidecars' row count the same. The registry's recipe,
+`npm run roster:table -- <board-dir>`, was run first as written and
+swept all 17 sidecars (43,444 battles), since every board row carries
+`rosters.csv`; v8's provenance names the eight ARM rows, so the table
+was rebuilt from those eight named, and the registry's recipe now names
+them. Each newcomer is drafted by all three characters, counted in the
+raw sidecars: the grenadier in 1,973 battles, the ninja 1,508, the
+telekinetic 784, the cavalier 386. The coverage test failed on the four
+PENDING lines with the new table (rule 5, the control) and passed, 14 of
+14, once they were dropped. After the commit: the table's and the
+sampled flag's tests pass (22, under `vitest.fuzz.config.ts`), and
+`--roster=sampled:2:5 --act=3` loads and plays a seed (exit 0), the
+cut's last exit clause.
+
+### 162e — the board read, and the calls put (2026-11-27)
+
+The numbers are in BALANCE (2026-11-27, the closing board at v10). Two
+readers are new this step: `scratch/162/acts-pooled.mjs`, act1-pooled's
+sums over every fight, checked against act1-pooled's act-1 rows on both
+boards and against 155a's acts 2 and 3 in its BALANCE entry; and a field
+share off the raw sidecars, its denominator 960 runs.
+
+What the board says:
+
+- **Act 1 holds.** Every act-1 fight is inside its turn target and cost
+  band on the pooled ARM walk rows, each within 0.1 turns and 2.2 of pool
+  of 155a's; the seam and act 1's wall are in their bands by vector; the
+  ARM soldier rows pair 11 : 11 and 5 : 4 against 155a. The newcomers, the
+  two kits and the fall moved act 1 by nothing a band sees.
+- **Three refs drift, none a signed target.** The priest's regen row 63
+  → 76 (6 : 19, p 0.015) sits over its band; the deploy row's
+  transactions 0.733 → 0.875 sit over theirs; the Queen's forced row 49 →
+  34 (19 : 4, p 0.0026, the one move of 15 that clears a Bonferroni
+  line) sits under its band, while in situ the Queen kills 3 of 18 and 3
+  of 86 instances (155a 5 of 29, 3 of 95) and the King > Queen order
+  holds (75 against 34).
+- **The full run is harder, in act 2.** Deaths over the two ARM walk
+  rows 124 → 142, act 2 70 → 84: the Brigand Champions 3 → 15 (a ronin
+  at their head, with the whirlwind since 160f), the witch hunt 17 → 24.
+  The walk rows' completions 24 → 15 (p 0.049) and 92 → 83 (p 0.11), as
+  the prior bank's 97 → 84 at 162a. Recorded for Rounds 21 and 22; the
+  cut leaves acts 2 and 3 untuned.
+- **The fire channel is in band**: 0.108 at n=120 (18 : 5), where 155a
+  read 0.275 at n=40; on seeds 1 to 40 alone it reads 0.075. 155a's
+  wide read was the small sample's, as far as two boards can show.
+- **The enemy grenadier** doubled the Artillery Company's cost, 3.01 →
+  5.88 a pool an instance, inside its band (2–6), with 6 runs ended there
+  in 266 instances (155a 1 in 279). Its falls: 3 in the census's 432
+  battles, all on one seed.
+- **The warlock and the ice mage:** the Miscreants (the ninja and the
+  warlock) cost 2.61 → 7.32, over the band, on 44 instances and 1 death;
+  the dark magic posse's turns 3.13 (under, 155a 3.29), its cost in band;
+  the Elemental Trio 3.03 / 2.92, inside both.
+- **The parity gaps narrowed**: the priest −7.5 and −9.2, the gambler
+  −14.2 and −5.8 (155a −18.3, −9.2, −18.3, −11.7). The gambler's regen
+  gap alone is told apart (p 0.0005).
+- **The derive** finds nothing above the deployed vector (26.9 % train,
+  1 of 6 held-out, against 24 of 40 on the doctrine walk row).
+- **The newcomers on the board**: the ARM fields the grenadier in 22.7 %
+  of its runs and the ninja in 17.1 %, inside the uncommons' spread; the
+  telekinetic in 12.0 % and the cavalier in 5.3 %, in the rares' (from
+  the corrupter's 2.1 % to the catapult's 16.4 %).
+
+**The calls, put to the user** (the session's leans; none is taken
+unattended):
+
+1. **Act 1's sheet**: re-pinned at this board with no content moved
+   (162f), or held. Lean: re-pin, as at 155g. No act-1 fight misses a
+   target or band, so there is nothing to tune; the three drifting refs
+   are reference values, and this board is the state Round 13 inherits,
+   so a ref left at 155a's values would carry three WARNs into every
+   board after it. The Queen's drop is named in the re-pin's source
+   line rather than absorbed silently.
+2. **The newcomers**: the grenadier and the ninja held; the telekinetic
+   and the cavalier held with a named watch (the rare tier's bottom), or
+   re-priced. Lean: hold both, with the watch read at the next prior
+   table. Their free rows, −32.0 ± 17 and −40.7 ± 20, are about two
+   errors under the reaver alone and within one of the held halberdier
+   (−30.6); a re-tier to uncommon would leave them the lowest there too;
+   a re-price is a content change, so 162g and a verify board, about 8 h
+   of box.
+3. **The fire channel**: hold the signed +0.10. Lean: hold; it reads
+   inside its band at n=120, so 155a's WARN closes with no re-sign and
+   no cause read.
+4. **The enemy grenadier**: held, or its weight or sectors changed.
+   Lean: hold, with a named watch on the Artillery Company's cost near
+   the top of its band; every reading is inside its band, and the falls
+   are one seed's.
+
+At the user's word: 162f amends the sheet if call 1 re-pins (its read
+`stop`, or `none` if the user makes it so, as at 155g); 162g and 162h
+run only if a call changes content.
+
+### 162e — the calls signed (2026-11-27)
+
+The user, the next morning: "Calls: agreed with all of your leans!" So:
+act 1's sheet re-pins at this board with no content moved (162f); the
+grenadier and the ninja are held, and the telekinetic and the cavalier
+held with a named watch at the next prior table (TODO, Round 13); the
+fire channel's signed +0.10 is held and its TODO row closed; the enemy
+grenadier is held, with a named watch on the Artillery Company's cost
+(TODO, Round 13). No call changes content, so 162g and 162h do not run.
+The user did not make 162f's read `none`, so it stays a `stop`. They
+also agreed to a resume mode for `box-drive.sh`, now a TODO row ("Not
+yet placed"), and said the 02:12Z restart was their eye tracker
+freezing, not a crash.
+
+### 162f — the sheet re-pinned (2026-11-27)
+
+*Built:* `tests/fuzz/board/signed-sheet.json` amended by
+`scratch/162/amend-sheet.mjs`, which checks the file's byte-identical
+round trip and every old value before writing, and refuses a second run
+(checked: it threw on the moved win refs). Re-pinned at the 162c
+board's n=120 values: the six act-1 win refs, the two banks, the
+firer's fires, the two transaction rates and the forced King and Queen;
+`board.ts`'s source strings and the deploy row's fires literal (4.81 →
+5.28) moved with them. The values are in BALANCE (2026-11-27, the sheet
+re-pinned). The Queen's drop is named in the sheet's entry and in her
+row's source string, with no cause read.
+
+*Held, a lean inside the signed call:* seam 1 and act 1's wall keep
+155g's bands, since they are signed bands rather than point refs and
+all four readings sit inside them (16.41 and 24.32 of 40, walls 0.190
+and 0.034); re-centring them would move a signature for under half a
+pool. The terminal pair, the pacing bands and the fire channel are held
+as at 155g.
+
+*The proof:* `--report` on `output/board-runs/162c/` under the amended
+sheet: 0 FAIL, 9 WARN (12 before), every re-pinned entry PASS
+(`scratch/162/162f-report-162c.txt`). The nine left: the terminal pair
+and derived win on both walk rows (six), the deploy walk's elite turns
+3.95 against 4.00, and the ceilings on regen (+0.175) and walk-regen
+(+0.125). The control, the same sheet on 155a's board: the priest's
+regen row (0.525), the deploy row's transactions (0.733) and the Queen
+(0.408) WARN, 12 in all (`scratch/162/162f-report-155a-control.txt`).
+Integrity reads one WARN on each, the measurement HEAD against this
+tree's, which the re-pin answers by citing `5f277acc`.
+
+Acts 2 and 3 for Rounds 21 and 22: the per-act table is in BALANCE
+beside the re-pin; by encounter and the deaths, in the board's entry.
+
+### Between §161.5 and §162: the watcher skips scratch/ (2026-11-26)
+
+**Asked.** The user's own `npm run dev` loads almost at once, where the
+hidden pane twice took about 90 s to go live (161f-post2, 161.5b), and
+`scratch/` need not be watched; signed: "Yes, ignore it".
+
+**Measured** in the hidden Browser pane (0×0, `visibilityState`
+visible), three cold `dev-preview` starts each way, from the resource
+timings. With `scratch/` watched (9,208 files): the first stylesheet
+held 3.6, 8.8 and 11.1 s after it was asked for, which the page did
+1.2 and 2.3 s into the first two loads (the third was a reload by the
+pane, its start unknown). A reload on the warm server: the stylesheet
+in 13 ms and all 250 modules in 0.5 s, which matches what the user
+sees from a server left running. With `**/scratch/**` added to
+`server.watch.ignored`: 0.8, 1.5 and 0.7 s, the stylesheet asked for
+2.0 to 2.8 s and every module in 3.6 to 3.7 s after the server process
+started (its start read from `Win32_Process`, the page's from
+`performance.timeOrigin`). The pre-commit hook's copy of the staged
+files is under the OS temp folder, outside the watched tree, and no
+stale Vite process was running.
+
+**Not explained.** The two 90 s loads: no cold start today came near
+the 30 s timeout, and the hidden pane at 0×0 loaded every time without
+a resize. The scan's cost varied 3× across three starts minutes apart,
+so a busier moment could stretch it, which would make the resize and
+reload in the "not live" bullet's 2026-11-22 fact line a coincidence;
+that is an inference, and the fact line is the user's.
+
+**The fact line dropped**, the user's call ("You can go ahead and drop
+it!"): the "not live" bullet no longer says a resize and a reload
+brought the hidden pane live, and its stand-in wait reads "about a
+second", as measured above.
+
+### 162f — signed (2026-11-27)
+
+The user: "Signed! 😁" So the re-pin stands as built, with seam 1 and
+act 1's wall on 155g's bands.
+
+### §162's close (2026-11-27)
+
+**The exit by clause.** *162a:* the prior table v10 by the registry's
+recipe at `c339879d`, 40 items as predicted, every draftable with a row;
+the coverage test failed on the four unit PENDING lines (its control) and
+passed after. *162b:* every newcomer's recruit row over 80 (219, 190,
+120, 114), so no grant pair; the fire census at the board's code. *162c:*
+§155's 25 lines line for line at `5f277acc`, the fire channel's two rows
+to n=120 and the fresh derive, every batch fetched with exit 0 after
+lean 7's one relaunch (the PC's restart at 02:12Z). *162d:* `--report`
+integrity PASS on 17 rows; the roster table v9, 52 buckets (at most 55),
+every newcomer in it, a sampled draw loading and playing. *162e:* the
+board read, four calls signed on every lean. *162f:* act 1's refs
+re-pinned at the 162c board, 0 FAIL and 9 WARN on it, signed. *162g and
+162h:* not run, since no call changed content. The phase's exit, the
+board read and signed, holds.
+
+**What §162 hands on.**
+
+- *To §163, the round's close:* the board as Round 13 inherits it, at
+  `5f277acc` (World v42, Run v51, no bump in §162), with the sheet
+  re-pinned at it; the nine WARNs left are the held terminal pair, the
+  deploy walk's elite turns (3.95 against 4.00) and two ceilings, all
+  recorded in BALANCE (2026-11-27).
+- *To Round 13:* the telekinetic and the cavalier, named watches at the
+  next prior table; the Artillery Company's cost, a named watch at the
+  next board (both TODO, Round 13); the priest's and the gambler's
+  parity gaps, narrowed to −7.5 / −9.2 and −14.2 / −5.8 (the TODO row,
+  C16).
+- *To Rounds 21 and 22:* acts 2 and 3 at 162c (BALANCE, the re-pin's
+  entry, and the board's by encounter and deaths): act 2 harder, deaths
+  70 → 84 over the two ARM walk rows, the Brigand Champions 3 → 15 and
+  the witch hunt 17 → 24; the Miscreants' cost 7.32 over its band on 44
+  instances.
+- *Not placed:* a resume mode for `box-drive.sh` (TODO, "Not yet
+  placed").
+
+**Box time.** 162a's cohort 4 h 34 min on one `cpx42`; 162c's board 8 h
+1 min over two, about 25 min of it idle after the restart; the derive 5
+h 21 min. In all 17 h 56 min, about 2.4 at the kickoff's price read
+(0.1314 an hour).
+
+**The friction read.** Three lines filed in §162, all this session's:
+two papercuts and one slip, no `distress` line.
+
+- *A driver killed by a PC restart* (162c, papercut): the second after
+  §155's, where the box idled 7.5 h; here the recovery was a fetch by
+  hand, a trimmed queue on a fresh box and a watcher for the derive, the
+  box idle about 25 min. Recurred, at a cost each time. Disposition: a
+  TODO line, a resume mode for `box-drive.sh`, which the user agreed to
+  (2026-11-27). The restart was the user's, after their eye tracker
+  froze, not Windows Update's.
+- *A recipe stale against its tool* (162d, papercut): BALANCE's roster
+  recipe named a board directory, and the CLI sweeps every row's
+  sidecar under it, so the first build took all 17 rows. Caught before
+  the commit by the bucket count. Disposition: fixed in `ec0f6ffc`, the
+  recipe naming the eight ARM dirs.
+- *A Windows shell trap met again* (162f, slip): a half-edited heredoc
+  command refused by the stdin guard before it ran, one retry, nothing
+  written; as at 161h and §161.5 (the backslash guard). Listed and left:
+  the guards are on the path and caught each one, and §161.5's close put
+  the shell traps' pattern to the user, who signed no new rule.
+
+No pattern recurred across §162's lines or against §161.5's close
+beyond the shell trap, so no candidate goes to the user.
+
+**Checked at the close** (`8faee462`): typecheck clean; **4101 main** in
+291 files, **588 fuzz:smoke** in 60 and **1 fuzz:jobs-parity**, all
+passing (the hook's run); the corpus test, 40 of 40 passing.
+
+**Sessions.** One session (`a2884e23`) ran §162 from its kickoff to this
+close, started from another session for the kickoff and then driven by
+the user, with a compaction after 162e's commit; its report is in
+`retro/sessions.md`.

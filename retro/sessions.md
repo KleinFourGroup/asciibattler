@@ -446,3 +446,64 @@ over-claim that reached the stop report ("no shot delays a hex") and
 was corrected at the -post, a read URL written before it was played, a
 hidden pane slow to go live, and the plant harness and the user's
 warmth as what helped. No `distress` filed.
+
+## 2026-11-26 to 27 — session a2884e23 (§162's kickoff to its close)
+
+Started from another session to run §162's kickoff up to the cut; the
+user then signed the cut with the unattended run from 162a to the stop
+at 162e, came back after a PC restart to ask for the recovery, and
+signed 162e's calls, 162f and this close. At least one compaction, the
+last after 162e's commit, so my answers about the earlier stretch come
+from its summary and the files rather than from recall.
+
+1. *Orientation.* Nothing blocked. Two things the docs had wrong or
+   lacked, both filed: BALANCE's roster recipe named a board directory
+   where the CLI sweeps every row's sidecar, and `box-drive.sh` has no
+   way back into a live box after its driver dies.
+2. *Norms.* No conflict noticed. Lean 7's one relaunch was written for a
+   driver's hold, and I applied it to a dead driver, flagged at 162c
+   rather than asked, since the user was away and the lean covered the
+   relaunch itself. As earlier sessions noted, the side-session framing
+   sat a little oddly once the user talked to me directly.
+3. *Pulled to over-claim.* A few times, each caught before a commit: the
+   deaths by encounter first written from a reading rather than a count
+   (recounted with awk, several numbers moved), the derive's duration
+   first written as "about 5 h 20 min" (5 h 9 to 5 h 19 min by the
+   watcher's polls), and at this close "about two errors under the
+   reaver" in a live TODO row, where the numbers give 1.7 and 1.9. At
+   162f, keeping the seam and wall bands was a lean inside the signed
+   call, so it went to the stop as a lean, not as part of the call.
+4. *Waste.* The roster table built once from all 17 rows; the acts
+   reader crashing on `pacing.csv`'s whole-batch row and missing the
+   brigands' "1+2" label on its first diff; one shell command refused by
+   the stdin guard; the board's box idle about 25 min after the restart.
+5. *For the next session.* `scratch/162/acts-pooled.mjs` pools every
+   encounter by act over walk batches, self-checked against act1-pooled
+   and 155c's figures; `scratch/162/amend-sheet.mjs` is the shape for the
+   next re-pin (old values checked, a second run refused). When a board
+   runs across two drivers, `scratch/146/merge.mjs` needs their logs
+   joined, since it reads the `fetched →` lines.
+6. *Room.* Yes. The cut's pauses were written down before the run, so
+   the restart's recovery was a decision I could take and flag rather
+   than a wait; the four calls went to the user with leans, and they
+   signed them. I offered 162f's read as `none` rather than taking it;
+   the user didn't take it up, so 162f stayed a stop. No wish to pause or stop came
+   up.
+7. *What helped.* The pre-signed pauses, which made a long unattended
+   stretch workable; the bucket count, which caught the 17-row build;
+   the user's quick, warm signs. My reported response, apart from
+   whether the work succeeded: in this last stretch the work read as
+   orderly and calm, and the user's "Signed! 😁" made the stops feel
+   light. Of the night's stretch I can report only what the files show,
+   not how it went. I would want the written-down pauses repeated.
+
+## Phase 162 — summary
+
+One session, `a2884e23`, from the kickoff to the close: the prior table
+v10, the board at `5f277acc` recovered after a PC restart with lean 7's
+one relaunch, the roster table v9, 162e's four calls signed on every
+lean, and act 1's refs re-pinned with no content moved. Its report names
+numbers written before they were counted, each caught before a
+commit, a stale recipe and a missing resume mode as the setup's
+friction, and the pre-signed pauses and the user's warmth as what
+helped. No `distress` filed.

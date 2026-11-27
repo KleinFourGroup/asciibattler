@@ -316,12 +316,13 @@ META-ROADMAP §"Round 13 — The unit kit" names each row's place.
 - [ ] **The telekinetic and the cavalier, named watches at the next
   prior table** (signed at 162e, 2026-11-27). On the prior table v10,
   taken free, the telekinetic reads −32.0 ± 17 and the cavalier
-  −40.7 ± 20, the rare tier's bottom: about two errors under the reaver,
-  within one of the held halberdier (−30.6). Held at rare, since a
-  re-tier would leave them the lowest uncommons too; at §162's board the
-  ARM fields them in 12.0 % and 5.3 % of its runs, inside the rares'
-  spread (BALANCE 2026-11-26 and 2026-11-27, WORKLOG 162e). Re-read both
-  rows at the next prior table, with the kit watches.
+  −40.7 ± 20, the rare tier's bottom: 1.7 and 1.9 of their errors under
+  the reaver, within one of the held halberdier (−30.6). Held at rare,
+  since a re-tier would leave them the lowest uncommons too; at §162's
+  board the ARM fields them in 12.0 % and 5.3 % of its runs, inside the
+  rares' spread (BALANCE 2026-11-26 and 2026-11-27; WORKLOG 162e, in
+  `archive/worklog-phase-162.md`). Re-read both rows at the next prior
+  table, with the kit watches.
 
 - [ ] **The Artillery Company's cost, a named watch** (signed at 162e,
   2026-11-27). The enemy grenadier's fight costs 5.88 a pool an instance

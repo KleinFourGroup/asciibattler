@@ -6,13 +6,13 @@ A fresh-session orientation for ASCIIbattler. Read this first; then dive into th
 
 **The ONE home for live status.** Other docs (and the agent memory) point here instead of restating it; when state changes, this section is the single place that updates.
 
-- **NEXT — ROUND 12 (Push, pull and blink): §162, the closing board — 162f, the sheet re-pinned, put to the user** (a stop): act 1's refs at the 162c board with no content moved, 0 FAIL and 9 WARN on it, the seam, wall, terminal, pacing and fire-channel bands held (WORKLOG 162f); then §162's close and §163. 162e's four calls signed 2026-11-27 on every lean, so 162g and 162h do not run ([ROADMAP.md](ROADMAP.md) §162; the cut and its eight leans signed 2026-11-26, in WORKLOG §162). **Open ◐:** 162f.
-- **In flight:** none; 162c's batches, anchors and logs are in the checkout's `output/` and `scratch/162/`, and its worktree is removed.
+- **NEXT — ROUND 12 (Push, pull and blink): §163, the close — its kickoff** (`process/planning.md` "Phase kickoff", then "Round close"): `0.5.0` and its upload, the round's exit by clause, Round 13's charter against the code, the process read and the archive ([ROADMAP.md](ROADMAP.md) §163; what §162 hands on is in `archive/worklog-phase-162.md`, "§162's close"). **Open ◐:** none.
+- **In flight:** none.
 - **The public build:** `0.4.0` (`4fc62cfe`, tag `v0.4.0`), uploaded to itch.io on 2026-11-13; the uploads before it are in Closed rounds below.
 - **Snapshots:** WorldSnapshot **v42** (no player keeps one) · RunSnapshot **v51** (a v50 save, `0.3.0`'s, rejects).
-- **Tests:** **4101 main** in 291 files, **588 fuzz:smoke** in 60 files and **1 fuzz:jobs-parity** at §161.5's close (`49ea7d21`'s code); typecheck clean; the journal corpus, run by hand, 34 journals, re-recorded at 161.5b-post (the ice storm's recharge: 2 moved, every config hash), the replay 0 of 34 differing at `3e0185ed`.
+- **Tests:** **4101 main** in 291 files, **588 fuzz:smoke** in 60 files and **1 fuzz:jobs-parity** at §162's close (`8faee462`); typecheck clean; the journal corpus, run by hand, 34 journals, re-recorded at 161.5b-post (the ice storm's recharge: 2 moved, every config hash), its test 40 of 40 passing at `8faee462`.
 - **Model id: `claude-opus-5-5`** since 2026-09-22. When yours differs, say so at the next stop; at the user's word, review AGENTS.md against the vendor's current prompting guidance and record the new id (the last review: `archive/post-104-worklog.md`, "The new-model tone audit").
-- **Last phase: §161.5**, the hex and the ice storm as specials, 2026-11-26: the warlock's Hex over the Jinx and the ice mage's Ice Storm over the Icicle, each shot releasing its caster after 0.3 s; the storm's recharge doubled to a flat 5 s at the play (`archive/worklog-phase-161.5.md`).
+- **Last phase: §162**, the closing board, 2026-11-27: the prior table v10 and the roster table v9, the board at `5f277acc` with act 1 inside every target and band, its refs re-pinned with no content moved; the four newcomers held, two as named watches; the fire channel in band (`archive/worklog-phase-162.md`).
 
 ## Current state
 

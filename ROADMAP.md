@@ -144,33 +144,23 @@ at most; the hex's flat 5 s kept, the storm's recharge doubled to a flat
 - ☑ **161.5b-post — the storm's recharge doubled** (`batch`): read
   2026-11-26.
 
-## Phase 162 — the closing board
+## Phase 162 — the closing board ✅ (closed 2026-11-27)
 
-The prior table rebuilt, the rarity protocol's desk read per new
-draftable, the board line for line against §155's and paired on its
-seeds, act 1's bands against 155g's sheet, the fire channel read (TODO).
-**Risk:** medium (about a day of box time, sized at its kickoff).
-**Exit:** the board read and signed. The cut signed 2026-11-26 with its
-eight leans (WORKLOG §162).
+The prior table v10 and the roster table v9, the board line for line
+against §155's at `5f277acc`, act 1 inside every target and band, its
+refs re-pinned with no content moved; the four newcomers held (the
+telekinetic and the cavalier as named watches), the fire channel in band
+at +0.108, the enemy grenadier held with a watch on the Artillery
+Company's cost (WORKLOG §162, in `archive/worklog-phase-162.md`).
 
-- ☑ **162a — the prior table rebuilt** (`none`): v10 by the registry's
-  recipe, before the board, since the ARM prices a missing row at 0.
-  40 items, every newcomer with a row (WORKLOG 162a).
-- ☑ **162b — the newcomers' desk read** (`none`): v10's recruit-site
-  rows and the fire census; their dispositions at 162e. Every recruit
-  row over 80, so no grant pair (WORKLOG 162b).
-- ☑ **162c — the board on the box** (`none`): §155's 25 lines at v10's
-  HEAD, the fire channel's two rows to n=120, the fresh derive. Every
-  batch fetched with exit 0 after a restart's relaunch (WORKLOG 162c).
-- ☑ **162d — the roster table rebuilt** (`none`): from the board's eight
-  ARM rows. `--report` PASS; the roster table v9, every newcomer in it
-  (WORKLOG 162d).
-- ☑ **162e — the board read** (`stop`, the decision point): signed
-  2026-11-27, every lean; no content changes (WORKLOG 162e).
-- ◐ **162f — the sheet amended** (`stop`): act 1's refs re-pinned at the
-  162c board, 0 FAIL and 9 WARN on it (WORKLOG 162f).
+- ☑ **162a — the prior table rebuilt** (`none`).
+- ☑ **162b — the newcomers' desk read** (`none`).
+- ☑ **162c — the board on the box** (`none`).
+- ☑ **162d — the roster table rebuilt** (`none`).
+- ☑ **162e — the board read** (`stop`): signed 2026-11-27.
+- ☑ **162f — the sheet amended** (`stop`): signed 2026-11-27.
 - ✗ **162g — the content changes** and ✗ **162h — the verify board**:
-  not run, since no call changes content.
+  not run, since no call changed content.
 
 ## Phase 163 — the close
 

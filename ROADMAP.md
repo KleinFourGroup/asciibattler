@@ -169,7 +169,7 @@ against the code, the process read and the archive.
 
 - ☑ **163a — the round's exit by clause, and Round 13's charter against the code** (`stop`): signed 2026-11-27, the exit met by clause and Round 13's charter standing, its `extends` parenthetical amended and the whirlwind's `evadable` a TODO row (WORKLOG 163a).
 - ☑ **163b — `0.5.0`, the tag and the zip** (`none`): `f0a0438a`, tagged `v0.5.0`, `asciibattler-0.5.0_f0a0438.zip` checked; a real `0.4.0` run continued in the pane and a fight played; the changelog drafted.
-- ☐ **163c — the smoke, the upload and the playtest** (`stop`, the user's).
+- ☑ **163c — the smoke, the upload and the playtest** (`stop`, the user's): read 2026-11-27, uploaded, the reads good on the user's word; `main` and `v0.5.0` pushed.
 - ☐ **163d — the process read** (`stop`, in two tranches).
 - ☐ **163e — the list built as signed** (`none`).
 - ☐ **163f — the archive and the round's close** (`stop`).

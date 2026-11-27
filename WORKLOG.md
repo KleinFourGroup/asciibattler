@@ -389,3 +389,15 @@ maps.
 **Not verified:** Firefox and Edge, the itch frame, sound by ear, a
 newcomer in a draft or a battle in this build, a push, a pull, a blink,
 a charge or a fall seen in it: 163c.
+
+### 163c — the smoke, the upload and the playtest (2026-11-27, the user's)
+
+The user uploaded `asciibattler-0.5.0_f0a0438.zip` and read the smoke as
+the session listed it (in Firefox and Edge: the build ID, a `0.4.0` run
+continued if one was on itch, a new run with a battle and sound, and
+the newcomers where the run met them): "Alright, it's uploaded, and the
+reads are good! 😁" Those reads stand on the user's word; the session
+saw no report of them. Which newcomers the run met, whether a `0.4.0`
+run was on itch to continue, and whether the changelog was posted are
+not recorded. By the cut's lean the smoke is the round's playtest.
+Pushed at that word, as at 156c: `main` and the tag `v0.5.0`.

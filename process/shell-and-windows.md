@@ -33,9 +33,6 @@ Claude Code's own tools.
 - Node's `execSync` runs its command through `cmd.exe` here, whatever
   shell launched Node, and `cmd.exe` reads `^` as an escape: `<sha>^`
   arrives as `<sha>`. Write `<sha>~1`.
-- Python's text-mode `open()` writes each `\n` as CRLF here, and the
-  repo's files are LF: open a file you write in binary mode, or with
-  `newline='\n'` (checked 2026-11-20, Python 3.14).
 - **Git's variables.** An absolute `GIT_DIR` or `GIT_INDEX_FILE` in the
   environment sends every git command beneath it to that repository, from
   any folder: a test that builds its own repository wrote this one's

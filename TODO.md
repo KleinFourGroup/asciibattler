@@ -295,19 +295,12 @@ META-ROADMAP §"Round 12 — Push, pull and blink" names each row's place.
 
 - [x] ✅ **The corpus's trade rows, by script** — 158a: the trade row makes the five port trades at a scripted port, with its own check and planted failure (WORKLOG 158a, in `archive/worklog-phase-158.md`).
 
-- [ ] **A line for every unit, the user's to write.** A unit's
-  `description` (145c) is optional, and only the six beasts have one;
-  none of them is draftable, so in play the full card shows no line and
-  an enemy card's tooltip is the only place one appears. The user writes
-  a one-line summary for each unit in the archetype editor's Description
-  field, as a set, since a line on some player cards and not others reads
-  as uneven. Asked 2026-11-02 (WORKLOG §145, "145c's tooltip in tiers");
-  carried from Round 11 at its close as 151f, which lands when the user
-  writes them.
-
 - [x] ✅ **The fire channel reads 0.275 against its signed +0.10.** Read at §162's board: 0.108 at n=120, inside its band, so the signed +0.10 is held and the WARN closes (the user's call at 162e, 2026-11-27; BALANCE 2026-11-27, WORKLOG 162e).
 
 - [x] ✅ **The enemy grenadier, used judiciously.** Read at §162's board: the Artillery Company costs 5.88 a pool an instance (band 2–6), the falls by enemy grenadiers 3 in 432 battles, all on one seed; held, with a named watch on its cost in Round 13 (the user's call at 162e, 2026-11-27; BALANCE 2026-11-27, WORKLOG 162e).
+
+At Round 12's close the units' lines went to Round 13, as 151f still
+stands (WORKLOG 163d, in `archive/worklog-phase-163.md`).
 
 ## Round 13 — The unit kit
 
@@ -331,6 +324,16 @@ META-ROADMAP §"Round 13 — The unit kit" names each row's place.
   in 432 battles, all on one seed (BALANCE 2026-11-27). Read it again at
   the next board; over the band's top, its grenadier weight and the
   sectors that draw it go to the user.
+
+- [ ] **A resume mode for `box-drive.sh`, before this round's board**
+  (placed at Round 12's close, 163d). A driver that dies with the PC
+  leaves its box running and its queue part-done, and the script has no
+  way back in: §162's recovery took a fetch by hand, a trimmed queue on
+  a fresh box and a hand-written watcher for the derive, with the
+  board's box idle about 25 min; §155's restart left a box idle 7.5 h.
+  A resume would take the live box and the queue, fetch what finished,
+  and drive the rest on that box (the user agreed, 2026-11-27; the
+  friction log, 2026-11-27, phase 162c; WORKLOG 162c).
 
 - [ ] **Ranged attacks that release their caster after 0.3 s, an
   experiment.** The ranged weapons (the bow, the pistol, the bolt, the
@@ -409,6 +412,27 @@ META-ROADMAP §"Round 13 — The unit kit" names each row's place.
   one commit (WORKLOG 163a, in `archive/worklog-phase-163.md` after
   §163's close).
 
+- [ ] **The redraw-fisher file is refused by its own schema** (placed
+  at Round 12's close beside `extends`, whose registration checklist
+  decides it, 163d). `config/redraw-level-fisher.json` names 10 of the
+  23 archetypes, and `ScoredCardWeightsSchema` is strict over every one,
+  so `npm run fuzz -- --count=1 --redraw=config/redraw-level-fisher.json`
+  throws at `weights.archetype.reaver`; nothing in the suite loads the
+  file. Fill in the missing archetypes at 0 or delete the file,
+  whichever its reader still wants (`tests/fuzz/redrawPolicy.ts:60-64`;
+  WORKLOG §144, the kickoff's audit).
+
+- [ ] **A line for every unit, the user's to write.** A unit's
+  `description` (145c) is optional, and only the six beasts have one;
+  none of them is draftable, so in play the full card shows no line and
+  an enemy card's tooltip is the only place one appears. The user writes
+  a one-line summary for each unit in the archetype editor's Description
+  field, as a set, since a line on some player cards and not others reads
+  as uneven. Asked 2026-11-02 (WORKLOG §145, "145c's tooltip in tiers");
+  carried from Round 11 at its close as 151f and from Round 12 at its
+  close (163d), with 6 of 43 units carrying a line; it lands when the
+  user writes them.
+
 ## Round 14 — Neutrals
 
 META-ROADMAP §"Round 14 — Neutrals" names each row's place.
@@ -479,6 +503,14 @@ META-ROADMAP §"Round 16 — The turn" names each row's place.
 ## Round 17 — Deck and daemons
 
 META-ROADMAP §"Round 17 — Deck and daemons" names each row's place.
+
+- [ ] **Beyond the Roman look** (placed at Round 12's close, 163d). The
+  user, at §151's kickoff (2026-11-06): "More generally, I want to start
+  diversifying from the Roman aesthetic also, but I think that can be a
+  future point." Every daemon but the Cornucopia and the Patrician's
+  Seal is a Roman god's, renamed at 151c for an object of the god; this
+  round's daemons are the next new ones (WORKLOG §151, "The cut
+  signed").
 
 - [ ] **WATCH: a unit bought at the port reads below keeping the bits.**
   On the prior table v9, 15 of the 16 units' bought rows sit below the
@@ -1079,30 +1111,5 @@ Rows with a trigger and no round (§133, tranche 3). Each names what reopens it.
 ## Not yet placed
 
 The inbox for a new row until the next pass places it.
-
-- [ ] **A resume mode for `box-drive.sh`.** A driver that dies with the
-  PC leaves its box running and its queue part-done, and the script has
-  no way back in: §162's recovery took a fetch by hand, a trimmed queue
-  on a fresh box and a hand-written watcher for the derive, with the
-  board's box idle about 25 min; §155's restart left a box idle 7.5 h.
-  A resume would take the live box and the queue, fetch what finished,
-  and drive the rest on that box (the user agreed, 2026-11-27; the
-  friction log, 2026-11-27, phase 162c; WORKLOG 162c).
-
-- [ ] **Beyond the Roman look.** The user, at §151's kickoff
-  (2026-11-06): "More generally, I want to start diversifying from the
-  Roman aesthetic also, but I think that can be a future point." Every
-  daemon but the Cornucopia and the Patrician's Seal is a Roman god's,
-  renamed at 151c for an object of the god; Round 17's daemons are the
-  next new ones (WORKLOG §151, "The cut signed").
-
-- [ ] **The redraw-fisher file is refused by its own schema.**
-  `config/redraw-level-fisher.json` names 10 of the 23 archetypes, and
-  `ScoredCardWeightsSchema` is strict over every one, so
-  `npm run fuzz -- --count=1 --redraw=config/redraw-level-fisher.json` throws at
-  `weights.archetype.reaver`; nothing in the suite loads the file. Fill
-  in the missing archetypes at 0 or delete the file, whichever its
-  reader still wants (`tests/fuzz/redrawPolicy.ts:60-64`; WORKLOG §144,
-  the kickoff's audit).
 
 - [x] ✅ **The hidden pane's slow first load.** `scratch/` is skipped by the dev server's watcher: a cold first stylesheet's wait went from 3.6 to 11.1 s over three starts to 0.7 to 1.5 s. The two 90 s loads stay unexplained (WORKLOG §162, "Between §161.5 and §162: the watcher skips scratch/").

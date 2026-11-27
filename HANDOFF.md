@@ -6,7 +6,7 @@ A fresh-session orientation for ASCIIbattler. Read this first; then dive into th
 
 **The ONE home for live status.** Other docs (and the agent memory) point here instead of restating it; when state changes, this section is the single place that updates.
 
-- **NEXT — ROUND 12 (Push, pull and blink): §163, the close: 163d's tranche 2 put to the user** (WORKLOG 163d: the open rows placed, two inbox rows placed, two papercuts left, the scratchpad empty; tranche 1 signed); on its sign, 163e builds the list. 151f, the units' lines, lands when the user writes them. **Open ◐:** 163d.
+- **NEXT — ROUND 12 (Push, pull and blink): §163, the close: 163f, the archive and the round's close** (`stop`; 163d signed and 163e built 2026-11-27, WORKLOG 163e). 151f, the units' lines, lands when the user writes them. **Open ◐:** none.
 - **In flight:** none.
 - **The public build:** `0.5.0` (`f0a0438a`, tag `v0.5.0`), uploaded to itch.io on 2026-11-27; the uploads before it are in Closed rounds below.
 - **Snapshots:** WorldSnapshot **v42** (no player keeps one) · RunSnapshot **v51** (a v50 save, `0.3.0`'s, rejects).

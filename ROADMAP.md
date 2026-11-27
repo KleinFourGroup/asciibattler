@@ -170,6 +170,6 @@ against the code, the process read and the archive.
 - ☑ **163a — the round's exit by clause, and Round 13's charter against the code** (`stop`): signed 2026-11-27, the exit met by clause and Round 13's charter standing, its `extends` parenthetical amended and the whirlwind's `evadable` a TODO row (WORKLOG 163a).
 - ☑ **163b — `0.5.0`, the tag and the zip** (`none`): `f0a0438a`, tagged `v0.5.0`, `asciibattler-0.5.0_f0a0438.zip` checked; a real `0.4.0` run continued in the pane and a fight played; the changelog drafted.
 - ☑ **163c — the smoke, the upload and the playtest** (`stop`, the user's): read 2026-11-27, uploaded, the reads good on the user's word; `main` and `v0.5.0` pushed.
-- ◐ **163d — the process read** (`stop`, in two tranches): tranche 1 signed 2026-11-27 (execSync's row kept, Python's CRLF row deleted, no new rule); tranche 2 put to the user (WORKLOG 163d).
-- ☐ **163e — the list built as signed** (`none`).
+- ☑ **163d — the process read** (`stop`, in two tranches): signed 2026-11-27 in two: `execSync`'s row kept and Python's CRLF row deleted, no new rule or guard; the units' lines, the resume mode and the redraw-fisher row to Round 13, the Roman look to Round 17, two papercuts left (WORKLOG 163d).
+- ☑ **163e — the list built as signed** (`none`): one row out of `shell-and-windows.md`, nothing else in the rule docs; the four TODO rows placed.
 - ☐ **163f — the archive and the round's close** (`stop`).

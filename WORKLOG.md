@@ -566,3 +566,24 @@ CRLF row out of `process/shell-and-windows.md`; in TODO, 151f's row and
 the resume mode under Round 13, the redraw-fisher row under Round 13
 and the Roman look under Round 17; AGENTS, CLAUDE.md, ROUND-RULES and
 the guards unchanged.
+
+**Tranche 2 signed** (the user: "Signed! 😁"), on every lean.
+
+### 163e — the list built as signed (2026-11-27)
+
+`process/shell-and-windows.md` loses the Python CRLF row (three lines);
+`execSync`'s row above it stays. In TODO: the units' lines move from
+Round 12 to the end of Round 13, with a note under Round 12 saying so;
+the resume mode moves from "Not yet placed" to Round 13 after §162's two
+named watches, titled as due before the round's board; the
+redraw-fisher row moves to Round 13 after the whirlwind's row, beside
+the `extends` work; the Roman look moves to the top of Round 17. Each
+moved row keeps its text, with a clause saying where and when it was
+placed.
+
+*The oracle*, the rule docs' diff against the signed list: `git diff
+--stat` over AGENTS.md, CLAUDE.md, ROUND-RULES.md, `process/`, the hook
+and the context meter's mod shows `process/shell-and-windows.md` alone,
+3 deletions. TODO's open rows count 88 before and after, and each moved
+row reads under its signed section (a script over the headings). The
+docs tests run on the commit.

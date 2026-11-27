@@ -256,7 +256,7 @@ function act1Posture(
       ? 'arbitrated:scored:59-regen-vector'
       : 'arbitrated:scored:92c2-winner';
   const provisional = character === 'gambler' ? ` [${sheet.gamblerNote}]` : '';
-  const winSource = `155g re-pin at the 155a board (act 1, The Periphery, arb λ=0.5, doctrine's pick the null, the prior table v9, n=120 pooled, ±8)${provisional}`;
+  const winSource = `162f re-pin at the 162c board (act 1, The Periphery, arb λ=0.5, doctrine's pick the null, the prior table v10, n=120 pooled, ±8)${provisional}`;
   const checks: BoardCheck[] = [
     ref('winRate', refs.winRefs[character][posture], WIN_TOL, winSource),
   ];
@@ -265,16 +265,16 @@ function act1Posture(
   // dissolution is the arm's structure, not a drift to chase.
   if (character === 'soldier' && posture === 'regen') {
     checks.push(
-      ref('terminalBank', refs.bankRefs.firer, BANK_TOL, '155g re-pin at the 155a board: the firer banks ~127 after act 1 (130 at 150h)'),
-      ref('firesPerRun', refs.firerFiresPerRun, 1.0, '155g re-pin at the 155a board: ~4.4 arbitrated fires a run (4.7 at 150h)'),
-      ref('transactionRate', refs.firerTransactionRate, 0.1, '155g re-pin at the 155a board: the firer shops in ~28% of runs (the port economy re-activated by the fold at 85g6d)'),
+      ref('terminalBank', refs.bankRefs.firer, BANK_TOL, '162f re-pin at the 162c board: the firer banks ~120 after act 1 (127 at 155a)'),
+      ref('firesPerRun', refs.firerFiresPerRun, 1.0, '162f re-pin at the 162c board: ~4.7 arbitrated fires a run (4.4 at 155a)'),
+      ref('transactionRate', refs.firerTransactionRate, 0.1, '162f re-pin at the 162c board: the firer shops in ~31% of runs (28% at 155a; the port economy re-activated by the fold at 85g6d)'),
     );
   }
   if (character === 'soldier' && posture === 'deploy') {
     checks.push(
-      ref('terminalBank', refs.bankRefs.shopper, BANK_TOL, '155g re-pin at the 155a board: the deploy row banks ~92 after act 1 (83 at 150h)'),
-      ref('transactionRate', refs.shopperTransactionRate, 0.1, '155g re-pin at the 155a board: the deploy vector shops in ~73% of runs (90% at 150h)'),
-      ref('firesPerRun', 4.81, 1.0, '155g re-pin at the 155a board: ~4.8 arbitrated fires a run (5.4 at 150h)'),
+      ref('terminalBank', refs.bankRefs.shopper, BANK_TOL, '162f re-pin at the 162c board: the deploy row banks ~85 after act 1 (92 at 155a)'),
+      ref('transactionRate', refs.shopperTransactionRate, 0.1, '162f re-pin at the 162c board: the deploy vector shops in ~88% of runs (73% at 155a)'),
+      ref('firesPerRun', 5.28, 1.0, '162f re-pin at the 162c board: ~5.3 arbitrated fires a run (4.8 at 155a)'),
     );
   }
   const base = character === 'soldier' ? posture : `${character}-${posture}`;
@@ -482,7 +482,7 @@ export function buildBoard(
       'bandit-king',
       sheet,
       walk,
-      '155g re-pin at the 155a board: the doctrine arm at n=120, the King at act 1 (0.717 at 146f)',
+      '162f re-pin at the 162c board: the doctrine arm at n=120, the King at act 1 (0.658 at 155a)',
     ),
     forcedBoss(
       'wall-queen',
@@ -490,7 +490,7 @@ export function buildBoard(
       'banditQueen',
       sheet,
       walk,
-      '155g re-pin at the 155a board: the doctrine arm at n=120, the Queen at act 3 (0.258 at 146f); the King>Queen order is the durable check',
+      '162f re-pin at the 162c board: the doctrine arm at n=120, the Queen at act 3 (0.408 at 155a, 34 of 120 here against 49, no cause read); the King>Queen order is the durable check',
     ),
     act1Posture('priest', 'regen', act1, sheet),
     act1Posture('priest', 'deploy', act1, sheet),

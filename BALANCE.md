@@ -6811,3 +6811,34 @@ deltas. The pre-X H7c→O log lives at
   `output/162c-anchors/`, the derive's vector in
   `output/box-batches/20261127-002025-5f277acc/best-strategy.json`, the
   logs in `scratch/162/`.
+- **2026-11-27 — the sheet re-pinned at v10** (§162, 162f, user-signed).
+  Act 1's refs at the closing board's values, no content moved (162e's
+  first call, signed 2026-11-27): the six act-1 win refs (soldier 0.708
+  / 0.950, priest 0.633 / 0.858, gambler 0.567 / 0.892), the banks
+  120.1 / 85.1, the firer's fires 4.68, the deploy row's 5.28 (a literal
+  in `board.ts`), the transaction rates 0.308 / 0.875, and the forced
+  King 0.625 (act 1) and Queen 0.283 (act 3). The Queen's row fell 49 →
+  34 of 120 against 155a with no cause read, named in the sheet's entry.
+  Held: seam 1 and act 1's wall by vector (16.41 and 24.32 of 40, walls
+  0.190 and 0.034, each inside 155g's band), the terminal pair, the
+  pacing bands and the fire channel's signed +0.10. The values are the
+  sheet's (`tests/fuzz/board/signed-sheet.json`, its 2026-11-27 entry),
+  written by `scratch/162/amend-sheet.mjs`. Read on its own board
+  (`output/board-runs/162c/`): every re-pinned entry PASS, 0 FAIL, 9
+  WARN (before the re-pin: 12): the terminal pair and derived win on the
+  walk rows, the deploy walk's elite turns 3.95 (against 4.00), and the
+  ceilings on regen (+0.175) and walk-regen (+0.125). Its control, the
+  same sheet on 155a's board: the priest's regen row (0.525), the deploy
+  row's transactions (0.733) and the Queen (0.408) WARN, 12 in all.
+
+  *Acts 2 and 3 at 162c, Rounds 21 and 22's starting points* (arrivals
+  at the act's boss, reach, wall, the seam out of the act with the runs
+  that crossed it; 146f's are in the 2026-11-03 entry; by encounter and
+  the deaths, the board's entry above):
+
+  | row | act 2 (The Start) | act 3 (The Deep End) |
+  |---|---|---|
+  | arb-walk-deploy | 103, 0.858, 0.126, 21.36 (90) | 86, 0.717, 0.035 |
+  | arb-walk-regen | 50, 0.417, 0.500, 14.80 (25) | 18, 0.150, 0.167 |
+  | walk-deploy (doctrine) | 33, 0.825, 0.121, 20.17 (29) | 28, 0.700, 0.143 |
+  | walk-regen (doctrine) | 9, 0.225, 0.556, 17.00 (4) | 2, 0.050, 0.000 |

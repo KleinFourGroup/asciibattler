@@ -165,11 +165,12 @@ eight leans (WORKLOG §162).
 - ☑ **162d — the roster table rebuilt** (`none`): from the board's eight
   ARM rows. `--report` PASS; the roster table v9, every newcomer in it
   (WORKLOG 162d).
-- ☐ **162e — the board read** (`stop`, the decision point).
-- ☐ **162f — the sheet amended** (`stop`; `none` if 162e holds the
-  sheet).
-- ☐ **162g — the content changes** (`stop`; only if 162e signs any).
-- ☐ **162h — the verify board** (`none`; only after 162g).
+- ☑ **162e — the board read** (`stop`, the decision point): signed
+  2026-11-27, every lean; no content changes (WORKLOG 162e).
+- ◐ **162f — the sheet amended** (`stop`): act 1's refs re-pinned at the
+  162c board, 0 FAIL and 9 WARN on it (WORKLOG 162f).
+- ✗ **162g — the content changes** and ✗ **162h — the verify board**:
+  not run, since no call changes content.
 
 ## Phase 163 — the close
 

@@ -305,21 +305,31 @@ META-ROADMAP §"Round 12 — Push, pull and blink" names each row's place.
   carried from Round 11 at its close as 151f, which lands when the user
   writes them.
 
-- [ ] **The fire channel reads 0.275 against its signed +0.10.** At §155's closing board the fire-ablated doctrine row cleared act 1 in 17 of 40 against 27 at 146f and 150h (p 0.021, one of 15 tests), so regen − fire-ablated widened; held unchanged at 155g (BALANCE 2026-11-12). Read it again at the next board, this round's, before any re-sign, which is the user's (moved from Round 10's "The board" at Round 11's close, WORKLOG §156, 156f).
+- [x] ✅ **The fire channel reads 0.275 against its signed +0.10.** Read at §162's board: 0.108 at n=120, inside its band, so the signed +0.10 is held and the WARN closes (the user's call at 162e, 2026-11-27; BALANCE 2026-11-27, WORKLOG 162e).
 
-- [ ] **The enemy grenadier, used judiciously.** A fall is a permanent
-  loss under the casualty rule, and an enemy grenadier's come in bursts:
-  the census's six player falls were all in one seed, four in one battle
-  (BALANCE 2026-11-20, the census of falls), and the Artillery Company
-  forced on the isthmus threw 6 in four battles, two by one grenade
-  (WORKLOG 160.5e). The user likes it, tentatively, harsh as it is, and
-  asks that enemy grenadiers be used judiciously (2026-11-20). Read at
-  §162's board: the Artillery Company's grenadier weight and the sectors
-  that draw it, against what the board shows the losses cost.
+- [x] ✅ **The enemy grenadier, used judiciously.** Read at §162's board: the Artillery Company costs 5.88 a pool an instance (band 2–6), the falls by enemy grenadiers 3 in 432 battles, all on one seed; held, with a named watch on its cost in Round 13 (the user's call at 162e, 2026-11-27; BALANCE 2026-11-27, WORKLOG 162e).
 
 ## Round 13 — The unit kit
 
 META-ROADMAP §"Round 13 — The unit kit" names each row's place.
+
+- [ ] **The telekinetic and the cavalier, named watches at the next
+  prior table** (signed at 162e, 2026-11-27). On the prior table v10,
+  taken free, the telekinetic reads −32.0 ± 17 and the cavalier
+  −40.7 ± 20, the rare tier's bottom: about two errors under the reaver,
+  within one of the held halberdier (−30.6). Held at rare, since a
+  re-tier would leave them the lowest uncommons too; at §162's board the
+  ARM fields them in 12.0 % and 5.3 % of its runs, inside the rares'
+  spread (BALANCE 2026-11-26 and 2026-11-27, WORKLOG 162e). Re-read both
+  rows at the next prior table, with the kit watches.
+
+- [ ] **The Artillery Company's cost, a named watch** (signed at 162e,
+  2026-11-27). The enemy grenadier's fight costs 5.88 a pool an instance
+  at §162's board, under its band's top of 6 (3.01 at §155's), and ended
+  6 runs in 266 instances; the census's falls by enemy grenadiers are 3
+  in 432 battles, all on one seed (BALANCE 2026-11-27). Read it again at
+  the next board; over the band's top, its grenadier weight and the
+  sectors that draw it go to the user.
 
 - [ ] **Ranged attacks that release their caster after 0.3 s, an
   experiment.** The ranged weapons (the bow, the pistol, the bolt, the
@@ -1057,6 +1067,15 @@ Rows with a trigger and no round (§133, tranche 3). Each names what reopens it.
 ## Not yet placed
 
 The inbox for a new row until the next pass places it.
+
+- [ ] **A resume mode for `box-drive.sh`.** A driver that dies with the
+  PC leaves its box running and its queue part-done, and the script has
+  no way back in: §162's recovery took a fetch by hand, a trimmed queue
+  on a fresh box and a hand-written watcher for the derive, with the
+  board's box idle about 25 min; §155's restart left a box idle 7.5 h.
+  A resume would take the live box and the queue, fetch what finished,
+  and drive the rest on that box (the user agreed, 2026-11-27; the
+  friction log, 2026-11-27, phase 162c; WORKLOG 162c).
 
 - [ ] **Beyond the Roman look.** The user, at §151's kickoff
   (2026-11-06): "More generally, I want to start diversifying from the

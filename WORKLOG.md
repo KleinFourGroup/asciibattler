@@ -434,6 +434,54 @@ At the user's word: 162f amends the sheet if call 1 re-pins (its read
 `stop`, or `none` if the user makes it so, as at 155g); 162g and 162h
 run only if a call changes content.
 
+### 162e — the calls signed (2026-11-27)
+
+The user, the next morning: "Calls: agreed with all of your leans!" So:
+act 1's sheet re-pins at this board with no content moved (162f); the
+grenadier and the ninja are held, and the telekinetic and the cavalier
+held with a named watch at the next prior table (TODO, Round 13); the
+fire channel's signed +0.10 is held and its TODO row closed; the enemy
+grenadier is held, with a named watch on the Artillery Company's cost
+(TODO, Round 13). No call changes content, so 162g and 162h do not run.
+The user did not make 162f's read `none`, so it stays a `stop`. They
+also agreed to a resume mode for `box-drive.sh`, now a TODO row ("Not
+yet placed"), and said the 02:12Z restart was their eye tracker
+freezing, not a crash.
+
+### 162f — the sheet re-pinned (2026-11-27)
+
+*Built:* `tests/fuzz/board/signed-sheet.json` amended by
+`scratch/162/amend-sheet.mjs`, which checks the file's byte-identical
+round trip and every old value before writing, and refuses a second run
+(checked: it threw on the moved win refs). Re-pinned at the 162c
+board's n=120 values: the six act-1 win refs, the two banks, the
+firer's fires, the two transaction rates and the forced King and Queen;
+`board.ts`'s source strings and the deploy row's fires literal (4.81 →
+5.28) moved with them. The values are in BALANCE (2026-11-27, the sheet
+re-pinned). The Queen's drop is named in the sheet's entry and in her
+row's source string, with no cause read.
+
+*Held, a lean inside the signed call:* seam 1 and act 1's wall keep
+155g's bands, since they are signed bands rather than point refs and
+all four readings sit inside them (16.41 and 24.32 of 40, walls 0.190
+and 0.034); re-centring them would move a signature for under half a
+pool. The terminal pair, the pacing bands and the fire channel are held
+as at 155g.
+
+*The proof:* `--report` on `output/board-runs/162c/` under the amended
+sheet: 0 FAIL, 9 WARN (12 before), every re-pinned entry PASS
+(`scratch/162/162f-report-162c.txt`). The nine left: the terminal pair
+and derived win on both walk rows (six), the deploy walk's elite turns
+3.95 against 4.00, and the ceilings on regen (+0.175) and walk-regen
+(+0.125). The control, the same sheet on 155a's board: the priest's
+regen row (0.525), the deploy row's transactions (0.733) and the Queen
+(0.408) WARN, 12 in all (`scratch/162/162f-report-155a-control.txt`).
+Integrity reads one WARN on each, the measurement HEAD against this
+tree's, which the re-pin answers by citing `5f277acc`.
+
+Acts 2 and 3 for Rounds 21 and 22: the per-act table is in BALANCE
+beside the re-pin; by encounter and the deaths, in the board's entry.
+
 ### Between §161.5 and §162: the watcher skips scratch/ (2026-11-26)
 
 **Asked.** The user's own `npm run dev` loads almost at once, where the

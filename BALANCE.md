@@ -6684,6 +6684,127 @@ deltas. The pre-X H7c→O log lives at
   grenadier in 1,973 battles, the ninja 1,508, the telekinetic 784, the
   cavalier 386, counted in the raw sidecars).
 
+  *Against 155a* (`output/board-runs/155a/`), paired on the seeds
+  (`scratch/146/pair.mjs`, only 155a : only 162c; its control, a row
+  against itself, reads 0 : 0 on 85 wins, and an awk join gives the
+  wall-queen pair the same), wins of 120 or 40:
+
+  | row | 155a | 162c | paired | p |
+  |---|---|---|---|---|
+  | arb-regen | 85 | 85 | 11 : 11 | 1.0 |
+  | arb-deploy | 115 | 114 | 5 : 4 | 1.0 |
+  | wall-king | 79 | 75 | 11 : 7 | 0.48 |
+  | wall-queen | 49 | 34 | 19 : 4 | 0.0026 |
+  | arb-priest-regen | 63 | 76 | 6 : 19 | 0.015 |
+  | arb-priest-deploy | 104 | 103 | 5 : 4 | 1.0 |
+  | arb-gambler-regen | 63 | 68 | 13 : 18 | 0.47 |
+  | arb-gambler-deploy | 101 | 107 | 8 : 14 | 0.29 |
+  | arb-walk-regen | 24 | 15 | 13 : 4 | 0.049 |
+  | arb-walk-deploy | 92 | 83 | 17 : 8 | 0.11 |
+  | regen (40 shared) | 28 | 22 | 7 : 1 | 0.070 |
+  | deploy (40) | 35 | 37 | 1 : 3 | 0.63 |
+  | fire-ablated (40 shared) | 17 | 19 | 2 : 4 | 0.69 |
+  | walk-regen (40) | 4 | 2 | 3 : 1 | 0.63 |
+  | walk-deploy (40) | 24 | 24 | 6 : 6 | 1.0 |
+
+  Of 15 tests, the wall-queen row alone clears a Bonferroni line
+  (0.0033). The regen and fire-ablated rows read 64 and 51 of 120.
+
+  *Act 1 on the ARM walk rows*, pooled over both by instances
+  (`scratch/155/act1-pooled.mjs`; 155a's pool reproduces its entry's
+  figures, and a row pooled with itself gives the same rates), turns per
+  won instance / pool an instance: the King 5.61 / 16.38, the bear 5.37 /
+  13.69, the cats 4.61 / 17.15, the Vermin Lords 4.31 / 6.90, the
+  poachers 3.01 / 5.05, the brigands 3.01 / 4.89, the rat hunt 3.03 /
+  3.06, the canids 3.00 / 2.31, the wolfpack 3.00 / 2.41, the rats' nest
+  3.03 / 2.74. Every fight is inside its turn target and its cost band;
+  each value within 0.1 turns and 2.2 of pool of 155a's. On the deploy
+  row alone one cost is under, the rats' nest 1.79 (155a: it and the
+  Vermin Lords).
+
+  *155g's sheet:* the seam 16.41 regen, 24.32 deploy (bands 14.8–18.8,
+  22.4–26.4); act 1's wall 0.190 and 0.034 (0.15–0.31, 0.00–0.11); the
+  six act-1 refs: arb-regen 0.708, arb-deploy 0.950, the priest 0.633
+  (band 0.45–0.60, WARN, over) and 0.858, the gambler 0.567 and 0.892;
+  banks 120.1 and 85.1, fires 4.68 and 5.28, transactions 0.308 and
+  0.875 (0.63–0.83, WARN, over); the King's forced row 0.625; the
+  Queen's 0.283 (0.31–0.51, WARN, under). Pacing, all acts pooled: the
+  deploy row's elite 3.95 (4.0–5.0, WARN); act 1's two elites alone, the
+  cats 4.61 and the Vermin Lords 4.31, are inside.
+
+  *The fire channel*, regen − fire-ablated on 120 shared seeds: 0.108
+  (band 0.05–0.15, PASS), 18 : 5 (p 0.011); on seeds 1 to 40 alone
+  0.075 (22 against 19). 155a read 0.275 at n=40 (28 against 17, 11 : 0).
+
+  *Acts 2 and 3 by encounter*, pooled over the two ARM walk rows
+  (`scratch/162/acts-pooled.mjs`, act1-pooled's sums over every fight,
+  labelled by act; its act-1 rows equal act1-pooled's on both boards,
+  and on 155a's rows its acts 2 and 3 give the figures of 155a's entry),
+  155a's in brackets, where a value is outside its target or band or
+  moved: act 2, the ronin-vs-mages 3.45 / 13.69 (both over) [3.57 /
+  13.82], the deserters' cost 1.52 and the highwaymen's 1.37 (under)
+  [1.70, 1.24], the generalissimo's turns 4.31 (under) [4.31], the
+  Brigand Champions 4.45 / 16.49 [4.21 / 12.17], the warband vanguard
+  4.10 / 10.92 [4.53 / 12.79], the witch hunt 5.20 / 14.36 [5.01 /
+  12.36]; acts 2 and 3, the adventurer with guards' turns 2.09 (under)
+  [2.13], the Artillery Company 3.00 / 5.88 [3.00 / 3.01]; act 3, the
+  Queen 5.21 / 11.13, inside now [5.07 / 9.69], the dark magic posse's
+  turns 3.13 [3.29], the plague spreaders' 3.03 [3.18] and the plague
+  doctors' 2.12 [2.16] (under), the infernal column's cost 8.48 [9.79]
+  and the Miscreants' 7.32 [2.61] (over), the plague victims' 0.19
+  [0.17] (under), the Elemental Trio 3.03 / 2.92 [3.00 / 3.20].
+
+  *Deaths by encounter*, pooled over the two ARM walk rows
+  (`scratch/146/walls.mjs`, traces equal to defeats on all four rows),
+  155a → 162c, by the trace's sector: 124 → 142 in all. Act 1: 40 → 41.
+  Act 2: the Brigand Champions 3 → 15, the witch hunt 17 → 24, the
+  generalissimo 18 → 14, the ronin-vs-mages 17 → 16, the warband
+  vanguard 7 → 6, the Artillery Company 0 → 4, the rest 8 → 5; 70 → 84.
+  Act 3: the Queen 8 → 6, the Artillery Company 1 → 2, the rest 5 → 9;
+  14 → 17. In situ, deaths of
+  instances regen / deploy: the generalissimo 11 of 24 and 3 of 48, the
+  witch hunt 14 of 26 and 10 of 55, the King 12 of 49 and 3 of 56, the
+  bear 8 of 56 and 1 of 62, the Queen 3 of 18 and 3 of 86 (155a 5 of 29,
+  3 of 95).
+
+  *The Artillery Company*, the enemy grenadier's fight: 266 instances
+  over the two walk rows, 262 won, 3.00 turns, 5.88 a pool an instance
+  (band 2–6), 6 runs ended in it (155a 279, 278, 3.00, 3.01, 1). The
+  fire census's falls by the enemy's grenadiers: 3 in 432 battles, all
+  the player's units, on one seed (BALANCE 2026-11-26).
+
+  *The parity gaps (C16)*, the class against the soldier on the same
+  seeds (only the class : only the soldier): the priest −7.5 on regen (76
+  against 85; 6 : 15, p 0.078) and −9.2 on deploy (103 against 114; 4 :
+  15, p 0.019); the gambler −14.2 (68; 3 : 20, p 0.0005) and −5.8 (107;
+  3 : 10, p 0.092). 155a: the priest −18.3 and −9.2, the gambler −18.3
+  and −11.7.
+
+  *The terminal pair against the wall watch (C17)*: reach 0.150 and
+  0.717 (band 0.40–0.50), wall 0.167 and 0.035 (0.30–0.35); 155a 0.242
+  and 0.792, 0.172 and 0.032. Per act on the walk rows (reach, wall):
+  arb-walk-regen act 2 0.417, 0.500 [0.492, 0.424]; arb-walk-deploy act
+  2 0.858, 0.126 [0.883, 0.094].
+
+  *The ceilings:* arb − doctrine +0.175 on regen (120 shared seeds,
+  WARN), +0.075 deploy, +0.125 walk-regen (WARN), +0.075 walk-deploy;
+  the anchors pure-random 4 and greedy 6 of 40, random < greedy < the
+  ARM ok.
+
+  *The newcomers on the board*, the share of the eight ARM rows' 960
+  runs that field a unit at some hop (the raw sidecars): the grenadier
+  0.227 and the ninja 0.171 (the uncommons: the ronin 0.458, the mage
+  0.222, the gunslinger 0.126, the adventurer 0.042); the telekinetic
+  0.120 and the cavalier 0.053 (the rares: the catapult 0.164, the reaver
+  0.107, the halberdier 0.093, the officer 0.032, the corrupter 0.021).
+
+  *The fresh derive*, the registry's line, 5 h 9 to 5 h 19 min by its
+  watcher's polls, exit 0: the
+  best of 96 vectors trains at 23.1 % before refinement and 26.9 % after
+  (7 of 26), and wins 1 of 6 held-out (155a: 57.7 % both, 1 of 6). The
+  deployed vector wins 24 of 40 on the doctrine walk row, 83 of 120
+  under the ARM; the search finds nothing above it.
+
   Artifacts (ignored, this machine): the 27 board batches and the
   derive's, `output/box-batches/20261127-*-5f277acc/`, the pooled board
   and its report in `output/board-runs/162c/`, the anchors in

@@ -350,7 +350,89 @@ them. Each newcomer is drafted by all three characters, counted in the
 raw sidecars: the grenadier in 1,973 battles, the ninja 1,508, the
 telekinetic 784, the cavalier 386. The coverage test failed on the four
 PENDING lines with the new table (rule 5, the control) and passed, 14 of
-14, once they were dropped.
+14, once they were dropped. After the commit: the table's and the
+sampled flag's tests pass (22, under `vitest.fuzz.config.ts`), and
+`--roster=sampled:2:5 --act=3` loads and plays a seed (exit 0), the
+cut's last exit clause.
+
+### 162e — the board read, and the calls put (2026-11-27)
+
+The numbers are in BALANCE (2026-11-27, the closing board at v10). Two
+readers are new this step: `scratch/162/acts-pooled.mjs`, act1-pooled's
+sums over every fight, checked against act1-pooled's act-1 rows on both
+boards and against 155a's acts 2 and 3 in its BALANCE entry; and a field
+share off the raw sidecars, its denominator 960 runs.
+
+What the board says:
+
+- **Act 1 holds.** Every act-1 fight is inside its turn target and cost
+  band on the pooled ARM walk rows, each within 0.1 turns and 2.2 of pool
+  of 155a's; the seam and act 1's wall are in their bands by vector; the
+  ARM soldier rows pair 11 : 11 and 5 : 4 against 155a. The newcomers, the
+  two kits and the fall moved act 1 by nothing a band sees.
+- **Three refs drift, none a signed target.** The priest's regen row 63
+  → 76 (6 : 19, p 0.015) sits over its band; the deploy row's
+  transactions 0.733 → 0.875 sit over theirs; the Queen's forced row 49 →
+  34 (19 : 4, p 0.0026, the one move of 15 that clears a Bonferroni
+  line) sits under its band, while in situ the Queen kills 3 of 18 and 3
+  of 86 instances (155a 5 of 29, 3 of 95) and the King > Queen order
+  holds (75 against 34).
+- **The full run is harder, in act 2.** Deaths over the two ARM walk
+  rows 124 → 142, act 2 70 → 84: the Brigand Champions 3 → 15 (a ronin
+  at their head, with the whirlwind since 160f), the witch hunt 17 → 24.
+  The walk rows' completions 24 → 15 (p 0.049) and 92 → 83 (p 0.11), as
+  the prior bank's 97 → 84 at 162a. Recorded for Rounds 21 and 22; the
+  cut leaves acts 2 and 3 untuned.
+- **The fire channel is in band**: 0.108 at n=120 (18 : 5), where 155a
+  read 0.275 at n=40; on seeds 1 to 40 alone it reads 0.075. 155a's
+  wide read was the small sample's, as far as two boards can show.
+- **The enemy grenadier** doubled the Artillery Company's cost, 3.01 →
+  5.88 a pool an instance, inside its band (2–6), with 6 runs ended there
+  in 266 instances (155a 1 in 279). Its falls: 3 in the census's 432
+  battles, all on one seed.
+- **The warlock and the ice mage:** the Miscreants (the ninja and the
+  warlock) cost 2.61 → 7.32, over the band, on 44 instances and 1 death;
+  the dark magic posse's turns 3.13 (under, 155a 3.29), its cost in band;
+  the Elemental Trio 3.03 / 2.92, inside both.
+- **The parity gaps narrowed**: the priest −7.5 and −9.2, the gambler
+  −14.2 and −5.8 (155a −18.3, −9.2, −18.3, −11.7). The gambler's regen
+  gap alone is told apart (p 0.0005).
+- **The derive** finds nothing above the deployed vector (26.9 % train,
+  1 of 6 held-out, against 24 of 40 on the doctrine walk row).
+- **The newcomers on the board**: the ARM fields the grenadier in 22.7 %
+  of its runs and the ninja in 17.1 %, inside the uncommons' spread; the
+  telekinetic in 12.0 % and the cavalier in 5.3 %, in the rares' (from
+  the corrupter's 2.1 % to the catapult's 16.4 %).
+
+**The calls, put to the user** (the session's leans; none is taken
+unattended):
+
+1. **Act 1's sheet**: re-pinned at this board with no content moved
+   (162f), or held. Lean: re-pin, as at 155g. No act-1 fight misses a
+   target or band, so there is nothing to tune; the three drifting refs
+   are reference values, and this board is the state Round 13 inherits,
+   so a ref left at 155a's values would carry three WARNs into every
+   board after it. The Queen's drop is named in the re-pin's source
+   line rather than absorbed silently.
+2. **The newcomers**: the grenadier and the ninja held; the telekinetic
+   and the cavalier held with a named watch (the rare tier's bottom), or
+   re-priced. Lean: hold both, with the watch read at the next prior
+   table. Their free rows, −32.0 ± 17 and −40.7 ± 20, are about two
+   errors under the reaver alone and within one of the held halberdier
+   (−30.6); a re-tier to uncommon would leave them the lowest there too;
+   a re-price is a content change, so 162g and a verify board, about 8 h
+   of box.
+3. **The fire channel**: hold the signed +0.10. Lean: hold; it reads
+   inside its band at n=120, so 155a's WARN closes with no re-sign and
+   no cause read.
+4. **The enemy grenadier**: held, or its weight or sectors changed.
+   Lean: hold, with a named watch on the Artillery Company's cost near
+   the top of its band; every reading is inside its band, and the falls
+   are one seed's.
+
+At the user's word: 162f amends the sheet if call 1 re-pins (its read
+`stop`, or `none` if the user makes it so, as at 155g); 162g and 162h
+run only if a call changes content.
 
 ### Between §161.5 and §162: the watcher skips scratch/ (2026-11-26)
 

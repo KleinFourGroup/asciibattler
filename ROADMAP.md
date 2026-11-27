@@ -167,7 +167,7 @@ Company's cost (WORKLOG §162, in `archive/worklog-phase-162.md`).
 `0.5.0` and its upload, the round's exit by clause, Round 13's charter
 against the code, the process read and the archive.
 
-- ☐ **163a — the round's exit by clause, and Round 13's charter against the code** (`stop`).
+- ◐ **163a — the round's exit by clause, and Round 13's charter against the code** (`stop`): built, put to the user (WORKLOG 163a).
 - ☐ **163b — `0.5.0`, the tag and the zip** (`none`): a `0.4.0` run continued in the pane.
 - ☐ **163c — the smoke, the upload and the playtest** (`stop`, the user's).
 - ☐ **163d — the process read** (`stop`, in two tranches).

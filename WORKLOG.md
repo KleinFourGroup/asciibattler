@@ -190,3 +190,133 @@ no audit round, since no META-ROADMAP cluster closed.
 
 Signed: "Signing all of those, Claude! 😁", over the cut as put and its
 seven leans. The stretch it opens runs to 163a's stop.
+
+### 163a — the round's exit by clause, and Round 13's charter against the code (2026-11-27)
+
+Read at `6940a92f`. Nothing under `src`, `config`, `tools`, `scripts` or
+`tests` has changed since `69a40c72`, §162's close. The consumers were
+read from the raw config files, not the loaders, by a probe in the
+session's scratch directory.
+
+**Round 12's exit (META-ROADMAP §"Round 12"), by clause:**
+
+| Clause | Holds? | Evidence |
+|---|---|---|
+| Each seam with a headless test and its planted failure | yes | the push's walk (159a, 10 rules planted out), the held slide (159b, 13), the op (159c, 7), the Snag and its room gate (159d, 5; 159d-post, 4); the boss flag (160.5a, 7) and the fall (160.5b, 13); the hit after a leap (161b, 8), the blink and the dash's landing as an entry (161c, 14), the charge (161d, 18); each from its phase close's exit entry |
+| The consumers in play | yes | at HEAD the grenadier (uncommon), the telekinetic (rare), the ninja (uncommon) and the cavalier (rare) are draftable, and each fights as an enemy in act 2 or 3: the grenadier in the Artillery Company (acts 2 and 3), the telekinetic in the Dark Magic Posse (act 3), the ninja among the Miscreants (act 3), the cavalier in the Warband Vanguard (act 2); the adventurer carries `snag` (a damage op and a push), the ronin `whirlwind` (a caster-anchored area), the banshee `wail` on her own cell (radius 2); each consumer's test from the raw config with its plants (160c to 160f, 161e to 161g) and the play signed at 160g and 161i |
+| The board | yes | §162: §155's lines line for line at `5f277acc`, read with every lean signed at 162e, act 1's refs re-pinned and signed at 162f (BALANCE 2026-11-27, "the closing board at v10" and "the sheet re-pinned at v10") |
+
+**The spec's rules for the re-cut's rounds.** Each seam with its test,
+its plant and a consumer in play: the table's first two rows. The board
+as paired same-seed deltas against §155's: BALANCE 2026-11-27 pairs 15
+rows against 155a, and the wall-queen row alone clears a Bonferroni line
+(49 → 34 of 40, 19 : 4, p 0.0026), named in the sheet's entry with no
+cause read. An upload with something a player can meet: 163c.
+
+**The release line** ("seven units and abilities"), read in config at
+HEAD: four new units and 13 new abilities. The seven consumers are the
+four units, the Snag, the whirlwind and the Wail on its caster; beside
+them the Punch and the Scratch (160d-post, 160e-post), the Sabre and the
+Dagger, the puma's pounce with the strike it shared renamed the Swipe,
+the warlock's Jinx and the ice mage's Icicle (§161.5), and the fall. No
+id was removed from the units, abilities, encounters or daemons; the
+`pounce` id is kept, now the puma's leap. Every ability's line is held
+by `src/config/abilities.test.ts` (its `withoutLine` check), green at
+§162's close.
+
+**The save clause** (a World bump): `WORLD_SCHEMA_VERSION` 39 at
+`4fc62cfe` (`src/sim/World.ts:92` there) and 42 at HEAD
+(`src/sim/World.ts:93`): v40 at 159b (the held slide), v41 at 160.5a
+(the boss flag), v42 at 160.5b (the fall's pusher). Run 51 at both ends;
+163b checks a `0.4.0` run in the built game.
+
+**The decision points.** The design stop: signed 2026-11-16 at 158b, in
+two tranches. Which new units are draftable: all four (tranche 2B), and
+all four read `draftable` at HEAD.
+
+**The scope guard** (no 2×2 body is pushed until round 19):
+`pushLanding` returns null for a body larger than one cell
+(`src/sim/push.ts:69`), and every forced move asks it (the push op,
+`src/sim/effects/interpreter.ts:391`; the Snag's room gate,
+`src/sim/effects/propose.ts:169`). Its test is `push.test.ts:104-119`
+("never moves"), and 159a's plant "a large body moves" takes out that
+line, whose text its `find` still matches at HEAD
+(`scratch/159/159a-plants.json`).
+
+**Built otherwise than the charter wrote it**, each signed: the fall
+(§160.5, inserted at §160's play), a push into chasm or deep water
+dropping its victim where 158b signed a stop at the edge, a boss
+excepted; §161.5 inserted, the hex and the ice storm made specials over a
+weak shot; N3's flag carried to Round 14 (158b); the cavalier's charge a
+push on itself and the pounce on the puma (158b). Gotcha #142 added at
+160.5b. GOTCHAS.md has no other change over the round.
+
+**Round 13's charter at HEAD** (META-ROADMAP §"Round 13"):
+
+- *Dodge as a passive special.* The idle miss path stands:
+  `unit:missed` (`src/core/events.ts:260`), heard by the renderer's MISS
+  word (`src/render/BattleRenderer.ts:1425`) and the sound registry
+  (`src/audio/eventSounds.ts:127`); `dealMiss` and `evade` declared and
+  unfired (`src/sim/triggers.ts:42-47`); the landing note in
+  `World.applyDamage` (`src/sim/World.ts:783-788`). `evadable` is read by
+  nothing (`src/sim/effects/schema.ts:102`); 27 damage ops are authored
+  `evadable: true` and 8 `false`. *Found:* two landing notes are false
+  since 160f. The whirlwind, an area on its caster, is authored
+  `evadable: true` ("evadable as the katana", WORKLOG 160f, in
+  `archive/worklog-phase-160.md`), where `interpreter.ts:38-39` says "no
+  shipped area op is `evadable`" and `schema.ts:102-105` that the flag
+  marks "the single-target weapons, as against blasts, spells and
+  ticks". Inert today; under a dodge it decides whether a dodger can
+  slip a whirlwind's cut. The round's other new damage ops are evadable
+  but the Grenade and Repulse. "Perhaps the ninja" now names a shipped
+  unit.
+- *The resolved-damage return and `lifesteal`.* `applyDamage` returns a
+  boolean (`World.ts:774-777`); `FireScratch` holds only `missed`
+  (`interpreter.ts:44-47`). Holds.
+- *`healActor`.* A battle rule's effects are `gainBits` and
+  `applyStatus` (`src/sim/battleRules.ts:50-56`); `dealHit` carries the
+  damage (`triggers.ts:39`). Holds.
+- *The specials' two gaps.* A `self` def without a `summon` op proposes
+  a leap or a blink (`propose.ts:304-308`, `proposeSelfMove` at `:215`),
+  so a self-buff or a self-heal on `self` has no arm. Holds.
+- *Global reach.* A search of `src/sim` and `src/config` for "global"
+  finds no selector or flag. Holds.
+- *`extends` and the places a new archetype is registered.* `extends` is
+  unbuilt. Recounted from the four newcomers' commits (`92ac5ca3`,
+  `6c771bc2`, `0b466d2e`, `85ca2214`): each touched `config/units.json`,
+  `config/prices.json` and `config/fuzz-strategies.json`, and each glyph
+  came in its own step (160a, 161a): four of the charter's seven. Each
+  also touched six places the charter does not name:
+  `locales/en/units.json`, `locales/en/abilities.json`,
+  `src/sim/abilities/registry.ts` (its ability ids), the five fuzz
+  fixtures' per-archetype records (`tests/fuzz/fixtures/`), the prior
+  and roster tables' coverage tests (PENDING) and DESIGN's roster line;
+  two added an effect to `src/render/fxRegistry.ts`, and the ninja moved
+  `tests/fuzz/sweepReport.test.ts`'s inactive list, which is in catalog
+  order (161f's slip). None touched the charter's other three: the
+  redraw-fisher's record (`config/redraw-level-fisher.json`, refused by
+  its own schema and loaded by nothing; TODO, "Not yet placed"),
+  `Recruitment.test`'s EXCLUDED (non-draftables only,
+  `src/run/Recruitment.test.ts:62`) and `REQUIRED_UNIT_IDS` (ids that
+  code names, `src/config/units.ts:26`).
+- *`knownAbilityIds`.* One reader, the archetype editor
+  (`tools/archetype-editor/editor.ts:82`). Holds.
+- *TODO's Round 13 rows.* The 0.3 s experiment's premise holds: the
+  eight ranged weapons it names recover by `fill`, and the Jinx and the
+  Icicle in 0.3 s (the Grenade and the Snag too). The officer reads base
+  mobility 3 and rare. The kit watches, the parity row and §162's two
+  named watches each wait on the next prior table or board, as written.
+
+**The calls, with the session's leans:**
+
+1. *Round 12's exit* is met by every clause, and the scope guard held.
+2. *Round 13's charter* stands, with one parenthetical amended: "the
+   seven places a new archetype is registered (…)" becomes "the places a
+   new archetype is registered (recounted at 163a, WORKLOG §163)", since
+   three of the seven no newcomer met and six it did are missing. And
+   one TODO row under Round 13: the whirlwind's `evadable` and the two
+   false landing notes, settled with the dodge's design, the flag and
+   the notes in one commit. The other arm: the charter as written, with
+   both left for Round 13's kickoff audit to find again.
+3. Settled by the cut: 163c's smoke is the round's playtest; no audit
+   round, since no META-ROADMAP cluster closed.

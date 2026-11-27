@@ -286,6 +286,37 @@ The anchors ran locally in the worktree at the same HEAD, clean
 manifests: pure-random 4 of 40, greedy 6 of 40 (155a: 6 and 7), in the
 worktree's `output/162c-anchors/`.
 
+### 162c — the drivers died with the PC, and the recovery (2026-11-27)
+
+The PC restarted at 02:12Z: System event 1074 from Explorer on the
+user's behalf, "Other (Unplanned)", and Kernel-Power 109; no
+Kernel-Power 41. The user reported a crash. Both drivers died with it.
+The board's log ends at 02:02Z with batches 1 to 9 launched and 1 to 8
+fetched; the derive's at 02:10Z, its one batch running.
+
+*Recovered* at the user's word ("can you recover?"), by
+`process/measurement.md`'s crash steps: the trees clean, no driver left
+running, both boxes up. The board's box held batch 9, done with exit 0;
+`scripts/box-batch.sh <box> fetch` brought it back (summary.csv
+`cefb1df4`, the manifest at `5f277acc`), and the nine fetched manifests'
+argv equal queue lines 1 to 9. That box was destroyed, and lines 10 to
+27, verbatim, went to a fresh `cpx42` under the unchanged driver
+(`scratch/162/162c-board-resume.queue`) from 02:37Z, its first batch at
+02:38Z (the `--jobs` parity pass held from 00:18Z at the same HEAD). The
+derive, still running, is watched by `scratch/162/162c-derive-watch.sh`:
+it polls `box-batch.sh status`, fetches on done, checks the fetch as the
+driver does (the `fetched →` line, exit 0, a non-empty
+`best-strategy.json`), destroys the box, and holds it on any anomaly;
+its status loop read the derive as running before it was armed. Logs in
+the worktree's `scratch/162/`: `162c-board-resume-drive.log`,
+`162c-derive-watch.log`.
+
+*Flag:* this is lean 7's one relaunch of the unfetched lines at the
+same HEAD, applied to a dead driver rather than a hold, as at 155a; a
+second failure fetches what finished and stops. The board's box idled
+about 25 min with batch 9 done. The restart went to the friction log
+with a candidate fix, a resume mode for `box-drive.sh`.
+
 ### Between §161.5 and §162: the watcher skips scratch/ (2026-11-26)
 
 **Asked.** The user's own `npm run dev` loads almost at once, where the

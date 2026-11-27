@@ -6,7 +6,7 @@ A fresh-session orientation for ASCIIbattler. Read this first; then dive into th
 
 **The ONE home for live status.** Other docs (and the agent memory) point here instead of restating it; when state changes, this section is the single place that updates.
 
-- **NEXT — ROUND 12 (Push, pull and blink): §163, the close: 163d, the process read, tranche 1** (`stop`: the keep test over the 2 rows, the friction lines by trap, the candidates; 163c read and `0.5.0` uploaded 2026-11-27, WORKLOG 163c). 151f, the units' lines, lands when the user writes them. **Open ◐:** none.
+- **NEXT — ROUND 12 (Push, pull and blink): §163, the close: 163d's tranche 1 put to the user** (WORKLOG 163d: the keep test, execSync's row kept and Python's CRLF row deleted; the friction read; no candidate for a new rule); on its sign, tranche 2 (the open rows, the papercuts, the scratchpad). 151f, the units' lines, lands when the user writes them. **Open ◐:** 163d.
 - **In flight:** none.
 - **The public build:** `0.5.0` (`f0a0438a`, tag `v0.5.0`), uploaded to itch.io on 2026-11-27; the uploads before it are in Closed rounds below.
 - **Snapshots:** WorldSnapshot **v42** (no player keeps one) · RunSnapshot **v51** (a v50 save, `0.3.0`'s, rejects).

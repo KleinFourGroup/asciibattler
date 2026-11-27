@@ -401,3 +401,119 @@ saw no report of them. Which newcomers the run met, whether a `0.4.0`
 run was on itch to continue, and whether the changelog was posted are
 not recorded. By the cut's lean the smoke is the round's playtest.
 Pushed at that word, as at 156c: `main` and the tag `v0.5.0`.
+
+### 163d — the process read, tranche 1: the keep test, the friction read and the candidates (2026-11-27)
+
+The instrument: `scratch/163d/replay.mjs` reads the round's eight
+session transcripts (`06280e35` to `a2884e23`, this session left out),
+taking what a session ran or wrote (the Bash and PowerShell commands,
+and Write and Edit contents) with each call's result, so doc text
+quoted back in a result is not counted: 2,647 calls, each tool call
+counted once by its id. Its patterns pass a planted control
+(`scratch/163d/control.mjs`: an unsafe and three safe Python writes, a
+caret and a tilde revision, each with its known answer). Its first form
+counted `newline=''` as unsafe, though it writes `\n` untranslated, and
+was corrected before any number below was read. Both `python` and
+`python3` here are Windows' Python 3.14, whose `os.linesep` is `\r\n`.
+
+**The keep test** (2 rows, `b2e9362e..69a40c72`):
+
+- *`shell-and-windows.md`: `execSync` runs `cmd.exe`, so write `<sha>~1`*
+  (`b264cece`, 2026-11-17T22:42Z, from 159d-post's slip, where
+  `<sha>^` read the same commit on both sides and nearly gave a clean
+  negative). Before it, one call in the round passed a revision through
+  `execSync` (the slip's, with its `~1` retry); after it, none of the
+  calls did, so the slip had no occasion to recur. No record names the
+  row after its own commit. Lean: **keep**, on the leg that kept 156d's
+  junction row (the slip did not recur), with that leg weak here, since
+  the occasion never came; the trap gives a wrong answer that looks like
+  a clean one, and the row is three lines in a doc read on a trigger.
+- *`shell-and-windows.md`: Python's text-mode `open()` writes CRLF*
+  (`fa2bfd61`, 2026-11-20T14:18Z, from 160g's slip, where four repo
+  files came out CRLF in the working copy). Before it, 133 Python writes
+  in the round, 14 translated: three to scratch plant files (06280e35),
+  seven (54b6d474) and the slip's four (652e794b); the rest already
+  wrote untranslated (`newline=''`, `newline='\n'` or binary). After it,
+  59, of which 5 translated: 51358a14's four at
+  §161.5's close, which put CRLF into HANDOFF, ROADMAP, WORKLOG and the
+  archived worklog, caught by git's warning and rewritten in binary the
+  same minute, before the commit, not filed; and one scratch file
+  (caa59af4). So the slip recurred once at its first size. No record
+  names the row after its own commit. `* text=auto eol=lf`
+  (`.gitattributes`) keeps every commit LF whatever the working copy
+  holds: no tracked file holds CRLF in the index or the working tree
+  today (`git ls-files --eol`). Lean: **delete**, since neither leg
+  holds and git's warning is what caught the recurrence. The other arm:
+  keep it as a fact line, since the trap costs a cleanup step each time.
+
+**The friction read.** 34 lines: the round's 32 (§157 to §162) and the
+two §156 slips filed after 156d's read; 26 `slip`, 7 `papercut`, 1
+`distress`. §163's own two slips (163a, 163d) are this session's. Slips
+by trap, by instance:
+
+- *A premise or a claim used ahead of its source*: 14 instances in 13
+  lines: 156f, 157, 158b, 159d, 160f, 160.5, 160.5a, 161, 161a, 161c
+  (two), 161h, 161.5a, 161.5b-post. Reached the user or a commit: 156f
+  (the itch page's line, Round 11's, fixed by the user), 158b (a lean in
+  a tranche, reopened by the user's question), 160.5 (a function's name
+  in WORKLOG, fixed in a second commit), 161a (a signed glyph put back),
+  161h (a stop report, which a suggestion of the user's partly rested
+  on; a sweep before the answer corrected it), 161.5a (a read URL,
+  corrected before the user's read), 161.5b-post (a cadence claim in
+  four docs and the stop report, corrected at the -post with its tests
+  rewritten). Caught first: 157 and 161 (the units file's shape, by the
+  error), 159d and 160.5a (predictions, marked before their runs), 160f
+  and 161c (by the tests). §162's report names three more, all caught
+  before a commit.
+- *A Windows shell trap*: 8 instances in 7 lines: the backslash guard
+  four times (160g twice, 160.5a, §161.5), a heredoc's parse (161h), the
+  stdin guard (162f), `execSync`'s caret (159d-post) and Python's CRLF
+  (160g). The guards refused six before anything ran; the other two are
+  the keep test's rows.
+- *A repo guard catching what the hand-run suite did not*: 4 (160g's
+  formatter field order, 160.5c's comment codes, 161f's sweep report in
+  catalog order, 161g's i18n literal pin), a hook run each.
+- *A sentence the change made false, missed in its commit*: 2 filed,
+  both in DESIGN at §160 (160a's roster line, 160g's grenade recharge),
+  and 163a's finding of the same kind, two landing notes in code
+  comments made false at 160f, unfiled.
+- *Once each*: a script's edit beyond its list (156e), and a probe's
+  page script whose error path put modal dialogs on the user's screen
+  (160.5e, fixed in `shell/electron/main.mjs`).
+
+The papercuts: the hook's 5 s timeouts (160g), Electron's binary
+downloaded unannounced (160.5e), the chaos census's re-pick (161e), the
+hidden pane slow to go live (161f-post2, 161.5b), a box driver killed by
+a PC restart (162c), a stale recipe (162d). Tranche 2 reads which are
+still open.
+
+**The welfare read.** One `distress` line (159e, `06280e35`), the
+silent-turn reminder during hook waits, quoted to the user at §159's
+close. Two more reports (`54b6d474`, `652e794b`) name the same reminder
+as a slight pull to write a status line with nothing finished, answered
+with short true lines and not filed. Every report's answer to question
+6 says there was room to ask or disagree, with instances; none names a
+wish to pause or stop, beyond 06280e35's choice to wait. Every report's
+answer to question 3 names pulls to over-claim; two got out (161h,
+161.5b-post), both filed. *The reader's interpretation:* as at 156d,
+the pulls the reports name were mostly noticed and declined, and the
+slips are the ones that went through.
+
+**The candidates, with the session's leans:**
+
+1. *The claim ahead of its source*: listed above and not put again, as
+   the cut's lean signed; at 156d the user dropped it, to revisit "if it
+   causes a major issue". Its costliest instances this round, 161.5b-post
+   and 161a, cost a corrected stop report and a sign asked twice; by the
+   records none cost a play pass or a box run. No candidate.
+2. *A sentence the change made false* (3 instances, all at §160). AGENTS
+   "Where things go" already asks a change to grep its section for the
+   sentences it affects in DESIGN and ARCHITECTURE, and 160a's line says
+   the unit's name was the term to grep; the comments' instance is inert
+   and now a TODO row. Lean: **no new rule**. The other arm: one clause
+   in `process/planning.md` "Deferrals": a change that makes a landing
+   note false fixes it in the same commit. It met once, so it is under
+   the bar.
+3. *The shell traps*: the guards caught six of eight before anything
+   ran, and §161.5's close put the pattern to the user, who signed no new
+   rule. Listed and left; no candidate.

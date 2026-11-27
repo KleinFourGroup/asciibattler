@@ -159,10 +159,12 @@ eight leans (WORKLOG §162).
 - ☑ **162b — the newcomers' desk read** (`none`): v10's recruit-site
   rows and the fire census; their dispositions at 162e. Every recruit
   row over 80, so no grant pair (WORKLOG 162b).
-- ☐ **162c — the board on the box** (`none`): §155's 25 lines at v10's
-  HEAD, the fire channel's two rows to n=120, the fresh derive.
-- ☐ **162d — the roster table rebuilt** (`none`): from the board's eight
-  ARM rows.
+- ☑ **162c — the board on the box** (`none`): §155's 25 lines at v10's
+  HEAD, the fire channel's two rows to n=120, the fresh derive. Every
+  batch fetched with exit 0 after a restart's relaunch (WORKLOG 162c).
+- ☑ **162d — the roster table rebuilt** (`none`): from the board's eight
+  ARM rows. `--report` PASS; the roster table v9, every newcomer in it
+  (WORKLOG 162d).
 - ☐ **162e — the board read** (`stop`, the decision point).
 - ☐ **162f — the sheet amended** (`stop`; `none` if 162e holds the
   sheet).

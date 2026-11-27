@@ -317,6 +317,41 @@ second failure fetches what finished and stops. The board's box idled
 about 25 min with batch 9 done. The restart went to the friction log
 with a candidate fix, a resume mode for `box-drive.sh`.
 
+### 162c — the cohorts fetched (2026-11-27)
+
+The derive's watcher read it done at 05:39Z, fetched it with exit 0 and
+a non-empty `best-strategy.json`, and destroyed its box at 05:40Z. The
+resume driver drained its 18 lines, each fetched with exit 0 and a
+`summary.csv`, and destroyed its box at 08:18Z; `box-launch.sh list`
+then read no box. The three board logs (the first driver's, batch 9's
+fetch by hand, the resume driver's) name 27 distinct fetched batches,
+each with exit 0 and a non-empty `summary.csv`. Box time: the board 8 h
+1 min over two boxes (00:17 to 02:37Z, 02:37 to 08:18Z), the derive 5 h
+21 min. No second failure, so lean 7's pause never came into play.
+
+### 162d — the board merged and the roster table v9 (2026-11-27)
+
+`scratch/146/merge.mjs`, run from the worktree on the three logs
+joined, matched every batch to its plan row by argv: 12 rows pooled
+from two stages (1+40, 41+80), the regen and fire-ablated doctrine rows
+among them now, and 3 copied; the anchors beside them, in
+`output/board-runs/162c/`. `--report` from the worktree: integrity PASS
+on all 17 rows, 0 WARN, the measurement HEAD matching the tree; DRIFT 0
+FAIL, 12 WARN. Its numbers are read at 162e (BALANCE, "the closing
+board at v10").
+
+*The roster table v9*, from the eight ARM rows: 26,985 battles in 52
+buckets, the raw sidecars' row count the same. The registry's recipe,
+`npm run roster:table -- <board-dir>`, was run first as written and
+swept all 17 sidecars (43,444 battles), since every board row carries
+`rosters.csv`; v8's provenance names the eight ARM rows, so the table
+was rebuilt from those eight named, and the registry's recipe now names
+them. Each newcomer is drafted by all three characters, counted in the
+raw sidecars: the grenadier in 1,973 battles, the ninja 1,508, the
+telekinetic 784, the cavalier 386. The coverage test failed on the four
+PENDING lines with the new table (rule 5, the control) and passed, 14 of
+14, once they were dropped.
+
 ### Between §161.5 and §162: the watcher skips scratch/ (2026-11-26)
 
 **Asked.** The user's own `npm run dev` loads almost at once, where the

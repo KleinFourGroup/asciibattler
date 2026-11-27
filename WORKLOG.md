@@ -269,6 +269,23 @@ prior table, so the code is the board's; the BALANCE entry adds the
 idols' moves and the bought-row watch's numbers, which TODO's Round 17
 watches read.
 
+### 162c — the cohorts launched (2026-11-27)
+
+*Launched* at `5f277acc`, v10's commit, pushed, from a detached worktree
+at `../asciibattler-162c` with a `node_modules` junction (138 entries on
+both sides). `balance:board -- --plan` printed 155a's 17 rows unchanged,
+and `scratch/162/make-queue.mjs` wrote the queues: the board's 25 lines
+byte for byte as 155a's, then the regen and fire-ablated rows to n=120
+in place of 155a's Dis Pater pair (27 lines, `162c-board.queue`), on one
+`cpx42` from 00:17Z, batch 1 at 00:18Z after the driver's parity test;
+the fresh derive (`162c-derive.queue`, the registry's line as 155a ran
+it) on a second from 00:19Z, launched at 00:20Z. No grant queue, since
+162b named no thin row. Drive logs in the worktree's
+`scratch/162/162c-board-drive.log` and `162c-derive-drive.log`.
+The anchors ran locally in the worktree at the same HEAD, clean
+manifests: pure-random 4 of 40, greedy 6 of 40 (155a: 6 and 7), in the
+worktree's `output/162c-anchors/`.
+
 ### Between §161.5 and §162: the watcher skips scratch/ (2026-11-26)
 
 **Asked.** The user's own `npm run dev` loads almost at once, where the

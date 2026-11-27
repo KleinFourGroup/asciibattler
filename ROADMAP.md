@@ -12,7 +12,7 @@ with its spec, its per-phase worklogs (`archive/worklog-phase-149.md` to
 `-156.md`) and its session reports beside it; before it
 [archive/post-140-roadmap.md](archive/post-140-roadmap.md) (Round 10).
 
-**Status: Round 12 under way; the spec and the cut signed 2026-11-14.**
+**Status: Round 12 under way; §163, the close: its cut put to the user 2026-11-27 (WORKLOG §163).**
 The spec is [round-12-spec.md](round-12-spec.md). The charter, the
 decision points, the exit and the scope guards are in META-ROADMAP
 §"Round 12 — Push, pull and blink"; its riders are TODO's "Round 12".

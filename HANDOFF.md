@@ -6,7 +6,7 @@ A fresh-session orientation for ASCIIbattler. Read this first; then dive into th
 
 **The ONE home for live status.** Other docs (and the agent memory) point here instead of restating it; when state changes, this section is the single place that updates.
 
-- **NEXT — ROUND 12 (Push, pull and blink): §163, the close — its kickoff** (`process/planning.md` "Phase kickoff", then "Round close"): `0.5.0` and its upload, the round's exit by clause, Round 13's charter against the code, the process read and the archive ([ROADMAP.md](ROADMAP.md) §163; what §162 hands on is in `archive/worklog-phase-162.md`, "§162's close"). **Open ◐:** none.
+- **NEXT — ROUND 12 (Push, pull and blink): §163, the close: its cut put to the user, 163a to 163f with their reads and seven leans** (WORKLOG §163, "The kickoff's audit"; `process/planning.md` "Round close"); on the sign, 163a. 151f, the units' lines, lands when the user writes them. **Open ◐:** none.
 - **In flight:** none.
 - **The public build:** `0.4.0` (`4fc62cfe`, tag `v0.4.0`), uploaded to itch.io on 2026-11-13; the uploads before it are in Closed rounds below.
 - **Snapshots:** WorldSnapshot **v42** (no player keeps one) · RunSnapshot **v51** (a v50 save, `0.3.0`'s, rejects).

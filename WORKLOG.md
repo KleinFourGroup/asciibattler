@@ -503,3 +503,125 @@ questions:
   steal, when the vampire is wounded. Lean: not booked, so a vampire
   levels as fast as any fighter dealing the same damage; fork 9's
   `healActor` signed the same way.
+
+### 165a — tranche A signed (2026-11-28)
+
+**Fork 8 signed** (the user: "Operations, XP: signed! Overkill: This is
+all happening in a chaotic fight, so I don't think the player will catch
+the mismatch. I vote we go literal."): the `lifesteal` op after its hit,
+not booked to the healing ledger, stealing from the HP the blow removed
+(at most the HP its target had), not from the number that floats up. So
+fork 1's return is the HP a strike removed, or null for a dodge. The
+session's lean, put with tranche B: `healActor` literal too, so both
+kinds of steal follow one rule.
+
+**The meter's unit, the user's suggestion:** "the meter counting in whole
+percentage points means that we can't represent a 1/3 rate. Maybe have it
+count to 120? Or whatever the industry standard is for this type of
+issue." The arms, put with tranche B: (a) a share written as a fraction,
+n dodges in d strikes, the meter adding n a strike and dodging when it
+reaches d, keeping the rest: the error term of Bresenham's line
+algorithm, the standard way to spread n events evenly over d steps in
+whole numbers, exact for every share; (b) a fixed scale of 120, exact
+for halves to sixths, eighths, tenths and twelfths but not sevenths or
+ninths (2,520 covers every denominator to 10); (c) whole percent, which
+cannot hold a third. Lean: (a).
+
+### 165a — tranche B put to the user: the rest (2026-11-28)
+
+**Step zero,** read at `886314e9`:
+
+- *A `self` heal, probed* (`scratch/165a/selfHeal.probe.test.ts`, run
+  through a real World tick by its own config,
+  `scratch/165a/vitest.probe.config.ts`): a `self` ability whose one op
+  is a heal of 30, cast by a wounded caster at a wounded foe. With
+  `rangeCells` 0 it never proposes, the foe beside it or four cells off,
+  since the leap's proposer finds no landing. With `rangeCells` 3 and the
+  foe four cells off it proposes once and heals the foe, 40 → 70, the
+  caster left at 40, with or without a leap before it (the leap moved the
+  caster to x 5, the harness's control). The code read at §164 holds.
+- *A power of 0:* every reader takes it. The chip rule charges nothing
+  for a death of power 0 (`src/run/chipRule.ts:142`, `:165`), the fallen
+  and standing sums add it (`World.ts:1798-1817`), the HUD's exposure
+  multiplies it (`chipRule.ts:78-93`), and a summon is already booked at
+  0 (`World.ts:1834-1841`). The one other effect: a capped turn charges
+  each pool the other side's standing power (`chipRule.ts:40-43`), so a
+  standing conscript presses nothing on the enemy's pool then. Power by
+  rarity is 1/1/2/3, signed at Round 11, so a power-0 common is the
+  ladder's one exception.
+- *An area heal is unbuilt:* the heal op heals the one target it was
+  given (`interpreter.ts:239-248`), while `applyStatus` lands on every
+  victim an area resolves (`resolveStatusTargets`, `:347-362`). So a
+  global stun or a global `rejuvenate` needs only the selector; an
+  instant global heal also needs the heal op taught an area's victims.
+- *The selector's neighbours:* a burst on its caster proposes when it has
+  a victim (`propose.ts:356-357`); an engaging ability's reach is its
+  `rangeCells`, or a nova's radius (`archetypes.ts:44-52`), so a board
+  ability's reach must read as null there, or it strands its carrier at
+  an endless range.
+- *The soldier's id:* the characters are `soldier`, `priest` and
+  `gambler` (`config/characters.json`), and the locale keeps characters
+  and units in separate files (`locales/en/characters.json`,
+  `locales/en/units.json`).
+
+**Tranche A's two leans, put with it:** the meter as a fraction, n dodges
+in d strikes (the arms in the entry above), and `healActor` literal as
+fork 8 is, stealing from the HP the blow removed.
+
+**The forks,** §164's numbers:
+
+10–11. *The self arm and its consumer.* (a) Built: a `self` ability with
+   no move and no summon proposes on its cooldown while its unit has a
+   target, a self-heal abstaining at full health, and a `self` ability's
+   heal heals its caster; its consumer named now, the conscript's appeal
+   or a part of the officer's redesign. (b) Carried to the first round
+   with a consumer, with a TODO row naming the probe's result, and a
+   parse refusal now: a `self` ability with ops must carry a move or a
+   summon, so the heal on the wrong side cannot be authored until the arm
+   exists (every shipped `self` ability passes it). Lean: (b), since a
+   special made up to give a seam its consumer is the wrong way round,
+   and the refusal guards the path where the mistake would happen.
+12. *Global reach, the selector.* (a) A new selector, `board`, with
+   `affects`: every combat-targetable unit it admits, no cells built,
+   proposed when it has a victim, its reach null for the engagement
+   range, refused beside a push `from: 'center'`. (b) An `aoe` with a
+   board radius, its shape, anchor and ring meaning nothing. (c) A large
+   radius: a radius-99 square builds 39,601 cells a fire. Lean: (a).
+13. *Global reach, the aura.* An aura's `radius` takes `'board'`; the
+   aura pass already measures every pair, so it costs nothing more.
+   Round 14's totems are its next consumer. Lean: as written.
+14. *The camps under a global `enemies`.* (a) As `affects` reads it
+   today: a player's global stun stuns every camp member and leaves the
+   camp passive, since only damage turns a camp hostile; Round 14's flags
+   refine it. (b) A `board` selector that skips camp members, a rule
+   Round 14 would undo. Lean: (a).
+15. *The global special.* Its kind: (a) a global heal, instant, with the
+   heal op taught an area's victims; (b) a global heal over time,
+   `rejuvenate` on every ally, needing only the selector; (c) a global
+   stun, `stunned` on every enemy. Its carrier: the shaman, a legendary
+   kit watch at −27.9 ± 14 on v9; the stormcaller, who read strong
+   (pooled +18.8); the healer; or an enemy boss, where a fight-wide stun
+   is something the player plays around (the act rounds). Lean: (a) on
+   the shaman, an instant heal reading as your "global heal" does, its
+   cooldown long.
+16. *`extends`.* A child names `extends` and gives what differs:
+   `baseStats` and `growthRates` merge stat by stat, every other key
+   replaces whole; its own `name` required, so no reskin shows under its
+   parent's name; one level, combatants only, refused at parse
+   otherwise; run once before the parse. Both editors edit the raw
+   records and preview the merged one; the formatter writes a child's
+   `extends` and its own keys alone; `knownAbilityIds`'s last reader goes
+   in the same pass. 163a's recount becomes the checklist, each place
+   with a test that fails for a new archetype missing it where none does
+   today; the redraw-fisher file deleted unless a reader wants it. The
+   other arms: a deep merge of every key (abilities appended, not
+   replaced), or chains of parents. Lean: as written.
+17. *The soldier and the conscript.* The soldier: `soldier` as his id,
+   beside the character's in its own file, and an enemy only, for act
+   2's realm in chaos (your words make him the mercenary where the name
+   fits the fight), against a draftable duplicate of the mercenary. The
+   conscript's appeal: (a) power 0, his fall costing the pool nothing, a
+   cheap body that buys time, with the costs above; (b) a price under the
+   mercenary's; (c) a special on the self arm (fork 10–11's (a)). Lean:
+   the soldier `soldier`, an enemy; the conscript (a), a draftable
+   common.

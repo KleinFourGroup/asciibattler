@@ -6,7 +6,7 @@ A fresh-session orientation for ASCIIbattler. Read this first; then dive into th
 
 **The ONE home for live status.** Other docs (and the agent memory) point here instead of restating it; when state changes, this section is the single place that updates.
 
-- **NEXT — ROUND 13 (The unit kit): 165a, the design** (`stop`) — tranche A (the damage path, forks 1 to 9) signed but fork 8, the lifesteal op, its elaboration put to the user (WORKLOG 165a); at its sign, tranche B (forks 10 to 17, WORKLOG §164) ([ROADMAP.md](ROADMAP.md) §165; the spec, [round-13-spec.md](round-13-spec.md), and the cut signed 2026-11-28). 151f, the units' lines, lands when the user writes them. **Open ◐:** none.
+- **NEXT — ROUND 13 (The unit kit): 165a, the design** (`stop`) — tranche A (the damage path, forks 1 to 9) signed; tranche B (forks 10 to 17) put to the user with A's two leans, the meter as a fraction and `healActor` literal (WORKLOG 165a); at its sign, §166 ([ROADMAP.md](ROADMAP.md) §165; the spec, [round-13-spec.md](round-13-spec.md), and the cut signed 2026-11-28). 151f, the units' lines, lands when the user writes them. **Open ◐:** none.
 - **In flight:** none.
 - **The public build:** `0.5.0` (`f0a0438a`, tag `v0.5.0`), uploaded to itch.io on 2026-11-27; the uploads before it are in Closed rounds below.
 - **Snapshots:** WorldSnapshot **v42** (no player keeps one) · RunSnapshot **v51** (a v50 save, `0.3.0`'s, rejects; `0.4.0`'s continues).

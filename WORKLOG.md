@@ -308,3 +308,10 @@ the soldier, the conscript, the commissar), the dodge on up to four, a
 global special, an idol and a packet, the officer reworked, and the
 ranged release if kept; Run v52 and World v43 from `healActor`, one more
 World bump only on a counted dodge.
+
+### The spec and the cut signed (2026-11-28)
+
+**Signed** (the user: "Signing the spec and the eight phases! 😁"): the
+spec, and §165 to §172 as eight phases, with 165a, the design, a `stop`;
+§169 and §170 kept apart. The cut is in the ROADMAP; the stretch runs
+165a's step zero, then its stop, tranche A first.

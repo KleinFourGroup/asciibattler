@@ -1,7 +1,7 @@
 # Round 13 Spec — The unit kit
 
-**Status: PROPOSED 2026-11-28**, with the phases §165 to §172 (WORKLOG
-§164). The intent is the user's, verbatim where it is theirs, from the
+**Status: SIGNED 2026-11-28** ("Signing the spec and the eight phases!
+😁"), with the phases §165 to §172 (WORKLOG §164). The intent is the user's, verbatim where it is theirs, from the
 hit roll's verdict (§136), the re-cut (§133c), the officer's study (§154)
 and the specials' round (§161.5); what was signed before the kickoff is
 listed with its date. The Open section is what the round still has to
@@ -148,7 +148,7 @@ under them; WORKLOG §164 holds the files and lines. In short:
 The calls, in tranches, with the session's leans; WORKLOG §164 holds the
 reasons and the other arms.
 
-### Tranche 1 (this kickoff)
+### Tranche 1 (this kickoff), signed 2026-11-28
 
 1. **The spec and the phases:** this spec, and §165 to §172 in the order
    §164 gives: the design; `extends`, the checklist and the mercenary's

@@ -1115,3 +1115,14 @@ Rows with a trigger and no round (§133, tranche 3). Each names what reopens it.
 The inbox for a new row until the next pass places it.
 
 - [x] ✅ **The hidden pane's slow first load.** `scratch/` is skipped by the dev server's watcher: a cold first stylesheet's wait went from 3.6 to 11.1 s over three starts to 0.7 to 1.5 s. The two 90 s loads stay unexplained (WORKLOG §162, "Between §161.5 and §162: the watcher skips scratch/").
+
+- [ ] **The specials' self arm, carried to its first consumer** (signed
+  at 165a, 2026-11-28). A `self` ability with no move and no summon goes
+  to the leap's proposer, so it proposes only when a leap could, and its
+  heal heals the leap's foe: probed through a World tick, a self-heal of
+  30 at `rangeCells` 3 healed the foe 40 → 70 and left its caster at 40,
+  and at `rangeCells` 0 it never proposed (`scratch/165a/selfHeal.probe.test.ts`;
+  WORKLOG 165a). §169 refuses such an ability at parse until the arm is
+  built: its own route, proposing on its cooldown while its unit has a
+  target, a self-heal abstaining at full health, a `self` heal healing its
+  caster. Placed with the first unit or event that wants a self-buff.

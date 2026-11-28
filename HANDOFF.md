@@ -6,13 +6,13 @@ A fresh-session orientation for ASCIIbattler. Read this first; then dive into th
 
 **The ONE home for live status.** Other docs (and the agent memory) point here instead of restating it; when state changes, this section is the single place that updates.
 
-- **NEXT — ROUND 13 (The unit kit): 165a, the design** (`stop`) — tranche A (the damage path, forks 1 to 9) signed; tranche B (forks 10 to 17) put to the user with A's two leans, the meter as a fraction and `healActor` literal (WORKLOG 165a); at its sign, §166 ([ROADMAP.md](ROADMAP.md) §165; the spec, [round-13-spec.md](round-13-spec.md), and the cut signed 2026-11-28). 151f, the units' lines, lands when the user writes them. **Open ◐:** none.
+- **NEXT — ROUND 13 (The unit kit): §166's kickoff** — `extends`, the checklist and the mercenary's reskins: the audit and the cut, put to the user ([ROADMAP.md](ROADMAP.md) §166; the design signed at 165a, the spec's tranche 2B, [round-13-spec.md](round-13-spec.md)). 151f, the units' lines, lands when the user writes them. **Open ◐:** none.
 - **In flight:** none.
 - **The public build:** `0.5.0` (`f0a0438a`, tag `v0.5.0`), uploaded to itch.io on 2026-11-27; the uploads before it are in Closed rounds below.
 - **Snapshots:** WorldSnapshot **v42** (no player keeps one) · RunSnapshot **v51** (a v50 save, `0.3.0`'s, rejects; `0.4.0`'s continues).
 - **Tests:** **4101 main** in 291 files at `f0a0438a` (163b, its hook); **588 fuzz:smoke** in 60 files and **1 fuzz:jobs-parity** at `8faee462` (§162's close); typecheck clean; the journal corpus, run by hand, 34 journals, re-recorded at 161.5b-post (the ice storm's recharge: 2 moved, every config hash), its test 40 of 40 passing at `8faee462`.
 - **Model id: `claude-opus-5-5`** since 2026-09-22. When yours differs, say so at the next stop; at the user's word, review AGENTS.md against the vendor's current prompting guidance and record the new id (the last review: `archive/post-104-worklog.md`, "The new-model tone audit").
-- **Last phase: §163**, the close, 2026-11-27 (signed 2026-11-28): Round 12's exit met, Round 13's charter standing; `0.5.0` uploaded, a `0.4.0` run continuing; Python's CRLF row deleted, no new rule or guard; the open rows placed in Rounds 13 and 17 (`archive/worklog-phase-163.md`).
+- **Last phase: §165**, the design, closed 2026-11-28 (with §164, the kickoff): the spec and eight phases signed; the dodge a meter of n in d strikes on the rogue, the ninja and a lesser adventurer; lifesteal literal and unbooked; the self arm carried; a `board` selector and a global heal on the shaman; `extends` as leaned (`archive/worklog-phase-165.md`).
 
 ## Current state
 

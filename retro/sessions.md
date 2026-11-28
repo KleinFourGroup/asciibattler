@@ -38,3 +38,10 @@ identify a fix, or reassure the reader that the session coped well.
 
 ---
 
+
+## Phases 164 and 165 — summary
+
+No session report yet. One session (`40b44d9b`) ran Round 13's kickoff
+(§164) and the design (§165), and runs on into §166's kickoff; its
+report, at its end, covers both phases. The friction log holds its two
+slips (164), read in §165's close entry (`archive/worklog-phase-165.md`).

@@ -7,7 +7,9 @@ and the specials' round (§161.5); what was signed before the kickoff is
 listed with its date. The Open section is what the round still has to
 settle, with the session's leans marked as leans. The charter is
 [META-ROADMAP.md](META-ROADMAP.md) §"Round 13 — The unit kit"; the record
-is [WORKLOG.md](WORKLOG.md) §164; the plan is [ROADMAP.md](ROADMAP.md).
+is WORKLOG §164 and 165a, in
+[archive/worklog-phase-165.md](archive/worklog-phase-165.md); the plan is
+[ROADMAP.md](ROADMAP.md).
 
 ## Intent (the user's words)
 
@@ -156,19 +158,65 @@ reasons and the other arms.
    by taste (the ranged release, the officer, the commissar); the closing
    board; the close. §165 is one step, 165a, the design, a `stop`.
 
-### Tranche 2 (at 165a, the design stop)
+### Tranche 2A (at 165a, the design stop), signed 2026-11-28
 
-Put there with both arms, cost and lean, in two lists (WORKLOG §164 has
-them in short):
+The damage path, fork by fork ("Your call", "b was the plan", "a for
+sure!", "Exactly!", "Agreed", and the two below; WORKLOG 165a, in
+`archive/worklog-phase-165.md`):
 
-- *A, the damage path:* the widened return; the dodge's shape, its seat
-  and its draw; which strikes it stops, the whirlwind included; what a
-  dodge costs the attacker; its carriers; the `lifesteal` op; `healActor`.
-- *B, the rest:* the self-buff arm and the self-heal, and the arm's
-  consumer; global reach as a selector and as an aura's reach, and the
-  camps under a global `enemies`; the global special's kind and carrier;
-  `extends`'s merge, the editors' round trip and the checklist with its
-  guards; the soldier's id and draft, the conscript's appeal.
+- *The return:* `World.applyDamage` returns the HP a strike removed, or
+  null for a dodged strike; the damage op sums it on its boundary's
+  scratch beside the misses.
+- *The dodge's shape, the user's:* "Every hit fills up a meter, and when
+  the meter is full, the hit misses. Basically, the extension of every
+  nth hit to non-round numbers." The meter is the dodger's, empty at each
+  fight's start; the share is written as a fraction, n dodges in d
+  strikes; each evadable strike at the dodger adds n, and the strike that
+  brings the meter to d is dodged and d comes off, so every share is
+  exact (the user's question on a third, answered with the fraction).
+  Saved on the unit, a World bump. It draws nothing.
+- *Its seat:* a passive ability with no ops and a dodge block, on the
+  card with its name, its line and its share; a daemon's grant waits for
+  Round 18's ability grant.
+- *Which strikes:* the ops authored `evadable`, the whirlwind among them,
+  its two landing notes rewritten with it.
+- *What a dodge costs:* the strike spent, no HP, no rider, `unit:missed`
+  then `dealMiss` and `evade`, no `dealHit`; the crit drawn first, so a
+  dodged crit is a plain miss.
+- *Its carriers:* "Rogue and ninja for sure; adventurer gets a lesser
+  dodge. I don't think the rioter fits thematically. If it looks weak in
+  the balance data, we can give it one."
+- *The `lifesteal` op* ("Operations, XP: signed! Overkill: … I vote we
+  go literal."): an op after its hit, healing the caster by a fraction of
+  the HP the boundary's hits removed, rounded and clamped at max HP, not
+  booked to the healing ledger.
+- *`healActor`:* a battle rule's effect on `dealHit` alone, healing the
+  striker by a fraction of the HP the blow removed, rounded, not booked;
+  the idol a daemon's hook, the packet an `injectRule` for the encounter.
+  A Run bump and a World bump.
+
+### Tranche 2B (at 165a, the design stop), signed 2026-11-28
+
+"Agreed on the leftovers!", then each fork agreed, the global special
+"Let's try it!" (WORKLOG 165a):
+
+- *The self arm:* carried to the first round with a consumer (TODO, "Not
+  yet placed"); now, a parse refusal of a `self` ability with ops but no
+  move and no summon, since its heal heals the leap's foe (probed at
+  165a).
+- *Global reach:* a `board` selector with `affects`, every unit it admits
+  and no cells built, proposed when it has a victim, its reach null for
+  the engagement range; an aura's `radius` takes `'board'`; camp members
+  read as `affects` reads them today, Round 14 refining it.
+- *The global special:* an instant global heal on the shaman, on a long
+  cooldown, the heal op taught an area's victims.
+- *`extends`:* a child gives what differs, the stat blocks merged stat by
+  stat and every other key replaced; its own name required; one level,
+  combatants only; both editors on the raw records; 163a's recount as a
+  checklist with a test where one is missing; the redraw-fisher file
+  deleted unless a reader wants it.
+- *The soldier:* `soldier`, an enemy only, for act 2. *The conscript:*
+  power 0, his fall costing the pool nothing, a draftable common.
 
 ### Later, at their phases
 

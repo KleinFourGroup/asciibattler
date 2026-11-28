@@ -26,16 +26,15 @@ The spec and the phases, signed by the user (WORKLOG §164).
   ([round-13-spec.md](round-13-spec.md)) and §165 to §172 below, with
   165a and its read; the seventeen forks put to 165a.
 
-## Phase 165 — the design
+## Phase 165 — the design ✅ (closed 2026-11-28)
 
-The design stop the charter's decision points name, before any build, so
-the stretch from §166 runs without a design stop. **Risk:** low; it is
-the round's decision point. **Exit:** both tranches signed.
+Both tranches signed; the design is the spec's tranches 2A and 2B
+(WORKLOG 165a, in `archive/worklog-phase-165.md`).
 
-- ☐ **165a — the design** (`stop`): the seventeen forks with both arms,
-  cost and lean, tranche A (the damage path, forks 1 to 9) first and
-  tranche B (the self arm, global reach, `extends`, the reskins' calls,
-  10 to 17) after A's sign.
+- ☑ **165a — the design** (`stop`) — signed 2026-11-28: the dodge a meter
+  of n in d, its carriers the rogue, the ninja and a lesser adventurer;
+  lifesteal literal and unbooked; the self arm carried; the `board`
+  selector; a global heal on the shaman; `extends` as leaned.
 
 ## Phase 166 — `extends`, the checklist and the mercenary's reskins
 
@@ -70,9 +69,11 @@ idol's and the packet's names and numbers a `stop`; the play a `stop`.
 
 ## Phase 169 — the specials and global reach
 
-The self arm and a self heal's target if 165a keeps them; the `board`
-selector and an aura's board-wide reach; the global special. Before the
-kits, so the officer's redesign has every mechanism the round builds.
+The parse refusal of a `self` ability with ops but no move and no summon
+(the self arm carried, 165a); the `board` selector and an aura's
+board-wide reach; the global heal on the shaman, the heal op taught an
+area's victims. Before the kits, so the officer's redesign has every
+mechanism the round builds.
 **Risk:** medium. **Reads, foreseen:** the seams `none`; the special
 `batch`; the play a `stop`.
 

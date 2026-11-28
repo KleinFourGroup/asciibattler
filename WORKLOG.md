@@ -315,3 +315,136 @@ World bump only on a counted dodge.
 spec, and §165 to §172 as eight phases, with 165a, the design, a `stop`;
 §169 and §170 kept apart. The cut is in the ROADMAP; the stretch runs
 165a's step zero, then its stop, tranche A first.
+
+## Phase 165 — the design
+
+### 165a — the design, tranche A put to the user: the damage path (2026-11-28)
+
+**Step zero,** read at `9b30c2fc`, each premise the forks rest on:
+
+- `applyDamage` has three callers, the damage op's three branches
+  (`src/sim/effects/interpreter.ts:180`, `:199`, `:212`), and a chain's
+  hops reach it through the same op (`fireChainHopOps`, `:530-543`). One
+  widened return covers every strike.
+- The ops authored `evadable`, recounted from `config/abilities.json` by
+  a script, chains walked: 27, every single-target strike but the
+  catapult's shot and the chain lightning, and the whirlwind's area. Not
+  evadable, 8: the grenade,
+  Repulse, the magic bolt, the catapult's shot, the vial, the ice storm,
+  the chain lightning's hops and the molotov. The hex and the wail lay a
+  status with no damage op, the status ticks and the fall deal damage
+  without `applyDamage` (`World.ts:1165`), so no dodge touches them.
+- The miss path: `unit:missed` floats the "Miss" word over the target
+  (`src/render/BattleRenderer.ts:1425`) and plays on the fx channel
+  (`src/audio/eventSounds.ts:127`); the pathing metrics count it as
+  contact (`tests/pathing/metrics.ts:210`). `src/sim/World.test.ts:670`
+  pins that no strike emits it, which the dodge changes on purpose.
+- A passive ability today: Inspire has no ops, a 1 s cooldown and a
+  `fill` timeline, because the schema requires a cooldown and a timeline
+  (`config/abilities.json`). The card shows its detail as its aura and
+  reach (`src/ui/abilityDetail.ts:80-85`) and its cadence column anyway
+  (`src/ui/UnitCard.ts:688-695`).
+- The old scale, a derivation and not a measurement: evasion cost an
+  attacker 0.02 of hit chance a point (`config/stats.json` at
+  `d50e23f1^`), every unit carried 3 to 6, and strikes landed 47.7 %
+  overall (BALANCE 2026-10-28). Against a unit at 5, the adventurer's 11
+  took 0.12 off a strike's chance, about a quarter of the strikes that
+  would have landed, and the rogue's and the rioter's 7 took 0.04, about
+  a twelfth.
+- XP: a point healed pays 3, as a point of damage does
+  (`config/leveling.json`), from the healing ledger that the heal op
+  books (`World.recordHealing`). A steal booked there pays its stealer
+  twice for one blow, and an idol of it would raise every player unit's
+  XP by its fraction.
+- `healActor`'s places: the daemon rule's effect union and its
+  trigger-domain check (`src/config/daemons.ts:100-160`), the packet's
+  `InjectedRuleSchema` (`src/config/packets.ts`), the sim's
+  `BattleRuleEffect` and its `execute` (`src/sim/battleRules.ts`), the
+  packet editor's rule form, and the Run's pinned shape.
+
+**The forks,** each with its arms, its cost and the lean. Fork numbers
+are §164's.
+
+1. *The return.* (a) `applyDamage` returns the damage dealt, or null for
+   a dodged strike; its three callers record a miss on null and add the
+   number to a new `dealt` on the boundary's scratch. (b) It returns
+   `{ landed, damage }`. Both are the same change to two files; (a) is
+   one value for its two readers. A ring cell that rounds to 0 never
+   reaches `applyDamage`, so it is neither missed nor dealt, as today.
+   Lean: (a).
+2. *The dodge's shape.* (a) A plain chance: an evadable strike at a
+   dodger is dodged with the dodger's chance. No new state; streaks
+   happen (at 25 %, two dodges in a row one time in 16, three in 64).
+   (b) A counted share: every nth evadable strike at the dodger is dodged
+   (n = 4 for a quarter); a counter on the unit, serialized, a World
+   bump; no draw, no streak, and a rhythm a watching player could count.
+   (c) A rising chance (Dota 2's pseudo-random evasion): low at first,
+   rising with each strike taken until a dodge resets it, averaging the
+   card's number; a counter and a draw, a World bump; no long streak
+   either way. Lean: (a), your "regular %", which a card line states
+   plainly ("dodges 25 % of strikes"); its cost is luck in a short fight,
+   where a dodger meets few strikes.
+3. *Its seat.* (a) A passive ability: no ops, a `dodge` block with its
+   chance, targeting `self`, skipped by the proposer as an op-less aura
+   is; on the card, its name, its line and "dodge 25 %", its cadence
+   column blank; the schema either relaxes the cooldown and the timeline
+   for a passive or takes dummies, as Inspire's are. (b) A status,
+   `evasive`, whose behaviour carries the chance, which its carrier
+   sustains on itself by an aura: a daemon's or a packet's rule could lay
+   it on `dealHit` or `kill` (a riposte), and its pip shows it on the
+   board, all fight, on every dodger; "your units dodge" would still need
+   a battle-start trigger. (c) A stat in the stat block, growing on
+   level-up: an empower or a packet's buff could raise it today, the most
+   composable with daemons, but it is Round 9's evasion back, on every
+   unit and the stat sheet. Lean: (a), the passive special you named; a
+   daemon's grant waits for Round 18's ability grant, by id, so not this
+   round.
+4. *Its draw,* under (a) or (c) of fork 2. (a) On `combatRng` after the
+   crit's draw. (b) A stream of its own, a key in `rngStreams.ts` and one
+   more serialized RNG on the World, a World bump, which leaves the crits
+   after a dodge where they would have been. Either way a fight with no
+   dodger draws nothing new, so its journals replay unchanged. Lean: (a).
+5. *Which strikes.* The 27 authored `evadable`, so a dodger slips the
+   charge and the pounce too, and the charge's knockback with it, since
+   the push skips a missed target (`interpreter.ts:385`). The whirlwind:
+   (a) evadable as authored, a dodger slipping the spin as it slips the
+   katana, and the two landing notes rewritten to "the blades and the
+   shots, as against blasts, spells and ticks"; (b) not evadable, the
+   notes kept. Lean: (a), since the spin is a blade's cut at each foe
+   beside the ronin.
+6. *What a dodge costs the attacker.* The strike's cooldown and busy
+   window are spent; no HP moves; no rider lands (`applyStatus` and the
+   push skip a missed target); `unit:missed`, then `dealMiss` and
+   `evade`; no `dealHit`, so no battle rule fires (Laverna's bit, Venom's
+   poison, Fortuna's crit) and nothing is stolen. The crit is drawn
+   first, so a dodged crit is a plain miss. No other arm worth drawing;
+   listed so the sign covers it.
+7. *Its carriers.* (a) The adventurer, the rogue, the rioter and the
+   ninja; (b) the charter's three, the rioter's watch then read on his
+   kit alone. A carrier dodges on either side, so an enemy rogue dodges
+   the player's strikes too. Numbers at §167, the old scale one anchor
+   (about a quarter for the adventurer, a twelfth for the rogue and the
+   rioter). Lean: (a).
+8. *The `lifesteal` op.* (a) An op, `{ kind: 'lifesteal', fraction }`,
+   after its damage op on the same phase: it heals the caster by the
+   fraction of what that boundary's damage ops dealt, rounded, clamped at
+   max HP, with `unit:healed` from the caster to itself. A dodged strike
+   deals nothing, so it steals nothing; an area steals from its whole
+   sum; a chain's delayed hops fire on boundaries of their own, so only
+   the primary's hit is stolen from. (b) A `lifesteal` field on the
+   damage op, which the status ticks and the chain's hops share
+   (`schema.ts:181`, `:220`), so a burn tick could steal unless refused.
+   With either, the dealt number is the hitsplat's, overkill included,
+   against the HP removed; and the steal is (i) not booked to the healing
+   ledger, since the blow already paid its XP, or (ii) booked, as every
+   heal is, paying the fraction again. Lean: (a), the hitsplat's number,
+   (i).
+9. *`healActor`.* (a) A battle rule's effect, `{ op: 'healActor',
+   fraction }`, on `dealHit` alone (the parse refusing it on `kill`, as
+   `applyTo: 'target'` is refused there): it heals the striker by the
+   fraction of the blow, rounded, clamped, not booked (as fork 8). The
+   idol is a daemon's hook, the packet an `injectRule` for the
+   encounter, as Venom is, and an area heals its caster once a victim.
+   Its rounding: (i) rounded, so a light blow may heal nothing (20 % of 2
+   is 0); (ii) a remainder carried on the unit, more state for a fraction
+   of a point. Either way Run v52 and World v43. Lean: (a), (i).

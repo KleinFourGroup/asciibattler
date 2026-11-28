@@ -55,15 +55,16 @@ The widened damage return; the dodge's seat and draw, the idle miss path
 woken; the whirlwind's flag and its two notes in one commit; then its
 carriers. Before lifesteal, which reads the return beside it, and before
 the board, since the kit watches wait on it. **Risk:** medium (the path
-every strike takes). **Predicted:** no World bump on a plain chance; the
-corpus moves with the carriers. **Reads, foreseen:** the seam `none`;
+every strike takes). **Predicted:** World v42 → v43, the dodge's meter
+on each unit (signed at 165a); no RNG draw; the corpus moves with the
+carriers. **Reads, foreseen:** the seam `none`;
 each carrier `batch`; the play a `stop`.
 
 ## Phase 168 — lifesteal
 
 The `lifesteal` op and the vampire; `healActor` with the idol and the
-packet. **Risk:** medium. **Predicted:** Run v51 → v52 and World v42 →
-v43 at `healActor`; no bump for the op. **Reads, foreseen:** the op and
+packet. **Risk:** medium. **Predicted:** Run v51 → v52 and World v43 →
+v44 at `healActor`; no bump for the op. **Reads, foreseen:** the op and
 `healActor` `none`; the vampire's glyph a `stop`, his kit `batch`; the
 idol's and the packet's names and numbers a `stop`; the play a `stop`.
 

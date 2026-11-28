@@ -379,7 +379,9 @@ META-ROADMAP §"Round 13 — The unit kit" names each row's place.
   −49.2 ± 19) and the shaman (−27.9 ± 14), named watches; the adventurer
   (−28.4 ± 12), the rioter (−16.2 ± 7) and the rogue (−29.5 ± 9, v9's
   clearest negative unit), held until this round gives them their dodge
-  back, then re-read.
+  back, then re-read. The rioter gets none (the user at 165a, 2026-11-28:
+  "I don't think the rioter fits thematically. If it looks weak in the
+  balance data, we can give it one"), so the board reads him on his kit.
 
 - [ ] **The priest's and the gambler's parity against the soldier**
   (C16; carried from Round 11 at 156d, 2026-11-13). At §155's closing

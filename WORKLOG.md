@@ -448,3 +448,58 @@ are §164's.
    Its rounding: (i) rounded, so a light blow may heal nothing (20 % of 2
    is 0); (ii) a remainder carried on the unit, more state for a fraction
    of a point. Either way Run v52 and World v43. Lean: (a), (i).
+
+### 165a — tranche A signed but fork 8 (2026-11-28)
+
+The user's answers, fork by fork:
+
+1. "Your call." The lean (a) stands: the dodge decides inside
+   `applyDamage`, so the return carries null for a dodged strike whatever
+   its shape.
+2. **(b), a meter**: "Every hit fills up a meter, and when the meter is
+   full, the hit misses. Basically, the extension of every nth hit to
+   non-round numbers." Built on these leans, inside that intent: the
+   meter is the dodger's, starts empty each fight, and each evadable
+   strike at the dodger adds the dodger's share; the strike that fills it
+   is dodged, and the meter keeps what ran over, so a share of 30 % dodges
+   exactly 3 strikes in 10. It is kept in whole percent, since ten floats
+   of 0.1 sum below 1 and would skip the tenth. Saved on the unit, a World
+   bump at §167 (v43), which moves `healActor`'s to v44. Whether the board
+   shows the meter is §167's look.
+3. "I think the plan was a": the passive ability.
+4. Not applicable under (b): the dodge draws nothing, and the crit is
+   still drawn first, so a dodge moves no combat draw.
+5. "a for sure!": the whirlwind evadable, its two landing notes
+   rewritten with the flag.
+6. "Exactly!"
+7. "Rogue and ninja for sure; adventurer gets a lesser dodge. I don't
+   think the rioter fits thematically. If it looks weak in the balance
+   data, we can give it one." The carriers are the rogue, the ninja and
+   the adventurer at a smaller share; the rioter's watch is read at the
+   board on his kit, a dodge his if it reads weak (TODO's kit watches).
+8. "Please elaborate?" Open; the elaboration is put with this entry.
+9. "Agreed": a battle rule's `healActor` on `dealHit`, rounded, not
+   booked to the healing ledger.
+
+**Fork 8, elaborated.** How the vampire's bite heals him, as three
+questions:
+
+- *The shape.* (a) A step of its own in the ability, after the hit: the
+  bite is the damage, then "heal me by 30 % of what this just dealt", as
+  the Snag is a hit then a pull. (b) A setting on the damage: "damage,
+  30 % lifesteal", one line shorter, but the damage's format is also the
+  burn's, the bleed's and the poison's ticks and the chain's hops, so the
+  schema must refuse it there or a tick could steal. Lean: (a). Worked:
+  a bite of 10 heals 3; a sweep of 4 at each of three foes (12) heals 4
+  (3.6 rounded); a dodged bite heals nothing; a chain steals only from its
+  first target, since its later hops land on later ticks.
+- *Overkill.* A bite of 10 into a foe with 2 HP left: from the 10, the
+  number that floats up, the heal is 3; from the 2 HP removed, 1. Lean:
+  the 10, since the heal then matches what the player saw; the other arm
+  is the literal drain, and stops a big blow on a dying foe from healing
+  much.
+- *XP.* An ability's healing earns 3 XP a point, as damage does. Booked
+  as a heal, that bite earns 30 XP for its damage and 9 more for its
+  steal, when the vampire is wounded. Lean: not booked, so a vampire
+  levels as fast as any fighter dealing the same damage; fork 9's
+  `healActor` signed the same way.

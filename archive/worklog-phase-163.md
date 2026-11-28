@@ -618,3 +618,8 @@ By `process/planning.md` "Round close" and "Phase close":
 - *The playtest:* 163c's smoke on the uploaded build, as signed with
   the cut. *The audit round:* none, since no cluster closed.
 - *Not yet:* the push, at the user's read of this step.
+
+### 163f signed (2026-11-28)
+
+Signed: "Yes, signed! 😁", over the close as built at `128ce905`. §163 and
+Round 12 close with it, and `main` is pushed.

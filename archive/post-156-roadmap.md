@@ -12,7 +12,7 @@ with its spec, its per-phase worklogs (`archive/worklog-phase-149.md` to
 `-156.md`) and its session reports beside it; before it
 [archive/post-140-roadmap.md](archive/post-140-roadmap.md) (Round 10).
 
-**Status: Round 12 closed 2026-11-27, its last step, 163f, at the user's read.**
+**Status: Round 12 closed 2026-11-27, its last step, 163f, signed 2026-11-28.**
 The spec is [round-12-spec.md](round-12-spec.md). The charter, the
 decision points, the exit and the scope guards are in META-ROADMAP
 §"Round 12 — Push, pull and blink"; its riders are TODO's "Round 12".
@@ -162,7 +162,7 @@ Company's cost (WORKLOG §162, in `archive/worklog-phase-162.md`).
 - ✗ **162g — the content changes** and ✗ **162h — the verify board**:
   not run, since no call changed content.
 
-## Phase 163 — the close
+## Phase 163 — the close ✅ (closed 2026-11-28)
 
 Round 12's exit met by clause and Round 13's charter standing, its
 `extends` parenthetical amended; `0.5.0` uploaded with a `0.4.0` run
@@ -176,4 +176,4 @@ Rounds 13 and 17); the archive. Each step's record is
 - ☑ **163c — the smoke, the upload and the playtest** (`stop`, the user's): read 2026-11-27, uploaded, the reads good on the user's word; `main` and `v0.5.0` pushed.
 - ☑ **163d — the process read** (`stop`, in two tranches): signed 2026-11-27 in two: `execSync`'s row kept and Python's CRLF row deleted, no new rule or guard; the units' lines, the resume mode and the redraw-fisher row to Round 13, the Roman look to Round 17, two papercuts left (WORKLOG 163d).
 - ☑ **163e — the list built as signed** (`none`): one row out of `shell-and-windows.md`, nothing else in the rule docs; the four TODO rows placed.
-- ◐ **163f — the archive and the round's close** (`stop`): built, put to the user (WORKLOG 163f).
+- ☑ **163f — the archive and the round's close** (`stop`): signed 2026-11-28, the close as built at `128ce905`; `main` pushed (WORKLOG 163f).

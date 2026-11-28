@@ -6,13 +6,13 @@ A fresh-session orientation for ASCIIbattler. Read this first; then dive into th
 
 **The ONE home for live status.** Other docs (and the agent memory) point here instead of restating it; when state changes, this section is the single place that updates.
 
-- **NEXT — 163f's read (the user's), then ROUND 13 (The unit kit): §164, the kickoff** — the spec first, then the audit and the cut ([ROADMAP.md](ROADMAP.md) §164; `process/planning.md` "Phase kickoff"; the charter in META-ROADMAP §"Round 13", standing at 163a; TODO's Round 13 rows, the resume mode for `box-drive.sh` due before its board). On 163f's sign: record it in `archive/worklog-phase-163.md` and `archive/post-156-roadmap.md`, and push. 151f, the units' lines, lands when the user writes them. **Open ◐:** 163f.
+- **NEXT — ROUND 13 (The unit kit): §164, the kickoff** — the spec first, then the audit and the cut ([ROADMAP.md](ROADMAP.md) §164; `process/planning.md` "Phase kickoff"; the charter in META-ROADMAP §"Round 13", standing at 163a; TODO's Round 13 rows, the resume mode for `box-drive.sh` due before its board). 151f, the units' lines, lands when the user writes them. **Open ◐:** none.
 - **In flight:** none.
 - **The public build:** `0.5.0` (`f0a0438a`, tag `v0.5.0`), uploaded to itch.io on 2026-11-27; the uploads before it are in Closed rounds below.
 - **Snapshots:** WorldSnapshot **v42** (no player keeps one) · RunSnapshot **v51** (a v50 save, `0.3.0`'s, rejects; `0.4.0`'s continues).
 - **Tests:** **4101 main** in 291 files at `f0a0438a` (163b, its hook); **588 fuzz:smoke** in 60 files and **1 fuzz:jobs-parity** at `8faee462` (§162's close); typecheck clean; the journal corpus, run by hand, 34 journals, re-recorded at 161.5b-post (the ice storm's recharge: 2 moved, every config hash), its test 40 of 40 passing at `8faee462`.
 - **Model id: `claude-opus-5-5`** since 2026-09-22. When yours differs, say so at the next stop; at the user's word, review AGENTS.md against the vendor's current prompting guidance and record the new id (the last review: `archive/post-104-worklog.md`, "The new-model tone audit").
-- **Last phase: §163**, the close, 2026-11-27: Round 12's exit met, Round 13's charter standing; `0.5.0` uploaded, a `0.4.0` run continuing; Python's CRLF row deleted, no new rule or guard; the open rows placed in Rounds 13 and 17 (`archive/worklog-phase-163.md`).
+- **Last phase: §163**, the close, 2026-11-27 (signed 2026-11-28): Round 12's exit met, Round 13's charter standing; `0.5.0` uploaded, a `0.4.0` run continuing; Python's CRLF row deleted, no new rule or guard; the open rows placed in Rounds 13 and 17 (`archive/worklog-phase-163.md`).
 
 ## Current state
 
